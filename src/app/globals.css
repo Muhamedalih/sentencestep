@@ -1,0 +1,167 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --radius: 0.875rem;
+
+  /* Surfaces */
+  --background: oklch(0.985 0.003 240);
+  --foreground: oklch(0.2 0.02 265);
+  --surface: oklch(1 0 0);
+  --surface-muted: oklch(0.965 0.006 250);
+
+  /* Brand */
+  --brand: oklch(0.47 0.19 273);
+  --brand-foreground: oklch(0.98 0.01 270);
+  --brand-muted: oklch(0.93 0.03 273);
+
+  --accent: oklch(0.78 0.16 75);
+  --accent-foreground: oklch(0.24 0.05 75);
+
+  /* Semantic */
+  --success: oklch(0.64 0.16 150);
+  --success-foreground: oklch(0.98 0.02 150);
+  --danger: oklch(0.63 0.22 25);
+  --danger-foreground: oklch(0.98 0.01 25);
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-muted);
+  --muted-foreground: oklch(0.5 0.02 265);
+  --border: oklch(0.9 0.008 260);
+  --input: oklch(0.9 0.008 260);
+  --ring: var(--brand);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-arabic:
+    "Noto Sans Arabic", "Segoe UI", ui-sans-serif, system-ui, Tahoma, Arial, sans-serif;
+}
+
+.dark {
+  --background: oklch(0.18 0.015 265);
+  --foreground: oklch(0.96 0.005 260);
+  --surface: oklch(0.22 0.016 265);
+  --surface-muted: oklch(0.26 0.018 265);
+
+  --brand: oklch(0.72 0.16 273);
+  --brand-foreground: oklch(0.16 0.02 270);
+  --brand-muted: oklch(0.3 0.05 273);
+
+  --accent: oklch(0.78 0.15 75);
+  --accent-foreground: oklch(0.2 0.04 75);
+
+  --success: oklch(0.7 0.15 150);
+  --success-foreground: oklch(0.16 0.03 150);
+  --danger: oklch(0.68 0.2 25);
+  --danger-foreground: oklch(0.16 0.02 25);
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-muted);
+  --muted-foreground: oklch(0.68 0.015 260);
+  --border: oklch(0.32 0.02 265);
+  --input: oklch(0.32 0.02 265);
+  --ring: var(--brand);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-sans);
+  --font-arabic: var(--font-arabic);
+
+  --animate-fade-in: fade-in 0.4s ease-out;
+  --animate-rise-in: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  [dir="rtl"] body,
+  html[lang="ar"] body {
+    font-family: var(--font-arabic);
+  }
+
+  ::selection {
+    background-color: var(--brand-muted);
+    color: var(--foreground);
+  }
+}
