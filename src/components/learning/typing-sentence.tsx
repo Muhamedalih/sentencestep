@@ -17,6 +17,11 @@ interface TypingSentenceProps {
 
 type LetterState = "correct" | "error" | "pending";
 
+/** Splits into words and single-space tokens so word-wrapping happens only between words. */
+function tokenize(target: string): string[] {
+  return target.match(/\S+|\s/g) ?? [];
+}
+
 export function TypingSentence({ sentence, onComplete, onCorrectLetter }: TypingSentenceProps) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
@@ -80,27 +85,47 @@ export function TypingSentence({ sentence, onComplete, onCorrectLetter }: Typing
         className="relative cursor-text text-2xl leading-relaxed font-medium tracking-wide sm:text-3xl"
       >
         <div aria-hidden="true" dir="ltr">
-          {target.split("").map((char, index) => {
-            const state: LetterState =
-              errorIndex === index ? "error" : index < typed.length ? "correct" : "pending";
-            const display = char === " " ? NBSP : char;
+          {(() => {
+            let charIndex = 0;
 
-            return (
-              <motion.span
-                key={index}
-                animate={state === "error" ? { x: [0, -4, 4, -3, 3, 0] } : { x: 0 }}
-                transition={{ duration: 0.3 }}
-                className={cn(
-                  "inline-block rounded transition-colors duration-150",
-                  state === "correct" && "text-success",
-                  state === "error" && "text-danger bg-danger/10",
-                  state === "pending" && "text-muted-foreground/40",
-                )}
-              >
-                {display}
-              </motion.span>
-            );
-          })}
+            return tokenize(target).map((token, tokenIndex) => {
+              const renderLetter = (char: string, index: number) => {
+                const state: LetterState =
+                  errorIndex === index ? "error" : index < typed.length ? "correct" : "pending";
+
+                return (
+                  <motion.span
+                    key={index}
+                    animate={state === "error" ? { x: [0, -4, 4, -3, 3, 0] } : { x: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className={cn(
+                      "inline-block rounded transition-colors duration-150",
+                      state === "correct" && "text-success",
+                      state === "error" && "text-danger bg-danger/10",
+                      state === "pending" && "text-muted-foreground/40",
+                    )}
+                  >
+                    {char === " " ? NBSP : char}
+                  </motion.span>
+                );
+              };
+
+              if (token === " ") {
+                const index = charIndex;
+                charIndex += 1;
+                return renderLetter(token, index);
+              }
+
+              const startIndex = charIndex;
+              charIndex += token.length;
+
+              return (
+                <span key={tokenIndex} className="inline-block whitespace-nowrap">
+                  {token.split("").map((char, i) => renderLetter(char, startIndex + i))}
+                </span>
+              );
+            });
+          })()}
         </div>
         <input
           ref={inputRef}
