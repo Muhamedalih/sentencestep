@@ -6,23 +6,25 @@ import { Check, Lock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { getLessonsByLevel, getLevels } from "@/data/lessons";
+import { getLessonsByLevel, getLevels } from "@/lib/content";
 import { useProgress } from "@/hooks/use-progress";
 import { fadeInUp, staggerChildren } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import type { LearningMode } from "@/types/content";
+import type { LearningMode, LessonUnit } from "@/types/content";
 
 export function LessonListView({
   mode,
   title,
   description,
+  units,
 }: {
   mode: LearningMode;
   title: string;
   description: string;
+  units: LessonUnit[];
 }) {
   const { isCompleted, isLoaded } = useProgress();
-  const levels = getLevels(mode);
+  const levels = getLevels(units);
 
   return (
     <div>
@@ -43,7 +45,7 @@ export function LessonListView({
               variants={staggerChildren}
               className="grid gap-3 sm:grid-cols-2"
             >
-              {getLessonsByLevel(mode, level).map((unit) => {
+              {getLessonsByLevel(units, level).map((unit) => {
                 const completed = isLoaded && isCompleted(mode, unit.id);
                 const locked = !unit.isFree;
 

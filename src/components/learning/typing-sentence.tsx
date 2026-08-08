@@ -13,6 +13,7 @@ interface TypingSentenceProps {
   sentence: Sentence;
   onComplete: () => void;
   onCorrectLetter: () => void;
+  onErrorLetter?: () => void;
 }
 
 type LetterState = "correct" | "error" | "pending";
@@ -22,7 +23,12 @@ function tokenize(target: string): string[] {
   return target.match(/\S+|\s/g) ?? [];
 }
 
-export function TypingSentence({ sentence, onComplete, onCorrectLetter }: TypingSentenceProps) {
+export function TypingSentence({
+  sentence,
+  onComplete,
+  onCorrectLetter,
+  onErrorLetter,
+}: TypingSentenceProps) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +70,7 @@ export function TypingSentence({ sentence, onComplete, onCorrectLetter }: Typing
       setErrorIndex(typed.length);
       clearTimeout(errorTimeoutRef.current);
       errorTimeoutRef.current = setTimeout(() => setErrorIndex(null), 300);
+      onErrorLetter?.();
     }
   }
 

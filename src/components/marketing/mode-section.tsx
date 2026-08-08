@@ -1,8 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getFreeLessons, getLessons, getSentenceCount } from "@/data/lessons";
+import { filterFree, getAllLessons, sentenceCount } from "@/lib/content";
 import { LEARNING_MODES, modeMeta } from "@/lib/learning-modes";
 
-export function ModeSection() {
+export async function ModeSection() {
+  const lessonsByMode = await getAllLessons();
+
   return (
     <section id="modes" className="mx-auto max-w-6xl px-6 py-20">
       <div className="mx-auto mb-12 max-w-2xl text-center">
@@ -18,9 +20,10 @@ export function ModeSection() {
         {LEARNING_MODES.map((mode, index) => {
           const copy = modeMeta[mode];
           const Icon = copy.icon;
-          const totalLessons = getLessons(mode).length;
-          const freeLessons = getFreeLessons(mode).length;
-          const sentences = getSentenceCount(mode);
+          const units = lessonsByMode[mode];
+          const totalLessons = units.length;
+          const freeLessons = filterFree(units).length;
+          const sentences = sentenceCount(units);
 
           return (
             <Card

@@ -4,42 +4,13 @@ import { conversationLessons } from "@/data/lessons/conversation";
 import { normalLessons } from "@/data/lessons/normal";
 import { storyLessons } from "@/data/lessons/stories";
 
+/**
+ * Local dev/test seed data. This is read through src/lib/content.ts, not
+ * imported directly — that's the one place the rest of the app goes for
+ * lesson content, so it can transparently swap to Supabase later.
+ */
 export const lessonsByMode: Record<LearningMode, LessonUnit[]> = {
   normal: normalLessons,
   stories: storyLessons,
   conversation: conversationLessons,
 };
-
-export function getLessons(mode: LearningMode): LessonUnit[] {
-  return lessonsByMode[mode];
-}
-
-export function getFreeLessons(mode: LearningMode): LessonUnit[] {
-  return lessonsByMode[mode].filter((unit) => unit.isFree);
-}
-
-export function getLessonById(mode: LearningMode, id: string): LessonUnit | undefined {
-  return lessonsByMode[mode].find((unit) => unit.id === id);
-}
-
-export function getLevels(mode: LearningMode): number[] {
-  const levels = new Set(lessonsByMode[mode].map((unit) => unit.level));
-  return Array.from(levels).sort((a, b) => a - b);
-}
-
-export function getLessonsByLevel(mode: LearningMode, level: number): LessonUnit[] {
-  return lessonsByMode[mode].filter((unit) => unit.level === level);
-}
-
-export function getSentenceCount(mode: LearningMode): number {
-  return lessonsByMode[mode].reduce((total, unit) => total + unit.sentences.length, 0);
-}
-
-export function getNextLesson(mode: LearningMode, currentId: string): LessonUnit | undefined {
-  const units = [...lessonsByMode[mode]].sort((a, b) => a.order - b.order);
-  const index = units.findIndex((unit) => unit.id === currentId);
-  if (index === -1) return undefined;
-  return units[index + 1];
-}
-
-export { conversationLessons, normalLessons, storyLessons };

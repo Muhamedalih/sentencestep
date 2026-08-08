@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { LessonSession } from "@/components/learning/lesson-session";
-import { getLessonById, lessonsByMode } from "@/data/lessons";
+import { findNextLesson, getLessons } from "@/lib/content";
 import { LEARNING_MODES, isLearningMode, modeMeta } from "@/lib/learning-modes";
 
-export function generateStaticParams() {
-  return LEARNING_MODES.flatMap((mode) =>
-    lessonsByMode[mode].filter((unit) => unit.isFree).map((unit) => ({ mode, lessonId: unit.id })),
+export async function generateStaticParams() {
+  const params = await Promise.all(
+    LEARNING_MODES.map(async (mode) => {
+      const units = await getLessons(mode);
+      return units.filter((unit) => unit.isFree).map((unit) => ({ mode, lessonId: unit.id }));
+    }),
   );
+  return params.flat();
 }
 
 export async function generateMetadata({
@@ -18,7 +22,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { mode, lessonId } = await params;
   if (!isLearningMode(mode)) return {};
-  const unit = getLessonById(mode, lessonId);
+  const units = await getLessons(mode);
+  const unit = units.find((item) => item.id === lessonId);
   return { title: unit?.title ?? modeMeta[mode].title };
 }
 
@@ -30,12 +35,15 @@ export default async function LessonPage({
   const { mode, lessonId } = await params;
   if (!isLearningMode(mode)) notFound();
 
-  const unit = getLessonById(mode, lessonId);
+  const units = await getLessons(mode);
+  const unit = units.find((item) => item.id === lessonId);
   if (!unit || !unit.isFree) notFound();
+
+  const nextLesson = findNextLesson(units, unit.id);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-      <LessonSession unit={unit} />
+      <LessonSession unit={unit} nextLesson={nextLesson} />
     </div>
   );
 }

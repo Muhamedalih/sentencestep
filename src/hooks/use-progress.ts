@@ -2,56 +2,48 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { readProgress, recordCompletion } from "@/lib/progress/store";
+import { emptyProgressState } from "@/lib/progress/types";
+import type { ProgressState } from "@/lib/progress/types";
 import type { LearningMode } from "@/types/content";
 
-const STORAGE_KEY = "looma:progress:v1";
-
-type ProgressMap = Record<LearningMode, string[]>;
-
-const emptyProgress: ProgressMap = { normal: [], stories: [], conversation: [] };
-
-function readProgress(): ProgressMap {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyProgress;
-    const parsed = JSON.parse(raw) as Partial<ProgressMap>;
-    return {
-      normal: parsed.normal ?? [],
-      stories: parsed.stories ?? [],
-      conversation: parsed.conversation ?? [],
-    };
-  } catch {
-    return emptyProgress;
-  }
-}
-
 /**
- * Tracks completed lessons in localStorage. There's no account system yet, so
- * this is the whole persistence layer for now — swap for a Supabase-backed
- * store once auth lands without changing the hook's public shape.
+ * Tracks lesson completions and streak in localStorage. There's no account
+ * system yet, so this is the whole persistence layer for now — see
+ * src/lib/supabase/queries/progress.ts for the Supabase-backed counterpart
+ * this hook swaps to once auth lands.
  */
 export function useProgress() {
-  const [progress, setProgress] = useState<ProgressMap>(emptyProgress);
+  const [state, setState] = useState<ProgressState>(emptyProgressState);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setProgress(readProgress());
+    setState(readProgress());
     setIsLoaded(true);
   }, []);
 
-  const markComplete = useCallback((mode: LearningMode, lessonId: string) => {
-    setProgress((prev) => {
-      if (prev[mode].includes(lessonId)) return prev;
-      const next: ProgressMap = { ...prev, [mode]: [...prev[mode], lessonId] };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+  const markComplete = useCallback((mode: LearningMode, lessonId: string, accuracy: number) => {
+    setState((prev) => recordCompletion(prev, mode, lessonId, accuracy));
   }, []);
 
-  const isCompleted = useCallback(
-    (mode: LearningMode, lessonId: string) => progress[mode].includes(lessonId),
-    [progress],
+  const getCompletedIds = useCallback(
+    (mode: LearningMode) =>
+      state.completions.filter((entry) => entry.mode === mode).map((entry) => entry.lessonId),
+    [state.completions],
   );
 
-  return { progress, isLoaded, isCompleted, markComplete };
+  const isCompleted = useCallback(
+    (mode: LearningMode, lessonId: string) =>
+      state.completions.some((entry) => entry.mode === mode && entry.lessonId === lessonId),
+    [state.completions],
+  );
+
+  return {
+    isLoaded,
+    completions: state.completions,
+    streak: state.streak,
+    isCompleted,
+    getCompletedIds,
+    markComplete,
+  };
 }

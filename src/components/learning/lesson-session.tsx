@@ -1,35 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, PartyPopper } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TypingSentence } from "@/components/learning/typing-sentence";
-import { getNextLesson } from "@/data/lessons";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { popIn } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 
-export function LessonSession({ unit }: { unit: LessonUnit }) {
+export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLesson?: LessonUnit }) {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const { markComplete } = useProgress();
   const { play } = useTypingSound();
+  const correctCountRef = useRef(0);
+  const errorCountRef = useRef(0);
 
   const total = unit.sentences.length;
   const sentence = unit.sentences[sentenceIndex];
-  const nextLesson = useMemo(() => getNextLesson(unit.mode, unit.id), [unit.mode, unit.id]);
 
   function handleSentenceComplete() {
     if (sentenceIndex + 1 < total) {
       setSentenceIndex((index) => index + 1);
     } else {
       play("complete");
-      markComplete(unit.mode, unit.id);
+      const attempts = correctCountRef.current + errorCountRef.current;
+      const accuracy = attempts === 0 ? 1 : correctCountRef.current / attempts;
+      markComplete(unit.mode, unit.id, accuracy);
       setIsComplete(true);
     }
   }
@@ -107,7 +109,13 @@ export function LessonSession({ unit }: { unit: LessonUnit }) {
               key={sentence.id}
               sentence={sentence}
               onComplete={handleSentenceComplete}
-              onCorrectLetter={() => play("letter")}
+              onCorrectLetter={() => {
+                correctCountRef.current += 1;
+                play("letter");
+              }}
+              onErrorLetter={() => {
+                errorCountRef.current += 1;
+              }}
             />
           )
         )}
