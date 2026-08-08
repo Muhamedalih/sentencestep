@@ -1,28 +1,6 @@
-import { MessagesSquare, NotebookText, Type } from "lucide-react";
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getFreeLessons, getLessons, getSentenceCount } from "@/data/lessons";
-import type { LearningMode } from "@/types/content";
-
-const modeCopy: Record<LearningMode, { title: string; description: string; icon: typeof Type }> = {
-  normal: {
-    title: "Normal",
-    description: "Short, focused sentences organized from easy to difficult.",
-    icon: Type,
-  },
-  stories: {
-    title: "Stories",
-    description: "Longer narratives you type sentence by sentence as they unfold.",
-    icon: NotebookText,
-  },
-  conversation: {
-    title: "Conversation",
-    description: "Real-life dialogue for situations you'll actually use English in.",
-    icon: MessagesSquare,
-  },
-};
-
-const modes: LearningMode[] = ["normal", "stories", "conversation"];
+import { LEARNING_MODES, modeMeta } from "@/lib/learning-modes";
 
 export function ModeSection() {
   return (
@@ -37,8 +15,8 @@ export function ModeSection() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {modes.map((mode, index) => {
-          const copy = modeCopy[mode];
+        {LEARNING_MODES.map((mode, index) => {
+          const copy = modeMeta[mode];
           const Icon = copy.icon;
           const totalLessons = getLessons(mode).length;
           const freeLessons = getFreeLessons(mode).length;

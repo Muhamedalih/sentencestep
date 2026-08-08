@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -39,9 +40,11 @@ export function Hero() {
           </motion.p>
 
           <motion.div variants={fadeInUp} className="mt-2 flex flex-wrap items-center gap-3">
-            <Button size="lg">Start learning free</Button>
-            <Button size="lg" variant="outline">
-              See how it works
+            <Button size="lg" asChild>
+              <Link href="/learn">Start learning free</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a href="#modes">See how it works</a>
             </Button>
           </motion.div>
 

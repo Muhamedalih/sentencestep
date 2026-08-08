@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 
 export function FreeCta() {
@@ -12,8 +14,8 @@ export function FreeCta() {
           required to get a feel for it.
         </p>
         <div className="mt-8 flex justify-center">
-          <Button size="lg" variant="secondary" className="text-foreground">
-            Start your first lesson
+          <Button size="lg" variant="secondary" className="text-foreground" asChild>
+            <Link href="/learn">Start your first lesson</Link>
           </Button>
         </div>
       </div>

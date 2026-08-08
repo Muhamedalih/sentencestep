@@ -25,7 +25,9 @@ export function SiteHeader() {
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
             Sign in
           </Button>
-          <Button size="sm">Start learning</Button>
+          <Button size="sm" asChild>
+            <Link href="/learn">Start learning</Link>
+          </Button>
         </div>
       </div>
     </header>

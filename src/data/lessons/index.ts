@@ -35,4 +35,11 @@ export function getSentenceCount(mode: LearningMode): number {
   return lessonsByMode[mode].reduce((total, unit) => total + unit.sentences.length, 0);
 }
 
+export function getNextLesson(mode: LearningMode, currentId: string): LessonUnit | undefined {
+  const units = [...lessonsByMode[mode]].sort((a, b) => a.order - b.order);
+  const index = units.findIndex((unit) => unit.id === currentId);
+  if (index === -1) return undefined;
+  return units[index + 1];
+}
+
 export { conversationLessons, normalLessons, storyLessons };
