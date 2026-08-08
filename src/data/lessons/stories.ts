@@ -1,10 +1,10 @@
-import type { LessonUnit } from "@/types/content";
+import type { Lesson } from "@/types/content";
 
 /**
  * Stories mode: longer narratives split into sentence-by-sentence units.
  * This is the initial content set (~24 sentences across 3 stories).
  */
-export const storyLessons: LessonUnit[] = [
+export const storyLessons: Lesson[] = [
   {
     id: "story-1",
     mode: "stories",
@@ -42,6 +42,11 @@ export const storyLessons: LessonUnit[] = [
         en: "She walked home slowly and made coffee.",
         ar: "مشت إلى المنزل ببطء وحضّرت القهوة.",
       },
+    ],
+    vocabulary: [
+      { id: "story-1-v1", en: "morning", ar: "صباح" },
+      { id: "story-1-v2", en: "walk", ar: "نزهة" },
+      { id: "story-1-v3", en: "early", ar: "مبكرًا" },
     ],
   },
   {

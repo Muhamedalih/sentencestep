@@ -1,11 +1,11 @@
-import type { LessonUnit } from "@/types/content";
+import type { Lesson } from "@/types/content";
 
 /**
  * Normal mode: short standalone sentences, one per lesson unit, grouped into
  * difficulty levels. This is the initial content set (~12 sentences); more
  * levels can be appended without changing the shape.
  */
-export const normalLessons: LessonUnit[] = [
+export const normalLessons: Lesson[] = [
   {
     id: "normal-1",
     mode: "normal",
@@ -15,6 +15,7 @@ export const normalLessons: LessonUnit[] = [
     titleAr: "أنا سعيد.",
     isFree: true,
     sentences: [{ id: "normal-1-s1", en: "I am happy.", ar: "أنا سعيد." }],
+    vocabulary: [{ id: "normal-1-v1", en: "happy", ar: "سعيد" }],
   },
   {
     id: "normal-2",
@@ -56,6 +57,10 @@ export const normalLessons: LessonUnit[] = [
     isFree: true,
     sentences: [
       { id: "normal-5-s1", en: "He goes to school every day.", ar: "يذهب إلى المدرسة كل يوم." },
+    ],
+    vocabulary: [
+      { id: "normal-5-v1", en: "school", ar: "مدرسة" },
+      { id: "normal-5-v2", en: "every day", ar: "كل يوم" },
     ],
   },
   {

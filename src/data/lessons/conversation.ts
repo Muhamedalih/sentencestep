@@ -1,11 +1,11 @@
-import type { LessonUnit } from "@/types/content";
+import type { Lesson } from "@/types/content";
 
 /**
  * Conversation mode: practical dialogue lines grouped by real-life
  * situation. This is the initial content set (~30 sentences across 5
  * situations).
  */
-export const conversationLessons: LessonUnit[] = [
+export const conversationLessons: Lesson[] = [
   {
     id: "conversation-1",
     mode: "conversation",
@@ -51,6 +51,11 @@ export const conversationLessons: LessonUnit[] = [
         en: "Here you go. Thank you very much.",
         ar: "تفضل. شكرًا جزيلاً لك.",
       },
+    ],
+    vocabulary: [
+      { id: "conversation-1-v1", en: "coffee", ar: "قهوة" },
+      { id: "conversation-1-v2", en: "please", ar: "من فضلك" },
+      { id: "conversation-1-v3", en: "order", ar: "طلب" },
     ],
   },
   {

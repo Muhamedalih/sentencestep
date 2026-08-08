@@ -10,9 +10,9 @@ import { LessonProgress } from "@/components/learning/lesson-progress";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
-import type { LessonUnit } from "@/types/content";
+import type { Lesson } from "@/types/content";
 
-export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLesson?: LessonUnit }) {
+export function LessonSession({ unit, nextLesson }: { unit: Lesson; nextLesson?: Lesson }) {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [finalAccuracy, setFinalAccuracy] = useState(1);
@@ -65,6 +65,7 @@ export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLess
             mode={unit.mode}
             accuracy={finalAccuracy}
             nextLesson={nextLesson}
+            vocabulary={unit.vocabulary}
           />
         ) : (
           sentence && (

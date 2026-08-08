@@ -12,3 +12,12 @@ export function getCurrentLevel(units: LessonUnit[], completedIds: string[]): nu
 
   return levels[levels.length - 1] ?? 1;
 }
+
+/** The next free lesson (in display order) the learner hasn't completed yet, or undefined once all free lessons are done. */
+export function findCurrentLesson(
+  units: LessonUnit[],
+  completedIds: string[],
+): LessonUnit | undefined {
+  const sorted = units.filter((unit) => unit.isFree).sort((a, b) => a.order - b.order);
+  return sorted.find((unit) => !completedIds.includes(unit.id));
+}
