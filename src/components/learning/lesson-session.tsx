@@ -2,20 +2,20 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, PartyPopper } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LessonCompletion } from "@/components/learning/lesson-completion";
+import { LessonProgress } from "@/components/learning/lesson-progress";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
-import { popIn } from "@/lib/motion";
-import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 
 export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLesson?: LessonUnit }) {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [finalAccuracy, setFinalAccuracy] = useState(1);
   const { markComplete } = useProgress();
   const { play } = useTypingSound();
   const correctCountRef = useRef(0);
@@ -31,6 +31,7 @@ export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLess
       play("complete");
       const attempts = correctCountRef.current + errorCountRef.current;
       const accuracy = attempts === 0 ? 1 : correctCountRef.current / attempts;
+      setFinalAccuracy(accuracy);
       markComplete(unit.mode, unit.id, accuracy);
       setIsComplete(true);
     }
@@ -51,21 +52,7 @@ export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLess
         </span>
       </div>
 
-      <div className="mb-6 flex gap-1.5" aria-hidden="true">
-        {unit.sentences.map((item, index) => (
-          <div
-            key={item.id}
-            className={cn(
-              "h-1.5 flex-1 rounded-full transition-colors duration-300",
-              index < sentenceIndex || isComplete
-                ? "bg-success"
-                : index === sentenceIndex
-                  ? "bg-primary"
-                  : "bg-muted",
-            )}
-          />
-        ))}
-      </div>
+      <LessonProgress total={total} currentIndex={sentenceIndex} isComplete={isComplete} />
 
       <p className="sr-only" aria-live="polite">
         {isComplete ? "Lesson complete" : `Sentence ${sentenceIndex + 1} of ${total}`}
@@ -73,41 +60,18 @@ export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLess
 
       <AnimatePresence mode="wait">
         {isComplete ? (
-          <motion.div
+          <LessonCompletion
             key="complete"
-            variants={popIn}
-            initial="hidden"
-            animate="visible"
-            className="border-border bg-card flex flex-col items-center gap-4 rounded-2xl border p-12 text-center"
-          >
-            <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-              <PartyPopper className="size-7" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Lesson complete</h2>
-              <p className="text-muted-foreground mt-1">
-                Great work — that&rsquo;s one more lesson learned.
-              </p>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-              <Button variant="outline" asChild>
-                <Link href={`/learn/${unit.mode}`}>Back to lessons</Link>
-              </Button>
-              {nextLesson && (
-                <Button asChild>
-                  <Link href={`/learn/${unit.mode}/${nextLesson.id}`}>
-                    Next lesson
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
-              )}
-            </div>
-          </motion.div>
+            mode={unit.mode}
+            accuracy={finalAccuracy}
+            nextLesson={nextLesson}
+          />
         ) : (
           sentence && (
             <TypingSentence
               key={sentence.id}
               sentence={sentence}
+              mode={unit.mode}
               onComplete={handleSentenceComplete}
               onCorrectLetter={() => {
                 correctCountRef.current += 1;
@@ -115,6 +79,7 @@ export function LessonSession({ unit, nextLesson }: { unit: LessonUnit; nextLess
               }}
               onErrorLetter={() => {
                 errorCountRef.current += 1;
+                play("error");
               }}
             />
           )

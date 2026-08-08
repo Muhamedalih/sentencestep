@@ -2,11 +2,26 @@
 
 import { useCallback, useRef } from "react";
 
-type SoundVariant = "letter" | "complete";
+type SoundVariant = "letter" | "error" | "complete";
+
+interface ToneConfig {
+  duration: number;
+  frequency: number;
+  peakGain: number;
+}
+
+const TONES: Record<SoundVariant, ToneConfig> = {
+  letter: { duration: 0.12, frequency: 660, peakGain: 0.08 },
+  error: { duration: 0.1, frequency: 220, peakGain: 0.05 },
+  complete: { duration: 0.4, frequency: 880, peakGain: 0.09 },
+};
 
 /**
- * Generates the correct-keystroke sound with the Web Audio API instead of an
- * audio asset — a couple of short oscillator envelopes, no file to ship.
+ * Generates keystroke sounds with the Web Audio API instead of audio assets
+ * — a few short oscillator envelopes, no files to ship. `play(variant)` is
+ * the whole public surface, so this can be swapped for real audio files
+ * later (e.g. HTMLAudioElement playback) without touching the typing engine
+ * or any lesson component.
  */
 export function useTypingSound() {
   const contextRef = useRef<AudioContext | undefined>(undefined);
@@ -26,8 +41,7 @@ export function useTypingSound() {
       try {
         const ctx = getContext();
         const now = ctx.currentTime;
-        const duration = variant === "complete" ? 0.4 : 0.15;
-        const frequency = variant === "complete" ? 880 : 660;
+        const { duration, frequency, peakGain } = TONES[variant];
 
         const oscillator = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -37,9 +51,12 @@ export function useTypingSound() {
         if (variant === "complete") {
           oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.5, now + 0.15);
         }
+        if (variant === "error") {
+          oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.85, now + duration);
+        }
 
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.08, now + 0.01);
+        gain.gain.linearRampToValueAtTime(peakGain, now + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
         oscillator.connect(gain);
