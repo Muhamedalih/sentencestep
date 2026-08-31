@@ -25,6 +25,8 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-4 has-[>svg]:px-3",
         lg: "h-13 rounded-xl px-8 text-base has-[>svg]:px-6",
         icon: "size-11",
+        /** Compact header controls (theme toggle, language flags, account trigger) — the header/account-menu redesign's smaller-chrome pass. */
+        "icon-sm": "size-8 [&_svg]:size-4",
       },
     },
     defaultVariants: {

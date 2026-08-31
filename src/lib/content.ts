@@ -1,79 +1,136 @@
-import { lessonsByMode } from "@/data/lessons";
 import { unitsByMode } from "@/data/units";
-import { fetchLessonById, fetchLessons } from "@/lib/supabase/queries/content";
+import { lessonsByMode } from "@/data/lessons";
+import {
+  fetchLessonById,
+  fetchLessons,
+  fetchLevelNames,
+  fetchLevelPreviews,
+} from "@/lib/supabase/queries/content";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { LEARNING_MODES, modeMeta } from "@/lib/learning-modes";
-import type {
-  Course,
-  LearningMode,
-  Lesson,
-  LessonActivity,
-  LessonUnit,
-  Unit,
-} from "@/types/content";
+import { LEARNING_MODES } from "@/lib/learning-modes";
+import { withSupportTextFallback } from "@/lib/content-helpers";
+import { deriveStoryVocabulary, withStoryVocabulary } from "@/lib/content/story-vocabulary";
+import type { SupportLocale } from "@/lib/i18n/locales";
+import type { LearningMode, Lesson, LessonActivity, PreviewSentence } from "@/types/content";
+
+export * from "@/lib/content-helpers";
+
+/**
+ * Completion-screen recap words for a lesson that has no hand-authored
+ * `vocabulary` of its own — every normal/conversation lesson today, since
+ * only stories mode (withStoryVocabulary) and a handful of hand-curated
+ * conversation.ts entries populate that field. Reuses the same deterministic
+ * word-ranking engine stories mode already relies on (see
+ * src/lib/content/story-vocabulary.ts) rather than inventing a second
+ * selection system — it already favors lesson-specific, title-relevant
+ * words over generic ones, which is also what keeps picks from converging
+ * on the same handful of common words across different lessons. A no-op
+ * when the lesson already has curated vocabulary, or when its sentences
+ * have no wordTranslations to rank (in which case the recap section simply
+ * doesn't render, exactly as it already does for an empty list).
+ */
+function withLessonVocabulary(lesson: Lesson): Lesson {
+  if (lesson.vocabulary && lesson.vocabulary.length > 0) return lesson;
+  const vocabulary = deriveStoryVocabulary(lesson.sentences, lesson.level, lesson.title);
+  return vocabulary.length > 0 ? { ...lesson, vocabulary } : lesson;
+}
 
 /**
  * The single place the app reads lesson content from. Falls back to the
  * local seed in src/data/lessons until a Supabase project is linked (see
  * supabase/README.md) — nothing else needs to change when that happens.
+ * `locale` is optional and additive (see Sentence.supportText's doc
+ * comment in types/content.ts) — every existing caller that omits it keeps
+ * getting the exact same Lesson shape as before; the static seed path
+ * never populates supportText/supportTitle regardless (the local dev seed
+ * has no content_translations equivalent), matching how it already has no
+ * admin-authored content beyond what's hardcoded there.
+ *
+ * Server-only: fetchLessonById reads the session-aware Supabase client to
+ * resolve premium access, which pulls in next/headers — see
+ * src/lib/content-helpers.ts for the pure helpers that are safe to import
+ * from Client Components instead.
  */
-export async function getLessons(mode: LearningMode): Promise<Lesson[]> {
-  if (isSupabaseConfigured()) return fetchLessons(mode);
-  return lessonsByMode[mode];
+export async function getLessons(mode: LearningMode, locale?: SupportLocale): Promise<Lesson[]> {
+  if (isSupabaseConfigured()) return fetchLessons(mode, locale);
+  if (mode === "stories") return lessonsByMode.stories.map(withStoryVocabulary);
+  return lessonsByMode[mode].map(withLessonVocabulary);
 }
 
-export async function getLessonById(mode: LearningMode, id: string): Promise<Lesson | undefined> {
-  if (isSupabaseConfigured()) return fetchLessonById(mode, id);
-  return lessonsByMode[mode].find((unit) => unit.id === id);
+export async function getLessonById(
+  mode: LearningMode,
+  id: string,
+  locale?: SupportLocale,
+): Promise<Lesson | undefined> {
+  if (isSupabaseConfigured()) return fetchLessonById(mode, id, locale);
+  const lesson = lessonsByMode[mode].find((unit) => unit.id === id);
+  if (!lesson) return undefined;
+  return mode === "stories" ? withStoryVocabulary(lesson) : withLessonVocabulary(lesson);
 }
 
-export async function getAllLessons(): Promise<Record<LearningMode, Lesson[]>> {
+/**
+ * Admin-authored level names beyond the three static units in
+ * src/data/units.ts (see src/data/units.ts's doc comment and
+ * src/components/app/lesson-list-view.tsx's uncovered-levels rendering).
+ * Local/no-Supabase mode has no live-created levels, so it's always empty
+ * there — every level in that mode already has a static name.
+ */
+export async function getLevelNames(
+  mode: LearningMode,
+  locale?: SupportLocale,
+): Promise<Record<number, { title: string; titleAr: string; supportTitle?: string }>> {
+  if (isSupabaseConfigured()) return fetchLevelNames(mode, locale);
+  return {};
+}
+
+/**
+ * The 5-sentence "Start Simple" preview for each of the normal mode's three
+ * levels (Beginner/Intermediate/Advanced) shown at the top of the /learn
+ * homepage. Prefers the admin-editable Supabase copy (via /admin/levels);
+ * falls back to the static previews in src/data/units.ts per level whenever
+ * Supabase isn't configured, or an admin hasn't authored one for that level
+ * yet (an empty array) — a level teaser is never silently blank.
+ */
+export async function getStartSimplePreviews(
+  locale?: SupportLocale,
+): Promise<Record<number, PreviewSentence[]>> {
+  const staticPreviews: Record<number, PreviewSentence[]> = {};
+  for (const unit of unitsByMode.normal) {
+    staticPreviews[unit.level] = unit.previewSentences ?? [];
+  }
+
+  if (!isSupabaseConfigured()) return withSupportTextFallback(staticPreviews, locale);
+
+  let dbPreviews: Record<number, PreviewSentence[]>;
+  try {
+    dbPreviews = await fetchLevelPreviews("normal", locale);
+  } catch (error) {
+    // Most likely the levels.preview_sentences column from this feature's
+    // own migration (supabase/migrations/20250117000000_content_redesign.sql)
+    // hasn't been applied to this project yet. That's a real, expected state
+    // right after this code ships and before someone runs the migration —
+    // the homepage should still render with the static fallback, not 500.
+    console.error("[content] getStartSimplePreviews: fetchLevelPreviews failed", error);
+    return withSupportTextFallback(staticPreviews, locale);
+  }
+
+  const merged: Record<number, PreviewSentence[]> = { ...staticPreviews };
+  for (const [level, sentences] of Object.entries(dbPreviews)) {
+    if (sentences.length > 0) merged[Number(level)] = sentences;
+  }
+  return withSupportTextFallback(merged, locale);
+}
+
+export async function getAllLessons(
+  locale?: SupportLocale,
+): Promise<Record<LearningMode, Lesson[]>> {
   const entries = await Promise.all(
-    LEARNING_MODES.map(async (mode) => [mode, await getLessons(mode)] as const),
+    LEARNING_MODES.map(async (mode) => [mode, await getLessons(mode, locale)] as const),
   );
   return Object.fromEntries(entries) as Record<LearningMode, Lesson[]>;
-}
-
-// --- Curriculum composition: Course > Unit, built from static metadata. ---
-// Content (lessons/sentences) stays fetchable per above; units and courses
-// are lightweight descriptive metadata, not something worth a round trip.
-
-export function getUnits(mode: LearningMode): Unit[] {
-  return unitsByMode[mode];
-}
-
-export function getCourse(mode: LearningMode): Course {
-  const meta = modeMeta[mode];
-  return { id: mode, title: meta.title, description: meta.description, units: getUnits(mode) };
 }
 
 /** The activities that make up a lesson. Only "typing" exists today; a future activity type would add another branch here. */
 export function getActivities(lesson: Lesson): LessonActivity[] {
   return [{ type: "typing", sentences: lesson.sentences }];
-}
-
-// --- Pure helpers that derive views over an already-fetched lesson list. ---
-
-export function filterFree(units: LessonUnit[]): LessonUnit[] {
-  return units.filter((unit) => unit.isFree);
-}
-
-export function sentenceCount(units: LessonUnit[]): number {
-  return units.reduce((total, unit) => total + unit.sentences.length, 0);
-}
-
-export function getLevels(units: LessonUnit[]): number[] {
-  const levels = new Set(units.map((unit) => unit.level));
-  return Array.from(levels).sort((a, b) => a - b);
-}
-
-export function getLessonsByLevel(units: LessonUnit[], level: number): LessonUnit[] {
-  return units.filter((unit) => unit.level === level);
-}
-
-export function findNextLesson(units: Lesson[], currentId: string): Lesson | undefined {
-  const sorted = [...units].sort((a, b) => a.order - b.order);
-  const index = sorted.findIndex((unit) => unit.id === currentId);
-  if (index === -1) return undefined;
-  return sorted[index + 1];
 }

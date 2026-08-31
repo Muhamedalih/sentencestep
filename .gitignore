@@ -37,3 +37,13 @@ next-env.d.ts
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Claude Code: local-only session/permission state, never shared config
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# One-off content-authoring scratch work (audit scripts, data dumps,
+# book-content backups from past Library authoring passes) — never part of
+# the app, referenced by at most a doc comment as an audit trail, and some
+# of it holds copyrighted book text that must never end up in a commit.
+scripts/scratch/

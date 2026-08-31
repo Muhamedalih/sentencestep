@@ -5,9 +5,12 @@ import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { TypingDemo } from "@/components/marketing/typing-demo";
+import { useLocale } from "@/components/providers/locale-provider";
 import { fadeInUp, staggerChildren } from "@/lib/motion";
 
-export function Hero() {
+export function Hero({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const { t } = useLocale();
+
   return (
     <section className="mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24 sm:pb-32">
       <div className="grid items-center gap-16 lg:grid-cols-2">
@@ -21,36 +24,39 @@ export function Hero() {
             variants={fadeInUp}
             className="bg-brand-muted text-primary rounded-full px-4 py-1.5 text-sm font-medium"
           >
-            English for Arabic speakers
+            {t.hero.eyebrow}
           </motion.span>
 
           <motion.h1
             variants={fadeInUp}
             className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl"
           >
-            Learn English, <span className="text-primary">letter by letter.</span>
+            {t.hero.headingPrefix} <span className="text-primary">{t.hero.headingEmphasis}</span>
           </motion.h1>
 
           <motion.p
             variants={fadeInUp}
             className="text-muted-foreground max-w-lg text-lg text-balance"
           >
-            Looma turns real sentences, stories, and conversations into a focused typing practice —
-            hear it, type it, feel it click.
+            {t.hero.subtitle}
           </motion.p>
 
           <motion.div variants={fadeInUp} className="mt-2 flex flex-wrap items-center gap-3">
             <Button size="lg" asChild>
-              <Link href="/learn">Start learning free</Link>
+              <Link href="/learn">
+                {isAuthenticated ? t.common.continueLearning : t.hero.ctaGuest}
+              </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <a href="#modes">See how it works</a>
+              <a href="#how-it-works">{t.hero.ctaSecondary}</a>
             </Button>
           </motion.div>
 
-          <motion.p variants={fadeInUp} className="text-muted-foreground text-sm">
-            No credit card required — try Normal, Stories, and Conversation lessons free.
-          </motion.p>
+          {!isAuthenticated && (
+            <motion.p variants={fadeInUp} className="text-muted-foreground text-sm">
+              {t.hero.ctaNoCard}
+            </motion.p>
+          )}
         </motion.div>
 
         <motion.div

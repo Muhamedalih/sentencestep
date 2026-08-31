@@ -1,0 +1,21 @@
+-- Milestone 14: close a privilege-escalation gap found while auditing RLS
+-- against a real database.
+--
+-- "Users manage their own profile" (20250101000000_init_schema.sql) is a
+-- `for all using (auth.uid() = id) with check (auth.uid() = id)` policy —
+-- row-level only. When `profiles.role` was added later
+-- (20250108000000_admin_cms.sql), nothing restricted which *columns* of
+-- their own row a user could write, so any authenticated learner could call
+-- `supabase.from('profiles').update({ role: 'admin' }).eq('id', user.id)`
+-- through the normal client and successfully self-promote — RLS never saw
+-- anything wrong, since the row being written was still their own.
+--
+-- Fixed with a column-level privilege restriction rather than touching the
+-- RLS policy itself: `role` must only ever be changed through direct,
+-- authorized database access (the Supabase SQL editor, or a service-role
+-- client), exactly as already documented in admin_cms.sql — never through
+-- the anon/authenticated Postgres roles the app's normal client runs as.
+-- This is additive and narrows an existing over-broad default grant; it does
+-- not touch any row of data.
+revoke update on profiles from authenticated;
+grant update (display_name, preferred_language, timezone, updated_at) on profiles to authenticated;

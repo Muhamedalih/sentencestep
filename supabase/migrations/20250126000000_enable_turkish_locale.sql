@@ -1,0 +1,26 @@
+-- Flips "tr" from registered-but-dormant to actually enabled for the
+-- translation system, per the explicit later decision documented in
+-- 20250125000000_turkish_locale_onboarding.sql's own comment ("a distinct,
+-- later, explicit decision after content review").
+--
+-- This does NOT touch SUPPORT_LOCALES (src/lib/i18n/locales.ts) — Turkish
+-- still isn't offered as a learner-facing interface language via the
+-- language switcher or first-time picker; that remains a separate,
+-- deliberate decision gated on reviewed lesson content, exactly as that
+-- file's doc comment describes. What this migration does gate:
+--
+-- - the admin translation dashboard's locale dropdown (listEnabledLocales,
+--   src/lib/admin/translation-queries.ts) will now include Turkish;
+-- - triggerAutomaticTranslation (src/lib/translation/auto-trigger.ts) will
+--   now draft a Turkish translation for every saved lesson, alongside
+--   Arabic and Spanish;
+-- - the cron sweep (src/app/api/cron/translation-sweep/route.ts) and the
+--   admin bulk-generate action will now include Turkish when scanning for
+--   missing/retriable work.
+--
+-- Every one of those call sites already reads "enabled" locales from this
+-- table and is locale-generic (see this session's audit) — no other code
+-- change is required to make Turkish a fully supported translation locale
+-- once this row is enabled.
+
+update locales set enabled = true where code = 'tr';

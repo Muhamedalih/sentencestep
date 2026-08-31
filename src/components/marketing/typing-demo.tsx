@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Eye, Keyboard, TrendingUp, Volume2 } from "lucide-react";
 
+import { Progress } from "@/components/ui/progress";
+import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 
 const DEMO_SENTENCE = "I love learning English.";
@@ -14,8 +17,17 @@ const LOOP_PAUSE_MS = 1600;
 type LetterState = "pending" | "correct" | "error";
 
 export function TypingDemo() {
+  const reducedMotion = useReducedMotion();
+  const { t } = useLocale();
   const [typedCount, setTypedCount] = useState(0);
   const [errorAt, setErrorAt] = useState<number | null>(null);
+
+  const STEPS = [
+    { icon: Eye, label: t.marketing.demoStepSee },
+    { icon: Volume2, label: t.marketing.demoStepHear },
+    { icon: Keyboard, label: t.marketing.demoStepType },
+    { icon: TrendingUp, label: t.marketing.demoStepProgress },
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -57,42 +69,66 @@ export function TypingDemo() {
     };
   }, []);
 
-  return (
-    <div className="bg-card border-border relative overflow-hidden rounded-2xl border p-8 shadow-xl shadow-black/5 sm:p-10">
-      <p className="text-muted-foreground mb-6 text-sm font-medium">Type the sentence</p>
-      <motion.div
-        animate={errorAt !== null ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
-        transition={{ duration: 0.35 }}
-        className="font-sans text-2xl leading-relaxed font-medium tracking-wide sm:text-3xl"
-        dir="ltr"
-      >
-        {DEMO_SENTENCE.split("").map((char, index) => {
-          const state: LetterState =
-            errorAt === index ? "error" : index < typedCount ? "correct" : "pending";
+  const percent = Math.round((typedCount / DEMO_SENTENCE.length) * 100);
 
-          return (
-            <span
-              key={index}
-              className={cn(
-                "transition-colors duration-150",
-                state === "correct" && "text-success",
-                state === "error" && "text-danger",
-                state === "pending" && "text-muted-foreground/40",
-              )}
-            >
-              {char}
-            </span>
-          );
-        })}
-        <AnimatePresence>
-          <motion.span
-            key="caret"
-            animate={{ opacity: [1, 1, 0, 0] }}
-            transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
-            className="bg-primary ms-0.5 inline-block h-6 w-0.5 translate-y-0.5 align-middle sm:h-7"
-          />
-        </AnimatePresence>
-      </motion.div>
+  return (
+    <div className="flex flex-col gap-4">
+      <ol className="text-muted-foreground flex items-center justify-between gap-2 text-xs font-medium">
+        {STEPS.map(({ icon: Icon, label }, index) => (
+          <li key={label} className="flex flex-1 items-center gap-1.5">
+            <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
+            <span>{label}</span>
+            {index < STEPS.length - 1 && (
+              <span className="bg-border ms-1 h-px flex-1" aria-hidden="true" />
+            )}
+          </li>
+        ))}
+      </ol>
+
+      <div className="bg-card border-border relative overflow-hidden rounded-2xl border p-8 shadow-xl shadow-black/5 sm:p-10">
+        <p className="text-muted-foreground mb-6 text-sm font-medium">
+          {t.marketing.typeTheSentenceCaption}
+        </p>
+        <motion.div
+          animate={errorAt !== null && !reducedMotion ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
+          transition={{ duration: 0.35 }}
+          className="font-sans text-2xl leading-relaxed font-medium tracking-wide sm:text-3xl"
+          dir="ltr"
+        >
+          {DEMO_SENTENCE.split("").map((char, index) => {
+            const state: LetterState =
+              errorAt === index ? "error" : index < typedCount ? "correct" : "pending";
+
+            return (
+              <span
+                key={index}
+                className={cn(
+                  "transition-colors duration-150",
+                  state === "correct" && "text-foreground",
+                  state === "error" && "text-danger",
+                  state === "pending" && "text-muted-foreground/40",
+                )}
+              >
+                {char}
+              </span>
+            );
+          })}
+          {!reducedMotion && (
+            <AnimatePresence>
+              <motion.span
+                key="caret"
+                animate={{ opacity: [1, 1, 0, 0] }}
+                transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
+                className="bg-primary ms-0.5 inline-block h-6 w-0.5 translate-y-0.5 align-middle sm:h-7"
+              />
+            </AnimatePresence>
+          )}
+        </motion.div>
+
+        <div className="mt-6">
+          <Progress value={percent} />
+        </div>
+      </div>
     </div>
   );
 }

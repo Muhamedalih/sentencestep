@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "flag-icons/css/flag-icons.min.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -137,6 +138,105 @@
   }
 }
 
+/*
+ * Scoped grayscale redesign of the signed-in app shell (header, sidebar,
+ * every /learn/* page — see the "app-shell" class on
+ * src/app/learn/(dashboard)/layout.tsx's root div). Marketing/landing pages
+ * sit outside this class and keep the original brand-purple tokens
+ * untouched. Every component that reads bg-primary/ring-primary/
+ * bg-brand-muted (buttons, badges, the progress bar, active nav state,
+ * focus rings) compiles to `var(--primary)` etc directly (verified against
+ * the actual generated CSS — Tailwind's @theme inline `--color-primary:
+ * var(--primary)` is only an internal alias, never what the utility classes
+ * themselves reference), so these bare token names are what must be
+ * overridden here, exactly like :root/.dark already do site-wide.
+ */
+.app-shell {
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --brand: oklch(0.2 0 0);
+  --brand-foreground: oklch(0.99 0 0);
+  --brand-muted: oklch(0.91 0 0);
+  --ring: oklch(0.2 0 0);
+}
+
+/*
+ * The full-screen lesson player route (/learn/[mode]/[lessonId], plus the
+ * Library reading route — see the "lesson-shell" class on both) used to
+ * force --primary/--brand/--brand-muted/--ring to near-black/white here,
+ * borrowing the app shell's neutral identity below. That over-applied the
+ * dashboard's neutralization to a surface it was never meant to reach: every
+ * element that reads --brand/--primary directly (the typing-position
+ * underline, conversation speaker bubbles, mode labels, the story-sentence
+ * numbering, and every hand-drawn scene illustration's stroke) went gray
+ * along with it, which is not what the lesson player originally looked
+ * like. Restored to just inherit the ordinary :root/.dark brand-purple
+ * tokens (no override here at all) so the lesson player's original
+ * purple/orange identity comes back; --background/--foreground are
+ * likewise left alone, falling back to the site-wide theme. Only
+ * .lesson-shell-stories' pure-black canvas below is intentionally
+ * theme-independent — that was a deliberate Stories-mode design choice, not
+ * part of the over-neutralization, so it's kept as-is.
+ *
+ * The admin-customizable per-role tokens below (--lesson-*) are what
+ * Admin -> Color Settings actually writes to (see
+ * src/lib/admin/lesson-color-settings.ts and the <style> block LearnLayout
+ * injects) — each one defaults to an alias of the restored brand/accent/
+ * danger/foreground tokens so an unconfigured install renders pixel-identical
+ * to this original design, and each is scoped to .lesson-shell only, so a
+ * custom color can never leak into the dashboard or marketing pages.
+ */
+.lesson-shell {
+  --lesson-primary: var(--brand);
+  --lesson-secondary: var(--brand-muted);
+  --lesson-accent: var(--accent);
+
+  --lesson-underline: var(--lesson-primary);
+  --lesson-letter-pending: color-mix(in oklch, var(--muted-foreground) 40%, transparent);
+  --lesson-letter-correct: var(--foreground);
+  --lesson-letter-wrong: var(--danger);
+  --lesson-title: var(--foreground);
+  --lesson-subtitle: var(--muted-foreground);
+  --lesson-story-label: var(--lesson-primary);
+  --lesson-speaker: var(--lesson-primary);
+  --lesson-icon: var(--lesson-primary);
+  --lesson-illustration-stroke: var(--lesson-primary);
+  --lesson-illustration-accent: var(--lesson-accent);
+  --lesson-xp: var(--accent);
+}
+
+/*
+ * Stories mode's lesson player sits on a pure black canvas regardless of the
+ * viewer's light/dark theme preference (see "lesson-shell-stories" on that
+ * route's page.tsx, added alongside "lesson-shell") — a deliberate design
+ * choice for that mode's storytelling feel, independent of whichever
+ * light/dark background every other mode's plain .lesson-shell falls back
+ * to. Unscoped by .dark so it applies in both light and dark alike. Only
+ * --background/--foreground move — buttons, the progress bar, and focus
+ * rings keep reading whatever primary/ring tokens the active theme already
+ * set, same as plain .lesson-shell.
+ */
+.lesson-shell.lesson-shell-stories {
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0 0);
+}
+
+.dark .app-shell {
+  --background: oklch(0.09 0 0);
+  --card: oklch(0.13 0 0);
+  --popover: oklch(0.13 0 0);
+  --secondary: oklch(0.17 0 0);
+  --secondary-foreground: oklch(0.96 0.005 260);
+  --muted: oklch(0.17 0 0);
+  --border: oklch(0.24 0 0);
+  --primary: oklch(0.97 0 0);
+  --primary-foreground: oklch(0.12 0 0);
+  --brand: oklch(0.97 0 0);
+  --brand-foreground: oklch(0.12 0 0);
+  --brand-muted: oklch(0.22 0 0);
+  --ring: oklch(0.75 0 0);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -163,5 +263,12 @@
   ::selection {
     background-color: var(--brand-muted);
     color: var(--foreground);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-rise-in {
+      animation: none;
+    }
   }
 }

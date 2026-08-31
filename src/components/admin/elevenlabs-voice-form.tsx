@@ -1,0 +1,203 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import { Loader2, Trash2, Volume2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { addElevenLabsVoiceAction, previewElevenLabsAction } from "@/lib/admin/elevenlabs-actions";
+import { deleteVoiceAction } from "@/lib/admin/voices-actions";
+import type { VoiceRow } from "@/lib/admin/voices-queries";
+import type { ElevenLabsSettings } from "@/lib/admin/elevenlabs-queries";
+import { cn } from "@/lib/utils";
+
+const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
+
+/**
+ * Registers a `voices` row for an ElevenLabs voice the admin already
+ * created/cloned in the ElevenLabs dashboard — unlike Kokoro's curated
+ * catalog (seedKokoroCollectionAction), there's no generation step: the
+ * admin pastes the ElevenLabs voice id, this just makes SentenceStep aware
+ * of it. Each row's Preview button calls previewElevenLabsAction, which is
+ * ephemeral by construction (see that action's doc comment) — nothing here
+ * ever writes to voice_audio_cache or Storage.
+ */
+export function ElevenLabsVoiceForm({
+  voices,
+  settings,
+}: {
+  voices: VoiceRow[];
+  settings: ElevenLabsSettings;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function handleAdd(formData: FormData) {
+    setMessage(null);
+    const name = String(formData.get("name") ?? "").trim();
+    const providerVoiceId = String(formData.get("providerVoiceId") ?? "").trim();
+    const gender = (formData.get("gender") === "male" ? "male" : "female") as "female" | "male";
+    const accent = String(formData.get("accent") ?? "").trim();
+
+    startTransition(async () => {
+      const result = await addElevenLabsVoiceAction({
+        id: `elevenlabs-${providerVoiceId.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+        name,
+        providerVoiceId,
+        gender,
+        accent,
+      });
+      setMessage(
+        result.error
+          ? { kind: "error", text: result.error }
+          : { kind: "success", text: result.success ?? "Added." },
+      );
+      if (!result.error) formRef.current?.reset();
+    });
+  }
+
+  function handleDelete(voiceId: string) {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await deleteVoiceAction(voiceId);
+      setMessage(
+        result.error
+          ? { kind: "error", text: result.error }
+          : { kind: "success", text: result.success ?? "Deleted." },
+      );
+    });
+  }
+
+  function handlePreview(providerVoiceId: string, voiceId: string) {
+    setMessage(null);
+    setPreviewingId(voiceId);
+    startTransition(async () => {
+      const result = await previewElevenLabsAction({
+        text: PREVIEW_TEXT,
+        providerVoiceId,
+        model: settings.model,
+        stability: settings.stability,
+        similarityBoost: settings.similarityBoost,
+        style: settings.style,
+        speed: settings.speed,
+        useSpeakerBoost: settings.useSpeakerBoost,
+      });
+      setPreviewingId(null);
+      if (result.error || !result.audioDataUri) {
+        setMessage({ kind: "error", text: result.error ?? "Preview failed." });
+        return;
+      }
+      if (audioRef.current) {
+        audioRef.current.src = result.audioDataUri;
+        void audioRef.current.play();
+      }
+    });
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">ElevenLabs voices</CardTitle>
+        <CardDescription>
+          Register a voice created or cloned in your ElevenLabs dashboard, then preview how it
+          sounds with the currently configured model and expressiveness settings below.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">
+        <form ref={formRef} action={handleAdd} className="grid gap-3 sm:grid-cols-4">
+          <input
+            name="name"
+            placeholder="Display name (e.g. Warm Narrator)"
+            required
+            className="border-input bg-background rounded-md border px-3 py-2 text-sm sm:col-span-2"
+          />
+          <input
+            name="providerVoiceId"
+            placeholder="ElevenLabs voice id"
+            required
+            className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+          />
+          <select
+            name="gender"
+            defaultValue="female"
+            className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+          >
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+          <input
+            name="accent"
+            placeholder="Accent (e.g. American)"
+            className="border-input bg-background rounded-md border px-3 py-2 text-sm sm:col-span-3"
+          />
+          <Button type="submit" disabled={isPending}>
+            Add voice
+          </Button>
+        </form>
+
+        <div className="flex flex-col gap-1.5">
+          {voices.length === 0 && (
+            <p className="text-muted-foreground py-4 text-center text-sm">
+              No ElevenLabs voices registered yet.
+            </p>
+          )}
+          {voices.map((voice) => (
+            <div
+              key={voice.id}
+              className="hover:bg-muted flex items-center gap-3 rounded-lg px-3 py-2.5"
+            >
+              <div className="min-w-0 flex-1">
+                <span className="text-sm font-medium">{voice.name}</span>
+                <span className="text-muted-foreground ml-2 text-xs">
+                  {voice.gender} · {voice.accent}
+                </span>
+                {settings.defaultStoryVoiceId === voice.id && (
+                  <span className="text-primary ml-2 text-xs font-medium">Default story voice</span>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Preview ${voice.name}`}
+                disabled={isPending}
+                onClick={() => handlePreview(voice.providerVoiceId, voice.id)}
+              >
+                {previewingId === voice.id ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Volume2 className="size-4" />
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Delete ${voice.name}`}
+                disabled={isPending}
+                onClick={() => handleDelete(voice.id)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <audio ref={audioRef} className="hidden" />
+        {message && (
+          <p
+            role={message.kind === "error" ? "alert" : undefined}
+            className={cn(
+              "text-sm",
+              message.kind === "error" ? "text-danger" : "text-muted-foreground",
+            )}
+          >
+            {message.text}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

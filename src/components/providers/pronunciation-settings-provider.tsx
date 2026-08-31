@@ -1,0 +1,310 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+
+import {
+  resolvePronunciationAudioAction,
+  type VoiceAudioContentType,
+} from "@/lib/voice/voice-audio";
+
+/**
+ * The three playback-speed states a learner can cycle through for spoken
+ * pronunciation (see PronunciationSpeedControl). Multiplier is applied on
+ * top of whatever "normal" already means for a given playback source —
+ * HTMLAudioElement.playbackRate for a recorded/Kokoro clip (native pace is
+ * 1), or the admin-configured browser-TTS rate (see DEFAULT_VOICE_SETTINGS)
+ * for the speech-synthesis fallback — never a fixed absolute rate, so
+ * "Normal" always matches whatever this deployment already sounds like.
+ * 0.75/0.5 are the two most common language-learning slow-down bands: each
+ * step is clearly, audibly slower than the last while staying well above
+ * the point (well under ~0.5x) where browsers' pitch-preserving playback
+ * and speech-synthesis engines start to sound dragged out or robotic.
+ */
+export const PRONUNCIATION_SPEED_STEPS = [
+  { key: "normal", multiplier: 1 },
+  { key: "slow", multiplier: 0.75 },
+  { key: "very-slow", multiplier: 0.5 },
+] as const;
+
+interface PronunciationSettingsValue {
+  /** False outside a PronunciationSettingsProvider (e.g. the Admin content preview, which reuses LessonSession directly) — the hint/speed UI render nothing in that case rather than showing dead controls, while PronunciationButton itself still works unaffected (multiplier just stays 1). */
+  isActive: boolean;
+  speedIndex: number;
+  speedMultiplier: number;
+  cycleSpeed: () => void;
+  /** Called by the currently-mounted PronunciationButton so the global Shift shortcut always replays whichever sentence/word is actually on screen. */
+  registerReplay: (replay: (() => void) | null) => void;
+  replayCurrent: () => void;
+  /** Increments every time a real standalone Shift press triggers a replay — purely a UI signal so ShiftReplayHint can play its brief "key pressed" animation; carries no data of its own. */
+  shiftPulse: number;
+  /**
+   * Cross-mount resolved-audio cache, keyed by contentId (a sentence or
+   * word id) — separate from, and a superset of, each PronunciationButton's
+   * own local `kokoroUrl` state. That local state only survives for as long
+   * as ONE specific sentence/word stays mounted; this one survives for the
+   * whole learning session, so a sentence resolved once (via its own
+   * on-demand resolve, via page-load pre-resolution, or via
+   * prefetchPronunciation below) never pays the resolve round trip again if
+   * the learner returns to it, and — combined with prefetchPronunciation —
+   * lets the NEXT sentence's audio already be sitting here by the time the
+   * learner actually reaches it.
+   */
+  getResolvedAudio: (contentId: string) => string | undefined;
+  registerResolvedAudio: (contentId: string, audioUrl: string) => void;
+  /**
+   * The single entry point for resolving a sentence/word's audio, used by
+   * BOTH prefetchPronunciation below AND PronunciationButton's own on-demand
+   * resolve — deliberately the same function, not two, so a prefetch that's
+   * still in flight when the learner reaches that sentence is *joined*
+   * (returns the same in-progress promise) rather than triggering a second,
+   * duplicate resolvePronunciationAudioAction call (and, on a cache miss, a
+   * second concurrent Kokoro generation) for identical content. Returns the
+   * cached URL synchronously-resolved if already known.
+   */
+  resolveAudio: (input: {
+    contentType: VoiceAudioContentType;
+    contentId: string;
+    voiceId: string;
+  }) => Promise<string | null>;
+  /**
+   * Fire-and-forget wrapper around resolveAudio — resolves (and caches) a
+   * sentence/word's audio in the background, without playing it and without
+   * touching any loading UI. A no-op if already cached or already in
+   * flight, so calling it repeatedly (e.g. once per render) is safe.
+   */
+  prefetchPronunciation: (input: {
+    contentType: VoiceAudioContentType;
+    contentId: string;
+    voiceId: string;
+  }) => void;
+}
+
+const noop = () => {};
+
+const DEFAULT_VALUE: PronunciationSettingsValue = {
+  isActive: false,
+  speedIndex: 0,
+  speedMultiplier: PRONUNCIATION_SPEED_STEPS[0].multiplier,
+  cycleSpeed: noop,
+  registerReplay: noop,
+  replayCurrent: noop,
+  shiftPulse: 0,
+  getResolvedAudio: () => undefined,
+  registerResolvedAudio: noop,
+  resolveAudio: () => Promise.resolve(null),
+  prefetchPronunciation: noop,
+};
+
+const PronunciationSettingsContext = createContext<PronunciationSettingsValue>(DEFAULT_VALUE);
+
+/**
+ * Shared, session-scoped state for the two global learning-audio features
+ * (Shift-to-replay and the speed toggle) — mounted once in
+ * src/app/learn/layout.tsx so it covers Normal, Stories, Conversation, and
+ * Word Lists alike without any of them duplicating this state or the Shift
+ * key handling. The current sentence/word to replay is whatever the
+ * currently-mounted PronunciationButton last registered (see
+ * registerReplay) — there is only ever one active at a time in the existing
+ * UI, so "current" naturally tracks whichever sentence/word is on screen.
+ */
+export function PronunciationSettingsProvider({ children }: { children: ReactNode }) {
+  const [speedIndex, setSpeedIndex] = useState(0);
+  const [shiftPulse, setShiftPulse] = useState(0);
+  const replayRef = useRef<(() => void) | null>(null);
+  // Plain refs, not state: writing to these must never trigger a re-render
+  // (a background prefetch resolving is not a UI event), and every reader
+  // (PronunciationButton.resolvePlaybackUrl) reads them imperatively at
+  // call time anyway, never during render.
+  const resolvedAudioRef = useRef<Map<string, string>>(new Map());
+  const inFlightRef = useRef<Map<string, Promise<string | null>>>(new Map());
+
+  const getResolvedAudio = useCallback(
+    (contentId: string) => resolvedAudioRef.current.get(contentId),
+    [],
+  );
+
+  const registerResolvedAudio = useCallback((contentId: string, audioUrl: string) => {
+    resolvedAudioRef.current.set(contentId, audioUrl);
+  }, []);
+
+  const resolveAudio = useCallback(
+    (input: {
+      contentType: VoiceAudioContentType;
+      contentId: string;
+      voiceId: string;
+    }): Promise<string | null> => {
+      const { contentId } = input;
+
+      const cached = resolvedAudioRef.current.get(contentId);
+      if (cached) return Promise.resolve(cached);
+
+      // A prefetch already in flight for this exact content — join it
+      // instead of starting a second, duplicate resolve (and, on a cache
+      // miss, a second concurrent Kokoro generation) for the same
+      // (voice, text) pair.
+      const inFlight = inFlightRef.current.get(contentId);
+      if (inFlight) return inFlight;
+
+      const promise = resolvePronunciationAudioAction(input)
+        .then((url) => {
+          if (url) resolvedAudioRef.current.set(contentId, url);
+          return url;
+        })
+        .catch((error: unknown) => {
+          console.error("[pronunciation] resolve failed", { contentId, error });
+          return null;
+        })
+        .finally(() => {
+          inFlightRef.current.delete(contentId);
+        });
+      inFlightRef.current.set(contentId, promise);
+      return promise;
+    },
+    [],
+  );
+
+  const prefetchPronunciation = useCallback(
+    (input: { contentType: VoiceAudioContentType; contentId: string; voiceId: string }) => {
+      void resolveAudio(input).then((url) => {
+        if (!url) return;
+        // Resolving the URL alone isn't the whole story: measured
+        // separately, a sentence whose URL was already known but whose
+        // audio bytes the browser had never fetched still took ~800ms from
+        // play() to the audible "playing" event — a cold Supabase Storage
+        // GET, not a resolve delay. A plain fetch() here, discarded once
+        // read, lets the browser cache the response per the bucket's own
+        // Cache-Control headers (no different from a real learner's
+        // browser having visited the URL before) — never bypassed or
+        // duplicated, and irrelevant to on-demand resolves that are about
+        // to play immediately anyway (see resolveAudio, called directly
+        // there without this).
+        fetch(url).catch(() => {});
+      });
+    },
+    [resolveAudio],
+  );
+
+  const cycleSpeed = useCallback(() => {
+    setSpeedIndex((index) => (index + 1) % PRONUNCIATION_SPEED_STEPS.length);
+  }, []);
+
+  const registerReplay = useCallback((replay: (() => void) | null) => {
+    replayRef.current = replay;
+  }, []);
+
+  const replayCurrent = useCallback(() => {
+    replayRef.current?.();
+  }, []);
+
+  // Makes a speed change immediately audible instead of making the learner
+  // press Shift/replay again to hear it. Deliberately an effect keyed on
+  // speedIndex — not called directly from cycleSpeed's caller — because
+  // replayRef.current only reflects the NEW speed once the currently-active
+  // PronunciationButton has re-rendered with the updated speedMultiplier
+  // from context (see its playReplayRef, refreshed every render); an effect
+  // runs after that render has committed, a same-tick call would not.
+  // isFirstRunRef skips the initial mount so nothing plays before the
+  // learner has touched the control at all.
+  const isFirstSpeedRunRef = useRef(true);
+  useEffect(() => {
+    if (isFirstSpeedRunRef.current) {
+      isFirstSpeedRunRef.current = false;
+      return;
+    }
+    replayRef.current?.();
+  }, [speedIndex]);
+
+  // Global "standalone Shift press" shortcut. Deliberately does NOT fire for:
+  // - Shift+<key> combos (Shift+Tab, Shift+ArrowLeft for text selection, ...)
+  // - Ctrl+Shift / Alt+Shift, regardless of which key goes down first
+  // - Shift held during a mouse selection (no key involved at all)
+  // `shiftAlone` tracks whether the Shift currently held down has stayed a
+  // lone press since it went down; only a keyup that finds it still true
+  // triggers a replay.
+  useEffect(() => {
+    let shiftAlone = true;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Shift") {
+        // A modifier already held when Shift goes down means Shift is
+        // starting a combo (e.g. Ctrl held, then Shift), not a standalone
+        // press — covers combo order the plain `shiftKey` check below can't.
+        shiftAlone = !(event.ctrlKey || event.altKey || event.metaKey);
+        return;
+      }
+      if (event.shiftKey) shiftAlone = false;
+    }
+
+    function handleKeyUp(event: KeyboardEvent) {
+      if (event.key !== "Shift") return;
+      if (shiftAlone) {
+        replayRef.current?.();
+        setShiftPulse((pulse) => pulse + 1);
+      }
+      shiftAlone = true;
+    }
+
+    function handleMouseDown(event: MouseEvent) {
+      if (event.shiftKey) shiftAlone = false;
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, []);
+
+  const value = useMemo<PronunciationSettingsValue>(
+    () => ({
+      isActive: true,
+      speedIndex,
+      // speedIndex only ever comes from the modulo cycling in cycleSpeed, so
+      // it's always a valid index — the fallback here is just to satisfy
+      // noUncheckedIndexedAccess, never expected to actually be hit.
+      speedMultiplier: (PRONUNCIATION_SPEED_STEPS[speedIndex] ?? PRONUNCIATION_SPEED_STEPS[0])
+        .multiplier,
+      cycleSpeed,
+      registerReplay,
+      replayCurrent,
+      shiftPulse,
+      getResolvedAudio,
+      registerResolvedAudio,
+      resolveAudio,
+      prefetchPronunciation,
+    }),
+    [
+      speedIndex,
+      cycleSpeed,
+      registerReplay,
+      replayCurrent,
+      shiftPulse,
+      getResolvedAudio,
+      registerResolvedAudio,
+      resolveAudio,
+      prefetchPronunciation,
+    ],
+  );
+
+  return (
+    <PronunciationSettingsContext.Provider value={value}>
+      {children}
+    </PronunciationSettingsContext.Provider>
+  );
+}
+
+export function usePronunciationSettings(): PronunciationSettingsValue {
+  return useContext(PronunciationSettingsContext);
+}

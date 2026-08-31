@@ -1,0 +1,160 @@
+import type { Metadata } from "next";
+
+import { DashboardSummary } from "@/components/app/dashboard-summary";
+import { HomeGreeting } from "@/components/app/home-greeting";
+import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
+import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
+import { getLessons } from "@/lib/content";
+import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { LEARNING_MODES } from "@/lib/learning-modes";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createPublicClient } from "@/lib/supabase/public-client";
+import { fetchBookProgressAction } from "@/lib/book-progress/actions";
+import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/queries/library";
+import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
+import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
+import type { Book } from "@/types/library";
+
+export const metadata: Metadata = { title: "Home" };
+
+/**
+ * Reads live content/progress on every request — same "no build-time cache
+ * over admin CMS changes or a real subscriber's unlocked state" reasoning as
+ * /upgrade and the [mode] list pages.
+ */
+export const dynamic = "force-dynamic";
+
+/**
+ * The Home dashboard, split out of /learn/normal (Home dashboard/Ordinary
+ * Lessons separation): this route used to redirect straight into the
+ * Ordinary Lessons list, with the actual greeting/stats/"up next" dashboard
+ * bolted onto the top of that list page — one page serving two different
+ * intents ("show me my progress" vs "let me browse a specific lesson"),
+ * which is exactly what made Home feel crowded. Ordinary Lessons is now its
+ * own sibling route (/learn/normal, structurally consistent with /learn/
+ * stories, /learn/word-lists, /learn/library — see learn-sidebar.tsx's own
+ * nav order), and this page is purely the dashboard: nothing here scrolls
+ * into a lesson catalog any more.
+ */
+export default async function LearnHomePage() {
+  const locale = await getLocale();
+  const t = locale ? getDictionary(locale) : fallbackDictionary;
+
+  // Every fetch below is independent of every other (the only real
+  // dependency in this whole page is book counts/progress needing to know
+  // which book got recommended first — see further down), so they all fire
+  // in one single batch rather than two sequential ones. This used to be
+  // split into two separate `await Promise.all([...])` calls — a leftover
+  // from when the second batch was added later and just tacked on below the
+  // first — which meant the second batch's four queries didn't even start
+  // until every query in the first batch had already finished, adding a
+  // full extra network round-trip of pure waiting to every load. That's
+  // what made Home noticeably slower to open than /learn/normal (etc.),
+  // which does the equivalent of just one such batch. attemptCount is the
+  // only entry that genuinely depends on another value here (the signed-in
+  // user's id) — chaining it off userPromise instead of awaiting user first
+  // lets it still join this same parallel batch instead of forcing its own
+  // sequential stage.
+  const supabase = isSupabaseConfigured() ? createPublicClient() : undefined;
+  const userPromise = getCurrentUser();
+  const attemptCountPromise = userPromise.then((user) =>
+    user ? fetchAttemptCount(user.id) : null,
+  );
+  const [
+    units,
+    hasPremium,
+    isAdminUser,
+    user,
+    storiesLessons,
+    conversationLessons,
+    attemptCount,
+    featuredBooks,
+  ] = await Promise.all([
+    getLessons("normal", locale ?? undefined),
+    hasPremiumAccess(),
+    isAdmin(),
+    userPromise,
+    getLessons("stories", locale ?? undefined),
+    getLessons("conversation", locale ?? undefined),
+    attemptCountPromise,
+    fetchFeaturedBooks(supabase),
+  ]);
+
+  const byMode = { normal: units, stories: storiesLessons, conversation: conversationLessons };
+  const lessonStats: LessonStatsMap = {};
+  for (const lessonMode of LEARNING_MODES) {
+    for (const lesson of byMode[lessonMode]) {
+      const words = lesson.sentences.reduce(
+        (sum, sentence) => sum + sentence.en.trim().split(/\s+/).filter(Boolean).length,
+        0,
+      );
+      lessonStats[`${lessonMode}:${lesson.id}`] = { sentences: lesson.sentences.length, words };
+    }
+  }
+  const totalLessons = LEARNING_MODES.reduce(
+    (sum, lessonMode) => sum + byMode[lessonMode].length,
+    0,
+  );
+
+  // The Book recommendation card: the first featured, published book, or
+  // the Library's first published book at all if none is explicitly marked
+  // featured yet (see fetchFirstPublishedBook's doc comment for why that's
+  // its own lightweight query rather than reusing the Library homepage's
+  // full category-scan). Null only when the Library has no published books
+  // whatsoever, in which case HomeHero simply omits that card rather than
+  // showing empty/fake data.
+  const recommendedBook: Book | null =
+    featuredBooks[0] ?? (await fetchFirstPublishedBook(supabase));
+
+  let bookSectionCount = 0;
+  let bookSentenceCount = 0;
+  let bookProgressPercent: number | undefined;
+  if (recommendedBook) {
+    const [counts, progress] = await Promise.all([
+      fetchBookContentCounts(recommendedBook.id, supabase),
+      fetchBookProgressAction(recommendedBook.id),
+    ]);
+    bookSectionCount = counts.sectionCount;
+    bookSentenceCount = counts.sentenceCount;
+    bookProgressPercent =
+      counts.sentenceCount > 0
+        ? Math.min(100, (progress.completedSentenceCount / counts.sentenceCount) * 100)
+        : undefined;
+  }
+
+  const isPremiumUser = hasPremium || isAdminUser;
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
+        <HomeGreeting
+          displayName={user?.displayName ?? null}
+          units={units}
+          isPremiumUser={isPremiumUser}
+          className="lg:w-80 lg:shrink-0"
+        />
+        <DashboardSummary
+          totalLessons={totalLessons}
+          lessonStats={lessonStats}
+          sessionCount={attemptCount}
+          className="flex-1"
+        />
+      </div>
+      <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+        {t.progress.upNextLabel}
+      </p>
+      <HomeHero
+        units={units}
+        storiesUnits={storiesLessons}
+        book={recommendedBook}
+        bookSectionCount={bookSectionCount}
+        bookSentenceCount={bookSentenceCount}
+        bookProgressPercent={bookProgressPercent}
+        isPremiumUser={isPremiumUser}
+      />
+    </div>
+  );
+}

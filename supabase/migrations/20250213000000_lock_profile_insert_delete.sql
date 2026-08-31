@@ -1,0 +1,25 @@
+-- Closes a privilege-escalation gap found while auditing profiles' RLS
+-- against the actual grants in place.
+--
+-- 20250111000000_lock_profile_role_column.sql only ever revoked UPDATE on
+-- profiles from `authenticated`. "Users manage their own profile"
+-- (20250101000000_init_schema.sql) is a `for all using (auth.uid() = id)
+-- with check (auth.uid() = id)` policy — row-level only, and never
+-- restricted to specific columns or operations beyond "it's my own row".
+-- That leaves INSERT and DELETE fully open for `authenticated` at the table
+-- privilege level (Supabase's default per-project grants), so a signed-in
+-- learner could bypass the UPDATE column lock entirely by calling, directly
+-- through PostgREST:
+--   delete from profiles where id = auth.uid();               -- passes RLS
+--   insert into profiles (id, role) values (auth.uid(), 'admin'); -- passes RLS
+-- and self-promote to admin — is_admin() (20250108000000_admin_cms.sql)
+-- trusts profiles.role everywhere, so this is a real privilege-escalation
+-- path, not just a data-integrity nuisance.
+--
+-- New profile rows are created exclusively by handle_new_user()
+-- (security definer, runs as the migration owner rather than the calling
+-- role — see 20250102000000_handle_new_user.sql), so `authenticated` never
+-- legitimately needs its own INSERT or DELETE privilege on this table.
+-- Revoking both closes the gap without touching signup, existing data, or
+-- any already-narrowed UPDATE grant.
+revoke insert, delete on profiles from authenticated;
