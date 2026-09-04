@@ -26,7 +26,7 @@ import { tokenize } from "@/lib/typing";
 export function MistakeReviewSentence({
   sentence,
   targetWord,
-  errorIndex,
+  errorIndexes,
   onComplete,
   onCorrectLetter,
   onErrorLetter,
@@ -36,8 +36,8 @@ export function MistakeReviewSentence({
   sentence: string;
   /** The exact, correctly-cased occurrence of the mistake word as it appears in `sentence` (see MistakeQueueItem.displayWord) — used both as the typing target and to locate the word for the prefix/suffix split below. */
   targetWord: string;
-  /** The letter the learner previously got wrong (see MistakeQueueItem.errorIndex) — passed straight through to TypingText's highlightIndex, which is the only thing that turns it into the red-letter hint; null renders exactly like today, with no highlight at all. */
-  errorIndex: number | null;
+  /** Every letter the learner previously got wrong (see MistakeQueueItem.errorIndexes) — passed straight through to TypingText's highlightIndexes, which is the only thing that turns them into the red-letter hint; an empty array renders exactly like today, with no highlight at all. */
+  errorIndexes: number[];
   onComplete: (wpm: number) => void;
   /** Admin -> Fonts' Fix Your Mistakes override (see resolveSectionFontFamily) — applied to the whole displayed line (prefix, target word, and suffix alike) so the sentence reads as one consistent font, not just the interactive word standing out. */
   fontFamily?: string;
@@ -47,6 +47,7 @@ export function MistakeReviewSentence({
   inputRef?: RefObject<HTMLInputElement | null>;
 }) {
   const reducedMotion = useReducedMotion() ?? false;
+  const highlightIndexSet = useMemo(() => new Set(errorIndexes), [errorIndexes]);
   const engine = useTypingEngine({
     target: targetWord,
     resetKey: targetWord,
@@ -74,21 +75,27 @@ export function MistakeReviewSentence({
       dir="ltr"
       onClick={engine.focus}
       style={fontFamily ? { fontFamily } : undefined}
-      className="text-foreground flex flex-wrap items-baseline gap-x-3 gap-y-2 text-[clamp(1.8rem,1.2rem+2.6vw,3.5rem)] leading-tight font-semibold text-balance"
+      className="flex flex-wrap items-baseline gap-x-3 gap-y-2 text-[clamp(1.8rem,1.2rem+2.6vw,3.5rem)] leading-tight font-medium text-balance"
     >
-      {prefix && <span>{prefix} </span>}
-      <TypingText
-        target={targetWord}
-        typed={engine.typed}
-        letterStates={engine.letterStates}
-        inputRef={engine.inputRef}
-        onChange={engine.handleChange}
-        onPaste={engine.handlePaste}
-        reducedMotion={reducedMotion}
-        className="inline-block"
-        highlightIndex={errorIndex}
-      />
-      {suffix && <span> {suffix}</span>}
+      {/* Prefix/suffix render muted and at normal weight — deliberately
+          quieter than the interactive target word (font-bold below) so the
+          sentence reads as "context around the word you're fixing" rather
+          than one undifferentiated line of equally-weighted text. */}
+      {prefix && <span className="text-muted-foreground">{prefix} </span>}
+      <span className="text-foreground font-bold">
+        <TypingText
+          target={targetWord}
+          typed={engine.typed}
+          letterStates={engine.letterStates}
+          inputRef={engine.inputRef}
+          onChange={engine.handleChange}
+          onPaste={engine.handlePaste}
+          reducedMotion={reducedMotion}
+          className="inline-block"
+          highlightIndexes={highlightIndexSet}
+        />
+      </span>
+      {suffix && <span className="text-muted-foreground"> {suffix}</span>}
     </div>
   );
 }

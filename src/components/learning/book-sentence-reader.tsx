@@ -2,10 +2,9 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-import { BookMarkControls } from "@/components/learning/book-mark-controls";
+import { BookReadingTools } from "@/components/learning/book-reading-tools";
 import { CurrentWordCard } from "@/components/learning/current-word-card";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -127,49 +126,39 @@ export function BookSentenceReader({
       className={readOnly ? "relative" : "relative lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"}
     >
       {/*
-        A two-sided row rather than PronunciationSpeedControl's usual
-        viewport-pinned `fixed` pill (every other lesson mode's convention):
-        that positioning put it directly on top of Save/Note/pronunciation
-        whenever the active sentence was the first one on its page (nothing
-        above it here to push this row down past the pill's fixed y-band).
-        Passing it a `className` override folds it into this row's own flex
-        layout instead — left group for Save/Note/pronunciation (the
-        existing lesson action controls), right side for speed — so the two
-        can never overlap.
+        Save/Note/Speed all live behind BookReadingTools' one trigger now
+        (see that component's own doc comment for why) — Play stays its own
+        always-visible icon alongside it, since it's the single most-used
+        action here and research on real reading apps (Apple Books, Kindle,
+        Chrome Reading Mode) only ever tucks away the *secondary* controls,
+        never primary playback.
       */}
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          {sectionTitle && (
-            <span className="text-primary text-xs font-semibold tracking-wide uppercase" dir={dir}>
-              {sectionTitle}
-            </span>
-          )}
-          <div className="flex items-center gap-1">
-            <BookMarkControls
-              bookId={bookId}
-              sentenceId={sentence.id}
-              inputRef={engine.inputRef}
-              mark={mark}
-            />
-            <PronunciationButton
-              text={sentence.en}
-              audioUrl={sentence.audioUrl}
-              onPlay={onAudioPlay}
-              autoPlay={!readOnly}
-              resetKey={sentence.id}
-              inputRef={engine.inputRef}
-              kokoroVoiceId={resolvedVoiceId}
-              contentType="book_sentence"
-              contentId={sentence.id}
-            />
-          </div>
-        </div>
-        {!readOnly && (
-          <PronunciationSpeedControl
-            inputRef={engine.inputRef}
-            className="static top-auto right-auto z-auto sm:right-auto"
-          />
+      <div className="mb-4 flex min-w-0 items-center gap-3">
+        {sectionTitle && (
+          <span className="text-primary text-xs font-semibold tracking-wide uppercase" dir={dir}>
+            {sectionTitle}
+          </span>
         )}
+        <div className="flex items-center gap-1.5">
+          <BookReadingTools
+            bookId={bookId}
+            sentenceId={sentence.id}
+            inputRef={engine.inputRef}
+            mark={mark}
+            showSpeed={!readOnly}
+          />
+          <PronunciationButton
+            text={sentence.en}
+            audioUrl={sentence.audioUrl}
+            onPlay={onAudioPlay}
+            autoPlay={!readOnly}
+            resetKey={sentence.id}
+            inputRef={engine.inputRef}
+            kokoroVoiceId={resolvedVoiceId}
+            contentType="book_sentence"
+            contentId={sentence.id}
+          />
+        </div>
       </div>
 
       {!readOnly && (
@@ -189,7 +178,7 @@ export function BookSentenceReader({
         textClassName={
           readOnly
             ? "text-[clamp(1.05rem,0.85rem+0.6vw,1.375rem)]"
-            : "text-[clamp(2rem,1.15rem+2.6vw,3.75rem)]"
+            : "text-[clamp(1.75rem,1.05rem+2.1vw,3rem)]"
         }
         textStyle={textStyle}
         onWordClick={(word) => wordSpeech.speakWord(word)}

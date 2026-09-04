@@ -35,6 +35,8 @@ export interface Book {
   freePreviewSentenceCount: number;
   status: BookStatus;
   orderIndex: number;
+  /** Per-book narration voice override (books.voice_id) — null falls back to elevenlabs_settings.default_story_voice_id, exactly like a Story with no override. See getBookNarrationVoiceId's doc comment. */
+  voiceId: string | null;
   /** Resolved category links — always present, possibly empty for a book with no categories assigned yet. */
   categories: BookCategoryLink[];
 }

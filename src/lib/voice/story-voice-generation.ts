@@ -4,10 +4,19 @@ import { getVoiceDirector } from "@/lib/voice/director-registry";
 import { validateVoiceDirectionOutput } from "@/lib/voice/director-validate";
 import type { SentenceDirection } from "@/lib/voice/director-types";
 import { toElevenLabsInput } from "@/lib/voice/direction-to-tags";
+import { toAzureInput } from "@/lib/voice/direction-to-ssml";
+import { toProsodyInput } from "@/lib/voice/direction-to-prosody";
+import { toGeminiInput } from "@/lib/voice/direction-to-gemini-prompt";
 import { getTTSProvider } from "@/lib/voice/provider-registry";
 import type { TTSVoiceSettings } from "@/lib/voice/provider";
 import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
-import { generatedElevenLabsClipPath, uploadVoiceClip } from "@/lib/voice/storage";
+import {
+  generatedAzureClipPath,
+  generatedEdgeTtsClipPath,
+  generatedElevenLabsClipPath,
+  generatedGeminiClipPath,
+  uploadVoiceClip,
+} from "@/lib/voice/storage";
 import type { Database } from "@/types/database";
 
 type DbClient = SupabaseClient<Database>;
@@ -22,6 +31,21 @@ export interface VoiceGenerationOutcome {
 
 /** Mirrors MAX_AUTO_RETRY_ATTEMPTS in translation/candidates.ts. */
 export const MAX_VOICE_RETRY_ATTEMPTS = 5;
+
+/**
+ * A 'generating' row older than this is treated as abandoned rather than
+ * "another worker already has this" — a serverless invocation that crashed
+ * or timed out mid-call otherwise leaves that row permanently unreclaimable
+ * (every future sweep skips it forever, since nothing ever moves it out of
+ * 'generating'). 10 minutes comfortably exceeds any real TTS provider call
+ * plus upload. Shared with book-voice-generation.ts so both content types
+ * use the same reclaim window.
+ */
+export const STALE_GENERATING_MS = 10 * 60 * 1000;
+
+export function isStaleGenerating(updatedAt: string): boolean {
+  return Date.now() - new Date(updatedAt).getTime() > STALE_GENERATING_MS;
+}
 
 interface SentenceRow {
   id: string;
@@ -46,16 +70,19 @@ function contextHash(prevEn: string | null, en: string, nextEn: string | null): 
   return hashText(parts.join("|"));
 }
 
+/** `providerName` (e.g. "azure"/"elevenlabs"/NO_PROVIDER) is folded into the version prefix so switching the active narration provider naturally invalidates the old provider's cached clips instead of ever mistaking one provider's audio for another's. */
 function generationVersionFor(
+  providerName: string,
   model: string,
   prevEn: string | null,
   en: string,
   nextEn: string | null,
 ): string {
-  return `elevenlabs:${model}:v1:${contextHash(prevEn, en, nextEn)}`;
+  return `${providerName}:${model}:v1:${contextHash(prevEn, en, nextEn)}`;
 }
 
-interface ElevenLabsSettingsRow {
+/** The elevenlabs_settings singleton row — kept under this name for historical/schema reasons (see that table's migration), but in practice now the shared model/default-voice settings for whichever narration provider (Azure or ElevenLabs) is actually active; see baseVoiceSettings' doc comment. */
+export interface ElevenLabsSettingsRow {
   model: string;
   default_story_voice_id: string | null;
   stability: number;
@@ -65,7 +92,8 @@ interface ElevenLabsSettingsRow {
   use_speaker_boost: boolean;
 }
 
-function baseVoiceSettings(settings: ElevenLabsSettingsRow): TTSVoiceSettings {
+/** Only meaningful for ElevenLabs — Azure's provider ignores voiceSettings entirely (see providers/azure.ts's doc comment), so this is computed unconditionally but ends up inert whenever the active provider is Azure. */
+export function baseVoiceSettings(settings: ElevenLabsSettingsRow): TTSVoiceSettings {
   return {
     stability: settings.stability,
     similarityBoost: settings.similarity_boost,
@@ -80,14 +108,20 @@ function baseVoiceSettings(settings: ElevenLabsSettingsRow): TTSVoiceSettings {
  * reason it can't be resolved (never a silent default). Batches every
  * `voices` lookup this lesson could possibly need into one query.
  *
- * Stories: `lesson.voice_id` is reused as the per-lesson override exactly
- * like the existing Kokoro resolveVoiceId() convention — but only when that
- * voice is actually ElevenLabs-sourced. `lessons.voice_id` also serves the
- * unrelated Kokoro word-level fallback path (see voice-audio.ts, D4 in the
- * project plan: word-level pronunciation inside Stories/Conversations stays
- * on Kokoro), so a Kokoro voice sitting in that column must never be
- * mistaken for this story's ElevenLabs narrator — it's simply ignored here,
- * falling through to the global elevenlabs_settings default instead.
+ * Stories and Normal lessons: `lesson.voice_id` is reused as the per-lesson
+ * override exactly like the existing Kokoro resolveVoiceId() convention —
+ * but only when that voice actually belongs to the active provider.
+ * `lessons.voice_id` also serves the unrelated Kokoro per-sentence
+ * pronunciation path (see voice-audio.ts's resolvePronunciationAudioAction,
+ * which already branches on the resolved voice's own `source` and simply
+ * does a cache-only read for a non-Kokoro one), so a Kokoro voice sitting in
+ * that column must never be mistaken for this lesson's narrator — it's
+ * simply ignored here, falling through to the global elevenlabs_settings
+ * default instead. A Normal lesson whose voice_id an admin has pointed at a
+ * narration-provider voice gets its sentences narrated exactly like a
+ * Story; one left on a Kokoro voice (or unset) keeps behaving exactly as
+ * before this pipeline supported "normal" at all — voice-audio.ts's
+ * on-demand Kokoro path only ever fires for a Kokoro-sourced voice.
  *
  * Conversations: each sentence's `speaker` must have an explicit
  * lesson_speaker_voices mapping — no default, no fallback. A conversation
@@ -106,11 +140,12 @@ async function resolveTargetVoices(
   lesson: { id: string; mode: string; voice_id: string | null },
   sentences: SentenceRow[],
   settings: ElevenLabsSettingsRow,
+  providerName: string,
 ): Promise<{ resolved: Map<string, ResolvedVoice>; unresolved: Map<string, string> }> {
   const resolved = new Map<string, ResolvedVoice>();
   const unresolved = new Map<string, string>();
 
-  if (lesson.mode === "stories") {
+  if (lesson.mode === "stories" || lesson.mode === "normal") {
     let voiceId = settings.default_story_voice_id;
     if (lesson.voice_id) {
       const { data: overrideVoice } = await supabase
@@ -118,10 +153,10 @@ async function resolveTargetVoices(
         .select("id, source")
         .eq("id", lesson.voice_id)
         .maybeSingle();
-      if (overrideVoice?.source === "elevenlabs") voiceId = overrideVoice.id;
+      if (overrideVoice?.source === providerName) voiceId = overrideVoice.id;
     }
     if (!voiceId) {
-      const reason = "No ElevenLabs voice configured — set a default story voice in Admin > Voice.";
+      const reason = `No ${providerName} voice configured — set a default narration voice in Admin > Voice.`;
       for (const s of sentences) unresolved.set(s.id, reason);
       return { resolved, unresolved };
     }
@@ -131,8 +166,8 @@ async function resolveTargetVoices(
       .select("id, provider_voice_id, source")
       .eq("id", voiceId)
       .maybeSingle();
-    if (!voiceRow || voiceRow.source !== "elevenlabs") {
-      const reason = "The configured story voice is missing or is not an ElevenLabs voice.";
+    if (!voiceRow || voiceRow.source !== providerName) {
+      const reason = `The configured story voice is missing or isn't a ${providerName} voice.`;
       for (const s of sentences) unresolved.set(s.id, reason);
       return { resolved, unresolved };
     }
@@ -143,7 +178,22 @@ async function resolveTargetVoices(
     return { resolved, unresolved };
   }
 
-  // Conversation: one voice per distinct speaker, no default.
+  // Conversation: an explicit lesson_speaker_voices mapping always wins
+  // when one exists (still assignable in the lesson editor's Speaker
+  // Voices section, for an admin who wants precise control over exactly
+  // which voice a given character uses). When a speaker has no explicit
+  // mapping, fall back to a deterministic voice picked from every
+  // registered voice for the active provider, hashed from the speaker's
+  // own name — the same speaker name always lands on the same voice, run
+  // after run (byte-identical hashing, see hashText), and two different
+  // speaker names spread across the pool essentially never collide unless
+  // the pool itself is that small. This is what makes Conversation audio
+  // usable out of the box across a whole content library (tens or
+  // hundreds of lessons) without hand-configuring every speaker in every
+  // lesson first — the exact scenario a "no default, no fallback" policy
+  // makes impractical at that scale, while an accidental same-voice
+  // collision (the risk that policy was originally guarding against) stays
+  // rare by construction rather than common.
   const { data: speakerVoices, error } = await supabase
     .from("lesson_speaker_voices")
     .select("speaker, voice_id")
@@ -155,35 +205,47 @@ async function resolveTargetVoices(
   const voiceIdBySpeaker = new Map((speakerVoices ?? []).map((row) => [row.speaker, row.voice_id]));
 
   const distinctVoiceIds = [...new Set(voiceIdBySpeaker.values())];
-  const { data: voiceRows } = distinctVoiceIds.length
-    ? await supabase.from("voices").select("id, provider_voice_id").in("id", distinctVoiceIds)
-    : { data: [] };
+  const [{ data: explicitVoiceRows }, { data: fallbackVoiceRows }] = await Promise.all([
+    distinctVoiceIds.length
+      ? supabase.from("voices").select("id, provider_voice_id").in("id", distinctVoiceIds)
+      : Promise.resolve({ data: [] }),
+    supabase.from("voices").select("id, provider_voice_id").eq("source", providerName).order("id"),
+  ]);
   const providerVoiceIdByVoiceId = new Map(
-    (voiceRows ?? []).map((v) => [v.id, v.provider_voice_id]),
+    (explicitVoiceRows ?? []).map((v) => [v.id, v.provider_voice_id]),
   );
+  const fallbackPool = fallbackVoiceRows ?? [];
+
+  function fallbackVoiceForSpeaker(speaker: string): ResolvedVoice | null {
+    if (fallbackPool.length === 0) return null;
+    const index = parseInt(hashText(speaker).slice(0, 8), 16) % fallbackPool.length;
+    const row = fallbackPool[index]!;
+    return { voiceId: row.id, providerVoiceId: row.provider_voice_id };
+  }
 
   for (const s of sentences) {
     if (!s.speaker) {
       unresolved.set(s.id, "This sentence has no speaker set.");
       continue;
     }
-    const voiceId = voiceIdBySpeaker.get(s.speaker);
-    if (!voiceId) {
-      unresolved.set(
-        s.id,
-        `No voice assigned for speaker "${s.speaker}" — set one in the lesson editor's Speaker Voices section.`,
-      );
+    const explicitVoiceId = voiceIdBySpeaker.get(s.speaker);
+    const explicitProviderVoiceId = explicitVoiceId
+      ? providerVoiceIdByVoiceId.get(explicitVoiceId)
+      : undefined;
+    if (explicitVoiceId && explicitProviderVoiceId) {
+      resolved.set(s.id, { voiceId: explicitVoiceId, providerVoiceId: explicitProviderVoiceId });
       continue;
     }
-    const providerVoiceId = providerVoiceIdByVoiceId.get(voiceId);
-    if (!providerVoiceId) {
-      unresolved.set(
-        s.id,
-        `Speaker "${s.speaker}"'s assigned voice ("${voiceId}") no longer exists.`,
-      );
+
+    const fallback = fallbackVoiceForSpeaker(s.speaker);
+    if (!fallback) {
+      const reason = explicitVoiceId
+        ? `Speaker "${s.speaker}"'s assigned voice no longer exists, and no ${providerName} voices are registered to auto-assign a replacement — add one in Admin > Voice.`
+        : `No ${providerName} voices are registered to auto-assign a voice for speaker "${s.speaker}" — add one in Admin > Voice, or assign one explicitly in the lesson editor's Speaker Voices section.`;
+      unresolved.set(s.id, reason);
       continue;
     }
-    resolved.set(s.id, { voiceId, providerVoiceId });
+    resolved.set(s.id, fallback);
   }
   return { resolved, unresolved };
 }
@@ -203,6 +265,7 @@ interface ExistingCacheRow {
   status: "generating" | "ready" | "failed";
   attempts: number;
   audio_url: string | null;
+  updated_at: string;
 }
 
 /**
@@ -216,10 +279,12 @@ interface ExistingCacheRow {
 async function loadLessonForVoiceWork(
   supabase: DbClient,
   lessonId: string,
+  providerName: string,
 ): Promise<
   | { ok: false; error: string }
   | {
       ok: true;
+      mode: string;
       sentences: SentenceRow[];
       keyedSentences: KeyedSentence[];
       unresolved: Map<string, string>;
@@ -234,10 +299,10 @@ async function loadLessonForVoiceWork(
     .maybeSingle();
   if (lessonError) return { ok: false, error: "Couldn't load the lesson." };
   if (!lesson) return { ok: false, error: "Lesson not found." };
-  if (lesson.mode !== "stories" && lesson.mode !== "conversation") {
+  if (lesson.mode !== "stories" && lesson.mode !== "conversation" && lesson.mode !== "normal") {
     return {
       ok: false,
-      error: `"${lesson.mode}" lessons don't use the ElevenLabs voice pipeline — only Stories/Conversation do.`,
+      error: `"${lesson.mode}" lessons don't use the narration voice pipeline.`,
     };
   }
 
@@ -262,6 +327,7 @@ async function loadLessonForVoiceWork(
   if (sentences.length === 0) {
     return {
       ok: true,
+      mode: lesson.mode,
       sentences,
       keyedSentences: [],
       unresolved: new Map(),
@@ -275,6 +341,7 @@ async function loadLessonForVoiceWork(
     lesson,
     sentences,
     settingsRow,
+    providerName,
   );
 
   const neighborEn = (index: number): { prev: string | null; next: string | null } => ({
@@ -288,7 +355,13 @@ async function loadLessonForVoiceWork(
       const index = sentences.indexOf(s);
       const { prev, next } = neighborEn(index);
       const { voiceId, providerVoiceId } = voiceBySentence.get(s.id)!;
-      const generationVersion = generationVersionFor(settingsRow.model, prev, s.en, next);
+      const generationVersion = generationVersionFor(
+        providerName,
+        settingsRow.model,
+        prev,
+        s.en,
+        next,
+      );
       return {
         sentence: s,
         voiceId,
@@ -305,7 +378,9 @@ async function loadLessonForVoiceWork(
   const { data: existingRowsRaw } = voiceIds.length
     ? await supabase
         .from("voice_audio_cache")
-        .select("id, voice_id, text_hash, generation_version, status, attempts, audio_url")
+        .select(
+          "id, voice_id, text_hash, generation_version, status, attempts, audio_url, updated_at",
+        )
         .in("voice_id", voiceIds)
         .in("text_hash", textHashes)
     : { data: [] };
@@ -316,7 +391,15 @@ async function loadLessonForVoiceWork(
     ]),
   );
 
-  return { ok: true, sentences, keyedSentences, unresolved, existingByKey, settingsRow };
+  return {
+    ok: true,
+    mode: lesson.mode,
+    sentences,
+    keyedSentences,
+    unresolved,
+    existingByKey,
+    settingsRow,
+  };
 }
 
 export interface SentenceVoiceStatus {
@@ -340,7 +423,7 @@ export async function getLessonVoiceStatus(
   supabase: DbClient,
   lessonId: string,
 ): Promise<{ statuses: SentenceVoiceStatus[]; error?: string }> {
-  const loaded = await loadLessonForVoiceWork(supabase, lessonId);
+  const loaded = await loadLessonForVoiceWork(supabase, lessonId, getTTSProvider().name);
   if (!loaded.ok) return { statuses: [], error: loaded.error };
 
   const statuses: SentenceVoiceStatus[] = [];
@@ -392,9 +475,9 @@ export async function getLessonVoiceStatus(
 }
 
 /**
- * The per-story generation attempt — same outcome shape as
- * src/lib/translation/generate.ts's GenerationOutcome. Never called for
- * `mode === "normal"` (Kokoro's on-demand path handles those unchanged);
+ * The per-lesson generation attempt — same outcome shape as
+ * src/lib/translation/generate.ts's GenerationOutcome. Works for any of
+ * Stories/Conversation/Normal (see loadLessonForVoiceWork's own mode gate);
  * validates its own inputs rather than trusting the caller (see this
  * repo's own established convention on generateLessonTranslationDraft).
  */
@@ -403,11 +486,17 @@ export async function generateStoryVoiceDraft(
   lessonId: string,
   forceSentenceIds?: ReadonlySet<string>,
 ): Promise<VoiceGenerationOutcome> {
-  const loaded = await loadLessonForVoiceWork(supabase, lessonId);
+  // Resolved once up front so resolveTargetVoices/generationVersionFor can
+  // key every sentence by the actual active provider from the start —
+  // getTTSProvider() always returns a real provider (Edge-TTS is the
+  // zero-config fallback), never null, so there is no "provider missing"
+  // state to special-case here.
+  const provider = getTTSProvider();
+  const loaded = await loadLessonForVoiceWork(supabase, lessonId, provider.name);
   if (!loaded.ok) return { generated: 0, skipped: 0, failed: 0, error: loaded.error };
   if (loaded.sentences.length === 0) return { generated: 0, skipped: 0, failed: 0 };
 
-  const { sentences, keyedSentences, unresolved, existingByKey, settingsRow } = loaded;
+  const { mode, sentences, keyedSentences, unresolved, existingByKey, settingsRow } = loaded;
 
   let skipped = 0;
   const eligible: typeof keyedSentences = [];
@@ -419,7 +508,7 @@ export async function generateStoryVoiceDraft(
       skipped += 1;
       continue;
     }
-    if (existing && existing.status === "generating") {
+    if (existing && existing.status === "generating" && !isStaleGenerating(existing.updated_at)) {
       skipped += 1; // another worker already has this
       continue;
     }
@@ -445,51 +534,63 @@ export async function generateStoryVoiceDraft(
     };
   }
 
-  const director = getVoiceDirector();
-  if (!director) {
-    return {
-      generated: 0,
-      skipped,
-      failed: eligible.length + unresolvedCount,
-      error: "No Voice Director configured (ANTHROPIC_API_KEY is not set).",
-    };
-  }
-  const provider = getTTSProvider();
-  if (!provider) {
-    return {
-      generated: 0,
-      skipped,
-      failed: eligible.length + unresolvedCount,
-      error: "No TTS provider configured (ELEVENLABS_API_KEY is not set).",
-    };
-  }
-
-  let rawDirection: unknown;
-  try {
-    rawDirection = await director.directStory(
-      sentences.map((s) => ({ id: s.id, en: s.en, speaker: s.speaker })),
+  // Normal lessons are plain typing-practice sentences, not expressive
+  // narration — there's no "character" or story arc for the Voice Director
+  // to interpret, so every sentence just gets a flat, neutral delivery
+  // instead of paying for (and waiting on) an LLM call that would have
+  // nothing meaningful to decide. This is also what keeps Normal-lesson
+  // pronunciation working with no ANTHROPIC_API_KEY configured at all —
+  // Stories/Conversation still go through the real Director below.
+  let directionBySentenceId: Map<string, SentenceDirection>;
+  if (mode === "normal") {
+    directionBySentenceId = new Map(
+      sentences.map((s) => [
+        s.id,
+        {
+          sentenceId: s.id,
+          emotion: "neutral",
+          energy: "medium",
+          pace: "normal",
+          emphasisWord: null,
+          pauseBefore: "none",
+        },
+      ]),
     );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      generated: 0,
-      skipped,
-      failed: eligible.length + unresolvedCount,
-      error: `Voice direction failed: ${message}`,
-    };
-  }
+  } else {
+    const director = getVoiceDirector();
+    if (!director) {
+      return {
+        generated: 0,
+        skipped,
+        failed: eligible.length + unresolvedCount,
+        error: "No Voice Director configured (ANTHROPIC_API_KEY is not set).",
+      };
+    }
+    let rawDirection: unknown;
+    try {
+      rawDirection = await director.directStory(
+        sentences.map((s) => ({ id: s.id, en: s.en, speaker: s.speaker })),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        generated: 0,
+        skipped,
+        failed: eligible.length + unresolvedCount,
+        error: `Voice direction failed: ${message}`,
+      };
+    }
 
-  const validation = validateVoiceDirectionOutput(rawDirection, {
-    sentenceIds: sentences.map((s) => s.id),
-    textById: new Map(sentences.map((s) => [s.id, s.en])),
-  });
-  if (!validation.valid) {
-    const message = `Malformed voice direction: ${validation.errors.join(" ")}`;
-    return { generated: 0, skipped, failed: eligible.length + unresolvedCount, error: message };
+    const validation = validateVoiceDirectionOutput(rawDirection, {
+      sentenceIds: sentences.map((s) => s.id),
+      textById: new Map(sentences.map((s) => [s.id, s.en])),
+    });
+    if (!validation.valid) {
+      const message = `Malformed voice direction: ${validation.errors.join(" ")}`;
+      return { generated: 0, skipped, failed: eligible.length + unresolvedCount, error: message };
+    }
+    directionBySentenceId = new Map(validation.value.map((d) => [d.sentenceId, d]));
   }
-  const directionBySentenceId = new Map<string, SentenceDirection>(
-    validation.value.map((d) => [d.sentenceId, d]),
-  );
 
   let generated = 0;
   let failed = unresolvedCount;
@@ -509,6 +610,7 @@ export async function generateStoryVoiceDraft(
       settingsRow.model,
       direction,
       existingByKey,
+      provider.name,
     );
     if (!claimed) {
       skipped += 1; // lost the claim race to a concurrent attempt
@@ -516,18 +618,23 @@ export async function generateStoryVoiceDraft(
     }
 
     try {
-      const { taggedText, voiceSettings } = toElevenLabsInput(
+      const { text, voiceSettings } = buildProviderSynthesisInput(
+        provider.name,
         direction,
         item.sentence.en,
+        item.providerVoiceId,
         baseVoiceSettings(settingsRow),
       );
       const { audio, durationMs } = await provider.synthesize({
-        text: taggedText,
+        text,
         voiceId: item.providerVoiceId,
         model: settingsRow.model,
         voiceSettings,
       });
-      const audioUrl = await uploadVoiceClip(generatedElevenLabsClipPath(item.voiceId), audio);
+      const audioUrl = await uploadVoiceClip(
+        clipPathForProvider(provider.name, item.voiceId),
+        audio,
+      );
 
       await supabase
         .from("voice_audio_cache")
@@ -559,22 +666,70 @@ export async function generateStoryVoiceDraft(
 }
 
 /**
+ * Builds the actual synthesize() request text for whichever narration
+ * provider is active — the one place that decides "ElevenLabs bracketed
+ * tags vs. Azure SSML vs. Edge-TTS prosody-only SSML," shared by
+ * story-voice-generation.ts and book-voice-generation.ts so both content
+ * types stay in lockstep with whatever provider is configured.
+ * `voiceSettings` is only meaningful for ElevenLabs (see baseVoiceSettings'
+ * doc comment) — still returned unconditionally since
+ * TTSProvider.synthesize's input shape requires it, but Azure's and
+ * Edge-TTS's synthesize() both ignore it entirely.
+ */
+export function buildProviderSynthesisInput(
+  providerName: string,
+  direction: SentenceDirection,
+  text: string,
+  providerVoiceId: string,
+  base: TTSVoiceSettings,
+): { text: string; voiceSettings: TTSVoiceSettings } {
+  if (providerName === "azure") {
+    return { text: toAzureInput(direction, text, providerVoiceId).ssml, voiceSettings: base };
+  }
+  if (providerName === "edge-tts") {
+    return { text: toProsodyInput(direction, text, providerVoiceId).ssml, voiceSettings: base };
+  }
+  if (providerName === "gemini") {
+    return { text: toGeminiInput(direction, text).text, voiceSettings: base };
+  }
+  const { taggedText, voiceSettings } = toElevenLabsInput(direction, text, base);
+  return { text: taggedText, voiceSettings };
+}
+
+/** The per-provider Storage path prefix a generated clip is uploaded under — shared by story-voice-generation.ts and book-voice-generation.ts so both content types file clips under the same convention. */
+export function clipPathForProvider(providerName: string, voiceId: string): string {
+  if (providerName === "azure") return generatedAzureClipPath(voiceId);
+  if (providerName === "edge-tts") return generatedEdgeTtsClipPath(voiceId);
+  if (providerName === "gemini") return generatedGeminiClipPath(voiceId);
+  return generatedElevenLabsClipPath(voiceId);
+}
+
+/**
  * Claims one cache row for exclusive generation — the concurrency-safety
  * mechanism (see the project plan's D3): a brand-new key is claimed via
  * INSERT (a 23505 unique-violation means a concurrent attempt already
- * exists, so this call loses); an existing 'failed' row is claimed via a
- * conditional UPDATE guarded on the exact status+attempts this attempt
- * observed (0 rows affected means a concurrent attempt already claimed it
- * first). Either way, only the caller that actually claims the row goes on
- * to call the TTS provider — Postgres's read-committed semantics make this
- * race-free without SELECT FOR UPDATE or a raw-SQL RPC.
+ * exists, so this call loses); an existing 'failed' row (or a 'generating'
+ * row stale enough that the caller has already decided, via
+ * isStaleGenerating, to treat it as abandoned) is claimed via a conditional
+ * UPDATE guarded on the exact status+attempts this attempt observed (0 rows
+ * affected means a concurrent attempt already claimed/resolved it first —
+ * including the normal case where a legitimately in-progress 'generating'
+ * row finished between this call's read and its update). Either way, only
+ * the caller that actually claims the row goes on to call the TTS provider —
+ * Postgres's read-committed semantics make this race-free without SELECT FOR
+ * UPDATE or a raw-SQL RPC. Exported so book-voice-generation.ts shares the
+ * exact same claim semantics rather than a second, potentially-drifting copy.
  */
-async function claimCacheRow(
+export async function claimCacheRow(
   supabase: DbClient,
   key: { normalizedText: string; textHash: string; voiceId: string; generationVersion: string },
   model: string,
   direction: SentenceDirection,
-  existingByKey: Map<string, { id: string; attempts: number; status: string }>,
+  existingByKey: Map<
+    string,
+    { id: string; attempts: number; status: "generating" | "ready" | "failed" }
+  >,
+  providerName: string,
 ): Promise<{ id: string } | null> {
   const k = `${key.voiceId}:${key.textHash}:${key.generationVersion}`;
   const existing = existingByKey.get(k);
@@ -588,7 +743,7 @@ async function claimCacheRow(
         normalized_text: key.normalizedText,
         generation_version: key.generationVersion,
         status: "generating",
-        provider: "elevenlabs",
+        provider: providerName,
         model,
         voice_direction: direction,
         attempts: 1,
@@ -609,7 +764,7 @@ async function claimCacheRow(
       updated_at: new Date().toISOString(),
     })
     .eq("id", existing.id)
-    .eq("status", "failed")
+    .eq("status", existing.status)
     .eq("attempts", existing.attempts)
     .select("id")
     .maybeSingle();

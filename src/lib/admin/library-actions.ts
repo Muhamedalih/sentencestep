@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { requireEditorOrAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { reconcileSectionSentences } from "@/lib/admin/library-section-reconcile";
+import { triggerAutomaticBookVoiceGeneration } from "@/lib/voice/book-auto-trigger";
 import {
   splitSentenceLines,
   splitTranslationLines,
@@ -536,6 +537,7 @@ export async function saveBookSection(input: BookSectionMutationInput): Promise<
   revalidatePath(`/admin/library/${input.bookId}/sections/${sectionId}/edit`);
   revalidatePath(`/learn/library/${input.bookId}`);
   revalidatePath(`/learn/library/${input.bookId}/read`);
+  triggerAutomaticBookVoiceGeneration(input.bookId);
   return { success: "Section saved.", id: sectionId };
 }
 

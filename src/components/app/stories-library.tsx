@@ -181,7 +181,7 @@ export function StoriesLibrary({
             initial="hidden"
             animate="visible"
             variants={staggerChildren}
-            className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4"
+            className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
           >
             {pageItems.map((lesson) => (
               <StoryCard

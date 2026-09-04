@@ -62,7 +62,7 @@ export function useMistakes() {
 
   /** Batched per completed sentence — see recordSentenceMistakesAction's own doc comment for why this is never called per keystroke. Updates the local count from the server's own response rather than a separate re-fetch. */
   const recordSentenceMistakes = useCallback(
-    (sentenceId: string, words: { word: string; errorIndex: number }[]) => {
+    (sentenceId: string, words: { word: string; errorIndexes: number[] }[]) => {
       if (!userId || words.length === 0) return;
       void recordSentenceMistakesAction(sentenceId, words)
         .then(({ activeCount }) => setCount(activeCount))

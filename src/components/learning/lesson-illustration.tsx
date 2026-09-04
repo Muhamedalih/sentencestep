@@ -164,7 +164,12 @@ export function LessonIllustration({
           // Short and wide on mobile (a banner above the sentence, not a
           // competing focal point) — fills the panel exactly once the
           // split layout kicks in at lg: — see LessonSession.
-          "relative aspect-[16/9] w-full overflow-hidden lg:aspect-auto lg:h-full",
+          // rounded-2xl/border/inset-highlight mirror StoryPreviousSentences'
+          // own chrome for this exact grid slot (see that component) — an
+          // admin-uploaded photo now reads as a framed card against the
+          // shell's pure black canvas instead of bleeding straight into it
+          // with a hard 90° corner.
+          "border-foreground/10 relative aspect-[16/9] w-full overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)] lg:aspect-auto lg:h-full",
           className,
         )}
       >
@@ -175,6 +180,21 @@ export function LessonIllustration({
           sizes="(min-width: 1024px) 40vw, 100vw"
           className="object-cover"
           priority
+        />
+        {/* A light, edges-only vignette — never a flat tint/duotone over the
+            whole photo, which would wash out a naturally bright photo just
+            as badly as it "fixes" a dark one. Fading to transparent well
+            before the center (55%) keeps the photo's own color and detail
+            intact; only the outer ring darkens slightly, which is what
+            actually unifies photos of very different original color
+            grading against the same black frame. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(130% 100% at 50% 40%, transparent 55%, rgba(0,0,0,0.28) 100%)",
+          }}
         />
       </div>
     );

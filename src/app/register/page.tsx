@@ -21,7 +21,11 @@ export default async function RegisterPage() {
       <Link href="/" className="mb-8 self-start" aria-label={t.marketing.homeLinkAriaLabel}>
         <Logo />
       </Link>
-      {isSupabaseConfigured() ? <RegisterForm /> : <NotConfiguredNotice />}
+      {isSupabaseConfigured() ? (
+        <RegisterForm turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null} />
+      ) : (
+        <NotConfiguredNotice />
+      )}
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   resolveWordArrayField,
   warnIfMissing,
 } from "@/lib/i18n/content-translations";
-import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { isMistakeWorthTracking, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { buildWordOrderIndex } from "@/lib/mistakes/ordering";
 import type { MistakeQueueItem } from "@/lib/mistakes/types";
 import {
@@ -57,24 +57,31 @@ export async function fetchActiveMistakeCountAction(): Promise<number> {
  */
 export async function recordSentenceMistakesAction(
   sentenceId: string,
-  words: { word: string; errorIndex: number }[],
+  words: { word: string; errorIndexes: number[] }[],
 ): Promise<{ activeCount: number }> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
 
-  // Deduplicated by normalized identity, keeping the first-reported
-  // errorIndex per word — mirrors TypingSentence's own per-attempt Map,
-  // which already only ever reports a word once per sentence completion.
-  const uniqueWords = new Map<string, number>();
-  for (const { word, errorIndex } of words) {
-    if (!isTrackableWord(word)) continue;
+  // Deduplicated by normalized identity, merging every reported errorIndex
+  // per word — mirrors TypingSentence's own per-attempt Map, which already
+  // only ever reports a word once per sentence completion (with its own
+  // full set of wrong positions already merged there).
+  const uniqueWords = new Map<string, Set<number>>();
+  for (const { word, errorIndexes } of words) {
+    if (!isMistakeWorthTracking(word)) continue;
     const normalized = normalizeMistakeWord(word);
-    if (normalized.length === 0 || uniqueWords.has(normalized)) continue;
-    uniqueWords.set(normalized, errorIndex);
+    if (normalized.length === 0) continue;
+    const positions = uniqueWords.get(normalized) ?? new Set<number>();
+    for (const index of errorIndexes) positions.add(index);
+    uniqueWords.set(normalized, positions);
   }
   await Promise.all(
-    [...uniqueWords.entries()].map(([word, errorIndex]) =>
-      recordMistake(word, sentenceId, errorIndex),
+    [...uniqueWords.entries()].map(([word, positions]) =>
+      recordMistake(
+        word,
+        sentenceId,
+        [...positions].sort((a, b) => a - b),
+      ),
     ),
   );
 
@@ -179,19 +186,18 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
 
     const nonSpaceTokens = tokenize(sentence.en).filter((token) => token !== " ");
     const displayWord = nonSpaceTokens.find(
-      (token) => isTrackableWord(token) && normalizeMistakeWord(token) === row.word,
+      (token) => isMistakeWorthTracking(token) && normalizeMistakeWord(token) === row.word,
     );
     if (!displayWord) continue;
 
-    // Bounds-checked against the CURRENT displayWord: a stored index only
+    // Bounds-checked against the CURRENT displayWord: stored indexes only
     // ever came from that exact same raw token at the time of the mistake
     // (see TypingSentence's locateWordAtCharIndex), but content can change
-    // after the fact — an out-of-range index is treated the same as "no
-    // index recorded" rather than highlighting the wrong letter or crashing.
-    const errorIndex =
-      row.errorIndex !== null && row.errorIndex >= 0 && row.errorIndex < displayWord.length
-        ? row.errorIndex
-        : null;
+    // after the fact — an out-of-range index is dropped rather than
+    // highlighting the wrong letter or crashing.
+    const errorIndexes = row.errorIndexes.filter(
+      (index) => index >= 0 && index < displayWord.length,
+    );
 
     const item: MistakeQueueItem = {
       word: row.word,
@@ -202,7 +208,7 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
       mode: lesson.mode,
       lessonId: lesson.id,
       isReview: row.isReview,
-      errorIndex,
+      errorIndexes,
     };
 
     if (locale && sentenceTranslations) {

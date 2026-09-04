@@ -16,16 +16,17 @@ export interface MistakeQueueItem {
   /** True for a due spaced review of an already-corrected word, false for an outstanding, never-yet-corrected mistake — see fetchMistakesAction. Drives FixYourMistakesSession's softer "let's see if you still remember this" framing and which action (markMistakeCorrectedAction vs markReviewCompletedAction) it calls on completion. */
   isReview: boolean;
   /**
-   * Zero-based offset into `displayWord` of the letter the learner got
-   * wrong the last time this word was mistyped (see mistakes.error_index) —
-   * null when unknown (row predates this column) or when it no longer maps
-   * onto the current displayWord (content changed since the mistake was
-   * recorded, or the stored index is out of range). MistakeReviewSentence
-   * shows this one letter in red only while it's still untyped; the moment
-   * it's typed (or the word is completed) it reads exactly like every other
-   * letter, the same as if this were never set.
+   * Zero-based offsets into `displayWord` of every letter the learner got
+   * wrong the last time this word was mistyped (see mistakes.error_indexes)
+   * — empty when unknown (row predates this column) or when none of the
+   * stored positions still map onto the current displayWord (content
+   * changed since the mistake was recorded, or a stored index is out of
+   * range). MistakeReviewSentence shows each of these letters in red only
+   * while it's still untyped; the moment a letter is typed (or the word is
+   * completed) it reads exactly like every other letter, the same as if
+   * this were never set.
    */
-  errorIndex: number | null;
+  errorIndexes: number[];
   /** This word's translation in the active support locale, resolved the same way sentenceSupportText is (see Sentence.supportWordTranslations) — undefined when no locale is active or no gloss exists for this word yet, in which case the preview shows the English word alone. */
   wordTranslation?: { en: string; text: string };
   /**

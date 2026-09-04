@@ -1,7 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
-import { fetchInProgressBooks } from "@/lib/supabase/queries/book-progress";
+import { fetchCompletedBookIds, fetchInProgressBooks } from "@/lib/supabase/queries/book-progress";
 import { getContentTranslations, resolveScalarField } from "@/lib/i18n/content-translations";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { Database } from "@/types/database";
@@ -83,6 +83,7 @@ function toBook(
     freePreviewSentenceCount: row.free_preview_sentence_count,
     status: row.status,
     orderIndex: row.order_index,
+    voiceId: row.voice_id,
     categories: categoryLinks.get(row.id) ?? [],
   };
 }
@@ -368,6 +369,42 @@ export async function fetchContinueReadingBooks(
     })
     .filter((entry) => entry.progressPercent > 0)
     .sort((a, b) => (orderByBook.get(a.book.id) ?? 0) - (orderByBook.get(b.book.id) ?? 0));
+}
+
+/**
+ * Books the given learner has fully finished, most-recently-completed
+ * first — the Library homepage's Completed Books shelf. Guests (userId
+ * null) always get an empty list, same reasoning as
+ * fetchContinueReadingBooks (book_progress is signed-in-only). Unlike that
+ * function this needs no per-book sentence-count fetch: a completed book
+ * has nothing to show a percentage of, just the fact that it's done.
+ */
+export async function fetchCompletedBooks(
+  userId: string | null,
+  client?: PublicClient,
+): Promise<Book[]> {
+  if (!userId || !isSupabaseConfigured()) return [];
+
+  const completedIds = await fetchCompletedBookIds(userId);
+  if (completedIds.length === 0) return [];
+
+  const supabase = client ?? createPublicClient();
+  const { data: bookRows, error } = await supabase
+    .from("books")
+    .select("*")
+    .eq("status", "published")
+    .in("id", completedIds);
+  if (error) throw error;
+  if (!bookRows || bookRows.length === 0) return [];
+
+  const links = await fetchCategoryLinksForBooks(
+    bookRows.map((row) => row.id),
+    supabase,
+  );
+  const orderById = new Map(completedIds.map((id, index) => [id, index]));
+  return bookRows
+    .map((row) => toBook(row, links))
+    .sort((a, b) => (orderById.get(a.id) ?? 0) - (orderById.get(b.id) ?? 0));
 }
 
 /** One published book by id, with its resolved categories — for the Book Overview page. Null for a missing/unpublished id (never throws for "not found"). Accepts an already-created client — see fetchCategories's doc comment. */

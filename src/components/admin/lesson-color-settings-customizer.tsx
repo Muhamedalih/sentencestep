@@ -24,6 +24,7 @@ const GROUPS: LessonColorRoleMeta["group"][] = [
   "Lesson Player",
   "Conversation / Stories",
   "Rewards",
+  "Book Reading",
 ];
 
 /**
@@ -151,6 +152,17 @@ export function LessonColorSettingsCustomizer({ initial }: { initial: LessonColo
               <div>
                 <span className="text-base font-semibold text-[var(--lesson-title)]">word</span>
                 <p className="text-sm text-[var(--lesson-subtitle)]">translation</p>
+              </div>
+              {/* Book Reading's cover color lives outside the mock above (it isn't a typing/story visual) — a tiny swatch of the same gradient .book-intro-cover builds in globals.css, so this role's preview stays honest instead of just showing a flat square. */}
+              <div
+                className="flex h-14 w-28 items-center justify-center rounded-lg text-xs font-semibold"
+                style={{
+                  background:
+                    "linear-gradient(150deg, color-mix(in oklch, var(--lesson-book-cover) 82%, black) 0%, var(--lesson-book-cover) 58%, color-mix(in oklch, var(--lesson-book-cover) 85%, white) 100%)",
+                  color: "var(--lesson-book-cover-foreground)",
+                }}
+              >
+                Book cover
               </div>
             </div>
           </div>

@@ -7,8 +7,10 @@ import { BookCompletion } from "@/components/learning/book-completion";
 import { BookReadingSession } from "@/components/learning/book-reading-session";
 import { fetchBookProgressAction, fetchSectionForReadingAction } from "@/lib/book-progress/actions";
 import { isSectionUnlocked } from "@/lib/book-progress/chapter-state";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getBookNarrationVoiceId } from "@/lib/admin/elevenlabs-queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
+import { resolveVoiceId } from "@/lib/voice/resolution";
+import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { fetchDailyProgress, fetchStreak, fetchXp } from "@/lib/supabase/queries/progress";
@@ -138,12 +140,19 @@ export default async function BookReadingPage({
       ? requestedSectionId
       : progress.currentSectionId;
 
-  const [section, defaultVoiceId, counts] = await Promise.all([
+  const [section, globalDefaultVoiceId, counts] = await Promise.all([
     fetchSectionForReadingAction(bookId, targetSectionId),
-    getDefaultVoiceId(),
+    getBookNarrationVoiceId(),
     fetchBookContentCounts(bookId, supabase),
   ]);
   if (!section || section.sentences.length === 0) notFound();
+  // This book's own narration override (set per-book from the "Story audio
+  // status" admin dashboard) always wins over the global default — mirrors
+  // exactly how generateBookVoiceDraft resolves the voice it actually
+  // generates audio with (see loadBookForVoiceWork in
+  // book-voice-generation.ts). Without this, every book played the same
+  // global default voice regardless of what was picked per book.
+  const resolvedVoiceId = resolveVoiceId(book.voiceId, globalDefaultVoiceId);
 
   // progress.currentSentenceId is only a valid starting point for the
   // reader's OWN current section — deep-linking into a different, already-
@@ -157,16 +166,37 @@ export default async function BookReadingPage({
       ? progress.currentSentenceId
       : section.sentences[0]!.id;
 
+  // Pre-resolves the initial sentence's pronunciation URL here, server-side,
+  // mirroring /learn/[mode]/[lessonId]'s identical fix (see that page's own
+  // doc comment) — without this, the first sentence of every book-reading
+  // session (and every section jump) pays an avoidable client→server round
+  // trip through PronunciationButton's on-demand resolve even when the clip
+  // is already cached. Cache-only: never triggers Kokoro generation.
+  const initialSentence = section.sentences.find((s) => s.id === initialSentenceId);
+  const initialSection =
+    initialSentence && !initialSentence.audioUrl && resolvedVoiceId
+      ? {
+          ...section,
+          sentences: await Promise.all(
+            section.sentences.map(async (s) =>
+              s.id === initialSentenceId
+                ? { ...s, audioUrl: await lookupCachedAudioUrl(s.en, resolvedVoiceId) }
+                : s,
+            ),
+          ),
+        }
+      : section;
+
   return (
     <div className="lesson-shell bg-background text-foreground h-svh w-full">
       <BookReadingSession
         book={book}
-        initialSection={section}
+        initialSection={initialSection}
         initialSentenceId={initialSentenceId}
         initialCompletedSentenceCount={progress.completedSentenceCount}
         totalSentenceCount={progress.totalSentenceCount}
         totalSectionCount={counts.sectionCount}
-        resolvedVoiceId={defaultVoiceId}
+        resolvedVoiceId={resolvedVoiceId}
       />
     </div>
   );

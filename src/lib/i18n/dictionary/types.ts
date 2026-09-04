@@ -167,6 +167,7 @@ export interface Dictionary {
       genericError: string;
       passwordMismatch: string;
       tooManyAttempts: string;
+      captchaFailed: string;
     };
     forgotPassword: string;
     forgotPasswordHeading: string;
@@ -271,6 +272,10 @@ export interface Dictionary {
     sentenceProgress: string;
     /** Screen-reader-only alt text for a lesson's illustration, e.g. `Illustration for the "The Wrong Order" lesson`. */
     illustrationAlt: string;
+    /** Normal-mode lesson screen — label/title for the toggle button that shows the topic illustration (the default view). */
+    illustrationViewImage: string;
+    /** Normal-mode lesson screen — label/title for the toggle button that swaps the illustration for a running list of already-typed sentences. */
+    illustrationViewList: string;
     /** Shown on the completion screen while recordCompletionAction is still in flight for a signed-in learner. */
     savingProgress: string;
     /** Shown in place of savingProgress if that save fails — paired with retry. */
@@ -294,6 +299,8 @@ export interface Dictionary {
     correctedCount: string;
     noOutstanding: string;
     learningHome: string;
+    /** Short label under the completion screen's "+N" hero number — e.g. "words fixed". */
+    fixedLabel: string;
     /** Eyebrow label shown instead of lesson.fixMistakes while the current item is a due spaced review, not a fresh mistake — deliberately softer ("let's see if you still remember this", not "you got this wrong"). */
     reviewLabel: string;
     /** Heading for the completion screen's inline "this lesson's mistakes" recap (see SessionMistake) — deliberately calm/educational, never "errors" or "warnings". */
@@ -459,6 +466,8 @@ export interface Dictionary {
     categoryEmptyBody: string;
     byAuthor: string;
     continueReading: string;
+    /** Heading for the Library homepage's "books you've finished" shelf — only rendered when the signed-in learner has actually completed at least one book. */
+    completedBooksHeading: string;
     startReading: string;
     percentComplete: string;
     sections: string;
@@ -475,6 +484,8 @@ export interface Dictionary {
     sectionLocked: string;
     /** State badge for a section the reader has already read through. */
     sectionCompletedLabel: string;
+    /** `Section {n} of {total}` — the Section Intro screen's position-in-book indicator (1-based). */
+    sectionOfTotal: string;
     /** Book Learning Engine (Section 8 of the reading-engine spec): the reading screen, section transitions, and book completion. */
     beginSection: string;
     sectionCompleteHeading: string;
@@ -482,6 +493,8 @@ export interface Dictionary {
     continueToNextSection: string;
     bookCompleteHeading: string;
     bookCompleteBody: string;
+    /** Lead-in above the Book Completion screen's quote from the book's own `description` — framed retrospectively as what the reader actually gained, never an invented takeaway field. */
+    bookCompleteLead: string;
     backToBookOverview: string;
     /** `Page {n}` — the reading screen's page-navigation indicator (Book Reading Experience Enhancements, addition 2). Always derived from the real sentence position, never an invented count. */
     pageLabel: string;
@@ -492,6 +505,8 @@ export interface Dictionary {
     /** The one word within `clickHint` that gets the highlight-mark treatment (see BookReadingSession's hint stack) — must be an exact, case-matching substring of that same locale's `clickHint`, or the highlight silently falls back to plain text. */
     clickHintHighlight: string;
     /** Save + Note controls on the reading screen (Lightweight Save + Notes system) — `common.save`/`common.saved` label the Save toggle itself; these are the Note popover's own strings. */
+    /** The combined Save/Note/Speed trigger's label (BookReadingTools) — kept short since it sits in a compact pill above the sentence. */
+    readingToolsLabel: string;
     noteAdd: string;
     noteEdit: string;
     notePlaceholder: string;
@@ -507,6 +522,19 @@ export interface Dictionary {
     mySavesSignInHeading: string;
     mySavesSignInSubtitle: string;
     mySavesLoadMore: string;
+    /** My Saves page: CTA into a typing review session over every currently saved sentence. */
+    reviewSaves: string;
+    reviewCompleteHeading: string;
+    /** "{n}" replaced with the count of sentences reviewed this session. */
+    reviewCompleteBody: string;
+    /** A saved sentence card's "share as image" action — exports the sentence + translation as a downloadable/shareable quote image. Used as that button's aria-label/title; the button's own visible text is the shorter `share` below. */
+    shareSentence: string;
+    /** Short form of shareSentence — the saved sentence card's footer button label itself, sized to match "practice" (a single short word). */
+    share: string;
+    /** Home dashboard: eyebrow label above a resurfaced saved sentence. */
+    savedSpotlightLabel: string;
+    /** Saved sentence card's corner "expand" control — opens the sentence full-screen (see SavedSentenceFocusOverlay). */
+    focusSentence: string;
   };
   pronunciation: {
     normalSpeed: string;

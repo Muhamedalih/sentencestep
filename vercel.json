@@ -2,6 +2,7 @@
   "crons": [
     { "path": "/api/cron/inactive-learners", "schedule": "0 15 * * *" },
     { "path": "/api/cron/translation-sweep", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/voice-sweep", "schedule": "0 4 * * *" }
+    { "path": "/api/cron/voice-sweep", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/kokoro-voice-sweep", "schedule": "0 5 * * *" }
   ]
 }

@@ -62,6 +62,8 @@ export interface Database {
           unit_id: string | null;
           /** This lesson's job within its unit (see LessonRole) — null exactly when unit_id is null. */
           role: LessonRole | null;
+          /** Opts this lesson out of the bulk/cron narration-generation sweep (see 20250217000000_voice_generation_exclusion.sql) without unpublishing it. */
+          voice_generation_excluded: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -80,6 +82,7 @@ export interface Database {
           voice_id?: string | null;
           unit_id?: string | null;
           role?: LessonRole | null;
+          voice_generation_excluded?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -766,8 +769,8 @@ export interface Database {
           review_stage: number;
           /** Next spaced-review due time; null = not scheduled (still active, or mastered). */
           next_review_at: string | null;
-          /** Character offset, within the mistyped word's own raw text, of the most recent wrong keystroke. Null = unknown — see 20250201000000_mistake_error_index.sql. */
-          error_index: number | null;
+          /** Character offsets, within the mistyped word's own raw text, of every wrong keystroke from the most recent attempt. Empty/null = unknown — see 20250219000000_mistake_error_indexes.sql (supersedes the old single error_index column). */
+          error_indexes: number[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -781,7 +784,7 @@ export interface Database {
           corrected_at?: string | null;
           review_stage?: number;
           next_review_at?: string | null;
-          error_index?: number | null;
+          error_indexes?: number[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -827,6 +830,10 @@ export interface Database {
           free_preview_sentence_count: number;
           status: "draft" | "published" | "archived";
           order_index: number;
+          /** Opts this book out of the bulk/cron narration-generation sweep (see 20250217000000_voice_generation_exclusion.sql) without unpublishing it. */
+          voice_generation_excluded: boolean;
+          /** Per-book narration voice override — mirrors lessons.voice_id (see 20250218000000_book_voice_override.sql). Null falls back to elevenlabs_settings.default_story_voice_id, exactly like a Story with no override. */
+          voice_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -842,6 +849,8 @@ export interface Database {
           free_preview_sentence_count?: number;
           status?: "draft" | "published" | "archived";
           order_index?: number;
+          voice_generation_excluded?: boolean;
+          voice_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1026,7 +1035,7 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       record_mistake: {
-        Args: { p_word: string; p_sentence_id: string; p_error_index?: number | null };
+        Args: { p_word: string; p_sentence_id: string; p_error_indexes?: number[] | null };
         Returns: undefined;
       };
       record_mistake_review: {

@@ -46,6 +46,10 @@
     "Helvetica Neue", Arial, sans-serif;
   --font-arabic:
     "Noto Sans Arabic", "Segoe UI", ui-sans-serif, system-ui, Tahoma, Arial, sans-serif;
+  /* Literary Arabic serif for "opening a book" moments (the Book Learning Engine's Section Intro cover) — deliberately not used for body text, only titles/numerals, alongside the regular --font-arabic UI face. Loaded via the Google Fonts <link> in the root layout's <head>. */
+  --font-book: "Amiri", "Noto Sans Arabic", "Segoe UI", ui-sans-serif, system-ui, serif;
+  /* My Saves' quote-card English sentence only (see SavedSentenceCard) — an editorial serif for the one place a saved sentence is presented as a literary quote rather than plain typing-lesson text. Loaded via the same Google Fonts <link> as --font-book. */
+  --font-quote: "Lora", ui-serif, Georgia, "Times New Roman", serif;
 }
 
 .dark {
@@ -114,6 +118,8 @@
 
   --font-sans: var(--font-sans);
   --font-arabic: var(--font-arabic);
+  --font-book: var(--font-book);
+  --font-quote: var(--font-quote);
 
   --animate-fade-in: fade-in 0.4s ease-out;
   --animate-rise-in: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
@@ -203,22 +209,87 @@
   --lesson-illustration-stroke: var(--lesson-primary);
   --lesson-illustration-accent: var(--lesson-accent);
   --lesson-xp: var(--accent);
+  /** The Book Learning Engine's Section Intro/Book Completion cover color (see .book-intro-cover below) — deliberately its own role rather than an alias of --lesson-primary, so Admin -> Color Settings can set it to an off-white/cream tone without recoloring the typing underline, story label, speaker bubbles, etc. that --lesson-primary also drives. */
+  --lesson-book-cover: var(--brand);
+  /** Text/icon color on the cover above — a separate role (not hardcoded to --brand-foreground) specifically so a light --lesson-book-cover override stays readable: an admin switching the cover to cream needs to switch this to a dark ink alongside it. */
+  --lesson-book-cover-foreground: var(--brand-foreground);
 }
 
 /*
- * Stories mode's lesson player sits on a pure black canvas regardless of the
- * viewer's light/dark theme preference (see "lesson-shell-stories" on that
- * route's page.tsx, added alongside "lesson-shell") — a deliberate design
- * choice for that mode's storytelling feel, independent of whichever
- * light/dark background every other mode's plain .lesson-shell falls back
- * to. Unscoped by .dark so it applies in both light and dark alike. Only
- * --background/--foreground move — buttons, the progress bar, and focus
- * rings keep reading whatever primary/ring tokens the active theme already
- * set, same as plain .lesson-shell.
+ * Every lesson-player surface (Normal, Conversation, Stories, and Book
+ * Reading — anything rendered inside .lesson-shell) sits on the same pure
+ * black canvas, regardless of the viewer's light/dark theme preference —
+ * matching the rest of the learning experience's premium, cinematic feel
+ * instead of falling back to the site-wide dashboard's dark-gray
+ * --background. Originally scoped to Stories mode only (via the
+ * "lesson-shell-stories" modifier class still present on that route's
+ * page.tsx), then extended to every mode so Normal/Conversation lessons no
+ * longer read as a visibly lighter, less-polished shade next to Stories and
+ * Book Reading. Unscoped by .dark so it applies in both light and dark
+ * alike. Only --background/--foreground move — buttons, the progress bar,
+ * and focus rings keep reading whatever primary/ring tokens the active
+ * theme already set.
  */
-.lesson-shell.lesson-shell-stories {
+.lesson-shell {
   --background: oklch(0 0 0);
   --foreground: oklch(0.97 0 0);
+}
+
+/*
+ * BookSectionIntro's "book cover" card — styled to read as an actual book
+ * that just opened to its first page rather than another flat app card
+ * (see that component's own doc comment for why). Kept as real CSS classes
+ * instead of Tailwind arbitrary-value soup because the layered page-stack
+ * shadow and the cover's gradient/texture aren't expressible as plain
+ * utilities without becoming unreadable inline. Every color still comes
+ * from the same brand/accent/background/border tokens :root/.dark already
+ * define, so both themes stay correct with no separate dark overrides here.
+ */
+.book-intro-frame {
+  box-shadow:
+    -7px 5px 0 -2px var(--background),
+    -7px 5px 0 -3px var(--border),
+    -14px 10px 0 -5px var(--background),
+    -14px 10px 0 -6px var(--border),
+    0 24px 46px -20px oklch(0 0 0 / 0.35);
+}
+
+.book-intro-cover {
+  position: relative;
+  overflow: hidden;
+  /* --lesson-book-cover, not --brand directly — see that token's own doc comment (admin-configurable independently of the rest of the lesson player). */
+  background:
+    linear-gradient(120deg, oklch(1 0 0 / 0.16), transparent 42%),
+    linear-gradient(
+      150deg,
+      color-mix(in oklch, var(--lesson-book-cover) 82%, black) 0%,
+      var(--lesson-book-cover) 58%,
+      color-mix(in oklch, var(--lesson-book-cover) 85%, white) 100%
+    );
+}
+.book-intro-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, oklch(1 0 0 / 0.045) 0 2px, transparent 2px 5px);
+  pointer-events: none;
+}
+
+/* A small bookmark-ribbon tab hanging from the cover's top edge, purely decorative. */
+.book-intro-ribbon {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 1.7rem;
+  width: 1rem;
+  height: 2.5rem;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+  box-shadow: 0 2px 5px oklch(0 0 0 / 0.25);
+}
+
+/* The seam where the cover "opens" onto the lighter page below. */
+.book-intro-page {
+  box-shadow: inset 0 6px 10px -8px oklch(0 0 0 / 0.35);
 }
 
 .dark .app-shell {

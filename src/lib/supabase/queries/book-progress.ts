@@ -71,6 +71,29 @@ export async function fetchInProgressBooks(userId: string): Promise<InProgressBo
   }));
 }
 
+/**
+ * Every book this learner has fully finished, most-recently-completed first
+ * — the Library's Completed Books shelf source (see fetchCompletedBooks in
+ * queries/library.ts, which joins these ids against real book rows).
+ * `current_sentence_id is null` is exactly "finished" (the mirror image of
+ * fetchInProgressBooks's `is not null` — see that function's own doc
+ * comment for the same pointer convention); `completed_sentence_count > 0`
+ * excludes the theoretical row shape that combination can't actually arise
+ * from in normal use, never a real reader.
+ */
+export async function fetchCompletedBookIds(userId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("book_progress")
+    .select("book_id")
+    .eq("user_id", userId)
+    .is("current_sentence_id", null)
+    .gt("completed_sentence_count", 0)
+    .order("last_read_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => row.book_id);
+}
+
 export interface CompleteBookSentenceResult {
   completedSentenceCount: number;
   currentSectionId: string | null;

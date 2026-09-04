@@ -17,6 +17,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { friendlyAuthError } from "@/lib/supabase/friendly-auth-error";
 import { isLoginLockedOut, recordLoginAttempt } from "@/lib/supabase/login-rate-limit";
+import { isTurnstileConfigured, verifyTurnstileToken } from "@/lib/turnstile/verify";
 
 export interface AuthActionState {
   error?: string;
@@ -114,6 +115,21 @@ export async function signUp(
 
   if (!email || !password) return { error: t.auth.errors.missingFields };
   if (password.length < 6) return { error: t.auth.errors.passwordTooShort };
+
+  // Bot-signup protection — see verify.ts's own doc comment for why this
+  // fails CLOSED (unlike most optional integrations here) and why
+  // Turnstile specifically. A no-op entirely until
+  // NEXT_PUBLIC_TURNSTILE_SITE_KEY/TURNSTILE_SECRET_KEY are configured, so
+  // this never blocks sign-up on a deployment that hasn't set it up yet.
+  // "cf-turnstile-response" is the field name Turnstile's own widget script
+  // auto-injects into this form — see register-form.tsx, no manual wiring
+  // needed on the client side.
+  if (isTurnstileConfigured()) {
+    const turnstileToken = String(formData.get("cf-turnstile-response") ?? "");
+    if (!(await verifyTurnstileToken(turnstileToken))) {
+      return { error: t.auth.errors.captchaFailed };
+    }
+  }
 
   // Falls back to the configured production origin, not an empty string —
   // a missing Origin header (uncommon, but not guaranteed absent) must never

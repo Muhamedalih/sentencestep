@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
-import { generateMissingVoiceForLessons } from "@/lib/admin/voice-generation-actions";
+import { generateMissingVoiceForContent } from "@/lib/admin/voice-generation-actions";
 import { cn } from "@/lib/utils";
 
 export function VoiceBulkGenerateControl() {
@@ -13,7 +13,7 @@ export function VoiceBulkGenerateControl() {
   function handleClick() {
     setMessage(null);
     startTransition(async () => {
-      const result = await generateMissingVoiceForLessons();
+      const result = await generateMissingVoiceForContent();
       setMessage(
         result.error
           ? { kind: "error", text: result.error }

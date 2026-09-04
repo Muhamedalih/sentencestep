@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 
 import "@/app/globals.css";
 
@@ -71,11 +72,28 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // renders (English chrome, LTR — exactly what already renders today),
   // FirstTimeLanguagePicker is what actually prompts them.
   const locale = await getLocale();
+  // Set by middleware.ts on every request (see its own doc comment) — lets
+  // this file's one inline script satisfy the CSP's script-src without
+  // 'unsafe-inline', which would otherwise authorize any inline script an
+  // attacker could ever inject via a stored-XSS bug, not just this one.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html lang={locale ?? "en"} dir={locale ? dirFor(locale) : "ltr"} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Amiri — the literary Arabic serif used only for the Book Learning Engine's Section Intro cover (see globals.css's --font-book). Lora — My Saves' quote-card English sentence (see --font-quote). Neither is self-hosted via next/font since no other font in this project is either (--font-arabic's "Noto Sans Arabic" already relies on the OS/browser having it, same pattern this follows). */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap"
+          rel="stylesheet"
+        />
+        {/* suppressHydrationWarning: browsers deliberately blank out a script's nonce attribute in the DOM right after it runs (so injected script can never read a legitimate nonce back out) — the server-rendered nonce value vs. the client's already-blanked one is expected, not a real mismatch. Documented Next.js CSP caveat. */}
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
       </head>
       <body>
         <LocaleProvider initialLocale={locale}>

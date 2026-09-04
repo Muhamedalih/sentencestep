@@ -20,3 +20,16 @@ export function isTrackableWord(word: string): boolean {
   const normalized = normalizeMistakeWord(word);
   return normalized.length > 0 && /\p{L}/u.test(normalized);
 }
+
+/**
+ * True for a mistyped word actually worth a "Fix Your Mistakes" entry —
+ * `isTrackableWord` minus one- and two-letter words ("I", "he", "a", "to",
+ * "is"...), which are too trivial to warrant a review item even when a
+ * learner mistypes them. Deliberately separate from isTrackableWord itself,
+ * which stays a broad "is this a real word token" check used well beyond
+ * mistake-tracking (content-word counts, voice-cache lookups) where
+ * filtering out short words would be wrong.
+ */
+export function isMistakeWorthTracking(word: string): boolean {
+  return isTrackableWord(word) && normalizeMistakeWord(word).length > 2;
+}

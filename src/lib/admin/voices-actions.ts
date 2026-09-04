@@ -6,14 +6,7 @@ import { isAdmin } from "@/lib/admin/access";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { KOKORO_COLLECTION, KOKORO_PREVIEW_TEXT, KOKORO_VOICES } from "@/lib/voice/kokoro-catalog";
-import { generateVoiceClip } from "@/lib/voice/generation";
-import {
-  deleteVoiceClips,
-  samplePath,
-  uploadVoiceClip,
-  voiceAudioPathFromUrl,
-} from "@/lib/voice/storage";
+import { deleteVoiceClips, voiceAudioPathFromUrl } from "@/lib/voice/storage";
 
 async function requireAdmin(): Promise<string | null> {
   if (!(await isAdmin())) return "You don't have permission to do that.";
@@ -21,93 +14,34 @@ async function requireAdmin(): Promise<string | null> {
 }
 
 /**
- * Generates and stores the one real preview sample per Kokoro voice, then
- * inserts each voice's metadata row — the only place real Kokoro inference
- * runs outside the on-demand lesson-audio path (voice-audio.ts). Safe to
- * re-run: an already-seeded voice (matched by id) is skipped entirely
- * rather than re-generated, so retrying after a partial failure only does
- * the remaining work. Deliberately generates one voice at a time, not in
- * parallel — the model is a single shared in-process resource (see
- * generation.ts), and running 10 CPU inferences concurrently would only
- * contend with each other, not finish faster.
+ * The global default voice, kept in sync across both places it's read from:
+ * tts_settings.default_voice_id (learner-facing pronunciation playback, see
+ * voices-queries.ts's getDefaultVoiceId) and elevenlabs_settings's
+ * default_story_voice_id (the background narration pipeline's own default,
+ * see story-voice-generation.ts's resolveTargetVoices). Writing both from
+ * this one action is what guarantees a lesson without its own voice_id
+ * override plays the exact same voice its background-generated audio was
+ * produced with — see saveElevenLabsSettingsAction for the other direction
+ * (that settings form updates tts_settings right back).
  */
-export async function seedKokoroCollectionAction(): Promise<
-  ActionResult & { generated?: number; skipped?: number }
-> {
-  const forbidden = await requireAdmin();
-  if (forbidden) return { error: forbidden };
-
-  const supabase = await createClient();
-  const { data: existing, error: existingError } = await supabase
-    .from("voices")
-    .select("id")
-    .eq("collection", KOKORO_COLLECTION);
-  if (existingError) return { error: "Couldn't check the existing collection. Please try again." };
-
-  const existingIds = new Set((existing ?? []).map((row) => row.id));
-  const toGenerate = KOKORO_VOICES.filter((voice) => !existingIds.has(voice.id));
-
-  let generated = 0;
-  const failures: string[] = [];
-
-  for (const voice of toGenerate) {
-    try {
-      const { mp3 } = await generateVoiceClip(KOKORO_PREVIEW_TEXT, voice.providerVoiceId);
-      const sampleAudioUrl = await uploadVoiceClip(samplePath(voice.id), mp3);
-
-      const { error: insertError } = await supabase.from("voices").insert({
-        id: voice.id,
-        name: voice.name,
-        source: "kokoro",
-        provider_voice_id: voice.providerVoiceId,
-        gender: voice.gender,
-        accent: voice.accent,
-        language: "en",
-        description: voice.description,
-        collection: KOKORO_COLLECTION,
-        sample_audio_url: sampleAudioUrl,
-      });
-      if (insertError) throw insertError;
-      generated += 1;
-    } catch (error) {
-      console.error("[admin] seedKokoroCollectionAction: voice failed", {
-        voiceId: voice.id,
-        error,
-      });
-      failures.push(voice.name);
-    }
-  }
-
-  revalidatePath("/admin/voice");
-
-  if (failures.length > 0) {
-    return {
-      error: `Generated ${generated} voice(s); failed: ${failures.join(", ")}. Re-running will only retry what's missing.`,
-      generated,
-      skipped: existingIds.size,
-    };
-  }
-  return {
-    success:
-      generated === 0
-        ? "Kokoro Natural Learning collection already fully seeded."
-        : `Generated ${generated} new voice(s).`,
-    generated,
-    skipped: existingIds.size,
-  };
-}
-
-/** The global default voice — additive alongside the existing Web Speech preference (saveVoiceSettings), which this never touches. Passing null clears the default, falling every lesson without its own override back to the Web Speech fallback exactly as before any Kokoro voice existed. */
 export async function setDefaultVoiceAction(voiceId: string | null): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("tts_settings")
-    .update({ default_voice_id: voiceId, updated_at: new Date().toISOString() })
-    .eq("id", 1);
-  if (error) return { error: "Couldn't save the default voice. Please try again." };
+  const now = new Date().toISOString();
+  const [{ error }, { error: elevenLabsError }] = await Promise.all([
+    supabase
+      .from("tts_settings")
+      .update({ default_voice_id: voiceId, updated_at: now })
+      .eq("id", 1),
+    supabase
+      .from("elevenlabs_settings")
+      .update({ default_story_voice_id: voiceId, updated_at: now })
+      .eq("id", 1),
+  ]);
+  if (error || elevenLabsError)
+    return { error: "Couldn't save the default voice. Please try again." };
 
   revalidatePath("/admin/voice");
   revalidatePath("/admin/content", "layout");
@@ -151,7 +85,7 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
   }
   if (elevenlabsSettings?.default_story_voice_id === voiceId) {
     return {
-      error: "This voice is the default ElevenLabs story voice — choose a different default first.",
+      error: "This voice is the default narration voice — choose a different default first.",
     };
   }
   if (lessonCount && lessonCount > 0) {

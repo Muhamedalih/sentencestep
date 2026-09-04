@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Home, Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { CurrentWordCard } from "@/components/learning/current-word-card";
+import {
+  PrimaryActionButton,
+  SecondaryActionButton,
+} from "@/components/learning/lesson-completion";
 import { MistakeReviewSentence } from "@/components/learning/mistake-review-sentence";
 import {
   mistakeRevealDurationMs,
@@ -17,9 +19,11 @@ import { PronunciationSpeedControl } from "@/components/learning/pronunciation-s
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useLessonCompletionTheme } from "@/components/providers/lesson-completion-theme-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { deriveLessonCompletionStyles } from "@/lib/admin/lesson-completion-theme";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import {
@@ -28,7 +32,7 @@ import {
   markReviewCompletedAction,
 } from "@/lib/mistakes/actions";
 import type { MistakeQueueItem } from "@/lib/mistakes/types";
-import { popIn } from "@/lib/motion";
+import { fadeInUp, staggerChildren } from "@/lib/motion";
 import type { Lesson } from "@/types/content";
 
 /** Reveal fully shown, then held, before the transition to typing — see the preview animation requirement ("hold the complete word visible for at least ~1000ms"). */
@@ -237,7 +241,6 @@ function MistakeItemSession({
 }) {
   const reducedMotion = useReducedMotion() ?? false;
   const [phase, setPhase] = useState<"preview" | "typing">("preview");
-  const { replayCurrent } = usePronunciationSettings();
   const { dir } = useLocale();
 
   // Reset by this component remounting fresh per item (key={item.word} in
@@ -261,18 +264,6 @@ function MistakeItemSession({
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire exactly once on mount
   }, []);
-
-  // The second pronunciation, right as typing begins — reuses the exact
-  // Shift/replay mechanism (see PronunciationSettingsProvider.replayCurrent)
-  // instead of a second audio system: the PronunciationButton below is
-  // mounted once for this whole item (not remounted per phase), so its
-  // registered replay callback is still the correct one to call here, and
-  // it plays from the same already-resolved URL its own autoPlay used a
-  // moment ago — no second resolve, no overlap (useAudioClip/useSpeech both
-  // cancel any in-flight playback before starting new audio).
-  useEffect(() => {
-    if (phase === "typing") replayCurrent();
-  }, [phase, replayCurrent]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -314,22 +305,27 @@ function MistakeItemSession({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <MistakeReviewSentence
-              sentence={item.sentenceEn}
-              targetWord={item.displayWord}
-              errorIndex={item.errorIndex}
-              onComplete={() => onWordCorrected(hadErrorRef.current)}
-              onCorrectLetter={onCorrectLetter}
-              onErrorLetter={() => {
-                hadErrorRef.current = true;
-                onErrorLetter();
-              }}
-              inputRef={inputRef}
-              fontFamily={fontFamily}
-            />
-            <p className="text-muted-foreground mt-6 text-lg" dir={dir}>
-              {item.sentenceSupportText ?? item.sentenceEn}
-            </p>
+            {/* Quote-card treatment: an accent-toned start border groups the
+                sentence and its translation as one unit, rather than two
+                disconnected lines of plain text floating on the page. */}
+            <div className="border-primary/50 bg-card/60 rounded-xl border-s-[3px] px-5 py-5 sm:px-7 sm:py-6">
+              <MistakeReviewSentence
+                sentence={item.sentenceEn}
+                targetWord={item.displayWord}
+                errorIndexes={item.errorIndexes}
+                onComplete={() => onWordCorrected(hadErrorRef.current)}
+                onCorrectLetter={onCorrectLetter}
+                onErrorLetter={() => {
+                  hadErrorRef.current = true;
+                  onErrorLetter();
+                }}
+                inputRef={inputRef}
+                fontFamily={fontFamily}
+              />
+              <p className="text-muted-foreground mt-4 text-base sm:text-lg" dir={dir}>
+                {item.sentenceSupportText ?? item.sentenceEn}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -348,54 +344,96 @@ function FixYourMistakesComplete({
 }) {
   const reducedMotion = useReducedMotion();
   const { t } = useLocale();
+  const theme = useLessonCompletionTheme();
+  const styles = deriveLessonCompletionStyles(theme);
+  const hasCount = correctedCount > 0 && !loadError;
 
   return (
     <motion.div
-      variants={popIn}
+      variants={staggerChildren}
       initial="hidden"
       animate="visible"
-      className="border-border bg-card mx-auto flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+      style={{ color: styles.textPrimary, gap: `${theme.sectionSpacing}px` }}
+      className="mx-auto flex w-full max-w-sm flex-col items-center py-8 text-center"
     >
-      <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-        <CheckCircle2 className="size-7" aria-hidden="true" />
-      </div>
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">
+      {/* Same rotated "sticker" hero as LessonCompletion's own accuracy
+          card — this screen belongs to the same completion-screen family,
+          not a separately-styled generic card. */}
+      {hasCount ? (
+        <motion.div
+          variants={fadeInUp}
+          dir="ltr"
+          initial={reducedMotion ? undefined : { rotate: -9 }}
+          animate={{ rotate: -2 }}
+          transition={
+            reducedMotion
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 140, damping: 9, delay: 0.1 }
+          }
+          style={{
+            backgroundColor: "oklch(0.96 0.015 85)",
+            color: "oklch(0.32 0.03 60)",
+            boxShadow: "0 3px 0 0 oklch(0.85 0.03 80), 0 10px 20px -8px rgba(0,0,0,0.45)",
+            padding: `${Math.round(theme.cardPadding * 0.9)}px ${theme.cardPadding * 1.6}px`,
+          }}
+          className="flex flex-col items-center gap-0.5 rounded-2xl"
+        >
+          <span
+            style={{ fontSize: theme.heroNumberSize * 0.6 }}
+            className="leading-none font-extrabold tabular-nums"
+          >
+            +{correctedCount}
+          </span>
+          <span className="text-xs font-semibold tracking-wide uppercase opacity-70">
+            {t.mistakes.fixedLabel}
+          </span>
+        </motion.div>
+      ) : (
+        <motion.div
+          variants={fadeInUp}
+          className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full"
+        >
+          <CheckCircle2 className="size-7" aria-hidden="true" />
+        </motion.div>
+      )}
+
+      <motion.div variants={fadeInUp} className="mt-2">
+        <h2
+          style={{ fontSize: theme.headingSize, fontWeight: theme.headingWeight }}
+          className="tracking-tight"
+        >
           {loadError ? t.mistakes.nothingToFix : t.mistakes.allCaughtUp}
         </h2>
-        <p className="text-muted-foreground mt-1">
+        <p style={{ fontSize: theme.bodySize, color: styles.textSecondary }} className="mt-1.5">
           {loadError
             ? t.mistakes.loadError
             : correctedCount > 0
               ? t.mistakes.correctedCount.replace("{n}", String(correctedCount))
               : t.mistakes.noOutstanding}
         </p>
-      </div>
+      </motion.div>
 
-      {correctedCount > 0 && !reducedMotion && (
-        <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.15 }}
-          className="text-primary text-3xl font-bold"
-        >
-          +{correctedCount}
-        </motion.div>
-      )}
-
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-        <Button variant="outline" asChild>
-          <Link href="/learn">{t.mistakes.learningHome}</Link>
-        </Button>
+      <motion.div
+        variants={fadeInUp}
+        style={{ gap: theme.cardSpacing }}
+        className="mt-2 flex flex-col items-center"
+      >
         {nextLesson && (
-          <Button asChild>
-            <Link href={`/learn/${nextLesson.mode}/${nextLesson.id}`}>
-              {t.lesson.nextLesson}
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          <PrimaryActionButton
+            icon={ArrowRight}
+            label={t.lesson.nextLesson}
+            href={`/learn/${nextLesson.mode}/${nextLesson.id}`}
+            theme={theme}
+          />
         )}
-      </div>
+        <SecondaryActionButton
+          icon={Home}
+          label={t.mistakes.learningHome}
+          href="/learn"
+          theme={theme}
+          styles={styles}
+        />
+      </motion.div>
     </motion.div>
   );
 }

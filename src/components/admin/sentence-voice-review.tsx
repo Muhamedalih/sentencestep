@@ -70,7 +70,7 @@ export function SentenceVoiceReview({
   function handlePlay(audioUrl: string) {
     if (audioRef.current) {
       audioRef.current.src = audioUrl;
-      void audioRef.current.play();
+      audioRef.current.play().catch(() => {});
     }
   }
 

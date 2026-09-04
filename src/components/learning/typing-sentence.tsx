@@ -14,7 +14,7 @@ import { useLessonFontSettings } from "@/components/providers/lesson-font-settin
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
-import { isTrackableWord } from "@/lib/mistakes/normalize";
+import { isMistakeWorthTracking } from "@/lib/mistakes/normalize";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import type { LearningMode, Sentence } from "@/types/content";
@@ -34,12 +34,15 @@ interface TypingSentenceProps {
    * the sentence it was mistyped in is finished, not on every wrong
    * character, which is what keeps this from becoming a database write per
    * keystroke. Words are raw (un-normalized) tokens; normalization happens
-   * server-side (see recordSentenceMistakesAction). `errorIndex` is the
-   * position of the first wrong keystroke within that raw word token itself
+   * server-side (see recordSentenceMistakesAction). `errorIndexes` are every
+   * distinct wrong-keystroke position within that raw word token itself
    * (not the whole sentence) — what Fix Your Mistakes' red-letter hint is
-   * keyed on (see record_mistake's error_index column).
+   * keyed on (see record_mistake's error_indexes column).
    */
-  onSentenceMistakes?: (sentenceId: string, words: { word: string; errorIndex: number }[]) => void;
+  onSentenceMistakes?: (
+    sentenceId: string,
+    words: { word: string; errorIndexes: number[] }[],
+  ) => void;
   /** This lesson's already-resolved voice (lesson.voiceId ?? globalDefaultVoiceId) — see resolveVoiceId. Null means no Kokoro voice applies; PronunciationButton behaves exactly as it always has. */
   resolvedVoiceId?: string | null;
   /** Conversation-mode speaker -> voice_id overrides (see lesson_speaker_voices) — empty/undefined for every other mode, in which case sentenceVoiceId below always falls through to resolvedVoiceId. */
@@ -100,14 +103,19 @@ export function TypingSentence({
   // per sentence (see its `key={sentence.id}` in LessonSession), so no
   // explicit reset-on-resetKey-change is needed; a brand new ref is exactly
   // "this sentence attempt's mistakes so far," keyed on the raw word token
-  // with the word-relative index of its first wrong keystroke this attempt.
-  const mistakeWordsRef = useRef<Map<string, number>>(new Map());
+  // with every distinct word-relative wrong-keystroke position seen this
+  // attempt (a Set, since retyping the same wrong position twice — e.g.
+  // after a shake-and-retry — must still only count once).
+  const mistakeWordsRef = useRef<Map<string, Set<number>>>(new Map());
 
   function handleComplete(wpm: number) {
     if (mistakeWordsRef.current.size > 0) {
       onSentenceMistakes?.(
         sentence.id,
-        [...mistakeWordsRef.current.entries()].map(([word, errorIndex]) => ({ word, errorIndex })),
+        [...mistakeWordsRef.current.entries()].map(([word, indexes]) => ({
+          word,
+          errorIndexes: [...indexes].sort((a, b) => a - b),
+        })),
       );
     }
     onComplete(wpm);
@@ -124,17 +132,16 @@ export function TypingSentence({
   // Fires once per genuinely new wrong keystroke (errorIndex transitions
   // null → a position, including a repeat wrong attempt at the same
   // position once the engine's own error flash has cleared it back to
-  // null) — the Map absorbs duplicates by word, so retyping the same wrong
-  // word several times still only ever contributes it once, keeping this
-  // attempt's FIRST wrong position for that word (a later mistake elsewhere
-  // in the same word doesn't overwrite it).
+  // null) — every distinct wrong position for a word is added to that
+  // word's own Set, so a word mistyped at more than one letter this attempt
+  // is remembered at all of them, not just the first.
   useEffect(() => {
     if (engine.errorIndex === null) return;
     const located = locateWordAtCharIndex(sentence.en, engine.errorIndex);
-    if (!located || !isTrackableWord(located.word)) return;
-    if (!mistakeWordsRef.current.has(located.word)) {
-      mistakeWordsRef.current.set(located.word, engine.errorIndex - located.startOffset);
-    }
+    if (!located || !isMistakeWorthTracking(located.word)) return;
+    const positions = mistakeWordsRef.current.get(located.word) ?? new Set<number>();
+    positions.add(engine.errorIndex - located.startOffset);
+    mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
   // Independent of PronunciationButton's own speech instance — a word click
   // never restarts or interrupts the full-sentence audio (see items 3-4).
@@ -323,10 +330,7 @@ export function TypingSentence({
   return (
     <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
       <PronunciationSpeedControl inputRef={engine.inputRef} />
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="min-h-11">
-          <CurrentWordCard word={currentWord} dir={dir} />
-        </div>
+      <div className="mb-4 flex justify-end">
         <PronunciationButton
           text={sentence.en}
           audioUrl={sentence.audioUrl}
@@ -339,12 +343,27 @@ export function TypingSentence({
           contentId={sentence.id}
         />
       </div>
-      {renderText("text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]", true)}
-      {spacer}
-      <p className="mt-6 text-lg text-[var(--lesson-subtitle)]" dir={dir}>
-        {supportText}
-      </p>
-      <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} />
+      {/* The current-word card sits right under the audio-button row, top-
+          anchored, not inside the centered group below — matching Stories
+          mode's own word-card placement (see that branch above) and the
+          reference layout this was aligned to. The sentence/translation/
+          stats group centers as one block within whatever leftover column
+          height remains under the word card: lg:flex-1 lets this div claim
+          that space, lg:justify-center centers its own children inside it,
+          and the group's internal spacing (mt-6 on the translation,
+          TypingStats' own mt-7 in its centered form) stays exactly as tight
+          as it always was — only where the whole group sits within the
+          column changes. */}
+      <div className="mb-3 min-h-11">
+        <CurrentWordCard word={currentWord} dir={dir} />
+      </div>
+      <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
+        {renderText("text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]", true)}
+        <p className="mt-6 text-lg text-[var(--lesson-subtitle)]" dir={dir}>
+          {supportText}
+        </p>
+        <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+      </div>
     </motion.div>
   );
 }

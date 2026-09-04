@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
+import { Sparkles } from "lucide-react";
 
 import { SavedSentenceCard } from "@/components/app/saved-sentence-card";
 import { Button } from "@/components/ui/button";
@@ -49,9 +51,36 @@ export function SavedSentencesList({
 
   return (
     <div className="flex flex-col gap-4">
-      {items.map((item) => (
-        <SavedSentenceCard key={item.sentenceId} item={item} />
-      ))}
+      {/* The one "strong feature" this list previously had none of — turns a
+          static bookmark dump into something worth actually returning to
+          (Section: My Saves feedback). Reuses the exact same typing engine
+          every lesson runs on rather than a passive flashcard flip, via
+          SavedReviewSession. */}
+      <div className="flex justify-end">
+        <Button asChild variant="accent" size="sm">
+          <Link href="/learn/saved/review">
+            <Sparkles className="size-4" aria-hidden="true" />
+            {t.bookLibrary.reviewSaves}
+          </Link>
+        </Button>
+      </div>
+      {items.map((item, index) => {
+        const previous = items[index - 1];
+        const showBookHeader = index === 0 || previous?.bookId !== item.bookId;
+        return (
+          <div key={item.sentenceId} className="flex flex-col gap-2">
+            {showBookHeader && (
+              <p
+                className="text-muted-foreground/80 mt-2 text-xs font-semibold tracking-wide uppercase first:mt-0"
+                dir="ltr"
+              >
+                {item.bookTitle}
+              </p>
+            )}
+            <SavedSentenceCard item={item} />
+          </div>
+        );
+      })}
       {hasMore && (
         <Button variant="outline" onClick={loadMore} disabled={isPending} className="self-center">
           {t.bookLibrary.mySavesLoadMore}

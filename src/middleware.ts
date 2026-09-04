@@ -14,6 +14,86 @@ import { isSupportLocale } from "@/lib/i18n/locales";
  */
 const AUTH_PATHS = new Set(["/login", "/register"]);
 
+/**
+ * A fresh, unguessable value per request — never reused across requests,
+ * which is what lets 'nonce-<value>' in the CSP header below authorize this
+ * one request's specific inline script (the theme-flash-prevention script
+ * in src/app/layout.tsx) without opening script-src up to 'unsafe-inline'
+ * for every inline script an attacker might inject via a stored-XSS bug.
+ * Built from Web Crypto (available on the Edge runtime middleware actually
+ * runs on) rather than node:crypto, which isn't available there.
+ */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+/**
+ * The site's Content-Security-Policy — added after an audit flagged that
+ * the app had no CSP at all (next.config.ts's headers() covers every other
+ * security header already). script-src relaxes to 'unsafe-eval' outside
+ * production because Next's own dev-mode React Refresh/HMR client
+ * genuinely needs eval() to work at all; that relaxation never ships to a
+ * production build. connect-src/img-src/media-src allow any
+ * `*.supabase.co` subdomain — this app's one real external data dependency
+ * (the learner's own Supabase project), matching next.config.ts's existing
+ * images.remotePatterns hostname exactly. challenges.cloudflare.com is
+ * Cloudflare Turnstile (the sign-up bot check — see register-form.tsx);
+ * fonts.googleapis.com/fonts.gstatic.com are the Google Fonts already
+ * loaded in src/app/layout.tsx for Amiri/Lora. PayTabs checkout is a real
+ * top-level navigation (redirect(), see checkout-actions.ts), never a form
+ * POST or fetch from this origin, so it needs no entry here at all.
+ *
+ * Sentry's ingest host is derived from NEXT_PUBLIC_SENTRY_DSN itself rather
+ * than hardcoded — Sentry's ingest domain varies by account region (e.g.
+ * `*.ingest.us.sentry.io` vs `*.ingest.de.sentry.io`), and the DSN already
+ * contains the exact right host. Without this, Sentry's SDK (see
+ * instrumentation-client.ts/sentry.server.config.ts) would silently fail to
+ * report a single error in production — not because Sentry is broken, but
+ * because the browser itself would block every report as a CSP violation.
+ */
+function sentryConnectSrc(): string {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return "";
+  try {
+    return ` https://${new URL(dsn).host}`;
+  } catch {
+    return "";
+  }
+}
+
+function buildCsp(nonce: string): string {
+  const isProd = process.env.NODE_ENV === "production";
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-eval'"} https://challenges.cloudflare.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https://*.supabase.co",
+    "media-src 'self' https://*.supabase.co",
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com${sentryConnectSrc()}`,
+    "frame-src https://challenges.cloudflare.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+}
+
+/**
+ * Stamps the CSP header on a response and returns it — called at every exit
+ * point of this file so no code path (an early redirect, an admin 403, the
+ * normal render path) ever ships without one.
+ */
+function withCsp(response: NextResponse, csp: string): NextResponse {
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
+}
+
 function createMiddlewareSupabaseClient(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -80,14 +160,14 @@ async function isMfaPending(
  * more appropriate than a page-level redirect. Fails closed: no Supabase
  * project and no dev override means no admin access, full stop.
  */
-async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
+async function handleAdminRoute(request: NextRequest, csp: string): Promise<NextResponse> {
   const devAdminOverride =
     process.env.NODE_ENV !== "production" &&
     request.cookies.get(DEV_ADMIN_COOKIE)?.value === "true";
-  if (devAdminOverride) return NextResponse.next();
+  if (devAdminOverride) return withCsp(NextResponse.next({ request }), csp);
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return withCsp(NextResponse.json({ error: "Forbidden" }, { status: 403 }), csp);
   }
 
   const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
@@ -100,7 +180,7 @@ async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);
-    return carryCookies(getResponse(), NextResponse.redirect(url));
+    return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
   }
 
   if (await isMfaPending(supabase)) {
@@ -108,7 +188,7 @@ async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
     url.pathname = VERIFY_MFA_PATH;
     url.search = "";
     url.searchParams.set("next", request.nextUrl.pathname);
-    return carryCookies(getResponse(), NextResponse.redirect(url));
+    return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
   }
 
   const { data: profile } = await supabase
@@ -133,10 +213,10 @@ async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
     const url = request.nextUrl.clone();
     url.pathname = "/learn";
     url.search = "";
-    return carryCookies(getResponse(), NextResponse.redirect(url));
+    return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
   }
 
-  return getResponse();
+  return withCsp(getResponse(), csp);
 }
 
 /** True for `/admin` itself and everything under it — not a bare prefix match, so a future sibling route (e.g. `/admin-status`) can never be swept into the admin gate by accident. */
@@ -249,15 +329,37 @@ function handleRootRoute(
  * is linked.
  */
 export async function middleware(request: NextRequest) {
+  // Generated once per request, then threaded two ways: as a request header
+  // (x-nonce) so src/app/layout.tsx's Server Component can read it via
+  // headers() and stamp it on the one inline script this app ships, and as
+  // part of the CSP response header every branch below returns through
+  // withCsp. Mutating request.headers in place (rather than building a new
+  // Headers object) means it's already present by the time
+  // createMiddlewareSupabaseClient's own internal NextResponse.next({
+  // request }) calls run below — the same "mutate request, then rebuild
+  // NextResponse.next({ request })" pattern that function already uses for
+  // cookies.
+  const nonce = generateNonce();
+  const csp = buildCsp(nonce);
+  // Both set as REQUEST headers (not just the response header every branch
+  // below adds via withCsp) — Next's own App Router build pipeline detects
+  // this exact x-nonce/Content-Security-Policy request-header pair to
+  // automatically nonce the framework's own internal inline scripts too,
+  // per Next's documented CSP pattern; without this, only this file's own
+  // explicit script tag (see layout.tsx) would be nonced.
+  request.headers.set("x-nonce", nonce);
+  request.headers.set("Content-Security-Policy", csp);
+
   if (isAdminRoute(request.nextUrl.pathname)) {
-    return handleAdminRoute(request);
+    return handleAdminRoute(request, csp);
   }
 
   const isRoot = request.nextUrl.pathname === "/";
 
   if (!isSupabaseConfigured()) {
-    if (isRoot) return handleRootRoute(request, false, NextResponse.next());
-    return NextResponse.next();
+    if (isRoot)
+      return withCsp(handleRootRoute(request, false, NextResponse.next({ request })), csp);
+    return withCsp(NextResponse.next({ request }), csp);
   }
 
   const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
@@ -273,7 +375,7 @@ export async function middleware(request: NextRequest) {
       url.pathname = VERIFY_MFA_PATH;
       url.search = "";
       url.searchParams.set("next", request.nextUrl.pathname);
-      return carryCookies(response, NextResponse.redirect(url));
+      return withCsp(carryCookies(response, NextResponse.redirect(url)), csp);
     }
 
     const reconciled = await reconcileLocaleCookie(request, supabase, user.id, () => response);
@@ -281,17 +383,17 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isRoot) {
-    return handleRootRoute(request, Boolean(user), response);
+    return withCsp(handleRootRoute(request, Boolean(user), response), csp);
   }
 
   if (user && AUTH_PATHS.has(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/learn";
     url.search = "";
-    return carryCookies(response, NextResponse.redirect(url));
+    return withCsp(carryCookies(response, NextResponse.redirect(url)), csp);
   }
 
-  return response;
+  return withCsp(response, csp);
 }
 
 export const config = {

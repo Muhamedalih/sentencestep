@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 
 import { isValidCronAuth } from "@/lib/cron/auth";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { findLessonIdsNeedingVoiceGeneration } from "@/lib/voice/candidates";
+import {
+  findBookIdsNeedingVoiceGeneration,
+  findLessonIdsNeedingVoiceGeneration,
+  findWordGroupIdsNeedingVoiceGeneration,
+} from "@/lib/voice/candidates";
+import { generateBookVoiceDraft } from "@/lib/voice/book-voice-generation";
 import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
+import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generation";
 
 /**
  * The recovery mechanism for ElevenLabs voice generation that `after()` may
@@ -17,6 +23,8 @@ import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
  * bulk-generate action via findLessonIdsNeedingVoiceGeneration.
  */
 const MAX_LESSON_VOICE_PAIRS_PER_RUN = 20;
+const MAX_BOOK_VOICE_PAIRS_PER_RUN = 10;
+const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 20;
 const MAX_ERRORS_REPORTED = 20;
 
 async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
@@ -33,10 +41,20 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   const supabase = createServiceRoleClient();
 
   let lessonIds: string[];
+  let bookIds: string[];
+  let wordGroupIds: string[];
   try {
     lessonIds = await findLessonIdsNeedingVoiceGeneration(supabase, MAX_LESSON_VOICE_PAIRS_PER_RUN);
+    bookIds = await findBookIdsNeedingVoiceGeneration(supabase, MAX_BOOK_VOICE_PAIRS_PER_RUN);
+    wordGroupIds = await findWordGroupIdsNeedingVoiceGeneration(
+      supabase,
+      MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN,
+    );
   } catch {
-    return NextResponse.json({ error: "Failed to read candidate lessons." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to read candidate lessons/books/word groups." },
+      { status: 500 },
+    );
   }
 
   let generated = 0;
@@ -54,7 +72,33 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
     }
   }
 
-  return NextResponse.json({ processed: lessonIds.length, generated, skipped, failed, errors });
+  for (const bookId of bookIds) {
+    const outcome = await generateBookVoiceDraft(supabase, bookId);
+    generated += outcome.generated;
+    skipped += outcome.skipped;
+    failed += outcome.failed;
+    if (outcome.error && errors.length < MAX_ERRORS_REPORTED) {
+      errors.push(`book ${bookId}: ${outcome.error}`);
+    }
+  }
+
+  for (const groupId of wordGroupIds) {
+    const outcome = await generateWordGroupVoiceDraft(supabase, groupId);
+    generated += outcome.generated;
+    skipped += outcome.skipped;
+    failed += outcome.failed;
+    if (outcome.error && errors.length < MAX_ERRORS_REPORTED) {
+      errors.push(`word group ${groupId}: ${outcome.error}`);
+    }
+  }
+
+  return NextResponse.json({
+    processed: lessonIds.length + bookIds.length + wordGroupIds.length,
+    generated,
+    skipped,
+    failed,
+    errors,
+  });
 }
 
 export async function GET(request: Request): Promise<NextResponse> {

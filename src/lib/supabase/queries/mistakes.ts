@@ -38,21 +38,21 @@ export async function fetchDueReviewCount(userId: string): Promise<number> {
  * comment for why this can't be a plain client-side upsert: incrementing
  * mistake_count safely needs a single `... DO UPDATE SET x = x + 1`, which
  * only a real SQL statement can express race-free). auth.uid() is read
- * inside the function itself, never trusted from the caller. `errorIndex` is
- * the word-relative position of the wrong keystroke that produced this
- * mistake (see mistakes.error_index) — null when the caller has none to
- * report, which the function itself treats as "keep whatever was there".
+ * inside the function itself, never trusted from the caller. `errorIndexes`
+ * are every word-relative position of a wrong keystroke that produced this
+ * mistake (see mistakes.error_indexes) — an empty/omitted array is treated
+ * the same as "keep whatever was there" by the function itself.
  */
 export async function recordMistake(
   word: string,
   sentenceId: string,
-  errorIndex: number | null = null,
+  errorIndexes: number[] = [],
 ): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("record_mistake", {
     p_word: word,
     p_sentence_id: sentenceId,
-    p_error_index: errorIndex,
+    p_error_indexes: errorIndexes,
   });
   if (error) throw error;
 }
@@ -96,21 +96,21 @@ export async function fetchWeakCandidateMistakeRows(
 export interface ActiveMistakeRow {
   word: string;
   sentenceId: string;
-  errorIndex: number | null;
+  errorIndexes: number[];
 }
 
 export async function fetchActiveMistakeRows(userId: string): Promise<ActiveMistakeRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mistakes")
-    .select("word, sentence_id, error_index")
+    .select("word, sentence_id, error_indexes")
     .eq("user_id", userId)
     .eq("status", "active");
   if (error) throw error;
   return (data ?? []).map((row) => ({
     word: row.word,
     sentenceId: row.sentence_id,
-    errorIndex: row.error_index,
+    errorIndexes: row.error_indexes ?? [],
   }));
 }
 
@@ -119,7 +119,7 @@ export async function fetchDueReviewRows(userId: string): Promise<ActiveMistakeR
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mistakes")
-    .select("word, sentence_id, error_index")
+    .select("word, sentence_id, error_indexes")
     .eq("user_id", userId)
     .eq("status", "corrected")
     .not("next_review_at", "is", null)
@@ -128,7 +128,7 @@ export async function fetchDueReviewRows(userId: string): Promise<ActiveMistakeR
   return (data ?? []).map((row) => ({
     word: row.word,
     sentenceId: row.sentence_id,
-    errorIndex: row.error_index,
+    errorIndexes: row.error_indexes ?? [],
   }));
 }
 

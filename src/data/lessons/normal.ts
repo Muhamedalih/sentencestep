@@ -87,11 +87,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-1-s5",
-        en: "Excuse me this isn't what I ordered",
+        en: "Excuse me, this isn't what I ordered",
         ar: "المعذرة، هذا ليس ما طلبته.",
         wordTranslations: [
           { en: "Excuse", ar: "عذراً" },
-          { en: "me", ar: "لي،" },
+          { en: "me,", ar: "لي،" },
           { en: "this", ar: "هذا" },
           { en: "isn't", ar: "ليس" },
           { en: "what", ar: "ما" },
@@ -132,13 +132,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-1-s8",
-        en: "The sandwich at least was perfect",
+        en: "The sandwich, at least, was perfect",
         ar: "الشطيرة، على الأقل، كانت ممتازة.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
-          { en: "sandwich", ar: "الشطيرة،" },
+          { en: "sandwich,", ar: "الشطيرة،" },
           { en: "at", ar: "على" },
-          { en: "least", ar: "الأقل،" },
+          { en: "least,", ar: "الأقل،" },
           { en: "was", ar: "كانت" },
           { en: "perfect", ar: "ممتازة" },
         ],
@@ -234,13 +234,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-2-s5",
-        en: "I waved my hand but the driver didn't see me",
+        en: "I waved my hand, but the driver didn't see me",
         ar: "لوّحت بيدي، لكن السائق لم يرني.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "waved", ar: "لوّحت" },
           { en: "my", ar: "بيدي" },
-          { en: "hand", ar: "يد،" },
+          { en: "hand,", ar: "يد،" },
           { en: "but", ar: "لكن" },
           { en: "the", ar: "الـ" },
           { en: "driver", ar: "السائق" },
@@ -421,13 +421,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-3-s7",
-        en: "When he walked in we both started laughing",
+        en: "When he walked in, we both started laughing",
         ar: "عندما دخل، بدأنا كلانا بالضحك.",
         wordTranslations: [
           { en: "When", ar: "عندما" },
           { en: "he", ar: "هو" },
           { en: "walked", ar: "دخل" },
-          { en: "in", ar: "بالداخل،" },
+          { en: "in,", ar: "بالداخل،" },
           { en: "we", ar: "نحن" },
           { en: "both", ar: "كلانا" },
           { en: "started", ar: "بدأنا" },
@@ -658,7 +658,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-5-s3",
-        en: "Instead of waiting at the gate I decided to explore",
+        en: "Instead of waiting at the gate, I decided to explore",
         ar: "بدلاً من الانتظار عند البوابة، قررت الاستكشاف.",
         wordTranslations: [
           { en: "Instead", ar: "بدلاً" },
@@ -666,7 +666,7 @@ export const normalLessons: Lesson[] = [
           { en: "waiting", ar: "الانتظار" },
           { en: "at", ar: "عند" },
           { en: "the", ar: "الـ" },
-          { en: "gate", ar: "البوابة،" },
+          { en: "gate,", ar: "البوابة،" },
           { en: "I", ar: "أنا" },
           { en: "decided", ar: "قررت" },
           { en: "to", ar: "أن" },
@@ -820,11 +820,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-6-s3",
-        en: "At first I really struggled to wake up on time",
+        en: "At first, I really struggled to wake up on time",
         ar: "في البداية، واجهت صعوبة حقيقية في الاستيقاظ في الوقت المحدد.",
         wordTranslations: [
           { en: "At", ar: "في" },
-          { en: "first", ar: "البداية،" },
+          { en: "first,", ar: "البداية،" },
           { en: "I", ar: "أنا" },
           { en: "really", ar: "حقاً" },
           { en: "struggled", ar: "واجهت صعوبة" },
@@ -837,12 +837,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-6-s4",
-        en: "After a week I started noticing more energy during the day",
+        en: "After a week, I started noticing more energy during the day",
         ar: "بعد أسبوع، بدأت ألاحظ طاقة أكبر خلال اليوم.",
         wordTranslations: [
           { en: "After", ar: "بعد" },
           { en: "a", ar: "واحد" },
-          { en: "week", ar: "أسبوع،" },
+          { en: "week,", ar: "أسبوع،" },
           { en: "I", ar: "أنا" },
           { en: "started", ar: "بدأت" },
           { en: "noticing", ar: "ألاحظ" },
@@ -887,14 +887,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-6-s7",
-        en: "Some days I still forget and that's completely fine",
+        en: "Some days I still forget, and that's completely fine",
         ar: "في بعض الأيام أنسى ذلك، وهذا أمر طبيعي تماماً.",
         wordTranslations: [
           { en: "Some", ar: "بعض" },
           { en: "days", ar: "الأيام" },
           { en: "I", ar: "أنا" },
           { en: "still", ar: "ما زلت" },
-          { en: "forget", ar: "أنسى،" },
+          { en: "forget,", ar: "أنسى،" },
           { en: "and", ar: "و" },
           { en: "that's", ar: "هذا" },
           { en: "completely", ar: "تماماً" },
@@ -903,14 +903,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-6-s8",
-        en: "Small habits it turns out add up over time",
+        en: "Small habits, it turns out, add up over time",
         ar: "تبيّن أن العادات الصغيرة تتراكم مع الوقت.",
         wordTranslations: [
           { en: "Small", ar: "الصغيرة" },
-          { en: "habits", ar: "العادات،" },
+          { en: "habits,", ar: "العادات،" },
           { en: "it", ar: "هي" },
           { en: "turns", ar: "تبيّن" },
-          { en: "out", ar: "أنها،" },
+          { en: "out,", ar: "أنها،" },
           { en: "add", ar: "تتراكم" },
           { en: "up", ar: "فوق" },
           { en: "over", ar: "مع" },
@@ -919,14 +919,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-6-s9",
-        en: "I'm not perfect at it but I've definitely changed",
+        en: "I'm not perfect at it, but I've definitely changed",
         ar: "لست مثالياً في ذلك، لكنني تغيرت بالتأكيد.",
         wordTranslations: [
           { en: "I'm", ar: "أنا" },
           { en: "not", ar: "لست" },
           { en: "perfect", ar: "مثالياً" },
           { en: "at", ar: "في" },
-          { en: "it", ar: "ذلك،" },
+          { en: "it,", ar: "ذلك،" },
           { en: "but", ar: "لكن" },
           { en: "I've", ar: "أنا" },
           { en: "definitely", ar: "بالتأكيد" },
@@ -966,11 +966,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-7-s2",
-        en: "Lately though the kitchen has been a mess",
+        en: "Lately, though, the kitchen has been a mess",
         ar: "لكن مؤخراً، أصبح المطبخ فوضوياً.",
         wordTranslations: [
-          { en: "Lately", ar: "مؤخراً،" },
-          { en: "though", ar: "لكن،" },
+          { en: "Lately,", ar: "مؤخراً،" },
+          { en: "though,", ar: "لكن،" },
           { en: "the", ar: "الـ" },
           { en: "kitchen", ar: "المطبخ" },
           { en: "has", ar: "قد" },
@@ -1014,10 +1014,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-7-s5",
-        en: "Eventually I decided to just bring it up calmly",
+        en: "Eventually, I decided to just bring it up calmly",
         ar: "في النهاية، قررت أن أطرح الموضوع بهدوء.",
         wordTranslations: [
-          { en: "Eventually", ar: "في النهاية،" },
+          { en: "Eventually,", ar: "في النهاية،" },
           { en: "I", ar: "أنا" },
           { en: "decided", ar: "قررت" },
           { en: "to", ar: "أن" },
@@ -1062,14 +1062,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-7-s8",
-        en: "It felt awkward at first but the talk actually helped",
+        en: "It felt awkward at first, but the talk actually helped",
         ar: "شعرت بالحرج في البداية، لكن الحديث ساعد فعلاً.",
         wordTranslations: [
           { en: "It", ar: "ذلك" },
           { en: "felt", ar: "بدا" },
           { en: "awkward", ar: "محرجاً" },
           { en: "at", ar: "في" },
-          { en: "first", ar: "البداية،" },
+          { en: "first,", ar: "البداية،" },
           { en: "but", ar: "لكن" },
           { en: "the", ar: "الـ" },
           { en: "talk", ar: "الحديث" },
@@ -1156,12 +1156,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-9-s4",
-        en: "A week later a package finally arrived at my door",
+        en: "A week later, a package finally arrived at my door",
         ar: "بعد أسبوع، وصل الطرد أخيراً إلى بابي.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
           { en: "week", ar: "أسبوع" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "a", ar: "واحد" },
           { en: "package", ar: "طرد" },
           { en: "finally", ar: "أخيراً" },
@@ -1238,10 +1238,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-9-s9",
-        en: "Now I always read the size chart before ordering anything",
+        en: "Now, I always read the size chart before ordering anything",
         ar: "الآن أقرأ دائماً جدول المقاسات قبل طلب أي شيء.",
         wordTranslations: [
-          { en: "Now", ar: "الآن" },
+          { en: "Now,", ar: "الآن" },
           { en: "I", ar: "أنا" },
           { en: "always", ar: "دائماً" },
           { en: "read", ar: "أقرأ" },
@@ -1284,14 +1284,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-8-s2",
-        en: "Ten minutes before it started the recruiter emailed to reschedule",
+        en: "Ten minutes before it started, the recruiter emailed to reschedule",
         ar: "قبل عشر دقائق من موعدها، راسلني المسؤول لتأجيلها.",
         wordTranslations: [
           { en: "Ten", ar: "عشر" },
           { en: "minutes", ar: "دقائق" },
           { en: "before", ar: "قبل" },
           { en: "it", ar: "هي" },
-          { en: "started", ar: "بدأت،" },
+          { en: "started,", ar: "بدأت،" },
           { en: "the", ar: "الـ" },
           { en: "recruiter", ar: "المسؤول" },
           { en: "emailed", ar: "راسلني" },
@@ -1301,14 +1301,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-8-s3",
-        en: "Part of me was relieved another part was oddly disappointed",
+        en: "Part of me was relieved, another part was oddly disappointed",
         ar: "شعر جزء مني بالارتياح، بينما شعر جزء آخر بخيبة أمل غريبة.",
         wordTranslations: [
           { en: "Part", ar: "جزء" },
           { en: "of", ar: "من" },
           { en: "me", ar: "مني" },
           { en: "was", ar: "كان" },
-          { en: "relieved", ar: "مرتاحاً؛" },
+          { en: "relieved,", ar: "مرتاحاً؛" },
           { en: "another", ar: "آخر" },
           { en: "part", ar: "جزء" },
           { en: "was", ar: "كان" },
@@ -1337,11 +1337,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-8-s5",
-        en: "That evening I sat down and rewrote my entire resume",
+        en: "That evening, I sat down and rewrote my entire resume",
         ar: "في تلك الأمسية، جلست وأعدت كتابة سيرتي الذاتية بالكامل.",
         wordTranslations: [
           { en: "That", ar: "تلك" },
-          { en: "evening", ar: "الأمسية،" },
+          { en: "evening,", ar: "الأمسية،" },
           { en: "I", ar: "أنا" },
           { en: "sat", ar: "جلست" },
           { en: "down", ar: "أسفل" },
@@ -1374,14 +1374,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-8-s7",
-        en: "When the interview finally happened I felt oddly calm",
+        en: "When the interview finally happened, I felt oddly calm",
         ar: "عندما جرت المقابلة أخيراً، شعرت بهدوء غريب.",
         wordTranslations: [
           { en: "When", ar: "عندما" },
           { en: "the", ar: "الـ" },
           { en: "interview", ar: "المقابلة" },
           { en: "finally", ar: "أخيراً" },
-          { en: "happened", ar: "جرت،" },
+          { en: "happened,", ar: "جرت،" },
           { en: "I", ar: "أنا" },
           { en: "felt", ar: "شعرت" },
           { en: "oddly", ar: "بشكل غريب" },
@@ -1407,11 +1407,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-8-s9",
-        en: "Looking back that last-minute delay turned out to be a gift",
+        en: "Looking back, that last-minute delay turned out to be a gift",
         ar: "بالنظر إلى الوراء، تبيّن أن ذلك التأجيل المفاجئ كان نعمة.",
         wordTranslations: [
           { en: "Looking", ar: "بالنظر" },
-          { en: "back", ar: "إلى الوراء،" },
+          { en: "back,", ar: "إلى الوراء،" },
           { en: "that", ar: "ذلك" },
           { en: "last-minute", ar: "المفاجئ" },
           { en: "delay", ar: "التأجيل" },
@@ -1438,7 +1438,7 @@ export const normalLessons: Lesson[] = [
     sentences: [
       {
         id: "normal-10-s1",
-        en: "We'd been close friends since university practically inseparable",
+        en: "We'd been close friends since university, practically inseparable",
         ar: "كنا أصدقاء مقربين منذ الجامعة، شبه متلازمين.",
         wordTranslations: [
           { en: "We'd", ar: "كنا" },
@@ -1446,20 +1446,20 @@ export const normalLessons: Lesson[] = [
           { en: "close", ar: "مقربين" },
           { en: "friends", ar: "أصدقاء" },
           { en: "since", ar: "منذ" },
-          { en: "university", ar: "الجامعة،" },
+          { en: "university,", ar: "الجامعة،" },
           { en: "practically", ar: "شبه" },
           { en: "inseparable", ar: "متلازمين" },
         ],
       },
       {
         id: "normal-10-s2",
-        en: "Somewhere along the way we just stopped making time for each other",
+        en: "Somewhere along the way, we just stopped making time for each other",
         ar: "في مرحلة ما، توقفنا ببساطة عن تخصيص وقت لبعضنا.",
         wordTranslations: [
           { en: "Somewhere", ar: "في مكان ما" },
           { en: "along", ar: "على" },
           { en: "the", ar: "الـ" },
-          { en: "way", ar: "الطريق،" },
+          { en: "way,", ar: "الطريق،" },
           { en: "we", ar: "نحن" },
           { en: "just", ar: "ببساطة" },
           { en: "stopped", ar: "توقفنا" },
@@ -1489,13 +1489,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-10-s4",
-        en: "Neither of us apologized and the silence dragged on for months",
+        en: "Neither of us apologized, and the silence dragged on for months",
         ar: "لم يعتذر أي منا، واستمر الصمت لأشهر.",
         wordTranslations: [
           { en: "Neither", ar: "لا" },
           { en: "of", ar: "من" },
           { en: "us", ar: "منا" },
-          { en: "apologized", ar: "اعتذر،" },
+          { en: "apologized,", ar: "اعتذر،" },
           { en: "and", ar: "و" },
           { en: "the", ar: "الـ" },
           { en: "silence", ar: "الصمت" },
@@ -1523,12 +1523,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-10-s6",
-        en: "Deep down though I really missed having her around",
+        en: "Deep down, though, I really missed having her around",
         ar: "لكن في أعماقي، اشتقت فعلاً لوجودها بجانبي.",
         wordTranslations: [
           { en: "Deep", ar: "في" },
-          { en: "down", ar: "الأعماق،" },
-          { en: "though", ar: "لكن،" },
+          { en: "down,", ar: "الأعماق،" },
+          { en: "though,", ar: "لكن،" },
           { en: "I", ar: "أنا" },
           { en: "really", ar: "فعلاً" },
           { en: "missed", ar: "اشتقت" },
@@ -1573,15 +1573,15 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-10-s9",
-        en: "We're rebuilding things slowly and honestly that feels like enough",
+        en: "We're rebuilding things slowly, and honestly, that feels like enough",
         ar: "نعيد بناء العلاقة تدريجياً، وبصراحة، هذا يبدو كافياً.",
         wordTranslations: [
           { en: "We're", ar: "نحن" },
           { en: "rebuilding", ar: "نعيد بناء" },
           { en: "things", ar: "الأمور" },
-          { en: "slowly", ar: "تدريجياً،" },
+          { en: "slowly,", ar: "تدريجياً،" },
           { en: "and", ar: "و" },
-          { en: "honestly", ar: "بصراحة،" },
+          { en: "honestly,", ar: "بصراحة،" },
           { en: "that", ar: "هذا" },
           { en: "feels", ar: "يبدو" },
           { en: "like", ar: "وكأنه" },
@@ -1621,13 +1621,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-11-s2",
-        en: "A few months in a stranger online offered to pay for it",
+        en: "A few months in, a stranger online offered to pay for it",
         ar: "بعد بضعة أشهر، عرض شخص غريب على الإنترنت أن يدفع مقابله.",
         wordTranslations: [
           { en: "A", ar: "بعد" },
           { en: "few", ar: "بضعة" },
           { en: "months", ar: "أشهر" },
-          { en: "in", ar: "فيها،" },
+          { en: "in,", ar: "فيها،" },
           { en: "a", ar: "واحد" },
           { en: "stranger", ar: "شخص غريب" },
           { en: "online", ar: "على الإنترنت" },
@@ -1655,11 +1655,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-11-s4",
-        en: "Word spread and suddenly I had a small waiting list of users",
+        en: "Word spread, and suddenly I had a small waiting list of users",
         ar: "انتشر الخبر، وفجأة أصبح لدي قائمة انتظار صغيرة من المستخدمين.",
         wordTranslations: [
           { en: "Word", ar: "الخبر" },
-          { en: "spread", ar: "انتشر،" },
+          { en: "spread,", ar: "انتشر،" },
           { en: "and", ar: "و" },
           { en: "suddenly", ar: "فجأة" },
           { en: "I", ar: "أنا" },
@@ -1708,12 +1708,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-11-s7",
-        en: "My manager surprisingly encouraged me to give it a real shot",
+        en: "My manager, surprisingly, encouraged me to give it a real shot",
         ar: "شجعني مديري، بشكل مفاجئ، على تجربته بجدية.",
         wordTranslations: [
           { en: "My", ar: "لي" },
-          { en: "manager", ar: "مديري،" },
-          { en: "surprisingly", ar: "بشكل مفاجئ،" },
+          { en: "manager,", ar: "مديري،" },
+          { en: "surprisingly,", ar: "بشكل مفاجئ،" },
           { en: "encouraged", ar: "شجعني" },
           { en: "me", ar: "لي" },
           { en: "to", ar: "أن" },
@@ -1743,14 +1743,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-11-s9",
-        en: "Whether it succeeds or not I don't regret taking the leap",
+        en: "Whether it succeeds or not, I don't regret taking the leap",
         ar: "سواء نجح أم لا، لا أندم على خوض هذه المخاطرة.",
         wordTranslations: [
           { en: "Whether", ar: "سواء" },
           { en: "it", ar: "هو" },
           { en: "succeeds", ar: "نجح" },
           { en: "or", ar: "أم" },
-          { en: "not", ar: "لا،" },
+          { en: "not,", ar: "لا،" },
           { en: "I", ar: "أنا" },
           { en: "don't", ar: "لا" },
           { en: "regret", ar: "أندم" },
@@ -1774,7 +1774,7 @@ export const normalLessons: Lesson[] = [
     sentences: [
       {
         id: "normal-12-s1",
-        en: "The job offer came with a catch it was only for one year",
+        en: "The job offer came with a catch, it was only for one year",
         ar: "جاء عرض العمل مع شرط: أنه لمدة عام واحد فقط.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
@@ -1783,7 +1783,7 @@ export const normalLessons: Lesson[] = [
           { en: "came", ar: "جاء" },
           { en: "with", ar: "مع" },
           { en: "a", ar: "واحد" },
-          { en: "catch", ar: "شرط:" },
+          { en: "catch,", ar: "شرط:" },
           { en: "it", ar: "أنه" },
           { en: "was", ar: "كان" },
           { en: "only", ar: "فقط" },
@@ -1810,10 +1810,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-12-s3",
-        en: "Instead I found myself seriously weighing the pros and cons",
+        en: "Instead, I found myself seriously weighing the pros and cons",
         ar: "بدلاً من ذلك، وجدت نفسي أزن الإيجابيات والسلبيات بجدية.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً من ذلك،" },
+          { en: "Instead,", ar: "بدلاً من ذلك،" },
           { en: "I", ar: "أنا" },
           { en: "found", ar: "وجدت" },
           { en: "myself", ar: "نفسي" },
@@ -1827,14 +1827,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-12-s4",
-        en: "Leaving my apartment my routine and my friends felt daunting",
+        en: "Leaving my apartment, my routine, and my friends felt daunting",
         ar: "بدا ترك شقتي وروتيني وأصدقائي أمراً مرهقاً.",
         wordTranslations: [
           { en: "Leaving", ar: "ترك" },
           { en: "my", ar: "لي" },
-          { en: "apartment", ar: "شقتي،" },
+          { en: "apartment,", ar: "شقتي،" },
           { en: "my", ar: "لي" },
-          { en: "routine", ar: "روتيني،" },
+          { en: "routine,", ar: "روتيني،" },
           { en: "and", ar: "و" },
           { en: "my", ar: "لي" },
           { en: "friends", ar: "أصدقائي" },
@@ -1844,13 +1844,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-12-s5",
-        en: "At the same time staying felt like choosing comfort over growth",
+        en: "At the same time, staying felt like choosing comfort over growth",
         ar: "في الوقت نفسه، بدا البقاء وكأنه اختيار الراحة على النمو.",
         wordTranslations: [
           { en: "At", ar: "في" },
           { en: "the", ar: "الـ" },
           { en: "same", ar: "نفس" },
-          { en: "time", ar: "الوقت،" },
+          { en: "time,", ar: "الوقت،" },
           { en: "staying", ar: "البقاء" },
           { en: "felt", ar: "بدا" },
           { en: "like", ar: "وكأنه" },
@@ -1862,7 +1862,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-12-s6",
-        en: "I gave myself one week to decide no more",
+        en: "I gave myself one week to decide, no more",
         ar: "منحت نفسي أسبوعاً واحداً لأقرر، لا أكثر.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -1871,19 +1871,19 @@ export const normalLessons: Lesson[] = [
           { en: "one", ar: "واحداً" },
           { en: "week", ar: "أسبوعاً" },
           { en: "to", ar: "لـ" },
-          { en: "decide", ar: "أقرر،" },
+          { en: "decide,", ar: "أقرر،" },
           { en: "no", ar: "لا" },
           { en: "more", ar: "أكثر" },
         ],
       },
       {
         id: "normal-12-s7",
-        en: "In the end uncertainty scared me less than regret did",
+        en: "In the end, uncertainty scared me less than regret did",
         ar: "في النهاية، أخافني الغموض أقل مما أخافني الندم.",
         wordTranslations: [
           { en: "In", ar: "في" },
           { en: "the", ar: "الـ" },
-          { en: "end", ar: "النهاية،" },
+          { en: "end,", ar: "النهاية،" },
           { en: "uncertainty", ar: "الغموض" },
           { en: "scared", ar: "أخافني" },
           { en: "me", ar: "ني" },
@@ -1911,14 +1911,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-12-s9",
-        en: "Whatever happens after that year I know I made the braver choice",
+        en: "Whatever happens after that year, I know I made the braver choice",
         ar: "مهما حدث بعد ذلك العام، أعلم أنني اتخذت الخيار الأكثر جرأة.",
         wordTranslations: [
           { en: "Whatever", ar: "مهما" },
           { en: "happens", ar: "حدث" },
           { en: "after", ar: "بعد" },
           { en: "that", ar: "ذلك" },
-          { en: "year", ar: "العام،" },
+          { en: "year,", ar: "العام،" },
           { en: "I", ar: "أنا" },
           { en: "know", ar: "أعلم" },
           { en: "I", ar: "أنني" },
@@ -1944,11 +1944,11 @@ export const normalLessons: Lesson[] = [
     sentences: [
       {
         id: "normal-13-s1",
-        en: "Every morning I rode the elevator with my neighbor",
+        en: "Every morning, I rode the elevator with my neighbor",
         ar: "كل صباح كنت أركب المصعد مع جارتي.",
         wordTranslations: [
           { en: "Every", ar: "كل" },
-          { en: "morning", ar: "صباح" },
+          { en: "morning,", ar: "صباح" },
           { en: "I", ar: "أنا" },
           { en: "rode", ar: "ركبت" },
           { en: "the", ar: "الـ" },
@@ -1976,11 +1976,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-13-s3",
-        en: "One evening the elevator suddenly stopped between floors",
+        en: "One evening, the elevator suddenly stopped between floors",
         ar: "في إحدى الأمسيات، توقف المصعد فجأة بين طابقين.",
         wordTranslations: [
           { en: "One", ar: "ذات" },
-          { en: "evening", ar: "أمسية" },
+          { en: "evening,", ar: "أمسية" },
           { en: "the", ar: "الـ" },
           { en: "elevator", ar: "المصعد" },
           { en: "suddenly", ar: "فجأة" },
@@ -1991,13 +1991,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-13-s4",
-        en: "The lights went dark and my heart started racing",
+        en: "The lights went dark, and my heart started racing",
         ar: "انطفأت الأضواء وبدأ قلبي يخفق بسرعة.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
           { en: "lights", ar: "الأضواء" },
           { en: "went", ar: "أصبحت" },
-          { en: "dark", ar: "مظلمة" },
+          { en: "dark,", ar: "مظلمة" },
           { en: "and", ar: "و" },
           { en: "my", ar: "لي" },
           { en: "heart", ar: "قلبي" },
@@ -2055,14 +2055,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-13-s8",
-        en: "The elevator finally moved again and we both smiled",
+        en: "The elevator finally moved again, and we both smiled",
         ar: "تحرك المصعد أخيراً مرة أخرى وابتسمنا كلانا.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
           { en: "elevator", ar: "المصعد" },
           { en: "finally", ar: "أخيراً" },
           { en: "moved", ar: "تحرك" },
-          { en: "again", ar: "مجدداً" },
+          { en: "again,", ar: "مجدداً" },
           { en: "and", ar: "و" },
           { en: "we", ar: "نحن" },
           { en: "both", ar: "كلانا" },
@@ -2071,10 +2071,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-13-s9",
-        en: "Now we always say hello and sometimes grab coffee",
+        en: "Now, we always say hello and sometimes grab coffee",
         ar: "الآن نلقي التحية دائماً ونحتسي القهوة معاً أحياناً.",
         wordTranslations: [
-          { en: "Now", ar: "الآن" },
+          { en: "Now,", ar: "الآن" },
           { en: "we", ar: "نحن" },
           { en: "always", ar: "دائماً" },
           { en: "say", ar: "نقول" },
@@ -2221,10 +2221,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-14-s9",
-        en: "Now I actually look forward to karaoke night",
+        en: "Now, I actually look forward to karaoke night",
         ar: "الآن أتطلع فعلاً إلى ليلة الكاريوكي.",
         wordTranslations: [
-          { en: "Now", ar: "الآن" },
+          { en: "Now,", ar: "الآن" },
           { en: "I", ar: "أنا" },
           { en: "actually", ar: "فعلاً" },
           { en: "look", ar: "أتطلع" },
@@ -2311,7 +2311,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-15-s5",
-        en: "A woman replied within an hour crying with relief",
+        en: "A woman replied within an hour, crying with relief",
         ar: "ردت امرأة خلال ساعة وهي تبكي من الارتياح.",
         wordTranslations: [
           { en: "A", ar: "واحدة" },
@@ -2319,7 +2319,7 @@ export const normalLessons: Lesson[] = [
           { en: "replied", ar: "ردت" },
           { en: "within", ar: "خلال" },
           { en: "an", ar: "واحدة" },
-          { en: "hour", ar: "ساعة" },
+          { en: "hour,", ar: "ساعة" },
           { en: "crying", ar: "تبكي" },
           { en: "with", ar: "من" },
           { en: "relief", ar: "الارتياح" },
@@ -2466,12 +2466,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-16-s5",
-        en: "At the wedding I kept touching my hair nervously",
+        en: "At the wedding, I kept touching my hair nervously",
         ar: "في الزفاف، ظللت ألمس شعري بتوتر.",
         wordTranslations: [
           { en: "At", ar: "في" },
           { en: "the", ar: "الـ" },
-          { en: "wedding", ar: "الزفاف" },
+          { en: "wedding,", ar: "الزفاف" },
           { en: "I", ar: "أنا" },
           { en: "kept", ar: "ظللت" },
           { en: "touching", ar: "ألمس" },
@@ -2593,12 +2593,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-17-s3",
-        en: "Even during meetings I kept sneaking glances at my screen",
+        en: "Even during meetings, I kept sneaking glances at my screen",
         ar: "حتى خلال الاجتماعات، كنت ألقي نظرات خفية على شاشتي.",
         wordTranslations: [
           { en: "Even", ar: "حتى" },
           { en: "during", ar: "خلال" },
-          { en: "meetings", ar: "الاجتماعات" },
+          { en: "meetings,", ar: "الاجتماعات" },
           { en: "I", ar: "أنا" },
           { en: "kept", ar: "ظللت" },
           { en: "sneaking", ar: "ألقي خلسة" },
@@ -2610,11 +2610,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-17-s4",
-        en: "One night I realized I hadn't had a quiet thought in hours",
+        en: "One night, I realized I hadn't had a quiet thought in hours",
         ar: "في إحدى الليالي، أدركت أنني لم أحظَ بفكرة هادئة منذ ساعات.",
         wordTranslations: [
           { en: "One", ar: "ذات" },
-          { en: "night", ar: "ليلة" },
+          { en: "night,", ar: "ليلة" },
           { en: "I", ar: "أنا" },
           { en: "realized", ar: "أدركت" },
           { en: "I", ar: "أنني" },
@@ -2750,11 +2750,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-18-s2",
-        en: "In meetings I mostly just nodded and took notes",
+        en: "In meetings, I mostly just nodded and took notes",
         ar: "في الاجتماعات، كنت غالباً أومئ برأسي وأدوّن الملاحظات فقط.",
         wordTranslations: [
           { en: "In", ar: "في" },
-          { en: "meetings", ar: "الاجتماعات" },
+          { en: "meetings,", ar: "الاجتماعات" },
           { en: "I", ar: "أنا" },
           { en: "mostly", ar: "غالباً" },
           { en: "just", ar: "فقط" },
@@ -2783,12 +2783,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-18-s4",
-        en: "During one meeting the team got stuck on a problem",
+        en: "During one meeting, the team got stuck on a problem",
         ar: "خلال أحد الاجتماعات، علق الفريق عند مشكلة ما.",
         wordTranslations: [
           { en: "During", ar: "خلال" },
           { en: "one", ar: "أحد" },
-          { en: "meeting", ar: "الاجتماعات" },
+          { en: "meeting,", ar: "الاجتماعات" },
           { en: "the", ar: "الـ" },
           { en: "team", ar: "الفريق" },
           { en: "got", ar: "علق" },
@@ -2816,13 +2816,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-18-s6",
-        en: "The room went silent and I regretted speaking instantly",
+        en: "The room went silent, and I regretted speaking instantly",
         ar: "ساد الصمت الغرفة وندمت على الكلام فوراً.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
           { en: "room", ar: "الغرفة" },
           { en: "went", ar: "ساد" },
-          { en: "silent", ar: "الصمت" },
+          { en: "silent,", ar: "الصمت" },
           { en: "and", ar: "و" },
           { en: "I", ar: "أنا" },
           { en: "regretted", ar: "ندمت" },
@@ -2832,10 +2832,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-18-s7",
-        en: "Then my manager said that's actually a great point",
+        en: "Then, my manager said that's actually a great point",
         ar: "ثم قال مديري إن هذه في الواقع نقطة رائعة.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "my", ar: "لي" },
           { en: "manager", ar: "مديري" },
           { en: "said", ar: "قال" },
@@ -3024,12 +3024,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-19-s9",
-        en: "Everyone it seems is just quietly figuring things out",
+        en: "Everyone, it seems, is just quietly figuring things out",
         ar: "يبدو أن الجميع يحاولون ببساطة فهم الأمور بهدوء.",
         wordTranslations: [
-          { en: "Everyone", ar: "الجميع" },
+          { en: "Everyone,", ar: "الجميع" },
           { en: "it", ar: "يبدو" },
-          { en: "seems", ar: "أن" },
+          { en: "seems,", ar: "أن" },
           { en: "is", ar: "الجميع" },
           { en: "just", ar: "يحاولون" },
           { en: "quietly", ar: "بهدوء" },
@@ -3087,11 +3087,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-20-s3",
-        en: "Within minutes the rain was pouring down hard",
+        en: "Within minutes, the rain was pouring down hard",
         ar: "خلال دقائق، كان المطر ينهمر بغزارة.",
         wordTranslations: [
           { en: "Within", ar: "خلال" },
-          { en: "minutes", ar: "دقائق" },
+          { en: "minutes,", ar: "دقائق" },
           { en: "the", ar: "الـ" },
           { en: "rain", ar: "المطر" },
           { en: "was", ar: "كان" },
@@ -3102,13 +3102,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-20-s4",
-        en: "Everyone stood there soaked staring at the ruined cake",
+        en: "Everyone stood there, soaked, staring at the ruined cake",
         ar: "وقف الجميع مبللين يحدقون في الكعكة المتضررة.",
         wordTranslations: [
           { en: "Everyone", ar: "الجميع" },
           { en: "stood", ar: "وقف" },
-          { en: "there", ar: "هناك" },
-          { en: "soaked", ar: "مبللين" },
+          { en: "there,", ar: "هناك" },
+          { en: "soaked,", ar: "مبللين" },
           { en: "staring", ar: "يحدقون" },
           { en: "at", ar: "في" },
           { en: "the", ar: "الـ" },
@@ -3151,13 +3151,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-20-s7",
-        en: "We carried everything upstairs laughing at how ridiculous we looked",
+        en: "We carried everything upstairs, laughing at how ridiculous we looked",
         ar: "حملنا كل شيء إلى الطابق العلوي ضاحكين على مدى غرابة مظهرنا.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
           { en: "carried", ar: "حملنا" },
           { en: "everything", ar: "كل شيء" },
-          { en: "upstairs", ar: "إلى الطابق العلوي" },
+          { en: "upstairs,", ar: "إلى الطابق العلوي" },
           { en: "laughing", ar: "ضاحكين" },
           { en: "at", ar: "على" },
           { en: "how", ar: "مدى" },
@@ -3340,12 +3340,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-21-s8",
-        en: "Six months in I can finally play one song without stopping",
+        en: "Six months in, I can finally play one song without stopping",
         ar: "بعد ستة أشهر، أستطيع أخيراً عزف أغنية واحدة دون توقف.",
         wordTranslations: [
           { en: "Six", ar: "ستة" },
           { en: "months", ar: "أشهر" },
-          { en: "in", ar: "بعد" },
+          { en: "in,", ar: "بعد" },
           { en: "I", ar: "أستطيع" },
           { en: "can", ar: "أخيراً" },
           { en: "finally", ar: "عزف" },
@@ -3490,7 +3490,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-22-s7",
-        en: "I wasn't ready to forgive him but I wasn't ready to lose him either",
+        en: "I wasn't ready to forgive him, but I wasn't ready to lose him either",
         ar: "لم أكن مستعداً لمسامحته، لكنني لم أكن مستعداً لخسارته أيضاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -3498,7 +3498,7 @@ export const normalLessons: Lesson[] = [
           { en: "ready", ar: "أكن" },
           { en: "to", ar: "مستعداً" },
           { en: "forgive", ar: "لمسامحته" },
-          { en: "him", ar: "ه" },
+          { en: "him,", ar: "ه" },
           { en: "but", ar: "لكن" },
           { en: "I", ar: "أنا" },
           { en: "wasn't", ar: "لم" },
@@ -3511,7 +3511,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-22-s8",
-        en: "I finally texted back three words just one coffee",
+        en: "I finally texted back three words, just one coffee",
         ar: "راسلته أخيراً بثلاث كلمات فقط قهوة واحدة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -3519,7 +3519,7 @@ export const normalLessons: Lesson[] = [
           { en: "texted", ar: "راسلته" },
           { en: "back", ar: "رداً" },
           { en: "three", ar: "بثلاث" },
-          { en: "words", ar: "كلمات" },
+          { en: "words,", ar: "كلمات" },
           { en: "just", ar: "فقط" },
           { en: "one", ar: "قهوة" },
           { en: "coffee", ar: "واحدة" },
@@ -3527,12 +3527,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-22-s9",
-        en: "Whatever happens next at least the chair won't stay empty forever",
+        en: "Whatever happens next, at least the chair won't stay empty forever",
         ar: "مهما يحدث بعد ذلك على الأقل لن يبقى الكرسي فارغاً إلى الأبد.",
         wordTranslations: [
           { en: "Whatever", ar: "مهما" },
           { en: "happens", ar: "يحدث" },
-          { en: "next", ar: "بعد ذلك" },
+          { en: "next,", ar: "بعد ذلك" },
           { en: "at", ar: "على" },
           { en: "least", ar: "الأقل" },
           { en: "the", ar: "الـ" },
@@ -3610,7 +3610,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-23-s4",
-        en: "One night after her last breakup she asked why I was so quiet",
+        en: "One night after her last breakup, she asked why I was so quiet",
         ar: "في إحدى الليالي بعد انفصالها الأخير، سألتني لماذا أنا صامت جداً.",
         wordTranslations: [
           { en: "One", ar: "في إحدى" },
@@ -3618,7 +3618,7 @@ export const normalLessons: Lesson[] = [
           { en: "after", ar: "بعد" },
           { en: "her", ar: "لها" },
           { en: "last", ar: "الأخير" },
-          { en: "breakup", ar: "انفصالها" },
+          { en: "breakup,", ar: "انفصالها" },
           { en: "she", ar: "هي" },
           { en: "asked", ar: "سألتني" },
           { en: "why", ar: "لماذا" },
@@ -3683,10 +3683,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-23-s8",
-        en: "Then she quietly admitted she'd wondered the same thing for years",
+        en: "Then, she quietly admitted she'd wondered the same thing for years",
         ar: "ثم اعترفت بهدوء بأنها تساءلت عن الشيء نفسه لسنوات.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "she", ar: "هي" },
           { en: "quietly", ar: "بهدوء" },
           { en: "admitted", ar: "اعترفت" },
@@ -3701,7 +3701,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-23-s9",
-        en: "We're still figuring out what we are but at least it's honest now",
+        en: "We're still figuring out what we are, but at least it's honest now",
         ar: "ما زلنا نكتشف ما نحن عليه، لكن على الأقل الأمر صادق الآن.",
         wordTranslations: [
           { en: "We're", ar: "ما زلنا" },
@@ -3710,7 +3710,7 @@ export const normalLessons: Lesson[] = [
           { en: "out", ar: "معاً" },
           { en: "what", ar: "ما" },
           { en: "we", ar: "نحن" },
-          { en: "are", ar: "عليه" },
+          { en: "are,", ar: "عليه" },
           { en: "but", ar: "لكن" },
           { en: "at", ar: "على" },
           { en: "least", ar: "الأقل" },
@@ -3822,10 +3822,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-24-s6",
-        en: "Instead I wrote honestly about how proud I actually was",
+        en: "Instead, I wrote honestly about how proud I actually was",
         ar: "بدلاً من ذلك، كتبت بصدق عن مدى فخري الحقيقي به.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً من ذلك" },
+          { en: "Instead,", ar: "بدلاً من ذلك" },
           { en: "I", ar: "أنا" },
           { en: "wrote", ar: "كتبت" },
           { en: "honestly", ar: "بصدق" },
@@ -3873,15 +3873,15 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-24-s9",
-        en: "Jealousy and love it turns out can live in the same sentence",
+        en: "Jealousy and love, it turns out, can live in the same sentence",
         ar: "تبيّن أن الغيرة والحب يمكن أن يتعايشا في الجملة نفسها.",
         wordTranslations: [
           { en: "Jealousy", ar: "الغيرة" },
           { en: "and", ar: "و" },
-          { en: "love", ar: "الحب" },
+          { en: "love,", ar: "الحب" },
           { en: "it", ar: "تبيّن" },
           { en: "turns", ar: "أن" },
-          { en: "out", ar: "الغيرة والحب" },
+          { en: "out,", ar: "الغيرة والحب" },
           { en: "can", ar: "يمكن" },
           { en: "live", ar: "أن يتعايشا" },
           { en: "in", ar: "في" },
@@ -4080,12 +4080,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-26-s2",
-        en: "After the workout I grabbed a bag from the bench",
+        en: "After the workout, I grabbed a bag from the bench",
         ar: "بعد التمرين أخذت حقيبة من على المقعد.",
         wordTranslations: [
           { en: "After", ar: "بعد" },
           { en: "the", ar: "الـ" },
-          { en: "workout", ar: "التمرين" },
+          { en: "workout,", ar: "التمرين" },
           { en: "I", ar: "أنا" },
           { en: "grabbed", ar: "أخذت" },
           { en: "a", ar: "واحدة" },
@@ -4097,11 +4097,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-26-s3",
-        en: "At home I opened it and found a stranger's clothes",
+        en: "At home, I opened it and found a stranger's clothes",
         ar: "في البيت فتحتها ووجدت ملابس شخص غريب.",
         wordTranslations: [
           { en: "At", ar: "في" },
-          { en: "home", ar: "البيت" },
+          { en: "home,", ar: "البيت" },
           { en: "I", ar: "أنا" },
           { en: "opened", ar: "فتحتها" },
           { en: "it", ar: "ها" },
@@ -4131,13 +4131,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-26-s5",
-        en: "I called the number and a man answered right away",
+        en: "I called the number, and a man answered right away",
         ar: "اتصلت بالرقم فأجاب رجل على الفور.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "called", ar: "اتصلت" },
           { en: "the", ar: "الـ" },
-          { en: "number", ar: "بالرقم" },
+          { en: "number,", ar: "بالرقم" },
           { en: "and", ar: "و" },
           { en: "a", ar: "واحد" },
           { en: "man", ar: "رجل" },
@@ -4195,10 +4195,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-26-s9",
-        en: "Now we say hello every time we see each other",
+        en: "Now, we say hello every time we see each other",
         ar: "الآن نتبادل التحية كلما التقينا.",
         wordTranslations: [
-          { en: "Now", ar: "الآن" },
+          { en: "Now,", ar: "الآن" },
           { en: "we", ar: "نحن" },
           { en: "say", ar: "نقول" },
           { en: "hello", ar: "مرحباً" },
@@ -4489,12 +4489,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-28-s8",
-        en: "She arrived early holding a small plant as a gift",
+        en: "She arrived early, holding a small plant as a gift",
         ar: "وصلت مبكراً حاملة نبتة صغيرة كهدية.",
         wordTranslations: [
           { en: "She", ar: "هي" },
           { en: "arrived", ar: "وصلت" },
-          { en: "early", ar: "مبكراً" },
+          { en: "early,", ar: "مبكراً" },
           { en: "holding", ar: "حاملة" },
           { en: "a", ar: "واحدة" },
           { en: "small", ar: "صغيرة" },
@@ -4591,14 +4591,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-29-s4",
-        en: "After the third late payment I finally sent a polite reminder",
+        en: "After the third late payment, I finally sent a polite reminder",
         ar: "بعد الدفعة المتأخرة الثالثة أرسلت أخيراً رسالة تذكير مؤدبة.",
         wordTranslations: [
           { en: "After", ar: "بعد" },
           { en: "the", ar: "الـ" },
           { en: "third", ar: "الثالثة" },
           { en: "late", ar: "المتأخرة" },
-          { en: "payment", ar: "الدفعة" },
+          { en: "payment,", ar: "الدفعة" },
           { en: "I", ar: "أنا" },
           { en: "finally", ar: "أخيراً" },
           { en: "sent", ar: "أرسلت" },
@@ -4609,11 +4609,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-29-s5",
-        en: "He apologized but the next invoice was late again anyway",
+        en: "He apologized, but the next invoice was late again anyway",
         ar: "اعتذر لكن الفاتورة التالية تأخرت مجدداً على أي حال.",
         wordTranslations: [
           { en: "He", ar: "هو" },
-          { en: "apologized", ar: "اعتذر" },
+          { en: "apologized,", ar: "اعتذر" },
           { en: "but", ar: "لكن" },
           { en: "the", ar: "الـ" },
           { en: "next", ar: "التالية" },
@@ -4777,14 +4777,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-30-s5",
-        en: "I ignored it for weeks and it somehow still survived",
+        en: "I ignored it for weeks, and it somehow still survived",
         ar: "تجاهلته لأسابيع ونجا بطريقة ما رغم ذلك.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "ignored", ar: "تجاهلت" },
           { en: "it", ar: "ها" },
           { en: "for", ar: "لمدة" },
-          { en: "weeks", ar: "أسابيع" },
+          { en: "weeks,", ar: "أسابيع" },
           { en: "and", ar: "و" },
           { en: "it", ar: "هي" },
           { en: "somehow", ar: "بطريقة ما" },
@@ -5458,10 +5458,10 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-34-s6",
-        en: "Instead I just sat there in my car for a while",
+        en: "Instead, I just sat there in my car for a while",
         ar: "بدلاً من ذلك جلست هناك في سيارتي لبعض الوقت.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً من ذلك" },
+          { en: "Instead,", ar: "بدلاً من ذلك" },
           { en: "I", ar: "أنا" },
           { en: "just", ar: "فقط" },
           { en: "sat", ar: "جلست" },
@@ -5493,14 +5493,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-34-s8",
-        en: "The house wasn't mine anymore but the memories still were",
+        en: "The house wasn't mine anymore, but the memories still were",
         ar: "لم يعد المنزل لي لكن الذكريات ما زالت كذلك.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
           { en: "house", ar: "المنزل" },
           { en: "wasn't", ar: "لم يعد" },
           { en: "mine", ar: "لي" },
-          { en: "anymore", ar: "بعد الآن" },
+          { en: "anymore,", ar: "بعد الآن" },
           { en: "but", ar: "لكن" },
           { en: "the", ar: "الـ" },
           { en: "memories", ar: "الذكريات" },
@@ -5510,12 +5510,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-34-s9",
-        en: "I drove away feeling strangely lighter than when I'd arrived",
+        en: "I drove away, feeling strangely lighter than when I'd arrived",
         ar: "ابتعدت بالسيارة شاعراً بخفة غريبة أكثر مما كنت عليه عند وصولي.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "drove", ar: "قدت" },
-          { en: "away", ar: "مبتعداً" },
+          { en: "away,", ar: "مبتعداً" },
           { en: "feeling", ar: "شاعراً" },
           { en: "strangely", ar: "بشكل غريب" },
           { en: "lighter", ar: "أخف" },
@@ -5561,14 +5561,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-35-s2",
-        en: "My mentor never said anything but I know he noticed",
+        en: "My mentor never said anything, but I know he noticed",
         ar: "لم يقل معلمي شيئاً قط لكنني أعلم أنه لاحظ.",
         wordTranslations: [
           { en: "My", ar: "لي" },
           { en: "mentor", ar: "معلمي" },
           { en: "never", ar: "أبداً" },
           { en: "said", ar: "قال" },
-          { en: "anything", ar: "شيئاً" },
+          { en: "anything,", ar: "شيئاً" },
           { en: "but", ar: "لكن" },
           { en: "I", ar: "أنا" },
           { en: "know", ar: "أعلم" },
@@ -5666,14 +5666,14 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-35-s8",
-        en: "When he finally called back he simply said thank you for saying that",
+        en: "When he finally called back, he simply said thank you for saying that",
         ar: "حين اتصل أخيراً قال ببساطة شكراً لك على قول ذلك.",
         wordTranslations: [
           { en: "When", ar: "عندما" },
           { en: "he", ar: "هو" },
           { en: "finally", ar: "أخيراً" },
           { en: "called", ar: "اتصل" },
-          { en: "back", ar: "مجدداً" },
+          { en: "back,", ar: "مجدداً" },
           { en: "he", ar: "هو" },
           { en: "simply", ar: "ببساطة" },
           { en: "said", ar: "قال" },
@@ -5686,7 +5686,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-35-s9",
-        en: "I don't know if he fully forgave me but at least I finally said it",
+        en: "I don't know if he fully forgave me, but at least I finally said it",
         ar: "لا أعلم إن سامحني بالكامل لكنني على الأقل قلتها أخيراً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -5696,7 +5696,7 @@ export const normalLessons: Lesson[] = [
           { en: "he", ar: "كان" },
           { en: "fully", ar: "قد" },
           { en: "forgave", ar: "سامحني" },
-          { en: "me", ar: "بالكامل" },
+          { en: "me,", ar: "بالكامل" },
           { en: "but", ar: "لكن" },
           { en: "at", ar: "على" },
           { en: "least", ar: "الأقل" },
@@ -5741,7 +5741,7 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-36-s2",
-        en: "It came with a bigger title double the salary and constant travel",
+        en: "It came with a bigger title, double the salary, and constant travel",
         ar: "جاءت بمنصب أكبر وضعف الراتب وسفر دائم.",
         wordTranslations: [
           { en: "It", ar: "هي" },
@@ -5749,10 +5749,10 @@ export const normalLessons: Lesson[] = [
           { en: "with", ar: "بـ" },
           { en: "a", ar: "واحد" },
           { en: "bigger", ar: "أكبر" },
-          { en: "title", ar: "منصب" },
+          { en: "title,", ar: "منصب" },
           { en: "double", ar: "ضعف" },
           { en: "the", ar: "الـ" },
-          { en: "salary", ar: "الراتب" },
+          { en: "salary,", ar: "الراتب" },
           { en: "and", ar: "و" },
           { en: "constant", ar: "دائم" },
           { en: "travel", ar: "سفر" },
@@ -5811,11 +5811,11 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-36-s6",
-        en: "Deep down I already knew what mattered more to me",
+        en: "Deep down, I already knew what mattered more to me",
         ar: "كنت أعلم في أعماقي ما الذي يهمني أكثر.",
         wordTranslations: [
           { en: "Deep", ar: "في العمق" },
-          { en: "down", ar: "بداخلي" },
+          { en: "down,", ar: "بداخلي" },
           { en: "I", ar: "أنا" },
           { en: "already", ar: "بالفعل" },
           { en: "knew", ar: "كنت أعلم" },
@@ -5828,13 +5828,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-36-s7",
-        en: "I turned it down and my manager looked genuinely confused",
+        en: "I turned it down, and my manager looked genuinely confused",
         ar: "رفضتها وبدا مديري مرتبكاً حقاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "turned", ar: "رفضت" },
           { en: "it", ar: "ها" },
-          { en: "down", ar: "تماماً" },
+          { en: "down,", ar: "تماماً" },
           { en: "and", ar: "و" },
           { en: "my", ar: "لي" },
           { en: "manager", ar: "مديري" },
@@ -5861,13 +5861,13 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-36-s9",
-        en: "Success it turns out doesn't always look like the title on paper",
+        en: "Success, it turns out, doesn't always look like the title on paper",
         ar: "يتبيّن أن النجاح لا يبدو دائماً مثل المنصب على الورق.",
         wordTranslations: [
-          { en: "Success", ar: "النجاح" },
+          { en: "Success,", ar: "النجاح" },
           { en: "it", ar: "تبيّن" },
           { en: "turns", ar: "أنه" },
-          { en: "out", ar: "لا" },
+          { en: "out,", ar: "لا" },
           { en: "doesn't", ar: "يبدو" },
           { en: "always", ar: "دائماً" },
           { en: "look", ar: "مثل" },

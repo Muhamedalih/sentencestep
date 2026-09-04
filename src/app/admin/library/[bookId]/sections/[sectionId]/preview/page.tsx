@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
+import { GenerateBookAudioButton } from "@/components/admin/generate-book-audio-button";
 import { BookReadingSession } from "@/components/learning/book-reading-session";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,8 +11,9 @@ import {
   getBookSectionWithSentencesAdmin,
   listBookSectionsAdmin,
 } from "@/lib/admin/library-queries";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getBookNarrationVoiceId } from "@/lib/admin/elevenlabs-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { resolveVoiceId } from "@/lib/voice/resolution";
 import type { Book } from "@/types/library";
 
 export const metadata: Metadata = {
@@ -34,13 +36,17 @@ export default async function AdminBookSectionPreviewPage({
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const { bookId, sectionId } = await params;
-  const [book, section, sections, defaultVoiceId] = await Promise.all([
+  const [book, section, sections, globalDefaultVoiceId] = await Promise.all([
     getBookByIdAdmin(bookId),
     getBookSectionWithSentencesAdmin(sectionId),
     listBookSectionsAdmin(bookId),
-    getDefaultVoiceId(),
+    getBookNarrationVoiceId(),
   ]);
   if (!book || !section || section.bookId !== bookId) notFound();
+  // This book's own narration override always wins over the global default
+  // — see the same fix in the learner-facing read/page.tsx, so a preview
+  // actually previews the voice this book will really be read with.
+  const resolvedVoiceId = resolveVoiceId(book.voiceId, globalDefaultVoiceId);
 
   if (section.sentences.length === 0) {
     return (
@@ -57,10 +63,11 @@ export default async function AdminBookSectionPreviewPage({
 
   return (
     <div className="lesson-shell bg-background text-foreground flex h-svh w-full flex-col">
-      <div className="shrink-0 px-6 pt-4 lg:px-16">
+      <div className="flex shrink-0 items-center justify-between gap-4 px-6 pt-4 lg:px-16">
         <Button asChild variant="ghost" size="sm" className="w-fit">
           <Link href={`/admin/library/${bookId}/sections/${sectionId}/edit`}>← Back to editor</Link>
         </Button>
+        <GenerateBookAudioButton bookId={bookId} />
       </div>
       <div className="min-h-0 flex-1">
         <BookReadingSession
@@ -77,7 +84,7 @@ export default async function AdminBookSectionPreviewPage({
           initialCompletedSentenceCount={0}
           totalSentenceCount={section.sentences.length}
           totalSectionCount={sections.length}
-          resolvedVoiceId={defaultVoiceId}
+          resolvedVoiceId={resolvedVoiceId}
           previewMode
         />
       </div>

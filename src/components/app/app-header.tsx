@@ -121,12 +121,22 @@ export function AppHeader({
                       smaller/lighter-weight than every other control here. */}
                   <Button asChild variant="ghost" size="icon-sm">
                     <Link href="/learn/saved" aria-label={t.nav.mySaves} title={t.nav.mySaves}>
-                      <Bookmark className="size-4" aria-hidden="true" />
+                      {/* Filled + accent-toned once something is actually saved — an
+                          outline icon in flat gray read as a dead utility control next
+                          to the colored streak/XP pair; matching their treatment gives
+                          it the same "this is alive" weight. */}
+                      <Bookmark
+                        className={cn(
+                          "size-4",
+                          savedCount ? "fill-accent text-accent" : "text-muted-foreground",
+                        )}
+                        aria-hidden="true"
+                      />
                     </Link>
                   </Button>
                   {Boolean(savedCount) && (
                     <span
-                      className="bg-accent text-accent-foreground pointer-events-none absolute -end-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full text-[9px] font-bold"
+                      className="bg-accent text-accent-foreground ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2"
                       aria-hidden="true"
                     >
                       {savedCount! > 9 ? "9+" : savedCount}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useActionState } from "react";
 import { MailCheck } from "lucide-react";
 
@@ -14,7 +15,7 @@ import type { AuthActionState } from "@/lib/supabase/auth-actions";
 
 const initialState: AuthActionState = {};
 
-export function RegisterForm() {
+export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [state, formAction, pending] = useActionState(signUp, initialState);
   const { t } = useLocale();
 
@@ -78,6 +79,20 @@ export function RegisterForm() {
             />
             <p className="text-muted-foreground text-xs">{t.auth.passwordHint}</p>
           </div>
+
+          {turnstileSiteKey && (
+            <>
+              {/* No nonce needed: this is an external-src script, matched by
+                  middleware.ts's CSP script-src allow-list (challenges.cloudflare.com),
+                  not by nonce — the nonce requirement only applies to inline scripts. */}
+              <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+              {/* Turnstile's own script auto-renders this into a real widget and
+                  injects a hidden "cf-turnstile-response" input into this form —
+                  signUp (auth-actions.ts) reads that field directly, no extra
+                  client-side wiring needed. */}
+              <div className="cf-turnstile" data-sitekey={turnstileSiteKey} data-theme="auto" />
+            </>
+          )}
 
           {state?.error && (
             <p role="alert" className="text-danger text-sm">

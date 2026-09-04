@@ -3,12 +3,15 @@ import type { Metadata } from "next";
 import { DashboardSummary } from "@/components/app/dashboard-summary";
 import { HomeGreeting } from "@/components/app/home-greeting";
 import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
+import { NeedsReviewWords } from "@/components/app/needs-review-words";
+import { SavedSentenceCard } from "@/components/app/saved-sentence-card";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessons } from "@/lib/content";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { LEARNING_MODES } from "@/lib/learning-modes";
+import { stableIndex } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -16,6 +19,8 @@ import { fetchBookProgressAction } from "@/lib/book-progress/actions";
 import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/queries/library";
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
+import { fetchMySavedSentences } from "@/lib/supabase/queries/saved-sentences";
+import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import type { Book } from "@/types/library";
 
 export const metadata: Metadata = { title: "Home" };
@@ -63,6 +68,12 @@ export default async function LearnHomePage() {
   const attemptCountPromise = userPromise.then((user) =>
     user ? fetchAttemptCount(user.id) : null,
   );
+  // A small pool (not the whole library) to pick today's resurfaced saved
+  // sentence from — see savedSpotlight below. null for a guest/no saves,
+  // which the render simply omits rather than showing an empty widget.
+  const savedPoolPromise = userPromise.then((user) =>
+    user ? fetchMySavedSentences(user.id, { limit: 10, locale: locale ?? undefined }) : null,
+  );
   const [
     units,
     hasPremium,
@@ -72,6 +83,8 @@ export default async function LearnHomePage() {
     conversationLessons,
     attemptCount,
     featuredBooks,
+    weakWords,
+    savedPool,
   ] = await Promise.all([
     getLessons("normal", locale ?? undefined),
     hasPremiumAccess(),
@@ -81,6 +94,8 @@ export default async function LearnHomePage() {
     getLessons("conversation", locale ?? undefined),
     attemptCountPromise,
     fetchFeaturedBooks(supabase),
+    fetchWeakWordsAction(),
+    savedPoolPromise,
   ]);
 
   const byMode = { normal: units, stories: storiesLessons, conversation: conversationLessons };
@@ -127,6 +142,15 @@ export default async function LearnHomePage() {
 
   const isPremiumUser = hasPremium || isAdminUser;
 
+  // Stable per calendar day (not per request) so refreshing the dashboard
+  // doesn't shuffle the pick mid-day — a resurfaced memory that changes
+  // every reload would read as random noise rather than "today's" pick.
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const savedSpotlight =
+    savedPool && savedPool.items.length > 0
+      ? savedPool.items[stableIndex(todayKey, savedPool.items.length)]
+      : null;
+
   return (
     <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
@@ -155,6 +179,15 @@ export default async function LearnHomePage() {
         bookProgressPercent={bookProgressPercent}
         isPremiumUser={isPremiumUser}
       />
+      <NeedsReviewWords words={weakWords} />
+      {savedSpotlight && (
+        <div className="mt-8">
+          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+            {t.bookLibrary.savedSpotlightLabel}
+          </p>
+          <SavedSentenceCard item={savedSpotlight} />
+        </div>
+      )}
     </div>
   );
 }

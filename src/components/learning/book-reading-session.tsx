@@ -379,38 +379,21 @@ export function BookReadingSession({
                 </p>
               }
             />
-            <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
+            <div className="shrink-0 px-6 pt-3 lg:px-16 lg:pt-4">
               {/*
-                A 1fr/auto/1fr grid rather than flex justify-between: the
-                two flanking 1fr tracks always split the leftover width
-                equally regardless of how wide the section-title or
-                page-count text is, which is what keeps bookTitleHeading
-                genuinely centered on the row instead of drifting toward
-                whichever side has shorter text. The side items are left at
-                grid's default `justify-self: stretch` (never overridden to
-                start/end) — that's what actually forces each one's box to
-                its track's computed width so `min-w-0 truncate` has
-                something to clip against; `justify-self-start/end` was
-                tried first and doesn't work here, since an unstretched grid
-                item sizes to its own content and can overflow past its
-                track with `truncate` never engaging. `text-start`/`text-end`
-                position the text within the now-full-width box instead.
+                Just the centered book title now — the section-title (start)
+                and page-of-total (end) that used to flank it were dropped
+                (reading-screen feedback: redundant with the sentence-
+                progress row directly below and with BookPageNav's own page
+                count at the page's bottom, and cutting them shrinks the
+                header enough to hand the content area real extra height).
+                Kept flush against the header's own (now smaller) top
+                padding rather than adding a further nudge — reading-screen
+                feedback was that the header was taking noticeably more
+                vertical space than the sentence content itself deserved.
               */}
-              <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                <span
-                  className="text-primary min-w-0 truncate text-start text-xs font-semibold tracking-wide uppercase"
-                  dir={dir}
-                >
-                  {section.supportTitle ?? section.title}
-                </span>
-                {bookTitleHeading}
-                <span className="text-muted-foreground min-w-0 truncate text-end text-xs font-medium tabular-nums">
-                  {t.bookLibrary.pageOfTotal
-                    .replace("{n}", String(pageNumber))
-                    .replace("{total}", String(totalPages))}
-                </span>
-              </div>
-              <div className="mb-3 flex items-center justify-between gap-4">
+              <div className="mb-0.5">{bookTitleHeading}</div>
+              <div className="mb-1 flex items-center justify-between gap-4">
                 <span className="text-muted-foreground text-sm font-medium">
                   {t.lesson.sentenceProgress
                     .replace("{n}", String(Math.min(completedCount + 1, totalSentenceCount)))
@@ -422,7 +405,7 @@ export function BookReadingSession({
               </div>
               <Progress value={percent} />
             </div>
-            <div className="flex flex-1 flex-col justify-start overflow-y-auto px-6 pb-8 lg:px-16 lg:pt-6">
+            <div className="flex flex-1 flex-col justify-start overflow-y-auto px-6 pb-8 lg:px-16 lg:pt-3">
               {/*
                 A real page (Phase 4) shows every sentence in `viewedPage`
                 together, but exactly one — the real, progress-linked active
@@ -443,9 +426,24 @@ export function BookReadingSession({
                 position, not by DOM index, so this stays correct without
                 ever moving the element in the tree.
               */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
                 <div
-                  className={isViewingActivePage ? undefined : "hidden"}
+                  className={
+                    !isViewingActivePage
+                      ? "hidden"
+                      : // A light divider under the active sentence's own box
+                        // (border-bottom, not a separate flex sibling) —
+                        // reader feedback wanted a subtle line between the
+                        // sentence being typed and the page's other
+                        // sentences below it, without disturbing the
+                        // gap-4 rhythm the rest of the page already uses.
+                        // Only when this page actually holds more than the
+                        // active sentence — nothing to separate it from
+                        // otherwise.
+                        viewedPage.length > 1
+                        ? "border-border/40 border-b pb-4"
+                        : undefined
+                  }
                   style={isViewingActivePage ? { order: activeSentenceIndexInPage } : undefined}
                 >
                   <BookSentenceReader
@@ -498,7 +496,13 @@ export function BookReadingSession({
             key="sectionIntro"
             className="flex flex-1 items-center justify-center px-6 py-8 lg:min-h-svh lg:px-16"
           >
-            <BookSectionIntro section={section} onBegin={() => setScreen("reading")} />
+            <BookSectionIntro
+              book={book}
+              section={section}
+              sectionNumber={section.orderIndex + 1}
+              totalSectionCount={totalSectionCount}
+              onBegin={() => setScreen("reading")}
+            />
           </div>
         ) : screen === "loadingNextSection" ? (
           <div key="loadingNextSection">

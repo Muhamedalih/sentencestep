@@ -195,6 +195,8 @@ export interface AdminBookDetail {
   freePreviewSentenceCount: number;
   status: BookStatus;
   orderIndex: number;
+  /** Per-book narration voice override (books.voice_id) — see the learner-facing Book type's identical field for why the reading/preview pages must resolve through this, not just the global default. */
+  voiceId: string | null;
   categories: { categoryId: string; isPrimary: boolean }[];
 }
 
@@ -222,6 +224,7 @@ export async function getBookByIdAdmin(id: string): Promise<AdminBookDetail | nu
     freePreviewSentenceCount: book.free_preview_sentence_count,
     status: book.status,
     orderIndex: book.order_index,
+    voiceId: book.voice_id,
     categories: (links ?? []).map((row) => ({
       categoryId: row.category_id,
       isPrimary: row.is_primary,

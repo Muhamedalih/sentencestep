@@ -42,6 +42,21 @@ export function generatedElevenLabsClipPath(voiceId: string): string {
   return `generated/elevenlabs/${voiceId}/${randomUUID()}.mp3`;
 }
 
+/** Same bucket, a separate `generated/azure/` prefix — mirrors generatedElevenLabsClipPath's per-provider prefix convention (see its own doc comment) for the Azure Speech narration pipeline. */
+export function generatedAzureClipPath(voiceId: string): string {
+  return `generated/azure/${voiceId}/${randomUUID()}.mp3`;
+}
+
+/** Same bucket, a separate `generated/gemini/` prefix — mirrors generatedAzureClipPath's per-provider prefix convention for the Gemini narration pipeline (see providers/gemini.ts). */
+export function generatedGeminiClipPath(voiceId: string): string {
+  return `generated/gemini/${voiceId}/${randomUUID()}.mp3`;
+}
+
+/** Same bucket, a separate `generated/edge-tts/` prefix — mirrors generatedAzureClipPath's per-provider prefix convention for the free, zero-config Edge-TTS narration pipeline (see providers/edge-tts.ts). */
+export function generatedEdgeTtsClipPath(voiceId: string): string {
+  return `generated/edge-tts/${voiceId}/${randomUUID()}.mp3`;
+}
+
 /** The path for a voice's one admin-preview sample — deterministic (not UUID-suffixed) so re-seeding the same voice overwrites its old sample instead of accumulating orphans. */
 export function samplePath(voiceId: string): string {
   return `samples/${voiceId}.mp3`;

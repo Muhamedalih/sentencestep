@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Image as ImageIcon, List as ListIcon } from "lucide-react";
 
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
@@ -49,11 +50,18 @@ export function LessonSession({
   const [isFixingMistakes, setIsFixingMistakes] = useState(false);
   const [finalAccuracy, setFinalAccuracy] = useState(1);
   const [finalWpm, setFinalWpm] = useState(0);
-  // Stories mode only (see StoryPreviousSentences) — the running numbered
-  // transcript that replaces the topic illustration there. Harmless to hold
-  // for every mode (nothing renders it outside unit.mode === "stories"),
-  // but only ever appended to below when it does.
+  // The running numbered transcript (see StoryPreviousSentences). Stories
+  // mode always shows this in place of the topic illustration; Normal mode
+  // collects the same data but only shows it when the learner opts into the
+  // list view via illustrationView below (see the toggle in the render).
+  // Harmless to hold for every mode — Conversation never renders it and
+  // never appends to it.
   const [previousSentences, setPreviousSentences] = useState<CompletedStorySentence[]>([]);
+  // Normal mode only — lets the learner swap the topic illustration for the
+  // same running sentence transcript Stories mode shows permanently,
+  // switching back and forth at will (unlike Stories, where the swap is
+  // permanent for the whole lesson).
+  const [illustrationView, setIllustrationView] = useState<"image" | "list">("image");
   const {
     markComplete,
     streak,
@@ -152,7 +160,7 @@ export function LessonSession({
 
   function handleSentenceMistakes(
     sentenceId: string,
-    words: { word: string; errorIndex: number }[],
+    words: { word: string; errorIndexes: number[] }[],
   ) {
     mistakes.recordSentenceMistakes(sentenceId, words);
   }
@@ -161,7 +169,7 @@ export function LessonSession({
     if (wpm > 0) wpmSamplesRef.current.push(wpm);
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, unit.mode));
 
-    if (unit.mode === "stories" && sentence) {
+    if ((unit.mode === "stories" || unit.mode === "normal") && sentence) {
       setPreviousSentences((prev) => [
         ...prev,
         {
@@ -307,18 +315,58 @@ export function LessonSession({
                 ? previousSentences.length > 0
                   ? "grid gap-0 lg:h-full lg:grid-cols-[275px_minmax(0,1fr)] lg:items-stretch"
                   : "grid gap-0 lg:h-full lg:grid-cols-[195px_minmax(0,1fr)] lg:items-stretch"
-                : "grid gap-0 lg:h-full lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-stretch"
+                : "grid gap-4 lg:h-full lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-stretch"
             }
           >
             {unit.mode === "stories" ? (
               <StoryPreviousSentences sentences={previousSentences} />
             ) : (
-              <LessonIllustration
-                mode={unit.mode}
-                lessonId={unit.id}
-                title={unit.title}
-                illustrationUrl={unit.illustrationUrl}
-              />
+              <div className="relative lg:h-full">
+                {illustrationView === "list" ? (
+                  <StoryPreviousSentences sentences={previousSentences} />
+                ) : (
+                  <LessonIllustration
+                    mode={unit.mode}
+                    lessonId={unit.id}
+                    title={unit.title}
+                    illustrationUrl={unit.illustrationUrl}
+                  />
+                )}
+                {unit.mode === "normal" && (
+                  <div className="border-border/60 bg-background/85 absolute end-3 top-3 z-10 flex items-center gap-1 rounded-full border p-1 shadow-sm backdrop-blur-md">
+                    <button
+                      type="button"
+                      onClick={() => setIllustrationView("image")}
+                      aria-pressed={illustrationView === "image"}
+                      aria-label={t.lesson.illustrationViewImage}
+                      title={t.lesson.illustrationViewImage}
+                      className={cn(
+                        "flex size-7 items-center justify-center rounded-full transition-colors",
+                        illustrationView === "image"
+                          ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <ImageIcon className="size-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIllustrationView("list")}
+                      aria-pressed={illustrationView === "list"}
+                      aria-label={t.lesson.illustrationViewList}
+                      title={t.lesson.illustrationViewList}
+                      className={cn(
+                        "flex size-7 items-center justify-center rounded-full transition-colors",
+                        illustrationView === "list"
+                          ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <ListIcon className="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* justify-center below lg: is fine either way — that breakpoint
@@ -327,16 +375,15 @@ export function LessonSession({
                 At lg:+ this column becomes lg:h-full, matching whatever
                 height the two-column row (illustration/transcript + sentence)
                 is stretched to — routinely taller than a single sentence's
-                own content. Non-stories modes stay lg:justify-start: with a
-                photo illustration beside it (see LessonIllustration's own
-                items-center), top-aligning keeps the sentence starting right
-                under the lesson counter instead of drifting down the row.
-                Stories mode instead keeps lg:justify-center: with the
-                previous-sentences transcript beside it (no fixed photo to
-                line up against) and no exit/enter animation on this subtree,
-                vertically centering the current sentence in the leftover
-                row height reads as "the sentence sits in the middle of the
-                screen" rather than pinned to the top with empty space below. */}
+                own content. Normal and Stories modes both go lg:justify-center:
+                the current sentence should sit in the middle of the leftover
+                row height rather than pinned to the top with empty space
+                below (Normal previously top-aligned against a fixed photo,
+                but reads better centered like the rest of the lesson
+                screen). Conversation alone stays lg:justify-start — its chat
+                bubbles read top-down like a real conversation log, so the
+                current line starts right under the lesson counter instead of
+                drifting toward the middle of the row. */}
             <div
               className={cn(
                 "flex flex-col lg:h-full lg:overflow-y-auto",
@@ -403,7 +450,9 @@ export function LessonSession({
                 className={
                   unit.mode === "stories"
                     ? "flex flex-1 flex-col justify-center px-6 pb-8 lg:px-12"
-                    : "flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16"
+                    : unit.mode === "normal"
+                      ? "flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-center lg:px-16"
+                      : "flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16"
                 }
               >
                 {sentence &&

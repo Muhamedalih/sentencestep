@@ -544,8 +544,10 @@ function StatCell({
  * earlier design varied this button's color by action, which meant a plain
  * "continue" action could visually read as a warning; this version relies
  * on size/weight/position alone to say "primary", never color-as-severity.
+ * Exported so FixYourMistakesSession's own completion state can reuse the
+ * exact same admin-themed button rather than a second, drifting copy of it.
  */
-function PrimaryActionButton({
+export function PrimaryActionButton({
   icon: Icon,
   label,
   href,
@@ -594,7 +596,7 @@ function PrimaryActionButton({
 }
 
 /** A quiet, compact next-to-the-primary action — plain outlined text, no fill, no glow; exists to stay reachable without competing with PrimaryActionButton. */
-function SecondaryActionButton({
+export function SecondaryActionButton({
   icon: Icon,
   label,
   href,

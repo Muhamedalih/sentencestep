@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { isTrackableWord, normalizeMistakeWord } from "./normalize";
+import { isMistakeWorthTracking, isTrackableWord, normalizeMistakeWord } from "./normalize";
 
 test("normalizeMistakeWord: lowercases", () => {
   assert.equal(normalizeMistakeWord("Went"), "went");
@@ -31,4 +31,19 @@ test("isTrackableWord: a real word is trackable", () => {
 test("isTrackableWord: a punctuation-only token is not trackable", () => {
   assert.equal(isTrackableWord("—"), false);
   assert.equal(isTrackableWord("..."), false);
+});
+
+test("isMistakeWorthTracking: excludes one- and two-letter words", () => {
+  assert.equal(isMistakeWorthTracking("I"), false);
+  assert.equal(isMistakeWorthTracking("he"), false);
+  assert.equal(isMistakeWorthTracking("a"), false);
+});
+
+test("isMistakeWorthTracking: includes real words of three letters or more", () => {
+  assert.equal(isMistakeWorthTracking("went"), true);
+  assert.equal(isMistakeWorthTracking("the"), true);
+});
+
+test("isMistakeWorthTracking: still excludes punctuation-only tokens", () => {
+  assert.equal(isMistakeWorthTracking("—"), false);
 });

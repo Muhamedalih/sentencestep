@@ -31,13 +31,15 @@ export type LessonColorRole =
   | "lessonIcon"
   | "lessonIllustrationStroke"
   | "lessonIllustrationAccent"
-  | "lessonXp";
+  | "lessonXp"
+  | "lessonBookCover"
+  | "lessonBookCoverForeground";
 
 export interface LessonColorRoleMeta {
   key: LessonColorRole;
   /** The --lesson-* custom property this role writes to inside .lesson-shell (see globals.css). */
   cssVar: string;
-  group: "Global" | "Lesson Player" | "Conversation / Stories" | "Rewards";
+  group: "Global" | "Lesson Player" | "Conversation / Stories" | "Rewards" | "Book Reading";
   label: string;
   description: string;
 }
@@ -158,6 +160,22 @@ export const LESSON_COLOR_ROLES: LessonColorRoleMeta[] = [
     label: "XP / reward accent",
     description: "The streak flame and XP-earned badge shown on Book Reading completion.",
   },
+  {
+    key: "lessonBookCover",
+    cssVar: "--lesson-book-cover",
+    group: "Book Reading",
+    label: "Book cover color",
+    description:
+      "The cover panel color on the Book Reading Section Intro and Book Completion screens — independent of the Primary/brand color above, so it can be set to an off-white/cream tone (or anything else) without recoloring the rest of the lesson player.",
+  },
+  {
+    key: "lessonBookCoverForeground",
+    cssVar: "--lesson-book-cover-foreground",
+    group: "Book Reading",
+    label: "Book cover text",
+    description:
+      "Text and icon color on the book cover above — pair the two when customizing (e.g. a light/cream cover needs a dark cover text, not the default light one) so the cover stays readable.",
+  },
 ];
 
 /**
@@ -185,6 +203,8 @@ export const LESSON_COLOR_REFERENCE_HEX: Record<LessonColorRole, string> = {
   lessonIllustrationStroke: "#3d47c3",
   lessonIllustrationAccent: "#f2a618",
   lessonXp: "#f2a618",
+  lessonBookCover: "#3d47c3",
+  lessonBookCoverForeground: "#faf9fd",
 };
 
 const HEX_COLOR_RE = /^#[0-9a-f]{6}$/i;

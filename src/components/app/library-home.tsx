@@ -16,6 +16,8 @@ interface LibraryHomeProps {
   categoriesWithBooks: CategoryWithBooks[];
   featuredBooks: Book[];
   continueReading: ContinueReadingEntry[];
+  /** Books this learner has fully finished, most-recently-completed first — empty for a guest or a learner who hasn't finished one yet, in which case the shelf below simply doesn't render (see fetchCompletedBooks). */
+  completedBooks: Book[];
 }
 
 /**
@@ -34,6 +36,7 @@ export function LibraryHome({
   categoriesWithBooks,
   featuredBooks,
   continueReading,
+  completedBooks,
 }: LibraryHomeProps) {
   const { t } = useLocale();
   const [query, setQuery] = useState("");
@@ -122,6 +125,15 @@ export function LibraryHome({
             </section>
           )}
 
+          {completedBooks.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <h2 className="text-xl font-semibold tracking-tight">
+                {t.bookLibrary.completedBooksHeading}
+              </h2>
+              <BookGrid books={completedBooks} completed />
+            </section>
+          )}
+
           {featuredBooks.length > 0 && (
             <section className="flex flex-col gap-4">
               <h2 className="text-xl font-semibold tracking-tight">
@@ -143,7 +155,16 @@ export function LibraryHome({
   );
 }
 
-function BookGrid({ books, progressById }: { books: Book[]; progressById?: Map<string, number> }) {
+function BookGrid({
+  books,
+  progressById,
+  completed = false,
+}: {
+  books: Book[];
+  progressById?: Map<string, number>;
+  /** True when every book in this grid is a finished one (the Completed Books shelf) — passed straight through to each BookCard's own `completed` badge. */
+  completed?: boolean;
+}) {
   return (
     <motion.div
       initial="hidden"
@@ -152,7 +173,12 @@ function BookGrid({ books, progressById }: { books: Book[]; progressById?: Map<s
       className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
     >
       {books.map((book) => (
-        <BookCard key={book.id} book={book} progressPercent={progressById?.get(book.id)} />
+        <BookCard
+          key={book.id}
+          book={book}
+          progressPercent={progressById?.get(book.id)}
+          completed={completed}
+        />
       ))}
     </motion.div>
   );

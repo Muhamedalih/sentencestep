@@ -1,7 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
-import { getVoices } from "@/lib/admin/voices-queries";
+import { getDefaultVoiceId, getVoices } from "@/lib/admin/voices-queries";
 
 export interface ElevenLabsSettings {
   model: string;
@@ -52,4 +52,24 @@ export async function getElevenLabsSettings(): Promise<ElevenLabsSettings> {
 export async function getElevenLabsVoices(): Promise<VoiceRow[]> {
   const voices = await getVoices();
   return voices.filter((voice) => voice.source === "elevenlabs");
+}
+
+/**
+ * The voice a Book's reading screen should request (see
+ * src/app/learn/library/[bookId]/read/page.tsx) — the shared Stories/Books
+ * narration voice (elevenlabs_settings.default_story_voice_id) when an
+ * admin has configured one, falling back to the plain Kokoro default
+ * otherwise. Falling back (rather than returning null) means a book always
+ * has *some* voice: before an admin ever sets up Azure/ElevenLabs, or for a
+ * book whose narration audio hasn't finished background-generating yet
+ * (PronunciationButton's Kokoro branch generates on demand, unlike the
+ * Azure/ElevenLabs branch, which is cache-only — see
+ * resolvePronunciationAudioAction's doc comment), the reader still gets
+ * real audio instead of silently falling all the way to browser speech
+ * synthesis.
+ */
+export async function getBookNarrationVoiceId(): Promise<string | null> {
+  const settings = await getElevenLabsSettings();
+  if (settings.defaultStoryVoiceId) return settings.defaultStoryVoiceId;
+  return getDefaultVoiceId();
 }

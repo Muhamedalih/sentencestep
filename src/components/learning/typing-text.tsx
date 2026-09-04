@@ -91,7 +91,7 @@ interface TypingTextProps {
   disabled?: boolean;
   /**
    * Fix Your Mistakes' red-letter hint (addition — see MistakeReviewSentence):
-   * the character index within `target` the learner previously got wrong,
+   * every character index within `target` the learner previously got wrong,
    * shown in the same red used for an active typing mistake. Only ever
    * applied while that position's own letterState is still "pending" or
    * "current" — the instant it's typed (state becomes "correct", or briefly
@@ -100,7 +100,7 @@ interface TypingTextProps {
    * as any other completed word, with no separate reset needed. Absent for
    * every other caller, which keeps them completely unaffected.
    */
-  highlightIndex?: number | null;
+  highlightIndexes?: ReadonlySet<number> | null;
 }
 
 interface UnderlineRect {
@@ -136,7 +136,7 @@ export function TypingText({
   enableWordHighlight = false,
   showTypingCursor = true,
   disabled = false,
-  highlightIndex = null,
+  highlightIndexes = null,
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -324,7 +324,7 @@ export function TypingText({
                     blank={blank}
                     reveal={obscureUntyped}
                     reducedMotion={reducedMotion}
-                    highlight={highlightIndex !== null && index === highlightIndex}
+                    highlight={highlightIndexes?.has(index) ?? false}
                   />
                 );
               })}

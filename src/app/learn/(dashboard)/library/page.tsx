@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LibraryHome } from "@/components/app/library-home";
 import {
   fetchCategoriesWithBooks,
+  fetchCompletedBooks,
   fetchContinueReadingBooks,
   fetchFeaturedBooks,
 } from "@/lib/supabase/queries/library";
@@ -25,10 +26,11 @@ export default async function LibraryHomePage() {
   // does on its own) has been observed to hang this request's streamed
   // response client-side once more than one exists in the same request.
   const supabase = isSupabaseConfigured() ? createPublicClient() : undefined;
-  const [categoriesWithBooks, featuredBooks, continueReading] = await Promise.all([
+  const [categoriesWithBooks, featuredBooks, continueReading, completedBooks] = await Promise.all([
     fetchCategoriesWithBooks(supabase, locale),
     fetchFeaturedBooks(supabase),
     fetchContinueReadingBooks(user?.id ?? null, supabase),
+    fetchCompletedBooks(user?.id ?? null, supabase),
   ]);
 
   return (
@@ -37,6 +39,7 @@ export default async function LibraryHomePage() {
         categoriesWithBooks={categoriesWithBooks}
         featuredBooks={featuredBooks}
         continueReading={continueReading}
+        completedBooks={completedBooks}
       />
     </div>
   );

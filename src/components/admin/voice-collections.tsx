@@ -7,17 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAudioClip } from "@/hooks/use-audio-clip";
-import {
-  deleteVoiceAction,
-  seedKokoroCollectionAction,
-  setDefaultVoiceAction,
-} from "@/lib/admin/voices-actions";
+import { deleteVoiceAction, setDefaultVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
-import { KOKORO_COLLECTION, KOKORO_VOICES } from "@/lib/voice/kokoro-catalog";
 import { cn } from "@/lib/utils";
 
 const COLLECTION_LABELS: Record<string, string> = {
-  [KOKORO_COLLECTION]: "Kokoro Natural Learning",
+  "edge-tts": "Edge-TTS",
+  elevenlabs: "ElevenLabs",
+  azure: "Azure Speech",
+  gemini: "Gemini",
 };
 
 /**
@@ -25,9 +23,11 @@ const COLLECTION_LABELS: Record<string, string> = {
  * from VoiceSettingsForm above it on this page, which only ever configures
  * a *preference* among whatever the Web Speech API happens to expose on
  * this browser (see voice-settings.ts's doc comment). This is where an
- * admin picks the actual global default Kokoro voice and, per lesson, an
- * override (see LessonForm's own Voice field) — both read through the one
- * resolveVoiceId function everywhere else in the app.
+ * admin picks the actual global default voice and, per lesson, an override
+ * (see LessonForm's own Voice field) — both read through the one
+ * resolveVoiceId function everywhere else in the app. New voices are added
+ * per-provider (see EdgeTtsVoiceForm/ElevenLabsVoiceForm/etc. elsewhere on
+ * this page) — this component only lists and manages what's already there.
  */
 export function VoiceCollections({
   voices,
@@ -45,21 +45,6 @@ export function VoiceCollections({
     const group = byCollection.get(voice.collection) ?? [];
     group.push(voice);
     byCollection.set(voice.collection, group);
-  }
-
-  const kokoroSeeded = voices.filter((voice) => voice.collection === KOKORO_COLLECTION).length;
-  const kokoroComplete = kokoroSeeded >= KOKORO_VOICES.length;
-
-  function handleSeed() {
-    setMessage(null);
-    startTransition(async () => {
-      const result = await seedKokoroCollectionAction();
-      setMessage(
-        result.error
-          ? { kind: "error", text: result.error }
-          : { kind: "success", text: result.success ?? "Done." },
-      );
-    });
   }
 
   function handleSetDefault(voiceId: string | null) {
@@ -102,27 +87,9 @@ export function VoiceCollections({
       <CardContent className="flex flex-col gap-6">
         {voices.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-muted-foreground text-sm">No voices generated yet.</p>
-            <Button type="button" onClick={handleSeed} disabled={isPending}>
-              {isPending ? "Generating…" : "Generate Kokoro Natural Learning collection"}
-            </Button>
-          </div>
-        )}
-
-        {voices.length > 0 && !kokoroComplete && (
-          <div className="border-border bg-muted/40 flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
-            <p className="text-sm">
-              {kokoroSeeded} of {KOKORO_VOICES.length} Kokoro voices generated.
+            <p className="text-muted-foreground text-sm">
+              No voices added yet — add one from a provider section further down this page.
             </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={handleSeed}
-              disabled={isPending}
-            >
-              {isPending ? "Generating…" : "Generate remaining"}
-            </Button>
           </div>
         )}
 
@@ -223,6 +190,11 @@ function VoiceRowItem({
         variant="ghost"
         size="icon"
         aria-label={`Preview ${voice.name}`}
+        title={
+          voice.sampleAudioUrl
+            ? undefined
+            : "No sample stored for this voice — preview it in its own section further down this page."
+        }
         onClick={() => clip.play()}
         disabled={!voice.sampleAudioUrl}
         className={cn("shrink-0", clip.status === "playing" && "text-primary")}

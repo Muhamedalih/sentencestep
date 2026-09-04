@@ -383,9 +383,8 @@ export async function saveLesson(input: LessonMutationInput): Promise<ActionResu
     triggerAutomaticTranslation(lessonId);
 
     // Same best-effort, non-blocking shape as translation above — see
-    // triggerAutomaticVoiceGeneration's own doc comment. No-ops for
-    // "normal" lessons (Kokoro's on-demand path needs no background
-    // generation at all).
+    // triggerAutomaticVoiceGeneration's own doc comment. Covers Normal
+    // lessons exactly like Stories/Conversation.
     triggerAutomaticVoiceGeneration(lessonId, input.mode);
   }
   if (insertError) {

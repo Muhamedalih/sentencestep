@@ -31,6 +31,7 @@ export function ElevenLabsVoiceForm({
 }) {
   const [isPending, startTransition] = useTransition();
   const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -90,9 +91,16 @@ export function ElevenLabsVoiceForm({
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
         return;
       }
+      setPreviewAudioUrl(result.audioDataUri);
       if (audioRef.current) {
         audioRef.current.src = result.audioDataUri;
-        void audioRef.current.play();
+        audioRef.current.play().catch(() => {
+          // Browsers can refuse this autoplay — the actual play() call lands
+          // after the server round-trip above, past the original click's
+          // user-gesture window. The native player revealed below (bound to
+          // previewAudioUrl) is the reliable fallback: pressing its own play
+          // button is a fresh gesture the browser always allows.
+        });
       }
     });
   }
@@ -185,7 +193,11 @@ export function ElevenLabsVoiceForm({
             </div>
           ))}
         </div>
-        <audio ref={audioRef} className="hidden" />
+        <audio
+          ref={audioRef}
+          controls
+          className={cn("h-8 max-w-full", !previewAudioUrl && "hidden")}
+        />
         {message && (
           <p
             role={message.kind === "error" ? "alert" : undefined}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
@@ -36,12 +37,26 @@ function stableHue(id: string): number {
  * faint initial letter — a "designed" placeholder that reads as intentional
  * rather than empty, the same fix StoryCard's overlay/gradient treatment
  * was for Stories' own thumbnail illustrations.
+ *
+ * `completed` (the Library homepage's Completed Books shelf) swaps the
+ * percent-complete bar for a small checkmark badge instead — a completed
+ * book has nothing left to show a percentage of, and repeating "100%
+ * complete" on every card in that shelf would be redundant with the shelf's
+ * own heading.
  */
-export function BookCard({ book, progressPercent }: { book: Book; progressPercent?: number }) {
+export function BookCard({
+  book,
+  progressPercent,
+  completed = false,
+}: {
+  book: Book;
+  progressPercent?: number;
+  completed?: boolean;
+}) {
   const { locale, dir, t } = useLocale();
   const difficulty = difficultyForLevel(book.difficultyLevel);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
-  const hasProgress = typeof progressPercent === "number" && progressPercent > 0;
+  const hasProgress = !completed && typeof progressPercent === "number" && progressPercent > 0;
   const hue = stableHue(book.id);
 
   return (
@@ -88,6 +103,15 @@ export function BookCard({ book, progressPercent }: { book: Book; progressPercen
           <span className="absolute top-3 left-3 rounded-full border border-white/15 bg-black/40 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
             {tierText}
           </span>
+
+          {completed && (
+            <span
+              className="bg-accent text-accent-foreground absolute top-3 right-3 flex size-6 items-center justify-center rounded-full shadow-sm"
+              aria-hidden="true"
+            >
+              <Check className="size-3.5" strokeWidth={3} />
+            </span>
+          )}
 
           <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4">
             <h3 className="truncate leading-snug font-semibold text-white" dir="ltr">

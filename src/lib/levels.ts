@@ -1,4 +1,3 @@
-import type { LessonUnit } from "@/types/content";
 import type { SupportLocale } from "@/lib/i18n/locales";
 
 // --- Level progression: levels (per mode) roll up into named tiers. ---
@@ -117,8 +116,8 @@ export function splitLevelTitle(title: string): { label: string; code: string | 
 /** Average words-per-minute a learner types at while still reading/absorbing new sentences — deliberately slower than free-typing speed. */
 const LEARNING_WPM = 20;
 
-/** Rough reading+typing time for a lesson, derived from its content rather than authored per lesson. */
-export function estimateMinutes(unit: Pick<LessonUnit, "sentences">): number {
+/** Rough reading+typing time for a lesson (or any other typed unit — e.g. a book section — with the same shape), derived from its content rather than authored per lesson. */
+export function estimateMinutes(unit: { sentences: { en: string }[] }): number {
   const words = unit.sentences.reduce(
     (total, sentence) => total + sentence.en.split(/\s+/).length,
     0,

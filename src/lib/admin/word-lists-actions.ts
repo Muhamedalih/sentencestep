@@ -8,6 +8,7 @@ import { logAdminAction } from "@/lib/admin/audit-log";
 import { validateWordGroupInput, validateWordGroupWords } from "@/lib/admin/word-lists-validation";
 import type { VocabularyWordInput, WordGroupInput } from "@/lib/admin/word-lists-validation";
 import { createClient } from "@/lib/supabase/server";
+import { triggerAutomaticWordGroupVoiceGeneration } from "@/lib/voice/auto-trigger";
 
 export interface ActionResult {
   error?: string;
@@ -253,6 +254,11 @@ export async function saveWordGroupWords(
     .from("vocabulary_words")
     .upsert(finalRows, { onConflict: "id" });
   if (finalError) return { error: "Couldn't save the words. Please try again." };
+
+  // Best-effort, non-blocking: pre-generates this group's word pronunciation
+  // audio ahead of any learner opening it — see
+  // triggerAutomaticWordGroupVoiceGeneration's own doc comment.
+  triggerAutomaticWordGroupVoiceGeneration(groupId);
 
   revalidatePath(`/admin/word-lists/${groupId}/edit`);
   revalidatePath("/admin/word-lists");

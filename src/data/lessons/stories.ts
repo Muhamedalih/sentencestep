@@ -152,13 +152,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-1-s6",
-        en: "Her name was Noor and she had just moved from another city",
+        en: "Her name was Noor, and she had just moved from another city",
         ar: "كان اسمها نور، وكانت قد انتقلت للتو من مدينة أخرى.",
         wordTranslations: [
           { en: "Her", ar: "ها" },
           { en: "name", ar: "اسم" },
           { en: "was", ar: "كان" },
-          { en: "Noor", ar: "نور،" },
+          { en: "Noor,", ar: "نور،" },
           { en: "and", ar: "و" },
           { en: "she", ar: "هي" },
           { en: "had", ar: "كانت" },
@@ -295,18 +295,18 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s2",
-        en: "He checked under the bed then behind the door then under the bed again",
+        en: "He checked under the bed, then behind the door, then under the bed again",
         ar: "بحث تحت السرير، ثم خلف الباب، ثم تحت السرير مرة أخرى.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "checked", ar: "بحث" },
           { en: "under", ar: "تحت" },
           { en: "the", ar: "الـ" },
-          { en: "bed", ar: "السرير،" },
+          { en: "bed,", ar: "السرير،" },
           { en: "then", ar: "ثم" },
           { en: "behind", ar: "خلف" },
           { en: "the", ar: "الـ" },
-          { en: "door", ar: "الباب،" },
+          { en: "door,", ar: "الباب،" },
           { en: "then", ar: "ثم" },
           { en: "under", ar: "تحت" },
           { en: "the", ar: "الـ" },
@@ -316,7 +316,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s3",
-        en: "His little sister was oddly quiet in the kitchen which was never a good sign",
+        en: "His little sister was oddly quiet in the kitchen, which was never a good sign",
         ar: "كانت أخته الصغيرة هادئة بشكل غريب في المطبخ، وهو أمر لم يكن مبشرًا أبدًا.",
         wordTranslations: [
           { en: "His", ar: "أخته" },
@@ -327,7 +327,7 @@ export const storyLessons: Lesson[] = [
           { en: "quiet", ar: "هادئة" },
           { en: "in", ar: "في" },
           { en: "the", ar: "الـ" },
-          { en: "kitchen", ar: "المطبخ،" },
+          { en: "kitchen,", ar: "المطبخ،" },
           { en: "which", ar: "وهو" },
           { en: "was", ar: "أمر" },
           { en: "never", ar: "لم يكن" },
@@ -338,13 +338,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s4",
-        en: "He found her there calmly handing his shoe to the dog one lace at a time",
+        en: "He found her there, calmly handing his shoe to the dog one lace at a time",
         ar: "وجدها هناك، تسلم حذاءه للكلب بهدوء، رباطًا واحدًا في كل مرة.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "found", ar: "وجد" },
           { en: "her", ar: "ها" },
-          { en: "there", ar: "هناك،" },
+          { en: "there,", ar: "هناك،" },
           { en: "calmly", ar: "بهدوء" },
           { en: "handing", ar: "تسلم" },
           { en: "his", ar: "حذاءه" },
@@ -377,7 +377,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s6",
-        en: "He couldn't decide whether to be angry or just start laughing so he did both",
+        en: "He couldn't decide whether to be angry or just start laughing, so he did both",
         ar: "لم يستطع أن يقرر إن كان سيغضب أم سيضحك فقط، فاختار الاثنين معًا.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -390,7 +390,7 @@ export const storyLessons: Lesson[] = [
           { en: "or", ar: "أم" },
           { en: "just", ar: "سيضحك" },
           { en: "start", ar: "فقط" },
-          { en: "laughing", ar: "أن يبدأ" },
+          { en: "laughing,", ar: "أن يبدأ" },
           { en: "so", ar: "فـ" },
           { en: "he", ar: "اختار" },
           { en: "did", ar: "الاثنين" },
@@ -399,7 +399,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s7",
-        en: "There was no time to argue so he grabbed his old shoes instead",
+        en: "There was no time to argue, so he grabbed his old shoes instead",
         ar: "لم يكن هناك وقت للجدال، فأمسك حذاءه القديم بدلاً منه.",
         wordTranslations: [
           { en: "There", ar: "لم" },
@@ -407,7 +407,7 @@ export const storyLessons: Lesson[] = [
           { en: "no", ar: "هناك" },
           { en: "time", ar: "وقت" },
           { en: "to", ar: "لـ" },
-          { en: "argue", ar: "الجدال،" },
+          { en: "argue,", ar: "الجدال،" },
           { en: "so", ar: "فـ" },
           { en: "he", ar: "أمسك" },
           { en: "grabbed", ar: "حذاءه" },
@@ -437,11 +437,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s9",
-        en: "By lunchtime half the class knew about the dog and the shoe",
+        en: "By lunchtime, half the class knew about the dog and the shoe",
         ar: "بحلول وقت الغداء، كان نصف الصف يعرف قصة الكلب والحذاء.",
         wordTranslations: [
           { en: "By", ar: "بحلول" },
-          { en: "lunchtime", ar: "وقت الغداء،" },
+          { en: "lunchtime,", ar: "وقت الغداء،" },
           { en: "half", ar: "نصف" },
           { en: "the", ar: "الـ" },
           { en: "class", ar: "الصف" },
@@ -456,7 +456,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s10",
-        en: "Someone started calling him Shoe Boy and it stuck",
+        en: "Someone started calling him Shoe Boy, and it stuck",
         ar: 'بدأ أحدهم بمناداته "فتى الحذاء"، واستمر اللقب.',
         wordTranslations: [
           { en: "Someone", ar: "أحدهم" },
@@ -464,7 +464,7 @@ export const storyLessons: Lesson[] = [
           { en: "calling", ar: "بمناداته" },
           { en: "him", ar: "-" },
           { en: "Shoe", ar: '"فتى' },
-          { en: "Boy", ar: 'الحذاء"،' },
+          { en: "Boy,", ar: 'الحذاء"،' },
           { en: "and", ar: "و" },
           { en: "it", ar: "اللقب" },
           { en: "stuck", ar: "استمر." },
@@ -472,11 +472,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-3-s11",
-        en: "Weeks later his sister still won't say why she picked that shoe",
+        en: "Weeks later, his sister still won't say why she picked that shoe",
         ar: "بعد أسابيع، ما زالت أخته ترفض أن تقول لماذا اختارت ذلك الحذاء بالذات.",
         wordTranslations: [
           { en: "Weeks", ar: "بعد" },
-          { en: "later", ar: "أسابيع،" },
+          { en: "later,", ar: "أسابيع،" },
           { en: "his", ar: "ـه" },
           { en: "sister", ar: "أخته" },
           { en: "still", ar: "ما زالت" },
@@ -505,13 +505,13 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-7-s1",
-        en: "Yusuf was running late so he ordered his coffee without really looking at the menu board",
+        en: "Yusuf was running late, so he ordered his coffee without really looking at the menu board",
         ar: "كان يوسف متأخرًا، فطلب قهوته دون أن ينظر حقًا إلى لوحة القائمة.",
         wordTranslations: [
           { en: "Yusuf", ar: "يوسف" },
           { en: "was", ar: "كان" },
           { en: "running", ar: "يجري" },
-          { en: "late", ar: "متأخرًا،" },
+          { en: "late,", ar: "متأخرًا،" },
           { en: "so", ar: "فـ" },
           { en: "he", ar: "هو" },
           { en: "ordered", ar: "طلب" },
@@ -528,13 +528,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-7-s2",
-        en: "The shop was packed and every name the barista called sounded a little like his",
+        en: "The shop was packed, and every name the barista called sounded a little like his",
         ar: "كان المقهى مزدحمًا، وكل اسم كان يناديه الباريستا يبدو قريبًا من اسمه.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
           { en: "shop", ar: "المقهى" },
           { en: "was", ar: "كان" },
-          { en: "packed", ar: "مزدحمًا،" },
+          { en: "packed,", ar: "مزدحمًا،" },
           { en: "and", ar: "و" },
           { en: "every", ar: "كل" },
           { en: "name", ar: "اسم" },
@@ -550,14 +550,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-7-s3",
-        en: "When Yusuf finally rang out he grabbed the nearest cup and headed for the door",
+        en: "When Yusuf finally rang out, he grabbed the nearest cup and headed for the door",
         ar: 'عندما نودي أخيرًا باسم "يوسف"، خطف أقرب كوب وتوجه نحو الباب.',
         wordTranslations: [
           { en: "When", ar: "عندما" },
           { en: "Yusuf", ar: '"يوسف"' },
           { en: "finally", ar: "أخيرًا" },
           { en: "rang", ar: "نودي" },
-          { en: "out", ar: "-" },
+          { en: "out,", ar: "-" },
           { en: "he", ar: "هو" },
           { en: "grabbed", ar: "خطف" },
           { en: "the", ar: "-" },
@@ -590,13 +590,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-7-s5",
-        en: "It was sweet syrupy nothing like the black coffee he'd asked for",
+        en: "It was sweet, syrupy, nothing like the black coffee he'd asked for",
         ar: "كانت حلوة وكثيفة كالشراب، لا تشبه إطلاقًا القهوة السوداء التي طلبها.",
         wordTranslations: [
           { en: "It", ar: "كانت" },
           { en: "was", ar: "-" },
-          { en: "sweet", ar: "حلوة،" },
-          { en: "syrupy", ar: "وكثيفة كالشراب،" },
+          { en: "sweet,", ar: "حلوة،" },
+          { en: "syrupy,", ar: "وكثيفة كالشراب،" },
           { en: "nothing", ar: "لا" },
           { en: "like", ar: "تشبه" },
           { en: "the", ar: "إطلاقًا" },
@@ -694,7 +694,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-7-s10",
-        en: "A man near the counter raised his hand looking equally confused about his own cup",
+        en: "A man near the counter raised his hand, looking equally confused about his own cup",
         ar: "رفع رجل بالقرب من الطاولة يده، وبدا مرتبكًا هو الآخر بشأن كوبه.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
@@ -704,7 +704,7 @@ export const storyLessons: Lesson[] = [
           { en: "counter", ar: "الطاولة" },
           { en: "raised", ar: "رفع" },
           { en: "his", ar: "-" },
-          { en: "hand", ar: "يده،" },
+          { en: "hand,", ar: "يده،" },
           { en: "looking", ar: "وبدا" },
           { en: "equally", ar: "مرتبكًا" },
           { en: "confused", ar: "هو الآخر" },
@@ -716,18 +716,18 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-7-s11",
-        en: "They swapped the barista apologized with a free pastry and Yusuf finally got his coffee",
+        en: "They swapped, the barista apologized with a free pastry, and Yusuf finally got his coffee",
         ar: "تبادلا الكوبين، واعتذر الباريستا بمعجنات مجانية، وحصل يوسف أخيرًا على قهوته.",
         wordTranslations: [
           { en: "They", ar: "تبادلا" },
-          { en: "swapped", ar: "الكوبين،" },
+          { en: "swapped,", ar: "الكوبين،" },
           { en: "the", ar: "-" },
           { en: "barista", ar: "الباريستا" },
           { en: "apologized", ar: "اعتذر" },
           { en: "with", ar: "بـ" },
           { en: "a", ar: "-" },
           { en: "free", ar: "مجانية" },
-          { en: "pastry", ar: "معجنات،" },
+          { en: "pastry,", ar: "معجنات،" },
           { en: "and", ar: "و" },
           { en: "Yusuf", ar: "يوسف" },
           { en: "finally", ar: "أخيرًا" },
@@ -738,7 +738,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-7-s12",
-        en: "He was later to work than planned but at least he had a better story than traffic",
+        en: "He was later to work than planned, but at least he had a better story than traffic",
         ar: 'وصل إلى العمل متأخرًا أكثر مما خطط له، لكن على الأقل كانت لديه قصة أفضل من "الزحام."',
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -747,7 +747,7 @@ export const storyLessons: Lesson[] = [
           { en: "to", ar: "إلى" },
           { en: "work", ar: "العمل" },
           { en: "than", ar: "أكثر" },
-          { en: "planned", ar: "من خطط له،" },
+          { en: "planned,", ar: "من خطط له،" },
           { en: "but", ar: "لكن" },
           { en: "at", ar: "على" },
           { en: "least", ar: "الأقل" },
@@ -775,7 +775,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-9-s1",
-        en: "A large box was waiting outside Tariq's door when he got home though he hadn't ordered anything",
+        en: "A large box was waiting outside Tariq's door when he got home, though he hadn't ordered anything",
         ar: "كان صندوق كبير بانتظاره أمام باب طارق حين عاد إلى المنزل، رغم أنه لم يطلب شيئًا.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
@@ -789,7 +789,7 @@ export const storyLessons: Lesson[] = [
           { en: "when", ar: "حين" },
           { en: "he", ar: "هو" },
           { en: "got", ar: "عاد" },
-          { en: "home", ar: "المنزل،" },
+          { en: "home,", ar: "المنزل،" },
           { en: "though", ar: "رغم" },
           { en: "he", ar: "أنه" },
           { en: "hadn't", ar: "لم" },
@@ -799,7 +799,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-9-s2",
-        en: "His name and address were right there on the label so he carried it inside anyway",
+        en: "His name and address were right there on the label, so he carried it inside anyway",
         ar: "كان اسمه وعنوانه مكتوبين على الملصق، فحملها إلى الداخل رغم ذلك.",
         wordTranslations: [
           { en: "His", ar: "كان" },
@@ -811,7 +811,7 @@ export const storyLessons: Lesson[] = [
           { en: "there", ar: "هناك" },
           { en: "on", ar: "على" },
           { en: "the", ar: "الـ" },
-          { en: "label", ar: "الملصق،" },
+          { en: "label,", ar: "الملصق،" },
           { en: "so", ar: "فـ" },
           { en: "he", ar: "هو" },
           { en: "carried", ar: "حملها" },
@@ -822,11 +822,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-9-s3",
-        en: "Opening it he found twelve pairs of impossibly bright socks and a card",
+        en: "Opening it, he found twelve pairs of impossibly bright socks and a card",
         ar: "عند فتحها، وجد اثني عشر زوجًا من الجوارب الزاهية بشكل غريب وبطاقة.",
         wordTranslations: [
           { en: "Opening", ar: "عند فتحها،" },
-          { en: "it", ar: "-" },
+          { en: "it,", ar: "-" },
           { en: "he", ar: "هو" },
           { en: "found", ar: "وجد" },
           { en: "twelve", ar: "اثني عشر" },
@@ -969,12 +969,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-9-s10",
-        en: "Within the hour someone three streets over replied that they knew exactly who that was",
+        en: "Within the hour, someone three streets over replied that they knew exactly who that was",
         ar: "خلال ساعة، رد شخص على بعد ثلاثة شوارع قائلاً إنه يعرف بالضبط من يكون.",
         wordTranslations: [
           { en: "Within", ar: "خلال" },
           { en: "the", ar: "-" },
-          { en: "hour", ar: "ساعة،" },
+          { en: "hour,", ar: "ساعة،" },
           { en: "someone", ar: "شخص" },
           { en: "three", ar: "ثلاثة" },
           { en: "streets", ar: "شوارع" },
@@ -1015,17 +1015,17 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-9-s12",
-        en: "He never met Tarek but a week later one very bright pair of socks appeared on his own doorstep",
+        en: "He never met Tarek, but a week later, one very bright pair of socks appeared on his own doorstep",
         ar: "لم يلتقِ طارق قط، لكن بعد أسبوع، ظهر زوج واحد شديد اللمعان من الجوارب على عتبة بابه هو.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "never", ar: "لم" },
           { en: "met", ar: "يلتقِ" },
-          { en: "Tarek", ar: "طارق،" },
+          { en: "Tarek,", ar: "طارق،" },
           { en: "but", ar: "لكن" },
           { en: "a", ar: "-" },
           { en: "week", ar: "أسبوع" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "one", ar: "واحد" },
           { en: "very", ar: "جدًا" },
           { en: "bright", ar: "لامع" },
@@ -1120,7 +1120,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-12-s4",
-        en: "They ordered coffee and sat mostly in silence each in their own world",
+        en: "They ordered coffee and sat mostly in silence, each in their own world",
         ar: "طلبا القهوة وجلسا في صمت غالبًا، كل واحد منهما في عالمه الخاص.",
         wordTranslations: [
           { en: "They", ar: "هما" },
@@ -1130,7 +1130,7 @@ export const storyLessons: Lesson[] = [
           { en: "sat", ar: "جلسا" },
           { en: "mostly", ar: "غالبًا" },
           { en: "in", ar: "في" },
-          { en: "silence", ar: "صمت،" },
+          { en: "silence,", ar: "صمت،" },
           { en: "each", ar: "كل واحد منهما" },
           { en: "in", ar: "في" },
           { en: "their", ar: "-" },
@@ -1140,7 +1140,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-12-s5",
-        en: "Noor pulled out her own book and the cover caught the man's attention",
+        en: "Noor pulled out her own book, and the cover caught the man's attention",
         ar: "أخرجت نور كتابها الخاص، فلفت الغلاف انتباه الرجل.",
         wordTranslations: [
           { en: "Noor", ar: "نور" },
@@ -1148,7 +1148,7 @@ export const storyLessons: Lesson[] = [
           { en: "out", ar: "-" },
           { en: "her", ar: "-" },
           { en: "own", ar: "الخاص" },
-          { en: "book", ar: "كتابها،" },
+          { en: "book,", ar: "كتابها،" },
           { en: "and", ar: "فـ" },
           { en: "the", ar: "-" },
           { en: "cover", ar: "الغلاف" },
@@ -1223,17 +1223,17 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-12-s9",
-        en: "Twenty minutes later their coffee had gone cold and neither of them had noticed",
+        en: "Twenty minutes later, their coffee had gone cold, and neither of them had noticed",
         ar: "بعد عشرين دقيقة، برد قهوتهما ولم يلاحظ أي منهما ذلك.",
         wordTranslations: [
           { en: "Twenty", ar: "عشرين" },
           { en: "minutes", ar: "دقيقة" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "their", ar: "-" },
           { en: "coffee", ar: "قهوتهما" },
           { en: "had", ar: "-" },
           { en: "gone", ar: "ذهبت" },
-          { en: "cold", ar: "باردة" },
+          { en: "cold,", ar: "باردة" },
           { en: "and", ar: "و" },
           { en: "neither", ar: "لا" },
           { en: "of", ar: "أحد" },
@@ -1265,12 +1265,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-12-s11",
-        en: "They exchanged numbers agreeing to compare notes once she'd caught up",
+        en: "They exchanged numbers, agreeing to compare notes once she'd caught up",
         ar: "تبادلا أرقام الهاتف، واتفقا على مقارنة آرائهما بعد أن تلحق بالقراءة.",
         wordTranslations: [
           { en: "They", ar: "تبادلا" },
           { en: "exchanged", ar: "أرقام الهاتف،" },
-          { en: "numbers", ar: "-" },
+          { en: "numbers,", ar: "-" },
           { en: "agreeing", ar: "واتفقا" },
           { en: "to", ar: "على" },
           { en: "compare", ar: "مقارنة" },
@@ -1318,14 +1318,14 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-2-s1",
-        en: "Ahmed's alarm didn't go off and he woke up with twenty minutes to cross town for his interview",
+        en: "Ahmed's alarm didn't go off, and he woke up with twenty minutes to cross town for his interview",
         ar: "لم يرن منبه أحمد، فاستيقظ ليجد أمامه عشرين دقيقة فقط ليقطع المدينة ويصل إلى مقابلته.",
         wordTranslations: [
           { en: "Ahmed's", ar: "أحمد" },
           { en: "alarm", ar: "منبه" },
           { en: "didn't", ar: "لم" },
           { en: "go", ar: "يرن" },
-          { en: "off", ar: "-" },
+          { en: "off,", ar: "-" },
           { en: "and", ar: "و" },
           { en: "he", ar: "هو" },
           { en: "woke", ar: "استيقظ" },
@@ -1343,7 +1343,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-2-s2",
-        en: "He grabbed his jacket and ran out still buttoning his shirt on the stairs",
+        en: "He grabbed his jacket and ran out, still buttoning his shirt on the stairs",
         ar: "خطف سترته وخرج مسرعًا وهو لا يزال يزرر قميصه على الدرج.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -1352,7 +1352,7 @@ export const storyLessons: Lesson[] = [
           { en: "jacket", ar: "سترة" },
           { en: "and", ar: "و" },
           { en: "ran", ar: "ركض" },
-          { en: "out", ar: "خارجًا" },
+          { en: "out,", ar: "خارجًا" },
           { en: "still", ar: "لا يزال" },
           { en: "buttoning", ar: "يزرر" },
           { en: "his", ar: "قميصه" },
@@ -1399,7 +1399,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-2-s5",
-        en: "He walked in two minutes early catching his breath hoping it didn't show",
+        en: "He walked in two minutes early, catching his breath, hoping it didn't show",
         ar: "دخل قبل دقيقتين من الموعد، ملتقطًا أنفاسه، آملاً ألا يظهر ذلك عليه.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -1407,10 +1407,10 @@ export const storyLessons: Lesson[] = [
           { en: "in", ar: "في" },
           { en: "two", ar: "اثنتين" },
           { en: "minutes", ar: "دقيقة" },
-          { en: "early", ar: "مبكرًا،" },
+          { en: "early,", ar: "مبكرًا،" },
           { en: "catching", ar: "ملتقطًا" },
           { en: "his", ar: "ـه" },
-          { en: "breath", ar: "أنفاس،" },
+          { en: "breath,", ar: "أنفاس،" },
           { en: "hoping", ar: "آملاً" },
           { en: "it", ar: "ذلك" },
           { en: "didn't", ar: "لا" },
@@ -1437,11 +1437,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-2-s7",
-        en: "Halfway through she asked why he looked like he'd run there",
+        en: "Halfway through, she asked why he looked like he'd run there",
         ar: "في منتصف المقابلة، سألته لماذا يبدو وكأنه ركض إلى هنا.",
         wordTranslations: [
           { en: "Halfway", ar: "في المنتصف،" },
-          { en: "through", ar: "المقابلة،" },
+          { en: "through,", ar: "المقابلة،" },
           { en: "she", ar: "هي" },
           { en: "asked", ar: "سألته" },
           { en: "why", ar: "لماذا" },
@@ -1533,12 +1533,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-2-s12",
-        en: "Two days later she called to offer him the job and to ask if he'd found a better alarm clock",
+        en: "Two days later, she called to offer him the job and to ask if he'd found a better alarm clock",
         ar: "بعد يومين، اتصلت لتعرض عليه الوظيفة، ولتسأله إن كان قد وجد منبهًا أفضل.",
         wordTranslations: [
           { en: "Two", ar: "اثنان" },
           { en: "days", ar: "أيام" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "she", ar: "هي" },
           { en: "called", ar: "اتصلت" },
           { en: "to", ar: "لـ" },
@@ -1607,13 +1607,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-13-s3",
-        en: "On his third night he used his key on the wrong door",
+        en: "On his third night, he used his key on the wrong door",
         ar: "في ليلته الثالثة، استخدم مفتاحه على الباب الخطأ.",
         wordTranslations: [
           { en: "On", ar: "في" },
           { en: "his", ar: "له" },
           { en: "third", ar: "الثالثة" },
-          { en: "night", ar: "ليلته،" },
+          { en: "night,", ar: "ليلته،" },
           { en: "he", ar: "هو" },
           { en: "used", ar: "استخدم" },
           { en: "his", ar: "له" },
@@ -1626,14 +1626,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-13-s4",
-        en: "Somehow the key actually turned and the door opened",
+        en: "Somehow the key actually turned, and the door opened",
         ar: "بطريقة ما، دار المفتاح فعلاً وانفتح الباب.",
         wordTranslations: [
           { en: "Somehow", ar: "بطريقة ما،" },
           { en: "the", ar: "الـ" },
           { en: "key", ar: "مفتاح" },
           { en: "actually", ar: "فعلاً" },
-          { en: "turned", ar: "دار" },
+          { en: "turned,", ar: "دار" },
           { en: "and", ar: "و" },
           { en: "the", ar: "الـ" },
           { en: "door", ar: "باب" },
@@ -1659,7 +1659,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-13-s6",
-        en: "A woman appeared from the kitchen looking equally confused",
+        en: "A woman appeared from the kitchen, looking equally confused",
         ar: "ظهرت امرأة من المطبخ، وبدت في حيرة مماثلة.",
         wordTranslations: [
           { en: "A", ar: "واحدة" },
@@ -1667,7 +1667,7 @@ export const storyLessons: Lesson[] = [
           { en: "appeared", ar: "ظهرت" },
           { en: "from", ar: "من" },
           { en: "the", ar: "الـ" },
-          { en: "kitchen", ar: "المطبخ،" },
+          { en: "kitchen,", ar: "المطبخ،" },
           { en: "looking", ar: "تبدو" },
           { en: "equally", ar: "بنفس القدر" },
           { en: "confused", ar: "حائرة" },
@@ -1675,7 +1675,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-13-s7",
-        en: "Omar realized with growing horror that he was in apartment 4B not 4A",
+        en: "Omar realized with growing horror that he was in apartment 4B, not 4A",
         ar: "أدرك عمر، بذعر متزايد، أنه في الشقة 4B وليست 4A.",
         wordTranslations: [
           { en: "Omar", ar: "عمر" },
@@ -1688,19 +1688,19 @@ export const storyLessons: Lesson[] = [
           { en: "was", ar: "كان" },
           { en: "in", ar: "في" },
           { en: "apartment", ar: "شقة" },
-          { en: "4B", ar: "4B،" },
+          { en: "4B,", ar: "4B،" },
           { en: "not", ar: "وليست" },
           { en: "4A", ar: "4A" },
         ],
       },
       {
         id: "story-13-s8",
-        en: "He apologized repeatedly backing slowly toward the hallway",
+        en: "He apologized repeatedly, backing slowly toward the hallway",
         ar: "اعتذر مراراً، وهو يتراجع ببطء نحو الممر.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "apologized", ar: "اعتذر" },
-          { en: "repeatedly", ar: "مراراً،" },
+          { en: "repeatedly,", ar: "مراراً،" },
           { en: "backing", ar: "متراجعاً" },
           { en: "slowly", ar: "ببطء" },
           { en: "toward", ar: "نحو" },
@@ -1725,10 +1725,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-13-s10",
-        en: "Apparently the building had two identical doors on that floor",
+        en: "Apparently, the building had two identical doors on that floor",
         ar: "على ما يبدو، كان للبناية بابان متطابقان في ذلك الطابق.",
         wordTranslations: [
-          { en: "Apparently", ar: "على ما يبدو،" },
+          { en: "Apparently,", ar: "على ما يبدو،" },
           { en: "the", ar: "الـ" },
           { en: "building", ar: "البناية" },
           { en: "had", ar: "كان لديها" },
@@ -1760,12 +1760,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-13-s12",
-        en: "From then on Omar always checked the number twice before entering",
+        en: "From then on, Omar always checked the number twice before entering",
         ar: "منذ ذلك الحين، أصبح عمر يتحقق من الرقم مرتين قبل الدخول.",
         wordTranslations: [
           { en: "From", ar: "منذ" },
           { en: "then", ar: "ذلك" },
-          { en: "on", ar: "الحين،" },
+          { en: "on,", ar: "الحين،" },
           { en: "Omar", ar: "عمر" },
           { en: "always", ar: "دائماً" },
           { en: "checked", ar: "يتحقق" },
@@ -1809,14 +1809,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-14-s2",
-        en: "Lina searched for it online but nothing came up",
+        en: "Lina searched for it online, but nothing came up",
         ar: "بحثت لينا عنه أونلاين، لكن لم يظهر شيء.",
         wordTranslations: [
           { en: "Lina", ar: "لينا" },
           { en: "searched", ar: "بحثت" },
           { en: "for", ar: "عن" },
           { en: "it", ar: "ذلك" },
-          { en: "online", ar: "أونلاين،" },
+          { en: "online,", ar: "أونلاين،" },
           { en: "but", ar: "لكن" },
           { en: "nothing", ar: "لا شيء" },
           { en: "came", ar: "ظهر" },
@@ -1859,7 +1859,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-14-s5",
-        en: "After twenty minutes of walking in circles she almost gave up",
+        en: "After twenty minutes of walking in circles, she almost gave up",
         ar: "بعد عشرين دقيقة من الدوران في المكان نفسه، كادت تستسلم.",
         wordTranslations: [
           { en: "After", ar: "بعد" },
@@ -1868,7 +1868,7 @@ export const storyLessons: Lesson[] = [
           { en: "of", ar: "من" },
           { en: "walking", ar: "المشي" },
           { en: "in", ar: "في" },
-          { en: "circles", ar: "دوائر،" },
+          { en: "circles,", ar: "دوائر،" },
           { en: "she", ar: "هي" },
           { en: "almost", ar: "كادت" },
           { en: "gave", ar: "تستسلم" },
@@ -1930,14 +1930,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-14-s9",
-        en: "Inside there was no menu only whatever the chef had cooked that day",
+        en: "Inside, there was no menu, only whatever the chef had cooked that day",
         ar: "في الداخل، لم تكن هناك قائمة طعام، فقط ما طبخه الشيف ذلك اليوم.",
         wordTranslations: [
-          { en: "Inside", ar: "بالداخل،" },
+          { en: "Inside,", ar: "بالداخل،" },
           { en: "there", ar: "ـ" },
           { en: "was", ar: "كانت" },
           { en: "no", ar: "لا" },
-          { en: "menu", ar: "قائمة،" },
+          { en: "menu,", ar: "قائمة،" },
           { en: "only", ar: "فقط" },
           { en: "whatever", ar: "أياً كان" },
           { en: "the", ar: "الـ" },
@@ -1989,12 +1989,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-14-s12",
-        en: "Some places apparently are better found than searched for",
+        en: "Some places, apparently, are better found than searched for",
         ar: "يبدو أن بعض الأماكن يُكتشف وجودها بدلاً من أن يُبحث عنها.",
         wordTranslations: [
           { en: "Some", ar: "بعض" },
-          { en: "places", ar: "أماكن،" },
-          { en: "apparently", ar: "على ما يبدو،" },
+          { en: "places,", ar: "أماكن،" },
+          { en: "apparently,", ar: "على ما يبدو،" },
           { en: "are", ar: "ـ" },
           { en: "better", ar: "أفضل" },
           { en: "found", ar: "يُكتشف" },
@@ -2038,14 +2038,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-15-s2",
-        en: "My pocket was completely empty and my stomach dropped",
+        en: "My pocket was completely empty, and my stomach dropped",
         ar: "كان جيبي فارغاً تماماً، وشعرت بانقباض في معدتي.",
         wordTranslations: [
           { en: "My", ar: "لي" },
           { en: "pocket", ar: "جيب" },
           { en: "was", ar: "كان" },
           { en: "completely", ar: "تماماً" },
-          { en: "empty", ar: "فارغاً،" },
+          { en: "empty,", ar: "فارغاً،" },
           { en: "and", ar: "و" },
           { en: "my", ar: "لي" },
           { en: "stomach", ar: "معدة" },
@@ -2054,14 +2054,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-15-s3",
-        en: "I quickly checked my bag but it wasn't there either",
+        en: "I quickly checked my bag, but it wasn't there either",
         ar: "تفقدت حقيبتي بسرعة، لكنها لم تكن هناك أيضاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "quickly", ar: "بسرعة" },
           { en: "checked", ar: "تفقدت" },
           { en: "my", ar: "لي" },
-          { en: "bag", ar: "حقيبة،" },
+          { en: "bag,", ar: "حقيبة،" },
           { en: "but", ar: "لكن" },
           { en: "it", ar: "هي" },
           { en: "wasn't", ar: "لم تكن" },
@@ -2086,11 +2086,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-15-s5",
-        en: "Behind me a small line was slowly starting to form",
+        en: "Behind me, a small line was slowly starting to form",
         ar: "خلفي، بدأ صف صغير يتشكل ببطء.",
         wordTranslations: [
           { en: "Behind", ar: "خلف" },
-          { en: "me", ar: "ي،" },
+          { en: "me,", ar: "ي،" },
           { en: "a", ar: "واحد" },
           { en: "small", ar: "صغير" },
           { en: "line", ar: "صف" },
@@ -2141,13 +2141,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-15-s8",
-        en: "I tried to refuse but she insisted it was no big deal",
+        en: "I tried to refuse, but she insisted it was no big deal",
         ar: "حاولت الرفض، لكنها أصرت أن الأمر بسيط.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "tried", ar: "حاولت" },
           { en: "to", ar: "أن" },
-          { en: "refuse", ar: "أرفض،" },
+          { en: "refuse,", ar: "أرفض،" },
           { en: "but", ar: "لكن" },
           { en: "she", ar: "هي" },
           { en: "insisted", ar: "أصرت" },
@@ -2178,12 +2178,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-15-s10",
-        en: "We exchanged numbers and I transferred the money that evening",
+        en: "We exchanged numbers, and I transferred the money that evening",
         ar: "تبادلنا الأرقام، وحولت لها المبلغ في تلك الأمسية.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
           { en: "exchanged", ar: "تبادلنا" },
-          { en: "numbers", ar: "أرقام،" },
+          { en: "numbers,", ar: "أرقام،" },
           { en: "and", ar: "و" },
           { en: "I", ar: "أنا" },
           { en: "transferred", ar: "حولت" },
@@ -2216,12 +2216,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-15-s12",
-        en: "Since that day I always keep a card in my phone case just in case",
+        en: "Since that day, I always keep a card in my phone case just in case",
         ar: "منذ ذلك اليوم، أحتفظ دائماً ببطاقة في غطاء هاتفي، احتياطاً.",
         wordTranslations: [
           { en: "Since", ar: "منذ" },
           { en: "that", ar: "ذلك" },
-          { en: "day", ar: "اليوم،" },
+          { en: "day,", ar: "اليوم،" },
           { en: "I", ar: "أنا" },
           { en: "always", ar: "دائماً" },
           { en: "keep", ar: "أحتفظ" },
@@ -2307,11 +2307,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-16-s4",
-        en: "After graduation we had simply lost touch with each other",
+        en: "After graduation, we had simply lost touch with each other",
         ar: "بعد التخرج، انقطع التواصل بيننا ببساطة.",
         wordTranslations: [
           { en: "After", ar: "بعد" },
-          { en: "graduation", ar: "التخرج،" },
+          { en: "graduation,", ar: "التخرج،" },
           { en: "we", ar: "نحن" },
           { en: "had", ar: "ـ" },
           { en: "simply", ar: "ببساطة" },
@@ -2342,7 +2342,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-16-s6",
-        en: "We stood there talking for almost an hour ignoring our shopping bags",
+        en: "We stood there talking for almost an hour, ignoring our shopping bags",
         ar: "وقفنا نتحدث لما يقارب الساعة، متجاهلتين أكياس التسوق.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
@@ -2352,7 +2352,7 @@ export const storyLessons: Lesson[] = [
           { en: "for", ar: "لمدة" },
           { en: "almost", ar: "تقريباً" },
           { en: "an", ar: "واحدة" },
-          { en: "hour", ar: "ساعة،" },
+          { en: "hour,", ar: "ساعة،" },
           { en: "ignoring", ar: "متجاهلين" },
           { en: "our", ar: "لنا" },
           { en: "shopping", ar: "تسوق" },
@@ -2361,7 +2361,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-16-s7",
-        en: "She told me about the years I had missed one story at a time",
+        en: "She told me about the years I had missed, one story at a time",
         ar: "أخبرتني عن السنوات التي فاتتني، قصة تلو الأخرى.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -2372,7 +2372,7 @@ export const storyLessons: Lesson[] = [
           { en: "years", ar: "سنوات" },
           { en: "I", ar: "أنا" },
           { en: "had", ar: "قد" },
-          { en: "missed", ar: "فاتتني،" },
+          { en: "missed,", ar: "فاتتني،" },
           { en: "one", ar: "واحدة" },
           { en: "story", ar: "قصة" },
           { en: "at", ar: "في" },
@@ -2418,11 +2418,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-16-s10",
-        en: "Before leaving we exchanged numbers and promised to stay in touch",
+        en: "Before leaving, we exchanged numbers and promised to stay in touch",
         ar: "قبل المغادرة، تبادلنا الأرقام ووعدنا بالبقاء على تواصل.",
         wordTranslations: [
           { en: "Before", ar: "قبل" },
-          { en: "leaving", ar: "المغادرة،" },
+          { en: "leaving,", ar: "المغادرة،" },
           { en: "we", ar: "نحن" },
           { en: "exchanged", ar: "تبادلنا" },
           { en: "numbers", ar: "أرقام" },
@@ -2436,11 +2436,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-16-s11",
-        en: "This time I made sure to actually save her contact properly",
+        en: "This time, I made sure to actually save her contact properly",
         ar: "هذه المرة، حرصت على حفظ رقمها بشكل صحيح فعلاً.",
         wordTranslations: [
           { en: "This", ar: "هذه" },
-          { en: "time", ar: "المرة،" },
+          { en: "time,", ar: "المرة،" },
           { en: "I", ar: "أنا" },
           { en: "made", ar: "حرصت" },
           { en: "sure", ar: "ـ" },
@@ -2454,7 +2454,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-16-s12",
-        en: "We now meet for coffee every few weeks picking up where we left off",
+        en: "We now meet for coffee every few weeks, picking up where we left off",
         ar: "نلتقي الآن لتناول القهوة كل بضعة أسابيع، نكمل من حيث توقفنا.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
@@ -2464,7 +2464,7 @@ export const storyLessons: Lesson[] = [
           { en: "coffee", ar: "قهوة" },
           { en: "every", ar: "كل" },
           { en: "few", ar: "بضعة" },
-          { en: "weeks", ar: "أسابيع،" },
+          { en: "weeks,", ar: "أسابيع،" },
           { en: "picking", ar: "نكمل" },
           { en: "up", ar: "ـ" },
           { en: "where", ar: "من حيث" },
@@ -2504,13 +2504,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-17-s2",
-        en: "I restarted the router hoping that would solve everything",
+        en: "I restarted the router, hoping that would solve everything",
         ar: "أعدت تشغيل الراوتر، آملاً أن يحل ذلك كل شيء.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "restarted", ar: "أعدت تشغيل" },
           { en: "the", ar: "الـ" },
-          { en: "router", ar: "راوتر،" },
+          { en: "router,", ar: "راوتر،" },
           { en: "hoping", ar: "آملاً" },
           { en: "that", ar: "أن" },
           { en: "would", ar: "سـ" },
@@ -2520,14 +2520,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-17-s3",
-        en: "It reconnected for a moment then dropped again immediately",
+        en: "It reconnected for a moment, then dropped again immediately",
         ar: "عاد الاتصال للحظة، ثم انقطع مجدداً فوراً.",
         wordTranslations: [
           { en: "It", ar: "هو" },
           { en: "reconnected", ar: "عاد الاتصال" },
           { en: "for", ar: "لـ" },
           { en: "a", ar: "واحدة" },
-          { en: "moment", ar: "لحظة،" },
+          { en: "moment,", ar: "لحظة،" },
           { en: "then", ar: "ثم" },
           { en: "dropped", ar: "انقطع" },
           { en: "again", ar: "مجدداً" },
@@ -2592,10 +2592,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-17-s7",
-        en: "Eventually they admitted there was an outage across the entire neighborhood",
+        en: "Eventually, they admitted there was an outage across the entire neighborhood",
         ar: "في النهاية، اعترفوا بوجود عطل يشمل الحي بأكمله.",
         wordTranslations: [
-          { en: "Eventually", ar: "في النهاية،" },
+          { en: "Eventually,", ar: "في النهاية،" },
           { en: "they", ar: "هم" },
           { en: "admitted", ar: "اعترفوا" },
           { en: "there", ar: "ـ" },
@@ -2629,7 +2629,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-17-s9",
-        en: "I ended up joining the call from my phone using mobile data",
+        en: "I ended up joining the call from my phone, using mobile data",
         ar: "انتهى بي الأمر بالانضمام إلى المكالمة من هاتفي، باستخدام بيانات الجوال.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -2640,7 +2640,7 @@ export const storyLessons: Lesson[] = [
           { en: "call", ar: "مكالمة" },
           { en: "from", ar: "من" },
           { en: "my", ar: "لي" },
-          { en: "phone", ar: "هاتف،" },
+          { en: "phone,", ar: "هاتف،" },
           { en: "using", ar: "باستخدام" },
           { en: "mobile", ar: "جوال" },
           { en: "data", ar: "بيانات" },
@@ -2664,7 +2664,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-17-s11",
-        en: "By the time the internet returned the meeting had already ended",
+        en: "By the time the internet returned, the meeting had already ended",
         ar: "بحلول عودة الإنترنت، كان الاجتماع قد انتهى بالفعل.",
         wordTranslations: [
           { en: "By", ar: "بحلول" },
@@ -2672,7 +2672,7 @@ export const storyLessons: Lesson[] = [
           { en: "time", ar: "وقت" },
           { en: "the", ar: "الـ" },
           { en: "internet", ar: "إنترنت" },
-          { en: "returned", ar: "عاد،" },
+          { en: "returned,", ar: "عاد،" },
           { en: "the", ar: "الـ" },
           { en: "meeting", ar: "اجتماع" },
           { en: "had", ar: "كان قد" },
@@ -2766,10 +2766,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-18-s4",
-        en: "Eventually a security guard let her in and explained everything",
+        en: "Eventually, a security guard let her in and explained everything",
         ar: "في النهاية، سمح لها حارس أمن بالدخول وشرح لها كل شيء.",
         wordTranslations: [
-          { en: "Eventually", ar: "في النهاية،" },
+          { en: "Eventually,", ar: "في النهاية،" },
           { en: "a", ar: "واحد" },
           { en: "security", ar: "أمن" },
           { en: "guard", ar: "حارس" },
@@ -2838,7 +2838,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-18-s8",
-        en: "Her manager greeted her with an apologetic slightly embarrassed smile",
+        en: "Her manager greeted her with an apologetic, slightly embarrassed smile",
         ar: "رحب بها مديرها بابتسامة اعتذارية، محرجة قليلاً.",
         wordTranslations: [
           { en: "Her", ar: "لها" },
@@ -2847,7 +2847,7 @@ export const storyLessons: Lesson[] = [
           { en: "her", ar: "بها" },
           { en: "with", ar: "بـ" },
           { en: "an", ar: "واحدة" },
-          { en: "apologetic", ar: "اعتذارية،" },
+          { en: "apologetic,", ar: "اعتذارية،" },
           { en: "slightly", ar: "قليلاً" },
           { en: "embarrassed", ar: "محرجة" },
           { en: "smile", ar: "ابتسامة" },
@@ -2855,13 +2855,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-18-s9",
-        en: "Despite the confusing start the rest of the day went smoothly",
+        en: "Despite the confusing start, the rest of the day went smoothly",
         ar: "رغم البداية المربكة، سار بقية اليوم بسلاسة.",
         wordTranslations: [
           { en: "Despite", ar: "رغم" },
           { en: "the", ar: "الـ" },
           { en: "confusing", ar: "المربكة" },
-          { en: "start", ar: "بداية،" },
+          { en: "start,", ar: "بداية،" },
           { en: "the", ar: "الـ" },
           { en: "rest", ar: "بقية" },
           { en: "of", ar: "من" },
@@ -2892,11 +2892,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-18-s11",
-        en: "By lunchtime the whole office was already joking about the mix-up",
+        en: "By lunchtime, the whole office was already joking about the mix-up",
         ar: "بحلول وقت الغداء، كان المكتب بأكمله يمزح بالفعل عن الالتباس.",
         wordTranslations: [
           { en: "By", ar: "بحلول" },
-          { en: "lunchtime", ar: "وقت الغداء،" },
+          { en: "lunchtime,", ar: "وقت الغداء،" },
           { en: "the", ar: "الـ" },
           { en: "whole", ar: "بأكمله" },
           { en: "office", ar: "مكتب" },
@@ -2910,7 +2910,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-18-s12",
-        en: "Yara left that evening feeling oddly welcomed mistake and all",
+        en: "Yara left that evening feeling oddly welcomed, mistake and all",
         ar: "غادرت يارا تلك الأمسية شاعرة بترحيب غريب، رغم كل شيء.",
         wordTranslations: [
           { en: "Yara", ar: "يارا" },
@@ -2919,7 +2919,7 @@ export const storyLessons: Lesson[] = [
           { en: "evening", ar: "الأمسية" },
           { en: "feeling", ar: "شاعرة" },
           { en: "oddly", ar: "بغرابة" },
-          { en: "welcomed", ar: "بترحيب،" },
+          { en: "welcomed,", ar: "بترحيب،" },
           { en: "mistake", ar: "خطأ" },
           { en: "and", ar: "و" },
           { en: "all", ar: "كل شيء" },
@@ -2971,13 +2971,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-5-s3",
-        en: "She looked impossibly young barely older than me",
+        en: "She looked impossibly young, barely older than me",
         ar: "بدت صغيرة السن بشكل يصعب تصديقه، بالكاد أكبر مني.",
         wordTranslations: [
           { en: "She", ar: "هي" },
           { en: "looked", ar: "بدت" },
           { en: "impossibly", ar: "بشكل يصعب تصديقه" },
-          { en: "young", ar: "صغيرة السن،" },
+          { en: "young,", ar: "صغيرة السن،" },
           { en: "barely", ar: "بالكاد" },
           { en: "older", ar: "أكبر" },
           { en: "than", ar: "من" },
@@ -2986,12 +2986,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-5-s4",
-        en: "On the back someone had written a date and a name",
+        en: "On the back, someone had written a date and a name",
         ar: "على الظهر، كتب أحدهم تاريخاً واسماً.",
         wordTranslations: [
           { en: "On", ar: "على" },
           { en: "the", ar: "الـ" },
-          { en: "back", ar: "الظهر،" },
+          { en: "back,", ar: "الظهر،" },
           { en: "someone", ar: "أحدهم" },
           { en: "had", ar: "قد" },
           { en: "written", ar: "كتب" },
@@ -3053,10 +3053,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-5-s8",
-        en: "Then she told me about a summer I never knew existed",
+        en: "Then, she told me about a summer I never knew existed",
         ar: "ثم أخبرتني عن صيف لم أكن أعلم بوجوده.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "she", ar: "هي" },
           { en: "told", ar: "أخبرتني" },
           { en: "me", ar: "ني" },
@@ -3117,13 +3117,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-5-s12",
-        en: "I left that evening realizing how little I truly knew her",
+        en: "I left that evening, realizing how little I truly knew her",
         ar: "غادرت تلك الأمسية مدركاً كم كنت أعرف القليل عنها فعلاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "left", ar: "غادرت" },
           { en: "that", ar: "تلك" },
-          { en: "evening", ar: "الأمسية" },
+          { en: "evening,", ar: "الأمسية" },
           { en: "realizing", ar: "مدركاً" },
           { en: "how", ar: "كم" },
           { en: "little", ar: "قليلاً" },
@@ -3166,10 +3166,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-6-s2",
-        en: "Naturally everything that could go wrong did",
+        en: "Naturally, everything that could go wrong did",
         ar: "وبطبيعة الحال، حدث كل ما يمكن أن يسوء.",
         wordTranslations: [
-          { en: "Naturally", ar: "وبطبيعة الحال،" },
+          { en: "Naturally,", ar: "وبطبيعة الحال،" },
           { en: "everything", ar: "كل شيء" },
           { en: "that", ar: "الذي" },
           { en: "could", ar: "كان يمكن" },
@@ -3213,12 +3213,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-6-s5",
-        en: "Halfway through dinner I knocked over an entire glass of wine",
+        en: "Halfway through dinner, I knocked over an entire glass of wine",
         ar: "في منتصف العشاء، أسقطت كأس نبيذ كاملاً.",
         wordTranslations: [
           { en: "Halfway", ar: "في" },
           { en: "through", ar: "منتصف" },
-          { en: "dinner", ar: "العشاء،" },
+          { en: "dinner,", ar: "العشاء،" },
           { en: "I", ar: "أنا" },
           { en: "knocked", ar: "أسقطت" },
           { en: "over", ar: "فوق" },
@@ -3247,13 +3247,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-6-s7",
-        en: "He laughed it off which somehow made things worse",
+        en: "He laughed it off, which somehow made things worse",
         ar: "تجاهل الأمر ضاحكاً، مما جعل الأمور أسوأ نوعاً ما.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "laughed", ar: "ضحك" },
           { en: "it", ar: "ه" },
-          { en: "off", ar: "متجاهلاً،" },
+          { en: "off,", ar: "متجاهلاً،" },
           { en: "which", ar: "مما" },
           { en: "somehow", ar: "نوعاً ما" },
           { en: "made", ar: "جعل" },
@@ -3279,11 +3279,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-6-s9",
-        en: "By dessert we'd both given up on making a good impression",
+        en: "By dessert, we'd both given up on making a good impression",
         ar: "بحلول وقت الحلوى، كنا قد تخلينا عن محاولة ترك انطباع جيد.",
         wordTranslations: [
           { en: "By", ar: "بحلول" },
-          { en: "dessert", ar: "الحلوى،" },
+          { en: "dessert,", ar: "الحلوى،" },
           { en: "we'd", ar: "كنا" },
           { en: "both", ar: "كلانا" },
           { en: "given", ar: "تخلينا" },
@@ -3297,11 +3297,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-6-s10",
-        en: "Oddly enough that's when the conversation actually got interesting",
+        en: "Oddly enough, that's when the conversation actually got interesting",
         ar: "والغريب أن الحديث أصبح مثيراً للاهتمام حينها فعلاً.",
         wordTranslations: [
           { en: "Oddly", ar: "والغريب" },
-          { en: "enough", ar: "أن،" },
+          { en: "enough,", ar: "أن،" },
           { en: "that's", ar: "هذا" },
           { en: "when", ar: "عندما" },
           { en: "the", ar: "الـ" },
@@ -3330,13 +3330,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-6-s12",
-        en: "Disasters it turns out make surprisingly good icebreakers",
+        en: "Disasters, it turns out, make surprisingly good icebreakers",
         ar: "تبين أن الكوارث تصنع وسيلة رائعة بشكل مفاجئ لكسر الجليد.",
         wordTranslations: [
-          { en: "Disasters", ar: "الكوارث،" },
+          { en: "Disasters,", ar: "الكوارث،" },
           { en: "it", ar: "أن" },
           { en: "turns", ar: "تبين" },
-          { en: "out", ar: "ذلك،" },
+          { en: "out,", ar: "ذلك،" },
           { en: "make", ar: "تصنع" },
           { en: "surprisingly", ar: "بشكل مفاجئ" },
           { en: "good", ar: "رائعة" },
@@ -3358,11 +3358,11 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-19-s1",
-        en: "For months I told myself I simply hadn't decided yet",
+        en: "For months, I told myself I simply hadn't decided yet",
         ar: "لأشهر، كنت أقنع نفسي بأنني ببساطة لم أقرر بعد.",
         wordTranslations: [
           { en: "For", ar: "لـ" },
-          { en: "months", ar: "أشهر،" },
+          { en: "months,", ar: "أشهر،" },
           { en: "I", ar: "أنا" },
           { en: "told", ar: "قلت" },
           { en: "myself", ar: "لنفسي" },
@@ -3375,11 +3375,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-19-s2",
-        en: "In truth I think I'd made up my mind fairly early on",
+        en: "In truth, I think I'd made up my mind fairly early on",
         ar: "في الحقيقة، أعتقد أنني اتخذت قراري مبكراً نسبياً.",
         wordTranslations: [
           { en: "In", ar: "في" },
-          { en: "truth", ar: "الحقيقة،" },
+          { en: "truth,", ar: "الحقيقة،" },
           { en: "I", ar: "أنا" },
           { en: "think", ar: "أعتقد" },
           { en: "I'd", ar: "أنا" },
@@ -3394,12 +3394,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-19-s3",
-        en: "Admitting that though meant facing everything the decision implied",
+        en: "Admitting that, though, meant facing everything the decision implied",
         ar: "لكن الاعتراف بذلك كان يعني مواجهة كل ما يترتب على القرار.",
         wordTranslations: [
           { en: "Admitting", ar: "الاعتراف" },
-          { en: "that", ar: "بذلك،" },
-          { en: "though", ar: "لكن،" },
+          { en: "that,", ar: "بذلك،" },
+          { en: "though,", ar: "لكن،" },
           { en: "meant", ar: "يعني" },
           { en: "facing", ar: "مواجهة" },
           { en: "everything", ar: "كل شيء" },
@@ -3410,11 +3410,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-19-s4",
-        en: "So instead I kept finding small convenient reasons to wait",
+        en: "So instead, I kept finding small convenient reasons to wait",
         ar: "لذا بدلاً من ذلك، استمررت بإيجاد أعذار صغيرة ومريحة للانتظار.",
         wordTranslations: [
           { en: "So", ar: "لذا" },
-          { en: "instead", ar: "بدلاً،" },
+          { en: "instead,", ar: "بدلاً،" },
           { en: "I", ar: "أنا" },
           { en: "kept", ar: "استمررت" },
           { en: "finding", ar: "إيجاد" },
@@ -3427,28 +3427,28 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-19-s5",
-        en: "Friends would ask and I'd give some vague noncommittal answer",
+        en: "Friends would ask, and I'd give some vague, noncommittal answer",
         ar: "كان الأصدقاء يسألون، وكنت أعطي إجابة غامضة وغير ملزمة.",
         wordTranslations: [
           { en: "Friends", ar: "أصدقاء" },
           { en: "would", ar: "سـ" },
-          { en: "ask", ar: "يسألون،" },
+          { en: "ask,", ar: "يسألون،" },
           { en: "and", ar: "و" },
           { en: "I'd", ar: "أنا" },
           { en: "give", ar: "أعطي" },
           { en: "some", ar: "بعض" },
-          { en: "vague", ar: "غامضة،" },
+          { en: "vague,", ar: "غامضة،" },
           { en: "noncommittal", ar: "غير ملزمة" },
           { en: "answer", ar: "إجابة" },
         ],
       },
       {
         id: "story-19-s6",
-        en: "Deep down I suspected they could tell I was stalling",
+        en: "Deep down, I suspected they could tell I was stalling",
         ar: "في أعماقي، شككت أنهم يستطيعون ملاحظة أنني أماطل.",
         wordTranslations: [
           { en: "Deep", ar: "في الأعماق" },
-          { en: "down", ar: "ـ،" },
+          { en: "down,", ar: "ـ،" },
           { en: "I", ar: "أنا" },
           { en: "suspected", ar: "شككت" },
           { en: "they", ar: "هم" },
@@ -3528,11 +3528,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-19-s11",
-        en: "Looking back the hardest part was never the decision itself",
+        en: "Looking back, the hardest part was never the decision itself",
         ar: "بالنظر إلى الوراء، لم يكن الجزء الأصعب هو القرار نفسه أبداً.",
         wordTranslations: [
           { en: "Looking", ar: "بالنظر" },
-          { en: "back", ar: "للوراء،" },
+          { en: "back,", ar: "للوراء،" },
           { en: "the", ar: "الـ" },
           { en: "hardest", ar: "الأصعب" },
           { en: "part", ar: "جزء" },
@@ -3627,16 +3627,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-20-s4",
-        en: "I mentioned almost as a throwaway comment how stuck I felt",
+        en: "I mentioned, almost as a throwaway comment, how stuck I felt",
         ar: "ذكرت، وكأنها ملاحظة عابرة، مدى شعوري بالعجز عن التقدم.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
-          { en: "mentioned", ar: "ذكرت،" },
+          { en: "mentioned,", ar: "ذكرت،" },
           { en: "almost", ar: "تقريباً" },
           { en: "as", ar: "كـ" },
           { en: "a", ar: "واحدة" },
           { en: "throwaway", ar: "عابرة" },
-          { en: "comment", ar: "ملاحظة،" },
+          { en: "comment,", ar: "ملاحظة،" },
           { en: "how", ar: "كم" },
           { en: "stuck", ar: "عالقاً" },
           { en: "I", ar: "أنا" },
@@ -3645,13 +3645,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-20-s5",
-        en: "He didn't offer advice which honestly caught me off guard",
+        en: "He didn't offer advice, which honestly caught me off guard",
         ar: "لم يقدم لي نصيحة، وهو ما فاجأني بصراحة.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "didn't", ar: "لم" },
           { en: "offer", ar: "يقدم" },
-          { en: "advice", ar: "نصيحة،" },
+          { en: "advice,", ar: "نصيحة،" },
           { en: "which", ar: "ما" },
           { en: "honestly", ar: "بصراحة" },
           { en: "caught", ar: "فاجأ" },
@@ -3662,10 +3662,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-20-s6",
-        en: "Instead he simply asked what stuck actually meant to me",
+        en: "Instead, he simply asked what stuck actually meant to me",
         ar: "بدلاً من ذلك، سألني ببساطة ماذا تعني كلمة عالق بالنسبة لي.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً من ذلك،" },
+          { en: "Instead,", ar: "بدلاً من ذلك،" },
           { en: "he", ar: "هو" },
           { en: "simply", ar: "ببساطة" },
           { en: "asked", ar: "سأل" },
@@ -3713,11 +3713,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-20-s9",
-        en: "He nodded admitting he'd once felt exactly the same way",
+        en: "He nodded, admitting he'd once felt exactly the same way",
         ar: "أومأ برأسه، معترفاً أنه شعر بالمثل تماماً في يوم من الأيام.",
         wordTranslations: [
           { en: "He", ar: "هو" },
-          { en: "nodded", ar: "أومأ،" },
+          { en: "nodded,", ar: "أومأ،" },
           { en: "admitting", ar: "معترفاً" },
           { en: "he'd", ar: "هو" },
           { en: "once", ar: "مرة" },
@@ -3730,7 +3730,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-20-s10",
-        en: "Nothing about our conversation solved anything technically speaking",
+        en: "Nothing about our conversation solved anything, technically speaking",
         ar: "لم يحل حديثنا شيئاً، من الناحية الفنية.",
         wordTranslations: [
           { en: "Nothing", ar: "لا شيء" },
@@ -3738,18 +3738,18 @@ export const storyLessons: Lesson[] = [
           { en: "our", ar: "لنا" },
           { en: "conversation", ar: "حديث" },
           { en: "solved", ar: "حل" },
-          { en: "anything", ar: "شيئاً،" },
+          { en: "anything,", ar: "شيئاً،" },
           { en: "technically", ar: "تقنياً" },
           { en: "speaking", ar: "بالحديث" },
         ],
       },
       {
         id: "story-20-s11",
-        en: "And yet something in how I viewed the problem had shifted",
+        en: "And yet, something in how I viewed the problem had shifted",
         ar: "ومع ذلك، تغير شيء ما في نظرتي إلى المشكلة.",
         wordTranslations: [
           { en: "And", ar: "و" },
-          { en: "yet", ar: "مع ذلك" },
+          { en: "yet,", ar: "مع ذلك" },
           { en: "something", ar: "شيء ما" },
           { en: "in", ar: "في" },
           { en: "how", ar: "كيف" },
@@ -3763,14 +3763,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-20-s12",
-        en: "I never learned his name but I still think about that conversation",
+        en: "I never learned his name, but I still think about that conversation",
         ar: "لم أعرف اسمه أبداً، لكنني ما زلت أفكر في ذلك الحديث.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "never", ar: "أبداً" },
           { en: "learned", ar: "عرفت" },
           { en: "his", ar: "له" },
-          { en: "name", ar: "اسم،" },
+          { en: "name,", ar: "اسم،" },
           { en: "but", ar: "لكن" },
           { en: "I", ar: "أنا" },
           { en: "still", ar: "لا أزال" },
@@ -3813,7 +3813,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-22-s2",
-        en: "I had absolutely no idea who he was though I tried not to show it",
+        en: "I had absolutely no idea who he was, though I tried not to show it",
         ar: "لم يكن لدي أدنى فكرة عمن يكون، رغم أنني حاولت ألا أظهر ذلك.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -3823,7 +3823,7 @@ export const storyLessons: Lesson[] = [
           { en: "idea", ar: "فكرة" },
           { en: "who", ar: "من" },
           { en: "he", ar: "هو" },
-          { en: "was", ar: "كان،" },
+          { en: "was,", ar: "كان،" },
           { en: "though", ar: "رغم" },
           { en: "I", ar: "أنا" },
           { en: "tried", ar: "حاولت" },
@@ -3868,7 +3868,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-22-s5",
-        en: "It had been a brief exchange nothing I'd considered particularly memorable",
+        en: "It had been a brief exchange, nothing I'd considered particularly memorable",
         ar: "كان حديثاً عابراً، لم أعتبره مميزاً بشكل خاص.",
         wordTranslations: [
           { en: "It", ar: "هو" },
@@ -3876,7 +3876,7 @@ export const storyLessons: Lesson[] = [
           { en: "been", ar: "كان" },
           { en: "a", ar: "واحداً" },
           { en: "brief", ar: "عابراً" },
-          { en: "exchange", ar: "حديثاً،" },
+          { en: "exchange,", ar: "حديثاً،" },
           { en: "nothing", ar: "لا شيء" },
           { en: "I'd", ar: "أنا" },
           { en: "considered", ar: "اعتبرته" },
@@ -3904,10 +3904,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-22-s7",
-        en: "Apparently something I'd said had stayed with him all this time",
+        en: "Apparently, something I'd said had stayed with him all this time",
         ar: "على ما يبدو، بقي شيء قلته عالقاً معه طوال هذا الوقت.",
         wordTranslations: [
-          { en: "Apparently", ar: "على ما يبدو،" },
+          { en: "Apparently,", ar: "على ما يبدو،" },
           { en: "something", ar: "شيء" },
           { en: "I'd", ar: "أنا" },
           { en: "said", ar: "قلته" },
@@ -3992,13 +3992,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-22-s12",
-        en: "I left the pharmacy thinking more about memory than about medicine",
+        en: "I left the pharmacy, thinking more about memory than about medicine",
         ar: "غادرت الصيدلية أفكر في الذاكرة أكثر مما أفكر في الدواء.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "left", ar: "غادرت" },
           { en: "the", ar: "الـ" },
-          { en: "pharmacy", ar: "الصيدلية" },
+          { en: "pharmacy,", ar: "الصيدلية" },
           { en: "thinking", ar: "أفكر" },
           { en: "more", ar: "أكثر" },
           { en: "about", ar: "في" },
@@ -4096,7 +4096,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-23-s5",
-        en: "I finally settled on a version that felt honest if imperfect",
+        en: "I finally settled on a version that felt honest, if imperfect",
         ar: "استقررت أخيراً على نسخة شعرت بأنها صادقة، وإن لم تكن مثالية.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -4107,7 +4107,7 @@ export const storyLessons: Lesson[] = [
           { en: "version", ar: "نسخة" },
           { en: "that", ar: "التي" },
           { en: "felt", ar: "بدت" },
-          { en: "honest", ar: "صادقة،" },
+          { en: "honest,", ar: "صادقة،" },
           { en: "if", ar: "وإن" },
           { en: "imperfect", ar: "غير مثالية" },
         ],
@@ -4133,15 +4133,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-23-s7",
-        en: "I told myself that whatever happened at least I'd know for certain",
+        en: "I told myself that, whatever happened, at least I'd know for certain",
         ar: "أخبرت نفسي أنه مهما حدث، سأعرف على الأقل بشكل مؤكد.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "told", ar: "أخبرت" },
           { en: "myself", ar: "نفسي" },
-          { en: "that", ar: "أن" },
+          { en: "that,", ar: "أن" },
           { en: "whatever", ar: "مهما" },
-          { en: "happened", ar: "حدث،" },
+          { en: "happened,", ar: "حدث،" },
           { en: "at", ar: "على" },
           { en: "least", ar: "الأقل" },
           { en: "I'd", ar: "أنا" },
@@ -4168,7 +4168,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-23-s9",
-        en: "It wasn't the response I had quietly hoped for but it wasn't harsh either",
+        en: "It wasn't the response I had quietly hoped for, but it wasn't harsh either",
         ar: "لم يكن الرد الذي تمنيته بهدوء، لكنه لم يكن قاسياً أيضاً.",
         wordTranslations: [
           { en: "It", ar: "هو" },
@@ -4179,7 +4179,7 @@ export const storyLessons: Lesson[] = [
           { en: "had", ar: "ـ" },
           { en: "quietly", ar: "بهدوء" },
           { en: "hoped", ar: "تمنيت" },
-          { en: "for", ar: "ـ،" },
+          { en: "for,", ar: "ـ،" },
           { en: "but", ar: "لكن" },
           { en: "it", ar: "هو" },
           { en: "wasn't", ar: "لم يكن" },
@@ -4189,10 +4189,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-23-s10",
-        en: "Strangely the uncertainty itself had been worse than the actual answer",
+        en: "Strangely, the uncertainty itself had been worse than the actual answer",
         ar: "بغرابة، كان الغموض نفسه أسوأ من الإجابة الفعلية.",
         wordTranslations: [
-          { en: "Strangely", ar: "بغرابة،" },
+          { en: "Strangely,", ar: "بغرابة،" },
           { en: "the", ar: "الـ" },
           { en: "uncertainty", ar: "غموض" },
           { en: "itself", ar: "نفسه" },
@@ -4207,14 +4207,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-23-s11",
-        en: "I read the reply twice then set my phone face down",
+        en: "I read the reply twice, then set my phone face down",
         ar: "قرأت الرد مرتين، ثم وضعت هاتفي مقلوباً على وجهه.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "read", ar: "قرأت" },
           { en: "the", ar: "الـ" },
           { en: "reply", ar: "رد" },
-          { en: "twice", ar: "مرتين،" },
+          { en: "twice,", ar: "مرتين،" },
           { en: "then", ar: "ثم" },
           { en: "set", ar: "وضعت" },
           { en: "my", ar: "لي" },
@@ -4225,12 +4225,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-23-s12",
-        en: "Whatever happened next I no longer had to wonder what if",
+        en: "Whatever happened next, I no longer had to wonder what if",
         ar: "مهما حدث بعد ذلك، لم أعد بحاجة للتساؤل ماذا لو.",
         wordTranslations: [
           { en: "Whatever", ar: "مهما" },
           { en: "happened", ar: "حدث" },
-          { en: "next", ar: "بعد ذلك،" },
+          { en: "next,", ar: "بعد ذلك،" },
           { en: "I", ar: "أنا" },
           { en: "no", ar: "لم" },
           { en: "longer", ar: "أعد" },
@@ -4306,7 +4306,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-25-s11",
-        en: "Her sister called her two minutes later laughing too",
+        en: "Her sister called her two minutes later, laughing too",
         ar: "اتصلت بها أختها بعد دقيقتين، وهي تضحك أيضاً.",
       },
       {
@@ -4359,7 +4359,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-26-s7",
-        en: "Then he admitted he'd used Karim's balcony for his own plants",
+        en: "Then, he admitted he'd used Karim's balcony for his own plants",
         ar: "ثم اعترف أنه استخدم شرفة كريم لنباتاته الخاصة.",
       },
       {
@@ -4374,7 +4374,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-26-s10",
-        en: "An old woman on the third floor answered surprised",
+        en: "An old woman on the third floor answered, surprised",
         ar: "فتحت امرأة مسنة في الطابق الثالث الباب، متفاجئة.",
       },
       {
@@ -4432,7 +4432,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-27-s7",
-        en: "After an hour one chord finally sounded right",
+        en: "After an hour, one chord finally sounded right",
         ar: "بعد ساعة، بدت وترة واحدة صحيحة أخيراً.",
       },
       {
@@ -4442,7 +4442,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-27-s9",
-        en: "His neighbor knocked again but softer this time",
+        en: "His neighbor knocked again, but softer this time",
         ar: "طرق جاره مرة أخرى، لكن بهدوء هذه المرة.",
       },
       {
@@ -4457,7 +4457,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-27-s12",
-        en: "Now they practice together every Saturday",
+        en: "Now, they practice together every Saturday",
         ar: "الآن يتدربان معاً كل يوم سبت.",
       },
     ],
@@ -4490,7 +4490,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-28-s4",
-        en: "There was ten thousand dinars too much",
+        en: "There was ten thousand dinars, too much",
         ar: "كان هناك عشرة آلاف دينار زيادة.",
       },
       {
@@ -4568,12 +4568,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-29-s5",
-        en: "Two minutes later he called again by mistake",
+        en: "Two minutes later, he called again by mistake",
         ar: "بعد دقيقتين، اتصل مرة أخرى بالخطأ.",
       },
       {
         id: "story-29-s6",
-        en: "This time we both laughed about it",
+        en: "This time, we both laughed about it",
         ar: "هذه المرة ضحكنا كلانا على الأمر.",
       },
       {
@@ -4588,12 +4588,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-29-s9",
-        en: "He thanked me and hung up still laughing",
+        en: "He thanked me and hung up, still laughing",
         ar: "شكرني وأغلق الخط، وهو لا يزال يضحك.",
       },
       {
         id: "story-29-s10",
-        en: "An hour later a text arrived Made it just in time",
+        en: "An hour later, a text arrived Made it just in time",
         ar: 'بعد ساعة، وصلتني رسالة: "وصلت في الوقت المناسب!"',
       },
       {
@@ -4603,7 +4603,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-29-s12",
-        en: "But every wedding season I think about that taxi",
+        en: "But every wedding season, I think about that taxi",
         ar: "لكن في كل موسم أعراس، أتذكر تلك السيارة.",
       },
     ],
@@ -4626,7 +4626,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-30-s2",
-        en: "I called the store ready to explain everything calmly",
+        en: "I called the store, ready to explain everything calmly",
         ar: "اتصلت بالمتجر، مستعداً لأشرح كل شيء بهدوء.",
       },
       {
@@ -4661,7 +4661,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-30-s9",
-        en: "When she came back she offered a full refund no questions asked",
+        en: "When she came back, she offered a full refund, no questions asked",
         ar: "عندما عادت، عرضت استرداداً كاملاً دون أي أسئلة.",
       },
       {
@@ -4699,7 +4699,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-31-s2",
-        en: "My manager looked up from her screen already half-smiling",
+        en: "My manager looked up from her screen, already half-smiling",
         ar: "رفعت مديرتي نظرها عن الشاشة، وقد ابتسمت نصف ابتسامة بالفعل.",
       },
       {
@@ -4714,17 +4714,17 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-31-s5",
-        en: "I listed the projects the extra hours the client who'd asked for me by name",
+        en: "I listed the projects, the extra hours, the client who'd asked for me by name",
         ar: "سردت المشاريع، والساعات الإضافية، والعميل الذي طلبني باسمي.",
       },
       {
         id: "story-31-s6",
-        en: "She nodded slowly through most of it saying nothing",
+        en: "She nodded slowly through most of it, saying nothing",
         ar: "أومأت برأسها ببطء طوال حديثي، دون أن تقول شيئاً.",
       },
       {
         id: "story-31-s7",
-        en: "When I finished she was quiet just long enough to worry me",
+        en: "When I finished, she was quiet just long enough to worry me",
         ar: "عندما انتهيت، بقيت صامتة لفترة كافية لتقلقني.",
       },
       {
@@ -4734,12 +4734,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-31-s9",
-        en: "Apparently a promotion had already been discussed above her",
+        en: "Apparently, a promotion had already been discussed above her",
         ar: "على ما يبدو، كانت هناك ترقية نوقشت بالفعل في مستوى أعلى منها.",
       },
       {
         id: "story-31-s10",
-        en: "All that rehearsal and the hardest part was just sitting still and listening",
+        en: "All that rehearsal, and the hardest part was just sitting still and listening",
         ar: "كل ذلك التدريب، والجزء الأصعب كان فقط أن أجلس بهدوء وأستمع.",
       },
       {
@@ -4767,17 +4767,17 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-32-s1",
-        en: "The email was meant for one person my friend Layla two desks away",
+        en: "The email was meant for one person, my friend Layla, two desks away",
         ar: "كانت الرسالة موجهة لشخص واحد فقط: صديقتي ليلى، على بعد مكتبين.",
       },
       {
         id: "story-32-s2",
-        en: "It was a tired honest complaint about our new meeting schedule",
+        en: "It was a tired, honest complaint about our new meeting schedule",
         ar: "كانت شكوى صادقة ومتعبة حول جدول الاجتماعات الجديد.",
       },
       {
         id: "story-32-s3",
-        en: "I hit reply typed everything I actually thought and pressed send",
+        en: "I hit reply, typed everything I actually thought, and pressed send",
         ar: 'ضغطت على "رد"، وكتبت كل ما أفكر به فعلاً، ثم أرسلت.',
       },
       {
@@ -4802,7 +4802,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-32-s8",
-        en: "Instead I sent a short follow-up admitting the mistake",
+        en: "Instead, I sent a short follow-up admitting the mistake",
         ar: "بدلاً من ذلك أرسلت رداً قصيراً أعترف فيه بالخطأ.",
       },
       {
@@ -4840,17 +4840,17 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-33-s1",
-        en: "I found the key on the stairwell floor half-hidden under a folded newspaper",
+        en: "I found the key on the stairwell floor, half-hidden under a folded newspaper",
         ar: "وجدت المفتاح على أرضية الدرج، مختبئاً جزئياً تحت جريدة مطوية.",
       },
       {
         id: "story-33-s2",
-        en: "It had no tag no name nothing but a small blue ribbon tied through it",
+        en: "It had no tag, no name, nothing but a small blue ribbon tied through it",
         ar: "لم تكن عليه بطاقة أو اسم، لا شيء سوى شريط أزرق صغير مربوط فيه.",
       },
       {
         id: "story-33-s3",
-        en: "For a week I kept it in a drawer telling myself I'd ask around eventually",
+        en: "For a week, I kept it in a drawer, telling myself I'd ask around eventually",
         ar: "لأسبوع كامل، أبقيته في درج، مقنعاً نفسي بأنني سأسأل الجيران لاحقاً.",
       },
       {
@@ -4865,17 +4865,17 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-33-s6",
-        en: "Instead for reasons I didn't fully examine I knocked",
+        en: "Instead, for reasons I didn't fully examine, I knocked",
         ar: "بدلاً من ذلك، ولأسباب لم أفحصها جيداً، طرقت الباب.",
       },
       {
         id: "story-33-s7",
-        en: "An older man answered and his face did something complicated when he saw the ribbon",
+        en: "An older man answered, and his face did something complicated when he saw the ribbon",
         ar: "فتح رجل مسن، وتغيّر وجهه بطريقة معقدة عندما رأى الشريط.",
       },
       {
         id: "story-33-s8",
-        en: "It had belonged to his late wife's apartment he explained from years before they'd married",
+        en: "It had belonged to his late wife's apartment, he explained, from years before they'd married",
         ar: "أوضح أنه كان مفتاح شقة زوجته الراحلة، من سنوات قبل زواجهما.",
       },
       {
@@ -4895,7 +4895,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-33-s12",
-        en: "Some questions I've learned are better left where you found them",
+        en: "Some questions, I've learned, are better left where you found them",
         ar: "بعض الأسئلة، كما تعلمت، من الأفضل تركها حيث وجدتها.",
       },
     ],
@@ -4931,13 +4931,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-34-s2",
-        en: "I never fed it but it kept coming back anyway",
+        en: "I never fed it, but it kept coming back anyway",
         ar: "لم أطعمها أبداً، لكنها استمرت بالعودة رغم ذلك.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "never", ar: "أبداً" },
           { en: "fed", ar: "أطعمت" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "but", ar: "لكن" },
           { en: "it", ar: "هو" },
           { en: "kept", ar: "استمرت" },
@@ -4966,12 +4966,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-34-s4",
-        en: "One cold night I finally let it inside",
+        en: "One cold night, I finally let it inside",
         ar: "في ليلة باردة، سمحت لها أخيراً بالدخول.",
         wordTranslations: [
           { en: "One", ar: "واحدة" },
           { en: "cold", ar: "باردة" },
-          { en: "night", ar: "ليلة،" },
+          { en: "night,", ar: "ليلة،" },
           { en: "I", ar: "أنا" },
           { en: "finally", ar: "أخيراً" },
           { en: "let", ar: "سمحت" },
@@ -4998,12 +4998,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-34-s6",
-        en: "Within a day it acted like it owned the place",
+        en: "Within a day, it acted like it owned the place",
         ar: "خلال يوم واحد، تصرفت وكأنها تملك المكان.",
         wordTranslations: [
           { en: "Within", ar: "خلال" },
           { en: "a", ar: "واحد" },
-          { en: "day", ar: "يوم،" },
+          { en: "day,", ar: "يوم،" },
           { en: "it", ar: "هو" },
           { en: "acted", ar: "تصرفت" },
           { en: "like", ar: "وكأنها" },
@@ -5015,14 +5015,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-34-s7",
-        en: "I bought a small bed and it ignored it completely",
+        en: "I bought a small bed, and it ignored it completely",
         ar: "اشتريت سريراً صغيراً، فتجاهلته تماماً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "bought", ar: "اشتريت" },
           { en: "a", ar: "واحد" },
           { en: "small", ar: "صغير" },
-          { en: "bed", ar: "سرير،" },
+          { en: "bed,", ar: "سرير،" },
           { en: "and", ar: "و" },
           { en: "it", ar: "هو" },
           { en: "ignored", ar: "تجاهلته" },
@@ -5059,12 +5059,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-34-s10",
-        en: "Two weeks later I bought it a proper collar",
+        en: "Two weeks later, I bought it a proper collar",
         ar: "بعد أسبوعين، اشتريت لها طوقاً حقيقياً.",
         wordTranslations: [
           { en: "Two", ar: "اثنين" },
           { en: "weeks", ar: "أسابيع" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "I", ar: "أنا" },
           { en: "bought", ar: "اشتريت" },
           { en: "it", ar: "هو" },
@@ -5090,11 +5090,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-34-s12",
-        en: "I hadn't but somehow it already felt like family",
+        en: "I hadn't, but somehow it already felt like family",
         ar: "لم أفعل، لكنها بطريقة ما شعرت وكأنها من العائلة بالفعل.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
-          { en: "hadn't", ar: "لم" },
+          { en: "hadn't,", ar: "لم" },
           { en: "but", ar: "لكن" },
           { en: "somehow", ar: "بطريقة ما" },
           { en: "it", ar: "هو" },
@@ -5155,14 +5155,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-35-s3",
-        en: "Half the buttons were stuck and one wire hung loose",
+        en: "Half the buttons were stuck, and one wire hung loose",
         ar: "كان نصف الأزرار عالقاً، وسلك واحد معلقاً بشكل مفكك.",
         wordTranslations: [
           { en: "Half", ar: "نصف" },
           { en: "the", ar: "ال" },
           { en: "buttons", ar: "أزرار" },
           { en: "were", ar: "كانوا" },
-          { en: "stuck", ar: "عالق،" },
+          { en: "stuck,", ar: "عالق،" },
           { en: "and", ar: "و" },
           { en: "one", ar: "واحد" },
           { en: "wire", ar: "سلك" },
@@ -5226,7 +5226,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-35-s7",
-        en: "When I finally plugged it in nothing happened at first",
+        en: "When I finally plugged it in, nothing happened at first",
         ar: "عندما وصّلته أخيراً، لم يحدث شيء في البداية.",
         wordTranslations: [
           { en: "When", ar: "عندما" },
@@ -5234,7 +5234,7 @@ export const storyLessons: Lesson[] = [
           { en: "finally", ar: "أخيراً" },
           { en: "plugged", ar: "وصّل" },
           { en: "it", ar: "هو" },
-          { en: "in", ar: "في" },
+          { en: "in,", ar: "في" },
           { en: "nothing", ar: "لا شيء" },
           { en: "happened", ar: "حدث" },
           { en: "at", ar: "في" },
@@ -5243,11 +5243,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-35-s8",
-        en: "Then quietly static turned into an old song",
+        en: "Then, quietly, static turned into an old song",
         ar: "ثم، بهدوء، تحول التشويش إلى أغنية قديمة.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
-          { en: "quietly", ar: "بهدوء،" },
+          { en: "Then,", ar: "ثم" },
+          { en: "quietly,", ar: "بهدوء،" },
           { en: "static", ar: "تشويش" },
           { en: "turned", ar: "تحول" },
           { en: "into", ar: "إلى" },
@@ -5308,12 +5308,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-35-s12",
-        en: "Nobody said much but nobody wanted to turn it off either",
+        en: "Nobody said much, but nobody wanted to turn it off either",
         ar: "لم يقل أحد الكثير، لكن لم يرغب أحد بإغلاقه أيضاً.",
         wordTranslations: [
           { en: "Nobody", ar: "لا أحد" },
           { en: "said", ar: "قال" },
-          { en: "much", ar: "كثيراً،" },
+          { en: "much,", ar: "كثيراً،" },
           { en: "but", ar: "لكن" },
           { en: "nobody", ar: "لا أحد" },
           { en: "wanted", ar: "أراد" },
@@ -5376,7 +5376,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-36-s3",
-        en: "Neither of us said a word but we both walked faster",
+        en: "Neither of us said a word, but we both walked faster",
         ar: "لم يقل أي منا كلمة، لكن كلانا مشى بسرعة أكبر.",
         wordTranslations: [
           { en: "Neither", ar: "لا أحد" },
@@ -5384,7 +5384,7 @@ export const storyLessons: Lesson[] = [
           { en: "us", ar: "منا" },
           { en: "said", ar: "قال" },
           { en: "a", ar: "واحد" },
-          { en: "word", ar: "كلمة،" },
+          { en: "word,", ar: "كلمة،" },
           { en: "but", ar: "لكن" },
           { en: "we", ar: "نحن" },
           { en: "both", ar: "كلا" },
@@ -5410,10 +5410,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-36-s5",
-        en: "Then she stopped and looked at my face",
+        en: "Then, she stopped and looked at my face",
         ar: "ثم توقفت ونظرت إلى وجهي.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "she", ar: "هي" },
           { en: "stopped", ar: "توقفت" },
           { en: "and", ar: "و" },
@@ -5458,7 +5458,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-36-s8",
-        en: "We stood there for a full minute neither one moving",
+        en: "We stood there for a full minute, neither one moving",
         ar: "وقفنا هناك لدقيقة كاملة، دون أن يتحرك أي منا.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
@@ -5467,7 +5467,7 @@ export const storyLessons: Lesson[] = [
           { en: "for", ar: "لـ" },
           { en: "a", ar: "واحد" },
           { en: "full", ar: "كاملة" },
-          { en: "minute", ar: "دقيقة،" },
+          { en: "minute,", ar: "دقيقة،" },
           { en: "neither", ar: "لا أحد" },
           { en: "one", ar: "أحد" },
           { en: "moving", ar: "يتحرك." },
@@ -5475,12 +5475,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-36-s9",
-        en: "In the end we split it exactly down the middle",
+        en: "In the end, we split it exactly down the middle",
         ar: "في النهاية، قسمناها بالضبط إلى نصفين.",
         wordTranslations: [
           { en: "In", ar: "في" },
           { en: "the", ar: "ال" },
-          { en: "end", ar: "نهاية،" },
+          { en: "end,", ar: "نهاية،" },
           { en: "we", ar: "نحن" },
           { en: "split", ar: "قسمنا" },
           { en: "it", ar: "هو" },
@@ -5577,13 +5577,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-37-s2",
-        en: "The bus was crowded and nobody looked at me twice",
+        en: "The bus was crowded, and nobody looked at me twice",
         ar: "كانت الحافلة مزدحمة، ولم ينظر إليّ أحد مرتين.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "bus", ar: "حافلة" },
           { en: "was", ar: "كان" },
-          { en: "crowded", ar: "مزدحمة،" },
+          { en: "crowded,", ar: "مزدحمة،" },
           { en: "and", ar: "و" },
           { en: "nobody", ar: "لا أحد" },
           { en: "looked", ar: "نظر" },
@@ -5594,12 +5594,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-37-s3",
-        en: "At the office my coworkers seemed unusually quiet all morning",
+        en: "At the office, my coworkers seemed unusually quiet all morning",
         ar: "في المكتب، بدا زملائي هادئين بشكل غير معتاد طوال الصباح.",
         wordTranslations: [
           { en: "At", ar: "في" },
           { en: "the", ar: "ال" },
-          { en: "office", ar: "مكتب،" },
+          { en: "office,", ar: "مكتب،" },
           { en: "my", ar: "لي" },
           { en: "coworkers", ar: "زملاء" },
           { en: "seemed", ar: "بدوا" },
@@ -5629,11 +5629,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-37-s5",
-        en: "At lunch I finally caught my reflection in a window",
+        en: "At lunch, I finally caught my reflection in a window",
         ar: "عند الغداء، رأيت أخيراً انعكاسي في نافذة.",
         wordTranslations: [
           { en: "At", ar: "في" },
-          { en: "lunch", ar: "غداء،" },
+          { en: "lunch,", ar: "غداء،" },
           { en: "I", ar: "أنا" },
           { en: "finally", ar: "أخيراً" },
           { en: "caught", ar: "رأيت" },
@@ -5663,13 +5663,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-37-s7",
-        en: "The seams the tag all of it in plain sight",
+        en: "The seams, the tag, all of it in plain sight",
         ar: "الخياطة، البطاقة، كل ذلك، ظاهر تماماً.",
         wordTranslations: [
           { en: "The", ar: "ال" },
-          { en: "seams", ar: "خياطة،" },
+          { en: "seams,", ar: "خياطة،" },
           { en: "the", ar: "ال" },
-          { en: "tag", ar: "بطاقة،" },
+          { en: "tag,", ar: "بطاقة،" },
           { en: "all", ar: "كل" },
           { en: "of", ar: "من" },
           { en: "it", ar: "هو" },
@@ -5830,7 +5830,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-38-s4",
-        en: "The teacher walked by and said nothing which felt worse than criticism",
+        en: "The teacher walked by and said nothing, which felt worse than criticism",
         ar: "مرت المعلمة ولم تقل شيئاً، وهو ما شعرت بأنه أسوأ من النقد.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -5839,7 +5839,7 @@ export const storyLessons: Lesson[] = [
           { en: "by", ar: "بواسطة" },
           { en: "and", ar: "و" },
           { en: "said", ar: "قالت" },
-          { en: "nothing", ar: "لا شيء" },
+          { en: "nothing,", ar: "لا شيء" },
           { en: "which", ar: "الذي" },
           { en: "felt", ar: "شعرت" },
           { en: "worse", ar: "أسوأ" },
@@ -5849,13 +5849,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-38-s5",
-        en: "By the third class I stopped trying to copy the person next to me",
+        en: "By the third class, I stopped trying to copy the person next to me",
         ar: "بحلول الصف الثالث، توقفت عن محاولة تقليد الشخص المجاور لي.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
           { en: "the", ar: "ال" },
           { en: "third", ar: "ثالث" },
-          { en: "class", ar: "صف،" },
+          { en: "class,", ar: "صف،" },
           { en: "I", ar: "أنا" },
           { en: "stopped", ar: "توقفت" },
           { en: "trying", ar: "محاولة" },
@@ -5888,13 +5888,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-38-s7",
-        en: "My tree turned purple and I decided that was fine",
+        en: "My tree turned purple, and I decided that was fine",
         ar: "أصبحت شجرتي أرجوانية، وقررت أن هذا جيد.",
         wordTranslations: [
           { en: "My", ar: "لي" },
           { en: "tree", ar: "شجرة" },
           { en: "turned", ar: "أصبحت" },
-          { en: "purple", ar: "أرجوانية،" },
+          { en: "purple,", ar: "أرجوانية،" },
           { en: "and", ar: "و" },
           { en: "I", ar: "أنا" },
           { en: "decided", ar: "قررت" },
@@ -5997,11 +5997,11 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-39-s1",
-        en: "Every morning the same woman sat by the bus window",
+        en: "Every morning, the same woman sat by the bus window",
         ar: "كل صباح، كانت نفس المرأة تجلس بجانب نافذة الحافلة.",
         wordTranslations: [
           { en: "Every", ar: "كل" },
-          { en: "morning", ar: "صباح،" },
+          { en: "morning,", ar: "صباح،" },
           { en: "the", ar: "ال" },
           { en: "same", ar: "نفس" },
           { en: "woman", ar: "امرأة" },
@@ -6030,7 +6030,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-39-s3",
-        en: "She never let anyone sit there not even when the bus was full",
+        en: "She never let anyone sit there, not even when the bus was full",
         ar: "لم تسمح لأحد بالجلوس هناك أبداً، حتى عندما كانت الحافلة ممتلئة.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -6038,7 +6038,7 @@ export const storyLessons: Lesson[] = [
           { en: "let", ar: "سمحت" },
           { en: "anyone", ar: "أحد" },
           { en: "sit", ar: "يجلس" },
-          { en: "there", ar: "هناك" },
+          { en: "there,", ar: "هناك" },
           { en: "not", ar: "لا" },
           { en: "even", ar: "حتى" },
           { en: "when", ar: "عندما" },
@@ -6064,12 +6064,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-39-s5",
-        en: "One rainy morning the bus was more crowded than usual",
+        en: "One rainy morning, the bus was more crowded than usual",
         ar: "في صباح ممطر، كانت الحافلة أكثر ازدحاماً من المعتاد.",
         wordTranslations: [
           { en: "One", ar: "واحد" },
           { en: "rainy", ar: "ممطر" },
-          { en: "morning", ar: "صباح،" },
+          { en: "morning,", ar: "صباح،" },
           { en: "the", ar: "ال" },
           { en: "bus", ar: "حافلة" },
           { en: "was", ar: "كان" },
@@ -6098,13 +6098,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-39-s7",
-        en: "This time she hesitated then said yes",
+        en: "This time, she hesitated, then said yes",
         ar: "هذه المرة، ترددت، ثم قالت نعم.",
         wordTranslations: [
           { en: "This", ar: "هذا" },
-          { en: "time", ar: "مرة،" },
+          { en: "time,", ar: "مرة،" },
           { en: "she", ar: "هي" },
-          { en: "hesitated", ar: "ترددت،" },
+          { en: "hesitated,", ar: "ترددت،" },
           { en: "then", ar: "ثم" },
           { en: "said", ar: "قالت" },
           { en: "yes", ar: "نعم." },
@@ -6112,13 +6112,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-39-s8",
-        en: "He sat down surprised and thanked her twice",
+        en: "He sat down, surprised, and thanked her twice",
         ar: "جلس، متفاجئاً، وشكرها مرتين.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "sat", ar: "جلس" },
-          { en: "down", ar: "أسفل" },
-          { en: "surprised", ar: "متفاجئاً،" },
+          { en: "down,", ar: "أسفل" },
+          { en: "surprised,", ar: "متفاجئاً،" },
           { en: "and", ar: "و" },
           { en: "thanked", ar: "شكر" },
           { en: "her", ar: "لها" },
@@ -6127,13 +6127,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-39-s9",
-        en: "Halfway through the ride her phone buzzed",
+        en: "Halfway through the ride, her phone buzzed",
         ar: "في منتصف الرحلة، اهتز هاتفها.",
         wordTranslations: [
           { en: "Halfway", ar: "منتصف" },
           { en: "through", ar: "عبر" },
           { en: "the", ar: "ال" },
-          { en: "ride", ar: "رحلة،" },
+          { en: "ride,", ar: "رحلة،" },
           { en: "her", ar: "لها" },
           { en: "phone", ar: "هاتف" },
           { en: "buzzed", ar: "اهتز." },
@@ -6239,12 +6239,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-40-s3",
-        en: "Within ten minutes we were laughing louder than we meant to",
+        en: "Within ten minutes, we were laughing louder than we meant to",
         ar: "خلال عشر دقائق، كنا نضحك بصوت أعلى مما قصدنا.",
         wordTranslations: [
           { en: "Within", ar: "خلال" },
           { en: "ten", ar: "عشر" },
-          { en: "minutes", ar: "دقائق،" },
+          { en: "minutes,", ar: "دقائق،" },
           { en: "we", ar: "نحن" },
           { en: "were", ar: "كانوا" },
           { en: "laughing", ar: "نضحك" },
@@ -6305,15 +6305,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-40-s7",
-        en: "Then someone remembered the teacher's name and it started again",
+        en: "Then, someone remembered the teacher's name, and it started again",
         ar: "ثم تذكر أحدنا اسم المعلم، وبدأ الأمر مجدداً.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "someone", ar: "أحدهم" },
           { en: "remembered", ar: "تذكر" },
           { en: "the", ar: "ال" },
           { en: "teacher's", ar: "معلم" },
-          { en: "name", ar: "اسم،" },
+          { en: "name,", ar: "اسم،" },
           { en: "and", ar: "و" },
           { en: "it", ar: "هو" },
           { en: "started", ar: "بدأ" },
@@ -6322,14 +6322,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-40-s8",
-        en: "The waiter came over twice smiling less each time",
+        en: "The waiter came over twice, smiling less each time",
         ar: "جاء النادل مرتين، مبتسماً بشكل أقل في كل مرة.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "waiter", ar: "نادل" },
           { en: "came", ar: "جاء" },
           { en: "over", ar: "فوق" },
-          { en: "twice", ar: "مرتين" },
+          { en: "twice,", ar: "مرتين" },
           { en: "smiling", ar: "مبتسماً" },
           { en: "less", ar: "أقل" },
           { en: "each", ar: "كل" },
@@ -6338,11 +6338,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-40-s9",
-        en: "By dessert half the restaurant seemed to know our whole history",
+        en: "By dessert, half the restaurant seemed to know our whole history",
         ar: "بحلول الحلوى، بدا أن نصف المطعم يعرف قصتنا بأكملها.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
-          { en: "dessert", ar: "حلوى،" },
+          { en: "dessert,", ar: "حلوى،" },
           { en: "half", ar: "نصف" },
           { en: "the", ar: "ال" },
           { en: "restaurant", ar: "مطعم" },
@@ -6452,13 +6452,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-41-s3",
-        en: "After she moved away I tried to make it from memory",
+        en: "After she moved away, I tried to make it from memory",
         ar: "بعد أن انتقلت للعيش بعيداً، حاولت تحضيرها من الذاكرة.",
         wordTranslations: [
           { en: "After", ar: "بعد" },
           { en: "she", ar: "هي" },
           { en: "moved", ar: "انتقلت" },
-          { en: "away", ar: "بعيداً،" },
+          { en: "away,", ar: "بعيداً،" },
           { en: "I", ar: "أنا" },
           { en: "tried", ar: "حاولت" },
           { en: "to", ar: "إلى" },
@@ -6498,12 +6498,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-41-s6",
-        en: "I called her and she laughed for a full minute",
+        en: "I called her, and she laughed for a full minute",
         ar: "اتصلت بها، فضحكت لدقيقة كاملة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "called", ar: "اتصلت" },
-          { en: "her", ar: "لها" },
+          { en: "her,", ar: "لها" },
           { en: "and", ar: "و" },
           { en: "she", ar: "هي" },
           { en: "laughed", ar: "ضحكت" },
@@ -6530,13 +6530,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-41-s8",
-        en: "On my fourth try I stopped measuring and just tasted as I went",
+        en: "On my fourth try, I stopped measuring and just tasted as I went",
         ar: "في محاولتي الرابعة، توقفت عن القياس وبدأت أتذوق أثناء الطهي فقط.",
         wordTranslations: [
           { en: "On", ar: "على" },
           { en: "my", ar: "لي" },
           { en: "fourth", ar: "رابعة" },
-          { en: "try", ar: "محاولة،" },
+          { en: "try,", ar: "محاولة،" },
           { en: "I", ar: "أنا" },
           { en: "stopped", ar: "توقفت" },
           { en: "measuring", ar: "قياس" },
@@ -6563,13 +6563,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-41-s10",
-        en: "I called her again this time holding up the phone toward the pot",
+        en: "I called her again, this time holding up the phone toward the pot",
         ar: "اتصلت بها مرة أخرى، هذه المرة رافعة الهاتف نحو القدر.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "called", ar: "اتصلت" },
           { en: "her", ar: "لها" },
-          { en: "again", ar: "مرة أخرى" },
+          { en: "again,", ar: "مرة أخرى" },
           { en: "this", ar: "هذا" },
           { en: "time", ar: "مرة" },
           { en: "holding", ar: "رافعة" },
@@ -6583,7 +6583,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-41-s11",
-        en: "She was quiet for a moment then said it smelled right",
+        en: "She was quiet for a moment, then said it smelled right",
         ar: "صمتت للحظة، ثم قالت إن رائحتها صحيحة.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -6591,7 +6591,7 @@ export const storyLessons: Lesson[] = [
           { en: "quiet", ar: "صامتة" },
           { en: "for", ar: "لـ" },
           { en: "a", ar: "واحد" },
-          { en: "moment", ar: "لحظة،" },
+          { en: "moment,", ar: "لحظة،" },
           { en: "then", ar: "ثم" },
           { en: "said", ar: "قالت" },
           { en: "it", ar: "هو" },
@@ -6601,7 +6601,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-41-s12",
-        en: "I still don't have a recipe but I have the stew",
+        en: "I still don't have a recipe, but I have the stew",
         ar: "ما زلت بلا وصفة، لكن لدي اليخنة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -6609,7 +6609,7 @@ export const storyLessons: Lesson[] = [
           { en: "don't", ar: "لا" },
           { en: "have", ar: "لديه" },
           { en: "a", ar: "واحد" },
-          { en: "recipe", ar: "وصفة،" },
+          { en: "recipe,", ar: "وصفة،" },
           { en: "but", ar: "لكن" },
           { en: "I", ar: "أنا" },
           { en: "have", ar: "لديه" },
@@ -6649,7 +6649,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-42-s2",
-        en: "By the time I looked up I didn't recognize the street",
+        en: "By the time I looked up, I didn't recognize the street",
         ar: "عندما رفعت نظري، لم أتعرف على الشارع.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
@@ -6657,7 +6657,7 @@ export const storyLessons: Lesson[] = [
           { en: "time", ar: "وقت" },
           { en: "I", ar: "أنا" },
           { en: "looked", ar: "رفعت" },
-          { en: "up", ar: "أعلى" },
+          { en: "up,", ar: "أعلى" },
           { en: "I", ar: "أنا" },
           { en: "didn't", ar: "لم" },
           { en: "recognize", ar: "أتعرف" },
@@ -6701,10 +6701,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-42-s5",
-        en: "Instead I decided to just walk for a while",
+        en: "Instead, I decided to just walk for a while",
         ar: "بدلاً من ذلك، قررت أن أمشي لفترة.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً" },
+          { en: "Instead,", ar: "بدلاً" },
           { en: "I", ar: "أنا" },
           { en: "decided", ar: "قررت" },
           { en: "to", ar: "إلى" },
@@ -6717,7 +6717,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-42-s6",
-        en: "The neighborhood had narrow streets and small colorful shops",
+        en: "The neighborhood had narrow streets and small, colorful shops",
         ar: "كان للحي شوارع ضيقة ومحلات صغيرة وملونة.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -6726,7 +6726,7 @@ export const storyLessons: Lesson[] = [
           { en: "narrow", ar: "ضيقة" },
           { en: "streets", ar: "شوارع" },
           { en: "and", ar: "و" },
-          { en: "small", ar: "صغيرة،" },
+          { en: "small,", ar: "صغيرة،" },
           { en: "colorful", ar: "ملونة" },
           { en: "shops", ar: "محلات." },
         ],
@@ -6790,14 +6790,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-42-s10",
-        en: "I checked the map twice then put my phone away",
+        en: "I checked the map twice, then put my phone away",
         ar: "تفقدت الخريطة مرتين، ثم وضعت هاتفي جانباً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "checked", ar: "تفقدت" },
           { en: "the", ar: "ال" },
           { en: "map", ar: "خريطة" },
-          { en: "twice", ar: "مرتين" },
+          { en: "twice,", ar: "مرتين" },
           { en: "then", ar: "ثم" },
           { en: "put", ar: "وضعت" },
           { en: "my", ar: "لي" },
@@ -6938,12 +6938,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-43-s6",
-        en: "The next day I brought it back to the same cafe",
+        en: "The next day, I brought it back to the same cafe",
         ar: "في اليوم التالي، أعدتها إلى نفس المقهى.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "next", ar: "تالي" },
-          { en: "day", ar: "يوم،" },
+          { en: "day,", ar: "يوم،" },
           { en: "I", ar: "أنا" },
           { en: "brought", ar: "أعدت" },
           { en: "it", ar: "هو" },
@@ -6975,7 +6975,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-43-s8",
-        en: "She came in twenty minutes later soaked and annoyed",
+        en: "She came in twenty minutes later, soaked and annoyed",
         ar: "دخلت بعد عشرين دقيقة، مبللة وغاضبة قليلاً.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -6983,7 +6983,7 @@ export const storyLessons: Lesson[] = [
           { en: "in", ar: "في" },
           { en: "twenty", ar: "عشرين" },
           { en: "minutes", ar: "دقيقة" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "soaked", ar: "مبللة" },
           { en: "and", ar: "و" },
           { en: "annoyed", ar: "غاضبة." },
@@ -7047,11 +7047,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-43-s12",
-        en: "This time I made sure to check the handle first",
+        en: "This time, I made sure to check the handle first",
         ar: "هذه المرة، تأكدت من فحص المقبض أولاً.",
         wordTranslations: [
           { en: "This", ar: "هذا" },
-          { en: "time", ar: "مرة،" },
+          { en: "time,", ar: "مرة،" },
           { en: "I", ar: "أنا" },
           { en: "made", ar: "جعلت" },
           { en: "sure", ar: "متأكدة" },
@@ -7143,16 +7143,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-44-s5",
-        en: "Theories appeared an escaped pet a prank a lost delivery",
+        en: "Theories appeared, an escaped pet, a prank, a lost delivery",
         ar: "ظهرت نظريات: حيوان أليف هارب، مزحة، طرد ضائع.",
         wordTranslations: [
           { en: "Theories", ar: "نظريات" },
-          { en: "appeared", ar: "ظهرت:" },
+          { en: "appeared,", ar: "ظهرت:" },
           { en: "an", ar: "واحد" },
           { en: "escaped", ar: "هارب" },
-          { en: "pet", ar: "أليف،" },
+          { en: "pet,", ar: "أليف،" },
           { en: "a", ar: "واحد" },
-          { en: "prank", ar: "مزحة،" },
+          { en: "prank,", ar: "مزحة،" },
           { en: "a", ar: "واحد" },
           { en: "lost", ar: "ضائع" },
           { en: "delivery", ar: "طرد." },
@@ -7176,13 +7176,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-44-s7",
-        en: "Another left out bread hoping to win its trust",
+        en: "Another left out bread, hoping to win its trust",
         ar: "ترك جار آخر خبزاً، أملاً في كسب ثقته.",
         wordTranslations: [
           { en: "Another", ar: "آخر" },
           { en: "left", ar: "ترك" },
           { en: "out", ar: "خارج" },
-          { en: "bread", ar: "خبز،" },
+          { en: "bread,", ar: "خبز،" },
           { en: "hoping", ar: "أملاً" },
           { en: "to", ar: "إلى" },
           { en: "win", ar: "كسب" },
@@ -7192,12 +7192,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-44-s8",
-        en: "By day three the rooster had a name Mr President",
+        en: "By day three, the rooster had a name Mr President",
         ar: "بحلول اليوم الثالث، كان للديك اسم: السيد الرئيس.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
           { en: "day", ar: "يوم" },
-          { en: "three", ar: "ثالث،" },
+          { en: "three,", ar: "ثالث،" },
           { en: "the", ar: "ال" },
           { en: "rooster", ar: "ديك" },
           { en: "had", ar: "كان" },
@@ -7209,12 +7209,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-44-s9",
-        en: "On day five an elderly man from the building next door came looking for him",
+        en: "On day five, an elderly man from the building next door came looking for him",
         ar: "في اليوم الخامس، جاء رجل مسن من المبنى المجاور يبحث عنه.",
         wordTranslations: [
           { en: "On", ar: "على" },
           { en: "day", ar: "يوم" },
-          { en: "five", ar: "خامس،" },
+          { en: "five,", ar: "خامس،" },
           { en: "an", ar: "واحد" },
           { en: "elderly", ar: "مسن" },
           { en: "man", ar: "رجل" },
@@ -7310,7 +7310,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s2",
-        en: "Three people sat across from me all smiling politely",
+        en: "Three people sat across from me, all smiling politely",
         ar: "جلس ثلاثة أشخاص أمامي، جميعهم يبتسمون بأدب.",
         wordTranslations: [
           { en: "Three", ar: "ثلاثة" },
@@ -7318,7 +7318,7 @@ export const storyLessons: Lesson[] = [
           { en: "sat", ar: "جلسوا" },
           { en: "across", ar: "أمام" },
           { en: "from", ar: "من" },
-          { en: "me", ar: "ي،" },
+          { en: "me,", ar: "ي،" },
           { en: "all", ar: "كل" },
           { en: "smiling", ar: "مبتسمين" },
           { en: "politely", ar: "بأدب." },
@@ -7326,10 +7326,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s3",
-        en: "Then one of them asked what my biggest professional failure was",
+        en: "Then, one of them asked what my biggest professional failure was",
         ar: "ثم سأل أحدهم عن أكبر فشل مهني واجهته.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "one", ar: "أحد" },
           { en: "of", ar: "من" },
           { en: "them", ar: "هم" },
@@ -7344,14 +7344,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s4",
-        en: "I hadn't prepared an answer and it showed",
+        en: "I hadn't prepared an answer, and it showed",
         ar: "لم أكن قد أعددت إجابة، وظهر ذلك بوضوح.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "hadn't", ar: "لم" },
           { en: "prepared", ar: "أعددت" },
           { en: "an", ar: "واحد" },
-          { en: "answer", ar: "إجابة،" },
+          { en: "answer,", ar: "إجابة،" },
           { en: "and", ar: "و" },
           { en: "it", ar: "هو" },
           { en: "showed", ar: "ظهر." },
@@ -7359,16 +7359,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s5",
-        en: "I started with a safe forgettable example then stopped myself",
+        en: "I started with a safe, forgettable example, then stopped myself",
         ar: "بدأت بمثال آمن لا يُنسى، ثم أوقفت نفسي.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "started", ar: "بدأت" },
           { en: "with", ar: "مع" },
           { en: "a", ar: "واحد" },
-          { en: "safe", ar: "آمن،" },
+          { en: "safe,", ar: "آمن،" },
           { en: "forgettable", ar: "سهل النسيان" },
-          { en: "example", ar: "مثال،" },
+          { en: "example,", ar: "مثال،" },
           { en: "then", ar: "ثم" },
           { en: "stopped", ar: "أوقفت" },
           { en: "myself", ar: "نفسي." },
@@ -7376,10 +7376,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s6",
-        en: "Instead I told them about the project I'd actually gotten wrong",
+        en: "Instead, I told them about the project I'd actually gotten wrong",
         ar: "بدلاً من ذلك، أخبرتهم عن المشروع الذي أخطأت فيه فعلاً.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً" },
+          { en: "Instead,", ar: "بدلاً" },
           { en: "I", ar: "أنا" },
           { en: "told", ar: "أخبرت" },
           { en: "them", ar: "هم" },
@@ -7416,13 +7416,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s8",
-        en: "I kept going anyway explaining exactly what I'd change now",
+        en: "I kept going anyway, explaining exactly what I'd change now",
         ar: "واصلت الحديث رغم ذلك، موضحاً بالضبط ما سأغيره الآن.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "kept", ar: "واصلت" },
           { en: "going", ar: "الحديث" },
-          { en: "anyway", ar: "على أي حال" },
+          { en: "anyway,", ar: "على أي حال" },
           { en: "explaining", ar: "موضحاً" },
           { en: "exactly", ar: "بالضبط" },
           { en: "what", ar: "ماذا" },
@@ -7483,7 +7483,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-45-s12",
-        en: "The offer came two days later mentioning that exact answer by name",
+        en: "The offer came two days later, mentioning that exact answer by name",
         ar: "جاء العرض بعد يومين، ذاكراً تلك الإجابة بالتحديد.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -7491,7 +7491,7 @@ export const storyLessons: Lesson[] = [
           { en: "came", ar: "جاء" },
           { en: "two", ar: "يومين" },
           { en: "days", ar: "بعد،" },
-          { en: "later", ar: "ذاكراً" },
+          { en: "later,", ar: "ذاكراً" },
           { en: "mentioning", ar: "تلك" },
           { en: "that", ar: "أن" },
           { en: "exact", ar: "بالتحديد" },
@@ -7515,7 +7515,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-46-s1",
-        en: "The piano sat in the back corner half-hidden under old coats",
+        en: "The piano sat in the back corner, half-hidden under old coats",
         ar: "جلس البيانو في الزاوية الخلفية، مختبئاً جزئياً تحت معاطف قديمة.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -7524,7 +7524,7 @@ export const storyLessons: Lesson[] = [
           { en: "in", ar: "في" },
           { en: "the", ar: "ال" },
           { en: "back", ar: "خلفية" },
-          { en: "corner", ar: "زاوية،" },
+          { en: "corner,", ar: "زاوية،" },
           { en: "half-hidden", ar: "مختبئاً" },
           { en: "under", ar: "تحت" },
           { en: "old", ar: "قديمة" },
@@ -7568,12 +7568,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-46-s4",
-        en: "On a whim I sat down and played a few uncertain notes",
+        en: "On a whim, I sat down and played a few uncertain notes",
         ar: "بدافع نزوة، جلست وعزفت بضع نغمات مترددة.",
         wordTranslations: [
           { en: "On", ar: "على" },
           { en: "a", ar: "واحد" },
-          { en: "whim", ar: "نزوة،" },
+          { en: "whim,", ar: "نزوة،" },
           { en: "I", ar: "أنا" },
           { en: "sat", ar: "جلست" },
           { en: "down", ar: "أسفل" },
@@ -7587,7 +7587,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-46-s5",
-        en: "They were badly out of tune but somehow still recognizable",
+        en: "They were badly out of tune, but somehow still recognizable",
         ar: "كانت غير مضبوطة بشدة، لكنها بقيت مألوفة بطريقة ما.",
         wordTranslations: [
           { en: "They", ar: "هم" },
@@ -7595,7 +7595,7 @@ export const storyLessons: Lesson[] = [
           { en: "badly", ar: "بشدة" },
           { en: "out", ar: "خارج" },
           { en: "of", ar: "من" },
-          { en: "tune", ar: "مضبوطة،" },
+          { en: "tune,", ar: "مضبوطة،" },
           { en: "but", ar: "لكن" },
           { en: "somehow", ar: "بطريقة ما" },
           { en: "still", ar: "ما زال" },
@@ -7604,14 +7604,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-46-s6",
-        en: "The owner mentioned almost casually that its last owner had been a teacher",
+        en: "The owner mentioned, almost casually, that its last owner had been a teacher",
         ar: "ذكر صاحب المحل، بشكل عابر تقريباً، أن مالكته الأخيرة كانت معلمة.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "owner", ar: "صاحب" },
-          { en: "mentioned", ar: "ذكر،" },
+          { en: "mentioned,", ar: "ذكر،" },
           { en: "almost", ar: "تقريباً" },
-          { en: "casually", ar: "عابر،" },
+          { en: "casually,", ar: "عابر،" },
           { en: "that", ar: "أن" },
           { en: "its", ar: "له" },
           { en: "last", ar: "أخيرة" },
@@ -7709,13 +7709,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-46-s12",
-        en: "I still play badly but the neighbors haven't complained yet",
+        en: "I still play badly, but the neighbors haven't complained yet",
         ar: "ما زلت أعزف بشكل سيء، لكن الجيران لم يشتكوا بعد.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "still", ar: "ما زال" },
           { en: "play", ar: "أعزف" },
-          { en: "badly", ar: "سيء،" },
+          { en: "badly,", ar: "سيء،" },
           { en: "but", ar: "لكن" },
           { en: "the", ar: "ال" },
           { en: "neighbors", ar: "جيران" },
@@ -7772,14 +7772,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-47-s3",
-        en: "His name came up occasionally usually followed by an awkward pause",
+        en: "His name came up occasionally, usually followed by an awkward pause",
         ar: "كان اسمه يُذكر أحياناً، متبوعاً عادة بصمت محرج.",
         wordTranslations: [
           { en: "His", ar: "له" },
           { en: "name", ar: "اسم" },
           { en: "came", ar: "يُذكر" },
           { en: "up", ar: "أعلى" },
-          { en: "occasionally", ar: "أحياناً،" },
+          { en: "occasionally,", ar: "أحياناً،" },
           { en: "usually", ar: "عادة" },
           { en: "followed", ar: "متبوعاً" },
           { en: "by", ar: "بواسطة" },
@@ -7790,13 +7790,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-47-s4",
-        en: "Then one ordinary Tuesday my mother's phone rang with his number",
+        en: "Then, one ordinary Tuesday, my mother's phone rang with his number",
         ar: "ثم، في يوم ثلاثاء عادي، رن هاتف والدتي برقمه.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "one", ar: "عادي" },
           { en: "ordinary", ar: "ثلاثاء" },
-          { en: "Tuesday", ar: "يوم،" },
+          { en: "Tuesday,", ar: "يوم،" },
           { en: "my", ar: "لي" },
           { en: "mother's", ar: "والدة" },
           { en: "phone", ar: "هاتف" },
@@ -7826,7 +7826,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-47-s6",
-        en: "The call lasted only a few minutes mostly small talk",
+        en: "The call lasted only a few minutes, mostly small talk",
         ar: "استمرت المكالمة بضع دقائق فقط، معظمها حديث عابر.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -7835,7 +7835,7 @@ export const storyLessons: Lesson[] = [
           { en: "only", ar: "فقط" },
           { en: "a", ar: "واحد" },
           { en: "few", ar: "بضع" },
-          { en: "minutes", ar: "دقائق،" },
+          { en: "minutes,", ar: "دقائق،" },
           { en: "mostly", ar: "معظمها" },
           { en: "small", ar: "عابر" },
           { en: "talk", ar: "حديث." },
@@ -7880,24 +7880,24 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-47-s9",
-        en: "The lunch itself was stiff full of careful neutral topics",
+        en: "The lunch itself was stiff, full of careful, neutral topics",
         ar: "كان الغداء نفسه متوتراً، مليئاً بمواضيع حذرة ومحايدة.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "lunch", ar: "غداء" },
           { en: "itself", ar: "نفسه" },
           { en: "was", ar: "كان" },
-          { en: "stiff", ar: "متوتر،" },
+          { en: "stiff,", ar: "متوتر،" },
           { en: "full", ar: "مليء" },
           { en: "of", ar: "من" },
-          { en: "careful", ar: "حذرة،" },
+          { en: "careful,", ar: "حذرة،" },
           { en: "neutral", ar: "محايدة" },
           { en: "topics", ar: "مواضيع." },
         ],
       },
       {
         id: "story-47-s10",
-        en: "Nobody mentioned the years we'd lost not once",
+        en: "Nobody mentioned the years we'd lost, not once",
         ar: "لم يذكر أحد السنوات التي فقدناها، ولا مرة واحدة.",
         wordTranslations: [
           { en: "Nobody", ar: "لا أحد" },
@@ -7905,19 +7905,19 @@ export const storyLessons: Lesson[] = [
           { en: "the", ar: "ال" },
           { en: "years", ar: "سنوات" },
           { en: "we'd", ar: "نحن" },
-          { en: "lost", ar: "فقدنا،" },
+          { en: "lost,", ar: "فقدنا،" },
           { en: "not", ar: "لا" },
           { en: "once", ar: "مرة" },
         ],
       },
       {
         id: "story-47-s11",
-        en: "As he left he simply said Same time next week",
+        en: "As he left, he simply said Same time next week",
         ar: 'وهو يغادر، قال ببساطة: "نفس الموعد الأسبوع القادم؟"',
         wordTranslations: [
           { en: "As", ar: "بينما" },
           { en: "he", ar: "هو" },
-          { en: "left", ar: "يغادر،" },
+          { en: "left,", ar: "يغادر،" },
           { en: "he", ar: "هو" },
           { en: "simply", ar: "ببساطة" },
           { en: "said", ar: "قال،" },
@@ -7998,18 +7998,18 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-48-s3",
-        en: "The mountains were too cold the coast too far the city too expensive",
+        en: "The mountains were too cold, the coast too far, the city too expensive",
         ar: "كانت الجبال باردة جداً، والساحل بعيداً جداً، والمدينة مكلفة جداً.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "mountains", ar: "جبال" },
           { en: "were", ar: "كانوا" },
           { en: "too", ar: "أيضاً" },
-          { en: "cold", ar: "باردة،" },
+          { en: "cold,", ar: "باردة،" },
           { en: "the", ar: "ال" },
           { en: "coast", ar: "ساحل" },
           { en: "too", ar: "أيضاً" },
-          { en: "far", ar: "بعيد،" },
+          { en: "far,", ar: "بعيد،" },
           { en: "the", ar: "ال" },
           { en: "city", ar: "مدينة" },
           { en: "too", ar: "أيضاً" },
@@ -8018,12 +8018,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-48-s4",
-        en: "By Thursday night we still had no destination and no bookings",
+        en: "By Thursday night, we still had no destination and no bookings",
         ar: "بحلول مساء الخميس، لم يكن لدينا وجهة ولا حجوزات بعد.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
           { en: "Thursday", ar: "خميس" },
-          { en: "night", ar: "مساء،" },
+          { en: "night,", ar: "مساء،" },
           { en: "we", ar: "نحن" },
           { en: "still", ar: "ما زال" },
           { en: "had", ar: "كان" },
@@ -8036,15 +8036,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-48-s5",
-        en: "Someone finally said only half joking Let's just get in the car",
+        en: "Someone finally said, only half joking, Let's just get in the car",
         ar: 'قال أحدنا أخيراً، بجدية نصفية، "لنركب السيارة فحسب."',
         wordTranslations: [
           { en: "Someone", ar: "أحدهم" },
           { en: "finally", ar: "أخيراً" },
-          { en: "said", ar: "قال،" },
+          { en: "said,", ar: "قال،" },
           { en: "only", ar: "فقط" },
           { en: "half", ar: "نصف" },
-          { en: "joking", ar: "جدية،" },
+          { en: "joking,", ar: "جدية،" },
           { en: "Let's", ar: '"لنركب' },
           { en: "just", ar: "فقط" },
           { en: "get", ar: "سيارة" },
@@ -8111,13 +8111,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-48-s9",
-        en: "The water was freezing and the only food nearby was a gas station",
+        en: "The water was freezing, and the only food nearby was a gas station",
         ar: "كان الماء متجمداً، والطعام الوحيد القريب كان في محطة وقود.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "water", ar: "ماء" },
           { en: "was", ar: "كان" },
-          { en: "freezing", ar: "متجمد،" },
+          { en: "freezing,", ar: "متجمد،" },
           { en: "and", ar: "و" },
           { en: "the", ar: "ال" },
           { en: "only", ar: "فقط" },
@@ -8131,15 +8131,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-48-s10",
-        en: "It ended up being without question our best trip in years",
+        en: "It ended up being, without question, our best trip in years",
         ar: "انتهى بها الأمر، دون شك، أفضل رحلة لنا منذ سنوات.",
         wordTranslations: [
           { en: "It", ar: "هو" },
           { en: "ended", ar: "انتهى" },
           { en: "up", ar: "أعلى" },
-          { en: "being", ar: "كونها،" },
+          { en: "being,", ar: "كونها،" },
           { en: "without", ar: "دون" },
-          { en: "question", ar: "شك،" },
+          { en: "question,", ar: "شك،" },
           { en: "our", ar: "لنا" },
           { en: "best", ar: "أفضل" },
           { en: "trip", ar: "رحلة" },
@@ -8225,12 +8225,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-49-s3",
-        en: "A week later he referenced a hiking trail I'd posted about years ago",
+        en: "A week later, he referenced a hiking trail I'd posted about years ago",
         ar: "بعد أسبوع، أشار إلى مسار مشي كنت قد نشرت عنه منذ سنوات.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
           { en: "week", ar: "أسبوع" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "he", ar: "هو" },
           { en: "referenced", ar: "أشار" },
           { en: "a", ar: "واحد" },
@@ -8245,14 +8245,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-49-s4",
-        en: "I started wondering half seriously if he'd looked me up online",
+        en: "I started wondering, half seriously, if he'd looked me up online",
         ar: "بدأت أتساءل، بجدية نصفية، إن كان قد بحث عني على الإنترنت.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "started", ar: "بدأت" },
-          { en: "wondering", ar: "أتساءل،" },
+          { en: "wondering,", ar: "أتساءل،" },
           { en: "half", ar: "نصف" },
-          { en: "seriously", ar: "جدية،" },
+          { en: "seriously,", ar: "جدية،" },
           { en: "if", ar: "إن" },
           { en: "he'd", ar: "هو" },
           { en: "looked", ar: "بحث" },
@@ -8263,13 +8263,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-49-s5",
-        en: "By the third coincidence it stopped feeling like a coincidence",
+        en: "By the third coincidence, it stopped feeling like a coincidence",
         ar: "بحلول المصادفة الثالثة، توقف الأمر عن الشعور وكأنه مصادفة.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
           { en: "the", ar: "ال" },
           { en: "third", ar: "ثالثة" },
-          { en: "coincidence", ar: "مصادفة،" },
+          { en: "coincidence,", ar: "مصادفة،" },
           { en: "it", ar: "هو" },
           { en: "stopped", ar: "توقف" },
           { en: "feeling", ar: "شعور" },
@@ -8383,10 +8383,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-49-s12",
-        en: "Now our coworkers joke that we're secretly the same person online",
+        en: "Now, our coworkers joke that we're secretly the same person online",
         ar: "الآن يمزح زملاؤنا بأننا نفس الشخص سراً على الإنترنت.",
         wordTranslations: [
-          { en: "Now", ar: "الآن" },
+          { en: "Now,", ar: "الآن" },
           { en: "our", ar: "لنا" },
           { en: "coworkers", ar: "زملاء" },
           { en: "joke", ar: "يمزحون" },
@@ -8451,7 +8451,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-50-s3",
-        en: "The translation was clearly done by a machine and it showed",
+        en: "The translation was clearly done by a machine, and it showed",
         ar: "كانت الترجمة قد تمت بواسطة آلة بوضوح، وظهر ذلك جلياً.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -8461,7 +8461,7 @@ export const storyLessons: Lesson[] = [
           { en: "done", ar: "تمت" },
           { en: "by", ar: "بواسطة" },
           { en: "a", ar: "واحد" },
-          { en: "machine", ar: "آلة،" },
+          { en: "machine,", ar: "آلة،" },
           { en: "and", ar: "و" },
           { en: "it", ar: "هو" },
           { en: "showed", ar: "ظهر." },
@@ -8486,7 +8486,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-50-s5",
-        en: "I had no idea what that meant so I improvised",
+        en: "I had no idea what that meant, so I improvised",
         ar: "لم تكن لدي فكرة عما يعنيه ذلك، فارتجلت.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -8495,7 +8495,7 @@ export const storyLessons: Lesson[] = [
           { en: "idea", ar: "فكرة" },
           { en: "what", ar: "ماذا" },
           { en: "that", ar: "أن" },
-          { en: "meant", ar: "يعني،" },
+          { en: "meant,", ar: "يعني،" },
           { en: "so", ar: "لذلك" },
           { en: "I", ar: "أنا" },
           { en: "improvised", ar: "ارتجلت." },
@@ -8503,12 +8503,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-50-s6",
-        en: "Twenty minutes in the kitchen smelled distinctly like something was wrong",
+        en: "Twenty minutes in, the kitchen smelled distinctly like something was wrong",
         ar: "بعد عشرين دقيقة، بدأت رائحة المطبخ توحي بوضوح بوجود خطأ ما.",
         wordTranslations: [
           { en: "Twenty", ar: "عشرين" },
           { en: "minutes", ar: "دقيقة" },
-          { en: "in", ar: "في" },
+          { en: "in,", ar: "في" },
           { en: "the", ar: "ال" },
           { en: "kitchen", ar: "مطبخ" },
           { en: "smelled", ar: "رائحة" },
@@ -8539,13 +8539,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-50-s8",
-        en: "I opened the door holding a spoon and looking slightly panicked",
+        en: "I opened the door, holding a spoon and looking slightly panicked",
         ar: "فتحت الباب حاملة ملعقة وأبدو مذعورة قليلاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "opened", ar: "فتحت" },
           { en: "the", ar: "ال" },
-          { en: "door", ar: "باب" },
+          { en: "door,", ar: "باب" },
           { en: "holding", ar: "حاملة" },
           { en: "a", ar: "واحد" },
           { en: "spoon", ar: "ملعقة" },
@@ -8579,17 +8579,17 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-50-s10",
-        en: "We ate the pizza and out of curiosity tasted my disaster too",
+        en: "We ate the pizza and, out of curiosity, tasted my disaster too",
         ar: "أكلنا البيتزا، وبدافع الفضول، تذوقنا كارثتي أيضاً.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
           { en: "ate", ar: "أكلنا" },
           { en: "the", ar: "ال" },
           { en: "pizza", ar: "بيتزا" },
-          { en: "and", ar: "و" },
+          { en: "and,", ar: "و" },
           { en: "out", ar: "خارج" },
           { en: "of", ar: "من" },
-          { en: "curiosity", ar: "فضول،" },
+          { en: "curiosity,", ar: "فضول،" },
           { en: "tasted", ar: "تذوقنا" },
           { en: "my", ar: "لي" },
           { en: "disaster", ar: "كارثة" },
@@ -8661,14 +8661,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-51-s2",
-        en: "I didn't know a Farida so I marked it wrong address and moved on",
+        en: "I didn't know a Farida, so I marked it wrong address and moved on",
         ar: 'لم أكن أعرف أي فريدة، فوضعت عليها "عنوان خاطئ" وتابعت حياتي.',
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "didn't", ar: "لم" },
           { en: "know", ar: "أعرف" },
           { en: "a", ar: "واحد" },
-          { en: "Farida", ar: "فريدة،" },
+          { en: "Farida,", ar: "فريدة،" },
           { en: "so", ar: "لذلك" },
           { en: "I", ar: "أنا" },
           { en: "marked", ar: "وضعت" },
@@ -8682,7 +8682,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-51-s3",
-        en: "A second letter came the following month same name same handwriting",
+        en: "A second letter came the following month, same name, same handwriting",
         ar: "وصلت رسالة ثانية في الشهر التالي، بنفس الاسم، وبنفس خط اليد.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
@@ -8691,22 +8691,22 @@ export const storyLessons: Lesson[] = [
           { en: "came", ar: "وصلت" },
           { en: "the", ar: "ال" },
           { en: "following", ar: "تالي" },
-          { en: "month", ar: "شهر،" },
+          { en: "month,", ar: "شهر،" },
           { en: "same", ar: "نفس" },
-          { en: "name", ar: "اسم،" },
+          { en: "name,", ar: "اسم،" },
           { en: "same", ar: "نفس" },
           { en: "handwriting", ar: "خط." },
         ],
       },
       {
         id: "story-51-s4",
-        en: "By the fifth letter I couldn't bring myself to just throw them away",
+        en: "By the fifth letter, I couldn't bring myself to just throw them away",
         ar: "بحلول الرسالة الخامسة، لم أستطع أن أرمِها ببساطة.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
           { en: "the", ar: "ال" },
           { en: "fifth", ar: "خامسة" },
-          { en: "letter", ar: "رسالة،" },
+          { en: "letter,", ar: "رسالة،" },
           { en: "I", ar: "أنا" },
           { en: "couldn't", ar: "لم" },
           { en: "bring", ar: "أرمِ" },
@@ -8720,7 +8720,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-51-s5",
-        en: "I started keeping them in a drawer unopened unsure what else to do",
+        en: "I started keeping them in a drawer, unopened, unsure what else to do",
         ar: "بدأت أحتفظ بها في درج، دون فتحها، غير متأكدة ماذا أفعل غير ذلك.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -8729,8 +8729,8 @@ export const storyLessons: Lesson[] = [
           { en: "them", ar: "ها" },
           { en: "in", ar: "في" },
           { en: "a", ar: "واحد" },
-          { en: "drawer", ar: "درج،" },
-          { en: "unopened", ar: "مغلقة،" },
+          { en: "drawer,", ar: "درج،" },
+          { en: "unopened,", ar: "مغلقة،" },
           { en: "unsure", ar: "متأكدة" },
           { en: "what", ar: "ماذا" },
           { en: "else", ar: "آخر" },
@@ -8779,7 +8779,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-51-s8",
-        en: "I mentioned it to an elderly neighbor almost as an afterthought",
+        en: "I mentioned it to an elderly neighbor, almost as an afterthought",
         ar: "ذكرت الأمر لجارة مسنة، وكأنه فكرة عابرة تقريباً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -8788,7 +8788,7 @@ export const storyLessons: Lesson[] = [
           { en: "to", ar: "إلى" },
           { en: "an", ar: "واحد" },
           { en: "elderly", ar: "مسنة" },
-          { en: "neighbor", ar: "جارة" },
+          { en: "neighbor,", ar: "جارة" },
           { en: "almost", ar: "تقريباً" },
           { en: "as", ar: "بينما" },
           { en: "an", ar: "واحد" },
@@ -8882,7 +8882,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-52-s1",
-        en: "I matched with a language partner online both of us nervous about the first call",
+        en: "I matched with a language partner online, both of us nervous about the first call",
         ar: "تعارفت مع شريك لغوي عبر الإنترنت، وكلانا متوتر بشأن المكالمة الأولى.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -8891,7 +8891,7 @@ export const storyLessons: Lesson[] = [
           { en: "a", ar: "واحد" },
           { en: "language", ar: "لغوي" },
           { en: "partner", ar: "شريك" },
-          { en: "online", ar: "إنترنت،" },
+          { en: "online,", ar: "إنترنت،" },
           { en: "both", ar: "كلا" },
           { en: "of", ar: "من" },
           { en: "us", ar: "كلانا" },
@@ -8904,7 +8904,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s2",
-        en: "He wanted to practice my language I wanted to practice his",
+        en: "He wanted to practice my language, I wanted to practice his",
         ar: "أراد أن يتدرب على لغتي، وأردت أن أتدرب على لغته.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -8912,7 +8912,7 @@ export const storyLessons: Lesson[] = [
           { en: "to", ar: "إلى" },
           { en: "practice", ar: "يتدرب" },
           { en: "my", ar: "لي" },
-          { en: "language", ar: "لغة،" },
+          { en: "language,", ar: "لغة،" },
           { en: "I", ar: "أنا" },
           { en: "wanted", ar: "أردت" },
           { en: "to", ar: "إلى" },
@@ -8922,14 +8922,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s3",
-        en: "For the first ten minutes we mostly just apologized for our mistakes",
+        en: "For the first ten minutes, we mostly just apologized for our mistakes",
         ar: "خلال الدقائق العشر الأولى، اكتفينا بالاعتذار عن أخطائنا.",
         wordTranslations: [
           { en: "For", ar: "لـ" },
           { en: "the", ar: "ال" },
           { en: "first", ar: "أولى" },
           { en: "ten", ar: "عشر" },
-          { en: "minutes", ar: "دقائق،" },
+          { en: "minutes,", ar: "دقائق،" },
           { en: "we", ar: "نحن" },
           { en: "mostly", ar: "معظمها" },
           { en: "just", ar: "فقط" },
@@ -8983,14 +8983,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s6",
-        en: "Somewhere around the twentieth minute we both stopped being embarrassed",
+        en: "Somewhere around the twentieth minute, we both stopped being embarrassed",
         ar: "في مكان ما حول الدقيقة العشرين، توقفنا كلانا عن الشعور بالإحراج.",
         wordTranslations: [
           { en: "Somewhere", ar: "مكان ما" },
           { en: "around", ar: "حول" },
           { en: "the", ar: "ال" },
           { en: "twentieth", ar: "عشرين" },
-          { en: "minute", ar: "دقيقة،" },
+          { en: "minute,", ar: "دقيقة،" },
           { en: "we", ar: "نحن" },
           { en: "both", ar: "كلا" },
           { en: "stopped", ar: "توقفنا" },
@@ -9037,7 +9037,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s9",
-        en: "We kept meeting every week after that mistakes and all",
+        en: "We kept meeting every week after that, mistakes and all",
         ar: "استمررنا بالاجتماع كل أسبوع بعد ذلك، بكل أخطائنا.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
@@ -9046,7 +9046,7 @@ export const storyLessons: Lesson[] = [
           { en: "every", ar: "كل" },
           { en: "week", ar: "أسبوع" },
           { en: "after", ar: "بعد" },
-          { en: "that", ar: "أن" },
+          { en: "that,", ar: "أن" },
           { en: "mistakes", ar: "أخطاء" },
           { en: "and", ar: "و" },
           { en: "all", ar: "كل" },
@@ -9054,12 +9054,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s10",
-        en: "Six months later his sentences had gotten noticeably smoother",
+        en: "Six months later, his sentences had gotten noticeably smoother",
         ar: "بعد ستة أشهر، أصبحت جمله أكثر سلاسة بشكل ملحوظ.",
         wordTranslations: [
           { en: "Six", ar: "ستة" },
           { en: "months", ar: "أشهر" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "his", ar: "له" },
           { en: "sentences", ar: "جمل" },
           { en: "had", ar: "كان" },
@@ -9070,13 +9070,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s11",
-        en: "Mine according to him still needed work",
+        en: "Mine, according to him, still needed work",
         ar: "جملي، بحسب رأيه، ما زالت بحاجة لعمل.",
         wordTranslations: [
-          { en: "Mine", ar: "لي" },
+          { en: "Mine,", ar: "لي" },
           { en: "according", ar: "بحسب" },
           { en: "to", ar: "إلى" },
-          { en: "him", ar: "رأي" },
+          { en: "him,", ar: "رأي" },
           { en: "still", ar: "ما زال" },
           { en: "needed", ar: "ه،" },
           { en: "work", ar: "عمل." },
@@ -9084,14 +9084,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-52-s12",
-        en: "We still correct each other but we laugh about it now instead of apologizing",
+        en: "We still correct each other, but we laugh about it now instead of apologizing",
         ar: "ما زلنا نصحح لبعضنا، لكننا نضحك على الأمر الآن بدلاً من الاعتذار.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
           { en: "still", ar: "ما زال" },
           { en: "correct", ar: "نصحح" },
           { en: "each", ar: "كل" },
-          { en: "other", ar: "بعض،" },
+          { en: "other,", ar: "بعض،" },
           { en: "but", ar: "لكن" },
           { en: "we", ar: "نحن" },
           { en: "laugh", ar: "نضحك" },
@@ -9137,7 +9137,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s2",
-        en: "Whenever someone points a lens at him he finds a reason to step aside",
+        en: "Whenever someone points a lens at him, he finds a reason to step aside",
         ar: "كلما وجّه أحد عدسة نحوه، يجد سبباً للابتعاد.",
         wordTranslations: [
           { en: "Whenever", ar: "كلما" },
@@ -9146,7 +9146,7 @@ export const storyLessons: Lesson[] = [
           { en: "a", ar: "واحد" },
           { en: "lens", ar: "عدسة" },
           { en: "at", ar: "في" },
-          { en: "him", ar: "ه،" },
+          { en: "him,", ar: "ه،" },
           { en: "he", ar: "هو" },
           { en: "finds", ar: "يجد" },
           { en: "a", ar: "واحد" },
@@ -9158,7 +9158,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s3",
-        en: "He'll offer to hold the bag check the lighting anything but pose",
+        en: "He'll offer to hold the bag, check the lighting, anything but pose",
         ar: "يعرض حمل الحقيبة، أو فحص الإضاءة، أي شيء إلا التصوير.",
         wordTranslations: [
           { en: "He'll", ar: "هو" },
@@ -9166,10 +9166,10 @@ export const storyLessons: Lesson[] = [
           { en: "to", ar: "إلى" },
           { en: "hold", ar: "حمل" },
           { en: "the", ar: "ال" },
-          { en: "bag", ar: "حقيبة،" },
+          { en: "bag,", ar: "حقيبة،" },
           { en: "check", ar: "فحص" },
           { en: "the", ar: "ال" },
-          { en: "lighting", ar: "إضاءة،" },
+          { en: "lighting,", ar: "إضاءة،" },
           { en: "anything", ar: "أي شيء" },
           { en: "but", ar: "لكن" },
           { en: "pose", ar: "تصوير." },
@@ -9177,14 +9177,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s4",
-        en: "At my birthday last year he took over two hundred photos of everyone else",
+        en: "At my birthday last year, he took over two hundred photos of everyone else",
         ar: "في عيد ميلادي العام الماضي، التقط أكثر من مئتي صورة للجميع سواه.",
         wordTranslations: [
           { en: "At", ar: "في" },
           { en: "my", ar: "لي" },
           { en: "birthday", ar: "ميلاد" },
           { en: "last", ar: "ماضٍ" },
-          { en: "year", ar: "عام،" },
+          { en: "year,", ar: "عام،" },
           { en: "he", ar: "هو" },
           { en: "took", ar: "التقط" },
           { en: "over", ar: "فوق" },
@@ -9198,15 +9198,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s5",
-        en: "I noticed going through them later that he wasn't in a single one",
+        en: "I noticed, going through them later, that he wasn't in a single one",
         ar: "لاحظت، وأنا أتصفحها لاحقاً، أنه لم يظهر في صورة واحدة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
-          { en: "noticed", ar: "لاحظت،" },
+          { en: "noticed,", ar: "لاحظت،" },
           { en: "going", ar: "أتصفح" },
           { en: "through", ar: "عبر" },
           { en: "them", ar: "ها" },
-          { en: "later", ar: "لاحقاً،" },
+          { en: "later,", ar: "لاحقاً،" },
           { en: "that", ar: "أن" },
           { en: "he", ar: "هو" },
           { en: "wasn't", ar: "لم" },
@@ -9218,14 +9218,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s6",
-        en: "I asked him about it expecting a joke or a shrug",
+        en: "I asked him about it, expecting a joke or a shrug",
         ar: "سألته عن الأمر، متوقعة مزحة أو هزة كتفين.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "asked", ar: "سألت" },
           { en: "him", ar: "ه" },
           { en: "about", ar: "عن" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "expecting", ar: "متوقعة" },
           { en: "a", ar: "واحد" },
           { en: "joke", ar: "مزحة" },
@@ -9236,10 +9236,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s7",
-        en: "Instead he went quiet for a moment before answering",
+        en: "Instead, he went quiet for a moment before answering",
         ar: "بدلاً من ذلك، صمت للحظة قبل أن يجيب.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً" },
+          { en: "Instead,", ar: "بدلاً" },
           { en: "he", ar: "هو" },
           { en: "went", ar: "صمت" },
           { en: "quiet", ar: "للحظة" },
@@ -9273,12 +9273,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s9",
-        en: "He described it an awkward school picture endlessly teased for years",
+        en: "He described it, an awkward school picture endlessly teased for years",
         ar: "وصفها: صورة مدرسية محرجة، تعرض للسخرية منها لسنوات.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "described", ar: "وصف" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "an", ar: "واحد" },
           { en: "awkward", ar: "محرجة" },
           { en: "school", ar: "مدرسية" },
@@ -9310,7 +9310,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-53-s11",
-        en: "I didn't say anything clever back just listened",
+        en: "I didn't say anything clever back, just listened",
         ar: "لم أقل شيئاً ذكياً رداً على ذلك، فقط استمعت.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -9318,22 +9318,22 @@ export const storyLessons: Lesson[] = [
           { en: "say", ar: "أقل" },
           { en: "anything", ar: "أي شيء" },
           { en: "clever", ar: "ذكياً" },
-          { en: "back", ar: "رداً،" },
+          { en: "back,", ar: "رداً،" },
           { en: "just", ar: "فقط" },
           { en: "listened", ar: "استمعت." },
         ],
       },
       {
         id: "story-53-s12",
-        en: "Last week for the first time he let me take one photo of him smiling slightly",
+        en: "Last week, for the first time, he let me take one photo of him smiling slightly",
         ar: "الأسبوع الماضي، ولأول مرة، سمح لي بأخذ صورة واحدة له، مبتسماً قليلاً.",
         wordTranslations: [
           { en: "Last", ar: "ماضٍ" },
-          { en: "week", ar: "أسبوع،" },
+          { en: "week,", ar: "أسبوع،" },
           { en: "for", ar: "لـ" },
           { en: "the", ar: "ال" },
           { en: "first", ar: "أولى" },
-          { en: "time", ar: "مرة،" },
+          { en: "time,", ar: "مرة،" },
           { en: "he", ar: "هو" },
           { en: "let", ar: "سمح" },
           { en: "me", ar: "لي" },
@@ -9361,14 +9361,14 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-54-s1",
-        en: "The waiter brought the bill and something looked off immediately",
+        en: "The waiter brought the bill, and something looked off immediately",
         ar: "أحضر النادل الفاتورة، وبدا شيء غريباً على الفور.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "waiter", ar: "نادل" },
           { en: "brought", ar: "أحضر" },
           { en: "the", ar: "ال" },
-          { en: "bill", ar: "فاتورة،" },
+          { en: "bill,", ar: "فاتورة،" },
           { en: "and", ar: "و" },
           { en: "something", ar: "شيء" },
           { en: "looked", ar: "بدا" },
@@ -9378,14 +9378,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-54-s2",
-        en: "Three main courses and drinks somehow totaling less than one meal usually cost",
+        en: "Three main courses and drinks, somehow totaling less than one meal usually cost",
         ar: "ثلاثة أطباق رئيسية ومشروبات، بمجموع أقل من ثمن وجبة واحدة عادة.",
         wordTranslations: [
           { en: "Three", ar: "ثلاثة" },
           { en: "main", ar: "رئيسية" },
           { en: "courses", ar: "أطباق" },
           { en: "and", ar: "و" },
-          { en: "drinks", ar: "مشروبات،" },
+          { en: "drinks,", ar: "مشروبات،" },
           { en: "somehow", ar: "بطريقة ما" },
           { en: "totaling", ar: "بمجموع" },
           { en: "less", ar: "أقل" },
@@ -9398,13 +9398,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-54-s3",
-        en: "I checked it twice sure there had to be a mistake",
+        en: "I checked it twice, sure there had to be a mistake",
         ar: "تحققت منها مرتين، متأكداً من وجود خطأ ما.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "checked", ar: "تحققت" },
           { en: "it", ar: "هو" },
-          { en: "twice", ar: "مرتين" },
+          { en: "twice,", ar: "مرتين" },
           { en: "sure", ar: "متأكداً" },
           { en: "there", ar: "هناك" },
           { en: "had", ar: "كان" },
@@ -9433,10 +9433,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-54-s5",
-        en: "Instead I flagged down the waiter and pointed at the total",
+        en: "Instead, I flagged down the waiter and pointed at the total",
         ar: "بدلاً من ذلك، ناديت النادل وأشرت إلى المجموع.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً" },
+          { en: "Instead,", ar: "بدلاً" },
           { en: "I", ar: "أنا" },
           { en: "flagged", ar: "ناديت" },
           { en: "down", ar: "أسفل" },
@@ -9451,13 +9451,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-54-s6",
-        en: "He glanced at it then smiled in a way I didn't expect",
+        en: "He glanced at it, then smiled in a way I didn't expect",
         ar: "ألقى نظرة عليها، ثم ابتسم بطريقة لم أتوقعها.",
         wordTranslations: [
           { en: "He", ar: "هو" },
           { en: "glanced", ar: "ألقى نظرة" },
           { en: "at", ar: "في" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "then", ar: "ثم" },
           { en: "smiled", ar: "ابتسم" },
           { en: "in", ar: "في" },
@@ -9491,10 +9491,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-54-s8",
-        en: "Apparently the owner kept a quiet list of regular customers",
+        en: "Apparently, the owner kept a quiet list of regular customers",
         ar: "على ما يبدو، احتفظ صاحب المطعم بقائمة هادئة للزبائن الدائمين.",
         wordTranslations: [
-          { en: "Apparently", ar: "يبدو،" },
+          { en: "Apparently,", ar: "يبدو،" },
           { en: "the", ar: "ال" },
           { en: "owner", ar: "صاحب" },
           { en: "kept", ar: "احتفظ" },
@@ -9508,14 +9508,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-54-s9",
-        en: "Nobody had ever mentioned it and there was no sign about it anywhere",
+        en: "Nobody had ever mentioned it, and there was no sign about it anywhere",
         ar: "لم يذكر أحد ذلك من قبل، ولم تكن هناك أي لافتة عن الأمر في أي مكان.",
         wordTranslations: [
           { en: "Nobody", ar: "لا أحد" },
           { en: "had", ar: "كان" },
           { en: "ever", ar: "قط" },
           { en: "mentioned", ar: "ذكر" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "and", ar: "و" },
           { en: "there", ar: "هناك" },
           { en: "was", ar: "كان" },
@@ -9618,14 +9618,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s2",
-        en: "For the first two days I kept reaching for it out of habit",
+        en: "For the first two days, I kept reaching for it out of habit",
         ar: "خلال اليومين الأولين، ظللت أمد يدي إليه بدافع العادة.",
         wordTranslations: [
           { en: "For", ar: "لـ" },
           { en: "the", ar: "ال" },
           { en: "first", ar: "أوليين" },
           { en: "two", ar: "يومين" },
-          { en: "days", ar: "،" },
+          { en: "days,", ar: "،" },
           { en: "I", ar: "أنا" },
           { en: "kept", ar: "ظللت" },
           { en: "reaching", ar: "أمد يدي" },
@@ -9638,7 +9638,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s3",
-        en: "My hand would go to my pocket find nothing and I'd feel oddly unsettled",
+        en: "My hand would go to my pocket, find nothing, and I'd feel oddly unsettled",
         ar: "كانت يدي تذهب إلى جيبي، لا تجد شيئاً، وأشعر بعدم ارتياح غريب.",
         wordTranslations: [
           { en: "My", ar: "لي" },
@@ -9647,9 +9647,9 @@ export const storyLessons: Lesson[] = [
           { en: "go", ar: "تذهب" },
           { en: "to", ar: "إلى" },
           { en: "my", ar: "لي" },
-          { en: "pocket", ar: "جيب،" },
+          { en: "pocket,", ar: "جيب،" },
           { en: "find", ar: "تجد" },
-          { en: "nothing", ar: "لا شيء" },
+          { en: "nothing,", ar: "لا شيء" },
           { en: "and", ar: "و" },
           { en: "I'd", ar: "أنا" },
           { en: "feel", ar: "أشعر" },
@@ -9702,7 +9702,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s6",
-        en: "A neighbor I'd nodded at for months turned out to have a name Samir",
+        en: "A neighbor I'd nodded at for months turned out to have a name, Samir",
         ar: "اتضح أن جاراً كنت أومئ له منذ أشهر له اسم، سمير.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
@@ -9717,13 +9717,13 @@ export const storyLessons: Lesson[] = [
           { en: "to", ar: "إلى" },
           { en: "have", ar: "لديه" },
           { en: "a", ar: "واحد" },
-          { en: "name", ar: "اسم،" },
+          { en: "name,", ar: "اسم،" },
           { en: "Samir", ar: "سمير." },
         ],
       },
       {
         id: "story-55-s7",
-        en: "We ended up talking for twenty minutes mostly about nothing important",
+        en: "We ended up talking for twenty minutes, mostly about nothing important",
         ar: "انتهى بنا الأمر نتحدث لعشرين دقيقة، معظمها عن أمور غير مهمة.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
@@ -9732,7 +9732,7 @@ export const storyLessons: Lesson[] = [
           { en: "talking", ar: "نتحدث" },
           { en: "for", ar: "لـ" },
           { en: "twenty", ar: "عشرين" },
-          { en: "minutes", ar: "دقيقة،" },
+          { en: "minutes,", ar: "دقيقة،" },
           { en: "mostly", ar: "معظمها" },
           { en: "about", ar: "عن" },
           { en: "nothing", ar: "لا شيء" },
@@ -9741,7 +9741,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s8",
-        en: "By the end of the first week I'd finished two books I'd been meaning to read",
+        en: "By the end of the first week, I'd finished two books I'd been meaning to read",
         ar: "بحلول نهاية الأسبوع الأول، أنهيت كتابين كنت أنوي قراءتهما.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
@@ -9750,7 +9750,7 @@ export const storyLessons: Lesson[] = [
           { en: "of", ar: "من" },
           { en: "the", ar: "ال" },
           { en: "first", ar: "أولى" },
-          { en: "week", ar: "أسبوع،" },
+          { en: "week,", ar: "أسبوع،" },
           { en: "I'd", ar: "أنا" },
           { en: "finished", ar: "أنهيت" },
           { en: "two", ar: "كتابين" },
@@ -9764,7 +9764,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s9",
-        en: "My replacement phone arrived on a Thursday still in its box",
+        en: "My replacement phone arrived on a Thursday, still in its box",
         ar: "وصل هاتفي البديل يوم خميس، ما زال في علبته.",
         wordTranslations: [
           { en: "My", ar: "لي" },
@@ -9773,7 +9773,7 @@ export const storyLessons: Lesson[] = [
           { en: "arrived", ar: "وصل" },
           { en: "on", ar: "على" },
           { en: "a", ar: "واحد" },
-          { en: "Thursday", ar: "خميس،" },
+          { en: "Thursday,", ar: "خميس،" },
           { en: "still", ar: "ما زال" },
           { en: "in", ar: "في" },
           { en: "its", ar: "له" },
@@ -9782,21 +9782,21 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s10",
-        en: "I left it there unopened until Sunday",
+        en: "I left it there, unopened, until Sunday",
         ar: "تركته هناك، دون فتح، حتى يوم الأحد.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "left", ar: "تركت" },
           { en: "it", ar: "هو" },
-          { en: "there", ar: "هناك" },
-          { en: "unopened", ar: "دون فتح،" },
+          { en: "there,", ar: "هناك" },
+          { en: "unopened,", ar: "دون فتح،" },
           { en: "until", ar: "حتى" },
           { en: "Sunday", ar: "أحد." },
         ],
       },
       {
         id: "story-55-s11",
-        en: "When I finally set it up I turned off half the notifications immediately",
+        en: "When I finally set it up, I turned off half the notifications immediately",
         ar: "عندما أعددته أخيراً، أطفأت نصف الإشعارات فوراً.",
         wordTranslations: [
           { en: "When", ar: "عندما" },
@@ -9804,7 +9804,7 @@ export const storyLessons: Lesson[] = [
           { en: "finally", ar: "أخيراً" },
           { en: "set", ar: "أعددت" },
           { en: "it", ar: "هو" },
-          { en: "up", ar: "أعلى" },
+          { en: "up,", ar: "أعلى" },
           { en: "I", ar: "أنا" },
           { en: "turned", ar: "أطفأت" },
           { en: "off", ar: "بعيداً" },
@@ -9816,7 +9816,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-55-s12",
-        en: "I still talk to Samir most mornings phone or no phone",
+        en: "I still talk to Samir most mornings, phone or no phone",
         ar: "ما زلت أتحدث إلى سمير معظم الصباحات، بهاتف أو دونه.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -9825,7 +9825,7 @@ export const storyLessons: Lesson[] = [
           { en: "to", ar: "إلى" },
           { en: "Samir", ar: "سمير" },
           { en: "most", ar: "الأكثر" },
-          { en: "mornings", ar: "صباحات،" },
+          { en: "mornings,", ar: "صباحات،" },
           { en: "phone", ar: "هاتف" },
           { en: "or", ar: "أو" },
           { en: "no", ar: "لا" },
@@ -9868,12 +9868,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s2",
-        en: "Nobody including me expected I'd actually need them",
+        en: "Nobody, including me, expected I'd actually need them",
         ar: "لم يتوقع أحد، بمن فيهم أنا، أنني سأحتاجه فعلاً.",
         wordTranslations: [
-          { en: "Nobody", ar: "لا أحد" },
+          { en: "Nobody,", ar: "لا أحد" },
           { en: "including", ar: "بمن" },
-          { en: "me", ar: "فيهم" },
+          { en: "me,", ar: "فيهم" },
           { en: "expected", ar: "ي،" },
           { en: "I'd", ar: "أنا" },
           { en: "actually", ar: "توقع" },
@@ -9883,10 +9883,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s3",
-        en: "Then the lead called in sick two hours before curtain and the director looked at me",
+        en: "Then, the lead called in sick two hours before curtain, and the director looked at me",
         ar: "ثم اعتذر البطل مرضياً قبل رفع الستار بساعتين، ونظر إليّ المخرج.",
         wordTranslations: [
-          { en: "Then", ar: "ثم" },
+          { en: "Then,", ar: "ثم" },
           { en: "the", ar: "ال" },
           { en: "lead", ar: "بطل" },
           { en: "called", ar: "اعتذر" },
@@ -9895,7 +9895,7 @@ export const storyLessons: Lesson[] = [
           { en: "two", ar: "ساعتين" },
           { en: "hours", ar: "قبل" },
           { en: "before", ar: "قبل" },
-          { en: "curtain", ar: "رفع" },
+          { en: "curtain,", ar: "رفع" },
           { en: "and", ar: "و" },
           { en: "the", ar: "ال" },
           { en: "director", ar: "ستار،" },
@@ -9906,7 +9906,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s4",
-        en: "There wasn't time to be nervous which turned out to be its own kind of mercy",
+        en: "There wasn't time to be nervous, which turned out to be its own kind of mercy",
         ar: "لم يكن هناك وقت للتوتر، وهو ما اتضح أنه نوع من الرحمة بحد ذاته.",
         wordTranslations: [
           { en: "There", ar: "هناك" },
@@ -9914,7 +9914,7 @@ export const storyLessons: Lesson[] = [
           { en: "time", ar: "وقت" },
           { en: "to", ar: "إلى" },
           { en: "be", ar: "يكون" },
-          { en: "nervous", ar: "توتر،" },
+          { en: "nervous,", ar: "توتر،" },
           { en: "which", ar: "الذي" },
           { en: "turned", ar: "اتضح" },
           { en: "out", ar: "خارج" },
@@ -9929,14 +9929,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s5",
-        en: "I stood in the wings running through the first scene's blocking one last time",
+        en: "I stood in the wings, running through the first scene's blocking one last time",
         ar: "وقفت في الكواليس أراجع حركة المشهد الأول مرة أخيرة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "stood", ar: "وقفت" },
           { en: "in", ar: "في" },
           { en: "the", ar: "ال" },
-          { en: "wings", ar: "كواليس" },
+          { en: "wings,", ar: "كواليس" },
           { en: "running", ar: "أراجع" },
           { en: "through", ar: "عبر" },
           { en: "the", ar: "ال" },
@@ -9988,7 +9988,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s8",
-        en: "Nobody in the audience seemed to notice or they were kind enough not to show it",
+        en: "Nobody in the audience seemed to notice, or they were kind enough not to show it",
         ar: "لم يبدُ أن أحداً في الجمهور لاحظ، أو كانوا لطفاء بما يكفي ليخفوا ذلك.",
         wordTranslations: [
           { en: "Nobody", ar: "لا أحد" },
@@ -9997,7 +9997,7 @@ export const storyLessons: Lesson[] = [
           { en: "audience", ar: "جمهور" },
           { en: "seemed", ar: "بدا" },
           { en: "to", ar: "إلى" },
-          { en: "notice", ar: "لاحظ،" },
+          { en: "notice,", ar: "لاحظ،" },
           { en: "or", ar: "أو" },
           { en: "they", ar: "هم" },
           { en: "were", ar: "كانوا" },
@@ -10011,11 +10011,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s9",
-        en: "Backstage afterward the director just said Well That happened",
+        en: "Backstage afterward, the director just said Well That happened",
         ar: 'خلف الكواليس بعد ذلك، قال المخرج فقط: "حسناً. حدث ذلك."',
         wordTranslations: [
           { en: "Backstage", ar: "كواليس" },
-          { en: "afterward", ar: "بعد ذلك،" },
+          { en: "afterward,", ar: "بعد ذلك،" },
           { en: "the", ar: "ال" },
           { en: "director", ar: "مخرج" },
           { en: "just", ar: "فقط" },
@@ -10050,16 +10050,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s11",
-        en: "The applause had been real at least whatever else was true",
+        en: "The applause had been real, at least, whatever else was true",
         ar: "كان التصفيق حقيقياً، على الأقل، مهما كان غير ذلك صحيحاً.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "applause", ar: "تصفيق" },
           { en: "had", ar: "كان" },
           { en: "been", ar: "كان" },
-          { en: "real", ar: "حقيقياً،" },
+          { en: "real,", ar: "حقيقياً،" },
           { en: "at", ar: "في" },
-          { en: "least", ar: "أقل،" },
+          { en: "least,", ar: "أقل،" },
           { en: "whatever", ar: "مهما" },
           { en: "else", ar: "آخر" },
           { en: "was", ar: "كان" },
@@ -10068,7 +10068,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-56-s12",
-        en: "I still don't know if I was good only that I didn't stop",
+        en: "I still don't know if I was good, only that I didn't stop",
         ar: "ما زلت لا أعرف إن كنت جيدة، فقط أنني لم أتوقف.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -10078,7 +10078,7 @@ export const storyLessons: Lesson[] = [
           { en: "if", ar: "إن" },
           { en: "I", ar: "أنا" },
           { en: "was", ar: "كان" },
-          { en: "good", ar: "جيدة،" },
+          { en: "good,", ar: "جيدة،" },
           { en: "only", ar: "فقط" },
           { en: "that", ar: "أن" },
           { en: "I", ar: "أنا" },
@@ -10142,7 +10142,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-57-s3",
-        en: "I sat down with them separately first which felt like diplomacy and espionage in equal measure",
+        en: "I sat down with them separately first, which felt like diplomacy and espionage in equal measure",
         ar: "جلست معهما بشكل منفصل أولاً، وهو ما شعر وكأنه دبلوماسية وتجسس بالتساوي.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -10151,7 +10151,7 @@ export const storyLessons: Lesson[] = [
           { en: "with", ar: "مع" },
           { en: "them", ar: "هما" },
           { en: "separately", ar: "منفصل" },
-          { en: "first", ar: "أولاً،" },
+          { en: "first,", ar: "أولاً،" },
           { en: "which", ar: "الذي" },
           { en: "felt", ar: "شعر" },
           { en: "like", ar: "وكأنه" },
@@ -10165,7 +10165,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-57-s4",
-        en: "One insisted it was about a missed deadline the other blamed a misread email",
+        en: "One insisted it was about a missed deadline, the other blamed a misread email",
         ar: "أصر أحدهما أن الأمر يتعلق بموعد نهائي فائت؛ ولام الآخر بريداً إلكترونياً أُسيء فهمه.",
         wordTranslations: [
           { en: "One", ar: "أحد" },
@@ -10175,7 +10175,7 @@ export const storyLessons: Lesson[] = [
           { en: "about", ar: "عن" },
           { en: "a", ar: "واحد" },
           { en: "missed", ar: "فائت" },
-          { en: "deadline", ar: "نهائي؛" },
+          { en: "deadline,", ar: "نهائي؛" },
           { en: "the", ar: "ال" },
           { en: "other", ar: "آخر" },
           { en: "blamed", ar: "لام" },
@@ -10186,7 +10186,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-57-s5",
-        en: "Twenty minutes into the joint conversation it became clear neither explanation was the real one",
+        en: "Twenty minutes into the joint conversation, it became clear neither explanation was the real one",
         ar: "بعد عشرين دقيقة من الحديث المشترك، اتضح أن أياً من التفسيرين لم يكن الحقيقي.",
         wordTranslations: [
           { en: "Twenty", ar: "عشرين" },
@@ -10194,7 +10194,7 @@ export const storyLessons: Lesson[] = [
           { en: "into", ar: "إلى" },
           { en: "the", ar: "ال" },
           { en: "joint", ar: "مشترك" },
-          { en: "conversation", ar: "حديث،" },
+          { en: "conversation,", ar: "حديث،" },
           { en: "it", ar: "هو" },
           { en: "became", ar: "اتضح" },
           { en: "clear", ar: "لم يكن" },
@@ -10269,7 +10269,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-57-s9",
-        en: "I didn't try to fix it just let them actually say it to each other",
+        en: "I didn't try to fix it, just let them actually say it to each other",
         ar: "لم أحاول إصلاح الأمر، فقط تركتهما يقولانه فعلاً لبعضهما.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -10277,7 +10277,7 @@ export const storyLessons: Lesson[] = [
           { en: "try", ar: "أحاول" },
           { en: "to", ar: "إلى" },
           { en: "fix", ar: "إصلاح" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "just", ar: "فقط" },
           { en: "let", ar: "تركتهما" },
           { en: "them", ar: "هما" },
@@ -10364,7 +10364,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-58-s1",
-        en: "The review appeared on a Sunday morning two stars and a paragraph that stung more than it should have",
+        en: "The review appeared on a Sunday morning, two stars and a paragraph that stung more than it should have",
         ar: "ظهرت المراجعة صباح أحد: نجمتان، وفقرة آلمتني أكثر مما ينبغي.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -10373,7 +10373,7 @@ export const storyLessons: Lesson[] = [
           { en: "on", ar: "على" },
           { en: "a", ar: "واحد" },
           { en: "Sunday", ar: "أحد" },
-          { en: "morning", ar: "صباح:" },
+          { en: "morning,", ar: "صباح:" },
           { en: "two", ar: "نجمتان" },
           { en: "stars", ar: "فقرة،" },
           { en: "and", ar: "و" },
@@ -10422,14 +10422,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-58-s4",
-        en: "My first draft was defensive and I deleted it immediately",
+        en: "My first draft was defensive, and I deleted it immediately",
         ar: "كانت مسودتي الأولى دفاعية، وحذفتها فوراً.",
         wordTranslations: [
           { en: "My", ar: "لي" },
           { en: "first", ar: "أولى" },
           { en: "draft", ar: "مسودة" },
           { en: "was", ar: "كان" },
-          { en: "defensive", ar: "دفاعية،" },
+          { en: "defensive,", ar: "دفاعية،" },
           { en: "and", ar: "و" },
           { en: "I", ar: "أنا" },
           { en: "deleted", ar: "حذفت" },
@@ -10458,14 +10458,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-58-s6",
-        en: "I finally wrote something simple an apology and an invitation to come back on the house",
+        en: "I finally wrote something simple, an apology and an invitation to come back, on the house",
         ar: "كتبت أخيراً شيئاً بسيطاً: اعتذار، ودعوة للعودة، على حسابنا.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "finally", ar: "أخيراً" },
           { en: "wrote", ar: "كتبت" },
           { en: "something", ar: "شيء" },
-          { en: "simple", ar: "بسيط:" },
+          { en: "simple,", ar: "بسيط:" },
           { en: "an", ar: "واحد" },
           { en: "apology", ar: "اعتذار،" },
           { en: "and", ar: "و" },
@@ -10473,7 +10473,7 @@ export const storyLessons: Lesson[] = [
           { en: "invitation", ar: "دعوة" },
           { en: "to", ar: "إلى" },
           { en: "come", ar: "للعودة" },
-          { en: "back", ar: "على" },
+          { en: "back,", ar: "على" },
           { en: "on", ar: "على" },
           { en: "the", ar: "ال" },
           { en: "house", ar: "حسابنا." },
@@ -10481,21 +10481,21 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-58-s7",
-        en: "Three days later a woman came in and introduced herself almost sheepishly as the reviewer",
+        en: "Three days later, a woman came in and introduced herself, almost sheepishly, as the reviewer",
         ar: "بعد ثلاثة أيام، دخلت امرأة وقدمت نفسها، بخجل تقريباً، على أنها صاحبة المراجعة.",
         wordTranslations: [
           { en: "Three", ar: "ثلاثة" },
           { en: "days", ar: "أيام" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "a", ar: "واحد" },
           { en: "woman", ar: "امرأة" },
           { en: "came", ar: "دخلت" },
           { en: "in", ar: "في" },
           { en: "and", ar: "و" },
           { en: "introduced", ar: "قدمت" },
-          { en: "herself", ar: "نفسها،" },
+          { en: "herself,", ar: "نفسها،" },
           { en: "almost", ar: "تقريباً" },
-          { en: "sheepishly", ar: "بخجل" },
+          { en: "sheepishly,", ar: "بخجل" },
           { en: "as", ar: "بينما" },
           { en: "the", ar: "ال" },
           { en: "reviewer", ar: "صاحبة" },
@@ -10503,7 +10503,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-58-s8",
-        en: "She admitted she'd been having an unrelated terrible week when she wrote it",
+        en: "She admitted she'd been having an unrelated, terrible week when she wrote it",
         ar: "اعترفت أنها كانت تمر بأسبوع سيء لا علاقة له بالأمر عندما كتبتها.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -10512,7 +10512,7 @@ export const storyLessons: Lesson[] = [
           { en: "been", ar: "كان" },
           { en: "having", ar: "تمر" },
           { en: "an", ar: "واحد" },
-          { en: "unrelated", ar: "لا علاقة له" },
+          { en: "unrelated,", ar: "لا علاقة له" },
           { en: "terrible", ar: "سيء" },
           { en: "week", ar: "أسبوع" },
           { en: "when", ar: "عندما" },
@@ -10545,7 +10545,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-58-s10",
-        en: "I gave her a fresh cup anyway no charge no mention of the review",
+        en: "I gave her a fresh cup anyway, no charge, no mention of the review",
         ar: "أعطيتها كوباً جديداً على أي حال، مجاناً، دون ذكر المراجعة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -10554,9 +10554,9 @@ export const storyLessons: Lesson[] = [
           { en: "a", ar: "واحد" },
           { en: "fresh", ar: "جديداً" },
           { en: "cup", ar: "كوباً" },
-          { en: "anyway", ar: "على أي حال" },
+          { en: "anyway,", ar: "على أي حال" },
           { en: "no", ar: "لا" },
-          { en: "charge", ar: "مجاناً،" },
+          { en: "charge,", ar: "مجاناً،" },
           { en: "no", ar: "لا" },
           { en: "mention", ar: "ذكر" },
           { en: "of", ar: "من" },
@@ -10566,7 +10566,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-58-s11",
-        en: "She left an updated review the next day five stars with an oddly specific apology",
+        en: "She left an updated review the next day, five stars, with an oddly specific apology",
         ar: "تركت مراجعة محدثة في اليوم التالي، خمس نجوم، مع اعتذار محدد بغرابة.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -10576,9 +10576,9 @@ export const storyLessons: Lesson[] = [
           { en: "review", ar: "مراجعة" },
           { en: "the", ar: "ال" },
           { en: "next", ar: "تالي" },
-          { en: "day", ar: "يوم،" },
+          { en: "day,", ar: "يوم،" },
           { en: "five", ar: "خمس" },
-          { en: "stars", ar: "نجوم،" },
+          { en: "stars,", ar: "نجوم،" },
           { en: "with", ar: "مع" },
           { en: "an", ar: "واحد" },
           { en: "oddly", ar: "بغرابة" },
@@ -10624,7 +10624,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-59-s1",
-        en: "My friend's apartment was quieter than mine which was the whole appeal of house-sitting for a week",
+        en: "My friend's apartment was quieter than mine, which was the whole appeal of house-sitting for a week",
         ar: "كانت شقة صديقتي أهدأ من شقتي، وهذا كان كل جاذبية العناية بالمنزل لأسبوع.",
         wordTranslations: [
           { en: "My", ar: "لي" },
@@ -10633,7 +10633,7 @@ export const storyLessons: Lesson[] = [
           { en: "was", ar: "كان" },
           { en: "quieter", ar: "أهدأ" },
           { en: "than", ar: "من" },
-          { en: "mine", ar: "لي" },
+          { en: "mine,", ar: "لي" },
           { en: "which", ar: "الذي" },
           { en: "was", ar: "كان" },
           { en: "the", ar: "ال" },
@@ -10648,12 +10648,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s2",
-        en: "The first night I noticed a lamp on in the living room that I was certain I'd turned off",
+        en: "The first night, I noticed a lamp on in the living room that I was certain I'd turned off",
         ar: "في الليلة الأولى، لاحظت مصباحاً مضاءً في غرفة الجلوس كنت متأكداً أنني أطفأته.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "first", ar: "أولى" },
-          { en: "night", ar: "ليلة،" },
+          { en: "night,", ar: "ليلة،" },
           { en: "I", ar: "أنا" },
           { en: "noticed", ar: "لاحظت" },
           { en: "a", ar: "واحد" },
@@ -10692,12 +10692,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s4",
-        en: "The second night a book I didn't recognize sat open on the kitchen table",
+        en: "The second night, a book I didn't recognize sat open on the kitchen table",
         ar: "في الليلة الثانية، كان هناك كتاب لا أعرفه مفتوحاً على طاولة المطبخ.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "second", ar: "ثانية" },
-          { en: "night", ar: "ليلة،" },
+          { en: "night,", ar: "ليلة،" },
           { en: "a", ar: "واحد" },
           { en: "book", ar: "كتاب" },
           { en: "I", ar: "أنا" },
@@ -10713,13 +10713,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s5",
-        en: "I hadn't touched it and my friend was three time zones away",
+        en: "I hadn't touched it, and my friend was three time zones away",
         ar: "لم ألمسه، وكانت صديقتي على بعد ثلاث مناطق زمنية.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "hadn't", ar: "لم" },
           { en: "touched", ar: "ألمسه" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "and", ar: "و" },
           { en: "my", ar: "لي" },
           { en: "friend", ar: "صديقة" },
@@ -10732,13 +10732,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s6",
-        en: "By the third night I was checking the locks twice before sleeping",
+        en: "By the third night, I was checking the locks twice before sleeping",
         ar: "بحلول الليلة الثالثة، كنت أتحقق من الأقفال مرتين قبل النوم.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
           { en: "the", ar: "ال" },
           { en: "third", ar: "ثالثة" },
-          { en: "night", ar: "ليلة،" },
+          { en: "night,", ar: "ليلة،" },
           { en: "I", ar: "أنا" },
           { en: "was", ar: "كان" },
           { en: "checking", ar: "أتحقق" },
@@ -10751,14 +10751,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s7",
-        en: "I texted my friend half-joking asking if anyone else had a key",
+        en: "I texted my friend, half-joking, asking if anyone else had a key",
         ar: "راسلت صديقتي، بجدية نصفية، أسأل إن كان لدى أحد آخر مفتاحاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "texted", ar: "راسلت" },
           { en: "my", ar: "لي" },
-          { en: "friend", ar: "صديقة،" },
-          { en: "half-joking", ar: "نصف جدية،" },
+          { en: "friend,", ar: "صديقة،" },
+          { en: "half-joking,", ar: "نصف جدية،" },
           { en: "asking", ar: "أسأل" },
           { en: "if", ar: "إن" },
           { en: "anyone", ar: "أحد" },
@@ -10813,7 +10813,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s10",
-        en: "He hadn't wanted to disturb me so he'd been coming while I was out",
+        en: "He hadn't wanted to disturb me, so he'd been coming while I was out",
         ar: "لم يرغب بإزعاجي، فكان يأتي وأنا في الخارج.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -10821,7 +10821,7 @@ export const storyLessons: Lesson[] = [
           { en: "wanted", ar: "أراد" },
           { en: "to", ar: "إلى" },
           { en: "disturb", ar: "إزعاج" },
-          { en: "me", ar: "ي،" },
+          { en: "me,", ar: "ي،" },
           { en: "so", ar: "لذلك" },
           { en: "he'd", ar: "هو" },
           { en: "been", ar: "كان" },
@@ -10834,14 +10834,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-59-s11",
-        en: "The mystery in the end was almost disappointingly simple",
+        en: "The mystery, in the end, was almost disappointingly simple",
         ar: "كان اللغز، في النهاية، بسيطاً بشكل يخيب الأمل تقريباً.",
         wordTranslations: [
           { en: "The", ar: "ال" },
-          { en: "mystery", ar: "لغز،" },
+          { en: "mystery,", ar: "لغز،" },
           { en: "in", ar: "في" },
           { en: "the", ar: "ال" },
-          { en: "end", ar: "نهاية،" },
+          { en: "end,", ar: "نهاية،" },
           { en: "was", ar: "كان" },
           { en: "almost", ar: "تقريباً" },
           { en: "disappointingly", ar: "مخيب" },
@@ -10884,7 +10884,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-60-s1",
-        en: "I was the only one in the room fluent in both languages which usually meant an easy job",
+        en: "I was the only one in the room fluent in both languages, which usually meant an easy job",
         ar: "كنت الوحيد في الغرفة المتقن للغتين، وهو ما كان يعني عادة مهمة سهلة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -10898,7 +10898,7 @@ export const storyLessons: Lesson[] = [
           { en: "fluent", ar: "متقن" },
           { en: "in", ar: "في" },
           { en: "both", ar: "كلا" },
-          { en: "languages", ar: "لغتين،" },
+          { en: "languages,", ar: "لغتين،" },
           { en: "which", ar: "الذي" },
           { en: "usually", ar: "عادة" },
           { en: "meant", ar: "يعني" },
@@ -10909,13 +10909,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-60-s2",
-        en: "Halfway through the negotiation our director leaned over and asked me to soften his next sentence",
+        en: "Halfway through the negotiation, our director leaned over and asked me to soften his next sentence",
         ar: 'في منتصف المفاوضات، انحنى مديرنا نحوي وطلب مني "تلطيف" جملته التالية.',
         wordTranslations: [
           { en: "Halfway", ar: "منتصف" },
           { en: "through", ar: "عبر" },
           { en: "the", ar: "ال" },
-          { en: "negotiation", ar: "مفاوضات،" },
+          { en: "negotiation,", ar: "مفاوضات،" },
           { en: "our", ar: "لنا" },
           { en: "director", ar: "مدير" },
           { en: "leaned", ar: "انحنى" },
@@ -10932,7 +10932,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-60-s3",
-        en: "What he'd actually said was blunt close to an accusation",
+        en: "What he'd actually said was blunt, close to an accusation",
         ar: "ما قاله فعلاً كان مباشراً، قريباً من الاتهام.",
         wordTranslations: [
           { en: "What", ar: "ماذا" },
@@ -10940,7 +10940,7 @@ export const storyLessons: Lesson[] = [
           { en: "actually", ar: "فعلاً" },
           { en: "said", ar: "قاله" },
           { en: "was", ar: "كان" },
-          { en: "blunt", ar: "مباشراً،" },
+          { en: "blunt,", ar: "مباشراً،" },
           { en: "close", ar: "قريب" },
           { en: "to", ar: "إلى" },
           { en: "an", ar: "واحد" },
@@ -10949,7 +10949,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-60-s4",
-        en: "What he wanted delivered was polite vague almost meaningless by comparison",
+        en: "What he wanted delivered was polite, vague, almost meaningless by comparison",
         ar: "ما أراد إيصاله كان مهذباً، غامضاً، شبه عديم المعنى بالمقارنة.",
         wordTranslations: [
           { en: "What", ar: "ماذا" },
@@ -10957,8 +10957,8 @@ export const storyLessons: Lesson[] = [
           { en: "wanted", ar: "أراد" },
           { en: "delivered", ar: "إيصاله" },
           { en: "was", ar: "كان" },
-          { en: "polite", ar: "مهذباً،" },
-          { en: "vague", ar: "غامضاً،" },
+          { en: "polite,", ar: "مهذباً،" },
+          { en: "vague,", ar: "غامضاً،" },
           { en: "almost", ar: "تقريباً" },
           { en: "meaningless", ar: "عديم المعنى" },
           { en: "by", ar: "بواسطة" },
@@ -11045,7 +11045,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-60-s9",
-        en: "The other side's negotiator caught the shift I think and let it pass anyway",
+        en: "The other side's negotiator caught the shift, I think, and let it pass anyway",
         ar: "أعتقد أن مفاوض الطرف الآخر لاحظ التحول، وتركه يمر رغم ذلك.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -11054,9 +11054,9 @@ export const storyLessons: Lesson[] = [
           { en: "negotiator", ar: "مفاوض" },
           { en: "caught", ar: "لاحظ" },
           { en: "the", ar: "ال" },
-          { en: "shift", ar: "تحول،" },
+          { en: "shift,", ar: "تحول،" },
           { en: "I", ar: "أنا" },
-          { en: "think", ar: "أعتقد،" },
+          { en: "think,", ar: "أعتقد،" },
           { en: "and", ar: "و" },
           { en: "let", ar: "ترك" },
           { en: "it", ar: "هو" },
@@ -11066,10 +11066,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-60-s10",
-        en: "Afterward my director thanked me for handling that well",
+        en: "Afterward, my director thanked me for handling that well",
         ar: 'بعد ذلك، شكرني مديري على "التعامل مع الأمر بشكل جيد."',
         wordTranslations: [
-          { en: "Afterward", ar: "بعد ذلك،" },
+          { en: "Afterward,", ar: "بعد ذلك،" },
           { en: "my", ar: "لي" },
           { en: "director", ar: "مدير" },
           { en: "thanked", ar: "شكر" },
@@ -11082,7 +11082,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-60-s11",
-        en: "I didn't feel like I'd handled anything only chosen the least damaging version of a lie",
+        en: "I didn't feel like I'd handled anything, only chosen the least damaging version of a lie",
         ar: "لم أشعر أنني تعاملت مع أي شيء، فقط اخترت النسخة الأقل ضرراً من كذبة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -11091,7 +11091,7 @@ export const storyLessons: Lesson[] = [
           { en: "like", ar: "أنني" },
           { en: "I'd", ar: "أنا" },
           { en: "handled", ar: "تعاملت" },
-          { en: "anything", ar: "أي شيء" },
+          { en: "anything,", ar: "أي شيء" },
           { en: "only", ar: "فقط" },
           { en: "chosen", ar: "اخترت" },
           { en: "the", ar: "ال" },
@@ -11161,7 +11161,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-61-s2",
-        en: "We met at the same cafe we used to go to which felt deliberate on both our parts",
+        en: "We met at the same cafe we used to go to, which felt deliberate on both our parts",
         ar: "التقينا في نفس المقهى الذي اعتدنا الذهاب إليه، وهو ما شعر بأنه مقصود من كلينا.",
         wordTranslations: [
           { en: "We", ar: "نحن" },
@@ -11174,7 +11174,7 @@ export const storyLessons: Lesson[] = [
           { en: "used", ar: "اعتدنا" },
           { en: "to", ar: "إلى" },
           { en: "go", ar: "الذهاب" },
-          { en: "to", ar: "إلى" },
+          { en: "to,", ar: "إلى" },
           { en: "which", ar: "الذي" },
           { en: "felt", ar: "شعر" },
           { en: "deliberate", ar: "مقصوداً" },
@@ -11226,12 +11226,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-61-s5",
-        en: "That landed strangely less like relief than I'd expected",
+        en: "That landed strangely, less like relief than I'd expected",
         ar: "وقع ذلك بغرابة، أقل ارتياحاً مما توقعت.",
         wordTranslations: [
           { en: "That", ar: "أن" },
           { en: "landed", ar: "وقع" },
-          { en: "strangely", ar: "بغرابة،" },
+          { en: "strangely,", ar: "بغرابة،" },
           { en: "less", ar: "أقل" },
           { en: "like", ar: "ارتياحاً" },
           { en: "relief", ar: "مما" },
@@ -11242,15 +11242,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-61-s6",
-        en: "Some part of me I realized had wanted her to still be angry",
+        en: "Some part of me, I realized, had wanted her to still be angry",
         ar: "أدركت أن جزءاً مني أراد أن تبقى غاضبة.",
         wordTranslations: [
           { en: "Some", ar: "بعض" },
           { en: "part", ar: "جزء" },
           { en: "of", ar: "من" },
-          { en: "me", ar: "مني،" },
+          { en: "me,", ar: "مني،" },
           { en: "I", ar: "أنا" },
-          { en: "realized", ar: "أدركت،" },
+          { en: "realized,", ar: "أدركت،" },
           { en: "had", ar: "كان" },
           { en: "wanted", ar: "أراد" },
           { en: "her", ar: "لها" },
@@ -11282,10 +11282,10 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-61-s8",
-        en: "Instead she just seemed tired and mildly amused at how seriously I was taking it",
+        en: "Instead, she just seemed tired and mildly amused at how seriously I was taking it",
         ar: "بدلاً من ذلك، بدت متعبة فقط، ومستمتعة قليلاً بمدى جديتي في الأمر.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً" },
+          { en: "Instead,", ar: "بدلاً" },
           { en: "she", ar: "هي" },
           { en: "just", ar: "فقط" },
           { en: "seemed", ar: "بدت" },
@@ -11324,7 +11324,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-61-s10",
-        en: "Neither of us suggested meeting again and neither of us ruled it out",
+        en: "Neither of us suggested meeting again, and neither of us ruled it out",
         ar: "لم يقترح أي منا اللقاء مرة أخرى، ولم يستبعده أي منا أيضاً.",
         wordTranslations: [
           { en: "Neither", ar: "لا أحد" },
@@ -11332,7 +11332,7 @@ export const storyLessons: Lesson[] = [
           { en: "us", ar: "منا" },
           { en: "suggested", ar: "اقترح" },
           { en: "meeting", ar: "لقاء" },
-          { en: "again", ar: "مرة أخرى" },
+          { en: "again,", ar: "مرة أخرى" },
           { en: "and", ar: "و" },
           { en: "neither", ar: "لا أحد" },
           { en: "of", ar: "من" },
@@ -11394,7 +11394,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-62-s1",
-        en: "I was only covering the class for one week and nobody expected me to remember any names",
+        en: "I was only covering the class for one week, and nobody expected me to remember any names",
         ar: "كنت أغطي الصف لأسبوع واحد فقط، ولم يتوقع أحد أن أتذكر أي أسماء.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -11405,7 +11405,7 @@ export const storyLessons: Lesson[] = [
           { en: "class", ar: "صف" },
           { en: "for", ar: "لـ" },
           { en: "one", ar: "واحد" },
-          { en: "week", ar: "أسبوع،" },
+          { en: "week,", ar: "أسبوع،" },
           { en: "and", ar: "و" },
           { en: "nobody", ar: "لا أحد" },
           { en: "expected", ar: "توقع" },
@@ -11418,7 +11418,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s2",
-        en: "One student sat at the back arms crossed answering every question with a shrug",
+        en: "One student sat at the back, arms crossed, answering every question with a shrug",
         ar: "جلس طالب في الخلف، ذراعاه متقاطعتان، يجيب على كل سؤال بهزة كتفين.",
         wordTranslations: [
           { en: "One", ar: "طالب" },
@@ -11426,9 +11426,9 @@ export const storyLessons: Lesson[] = [
           { en: "sat", ar: "خلف،" },
           { en: "at", ar: "في" },
           { en: "the", ar: "ال" },
-          { en: "back", ar: "ذراعان" },
+          { en: "back,", ar: "ذراعان" },
           { en: "arms", ar: "متقاطعتان،" },
-          { en: "crossed", ar: "يجيب" },
+          { en: "crossed,", ar: "يجيب" },
           { en: "answering", ar: "سؤال" },
           { en: "every", ar: "كل" },
           { en: "question", ar: "هزة" },
@@ -11439,11 +11439,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s3",
-        en: "By Wednesday I'd stopped trying to draw him into the discussion directly",
+        en: "By Wednesday, I'd stopped trying to draw him into the discussion directly",
         ar: "بحلول الأربعاء، توقفت عن محاولة إشراكه في النقاش مباشرة.",
         wordTranslations: [
           { en: "By", ar: "بواسطة" },
-          { en: "Wednesday", ar: "أربعاء،" },
+          { en: "Wednesday,", ar: "أربعاء،" },
           { en: "I'd", ar: "أنا" },
           { en: "stopped", ar: "توقفت" },
           { en: "trying", ar: "محاولة" },
@@ -11458,21 +11458,21 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s4",
-        en: "Instead I left a harder optional problem on the board after class almost as an afterthought",
+        en: "Instead, I left a harder, optional problem on the board after class, almost as an afterthought",
         ar: "بدلاً من ذلك، تركت مسألة أصعب واختيارية على السبورة بعد الحصة، وكأنها فكرة عابرة.",
         wordTranslations: [
-          { en: "Instead", ar: "بدلاً" },
+          { en: "Instead,", ar: "بدلاً" },
           { en: "I", ar: "أنا" },
           { en: "left", ar: "تركت" },
           { en: "a", ar: "واحد" },
-          { en: "harder", ar: "أصعب،" },
+          { en: "harder,", ar: "أصعب،" },
           { en: "optional", ar: "اختيارية" },
           { en: "problem", ar: "مسألة" },
           { en: "on", ar: "على" },
           { en: "the", ar: "ال" },
           { en: "board", ar: "سبورة" },
           { en: "after", ar: "بعد" },
-          { en: "class", ar: "حصة،" },
+          { en: "class,", ar: "حصة،" },
           { en: "almost", ar: "تقريباً" },
           { en: "as", ar: "بينما" },
           { en: "an", ar: "واحد" },
@@ -11481,12 +11481,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s5",
-        en: "The next morning it was solved on the whiteboard before I'd even arrived",
+        en: "The next morning, it was solved on the whiteboard before I'd even arrived",
         ar: "في صباح اليوم التالي، كانت محلولة على السبورة قبل وصولي حتى.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "next", ar: "تالي" },
-          { en: "morning", ar: "صباح،" },
+          { en: "morning,", ar: "صباح،" },
           { en: "it", ar: "هو" },
           { en: "was", ar: "كان" },
           { en: "solved", ar: "محلولة" },
@@ -11501,16 +11501,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s6",
-        en: "No name no note just the answer correct and slightly show-offy in its handwriting",
+        en: "No name, no note, just the answer, correct and slightly show-offy in its handwriting",
         ar: "لا اسم، لا ملاحظة، فقط الإجابة، صحيحة وبخط يد يوحي بقليل من الاستعراض.",
         wordTranslations: [
           { en: "No", ar: "لا" },
-          { en: "name", ar: "اسم،" },
+          { en: "name,", ar: "اسم،" },
           { en: "no", ar: "لا" },
-          { en: "note", ar: "ملاحظة،" },
+          { en: "note,", ar: "ملاحظة،" },
           { en: "just", ar: "فقط" },
           { en: "the", ar: "ال" },
-          { en: "answer", ar: "إجابة،" },
+          { en: "answer,", ar: "إجابة،" },
           { en: "correct", ar: "صحيحة" },
           { en: "and", ar: "و" },
           { en: "slightly", ar: "قليلاً" },
@@ -11522,7 +11522,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s7",
-        en: "I left another one the following day a little harder",
+        en: "I left another one the following day, a little harder",
         ar: "تركت مسألة أخرى في اليوم التالي، أصعب قليلاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -11531,7 +11531,7 @@ export const storyLessons: Lesson[] = [
           { en: "one", ar: "مسألة" },
           { en: "the", ar: "ال" },
           { en: "following", ar: "تالي" },
-          { en: "day", ar: "يوم،" },
+          { en: "day,", ar: "يوم،" },
           { en: "a", ar: "واحد" },
           { en: "little", ar: "قليلاً" },
           { en: "harder", ar: "أصعب." },
@@ -11556,11 +11556,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s9",
-        en: "On Friday I finally asked to the room in general who'd been doing them",
+        en: "On Friday, I finally asked to the room in general who'd been doing them",
         ar: "يوم الجمعة، سألت أخيراً، للصف بأكمله، من كان يحلها.",
         wordTranslations: [
           { en: "On", ar: "على" },
-          { en: "Friday", ar: "جمعة،" },
+          { en: "Friday,", ar: "جمعة،" },
           { en: "I", ar: "أنا" },
           { en: "finally", ar: "أخيراً" },
           { en: "asked", ar: "سألت،" },
@@ -11577,20 +11577,20 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s10",
-        en: "Nobody answered but I caught him looking for just a second less bored than usual",
+        en: "Nobody answered, but I caught him looking, for just a second, less bored than usual",
         ar: "لم يجب أحد، لكنني لمحته ينظر، للحظة واحدة فقط، أقل ملالاً من المعتاد.",
         wordTranslations: [
           { en: "Nobody", ar: "لا أحد" },
-          { en: "answered", ar: "أجاب،" },
+          { en: "answered,", ar: "أجاب،" },
           { en: "but", ar: "لكن" },
           { en: "I", ar: "أنا" },
           { en: "caught", ar: "لمحت" },
           { en: "him", ar: "ه" },
-          { en: "looking", ar: "ينظر،" },
+          { en: "looking,", ar: "ينظر،" },
           { en: "for", ar: "لـ" },
           { en: "just", ar: "فقط" },
           { en: "a", ar: "واحد" },
-          { en: "second", ar: "لحظة" },
+          { en: "second,", ar: "لحظة" },
           { en: "less", ar: "أقل" },
           { en: "bored", ar: "ملالاً" },
           { en: "than", ar: "من" },
@@ -11615,7 +11615,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-62-s12",
-        en: "I left one more problem on the board on my way out unsigned just in case",
+        en: "I left one more problem on the board on my way out, unsigned, just in case",
         ar: "تركت مسألة أخرى على السبورة في طريقي للخروج، دون توقيع، احتياطاً.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -11629,8 +11629,8 @@ export const storyLessons: Lesson[] = [
           { en: "on", ar: "على" },
           { en: "my", ar: "لي" },
           { en: "way", ar: "طريق" },
-          { en: "out", ar: "خارج" },
-          { en: "unsigned", ar: "دون توقيع،" },
+          { en: "out,", ar: "خارج" },
+          { en: "unsigned,", ar: "دون توقيع،" },
           { en: "just", ar: "فقط" },
           { en: "in", ar: "في" },
           { en: "case", ar: "احتياط." },
@@ -11702,13 +11702,13 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-63-s3",
-        en: "Nobody else seemed interested and I got it for less than the bookshelf",
+        en: "Nobody else seemed interested, and I got it for less than the bookshelf",
         ar: "لم يبدُ أن أحداً آخر مهتم، وحصلت عليه بأقل من ثمن رف الكتب.",
         wordTranslations: [
           { en: "Nobody", ar: "لا أحد" },
           { en: "else", ar: "آخر" },
           { en: "seemed", ar: "بدا" },
-          { en: "interested", ar: "مهتماً،" },
+          { en: "interested,", ar: "مهتماً،" },
           { en: "and", ar: "و" },
           { en: "I", ar: "أنا" },
           { en: "got", ar: "حصلت" },
@@ -11722,11 +11722,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-63-s4",
-        en: "At home I noticed a small drawer I'd missed at the auction stuck slightly from age",
+        en: "At home, I noticed a small drawer I'd missed at the auction, stuck slightly from age",
         ar: "في المنزل، لاحظت درجاً صغيراً فاتني في المزاد، عالقاً قليلاً من القدم.",
         wordTranslations: [
           { en: "At", ar: "في" },
-          { en: "home", ar: "منزل،" },
+          { en: "home,", ar: "منزل،" },
           { en: "I", ar: "أنا" },
           { en: "noticed", ar: "لاحظت" },
           { en: "a", ar: "واحد" },
@@ -11736,7 +11736,7 @@ export const storyLessons: Lesson[] = [
           { en: "missed", ar: "فاتني" },
           { en: "at", ar: "في" },
           { en: "the", ar: "ال" },
-          { en: "auction", ar: "مزاد،" },
+          { en: "auction,", ar: "مزاد،" },
           { en: "stuck", ar: "عالقاً" },
           { en: "slightly", ar: "قليلاً" },
           { en: "from", ar: "من" },
@@ -11767,15 +11767,15 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-63-s6",
-        en: "The handwriting looked deliberate almost formal like it had mattered to whoever wrote it",
+        en: "The handwriting looked deliberate, almost formal, like it had mattered to whoever wrote it",
         ar: "بدا خط اليد متعمداً، رسمياً تقريباً، وكأنه كان مهماً لمن كتبه.",
         wordTranslations: [
           { en: "The", ar: "ال" },
           { en: "handwriting", ar: "خط" },
           { en: "looked", ar: "بدا" },
-          { en: "deliberate", ar: "متعمداً،" },
+          { en: "deliberate,", ar: "متعمداً،" },
           { en: "almost", ar: "تقريباً" },
-          { en: "formal", ar: "رسمياً،" },
+          { en: "formal,", ar: "رسمياً،" },
           { en: "like", ar: "وكأنه" },
           { en: "it", ar: "هو" },
           { en: "had", ar: "كان" },
@@ -11872,7 +11872,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-63-s11",
-        en: "I keep the box on my shelf now the photograph back in its drawer",
+        en: "I keep the box on my shelf now, the photograph back in its drawer",
         ar: "أحتفظ بالصندوق على رفي الآن، والصورة عادت إلى درجها.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -11882,7 +11882,7 @@ export const storyLessons: Lesson[] = [
           { en: "on", ar: "على" },
           { en: "my", ar: "لي" },
           { en: "shelf", ar: "رف" },
-          { en: "now", ar: "الآن،" },
+          { en: "now,", ar: "الآن،" },
           { en: "the", ar: "ال" },
           { en: "photograph", ar: "صورة" },
           { en: "back", ar: "عادت" },
@@ -11893,12 +11893,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-63-s12",
-        en: "Every few months I take it out and look at it again no closer to knowing why",
+        en: "Every few months, I take it out and look at it again, no closer to knowing why",
         ar: "كل بضعة أشهر، أخرجها وأنظر إليها مجدداً، دون أن أقترب من معرفة السبب.",
         wordTranslations: [
           { en: "Every", ar: "كل" },
           { en: "few", ar: "بضعة" },
-          { en: "months", ar: "أشهر،" },
+          { en: "months,", ar: "أشهر،" },
           { en: "I", ar: "أنا" },
           { en: "take", ar: "أخرجها" },
           { en: "it", ar: "هو" },
@@ -11907,7 +11907,7 @@ export const storyLessons: Lesson[] = [
           { en: "look", ar: "أنظر" },
           { en: "at", ar: "في" },
           { en: "it", ar: "هو" },
-          { en: "again", ar: "مرة أخرى" },
+          { en: "again,", ar: "مرة أخرى" },
           { en: "no", ar: "لا" },
           { en: "closer", ar: "أقترب" },
           { en: "to", ar: "إلى" },
@@ -11930,7 +11930,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-64-s1",
-        en: "The voicemail had been sitting unheard in my inbox for six years saved by accident more than intention",
+        en: "The voicemail had been sitting unheard in my inbox for six years, saved by accident more than intention",
         ar: "ظلت الرسالة الصوتية دون استماع في بريدي لست سنوات، محفوظة بالصدفة أكثر من القصد.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -11944,7 +11944,7 @@ export const storyLessons: Lesson[] = [
           { en: "inbox", ar: "بريد" },
           { en: "for", ar: "لـ" },
           { en: "six", ar: "ست" },
-          { en: "years", ar: "سنوات،" },
+          { en: "years,", ar: "سنوات،" },
           { en: "saved", ar: "محفوظة" },
           { en: "by", ar: "بواسطة" },
           { en: "accident", ar: "صدفة" },
@@ -11955,7 +11955,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s2",
-        en: "I'd changed phones twice since then transferring it each time without quite deciding to",
+        en: "I'd changed phones twice since then, transferring it each time without quite deciding to",
         ar: "غيّرت هاتفي مرتين منذ ذلك الحين، ناقلتها في كل مرة دون أن أقرر ذلك تماماً.",
         wordTranslations: [
           { en: "I'd", ar: "أنا" },
@@ -11963,7 +11963,7 @@ export const storyLessons: Lesson[] = [
           { en: "phones", ar: "هاتف" },
           { en: "twice", ar: "مرتين" },
           { en: "since", ar: "منذ" },
-          { en: "then", ar: "ثم" },
+          { en: "then,", ar: "ثم" },
           { en: "transferring", ar: "ناقلتها" },
           { en: "it", ar: "هو" },
           { en: "each", ar: "كل" },
@@ -11976,7 +11976,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s3",
-        en: "It was from a friend I'd lost touch with after she moved abroad her number long since disconnected",
+        en: "It was from a friend I'd lost touch with after she moved abroad, her number long since disconnected",
         ar: "كانت من صديقة فقدت التواصل معها بعد انتقالها للخارج، وانقطع رقمها منذ زمن طويل.",
         wordTranslations: [
           { en: "It", ar: "هو" },
@@ -11991,7 +11991,7 @@ export const storyLessons: Lesson[] = [
           { en: "after", ar: "بعد" },
           { en: "she", ar: "هي" },
           { en: "moved", ar: "انتقلت" },
-          { en: "abroad", ar: "للخارج،" },
+          { en: "abroad,", ar: "للخارج،" },
           { en: "her", ar: "لها" },
           { en: "number", ar: "رقم" },
           { en: "long", ar: "طويل" },
@@ -12001,7 +12001,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s4",
-        en: "I knew roughly what it said I'd listened to it enough times right after she left",
+        en: "I knew roughly what it said, I'd listened to it enough times right after she left",
         ar: "كنت أعرف تقريباً ما تقوله؛ استمعت إليها كفاية بعد رحيلها مباشرة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12009,7 +12009,7 @@ export const storyLessons: Lesson[] = [
           { en: "roughly", ar: "تقريباً" },
           { en: "what", ar: "ماذا" },
           { en: "it", ar: "هو" },
-          { en: "said", ar: "قالت؛" },
+          { en: "said,", ar: "قالت؛" },
           { en: "I'd", ar: "أنا" },
           { en: "listened", ar: "استمعت" },
           { en: "to", ar: "إلى" },
@@ -12070,7 +12070,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s7",
-        en: "Her voice sounded younger than I remembered or maybe I'd just changed more than she had",
+        en: "Her voice sounded younger than I remembered, or maybe I'd just changed more than she had",
         ar: "بدا صوتها أصغر سناً مما تذكرت، أو ربما أنا من تغيرت أكثر منها.",
         wordTranslations: [
           { en: "Her", ar: "لها" },
@@ -12079,7 +12079,7 @@ export const storyLessons: Lesson[] = [
           { en: "younger", ar: "أصغر" },
           { en: "than", ar: "من" },
           { en: "I", ar: "أنا" },
-          { en: "remembered", ar: "تذكرت،" },
+          { en: "remembered,", ar: "تذكرت،" },
           { en: "or", ar: "أو" },
           { en: "maybe", ar: "ربما" },
           { en: "I'd", ar: "أنا" },
@@ -12093,7 +12093,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s8",
-        en: "She was laughing about something unimportant some joke from a party I barely remembered",
+        en: "She was laughing about something unimportant, some joke from a party I barely remembered",
         ar: "كانت تضحك على شيء غير مهم، نكتة من حفلة بالكاد أتذكرها.",
         wordTranslations: [
           { en: "She", ar: "هي" },
@@ -12101,7 +12101,7 @@ export const storyLessons: Lesson[] = [
           { en: "laughing", ar: "تضحك" },
           { en: "about", ar: "عن" },
           { en: "something", ar: "شيء" },
-          { en: "unimportant", ar: "مهم،" },
+          { en: "unimportant,", ar: "مهم،" },
           { en: "some", ar: "بعض" },
           { en: "joke", ar: "نكتة" },
           { en: "from", ar: "من" },
@@ -12114,12 +12114,12 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s9",
-        en: "I didn't cry which somehow surprised me more than if I had",
+        en: "I didn't cry, which somehow surprised me more than if I had",
         ar: "لم أبكِ، وهو ما فاجأني بطريقة ما أكثر مما لو بكيت.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "didn't", ar: "لم" },
-          { en: "cry", ar: "أبكِ،" },
+          { en: "cry,", ar: "أبكِ،" },
           { en: "which", ar: "الذي" },
           { en: "somehow", ar: "بطريقة ما" },
           { en: "surprised", ar: "فاجأ" },
@@ -12133,7 +12133,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s10",
-        en: "I deleted it before I could reconsider then immediately wished I'd written down the joke",
+        en: "I deleted it before I could reconsider, then immediately wished I'd written down the joke",
         ar: "حذفتها قبل أن أتراجع، ثم تمنيت فوراً لو كتبت النكتة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12142,7 +12142,7 @@ export const storyLessons: Lesson[] = [
           { en: "before", ar: "قبل" },
           { en: "I", ar: "أنا" },
           { en: "could", ar: "استطاع" },
-          { en: "reconsider", ar: "أتراجع،" },
+          { en: "reconsider,", ar: "أتراجع،" },
           { en: "then", ar: "ثم" },
           { en: "immediately", ar: "فوراً" },
           { en: "wished", ar: "تمنيت" },
@@ -12155,7 +12155,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s11",
-        en: "I still don't remember what was funny only that she'd sounded happy saying it",
+        en: "I still don't remember what was funny, only that she'd sounded happy saying it",
         ar: "ما زلت لا أتذكر ما كان مضحكاً، فقط أنها بدت سعيدة وهي تقوله.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12164,7 +12164,7 @@ export const storyLessons: Lesson[] = [
           { en: "remember", ar: "أتذكر" },
           { en: "what", ar: "ماذا" },
           { en: "was", ar: "كان" },
-          { en: "funny", ar: "مضحكاً،" },
+          { en: "funny,", ar: "مضحكاً،" },
           { en: "only", ar: "فقط" },
           { en: "that", ar: "أن" },
           { en: "she'd", ar: "هي" },
@@ -12176,7 +12176,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-64-s12",
-        en: "I haven't looked for her online since though I've thought about it more than once",
+        en: "I haven't looked for her online since, though I've thought about it more than once",
         ar: "لم أبحث عنها على الإنترنت منذ ذلك الحين، رغم أنني فكرت بالأمر أكثر من مرة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12185,7 +12185,7 @@ export const storyLessons: Lesson[] = [
           { en: "for", ar: "لـ" },
           { en: "her", ar: "لها" },
           { en: "online", ar: "إنترنت" },
-          { en: "since", ar: "منذ" },
+          { en: "since,", ar: "منذ" },
           { en: "though", ar: "رغم" },
           { en: "I've", ar: "أنا" },
           { en: "thought", ar: "فكرت" },
@@ -12211,7 +12211,7 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "story-65-s1",
-        en: "The client's video call started four minutes late which I chose to read as a good sign",
+        en: "The client's video call started four minutes late, which I chose to read as a good sign",
         ar: "بدأت مكالمة الفيديو مع العميلة متأخرة بأربع دقائق، وقررت اعتبار ذلك علامة جيدة.",
         wordTranslations: [
           { en: "The", ar: "ال" },
@@ -12221,7 +12221,7 @@ export const storyLessons: Lesson[] = [
           { en: "started", ar: "بدأت" },
           { en: "four", ar: "أربع" },
           { en: "minutes", ar: "دقائق" },
-          { en: "late", ar: "متأخرة،" },
+          { en: "late,", ar: "متأخرة،" },
           { en: "which", ar: "الذي" },
           { en: "I", ar: "أنا" },
           { en: "chose", ar: "اخترت" },
@@ -12288,7 +12288,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-65-s5",
-        en: "When I finally named my new rate she went quiet for exactly long enough to worry me",
+        en: "When I finally named my new rate, she went quiet for exactly long enough to worry me",
         ar: "عندما ذكرت أخيراً أجري الجديد، صمتت لفترة كافية بالضبط لتقلقني.",
         wordTranslations: [
           { en: "When", ar: "عندما" },
@@ -12297,7 +12297,7 @@ export const storyLessons: Lesson[] = [
           { en: "named", ar: "ذكرت" },
           { en: "my", ar: "لي" },
           { en: "new", ar: "جديد" },
-          { en: "rate", ar: "أجر،" },
+          { en: "rate,", ar: "أجر،" },
           { en: "she", ar: "هي" },
           { en: "went", ar: "صمتت" },
           { en: "quiet", ar: "فترة" },
@@ -12336,7 +12336,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-65-s7",
-        en: "I held the silence instead of filling it which felt physically uncomfortable",
+        en: "I held the silence instead of filling it, which felt physically uncomfortable",
         ar: "أبقيت على الصمت بدلاً من ملئه، وهو ما شعر بعدم ارتياح جسدي.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12346,7 +12346,7 @@ export const storyLessons: Lesson[] = [
           { en: "instead", ar: "بدلاً" },
           { en: "of", ar: "من" },
           { en: "filling", ar: "ملء" },
-          { en: "it", ar: "هو" },
+          { en: "it,", ar: "هو" },
           { en: "which", ar: "الذي" },
           { en: "felt", ar: "شعر" },
           { en: "physically", ar: "جسدياً" },
@@ -12422,16 +12422,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-65-s11",
-        en: "Afterward she mentioned almost as an aside that she'd been nervous about the whole call",
+        en: "Afterward, she mentioned, almost as an aside, that she'd been nervous about the whole call",
         ar: "بعد ذلك، ذكرت، بشكل عابر تقريباً، أنها كانت متوترة بشأن المكالمة بأكملها.",
         wordTranslations: [
-          { en: "Afterward", ar: "بعد ذلك،" },
+          { en: "Afterward,", ar: "بعد ذلك،" },
           { en: "she", ar: "هي" },
-          { en: "mentioned", ar: "ذكرت،" },
+          { en: "mentioned,", ar: "ذكرت،" },
           { en: "almost", ar: "تقريباً" },
           { en: "as", ar: "بينما" },
           { en: "an", ar: "واحد" },
-          { en: "aside", ar: "عابر" },
+          { en: "aside,", ar: "عابر" },
           { en: "that", ar: "أن" },
           { en: "she'd", ar: "هي" },
           { en: "been", ar: "كان" },
@@ -12444,14 +12444,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-65-s12",
-        en: "I hadn't noticed at all which somehow made me more nervous in hindsight than I'd been during it",
+        en: "I hadn't noticed at all, which somehow made me more nervous in hindsight than I'd been during it",
         ar: "لم ألاحظ ذلك إطلاقاً، وهو ما جعلني بطريقة ما أكثر توتراً بأثر رجعي مما كنت أثناءها.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "hadn't", ar: "لم" },
           { en: "noticed", ar: "لاحظت" },
           { en: "at", ar: "في" },
-          { en: "all", ar: "كل" },
+          { en: "all,", ar: "كل" },
           { en: "which", ar: "الذي" },
           { en: "somehow", ar: "بطريقة ما" },
           { en: "made", ar: "جعل" },
@@ -12545,7 +12545,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-66-s4",
-        en: "A second note came a week later less polite mentioning specific dates and times",
+        en: "A second note came a week later, less polite, mentioning specific dates and times",
         ar: "وصلت ملاحظة ثانية بعد أسبوع، أقل أدباً، تذكر تواريخ وأوقاتاً محددة.",
         wordTranslations: [
           { en: "A", ar: "واحد" },
@@ -12554,9 +12554,9 @@ export const storyLessons: Lesson[] = [
           { en: "came", ar: "وصلت" },
           { en: "a", ar: "واحد" },
           { en: "week", ar: "أسبوع" },
-          { en: "later", ar: "بعد،" },
+          { en: "later,", ar: "بعد،" },
           { en: "less", ar: "أقل" },
-          { en: "polite", ar: "أدباً،" },
+          { en: "polite,", ar: "أدباً،" },
           { en: "mentioning", ar: "تذكر" },
           { en: "specific", ar: "محددة" },
           { en: "dates", ar: "تواريخ" },
@@ -12566,7 +12566,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-66-s5",
-        en: "I started walking on tiptoe after nine resentment building with every quiet step",
+        en: "I started walking on tiptoe after nine, resentment building with every quiet step",
         ar: "بدأت أمشي على أطراف أصابعي بعد التاسعة، والاستياء يتراكم مع كل خطوة هادئة.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12575,7 +12575,7 @@ export const storyLessons: Lesson[] = [
           { en: "on", ar: "على" },
           { en: "tiptoe", ar: "أطراف أصابعي" },
           { en: "after", ar: "بعد" },
-          { en: "nine", ar: "تاسعة،" },
+          { en: "nine,", ar: "تاسعة،" },
           { en: "resentment", ar: "استياء" },
           { en: "building", ar: "يتراكم" },
           { en: "with", ar: "مع" },
@@ -12604,14 +12604,14 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-66-s7",
-        en: "This continued for a month an entire relationship conducted through folded paper",
+        en: "This continued for a month, an entire relationship conducted through folded paper",
         ar: "استمر هذا لشهر كامل، علاقة بأكملها تجري عبر ورق مطوي.",
         wordTranslations: [
           { en: "This", ar: "هذا" },
           { en: "continued", ar: "استمر" },
           { en: "for", ar: "لـ" },
           { en: "a", ar: "واحد" },
-          { en: "month", ar: "شهر،" },
+          { en: "month,", ar: "شهر،" },
           { en: "an", ar: "واحد" },
           { en: "entire", ar: "كامل" },
           { en: "relationship", ar: "علاقة" },
@@ -12643,7 +12643,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-66-s9",
-        en: "I finally knocked on his door prepared for an argument I'd been rehearsing for weeks",
+        en: "I finally knocked on his door, prepared for an argument I'd been rehearsing for weeks",
         ar: "طرقت بابه أخيراً، مستعداً لجدال كنت أتدرب عليه لأسابيع.",
         wordTranslations: [
           { en: "I", ar: "أنا" },
@@ -12651,7 +12651,7 @@ export const storyLessons: Lesson[] = [
           { en: "knocked", ar: "طرقت" },
           { en: "on", ar: "على" },
           { en: "his", ar: "له" },
-          { en: "door", ar: "باب،" },
+          { en: "door,", ar: "باب،" },
           { en: "prepared", ar: "مستعداً" },
           { en: "for", ar: "لـ" },
           { en: "an", ar: "واحد" },
@@ -12665,7 +12665,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "story-66-s10",
-        en: "He opened it holding a baby visibly exhausted and apologized before I'd said anything",
+        en: "He opened it holding a baby, visibly exhausted, and apologized before I'd said anything",
         ar: "فتحه حاملاً طفلاً، متعباً بوضوح، واعتذر قبل أن أقول أي شيء.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -12673,9 +12673,9 @@ export const storyLessons: Lesson[] = [
           { en: "it", ar: "هو" },
           { en: "holding", ar: "حاملاً" },
           { en: "a", ar: "واحد" },
-          { en: "baby", ar: "طفلاً،" },
+          { en: "baby,", ar: "طفلاً،" },
           { en: "visibly", ar: "بوضوح" },
-          { en: "exhausted", ar: "متعباً،" },
+          { en: "exhausted,", ar: "متعباً،" },
           { en: "and", ar: "و" },
           { en: "apologized", ar: "اعتذر" },
           { en: "before", ar: "قبل" },
@@ -12811,7 +12811,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "stories-8249d07a-s5",
-        en: "He recommended a mild pain reliever then asked if she took any other medicine",
+        en: "He recommended a mild pain reliever, then asked if she took any other medicine",
         ar: "أوصى بمسكن خفيف للألم، ثم سألها إن كانت تتناول أي دواء آخر.",
         wordTranslations: [
           { en: "He", ar: "هو" },
@@ -12819,7 +12819,7 @@ export const storyLessons: Lesson[] = [
           { en: "a", ar: "بـ" },
           { en: "mild", ar: "خفيف" },
           { en: "pain", ar: "للألم" },
-          { en: "reliever", ar: "مسكن،" },
+          { en: "reliever,", ar: "مسكن،" },
           { en: "then", ar: "ثم" },
           { en: "asked", ar: "سأل" },
           { en: "if", ar: "إن" },
@@ -12887,7 +12887,7 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "stories-8249d07a-s9",
-        en: "Maya thanked him and walked home already feeling a little better",
+        en: "Maya thanked him and walked home, already feeling a little better",
         ar: "شكرته مايا وعادت إلى المنزل سيرًا، وقد شعرت بتحسن طفيف بالفعل.",
         wordTranslations: [
           { en: "Maya", ar: "مايا" },
@@ -12895,7 +12895,7 @@ export const storyLessons: Lesson[] = [
           { en: "him", ar: "ه" },
           { en: "and", ar: "و" },
           { en: "walked", ar: "عادت" },
-          { en: "home", ar: "للمنزل،" },
+          { en: "home,", ar: "للمنزل،" },
           { en: "already", ar: "بالفعل" },
           { en: "feeling", ar: "شعرت" },
           { en: "a", ar: "بـ" },
@@ -12918,25 +12918,25 @@ export const storyLessons: Lesson[] = [
     sentences: [
       {
         id: "stories-3d5f4e74-s1",
-        en: "Maya lived in a small friendly town",
+        en: "Maya lived in a small, friendly town",
         ar: "عاشت مايا في بلدة صغيرة وودودة.",
         wordTranslations: [
           { en: "Maya", ar: "مايا" },
           { en: "lived", ar: "عاشت" },
           { en: "in", ar: "في" },
           { en: "a", ar: "واحدة" },
-          { en: "small", ar: "صغيرة،" },
+          { en: "small,", ar: "صغيرة،" },
           { en: "friendly", ar: "ودودة" },
           { en: "town", ar: "بلدة" },
         ],
       },
       {
         id: "stories-3d5f4e74-s2",
-        en: "One day a kind man named Adam moved to her town",
+        en: "One day, a kind man named Adam moved to her town",
         ar: "في أحد الأيام، انتقل رجل طيب اسمه آدم إلى بلدتها.",
         wordTranslations: [
           { en: "One", ar: "في" },
-          { en: "day", ar: "يوم،" },
+          { en: "day,", ar: "يوم،" },
           { en: "a", ar: "واحد" },
           { en: "kind", ar: "طيب" },
           { en: "man", ar: "رجل" },
@@ -12995,11 +12995,11 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "stories-3d5f4e74-s6",
-        en: "One evening Maya felt sad and quiet",
+        en: "One evening, Maya felt sad and quiet",
         ar: "في أحد الأمسيات، شعرت مايا بالحزن والهدوء.",
         wordTranslations: [
           { en: "One", ar: "ذات" },
-          { en: "evening", ar: "مساء،" },
+          { en: "evening,", ar: "مساء،" },
           { en: "Maya", ar: "مايا" },
           { en: "felt", ar: "شعرت" },
           { en: "sad", ar: "بالحزن" },
@@ -13057,16 +13057,16 @@ export const storyLessons: Lesson[] = [
       },
       {
         id: "stories-3d5f4e74-s10",
-        en: "The next morning she texted him first just to say good morning",
+        en: "The next morning, she texted him first, just to say good morning",
         ar: "في الصباح التالي، راسلته أولاً لتقول له صباح الخير فقط.",
         wordTranslations: [
           { en: "The", ar: "الـ" },
           { en: "next", ar: "التالي" },
-          { en: "morning", ar: "صباح،" },
+          { en: "morning,", ar: "صباح،" },
           { en: "she", ar: "هي" },
           { en: "texted", ar: "راسلت" },
           { en: "him", ar: "ه" },
-          { en: "first", ar: "أولاً،" },
+          { en: "first,", ar: "أولاً،" },
           { en: "just", ar: "فقط" },
           { en: "to", ar: "لـ" },
           { en: "say", ar: "تقول" },

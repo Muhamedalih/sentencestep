@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { createClient } from "@/lib/supabase/server";
-import { getTTSProvider } from "@/lib/voice/provider-registry";
+import { createElevenLabsProvider } from "@/lib/voice/providers/elevenlabs";
 
 /** Mirrors elevenlabs_settings' own CHECK constraints (20250203000000_elevenlabs_voice_engine.sql) — validated here too so a bad value is rejected with a specific message instead of a raw Postgres constraint-violation error. */
 const STABILITY_RANGE = { min: 0, max: 1 };
@@ -101,6 +101,7 @@ export async function saveElevenLabsSettingsAction(
   if (validationError) return { error: validationError };
 
   const supabase = await createClient();
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from("elevenlabs_settings")
     .update({
@@ -111,10 +112,21 @@ export async function saveElevenLabsSettingsAction(
       style: input.style,
       speed: input.speed,
       use_speaker_boost: input.useSpeakerBoost,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     })
     .eq("id", 1);
   if (error) return { error: "Couldn't save ElevenLabs settings. Please try again." };
+
+  // Kept in sync with tts_settings.default_voice_id — see
+  // setDefaultVoiceAction's doc comment for why the learner-facing
+  // pronunciation path and the background narration pipeline must always
+  // agree on the same default voice. Best-effort: a failure here doesn't
+  // fail the settings save itself, since default_story_voice_id (the value
+  // that actually matters to this form) is already saved above.
+  await supabase
+    .from("tts_settings")
+    .update({ default_voice_id: input.defaultStoryVoiceId, updated_at: now })
+    .eq("id", 1);
 
   void logAdminAction("elevenlabs_settings.updated", "elevenlabs_settings", null);
   revalidatePath("/admin/voice");
@@ -147,8 +159,14 @@ export async function previewElevenLabsAction(input: {
   const validationError = validateVoiceSettingsInput(input);
   if (validationError) return { error: validationError };
 
-  const provider = getTTSProvider();
-  if (!provider) return { error: "ELEVENLABS_API_KEY is not configured." };
+  // Built directly from ELEVENLABS_API_KEY rather than getTTSProvider() —
+  // this preview button is specifically for ElevenLabs voices, so it must
+  // always exercise ElevenLabs, never silently fall through to Azure when
+  // provider-registry.ts's Azure-first preference applies (see
+  // azure-actions.ts's previewAzureAction for the mirrored reasoning).
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) return { error: "ELEVENLABS_API_KEY is not configured." };
+  const provider = createElevenLabsProvider(apiKey);
 
   try {
     const { audio } = await provider.synthesize({
