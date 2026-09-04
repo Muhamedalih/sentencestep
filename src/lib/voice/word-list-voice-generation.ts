@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { getTTSProvider } from "@/lib/voice/provider-registry";
+import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
 import { cacheKeyParts } from "@/lib/voice/resolution";
 import { uploadVoiceClip } from "@/lib/voice/storage";
 import {
-  baseVoiceSettings,
   buildProviderSynthesisInput,
   claimCacheRow,
   clipPathForProvider,
@@ -25,15 +25,32 @@ type DbClient = SupabaseClient<Database>;
  * cache for a word's pronunciation button), applied to a word group's
  * vocabulary words instead of lesson/book sentences.
  *
- * Deliberately skips the Voice Director entirely, unlike Stories/Books: a
- * single vocabulary word has no story arc or character for an LLM to
- * interpret — every word gets the same flat, neutral delivery (mirrors
- * story-voice-generation.ts's own Normal-lesson shortcut, for the same
- * reason). No per-group voice override exists yet (word_groups has no
- * voice_id column) — every group uses the one global
- * elevenlabs_settings.default_story_voice_id, exactly like a Normal lesson
- * with no lesson.voice_id override.
+ * Deliberately isolated from Stories/Books/Conversation's narration
+ * pipeline: always Edge-TTS specifically (never getTTSProvider()'s
+ * auto-detected provider), never elevenlabs_settings — that table is
+ * Stories/Books' own settings and must never be read from or affect Word
+ * Lists. The default voice comes from
+ * tts_settings.default_pronunciation_voice_id (see
+ * getDefaultPronunciationVoiceId — shared with Normal lessons and Mistake
+ * Review, admin-configurable independently of Stories/Books). No per-group
+ * voice override exists yet (word_groups has no voice_id column), so every
+ * group uses that one shared default.
+ *
+ * Also skips the Voice Director entirely, unlike Stories/Books: a single
+ * vocabulary word has no story arc or character for an LLM to interpret —
+ * every word gets the same flat, neutral delivery.
  */
+const WORD_LIST_MODEL = "edge-tts";
+const WORD_LIST_GENERATION_VERSION = "edge-tts:word-list:v1";
+
+const NEUTRAL_VOICE_SETTINGS = {
+  stability: 0.5,
+  similarityBoost: 0.75,
+  style: 0,
+  speed: 1,
+  useSpeakerBoost: true,
+};
+
 const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
   emotion: "neutral",
   energy: "medium",
@@ -41,11 +58,6 @@ const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
   emphasisWord: null,
   pauseBefore: "none",
 };
-
-/** Folds providerName into the version, same reasoning as story-voice-generation.ts's generationVersionFor — switching the active narration provider naturally invalidates the old provider's cached word clips. */
-function wordListGenerationVersion(providerName: string): string {
-  return `${providerName}:word-list:v1`;
-}
 
 interface VocabularyWordRow {
   id: string;
@@ -71,17 +83,7 @@ export async function generateWordGroupVoiceDraft(
   groupId: string,
   forceWordIds?: ReadonlySet<string>,
 ): Promise<VoiceGenerationOutcome> {
-  const provider = getTTSProvider();
-
-  const { data: settingsRow, error: settingsError } = await supabase
-    .from("elevenlabs_settings")
-    .select(
-      "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
-    )
-    .eq("id", 1)
-    .maybeSingle();
-  if (settingsError || !settingsRow)
-    return { generated: 0, skipped: 0, failed: 0, error: "Couldn't load narration settings." };
+  const provider = createEdgeTtsProvider();
 
   const { data: words, error: wordsError } = await supabase
     .from("vocabulary_words")
@@ -91,15 +93,7 @@ export async function generateWordGroupVoiceDraft(
     return { generated: 0, skipped: 0, failed: 0, error: "Couldn't load the word group's words." };
   if (!words || words.length === 0) return { generated: 0, skipped: 0, failed: 0 };
 
-  const defaultVoiceId = settingsRow.default_story_voice_id;
-  if (!defaultVoiceId) {
-    return {
-      generated: 0,
-      skipped: 0,
-      failed: words.length,
-      error: `No ${provider.name} voice configured — set a default narration voice in Admin > Voice.`,
-    };
-  }
+  const defaultVoiceId = await getDefaultPronunciationVoiceId();
   const { data: voiceRow } = await supabase
     .from("voices")
     .select("id, provider_voice_id, source")
@@ -110,12 +104,12 @@ export async function generateWordGroupVoiceDraft(
       generated: 0,
       skipped: 0,
       failed: words.length,
-      error: `The configured default voice is missing or isn't a ${provider.name} voice.`,
+      error: `The Word Lists voice (${defaultVoiceId}) is missing or isn't an Edge-TTS voice.`,
     };
   }
   const voiceId = voiceRow.id;
   const providerVoiceId = voiceRow.provider_voice_id;
-  const generationVersion = wordListGenerationVersion(provider.name);
+  const generationVersion = WORD_LIST_GENERATION_VERSION;
 
   const keyedWords = (words as VocabularyWordRow[]).map((word) => ({
     word,
@@ -175,7 +169,7 @@ export async function generateWordGroupVoiceDraft(
     const claimed = await claimCacheRow(
       supabase,
       item.key,
-      settingsRow.model,
+      WORD_LIST_MODEL,
       direction,
       existingByKeyForClaim,
       provider.name,
@@ -191,12 +185,12 @@ export async function generateWordGroupVoiceDraft(
         direction,
         item.word.target_word,
         providerVoiceId,
-        baseVoiceSettings(settingsRow),
+        NEUTRAL_VOICE_SETTINGS,
       );
       const { audio, durationMs } = await provider.synthesize({
         text,
         voiceId: providerVoiceId,
-        model: settingsRow.model,
+        model: WORD_LIST_MODEL,
         voiceSettings,
       });
       const audioUrl = await uploadVoiceClip(clipPathForProvider(provider.name, voiceId), audio);

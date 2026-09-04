@@ -101,7 +101,6 @@ export async function saveElevenLabsSettingsAction(
   if (validationError) return { error: validationError };
 
   const supabase = await createClient();
-  const now = new Date().toISOString();
   const { error } = await supabase
     .from("elevenlabs_settings")
     .update({
@@ -112,21 +111,10 @@ export async function saveElevenLabsSettingsAction(
       style: input.style,
       speed: input.speed,
       use_speaker_boost: input.useSpeakerBoost,
-      updated_at: now,
+      updated_at: new Date().toISOString(),
     })
     .eq("id", 1);
   if (error) return { error: "Couldn't save ElevenLabs settings. Please try again." };
-
-  // Kept in sync with tts_settings.default_voice_id — see
-  // setDefaultVoiceAction's doc comment for why the learner-facing
-  // pronunciation path and the background narration pipeline must always
-  // agree on the same default voice. Best-effort: a failure here doesn't
-  // fail the settings save itself, since default_story_voice_id (the value
-  // that actually matters to this form) is already saved above.
-  await supabase
-    .from("tts_settings")
-    .update({ default_voice_id: input.defaultStoryVoiceId, updated_at: now })
-    .eq("id", 1);
 
   void logAdminAction("elevenlabs_settings.updated", "elevenlabs_settings", null);
   revalidatePath("/admin/voice");

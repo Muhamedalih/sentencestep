@@ -5,7 +5,7 @@ import { VocabularyPractice } from "@/components/learning/vocabulary-practice";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
 import { isAdmin } from "@/lib/admin/access";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
@@ -63,11 +63,14 @@ export default async function WordGroupPracticePage({
     );
   }
 
-  const defaultVoiceId = await getDefaultVoiceId();
+  // Shared with Normal lessons & Mistake Review, isolated from
+  // Stories/Conversation's own default (see word-list-voice-generation.ts's
+  // own doc comment).
+  const defaultVoiceId = await getDefaultPronunciationVoiceId();
 
   // Same fix as LessonPage's identical pre-resolution: only the first
-  // word, cache-only (never triggers Kokoro generation), so a miss just
-  // leaves the word to resolve on demand exactly as before.
+  // word, cache-only, so a miss just leaves the word to resolve on demand
+  // exactly as before.
   const firstWord = group.words[0];
   const words =
     firstWord && !firstWord.audioUrl && defaultVoiceId

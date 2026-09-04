@@ -9,7 +9,7 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessons } from "@/lib/content";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultPronunciationVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
 import { resolveVoiceId } from "@/lib/voice/resolution";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 import { getSpeakerVoiceMap } from "@/lib/voice/speaker-voices";
@@ -92,8 +92,13 @@ export default async function LessonPage({
   }
 
   const nextLesson = findNextLesson(units, unit.id);
+  // Normal lessons fall back to their own admin-configurable default
+  // (tts_settings.default_pronunciation_voice_id) — never the shared
+  // tts_settings.default_voice_id, which is Stories/Conversation's own
+  // setting and must stay completely unaffected by Normal lessons'
+  // resolution.
   const [defaultVoiceId, speakerVoiceMap] = await Promise.all([
-    getDefaultVoiceId(),
+    mode === "normal" ? getDefaultPronunciationVoiceId() : getDefaultVoiceId(),
     // Only Conversation lessons have per-speaker voices at all — every
     // other mode gets an empty map, which correctly falls through to
     // resolvedVoiceId everywhere it's consulted (see TypingSentence).

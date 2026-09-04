@@ -22,12 +22,19 @@ const COLLECTION_LABELS: Record<string, string> = {
  * Real, stored voices (see the voices table) — a genuinely different thing
  * from VoiceSettingsForm above it on this page, which only ever configures
  * a *preference* among whatever the Web Speech API happens to expose on
- * this browser (see voice-settings.ts's doc comment). This is where an
- * admin picks the actual global default voice and, per lesson, an override
- * (see LessonForm's own Voice field) — both read through the one
- * resolveVoiceId function everywhere else in the app. New voices are added
+ * this browser (see voice-settings.ts's doc comment). New voices are added
  * per-provider (see EdgeTtsVoiceForm/ElevenLabsVoiceForm/etc. elsewhere on
- * this page) — this component only lists and manages what's already there.
+ * this page) — this component only lists, previews, and deletes what's
+ * already there, plus one specific setting (see "Set default" below).
+ *
+ * IMPORTANT — the "Set default" button here writes tts_settings.default_voice_id,
+ * which is Stories/Conversation's OWN fallback voice (see
+ * story-voice-generation.ts's resolveTargetVoices and this page's separate
+ * "Default narration voice (Stories & Books)" picker in
+ * ElevenLabsSettingsForm — the two must always point at the same voice, see
+ * that form's own doc comment). It has nothing to do with Normal lessons,
+ * Word Lists, or Mistake Review — see PronunciationDefaultVoiceForm
+ * elsewhere on this page for that separate, independent setting.
  */
 export function VoiceCollections({
   voices,
@@ -80,8 +87,9 @@ export function VoiceCollections({
       <CardHeader>
         <CardTitle className="text-lg">Voice collections</CardTitle>
         <CardDescription>
-          Real, generated voices lessons can use directly — pick a global default here, or override
-          an individual lesson&apos;s voice from its editor.
+          Every registered voice, for preview and cleanup. The default set here applies only to
+          Stories, Conversation & Books (their own narration fallback) — for Normal Lessons, Word
+          Lists & Mistake Review, use the separate picker further down this page.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
@@ -123,7 +131,7 @@ export function VoiceCollections({
             disabled={isPending}
             onClick={() => handleSetDefault(null)}
           >
-            Clear global default
+            Clear Stories default
           </Button>
         )}
 
@@ -202,8 +210,15 @@ function VoiceRowItem({
         <Volume2 className={cn("size-4", clip.status === "playing" && "animate-pulse")} />
       </Button>
       {!isDefault && (
-        <Button type="button" variant="outline" size="sm" onClick={onSetDefault} disabled={isBusy}>
-          Set default
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onSetDefault}
+          disabled={isBusy}
+          title="Sets the Stories/Conversation/Books fallback voice — not Normal Lessons, Word Lists, or Mistake Review."
+        >
+          Set as Stories default
         </Button>
       )}
       <Button

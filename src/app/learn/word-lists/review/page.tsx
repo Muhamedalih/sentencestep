@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { WordReviewSession, type ReviewWord } from "@/components/learning/word-review-session";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { getWordGroupById } from "@/lib/word-lists";
@@ -51,9 +51,10 @@ export default async function WordListsReviewPage() {
   }
   if (words.length === 0) redirect("/learn/word-lists");
 
-  const defaultVoiceId = await getDefaultVoiceId();
-  // Same cache-only pre-resolution as WordGroupPracticePage — only the
-  // first word, never triggers Kokoro generation.
+  // Shared with Normal lessons & Word Lists, isolated from
+  // Stories/Conversation's own default.
+  const defaultVoiceId = await getDefaultPronunciationVoiceId();
+  // Same cache-only pre-resolution as WordGroupPracticePage.
   const firstWord = words[0];
   const hydratedWords =
     firstWord && !firstWord.audioUrl && defaultVoiceId

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { VoiceCollections } from "@/components/admin/voice-collections";
+import { PronunciationDefaultVoiceForm } from "@/components/admin/pronunciation-default-voice-form";
 import { VoiceSettingsForm } from "@/components/admin/voice-settings-form";
 import { ElevenLabsSettingsForm } from "@/components/admin/elevenlabs-settings-form";
 import { ElevenLabsVoiceForm } from "@/components/admin/elevenlabs-voice-form";
@@ -11,7 +12,11 @@ import { EdgeTtsVoiceForm } from "@/components/admin/edge-tts-voice-form";
 import { GeminiVoiceForm } from "@/components/admin/gemini-voice-form";
 import { Button } from "@/components/ui/button";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
-import { getDefaultVoiceId, getVoices } from "@/lib/admin/voices-queries";
+import {
+  getDefaultPronunciationVoiceId,
+  getDefaultVoiceId,
+  getVoices,
+} from "@/lib/admin/voices-queries";
 import { getElevenLabsSettings, getElevenLabsVoices } from "@/lib/admin/elevenlabs-queries";
 import { getAzureVoices } from "@/lib/admin/azure-queries";
 import { getEdgeTtsVoices } from "@/lib/admin/edge-tts-queries";
@@ -29,6 +34,7 @@ export default async function AdminVoicePage() {
     settings,
     voices,
     defaultVoiceId,
+    defaultPronunciationVoiceId,
     elevenlabsSettings,
     elevenlabsVoices,
     azureVoices,
@@ -38,6 +44,7 @@ export default async function AdminVoicePage() {
     getVoiceSettings(),
     getVoices(),
     getDefaultVoiceId(),
+    getDefaultPronunciationVoiceId(),
     getElevenLabsSettings(),
     getElevenLabsVoices(),
     getAzureVoices(),
@@ -68,6 +75,10 @@ export default async function AdminVoicePage() {
         </Button>
       </div>
       <VoiceCollections voices={voices} defaultVoiceId={defaultVoiceId} />
+      <PronunciationDefaultVoiceForm
+        voices={edgeTtsVoices}
+        currentVoiceId={defaultPronunciationVoiceId}
+      />
       <VoiceSettingsForm initial={settings} />
       <GeminiVoiceForm voices={geminiVoices} />
       <EdgeTtsVoiceForm voices={edgeTtsVoices} />

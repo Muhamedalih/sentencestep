@@ -29,7 +29,13 @@ const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside
 export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
   const [isPending, startTransition] = useTransition();
   const [previewingId, setPreviewingId] = useState<string | null>(null);
-  const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
+  // Keyed by voice id (not a single shared value) so the fallback player
+  // renders inline, right next to the row that was actually clicked — see
+  // handlePreview's own doc comment for why a fallback player is needed at
+  // all. A single player rendered once at the bottom of a long voice list
+  // is easy to miss entirely (looks exactly like "nothing happened"), which
+  // is the bug this fixes.
+  const [playedVoice, setPlayedVoice] = useState<{ id: string; audioUrl: string } | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -85,6 +91,7 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
   function handlePreview(providerVoiceId: string, voiceId: string) {
     setMessage(null);
     setPreviewingId(voiceId);
+    setPlayedVoice(null);
     startTransition(async () => {
       const result = await previewEdgeTtsAction({ text: PREVIEW_TEXT, providerVoiceId });
       setPreviewingId(null);
@@ -92,17 +99,19 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
         return;
       }
-      setPreviewAudioUrl(result.audioDataUri);
-      if (audioRef.current) {
-        audioRef.current.src = result.audioDataUri;
-        audioRef.current.play().catch(() => {
+      // Revealed inline in this voice's own row (see the render below) —
+      // set first so the <audio> element exists in the DOM before autoplay
+      // is attempted.
+      setPlayedVoice({ id: voiceId, audioUrl: result.audioDataUri });
+      requestAnimationFrame(() => {
+        audioRef.current?.play().catch(() => {
           // Browsers can refuse this autoplay — the actual play() call lands
           // after the server round-trip above, past the original click's
-          // user-gesture window. The native player revealed below (bound to
-          // previewAudioUrl) is the reliable fallback: pressing its own play
-          // button is a fresh gesture the browser always allows.
+          // user-gesture window. The visible native player (rendered right
+          // next to this row) is the reliable fallback: pressing its own
+          // play button is a fresh gesture the browser always allows.
         });
-      }
+      });
     });
   }
 
@@ -168,7 +177,7 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
           {voices.map((voice) => (
             <div
               key={voice.id}
-              className="hover:bg-muted flex items-center gap-3 rounded-lg px-3 py-2.5"
+              className="hover:bg-muted flex flex-wrap items-center gap-3 rounded-lg px-3 py-2.5"
             >
               <div className="min-w-0 flex-1">
                 <span className="text-sm font-medium">{voice.name}</span>
@@ -176,6 +185,15 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
                   {voice.gender} · {voice.accent}
                 </span>
               </div>
+              {playedVoice?.id === voice.id && (
+                <audio
+                  ref={audioRef}
+                  controls
+                  autoPlay
+                  src={playedVoice.audioUrl}
+                  className="h-8 max-w-[220px]"
+                />
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -203,11 +221,6 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
             </div>
           ))}
         </div>
-        <audio
-          ref={audioRef}
-          controls
-          className={cn("h-8 max-w-full", !previewAudioUrl && "hidden")}
-        />
         {message && (
           <p
             role={message.kind === "error" ? "alert" : undefined}

@@ -1,7 +1,7 @@
 "use server";
 
 import { getAllLessons } from "@/lib/content";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import {
   getContentTranslations,
@@ -264,16 +264,16 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
   // genuinely new (never-before-generated) word's background prefetch the
   // maximum possible lead time (see FixYourMistakesSession) instead of just
   // one item's worth. Never triggers Kokoro generation itself — a miss here
-  // just leaves that item to resolve on demand exactly as before.
-  const voiceId = await getDefaultVoiceId();
-  if (voiceId) {
-    const audioUrls = await Promise.all(
-      items.map((item) => lookupCachedAudioUrl(item.displayWord, voiceId)),
-    );
-    items.forEach((item, index) => {
-      item.audioUrl = audioUrls[index];
-    });
-  }
+  // just leaves that item to resolve on demand exactly as before. Uses the
+  // Normal-lessons/Word-Lists pronunciation default (never Stories'), since
+  // mistake words come from ordinary lesson content, not narration.
+  const voiceId = await getDefaultPronunciationVoiceId();
+  const audioUrls = await Promise.all(
+    items.map((item) => lookupCachedAudioUrl(item.displayWord, voiceId)),
+  );
+  items.forEach((item, index) => {
+    item.audioUrl = audioUrls[index];
+  });
 
   return items;
 }

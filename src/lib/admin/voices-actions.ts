@@ -13,39 +13,46 @@ async function requireAdmin(): Promise<string | null> {
   return null;
 }
 
-/**
- * The global default voice, kept in sync across both places it's read from:
- * tts_settings.default_voice_id (learner-facing pronunciation playback, see
- * voices-queries.ts's getDefaultVoiceId) and elevenlabs_settings's
- * default_story_voice_id (the background narration pipeline's own default,
- * see story-voice-generation.ts's resolveTargetVoices). Writing both from
- * this one action is what guarantees a lesson without its own voice_id
- * override plays the exact same voice its background-generated audio was
- * produced with — see saveElevenLabsSettingsAction for the other direction
- * (that settings form updates tts_settings right back).
- */
+/** The global default voice (tts_settings.default_voice_id) — additive alongside the existing Web Speech preference (saveVoiceSettings), which this never touches. Passing null clears the default, falling every lesson without its own override back to the Web Speech fallback. Deliberately independent from elevenlabs_settings.default_story_voice_id (Stories/Books' own narration default, set from its own settings form) — the two are different settings for different content, and must never be overwritten as a side effect of the other. */
 export async function setDefaultVoiceAction(voiceId: string | null): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
   const supabase = await createClient();
-  const now = new Date().toISOString();
-  const [{ error }, { error: elevenLabsError }] = await Promise.all([
-    supabase
-      .from("tts_settings")
-      .update({ default_voice_id: voiceId, updated_at: now })
-      .eq("id", 1),
-    supabase
-      .from("elevenlabs_settings")
-      .update({ default_story_voice_id: voiceId, updated_at: now })
-      .eq("id", 1),
-  ]);
-  if (error || elevenLabsError)
-    return { error: "Couldn't save the default voice. Please try again." };
+  const { error } = await supabase
+    .from("tts_settings")
+    .update({ default_voice_id: voiceId, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) return { error: "Couldn't save the default voice. Please try again." };
 
   revalidatePath("/admin/voice");
   revalidatePath("/admin/content", "layout");
   return { success: "Default voice saved." };
+}
+
+/**
+ * The default voice for Normal lessons, Word Lists, and Mistake Review
+ * (tts_settings.default_pronunciation_voice_id) — completely separate from
+ * setDefaultVoiceAction above (Stories/Conversation's own default) and from
+ * saveElevenLabsSettingsAction (Stories/Books' narration default). Never
+ * touches either of those.
+ */
+export async function setDefaultPronunciationVoiceAction(voiceId: string): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+  if (!voiceId.trim()) return { error: "Pick a voice first." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("tts_settings")
+    .update({ default_pronunciation_voice_id: voiceId, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) return { error: "Couldn't save the default voice. Please try again." };
+
+  revalidatePath("/admin/voice");
+  revalidatePath("/admin/content", "layout");
+  revalidatePath("/learn", "layout");
+  return { success: "Default pronunciation voice saved." };
 }
 
 /**
@@ -72,7 +79,11 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
     { count: speakerCount },
   ] = await Promise.all([
     supabase.from("lessons").select("id", { count: "exact", head: true }).eq("voice_id", voiceId),
-    supabase.from("tts_settings").select("default_voice_id").eq("id", 1).maybeSingle(),
+    supabase
+      .from("tts_settings")
+      .select("default_voice_id, default_pronunciation_voice_id")
+      .eq("id", 1)
+      .maybeSingle(),
     supabase.from("elevenlabs_settings").select("default_story_voice_id").eq("id", 1).maybeSingle(),
     supabase
       .from("lesson_speaker_voices")
@@ -82,6 +93,12 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
 
   if (settings?.default_voice_id === voiceId) {
     return { error: "This voice is the global default — choose a different default first." };
+  }
+  if (settings?.default_pronunciation_voice_id === voiceId) {
+    return {
+      error:
+        "This voice is the default for Normal lessons, Word Lists & Mistake Review — choose a different default first.",
+    };
   }
   if (elevenlabsSettings?.default_story_voice_id === voiceId) {
     return {

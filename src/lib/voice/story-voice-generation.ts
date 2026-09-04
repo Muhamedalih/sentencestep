@@ -7,8 +7,10 @@ import { toElevenLabsInput } from "@/lib/voice/direction-to-tags";
 import { toAzureInput } from "@/lib/voice/direction-to-ssml";
 import { toProsodyInput } from "@/lib/voice/direction-to-prosody";
 import { toGeminiInput } from "@/lib/voice/direction-to-gemini-prompt";
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { getTTSProvider } from "@/lib/voice/provider-registry";
-import type { TTSVoiceSettings } from "@/lib/voice/provider";
+import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
+import type { TTSProvider, TTSVoiceSettings } from "@/lib/voice/provider";
 import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import {
   generatedAzureClipPath,
@@ -31,6 +33,21 @@ export interface VoiceGenerationOutcome {
 
 /** Mirrors MAX_AUTO_RETRY_ATTEMPTS in translation/candidates.ts. */
 export const MAX_VOICE_RETRY_ATTEMPTS = 5;
+
+/**
+ * Normal lessons always use Edge-TTS specifically — never
+ * getTTSProvider()'s auto-detected provider, and never
+ * elevenlabs_settings.default_story_voice_id. This is a deliberate,
+ * permanent split from Stories/Conversation/Books: those keep using
+ * whichever narration provider is configured (ElevenLabs/Azure/Gemini) and
+ * their own default_story_voice_id exactly as before, completely
+ * unaffected by anything here. The actual fallback voice (when a lesson has
+ * no `voice_id` override) is tts_settings.default_pronunciation_voice_id —
+ * see getDefaultPronunciationVoiceId, admin-configurable independently of
+ * Stories/Books. Changing one specific lesson's voice is done the same way
+ * as any lesson — its own `voice_id` (see the "Normal Lessons" admin
+ * dashboard).
+ */
 
 /**
  * A 'generating' row older than this is treated as abandoned rather than
@@ -139,14 +156,14 @@ async function resolveTargetVoices(
   supabase: DbClient,
   lesson: { id: string; mode: string; voice_id: string | null },
   sentences: SentenceRow[],
-  settings: ElevenLabsSettingsRow,
+  defaultVoiceId: string | null,
   providerName: string,
 ): Promise<{ resolved: Map<string, ResolvedVoice>; unresolved: Map<string, string> }> {
   const resolved = new Map<string, ResolvedVoice>();
   const unresolved = new Map<string, string>();
 
   if (lesson.mode === "stories" || lesson.mode === "normal") {
-    let voiceId = settings.default_story_voice_id;
+    let voiceId = defaultVoiceId;
     if (lesson.voice_id) {
       const { data: overrideVoice } = await supabase
         .from("voices")
@@ -279,12 +296,12 @@ interface ExistingCacheRow {
 async function loadLessonForVoiceWork(
   supabase: DbClient,
   lessonId: string,
-  providerName: string,
 ): Promise<
   | { ok: false; error: string }
   | {
       ok: true;
       mode: string;
+      provider: TTSProvider;
       sentences: SentenceRow[];
       keyedSentences: KeyedSentence[];
       unresolved: Map<string, string>;
@@ -305,6 +322,13 @@ async function loadLessonForVoiceWork(
       error: `"${lesson.mode}" lessons don't use the narration voice pipeline.`,
     };
   }
+
+  // Normal lessons always use Edge-TTS (see NORMAL_LESSON_DEFAULT_VOICE_ID's
+  // doc comment) — Stories/Conversation are completely unaffected, still
+  // resolving through getTTSProvider() exactly as before.
+  const provider: TTSProvider =
+    lesson.mode === "normal" ? createEdgeTtsProvider() : getTTSProvider();
+  const providerName = provider.name;
 
   const { data: sentenceRows, error: sentencesError } = await supabase
     .from("sentences")
@@ -328,6 +352,7 @@ async function loadLessonForVoiceWork(
     return {
       ok: true,
       mode: lesson.mode,
+      provider,
       sentences,
       keyedSentences: [],
       unresolved: new Map(),
@@ -336,11 +361,17 @@ async function loadLessonForVoiceWork(
     };
   }
 
+  // Normal lessons never fall back to Stories' default_story_voice_id —
+  // Stories/Conversation keep using it exactly as before.
+  const defaultVoiceId =
+    lesson.mode === "normal"
+      ? await getDefaultPronunciationVoiceId()
+      : settingsRow.default_story_voice_id;
   const { resolved: voiceBySentence, unresolved } = await resolveTargetVoices(
     supabase,
     lesson,
     sentences,
-    settingsRow,
+    defaultVoiceId,
     providerName,
   );
 
@@ -394,6 +425,7 @@ async function loadLessonForVoiceWork(
   return {
     ok: true,
     mode: lesson.mode,
+    provider,
     sentences,
     keyedSentences,
     unresolved,
@@ -423,7 +455,7 @@ export async function getLessonVoiceStatus(
   supabase: DbClient,
   lessonId: string,
 ): Promise<{ statuses: SentenceVoiceStatus[]; error?: string }> {
-  const loaded = await loadLessonForVoiceWork(supabase, lessonId, getTTSProvider().name);
+  const loaded = await loadLessonForVoiceWork(supabase, lessonId);
   if (!loaded.ok) return { statuses: [], error: loaded.error };
 
   const statuses: SentenceVoiceStatus[] = [];
@@ -486,17 +518,12 @@ export async function generateStoryVoiceDraft(
   lessonId: string,
   forceSentenceIds?: ReadonlySet<string>,
 ): Promise<VoiceGenerationOutcome> {
-  // Resolved once up front so resolveTargetVoices/generationVersionFor can
-  // key every sentence by the actual active provider from the start —
-  // getTTSProvider() always returns a real provider (Edge-TTS is the
-  // zero-config fallback), never null, so there is no "provider missing"
-  // state to special-case here.
-  const provider = getTTSProvider();
-  const loaded = await loadLessonForVoiceWork(supabase, lessonId, provider.name);
+  const loaded = await loadLessonForVoiceWork(supabase, lessonId);
   if (!loaded.ok) return { generated: 0, skipped: 0, failed: 0, error: loaded.error };
   if (loaded.sentences.length === 0) return { generated: 0, skipped: 0, failed: 0 };
 
-  const { mode, sentences, keyedSentences, unresolved, existingByKey, settingsRow } = loaded;
+  const { mode, provider, sentences, keyedSentences, unresolved, existingByKey, settingsRow } =
+    loaded;
 
   let skipped = 0;
   const eligible: typeof keyedSentences = [];
