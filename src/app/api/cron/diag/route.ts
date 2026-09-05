@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isValidCronAuth } from "@/lib/cron/auth";
 import { getTTSProvider } from "@/lib/voice/provider-registry";
+import { createGeminiProvider } from "@/lib/voice/providers/gemini";
 
 /**
  * TEMPORARY — added to diagnose a live-only discrepancy (Netlify's env var
@@ -21,11 +22,34 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  let geminiTest: { ok: boolean; detail: string } = { ok: false, detail: "not attempted" };
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const provider = createGeminiProvider(process.env.GEMINI_API_KEY);
+      const { audio } = await provider.synthesize({
+        text: "Testing.",
+        voiceId: "Kore",
+        model: "gemini-2.5-flash-preview-tts",
+        voiceSettings: {
+          stability: 0.5,
+          similarityBoost: 0.75,
+          style: 0,
+          speed: 1,
+          useSpeakerBoost: true,
+        },
+      });
+      geminiTest = { ok: true, detail: `received ${audio.length} bytes` };
+    } catch (err) {
+      geminiTest = { ok: false, detail: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
   return NextResponse.json({
     hasAzureKey: Boolean(process.env.AZURE_SPEECH_KEY),
     hasAzureRegion: Boolean(process.env.AZURE_SPEECH_REGION),
     hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
     hasElevenLabsKey: Boolean(process.env.ELEVENLABS_API_KEY),
     activeProvider: getTTSProvider().name,
+    geminiTest,
   });
 }
