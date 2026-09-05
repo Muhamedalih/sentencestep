@@ -118,6 +118,7 @@ export const ar: Dictionary = {
     intermediateBody: "مرتاح مع الإنجليزية اليومية، وجاهز لجمل أكثر طبيعية.",
     advancedBody: "واثق من إنجليزيتك، وتبحث عن مفردات وتدريب أغنى.",
     skip: "سأختار بنفسي",
+    back: "رجوع",
   },
   auth: {
     loginHeading: "مرحبًا بعودتك",

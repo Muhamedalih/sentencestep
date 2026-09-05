@@ -134,6 +134,7 @@ export interface Dictionary {
     intermediateBody: string;
     advancedBody: string;
     skip: string;
+    back: string;
   };
   auth: {
     loginHeading: string;

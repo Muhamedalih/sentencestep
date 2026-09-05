@@ -130,6 +130,7 @@ export const es: Dictionary = {
     intermediateBody: "Cómodo con el inglés cotidiano, listo para oraciones más naturales.",
     advancedBody: "Con confianza en inglés, buscando vocabulario y práctica más ricos.",
     skip: "Elegiré yo mismo",
+    back: "Atrás",
   },
   auth: {
     loginHeading: "Bienvenido de nuevo",

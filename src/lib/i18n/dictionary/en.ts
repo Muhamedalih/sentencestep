@@ -127,6 +127,7 @@ export const en: Dictionary = {
     intermediateBody: "Comfortable with everyday English, ready for more natural sentences.",
     advancedBody: "Confident with English, looking for richer vocabulary and practice.",
     skip: "I'll choose myself",
+    back: "Back",
   },
   auth: {
     loginHeading: "Welcome back",

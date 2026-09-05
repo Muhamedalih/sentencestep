@@ -125,6 +125,7 @@ export const tr: Dictionary = {
     intermediateBody: "Günlük İngilizceyle rahatsınız, daha doğal cümlelere hazırsınız.",
     advancedBody: "İngilizcenize güveniyorsunuz, daha zengin kelime bilgisi ve pratik arıyorsunuz.",
     skip: "Kendim seçeceğim",
+    back: "Geri",
   },
   auth: {
     loginHeading: "Tekrar hoş geldiniz",

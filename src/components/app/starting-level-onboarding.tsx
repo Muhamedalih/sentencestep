@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
+import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { Logo } from "@/components/layout/logo";
 import { tierSupportLabel, type Difficulty } from "@/lib/levels";
 import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
@@ -48,10 +49,13 @@ const OPENING_LESSON_ID: Record<Difficulty, string> = {
 export function StartingLevelOnboarding() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel, setStartingLevel } = useProgress();
+  const { forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
   const pathname = usePathname();
   const router = useRouter();
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
+  const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
+  if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (pathname !== "/") return null;
   if (!locale || !isLoaded || startingLevel !== null || completions.length > 0) return null;
 
@@ -73,6 +77,16 @@ export function StartingLevelOnboarding() {
           2/2
         </span>
       </div>
+
+      <button
+        type="button"
+        dir={dir}
+        onClick={() => setForceLanguageStep(true)}
+        className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors"
+      >
+        <BackIcon aria-hidden="true" className="size-4" />
+        {t.onboarding.back}
+      </button>
 
       <div className="flex flex-1 items-center justify-center">
         <motion.div

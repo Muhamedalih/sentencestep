@@ -5,6 +5,7 @@ import "@/app/globals.css";
 
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
 import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
+import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dirFor } from "@/lib/i18n/locales";
@@ -98,8 +99,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body>
         <LocaleProvider initialLocale={locale}>
-          <FirstTimeLanguagePicker />
-          <StartingLevelOnboarding />
+          <GetStartedStepProvider>
+            <FirstTimeLanguagePicker />
+            <StartingLevelOnboarding />
+          </GetStartedStepProvider>
           {children}
         </LocaleProvider>
       </body>

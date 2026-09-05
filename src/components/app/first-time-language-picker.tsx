@@ -3,15 +3,20 @@
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { Logo } from "@/components/layout/logo";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 
 /**
  * Mounted once, high in src/app/layout.tsx, alongside every page — renders
- * nothing once a locale is known (see useLocale's `locale` being non-null),
- * so this is a pure overlay gate rather than a separate route: a genuinely
- * first-time, cookie-less visitor sees it on top of whatever page they
- * landed on and it disappears the instant they choose, no redirect or
+ * nothing once a locale is known (see useLocale's `locale` being non-null)
+ * UNLESS StartingLevelOnboarding's back button set `forceLanguageStep`
+ * (see GetStartedStepProvider), so a first-time visitor can return here
+ * from the level step without their already-chosen locale being discarded
+ * — picking again (even the same language) just clears that flag and falls
+ * through to the level step exactly as the first time through. Otherwise a
+ * genuinely first-time, cookie-less visitor sees it on top of whatever page
+ * they landed on and it disappears the instant they choose, no redirect or
  * reload. Fully opaque (not a backdrop-blur-through modal) and paired with
  * StartingLevelOnboarding's identical minimal-top-bar/step-badge shell —
  * together they read as step 1 and 2 of one linear "get started" flow
@@ -20,7 +25,8 @@ import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
  */
 export function FirstTimeLanguagePicker() {
   const { locale, t, setLocale } = useLocale();
-  if (locale) return null;
+  const { forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
+  if (locale && !forceLanguageStep) return null;
 
   return (
     <div
@@ -56,7 +62,10 @@ export function FirstTimeLanguagePicker() {
                 key={option}
                 type="button"
                 dir={LOCALE_META[option].dir}
-                onClick={() => setLocale(option)}
+                onClick={() => {
+                  setLocale(option);
+                  setForceLanguageStep(false);
+                }}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
