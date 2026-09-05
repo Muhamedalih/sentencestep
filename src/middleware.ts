@@ -46,6 +46,13 @@ function generateNonce(): string {
  * loaded in src/app/layout.tsx for Amiri/Lora. PayTabs checkout is a real
  * top-level navigation (redirect(), see checkout-actions.ts), never a form
  * POST or fetch from this origin, so it needs no entry here at all.
+ * media-src includes blob: (mirroring img-src's own blob: entry) for
+ * client-generated TTS previews (see dataUriToBlobUrl and its callers) —
+ * without it, a live voice preview's <audio> element loads silently
+ * nothing: no error surfaced to the user, just a blocked network request
+ * logged to the console (data: URIs are blocked here identically, which is
+ * why those previews are converted to a Blob URL client-side rather than
+ * just adding data: instead).
  *
  * Sentry's ingest host is derived from NEXT_PUBLIC_SENTRY_DSN itself rather
  * than hardcoded — Sentry's ingest domain varies by account region (e.g.
@@ -73,7 +80,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https://*.supabase.co",
-    "media-src 'self' https://*.supabase.co",
+    "media-src 'self' blob: https://*.supabase.co",
     `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com${sentryConnectSrc()}`,
     "frame-src https://challenges.cloudflare.com",
     "object-src 'none'",

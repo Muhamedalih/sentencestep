@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { previewEdgeTtsAction } from "@/lib/admin/edge-tts-actions";
 import { setDefaultPronunciationVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
+import { dataUriToBlobUrl } from "@/lib/audio-preview";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
@@ -60,7 +61,10 @@ export function PronunciationDefaultVoiceForm({
   function handlePreview() {
     if (!current) return;
     setMessage(null);
-    setPreviewAudioUrl(null);
+    setPreviewAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setIsPreviewing(true);
     startTransition(async () => {
       const result = await previewEdgeTtsAction({
@@ -72,7 +76,10 @@ export function PronunciationDefaultVoiceForm({
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
         return;
       }
-      setPreviewAudioUrl(result.audioDataUri);
+      // Converted to a Blob URL — see dataUriToBlobUrl's own doc comment
+      // for why a raw inline data: URI renders unreliably here (shows
+      // "0:00 / 0:00" and never actually plays).
+      setPreviewAudioUrl(dataUriToBlobUrl(result.audioDataUri));
       requestAnimationFrame(() => {
         audioRef.current?.play().catch(() => {
           // Autoplay can be blocked (the click's user-gesture window has
@@ -106,7 +113,10 @@ export function PronunciationDefaultVoiceForm({
               value={selected}
               onChange={(event) => {
                 setSelected(event.target.value);
-                setPreviewAudioUrl(null);
+                setPreviewAudioUrl((prev) => {
+                  if (prev) URL.revokeObjectURL(prev);
+                  return null;
+                });
               }}
               className="border-input bg-background rounded-md border px-3 py-2 text-sm"
             >

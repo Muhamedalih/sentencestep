@@ -13,6 +13,7 @@ import {
 import { deleteVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
 import { EDGE_TTS_VOICES } from "@/lib/voice/edge-tts-catalog";
+import { dataUriToBlobUrl } from "@/lib/audio-preview";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
@@ -91,7 +92,10 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
   function handlePreview(providerVoiceId: string, voiceId: string) {
     setMessage(null);
     setPreviewingId(voiceId);
-    setPlayedVoice(null);
+    setPlayedVoice((prev) => {
+      if (prev) URL.revokeObjectURL(prev.audioUrl);
+      return null;
+    });
     startTransition(async () => {
       const result = await previewEdgeTtsAction({ text: PREVIEW_TEXT, providerVoiceId });
       setPreviewingId(null);
@@ -99,10 +103,13 @@ export function EdgeTtsVoiceForm({ voices }: { voices: VoiceRow[] }) {
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
         return;
       }
-      // Revealed inline in this voice's own row (see the render below) —
-      // set first so the <audio> element exists in the DOM before autoplay
-      // is attempted.
-      setPlayedVoice({ id: voiceId, audioUrl: result.audioDataUri });
+      // Converted to a Blob URL (see dataUriToBlobUrl's own doc comment for
+      // why: msedge-tts's raw MP3 stream has no duration header, which
+      // Chrome parses unreliably as a giant inline data: URI — shows
+      // "0:00 / 0:00" and never actually plays). Revealed inline in this
+      // voice's own row (see the render below) — set first so the <audio>
+      // element exists in the DOM before autoplay is attempted.
+      setPlayedVoice({ id: voiceId, audioUrl: dataUriToBlobUrl(result.audioDataUri) });
       requestAnimationFrame(() => {
         audioRef.current?.play().catch(() => {
           // Browsers can refuse this autoplay — the actual play() call lands
