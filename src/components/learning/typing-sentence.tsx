@@ -11,11 +11,17 @@ import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
+import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
+import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
-import { isMistakeWorthTracking } from "@/lib/mistakes/normalize";
-import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
+import {
+  isMistakeWorthTracking,
+  isTrackableWord,
+  normalizeMistakeWord,
+} from "@/lib/mistakes/normalize";
+import { getCurrentWordIndex, locateWordAtCharIndex, tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import type { LearningMode, Sentence } from "@/types/content";
 
@@ -146,6 +152,63 @@ export function TypingSentence({
   // Independent of PronunciationButton's own speech instance — a word click
   // never restarts or interrupts the full-sentence audio (see items 3-4).
   const wordSpeech = useSpeech();
+  const wordClip = useAudioClip();
+  const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
+
+  /**
+   * A word click's real voice, same rule as PronunciationButton's own
+   * `kokoroVoiceId` prop (sentenceVoiceId, computed above) — never a
+   * different provider/voice than the sentence it's part of. Cache hit or a
+   * free Edge-TTS on-demand synthesis (Normal lessons) plays the resolved
+   * clip directly; a Stories paid-provider voice instead gets a
+   * gender-matched free Edge-TTS substitute for just this one word (see
+   * resolvePronunciationAudioAction's own doc comment) — the narrator's own
+   * paid voice is never touched, only this isolated word is spoken by a
+   * different (free) voice. No resolvable voice, or a token that isn't a
+   * real trackable word (stray punctuation), falls back to the browser's
+   * own speech synthesis exactly as this always did before.
+   */
+  async function handleWordClick(word: string) {
+    if (sentenceVoiceId && isTrackableWord(word)) {
+      const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
+      const url = await resolveAudio({
+        contentType: "sentence_word",
+        contentId,
+        voiceId: sentenceVoiceId,
+      });
+      if (url) {
+        wordClip.play(url);
+        return;
+      }
+    }
+    wordSpeech.speakWord(word);
+  }
+
+  // Warms every trackable word's clip in the background the moment this
+  // sentence mounts, the same prefetchPronunciation mechanism/dedup
+  // PronunciationButton's own next-sentence prefetch uses — a first-time
+  // isolated-word synthesis measured ~3-4s (a real Edge-TTS round trip plus
+  // a Storage upload), which felt like a hang when it only started the
+  // instant a learner actually clicked. Firing it here instead means most
+  // clicks land well after the learner has started reading/typing the
+  // sentence, by which point the word is very likely already cached — a
+  // near-instant play instead of a multi-second wait. Only for
+  // Normal/Stories (enableWordClick's own scope — Conversation never
+  // enables word click at all), and only once real content/voice exist.
+  useEffect(() => {
+    if (mode !== "normal" && mode !== "stories") return;
+    if (!sentenceVoiceId) return;
+    const words = new Set(tokenize(sentence.en).filter(isTrackableWord));
+    for (const word of words) {
+      prefetchPronunciation({
+        contentType: "sentence_word",
+        contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
+        voiceId: sentenceVoiceId,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice actually changes, not on every render
+  }, [sentence.id, sentenceVoiceId, mode]);
+
   const currentWord =
     sentence.supportWordTranslations?.[getCurrentWordIndex(sentence.en, engine.typed.length)];
 
@@ -183,7 +246,7 @@ export function TypingSentence({
         reducedMotion={reducedMotion}
         textClassName={sizeClass}
         textStyle={textStyle}
-        onWordClick={enableWordClick ? (word) => wordSpeech.speakWord(word) : undefined}
+        onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
         targetVocabularyIndices={targetVocabularyIndices}
       />
     );

@@ -2,8 +2,19 @@
 
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { tokenize } from "@/lib/typing";
-import { hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
+import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import type { SentenceDirection } from "@/lib/voice/director-types";
+import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
+import type { TTSVoiceSettings } from "@/lib/voice/provider";
+import {
+  buildProviderSynthesisInput,
+  claimCacheRow,
+  clipPathForProvider,
+  isStaleGenerating,
+  MAX_VOICE_RETRY_ATTEMPTS,
+} from "@/lib/voice/story-voice-generation";
+import { uploadVoiceClip } from "@/lib/voice/storage";
 
 /**
  * The on-demand, cached pronunciation-audio pipeline every lesson type
@@ -18,19 +29,31 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
  *
  * Every voice's audio is generated ahead of time by the background
  * narration pipeline (see story-voice-generation.ts, which covers Normal
- * lessons exactly like Stories/Conversation) — this module never runs TTS
- * inference itself, it only ever serves an already-cached clip. A cache
- * miss (new content the background sweep hasn't reached yet, or no
+ * lessons exactly like Stories/Conversation) — this module only runs TTS
+ * inference itself for the one narrow "sentence_word" exception documented
+ * below; every other content type stays purely cache-only. A cache miss for
+ * those (new content the background sweep hasn't reached yet, or no
  * narration provider configured) falls back to the browser's own speech
  * synthesis exactly like any other resolution failure (see
  * PronunciationButton).
  *
- * "sentence_word" is "Fix Your Mistakes"' one addition (see
- * FixYourMistakesSession): pronouncing a single target word in isolation,
- * not the sentence it came from. contentId is `${sentenceId}::${normalized
- * word}`, resolved by re-deriving the word from the real sentence text
- * server-side — never trusting a client-supplied word string directly —
- * so the same "content reference, never raw text" guarantee holds here too.
+ * "sentence_word"/"book_sentence_word" pronounce a single target word in
+ * isolation, not the sentence it came from — used by both "Fix Your
+ * Mistakes" (see FixYourMistakesSession) and the in-lesson word-click while
+ * reading/typing a Normal/Stories/Book sentence (see TypingSentence/
+ * BookSentenceReader). contentId is `${sentenceId}::${normalized word}`,
+ * resolved by re-deriving the word from the real sentence text server-side
+ * — never trusting a client-supplied word string directly — so the same
+ * "content reference, never raw text" guarantee holds here too;
+ * "book_sentence_word" is identical except resolved against book_sentences
+ * instead of sentences. Unlike every other content type, a cache miss here
+ * doesn't just fall back to the browser: an Edge-TTS-sourced voice (Normal
+ * lessons — free, no account needed) gets the word synthesized on demand
+ * with that exact voice (see generateIsolatedWordAudio); a paid-provider
+ * voice (Stories/Books) never triggers a real synthesis call on that
+ * provider — a gender-matched free Edge-TTS voice stands in for just this
+ * one word instead (see pickGenderMatchedEdgeTtsVoice), leaving the
+ * narrator's own paid voice completely untouched.
  *
  * "book_sentence" is the Book Learning Engine's addition — a book_sentences
  * row rather than a sentences row, looked up the same content-reference way
@@ -39,7 +62,8 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
  * contentType/contentId, so a book sentence that happens to share exact text
  * with a lesson sentence already shares its cached clip for free.
  */
-export type VoiceAudioContentType = "sentence" | "word" | "sentence_word" | "book_sentence";
+export type VoiceAudioContentType =
+  "sentence" | "word" | "sentence_word" | "book_sentence" | "book_sentence_word";
 
 const MAX_TEXT_LENGTH = 300;
 
@@ -67,11 +91,11 @@ async function lookupContentText(
     return data?.en ?? null;
   }
 
-  if (contentType === "sentence_word") {
+  if (contentType === "sentence_word" || contentType === "book_sentence_word") {
     const [sentenceId, normalizedWord] = contentId.split("::");
     if (!sentenceId || !normalizedWord) return null;
     const { data } = await supabase
-      .from("sentences")
+      .from(contentType === "sentence_word" ? "sentences" : "book_sentences")
       .select("en")
       .eq("id", sentenceId)
       .maybeSingle();
@@ -94,14 +118,16 @@ async function lookupContentText(
 
 async function lookupVoice(
   voiceId: string,
-): Promise<{ providerVoiceId: string; source: string } | null> {
+): Promise<{ providerVoiceId: string; source: string; gender: "female" | "male" } | null> {
   const supabase = createServiceRoleClient();
   const { data } = await supabase
     .from("voices")
-    .select("provider_voice_id, source")
+    .select("provider_voice_id, source, gender")
     .eq("id", voiceId)
     .maybeSingle();
-  return data ? { providerVoiceId: data.provider_voice_id, source: data.source } : null;
+  return data
+    ? { providerVoiceId: data.provider_voice_id, source: data.source, gender: data.gender }
+    : null;
 }
 
 /**
@@ -154,13 +180,180 @@ export async function lookupCachedAudioUrl(text: string, voiceId: string): Promi
   return cached?.audio_url ?? null;
 }
 
+/** A single isolated word has no narrative context (no neighboring sentences, no character arc) for the Voice Director to interpret — the exact same reasoning generateWordGroupVoiceDraft already applies to vocabulary words, reused here for the same shape of content. */
+const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
+  emotion: "neutral",
+  energy: "medium",
+  pace: "normal",
+  emphasisWord: null,
+  pauseBefore: "none",
+};
+
+/** Edge-TTS ignores voiceSettings entirely (see providers/edge-tts.ts's doc comment) — this exists only to satisfy buildProviderSynthesisInput/synthesize's shared shape, mirrors generateWordGroupVoiceDraft's identical constant for the same reason. */
+const NEUTRAL_VOICE_SETTINGS: TTSVoiceSettings = {
+  stability: 0.5,
+  similarityBoost: 0.75,
+  style: 0,
+  speed: 1,
+  useSpeakerBoost: true,
+};
+
+const EDGE_TTS_GENERATION_VERSION = "edge-tts:sentence-word:v1";
+
+/**
+ * The one on-demand synthesis path in this otherwise cache-only module —
+ * "Fix Your Mistakes" asking to hear a single word in isolation from within
+ * a Normal lesson's sentence, when that exact word (under that exact voice)
+ * has never been generated by any background pipeline: Normal lessons only
+ * ever pre-generate whole sentences, and Word Lists only ever pre-generates
+ * its own vocabulary words, so an arbitrary mistake word has no guaranteed
+ * pre-existing clip anywhere. Deliberately Edge-TTS only — the caller
+ * (resolvePronunciationAudioAction) only ever reaches this for an
+ * edge-tts-sourced voice, since Edge-TTS is free and requires no account,
+ * unlike Stories/Books' paid narration providers (see
+ * fallbackToParentSentenceAudio for those instead). Always synthesizes with
+ * the exact same `voiceId`/`providerVoiceId` the caller already resolved for
+ * that lesson, so this one word never sounds like a different narrator than
+ * the sentence it came from. Same claim/generate/cache-write shape as
+ * generateWordGroupVoiceDraft (content-addressed by (voice_id, text_hash,
+ * generation_version), same bounded retry budget, same
+ * stale-'generating'-row reclaim), just inlined here for a single word
+ * instead of a whole word group. Best-effort: any failure (provider error,
+ * upload error) is swallowed and returns null, leaving the caller with its
+ * existing cache-miss fallback (the browser's own speech synthesis) — never
+ * surfaced as an error.
+ */
+async function generateIsolatedWordAudio(
+  word: string,
+  voiceId: string,
+  providerVoiceId: string,
+): Promise<string | null> {
+  const provider = createEdgeTtsProvider();
+  const supabase = createServiceRoleClient();
+  const key = cacheKeyParts(word, voiceId, EDGE_TTS_GENERATION_VERSION);
+
+  const { data: existingRow } = await supabase
+    .from("voice_audio_cache")
+    .select("id, status, attempts, updated_at")
+    .eq("voice_id", voiceId)
+    .eq("text_hash", key.textHash)
+    .eq("generation_version", EDGE_TTS_GENERATION_VERSION)
+    .maybeSingle();
+
+  if (existingRow) {
+    if (existingRow.status === "generating" && !isStaleGenerating(existingRow.updated_at)) {
+      return null; // another request is already generating this exact word
+    }
+    if (existingRow.status === "failed" && existingRow.attempts >= MAX_VOICE_RETRY_ATTEMPTS) {
+      return null; // retry budget exhausted; needs the background sweep or an admin to intervene
+    }
+  }
+
+  const existingByKey = existingRow
+    ? new Map([[`${voiceId}:${key.textHash}:${EDGE_TTS_GENERATION_VERSION}`, existingRow]])
+    : new Map();
+  const direction: SentenceDirection = { sentenceId: `word:${voiceId}`, ...NEUTRAL_DIRECTION };
+  const claimed = await claimCacheRow(
+    supabase,
+    key,
+    "edge-tts",
+    direction,
+    existingByKey,
+    provider.name,
+  );
+  if (!claimed) return null; // lost the claim race to a concurrent identical request
+
+  try {
+    const { text, voiceSettings } = buildProviderSynthesisInput(
+      provider.name,
+      direction,
+      word,
+      providerVoiceId,
+      NEUTRAL_VOICE_SETTINGS,
+    );
+    const { audio, durationMs } = await provider.synthesize({
+      text,
+      voiceId: providerVoiceId,
+      model: "edge-tts",
+      voiceSettings,
+    });
+    const audioUrl = await uploadVoiceClip(clipPathForProvider(provider.name, voiceId), audio);
+
+    await supabase
+      .from("voice_audio_cache")
+      .update({
+        status: "ready",
+        audio_url: audioUrl,
+        duration_ms: durationMs,
+        last_error: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", claimed.id);
+    return audioUrl;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await supabase
+      .from("voice_audio_cache")
+      .update({
+        status: "failed",
+        last_error: message.slice(0, 500),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", claimed.id);
+    return null;
+  }
+}
+
+/**
+ * Picks a free Edge-TTS voice to stand in for a paid narration provider's
+ * voice when isolating a single word (see resolvePronunciationAudioAction) —
+ * never the narrator's own paid voice itself, so a word click on a
+ * Story/Book sentence can never trigger a real ElevenLabs/Azure/Gemini
+ * charge. Matched by gender only (never touches the real narrator voice
+ * itself, just picks the closest free substitute for this one word): an
+ * American-accented Edge-TTS voice of the same gender when one is
+ * registered, falling back to any accent of that gender, so the isolated
+ * word at least sounds like a plausible narrator of the right gender rather
+ * than a random default. Returns null only if no Edge-TTS voice of that
+ * gender is registered at all (practically never — Edge-TTS ships several
+ * of each).
+ */
+async function pickGenderMatchedEdgeTtsVoice(
+  gender: "female" | "male",
+): Promise<{ id: string; providerVoiceId: string } | null> {
+  const supabase = createServiceRoleClient();
+
+  const { data: american } = await supabase
+    .from("voices")
+    .select("id, provider_voice_id")
+    .eq("source", "edge-tts")
+    .eq("gender", gender)
+    .eq("accent", "American")
+    .order("id")
+    .limit(1)
+    .maybeSingle();
+  if (american) return { id: american.id, providerVoiceId: american.provider_voice_id };
+
+  const { data: any } = await supabase
+    .from("voices")
+    .select("id, provider_voice_id")
+    .eq("source", "edge-tts")
+    .eq("gender", gender)
+    .order("id")
+    .limit(1)
+    .maybeSingle();
+  return any ? { id: any.id, providerVoiceId: any.provider_voice_id } : null;
+}
+
 /**
  * Resolves a ready-to-play audio URL for real SentenceStep content spoken
- * by a real, existing voice — cache-only (see lookupCachedAudioUrl); a miss
- * returns null (never throws) so PronunciationButton falls back to the
- * browser's speech synthesis exactly as it does for any other resolution
- * failure. Validates the content id and voice id are real before looking up
- * the cache, unlike lookupCachedAudioUrl, which trusts its caller.
+ * by a real, existing voice. Cache-only for every content type except
+ * "sentence_word"/"book_sentence_word" (see generateIsolatedWordAudio) — a
+ * miss for any other type returns null (never throws) so PronunciationButton
+ * falls back to the browser's speech synthesis exactly as it does for any
+ * other resolution failure. Validates the content id and voice id are real
+ * before looking up the cache, unlike lookupCachedAudioUrl, which trusts its
+ * caller.
  */
 export async function resolvePronunciationAudioAction(input: {
   contentType: VoiceAudioContentType;
@@ -176,5 +369,22 @@ export async function resolvePronunciationAudioAction(input: {
   if (!text || text.length > MAX_TEXT_LENGTH) return null;
   if (!voice) return null;
 
-  return lookupCachedAudioUrl(text, voiceId);
+  const cached = await lookupCachedAudioUrl(text, voiceId);
+  if (cached) return cached;
+
+  if (contentType !== "sentence_word" && contentType !== "book_sentence_word") return null;
+
+  if (voice.source === "edge-tts") {
+    return generateIsolatedWordAudio(text, voiceId, voice.providerVoiceId);
+  }
+
+  // A Story/Book sentence's narrator is a paid provider — never spend a
+  // real synthesis call isolating just one word of content that's already
+  // fully narrated. Substitute a gender-matched free Edge-TTS voice
+  // instead (see pickGenderMatchedEdgeTtsVoice): the narrator's own voice
+  // is never touched, only this one isolated-word request is served by a
+  // different (free) voice.
+  const substitute = await pickGenderMatchedEdgeTtsVoice(voice.gender);
+  if (!substitute) return null;
+  return generateIsolatedWordAudio(text, substitute.id, substitute.providerVoiceId);
 }

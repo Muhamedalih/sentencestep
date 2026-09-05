@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { BookReadingTools } from "@/components/learning/book-reading-tools";
@@ -9,10 +10,13 @@ import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
+import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
+import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
-import { getCurrentWordIndex, getLetterStates } from "@/lib/typing";
+import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { getCurrentWordIndex, getLetterStates, tokenize } from "@/lib/typing";
 import type { BookSentence } from "@/types/library";
 import type { BookSentenceMark } from "@/lib/book-progress/marks";
 
@@ -90,6 +94,45 @@ export function BookSentenceReader({
   // language.
   const supportText = sentence.supportText ?? sentence.en;
   const wordSpeech = useSpeech();
+  const wordClip = useAudioClip();
+  const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
+
+  /** Same rule as TypingSentence's identical handler: a word click always speaks with this sentence's own resolved voice (cache hit, a free Edge-TTS on-demand synthesis, or — for a paid narration provider — a gender-matched free Edge-TTS substitute, never a fresh paid synthesis just for one word), falling back to the browser's speech synthesis only when nothing resolves at all. */
+  async function handleWordClick(word: string) {
+    if (resolvedVoiceId && isTrackableWord(word)) {
+      const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
+      const url = await resolveAudio({
+        contentType: "book_sentence_word",
+        contentId,
+        voiceId: resolvedVoiceId,
+      });
+      if (url) {
+        wordClip.play(url);
+        return;
+      }
+    }
+    wordSpeech.speakWord(word);
+  }
+
+  // See TypingSentence's identical effect's own doc comment: warms every
+  // trackable word's clip in the background as soon as this sentence
+  // mounts, so a later click on it lands on an already-cached clip instead
+  // of paying the first-time ~3-4s synthesis cost at click time. Skipped
+  // entirely in the read-only page-preview state (readOnly) — that
+  // rendering has no live typing cursor and isn't the sentence the learner
+  // is actually reading right now.
+  useEffect(() => {
+    if (readOnly || !resolvedVoiceId) return;
+    const words = new Set(tokenize(sentence.en).filter(isTrackableWord));
+    for (const word of words) {
+      prefetchPronunciation({
+        contentType: "book_sentence_word",
+        contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
+        voiceId: resolvedVoiceId,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice/readOnly actually changes, not on every render
+  }, [sentence.id, resolvedVoiceId, readOnly]);
 
   const engine = useTypingEngine({
     target: sentence.en,
@@ -181,7 +224,7 @@ export function BookSentenceReader({
             : "text-[clamp(1.75rem,1.05rem+2.1vw,3rem)]"
         }
         textStyle={textStyle}
-        onWordClick={(word) => wordSpeech.speakWord(word)}
+        onWordClick={(word) => void handleWordClick(word)}
         wordTranslations={sentence.supportWordTranslations}
         translationDir={dir}
         enableWordHighlight

@@ -6,6 +6,7 @@ import { VoiceDashboardRow } from "@/components/admin/voice-dashboard-row";
 import { Card, CardContent } from "@/components/ui/card";
 import { listVoiceGenerationDashboardRows } from "@/lib/admin/voice-generation-queries";
 import { getVoices } from "@/lib/admin/voices-queries";
+import { getEdgeTtsVoices } from "@/lib/admin/edge-tts-queries";
 import { getTTSProvider } from "@/lib/voice/provider-registry";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -15,29 +16,43 @@ export const metadata: Metadata = { title: "Story Audio Status" };
 export default async function AdminVoiceContentPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const [rows, allVoices] = await Promise.all([listVoiceGenerationDashboardRows(), getVoices()]);
+  const [rows, allVoices, edgeTtsVoices] = await Promise.all([
+    listVoiceGenerationDashboardRows(),
+    getVoices(),
+    getEdgeTtsVoices(),
+  ]);
   const storyRows = rows.filter((r) => r.contentType === "story");
   const conversationRows = rows.filter((r) => r.contentType === "conversation");
   const normalRows = rows.filter((r) => r.contentType === "normal");
   const bookRows = rows.filter((r) => r.contentType === "book");
   // Only the active provider's own voices are ever a valid per-row override
-  // (resolveTargetVoices/loadBookForVoiceWork both reject a mismatched-
-  // provider voice_id, silently falling back to the global default) — so
-  // the picker only ever offers voices that would actually work if chosen.
+  // for Stories/Conversations/Books (resolveTargetVoices/loadBookForVoiceWork
+  // both reject a mismatched-provider voice_id, silently falling back to the
+  // global default) — so the picker only ever offers voices that would
+  // actually work if chosen.
   const activeProviderName = getTTSProvider().name;
   const pickableVoices = allVoices.filter((voice) => voice.source === activeProviderName);
+  // Normal lessons are the one exception: loadLessonForVoiceWork always
+  // resolves and generates them through Edge-TTS specifically, regardless of
+  // which narration provider is active (see that function's own doc
+  // comment) — so their row picker must offer Edge-TTS voices, never the
+  // active provider's, or every selection here would silently fail to
+  // resolve and fall back to the default pronunciation voice instead.
+  const normalPickableVoices = edgeTtsVoices;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Story audio status</h1>
         <p className="text-muted-foreground mt-1">
-          Narration audio (via the active provider — Azure, Gemini, ElevenLabs, or the built-in
-          Edge-TTS fallback) for every published Story, Conversation, Normal lesson, and Book. Each
-          row&apos;s own voice picker sets that item&apos;s narration voice directly — for a Normal
-          lesson this is also what a learner actually hears (see PronunciationButton), so picking a
-          voice there and generating replaces its free Kokoro pronunciation with narrated audio in
-          one step. Changing the default narration voice above doesn&apos;t retroactively regenerate
+          Narration audio for every published Story, Conversation, Normal lesson, and Book. Stories,
+          Conversations, and Books use the active narration provider (Azure, Gemini, ElevenLabs, or
+          the built-in Edge-TTS fallback); Normal lessons always use Edge-TTS, isolated from that
+          provider (see &quot;Default voice — Normal Lessons, Word Lists &amp; Mistake Review&quot;
+          on the main Voice page). Each row&apos;s own voice picker sets that item&apos;s narration
+          voice directly — for a Normal lesson this is also what a learner actually hears (see
+          PronunciationButton), so picking a voice there and generating is a one-step way to narrate
+          that specific lesson. Changing a default voice doesn&apos;t retroactively regenerate
           existing audio — use &quot;Generate Missing Audio&quot; below, or a row&apos;s own
           &quot;Generate&quot; button, after changing it.
         </p>
@@ -86,7 +101,7 @@ export default async function AdminVoiceContentPage() {
               </p>
             )}
             {normalRows.map((row) => (
-              <VoiceDashboardRow key={`normal-${row.id}`} row={row} voices={pickableVoices} />
+              <VoiceDashboardRow key={`normal-${row.id}`} row={row} voices={normalPickableVoices} />
             ))}
           </CardContent>
         </Card>
