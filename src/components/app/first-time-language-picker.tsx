@@ -6,6 +6,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { Logo } from "@/components/layout/logo";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
+import { cn } from "@/lib/utils";
 
 /**
  * Mounted once, high in src/app/layout.tsx, alongside every page — renders
@@ -71,9 +72,13 @@ export function FirstTimeLanguagePicker() {
                 transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                 className="border-border bg-card hover:border-primary hover:shadow-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex flex-col items-center gap-3 rounded-2xl border px-6 py-8 transition-colors outline-none hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2"
               >
-                <span aria-hidden="true" className="text-4xl leading-none">
-                  {LOCALE_META[option].flag}
-                </span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    `fi fi-${LOCALE_META[option].flagCountryCode}`,
+                    "!block !h-8 !w-11 rounded-md bg-center shadow-[0_0_0_1px_var(--border)]",
+                  )}
+                />
                 <span className="text-lg font-medium">{LOCALE_META[option].nativeLabel}</span>
               </motion.button>
             ))}
