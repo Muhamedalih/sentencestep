@@ -1,0 +1,47 @@
+name: Scheduled maintenance sweeps
+
+# This project deploys to Netlify (see the GitHub integration), not Vercel —
+# vercel.json's own "crons" block is Vercel-proprietary config that Netlify
+# never reads, so the four /api/cron/* routes it lists were never actually
+# being triggered on this deployment. GitHub Actions' own cron trigger is a
+# free, host-agnostic replacement: each job below just calls one route over
+# HTTPS with the same `Authorization: Bearer <CRON_SECRET>` header those
+# routes already require (see src/lib/cron/auth.ts) — no Netlify-specific
+# scheduling feature needed. Schedules mirror vercel.json's original ones.
+on:
+  schedule:
+    - cron: "0 15 * * *" # inactive-learners
+    - cron: "0 3 * * *" # translation-sweep
+    - cron: "0 4 * * *" # voice-sweep
+  workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
+
+jobs:
+  inactive-learners:
+    if: github.event.schedule == '0 15 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/inactive-learners
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/inactive-learners
+
+  translation-sweep:
+    if: github.event.schedule == '0 3 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/translation-sweep
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/translation-sweep
+
+  voice-sweep:
+    if: github.event.schedule == '0 4 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/voice-sweep
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/voice-sweep
