@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -45,6 +46,19 @@ const OPENING_LESSON_ID: Record<Difficulty, string> = {
  * self-scope to the marketing homepage a fresh visitor actually lands on,
  * never intercepting /login, /register, or a deep-linked lesson URL for a
  * guest whose local progress happens to be empty too.
+ *
+ * `isNavigating` closes a real gap: this component is mounted at the root
+ * layout, which never unmounts on a client-side route change — only
+ * `pathname` updates, and only once the new route has actually taken over.
+ * Calling setStartingLevel() flips this component's own natural gate
+ * (`startingLevel !== null`) to hidden the instant it's clicked, which is
+ * BEFORE router.push's navigation actually finishes — without this flag,
+ * that gap between "gate says hide" and "the lesson route has actually
+ * mounted" let the marketing homepage flash through underneath for a
+ * frame. Setting it first keeps this full-page takeover (now a loading
+ * spinner instead of the cards) covering the screen for that entire gap;
+ * `pathname !== "/"` firing once navigation truly completes is what
+ * finally unmounts it, never this flag on its own.
  */
 export function StartingLevelOnboarding() {
   const { locale, t, dir } = useLocale();
@@ -52,14 +66,23 @@ export function StartingLevelOnboarding() {
   const { forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
   const pathname = usePathname();
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (pathname !== "/") return null;
+  if (isNavigating) {
+    return (
+      <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
+        <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
+      </div>
+    );
+  }
   if (!locale || !isLoaded || startingLevel !== null || completions.length > 0) return null;
 
   function handleSelect(difficulty: Difficulty, level: number) {
+    setIsNavigating(true);
     setStartingLevel(level);
     router.push(`/learn/normal/${OPENING_LESSON_ID[difficulty]}`);
   }
