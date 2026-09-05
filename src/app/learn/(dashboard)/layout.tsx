@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app/app-header";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
-import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
 import { getAccessState } from "@/lib/billing/access";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
@@ -21,6 +20,12 @@ import { fetchXp } from "@/lib/supabase/queries/progress";
  * with no header or sidebar — see src/app/learn/layout.tsx, the shared
  * ancestor both this layout and the lesson route sit under, which now only
  * provides context (auth/voice/typing-sound), never this chrome.
+ *
+ * StartingLevelOnboarding used to mount here; it's now root-mounted (see
+ * src/app/layout.tsx) alongside FirstTimeLanguagePicker instead, since it's
+ * the second step of one linear language→level→lesson flow a brand-new
+ * guest hits at "/" — it self-gates on pathname now, so it no longer needs
+ * to live inside this specific layout to only ever fire once.
  */
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
   const [user, access] = await Promise.all([getCurrentUser(), getAccessState()]);
@@ -32,7 +37,6 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
 
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
-      <StartingLevelOnboarding />
       <AppHeader user={user} access={access} xp={xp} savedCount={savedCount} />
       <div className="flex flex-1 flex-col md:flex-row">
         <LearnSidebar />

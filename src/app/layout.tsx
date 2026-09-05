@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import "@/app/globals.css";
 
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
+import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dirFor } from "@/lib/i18n/locales";
@@ -98,6 +99,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <LocaleProvider initialLocale={locale}>
           <FirstTimeLanguagePicker />
+          <StartingLevelOnboarding />
           {children}
         </LocaleProvider>
       </body>
