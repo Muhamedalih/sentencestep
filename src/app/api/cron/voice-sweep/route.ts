@@ -21,10 +21,23 @@ import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generat
  * a single invocation attempts — a "do a little, safely, often" sweep, not
  * a full-library backfill. Candidate selection is shared with the admin
  * bulk-generate action via findLessonIdsNeedingVoiceGeneration.
+ *
+ * Kept deliberately small (not the 20/10/20 this shipped with originally):
+ * loadLessonForVoiceWork/its Book equivalent is several sequential Supabase
+ * round trips per candidate (sentences, settings, voice resolution, cache
+ * lookups), and measured in production on Netlify — a platform whose
+ * function/edge timeout is materially shorter than what this was originally
+ * tuned against — a full 20+10+20-candidate sweep reliably exceeded it
+ * ("the edge function timed out", a 500/502 with zero items actually
+ * processed). Smaller batches finish comfortably inside any reasonable
+ * platform timeout; the GitHub Actions schedule (.github/workflows/cron.yml)
+ * compensates by calling this endpoint every 15 minutes instead of once a
+ * day, so real backlog still gets fully worked through — just in more, smaller
+ * steps rather than one big one that never completes.
  */
-const MAX_LESSON_VOICE_PAIRS_PER_RUN = 20;
-const MAX_BOOK_VOICE_PAIRS_PER_RUN = 10;
-const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 20;
+const MAX_LESSON_VOICE_PAIRS_PER_RUN = 5;
+const MAX_BOOK_VOICE_PAIRS_PER_RUN = 3;
+const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 5;
 const MAX_ERRORS_REPORTED = 20;
 
 async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
