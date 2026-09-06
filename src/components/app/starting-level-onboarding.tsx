@@ -1,8 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -25,66 +24,46 @@ const TIER_DOT_CLASS: Record<Difficulty, string> = {
   advanced: "bg-amber-500",
 };
 
-/** The one dedicated "opening lesson" written for this exact moment (see the seed data pushed via scripts/scratch's onboarding-lesson insert) — never the ordinary catalog's own first-incomplete-lesson pick, so a brand-new visitor's very first typing experience is always this specific, deliberately upbeat lesson, matched to the tier they just chose. */
-const OPENING_LESSON_ID: Record<Difficulty, string> = {
-  beginner: "onboarding-beginner",
-  intermediate: "onboarding-intermediate",
-  advanced: "onboarding-advanced",
-};
-
 /**
- * A one-time placement choice for a genuinely new learner, immediately
- * followed by dropping them straight into a real lesson — this is
- * deliberately the second and last step of the same linear "get started"
- * flow FirstTimeLanguagePicker starts (identical minimal-top-bar/step-badge
- * shell, same full-page takeover, no backdrop-blur-through), not a modal
- * popped up later inside the dashboard. Gated on `startingLevel === null`
- * (never asked yet) AND zero completions, so it can never interrupt a
- * returning learner or one who already has real progress; also gated on
- * `pathname === "/"` specifically — mounted at the root layout (same as
- * FirstTimeLanguagePicker) rather than only the dashboard's, so it must
- * self-scope to the marketing homepage a fresh visitor actually lands on,
- * never intercepting /login, /register, or a deep-linked lesson URL for a
- * guest whose local progress happens to be empty too.
+ * The second of the three steps in the homepage's "get started" flow
+ * (language -> level -> OnboardingIntroCard -> lesson) FirstTimeLanguagePicker
+ * starts (identical minimal-top-bar/step-badge shell, same full-page
+ * takeover, no backdrop-blur-through), not a modal popped up later inside
+ * the dashboard. Gated on `startingLevel === null` (never asked yet) AND
+ * zero completions, so it can never interrupt a returning learner or one who
+ * already has real progress; also gated on `pathname === "/"` specifically
+ * — mounted at the root layout (same as FirstTimeLanguagePicker) rather than
+ * only the dashboard's, so it must self-scope to the marketing homepage a
+ * fresh visitor actually lands on, never intercepting /login, /register, or
+ * a deep-linked lesson URL for a guest whose local progress happens to be
+ * empty too.
  *
- * `isNavigating` closes a real gap: this component is mounted at the root
- * layout, which never unmounts on a client-side route change — only
- * `pathname` updates, and only once the new route has actually taken over.
- * Calling setStartingLevel() flips this component's own natural gate
- * (`startingLevel !== null`) to hidden the instant it's clicked, which is
- * BEFORE router.push's navigation actually finishes — without this flag,
- * that gap between "gate says hide" and "the lesson route has actually
- * mounted" let the marketing homepage flash through underneath for a
- * frame. Setting it first keeps this full-page takeover (now a loading
- * spinner instead of the cards) covering the screen for that entire gap;
- * `pathname !== "/"` firing once navigation truly completes is what
- * finally unmounts it, never this flag on its own.
+ * Deliberately doesn't navigate anywhere itself: picking a tier calls
+ * setStartingLevel(level) (persistence) and setPendingDifficulty(difficulty)
+ * (the GetStartedStepProvider context write OnboardingIntroCard actually
+ * reacts to — see that context's own doc comment for why a plain
+ * setStartingLevel call alone can't reactively reach a sibling component).
+ * setStartingLevel flips this component's own gate to hidden; OnboardingIntroCard
+ * (mounted right after this one in layout.tsx) then takes over as the third
+ * step, and is what actually routes into OPENING_LESSON_ID[difficulty] once
+ * the learner confirms there. See that component's own doc comment for the
+ * `isNavigating`-style loading-spinner treatment this used to need itself.
  */
 export function StartingLevelOnboarding() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel, setStartingLevel } = useProgress();
-  const { forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
+  const { forceLanguageStep, setForceLanguageStep, setPendingDifficulty } = useGetStartedStep();
   const pathname = usePathname();
-  const router = useRouter();
-  const [isNavigating, setIsNavigating] = useState(false);
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (pathname !== "/") return null;
-  if (isNavigating) {
-    return (
-      <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
-        <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
-      </div>
-    );
-  }
   if (!locale || !isLoaded || startingLevel !== null || completions.length > 0) return null;
 
   function handleSelect(difficulty: Difficulty, level: number) {
-    setIsNavigating(true);
     setStartingLevel(level);
-    router.push(`/learn/normal/${OPENING_LESSON_ID[difficulty]}`);
+    setPendingDifficulty(difficulty);
   }
 
   return (
@@ -97,7 +76,7 @@ export function StartingLevelOnboarding() {
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          2/2
+          2/3
         </span>
       </div>
 

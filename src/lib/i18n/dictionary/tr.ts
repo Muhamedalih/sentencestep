@@ -126,6 +126,7 @@ export const tr: Dictionary = {
     advancedBody: "İngilizcenize güveniyorsunuz, daha zengin kelime bilgisi ve pratik arıyorsunuz.",
     skip: "Kendim seçeceğim",
     back: "Geri",
+    startCta: "Derse başla",
   },
   auth: {
     loginHeading: "Tekrar hoş geldiniz",

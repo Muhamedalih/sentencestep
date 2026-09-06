@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import "@/app/globals.css";
 
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
+import { OnboardingIntroCard } from "@/components/app/onboarding-intro-card";
 import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
@@ -102,6 +103,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <GetStartedStepProvider>
             <FirstTimeLanguagePicker />
             <StartingLevelOnboarding />
+            <OnboardingIntroCard />
           </GetStartedStepProvider>
           {children}
         </LocaleProvider>

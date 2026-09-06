@@ -244,6 +244,7 @@ const ADMIN_ONLY_SEGMENTS = [
   "color-settings",
   "voice",
   "typing-sound",
+  "onboarding-card",
   "lesson-fonts",
   "lesson-completion",
   "reports",

@@ -128,6 +128,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                     Typing sound
                   </Link>
                   <Link
+                    href="/admin/onboarding-card"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Onboarding card
+                  </Link>
+                  <Link
                     href="/admin/lesson-fonts"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >

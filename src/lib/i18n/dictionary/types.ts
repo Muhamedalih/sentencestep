@@ -135,6 +135,8 @@ export interface Dictionary {
     advancedBody: string;
     skip: string;
     back: string;
+    /** Onboarding intro card's (src/components/app/onboarding-intro-card.tsx) "enter the lesson" button — the flow's third and last step. */
+    startCta: string;
   };
   auth: {
     loginHeading: string;

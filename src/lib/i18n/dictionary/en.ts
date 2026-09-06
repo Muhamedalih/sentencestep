@@ -128,6 +128,7 @@ export const en: Dictionary = {
     advancedBody: "Confident with English, looking for richer vocabulary and practice.",
     skip: "I'll choose myself",
     back: "Back",
+    startCta: "Start the lesson",
   },
   auth: {
     loginHeading: "Welcome back",

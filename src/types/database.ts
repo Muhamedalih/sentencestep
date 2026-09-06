@@ -493,6 +493,23 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["typing_sound_settings"]["Insert"]>;
         Relationships: [];
       };
+      onboarding_intro_card: {
+        Row: {
+          id: number;
+          /** Admin-uploaded cover image (Supabase Storage, "onboarding-card" bucket) shown by the get-started flow's third step, before a first-time learner enters their opening lesson — null means "no image set yet" (see src/components/app/onboarding-intro-card.tsx's fallback). */
+          image_url: string | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          image_url?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["onboarding_intro_card"]["Insert"]>;
+        Relationships: [];
+      };
       lesson_completion_theme: {
         Row: {
           id: number;

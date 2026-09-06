@@ -119,6 +119,7 @@ export const ar: Dictionary = {
     advancedBody: "واثق من إنجليزيتك، وتبحث عن مفردات وتدريب أغنى.",
     skip: "سأختار بنفسي",
     back: "رجوع",
+    startCta: "ابدأ الدرس",
   },
   auth: {
     loginHeading: "مرحبًا بعودتك",

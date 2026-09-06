@@ -131,6 +131,7 @@ export const es: Dictionary = {
     advancedBody: "Con confianza en inglés, buscando vocabulario y práctica más ricos.",
     skip: "Elegiré yo mismo",
     back: "Atrás",
+    startCta: "Comenzar la lección",
   },
   auth: {
     loginHeading: "Bienvenido de nuevo",
