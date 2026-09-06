@@ -211,8 +211,17 @@ export function validateLessonInput(input: LessonInput): ValidationResult {
         );
       }
     } else if (input.mode === "normal" || input.mode === "conversation") {
+      // The three onboarding-* lessons (see OPENING_LESSON_ID in
+      // starting-level.ts) are a first-time visitor's one-off opening
+      // experience, not part of the ordinary numbered curriculum the
+      // exact-9 standard exists for (mode-section.tsx's lesson-count-times-9
+      // marketing stat is about that curriculum only) — they're exempt from
+      // it the same way Stories' arc-driven length already is, so their
+      // sentence count is free to match whatever the admin actually wrote.
+      const isExemptOnboardingLesson =
+        input.mode === "normal" && input.id?.startsWith("onboarding-");
       const requiredCount = REQUIRED_SENTENCE_COUNT[input.mode];
-      if (input.sentences.length !== requiredCount) {
+      if (!isExemptOnboardingLesson && input.sentences.length !== requiredCount) {
         errors.push(
           `${input.mode === "normal" ? "Lessons" : "Conversations"} must have exactly ${requiredCount} sentences (this one has ${input.sentences.length}).`,
         );
