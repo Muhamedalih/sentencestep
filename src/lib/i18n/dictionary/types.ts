@@ -521,6 +521,10 @@ export interface Dictionary {
     clickHint: string;
     /** The one word within `clickHint` that gets the highlight-mark treatment (see BookReadingSession's hint stack) — must be an exact, case-matching substring of that same locale's `clickHint`, or the highlight silently falls back to plain text. */
     clickHintHighlight: string;
+    /** Book Reading's manual advance control (read/listen-first redesign): moves to the next sentence without requiring it to be typed — typing stays available and optional, and still completes the sentence the same way it always has if the learner does type it. */
+    nextSentence: string;
+    /** Clickable invitation shown in place of TypingStats before the learner has typed anything this sentence (read/listen-first redesign) — makes the now-optional typing practice discoverable without requiring it. Clicking it just focuses the same always-present invisible input. */
+    typingInviteHint: string;
     /** Save + Note controls on the reading screen (Lightweight Save + Notes system) — `common.save`/`common.saved` label the Save toggle itself; these are the Note popover's own strings. */
     /** The combined Save/Note/Speed trigger's label (BookReadingTools) — kept short since it sits in a compact pill above the sentence. */
     readingToolsLabel: string;

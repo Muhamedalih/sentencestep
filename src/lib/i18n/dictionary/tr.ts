@@ -496,6 +496,8 @@ export const tr: Dictionary = {
     pageOfTotal: "Sayfa {n} / {total}",
     clickHint: "Bir kelimeyi vurgulamak için tıklayın.",
     clickHintHighlight: "vurgulamak",
+    nextSentence: "Sonraki",
+    typingInviteHint: "Yazma pratiği yapmak ister misin? Buraya dokun",
     readingToolsLabel: "Araçlar",
     noteAdd: "Not ekle",
     noteEdit: "Notu düzenle",

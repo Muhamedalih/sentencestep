@@ -503,6 +503,8 @@ export const es: Dictionary = {
     pageOfTotal: "Página {n} de {total}",
     clickHint: "Haz clic en una palabra para resaltarla.",
     clickHintHighlight: "resaltarla",
+    nextSentence: "Siguiente",
+    typingInviteHint: "¿Quieres practicar escribiendo? Toca aquí",
     readingToolsLabel: "Herramientas",
     noteAdd: "Añadir una nota",
     noteEdit: "Editar nota",

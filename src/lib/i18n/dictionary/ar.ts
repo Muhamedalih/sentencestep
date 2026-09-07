@@ -474,6 +474,8 @@ export const ar: Dictionary = {
     pageOfTotal: "صفحة {n} من {total}",
     clickHint: "انقر على الكلمة لتمييزها",
     clickHintHighlight: "تمييزها",
+    nextSentence: "التالي",
+    typingInviteHint: "حاب تتمرن على الكتابة؟ اضغط هنا",
     readingToolsLabel: "أدوات",
     noteAdd: "إضافة ملاحظة",
     noteEdit: "تعديل الملاحظة",

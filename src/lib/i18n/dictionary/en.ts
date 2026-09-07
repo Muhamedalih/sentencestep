@@ -487,6 +487,8 @@ export const en: Dictionary = {
     pageOfTotal: "Page {n} of {total}",
     clickHint: "Click a word to highlight it.",
     clickHintHighlight: "highlight",
+    nextSentence: "Next",
+    typingInviteHint: "Want to practice typing? Tap here",
     readingToolsLabel: "Tools",
     noteAdd: "Add a note",
     noteEdit: "Edit note",
