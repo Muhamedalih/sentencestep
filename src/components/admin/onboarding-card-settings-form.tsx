@@ -6,22 +6,30 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  applyOpeningLessonWordTranslations,
+  generateOpeningLessonVoice,
   removeOnboardingCardImage,
   removeOpeningLessonImage,
   saveOnboardingCardTitle,
+  setOpeningLessonVoice,
   uploadOnboardingCardImage,
   uploadOpeningLessonImage,
 } from "@/lib/admin/onboarding-card-actions";
 import { ONBOARDING_CARD_TITLE_MAX_LENGTH } from "@/lib/admin/onboarding-card-settings";
 import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-settings";
+import type { VoiceRow } from "@/lib/admin/voices-queries";
 import { cn } from "@/lib/utils";
 
 export function OnboardingCardSettingsForm({
   initial,
   initialLessonImageUrl,
+  initialLessonVoiceId,
+  voices,
 }: {
   initial: OnboardingCardSettings;
   initialLessonImageUrl: string | null;
+  initialLessonVoiceId: string | null;
+  voices: VoiceRow[];
 }) {
   const [title, setTitle] = useState(initial.title);
   const [url, setUrl] = useState(initial.imageUrl);
@@ -71,6 +79,56 @@ export function OnboardingCardSettingsForm({
       }
       setLessonImageUrl(null);
       setConfirmingLessonImageRemove(false);
+    });
+  }
+
+  const [voiceId, setVoiceId] = useState(initialLessonVoiceId ?? "");
+  const [voiceMessage, setVoiceMessage] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [isSavingVoice, startSavingVoice] = useTransition();
+  const [isGeneratingVoice, startGeneratingVoice] = useTransition();
+
+  function handleSaveVoice() {
+    setVoiceMessage(null);
+    startSavingVoice(async () => {
+      const result = await setOpeningLessonVoice(voiceId || null);
+      if (result.error) {
+        setVoiceMessage({ kind: "error", text: result.error });
+        return;
+      }
+      setVoiceMessage({ kind: "success", text: result.success ?? "Saved." });
+    });
+  }
+
+  function handleGenerateVoice() {
+    setVoiceMessage(null);
+    startGeneratingVoice(async () => {
+      const result = await generateOpeningLessonVoice();
+      if (result.error) {
+        setVoiceMessage({ kind: "error", text: result.error });
+        return;
+      }
+      setVoiceMessage({ kind: "success", text: result.success ?? "Generated." });
+    });
+  }
+
+  const [wordTranslationsMessage, setWordTranslationsMessage] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [isApplyingWordTranslations, startApplyingWordTranslations] = useTransition();
+
+  function handleApplyWordTranslations() {
+    setWordTranslationsMessage(null);
+    startApplyingWordTranslations(async () => {
+      const result = await applyOpeningLessonWordTranslations();
+      if (result.error) {
+        setWordTranslationsMessage({ kind: "error", text: result.error });
+        return;
+      }
+      setWordTranslationsMessage({ kind: "success", text: result.success ?? "Applied." });
     });
   }
 
@@ -317,6 +375,87 @@ export function OnboardingCardSettingsForm({
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Narration voice</CardTitle>
+          <CardDescription>
+            The voice heard on the opening lesson itself, for all three starting levels at once.
+            Picking a voice doesn&apos;t regenerate existing audio by itself — use &quot;Generate
+            audio&quot; below after changing it.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <select
+            value={voiceId}
+            onChange={(event) => setVoiceId(event.target.value)}
+            className="border-input bg-background h-11 rounded-lg border px-3 text-sm"
+          >
+            <option value="">Use default voice</option>
+            {voices.map((voice) => (
+              <option key={voice.id} value={voice.id}>
+                {voice.name} — {voice.gender === "female" ? "Female" : "Male"} / {voice.accent}
+              </option>
+            ))}
+          </select>
+          <div className="flex items-center gap-3">
+            <Button type="button" onClick={handleSaveVoice} disabled={isSavingVoice}>
+              {isSavingVoice ? "Saving…" : "Save voice"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerateVoice}
+              disabled={isGeneratingVoice}
+            >
+              {isGeneratingVoice ? "Generating…" : "Generate audio"}
+            </Button>
+            {voiceMessage && (
+              <p
+                role={voiceMessage.kind === "error" ? "alert" : undefined}
+                className={cn(
+                  "text-sm",
+                  voiceMessage.kind === "error" ? "text-danger" : "text-muted-foreground",
+                )}
+              >
+                {voiceMessage.text}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Word-by-word translations</CardTitle>
+          <CardDescription>
+            The per-word Arabic gloss a learner sees under the word they&apos;re currently typing.
+            Applies the hand-authored word list for all 5 opening-lesson sentences to all three
+            starting levels at once.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleApplyWordTranslations}
+            disabled={isApplyingWordTranslations}
+          >
+            {isApplyingWordTranslations ? "Applying…" : "Apply word-by-word translations"}
+          </Button>
+          {wordTranslationsMessage && (
+            <p
+              role={wordTranslationsMessage.kind === "error" ? "alert" : undefined}
+              className={cn(
+                "text-sm",
+                wordTranslationsMessage.kind === "error" ? "text-danger" : "text-muted-foreground",
+              )}
+            >
+              {wordTranslationsMessage.text}
+            </p>
+          )}
         </CardContent>
       </Card>
 

@@ -53,3 +53,24 @@ export async function getOpeningLessonIllustration(): Promise<string | null> {
   if (error || !data) return null;
   return data.illustration_url;
 }
+
+/**
+ * Reads the shared narration voice the three OPENING_LESSON_IDS lessons
+ * carry (see setOpeningLessonVoice in onboarding-card-actions.ts) — only
+ * onboarding-beginner's own row is queried since a shared change always
+ * writes the identical voice_id to all three, so any one of them is
+ * representative for showing the admin what's currently set.
+ */
+export async function getOpeningLessonVoiceId(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("voice_id")
+    .eq("id", "onboarding-beginner")
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.voice_id;
+}

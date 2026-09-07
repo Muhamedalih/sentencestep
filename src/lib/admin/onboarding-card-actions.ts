@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { ONBOARDING_CARD_TITLE_MAX_LENGTH } from "@/lib/admin/onboarding-card-settings";
+import { generateLessonVoice, setContentVoiceOverride } from "@/lib/admin/voice-generation-actions";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -299,4 +300,170 @@ export async function removeOpeningLessonImage(): Promise<ActionResult> {
   revalidatePath("/admin/content");
   for (const lessonId of OPENING_LESSON_IDS) revalidatePath(`/learn/normal/${lessonId}`);
   return { success: "Image removed." };
+}
+
+/**
+ * Sets the narration voice for all three OPENING_LESSON_IDS lessons at
+ * once, one picker instead of three separate trips to the Story audio
+ * status dashboard's per-row pickers. Reuses setContentVoiceOverride
+ * (voice-generation-actions.ts) rather than writing lessons.voice_id
+ * directly, so this goes through the exact same write every other narration
+ * override in the app already does. Picking a voice here does not by
+ * itself regenerate any already-cached audio — see generateOpeningLessonVoice
+ * below for that, mirroring the dashboard's own "pick, then Generate"
+ * two-step shape (VoiceDashboardRow's doc comment explains why: a picked
+ * voice with no generation yet must never silently claim existing audio was
+ * re-narrated).
+ */
+export async function setOpeningLessonVoice(voiceId: string | null): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const results = await Promise.all(
+    OPENING_LESSON_IDS.map((id) => setContentVoiceOverride("normal", id, voiceId)),
+  );
+  const failed = results.find((result) => result.error);
+  if (failed) return { error: failed.error };
+
+  void logAdminAction("onboarding_intro_card.lesson_voice_updated", "lessons", null, {
+    lessonIds: OPENING_LESSON_IDS,
+    voiceId,
+  });
+  revalidatePath("/admin/onboarding-card");
+  return { success: voiceId ? "Voice saved." : "Reset to the default voice." };
+}
+
+/**
+ * Generates (or regenerates) narration audio for all three
+ * OPENING_LESSON_IDS lessons using whatever voice_id they currently carry —
+ * the second step after setOpeningLessonVoice, same two-step shape as the
+ * Story audio status dashboard's own per-row picker + Generate button.
+ * Reuses generateLessonVoice, so this is exactly what clicking "Generate"
+ * three times on that dashboard would do, just from the one shared control
+ * here.
+ */
+export async function generateOpeningLessonVoice(): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const results = await Promise.all(OPENING_LESSON_IDS.map((id) => generateLessonVoice(id)));
+  const failed = results.find((result) => result.error);
+  if (failed) return { error: failed.error };
+
+  revalidatePath("/admin/onboarding-card");
+  return { success: "Audio generated for all three starting levels." };
+}
+
+/**
+ * Hand-authored per-word gloss for each of the 5 opening-lesson sentences,
+ * one {en, ar} pair per whitespace-separated token of the English text
+ * (punctuation stays attached to its word, e.g. "simple" not "simple.") —
+ * same shape/convention as the original hand-authored word lists in
+ * 20250113000000_word_translations.sql and scripts/insert-new-normal-lessons.ts.
+ * This is the ONLY path that ever populates sentences.word_translations
+ * (see CurrentWordCard, the typing-time "current word" gloss) — the admin
+ * CMS has no editor field for it and the AI translation pipeline only
+ * translates an already-populated list into other locales, never invents
+ * one — so, like every other lesson's word list before it, this has to be
+ * hand-typed rather than collected through a form. Indexed 0-4 to match
+ * each lesson's sentence order_index (all three OPENING_LESSON_IDS share
+ * the exact same 5 sentences, so one list applies to all three).
+ */
+const OPENING_LESSON_WORD_TRANSLATIONS: { en: string; ar: string }[][] = [
+  [
+    { en: "Learning", ar: "تعلّم" },
+    { en: "English", ar: "الإنجليزية" },
+    { en: "can", ar: "يمكن" },
+    { en: "be", ar: "أن يكون" },
+    { en: "simple", ar: "بسيطاً" },
+  ],
+  [
+    { en: "You", ar: "أنتَ" },
+    { en: "listen,", ar: "تستمع" },
+    { en: "you", ar: "أنتَ" },
+    { en: "type,", ar: "تكتب" },
+    { en: "and", ar: "و" },
+    { en: "you", ar: "أنتَ" },
+    { en: "learn", ar: "تتعلّم" },
+    { en: "one", ar: "واحدة" },
+    { en: "sentence", ar: "جملة" },
+    { en: "at", ar: "في" },
+    { en: "a", ar: "كل" },
+    { en: "time", ar: "مرة" },
+  ],
+  [
+    { en: "Make", ar: "ارتكب" },
+    { en: "a", ar: "واحد" },
+    { en: "mistake,", ar: "خطأ" },
+    { en: "try", ar: "حاول" },
+    { en: "again,", ar: "مجدداً" },
+    { en: "and", ar: "و" },
+    { en: "keep", ar: "استمر" },
+    { en: "going", ar: "مستمراً" },
+  ],
+  [
+    { en: "With", ar: "مع" },
+    { en: "every", ar: "كل" },
+    { en: "sentence,", ar: "جملة" },
+    { en: "English", ar: "الإنجليزية" },
+    { en: "starts", ar: "تبدأ" },
+    { en: "to", ar: "أن" },
+    { en: "feel", ar: "تشعر" },
+    { en: "more", ar: "أكثر" },
+    { en: "natural", ar: "طبيعية" },
+  ],
+  [
+    { en: "So", ar: "لذا" },
+    { en: "take", ar: "خذ" },
+    { en: "your", ar: "لك" },
+    { en: "first", ar: "الأولى" },
+    { en: "step,", ar: "خطوة" },
+    { en: "and", ar: "و" },
+    { en: "let", ar: "دع" },
+    { en: "your", ar: "لك" },
+    { en: "English", ar: "الإنجليزية" },
+    { en: "grow", ar: "تنمو" },
+    { en: "from", ar: "من" },
+    { en: "here", ar: "هنا" },
+  ],
+];
+
+/**
+ * Writes OPENING_LESSON_WORD_TRANSLATIONS onto all 15 opening-lesson
+ * sentences (5 sentences × 3 OPENING_LESSON_IDS) — a one-time data fill,
+ * not an ongoing setting, so this is a single button rather than a form:
+ * see the "Word-by-word translations" card in the onboarding-card page.
+ * Safe to run again later (e.g. after a wording tweak) since it always
+ * overwrites with the current OPENING_LESSON_WORD_TRANSLATIONS content.
+ */
+export async function applyOpeningLessonWordTranslations(): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const supabase = await createClient();
+
+  const updates = OPENING_LESSON_IDS.flatMap((lessonId) =>
+    OPENING_LESSON_WORD_TRANSLATIONS.map((wordTranslations, index) =>
+      supabase
+        .from("sentences")
+        .update({ word_translations: wordTranslations, updated_at: new Date().toISOString() })
+        .eq("id", `${lessonId}-s${index + 1}`),
+    ),
+  );
+  const results = await Promise.all(updates);
+  const failed = results.find((result) => result.error);
+  if (failed) {
+    console.error("[admin] applyOpeningLessonWordTranslations: update failed", {
+      code: failed.error?.code,
+      message: failed.error?.message,
+    });
+    return { error: "Couldn't save the word translations. Please try again." };
+  }
+
+  void logAdminAction("onboarding_intro_card.word_translations_applied", "sentences", null, {
+    lessonIds: OPENING_LESSON_IDS,
+  });
+  revalidatePath("/admin/onboarding-card");
+  for (const lessonId of OPENING_LESSON_IDS) revalidatePath(`/learn/normal/${lessonId}`);
+  return { success: "Word-by-word translations applied to all three starting levels." };
 }
