@@ -278,6 +278,26 @@ export function BookReadingSession({
     }
   }
 
+  /**
+   * Moves the active pointer back one sentence for review — client-only,
+   * bounded to the current section (there's no fetchSectionBefore the way
+   * fetchSectionAfterAction covers the forward direction, matching
+   * BookPageNav's own page-navigation boundary). Never touches
+   * completedCount/XP/book_progress: those are only ever written by
+   * completeSentence, which this doesn't call. If the reader presses "next
+   * sentence" again from here, that re-completes the same sentence they'd
+   * already completed before — completeBookSentence's compare-and-swap
+   * already makes that a safe no-op server-side (see handleSentenceComplete
+   * above), so going back and forward freely can never double-count.
+   */
+  function goToPreviousSentence() {
+    if (sentenceIndex === 0) return;
+    const prevIndex = sentenceIndex - 1;
+    const prevSentence = section.sentences[prevIndex]!;
+    setSentenceIndex(prevIndex);
+    setViewPageIndex(findPageIndexForSentenceId(pages, prevSentence.id));
+  }
+
   function handleContinueToNextSection() {
     if (!pendingNextSection) return;
     setSection(pendingNextSection);
@@ -358,24 +378,30 @@ export function BookReadingSession({
             {/*
               Reuses the main lessons' exact ShiftReplayHint pill/position
               (fixed bottom-right, same pill styling, same isActive gating)
-              rather than approximating it — see that component's own doc
-              comment for what `below` adds: one more instructional line,
-              sharing the same anchor/gap, for the click-to-highlight hint
-              that used to sit centered under BookPageNav. Scoped to the
-              "reading" screen only (this branch), matching where that hint
+              rather than approximating it. Reader feedback: with the
+              click-to-highlight hint no longer stacked underneath it (see
+              the separate bottom-left hint below), this now renders exactly
+              like every other lesson mode's Shift hint. Scoped to the
+              "reading" screen only (this branch), matching where this hint
               was always shown before — section intro/complete and book
               complete never had it and still don't.
             */}
-            <ShiftReplayHint
-              below={
-                <p dir={dir} className="text-muted-foreground/70 text-end text-sm">
-                  {renderHintWithHighlight(
-                    t.bookLibrary.clickHint,
-                    t.bookLibrary.clickHintHighlight,
-                  )}
-                </p>
-              }
-            />
+            <ShiftReplayHint />
+            {/*
+              The click-to-highlight hint used to stack directly under the
+              Shift pill (same bottom-right corner) — reader feedback moved
+              it to its own bottom-left corner instead, so the two
+              instructional hints read as two distinct, uncluttered notes
+              rather than one dense stack. Purely informational (aria-hidden,
+              pointer-events-none), matching the Shift pill's own treatment.
+            */}
+            <p
+              aria-hidden="true"
+              dir={dir}
+              className="text-muted-foreground/70 pointer-events-none fixed bottom-4 left-4 z-30 text-sm select-none sm:bottom-6 sm:left-6"
+            >
+              {renderHintWithHighlight(t.bookLibrary.clickHint, t.bookLibrary.clickHintHighlight)}
+            </p>
             <div className="shrink-0 px-6 pt-3 lg:px-16 lg:pt-4">
               {/*
                 Just the centered book title now — the section-title (start)
@@ -451,6 +477,9 @@ export function BookReadingSession({
                         resolvedVoiceId={resolvedVoiceId}
                         readOnly={!isActiveSentence}
                         large={isActiveSentence || viewedPage.length === 1}
+                        onPrevious={
+                          isActiveSentence && sentenceIndex > 0 ? goToPreviousSentence : undefined
+                        }
                         onComplete={isActiveSentence ? handleSentenceComplete : NOOP}
                         onCorrectLetter={
                           isActiveSentence

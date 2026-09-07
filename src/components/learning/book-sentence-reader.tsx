@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { BookReadingTools } from "@/components/learning/book-reading-tools";
@@ -45,6 +45,7 @@ export function BookSentenceReader({
   onCorrectLetter,
   onErrorLetter,
   onAudioPlay,
+  onPrevious,
   readOnly = false,
   large,
   mark,
@@ -67,6 +68,8 @@ export function BookSentenceReader({
   onCorrectLetter: () => void;
   onErrorLetter?: () => void;
   onAudioPlay?: () => void;
+  /** Moves the active pointer back to the previous sentence in this section for review (a local, client-only step — never un-records a completion already saved server-side; re-completing that sentence afterward is a safe idempotent no-op). Omit to hide the "previous sentence" control entirely — BookReadingSession only supplies it once there IS a previous sentence in this section. */
+  onPrevious?: () => void;
   /**
    * Page-navigation preview (Book Reading Experience Enhancements, addition
    * 2): true for a sentence the reader has paged to that isn't their actual
@@ -157,14 +160,17 @@ export function BookSentenceReader({
   // fully-bright, fully-readable state as a read-only page-preview sentence
   // (every letter "correct") rather than the typing screen's usual muted
   // "nothing typed yet" gray — reading and listening are the default here,
-  // not a paused typing exercise. The instant the learner actually types a
-  // first character, this switches to the engine's real letterStates and
-  // behaves exactly like every other typing screen from then on; nothing
-  // about useTypingEngine's own validation, sectionAccuracy, or onComplete
-  // changes — this is a rendering-only decision.
+  // not a paused typing exercise. Clicking the "want to practice typing?"
+  // hint below (practiceMode) or just typing directly switches this sentence
+  // to the same muted-until-typed system every other lesson mode (Normal,
+  // Stories) already uses: engine.letterStates, starting all-pending/gray
+  // and turning white as each real keystroke lands — nothing about
+  // useTypingEngine's own validation, sectionAccuracy, or onComplete
+  // changes, this is a rendering-only decision.
+  const [practiceMode, setPracticeMode] = useState(false);
   const hasStartedTyping = !readOnly && engine.typed.length > 0;
   const displayLetterStates =
-    readOnly || !hasStartedTyping
+    readOnly || (!practiceMode && !hasStartedTyping)
       ? getLetterStates(sentence.en, sentence.en, null)
       : engine.letterStates;
   const isLarge = large ?? !readOnly;
@@ -198,20 +204,28 @@ export function BookSentenceReader({
       </div>
 
       {!readOnly && (
-        <div className="mb-2 flex justify-center">
-          <PronunciationButton
-            text={sentence.en}
-            audioUrl={sentence.audioUrl}
-            onPlay={onAudioPlay}
-            autoPlay
-            resetKey={sentence.id}
-            inputRef={engine.inputRef}
-            kokoroVoiceId={resolvedVoiceId}
-            contentType="book_sentence"
-            contentId={sentence.id}
-            className="bg-accent/15 text-accent hover:bg-accent/25 hover:text-accent size-11 rounded-full [&_svg]:size-5"
-          />
-        </div>
+        // Reader feedback: with audio already autoplaying and the Shift
+        // shortcut already covering manual replay (see ShiftReplayHint),
+        // a big dedicated Play button had no function beyond what Shift
+        // already did — removed to give the sentences the space it took.
+        // Still mounted (just visually `hidden`), never removed from the
+        // tree: this is what actually fires the autoplay on mount AND
+        // registers this sentence's audio with the global Shift-replay
+        // hook (see PronunciationButton's own registerReplay effect) —
+        // losing either of those would silently break Shift-to-replay too,
+        // not just autoplay.
+        <PronunciationButton
+          text={sentence.en}
+          audioUrl={sentence.audioUrl}
+          onPlay={onAudioPlay}
+          autoPlay
+          resetKey={sentence.id}
+          inputRef={engine.inputRef}
+          kokoroVoiceId={resolvedVoiceId}
+          contentType="book_sentence"
+          contentId={sentence.id}
+          className="hidden"
+        />
       )}
 
       <TypingText
@@ -250,33 +264,43 @@ export function BookSentenceReader({
           ) : (
             // Read/listen-first redesign: before the learner has typed
             // anything, WPM/accuracy have nothing real to report, so this
-            // slot instead invites the optional typing practice — clicking
-            // it just focuses the same invisible input TypingText's own
-            // click-anywhere-on-the-text already focuses, it's only a more
-            // discoverable entry point for someone who wouldn't guess the
-            // text itself is typeable now that it no longer looks muted/
-            // waiting-to-be-typed (see displayLetterStates above).
+            // slot instead invites the optional typing practice. Clicking it
+            // now does two things, not just focus: it flips practiceMode on,
+            // switching the sentence to the same muted-until-typed system
+            // Normal/Stories already use (see displayLetterStates above) —
+            // without that, the text already looked fully typed, so the
+            // click had no visible effect at all.
             <button
               type="button"
-              onClick={() => engine.inputRef.current?.focus()}
+              onClick={() => {
+                setPracticeMode(true);
+                engine.inputRef.current?.focus();
+              }}
               className="text-muted-foreground hover:text-foreground text-sm transition-colors hover:underline"
             >
               ✎ {t.bookLibrary.typingInviteHint}
             </button>
           )}
-          {/*
-            Typing a sentence correctly still completes it exactly as before
-            (engine.onComplete, wired below), but it's no longer the only way
-            to move on — the text is already fully readable and the audio
-            already autoplays, so a learner who just wants to read and listen
-            can advance with this button instead of being required to type.
-            sectionAccuracy in BookReadingSession already defaults to 1 when
-            nothing was typed this section, so pressing this never costs XP
-            relative to typing.
-          */}
-          <Button onClick={() => onComplete(engine.wpm)} size="sm">
-            {t.bookLibrary.nextSentence}
-          </Button>
+          <div className="flex items-center gap-2">
+            {onPrevious && (
+              <Button onClick={onPrevious} size="sm" variant="secondary">
+                {t.bookLibrary.previousSentence}
+              </Button>
+            )}
+            {/*
+              Typing a sentence correctly still completes it exactly as
+              before (engine.onComplete, wired below), but it's no longer
+              the only way to move on — the text is already fully readable
+              and the audio already autoplays, so a learner who just wants
+              to read and listen can advance with this button instead of
+              being required to type. sectionAccuracy in BookReadingSession
+              already defaults to 1 when nothing was typed this section, so
+              pressing this never costs XP relative to typing.
+            */}
+            <Button onClick={() => onComplete(engine.wpm)} size="sm">
+              {t.bookLibrary.nextSentence}
+            </Button>
+          </div>
         </div>
       )}
     </motion.div>
