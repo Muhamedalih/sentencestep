@@ -36,12 +36,19 @@ export function PronunciationButton({
   kokoroVoiceId,
   contentType,
   contentId,
+  label,
+  variant = "ghost",
+  size = "icon",
 }: {
   text: string;
   audioUrl?: string | null;
   /** Fired once per successful play press, regardless of source — lets a caller record a lightweight "pronunciation was used" signal without this component knowing about analytics. */
   onPlay?: () => void;
   className?: string;
+  /** When set, renders as a labeled icon+text button (e.g. Word Lists' Learn view "Replay" control) instead of the default icon-only ghost button. The click/playback/shortcut-registration logic is identical either way. */
+  label?: string;
+  variant?: "ghost" | "outline" | "secondary";
+  size?: "icon" | "sm" | "default";
   /** Pronounce the full text once automatically, the moment `resetKey` changes — the same play logic the manual click uses, so auto-play and replay can never drift apart. */
   autoPlay?: boolean;
   /** Required when autoPlay is set — pass the sentence id, not the text, so re-renders of the same sentence never re-trigger it. */
@@ -223,15 +230,17 @@ export function PronunciationButton({
   return (
     <Button
       type="button"
-      variant="ghost"
-      size="icon"
+      variant={variant}
+      size={size}
       onClick={handleClick}
       // Only guards the new on-demand-generation path — a clip already
       // loading from a static audioUrl stays clickable exactly as before,
       // since that repeat-click behavior was never a problem this needed
       // to solve.
       disabled={isResolvingKokoro}
-      aria-label={isPlaying ? t.pronunciation.replayLabel : t.pronunciation.playLabel}
+      aria-label={
+        label ? undefined : isPlaying ? t.pronunciation.replayLabel : t.pronunciation.playLabel
+      }
       className={cn(
         "text-muted-foreground shrink-0",
         isPlaying && "text-[var(--lesson-icon)]",
@@ -239,13 +248,20 @@ export function PronunciationButton({
       )}
     >
       {isLoading ? (
-        <Loader2 className={cn("size-5", !reducedMotion && "animate-spin")} aria-hidden="true" />
+        <Loader2
+          className={cn(size === "icon" ? "size-5" : "size-4", !reducedMotion && "animate-spin")}
+          aria-hidden="true"
+        />
       ) : (
         <Volume2
-          className={cn("size-5", isPlaying && !reducedMotion && "animate-pulse")}
+          className={cn(
+            size === "icon" ? "size-5" : "size-4",
+            isPlaying && !reducedMotion && "animate-pulse",
+          )}
           aria-hidden="true"
         />
       )}
+      {label && <span>{label}</span>}
     </Button>
   );
 }

@@ -20,6 +20,7 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
+import { splitWordHint } from "@/lib/word-lists-hint";
 import type { VocabularyWord, WordGroup } from "@/types/word-lists";
 
 /** Words per practice block — see the queue/block state in VocabularyPractice. Groups no longer all share one fixed word count (20-30, see the word-lists content expansion); this just chunks whatever length a group actually has, with a shorter final block when it doesn't divide evenly. */
@@ -77,7 +78,6 @@ export function VocabularyPractice({
   const currentBlock = blocks[blockIndex] ?? [];
   const currentSlot: number | undefined = queue[0];
   const blockSize = currentBlock.length;
-  const positionInBlock = Math.min(doneInBlock.size + 1, blockSize || 1);
 
   // Once every slot in the current block has been resolved correctly (the
   // queue drains to empty), advance to the next block or finish the lesson.
@@ -115,6 +115,9 @@ export function VocabularyPractice({
   const total = group.words.length;
   const word = currentSlot !== undefined ? currentBlock[currentSlot] : undefined;
   const completedCount = completedCountIn(group.words.map((w) => w.id));
+  const hint = word?.supportHint
+    ? splitWordHint(word.supportHint)
+    : { term: undefined, definition: undefined };
 
   // Same fix as LessonSession's identical effect: while the learner types
   // the current word, resolve the NEXT word's pronunciation in the
@@ -171,12 +174,32 @@ export function VocabularyPractice({
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            {t.wordLists.navLabel}
+            <span dir="ltr">{group.title}</span>
           </Link>
-          {!isComplete && blockSize > 0 && (
-            <span className="text-muted-foreground shrink-0 text-sm font-medium" dir="ltr">
-              {positionInBlock} / {blockSize}
-            </span>
+          {!isComplete && word && (
+            <div className="flex shrink-0 items-center gap-3">
+              {blockSize > 0 && (
+                <span className="text-muted-foreground text-sm font-medium" dir="ltr">
+                  {doneInBlock.size} / {blockSize}
+                </span>
+              )}
+              <PronunciationButton
+                // Only the target word is pronounced — never the full
+                // sentence. This is the one rule this whole screen is
+                // built around; see the component doc comment above.
+                text={word.targetWord}
+                audioUrl={word.audioUrl}
+                autoPlay
+                resetKey={word.id}
+                inputRef={inputRef}
+                kokoroVoiceId={defaultVoiceId}
+                contentType="word"
+                contentId={word.id}
+                label={t.wordLists.replayAction}
+                variant="outline"
+                size="sm"
+              />
+            </div>
           )}
         </div>
         {previewMode && (
@@ -243,43 +266,48 @@ export function VocabularyPractice({
               initial={false}
               className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16"
             >
-              <div className="flex w-full max-w-2xl items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                  {t.wordLists.wordListBadge}
-                </span>
-                <PronunciationButton
-                  // Only the target word is pronounced — never the full
-                  // sentence. This is the one rule this whole screen is
-                  // built around; see the component doc comment above.
-                  text={word.targetWord}
-                  audioUrl={word.audioUrl}
-                  onPlay={undefined}
-                  autoPlay
-                  resetKey={word.id}
-                  inputRef={inputRef}
-                  kokoroVoiceId={defaultVoiceId}
-                  contentType="word"
-                  contentId={word.id}
-                />
-              </div>
-
               {/* The support-language meaning first, English sentence second
                   and clearly larger — the learner reads what the word means,
-                  hears it (above), then has to recall and type it below.
-                  Never falls back to word.hintAr for Spanish (same rule as
-                  typing-sentence.tsx's supportText) — and unlike sentence
-                  translations, there's no neutral English hint field to fall
-                  back to either (see types/word-lists.ts's hintAr doc
-                  comment), so a genuinely missing translation renders
-                  nothing here rather than a semantically wrong stand-in. */}
-              {word.supportHint && (
-                <p
-                  className="text-foreground w-full max-w-2xl text-center text-2xl font-semibold text-balance sm:text-3xl"
-                  dir={dir}
-                >
-                  {word.supportHint}
-                </p>
+                  hears it (via the header's Replay button), then has to
+                  recall and type it below. Never falls back to word.hintAr
+                  for Spanish (same rule as typing-sentence.tsx's
+                  supportText) — and unlike sentence translations, there's
+                  no neutral English hint field to fall back to either (see
+                  types/word-lists.ts's hintAr doc comment), so a genuinely
+                  missing translation renders nothing here rather than a
+                  semantically wrong stand-in. Split into a short term and a
+                  longer definition line via splitWordHint — the same
+                  "term: definition" shape VocabularyLearn reads the same
+                  content with. */}
+              {hint.term && (
+                <div className="flex w-full max-w-2xl flex-col items-center gap-1.5 text-center">
+                  {hint.definition ? (
+                    <>
+                      <p className="text-muted-foreground text-sm font-medium" dir={dir}>
+                        {hint.term}
+                      </p>
+                      <p
+                        className="text-foreground text-xl font-semibold text-balance sm:text-2xl"
+                        dir={dir}
+                      >
+                        {hint.definition}
+                      </p>
+                    </>
+                  ) : (
+                    // No colon to split on — the term IS the whole hint (see
+                    // splitWordHint), so it takes the definition's own
+                    // prominent size rather than shrinking to a caption.
+                    <p
+                      className="text-foreground text-2xl font-semibold text-balance sm:text-3xl"
+                      dir={dir}
+                    >
+                      {hint.term}
+                    </p>
+                  )}
+                </div>
               )}
+
+              <div className="bg-border h-10 w-px" aria-hidden="true" />
 
               <div className="w-full max-w-2xl">
                 <VocabularySentence

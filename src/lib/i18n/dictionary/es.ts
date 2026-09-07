@@ -443,6 +443,13 @@ export const es: Dictionary = {
     lockedBody:
       "Esta lista de palabras es parte de SentenceStep Premium. Mejora tu plan para desbloquearla, junto con cada uno de los demás grupos de vocabulario.",
     wordsAndHintDetail: "20 palabras, cada una con una oración de contexto y una pista.",
+    learnAction: "Aprender",
+    practiceAction: "Practicar",
+    startTest: "Comenzar la prueba",
+    replayAction: "Repetir",
+    wordListPanelAria: "Lista de palabras",
+    prevWordAria: "Palabra anterior",
+    nextWordAria: "Palabra siguiente",
   },
   library: {
     storiesHeading: "Historias",

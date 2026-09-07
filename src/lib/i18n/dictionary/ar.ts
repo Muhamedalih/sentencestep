@@ -415,6 +415,13 @@ export const ar: Dictionary = {
     lockedBody:
       "قائمة الكلمات هذه جزء من SentenceStep المميز. قم بالترقية لفتحها — وكل مجموعة كلمات أخرى.",
     wordsAndHintDetail: "20 كلمة، لكل واحدة جملة سياق وتلميح.",
+    learnAction: "تعلّم",
+    practiceAction: "تدرّب",
+    startTest: "ابدأ الاختبار",
+    replayAction: "Replay",
+    wordListPanelAria: "قائمة الكلمات",
+    prevWordAria: "الكلمة السابقة",
+    nextWordAria: "الكلمة التالية",
   },
   library: {
     storiesHeading: "القصص",

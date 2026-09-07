@@ -428,6 +428,13 @@ export const en: Dictionary = {
     lockedBody:
       "This word list is part of SentenceStep Premium. Upgrade to unlock it — and every other vocabulary group.",
     wordsAndHintDetail: "20 words, one context sentence and hint each",
+    learnAction: "Learn",
+    practiceAction: "Practice",
+    startTest: "Start the test",
+    replayAction: "Replay",
+    wordListPanelAria: "Word list",
+    prevWordAria: "Previous word",
+    nextWordAria: "Next word",
   },
   library: {
     storiesHeading: "Stories",

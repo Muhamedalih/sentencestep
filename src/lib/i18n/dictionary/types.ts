@@ -450,6 +450,20 @@ export interface Dictionary {
     lockedBadge: string;
     lockedBody: string;
     wordsAndHintDetail: string;
+    /** Label for the "Learn" action (flashcard/study view) — one of the two choices offered when a word-group card expands, alongside practiceAction. */
+    learnAction: string;
+    /** Label for the "Practice" action (the existing fill-in-the-blank exercise) — the card expansion's other choice. */
+    practiceAction: string;
+    /** Button at the bottom of the Learn flashcard view that hands off to the practice exercise for the same group. */
+    startTest: string;
+    /** Label for the Learn view's labeled replay button (PronunciationButton's `label` prop) — deliberately kept as the English word across locales to match the app's existing convention of English micro-copy for playback controls (see pronunciation.replayHint's "Shift" keycap). */
+    replayAction: string;
+    /** Aria-label for the Learn view's sidebar-toggle button (shows/hides the full word list panel). */
+    wordListPanelAria: string;
+    /** Aria-label for the Learn view's "previous word" arrow control. */
+    prevWordAria: string;
+    /** Aria-label for the Learn view's "next word" arrow control. */
+    nextWordAria: string;
   };
   library: {
     storiesHeading: string;

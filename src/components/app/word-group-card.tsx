@@ -1,10 +1,12 @@
 "use client";
 
+import { useId, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ChevronRight, Lock } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, ChevronRight, GraduationCap, Lock, PencilLine } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -22,10 +24,17 @@ const TIER_CARD_ACCENT: Record<number, string> = {
 /**
  * One vocabulary group in the Word Lists library — the group-level
  * equivalent of story-card.tsx, but for a word count + optional
- * completed-count instead of a lesson's sentence count. Locked state
- * mirrors StoryCard's exact pattern (a lock badge, not a disabled link —
- * clicking still navigates, and the practice screen itself explains the
- * lock, same as PremiumLocked does for lessons).
+ * completed-count instead of a lesson's sentence count.
+ *
+ * Locked state mirrors StoryCard's exact pattern (a lock badge, not a
+ * disabled link — clicking still navigates, and the practice screen itself
+ * explains the lock, same as PremiumLocked does for lessons).
+ *
+ * An unlocked card no longer navigates on click — it expands in place to
+ * offer the two ways to work through the group: Learn (the flashcard/study
+ * view at .../learn) or Practice (the existing fill-in-the-blank exercise).
+ * Only one action needs a click to reach, same cost as the old direct link,
+ * but the learner now picks which mode before committing to either screen.
  */
 export function WordGroupCard({
   group,
@@ -42,38 +51,72 @@ export function WordGroupCard({
   const percent = group.wordCount === 0 ? 0 : Math.round((completedCount / group.wordCount) * 100);
   const { dir, t } = useLocale();
   const supportTitle = group.supportTitle ?? group.title;
+  const [expanded, setExpanded] = useState(false);
+  const panelId = useId();
 
-  return (
-    <motion.div
-      variants={fadeInUp}
-      whileHover={locked ? undefined : { scale: 1.025 }}
-      transition={{ type: "spring", stiffness: 400, damping: 22 }}
-    >
-      <Link
-        href={`/learn/word-lists/${group.id}`}
-        aria-label={
-          locked ? t.premium.lockedContentAriaLabel.replace("{title}", group.title) : group.title
-        }
-        className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-      >
-        <Card
-          className={cn(
-            "flex-row items-center justify-between gap-3 border-l-[3px] px-4 py-3.5 transition-[box-shadow,background-color] duration-200",
-            locked ? "opacity-80" : ["hover:shadow-md", TIER_CARD_ACCENT[group.level]],
-          )}
+  if (locked) {
+    return (
+      <motion.div variants={fadeInUp}>
+        <Link
+          href={`/learn/word-lists/${group.id}`}
+          aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
+          className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="truncate font-medium" dir="ltr">
-                {group.title}
-              </p>
-              {locked && (
+          <Card
+            className={cn(
+              "flex-row items-center justify-between gap-3 border-l-[3px] px-4 py-3.5 opacity-80 transition-[box-shadow,background-color] duration-200",
+            )}
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate font-medium" dir="ltr">
+                  {group.title}
+                </p>
                 <Badge variant="muted" className="shrink-0">
                   <Lock aria-hidden="true" />
                   {t.wordLists.premiumGroup}
                 </Badge>
-              )}
+              </div>
+              <p className="text-muted-foreground truncate text-sm" dir={dir}>
+                {supportTitle}
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-muted-foreground text-xs font-medium">
+                  {t.wordLists.wordCount.replace("{n}", String(group.wordCount))}
+                </span>
+              </div>
             </div>
+            <ChevronRight className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+          </Card>
+        </Link>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      variants={fadeInUp}
+      whileHover={{ scale: 1.025 }}
+      transition={{ type: "spring", stiffness: 400, damping: 22 }}
+    >
+      <Card
+        className={cn(
+          "gap-0 overflow-hidden border-l-[3px] p-0 transition-[box-shadow,background-color] duration-200",
+          "hover:shadow-md",
+          TIER_CARD_ACCENT[group.level],
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          aria-expanded={expanded}
+          aria-controls={panelId}
+          className="focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-between gap-3 px-4 py-3.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium" dir="ltr">
+              {group.title}
+            </p>
             <p className="text-muted-foreground truncate text-sm" dir={dir}>
               {supportTitle}
             </p>
@@ -95,9 +138,43 @@ export function WordGroupCard({
               )}
             </div>
           </div>
-          <ChevronRight className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-        </Card>
-      </Link>
+          <ChevronDown
+            className={cn(
+              "text-muted-foreground size-4 shrink-0 transition-transform duration-200",
+              expanded && "rotate-180",
+            )}
+            aria-hidden="true"
+          />
+        </button>
+
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div
+              id={panelId}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="flex items-center gap-2 px-4 pt-1 pb-4">
+                <Button asChild variant="outline" className="flex-1 gap-1.5">
+                  <Link href={`/learn/word-lists/${group.id}/learn`}>
+                    <GraduationCap className="size-4" aria-hidden="true" />
+                    {t.wordLists.learnAction}
+                  </Link>
+                </Button>
+                <Button asChild variant="accent" className="flex-1 gap-1.5">
+                  <Link href={`/learn/word-lists/${group.id}`}>
+                    <PencilLine className="size-4" aria-hidden="true" />
+                    {t.wordLists.practiceAction}
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
     </motion.div>
   );
 }

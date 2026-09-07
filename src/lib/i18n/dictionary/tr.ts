@@ -437,6 +437,13 @@ export const tr: Dictionary = {
     lockedBody:
       "Bu kelime listesi SentenceStep Premium'un bir parçasıdır. Diğer tüm kelime gruplarıyla birlikte kilidini açmak için planınızı yükseltin.",
     wordsAndHintDetail: "Her biri bir bağlam cümlesi ve bir ipucuyla birlikte 20 kelime.",
+    learnAction: "Öğren",
+    practiceAction: "Alıştır",
+    startTest: "Teste başla",
+    replayAction: "Tekrar",
+    wordListPanelAria: "Kelime listesi",
+    prevWordAria: "Önceki kelime",
+    nextWordAria: "Sonraki kelime",
   },
   library: {
     storiesHeading: "Hikayeler",
