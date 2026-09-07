@@ -34,12 +34,11 @@ export async function setPreferredLanguageAction(locale: SupportLocale): Promise
   });
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return;
 
-  await supabase.from("profiles").update({ preferred_language: locale }).eq("id", user.id);
+  await supabase.from("profiles").update({ preferred_language: locale }).eq("id", claims.sub);
 }
 
 /** Used only at the signIn/signUp transitions described above — never on an ordinary page render. */

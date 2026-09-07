@@ -9,10 +9,8 @@ import type { WeakWordItem } from "@/lib/weak-words/types";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ?? null;
 }
 
 /**

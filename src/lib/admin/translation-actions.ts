@@ -179,9 +179,8 @@ export async function approveTranslationField(
   if (!value) return { error: "Nothing to approve — no translated value exists yet." };
 
   const sessionClient = await createClient();
-  const {
-    data: { user },
-  } = await sessionClient.auth.getUser();
+  const { data: sessionData } = await sessionClient.auth.getClaims();
+  const claims = sessionData?.claims;
 
   const { error } = await admin.from("content_translations").upsert(
     {
@@ -195,7 +194,7 @@ export async function approveTranslationField(
       source_snapshot: englishText,
       previous_value: null,
       reviewed_at: new Date().toISOString(),
-      reviewed_by: user?.id ?? null,
+      reviewed_by: claims?.sub ?? null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "content_type,content_id,field,locale" },

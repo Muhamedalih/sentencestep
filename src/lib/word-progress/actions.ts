@@ -10,10 +10,8 @@ import type { WordProgressState } from "@/lib/word-progress/types";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ?? null;
 }
 
 /** Reads the signed-in learner's word progress; an empty state for guests (whose progress lives in localStorage — see src/lib/word-progress/store.ts). */

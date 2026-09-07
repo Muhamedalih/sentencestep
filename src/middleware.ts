@@ -179,11 +179,19 @@ async function handleAdminRoute(request: NextRequest, csp: string): Promise<Next
 
   const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() rather than getUser(): verifies the JWT the same way (it
+  // falls back to a real getUser() network call itself if the project isn't
+  // using asymmetric signing keys — see its own doc comment), but once
+  // asymmetric keys are enabled it verifies locally via WebCrypto instead of
+  // a round trip to the Auth server on every single request. Middleware runs
+  // on nearly every request AND every Server Action (see this file's own
+  // matcher), so that round trip was previously paid twice per action
+  // (once here, once more inside whatever the action itself does) — a real,
+  // measured source of "sometimes instant, sometimes seconds" latency.
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims ?? null;
 
-  if (!user) {
+  if (!claims) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);
@@ -201,7 +209,7 @@ async function handleAdminRoute(request: NextRequest, csp: string): Promise<Next
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("id", claims.sub)
     .maybeSingle();
 
   const role = profile?.role;
@@ -372,12 +380,15 @@ export async function middleware(request: NextRequest) {
 
   const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // See handleAdminRoute's identical getClaims() switch above for why this
+  // replaces getUser() — same JWT-verification guarantee, without forcing a
+  // network round trip to the Auth server on every request/action once the
+  // Supabase project is on asymmetric signing keys.
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims ?? null;
 
   let response = getResponse();
-  if (user) {
+  if (claims) {
     if (request.nextUrl.pathname !== VERIFY_MFA_PATH && (await isMfaPending(supabase))) {
       const url = request.nextUrl.clone();
       url.pathname = VERIFY_MFA_PATH;
@@ -386,15 +397,15 @@ export async function middleware(request: NextRequest) {
       return withCsp(carryCookies(response, NextResponse.redirect(url)), csp);
     }
 
-    const reconciled = await reconcileLocaleCookie(request, supabase, user.id, () => response);
+    const reconciled = await reconcileLocaleCookie(request, supabase, claims.sub, () => response);
     if (reconciled) response = reconciled;
   }
 
   if (isRoot) {
-    return withCsp(handleRootRoute(request, Boolean(user), response), csp);
+    return withCsp(handleRootRoute(request, Boolean(claims), response), csp);
   }
 
-  if (user && AUTH_PATHS.has(request.nextUrl.pathname)) {
+  if (claims && AUTH_PATHS.has(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/learn";
     url.search = "";

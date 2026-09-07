@@ -45,10 +45,8 @@ import type { LearningMode } from "@/types/content";
  */
 async function getAuthenticatedUserId(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ?? null;
 }
 
 function toCompletions(rows: Awaited<ReturnType<typeof fetchUserProgress>>): LessonCompletion[] {

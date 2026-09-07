@@ -19,15 +19,14 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
-  if (!user) return null;
+  if (!claims) return null;
 
   return {
-    id: user.id,
-    email: user.email ?? "",
-    displayName: (user.user_metadata?.display_name as string | undefined) ?? null,
+    id: claims.sub,
+    email: claims.email ?? "",
+    displayName: (claims.user_metadata?.display_name as string | undefined) ?? null,
   };
 }

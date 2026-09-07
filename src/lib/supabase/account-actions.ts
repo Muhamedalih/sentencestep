@@ -42,14 +42,13 @@ export async function deleteAccountAction(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: t.auth.errors.genericError };
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return { error: t.auth.errors.genericError };
 
   try {
     const serviceRole = createServiceRoleClient();
-    const { error } = await serviceRole.auth.admin.deleteUser(user.id);
+    const { error } = await serviceRole.auth.admin.deleteUser(claims.sub);
     if (error) return { error: t.settings.deleteAccountError };
   } catch {
     return { error: t.settings.deleteAccountError };

@@ -13,10 +13,8 @@ import { getLocale } from "@/lib/i18n/get-locale";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ?? null;
 }
 
 /**

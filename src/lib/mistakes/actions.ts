@@ -29,10 +29,8 @@ import { tokenize } from "@/lib/typing";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ?? null;
 }
 
 /** The count LessonCompletion needs to decide whether "Fix Your Mistakes" is the primary action — cheap on purpose (two `count(*)` reads), never the full hydrated queue. Includes due reviews as well as outstanding mistakes, since Fix Your Mistakes is the only entry point into either. Guests (no persistent identity for this feature — see the final report) always get 0, matching "no outstanding mistakes" and leaving their completion screen exactly as it always was. */

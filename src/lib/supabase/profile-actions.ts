@@ -25,12 +25,14 @@ export async function updateDailyGoalAction(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: t.auth.errors.genericError };
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return { error: t.auth.errors.genericError };
 
-  const { error } = await supabase.from("profiles").update({ daily_goal: raw }).eq("id", user.id);
+  const { error } = await supabase
+    .from("profiles")
+    .update({ daily_goal: raw })
+    .eq("id", claims.sub);
   if (error) return { error: t.settings.dailyGoalError };
 
   revalidatePath("/learn/settings");
@@ -46,15 +48,14 @@ export async function updateDailyGoalAction(
  */
 export async function setStartingLevelAction(level: number): Promise<void> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return;
 
   const { error } = await supabase
     .from("profiles")
     .update({ starting_level: level })
-    .eq("id", user.id);
+    .eq("id", claims.sub);
   if (error) throw error;
 }
 
@@ -72,15 +73,14 @@ export async function updateStartingLevelAction(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: t.auth.errors.genericError };
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return { error: t.auth.errors.genericError };
 
   const { error } = await supabase
     .from("profiles")
     .update({ starting_level: raw })
-    .eq("id", user.id);
+    .eq("id", claims.sub);
   if (error) return { error: t.settings.startingLevelError };
 
   revalidatePath("/learn/settings");
