@@ -450,6 +450,7 @@ export function BookReadingSession({
                         mark={marksBySentence[pageSentence.id] ?? EMPTY_MARK}
                         resolvedVoiceId={resolvedVoiceId}
                         readOnly={!isActiveSentence}
+                        large={isActiveSentence || viewedPage.length === 1}
                         onComplete={isActiveSentence ? handleSentenceComplete : NOOP}
                         onCorrectLetter={
                           isActiveSentence

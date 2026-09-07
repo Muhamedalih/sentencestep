@@ -46,6 +46,7 @@ export function BookSentenceReader({
   onErrorLetter,
   onAudioPlay,
   readOnly = false,
+  large,
   mark,
 }: {
   sentence: BookSentence;
@@ -83,6 +84,15 @@ export function BookSentenceReader({
    * decides this flag).
    */
   readOnly?: boolean;
+  /**
+   * Visual size only — independent of `readOnly`'s functional meaning.
+   * Defaults to `!readOnly` (the active sentence renders large, every other
+   * one renders small), but BookReadingSession overrides this to `true` for
+   * a readOnly sentence that's the ONLY sentence on the currently-viewed
+   * page (e.g. a section's final, short page): nothing to look small
+   * relative to, so it reads large even though it stays non-interactive.
+   */
+  large?: boolean;
 }) {
   const reducedMotion = useReducedMotion() ?? false;
   const { t, dir } = useLocale();
@@ -157,18 +167,20 @@ export function BookSentenceReader({
     readOnly || !hasStartedTyping
       ? getLetterStates(sentence.en, sentence.en, null)
       : engine.letterStates;
+  const isLarge = large ?? !readOnly;
 
   return (
     <motion.div initial={false} className="relative">
       {/*
         Save/Note/Speed live behind BookReadingTools' one trigger (see that
-        component's own doc comment for why). For a read-only page-preview
-        sentence, Play stays a small icon right alongside it — that row is
-        the only chrome those get. The active sentence instead gets its own
-        much larger, centered Play button below (audio-first redesign): the
-        single most-used control here now reads as the primary action, the
-        way a real audiobook/reading app (Audible, Speechify) treats
-        playback, not as one icon among several.
+        component's own doc comment for why). A read-only page-preview
+        sentence gets just this row — no per-sentence replay button anymore
+        (removed: reader feedback was that a small speaker icon on every
+        context sentence read as clutter competing with the active
+        sentence's own big, primary Play button, and freed the row to sit
+        more tightly against the sentence text below it). The active
+        sentence's large, centered Play button (audio-first redesign) stays
+        the one and only playback control on the page.
       */}
       <div className="mb-3 flex min-w-0 items-center gap-3">
         {sectionTitle && (
@@ -176,27 +188,13 @@ export function BookSentenceReader({
             {sectionTitle}
           </span>
         )}
-        <div className="flex items-center gap-1.5">
-          <BookReadingTools
-            bookId={bookId}
-            sentenceId={sentence.id}
-            inputRef={engine.inputRef}
-            mark={mark}
-            showSpeed={!readOnly}
-          />
-          {readOnly && (
-            <PronunciationButton
-              text={sentence.en}
-              audioUrl={sentence.audioUrl}
-              onPlay={onAudioPlay}
-              resetKey={sentence.id}
-              inputRef={engine.inputRef}
-              kokoroVoiceId={resolvedVoiceId}
-              contentType="book_sentence"
-              contentId={sentence.id}
-            />
-          )}
-        </div>
+        <BookReadingTools
+          bookId={bookId}
+          sentenceId={sentence.id}
+          inputRef={engine.inputRef}
+          mark={mark}
+          showSpeed={!readOnly}
+        />
       </div>
 
       {!readOnly && (
@@ -225,9 +223,9 @@ export function BookSentenceReader({
         onPaste={engine.handlePaste}
         reducedMotion={reducedMotion}
         textClassName={
-          readOnly
-            ? "text-[clamp(1.05rem,0.85rem+0.6vw,1.375rem)]"
-            : "text-[clamp(1.4rem,1rem+1.4vw,2.25rem)]"
+          isLarge
+            ? "text-[clamp(1.55rem,1.1rem+1.55vw,2.5rem)]"
+            : "text-[clamp(0.95rem,0.75rem+0.55vw,1.25rem)]"
         }
         textStyle={textStyle}
         onWordClick={(word) => void handleWordClick(word)}
@@ -239,7 +237,7 @@ export function BookSentenceReader({
       />
       <p
         className={
-          readOnly ? "text-muted-foreground mt-1 text-sm" : "text-muted-foreground mt-1 text-base"
+          isLarge ? "text-muted-foreground mt-1 text-base" : "text-muted-foreground mt-1 text-sm"
         }
         dir={dir}
       >
