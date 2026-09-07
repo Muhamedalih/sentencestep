@@ -5,6 +5,7 @@ import { OnboardingCardSettingsForm } from "@/components/admin/onboarding-card-s
 import {
   getOnboardingCardSettings,
   getOpeningLessonIllustration,
+  getOpeningLessonSentences,
   getOpeningLessonVoiceId,
 } from "@/lib/admin/onboarding-card-queries";
 import { getEdgeTtsVoices } from "@/lib/admin/edge-tts-queries";
@@ -17,11 +18,12 @@ export const metadata: Metadata = {
 export default async function AdminOnboardingCardPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const [settings, lessonIllustrationUrl, lessonVoiceId, voices] = await Promise.all([
+  const [settings, lessonIllustrationUrl, lessonVoiceId, voices, sentences] = await Promise.all([
     getOnboardingCardSettings(),
     getOpeningLessonIllustration(),
     getOpeningLessonVoiceId(),
     getEdgeTtsVoices(),
+    getOpeningLessonSentences(),
   ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function AdminOnboardingCardPage() {
         initialLessonImageUrl={lessonIllustrationUrl}
         initialLessonVoiceId={lessonVoiceId}
         voices={voices}
+        initialSentences={sentences}
       />
     </div>
   );

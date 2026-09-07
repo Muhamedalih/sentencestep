@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { ONBOARDING_CARD_TITLE_MAX_LENGTH } from "@/lib/admin/onboarding-card-settings";
+import { markTranslationsStaleIfChanged } from "@/lib/admin/translations";
 import { generateLessonVoice, setContentVoiceOverride } from "@/lib/admin/voice-generation-actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -466,4 +467,82 @@ export async function applyOpeningLessonWordTranslations(): Promise<ActionResult
   revalidatePath("/admin/onboarding-card");
   for (const lessonId of OPENING_LESSON_IDS) revalidatePath(`/learn/normal/${lessonId}`);
   return { success: "Word-by-word translations applied to all three starting levels." };
+}
+
+const OPENING_LESSON_SENTENCE_COUNT = 5;
+
+/**
+ * Saves the 5 shared sentences (English + Arabic) onto all three
+ * OPENING_LESSON_IDS lessons at once — the same consolidation as the
+ * illustration/voice/word-translations controls above, so editing this one
+ * lesson's actual text never requires a trip to the ordinary /admin/content
+ * editor (which also can't be used for a sentence-count other than 9 for
+ * every OTHER normal lesson, though onboarding-* itself is exempt — see
+ * validateLessonInput). English changes stale existing Spanish/Turkish
+ * drafts via markTranslationsStaleIfChanged, exactly like a normal
+ * saveLesson edit does, so the auto-translation pipeline knows to refresh
+ * them next time it runs; Arabic is written directly since it's the
+ * canonical `ar` column here, not an AI-drafted locale.
+ */
+export async function saveOpeningLessonSentences(
+  sentences: { en: string; ar: string }[],
+): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  if (sentences.length !== OPENING_LESSON_SENTENCE_COUNT) {
+    return { error: `There must be exactly ${OPENING_LESSON_SENTENCE_COUNT} sentences.` };
+  }
+  for (const [index, sentence] of sentences.entries()) {
+    if (!sentence.en.trim()) return { error: `Sentence ${index + 1}: English text is required.` };
+    if (!sentence.ar.trim()) {
+      return { error: `Sentence ${index + 1}: Arabic translation is required.` };
+    }
+  }
+
+  const supabase = await createClient();
+  const nowIso = new Date().toISOString();
+  const trimmed = sentences.map((sentence) => ({
+    en: sentence.en.trim(),
+    ar: sentence.ar.trim(),
+  }));
+
+  const updates = OPENING_LESSON_IDS.flatMap((lessonId) =>
+    trimmed.map((sentence, index) =>
+      supabase
+        .from("sentences")
+        .update({ en: sentence.en, ar: sentence.ar, updated_at: nowIso })
+        .eq("id", `${lessonId}-s${index + 1}`),
+    ),
+  );
+  const results = await Promise.all(updates);
+  const failed = results.find((result) => result.error);
+  if (failed) {
+    console.error("[admin] saveOpeningLessonSentences: update failed", {
+      code: failed.error?.code,
+      message: failed.error?.message,
+    });
+    return { error: "Couldn't save the sentences. Please try again." };
+  }
+
+  await Promise.all(
+    OPENING_LESSON_IDS.flatMap((lessonId) =>
+      trimmed.map((sentence, index) =>
+        markTranslationsStaleIfChanged(
+          "sentence",
+          `${lessonId}-s${index + 1}`,
+          "text",
+          sentence.en,
+        ),
+      ),
+    ),
+  );
+
+  void logAdminAction("onboarding_intro_card.sentences_updated", "sentences", null, {
+    lessonIds: OPENING_LESSON_IDS,
+  });
+  revalidatePath("/admin/onboarding-card");
+  revalidatePath("/admin/content");
+  for (const lessonId of OPENING_LESSON_IDS) revalidatePath(`/learn/normal/${lessonId}`);
+  return { success: "Sentences saved for all three starting levels." };
 }

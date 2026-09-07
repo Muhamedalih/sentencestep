@@ -11,6 +11,7 @@ import {
   removeOnboardingCardImage,
   removeOpeningLessonImage,
   saveOnboardingCardTitle,
+  saveOpeningLessonSentences,
   setOpeningLessonVoice,
   uploadOnboardingCardImage,
   uploadOpeningLessonImage,
@@ -25,12 +26,38 @@ export function OnboardingCardSettingsForm({
   initialLessonImageUrl,
   initialLessonVoiceId,
   voices,
+  initialSentences,
 }: {
   initial: OnboardingCardSettings;
   initialLessonImageUrl: string | null;
   initialLessonVoiceId: string | null;
   voices: VoiceRow[];
+  initialSentences: { en: string; ar: string }[];
 }) {
+  const [sentences, setSentences] = useState(initialSentences);
+  const [sentencesMessage, setSentencesMessage] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [isSavingSentences, startSavingSentences] = useTransition();
+
+  function updateSentence(index: number, field: "en" | "ar", value: string) {
+    setSentences((prev) =>
+      prev.map((sentence, i) => (i === index ? { ...sentence, [field]: value } : sentence)),
+    );
+  }
+
+  function handleSaveSentences() {
+    setSentencesMessage(null);
+    startSavingSentences(async () => {
+      const result = await saveOpeningLessonSentences(sentences);
+      if (result.error) {
+        setSentencesMessage({ kind: "error", text: result.error });
+        return;
+      }
+      setSentencesMessage({ kind: "success", text: result.success ?? "Saved." });
+    });
+  }
   const [title, setTitle] = useState(initial.title);
   const [url, setUrl] = useState(initial.imageUrl);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -179,6 +206,59 @@ export function OnboardingCardSettingsForm({
 
   return (
     <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Sentences</CardTitle>
+          <CardDescription>
+            The 5 sentences of the opening lesson itself — shared by all three starting levels
+            (beginner, intermediate, advanced). Saving here updates all three at once; existing
+            Spanish/Turkish drafts are marked stale so they get refreshed to match.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {sentences.map((sentence, index) => (
+            <div key={index} className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">English {index + 1}</span>
+                <input
+                  type="text"
+                  value={sentence.en}
+                  onChange={(event) => updateSentence(index, "en", event.target.value)}
+                  dir="ltr"
+                  className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">Arabic {index + 1}</span>
+                <input
+                  type="text"
+                  value={sentence.ar}
+                  onChange={(event) => updateSentence(index, "ar", event.target.value)}
+                  dir="rtl"
+                  className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-3">
+            <Button type="button" onClick={handleSaveSentences} disabled={isSavingSentences}>
+              {isSavingSentences ? "Saving…" : "Save sentences"}
+            </Button>
+            {sentencesMessage && (
+              <p
+                role={sentencesMessage.kind === "error" ? "alert" : undefined}
+                className={cn(
+                  "text-sm",
+                  sentencesMessage.kind === "error" ? "text-danger" : "text-muted-foreground",
+                )}
+              >
+                {sentencesMessage.text}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Cover image</CardTitle>

@@ -74,3 +74,24 @@ export async function getOpeningLessonVoiceId(): Promise<string | null> {
   if (error || !data) return null;
   return data.voice_id;
 }
+
+/**
+ * Reads the 5 shared sentences (English + Arabic) every OPENING_LESSON_IDS
+ * lesson carries — only onboarding-beginner's own rows are queried since a
+ * shared save (see saveOpeningLessonSentences in onboarding-card-actions.ts)
+ * always writes the identical text to all three, so any one of them is
+ * representative for showing the admin what's currently set.
+ */
+export async function getOpeningLessonSentences(): Promise<{ en: string; ar: string }[]> {
+  if (!isSupabaseConfigured()) return [];
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("sentences")
+    .select("en, ar, order_index")
+    .eq("lesson_id", "onboarding-beginner")
+    .order("order_index");
+
+  if (error || !data) return [];
+  return data.map((row) => ({ en: row.en, ar: row.ar }));
+}
