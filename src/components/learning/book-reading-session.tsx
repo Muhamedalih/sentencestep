@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { BookCompletion } from "@/components/learning/book-completion";
 import { BookPageNav } from "@/components/learning/book-page-nav";
@@ -98,6 +98,7 @@ export function BookReadingSession({
   previewMode = false,
 }: BookReadingSessionProps) {
   const { t, dir } = useLocale();
+  const reducedMotion = useReducedMotion() ?? false;
   const { isSignedIn: isSignedInReal, completeSentence } = useBookProgress();
   // See previewMode's own doc comment — an admin previewing a draft section
   // gets the exact same reading UI, but every persistence-gated effect below
@@ -292,10 +293,6 @@ export function BookReadingSession({
   // BookPageNav's own doc comment for why that boundary is deliberate, not a
   // missing feature.
   const viewedPage = pages[viewPageIndex] ?? [];
-  const activePageIndex = sentence ? findPageIndexForSentenceId(pages, sentence.id) : 0;
-  const isViewingActivePage = viewPageIndex === activePageIndex;
-  const activeSentenceIndexInPage =
-    isViewingActivePage && sentence ? viewedPage.findIndex((s) => s.id === sentence.id) : -1;
   const canGoToPreviousPage = viewPageIndex > 0;
   const canGoToNextPage = viewPageIndex < pages.length - 1;
   // A real page number within the current section (Phase 4: "Page X
@@ -407,79 +404,73 @@ export function BookReadingSession({
             </div>
             <div className="flex flex-1 flex-col justify-start overflow-y-auto px-6 pb-8 lg:px-16 lg:pt-3">
               {/*
-                A real page (Phase 4) shows every sentence in `viewedPage`
-                together, but exactly one — the real, progress-linked active
-                sentence — is ever the live typing target. The active
-                sentence's own BookSentenceReader instance stays mounted for
-                as long as `sentence` itself doesn't change — its key is
-                always `sentence.id`, and it is NEVER re-rendered from the
-                `viewedPage.map` below — specifically so paging away to a
-                different page and back never remounts it, which would
-                otherwise reset useTypingEngine's in-progress `typed` state (a
-                real bug caught live: keying this by the viewed sentence
-                unmounted/remounted the active instance on every page turn,
-                silently erasing whatever the reader had already typed).
-                Hidden via `display:none` rather than conditionally unmounted
-                while a different page is being viewed, for exactly that
-                reason. `order` places it at its real position among the
-                other sentences on its page — flex `order` matches by
-                position, not by DOM index, so this stays correct without
-                ever moving the element in the tree.
+                A real page renders all four of `viewedPage`'s sentences as
+                one persistent slot each — keyed by the sentence's OWN id,
+                which never changes for the lifetime of this page, unlike the
+                pre-redesign version which pulled the active sentence into a
+                separate, specially-positioned element whose key changed
+                every time progress advanced (and which fought Framer
+                Motion's layout animation badly enough, combined with flex
+                `order` repositioning, to render sentences invisible
+                mid-transition — caught live while building this). Exactly
+                one slot is ever active at a time (isActiveSentence,
+                `readOnly={false}`, rendered large) — the rest render small
+                (readOnly, listen/read-only context) — and since a slot's key
+                never changes as active-ness moves through the page one
+                sentence at a time, useTypingEngine for a given sentence
+                never remounts while advancing within this page, only when a
+                genuinely different page is loaded.
+
+                Read/listen-first redesign's "which sentence is big" motion:
+                plain `layout` (no `layoutId` needed — this is the same
+                persisting element, not a cross-element match) lets Framer
+                Motion smoothly interpolate each slot's own bounding-box
+                change between renders — its real size differs a lot between
+                small/readOnly and large/active (BookSentenceReader renders
+                genuinely different content either way), so the slot visibly
+                grows when it becomes active and shrinks when it stops being
+                active, instead of an instant cut.
               */}
               <div className="flex flex-col gap-4">
-                <div
-                  className={
-                    !isViewingActivePage
-                      ? "hidden"
-                      : // A light divider under the active sentence's own box
-                        // (border-bottom, not a separate flex sibling) —
-                        // reader feedback wanted a subtle line between the
-                        // sentence being typed and the page's other
-                        // sentences below it, without disturbing the
-                        // gap-4 rhythm the rest of the page already uses.
-                        // Only when this page actually holds more than the
-                        // active sentence — nothing to separate it from
-                        // otherwise.
-                        viewedPage.length > 1
-                        ? "border-border/40 border-b pb-4"
-                        : undefined
-                  }
-                  style={isViewingActivePage ? { order: activeSentenceIndexInPage } : undefined}
-                >
-                  <BookSentenceReader
-                    key={sentence.id}
-                    sentence={sentence}
-                    bookId={book.id}
-                    mark={marksBySentence[sentence.id] ?? EMPTY_MARK}
-                    resolvedVoiceId={resolvedVoiceId}
-                    onComplete={handleSentenceComplete}
-                    onCorrectLetter={() => {
-                      sectionCorrectRef.current += 1;
-                      play("letter");
-                    }}
-                    onErrorLetter={() => {
-                      sectionErrorRef.current += 1;
-                      play("error");
-                    }}
-                  />
-                </div>
-                {viewedPage.map((pageSentence, index) =>
-                  isViewingActivePage && pageSentence.id === sentence.id ? null : (
-                    <div key={pageSentence.id} style={{ order: index }}>
+                {viewedPage.map((pageSentence) => {
+                  const isActiveSentence = pageSentence.id === sentence.id;
+                  return (
+                    <motion.div
+                      key={pageSentence.id}
+                      layout
+                      transition={
+                        reducedMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 300, damping: 30 }
+                      }
+                    >
                       <BookSentenceReader
-                        key={pageSentence.id}
                         sentence={pageSentence}
                         bookId={book.id}
                         mark={marksBySentence[pageSentence.id] ?? EMPTY_MARK}
                         resolvedVoiceId={resolvedVoiceId}
-                        readOnly
-                        onComplete={NOOP}
-                        onCorrectLetter={() => {}}
-                        onErrorLetter={() => {}}
+                        readOnly={!isActiveSentence}
+                        onComplete={isActiveSentence ? handleSentenceComplete : NOOP}
+                        onCorrectLetter={
+                          isActiveSentence
+                            ? () => {
+                                sectionCorrectRef.current += 1;
+                                play("letter");
+                              }
+                            : NOOP
+                        }
+                        onErrorLetter={
+                          isActiveSentence
+                            ? () => {
+                                sectionErrorRef.current += 1;
+                                play("error");
+                              }
+                            : NOOP
+                        }
                       />
-                    </div>
-                  ),
-                )}
+                    </motion.div>
+                  );
+                })}
               </div>
               <BookPageNav
                 pageNumber={pageNumber}

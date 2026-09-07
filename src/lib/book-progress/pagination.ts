@@ -13,13 +13,17 @@
 import type { BookSentence } from "@/types/library";
 
 /**
- * Reading Experience Polish: a real book page shows exactly two sentences —
- * the one the learner just read for context, and the one they're actively
- * typing — never three or more crammed onto the same screen. Fixed at 2
- * rather than a word-count budget: with only two slots, the deterministic
- * rule is simplest as a flat sentence-count chunk.
+ * Read/listen-first redesign: a real book page shows exactly four sentences
+ * at once — the one the learner is currently reading/listening to (rendered
+ * large by BookReadingSession) plus three others for context (rendered
+ * small), so a page reads like a real page of a book rather than one
+ * sentence in isolation. Fixed at 4 rather than a word-count budget: with a
+ * flat slot count, the deterministic rule is simplest as a flat
+ * sentence-count chunk, and BookReadingSession's own shared-layout
+ * animation (which sentence is "big" smoothly grows/shrinks as the active
+ * one advances) is simplest to reason about over a fixed-size group.
  */
-const SENTENCES_PER_PAGE = 2;
+const SENTENCES_PER_PAGE = 4;
 
 /**
  * Groups one section's sentences into pages of exactly `SENTENCES_PER_PAGE`,
