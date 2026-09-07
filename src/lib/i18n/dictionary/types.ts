@@ -138,6 +138,20 @@ export interface Dictionary {
     /** Onboarding intro card's (src/components/app/onboarding-intro-card.tsx) "enter the lesson" button — the flow's third and last step. */
     startCta: string;
   };
+  /** The premium "pitch" screen shown instead of the ordinary LessonCompletion when a first-time learner finishes their opening lesson (src/components/learning/onboarding-lesson-complete.tsx) — the get-started flow's real final step, bookending onboarding.heading/onboardingIntroCard's startCta. Four fixed benefit points, not a dynamic list. */
+  onboardingComplete: {
+    eyebrow: string;
+    headline: string;
+    point1Title: string;
+    point1Body: string;
+    point2Title: string;
+    point2Body: string;
+    point3Title: string;
+    point3Body: string;
+    point4Title: string;
+    point4Body: string;
+    cta: string;
+  };
   auth: {
     loginHeading: string;
     loginSubtitle: string;

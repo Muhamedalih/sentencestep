@@ -133,6 +133,20 @@ export const es: Dictionary = {
     back: "Atrás",
     startCta: "Comenzar la lección",
   },
+  onboardingComplete: {
+    eyebrow: "Lo lograste — tu primera lección está completa",
+    headline: "Tu viaje con el inglés ya comenzó",
+    point1Title: "Aprendes haciendo, no memorizando",
+    point1Body: "Lo escuchas, lo escribes letra por letra — así es como se queda contigo.",
+    point2Title: "Corrección al instante en cada error",
+    point2Body: "Ves exactamente dónde te equivocaste en el momento, para que no se repita.",
+    point3Title: "De oraciones simples a historias reales",
+    point3Body: "Lecciones normales, historias y conversaciones crecen contigo, nivel a nivel.",
+    point4Title: "Unos minutos al día son suficientes",
+    point4Body:
+      "La práctica breve y constante gana a las sesiones largas y ocasionales — y ya demostraste que puedes.",
+    cta: "Continuar",
+  },
   auth: {
     loginHeading: "Bienvenido de nuevo",
     loginSubtitle: "Inicia sesión para mantener tu progreso sincronizado.",

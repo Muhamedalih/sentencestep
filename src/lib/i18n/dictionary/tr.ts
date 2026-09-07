@@ -128,6 +128,20 @@ export const tr: Dictionary = {
     back: "Geri",
     startCta: "Derse başla",
   },
+  onboardingComplete: {
+    eyebrow: "İlk dersini tamamladın",
+    headline: "İngilizce yolculuğun artık başladı",
+    point1Title: "Ezberlemeden, yaparak öğrenirsin",
+    point1Body: "Duyarsın, harf harf yazarsın — kalıcı olmasını sağlayan da budur.",
+    point2Title: "Her hataya anında geri bildirim",
+    point2Body: "Nerede yanlış yaptığını tam o anda görürsün, bir daha tekrarlanmasın diye.",
+    point3Title: "Basit cümlelerden gerçek hikayelere",
+    point3Body: "Normal dersler, hikayeler ve konuşmalar seviye seviye seninle büyür.",
+    point4Title: "Günde birkaç dakika yeter",
+    point4Body:
+      "Kısa ve düzenli pratik, uzun ama seyrek oturumlardan daha güçlüdür — ve bunu yapabildiğini az önce kanıtladın.",
+    cta: "Devam et",
+  },
   auth: {
     loginHeading: "Tekrar hoş geldiniz",
     loginSubtitle: "İlerlemenizi senkronize tutmak için giriş yapın.",

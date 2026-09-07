@@ -7,6 +7,7 @@ import { Image as ImageIcon, List as ListIcon } from "lucide-react";
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { OnboardingLessonComplete } from "@/components/learning/onboarding-lesson-complete";
 import {
   StoryPreviousSentences,
   type CompletedStorySentence,
@@ -23,8 +24,11 @@ import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
+import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import { cn } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
+
+const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
 
 export function LessonSession({
   unit,
@@ -45,6 +49,11 @@ export function LessonSession({
   /** Conversation-mode speaker -> voice_id overrides (empty for every other mode) — see TypingSentence's own resolution of resolvedVoiceId vs. a sentence's speaker-specific voice. */
   speakerVoiceMap?: Record<string, string>;
 }) {
+  // Never true in previewMode: an admin previewing content has no
+  // "get started" flow underway, so the real dashboard pitch would be a
+  // non-sequitur there — LessonCompletion (the ordinary stats recap) is
+  // what preview should always show, same as every other lesson.
+  const isOpeningLesson = !previewMode && OPENING_LESSON_IDS.has(unit.id);
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isFixingMistakes, setIsFixingMistakes] = useState(false);
@@ -248,7 +257,9 @@ export function LessonSession({
           thing squeezed into the sentence column while the illustration
           panel sits there unchanged beside it. */}
       <AnimatePresence>
-        {isComplete && isFixingMistakes ? (
+        {isComplete && isOpeningLesson ? (
+          <OnboardingLessonComplete key="onboarding-complete" />
+        ) : isComplete && isFixingMistakes ? (
           <div key="fix-mistakes" className="flex flex-col lg:h-full">
             <FixYourMistakesSession
               lessonId={unit.id}

@@ -130,6 +130,21 @@ export const en: Dictionary = {
     back: "Back",
     startCta: "Start the lesson",
   },
+  onboardingComplete: {
+    eyebrow: "You did it — your first lesson is complete",
+    headline: "Your English journey has begun",
+    point1Title: "You learn by doing, not memorizing",
+    point1Body: "You hear it, you type it, letter by letter — that's what makes it stick.",
+    point2Title: "Instant feedback on every mistake",
+    point2Body:
+      "You see exactly where you went wrong, the moment it happens, so it never happens twice.",
+    point3Title: "From simple sentences to real stories",
+    point3Body: "Normal lessons, Stories, and Conversations grow with you, one level at a time.",
+    point4Title: "A few minutes a day is enough",
+    point4Body:
+      "Small, steady practice beats long, rare sessions — and you just proved you can do it.",
+    cta: "Continue",
+  },
   auth: {
     loginHeading: "Welcome back",
     loginSubtitle: "Sign in to keep your progress in sync.",
