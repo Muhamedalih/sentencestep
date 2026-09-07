@@ -7,14 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   removeOnboardingCardImage,
+  removeOpeningLessonImage,
   saveOnboardingCardTitle,
   uploadOnboardingCardImage,
+  uploadOpeningLessonImage,
 } from "@/lib/admin/onboarding-card-actions";
 import { ONBOARDING_CARD_TITLE_MAX_LENGTH } from "@/lib/admin/onboarding-card-settings";
 import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-settings";
 import { cn } from "@/lib/utils";
 
-export function OnboardingCardSettingsForm({ initial }: { initial: OnboardingCardSettings }) {
+export function OnboardingCardSettingsForm({
+  initial,
+  initialLessonImageUrl,
+}: {
+  initial: OnboardingCardSettings;
+  initialLessonImageUrl: string | null;
+}) {
   const [title, setTitle] = useState(initial.title);
   const [url, setUrl] = useState(initial.imageUrl);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -26,6 +34,45 @@ export function OnboardingCardSettingsForm({ initial }: { initial: OnboardingCar
   const [isSavingTitle, startSavingTitle] = useTransition();
   const [isPendingImage, startImageTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [lessonImageUrl, setLessonImageUrl] = useState(initialLessonImageUrl);
+  const [confirmingLessonImageRemove, setConfirmingLessonImageRemove] = useState(false);
+  const [lessonImageError, setLessonImageError] = useState<string | null>(null);
+  const [isPendingLessonImage, startLessonImageTransition] = useTransition();
+  const lessonImageInputRef = useRef<HTMLInputElement>(null);
+
+  function handleLessonImageFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setLessonImageError(null);
+    setConfirmingLessonImageRemove(false);
+    const formData = new FormData();
+    formData.set("file", file);
+
+    startLessonImageTransition(async () => {
+      const result = await uploadOpeningLessonImage(formData);
+      if (result.error) {
+        setLessonImageError(result.error);
+        return;
+      }
+      if (result.url) setLessonImageUrl(result.url);
+    });
+  }
+
+  function handleLessonImageRemove() {
+    setLessonImageError(null);
+    startLessonImageTransition(async () => {
+      const result = await removeOpeningLessonImage();
+      if (result.error) {
+        setLessonImageError(result.error);
+        return;
+      }
+      setLessonImageUrl(null);
+      setConfirmingLessonImageRemove(false);
+    });
+  }
 
   function handleSaveTitle() {
     setTitleMessage(null);
@@ -165,6 +212,108 @@ export function OnboardingCardSettingsForm({ initial }: { initial: OnboardingCar
             {imageError && (
               <p role="alert" className="text-danger text-xs">
                 {imageError}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Lesson illustration</CardTitle>
+          <CardDescription>
+            The picture shown beside the sentence on the opening lesson itself, for all three
+            starting levels (beginner, intermediate, advanced) at once — not the cover image above.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <div className="border-border bg-muted relative flex aspect-[4/3] w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+            {lessonImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- small admin preview, not worth next/image's remote-loader ceremony here
+              <img
+                src={lessonImageUrl}
+                alt="Current opening lesson illustration"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-muted-foreground px-2 text-center text-xs">
+                No image — using default scene
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            {confirmingLessonImageRemove ? (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm">Remove this image?</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="w-fit"
+                    disabled={isPendingLessonImage}
+                    onClick={handleLessonImageRemove}
+                  >
+                    {isPendingLessonImage ? "Removing…" : "Remove"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    disabled={isPendingLessonImage}
+                    onClick={() => setConfirmingLessonImageRemove(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <input
+                  ref={lessonImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLessonImageFileChange}
+                  className="hidden"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    disabled={isPendingLessonImage}
+                    onClick={() => lessonImageInputRef.current?.click()}
+                  >
+                    {isPendingLessonImage
+                      ? "Uploading…"
+                      : lessonImageUrl
+                        ? "Replace image"
+                        : "Upload image"}
+                  </Button>
+                  {lessonImageUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-danger w-fit"
+                      disabled={isPendingLessonImage}
+                      onClick={() => setConfirmingLessonImageRemove(true)}
+                      aria-label="Remove image"
+                    >
+                      <Trash2 className="size-4" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-xs">JPG, PNG, or WebP, up to 5MB.</p>
+              </>
+            )}
+            {lessonImageError && (
+              <p role="alert" className="text-danger text-xs">
+                {lessonImageError}
               </p>
             )}
           </div>

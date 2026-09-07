@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { OnboardingCardSettingsForm } from "@/components/admin/onboarding-card-settings-form";
-import { getOnboardingCardSettings } from "@/lib/admin/onboarding-card-queries";
+import {
+  getOnboardingCardSettings,
+  getOpeningLessonIllustration,
+} from "@/lib/admin/onboarding-card-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -12,7 +15,10 @@ export const metadata: Metadata = {
 export default async function AdminOnboardingCardPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const settings = await getOnboardingCardSettings();
+  const [settings, lessonIllustrationUrl] = await Promise.all([
+    getOnboardingCardSettings(),
+    getOpeningLessonIllustration(),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,7 +29,10 @@ export default async function AdminOnboardingCardPage() {
           before their opening lesson starts.
         </p>
       </div>
-      <OnboardingCardSettingsForm initial={settings} />
+      <OnboardingCardSettingsForm
+        initial={settings}
+        initialLessonImageUrl={lessonIllustrationUrl}
+      />
     </div>
   );
 }

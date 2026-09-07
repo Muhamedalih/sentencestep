@@ -32,3 +32,24 @@ export async function getOnboardingCardSettings(): Promise<OnboardingCardSetting
     title: data.title || DEFAULT_ONBOARDING_CARD_SETTINGS.title,
   };
 }
+
+/**
+ * Reads the shared illustration the three OPENING_LESSON_IDS lessons carry
+ * (see uploadOpeningLessonImage in onboarding-card-actions.ts) — only
+ * onboarding-beginner's own row is queried since a shared upload always
+ * writes the identical URL to all three, so any one of them is
+ * representative for showing the admin what's currently set.
+ */
+export async function getOpeningLessonIllustration(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("illustration_url")
+    .eq("id", "onboarding-beginner")
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.illustration_url;
+}
