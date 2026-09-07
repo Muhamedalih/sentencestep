@@ -402,7 +402,7 @@ export function BookReadingSession({
               </div>
               <Progress value={percent} />
             </div>
-            <div className="flex flex-1 flex-col justify-start overflow-y-auto px-6 pb-8 lg:px-16 lg:pt-3">
+            <div className="flex flex-1 flex-col justify-start overflow-y-auto px-6 pb-4 lg:px-16 lg:pt-3">
               {/*
                 A real page renders all four of `viewedPage`'s sentences as
                 one persistent slot each — keyed by the sentence's OWN id,
@@ -431,7 +431,7 @@ export function BookReadingSession({
                 grows when it becomes active and shrinks when it stops being
                 active, instead of an instant cut.
               */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 {viewedPage.map((pageSentence) => {
                   const isActiveSentence = pageSentence.id === sentence.id;
                   return (

@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { BookReadingTools } from "@/components/learning/book-reading-tools";
-import { CurrentWordCard } from "@/components/learning/current-word-card";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
@@ -17,7 +16,7 @@ import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
-import { getCurrentWordIndex, getLetterStates, tokenize } from "@/lib/typing";
+import { getLetterStates, tokenize } from "@/lib/typing";
 import type { BookSentence } from "@/types/library";
 import type { BookSentenceMark } from "@/lib/book-progress/marks";
 
@@ -159,27 +158,8 @@ export function BookSentenceReader({
       ? getLetterStates(sentence.en, sentence.en, null)
       : engine.letterStates;
 
-  // Same pattern as TypingSentence's Stories/normal modes: the word at the
-  // learner's current typing position, shown automatically as they read/type
-  // — never requires a click. No current word to show in the read-only
-  // page-preview state (no live typing cursor there — see showTypingCursor).
-  const currentWord = readOnly
-    ? undefined
-    : sentence.supportWordTranslations?.[getCurrentWordIndex(sentence.en, engine.typed.length)];
-
-  // Only the active sentence grows to fill available height and anchors its
-  // translation/stats toward the bottom (Reading Experience Polish, Goal 1)
-  // — a page now holds this one PLUS one compact context sentence, and
-  // giving both an equal `flex-1` share left the short context block
-  // stretching to half the page height with a large empty gap above its
-  // translation. The context sentence instead sizes to its own content.
-  const spacer = <div aria-hidden="true" className="lg:flex-1" />;
-
   return (
-    <motion.div
-      initial={false}
-      className={readOnly ? "relative" : "relative lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"}
-    >
+    <motion.div initial={false} className="relative">
       {/*
         Save/Note/Speed live behind BookReadingTools' one trigger (see that
         component's own doc comment for why). For a read-only page-preview
@@ -190,7 +170,7 @@ export function BookSentenceReader({
         way a real audiobook/reading app (Audible, Speechify) treats
         playback, not as one icon among several.
       */}
-      <div className="mb-4 flex min-w-0 items-center gap-3">
+      <div className="mb-3 flex min-w-0 items-center gap-3">
         {sectionTitle && (
           <span className="text-primary text-xs font-semibold tracking-wide uppercase" dir={dir}>
             {sectionTitle}
@@ -220,7 +200,7 @@ export function BookSentenceReader({
       </div>
 
       {!readOnly && (
-        <div className="mb-5 flex justify-center">
+        <div className="mb-2 flex justify-center">
           <PronunciationButton
             text={sentence.en}
             audioUrl={sentence.audioUrl}
@@ -231,14 +211,8 @@ export function BookSentenceReader({
             kokoroVoiceId={resolvedVoiceId}
             contentType="book_sentence"
             contentId={sentence.id}
-            className="bg-accent/15 text-accent hover:bg-accent/25 hover:text-accent size-16 rounded-full [&_svg]:size-7"
+            className="bg-accent/15 text-accent hover:bg-accent/25 hover:text-accent size-11 rounded-full [&_svg]:size-5"
           />
-        </div>
-      )}
-
-      {!readOnly && (
-        <div className="mb-4 min-h-11">
-          <CurrentWordCard word={currentWord} dir={dir} />
         </div>
       )}
 
@@ -253,7 +227,7 @@ export function BookSentenceReader({
         textClassName={
           readOnly
             ? "text-[clamp(1.05rem,0.85rem+0.6vw,1.375rem)]"
-            : "text-[clamp(1.75rem,1.05rem+2.1vw,3rem)]"
+            : "text-[clamp(1.4rem,1rem+1.4vw,2.25rem)]"
         }
         textStyle={textStyle}
         onWordClick={(word) => void handleWordClick(word)}
@@ -263,17 +237,16 @@ export function BookSentenceReader({
         showTypingCursor={!readOnly}
         disabled={readOnly}
       />
-      {!readOnly && spacer}
       <p
         className={
-          readOnly ? "text-muted-foreground mt-2 text-sm" : "text-muted-foreground mt-6 text-lg"
+          readOnly ? "text-muted-foreground mt-1 text-sm" : "text-muted-foreground mt-1 text-base"
         }
         dir={dir}
       >
         {supportText}
       </p>
       {!readOnly && (
-        <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="mt-2 flex items-center justify-between gap-4">
           {hasStartedTyping ? (
             <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} />
           ) : (
