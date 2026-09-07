@@ -94,10 +94,14 @@ export function OnboardingLessonComplete() {
             </Button>
           </div>
 
-          <div className="border-border bg-card mx-auto aspect-square w-full max-w-md overflow-hidden rounded-2xl border lg:aspect-auto lg:h-full lg:max-w-none">
-            {settings?.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as OnboardingIntroCard's identical image
-              <img src={settings.imageUrl} alt="" className="h-full w-full object-cover" />
+          <div className="border-border bg-card mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl border">
+            {settings?.completionImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as OnboardingIntroCard's image
+              <img
+                src={settings.completionImageUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="from-brand-muted to-muted flex h-full w-full items-center justify-center bg-gradient-to-br">
                 <GraduationCap className="text-muted-foreground/50 size-16" aria-hidden="true" />

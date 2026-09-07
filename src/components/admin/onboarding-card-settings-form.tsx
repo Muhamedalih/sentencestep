@@ -10,11 +10,13 @@ import {
   applyOpeningLessonWordTranslations,
   generateOpeningLessonVoice,
   removeOnboardingCardImage,
+  removeOnboardingCompletionImage,
   removeOpeningLessonImage,
   saveOnboardingCardTitle,
   saveOpeningLessonSentences,
   setOpeningLessonVoice,
   uploadOnboardingCardImage,
+  uploadOnboardingCompletionImage,
   uploadOpeningLessonImage,
 } from "@/lib/admin/onboarding-card-actions";
 import { ONBOARDING_CARD_TITLE_MAX_LENGTH } from "@/lib/admin/onboarding-card-settings";
@@ -88,6 +90,45 @@ export function OnboardingCardSettingsForm({
   const [isSavingTitle, startSavingTitle] = useTransition();
   const [isPendingImage, startImageTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [completionUrl, setCompletionUrl] = useState(initial.completionImageUrl);
+  const [confirmingCompletionRemove, setConfirmingCompletionRemove] = useState(false);
+  const [completionImageError, setCompletionImageError] = useState<string | null>(null);
+  const [isPendingCompletionImage, startCompletionImageTransition] = useTransition();
+  const completionInputRef = useRef<HTMLInputElement>(null);
+
+  function handleCompletionFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setCompletionImageError(null);
+    setConfirmingCompletionRemove(false);
+    const formData = new FormData();
+    formData.set("file", file);
+
+    startCompletionImageTransition(async () => {
+      const result = await uploadOnboardingCompletionImage(formData);
+      if (result.error) {
+        setCompletionImageError(result.error);
+        return;
+      }
+      if (result.url) setCompletionUrl(result.url);
+    });
+  }
+
+  function handleCompletionRemove() {
+    setCompletionImageError(null);
+    startCompletionImageTransition(async () => {
+      const result = await removeOnboardingCompletionImage();
+      if (result.error) {
+        setCompletionImageError(result.error);
+        return;
+      }
+      setCompletionUrl(null);
+      setConfirmingCompletionRemove(false);
+    });
+  }
 
   const [lessonImageUrl, setLessonImageUrl] = useState(initialLessonImageUrl);
   const [confirmingLessonImageRemove, setConfirmingLessonImageRemove] = useState(false);
@@ -369,6 +410,108 @@ export function OnboardingCardSettingsForm({
             {imageError && (
               <p role="alert" className="text-danger text-xs">
                 {imageError}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Completion screen image</CardTitle>
+          <CardDescription>
+            Shown on the screen a learner sees right after finishing the opening lesson — separate
+            from the cover image above. Without one, they see a plain icon instead.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <div className="border-border bg-muted relative flex aspect-[4/3] w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+            {completionUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- small admin preview, not worth next/image's remote-loader ceremony here
+              <img
+                src={completionUrl}
+                alt="Current completion screen image"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-muted-foreground px-2 text-center text-xs">
+                No image — using default icon
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            {confirmingCompletionRemove ? (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm">Remove this image?</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="w-fit"
+                    disabled={isPendingCompletionImage}
+                    onClick={handleCompletionRemove}
+                  >
+                    {isPendingCompletionImage ? "Removing…" : "Remove"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    disabled={isPendingCompletionImage}
+                    onClick={() => setConfirmingCompletionRemove(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <input
+                  ref={completionInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCompletionFileChange}
+                  className="hidden"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    disabled={isPendingCompletionImage}
+                    onClick={() => completionInputRef.current?.click()}
+                  >
+                    {isPendingCompletionImage
+                      ? "Uploading…"
+                      : completionUrl
+                        ? "Replace image"
+                        : "Upload image"}
+                  </Button>
+                  {completionUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-danger w-fit"
+                      disabled={isPendingCompletionImage}
+                      onClick={() => setConfirmingCompletionRemove(true)}
+                      aria-label="Remove image"
+                    >
+                      <Trash2 className="size-4" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-xs">JPG, PNG, or WebP, up to 5MB.</p>
+              </>
+            )}
+            {completionImageError && (
+              <p role="alert" className="text-danger text-xs">
+                {completionImageError}
               </p>
             )}
           </div>

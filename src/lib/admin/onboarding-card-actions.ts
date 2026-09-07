@@ -175,6 +175,122 @@ export async function removeOnboardingCardImage(): Promise<ActionResult> {
   return { success: "Image removed." };
 }
 
+/** Uploads the completion screen's image — same shape as uploadOnboardingCardImage above, just keyed to completion_image_url instead of image_url so the cover card and the completion screen can each carry their own picture. */
+export async function uploadOnboardingCompletionImage(
+  formData: FormData,
+): Promise<ActionResult & { url?: string }> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "No file provided." };
+  if (!file.type.startsWith("image/")) return { error: "File must be an image." };
+  if (file.size > MAX_IMAGE_BYTES) return { error: "Image must be smaller than 5MB." };
+
+  const supabase = await createClient();
+
+  const { data: current } = await supabase
+    .from("onboarding_intro_card")
+    .select("completion_image_url")
+    .eq("id", 1)
+    .maybeSingle();
+  const previousPath = current?.completion_image_url
+    ? onboardingCardPathFromUrl(current.completion_image_url)
+    : null;
+
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${randomUUID()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("onboarding-card")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) {
+    console.error("[admin] uploadOnboardingCompletionImage: Storage upload failed", {
+      path,
+      code: uploadError.name,
+      message: uploadError.message,
+    });
+    return { error: "Couldn't upload the image. Please try again." };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("onboarding-card").getPublicUrl(path);
+
+  const { error: updateError } = await supabase
+    .from("onboarding_intro_card")
+    .update({ completion_image_url: publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (updateError) {
+    console.error("[admin] uploadOnboardingCompletionImage: row update failed", {
+      code: updateError.code,
+      message: updateError.message,
+    });
+    return { error: "Image uploaded but couldn't be saved. Please try again." };
+  }
+
+  if (previousPath) {
+    const { error: removeError } = await supabase.storage
+      .from("onboarding-card")
+      .remove([previousPath]);
+    if (removeError) {
+      console.error("[admin] uploadOnboardingCompletionImage: cleanup of previous image failed", {
+        path: previousPath,
+        message: removeError.message,
+      });
+    }
+  }
+
+  void logAdminAction(
+    "onboarding_intro_card.completion_image_updated",
+    "onboarding_intro_card",
+    null,
+  );
+  revalidatePath("/admin/onboarding-card");
+  return { success: "Image updated.", url: publicUrl };
+}
+
+/** Clears the completion screen's image back to null — that screen falls back to a plain icon in that case (see OnboardingLessonComplete), so removal needs no separate fallback logic. */
+export async function removeOnboardingCompletionImage(): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const supabase = await createClient();
+
+  const { data: current } = await supabase
+    .from("onboarding_intro_card")
+    .select("completion_image_url")
+    .eq("id", 1)
+    .maybeSingle();
+  const path = current?.completion_image_url
+    ? onboardingCardPathFromUrl(current.completion_image_url)
+    : null;
+
+  if (path) {
+    const { error: removeError } = await supabase.storage.from("onboarding-card").remove([path]);
+    if (removeError) {
+      console.error("[admin] removeOnboardingCompletionImage: Storage remove failed", {
+        path,
+        message: removeError.message,
+      });
+    }
+  }
+
+  const { error: updateError } = await supabase
+    .from("onboarding_intro_card")
+    .update({ completion_image_url: null, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (updateError) return { error: "Couldn't remove the image. Please try again." };
+
+  void logAdminAction(
+    "onboarding_intro_card.completion_image_removed",
+    "onboarding_intro_card",
+    null,
+  );
+  revalidatePath("/admin/onboarding-card");
+  return { success: "Image removed." };
+}
+
 /**
  * Uploads the illustration shown ON the opening lesson itself (the framed
  * photo/scene beside the sentence, from LessonIllustration) — distinct from

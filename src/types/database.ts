@@ -498,12 +498,15 @@ export interface Database {
           id: number;
           /** Admin-uploaded cover image (Supabase Storage, "onboarding-card" bucket) shown by the get-started flow's third step, before a first-time learner enters their opening lesson — null means "no image set yet" (see src/components/app/onboarding-intro-card.tsx's fallback). */
           image_url: string | null;
+          /** Admin-uploaded image (same "onboarding-card" bucket) shown on the screen a learner sees right after finishing the opening lesson — independent of image_url above, null means "no image set yet" (see src/components/learning/onboarding-lesson-complete.tsx's fallback). */
+          completion_image_url: string | null;
           title: string;
           updated_at: string;
         };
         Insert: {
           id?: number;
           image_url?: string | null;
+          completion_image_url?: string | null;
           title?: string;
           updated_at?: string;
         };
