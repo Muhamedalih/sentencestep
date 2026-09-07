@@ -121,6 +121,31 @@ export function baseVoiceSettings(settings: ElevenLabsSettingsRow): TTSVoiceSett
 }
 
 /**
+ * Lets a caller that already needs status for *many* lessons in one request
+ * (listVoiceGenerationDashboardRows — the Story audio status dashboard)
+ * fetch elevenlabs_settings, the Normal-lesson default pronunciation voice,
+ * and every referenced `voices` row exactly once up front, instead of
+ * loadLessonForVoiceWork re-querying all three per lesson. Measured root
+ * cause of that dashboard timing out (15s+ per load, crashing with the
+ * generic error page) once the library grew past ~100 published
+ * Stories/Normal lessons: bounded concurrency (VOICE_STATUS_CONCURRENCY)
+ * already keeps the *number of lessons in flight* bounded, but every single
+ * lesson — even ones running concurrently — was still doing its own
+ * `elevenlabs_settings` read (a singleton row, identical every time) and up
+ * to two more `voices` reads for its own voice_id, so total query count
+ * still scaled linearly with library size. Optional and defaulted to
+ * undefined everywhere else (generateStoryVoiceDraft's single-lesson
+ * callers: the cron sweep, auto-trigger, and the admin "Generate" actions)
+ * so their behavior — and their single lesson's own fresh queries — is
+ * completely unchanged.
+ */
+export interface PreloadedVoiceWorkContext {
+  settingsRow: ElevenLabsSettingsRow;
+  defaultPronunciationVoiceId: string;
+  voicesById: Map<string, { id: string; source: string; provider_voice_id: string }>;
+}
+
+/**
  * Resolves each sentence's target ElevenLabs voice id, or a human-readable
  * reason it can't be resolved (never a silent default). Batches every
  * `voices` lookup this lesson could possibly need into one query.
@@ -158,6 +183,7 @@ async function resolveTargetVoices(
   sentences: SentenceRow[],
   defaultVoiceId: string | null,
   providerName: string,
+  voicesById?: Map<string, { id: string; source: string; provider_voice_id: string }>,
 ): Promise<{ resolved: Map<string, ResolvedVoice>; unresolved: Map<string, string> }> {
   const resolved = new Map<string, ResolvedVoice>();
   const unresolved = new Map<string, string>();
@@ -165,11 +191,15 @@ async function resolveTargetVoices(
   if (lesson.mode === "stories" || lesson.mode === "normal") {
     let voiceId = defaultVoiceId;
     if (lesson.voice_id) {
-      const { data: overrideVoice } = await supabase
-        .from("voices")
-        .select("id, source")
-        .eq("id", lesson.voice_id)
-        .maybeSingle();
+      const overrideVoice = voicesById
+        ? (voicesById.get(lesson.voice_id) ?? null)
+        : (
+            await supabase
+              .from("voices")
+              .select("id, source, provider_voice_id")
+              .eq("id", lesson.voice_id)
+              .maybeSingle()
+          ).data;
       if (overrideVoice?.source === providerName) voiceId = overrideVoice.id;
     }
     if (!voiceId) {
@@ -178,11 +208,15 @@ async function resolveTargetVoices(
       return { resolved, unresolved };
     }
 
-    const { data: voiceRow } = await supabase
-      .from("voices")
-      .select("id, provider_voice_id, source")
-      .eq("id", voiceId)
-      .maybeSingle();
+    const voiceRow = voicesById
+      ? (voicesById.get(voiceId) ?? null)
+      : (
+          await supabase
+            .from("voices")
+            .select("id, provider_voice_id, source")
+            .eq("id", voiceId)
+            .maybeSingle()
+        ).data;
     if (!voiceRow || voiceRow.source !== providerName) {
       const reason = `The configured story voice is missing or isn't a ${providerName} voice.`;
       for (const s of sentences) unresolved.set(s.id, reason);
@@ -296,6 +330,7 @@ interface ExistingCacheRow {
 async function loadLessonForVoiceWork(
   supabase: DbClient,
   lessonId: string,
+  preloaded?: PreloadedVoiceWorkContext,
 ): Promise<
   | { ok: false; error: string }
   | {
@@ -338,15 +373,20 @@ async function loadLessonForVoiceWork(
   if (sentencesError) return { ok: false, error: "Couldn't load the lesson's sentences." };
   const sentences = sentenceRows ?? [];
 
-  const { data: settingsRow, error: settingsError } = await supabase
-    .from("elevenlabs_settings")
-    .select(
-      "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
-    )
-    .eq("id", 1)
-    .maybeSingle();
-  if (settingsError || !settingsRow)
-    return { ok: false, error: "Couldn't load ElevenLabs settings." };
+  let settingsRow: ElevenLabsSettingsRow;
+  if (preloaded) {
+    settingsRow = preloaded.settingsRow;
+  } else {
+    const { data, error: settingsError } = await supabase
+      .from("elevenlabs_settings")
+      .select(
+        "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
+      )
+      .eq("id", 1)
+      .maybeSingle();
+    if (settingsError || !data) return { ok: false, error: "Couldn't load ElevenLabs settings." };
+    settingsRow = data;
+  }
 
   if (sentences.length === 0) {
     return {
@@ -365,7 +405,7 @@ async function loadLessonForVoiceWork(
   // Stories/Conversation keep using it exactly as before.
   const defaultVoiceId =
     lesson.mode === "normal"
-      ? await getDefaultPronunciationVoiceId()
+      ? (preloaded?.defaultPronunciationVoiceId ?? (await getDefaultPronunciationVoiceId()))
       : settingsRow.default_story_voice_id;
   const { resolved: voiceBySentence, unresolved } = await resolveTargetVoices(
     supabase,
@@ -373,6 +413,7 @@ async function loadLessonForVoiceWork(
     sentences,
     defaultVoiceId,
     providerName,
+    preloaded?.voicesById,
   );
 
   const neighborEn = (index: number): { prev: string | null; next: string | null } => ({
@@ -454,8 +495,9 @@ export interface SentenceVoiceStatus {
 export async function getLessonVoiceStatus(
   supabase: DbClient,
   lessonId: string,
+  preloaded?: PreloadedVoiceWorkContext,
 ): Promise<{ statuses: SentenceVoiceStatus[]; error?: string }> {
-  const loaded = await loadLessonForVoiceWork(supabase, lessonId);
+  const loaded = await loadLessonForVoiceWork(supabase, lessonId, preloaded);
   if (!loaded.ok) return { statuses: [], error: loaded.error };
 
   const statuses: SentenceVoiceStatus[] = [];

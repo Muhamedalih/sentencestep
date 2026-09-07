@@ -2,7 +2,12 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getBookVoiceStatus } from "@/lib/voice/book-voice-generation";
-import { getLessonVoiceStatus, type SentenceVoiceStatus } from "@/lib/voice/story-voice-generation";
+import {
+  getLessonVoiceStatus,
+  type PreloadedVoiceWorkContext,
+  type SentenceVoiceStatus,
+} from "@/lib/voice/story-voice-generation";
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 
 export interface VoiceDashboardRow {
   contentType: "story" | "conversation" | "normal" | "book";
@@ -67,8 +72,60 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
   // requests at Supabase's connection pool on a large library.
   const serviceClient = createServiceRoleClient();
 
+  // elevenlabs_settings, the Normal-lesson default pronunciation voice, and
+  // every `voices` row this library's lessons/books could possibly
+  // reference are each fetched exactly once here and handed to every item
+  // below (see PreloadedVoiceWorkContext's own doc comment) — without this,
+  // loadLessonForVoiceWork/loadBookForVoiceWork re-ran the same
+  // elevenlabs_settings read and up to two more `voices` reads *per lesson
+  // and per book*, which is what actually timed this dashboard out once the
+  // library grew past ~100 published items (bounded concurrency alone
+  // doesn't help: total query count still scaled with library size, not
+  // with the concurrency limit).
+  const referencedVoiceIds = [
+    ...new Set(
+      [...safeLessons, ...safeBooks]
+        .map((item) => item.voice_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const [
+    { data: settingsRow, error: settingsError },
+    defaultPronunciationVoiceId,
+    { data: voiceRows },
+  ] = await Promise.all([
+    serviceClient
+      .from("elevenlabs_settings")
+      .select(
+        "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
+      )
+      .eq("id", 1)
+      .maybeSingle(),
+    getDefaultPronunciationVoiceId(),
+    referencedVoiceIds.length
+      ? serviceClient
+          .from("voices")
+          .select("id, source, provider_voice_id")
+          .in("id", referencedVoiceIds)
+      : Promise.resolve({
+          data: [] as { id: string; source: string; provider_voice_id: string }[],
+        }),
+  ]);
+  // A missing/errored settings row can't be preloaded — fall back to letting
+  // each item fetch (and fail) it individually, exactly as before this
+  // optimization existed, rather than silently hiding every item behind one
+  // dashboard-wide error.
+  const preloaded: PreloadedVoiceWorkContext | undefined =
+    settingsError || !settingsRow
+      ? undefined
+      : {
+          settingsRow,
+          defaultPronunciationVoiceId,
+          voicesById: new Map((voiceRows ?? []).map((v) => [v.id, v])),
+        };
+
   const storyRows = mapWithConcurrency(safeLessons, VOICE_STATUS_CONCURRENCY, async (lesson) => {
-    const { statuses } = await getLessonVoiceStatus(serviceClient, lesson.id);
+    const { statuses } = await getLessonVoiceStatus(serviceClient, lesson.id, preloaded);
     const contentType =
       lesson.mode === "conversation"
         ? "conversation"
@@ -85,7 +142,7 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
     );
   });
   const bookRows = mapWithConcurrency(safeBooks, VOICE_STATUS_CONCURRENCY, async (book) => {
-    const { statuses } = await getBookVoiceStatus(serviceClient, book.id);
+    const { statuses } = await getBookVoiceStatus(serviceClient, book.id, preloaded);
     return summarize(
       "book",
       book.id,

@@ -14,6 +14,7 @@ import {
   isStaleGenerating,
   MAX_VOICE_RETRY_ATTEMPTS,
   type ElevenLabsSettingsRow,
+  type PreloadedVoiceWorkContext,
   type SentenceVoiceStatus,
   type VoiceGenerationOutcome,
 } from "@/lib/voice/story-voice-generation";
@@ -93,16 +94,22 @@ async function loadBookForVoiceWork(
   supabase: DbClient,
   bookId: string,
   providerName: string,
+  preloaded?: PreloadedVoiceWorkContext,
 ): Promise<{ ok: false; error: string } | { ok: true; loaded: LoadedBook }> {
-  const { data: settingsRow, error: settingsError } = await supabase
-    .from("elevenlabs_settings")
-    .select(
-      "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
-    )
-    .eq("id", 1)
-    .maybeSingle();
-  if (settingsError || !settingsRow)
-    return { ok: false, error: "Couldn't load narration settings." };
+  let settingsRow: ElevenLabsSettingsRow;
+  if (preloaded) {
+    settingsRow = preloaded.settingsRow;
+  } else {
+    const { data, error: settingsError } = await supabase
+      .from("elevenlabs_settings")
+      .select(
+        "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
+      )
+      .eq("id", 1)
+      .maybeSingle();
+    if (settingsError || !data) return { ok: false, error: "Couldn't load narration settings." };
+    settingsRow = data;
+  }
 
   const { data: bookRow, error: bookError } = await supabase
     .from("books")
@@ -119,16 +126,29 @@ async function loadBookForVoiceWork(
   if (sectionsError) return { ok: false, error: "Couldn't load the book's sections." };
   const sectionIds = (sections ?? []).map((s) => s.id);
 
-  const sentences: BookSentenceRow[] = [];
-  for (const sectionId of sectionIds) {
-    const { data: rows, error } = await supabase
-      .from("book_sentences")
-      .select("id, en, order_index, section_id")
-      .eq("section_id", sectionId)
-      .order("order_index");
-    if (error) return { ok: false, error: "Couldn't load the book's sentences." };
-    sentences.push(...(rows ?? []));
+  // One batched query across every section instead of one sequential query
+  // per section — a book with N sections used to cost N round trips here
+  // alone. Grouped and re-sorted in JS (by sectionIds' own order, then each
+  // section's order_index) rather than relying on the query's own .order()
+  // across sections, since order_index is only meaningful *within* a
+  // section and a single cross-section .order("order_index") would
+  // interleave sections whose local indexes happen to overlap.
+  const { data: sentenceRows, error: sentencesError } = sectionIds.length
+    ? await supabase
+        .from("book_sentences")
+        .select("id, en, order_index, section_id")
+        .in("section_id", sectionIds)
+    : { data: [] as BookSentenceRow[], error: null };
+  if (sentencesError) return { ok: false, error: "Couldn't load the book's sentences." };
+  const sentencesBySection = new Map<string, BookSentenceRow[]>();
+  for (const row of sentenceRows ?? []) {
+    const list = sentencesBySection.get(row.section_id) ?? [];
+    list.push(row);
+    sentencesBySection.set(row.section_id, list);
   }
+  const sentences: BookSentenceRow[] = sectionIds.flatMap(
+    (id) => sentencesBySection.get(id)?.sort((a, b) => a.order_index - b.order_index) ?? [],
+  );
 
   if (sentences.length === 0) {
     return {
@@ -158,22 +178,30 @@ async function loadBookForVoiceWork(
   // global default below, same as Stories.
   let candidateVoiceId = settingsRow.default_story_voice_id;
   if (bookRow?.voice_id) {
-    const { data: overrideVoice } = await supabase
-      .from("voices")
-      .select("id, source")
-      .eq("id", bookRow.voice_id)
-      .maybeSingle();
+    const overrideVoice = preloaded
+      ? (preloaded.voicesById.get(bookRow.voice_id) ?? null)
+      : (
+          await supabase
+            .from("voices")
+            .select("id, source, provider_voice_id")
+            .eq("id", bookRow.voice_id)
+            .maybeSingle()
+        ).data;
     if (overrideVoice?.source === providerName) candidateVoiceId = overrideVoice.id;
   }
 
   if (!candidateVoiceId) {
     unresolvedReason = `No ${providerName} voice configured — set a default narration voice in Admin > Voice.`;
   } else {
-    const { data: voiceRow } = await supabase
-      .from("voices")
-      .select("id, provider_voice_id, source")
-      .eq("id", candidateVoiceId)
-      .maybeSingle();
+    const voiceRow = preloaded
+      ? (preloaded.voicesById.get(candidateVoiceId) ?? null)
+      : (
+          await supabase
+            .from("voices")
+            .select("id, provider_voice_id, source")
+            .eq("id", candidateVoiceId)
+            .maybeSingle()
+        ).data;
     if (!voiceRow || voiceRow.source !== providerName) {
       unresolvedReason = `The configured narration voice is missing or isn't a ${providerName} voice.`;
     } else {
@@ -248,9 +276,10 @@ async function loadBookForVoiceWork(
 export async function getBookVoiceStatus(
   supabase: DbClient,
   bookId: string,
+  preloaded?: PreloadedVoiceWorkContext,
 ): Promise<{ statuses: SentenceVoiceStatus[]; error?: string }> {
   const provider = getTTSProvider();
-  const result = await loadBookForVoiceWork(supabase, bookId, provider.name);
+  const result = await loadBookForVoiceWork(supabase, bookId, provider.name, preloaded);
   if (!result.ok) return { statuses: [], error: result.error };
   const { sentences, keyedSentences, unresolvedReason, existingByKey } = result.loaded;
 
