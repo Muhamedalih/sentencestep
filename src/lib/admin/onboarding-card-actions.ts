@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { ONBOARDING_CARD_TITLE_MAX_LENGTH } from "@/lib/admin/onboarding-card-settings";
-import { markTranslationsStaleIfChanged } from "@/lib/admin/translations";
+import { markTranslationsStaleIfChanged, upsertTranslation } from "@/lib/admin/translations";
 import { generateLessonVoice, setContentVoiceOverride } from "@/lib/admin/voice-generation-actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -545,4 +545,86 @@ export async function saveOpeningLessonSentences(
   revalidatePath("/admin/content");
   for (const lessonId of OPENING_LESSON_IDS) revalidatePath(`/learn/normal/${lessonId}`);
   return { success: "Sentences saved for all three starting levels." };
+}
+
+/**
+ * Hand-authored Spanish/Turkish translations for the 5 opening-lesson
+ * sentences (see OPENING_LESSON_WORD_TRANSLATIONS above for the same
+ * pattern) — the lesson's title/description already carry Spanish/Turkish
+ * from the original seeding, but the sentence text itself lost its es/tr
+ * content_translations rows when the English wording changed (see
+ * saveOpeningLessonSentences's markTranslationsStaleIfChanged call, which
+ * only flags the old rows stale rather than replacing them). Written
+ * directly here rather than via the AI auto-translation pipeline, matching
+ * every other piece of this app's content the admin authors by hand.
+ */
+const OPENING_LESSON_SENTENCE_TRANSLATIONS: { es: string; tr: string }[] = [
+  {
+    es: "Aprender inglés puede ser simple",
+    tr: "İngilizce öğrenmek basit olabilir",
+  },
+  {
+    es: "Escuchas, escribes y aprendes una oración a la vez",
+    tr: "Dinlersin, yazarsın ve her seferinde bir cümle öğrenirsin",
+  },
+  {
+    es: "Comete un error, inténtalo de nuevo y sigue adelante",
+    tr: "Hata yap, tekrar dene ve devam et",
+  },
+  {
+    es: "Con cada oración, el inglés empieza a sentirse más natural",
+    tr: "Her cümleyle birlikte İngilizce daha doğal hissettirmeye başlar",
+  },
+  {
+    es: "Así que da tu primer paso, y deja que tu inglés crezca desde aquí",
+    tr: "O yüzden ilk adımını at ve İngilizcenin buradan itibaren gelişmesine izin ver",
+  },
+];
+
+/**
+ * Writes OPENING_LESSON_SENTENCE_TRANSLATIONS onto all 15 opening-lesson
+ * sentences (5 sentences × 3 OPENING_LESSON_IDS), reusing upsertTranslation
+ * — the exact same write every ordinary admin lesson save already does for
+ * es/tr — so these rows are indistinguishable from a normal approved
+ * translation. Reads each sentence's current English back first so
+ * source_snapshot matches whatever saveOpeningLessonSentences last saved,
+ * rather than assuming the hardcoded copy above is still current.
+ */
+export async function applyOpeningLessonSentenceTranslations(): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const supabase = await createClient();
+  const { data: currentSentences, error: fetchError } = await supabase
+    .from("sentences")
+    .select("id, en")
+    .eq("lesson_id", OPENING_LESSON_IDS[0])
+    .order("order_index");
+  if (
+    fetchError ||
+    !currentSentences ||
+    currentSentences.length !== OPENING_LESSON_SENTENCE_COUNT
+  ) {
+    return { error: "Couldn't read the current sentences. Please try again." };
+  }
+
+  await Promise.all(
+    OPENING_LESSON_IDS.flatMap((lessonId) =>
+      OPENING_LESSON_SENTENCE_TRANSLATIONS.flatMap((translation, index) => {
+        const sourceText = currentSentences[index]?.en ?? "";
+        const contentId = `${lessonId}-s${index + 1}`;
+        return [
+          upsertTranslation("es", "sentence", contentId, "text", translation.es, sourceText),
+          upsertTranslation("tr", "sentence", contentId, "text", translation.tr, sourceText),
+        ];
+      }),
+    ),
+  );
+
+  void logAdminAction("onboarding_intro_card.sentence_translations_applied", "sentences", null, {
+    lessonIds: OPENING_LESSON_IDS,
+  });
+  revalidatePath("/admin/onboarding-card");
+  for (const lessonId of OPENING_LESSON_IDS) revalidatePath(`/learn/normal/${lessonId}`);
+  return { success: "Spanish and Turkish translations applied to all three starting levels." };
 }

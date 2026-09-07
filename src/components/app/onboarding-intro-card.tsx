@@ -74,14 +74,24 @@ export function OnboardingIntroCard() {
   }, [shouldShow, settings]);
 
   if (pathname !== "/") return null;
-  if (isNavigating) {
+  if (!shouldShow || !difficulty) return null;
+
+  // Deliberately a SEPARATE condition from the `!shouldShow` check above,
+  // not folded into it: `shouldShow` alone would let this component return
+  // null for the entire span the settings fetch is in flight, uncovering
+  // whatever "/" actually renders underneath (the marketing homepage) for
+  // that gap — the exact flash isNavigating below exists to prevent, just
+  // at the opposite transition (level chosen -> this step's own content
+  // ready, rather than this step -> the lesson route). The opaque
+  // full-page div must mount the instant shouldShow flips true and stay
+  // mounted continuously through both loading states.
+  if (isNavigating || !settings) {
     return (
       <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
         <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
       </div>
     );
   }
-  if (!shouldShow || !settings || !difficulty) return null;
   const openingLessonPath = `/learn/normal/${OPENING_LESSON_ID[difficulty]}`;
 
   function handleStart() {

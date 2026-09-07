@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  applyOpeningLessonSentenceTranslations,
   applyOpeningLessonWordTranslations,
   generateOpeningLessonVoice,
   removeOnboardingCardImage,
@@ -56,6 +57,24 @@ export function OnboardingCardSettingsForm({
         return;
       }
       setSentencesMessage({ kind: "success", text: result.success ?? "Saved." });
+    });
+  }
+
+  const [sentenceTranslationsMessage, setSentenceTranslationsMessage] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [isApplyingSentenceTranslations, startApplyingSentenceTranslations] = useTransition();
+
+  function handleApplySentenceTranslations() {
+    setSentenceTranslationsMessage(null);
+    startApplyingSentenceTranslations(async () => {
+      const result = await applyOpeningLessonSentenceTranslations();
+      if (result.error) {
+        setSentenceTranslationsMessage({ kind: "error", text: result.error });
+        return;
+      }
+      setSentenceTranslationsMessage({ kind: "success", text: result.success ?? "Applied." });
     });
   }
   const [title, setTitle] = useState(initial.title);
@@ -534,6 +553,40 @@ export function OnboardingCardSettingsForm({
               )}
             >
               {wordTranslationsMessage.text}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Spanish &amp; Turkish translations</CardTitle>
+          <CardDescription>
+            Translates the 5 opening-lesson sentences into Spanish and Turkish (the title and
+            description already have theirs). Applies the hand-authored translations to all three
+            starting levels at once.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleApplySentenceTranslations}
+            disabled={isApplyingSentenceTranslations}
+          >
+            {isApplyingSentenceTranslations ? "Applying…" : "Apply Spanish & Turkish translations"}
+          </Button>
+          {sentenceTranslationsMessage && (
+            <p
+              role={sentenceTranslationsMessage.kind === "error" ? "alert" : undefined}
+              className={cn(
+                "text-sm",
+                sentenceTranslationsMessage.kind === "error"
+                  ? "text-danger"
+                  : "text-muted-foreground",
+              )}
+            >
+              {sentenceTranslationsMessage.text}
             </p>
           )}
         </CardContent>
