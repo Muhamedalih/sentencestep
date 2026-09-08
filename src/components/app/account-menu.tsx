@@ -66,14 +66,15 @@ export function AccountMenu({
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className="border-border/60 bg-card/60 hover:bg-card focus-visible:ring-primary flex items-center gap-2.5 rounded-full border py-1.5 ps-1.5 pe-4 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="border-border/60 bg-card/60 hover:bg-card focus-visible:ring-primary flex items-center gap-2.5 rounded-full border py-1.5 ps-1.5 pe-4 transition-all duration-200 ease-out hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"
       >
+        {/* No progress ring here (the trigger reads as an identity button,
+            not a stats readout) — the popover's own avatar below keeps it. */}
         <InitialsAvatar
           seed={user.id}
           displayName={user.displayName}
           email={user.email}
           className="size-8 text-sm"
-          ringPercent={goalMet ? 100 : ringPercent}
         />
         {/* Visible on the header itself from `sm` up; screen-reader-only
             below that (the icon-only mobile header has no room for it),
