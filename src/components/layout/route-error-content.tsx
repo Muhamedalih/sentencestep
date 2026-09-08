@@ -8,11 +8,17 @@ import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 
 /**
- * Root error boundary — catches unhandled exceptions from any Server
- * Component/Server Action in the tree that isn't itself wrapped in a more
- * specific error.tsx. Client Component per the Next.js App Router contract.
+ * Shared by every root layout's error.tsx (src/app/(app)/error.tsx,
+ * src/app/(default)/error.tsx, src/app/[locale]/error.tsx) — each root
+ * layout needs its OWN error.tsx (Next.js doesn't share a single one across
+ * sibling root layouts; see root-html-shell.tsx's doc comment for why there
+ * are three of them now), but the actual markup/behavior stays
+ * byte-identical to what the single shared src/app/error.tsx rendered
+ * before. Relies on useLocale() — safe here because error.tsx replaces only
+ * the failing `{children}` slot, not the layout around it, so the same
+ * root layout's LocaleProvider is still mounted above it.
  */
-export default function GlobalError({
+export function RouteErrorContent({
   error,
   reset,
 }: {

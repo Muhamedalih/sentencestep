@@ -1,16 +1,16 @@
-import type { Metadata } from "next";
-
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
-export const metadata: Metadata = {
-  title: "Terms",
-};
-
-/** See src/app/page.tsx's identical export for the full reasoning — same edge-compatible render path (SiteHeader), same zero-behavior-change tradeoff. */
-export const runtime = "edge";
-
-export default function TermsPage() {
+/**
+ * Shared by both marketing root layouts' /terms pages (see
+ * src/app/(default)/terms/page.tsx and src/app/[locale]/terms/page.tsx) so
+ * their rendered output can never silently drift apart. No `locale` prop —
+ * this page's own body text is hardcoded English regardless of locale (it
+ * always has been; there's no translated content to select between), and
+ * SiteHeader/SiteFooter read locale from the LocaleProvider context
+ * themselves rather than a prop.
+ */
+export function TermsPageContent() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
