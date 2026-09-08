@@ -11,10 +11,9 @@ const ProgressContext = createContext<ProgressValue | null>(null);
 /**
  * Shares ONE useProgress() instance across every consumer inside it, instead
  * of each one calling the hook independently. The Home dashboard is the
- * motivating case: HomeGreeting, DashboardSummary (since merged into
- * HomeSummary), and HomeHero each used to call useProgress() (HomeHero
- * twice, once directly and once through useCurrentLesson) — four separate
- * mounts of the same effect, each firing
+ * motivating case: HomeGreeting, DashboardSummary, and HomeHero each used to
+ * call useProgress() (HomeHero twice, once directly and once through
+ * useCurrentLesson) — four separate mounts of the same effect, each firing
  * its own fetchProgressAction round trip for a signed-in learner. Those four
  * requests don't resolve at the same instant, so the four skeleton-to-real
  * transitions fired at visibly different times — the "parts of the page pop

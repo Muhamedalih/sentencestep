@@ -13,9 +13,9 @@ import type { LessonUnit } from "@/types/content";
  * Takes an already-resolved `progress` (from useSharedProgress, both of
  * today's two call sites live inside the Home page's ProgressProvider)
  * rather than calling useProgress() itself — see progress-provider.tsx's
- * doc comment for why: HomeSummary and HomeHero both need this, and each
+ * doc comment for why: HomeGreeting and HomeHero both need this, and each
  * calling its own useProgress() independently used to mean two more
- * redundant fetches on top of the ones HomeSummary/HomeHero already
+ * redundant fetches on top of the ones DashboardSummary/HomeHero already
  * made directly.
  */
 export function useCurrentLesson(

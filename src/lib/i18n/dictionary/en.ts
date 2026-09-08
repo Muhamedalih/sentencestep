@@ -399,6 +399,7 @@ export const en: Dictionary = {
     streakUnitSingular: "day",
     streakUnitPlural: "days",
     streakStart: "Complete a lesson to start a streak",
+    lessonsCompleteOverall: "{completed} / {total} lessons complete overall",
     continueMode: "Continue",
     startMode: "Start",
     freeCount: "{n} free",
@@ -514,7 +515,6 @@ export const en: Dictionary = {
     reviewCompleteBody: "You reviewed {n} sentence(s). Nice work.",
     shareSentence: "Share as image",
     share: "Share",
-    savedSpotlightLabel: "From your saves",
     focusSentence: "View full screen",
   },
   pronunciation: {

@@ -407,6 +407,7 @@ export const tr: Dictionary = {
     streakUnitSingular: "gün",
     streakUnitPlural: "gün",
     streakStart: "Bir seri başlatmak için bir ders tamamlayın",
+    lessonsCompleteOverall: "Toplamda {completed} / {total} ders tamamlandı",
     continueMode: "Devam et",
     startMode: "Başla",
     freeCount: "{n} ücretsiz",
@@ -523,7 +524,6 @@ export const tr: Dictionary = {
     reviewCompleteBody: "{n} cümleyi gözden geçirdin. Aferin.",
     shareSentence: "Görsel olarak paylaş",
     share: "Paylaş",
-    savedSpotlightLabel: "Kayıtlarından",
     focusSentence: "Tam ekranda görüntüle",
   },
   pronunciation: {

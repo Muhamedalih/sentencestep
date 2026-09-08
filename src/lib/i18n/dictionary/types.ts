@@ -264,7 +264,7 @@ export interface Dictionary {
     streakLabel: string;
     xpEarnedLabel: string;
     dailyGoalLabel: string;
-    /** Heading for the lesson-completion screen's own daily-progress card — deliberately distinct text from dailyGoalLabel (shared with HomeSummary/BookCompletion, left unchanged there), framing today's count as progress made rather than a quota still owed. */
+    /** Heading for the lesson-completion screen's own daily-progress card — deliberately distinct text from dailyGoalLabel (shared with DashboardSummary/BookCompletion, left unchanged there), framing today's count as progress made rather than a quota still owed. */
     dailyProgressLabel: string;
     sentencesUnit: string;
     wordReadyToReview: string;
@@ -410,14 +410,15 @@ export interface Dictionary {
   progress: {
     streakDaySingular: string;
     streakDayPlural: string;
-    /** Bare unit label ("day"/"days"), no {n} — HomeSummary's big streak number is rendered separately from its label now, so a template placeholder would leak as literal text. */
+    /** Bare unit label ("day"/"days"), no {n} — DashboardSummary's big streak number is rendered separately from its label now, so a template placeholder would leak as literal text. */
     streakUnitSingular: string;
     streakUnitPlural: string;
     streakStart: string;
+    lessonsCompleteOverall: string;
     continueMode: string;
     startMode: string;
     freeCount: string;
-    /** `Welcome back, {name}` — the Home dashboard's small personal greeting (see HomeSummary), shown only when the signed-in learner has a real display name; a nameless learner/guest instead gets the existing `auth.loginHeading` ("Welcome back") with no name inserted. */
+    /** `Welcome back, {name}` — the Home dashboard's small personal greeting (see HomeGreeting), shown only when the signed-in learner has a real display name; a nameless learner/guest instead gets the existing `auth.loginHeading` ("Welcome back") with no name inserted. */
     welcomeBackLabel: string;
     /** Small section eyebrow above HomeHero's card grid — Home dashboard organization pass. */
     upNextLabel: string;
@@ -567,8 +568,6 @@ export interface Dictionary {
     shareSentence: string;
     /** Short form of shareSentence — the saved sentence card's footer button label itself, sized to match "practice" (a single short word). */
     share: string;
-    /** Home dashboard: eyebrow label above a resurfaced saved sentence. */
-    savedSpotlightLabel: string;
     /** Saved sentence card's corner "expand" control — opens the sentence full-screen (see SavedSentenceFocusOverlay). */
     focusSentence: string;
   };
