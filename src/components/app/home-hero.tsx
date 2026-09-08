@@ -7,8 +7,8 @@ import { HomeBookCard } from "@/components/app/home-book-card";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
-import { useProgress } from "@/hooks/use-progress";
 import { formatPrice } from "@/lib/billing/pricing";
 import { findCurrentLesson } from "@/lib/progress/level";
 import type { LessonUnit } from "@/types/content";
@@ -116,8 +116,9 @@ export function HomeHero({
   isPremiumUser: boolean;
 }) {
   const { t, dir } = useLocale();
-  const { isLoaded, getCompletedIds, startingLevel } = useProgress();
-  const { completedIds, currentLesson } = useCurrentLesson(units, isPremiumUser);
+  const progress = useSharedProgress();
+  const { isLoaded, getCompletedIds, startingLevel } = progress;
+  const { completedIds, currentLesson } = useCurrentLesson(units, isPremiumUser, progress);
   // Not `units.length === 0` (no content authored at all — LessonListView's
   // own empty state handles that): specifically "there IS content, but this
   // learner has exhausted everything they're eligible for right now."

@@ -266,42 +266,29 @@ export function VocabularyPractice({
               initial={false}
               className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16"
             >
-              {/* The support-language meaning first, English sentence second
-                  and clearly larger — the learner reads what the word means,
-                  hears it (via the header's Replay button), then has to
-                  recall and type it below. Never falls back to word.hintAr
-                  for Spanish (same rule as typing-sentence.tsx's
-                  supportText) — and unlike sentence translations, there's
-                  no neutral English hint field to fall back to either (see
+              {/* The support-language TERM leads, large and clear — it's the
+                  answer to "what does this word mean," the first thing a
+                  learner needs before they can recall it. The definition
+                  (when splitWordHint finds one) sits underneath at roughly
+                  half that size: real supporting context, not competing for
+                  the same attention. Never falls back to word.hintAr for
+                  Spanish (same rule as typing-sentence.tsx's supportText) —
+                  and unlike sentence translations, there's no neutral
+                  English hint field to fall back to either (see
                   types/word-lists.ts's hintAr doc comment), so a genuinely
                   missing translation renders nothing here rather than a
-                  semantically wrong stand-in. Split into a short term and a
-                  longer definition line via splitWordHint — the same
-                  "term: definition" shape VocabularyLearn reads the same
-                  content with. */}
+                  semantically wrong stand-in. */}
               {hint.term && (
-                <div className="flex w-full max-w-2xl flex-col items-center gap-1.5 text-center">
-                  {hint.definition ? (
-                    <>
-                      <p className="text-muted-foreground text-sm font-medium" dir={dir}>
-                        {hint.term}
-                      </p>
-                      <p
-                        className="text-foreground text-xl font-semibold text-balance sm:text-2xl"
-                        dir={dir}
-                      >
-                        {hint.definition}
-                      </p>
-                    </>
-                  ) : (
-                    // No colon to split on — the term IS the whole hint (see
-                    // splitWordHint), so it takes the definition's own
-                    // prominent size rather than shrinking to a caption.
-                    <p
-                      className="text-foreground text-2xl font-semibold text-balance sm:text-3xl"
-                      dir={dir}
-                    >
-                      {hint.term}
+                <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
+                  <p
+                    className="text-foreground text-3xl font-bold text-balance sm:text-4xl"
+                    dir={dir}
+                  >
+                    {hint.term}
+                  </p>
+                  {hint.definition && (
+                    <p className="text-muted-foreground text-base font-medium" dir={dir}>
+                      {hint.definition}
                     </p>
                   )}
                 </div>

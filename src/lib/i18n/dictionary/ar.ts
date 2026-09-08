@@ -24,7 +24,7 @@ export const ar: Dictionary = {
     learningModes: "أنماط التعلم",
     freeLessons: "دروس مجانية",
     pricing: "الأسعار",
-    normalLessons: "الدروس العادية",
+    normalLessons: "الدروس اليومية",
     stories: "القصص",
     conversation: "المحادثة",
     createAccount: "إنشاء حساب",

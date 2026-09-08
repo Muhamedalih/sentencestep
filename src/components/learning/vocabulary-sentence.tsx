@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -230,14 +230,18 @@ export function VocabularySentence({
  * per-letter tick like every other typing surface in this app: this word
  * genuinely isn't visible anywhere until the learner produces it (see the
  * giant stage above), so the gap needs to read as "a whole word is missing
- * here," not "a few characters." The diagonal hatch is the crossed-out-box
- * look, not a real answer leaking through — it's a fixed pattern, identical
- * regardless of what targetWord actually is.
+ * here," not "a few characters." A soft tinted panel with a dashed border,
+ * not a diagonal hatch pattern — a plain, roomy void reads calmer than a
+ * crossed-out-box look. Focused (`active`) swaps the dashed border for a
+ * solid one plus a soft outer glow, echoing the same underline-color cue
+ * every other typing surface in this app uses for "this is where you're
+ * typing," without needing a visible caret in an input the box is only
+ * standing in for.
  *
  * Once the word is actually typed correctly, `revealedWord` swaps the box
  * out for the real word itself, right there in the sentence — so the
  * completed sentence reads whole afterward instead of leaving a permanent
- * hatched gap where a word obviously used to be missing.
+ * gap where a word obviously used to be missing.
  */
 function BlankBox({
   length,
@@ -261,14 +265,25 @@ function BlankBox({
     );
   }
 
+  const style: CSSProperties = {
+    width: `${Math.max(length, 3) * 0.85}em`,
+    height: "1.65em",
+    ...(active
+      ? ({
+          "--lesson-underline-glow":
+            "color-mix(in oklch, var(--lesson-underline) 14%, transparent)",
+        } as CSSProperties)
+      : undefined),
+  };
+
   return (
     <span
       aria-hidden="true"
-      style={{ width: `${Math.max(length, 3) * 0.62}em` }}
+      style={style}
       className={cn(
-        "border-border relative mx-1 inline-block h-[1.2em] translate-y-[0.22em] rounded-md border-2 align-baseline transition-colors duration-150",
-        "bg-[repeating-linear-gradient(135deg,color-mix(in_oklch,var(--muted-foreground)_16%,transparent)_0px,color-mix(in_oklch,var(--muted-foreground)_16%,transparent)_2px,transparent_2px,transparent_9px)]",
-        active && "border-[var(--lesson-underline)]",
+        "bg-muted/60 border-muted-foreground/25 relative mx-1.5 inline-block translate-y-[0.32em] rounded-xl border-2 border-dashed align-baseline transition-all duration-200",
+        active &&
+          "border-solid border-[var(--lesson-underline)] bg-[var(--lesson-underline)]/[0.06] shadow-[0_0_0_5px_var(--lesson-underline-glow,transparent)]",
       )}
     />
   );

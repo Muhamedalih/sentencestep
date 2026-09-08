@@ -5,6 +5,7 @@ import { HomeGreeting } from "@/components/app/home-greeting";
 import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { SavedSentenceCard } from "@/components/app/saved-sentence-card";
+import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessons } from "@/lib/content";
@@ -152,42 +153,44 @@ export default async function LearnHomePage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
-        <HomeGreeting
-          displayName={user?.displayName ?? null}
-          units={units}
-          isPremiumUser={isPremiumUser}
-          className="lg:w-80 lg:shrink-0"
-        />
-        <DashboardSummary
-          totalLessons={totalLessons}
-          lessonStats={lessonStats}
-          sessionCount={attemptCount}
-          className="flex-1"
-        />
-      </div>
-      <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-        {t.progress.upNextLabel}
-      </p>
-      <HomeHero
-        units={units}
-        storiesUnits={storiesLessons}
-        book={recommendedBook}
-        bookSectionCount={bookSectionCount}
-        bookSentenceCount={bookSentenceCount}
-        bookProgressPercent={bookProgressPercent}
-        isPremiumUser={isPremiumUser}
-      />
-      <NeedsReviewWords words={weakWords} />
-      {savedSpotlight && (
-        <div className="mt-8">
-          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-            {t.bookLibrary.savedSpotlightLabel}
-          </p>
-          <SavedSentenceCard item={savedSpotlight} />
+    <ProgressProvider>
+      <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
+          <HomeGreeting
+            displayName={user?.displayName ?? null}
+            units={units}
+            isPremiumUser={isPremiumUser}
+            className="lg:w-80 lg:shrink-0"
+          />
+          <DashboardSummary
+            totalLessons={totalLessons}
+            lessonStats={lessonStats}
+            sessionCount={attemptCount}
+            className="flex-1"
+          />
         </div>
-      )}
-    </div>
+        <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+          {t.progress.upNextLabel}
+        </p>
+        <HomeHero
+          units={units}
+          storiesUnits={storiesLessons}
+          book={recommendedBook}
+          bookSectionCount={bookSectionCount}
+          bookSentenceCount={bookSentenceCount}
+          bookProgressPercent={bookProgressPercent}
+          isPremiumUser={isPremiumUser}
+        />
+        <NeedsReviewWords words={weakWords} />
+        {savedSpotlight && (
+          <div className="mt-8">
+            <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+              {t.bookLibrary.savedSpotlightLabel}
+            </p>
+            <SavedSentenceCard item={savedSpotlight} />
+          </div>
+        )}
+      </div>
+    </ProgressProvider>
   );
 }

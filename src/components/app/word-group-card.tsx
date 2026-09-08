@@ -3,7 +3,16 @@
 import { useId, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronRight, GraduationCap, Lock, PencilLine } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Crown,
+  GraduationCap,
+  Lock,
+  PencilLine,
+  Sprout,
+  Zap,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,11 +23,20 @@ import { fadeInUp } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { WordGroupSummary } from "@/types/word-lists";
 
-/** Same per-tier accent as word-lists-library.tsx's tier badges (kept as its own small map here rather than a shared import — three lines, one call site each, not worth the indirection): a colored left edge plus a barely-there tint on hover, never a filled/loud background. */
-const TIER_CARD_ACCENT: Record<number, string> = {
-  1: "border-l-success/70 hover:bg-success/[0.04]",
-  2: "border-l-accent/70 hover:bg-accent/[0.06]",
-  3: "border-l-primary/70 hover:bg-primary/[0.04]",
+/**
+ * A small per-tier icon badge next to the card's title — a quieter, more
+ * distinctive substitute for the thick colored left-border stripe every
+ * card used to carry (that read as a generic templated pattern once every
+ * card had one). Sprout/Zap/Crown read as "just starting → building
+ * momentum → mastery" at a glance, on top of the color, so the three tiers
+ * stay visually distinct even for a learner who can't tell the accent
+ * colors apart.
+ */
+const TIER_ICON: Record<number, typeof Sprout> = { 1: Sprout, 2: Zap, 3: Crown };
+const TIER_TINT: Record<number, string> = {
+  1: "bg-success/12 text-success",
+  2: "bg-accent/15 text-accent",
+  3: "bg-primary/12 text-primary",
 };
 
 /**
@@ -54,19 +72,25 @@ export function WordGroupCard({
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
 
+  const TierIcon = TIER_ICON[group.level] ?? Sprout;
+
   if (locked) {
     return (
       <motion.div variants={fadeInUp}>
         <Link
           href={`/learn/word-lists/${group.id}`}
           aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
-          className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
-          <Card
-            className={cn(
-              "flex-row items-center justify-between gap-3 border-l-[3px] px-4 py-3.5 opacity-80 transition-[box-shadow,background-color] duration-200",
-            )}
-          >
+          <Card className="flex-row items-center gap-3 px-4 py-3.5 opacity-70 transition-[box-shadow] duration-200">
+            <div
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-full",
+                TIER_TINT[group.level],
+              )}
+            >
+              <TierIcon className="size-4" aria-hidden="true" />
+            </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium" dir="ltr">
@@ -101,9 +125,8 @@ export function WordGroupCard({
     >
       <Card
         className={cn(
-          "gap-0 overflow-hidden border-l-[3px] p-0 transition-[box-shadow,background-color] duration-200",
-          "hover:shadow-md",
-          TIER_CARD_ACCENT[group.level],
+          "gap-0 overflow-hidden p-0 transition-[box-shadow,border-color] duration-200",
+          "hover:border-border hover:shadow-md",
         )}
       >
         <button
@@ -111,8 +134,16 @@ export function WordGroupCard({
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
           aria-controls={panelId}
-          className="focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-between gap-3 px-4 py-3.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center gap-3 px-4 py-3.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
+          <div
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full",
+              TIER_TINT[group.level],
+            )}
+          >
+            <TierIcon className="size-4" aria-hidden="true" />
+          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium" dir="ltr">
               {group.title}
@@ -164,7 +195,7 @@ export function WordGroupCard({
                     {t.wordLists.learnAction}
                   </Link>
                 </Button>
-                <Button asChild variant="accent" className="flex-1 gap-1.5">
+                <Button asChild className="flex-1 gap-1.5">
                   <Link href={`/learn/word-lists/${group.id}`}>
                     <PencilLine className="size-4" aria-hidden="true" />
                     {t.wordLists.practiceAction}

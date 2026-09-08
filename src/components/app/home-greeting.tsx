@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
 import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
@@ -39,7 +40,12 @@ export function HomeGreeting({
   className?: string;
 }) {
   const { t } = useLocale();
-  const { isLoaded, completedIds, currentLesson } = useCurrentLesson(units, isPremiumUser);
+  const progress = useSharedProgress();
+  const { isLoaded, completedIds, currentLesson } = useCurrentLesson(
+    units,
+    isPremiumUser,
+    progress,
+  );
 
   if (!isLoaded) {
     return (

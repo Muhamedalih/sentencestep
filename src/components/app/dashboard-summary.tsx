@@ -5,7 +5,7 @@ import { Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useProgress } from "@/hooks/use-progress";
+import { useSharedProgress } from "@/components/providers/progress-provider";
 import { learnerLevelSupportLabel } from "@/lib/progress/learner-level";
 import { cn } from "@/lib/utils";
 import type { LessonStatsMap } from "@/components/app/home-hero";
@@ -43,7 +43,7 @@ export function DashboardSummary({
   sessionCount: number | null;
   className?: string;
 }) {
-  const { isLoaded, completions, streak, xp, learnerLevel, dailyProgress } = useProgress();
+  const { isLoaded, completions, streak, xp, learnerLevel, dailyProgress } = useSharedProgress();
   const { t } = useLocale();
 
   if (!isLoaded) {
