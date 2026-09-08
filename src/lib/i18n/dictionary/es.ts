@@ -46,6 +46,7 @@ export const es: Dictionary = {
   },
   account: {
     menuLabel: "Menú de cuenta",
+    manageAccountLabel: "Gestionar cuenta",
     chooseAvatar: "Elige tu avatar",
     avatarOptionLabel: "Avatar {n}",
   },

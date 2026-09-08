@@ -46,6 +46,7 @@ export const en: Dictionary = {
   },
   account: {
     menuLabel: "Account menu",
+    manageAccountLabel: "Manage account",
     chooseAvatar: "Choose your avatar",
     avatarOptionLabel: "Avatar {n}",
   },

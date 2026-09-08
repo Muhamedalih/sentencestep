@@ -57,6 +57,8 @@ export interface Dictionary {
   account: {
     /** Aria-label for the header avatar button that opens this popover. */
     menuLabel: string;
+    /** Visible label on the header account trigger button, next to the avatar (e.g. "Manage account"). */
+    manageAccountLabel: string;
     chooseAvatar: string;
     /** Aria-label for one avatar swatch in the picker grid — "{n}" is a 1-based position, e.g. "Avatar 3". Selected state is conveyed separately via aria-pressed. */
     avatarOptionLabel: string;

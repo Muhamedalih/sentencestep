@@ -38,6 +38,7 @@ export const ar: Dictionary = {
   },
   account: {
     menuLabel: "قائمة الحساب",
+    manageAccountLabel: "إدارة الحساب",
     chooseAvatar: "اختر صورتك الرمزية",
     avatarOptionLabel: "الصورة الرمزية {n}",
   },

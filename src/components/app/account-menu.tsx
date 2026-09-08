@@ -65,9 +65,8 @@ export function AccountMenu({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={t.account.menuLabel}
         aria-expanded={open}
-        className="focus-visible:ring-primary rounded-full transition-transform duration-150 hover:scale-105 focus-visible:ring-2 focus-visible:outline-none"
+        className="border-border/60 bg-card/60 hover:bg-card focus-visible:ring-primary flex items-center gap-2.5 rounded-full border py-1.5 ps-1.5 pe-4 transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         <InitialsAvatar
           seed={user.id}
@@ -76,6 +75,13 @@ export function AccountMenu({
           className="size-8 text-sm"
           ringPercent={goalMet ? 100 : ringPercent}
         />
+        {/* Visible on the header itself from `sm` up; screen-reader-only
+            below that (the icon-only mobile header has no room for it),
+            so the button's accessible name always includes this text
+            instead of a separate aria-label that could drift out of sync. */}
+        <span className="sr-only text-sm font-semibold sm:not-sr-only">
+          {t.account.manageAccountLabel}
+        </span>
       </button>
 
       {open && (

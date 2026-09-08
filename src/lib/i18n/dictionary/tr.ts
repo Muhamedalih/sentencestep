@@ -43,6 +43,7 @@ export const tr: Dictionary = {
   },
   account: {
     menuLabel: "Hesap menüsü",
+    manageAccountLabel: "Hesabı yönet",
     chooseAvatar: "Avatarını seç",
     avatarOptionLabel: "Avatar {n}",
   },
