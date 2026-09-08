@@ -58,9 +58,15 @@
   --surface: oklch(0.22 0.016 265);
   --surface-muted: oklch(0.26 0.018 265);
 
-  --brand: oklch(0.72 0.16 273);
+  /*
+   * Kept close in hue/chroma to :root's light --brand (0.47 0.19 273) —
+   * only the lightness moves, for contrast against the dark background —
+   * so the accent reads as the same violet in both themes instead of a
+   * washed-out pastel next to light mode's richer indigo.
+   */
+  --brand: oklch(0.68 0.18 273);
   --brand-foreground: oklch(0.16 0.02 270);
-  --brand-muted: oklch(0.3 0.05 273);
+  --brand-muted: oklch(0.3 0.06 273);
 
   --accent: oklch(0.78 0.15 75);
   --accent-foreground: oklch(0.2 0.04 75);
