@@ -101,6 +101,27 @@ function withCsp(response: NextResponse, csp: string): NextResponse {
   return response;
 }
 
+/**
+ * Whether this request carries a Supabase session cookie at all
+ * (`sb-<project-ref>-auth-token`, possibly chunked into `.0`/`.1` suffixes
+ * by supabase-js when the JWT is large — hence a substring check rather
+ * than an exact name match). Lets every call site below skip
+ * `getClaims()`'s JWT verification (and, on projects still using
+ * symmetric signing keys, its network round trip to the Auth server —
+ * see the doc comments at each call site) entirely for a guest with no
+ * session: there is provably no JWT to verify, so the result is always
+ * `null` claims, just reached without the extra request/CPU work. This
+ * matters here specifically because middleware runs on literally every
+ * matched request (see this file's own matcher) — signed-out traffic
+ * (every marketing-page visit, most of this app's actual volume) was
+ * paying that cost on every single page view for no behavioral gain.
+ */
+function hasSupabaseAuthCookie(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+}
+
 function createMiddlewareSupabaseClient(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -175,6 +196,13 @@ async function handleAdminRoute(request: NextRequest, csp: string): Promise<Next
 
   if (!isSupabaseConfigured()) {
     return withCsp(NextResponse.json({ error: "Forbidden" }, { status: 403 }), csp);
+  }
+
+  if (!hasSupabaseAuthCookie(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", request.nextUrl.pathname);
+    return withCsp(NextResponse.redirect(url), csp);
   }
 
   const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
@@ -378,17 +406,30 @@ export async function middleware(request: NextRequest) {
     return withCsp(NextResponse.next({ request }), csp);
   }
 
-  const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
+  // A guest with no Supabase session cookie at all can never produce claims
+  // — skip standing up a client and calling getClaims() entirely rather
+  // than doing that work just to arrive at the same `null` (see
+  // hasSupabaseAuthCookie's doc comment). This is the common case for
+  // every marketing-page visit, so it's the request path most worth not
+  // paying JWT verification (and, on projects without asymmetric signing
+  // keys, a real Auth-server round trip) for.
+  let claims: { sub: string } | null = null;
+  let response = NextResponse.next({ request });
+  let supabase: ReturnType<typeof createMiddlewareSupabaseClient>["supabase"] | null = null;
+  if (hasSupabaseAuthCookie(request)) {
+    const created = createMiddlewareSupabaseClient(request);
+    supabase = created.supabase;
 
-  // See handleAdminRoute's identical getClaims() switch above for why this
-  // replaces getUser() — same JWT-verification guarantee, without forcing a
-  // network round trip to the Auth server on every request/action once the
-  // Supabase project is on asymmetric signing keys.
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims ?? null;
+    // See handleAdminRoute's identical getClaims() switch above for why this
+    // replaces getUser() — same JWT-verification guarantee, without forcing a
+    // network round trip to the Auth server on every request/action once the
+    // Supabase project is on asymmetric signing keys.
+    const { data } = await supabase.auth.getClaims();
+    claims = data?.claims ?? null;
+    response = created.getResponse();
+  }
 
-  let response = getResponse();
-  if (claims) {
+  if (claims && supabase) {
     if (request.nextUrl.pathname !== VERIFY_MFA_PATH && (await isMfaPending(supabase))) {
       const url = request.nextUrl.clone();
       url.pathname = VERIFY_MFA_PATH;
