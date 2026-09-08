@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManageBillingButton } from "@/components/billing/manage-billing-button";
+import { signOut } from "@/lib/supabase/auth-actions";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { AccessState } from "@/lib/billing/types";
 
@@ -54,6 +56,16 @@ export function AccountSection({
             )}
           </p>
         )}
+
+        {/* The account header's own trigger now links straight here instead
+            of opening a popover (see AccountMenu) — sign-out used to live
+            only in that popover, so it moved here to keep it reachable. */}
+        <form action={signOut} className="pt-1">
+          <Button type="submit" variant="ghost" size="sm" className="text-danger w-fit">
+            <LogOut aria-hidden="true" />
+            {t.common.signOut}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

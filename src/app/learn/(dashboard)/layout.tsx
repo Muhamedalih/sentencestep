@@ -3,10 +3,8 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app/app-header";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
-import { getAccessState } from "@/lib/billing/access";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
-import { fetchXp } from "@/lib/supabase/queries/progress";
 
 /**
  * The dashboard chrome (header + sidebar) for every /learn/* page except
@@ -28,16 +26,12 @@ import { fetchXp } from "@/lib/supabase/queries/progress";
  * to live inside this specific layout to only ever fire once.
  */
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
-  const [user, access] = await Promise.all([getCurrentUser(), getAccessState()]);
-  // Only fetched for a signed-in learner — AccountMenu (which needs both)
-  // never mounts for a guest, see AppHeader.
-  const [xp, savedCount] = user
-    ? await Promise.all([fetchXp(user.id), fetchMySavedSentencesCount(user.id)])
-    : [0, 0];
+  const user = await getCurrentUser();
+  const savedCount = user ? await fetchMySavedSentencesCount(user.id) : 0;
 
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
-      <AppHeader user={user} access={access} xp={xp} savedCount={savedCount} />
+      <AppHeader user={user} savedCount={savedCount} />
       <div className="flex flex-1 flex-col md:flex-row">
         <LearnSidebar />
         <main className="min-w-0 flex-1">{children}</main>

@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { cn } from "@/lib/utils";
-import type { AccessState } from "@/lib/billing/types";
 import type { CurrentUser } from "@/lib/supabase/auth";
 
 /** Duolingo-style always-visible streak/XP pair, centered in the header — see AppHeader's own doc comment for why this replaced empty header space. Renders nothing until progress has actually loaded, never a flashing "0". */
@@ -59,14 +58,9 @@ function ProgressHud() {
  */
 export function AppHeader({
   user,
-  access,
-  xp,
   savedCount,
 }: {
   user: CurrentUser | null;
-  access: AccessState;
-  /** Total XP, for the account menu's learner-level line (see AccountMenu) — 0 for a guest, never rendered there anyway since AccountMenu only mounts when signed in. */
-  xp: number;
   /** This learner's saved-sentence count, for the bookmark icon's badge — 0/undefined renders no badge at all. */
   savedCount?: number;
 }) {
@@ -147,7 +141,7 @@ export function AppHeader({
                 <ThemeToggle />
               </div>
               <div className="bg-border/60 h-6 w-px" aria-hidden="true" />
-              <AccountMenu user={user} access={access} xp={xp} />
+              <AccountMenu user={user} />
             </>
           ) : (
             <>
