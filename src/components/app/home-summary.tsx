@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Flame } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
@@ -24,20 +23,22 @@ function MiniStat({ value, label }: { value: number; label: string }) {
 }
 
 /**
- * The Home dashboard's single top card (visual redesign pass) — merges what
- * used to be two adjacent cards, HomeGreeting's identity/CTA and
- * DashboardSummary's daily-goal/streak/session stats, into one bordered
- * card. Also drops the overall-lessons-complete and level/XP line the old
- * DashboardSummary used to close with: that line repeated numbers already
- * shown elsewhere (the account menu) and was consistently the least-needed
- * information competing for attention on first paint, per user feedback.
- * Sessions/lines/words and the daily goal/streak stay exactly as before —
- * only the wrapping and that one trailing line changed.
+ * The Home dashboard's single top card — merges what used to be two adjacent
+ * cards, HomeGreeting's identity/CTA and DashboardSummary's daily-goal/
+ * streak/session stats, into one bordered card, streak-led: the current
+ * streak renders as a large hero number with a faint flame watermark behind
+ * it (the one number most likely to bring a learner back tomorrow), with
+ * identity/CTA beside it, the daily goal below, and sessions/lines/words as
+ * quiet secondary context under a divider. Drops the overall-lessons-complete
+ * and level/XP line the old DashboardSummary used to close with — that line
+ * repeated numbers already shown elsewhere (the account menu) and was
+ * consistently the least-needed information competing for attention on
+ * first paint, per user feedback.
  *
- * The streak flame uses a dedicated muted violet instead of --accent
- * (kept local to this component, not a theme token) so recoloring it here
- * doesn't also recolor XP badges/icons elsewhere in the app that read
- * --accent directly.
+ * The violet used for the streak number/watermark/goal-bar fill is a
+ * dedicated muted color, not --accent (kept local to this component) so
+ * recoloring it here doesn't also recolor XP badges/icons elsewhere in the
+ * app that read --accent directly.
  */
 export function HomeSummary({
   displayName,
@@ -68,15 +69,18 @@ export function HomeSummary({
     // for a returning learner whose real progress hasn't loaded yet.
     return (
       <div
-        className={cn("border-border/60 bg-card/60 rounded-2xl border p-5 sm:p-6", className)}
+        className={cn("border-border/60 bg-card/60 rounded-2xl border p-6 sm:p-7", className)}
         aria-hidden="true"
       >
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-5">
-          <div className="bg-muted h-9 w-40 animate-pulse rounded" />
-          <div className="bg-muted h-9 w-16 animate-pulse rounded" />
-          <div className="bg-muted h-5 min-w-[180px] flex-1 animate-pulse rounded" />
+        <div className="flex flex-wrap items-end gap-6">
+          <div className="bg-muted h-14 w-20 animate-pulse rounded" />
+          <div className="flex min-w-[200px] flex-1 flex-col gap-2.5">
+            <div className="bg-muted h-4 w-24 animate-pulse rounded" />
+            <div className="bg-muted h-9 w-40 animate-pulse rounded" />
+          </div>
         </div>
-        <div className="border-border/50 mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-4">
+        <div className="bg-muted mt-6 h-5 w-full animate-pulse rounded" />
+        <div className="border-border/50 mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-4">
           <div className="bg-muted h-5 w-40 animate-pulse rounded" />
         </div>
       </div>
@@ -101,39 +105,66 @@ export function HomeSummary({
   );
   const ctaLabel = completedIds.length > 0 ? t.common.continueLearning : t.common.startLearning;
 
+  const violetText = "text-[oklch(0.52_0.09_296)] dark:text-[oklch(0.6_0.045_296)]";
+  const violetBg = "bg-[oklch(0.52_0.09_296)] dark:bg-[oklch(0.6_0.045_296)]";
+
   return (
-    <div className={cn("border-border/60 bg-card/60 rounded-2xl border p-5 sm:p-6", className)}>
-      {/* Identity + CTA on one side, streak on the other — each gets its own
-          line of breathing room instead of sharing a line with the goal bar
-          and mini-stats (an earlier pass crammed the name chip, CTA button,
-          streak, and goal bar into one row; with a real name it read as
-          visual noise, not a clean strip). */}
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-col gap-1.5">
-            <p className="text-muted-foreground text-sm font-medium">
-              {t.progress.welcomeBackLabel}
-            </p>
-            {displayName ? (
-              <div
-                dir="ltr"
-                className="w-fit -rotate-1 rounded-xl bg-[oklch(0.96_0.015_85)] px-4 py-2 text-[oklch(0.32_0.03_60)] shadow-[0_2px_0_0_oklch(0.85_0.03_80)]"
-              >
-                <span
-                  dir="auto"
-                  className="block truncate text-lg font-bold tracking-tight sm:text-xl"
-                >
-                  {displayName}
-                </span>
-              </div>
-            ) : (
-              <p className="truncate text-lg font-semibold tracking-tight sm:text-xl">
-                {t.auth.loginHeading}
-              </p>
+    <div
+      className={cn(
+        "border-border/60 bg-card/60 relative overflow-hidden rounded-2xl border p-6 sm:p-7",
+        className,
+      )}
+    >
+      {/* Faint flame watermark behind the streak number — purely decorative. */}
+      <svg
+        className={cn("pointer-events-none absolute -start-5 -bottom-8 size-48", violetText)}
+        style={{ opacity: 0.1 }}
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          d="M12 22c-4 0-7-3-7-6.5 0-3 2-5 3-7 .5 1.5 1.5 2.5 2.5 2.5 1 0 1-1 1-2 0-2 1-4 3-5.5 0 2 1 3.5 2.5 5C18.5 10 19 12 19 14c0 4.5-3 8-7 8Z"
+          fill="currentColor"
+        />
+      </svg>
+
+      {/* Streak — the largest, most prominent number on this card, since
+          it's the one stat most likely to bring a learner back tomorrow.
+          Muted violet instead of --accent (amber), scoped to this component. */}
+      <div className="relative flex flex-wrap items-end gap-6">
+        <div>
+          <div
+            className={cn(
+              "font-mono text-5xl leading-none font-extrabold tabular-nums",
+              violetText,
             )}
+            dir="ltr"
+          >
+            {streak.currentStreak}
           </div>
+          <div className="text-muted-foreground mt-1.5 text-xs font-semibold">
+            {streak.currentStreak === 1
+              ? t.progress.streakUnitSingular
+              : t.progress.streakUnitPlural}{" "}
+            🔥
+          </div>
+        </div>
+
+        <div className="flex min-w-[200px] flex-1 flex-col gap-2.5">
+          <span className="text-muted-foreground text-sm font-medium">
+            {t.progress.welcomeBackLabel}
+          </span>
+          {displayName ? (
+            <span dir="ltr" className="truncate text-lg font-extrabold tracking-tight sm:text-xl">
+              {displayName}
+            </span>
+          ) : (
+            <span className="truncate text-lg font-extrabold tracking-tight sm:text-xl">
+              {t.auth.loginHeading}
+            </span>
+          )}
           {currentLesson && (
-            <Button asChild>
+            <Button asChild className="mt-1 w-fit">
               <Link href={`/learn/normal/${currentLesson.id}`}>
                 {ctaLabel}
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -141,38 +172,12 @@ export function HomeSummary({
             </Button>
           )}
         </div>
-
-        {/* Streak — deliberately the largest number on this card, since it's
-            the one stat most likely to bring a learner back tomorrow. Muted
-            violet instead of --accent (amber), scoped to this component. */}
-        <div className="flex items-center gap-2.5">
-          <Flame
-            className={cn(
-              "size-7",
-              streak.currentStreak > 0
-                ? "text-[oklch(0.52_0.09_296)] dark:text-[oklch(0.6_0.045_296)]"
-                : "text-muted-foreground",
-            )}
-            aria-hidden="true"
-          />
-          <div className="flex flex-col">
-            <span
-              className="text-2xl leading-none font-extrabold tabular-nums sm:text-3xl"
-              dir="ltr"
-            >
-              {streak.currentStreak}
-            </span>
-            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {streak.currentStreak === 1
-                ? t.progress.streakUnitSingular
-                : t.progress.streakUnitPlural}
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* Daily goal — its own full-width line. */}
-      <div className="mt-5">
+      {/* Daily goal — its own full-width line, violet fill matching the
+          streak above (hand-rolled here rather than the shared Progress
+          component, which hardcodes its fill to bg-primary). */}
+      <div className="relative mt-6">
         <div className="text-muted-foreground mb-1.5 flex items-center justify-between text-sm">
           <span className="font-semibold">{t.lesson.dailyGoalLabel}</span>
           <span className="tabular-nums">
@@ -180,12 +185,17 @@ export function HomeSummary({
             {t.lesson.sentencesUnit}
           </span>
         </div>
-        <Progress value={dailyGoalPercent} className="h-2" />
+        <div className="bg-muted h-2 overflow-hidden rounded-full">
+          <div
+            className={cn("h-full rounded-full transition-[width] duration-500 ease-out", violetBg)}
+            style={{ width: `${dailyGoalPercent}%` }}
+          />
+        </div>
       </div>
 
       {/* Secondary context — sessions/lines/words, visually quieter than the
           streak and daily goal above. */}
-      <div className="border-border/50 text-muted-foreground mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-4">
+      <div className="border-border/50 text-muted-foreground relative mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-4">
         <MiniStat value={sessions} label={t.stats.sessionsLabel} />
         <MiniStat value={totals.sentences} label={t.stats.linesLabel} />
         <MiniStat value={totals.words} label={t.stats.wordsLabel} />
