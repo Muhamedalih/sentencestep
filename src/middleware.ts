@@ -72,11 +72,27 @@ function sentryConnectSrc(): string {
   }
 }
 
+/**
+ * The exact SHA-256 hash (`openssl dgst -sha256 -binary | openssl base64`,
+ * or Node's `crypto.createHash("sha256")`) of layout.tsx's THEME_INIT_SCRIPT
+ * string, byte for byte — CSP hashes the literal text a `<script>` tag
+ * executes, so this must be recomputed and updated here if that script's
+ * source ever changes even by one character (a stale hash just makes the
+ * script fail CSP and silently not run, not a build error). Authorizing it
+ * this way rather than by nonce is what lets layout.tsx render it without
+ * calling headers() for a per-request nonce — a fixed, build-time-known
+ * hash needs no per-request value at all, which is what actually lets
+ * pages that don't otherwise read cookies()/headers() become statically
+ * cacheable. See THEME_INIT_SCRIPT's own doc comment for why the script
+ * itself is safe to authorize this way (100% static, zero interpolation).
+ */
+const THEME_SCRIPT_HASH = "sha256-wsUdzDaf48DVgowQHlmZS5LH85z4u/iIq9XHllJtjn4=";
+
 function buildCsp(nonce: string): string {
   const isProd = process.env.NODE_ENV === "production";
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-eval'"} https://challenges.cloudflare.com`,
+    `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}'${isProd ? "" : " 'unsafe-eval'"} https://challenges.cloudflare.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https://*.supabase.co",
