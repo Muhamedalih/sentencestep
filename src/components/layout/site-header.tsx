@@ -15,14 +15,16 @@ import { FREE_ACCESS } from "@/lib/billing/types";
  * redirects every authenticated visitor away before this ever renders, so
  * `user` was always effectively null here regardless.
  *
- * For "/privacy" and "/terms" specifically this is a real, deliberate
- * behavior change: previously, a signed-in learner who navigated directly
- * to one of those two pages (no in-app link does this — see
- * register-form.tsx, the only internal link to either, which is itself only
- * reachable signed-out) would see the "Dashboard"/"Sign out" header state;
- * now they see the same signed-out "Sign in"/"Start learning" buttons as
- * every other visitor. Flagged explicitly since it's the one place this
- * change alters real (if rare) behavior rather than only caching.
+ * For "/privacy" and "/terms" specifically, always passing `user={null}`
+ * here on its own WOULD be a real behavior regression: a signed-in learner
+ * who navigates directly to one of those two pages (no in-app link does
+ * this — see register-form.tsx, the only internal link to either, which is
+ * itself only reachable signed-out) would see the signed-out "Sign
+ * in"/"Start learning" buttons despite already being signed in. That's
+ * fixed one layer down: SiteHeaderClient checks for a Supabase auth cookie
+ * CLIENT-SIDE, after hydration (see its own doc comment), and swaps in a
+ * generic signed-in header state if one is present — without this Server
+ * Component ever reading the cookie itself, so the page stays fully static.
  */
 export function SiteHeader() {
   return <SiteHeaderClient user={null} access={FREE_ACCESS} />;

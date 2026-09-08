@@ -10,6 +10,9 @@ export function generateStaticParams() {
 
 export const dynamicParams = false;
 
+/** See src/app/[locale]/page.tsx's identical export for why this is required (generateStaticParams alone doesn't force real static output here) rather than left to auto-detection. */
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Terms",
 };
