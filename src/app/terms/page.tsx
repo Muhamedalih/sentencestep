@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Terms",
 };
 
+/** See src/app/page.tsx's identical export for the full reasoning — same edge-compatible render path (SiteHeader), same zero-behavior-change tradeoff. */
+export const runtime = "edge";
+
 export default function TermsPage() {
   return (
     <div className="flex min-h-svh flex-col">

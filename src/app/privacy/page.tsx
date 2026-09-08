@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Privacy",
 };
 
+/** See src/app/page.tsx's identical export for the full reasoning — same edge-compatible render path (SiteHeader), same zero-behavior-change tradeoff. */
+export const runtime = "edge";
+
 export default function PrivacyPage() {
   return (
     <div className="flex min-h-svh flex-col">
