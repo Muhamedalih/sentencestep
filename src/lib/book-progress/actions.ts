@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import { isBookProgressComplete } from "@/lib/book-progress/completion";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getStreakMilestone } from "@/lib/email/milestones";
@@ -29,6 +30,10 @@ import type { BookSentenceCompletionResult } from "@/lib/book-progress/types";
 import type { BookProgressSummary, BookSectionWithSentences } from "@/types/library";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
+  // Same fast path as getCurrentUser (src/lib/supabase/auth.ts) — a guest
+  // with no session cookie can never produce claims, so skip standing up a
+  // client and calling getClaims() at all for that guaranteed-null case.
+  if (!(await hasSupabaseAuthCookie())) return null;
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   return data?.claims.sub ?? null;
@@ -54,28 +59,47 @@ async function getAuthenticatedUserId(): Promise<string | null> {
  * reader's completed count hasn't reached the book's current total, so
  * isComplete stays false and the reading page falls back to its "resume
  * position lost" branch instead of the wrong "book complete" one.
+ *
+ * `countsPromise` lets a caller that already needs this book's section/
+ * sentence counts for its own purposes (the Home dashboard renders them
+ * directly alongside this summary — see (dashboard)/page.tsx) hand over
+ * that same in-flight request instead of this function firing its own,
+ * identical `fetchBookContentCounts` query a second time. Every other
+ * caller (Book Overview, the reading page) omits it and gets the exact
+ * same behavior as before.
+ *
+ * Counts are only ever needed for the final totalSentenceCount/isComplete
+ * fields below — nothing about which branch runs (userId, then row vs.
+ * first-sentence) depends on them — so the counts fetch is kicked off
+ * up front and only actually awaited at the end, letting it run fully
+ * alongside the auth check + row/first-sentence lookup instead of that
+ * chain waiting on it (or vice versa) first.
  */
-export async function fetchBookProgressAction(bookId: string): Promise<BookProgressSummary> {
-  const counts = await fetchBookContentCounts(bookId);
+export async function fetchBookProgressAction(
+  bookId: string,
+  countsPromise?: ReturnType<typeof fetchBookContentCounts>,
+): Promise<BookProgressSummary> {
+  const counts = countsPromise ?? fetchBookContentCounts(bookId);
   const userId = await getAuthenticatedUserId();
 
   if (userId) {
     const row = await fetchBookProgressRow(userId, bookId);
     if (row) {
+      const { sentenceCount } = await counts;
       return {
         completedSentenceCount: row.completedSentenceCount,
-        totalSentenceCount: counts.sentenceCount,
+        totalSentenceCount: sentenceCount,
         currentSectionId: row.currentSectionId,
         currentSentenceId: row.currentSentenceId,
-        isComplete: isBookProgressComplete(row.completedSentenceCount, counts.sentenceCount),
+        isComplete: isBookProgressComplete(row.completedSentenceCount, sentenceCount),
       };
     }
   }
 
-  const first = await fetchFirstSentenceRef(bookId);
+  const [{ sentenceCount }, first] = await Promise.all([counts, fetchFirstSentenceRef(bookId)]);
   return {
     completedSentenceCount: 0,
-    totalSentenceCount: counts.sentenceCount,
+    totalSentenceCount: sentenceCount,
     currentSectionId: first?.sectionId ?? null,
     currentSentenceId: first?.sentenceId ?? null,
     isComplete: false,
