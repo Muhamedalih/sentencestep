@@ -5,7 +5,20 @@ import { Button } from "@/components/ui/button";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 
-export default async function NotFound() {
+/**
+ * Shared by every root layout's not-found.tsx (src/app/(app)/not-found.tsx,
+ * src/app/(default)/not-found.tsx, src/app/[locale]/not-found.tsx) — each
+ * root layout needs its OWN not-found.tsx (Next.js doesn't share a single
+ * one across sibling root layouts; see root-html-shell.tsx's doc comment
+ * for why there are three of them now), but the actual markup/behavior
+ * stays byte-identical to what the single shared src/app/not-found.tsx
+ * rendered before. Reads the locale straight from the cookie (not a route
+ * param) exactly as before — this is only ever reached for a genuinely
+ * unmatched path, which is always rendered on demand regardless, so a
+ * cookies() call here doesn't affect any other route's static/dynamic
+ * status.
+ */
+export async function NotFoundContent() {
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 

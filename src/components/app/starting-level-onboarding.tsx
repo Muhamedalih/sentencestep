@@ -8,6 +8,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { Logo } from "@/components/layout/logo";
+import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { tierSupportLabel, type Difficulty } from "@/lib/levels";
 import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 
@@ -31,12 +32,13 @@ const TIER_DOT_CLASS: Record<Difficulty, string> = {
  * takeover, no backdrop-blur-through), not a modal popped up later inside
  * the dashboard. Gated on `startingLevel === null` (never asked yet) AND
  * zero completions, so it can never interrupt a returning learner or one who
- * already has real progress; also gated on `pathname === "/"` specifically
- * — mounted at the root layout (same as FirstTimeLanguagePicker) rather than
- * only the dashboard's, so it must self-scope to the marketing homepage a
- * fresh visitor actually lands on, never intercepting /login, /register, or
- * a deep-linked lesson URL for a guest whose local progress happens to be
- * empty too.
+ * already has real progress; also gated on isMarketingHomePath(pathname)
+ * (true for "/" and its locale-prefixed static variants "/ar"/"/es"/"/tr" —
+ * see that helper's own doc comment) — mounted at the root layout (same as
+ * FirstTimeLanguagePicker) rather than only the dashboard's, so it must
+ * self-scope to the marketing homepage a fresh visitor actually lands on,
+ * never intercepting /login, /register, or a deep-linked lesson URL for a
+ * guest whose local progress happens to be empty too.
  *
  * Deliberately doesn't navigate anywhere itself: picking a tier calls
  * setStartingLevel(level) (persistence) and setPendingDifficulty(difficulty)
@@ -58,7 +60,7 @@ export function StartingLevelOnboarding() {
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   if (forceLanguageStep) return null; // back button below sent them to the language step instead
-  if (pathname !== "/") return null;
+  if (!isMarketingHomePath(pathname)) return null;
   if (!locale || !isLoaded || startingLevel !== null || completions.length > 0) return null;
 
   function handleSelect(difficulty: Difficulty, level: number) {

@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { DEV_ADMIN_COOKIE } from "@/lib/admin/constants";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "@/lib/i18n/locale-cookie";
-import { isSupportLocale } from "@/lib/i18n/locales";
+import { isSupportLocale, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 
 /**
  * Pages an already-authenticated visitor shouldn't land on again. The
@@ -88,11 +88,45 @@ function sentryConnectSrc(): string {
  */
 const THEME_SCRIPT_HASH = "sha256-wsUdzDaf48DVgowQHlmZS5LH85z4u/iIq9XHllJtjn4=";
 
-function buildCsp(nonce: string): string {
+/**
+ * True for "/", "/privacy", "/terms" and every one of their locale-prefixed
+ * static siblings ("/ar", "/es/privacy", "/tr/terms", ...) — see
+ * buildCsp's `isStaticRoute` param for why this distinction exists.
+ */
+function isStaticMarketingPath(pathname: string): boolean {
+  if (MARKETING_STATIC_PATHS.has(pathname)) return true;
+  return SUPPORT_LOCALES.some(
+    (locale) =>
+      pathname === `/${locale}` ||
+      pathname === `/${locale}/privacy` ||
+      pathname === `/${locale}/terms`,
+  );
+}
+
+function buildCsp(nonce: string, isStaticRoute: boolean): string {
   const isProd = process.env.NODE_ENV === "production";
+  // A per-request nonce cannot work on a statically-generated page: the
+  // HTML is rendered ONCE at build time with no request to attach a nonce
+  // to, so Next.js ships its own internal hydration/streaming <script>
+  // tags on these routes with no nonce attribute at all (confirmed by
+  // diffing curl output of a static vs. a dynamic route — the dynamic
+  // page's internal scripts carry `nonce="..."`, the static page's don't).
+  // A strict nonce-only script-src would then block Next's OWN scripts on
+  // every visit to "/", "/privacy", "/terms" (and their locale variants),
+  // breaking hydration entirely — this is a documented Next.js/CSP
+  // limitation (nonces are incompatible with static rendering), not
+  // something fixable from application code. `'unsafe-inline'` here
+  // (WITHOUT a nonce or hash present — a nonce/hash source makes browsers
+  // ignore 'unsafe-inline' entirely, so the two can't be combined) is the
+  // standard mitigation, scoped to exactly these three read-only,
+  // unauthenticated, no-form marketing pages — every other route (login,
+  // learn, admin, ...) keeps the strict nonce-based policy unchanged.
+  const scriptSrc = isStaticRoute
+    ? "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com"
+    : `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}'${isProd ? "" : " 'unsafe-eval'"} https://challenges.cloudflare.com`;
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}'${isProd ? "" : " 'unsafe-eval'"} https://challenges.cloudflare.com`,
+    scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https://*.supabase.co",
@@ -379,6 +413,48 @@ function handleRootRoute(
 }
 
 /**
+ * The three routes statically pre-rendered per src/app/(default)/layout.tsx
+ * (unprefixed) and src/app/[locale]/layout.tsx (locale-prefixed) — see
+ * redirectToLocalizedMarketingPath below for what actually happens on this
+ * set.
+ */
+const MARKETING_STATIC_PATHS = new Set(["/", "/privacy", "/terms"]);
+
+/**
+ * Sends a visitor who already has a ss_locale cookie straight to the
+ * matching locale-prefixed STATIC variant ("/ar", "/es/privacy", ...)
+ * instead of the unprefixed English-fallback one — this is what lets a
+ * returning visitor's very first response already be the fully static,
+ * correctly-localized HTML, with no flash of English first (see
+ * src/app/[locale]/layout.tsx's doc comment: that tree is pre-rendered per
+ * locale at build time, with no per-request cookie read left to resolve
+ * one). A cookie-less, genuinely first-time visitor is untouched: `null` is
+ * returned, and the caller falls through to the unprefixed static page
+ * exactly as today, with FirstTimeLanguagePicker prompting them.
+ *
+ * Deliberately does NOT apply this redirect for an authenticated visitor on
+ * "/" — the caller checks that first (see handleRootRoute) and returns
+ * before ever reaching here, since they're headed to /learn regardless of
+ * locale. /privacy and /terms have no such authenticated-visitor redirect,
+ * on either the old dynamic pages or these new static ones — a signed-in
+ * learner can still open either directly, same as before this task.
+ */
+function redirectToLocalizedMarketingPath(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse | null {
+  const pathname = request.nextUrl.pathname;
+  if (!MARKETING_STATIC_PATHS.has(pathname)) return null;
+
+  const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+  if (!isSupportLocale(cookieLocale)) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = `/${cookieLocale}${pathname === "/" ? "" : pathname}`;
+  return carryCookies(response, NextResponse.redirect(url));
+}
+
+/**
  * Refreshes the Supabase session cookie on every request (the official
  * @supabase/ssr pattern — calling getUser() here revalidates the access
  * token so Server Components downstream never see a stale session), keeps
@@ -400,7 +476,7 @@ export async function middleware(request: NextRequest) {
   // NextResponse.next({ request })" pattern that function already uses for
   // cookies.
   const nonce = generateNonce();
-  const csp = buildCsp(nonce);
+  const csp = buildCsp(nonce, isStaticMarketingPath(request.nextUrl.pathname));
   // Both set as REQUEST headers (not just the response header every branch
   // below adds via withCsp) — Next's own App Router build pipeline detects
   // this exact x-nonce/Content-Security-Policy request-header pair to
@@ -417,8 +493,13 @@ export async function middleware(request: NextRequest) {
   const isRoot = request.nextUrl.pathname === "/";
 
   if (!isSupabaseConfigured()) {
-    if (isRoot)
-      return withCsp(handleRootRoute(request, false, NextResponse.next({ request })), csp);
+    // No auth system at all, so never authenticated — handleRootRoute would
+    // always no-op here, straight to the locale-redirect check.
+    const marketingRedirect = redirectToLocalizedMarketingPath(
+      request,
+      NextResponse.next({ request }),
+    );
+    if (marketingRedirect) return withCsp(marketingRedirect, csp);
     return withCsp(NextResponse.next({ request }), csp);
   }
 
@@ -458,8 +539,20 @@ export async function middleware(request: NextRequest) {
     if (reconciled) response = reconciled;
   }
 
+  if (isRoot && claims) {
+    // Authenticated visitor on "/" -> straight to /learn, unchanged from
+    // before this task and regardless of locale.
+    return withCsp(handleRootRoute(request, true, response), csp);
+  }
+
+  const marketingRedirect = redirectToLocalizedMarketingPath(request, response);
+  if (marketingRedirect) return withCsp(marketingRedirect, csp);
+
   if (isRoot) {
-    return withCsp(handleRootRoute(request, Boolean(claims), response), csp);
+    // Not authenticated, no (or invalid) locale cookie: a genuine
+    // first-time visitor — the unprefixed static "/" renders as-is,
+    // FirstTimeLanguagePicker prompts them client-side.
+    return withCsp(response, csp);
   }
 
   if (claims && AUTH_PATHS.has(request.nextUrl.pathname)) {

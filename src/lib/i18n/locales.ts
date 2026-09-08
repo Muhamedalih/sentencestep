@@ -58,3 +58,18 @@ export function isSupportLocale(value: string | null | undefined): value is Supp
 export function dirFor(locale: SupportLocale): "rtl" | "ltr" {
   return LOCALE_META[locale].dir;
 }
+
+/**
+ * True for the marketing homepage's unprefixed URL ("/") AND every one of
+ * its locale-prefixed static variants ("/ar", "/es", "/tr" — see
+ * src/app/[locale]/page.tsx). Used by StartingLevelOnboarding and
+ * OnboardingIntroCard, which gate on "is this the homepage" via
+ * `usePathname()`: once FirstTimeLanguagePicker's setLocale navigates a
+ * first-time visitor from "/" to "/{locale}" (necessary now that the
+ * marketing pages are static — see LocaleProvider's `localizedNavigation`
+ * doc comment), a bare `pathname === "/"` check would incorrectly hide the
+ * rest of the "get started" flow on the very next step.
+ */
+export function isMarketingHomePath(pathname: string): boolean {
+  return pathname === "/" || SUPPORT_LOCALES.some((locale) => pathname === `/${locale}`);
+}

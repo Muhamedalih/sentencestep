@@ -10,6 +10,7 @@ import { useProgress } from "@/hooks/use-progress";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { getOnboardingCardSettings } from "@/lib/admin/onboarding-card-queries";
 import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-settings";
 import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
@@ -60,7 +61,11 @@ export function OnboardingIntroCard() {
 
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const shouldShow =
-    pathname === "/" && !!locale && isLoaded && difficulty !== null && completions.length === 0;
+    isMarketingHomePath(pathname) &&
+    !!locale &&
+    isLoaded &&
+    difficulty !== null &&
+    completions.length === 0;
 
   useEffect(() => {
     if (!shouldShow || settings) return;
@@ -73,7 +78,7 @@ export function OnboardingIntroCard() {
     };
   }, [shouldShow, settings]);
 
-  if (pathname !== "/") return null;
+  if (!isMarketingHomePath(pathname)) return null;
   if (!shouldShow || !difficulty) return null;
 
   // Deliberately a SEPARATE condition from the `!shouldShow` check above,

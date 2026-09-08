@@ -1,13 +1,16 @@
-import type { Metadata } from "next";
-
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
-export const metadata: Metadata = {
-  title: "Privacy",
-};
-
-export default function PrivacyPage() {
+/**
+ * Shared by both marketing root layouts' /privacy pages (see
+ * src/app/(default)/privacy/page.tsx and src/app/[locale]/privacy/page.tsx)
+ * so their rendered output can never silently drift apart. No `locale` prop
+ * — this page's own body text is hardcoded English regardless of locale (it
+ * always has been; there's no translated content to select between), and
+ * SiteHeader/SiteFooter read locale from the LocaleProvider context
+ * themselves rather than a prop.
+ */
+export function PrivacyPageContent() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
