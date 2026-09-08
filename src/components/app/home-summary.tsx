@@ -103,8 +103,12 @@ export function HomeSummary({
 
   return (
     <div className={cn("border-border/60 bg-card/60 rounded-2xl border p-5 sm:p-6", className)}>
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-5">
-        {/* Identity + CTA */}
+      {/* Identity + CTA on one side, streak on the other — each gets its own
+          line of breathing room instead of sharing a line with the goal bar
+          and mini-stats (an earlier pass crammed the name chip, CTA button,
+          streak, and goal bar into one row; with a real name it read as
+          visual noise, not a clean strip). */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex flex-col gap-1.5">
             <p className="text-muted-foreground text-sm font-medium">
@@ -165,23 +169,23 @@ export function HomeSummary({
             </span>
           </div>
         </div>
+      </div>
 
-        {/* Daily goal */}
-        <div className="min-w-[180px] flex-1">
-          <div className="text-muted-foreground mb-1.5 flex items-center justify-between text-sm">
-            <span className="font-semibold">{t.lesson.dailyGoalLabel}</span>
-            <span className="tabular-nums">
-              {Math.min(dailyProgress.sentencesCompleted, dailyProgress.goal)} /{" "}
-              {dailyProgress.goal} {t.lesson.sentencesUnit}
-            </span>
-          </div>
-          <Progress value={dailyGoalPercent} className="h-2" />
+      {/* Daily goal — its own full-width line. */}
+      <div className="mt-5">
+        <div className="text-muted-foreground mb-1.5 flex items-center justify-between text-sm">
+          <span className="font-semibold">{t.lesson.dailyGoalLabel}</span>
+          <span className="tabular-nums">
+            {Math.min(dailyProgress.sentencesCompleted, dailyProgress.goal)} / {dailyProgress.goal}{" "}
+            {t.lesson.sentencesUnit}
+          </span>
         </div>
+        <Progress value={dailyGoalPercent} className="h-2" />
       </div>
 
       {/* Secondary context — sessions/lines/words, visually quieter than the
           streak and daily goal above. */}
-      <div className="border-border/50 text-muted-foreground mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-4">
+      <div className="border-border/50 text-muted-foreground mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-4">
         <MiniStat value={sessions} label={t.stats.sessionsLabel} />
         <MiniStat value={totals.sentences} label={t.stats.linesLabel} />
         <MiniStat value={totals.words} label={t.stats.wordsLabel} />

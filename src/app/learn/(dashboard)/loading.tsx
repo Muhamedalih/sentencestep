@@ -20,12 +20,12 @@ export default function Loading() {
     <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16" aria-hidden="true">
       {/* HomeSummary */}
       <div className="border-border/60 bg-card/60 mb-8 rounded-2xl border p-5 sm:p-6">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
           <Skeleton className="h-9 w-40" />
           <Skeleton className="h-9 w-16" />
-          <Skeleton className="h-5 min-w-[180px] flex-1" />
         </div>
-        <div className="border-border/50 mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-4">
+        <Skeleton className="mt-5 h-5 w-full" />
+        <div className="border-border/50 mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-4">
           <Skeleton className="h-5 w-40" />
         </div>
       </div>
