@@ -281,7 +281,7 @@ export function VocabularyPractice({
               {hint.term && (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
                   <p
-                    className="text-foreground text-3xl font-bold text-balance sm:text-4xl"
+                    className="text-foreground/85 text-2xl font-bold text-balance sm:text-[1.8rem]"
                     dir={dir}
                   >
                     {hint.term}

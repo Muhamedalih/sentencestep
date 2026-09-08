@@ -144,7 +144,7 @@ export function VocabularySentence({
           transition={{ duration: isDiffPhase ? 0.35 : 0.2 }}
           style={fontFamily ? { fontFamily } : undefined}
           className={cn(
-            "text-[clamp(2.5rem,1.2rem+5vw,6rem)] leading-none font-extrabold tracking-tight",
+            "text-[clamp(3.5rem,1.68rem+7vw,8.4rem)] leading-none font-extrabold tracking-tight",
             isDiffPhase && "decoration-danger line-through decoration-[0.07em]",
           )}
         >
@@ -188,7 +188,7 @@ export function VocabularySentence({
           below the entire sentence, nowhere near the word it belongs after. */}
       <p
         onClick={engine.focus}
-        className="text-foreground w-full text-center text-[clamp(1.4rem,1rem+1.8vw,2.25rem)] leading-tight font-semibold text-balance"
+        className="text-muted-foreground w-full text-center text-[clamp(1.4rem,1rem+1.8vw,2.25rem)] leading-tight font-semibold text-balance"
       >
         {prefix && <span>{prefix} </span>}
         <span className="relative inline-block cursor-text align-baseline">
