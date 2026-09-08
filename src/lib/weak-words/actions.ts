@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
 import { fetchAllVocabularyWordsFlat } from "@/lib/supabase/queries/word-lists";
@@ -8,6 +9,10 @@ import { isWeakWord } from "@/lib/weak-words/types";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
+  // Same fast path as getCurrentUser (src/lib/supabase/auth.ts) — a guest
+  // with no session cookie can never produce claims, so skip standing up a
+  // client and calling getClaims() at all for that guaranteed-null case.
+  if (!(await hasSupabaseAuthCookie())) return null;
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   return data?.claims.sub ?? null;

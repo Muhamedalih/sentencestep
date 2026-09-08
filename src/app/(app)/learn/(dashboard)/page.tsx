@@ -60,6 +60,21 @@ export default async function LearnHomePage() {
   // user's id) — chaining it off userPromise instead of awaiting user first
   // lets it still join this same parallel batch instead of forcing its own
   // sequential stage.
+  //
+  // fetchFirstPublishedBook (the `fallbackBook` entry below) also joins this
+  // same batch unconditionally now, rather than only being fetched after learning
+  // featuredBooks came back empty: measured production timing showed each
+  // Supabase round trip on this page costs ~200-500ms, so a sequential
+  // "fetch featured, then fetch fallback" second stage was adding a full
+  // extra round trip specifically on every load with no explicitly featured
+  // book yet (the common state until an admin marks one — see
+  // fetchFirstPublishedBook's doc comment). Firing it in parallel instead
+  // means it's hidden entirely under whichever other query in this batch
+  // takes longest (in practice one of the getLessons calls), at the cost of
+  // one extra always-issued, cheap, indexed single-row query that goes
+  // unused whenever a featured book already exists. That trade is worth it
+  // here: the discarded query is a `select("*") ... limit(1)`, not a scan,
+  // while the round trip it replaces was a real, measured, guaranteed delay.
   const supabase = isSupabaseConfigured() ? createPublicClient() : undefined;
   const userPromise = getCurrentUser();
   const attemptCountPromise = userPromise.then((user) =>
@@ -74,6 +89,7 @@ export default async function LearnHomePage() {
     conversationLessons,
     attemptCount,
     featuredBooks,
+    fallbackBook,
     weakWords,
   ] = await Promise.all([
     getLessons("normal", locale ?? undefined),
@@ -84,6 +100,7 @@ export default async function LearnHomePage() {
     getLessons("conversation", locale ?? undefined),
     attemptCountPromise,
     fetchFeaturedBooks(supabase),
+    fetchFirstPublishedBook(supabase),
     fetchWeakWordsAction(),
   ]);
 
@@ -105,16 +122,20 @@ export default async function LearnHomePage() {
   // full category-scan). Null only when the Library has no published books
   // whatsoever, in which case HomeHero simply omits that card rather than
   // showing empty/fake data.
-  const recommendedBook: Book | null =
-    featuredBooks[0] ?? (await fetchFirstPublishedBook(supabase));
+  const recommendedBook: Book | null = featuredBooks[0] ?? fallbackBook;
 
   let bookSectionCount = 0;
   let bookSentenceCount = 0;
   let bookProgressPercent: number | undefined;
   if (recommendedBook) {
+    // countsPromise is shared with fetchBookProgressAction below (instead of
+    // each independently calling fetchBookContentCounts) — see that
+    // function's own doc comment for why it used to redundantly re-run the
+    // exact same book_sections/book_sentences count query a second time.
+    const countsPromise = fetchBookContentCounts(recommendedBook.id, supabase);
     const [counts, progress] = await Promise.all([
-      fetchBookContentCounts(recommendedBook.id, supabase),
-      fetchBookProgressAction(recommendedBook.id),
+      countsPromise,
+      fetchBookProgressAction(recommendedBook.id, countsPromise),
     ]);
     bookSectionCount = counts.sectionCount;
     bookSentenceCount = counts.sentenceCount;
