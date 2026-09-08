@@ -145,26 +145,23 @@
 }
 
 /*
- * Scoped grayscale redesign of the signed-in app shell (header, sidebar,
- * every /learn/* page — see the "app-shell" class on
- * src/app/learn/(dashboard)/layout.tsx's root div). Marketing/landing pages
- * sit outside this class and keep the original brand-purple tokens
- * untouched. Every component that reads bg-primary/ring-primary/
- * bg-brand-muted (buttons, badges, the progress bar, active nav state,
- * focus rings) compiles to `var(--primary)` etc directly (verified against
- * the actual generated CSS — Tailwind's @theme inline `--color-primary:
- * var(--primary)` is only an internal alias, never what the utility classes
- * themselves reference), so these bare token names are what must be
- * overridden here, exactly like :root/.dark already do site-wide.
+ * Signed-in app shell (header, sidebar, every /learn/* page — see the
+ * "app-shell" class on src/app/learn/(dashboard)/layout.tsx's root div).
+ * Surfaces (background/card/secondary/muted/border, overridden below for
+ * dark mode only) stay neutral grayscale — that's the deliberate premium,
+ * uncluttered base. On top of that neutral base, --primary/--brand/
+ * --brand-muted/--ring are intentionally left unset here so they inherit
+ * the site-wide violet brand tokens from :root/.dark instead of being
+ * forced to grayscale (a prior version of this rule zeroed them out too;
+ * that made the whole shell feel flat and lifeless). Every component that
+ * reads bg-primary/ring-primary/bg-brand-muted (buttons, badges, the
+ * progress bar, active nav state, focus rings, the Home header's
+ * daily-goal ring) compiles to `var(--primary)` etc directly (verified
+ * against the actual generated CSS — Tailwind's @theme inline
+ * `--color-primary: var(--primary)` is only an internal alias, never what
+ * the utility classes themselves reference), so this single violet accent
+ * now shows up on exactly those functional surfaces and nowhere else.
  */
-.app-shell {
-  --primary: oklch(0.2 0 0);
-  --primary-foreground: oklch(0.99 0 0);
-  --brand: oklch(0.2 0 0);
-  --brand-foreground: oklch(0.99 0 0);
-  --brand-muted: oklch(0.91 0 0);
-  --ring: oklch(0.2 0 0);
-}
 
 /*
  * The full-screen lesson player route (/learn/[mode]/[lessonId], plus the
@@ -300,12 +297,6 @@
   --secondary-foreground: oklch(0.96 0.005 260);
   --muted: oklch(0.17 0 0);
   --border: oklch(0.24 0 0);
-  --primary: oklch(0.97 0 0);
-  --primary-foreground: oklch(0.12 0 0);
-  --brand: oklch(0.97 0 0);
-  --brand-foreground: oklch(0.12 0 0);
-  --brand-muted: oklch(0.22 0 0);
-  --ring: oklch(0.75 0 0);
 }
 
 @layer base {
