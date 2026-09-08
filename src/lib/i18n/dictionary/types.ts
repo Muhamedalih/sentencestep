@@ -264,7 +264,7 @@ export interface Dictionary {
     streakLabel: string;
     xpEarnedLabel: string;
     dailyGoalLabel: string;
-    /** Heading for the lesson-completion screen's own daily-progress card — deliberately distinct text from dailyGoalLabel (shared with DashboardSummary/BookCompletion, left unchanged there), framing today's count as progress made rather than a quota still owed. */
+    /** Heading for the lesson-completion screen's own daily-progress card — deliberately distinct text from dailyGoalLabel (shared with BookCompletion, left unchanged there), framing today's count as progress made rather than a quota still owed. */
     dailyProgressLabel: string;
     sentencesUnit: string;
     wordReadyToReview: string;
@@ -410,7 +410,7 @@ export interface Dictionary {
   progress: {
     streakDaySingular: string;
     streakDayPlural: string;
-    /** Bare unit label ("day"/"days"), no {n} — DashboardSummary's big streak number is rendered separately from its label now, so a template placeholder would leak as literal text. */
+    /** Bare unit label ("day"/"days"), no {n} — for a big streak number rendered separately from its label, so a template placeholder would leak as literal text. Not currently rendered anywhere on Home (see HomeHeaderBar) after the borderless-header redesign dropped the streak display; kept for whenever a streak number returns to the UI. */
     streakUnitSingular: string;
     streakUnitPlural: string;
     streakStart: string;
@@ -418,7 +418,7 @@ export interface Dictionary {
     continueMode: string;
     startMode: string;
     freeCount: string;
-    /** `Welcome back, {name}` — the Home dashboard's small personal greeting (see HomeGreeting), shown only when the signed-in learner has a real display name; a nameless learner/guest instead gets the existing `auth.loginHeading` ("Welcome back") with no name inserted. */
+    /** `Welcome back, {name}` — the Home dashboard's small personal greeting (see HomeHeaderBar), shown only when the signed-in learner has a real display name; a nameless learner/guest instead gets the existing `auth.loginHeading` ("Welcome back") with no name inserted. */
     welcomeBackLabel: string;
     /** Small section eyebrow above HomeHero's card grid — Home dashboard organization pass. */
     upNextLabel: string;

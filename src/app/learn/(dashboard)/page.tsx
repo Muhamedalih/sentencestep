@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
-import { DashboardSummary } from "@/components/app/dashboard-summary";
-import { HomeGreeting } from "@/components/app/home-greeting";
+import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
@@ -99,11 +98,6 @@ export default async function LearnHomePage() {
       lessonStats[`${lessonMode}:${lesson.id}`] = { sentences: lesson.sentences.length, words };
     }
   }
-  const totalLessons = LEARNING_MODES.reduce(
-    (sum, lessonMode) => sum + byMode[lessonMode].length,
-    0,
-  );
-
   // The Book recommendation card: the first featured, published book, or
   // the Library's first published book at all if none is explicitly marked
   // featured yet (see fetchFirstPublishedBook's doc comment for why that's
@@ -135,20 +129,12 @@ export default async function LearnHomePage() {
   return (
     <ProgressProvider>
       <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
-        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
-          <HomeGreeting
-            displayName={user?.displayName ?? null}
-            units={units}
-            isPremiumUser={isPremiumUser}
-            className="lg:w-80 lg:shrink-0"
-          />
-          <DashboardSummary
-            totalLessons={totalLessons}
-            lessonStats={lessonStats}
-            sessionCount={attemptCount}
-            className="flex-1"
-          />
-        </div>
+        <HomeHeaderBar
+          user={user}
+          lessonStats={lessonStats}
+          sessionCount={attemptCount}
+          className="mb-10"
+        />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}
         </p>
