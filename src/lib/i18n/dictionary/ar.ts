@@ -387,7 +387,6 @@ export const ar: Dictionary = {
     streakUnitSingular: "يوم",
     streakUnitPlural: "أيام",
     streakStart: "أكمل درسًا لتبدأ تتابعًا",
-    lessonsCompleteOverall: "{completed} / {total} دروس مكتملة إجمالاً",
     continueMode: "متابعة",
     startMode: "ابدأ",
     freeCount: "{n} مجاني",

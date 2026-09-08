@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * full-page spinner at src/app/learn/loading.tsx, which blanked out the
  * header/sidebar chrome too on every navigation between dashboard routes.
  * Approximates the richest of these routes (the Normal-mode Home page:
- * the HomeGreeting + DashboardSummary top row, HomeHero's three-card
+ * HomeSummary's merged identity/goal/streak card, HomeHero's three-card
  * composition, and LessonListView's unit sections) since it's the
  * most-visited entry point; Library and Stories get their own shape-matched
  * skeletons (see the sibling loading.tsx files) since their layout differs
@@ -18,22 +18,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16" aria-hidden="true">
-      {/* HomeGreeting + DashboardSummary row */}
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-stretch">
-        <div className="border-border/60 bg-card/60 flex flex-col justify-center gap-2 rounded-2xl border p-5 lg:w-72 lg:shrink-0">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-40" />
+      {/* HomeSummary */}
+      <div className="border-border/60 bg-card/60 mb-8 rounded-2xl border p-5 sm:p-6">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-5">
+          <Skeleton className="h-9 w-40" />
+          <Skeleton className="h-9 w-16" />
+          <Skeleton className="h-5 min-w-[180px] flex-1" />
         </div>
-        <div className="border-border/60 bg-card/60 flex-1 rounded-2xl border p-5 sm:p-6">
-          <div className="flex flex-wrap gap-x-10 gap-y-4">
-            <Skeleton className="h-10 w-16" />
-            <Skeleton className="h-10 w-16" />
-            <Skeleton className="h-10 w-16" />
-          </div>
-          <div className="border-border/50 mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-4">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-5 w-48" />
-          </div>
+        <div className="border-border/50 mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-4">
+          <Skeleton className="h-5 w-40" />
         </div>
       </div>
 

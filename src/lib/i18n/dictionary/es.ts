@@ -413,7 +413,6 @@ export const es: Dictionary = {
     streakUnitSingular: "día",
     streakUnitPlural: "días",
     streakStart: "Completa una lección para comenzar una racha",
-    lessonsCompleteOverall: "{completed} / {total} lecciones completadas en total",
     continueMode: "Continuar",
     startMode: "Comenzar",
     freeCount: "{n} gratis",

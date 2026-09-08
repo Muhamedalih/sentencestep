@@ -14,7 +14,7 @@ import { findCurrentLesson } from "@/lib/progress/level";
 import type { LessonUnit } from "@/types/content";
 import type { Book } from "@/types/library";
 
-/** Sentence/word totals for one lesson, keyed by `${mode}:${lessonId}` — see (dashboard)/[mode]/page.tsx, which derives this once from the same lesson content it already fetches for the lesson list, no extra queries. Also consumed by DashboardSummary for its Sessions/Lines/Words tiles (see that component's own doc comment). */
+/** Sentence/word totals for one lesson, keyed by `${mode}:${lessonId}` — see (dashboard)/[mode]/page.tsx, which derives this once from the same lesson content it already fetches for the lesson list, no extra queries. Also consumed by HomeSummary for its Sessions/Lines/Words tiles (see that component's own doc comment). */
 export type LessonStatsMap = Record<string, { sentences: number; words: number }>;
 
 /**
@@ -84,7 +84,7 @@ function MainLessonCardBody({
  * current/next Stories lesson (Section 2C, same findCurrentLesson machinery
  * as the main card, just pointed at Stories content instead of Normal). The
  * Sessions/Lines/Words stat row this component used to render at the bottom
- * moved to DashboardSummary at the top of the page (see that component's own
+ * moved to HomeSummary at the top of the page (see that component's own
  * doc comment) — Section 1 of the redesign asks for every progress number in
  * one prominent top block, not split between here and there.
  *
