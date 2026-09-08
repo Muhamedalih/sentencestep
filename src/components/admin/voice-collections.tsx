@@ -14,8 +14,8 @@ import { cn } from "@/lib/utils";
 const COLLECTION_LABELS: Record<string, string> = {
   "edge-tts": "Edge-TTS",
   elevenlabs: "ElevenLabs",
-  azure: "Azure Speech",
-  gemini: "Gemini",
+  cartesia: "Cartesia",
+  hume: "Hume AI",
 };
 
 /**

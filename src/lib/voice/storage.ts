@@ -42,19 +42,19 @@ export function generatedElevenLabsClipPath(voiceId: string): string {
   return `generated/elevenlabs/${voiceId}/${randomUUID()}.mp3`;
 }
 
-/** Same bucket, a separate `generated/azure/` prefix — mirrors generatedElevenLabsClipPath's per-provider prefix convention (see its own doc comment) for the Azure Speech narration pipeline. */
-export function generatedAzureClipPath(voiceId: string): string {
-  return `generated/azure/${voiceId}/${randomUUID()}.mp3`;
-}
-
-/** Same bucket, a separate `generated/gemini/` prefix — mirrors generatedAzureClipPath's per-provider prefix convention for the Gemini narration pipeline (see providers/gemini.ts). */
-export function generatedGeminiClipPath(voiceId: string): string {
-  return `generated/gemini/${voiceId}/${randomUUID()}.mp3`;
-}
-
-/** Same bucket, a separate `generated/edge-tts/` prefix — mirrors generatedAzureClipPath's per-provider prefix convention for the free, zero-config Edge-TTS narration pipeline (see providers/edge-tts.ts). */
+/** Same bucket, a separate `generated/edge-tts/` prefix — mirrors generatedElevenLabsClipPath's per-provider prefix convention for the free, zero-config Edge-TTS narration pipeline (see providers/edge-tts.ts). */
 export function generatedEdgeTtsClipPath(voiceId: string): string {
   return `generated/edge-tts/${voiceId}/${randomUUID()}.mp3`;
+}
+
+/** Same bucket, a separate `generated/cartesia/` prefix — mirrors generatedAzureClipPath's per-provider prefix convention for the Cartesia narration pipeline (see providers/cartesia.ts). */
+export function generatedCartesiaClipPath(voiceId: string): string {
+  return `generated/cartesia/${voiceId}/${randomUUID()}.mp3`;
+}
+
+/** Same bucket, a separate `generated/hume/` prefix — mirrors generatedAzureClipPath's per-provider prefix convention for the Hume AI narration pipeline (see providers/hume.ts). */
+export function generatedHumeClipPath(voiceId: string): string {
+  return `generated/hume/${voiceId}/${randomUUID()}.mp3`;
 }
 
 /** The path for a voice's one admin-preview sample — deterministic (not UUID-suffixed) so re-seeding the same voice overwrites its old sample instead of accumulating orphans. */

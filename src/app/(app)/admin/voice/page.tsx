@@ -7,9 +7,9 @@ import { PronunciationDefaultVoiceForm } from "@/components/admin/pronunciation-
 import { VoiceSettingsForm } from "@/components/admin/voice-settings-form";
 import { ElevenLabsSettingsForm } from "@/components/admin/elevenlabs-settings-form";
 import { ElevenLabsVoiceForm } from "@/components/admin/elevenlabs-voice-form";
-import { AzureVoiceForm } from "@/components/admin/azure-voice-form";
 import { EdgeTtsVoiceForm } from "@/components/admin/edge-tts-voice-form";
-import { GeminiVoiceForm } from "@/components/admin/gemini-voice-form";
+import { CartesiaVoiceForm } from "@/components/admin/cartesia-voice-form";
+import { HumeVoiceForm } from "@/components/admin/hume-voice-form";
 import { Button } from "@/components/ui/button";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
 import {
@@ -18,9 +18,9 @@ import {
   getVoices,
 } from "@/lib/admin/voices-queries";
 import { getElevenLabsSettings, getElevenLabsVoices } from "@/lib/admin/elevenlabs-queries";
-import { getAzureVoices } from "@/lib/admin/azure-queries";
 import { getEdgeTtsVoices } from "@/lib/admin/edge-tts-queries";
-import { getGeminiVoices } from "@/lib/admin/gemini-queries";
+import { getCartesiaVoices } from "@/lib/admin/cartesia-queries";
+import { getHumeVoices } from "@/lib/admin/hume-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -37,9 +37,9 @@ export default async function AdminVoicePage() {
     defaultPronunciationVoiceId,
     elevenlabsSettings,
     elevenlabsVoices,
-    azureVoices,
     edgeTtsVoices,
-    geminiVoices,
+    cartesiaVoices,
+    humeVoices,
   ] = await Promise.all([
     getVoiceSettings(),
     getVoices(),
@@ -47,18 +47,18 @@ export default async function AdminVoicePage() {
     getDefaultPronunciationVoiceId(),
     getElevenLabsSettings(),
     getElevenLabsVoices(),
-    getAzureVoices(),
     getEdgeTtsVoices(),
-    getGeminiVoices(),
+    getCartesiaVoices(),
+    getHumeVoices(),
   ]);
 
   // The "default narration voice" dropdown (ElevenLabsSettingsForm) needs
   // every candidate voice regardless of which provider is currently active
-  // — an admin switching between AZURE_SPEECH_KEY, GEMINI_API_KEY,
-  // ELEVENLABS_API_KEY, and the zero-config Edge-TTS fallback should still
-  // see every provider's registered voices to choose from, not just
-  // whichever one happens to be active right now.
-  const narrationVoices = [...geminiVoices, ...edgeTtsVoices, ...azureVoices, ...elevenlabsVoices];
+  // — an admin switching between ELEVENLABS_API_KEY, CARTESIA_API_KEY,
+  // HUME_API_KEY, and the zero-config Edge-TTS fallback should still see
+  // every provider's registered voices to choose from, not just whichever
+  // one happens to be active right now.
+  const narrationVoices = [...edgeTtsVoices, ...elevenlabsVoices, ...cartesiaVoices, ...humeVoices];
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,20 +80,11 @@ export default async function AdminVoicePage() {
         currentVoiceId={defaultPronunciationVoiceId}
       />
       <VoiceSettingsForm initial={settings} />
-      <GeminiVoiceForm voices={geminiVoices} />
       <EdgeTtsVoiceForm voices={edgeTtsVoices} />
-      {/*
-        Narration settings (the "Default narration voice (Stories & Books)"
-        picker) sits right after Gemini/Edge-TTS rather than at the very
-        bottom, below Azure/ElevenLabs — those two are the providers every
-        deployment can actually use immediately (see provider-registry.ts),
-        so picking a default is almost always the very next step after
-        adding voices there, not something an admin should have to scroll
-        past two other (often empty/paid) provider sections to find.
-      */}
       <ElevenLabsSettingsForm initial={elevenlabsSettings} voices={narrationVoices} />
-      <AzureVoiceForm voices={azureVoices} settings={elevenlabsSettings} />
       <ElevenLabsVoiceForm voices={elevenlabsVoices} settings={elevenlabsSettings} />
+      <CartesiaVoiceForm voices={cartesiaVoices} model={elevenlabsSettings.model} />
+      <HumeVoiceForm voices={humeVoices} />
     </div>
   );
 }

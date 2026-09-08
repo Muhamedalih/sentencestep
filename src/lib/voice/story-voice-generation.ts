@@ -4,19 +4,17 @@ import { getVoiceDirector } from "@/lib/voice/director-registry";
 import { validateVoiceDirectionOutput } from "@/lib/voice/director-validate";
 import type { SentenceDirection } from "@/lib/voice/director-types";
 import { toElevenLabsInput } from "@/lib/voice/direction-to-tags";
-import { toAzureInput } from "@/lib/voice/direction-to-ssml";
 import { toProsodyInput } from "@/lib/voice/direction-to-prosody";
-import { toGeminiInput } from "@/lib/voice/direction-to-gemini-prompt";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { getTTSProvider } from "@/lib/voice/provider-registry";
 import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
 import type { TTSProvider, TTSVoiceSettings } from "@/lib/voice/provider";
 import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import {
-  generatedAzureClipPath,
+  generatedCartesiaClipPath,
   generatedEdgeTtsClipPath,
   generatedElevenLabsClipPath,
-  generatedGeminiClipPath,
+  generatedHumeClipPath,
   uploadVoiceClip,
 } from "@/lib/voice/storage";
 import type { Database } from "@/types/database";
@@ -737,13 +735,13 @@ export async function generateStoryVoiceDraft(
 /**
  * Builds the actual synthesize() request text for whichever narration
  * provider is active — the one place that decides "ElevenLabs bracketed
- * tags vs. Azure SSML vs. Edge-TTS prosody-only SSML," shared by
- * story-voice-generation.ts and book-voice-generation.ts so both content
+ * tags vs. Edge-TTS prosody-only SSML vs. Cartesia/Hume plain text," shared
+ * by story-voice-generation.ts and book-voice-generation.ts so both content
  * types stay in lockstep with whatever provider is configured.
  * `voiceSettings` is only meaningful for ElevenLabs (see baseVoiceSettings'
  * doc comment) — still returned unconditionally since
- * TTSProvider.synthesize's input shape requires it, but Azure's and
- * Edge-TTS's synthesize() both ignore it entirely.
+ * TTSProvider.synthesize's input shape requires it, but Edge-TTS's,
+ * Cartesia's, and Hume's synthesize() all ignore it entirely.
  */
 export function buildProviderSynthesisInput(
   providerName: string,
@@ -752,14 +750,23 @@ export function buildProviderSynthesisInput(
   providerVoiceId: string,
   base: TTSVoiceSettings,
 ): { text: string; voiceSettings: TTSVoiceSettings } {
-  if (providerName === "azure") {
-    return { text: toAzureInput(direction, text, providerVoiceId).ssml, voiceSettings: base };
-  }
   if (providerName === "edge-tts") {
     return { text: toProsodyInput(direction, text, providerVoiceId).ssml, voiceSettings: base };
   }
-  if (providerName === "gemini") {
-    return { text: toGeminiInput(direction, text).text, voiceSettings: base };
+  if (providerName === "cartesia" || providerName === "hume") {
+    // Neither has a verified inline direction syntax (no ElevenLabs-style
+    // bracketed tags, no SSML) — sending either would risk the tags being
+    // read aloud as literal words. Same "no fake control" honesty as
+    // direction-to-prosody.ts: only the pause is simulated, via the same
+    // leading-ellipsis technique, since that's plain text every TTS voice
+    // reads as a natural pause.
+    const pausePrefix =
+      direction.pauseBefore === "long"
+        ? "... ... "
+        : direction.pauseBefore === "short"
+          ? "... "
+          : "";
+    return { text: `${pausePrefix}${text}`, voiceSettings: base };
   }
   const { taggedText, voiceSettings } = toElevenLabsInput(direction, text, base);
   return { text: taggedText, voiceSettings };
@@ -767,9 +774,9 @@ export function buildProviderSynthesisInput(
 
 /** The per-provider Storage path prefix a generated clip is uploaded under — shared by story-voice-generation.ts and book-voice-generation.ts so both content types file clips under the same convention. */
 export function clipPathForProvider(providerName: string, voiceId: string): string {
-  if (providerName === "azure") return generatedAzureClipPath(voiceId);
   if (providerName === "edge-tts") return generatedEdgeTtsClipPath(voiceId);
-  if (providerName === "gemini") return generatedGeminiClipPath(voiceId);
+  if (providerName === "cartesia") return generatedCartesiaClipPath(voiceId);
+  if (providerName === "hume") return generatedHumeClipPath(voiceId);
   return generatedElevenLabsClipPath(voiceId);
 }
 

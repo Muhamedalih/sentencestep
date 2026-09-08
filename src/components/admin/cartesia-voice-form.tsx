@@ -1,57 +1,45 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Loader2, Trash2, Volume2 } from "lucide-react";
+import { Loader2, Search, Trash2, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { addAzureVoiceAction, previewAzureAction } from "@/lib/admin/azure-actions";
+import {
+  addCartesiaVoiceAction,
+  browseCartesiaVoicesAction,
+  previewCartesiaAction,
+} from "@/lib/admin/cartesia-actions";
 import { deleteVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
-import type { ElevenLabsSettings } from "@/lib/admin/elevenlabs-queries";
+import type { CartesiaVoiceSummary } from "@/lib/voice/providers/cartesia";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
 
-/**
- * A curated shortlist of Azure neural voices with rich mstts:express-as
- * style support (see direction-to-ssml.ts's EXPRESS_AS_STYLE) — not an
- * exhaustive catalog (Azure's full voice list is far larger, see
- * https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts),
- * just a starting point so an admin doesn't have to look up a voice name
- * before trying this out. The provider voice id field stays free text
- * (datalist, not a locked <select>) so any real Azure voice name works.
- */
-const SUGGESTED_VOICES = [
-  { id: "en-US-AriaNeural", label: "Aria (US, female — widest style range)" },
-  { id: "en-US-JennyNeural", label: "Jenny (US, female — assistant/chat)" },
-  { id: "en-US-GuyNeural", label: "Guy (US, male — newscast/narration)" },
-  { id: "en-US-DavisNeural", label: "Davis (US, male)" },
-  { id: "en-US-SaraNeural", label: "Sara (US, female)" },
-  { id: "en-US-TonyNeural", label: "Tony (US, male)" },
-  { id: "en-GB-SoniaNeural", label: "Sonia (UK, female)" },
-  { id: "en-GB-RyanNeural", label: "Ryan (UK, male)" },
-];
+function slugify(providerVoiceId: string): string {
+  return `cartesia-${providerVoiceId.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}
+
+function genderFromCartesia(gender: string | null): "female" | "male" {
+  return gender === "masculine" ? "male" : "female";
+}
 
 /**
- * Registers a `voices` row for a real Azure neural voice name — unlike
- * ElevenLabs (ElevenLabsVoiceForm), there is no per-account cloning step:
- * every Azure Speech resource shares the same public catalog, so the admin
- * just picks (or types) a real voice name. Each row's Preview button calls
- * previewAzureAction, ephemeral by construction — nothing here ever writes
- * to voice_audio_cache or Storage.
+ * Registers a `voices` row for a Cartesia voice — either browsed live from
+ * Cartesia's public catalog (browseCartesiaVoicesAction) or pasted in by id
+ * for a private/cloned voice not in that catalog. Mirrors
+ * ElevenLabsVoiceForm's shape (preview/delete list) with one addition: the
+ * browse panel, since Cartesia's catalog is fetched live rather than
+ * requiring the admin to visit Cartesia's own dashboard first.
  */
-export function AzureVoiceForm({
-  voices,
-  settings,
-}: {
-  voices: VoiceRow[];
-  settings: ElevenLabsSettings;
-}) {
+export function CartesiaVoiceForm({ voices, model }: { voices: VoiceRow[]; model: string }) {
   const [isPending, startTransition] = useTransition();
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<CartesiaVoiceSummary[] | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -63,8 +51,8 @@ export function AzureVoiceForm({
     const accent = String(formData.get("accent") ?? "").trim();
 
     startTransition(async () => {
-      const result = await addAzureVoiceAction({
-        id: `azure-${providerVoiceId.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      const result = await addCartesiaVoiceAction({
+        id: slugify(providerVoiceId),
         name,
         providerVoiceId,
         gender,
@@ -76,6 +64,38 @@ export function AzureVoiceForm({
           : { kind: "success", text: result.success ?? "Added." },
       );
       if (!result.error) formRef.current?.reset();
+    });
+  }
+
+  function handleBrowse() {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await browseCartesiaVoicesAction(query);
+      if (result.error) {
+        setMessage({ kind: "error", text: result.error });
+        setResults(null);
+        return;
+      }
+      setResults(result.voices ?? []);
+    });
+  }
+
+  function handleAddFromCatalog(voice: CartesiaVoiceSummary) {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await addCartesiaVoiceAction({
+        id: slugify(voice.id),
+        name: voice.name,
+        providerVoiceId: voice.id,
+        gender: genderFromCartesia(voice.gender),
+        accent: voice.language ?? "Neutral",
+        description: voice.description,
+      });
+      setMessage(
+        result.error
+          ? { kind: "error", text: result.error }
+          : { kind: "success", text: result.success ?? "Added." },
+      );
     });
   }
 
@@ -95,7 +115,7 @@ export function AzureVoiceForm({
     setMessage(null);
     setPreviewingId(voiceId);
     startTransition(async () => {
-      const result = await previewAzureAction({ text: PREVIEW_TEXT, providerVoiceId });
+      const result = await previewCartesiaAction({ text: PREVIEW_TEXT, providerVoiceId, model });
       setPreviewingId(null);
       if (result.error || !result.audioDataUri) {
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
@@ -105,11 +125,8 @@ export function AzureVoiceForm({
       if (audioRef.current) {
         audioRef.current.src = result.audioDataUri;
         audioRef.current.play().catch(() => {
-          // Browsers can refuse this autoplay — the actual play() call lands
-          // after the server round-trip above, past the original click's
-          // user-gesture window. The native player revealed below (bound to
-          // previewAudioUrl) is the reliable fallback: pressing its own play
-          // button is a fresh gesture the browser always allows.
+          // Same autoplay caveat as ElevenLabsVoiceForm — the native player
+          // below is the reliable fallback.
         });
       }
     });
@@ -118,14 +135,60 @@ export function AzureVoiceForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Azure voices (free)</CardTitle>
+        <CardTitle className="text-lg">Cartesia voices</CardTitle>
         <CardDescription>
-          Register a real Azure neural voice name (see the suggestions below, or Azure&apos;s full
-          voice list), then preview how it sounds. Azure&apos;s free tier covers 500,000
-          characters/month — see AZURE_SPEECH_KEY in .env.example for setup.
+          Search Cartesia&apos;s voice catalog and add the ones you want, or paste a voice id
+          directly for a private/cloned voice.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search Cartesia voices (e.g. warm, British, narrator)"
+              className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
+            />
+            <Button type="button" variant="secondary" disabled={isPending} onClick={handleBrowse}>
+              <Search className="size-4" />
+              Browse
+            </Button>
+          </div>
+          {results && (
+            <div className="flex flex-col gap-1.5 rounded-lg border p-2">
+              {results.length === 0 && (
+                <p className="text-muted-foreground py-2 text-center text-sm">No voices found.</p>
+              )}
+              {results.map((voice) => {
+                const alreadyAdded = voices.some((v) => v.providerVoiceId === voice.id);
+                return (
+                  <div
+                    key={voice.id}
+                    className="hover:bg-muted flex items-center gap-3 rounded-lg px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium">{voice.name}</span>
+                      {voice.language && (
+                        <span className="text-muted-foreground ml-2 text-xs">{voice.language}</span>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isPending || alreadyAdded}
+                      onClick={() => handleAddFromCatalog(voice)}
+                    >
+                      {alreadyAdded ? "Added" : "Add"}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <form ref={formRef} action={handleAdd} className="grid gap-3 sm:grid-cols-4">
           <input
             name="name"
@@ -135,18 +198,10 @@ export function AzureVoiceForm({
           />
           <input
             name="providerVoiceId"
-            placeholder="Azure voice name (e.g. en-US-AriaNeural)"
+            placeholder="Cartesia voice id"
             required
-            list="azure-suggested-voices"
             className="border-input bg-background rounded-md border px-3 py-2 text-sm"
           />
-          <datalist id="azure-suggested-voices">
-            {SUGGESTED_VOICES.map((voice) => (
-              <option key={voice.id} value={voice.id}>
-                {voice.label}
-              </option>
-            ))}
-          </datalist>
           <select
             name="gender"
             defaultValue="female"
@@ -168,7 +223,7 @@ export function AzureVoiceForm({
         <div className="flex flex-col gap-1.5">
           {voices.length === 0 && (
             <p className="text-muted-foreground py-4 text-center text-sm">
-              No Azure voices registered yet.
+              No Cartesia voices registered yet.
             </p>
           )}
           {voices.map((voice) => (
@@ -181,11 +236,6 @@ export function AzureVoiceForm({
                 <span className="text-muted-foreground ml-2 text-xs">
                   {voice.gender} · {voice.accent}
                 </span>
-                {settings.defaultStoryVoiceId === voice.id && (
-                  <span className="text-primary ml-2 text-xs font-medium">
-                    Default narration voice
-                  </span>
-                )}
               </div>
               <Button
                 type="button"

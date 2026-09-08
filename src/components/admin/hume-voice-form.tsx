@@ -1,49 +1,40 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Loader2, Sparkles, Trash2, Volume2 } from "lucide-react";
+import { Loader2, Search, Trash2, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  addGeminiVoiceAction,
-  previewGeminiAction,
-  seedGeminiVoicesAction,
-} from "@/lib/admin/gemini-actions";
+  addHumeVoiceAction,
+  browseHumeVoicesAction,
+  previewHumeAction,
+} from "@/lib/admin/hume-actions";
 import { deleteVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
-import { GEMINI_VOICES } from "@/lib/voice/gemini-catalog";
+import type { HumeVoiceSummary } from "@/lib/voice/providers/hume";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
 
+function slugify(providerVoiceId: string): string {
+  return `hume-${providerVoiceId.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}
+
 /**
- * Registers `voices` rows for Gemini — a genuine free tier requiring only a
- * Google account and no billing/card verification (see GEMINI_API_KEY in
- * .env.example), with natural-language style control (see
- * direction-to-gemini-prompt.ts). "Add suggested voices" seeds the whole
- * curated GEMINI_VOICES list in one click, mirroring EdgeTtsVoiceForm's
- * exact "Add N suggested voices" convenience.
+ * Registers a `voices` row for a Hume AI voice — either browsed live from
+ * Hume's shared Voice Library (browseHumeVoicesAction) or pasted in by id
+ * for a custom saved voice not in that library. Mirrors CartesiaVoiceForm's
+ * shape exactly.
  */
-export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
+export function HumeVoiceForm({ voices }: { voices: VoiceRow[] }) {
   const [isPending, startTransition] = useTransition();
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const [results, setResults] = useState<HumeVoiceSummary[] | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-
-  function handleSeed() {
-    setMessage(null);
-    startTransition(async () => {
-      const result = await seedGeminiVoicesAction();
-      setMessage(
-        result.error
-          ? { kind: "error", text: result.error }
-          : { kind: "success", text: result.success ?? "Added." },
-      );
-    });
-  }
 
   function handleAdd(formData: FormData) {
     setMessage(null);
@@ -53,8 +44,8 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
     const accent = String(formData.get("accent") ?? "").trim();
 
     startTransition(async () => {
-      const result = await addGeminiVoiceAction({
-        id: `gemini-manual-${providerVoiceId.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      const result = await addHumeVoiceAction({
+        id: slugify(providerVoiceId),
         name,
         providerVoiceId,
         gender,
@@ -66,6 +57,37 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
           : { kind: "success", text: result.success ?? "Added." },
       );
       if (!result.error) formRef.current?.reset();
+    });
+  }
+
+  function handleBrowse() {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await browseHumeVoicesAction();
+      if (result.error) {
+        setMessage({ kind: "error", text: result.error });
+        setResults(null);
+        return;
+      }
+      setResults(result.voices ?? []);
+    });
+  }
+
+  function handleAddFromCatalog(voice: HumeVoiceSummary) {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await addHumeVoiceAction({
+        id: slugify(voice.id),
+        name: voice.name,
+        providerVoiceId: voice.id,
+        gender: "female",
+        accent: "Neutral",
+      });
+      setMessage(
+        result.error
+          ? { kind: "error", text: result.error }
+          : { kind: "success", text: result.success ?? "Added." },
+      );
     });
   }
 
@@ -85,7 +107,7 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
     setMessage(null);
     setPreviewingId(voiceId);
     startTransition(async () => {
-      const result = await previewGeminiAction({ text: PREVIEW_TEXT, providerVoiceId });
+      const result = await previewHumeAction({ text: PREVIEW_TEXT, providerVoiceId });
       setPreviewingId(null);
       if (result.error || !result.audioDataUri) {
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
@@ -95,11 +117,8 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
       if (audioRef.current) {
         audioRef.current.src = result.audioDataUri;
         audioRef.current.play().catch(() => {
-          // Browsers can refuse this autoplay — the actual play() call lands
-          // after the server round-trip above, past the original click's
-          // user-gesture window. The native player revealed below (bound to
-          // previewAudioUrl) is the reliable fallback: pressing its own play
-          // button is a fresh gesture the browser always allows.
+          // Same autoplay caveat as ElevenLabsVoiceForm — the native player
+          // below is the reliable fallback.
         });
       }
     });
@@ -108,25 +127,54 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Gemini voices (free tier, no card required)</CardTitle>
+        <CardTitle className="text-lg">Hume AI voices</CardTitle>
         <CardDescription>
-          Google&apos;s Gemini TTS — natural-language style control instead of SSML (see
-          direction-to-gemini-prompt.ts), genuine free tier, very cheap beyond it. Requires
-          GEMINI_API_KEY (see .env.example for setup — no billing/card needed to get a key).
+          Browse Hume&apos;s Voice Library and add the ones you want, or paste a voice id directly
+          for a custom saved voice.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={handleSeed}
-          disabled={isPending}
-          className="w-fit"
-        >
-          <Sparkles className="size-4" aria-hidden="true" />
-          Add {GEMINI_VOICES.length} suggested voices
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={isPending}
+            onClick={handleBrowse}
+            className="w-fit"
+          >
+            <Search className="size-4" />
+            Browse Voice Library
+          </Button>
+          {results && (
+            <div className="flex flex-col gap-1.5 rounded-lg border p-2">
+              {results.length === 0 && (
+                <p className="text-muted-foreground py-2 text-center text-sm">No voices found.</p>
+              )}
+              {results.map((voice) => {
+                const alreadyAdded = voices.some((v) => v.providerVoiceId === voice.id);
+                return (
+                  <div
+                    key={voice.id}
+                    className="hover:bg-muted flex items-center gap-3 rounded-lg px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium">{voice.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isPending || alreadyAdded}
+                      onClick={() => handleAddFromCatalog(voice)}
+                    >
+                      {alreadyAdded ? "Added" : "Add"}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <form ref={formRef} action={handleAdd} className="grid gap-3 sm:grid-cols-4">
           <input
@@ -137,7 +185,7 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
           />
           <input
             name="providerVoiceId"
-            placeholder="Voice name (e.g. Kore)"
+            placeholder="Hume voice id"
             required
             className="border-input bg-background rounded-md border px-3 py-2 text-sm"
           />
@@ -151,7 +199,7 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
           </select>
           <input
             name="accent"
-            placeholder="Accent (e.g. Neutral)"
+            placeholder="Accent (e.g. American)"
             className="border-input bg-background rounded-md border px-3 py-2 text-sm sm:col-span-3"
           />
           <Button type="submit" disabled={isPending}>
@@ -162,7 +210,7 @@ export function GeminiVoiceForm({ voices }: { voices: VoiceRow[] }) {
         <div className="flex flex-col gap-1.5">
           {voices.length === 0 && (
             <p className="text-muted-foreground py-4 text-center text-sm">
-              No Gemini voices registered yet.
+              No Hume voices registered yet.
             </p>
           )}
           {voices.map((voice) => (

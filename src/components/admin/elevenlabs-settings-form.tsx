@@ -11,18 +11,17 @@ import { cn } from "@/lib/utils";
 
 /**
  * This "Model" field is passed through as-is to whichever provider is
- * active (see provider-registry.ts) — Azure and Edge-TTS both ignore it
- * entirely, but ElevenLabs and Gemini both need it to be a real model name
+ * active (see provider-registry.ts) — Edge-TTS and Hume both ignore it
+ * entirely, but ElevenLabs and Cartesia both need it to be a real model name
  * for *that specific provider*, so it must be changed here when switching
- * which provider's default narration voice is selected above (a Gemini
- * voice selected while this still says "eleven_v3" will fail — Gemini's
- * request URL is built directly from this value).
+ * which provider's default narration voice is selected above (a Cartesia
+ * voice selected while this still says "eleven_v3" will fail — Cartesia's
+ * request body is built directly from this value).
  */
 const MODEL_OPTIONS = [
   { value: "eleven_v3", label: "Eleven v3 (ElevenLabs, most expressive)" },
   { value: "eleven_multilingual_v2", label: "Eleven Multilingual v2 (ElevenLabs, no audio tags)" },
-  { value: "gemini-2.5-flash-preview-tts", label: "Gemini 2.5 Flash TTS (fast, cheap)" },
-  { value: "gemini-2.5-pro-preview-tts", label: "Gemini 2.5 Pro TTS (higher quality)" },
+  { value: "sonic-2", label: "Sonic 2 (Cartesia)" },
 ];
 
 /**
@@ -75,10 +74,10 @@ export function ElevenLabsSettingsForm({
         <CardTitle className="text-lg">Narration settings</CardTitle>
         <CardDescription>
           Used for Stories, Conversations, and Books — Normal lessons keep using the free Kokoro
-          voices above. The model/stability/similarity/style/speed fields below are ElevenLabs-
-          specific and only take effect when ElevenLabs is the active provider (see
-          provider-registry.ts); with Azure active, the default narration voice above is all that
-          matters here.
+          voices above. The stability/similarity/style/speed sliders below are ElevenLabs-specific
+          and only take effect when ElevenLabs is the active provider (see provider-registry.ts);
+          with Cartesia or Hume active, the Model field and default narration voice above are all
+          that matter here.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -115,9 +114,8 @@ export function ElevenLabsSettingsForm({
         </div>
 
         <p className="text-muted-foreground text-xs">
-          The sliders below only apply when ElevenLabs is the active narration provider — Azure
-          voices deliver their emotion/energy/pace through SSML instead (see direction-to-ssml.ts)
-          and ignore these entirely.
+          The sliders below only apply when ElevenLabs is the active narration provider — Cartesia,
+          Hume, and Edge-TTS voices ignore these entirely.
         </p>
         <div className="grid gap-5 sm:grid-cols-3">
           <ElevenLabsSlider

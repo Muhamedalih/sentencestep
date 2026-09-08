@@ -46,7 +46,7 @@ export default async function AdminVoiceContentPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Story audio status</h1>
         <p className="text-muted-foreground mt-1">
           Narration audio for every published Story, Conversation, Normal lesson, and Book. Stories,
-          Conversations, and Books use the active narration provider (Azure, Gemini, ElevenLabs, or
+          Conversations, and Books use the active narration provider (ElevenLabs, Cartesia, Hume, or
           the built-in Edge-TTS fallback); Normal lessons always use Edge-TTS, isolated from that
           provider (see &quot;Default voice — Normal Lessons, Word Lists &amp; Mistake Review&quot;
           on the main Voice page). Each row&apos;s own voice picker sets that item&apos;s narration
