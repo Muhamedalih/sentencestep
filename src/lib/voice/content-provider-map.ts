@@ -36,12 +36,27 @@ export const WORD_LIST_PROVIDER = "cartesia";
  * holds an ElevenLabs model id (default "eleven_v3", see
  * 20250203000000_elevenlabs_voice_engine.sql) and is Stories/Books' own
  * setting; sending it to Cartesia's API 404s ("Model not found") since the
- * two providers use unrelated model id namespaces. This was passed as
- * Cartesia's model in two places that predate Word Lists moving to
- * Cartesia — CartesiaVoiceForm's preview button (admin/voice/page.tsx) and
- * would have been word-list-voice-generation.ts's too if it had reused
- * elevenlabs_settings — both now use this constant instead. Exported here
- * (rather than from word-list-voice-generation.ts, which pulls in
- * server-only Supabase code) so client components can import it too.
+ * two providers use unrelated model id namespaces.
+ *
+ * "sonic-2" (this codebase's original guess, and once a real Cartesia
+ * model) has since been retired — confirmed against Cartesia's own current
+ * API reference (docs.cartesia.ai/api-reference/tts/bytes) on 2026-09-09,
+ * whose model_id enum is exactly ["sonic-3.6", "sonic-3.5", "sonic-3",
+ * "sonic-latest"], "sonic-3.6" being the documented default. Pinned to a
+ * specific version rather than "sonic-latest" for the same reason
+ * elevenlabs_settings.model is pinned to a specific ElevenLabs model
+ * ("eleven_v3") instead of an auto-updating alias: reproducible audio
+ * across regenerations, not silently different output whenever Cartesia
+ * ships a new default. If Cartesia 404s on this again in the future, that
+ * means this version was retired too — check
+ * docs.cartesia.ai/api-reference/tts/bytes for the current enum rather than
+ * guessing again.
+ *
+ * Used in two places: word-list-voice-generation.ts's real generation
+ * pipeline and CartesiaVoiceForm's admin preview button
+ * (admin/voice/page.tsx) — both must agree on one real Cartesia model id.
+ * Exported here (rather than from word-list-voice-generation.ts, which
+ * pulls in server-only Supabase code) so client components can import it
+ * too.
  */
-export const DEFAULT_CARTESIA_MODEL = "sonic-2";
+export const DEFAULT_CARTESIA_MODEL = "sonic-3.6";
