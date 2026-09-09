@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/voice/providers/fetch-with-timeout";
 import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice/provider";
 
 const API_BASE = "https://api.hume.ai/v0/tts";
@@ -23,7 +24,7 @@ export function createHumeProvider(apiKey: string): TTSProvider {
   return {
     name: "hume",
     async synthesize(input: SynthesizeInput): Promise<SynthesizedAudio> {
-      const response = await fetch(API_BASE, {
+      const response = await fetchWithTimeout(API_BASE, {
         method: "POST",
         headers: {
           "X-Hume-Api-Key": apiKey,
@@ -70,7 +71,7 @@ export async function listHumeVoices(
     page_size: String(opts.pageSize ?? 50),
   });
 
-  const response = await fetch(`${API_BASE}/voices?${params.toString()}`, {
+  const response = await fetchWithTimeout(`${API_BASE}/voices?${params.toString()}`, {
     headers: { "X-Hume-Api-Key": apiKey },
   });
   if (!response.ok) {

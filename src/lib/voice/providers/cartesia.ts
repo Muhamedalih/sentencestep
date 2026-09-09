@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/voice/providers/fetch-with-timeout";
 import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice/provider";
 
 const API_BASE = "https://api.cartesia.ai";
@@ -44,7 +45,7 @@ export function createCartesiaProvider(apiKey: string): TTSProvider {
   return {
     name: "cartesia",
     async synthesize(input: SynthesizeInput): Promise<SynthesizedAudio> {
-      const response = await fetch(`${API_BASE}/tts/bytes`, {
+      const response = await fetchWithTimeout(`${API_BASE}/tts/bytes`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -96,7 +97,7 @@ export async function listCartesiaVoices(
   if (opts.query) params.set("q", opts.query);
   if (opts.language) params.set("language", opts.language);
 
-  const response = await fetch(`${API_BASE}/voices?${params.toString()}`, {
+  const response = await fetchWithTimeout(`${API_BASE}/voices?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Cartesia-Version": API_VERSION,

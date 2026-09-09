@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/voice/providers/fetch-with-timeout";
 import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice/provider";
 
 const API_BASE = "https://api.elevenlabs.io/v1";
@@ -41,7 +42,7 @@ export function createElevenLabsProvider(apiKey: string): TTSProvider {
   return {
     name: "elevenlabs",
     async synthesize(input: SynthesizeInput): Promise<SynthesizedAudio> {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${API_BASE}/text-to-speech/${encodeURIComponent(input.voiceId)}?output_format=${OUTPUT_FORMAT}`,
         {
           method: "POST",
