@@ -12,7 +12,12 @@ on:
   schedule:
     - cron: "0 15 * * *" # inactive-learners
     - cron: "0 3 * * *" # translation-sweep
-    - cron: "*/15 * * * *" # voice-sweep — see that route's own doc comment for why this runs far more often than the other two
+    # voice-sweep's */15 * * * * schedule is disabled — a provider switch
+    # invalidated the entire voice cache and this ran the full backlog
+    # non-stop for days, exhausting the Netlify account's credits. Left as
+    # workflow_dispatch-only until the voice system is rebuilt (see
+    # src/app/api/cron/voice-sweep/route.ts) with cost controls that make
+    # scheduling it again safe.
   workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
 
 jobs:
@@ -37,7 +42,7 @@ jobs:
             https://sentencestep.com/api/cron/translation-sweep
 
   voice-sweep:
-    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Call /api/cron/voice-sweep
