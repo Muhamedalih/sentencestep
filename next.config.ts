@@ -3,6 +3,27 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Server Actions' encryption key needs no config field here — Next.js
+  // reads process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY directly at build
+  // time (see node_modules/next/dist/server/app-render/encryption-utils-server.js)
+  // and uses it verbatim when set, generating a random one only when it's
+  // missing. That env var is set on Netlify (Production) — see the doc
+  // comment on why this matters below, at NEXT_SERVER_ACTIONS_ENCRYPTION_KEY's
+  // usage note.
+  //
+  // Without a stable key, each separate Netlify build generates its own
+  // random one — a page whose HTML was served from an older deploy (a
+  // browser tab left open, or a CDN edge node that hasn't finished
+  // propagating the newest deploy yet) then encodes its Server Action IDs
+  // under a key the CURRENT deploy's function no longer recognizes, so
+  // submitting that action 404s with no useful error. Confirmed as the
+  // actual cause of a real incident on 2026-09-09: several rapid
+  // consecutive deploys in under an hour left admin pages' Server Actions
+  // (e.g. the Cartesia voice preview button) 404ing even right after a hard
+  // refresh, because the page had been fetched from a not-yet-repropagated
+  // edge node. A stable key (set once, never rotated on an ordinary deploy)
+  // makes every deploy's action IDs mutually compatible, so this class of
+  // failure can't recur just from deploying normally.
   // msedge-tts (src/lib/voice/providers/edge-tts.ts) opens a raw WebSocket
   // via `ws` (through `isomorphic-ws`), and webpack's server bundle silently
   // swaps in browser-oriented shims for `ws`'s own dependencies (its
