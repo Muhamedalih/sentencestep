@@ -157,41 +157,84 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
     };
   }
 
-  const [lessonIds, bookIds] = await Promise.all([
-    findLessonIdsNeedingVoiceGeneration(supabase, MAX_BULK_LESSONS_PER_RUN),
-    findBookIdsNeedingVoiceGeneration(supabase, MAX_BULK_BOOKS_PER_RUN),
+  // Fetches a wider pool than MAX_BULK_LESSONS_PER_RUN/MAX_BULK_BOOKS_PER_RUN
+  // themselves — see the loop below's own comment on why: the candidate
+  // list is "oldest updated_at first" with no way to tell in advance which
+  // of those are already fully generated (voice_audio_cache is a separate,
+  // content-addressed table with no link back to lessons/books, so
+  // "already complete" isn't knowable from this query alone). CANDIDATE_POOL_MULTIPLIER
+  // just fetches ids; the moderately expensive part (loadLessonForVoiceWork's
+  // own handful of reads) only happens for ids we actually process below.
+  const CANDIDATE_POOL_MULTIPLIER = 8;
+  const [lessonPool, bookPool] = await Promise.all([
+    findLessonIdsNeedingVoiceGeneration(
+      supabase,
+      MAX_BULK_LESSONS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
+    ),
+    findBookIdsNeedingVoiceGeneration(supabase, MAX_BULK_BOOKS_PER_RUN * CANDIDATE_POOL_MULTIPLIER),
   ]);
 
-  if (lessonIds.length === 0 && bookIds.length === 0) {
+  if (lessonPool.length === 0 && bookPool.length === 0) {
     return { success: "Nothing left to generate — every eligible item is already up to date." };
   }
 
   after(async () => {
-    for (const lessonId of lessonIds) {
+    // Confirmed root cause of a real 2026-09-09 incident: a handful of
+    // lessons whose *content* hasn't been edited since 2026-08-14 already
+    // had complete 12/12 audio, but findLessonIdsNeedingVoiceGeneration's
+    // "oldest content-edit first" ordering has no way to know that — they
+    // permanently occupied the front of every candidate list, so a fixed
+    // MAX_BULK_LESSONS_PER_RUN-sized batch kept re-selecting the exact same
+    // already-done items (an instant no-op via generateStoryVoiceDraft's
+    // own short-circuit) and never advanced far enough into the pool to
+    // reach genuinely incomplete ones. The visible symptom was "the first
+    // click or two does something, then the completion percentage never
+    // moves again no matter how many more times it's clicked."
+    //
+    // This walks the wider pool fetched above and counts only real work
+    // (something actually generated or failed) against the original
+    // per-run limit — an already-complete candidate is skipped past
+    // essentially for free (no Director/TTS call, just the same cheap
+    // reads the dashboard's own status check already relies on) instead of
+    // consuming a slot that could have gone to real work. Deliberately
+    // *not* touching lessons.updated_at/books.updated_at to "rotate" them
+    // instead: that column is also relied on by translation's own oldest-first
+    // candidate selection (src/lib/translation/candidates.ts) — bumping it
+    // here would have silently starved the translation queue for any
+    // lesson whose voice happened to finish generating.
+    let lessonWorkDone = 0;
+    for (const lessonId of lessonPool) {
+      if (lessonWorkDone >= MAX_BULK_LESSONS_PER_RUN) break;
       try {
         const outcome = await generateStoryVoiceDraft(supabase, lessonId);
         if (outcome.error) {
           console.error("[voice] bulk generate lesson issue", { lessonId, error: outcome.error });
         }
+        if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
       } catch (err) {
         console.error("[voice] bulk generate lesson threw", { lessonId, err });
+        lessonWorkDone += 1;
       }
     }
-    for (const bookId of bookIds) {
+    let bookWorkDone = 0;
+    for (const bookId of bookPool) {
+      if (bookWorkDone >= MAX_BULK_BOOKS_PER_RUN) break;
       try {
         const outcome = await generateBookVoiceDraft(supabase, bookId);
         if (outcome.error) {
           console.error("[voice] bulk generate book issue", { bookId, error: outcome.error });
         }
+        if (outcome.generated > 0 || outcome.failed > 0) bookWorkDone += 1;
       } catch (err) {
         console.error("[voice] bulk generate book threw", { bookId, err });
+        bookWorkDone += 1;
       }
     }
     revalidatePath("/admin/voice/content");
   });
 
   return {
-    success: `Started generating ${lessonIds.length} lesson(s) and ${bookIds.length} book(s) in the background — refresh this page in a moment to see updated status.`,
+    success: `Started generating up to ${Math.min(lessonPool.length, MAX_BULK_LESSONS_PER_RUN)} lesson(s) and ${Math.min(bookPool.length, MAX_BULK_BOOKS_PER_RUN)} book(s) in the background — refresh this page in a moment to see updated status.`,
   };
 }
 

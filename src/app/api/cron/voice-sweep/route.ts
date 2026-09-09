@@ -57,6 +57,28 @@ const MAX_BOOK_VOICE_PAIRS_PER_RUN = 3;
 const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 5;
 const MAX_ERRORS_REPORTED = 20;
 
+/**
+ * findLessonIdsNeedingVoiceGeneration/findBookIdsNeedingVoiceGeneration/
+ * findWordGroupIdsNeedingVoiceGeneration order "oldest updated_at first",
+ * with no way to know in advance which of those are already fully
+ * generated (voice_audio_cache is separate and content-addressed, with no
+ * link back to lessons/books/word_groups) — confirmed as a real incident
+ * (2026-09-09): a handful of lessons whose content hadn't been edited in
+ * weeks already had complete audio, and permanently occupied the front of
+ * every candidate list, so a MAX_..._PER_RUN-sized batch kept re-selecting
+ * the exact same already-done items every single run and never advanced
+ * into the genuinely incomplete backlog. Fetching a wider pool and only
+ * counting real work (something actually generated or failed, not an
+ * instant already-ready short-circuit) against the per-run cap lets this
+ * skip past already-done candidates within the same run instead of
+ * wasting the whole budget on them. Smaller multiplier than the admin
+ * bulk action's own version of this fix (voice-generation-actions.ts) —
+ * this route has no `after()` escape hatch from the platform's own
+ * request timeout, so extra already-done checks here add directly to this
+ * invocation's wall-clock time instead of running in the background.
+ */
+const CANDIDATE_POOL_MULTIPLIER = 3;
+
 async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
@@ -86,15 +108,21 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
     });
   }
 
-  let lessonIds: string[];
-  let bookIds: string[];
-  let wordGroupIds: string[];
+  let lessonPool: string[];
+  let bookPool: string[];
+  let wordGroupPool: string[];
   try {
-    lessonIds = await findLessonIdsNeedingVoiceGeneration(supabase, MAX_LESSON_VOICE_PAIRS_PER_RUN);
-    bookIds = await findBookIdsNeedingVoiceGeneration(supabase, MAX_BOOK_VOICE_PAIRS_PER_RUN);
-    wordGroupIds = await findWordGroupIdsNeedingVoiceGeneration(
+    lessonPool = await findLessonIdsNeedingVoiceGeneration(
       supabase,
-      MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN,
+      MAX_LESSON_VOICE_PAIRS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
+    );
+    bookPool = await findBookIdsNeedingVoiceGeneration(
+      supabase,
+      MAX_BOOK_VOICE_PAIRS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
+    );
+    wordGroupPool = await findWordGroupIdsNeedingVoiceGeneration(
+      supabase,
+      MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
     );
   } catch {
     return NextResponse.json(
@@ -107,8 +135,12 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   let skipped = 0;
   let failed = 0;
   const errors: string[] = [];
+  let processed = 0;
 
-  for (const lessonId of lessonIds) {
+  let lessonWorkDone = 0;
+  for (const lessonId of lessonPool) {
+    if (lessonWorkDone >= MAX_LESSON_VOICE_PAIRS_PER_RUN) break;
+    processed += 1;
     const outcome = await generateStoryVoiceDraft(supabase, lessonId);
     generated += outcome.generated;
     skipped += outcome.skipped;
@@ -116,9 +148,13 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
     if (outcome.error && errors.length < MAX_ERRORS_REPORTED) {
       errors.push(`${lessonId}: ${outcome.error}`);
     }
+    if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
   }
 
-  for (const bookId of bookIds) {
+  let bookWorkDone = 0;
+  for (const bookId of bookPool) {
+    if (bookWorkDone >= MAX_BOOK_VOICE_PAIRS_PER_RUN) break;
+    processed += 1;
     const outcome = await generateBookVoiceDraft(supabase, bookId);
     generated += outcome.generated;
     skipped += outcome.skipped;
@@ -126,9 +162,13 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
     if (outcome.error && errors.length < MAX_ERRORS_REPORTED) {
       errors.push(`book ${bookId}: ${outcome.error}`);
     }
+    if (outcome.generated > 0 || outcome.failed > 0) bookWorkDone += 1;
   }
 
-  for (const groupId of wordGroupIds) {
+  let wordGroupWorkDone = 0;
+  for (const groupId of wordGroupPool) {
+    if (wordGroupWorkDone >= MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN) break;
+    processed += 1;
     const outcome = await generateWordGroupVoiceDraft(supabase, groupId);
     generated += outcome.generated;
     skipped += outcome.skipped;
@@ -136,10 +176,11 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
     if (outcome.error && errors.length < MAX_ERRORS_REPORTED) {
       errors.push(`word group ${groupId}: ${outcome.error}`);
     }
+    if (outcome.generated > 0 || outcome.failed > 0) wordGroupWorkDone += 1;
   }
 
   return NextResponse.json({
-    processed: lessonIds.length + bookIds.length + wordGroupIds.length,
+    processed,
     generated,
     skipped,
     failed,
