@@ -40,7 +40,9 @@ export async function generateLessonVoice(lessonId: string): Promise<ActionResul
   const supabase = createServiceRoleClient();
   const outcome = await generateStoryVoiceDraft(supabase, lessonId);
   revalidatePath(`/admin/voice/content/${lessonId}`);
-  revalidatePath("/admin/voice/content");
+  // Deliberately NOT revalidating /admin/voice/content itself — see
+  // generateBookVoice's own doc comment on why a single-row action here
+  // must never force the whole ~150-query dashboard to reload.
   return summarize(outcome);
 }
 
@@ -66,7 +68,20 @@ export async function generateBookVoice(bookId: string): Promise<ActionResult> {
   const supabase = createServiceRoleClient();
   const outcome = await generateBookVoiceDraft(supabase, bookId);
   revalidatePath(`/admin/library/${bookId}/edit`);
-  revalidatePath("/admin/voice/content");
+  // Deliberately NOT revalidating /admin/voice/content itself — that page's
+  // listVoiceGenerationDashboardRows() fires roughly a hundred Supabase
+  // reads for a library this size (74+ Stories alone), and every
+  // single-row action here already gives the admin an inline result
+  // message via `summarize(outcome)` without needing a dashboard-wide
+  // refetch. Confirmed root cause of a real 2026-09-09 incident: an admin
+  // clicking Generate row-by-row kept forcing that full reload on every
+  // click, and repeated large batches of reads eventually hit the same
+  // stale-connection issue fixed elsewhere in this codebase — "worked for a
+  // while, then crashed" is exactly what compounding that risk on every
+  // click looks like. The row's own badge counts go stale until the admin's
+  // next real page load, which is a far smaller cost than crashing.
+  // generateMissingVoiceForContent (the bulk button) still revalidates once
+  // per click, not per item, which stays worth it.
   return summarize(outcome);
 }
 
@@ -140,7 +155,10 @@ export async function setVoiceGenerationExcluded(
     .eq("id", id);
   if (error) return { error: "Couldn't update. Please try again." };
 
-  revalidatePath("/admin/voice/content");
+  // Not revalidating /admin/voice/content — see generateBookVoice's doc
+  // comment on why a single-row action here must never force the whole
+  // dashboard to reload; the checkbox itself already reflects the change
+  // since nothing forces this row to re-render with stale server data.
   return { success: excluded ? "Excluded from generation." : "Included in generation." };
 }
 
@@ -172,6 +190,7 @@ export async function setContentVoiceOverride(
   const { error } = await supabase.from(table).update({ voice_id: voiceId }).eq("id", id);
   if (error) return { error: "Couldn't update. Please try again." };
 
-  revalidatePath("/admin/voice/content");
+  // Not revalidating /admin/voice/content — same reasoning as
+  // setVoiceGenerationExcluded above.
   return { success: voiceId ? "Voice saved." : "Reset to the default voice." };
 }
