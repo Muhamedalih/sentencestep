@@ -1,4 +1,4 @@
-const REQUEST_TIMEOUT_MS = 20_000;
+const REQUEST_TIMEOUT_MS = 8_000;
 
 /**
  * Passed as every Supabase client's `global.fetch` override (see client.ts,
@@ -23,9 +23,19 @@ const REQUEST_TIMEOUT_MS = 20_000;
  * unlike a TTS synthesis call, a write's request could in principle have
  * been received and applied before the client gave up waiting, and blindly
  * retrying could double it (e.g. a duplicate insert). A write that times
- * out still fails fast (20s instead of a 60s hang) and surfaces a real,
+ * out still fails fast instead of hanging for 60s and surfaces a real,
  * actionable error instead of an opaque 500 — it just doesn't self-heal the
  * way a read does.
+ *
+ * Originally 20_000ms — lowered the same day and for the same reason
+ * documented in providers/fetch-with-timeout.ts: real, Sentry-confirmed
+ * 504s in the admin bulk voice-generate action even after shrinking it to
+ * one item per round, on a day Supabase's own status page showed their API
+ * Gateway as "Degraded Performance." That action makes many of these calls
+ * sequentially inside one synchronous request with a real 60s ceiling, so
+ * even one or two calls timing out and retrying at 20s each could exhaust
+ * the budget on their own. 8s keeps a single bad call's worst case at 16s
+ * instead of 40s.
  */
 export function supabaseFetchWithTimeout(
   input: RequestInfo | URL,

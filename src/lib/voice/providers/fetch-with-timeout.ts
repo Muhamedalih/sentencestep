@@ -1,4 +1,4 @@
-const REQUEST_TIMEOUT_MS = 20_000;
+const REQUEST_TIMEOUT_MS = 8_000;
 
 /**
  * Wraps `fetch` with a per-request timeout and a single retry — added after
@@ -26,11 +26,25 @@ const REQUEST_TIMEOUT_MS = 20_000;
  * Disabling connection pooling outright would need a custom undici
  * `Agent`/dispatcher (a new dependency, not added here without validating
  * it actually helps). This fix instead bounds the damage: a stale
- * connection now fails after REQUEST_TIMEOUT_MS instead of 60s, and is
- * retried once — a retry almost always gets a fresh connection and
- * succeeds, since only a fraction of pooled connections are stale at any
- * given moment. Two attempts at 20s each stay safely under Netlify's 60s
- * function timeout even in the worst case.
+ * connection now fails fast instead of hanging for 60s, and is retried
+ * once — a retry almost always gets a fresh connection and succeeds, since
+ * only a fraction of pooled connections are stale at any given moment.
+ *
+ * Originally 20_000: safe in isolation (two attempts at 20s stay under
+ * Netlify's 60s function timeout), but this fetch isn't the only thing
+ * running inside that 60s budget — the admin bulk-generate action
+ * (voice-generation-actions.ts) makes many of these calls sequentially
+ * (one Director call plus one per sentence) inside a single synchronous
+ * request, and Sentry caught real 504s in production even after that
+ * action was shrunk to one lesson and one book per round, on a day
+ * Supabase's own status page (status.supabase.com) showed their API
+ * Gateway as "Degraded Performance" — i.e. more calls than usual were
+ * running slow, not just the rare stale pooled connection. One or two
+ * calls timing out and retrying at 20s each was, on its own, enough to
+ * exceed the remaining budget. Lowered to 8s so a single bad call now
+ * costs at most 16s (timeout + retry) instead of 40s, leaving the rest of
+ * the round enough of the 60s budget to still finish even when several
+ * calls are running slow at once.
  */
 export async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
   try {
