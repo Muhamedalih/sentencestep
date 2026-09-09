@@ -24,6 +24,25 @@ import type { Database } from "@/types/database";
 type DbClient = SupabaseClient<Database>;
 
 /**
+ * Unlike a lesson (naturally capped around a dozen sentences), a book can
+ * have hundreds — several published books measured at 100-200+ sentences
+ * still needing their first narration pass. Nothing before this bounded
+ * generateBookVoiceDraft's own TTS loop, so a single call could attempt
+ * every one of them sequentially; found 2026-09-10 while working through a
+ * real backlog of un-narrated books, sized against the same ~25s real
+ * platform ceiling documented in voice-generation-actions.ts (confirmed via
+ * Sentry's exact request-start-to-504 timestamps, not the ~60s originally
+ * assumed). The Voice Director call above still covers every sentence in
+ * the book at once (it needs the full text for continuity/context either
+ * way), but only this many actually get synthesized per call — the rest
+ * count as `skipped` so the same short-circuit that makes an already-ready
+ * sentence free also makes repeated clicks/sweep rounds pick up wherever
+ * the last one left off, the same pattern the admin bulk button already
+ * relies on for lessons.
+ */
+const MAX_SENTENCES_PER_BOOK_RUN = 15;
+
+/**
  * The Book Learning Engine's counterpart to story-voice-generation.ts's
  * generateStoryVoiceDraft — the same expressive Voice Director + provider
  * pipeline (see that file's doc comments for the shared reasoning:
@@ -465,7 +484,10 @@ export async function generateBookVoiceDraft(
   let failed = 0;
   const notes: string[] = [];
 
-  for (const item of eligible) {
+  const toSynthesizeNow = eligible.slice(0, MAX_SENTENCES_PER_BOOK_RUN);
+  skipped += eligible.length - toSynthesizeNow.length;
+
+  for (const item of toSynthesizeNow) {
     const direction = directionBySentenceId.get(item.sentence.id);
     if (!direction) {
       failed += 1;
