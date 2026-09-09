@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 
 import { requireAdmin } from "@/lib/admin/access";
 import type { ActionResult } from "@/lib/admin/content-actions";
@@ -50,42 +49,30 @@ function summarize(outcome: {
 /**
  * Manual single-lesson trigger — the "Regenerate Story Audio" button.
  *
- * Deferred via `after()`, exactly like triggerAutomaticVoiceGeneration's own
- * auto-trigger-on-save (see that file's doc comment for the shared
- * reasoning) — added after Sentry caught the real cause of this project's
- * recurring "works fine, then suddenly fails" reports on /admin/voice/content:
- * actual HTTP 504s (`POST /admin/voice/content [504]`), a client/gateway
- * timeout on the request itself, not a thrown error in the code. A 12-sentence
- * lesson is 1 Voice Director call plus 12 real TTS calls, sequential, all
- * held inside one HTTP request-response cycle the browser waits on — plenty
- * to outlast a proxy's patience even when the work itself succeeds
- * server-side (confirmed: admins kept seeing correct generated audio despite
- * the error, because the generation had actually finished after the browser
- * already gave up). Returning immediately and letting the real work continue
- * after the response is sent removes the timeout risk entirely, regardless
- * of how many sentences a lesson has — the trade-off is losing the exact
- * "N generated, M failed" count in the same click; the admin sees it
- * reflected in the row's badges on the next real page load instead.
+ * Briefly used `after()` here to dodge a real, Sentry-confirmed 504 (a
+ * multi-sentence lesson's sequential Director+TTS calls outlasting the
+ * platform's own request timeout) — reverted after confirming Netlify's
+ * Next.js Runtime doesn't actually support `after()` reliably (no
+ * `waitUntil` wiring: https://github.com/opennextjs/opennextjs-netlify/issues/2695).
+ * It looked like it worked once or twice, then silently stopped running at
+ * all — a background job with no guarantee it ever executes is worse than
+ * a slow synchronous one that at least always either finishes or fails
+ * visibly. Back to synchronous: each sentence still commits to
+ * voice_audio_cache as it completes (not all-or-nothing), so an occasional
+ * timeout on a long lesson doesn't lose progress — the short-circuit in
+ * generateStoryVoiceDraft picks up wherever it left off on the next click.
  */
 export async function generateLessonVoice(lessonId: string): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
-  after(async () => {
-    const supabase = createServiceRoleClient();
-    const outcome = await generateStoryVoiceDraft(supabase, lessonId);
-    if (outcome.error) {
-      console.error("[voice] generateLessonVoice (admin) issue", {
-        lessonId,
-        error: outcome.error,
-      });
-    }
-    revalidatePath(`/admin/voice/content/${lessonId}`);
-  });
-
-  return {
-    success: "Generation started in the background — refresh in a moment to see the result.",
-  };
+  const supabase = createServiceRoleClient();
+  const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+  revalidatePath(`/admin/voice/content/${lessonId}`);
+  // Deliberately NOT revalidating /admin/voice/content itself — see
+  // generateBookVoice's own doc comment on why a single-row action here
+  // must never force the whole ~150-query dashboard to reload.
+  return summarize(outcome);
 }
 
 /** One sentence's "Regenerate" button — forces past an already-'ready' or retry-exhausted row. */
@@ -105,27 +92,47 @@ export async function regenerateSentenceVoice(
 /**
  * Manual whole-book trigger — used by both the Book Preview page's
  * "Generate book audio" button and the "Story audio status" dashboard's
- * per-row generate button. Deferred via `after()` — see
- * generateLessonVoice's own doc comment for why (the actual measured 504
- * gateway-timeout cause, confirmed via Sentry, not a guess).
+ * per-row generate button. Synchronous — see generateLessonVoice's own doc
+ * comment on why `after()` was tried and reverted here.
  */
 export async function generateBookVoice(bookId: string): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
-  after(async () => {
-    const supabase = createServiceRoleClient();
-    const outcome = await generateBookVoiceDraft(supabase, bookId);
-    if (outcome.error) {
-      console.error("[voice] generateBookVoice (admin) issue", { bookId, error: outcome.error });
-    }
-    revalidatePath(`/admin/library/${bookId}/edit`);
-  });
-
-  return {
-    success: "Generation started in the background — refresh in a moment to see the result.",
-  };
+  const supabase = createServiceRoleClient();
+  const outcome = await generateBookVoiceDraft(supabase, bookId);
+  revalidatePath(`/admin/library/${bookId}/edit`);
+  // Deliberately NOT revalidating /admin/voice/content itself — that page's
+  // listVoiceGenerationDashboardRows() fires roughly a hundred Supabase
+  // reads for a library this size, and this action already gives the
+  // admin an inline result via `summarize(outcome)` without needing a
+  // dashboard-wide refetch.
+  return summarize(outcome);
 }
+
+/**
+ * findLessonIdsNeedingVoiceGeneration/findBookIdsNeedingVoiceGeneration
+ * order "oldest content-edit first" with no way to know in advance which
+ * of those are already fully generated (voice_audio_cache is separate and
+ * content-addressed, with no link back to lessons/books) — confirmed as a
+ * real incident (2026-09-09): a handful of lessons whose content hadn't
+ * been edited in weeks already had complete audio, and permanently
+ * occupied the front of every candidate list, so a fixed-size batch kept
+ * re-selecting the exact same already-done items every run (an instant
+ * no-op via generateStoryVoiceDraft's own short-circuit) and never
+ * advanced into the real backlog — "the first click or two does
+ * something, then the completion count never moves again."
+ *
+ * Fetching a wider pool and counting only real work (something actually
+ * generated or failed) against the per-run cap skips already-done
+ * candidates within the same run instead of wasting the whole budget on
+ * them. Kept modest (not the admin bulk button's first attempt at 8x, back
+ * when this ran under `after()`): this whole action is synchronous now
+ * (see below), so every extra already-done candidate checked here adds
+ * directly to this request's own wall-clock time instead of running
+ * separately in the background.
+ */
+const CANDIDATE_POOL_MULTIPLIER = 3;
 
 /**
  * Bulk "Generate Missing Audio" — bounded, shares candidate selection with
@@ -135,14 +142,18 @@ export async function generateBookVoice(bookId: string): Promise<ActionResult> {
  * excluded: only whatever an admin has individually flagged
  * voice_generation_excluded from the dashboard).
  *
- * The candidate-selection + cap check stay synchronous (a couple of cheap
- * queries, safe to await directly) so a capped/empty run still gets an
- * immediate, accurate message. The actual generation loop is deferred via
- * `after()` — see generateLessonVoice's own doc comment for why: even at
- * MAX_BULK_LESSONS_PER_RUN's reduced size, a handful of multi-sentence
- * lessons processed sequentially can still outlast the platform gateway's
- * timeout on the request itself (confirmed via Sentry: real HTTP 504s on
- * this exact route), regardless of how small the batch is made.
+ * Briefly deferred the generation loop via `after()` to dodge a real,
+ * Sentry-confirmed 504 — reverted after confirming Netlify's Next.js
+ * Runtime doesn't actually support `after()` reliably (no `waitUntil`
+ * wiring: https://github.com/opennextjs/opennextjs-netlify/issues/2695).
+ * It worked once or twice, then silently stopped running at all — no
+ * guarantee it ever executes, confirmed live when repeated clicks stopped
+ * producing any database activity whatsoever. Back to synchronous, same
+ * as before that fix: MAX_BULK_LESSONS_PER_RUN/MAX_BULK_BOOKS_PER_RUN
+ * already match the cron sweep's own proven-safe-in-production size, and
+ * each sentence still commits to voice_audio_cache as it completes (not
+ * all-or-nothing), so an occasional timeout on an unusually long lesson
+ * doesn't lose progress.
  */
 export async function generateMissingVoiceForContent(): Promise<ActionResult> {
   const forbidden = await requireAdmin();
@@ -157,15 +168,6 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
     };
   }
 
-  // Fetches a wider pool than MAX_BULK_LESSONS_PER_RUN/MAX_BULK_BOOKS_PER_RUN
-  // themselves — see the loop below's own comment on why: the candidate
-  // list is "oldest updated_at first" with no way to tell in advance which
-  // of those are already fully generated (voice_audio_cache is a separate,
-  // content-addressed table with no link back to lessons/books, so
-  // "already complete" isn't knowable from this query alone). CANDIDATE_POOL_MULTIPLIER
-  // just fetches ids; the moderately expensive part (loadLessonForVoiceWork's
-  // own handful of reads) only happens for ids we actually process below.
-  const CANDIDATE_POOL_MULTIPLIER = 8;
   const [lessonPool, bookPool] = await Promise.all([
     findLessonIdsNeedingVoiceGeneration(
       supabase,
@@ -178,63 +180,31 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
     return { success: "Nothing left to generate — every eligible item is already up to date." };
   }
 
-  after(async () => {
-    // Confirmed root cause of a real 2026-09-09 incident: a handful of
-    // lessons whose *content* hasn't been edited since 2026-08-14 already
-    // had complete 12/12 audio, but findLessonIdsNeedingVoiceGeneration's
-    // "oldest content-edit first" ordering has no way to know that — they
-    // permanently occupied the front of every candidate list, so a fixed
-    // MAX_BULK_LESSONS_PER_RUN-sized batch kept re-selecting the exact same
-    // already-done items (an instant no-op via generateStoryVoiceDraft's
-    // own short-circuit) and never advanced far enough into the pool to
-    // reach genuinely incomplete ones. The visible symptom was "the first
-    // click or two does something, then the completion percentage never
-    // moves again no matter how many more times it's clicked."
-    //
-    // This walks the wider pool fetched above and counts only real work
-    // (something actually generated or failed) against the original
-    // per-run limit — an already-complete candidate is skipped past
-    // essentially for free (no Director/TTS call, just the same cheap
-    // reads the dashboard's own status check already relies on) instead of
-    // consuming a slot that could have gone to real work. Deliberately
-    // *not* touching lessons.updated_at/books.updated_at to "rotate" them
-    // instead: that column is also relied on by translation's own oldest-first
-    // candidate selection (src/lib/translation/candidates.ts) — bumping it
-    // here would have silently starved the translation queue for any
-    // lesson whose voice happened to finish generating.
-    let lessonWorkDone = 0;
-    for (const lessonId of lessonPool) {
-      if (lessonWorkDone >= MAX_BULK_LESSONS_PER_RUN) break;
-      try {
-        const outcome = await generateStoryVoiceDraft(supabase, lessonId);
-        if (outcome.error) {
-          console.error("[voice] bulk generate lesson issue", { lessonId, error: outcome.error });
-        }
-        if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
-      } catch (err) {
-        console.error("[voice] bulk generate lesson threw", { lessonId, err });
-        lessonWorkDone += 1;
-      }
-    }
-    let bookWorkDone = 0;
-    for (const bookId of bookPool) {
-      if (bookWorkDone >= MAX_BULK_BOOKS_PER_RUN) break;
-      try {
-        const outcome = await generateBookVoiceDraft(supabase, bookId);
-        if (outcome.error) {
-          console.error("[voice] bulk generate book issue", { bookId, error: outcome.error });
-        }
-        if (outcome.generated > 0 || outcome.failed > 0) bookWorkDone += 1;
-      } catch (err) {
-        console.error("[voice] bulk generate book threw", { bookId, err });
-        bookWorkDone += 1;
-      }
-    }
-    revalidatePath("/admin/voice/content");
-  });
+  let generated = 0;
+  let skipped = 0;
+  let failed = 0;
+  let lessonWorkDone = 0;
+  for (const lessonId of lessonPool) {
+    if (lessonWorkDone >= MAX_BULK_LESSONS_PER_RUN) break;
+    const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+    generated += outcome.generated;
+    skipped += outcome.skipped;
+    failed += outcome.failed;
+    if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
+  }
+  let bookWorkDone = 0;
+  for (const bookId of bookPool) {
+    if (bookWorkDone >= MAX_BULK_BOOKS_PER_RUN) break;
+    const outcome = await generateBookVoiceDraft(supabase, bookId);
+    generated += outcome.generated;
+    skipped += outcome.skipped;
+    failed += outcome.failed;
+    if (outcome.generated > 0 || outcome.failed > 0) bookWorkDone += 1;
+  }
 
+  revalidatePath("/admin/voice/content");
   return {
-    success: `Started generating up to ${Math.min(lessonPool.length, MAX_BULK_LESSONS_PER_RUN)} lesson(s) and ${Math.min(bookPool.length, MAX_BULK_BOOKS_PER_RUN)} book(s) in the background — refresh this page in a moment to see updated status.`,
+    success: `Processed ${lessonWorkDone} lesson(s) and ${bookWorkDone} book(s): ${generated} generated, ${skipped} skipped, ${failed} failed.`,
   };
 }
 
