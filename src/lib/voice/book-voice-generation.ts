@@ -111,12 +111,19 @@ async function loadBookForVoiceWork(
     settingsRow = data;
   }
 
-  const { data: bookRow, error: bookError } = await supabase
-    .from("books")
-    .select("voice_id")
-    .eq("id", bookId)
-    .maybeSingle();
-  if (bookError) return { ok: false, error: "Couldn't load the book." };
+  const preloadedBook = preloaded?.booksById?.get(bookId);
+  let bookRow: { voice_id: string | null } | null;
+  if (preloadedBook) {
+    bookRow = preloadedBook;
+  } else {
+    const { data, error: bookError } = await supabase
+      .from("books")
+      .select("voice_id")
+      .eq("id", bookId)
+      .maybeSingle();
+    if (bookError) return { ok: false, error: "Couldn't load the book." };
+    bookRow = data;
+  }
 
   const { data: sections, error: sectionsError } = await supabase
     .from("book_sections")

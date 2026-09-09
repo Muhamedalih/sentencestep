@@ -122,6 +122,15 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
           settingsRow,
           defaultNormalLessonVoiceId,
           voicesById: new Map((voiceRows ?? []).map((v) => [v.id, v])),
+          // Both queries above already selected mode/voice_id (lessons) and
+          // voice_id (books) for every item — reusing them here means
+          // loadLessonForVoiceWork/loadBookForVoiceWork skip their own
+          // per-item `lessons`/`books` re-fetch entirely (see
+          // PreloadedVoiceWorkContext's own doc comment).
+          lessonsById: new Map(
+            safeLessons.map((l) => [l.id, { mode: l.mode, voice_id: l.voice_id }]),
+          ),
+          booksById: new Map(safeBooks.map((b) => [b.id, { voice_id: b.voice_id }])),
         };
 
   const storyRows = mapWithConcurrency(safeLessons, VOICE_STATUS_CONCURRENCY, async (lesson) => {

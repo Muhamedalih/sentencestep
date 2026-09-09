@@ -150,6 +150,17 @@ export interface PreloadedVoiceWorkContext {
   settingsRow: ElevenLabsSettingsRow;
   defaultNormalLessonVoiceId: string;
   voicesById: Map<string, { id: string; source: string; provider_voice_id: string }>;
+  /**
+   * The dashboard's own initial `lessons`/`books` query already carries
+   * every item's `mode`/`voice_id` — without this, loadLessonForVoiceWork/
+   * loadBookForVoiceWork re-fetched that exact same single row again per
+   * item, on top of the settings/voices reads this context already exists
+   * to dedupe. Optional (falls back to loadLessonForVoiceWork's own
+   * `lessons` query) so a caller that only has settings/voices preloaded —
+   * none exist today, but nothing requires every field — still works.
+   */
+  lessonsById?: Map<string, { mode: string; voice_id: string | null }>;
+  booksById?: Map<string, { voice_id: string | null }>;
 }
 
 /**
@@ -351,12 +362,19 @@ async function loadLessonForVoiceWork(
       settingsRow: ElevenLabsSettingsRow;
     }
 > {
-  const { data: lesson, error: lessonError } = await supabase
-    .from("lessons")
-    .select("id, mode, voice_id")
-    .eq("id", lessonId)
-    .maybeSingle();
-  if (lessonError) return { ok: false, error: "Couldn't load the lesson." };
+  const preloadedLesson = preloaded?.lessonsById?.get(lessonId);
+  let lesson: { id: string; mode: string; voice_id: string | null } | null;
+  if (preloadedLesson) {
+    lesson = { id: lessonId, mode: preloadedLesson.mode, voice_id: preloadedLesson.voice_id };
+  } else {
+    const { data, error: lessonError } = await supabase
+      .from("lessons")
+      .select("id, mode, voice_id")
+      .eq("id", lessonId)
+      .maybeSingle();
+    if (lessonError) return { ok: false, error: "Couldn't load the lesson." };
+    lesson = data;
+  }
   if (!lesson) return { ok: false, error: "Lesson not found." };
   if (lesson.mode !== "stories" && lesson.mode !== "conversation" && lesson.mode !== "normal") {
     return {
