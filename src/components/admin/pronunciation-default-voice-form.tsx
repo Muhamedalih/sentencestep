@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { previewCartesiaAction } from "@/lib/admin/cartesia-actions";
 import { setDefaultPronunciationVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
-import { WORD_LIST_CARTESIA_MODEL } from "@/lib/voice/content-provider-map";
+import { DEFAULT_CARTESIA_MODEL } from "@/lib/voice/content-provider-map";
 import { dataUriToBlobUrl } from "@/lib/audio-preview";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ export function PronunciationDefaultVoiceForm({
       const result = await previewCartesiaAction({
         text: PREVIEW_TEXT,
         providerVoiceId: current.providerVoiceId,
-        model: WORD_LIST_CARTESIA_MODEL,
+        model: DEFAULT_CARTESIA_MODEL,
       });
       setIsPreviewing(false);
       if (result.error || !result.audioDataUri) {

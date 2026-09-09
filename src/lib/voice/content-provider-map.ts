@@ -32,12 +32,16 @@ export const NORMAL_LESSON_PROVIDER = "hume";
 export const WORD_LIST_PROVIDER = "cartesia";
 
 /**
- * Word Lists' fixed Cartesia model id — never elevenlabs_settings.model
- * (that table is Stories/Books' own settings, see
- * word-list-voice-generation.ts's own doc comment on why Word Lists never
- * reads it). Exported here (rather than from word-list-voice-generation.ts,
- * which pulls in server-only Supabase code) so the admin preview button for
- * the Word Lists default-voice picker can use the exact same model id the
- * real generation pipeline does.
+ * Cartesia's own model id — never elevenlabs_settings.model. That column
+ * holds an ElevenLabs model id (default "eleven_v3", see
+ * 20250203000000_elevenlabs_voice_engine.sql) and is Stories/Books' own
+ * setting; sending it to Cartesia's API 404s ("Model not found") since the
+ * two providers use unrelated model id namespaces. This was passed as
+ * Cartesia's model in two places that predate Word Lists moving to
+ * Cartesia — CartesiaVoiceForm's preview button (admin/voice/page.tsx) and
+ * would have been word-list-voice-generation.ts's too if it had reused
+ * elevenlabs_settings — both now use this constant instead. Exported here
+ * (rather than from word-list-voice-generation.ts, which pulls in
+ * server-only Supabase code) so client components can import it too.
  */
-export const WORD_LIST_CARTESIA_MODEL = "sonic-2";
+export const DEFAULT_CARTESIA_MODEL = "sonic-2";

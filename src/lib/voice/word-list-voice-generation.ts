@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { WORD_LIST_CARTESIA_MODEL, WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
+import { DEFAULT_CARTESIA_MODEL, WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
 import { createProviderForSource } from "@/lib/voice/provider-registry";
 import { cacheKeyParts } from "@/lib/voice/resolution";
 import { uploadVoiceClip } from "@/lib/voice/storage";
@@ -42,7 +42,7 @@ type DbClient = SupabaseClient<Database>;
  * vocabulary word has no story arc or character for an LLM to interpret —
  * every word gets the same flat, neutral delivery.
  */
-const WORD_LIST_MODEL = WORD_LIST_CARTESIA_MODEL;
+const WORD_LIST_MODEL = DEFAULT_CARTESIA_MODEL;
 /**
  * Bumped from the old "edge-tts:word-list:v1" (and provider identity
  * dropped from the string entirely, see story-voice-generation.ts's

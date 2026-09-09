@@ -23,6 +23,7 @@ import { getElevenLabsSettings, getElevenLabsVoices } from "@/lib/admin/elevenla
 import { getEdgeTtsVoices } from "@/lib/admin/edge-tts-queries";
 import { getCartesiaVoices } from "@/lib/admin/cartesia-queries";
 import { getHumeVoices } from "@/lib/admin/hume-queries";
+import { DEFAULT_CARTESIA_MODEL } from "@/lib/voice/content-provider-map";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -91,7 +92,7 @@ export default async function AdminVoicePage() {
       <EdgeTtsVoiceForm voices={edgeTtsVoices} />
       <ElevenLabsSettingsForm initial={elevenlabsSettings} voices={narrationVoices} />
       <ElevenLabsVoiceForm voices={elevenlabsVoices} settings={elevenlabsSettings} />
-      <CartesiaVoiceForm voices={cartesiaVoices} model={elevenlabsSettings.model} />
+      <CartesiaVoiceForm voices={cartesiaVoices} model={DEFAULT_CARTESIA_MODEL} />
       <HumeVoiceForm voices={humeVoices} />
     </div>
   );
