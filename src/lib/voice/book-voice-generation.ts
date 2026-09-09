@@ -3,7 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getVoiceDirector } from "@/lib/voice/director-registry";
 import { validateVoiceDirectionOutput } from "@/lib/voice/director-validate";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { getTTSProvider } from "@/lib/voice/provider-registry";
+import { STORIES_AND_BOOKS_PROVIDER } from "@/lib/voice/content-provider-map";
+import { createProviderForSource } from "@/lib/voice/provider-registry";
 import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import { uploadVoiceClip } from "@/lib/voice/storage";
 import {
@@ -56,15 +57,14 @@ function contextHash(prevEn: string | null, en: string, nextEn: string | null): 
   return hashText(parts.join("|"));
 }
 
-/** Mirrors story-voice-generation.ts's generationVersionFor exactly (see its own doc comment on why providerName is folded in). */
+/** Mirrors story-voice-generation.ts's generationVersionFor exactly (see its own doc comment on why provider identity is deliberately NOT folded in). */
 function generationVersionFor(
-  providerName: string,
   model: string,
   prevEn: string | null,
   en: string,
   nextEn: string | null,
 ): string {
-  return `${providerName}:${model}:v1:${contextHash(prevEn, en, nextEn)}`;
+  return `${model}:v1:${contextHash(prevEn, en, nextEn)}`;
 }
 
 interface KeyedBookSentence {
@@ -232,13 +232,7 @@ async function loadBookForVoiceWork(
 
   const keyedSentences: KeyedBookSentence[] = sentences.map((s, index) => {
     const { prev, next } = neighborEn(index);
-    const generationVersion = generationVersionFor(
-      providerName,
-      settingsRow.model,
-      prev,
-      s.en,
-      next,
-    );
+    const generationVersion = generationVersionFor(settingsRow.model, prev, s.en, next);
     return { sentence: s, key: cacheKeyParts(s.en, voiceId!, generationVersion) };
   });
 
@@ -278,8 +272,12 @@ export async function getBookVoiceStatus(
   bookId: string,
   preloaded?: PreloadedVoiceWorkContext,
 ): Promise<{ statuses: SentenceVoiceStatus[]; error?: string }> {
-  const provider = getTTSProvider();
-  const result = await loadBookForVoiceWork(supabase, bookId, provider.name, preloaded);
+  const result = await loadBookForVoiceWork(
+    supabase,
+    bookId,
+    STORIES_AND_BOOKS_PROVIDER,
+    preloaded,
+  );
   if (!result.ok) return { statuses: [], error: result.error };
   const { sentences, keyedSentences, unresolvedReason, existingByKey } = result.loaded;
 
@@ -338,8 +336,14 @@ export async function generateBookVoiceDraft(
   bookId: string,
   forceSentenceIds?: ReadonlySet<string>,
 ): Promise<VoiceGenerationOutcome> {
-  const provider = getTTSProvider();
-  const result = await loadBookForVoiceWork(supabase, bookId, provider.name);
+  let provider;
+  try {
+    provider = createProviderForSource(STORIES_AND_BOOKS_PROVIDER);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { generated: 0, skipped: 0, failed: 0, error: message };
+  }
+  const result = await loadBookForVoiceWork(supabase, bookId, STORIES_AND_BOOKS_PROVIDER);
   if (!result.ok) return { generated: 0, skipped: 0, failed: 0, error: result.error };
   const {
     sentences,

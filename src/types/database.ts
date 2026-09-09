@@ -340,8 +340,10 @@ export interface Database {
           pitch: number;
           volume: number;
           default_voice_id: string | null;
-          /** Default voice for Normal lessons, Word Lists, and Mistake Review — separate from default_voice_id (which is unused by this trio; see the code's own doc comments) and from elevenlabs_settings.default_story_voice_id (Stories/Books' own default). See 20250222000000_pronunciation_default_voice.sql. */
+          /** Default voice for Word Lists (Cartesia) — separate from default_voice_id (Stories/Conversation's own default) and from elevenlabs_settings.default_story_voice_id (Stories/Books' own default). See 20250222000000_pronunciation_default_voice.sql. */
           default_pronunciation_voice_id: string | null;
+          /** Default voice for Normal lessons / Daily Lessons (Hume AI) — see 20250225000000_normal_lesson_default_voice.sql. */
+          default_normal_lesson_voice_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -353,6 +355,7 @@ export interface Database {
           volume?: number;
           default_voice_id?: string | null;
           default_pronunciation_voice_id?: string | null;
+          default_normal_lesson_voice_id?: string | null;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["tts_settings"]["Insert"]>;

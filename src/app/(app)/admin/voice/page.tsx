@@ -4,6 +4,7 @@ import Link from "next/link";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { VoiceCollections } from "@/components/admin/voice-collections";
 import { PronunciationDefaultVoiceForm } from "@/components/admin/pronunciation-default-voice-form";
+import { NormalLessonDefaultVoiceForm } from "@/components/admin/normal-lesson-default-voice-form";
 import { VoiceSettingsForm } from "@/components/admin/voice-settings-form";
 import { ElevenLabsSettingsForm } from "@/components/admin/elevenlabs-settings-form";
 import { ElevenLabsVoiceForm } from "@/components/admin/elevenlabs-voice-form";
@@ -13,6 +14,7 @@ import { HumeVoiceForm } from "@/components/admin/hume-voice-form";
 import { Button } from "@/components/ui/button";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
 import {
+  getDefaultNormalLessonVoiceId,
   getDefaultPronunciationVoiceId,
   getDefaultVoiceId,
   getVoices,
@@ -35,6 +37,7 @@ export default async function AdminVoicePage() {
     voices,
     defaultVoiceId,
     defaultPronunciationVoiceId,
+    defaultNormalLessonVoiceId,
     elevenlabsSettings,
     elevenlabsVoices,
     edgeTtsVoices,
@@ -45,6 +48,7 @@ export default async function AdminVoicePage() {
     getVoices(),
     getDefaultVoiceId(),
     getDefaultPronunciationVoiceId(),
+    getDefaultNormalLessonVoiceId(),
     getElevenLabsSettings(),
     getElevenLabsVoices(),
     getEdgeTtsVoices(),
@@ -75,8 +79,12 @@ export default async function AdminVoicePage() {
         </Button>
       </div>
       <VoiceCollections voices={voices} defaultVoiceId={defaultVoiceId} />
+      <NormalLessonDefaultVoiceForm
+        voices={humeVoices}
+        currentVoiceId={defaultNormalLessonVoiceId}
+      />
       <PronunciationDefaultVoiceForm
-        voices={edgeTtsVoices}
+        voices={cartesiaVoices}
         currentVoiceId={defaultPronunciationVoiceId}
       />
       <VoiceSettingsForm initial={settings} />

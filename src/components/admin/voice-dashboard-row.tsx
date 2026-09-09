@@ -27,10 +27,11 @@ import { cn } from "@/lib/utils";
  * no per-sentence detail view yet, so the title links to the book's editor
  * instead, and every action here is inline.
  *
- * `voices` is the active provider's own registered voices for Story/Book
- * rows, or Edge-TTS's own voices for Normal rows (see the page's own
- * filtering — Normal lessons always resolve and generate through Edge-TTS,
- * never the active provider) — the per-row picker that lets an admin choose
+ * `voices` is ElevenLabs' own registered voices for Story/Book rows, or
+ * Hume's own voices for Normal rows (see the page's own filtering — Normal
+ * lessons always resolve and generate through Hume AI, Stories/Books always
+ * through ElevenLabs, fixed assignments per content-provider-map.ts) — the
+ * per-row picker that lets an admin choose
  * a specific narration voice for just this Story, Normal lesson, or Book
  * instead of only ever getting the one global default (see setContentVoiceOverride's
  * doc comment). For a Normal lesson this is also what makes the generated

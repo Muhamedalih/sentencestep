@@ -12,10 +12,12 @@ import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
 import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generation";
 
 /**
- * The recovery mechanism for ElevenLabs voice generation that `after()` may
- * have missed — mirrors src/app/api/cron/translation-sweep/route.ts
- * directly (same CRON_SECRET gate, same isValidCronAuth, same "fails
- * closed without it" behavior, same GET+POST dual export).
+ * The recovery mechanism for narration voice generation (ElevenLabs for
+ * Stories/Conversation/Books, Hume for Normal lessons, Cartesia for Word
+ * Lists — see content-provider-map.ts) that `after()` may have missed —
+ * mirrors src/app/api/cron/translation-sweep/route.ts directly (same
+ * CRON_SECRET gate, same isValidCronAuth, same "fails closed without it"
+ * behavior, same GET+POST dual export).
  *
  * Bounded on purpose: MAX_LESSON_VOICE_PAIRS_PER_RUN caps how many lessons
  * a single invocation attempts — a "do a little, safely, often" sweep, not
@@ -34,11 +36,32 @@ import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generat
  * compensates by calling this endpoint every 15 minutes instead of once a
  * day, so real backlog still gets fully worked through — just in more, smaller
  * steps rather than one big one that never completes.
+ *
+ * MAX_VOICE_GENERATIONS_PER_DAY is a hard safety brake added after a
+ * September 2026 incident: a narration provider switch invalidated the
+ * entire voice cache (every published item looked "eligible" at once), and
+ * this sweep — running every 15 minutes with no spend guard — regenerated
+ * the whole library non-stop for three days and exhausted the Netlify
+ * account's credits. This counts actual successful generations already
+ * done today (voice_audio_cache rows that turned 'ready' since midnight
+ * UTC) and refuses to generate anything more once the cap is hit, no matter
+ * how large the candidate backlog is. 300/day is a conservative starting
+ * point, not a measured "safe" number for this account's actual plan/spend
+ * limits — tune it via the MAX_VOICE_GENERATIONS_PER_DAY env var once real
+ * per-generation cost is known.
  */
 const MAX_LESSON_VOICE_PAIRS_PER_RUN = 5;
 const MAX_BOOK_VOICE_PAIRS_PER_RUN = 3;
 const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 5;
 const MAX_ERRORS_REPORTED = 20;
+const DEFAULT_MAX_VOICE_GENERATIONS_PER_DAY = 300;
+
+function startOfTodayUtcIso(): string {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  ).toISOString();
+}
 
 async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
@@ -52,6 +75,27 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   }
 
   const supabase = createServiceRoleClient();
+
+  const dailyCap = Number(
+    process.env.MAX_VOICE_GENERATIONS_PER_DAY ?? DEFAULT_MAX_VOICE_GENERATIONS_PER_DAY,
+  );
+  const { count: generatedToday, error: usageError } = await supabase
+    .from("voice_audio_cache")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "ready")
+    .gte("updated_at", startOfTodayUtcIso());
+  if (usageError) {
+    return NextResponse.json(
+      { error: "Couldn't check today's generation usage." },
+      { status: 500 },
+    );
+  }
+  if ((generatedToday ?? 0) >= dailyCap) {
+    return NextResponse.json({
+      skipped: true,
+      reason: `Daily voice generation cap reached (${generatedToday}/${dailyCap}). No new audio generated this run.`,
+    });
+  }
 
   let lessonIds: string[];
   let bookIds: string[];

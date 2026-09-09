@@ -59,12 +59,15 @@ export async function getDefaultVoiceId(): Promise<string | null> {
 }
 
 /**
- * The default voice for Normal lessons, Word Lists, and Mistake Review
- * (tts_settings.default_pronunciation_voice_id) — deliberately a separate
- * column from getDefaultVoiceId's, which is Stories/Conversation's own
- * setting. Falls back to a fixed Edge-TTS voice when unset (e.g. right
- * after the column was added, before an admin has picked one yet) rather
- * than null, so this trio always has a real, working voice out of the box.
+ * The default voice for Word Lists (tts_settings.default_pronunciation_voice_id)
+ * — deliberately a separate column from getDefaultVoiceId's (Stories/
+ * Conversation's own setting) and from getDefaultNormalLessonVoiceId's
+ * (Normal lessons' own setting). Must be a Cartesia voice — see
+ * content-provider-map.ts and word-list-voice-generation.ts. Falls back to
+ * a fixed Edge-TTS voice id when unset purely so a fresh deployment has
+ * *some* value to read before an admin has picked a real Cartesia voice
+ * yet; word-list-voice-generation.ts still rejects it (and reports an
+ * error) if it doesn't resolve to an actual Cartesia voice.
  */
 export async function getDefaultPronunciationVoiceId(): Promise<string> {
   const FALLBACK_VOICE_ID = "edge-tts-en-us-aria";
@@ -79,4 +82,30 @@ export async function getDefaultPronunciationVoiceId(): Promise<string> {
 
   if (error || !data?.default_pronunciation_voice_id) return FALLBACK_VOICE_ID;
   return data.default_pronunciation_voice_id;
+}
+
+/**
+ * The default voice for Normal lessons / Daily Lessons
+ * (tts_settings.default_normal_lesson_voice_id) — split out from
+ * getDefaultPronunciationVoiceId (now Word Lists' own setting) so the two
+ * content types can use two different paid providers (Hume vs. Cartesia)
+ * without ever sharing a voice id that only resolves for one of them. See
+ * 20250225000000_normal_lesson_default_voice.sql. Falls back to the same
+ * fixed Edge-TTS voice id for the same reason as
+ * getDefaultPronunciationVoiceId — a placeholder for a fresh deployment,
+ * rejected by story-voice-generation.ts if it isn't an actual Hume voice.
+ */
+export async function getDefaultNormalLessonVoiceId(): Promise<string> {
+  const FALLBACK_VOICE_ID = "edge-tts-en-us-aria";
+  if (!isSupabaseConfigured()) return FALLBACK_VOICE_ID;
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("tts_settings")
+    .select("default_normal_lesson_voice_id")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error || !data?.default_normal_lesson_voice_id) return FALLBACK_VOICE_ID;
+  return data.default_normal_lesson_voice_id;
 }

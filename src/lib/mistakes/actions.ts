@@ -1,7 +1,7 @@
 "use server";
 
 import { getAllLessons } from "@/lib/content";
-import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import {
   getContentTranslations,
@@ -263,9 +263,11 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
   // maximum possible lead time (see FixYourMistakesSession) instead of just
   // one item's worth. Never triggers Kokoro generation itself — a miss here
   // just leaves that item to resolve on demand exactly as before. Uses the
-  // Normal-lessons/Word-Lists pronunciation default (never Stories'), since
-  // mistake words come from ordinary lesson content, not narration.
-  const voiceId = await getDefaultPronunciationVoiceId();
+  // Normal lessons' own default (never Stories'/Word Lists'), since mistake
+  // words come from ordinary (Normal) lesson content, and
+  // generateIsolatedWordAudio resolves an isolated mistake word against
+  // whatever voice its parent sentence used.
+  const voiceId = await getDefaultNormalLessonVoiceId();
   const audioUrls = await Promise.all(
     items.map((item) => lookupCachedAudioUrl(item.displayWord, voiceId)),
   );

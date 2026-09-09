@@ -31,11 +31,11 @@ export async function setDefaultVoiceAction(voiceId: string | null): Promise<Act
 }
 
 /**
- * The default voice for Normal lessons, Word Lists, and Mistake Review
- * (tts_settings.default_pronunciation_voice_id) — completely separate from
- * setDefaultVoiceAction above (Stories/Conversation's own default) and from
- * saveElevenLabsSettingsAction (Stories/Books' narration default). Never
- * touches either of those.
+ * The default voice for Word Lists (tts_settings.default_pronunciation_voice_id,
+ * must be a Cartesia voice) — completely separate from setDefaultVoiceAction
+ * above (Stories/Conversation's own default), setDefaultNormalLessonVoiceAction
+ * below (Normal lessons' own default), and saveElevenLabsSettingsAction
+ * (Stories/Books' narration default). Never touches any of those.
  */
 export async function setDefaultPronunciationVoiceAction(voiceId: string): Promise<ActionResult> {
   const forbidden = await requireAdmin();
@@ -52,7 +52,33 @@ export async function setDefaultPronunciationVoiceAction(voiceId: string): Promi
   revalidatePath("/admin/voice");
   revalidatePath("/admin/content", "layout");
   revalidatePath("/learn", "layout");
-  return { success: "Default pronunciation voice saved." };
+  return { success: "Default Word Lists voice saved." };
+}
+
+/**
+ * The default voice for Normal lessons / Daily Lessons
+ * (tts_settings.default_normal_lesson_voice_id, must be a Hume voice) —
+ * split out from setDefaultPronunciationVoiceAction (now Word Lists' own
+ * setting) so the two content types can each point at a voice from their
+ * own provider. Never touches setDefaultVoiceAction's or
+ * saveElevenLabsSettingsAction's settings either.
+ */
+export async function setDefaultNormalLessonVoiceAction(voiceId: string): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+  if (!voiceId.trim()) return { error: "Pick a voice first." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("tts_settings")
+    .update({ default_normal_lesson_voice_id: voiceId, updated_at: new Date().toISOString() })
+    .eq("id", 1);
+  if (error) return { error: "Couldn't save the default voice. Please try again." };
+
+  revalidatePath("/admin/voice");
+  revalidatePath("/admin/content", "layout");
+  revalidatePath("/learn", "layout");
+  return { success: "Default Normal lesson voice saved." };
 }
 
 /**
@@ -81,7 +107,7 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
     supabase.from("lessons").select("id", { count: "exact", head: true }).eq("voice_id", voiceId),
     supabase
       .from("tts_settings")
-      .select("default_voice_id, default_pronunciation_voice_id")
+      .select("default_voice_id, default_pronunciation_voice_id, default_normal_lesson_voice_id")
       .eq("id", 1)
       .maybeSingle(),
     supabase.from("elevenlabs_settings").select("default_story_voice_id").eq("id", 1).maybeSingle(),
@@ -96,8 +122,12 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
   }
   if (settings?.default_pronunciation_voice_id === voiceId) {
     return {
-      error:
-        "This voice is the default for Normal lessons, Word Lists & Mistake Review — choose a different default first.",
+      error: "This voice is the default for Word Lists — choose a different default first.",
+    };
+  }
+  if (settings?.default_normal_lesson_voice_id === voiceId) {
+    return {
+      error: "This voice is the default for Normal lessons — choose a different default first.",
     };
   }
   if (elevenlabsSettings?.default_story_voice_id === voiceId) {

@@ -5,9 +5,12 @@ import { validateVoiceDirectionOutput } from "@/lib/voice/director-validate";
 import type { SentenceDirection } from "@/lib/voice/director-types";
 import { toElevenLabsInput } from "@/lib/voice/direction-to-tags";
 import { toProsodyInput } from "@/lib/voice/direction-to-prosody";
-import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
-import { getTTSProvider } from "@/lib/voice/provider-registry";
-import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
+import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
+import {
+  NORMAL_LESSON_PROVIDER,
+  STORIES_AND_BOOKS_PROVIDER,
+} from "@/lib/voice/content-provider-map";
+import { createProviderForSource } from "@/lib/voice/provider-registry";
 import type { TTSProvider, TTSVoiceSettings } from "@/lib/voice/provider";
 import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import {
@@ -33,18 +36,18 @@ export interface VoiceGenerationOutcome {
 export const MAX_VOICE_RETRY_ATTEMPTS = 5;
 
 /**
- * Normal lessons always use Edge-TTS specifically — never
- * getTTSProvider()'s auto-detected provider, and never
+ * Normal lessons (Daily Lessons) always use Hume AI specifically — never
  * elevenlabs_settings.default_story_voice_id. This is a deliberate,
  * permanent split from Stories/Conversation/Books: those keep using
- * whichever narration provider is configured (ElevenLabs/Azure/Gemini) and
- * their own default_story_voice_id exactly as before, completely
- * unaffected by anything here. The actual fallback voice (when a lesson has
- * no `voice_id` override) is tts_settings.default_pronunciation_voice_id —
- * see getDefaultPronunciationVoiceId, admin-configurable independently of
- * Stories/Books. Changing one specific lesson's voice is done the same way
- * as any lesson — its own `voice_id` (see the "Normal Lessons" admin
- * dashboard).
+ * ElevenLabs and their own default_story_voice_id exactly as before,
+ * completely unaffected by anything here. The actual fallback voice (when a
+ * lesson has no `voice_id` override) is
+ * tts_settings.default_normal_lesson_voice_id — see
+ * getDefaultNormalLessonVoiceId, admin-configurable independently of
+ * Stories/Books and of Word Lists. Changing one specific lesson's voice is
+ * done the same way as any lesson — its own `voice_id` (see the "Normal
+ * Lessons" admin dashboard). See content-provider-map.ts for why this
+ * assignment is fixed rather than auto-detected.
  */
 
 /**
@@ -85,15 +88,21 @@ function contextHash(prevEn: string | null, en: string, nextEn: string | null): 
   return hashText(parts.join("|"));
 }
 
-/** `providerName` (e.g. "azure"/"elevenlabs"/NO_PROVIDER) is folded into the version prefix so switching the active narration provider naturally invalidates the old provider's cached clips instead of ever mistaking one provider's audio for another's. */
+/**
+ * Provider identity is deliberately NOT folded in here (unlike the old
+ * version of this function) — see content-provider-map.ts's doc comment.
+ * Each content type has one fixed provider, and a voice's own id already
+ * differs across providers (see resolution.ts's cacheKeyParts), so a
+ * provider reassignment invalidates only the reassigned content type's own
+ * cache rows, never the whole library at once.
+ */
 function generationVersionFor(
-  providerName: string,
   model: string,
   prevEn: string | null,
   en: string,
   nextEn: string | null,
 ): string {
-  return `${providerName}:${model}:v1:${contextHash(prevEn, en, nextEn)}`;
+  return `${model}:v1:${contextHash(prevEn, en, nextEn)}`;
 }
 
 /** The elevenlabs_settings singleton row — kept under this name for historical/schema reasons (see that table's migration), but in practice now the shared model/default-voice settings for whichever narration provider (Azure or ElevenLabs) is actually active; see baseVoiceSettings' doc comment. */
@@ -139,7 +148,7 @@ export function baseVoiceSettings(settings: ElevenLabsSettingsRow): TTSVoiceSett
  */
 export interface PreloadedVoiceWorkContext {
   settingsRow: ElevenLabsSettingsRow;
-  defaultPronunciationVoiceId: string;
+  defaultNormalLessonVoiceId: string;
   voicesById: Map<string, { id: string; source: string; provider_voice_id: string }>;
 }
 
@@ -356,12 +365,21 @@ async function loadLessonForVoiceWork(
     };
   }
 
-  // Normal lessons always use Edge-TTS (see NORMAL_LESSON_DEFAULT_VOICE_ID's
-  // doc comment) — Stories/Conversation are completely unaffected, still
-  // resolving through getTTSProvider() exactly as before.
-  const provider: TTSProvider =
-    lesson.mode === "normal" ? createEdgeTtsProvider() : getTTSProvider();
-  const providerName = provider.name;
+  // Normal lessons always use Hume AI — Stories/Conversation always use
+  // ElevenLabs. Both are fixed assignments (see content-provider-map.ts),
+  // never auto-detected. createProviderForSource throws when its API key
+  // is missing (fail loudly rather than silently substitute a different
+  // provider) — caught here and surfaced as a normal "couldn't load" error
+  // like every other failure mode in this function.
+  const providerName =
+    lesson.mode === "normal" ? NORMAL_LESSON_PROVIDER : STORIES_AND_BOOKS_PROVIDER;
+  let provider: TTSProvider;
+  try {
+    provider = createProviderForSource(providerName);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: message };
+  }
 
   const { data: sentenceRows, error: sentencesError } = await supabase
     .from("sentences")
@@ -403,7 +421,7 @@ async function loadLessonForVoiceWork(
   // Stories/Conversation keep using it exactly as before.
   const defaultVoiceId =
     lesson.mode === "normal"
-      ? (preloaded?.defaultPronunciationVoiceId ?? (await getDefaultPronunciationVoiceId()))
+      ? (preloaded?.defaultNormalLessonVoiceId ?? (await getDefaultNormalLessonVoiceId()))
       : settingsRow.default_story_voice_id;
   const { resolved: voiceBySentence, unresolved } = await resolveTargetVoices(
     supabase,
@@ -425,13 +443,7 @@ async function loadLessonForVoiceWork(
       const index = sentences.indexOf(s);
       const { prev, next } = neighborEn(index);
       const { voiceId, providerVoiceId } = voiceBySentence.get(s.id)!;
-      const generationVersion = generationVersionFor(
-        providerName,
-        settingsRow.model,
-        prev,
-        s.en,
-        next,
-      );
+      const generationVersion = generationVersionFor(settingsRow.model, prev, s.en, next);
       return {
         sentence: s,
         voiceId,

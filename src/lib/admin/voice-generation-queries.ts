@@ -7,7 +7,7 @@ import {
   type PreloadedVoiceWorkContext,
   type SentenceVoiceStatus,
 } from "@/lib/voice/story-voice-generation";
-import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
 
 export interface VoiceDashboardRow {
   contentType: "story" | "conversation" | "normal" | "book";
@@ -72,7 +72,7 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
   // requests at Supabase's connection pool on a large library.
   const serviceClient = createServiceRoleClient();
 
-  // elevenlabs_settings, the Normal-lesson default pronunciation voice, and
+  // elevenlabs_settings, the Normal-lesson default voice, and
   // every `voices` row this library's lessons/books could possibly
   // reference are each fetched exactly once here and handed to every item
   // below (see PreloadedVoiceWorkContext's own doc comment) — without this,
@@ -91,7 +91,7 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
   ];
   const [
     { data: settingsRow, error: settingsError },
-    defaultPronunciationVoiceId,
+    defaultNormalLessonVoiceId,
     { data: voiceRows },
   ] = await Promise.all([
     serviceClient
@@ -101,7 +101,7 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
       )
       .eq("id", 1)
       .maybeSingle(),
-    getDefaultPronunciationVoiceId(),
+    getDefaultNormalLessonVoiceId(),
     referencedVoiceIds.length
       ? serviceClient
           .from("voices")
@@ -120,7 +120,7 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
       ? undefined
       : {
           settingsRow,
-          defaultPronunciationVoiceId,
+          defaultNormalLessonVoiceId,
           voicesById: new Map((voiceRows ?? []).map((v) => [v.id, v])),
         };
 

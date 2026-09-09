@@ -158,12 +158,13 @@ export function TypingSentence({
   /**
    * A word click's real voice, same rule as PronunciationButton's own
    * `kokoroVoiceId` prop (sentenceVoiceId, computed above) — never a
-   * different provider/voice than the sentence it's part of. Cache hit or a
-   * free Edge-TTS on-demand synthesis (Normal lessons) plays the resolved
-   * clip directly; a Stories paid-provider voice instead gets a
-   * gender-matched free Edge-TTS substitute for just this one word (see
-   * resolvePronunciationAudioAction's own doc comment) — the narrator's own
-   * paid voice is never touched, only this isolated word is spoken by a
+   * different provider/voice than the sentence it's part of. A cache hit, or
+   * a free Edge-TTS on-demand synthesis when the sentence itself is
+   * Edge-TTS-sourced, plays the resolved clip directly; a paid-provider
+   * sentence voice (Hume for Normal lessons, ElevenLabs for Stories) instead
+   * gets a gender-matched free Edge-TTS substitute for just this one word
+   * (see resolvePronunciationAudioAction's own doc comment) — the sentence's
+   * own paid voice is never touched, only this isolated word is spoken by a
    * different (free) voice. No resolvable voice, or a token that isn't a
    * real trackable word (stray punctuation), falls back to the browser's
    * own speech synthesis exactly as this always did before.
