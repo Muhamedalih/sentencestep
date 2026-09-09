@@ -429,7 +429,13 @@ export async function generateBookVoiceDraft(
     // Auto-exclude on a real validation failure (not a thrown/transient
     // error) — same reasoning and same incident as
     // generateStoryVoiceDraft's mirrored fix, see its own doc comment.
-    await supabase.from("books").update({ voice_generation_excluded: true }).eq("id", bookId);
+    // Best-effort: a network hiccup on this secondary safety write must
+    // never crash the caller in place of a clean error return below.
+    try {
+      await supabase.from("books").update({ voice_generation_excluded: true }).eq("id", bookId);
+    } catch {
+      // Ignored — worst case this book keeps being offered next sweep.
+    }
     return {
       generated: 0,
       skipped,

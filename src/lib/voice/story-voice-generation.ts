@@ -700,7 +700,18 @@ export async function generateStoryVoiceDraft(
       // blips) or the "no ANTHROPIC_API_KEY" branch, both of which are
       // transient/global rather than a signal this lesson's content itself
       // is the problem.
-      await supabase.from("lessons").update({ voice_generation_excluded: true }).eq("id", lessonId);
+      // Best-effort: this is a secondary safety write, not the actual
+      // failure being reported — a network hiccup here (the same class this
+      // whole app has already hit repeatedly on Netlify) must never crash
+      // the caller in place of a clean error return.
+      try {
+        await supabase
+          .from("lessons")
+          .update({ voice_generation_excluded: true })
+          .eq("id", lessonId);
+      } catch {
+        // Ignored — worst case this lesson keeps being offered next sweep.
+      }
       return { generated: 0, skipped, failed: eligible.length + unresolvedCount, error: message };
     }
     directionBySentenceId = new Map(validation.value.map((d) => [d.sentenceId, d]));
