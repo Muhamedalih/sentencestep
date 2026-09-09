@@ -102,6 +102,19 @@ export interface Lesson extends LessonUnit {
   vocabulary?: VocabularyItem[];
 }
 
+/**
+ * What LessonSession/LessonCompletion/FixYourMistakesSession's `nextLesson`
+ * prop actually reads off the "next lesson" — just enough to link to
+ * `/learn/{mode}/{id}`, never its title/sentences/anything else a full
+ * Lesson carries. Lets the lesson page hand those components a lightweight
+ * id/level/order-only lookup result (see fetchLessonNav's doc comment)
+ * instead of a whole Lesson pulled from a full mode-wide fetch just for
+ * this. A full Lesson/LessonUnit satisfies this structurally, so existing
+ * callers that do have a real one (e.g. the admin lesson-completion preview)
+ * keep working unchanged.
+ */
+export type NextLessonRef = Pick<LessonUnit, "id" | "mode">;
+
 /** A short English→Arabic/Spanish example pair, standalone (not tied to a lesson/activity) — used for the "Start Simple" level previews below. */
 export interface PreviewSentence {
   en: string;

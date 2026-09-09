@@ -33,7 +33,7 @@ import {
 } from "@/lib/mistakes/actions";
 import type { MistakeQueueItem } from "@/lib/mistakes/types";
 import { fadeInUp, staggerChildren } from "@/lib/motion";
-import type { Lesson } from "@/types/content";
+import type { NextLessonRef } from "@/types/content";
 
 /** Reveal fully shown, then held, before the transition to typing — see the preview animation requirement ("hold the complete word visible for at least ~1000ms"). */
 const REVEAL_HOLD_MS = 1000;
@@ -61,7 +61,7 @@ export function FixYourMistakesSession({
   /** The site-wide default Kokoro voice (see getDefaultVoiceId), passed down from the lesson page. Mistakes can originate from lessons with different per-lesson voice overrides; using one consistent voice for the whole review session (rather than switching voice mid-session per item) is a deliberate simplification — the same one Word Lists already makes for its own cross-lesson vocabulary practice. */
   defaultVoiceId?: string | null;
   /** Same "what's next" lesson the ordinary completion screen would have offered — FYM's own completion screen offers the identical destination as its secondary action. */
-  nextLesson?: Lesson;
+  nextLesson?: NextLessonRef;
 }) {
   const { t } = useLocale();
   const [queue, setQueue] = useState<MistakeQueueItem[] | null>(null);
@@ -339,7 +339,7 @@ function FixYourMistakesComplete({
   loadError,
 }: {
   correctedCount: number;
-  nextLesson?: Lesson;
+  nextLesson?: NextLessonRef;
   loadError: boolean;
 }) {
   const reducedMotion = useReducedMotion();

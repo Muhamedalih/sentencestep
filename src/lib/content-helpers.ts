@@ -5,7 +5,6 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 import type {
   Course,
   LearningMode,
-  Lesson,
   LessonUnit,
   PreviewSentence,
   Unit,
@@ -68,8 +67,18 @@ export function getLessonsByLevel(units: LessonUnit[], level: number): LessonUni
  * guaranteed to stay level-monotonic as content is added over time, so
  * sorting by it alone could hand back a "next lesson" from a lower level
  * than the one the learner is currently on.
+ *
+ * Generic over anything shaped like `{id, level, order}` — not just a full
+ * Lesson — so a caller that only needs to know *which* lesson comes next
+ * (e.g. to build a `/learn/{mode}/{id}` link) can pass a lightweight
+ * id/level/order-only list instead of a full Lesson[] with every sentence
+ * body loaded. See fetchLessonNav's doc comment for why that distinction
+ * matters.
  */
-export function findNextLesson(units: Lesson[], currentId: string): Lesson | undefined {
+export function findNextLesson<T extends { id: string; level: number; order: number }>(
+  units: T[],
+  currentId: string,
+): T | undefined {
   const sorted = [...units].sort((a, b) => a.level - b.level || a.order - b.order);
   const index = sorted.findIndex((unit) => unit.id === currentId);
   if (index === -1) return undefined;

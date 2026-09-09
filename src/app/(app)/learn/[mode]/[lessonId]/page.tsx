@@ -6,7 +6,7 @@ import { LessonSession } from "@/components/learning/lesson-session";
 import { PremiumLocked } from "@/components/learning/premium-locked";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { findNextLesson, getLessonById, getLessons } from "@/lib/content";
+import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultPronunciationVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
@@ -35,8 +35,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { mode, lessonId } = await params;
   if (!isLearningMode(mode)) return {};
-  const units = await getLessons(mode);
-  const unit = units.find((item) => item.id === lessonId);
+  // Fetches this one lesson directly rather than the whole mode's list (as
+  // this used to) — getLessonById is React-cache()'d (see src/lib/content.ts),
+  // so when this resolves to the exact same arguments the page component
+  // below calls it with (no locale set), the two share one fetch instead of
+  // issuing it twice for the same request.
+  const unit = await getLessonById(mode, lessonId);
   return { title: unit?.title ?? modeMeta[mode].title };
 }
 
@@ -49,8 +53,13 @@ export default async function LessonPage({
   if (!isLearningMode(mode)) notFound();
 
   const locale = await getLocale();
-  const [units, unit] = await Promise.all([
-    getLessons(mode, locale ?? undefined),
+  // getLessonNav, not getLessons: finding the next lesson only needs every
+  // published lesson's id/level/order, never their full sentence bodies —
+  // see fetchLessonNav's doc comment for why the previous full-list fetch
+  // here was the single most expensive call on this page after
+  // fetchLessonById's own.
+  const [lessonNav, unit] = await Promise.all([
+    getLessonNav(mode),
     getLessonById(mode, lessonId, locale ?? undefined),
   ]);
   if (!unit) notFound();
@@ -91,7 +100,7 @@ export default async function LessonPage({
     );
   }
 
-  const nextLesson = findNextLesson(units, unit.id);
+  const nextLesson = findNextLesson(lessonNav, unit.id);
   // Normal lessons fall back to their own admin-configurable default
   // (tts_settings.default_pronunciation_voice_id) — never the shared
   // tts_settings.default_voice_id, which is Stories/Conversation's own

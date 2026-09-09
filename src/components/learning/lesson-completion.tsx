@@ -23,7 +23,7 @@ import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
-import type { LearningMode, LessonUnit, VocabularyItem } from "@/types/content";
+import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/content";
 
 /** Fixed, non-themed contrast color for text/icons sitting directly on the solid accent fill (PrimaryActionButton) — a contrast requirement, not a stylistic choice, so it isn't an admin field. theme.colorAccent defaults to a mid-brightness purple; white text on it reads poorly (~2:1 contrast), so this stays a near-black regardless of theme. */
 const ON_ACCENT_TEXT = "#12141c";
@@ -108,7 +108,7 @@ export function LessonCompletion({
   accuracy: number;
   /** Average words-per-minute across the lesson's sentences; 0 if unavailable. */
   wpm: number;
-  nextLesson?: LessonUnit;
+  nextLesson?: NextLessonRef;
   vocabulary?: VocabularyItem[];
   streak: number;
   /** Running XP total (post this completion) — used only to show numeric progress toward the next level; the per-completion reward is xpEarned below. */
