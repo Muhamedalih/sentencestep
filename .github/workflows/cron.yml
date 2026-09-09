@@ -12,12 +12,17 @@ on:
   schedule:
     - cron: "0 15 * * *" # inactive-learners
     - cron: "0 3 * * *" # translation-sweep
-    # voice-sweep's */15 * * * * schedule is disabled — a provider switch
-    # invalidated the entire voice cache and this ran the full backlog
-    # non-stop for days, exhausting the Netlify account's credits. Left as
-    # workflow_dispatch-only until the voice system is rebuilt (see
-    # src/app/api/cron/voice-sweep/route.ts) with cost controls that make
-    # scheduling it again safe.
+    # voice-sweep: originally */15 * * * * (every 15 min), disabled after a
+    # provider switch invalidated the entire voice cache and this ran the
+    # full backlog non-stop for days, exhausting the Netlify account's
+    # credits. Re-enabled now that src/app/api/cron/voice-sweep/route.ts
+    # enforces MAX_VOICE_GENERATIONS_PER_DAY (src/lib/voice/daily-cap.ts) —
+    # a hard ceiling on actual successful generations per UTC day shared
+    # with the admin bulk-generate action, so raising or lowering this
+    # schedule's frequency no longer changes worst-case daily spend, only
+    # how quickly a real backlog (e.g. a cache-invalidating provider/version
+    # switch) gets worked through in small, bounded steps.
+    - cron: "*/15 * * * *" # voice-sweep
   workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
 
 jobs:
@@ -42,7 +47,7 @@ jobs:
             https://sentencestep.com/api/cron/translation-sweep
 
   voice-sweep:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Call /api/cron/voice-sweep

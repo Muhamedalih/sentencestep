@@ -11,6 +11,7 @@ import {
   findBookIdsNeedingVoiceGeneration,
   findLessonIdsNeedingVoiceGeneration,
 } from "@/lib/voice/candidates";
+import { isDailyVoiceGenerationCapReached } from "@/lib/voice/daily-cap";
 import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
 
 const MAX_BULK_LESSONS_PER_RUN = 20;
@@ -82,6 +83,14 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
   if (forbidden) return { error: forbidden };
 
   const supabase = createServiceRoleClient();
+
+  const capStatus = await isDailyVoiceGenerationCapReached(supabase);
+  if (capStatus.capped) {
+    return {
+      error: `Daily voice generation cap reached (${capStatus.generatedToday}/${capStatus.dailyCap}). Try again after midnight UTC, or raise MAX_VOICE_GENERATIONS_PER_DAY.`,
+    };
+  }
+
   const [lessonIds, bookIds] = await Promise.all([
     findLessonIdsNeedingVoiceGeneration(supabase, MAX_BULK_LESSONS_PER_RUN),
     findBookIdsNeedingVoiceGeneration(supabase, MAX_BULK_BOOKS_PER_RUN),
