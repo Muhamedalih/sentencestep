@@ -15,21 +15,24 @@ import { isDailyVoiceGenerationCapReached } from "@/lib/voice/daily-cap";
 import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
 
 /**
- * Matches MAX_LESSON_VOICE_PAIRS_PER_RUN/MAX_BOOK_VOICE_PAIRS_PER_RUN in
- * src/app/api/cron/voice-sweep/route.ts exactly — that file's own doc
- * comment documents the measured incident this mirrors: a 20+10-candidate
- * batch reliably exceeded Netlify's function timeout in production,
- * because each candidate isn't one query, it's a real Voice Director call
- * plus one real TTS provider call per sentence, all sequential within a
- * single invocation (a 12-sentence lesson alone is 13 real network calls).
- * The cron sweep was shrunk after that measurement; this bulk button was
- * missed and kept crashing on real admin use (confirmed 2026-09-09: "works
- * fine, then suddenly fails" on every attempt) until reduced to the same
- * proven-safe size. A big backlog now needs a few clicks instead of one,
- * same trade-off the cron sweep already made.
+ * Kept far smaller than the cron sweep's own MAX_LESSON_VOICE_PAIRS_PER_RUN/
+ * MAX_BOOK_VOICE_PAIRS_PER_RUN (src/app/api/cron/voice-sweep/route.ts, 5/3):
+ * this button is a synchronous HTTP request with a real, unattended admin
+ * waiting on it, and a genuine Netlify platform 504 (confirmed via Sentry,
+ * not a code bug) still happened at 5/3 once a run's candidates needed real
+ * work rather than cheap already-cached skips — each real item is a Voice
+ * Director call plus one TTS call per sentence, all sequential (a
+ * 12-sentence lesson alone is 13 real network calls), and eight such items
+ * back-to-back in one request comfortably outlasts any synchronous function
+ * timeout. Shrunk to one lesson and one book per call, with
+ * VoiceBulkGenerateControl (the client component) calling this repeatedly
+ * in a loop so one click still works through the whole backlog — just as
+ * many small, fast, safe round trips instead of one large, slow, fragile
+ * one. A round that times out only loses that one item's progress, not the
+ * whole click's.
  */
-const MAX_BULK_LESSONS_PER_RUN = 5;
-const MAX_BULK_BOOKS_PER_RUN = 3;
+const MAX_BULK_LESSONS_PER_RUN = 1;
+const MAX_BULK_BOOKS_PER_RUN = 1;
 
 function summarize(outcome: {
   generated: number;
@@ -125,62 +128,57 @@ export async function generateBookVoice(bookId: string): Promise<ActionResult> {
  *
  * Fetching a wider pool and counting only real work (something actually
  * generated or failed) against the per-run cap skips already-done
- * candidates within the same run instead of wasting the whole budget on
- * them. Kept modest (not the admin bulk button's first attempt at 8x, back
- * when this ran under `after()`): this whole action is synchronous now
- * (see below), so every extra already-done candidate checked here adds
- * directly to this request's own wall-clock time instead of running
- * separately in the background.
+ * candidates within the same round instead of wasting its whole (now much
+ * smaller — see MAX_BULK_LESSONS_PER_RUN) budget on them.
  */
 const CANDIDATE_POOL_MULTIPLIER = 3;
 
+/** One small, fast round of bulk generation — see generateMissingVoiceForContent. */
+export interface BulkVoiceGenerationRound {
+  error?: string;
+  generated: number;
+  skipped: number;
+  failed: number;
+  lessonsWorked: number;
+  booksWorked: number;
+  /** True once both candidate pools were completely empty at the start of this round — nothing left at all, the caller should stop looping. */
+  exhausted: boolean;
+}
+
 /**
- * Bulk "Generate Missing Audio" — bounded, shares candidate selection with
- * the cron sweep. Covers Stories, Conversations, Normal lessons, and Books
- * in one click (see findLessonIdsNeedingVoiceGeneration/
- * findBookIdsNeedingVoiceGeneration's own doc comments for exactly what's
- * excluded: only whatever an admin has individually flagged
- * voice_generation_excluded from the dashboard).
+ * Bulk "Generate Missing Audio" — one small round, shares candidate
+ * selection with the cron sweep. Covers Stories, Conversations, Normal
+ * lessons, and Books. VoiceBulkGenerateControl (the client component) calls
+ * this in a loop so one click still works through a whole backlog; see
+ * MAX_BULK_LESSONS_PER_RUN's own doc comment for why each individual round
+ * is kept this small (a real, Sentry-confirmed platform 504 at the old
+ * larger size).
  *
- * Briefly deferred the generation loop via `after()` to dodge a real,
- * Sentry-confirmed 504 — reverted after confirming Netlify's Next.js
- * Runtime doesn't actually support `after()` reliably (no `waitUntil`
- * wiring: https://github.com/opennextjs/opennextjs-netlify/issues/2695).
- * It worked once or twice, then silently stopped running at all — no
- * guarantee it ever executes, confirmed live when repeated clicks stopped
- * producing any database activity whatsoever. Back to synchronous, same
- * as before that fix: MAX_BULK_LESSONS_PER_RUN/MAX_BULK_BOOKS_PER_RUN
- * already match the cron sweep's own proven-safe-in-production size, and
- * each sentence still commits to voice_audio_cache as it completes (not
- * all-or-nothing), so an occasional timeout on an unusually long lesson
- * doesn't lose progress.
- *
- * Does NOT call revalidatePath("/admin/voice/content") — it used to, and
- * that was itself a second real bug on top of the `after()` one: this
- * action already takes a while doing real TTS/Director work, and stacking
- * a revalidation of a ~150-query dashboard onto the *same* HTTP response
- * makes that one response large and slow enough that Sentry caught it
- * failing two different ways in production — "Connection closed" and "An
- * unexpected response was received from the server" (a Next.js RSC-stream
- * parse failure), both on this exact route, both while this action was
- * still returning correct, verified-against-the-database results server
- * side. Single-row actions in this file already made this same call for
- * the same reason (see generateBookVoice's doc comment); this bulk action
- * was the one exception, and it was reproducing the same failure mode.
- * The per-row "N/M ready" counts on the dashboard simply go stale until
- * the admin reloads the page — no worse than the single-row buttons today,
- * and the inline result message below still reports the real outcome.
+ * Does NOT call revalidatePath("/admin/voice/content") — seemingly
+ * harmless, but stacking a ~150-query dashboard revalidation onto this
+ * action's own response was a second real, Sentry-confirmed production bug
+ * on top of the batch-size one: "Connection closed" and "An unexpected
+ * response was received from the server" (a Next.js RSC-stream parse
+ * failure), both on this exact route, both while this action had already
+ * computed a correct result server-side. Single-row actions in this file
+ * already skip this for the same reason (see generateBookVoice's doc
+ * comment). The per-row "N/M ready" counts on the dashboard simply go stale
+ * until the admin reloads the page.
  */
-export async function generateMissingVoiceForContent(): Promise<ActionResult> {
+export async function generateMissingVoiceForContent(): Promise<BulkVoiceGenerationRound> {
+  const empty = { generated: 0, skipped: 0, failed: 0, lessonsWorked: 0, booksWorked: 0 };
+
   const forbidden = await requireAdmin();
-  if (forbidden) return { error: forbidden };
+  if (forbidden) return { ...empty, error: forbidden, exhausted: true };
 
   const supabase = createServiceRoleClient();
 
   const capStatus = await isDailyVoiceGenerationCapReached(supabase);
   if (capStatus.capped) {
     return {
+      ...empty,
       error: `Daily voice generation cap reached (${capStatus.generatedToday}/${capStatus.dailyCap}). Try again after midnight UTC, or raise MAX_VOICE_GENERATIONS_PER_DAY.`,
+      exhausted: true,
     };
   }
 
@@ -193,7 +191,7 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
   ]);
 
   if (lessonPool.length === 0 && bookPool.length === 0) {
-    return { success: "Nothing left to generate — every eligible item is already up to date." };
+    return { ...empty, exhausted: true };
   }
 
   let generated = 0;
@@ -219,37 +217,13 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
   }
 
   return {
-    success: `Processed ${lessonWorkDone} lesson(s) and ${bookWorkDone} book(s): ${generated} generated, ${skipped} skipped, ${failed} failed.`,
+    generated,
+    skipped,
+    failed,
+    lessonsWorked: lessonWorkDone,
+    booksWorked: bookWorkDone,
+    exhausted: false,
   };
-}
-
-/**
- * The "Story audio status" dashboard's per-row exclude toggle — opts a
- * specific story/book out of both the bulk button above and the cron sweep
- * (src/app/api/cron/voice-sweep) without unpublishing it. See
- * 20250217000000_voice_generation_exclusion.sql.
- */
-export async function setVoiceGenerationExcluded(
-  contentType: "story" | "conversation" | "normal" | "book",
-  id: string,
-  excluded: boolean,
-): Promise<ActionResult> {
-  const forbidden = await requireAdmin();
-  if (forbidden) return { error: forbidden };
-
-  const supabase = await createClient();
-  const table = contentType === "book" ? "books" : "lessons";
-  const { error } = await supabase
-    .from(table)
-    .update({ voice_generation_excluded: excluded })
-    .eq("id", id);
-  if (error) return { error: "Couldn't update. Please try again." };
-
-  // Not revalidating /admin/voice/content — see generateBookVoice's doc
-  // comment on why a single-row action here must never force the whole
-  // dashboard to reload; the checkbox itself already reflects the change
-  // since nothing forces this row to re-render with stale server data.
-  return { success: excluded ? "Excluded from generation." : "Included in generation." };
 }
 
 /**
@@ -280,7 +254,8 @@ export async function setContentVoiceOverride(
   const { error } = await supabase.from(table).update({ voice_id: voiceId }).eq("id", id);
   if (error) return { error: "Couldn't update. Please try again." };
 
-  // Not revalidating /admin/voice/content — same reasoning as
-  // setVoiceGenerationExcluded above.
+  // Not revalidating /admin/voice/content — see generateBookVoice's doc
+  // comment on why a single-row action here must never force the whole
+  // dashboard to reload.
   return { success: voiceId ? "Voice saved." : "Reset to the default voice." };
 }

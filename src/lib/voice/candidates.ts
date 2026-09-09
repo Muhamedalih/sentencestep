@@ -41,8 +41,14 @@ type DbClient = SupabaseClient<Database>;
  * clips.
  *
  * `voice_generation_excluded` (see 20250217000000_voice_generation_exclusion.sql)
- * lets an admin opt a specific lesson out of this sweep from the "Story
- * audio status" dashboard without unpublishing it.
+ * has no admin-facing toggle anymore — it's now set only automatically, by
+ * story-voice-generation.ts/book-voice-generation.ts, the moment a lesson's
+ * or book's Voice Director output comes back malformed (see those files'
+ * own doc comments). That failure mode has no bounded-retry counter of its
+ * own the way a plain TTS-provider failure does (MAX_VOICE_RETRY_ATTEMPTS),
+ * so without this flag a lesson stuck failing Director validation would be
+ * re-offered here, and re-billed to Anthropic, on every single sweep
+ * forever.
  */
 export async function findLessonIdsNeedingVoiceGeneration(
   supabase: DbClient,

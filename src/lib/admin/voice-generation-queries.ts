@@ -17,8 +17,6 @@ export interface VoiceDashboardRow {
   readyCount: number;
   failedCount: number;
   unresolvedCount: number;
-  /** See 20250217000000_voice_generation_exclusion.sql — opted out of the bulk/cron sweep by an admin, without being unpublished. */
-  excluded: boolean;
   /** This item's own narration voice override (lessons.voice_id / books.voice_id), or null when it falls back to the global default — the current selection for the dashboard's per-row voice picker. Never meaningful for "conversation" rows (see resolveTargetVoices' per-speaker branch). */
   voiceId: string | null;
 }
@@ -43,13 +41,13 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
     await Promise.all([
       publicClient
         .from("lessons")
-        .select("id, title, mode, voice_generation_excluded, voice_id")
+        .select("id, title, mode, voice_id")
         .in("mode", ["stories", "conversation", "normal"])
         .eq("status", "published")
         .order("title"),
       publicClient
         .from("books")
-        .select("id, title, voice_generation_excluded, voice_id")
+        .select("id, title, voice_id")
         .eq("status", "published")
         .order("title"),
     ]);
@@ -141,25 +139,11 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
         : lesson.mode === "normal"
           ? "normal"
           : "story";
-    return summarize(
-      contentType,
-      lesson.id,
-      lesson.title,
-      lesson.voice_generation_excluded,
-      lesson.voice_id,
-      statuses,
-    );
+    return summarize(contentType, lesson.id, lesson.title, lesson.voice_id, statuses);
   });
   const bookRows = mapWithConcurrency(safeBooks, VOICE_STATUS_CONCURRENCY, async (book) => {
     const { statuses } = await getBookVoiceStatus(serviceClient, book.id, preloaded);
-    return summarize(
-      "book",
-      book.id,
-      book.title,
-      book.voice_generation_excluded,
-      book.voice_id,
-      statuses,
-    );
+    return summarize("book", book.id, book.title, book.voice_id, statuses);
   });
 
   return [...(await storyRows), ...(await bookRows)];
@@ -169,7 +153,6 @@ function summarize(
   contentType: "story" | "conversation" | "normal" | "book",
   id: string,
   title: string,
-  excluded: boolean,
   voiceId: string | null,
   statuses: SentenceVoiceStatus[],
 ): VoiceDashboardRow {
@@ -181,7 +164,6 @@ function summarize(
     readyCount: statuses.filter((s) => s.status === "ready").length,
     failedCount: statuses.filter((s) => s.status === "failed").length,
     unresolvedCount: statuses.filter((s) => s.status === "unresolved").length,
-    excluded,
     voiceId,
   };
 }

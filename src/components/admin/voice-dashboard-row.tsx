@@ -9,7 +9,6 @@ import {
   generateBookVoice,
   generateLessonVoice,
   setContentVoiceOverride,
-  setVoiceGenerationExcluded,
 } from "@/lib/admin/voice-generation-actions";
 import { getStoryCharacterGenderLabelAr } from "@/lib/admin/story-character-gender";
 import type { VoiceDashboardRow as VoiceDashboardRowData } from "@/lib/admin/voice-generation-queries";
@@ -18,8 +17,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * One row of the unified Stories+Conversations+Normal+Books narration
- * dashboard — interactive (exclude toggle, per-row Generate button), so
- * this is a client component even though the page around it is a Server
+ * dashboard — interactive (voice picker, per-row Generate button), so this
+ * is a client component even though the page around it is a Server
  * Component. Story, Conversation, and Normal rows (all three are `lessons`)
  * link to their per-sentence detail page
  * (src/app/admin/voice/content/[lessonId]), which works for any mode since
@@ -63,13 +62,6 @@ export function VoiceDashboardRow({
     });
   }
 
-  function handleToggleExcluded() {
-    setMessage(null);
-    startTransition(async () => {
-      await setVoiceGenerationExcluded(row.contentType, row.id, !row.excluded);
-    });
-  }
-
   function handleVoiceChange(voiceId: string) {
     setMessage(null);
     startTransition(async () => {
@@ -93,11 +85,6 @@ export function VoiceDashboardRow({
         {characterGenderLabel && (
           <Badge variant="muted" className="shrink-0" title="Speaking character's gender">
             {characterGenderLabel}
-          </Badge>
-        )}
-        {row.excluded && (
-          <Badge variant="outline" className="shrink-0">
-            excluded
           </Badge>
         )}
       </div>
@@ -129,20 +116,10 @@ export function VoiceDashboardRow({
             ))}
           </select>
         )}
-        <label className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <input
-            type="checkbox"
-            checked={row.excluded}
-            onChange={handleToggleExcluded}
-            disabled={isPending}
-            className="accent-primary"
-          />
-          Exclude
-        </label>
         <button
           type="button"
           onClick={handleGenerate}
-          disabled={isPending || row.excluded}
+          disabled={isPending}
           className={cn(
             "rounded-md border px-2.5 py-1 text-xs font-medium",
             "border-input hover:bg-muted disabled:opacity-50",

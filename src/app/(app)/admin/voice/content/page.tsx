@@ -12,7 +12,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Story Audio Status" };
 
-/** Unified Stories + Conversations + Normal lessons + Books narration dashboard — mirrors /admin/translations' dashboard shape: one row per published Stories lesson, published Conversation lesson, published Normal lesson, and published Book, its audio completeness, an inline Generate button, a per-row voice picker, and an "Exclude" toggle to opt an item out of the bulk sweep below and the cron sweep without unpublishing it. */
+/** Unified Stories + Conversations + Normal lessons + Books narration dashboard — mirrors /admin/translations' dashboard shape: one row per published Stories lesson, published Conversation lesson, published Normal lesson, and published Book, its audio completeness, an inline Generate button, and a per-row voice picker. */
 export default async function AdminVoiceContentPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 

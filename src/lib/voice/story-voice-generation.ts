@@ -692,8 +692,12 @@ export async function generateStoryVoiceDraft(
       // has no "attempts" counter to bound it by and re-offers this exact
       // lesson on every future sweep/bulk-generate run forever. Auto-excluding
       // here reuses voice_generation_excluded exactly as it's already
-      // designed (an admin opt-out, visible and reversible from the "Story
-      // audio status" dashboard's own Exclude checkbox) as a one-strike
+      // designed (previously also exposed as an admin-facing
+      // "Exclude" checkbox on the "Story audio status" dashboard; that
+      // checkbox was removed 2026-09-10 at the user's request, so this
+      // column now has no UI toggle at all — reversing it means fixing
+      // whatever the Director rejected and flipping the column back
+      // manually) as a one-strike
       // circuit breaker — confirmed real after a 2026-09-09 incident where
       // this looped indefinitely on the same broken lessons. Deliberately
       // NOT applied to the thrown-error branch above (rate limits, network
