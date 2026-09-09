@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import { requireAdmin } from "@/lib/admin/access";
 import type { ActionResult } from "@/lib/admin/content-actions";
@@ -46,18 +47,45 @@ function summarize(outcome: {
   return { success: parts.join(", ") + "." };
 }
 
-/** Manual single-lesson trigger — the "Regenerate Story Audio" button. */
+/**
+ * Manual single-lesson trigger — the "Regenerate Story Audio" button.
+ *
+ * Deferred via `after()`, exactly like triggerAutomaticVoiceGeneration's own
+ * auto-trigger-on-save (see that file's doc comment for the shared
+ * reasoning) — added after Sentry caught the real cause of this project's
+ * recurring "works fine, then suddenly fails" reports on /admin/voice/content:
+ * actual HTTP 504s (`POST /admin/voice/content [504]`), a client/gateway
+ * timeout on the request itself, not a thrown error in the code. A 12-sentence
+ * lesson is 1 Voice Director call plus 12 real TTS calls, sequential, all
+ * held inside one HTTP request-response cycle the browser waits on — plenty
+ * to outlast a proxy's patience even when the work itself succeeds
+ * server-side (confirmed: admins kept seeing correct generated audio despite
+ * the error, because the generation had actually finished after the browser
+ * already gave up). Returning immediately and letting the real work continue
+ * after the response is sent removes the timeout risk entirely, regardless
+ * of how many sentences a lesson has — the trade-off is losing the exact
+ * "N generated, M failed" count in the same click; the admin sees it
+ * reflected in the row's badges on the next real page load instead.
+ */
 export async function generateLessonVoice(lessonId: string): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
-  const supabase = createServiceRoleClient();
-  const outcome = await generateStoryVoiceDraft(supabase, lessonId);
-  revalidatePath(`/admin/voice/content/${lessonId}`);
-  // Deliberately NOT revalidating /admin/voice/content itself — see
-  // generateBookVoice's own doc comment on why a single-row action here
-  // must never force the whole ~150-query dashboard to reload.
-  return summarize(outcome);
+  after(async () => {
+    const supabase = createServiceRoleClient();
+    const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+    if (outcome.error) {
+      console.error("[voice] generateLessonVoice (admin) issue", {
+        lessonId,
+        error: outcome.error,
+      });
+    }
+    revalidatePath(`/admin/voice/content/${lessonId}`);
+  });
+
+  return {
+    success: "Generation started in the background — refresh in a moment to see the result.",
+  };
 }
 
 /** One sentence's "Regenerate" button — forces past an already-'ready' or retry-exhausted row. */
@@ -74,29 +102,29 @@ export async function regenerateSentenceVoice(
   return summarize(outcome);
 }
 
-/** Manual whole-book trigger — used by both the Book Preview page's "Generate book audio" button and the "Story audio status" dashboard's per-row generate button. */
+/**
+ * Manual whole-book trigger — used by both the Book Preview page's
+ * "Generate book audio" button and the "Story audio status" dashboard's
+ * per-row generate button. Deferred via `after()` — see
+ * generateLessonVoice's own doc comment for why (the actual measured 504
+ * gateway-timeout cause, confirmed via Sentry, not a guess).
+ */
 export async function generateBookVoice(bookId: string): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
-  const supabase = createServiceRoleClient();
-  const outcome = await generateBookVoiceDraft(supabase, bookId);
-  revalidatePath(`/admin/library/${bookId}/edit`);
-  // Deliberately NOT revalidating /admin/voice/content itself — that page's
-  // listVoiceGenerationDashboardRows() fires roughly a hundred Supabase
-  // reads for a library this size (74+ Stories alone), and every
-  // single-row action here already gives the admin an inline result
-  // message via `summarize(outcome)` without needing a dashboard-wide
-  // refetch. Confirmed root cause of a real 2026-09-09 incident: an admin
-  // clicking Generate row-by-row kept forcing that full reload on every
-  // click, and repeated large batches of reads eventually hit the same
-  // stale-connection issue fixed elsewhere in this codebase — "worked for a
-  // while, then crashed" is exactly what compounding that risk on every
-  // click looks like. The row's own badge counts go stale until the admin's
-  // next real page load, which is a far smaller cost than crashing.
-  // generateMissingVoiceForContent (the bulk button) still revalidates once
-  // per click, not per item, which stays worth it.
-  return summarize(outcome);
+  after(async () => {
+    const supabase = createServiceRoleClient();
+    const outcome = await generateBookVoiceDraft(supabase, bookId);
+    if (outcome.error) {
+      console.error("[voice] generateBookVoice (admin) issue", { bookId, error: outcome.error });
+    }
+    revalidatePath(`/admin/library/${bookId}/edit`);
+  });
+
+  return {
+    success: "Generation started in the background — refresh in a moment to see the result.",
+  };
 }
 
 /**
@@ -106,6 +134,15 @@ export async function generateBookVoice(bookId: string): Promise<ActionResult> {
  * findBookIdsNeedingVoiceGeneration's own doc comments for exactly what's
  * excluded: only whatever an admin has individually flagged
  * voice_generation_excluded from the dashboard).
+ *
+ * The candidate-selection + cap check stay synchronous (a couple of cheap
+ * queries, safe to await directly) so a capped/empty run still gets an
+ * immediate, accurate message. The actual generation loop is deferred via
+ * `after()` — see generateLessonVoice's own doc comment for why: even at
+ * MAX_BULK_LESSONS_PER_RUN's reduced size, a handful of multi-sentence
+ * lessons processed sequentially can still outlast the platform gateway's
+ * timeout on the request itself (confirmed via Sentry: real HTTP 504s on
+ * this exact route), regardless of how small the batch is made.
  */
 export async function generateMissingVoiceForContent(): Promise<ActionResult> {
   const forbidden = await requireAdmin();
@@ -125,25 +162,36 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
     findBookIdsNeedingVoiceGeneration(supabase, MAX_BULK_BOOKS_PER_RUN),
   ]);
 
-  let generated = 0;
-  let skipped = 0;
-  let failed = 0;
-  for (const lessonId of lessonIds) {
-    const outcome = await generateStoryVoiceDraft(supabase, lessonId);
-    generated += outcome.generated;
-    skipped += outcome.skipped;
-    failed += outcome.failed;
-  }
-  for (const bookId of bookIds) {
-    const outcome = await generateBookVoiceDraft(supabase, bookId);
-    generated += outcome.generated;
-    skipped += outcome.skipped;
-    failed += outcome.failed;
+  if (lessonIds.length === 0 && bookIds.length === 0) {
+    return { success: "Nothing left to generate — every eligible item is already up to date." };
   }
 
-  revalidatePath("/admin/voice/content");
+  after(async () => {
+    for (const lessonId of lessonIds) {
+      try {
+        const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+        if (outcome.error) {
+          console.error("[voice] bulk generate lesson issue", { lessonId, error: outcome.error });
+        }
+      } catch (err) {
+        console.error("[voice] bulk generate lesson threw", { lessonId, err });
+      }
+    }
+    for (const bookId of bookIds) {
+      try {
+        const outcome = await generateBookVoiceDraft(supabase, bookId);
+        if (outcome.error) {
+          console.error("[voice] bulk generate book issue", { bookId, error: outcome.error });
+        }
+      } catch (err) {
+        console.error("[voice] bulk generate book threw", { bookId, err });
+      }
+    }
+    revalidatePath("/admin/voice/content");
+  });
+
   return {
-    success: `Processed ${lessonIds.length} lesson(s) and ${bookIds.length} book(s): ${generated} generated, ${skipped} skipped, ${failed} failed.`,
+    success: `Started generating ${lessonIds.length} lesson(s) and ${bookIds.length} book(s) in the background — refresh this page in a moment to see updated status.`,
   };
 }
 
