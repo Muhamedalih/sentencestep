@@ -1,8 +1,29 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
+import type { LearningMode } from "@/types/content";
 
 type DbClient = SupabaseClient<Database>;
+
+/**
+ * Temporary pause, not a removal — flip back to `false` to re-include
+ * Normal lessons in the automatic bulk/cron sweep. Requested 2026-09-10:
+ * the admin Voice page's own "Default voice — Normal Lessons" section
+ * reads "No Hume voices registered yet" — zero Hume voices have ever been
+ * added, so every Normal lesson's own lessons.voice_id is necessarily
+ * either empty or (as confirmed on two real lessons, "The Side Project"
+ * and "Moving Abroad Sort Of") a leftover value from a different provider
+ * that Hume was never going to accept. Because these are the
+ * oldest-updated published lessons in the whole library, they permanently
+ * occupied the front of findLessonIdsNeedingVoiceGeneration's combined
+ * (Stories + Conversation + Normal) result, so every sweep/bulk-generate
+ * round spent its one-lesson budget on a Normal lesson that could only
+ * ever fail, and Stories/Conversation lessons (ElevenLabs) never got a
+ * turn. Pausing Normal here — until Hume voices actually exist to assign —
+ * lets ElevenLabs-backed content generate normally in the meantime; no
+ * lesson data, audio, or voice_id was touched to do this.
+ */
+const NORMAL_LESSON_SWEEP_PAUSED = true;
 
 /**
  * Lesson ids worth attempting voice generation for, bounded to `limit` —
@@ -54,10 +75,13 @@ export async function findLessonIdsNeedingVoiceGeneration(
   supabase: DbClient,
   limit: number,
 ): Promise<string[]> {
+  const modes: LearningMode[] = NORMAL_LESSON_SWEEP_PAUSED
+    ? ["stories", "conversation"]
+    : ["stories", "conversation", "normal"];
   const { data: lessons, error } = await supabase
     .from("lessons")
     .select("id")
-    .in("mode", ["stories", "conversation", "normal"])
+    .in("mode", modes)
     .eq("status", "published")
     .eq("voice_generation_excluded", false)
     .order("updated_at", { ascending: true })
