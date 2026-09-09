@@ -684,6 +684,23 @@ export async function generateStoryVoiceDraft(
     });
     if (!validation.valid) {
       const message = `Malformed voice direction: ${validation.errors.join(" ")}`;
+      // A validation failure (not a thrown/transient error) means the
+      // Director's structured output was actually rejected for this
+      // lesson's specific content — every retry burns a real Anthropic call
+      // and, with nothing written to voice_audio_cache on this path (a
+      // whole-lesson failure, not a per-sentence one), findLessonIdsNeedingVoiceGeneration
+      // has no "attempts" counter to bound it by and re-offers this exact
+      // lesson on every future sweep/bulk-generate run forever. Auto-excluding
+      // here reuses voice_generation_excluded exactly as it's already
+      // designed (an admin opt-out, visible and reversible from the "Story
+      // audio status" dashboard's own Exclude checkbox) as a one-strike
+      // circuit breaker — confirmed real after a 2026-09-09 incident where
+      // this looped indefinitely on the same broken lessons. Deliberately
+      // NOT applied to the thrown-error branch above (rate limits, network
+      // blips) or the "no ANTHROPIC_API_KEY" branch, both of which are
+      // transient/global rather than a signal this lesson's content itself
+      // is the problem.
+      await supabase.from("lessons").update({ voice_generation_excluded: true }).eq("id", lessonId);
       return { generated: 0, skipped, failed: eligible.length + unresolvedCount, error: message };
     }
     directionBySentenceId = new Map(validation.value.map((d) => [d.sentenceId, d]));

@@ -426,6 +426,10 @@ export async function generateBookVoiceDraft(
     textById: new Map(sentences.map((s) => [s.id, s.en])),
   });
   if (!validation.valid) {
+    // Auto-exclude on a real validation failure (not a thrown/transient
+    // error) — same reasoning and same incident as
+    // generateStoryVoiceDraft's mirrored fix, see its own doc comment.
+    await supabase.from("books").update({ voice_generation_excluded: true }).eq("id", bookId);
     return {
       generated: 0,
       skipped,
