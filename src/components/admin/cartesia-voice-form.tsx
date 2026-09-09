@@ -13,6 +13,7 @@ import {
 import { deleteVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
 import type { CartesiaVoiceSummary } from "@/lib/voice/providers/cartesia";
+import { dataUriToBlobUrl } from "@/lib/audio-preview";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
@@ -121,9 +122,18 @@ export function CartesiaVoiceForm({ voices, model }: { voices: VoiceRow[]; model
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
         return;
       }
-      setPreviewAudioUrl(result.audioDataUri);
+      // Converted to a Blob URL — a raw inline data: URI renders
+      // unreliably here (MediaError MEDIA_ERR_SRC_NOT_SUPPORTED, shows
+      // "0:00 / 0:00" and never plays) — see dataUriToBlobUrl's own doc
+      // comment, and pronunciation-default-voice-form.tsx for the same fix.
+      setPreviewAudioUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+      const blobUrl = dataUriToBlobUrl(result.audioDataUri);
+      setPreviewAudioUrl(blobUrl);
       if (audioRef.current) {
-        audioRef.current.src = result.audioDataUri;
+        audioRef.current.src = blobUrl;
         audioRef.current.play().catch(() => {
           // Same autoplay caveat as ElevenLabsVoiceForm — the native player
           // below is the reliable fallback.
