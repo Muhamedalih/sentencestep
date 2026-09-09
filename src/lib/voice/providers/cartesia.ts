@@ -1,7 +1,19 @@
 import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice/provider";
 
 const API_BASE = "https://api.cartesia.ai";
-const API_VERSION = "2025-04-16";
+/**
+ * Pinned to Cartesia's current documented version (confirmed against
+ * docs.cartesia.ai/api-reference/tts/bytes on 2026-09-09 — was "2025-04-16"
+ * before, likely the real cause of a request that returned 200 with no
+ * error but produced audio that silently failed to play: an old
+ * API-Version paired with a model_id from a generation that version
+ * predates (sonic-3.6, added long after 2025-04-16) is exactly the kind of
+ * mismatch that can make a provider accept the request but return
+ * malformed output instead of a clean error. If Cartesia audio ever goes
+ * silent again, re-check this value against the docs rather than assuming
+ * it's still current.
+ */
+const API_VERSION = "2026-08-14";
 
 /** MP3 output at the same 64kbps mono this app already standardizes on for every other provider's clips (see providers/elevenlabs.ts's OUTPUT_FORMAT). */
 const OUTPUT_FORMAT = {
@@ -22,9 +34,11 @@ function describeFailure(status: number, bodyText: string): string {
  * The only file that talks to Cartesia's HTTP API directly — everything
  * else in this app goes through the TTSProvider interface, exactly like
  * providers/elevenlabs.ts. `input.model` carries Cartesia's model_id (e.g.
- * "sonic-2"), admin-configured in the shared elevenlabs_settings.model field
- * (see .env.example). `input.voiceSettings` is unused — Cartesia has no
- * stability/similarity-boost equivalent, only the request fields below.
+ * "sonic-3.6") — see content-provider-map.ts's DEFAULT_CARTESIA_MODEL,
+ * never elevenlabs_settings.model (that's Stories/Books' own ElevenLabs
+ * setting, unrelated to Cartesia since the provider rebuild — see
+ * content-provider-map.ts). `input.voiceSettings` is unused — Cartesia has
+ * no stability/similarity-boost equivalent, only the request fields below.
  */
 export function createCartesiaProvider(apiKey: string): TTSProvider {
   return {

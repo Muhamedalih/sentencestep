@@ -80,7 +80,7 @@ export async function previewCartesiaAction(input: {
 
   const text = (input.text || PREVIEW_TEXT).trim();
   if (!text || text.length > 500) return { error: "Preview text must be 1-500 characters." };
-  if (!input.model.trim()) return { error: "A Cartesia model id is required (e.g. sonic-2)." };
+  if (!input.model.trim()) return { error: "A Cartesia model id is required (e.g. sonic-3.6)." };
 
   // Built directly from CARTESIA_API_KEY rather than getTTSProvider() — this
   // preview button is specifically for Cartesia voices, must always

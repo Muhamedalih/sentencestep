@@ -10,18 +10,16 @@ import type { VoiceRow } from "@/lib/admin/voices-queries";
 import { cn } from "@/lib/utils";
 
 /**
- * This "Model" field is passed through as-is to whichever provider is
- * active (see provider-registry.ts) — Edge-TTS and Hume both ignore it
- * entirely, but ElevenLabs and Cartesia both need it to be a real model name
- * for *that specific provider*, so it must be changed here when switching
- * which provider's default narration voice is selected above (a Cartesia
- * voice selected while this still says "eleven_v3" will fail — Cartesia's
- * request body is built directly from this value).
+ * This "Model" field is ElevenLabs-only — Stories/Conversation/Books are
+ * permanently pinned to ElevenLabs (see content-provider-map.ts), so unlike
+ * before the provider rebuild, this can no longer configure Cartesia's
+ * model too. Cartesia's own model id is a separate, fixed constant
+ * (content-provider-map.ts's DEFAULT_CARTESIA_MODEL) used by Word Lists and
+ * the Cartesia admin preview — never read from here.
  */
 const MODEL_OPTIONS = [
   { value: "eleven_v3", label: "Eleven v3 (ElevenLabs, most expressive)" },
   { value: "eleven_multilingual_v2", label: "Eleven Multilingual v2 (ElevenLabs, no audio tags)" },
-  { value: "sonic-2", label: "Sonic 2 (Cartesia)" },
 ];
 
 /**
