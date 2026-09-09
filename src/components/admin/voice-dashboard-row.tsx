@@ -54,19 +54,33 @@ export function VoiceDashboardRow({
   function handleGenerate() {
     setMessage(null);
     startTransition(async () => {
-      const result =
-        row.contentType === "book"
-          ? await generateBookVoice(row.id)
-          : await generateLessonVoice(row.id);
-      setMessage(result.error ?? result.success ?? null);
+      try {
+        const result =
+          row.contentType === "book"
+            ? await generateBookVoice(row.id)
+            : await generateLessonVoice(row.id);
+        setMessage(result.error ?? result.success ?? null);
+      } catch {
+        // A network/platform hiccup (timeout, dropped connection) throws
+        // out of the Server Action call itself rather than returning a
+        // normal ActionResult — see voice-bulk-generate-control.tsx's own
+        // try/catch for the same reasoning. Uncaught here it crashes this
+        // whole page to the nearest error boundary; caught, it's just an
+        // inline message, and it's always safe to click Generate again.
+        setMessage("Couldn't reach the server. Safe to try again.");
+      }
     });
   }
 
   function handleVoiceChange(voiceId: string) {
     setMessage(null);
     startTransition(async () => {
-      const result = await setContentVoiceOverride(row.contentType, row.id, voiceId || null);
-      setMessage(result.error ?? result.success ?? null);
+      try {
+        const result = await setContentVoiceOverride(row.contentType, row.id, voiceId || null);
+        setMessage(result.error ?? result.success ?? null);
+      } catch {
+        setMessage("Couldn't reach the server. Safe to try again.");
+      }
     });
   }
 

@@ -44,12 +44,21 @@ export function SentenceVoiceReview({
   function handleRegenerateAll() {
     setMessage(null);
     startTransition(async () => {
-      const result = await generateLessonVoice(lessonId);
-      setMessage(
-        result.error
-          ? { kind: "error", text: result.error }
-          : { kind: "success", text: result.success ?? "Done." },
-      );
+      try {
+        const result = await generateLessonVoice(lessonId);
+        setMessage(
+          result.error
+            ? { kind: "error", text: result.error }
+            : { kind: "success", text: result.success ?? "Done." },
+        );
+      } catch {
+        // A network/platform hiccup throws out of the Server Action call
+        // itself rather than returning a normal ActionResult — see
+        // voice-bulk-generate-control.tsx's own try/catch for the same
+        // reasoning. Uncaught here it crashes this whole page instead of
+        // just showing an inline message.
+        setMessage({ kind: "error", text: "Couldn't reach the server. Safe to try again." });
+      }
     });
   }
 
@@ -57,12 +66,16 @@ export function SentenceVoiceReview({
     setMessage(null);
     setPendingSentenceId(sentenceId);
     startTransition(async () => {
-      const result = await regenerateSentenceVoice(lessonId, sentenceId);
-      setMessage(
-        result.error
-          ? { kind: "error", text: result.error }
-          : { kind: "success", text: result.success ?? "Done." },
-      );
+      try {
+        const result = await regenerateSentenceVoice(lessonId, sentenceId);
+        setMessage(
+          result.error
+            ? { kind: "error", text: result.error }
+            : { kind: "success", text: result.success ?? "Done." },
+        );
+      } catch {
+        setMessage({ kind: "error", text: "Couldn't reach the server. Safe to try again." });
+      }
       setPendingSentenceId(null);
     });
   }
