@@ -154,6 +154,22 @@ const CANDIDATE_POOL_MULTIPLIER = 3;
  * each sentence still commits to voice_audio_cache as it completes (not
  * all-or-nothing), so an occasional timeout on an unusually long lesson
  * doesn't lose progress.
+ *
+ * Does NOT call revalidatePath("/admin/voice/content") — it used to, and
+ * that was itself a second real bug on top of the `after()` one: this
+ * action already takes a while doing real TTS/Director work, and stacking
+ * a revalidation of a ~150-query dashboard onto the *same* HTTP response
+ * makes that one response large and slow enough that Sentry caught it
+ * failing two different ways in production — "Connection closed" and "An
+ * unexpected response was received from the server" (a Next.js RSC-stream
+ * parse failure), both on this exact route, both while this action was
+ * still returning correct, verified-against-the-database results server
+ * side. Single-row actions in this file already made this same call for
+ * the same reason (see generateBookVoice's doc comment); this bulk action
+ * was the one exception, and it was reproducing the same failure mode.
+ * The per-row "N/M ready" counts on the dashboard simply go stale until
+ * the admin reloads the page — no worse than the single-row buttons today,
+ * and the inline result message below still reports the real outcome.
  */
 export async function generateMissingVoiceForContent(): Promise<ActionResult> {
   const forbidden = await requireAdmin();
@@ -202,7 +218,6 @@ export async function generateMissingVoiceForContent(): Promise<ActionResult> {
     if (outcome.generated > 0 || outcome.failed > 0) bookWorkDone += 1;
   }
 
-  revalidatePath("/admin/voice/content");
   return {
     success: `Processed ${lessonWorkDone} lesson(s) and ${bookWorkDone} book(s): ${generated} generated, ${skipped} skipped, ${failed} failed.`,
   };
