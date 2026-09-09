@@ -19,17 +19,22 @@ import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
  * MAX_BOOK_VOICE_PAIRS_PER_RUN (src/app/api/cron/voice-sweep/route.ts, 5/3):
  * this button is a synchronous HTTP request with a real, unattended admin
  * waiting on it, and a genuine Netlify platform 504 (confirmed via Sentry,
- * not a code bug) still happened at 5/3 once a run's candidates needed real
- * work rather than cheap already-cached skips — each real item is a Voice
+ * not a code bug) happened at 5/3 once a run's candidates needed real work
+ * rather than cheap already-cached skips — each real item is a Voice
  * Director call plus one TTS call per sentence, all sequential (a
- * 12-sentence lesson alone is 13 real network calls), and eight such items
- * back-to-back in one request comfortably outlasts any synchronous function
- * timeout. Shrunk to one lesson and one book per call, with
- * VoiceBulkGenerateControl (the client component) calling this repeatedly
- * in a loop so one click still works through the whole backlog — just as
- * many small, fast, safe round trips instead of one large, slow, fragile
- * one. A round that times out only loses that one item's progress, not the
- * whole click's.
+ * 12-sentence lesson alone is 13 real network calls). Shrunk to 1 lesson
+ * and 1 book, with VoiceBulkGenerateControl (the client component) calling
+ * this repeatedly in a loop so one click still works through the whole
+ * backlog — many small, fast, safe round trips instead of one large, slow,
+ * fragile one.
+ *
+ * Even at 1+1 together, Sentry caught a second real 504 — this time the
+ * exact request-start-to-504 timestamps put the platform's actual ceiling
+ * for this route at roughly 25 seconds, not the ~60s the original
+ * stale-connection-retry fix (src/lib/supabase/fetch-with-timeout.ts) had
+ * assumed. generateMissingVoiceForContent below only ever runs generation
+ * for the lesson pool OR the book pool in a given round, never both, to
+ * roughly halve the worst case again.
  */
 const MAX_BULK_LESSONS_PER_RUN = 1;
 const MAX_BULK_BOOKS_PER_RUN = 1;
@@ -194,20 +199,33 @@ export async function generateMissingVoiceForContent(): Promise<BulkVoiceGenerat
     return { ...empty, exhausted: true };
   }
 
+  // Only one of the two pools below actually runs generation this round —
+  // see MAX_BULK_LESSONS_PER_RUN's own doc comment on why even "1 lesson +
+  // 1 book" together was still, empirically, too much for one request:
+  // Sentry caught a real 504 at exactly ~25s wall-clock (the platform's
+  // real ceiling for this route, not the ~60s originally assumed), on a
+  // round doing both. Doing at most one of the two per round roughly halves
+  // the worst-case sequential network-call count. Lessons go first simply
+  // because there are usually far more of them; a round only reaches for a
+  // book once the lesson pool is empty.
+  const workingOnBooksOnly = lessonPool.length === 0;
+
   let generated = 0;
   let skipped = 0;
   let failed = 0;
   let lessonWorkDone = 0;
-  for (const lessonId of lessonPool) {
-    if (lessonWorkDone >= MAX_BULK_LESSONS_PER_RUN) break;
-    const outcome = await generateStoryVoiceDraft(supabase, lessonId);
-    generated += outcome.generated;
-    skipped += outcome.skipped;
-    failed += outcome.failed;
-    if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
+  if (!workingOnBooksOnly) {
+    for (const lessonId of lessonPool) {
+      if (lessonWorkDone >= MAX_BULK_LESSONS_PER_RUN) break;
+      const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+      generated += outcome.generated;
+      skipped += outcome.skipped;
+      failed += outcome.failed;
+      if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
+    }
   }
   let bookWorkDone = 0;
-  for (const bookId of bookPool) {
+  for (const bookId of workingOnBooksOnly ? bookPool : []) {
     if (bookWorkDone >= MAX_BULK_BOOKS_PER_RUN) break;
     const outcome = await generateBookVoiceDraft(supabase, bookId);
     generated += outcome.generated;
