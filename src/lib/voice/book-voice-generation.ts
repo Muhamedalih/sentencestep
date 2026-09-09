@@ -26,19 +26,22 @@ type DbClient = SupabaseClient<Database>;
 /**
  * Unlike a lesson (naturally capped around a dozen sentences), a book can
  * have hundreds — several published books measured at 100-200+ sentences
- * still needing their first narration pass. Nothing before this bounded
- * generateBookVoiceDraft's own TTS loop, so a single call could attempt
- * every one of them sequentially; found 2026-09-10 while working through a
- * real backlog of un-narrated books, sized against the same ~25s real
- * platform ceiling documented in voice-generation-actions.ts (confirmed via
- * Sentry's exact request-start-to-504 timestamps, not the ~60s originally
- * assumed). The Voice Director call above still covers every sentence in
- * the book at once (it needs the full text for continuity/context either
- * way), but only this many actually get synthesized per call — the rest
- * count as `skipped` so the same short-circuit that makes an already-ready
- * sentence free also makes repeated clicks/sweep rounds pick up wherever
- * the last one left off, the same pattern the admin bulk button already
- * relies on for lessons.
+ * still needing their first narration pass. Bounds *both* the Voice
+ * Director call and the TTS synthesis loop in generateBookVoiceDraft to
+ * this many sentences per invocation — originally only the TTS loop was
+ * capped and the Director was still asked to direct the whole book at
+ * once, which on a real 201-sentence book (Atomic Habits) produced
+ * "Malformed voice direction: Missing sentences array" every time: the
+ * underlying LLM call's own output was being truncated before it could
+ * cover every sentence, not a validation bug, and that failure auto-
+ * excluded the book (see the Director-validation-failure comment below)
+ * before it ever got a chance to make real progress. Also sized against
+ * the same ~25s real platform ceiling documented in
+ * voice-generation-actions.ts (confirmed via Sentry's exact
+ * request-start-to-504 timestamps, not the ~60s originally assumed).
+ * Sentences beyond this count as `skipped`, so the same short-circuit that
+ * makes an already-ready sentence free also makes repeated clicks/sweep
+ * rounds pick up wherever the last one left off.
  */
 const MAX_SENTENCES_PER_BOOK_RUN = 15;
 
@@ -418,31 +421,48 @@ export async function generateBookVoiceDraft(
 
   if (eligible.length === 0) return { generated: 0, skipped, failed: 0 };
 
+  // Bounded here too, and to the *same* chunk the Director is asked about
+  // below — see MAX_SENTENCES_PER_BOOK_RUN's own doc comment. Originally
+  // the Director call covered every one of `sentences` (the whole book) at
+  // once regardless of how many were actually eligible; confirmed in
+  // production on a 201-sentence book as the real cause of "Malformed
+  // voice direction: Missing sentences array" (and the auto-exclude that
+  // followed it) — the underlying LLM call's own output was being
+  // truncated before it could include every sentence, not a validation bug.
+  // Chunking fixes both problems at once: no single Director call is ever
+  // asked to cover more than MAX_SENTENCES_PER_BOOK_RUN sentences, so nothing
+  // this large gets truncated, and each call only costs tokens for the
+  // sentences actually being synthesized this round.
+  const toSynthesizeNow = eligible.slice(0, MAX_SENTENCES_PER_BOOK_RUN);
+  skipped += eligible.length - toSynthesizeNow.length;
+
   const director = getVoiceDirector();
   if (!director) {
     return {
       generated: 0,
       skipped,
-      failed: eligible.length,
+      failed: toSynthesizeNow.length,
       error: "No Voice Director configured (ANTHROPIC_API_KEY is not set).",
     };
   }
   let rawDirection: unknown;
   try {
-    rawDirection = await director.directStory(sentences.map((s) => ({ id: s.id, en: s.en })));
+    rawDirection = await director.directStory(
+      toSynthesizeNow.map((item) => ({ id: item.sentence.id, en: item.sentence.en })),
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
       generated: 0,
       skipped,
-      failed: eligible.length,
+      failed: toSynthesizeNow.length,
       error: `Voice direction failed: ${message}`,
     };
   }
 
   const validation = validateVoiceDirectionOutput(rawDirection, {
-    sentenceIds: sentences.map((s) => s.id),
-    textById: new Map(sentences.map((s) => [s.id, s.en])),
+    sentenceIds: toSynthesizeNow.map((item) => item.sentence.id),
+    textById: new Map(toSynthesizeNow.map((item) => [item.sentence.id, item.sentence.en])),
   });
   if (!validation.valid) {
     // Auto-exclude on a real validation failure (not a thrown/transient
@@ -458,7 +478,7 @@ export async function generateBookVoiceDraft(
     return {
       generated: 0,
       skipped,
-      failed: eligible.length,
+      failed: toSynthesizeNow.length,
       error: `Malformed voice direction: ${validation.errors.join(" ")}`,
     };
   }
@@ -483,9 +503,6 @@ export async function generateBookVoiceDraft(
   let generated = 0;
   let failed = 0;
   const notes: string[] = [];
-
-  const toSynthesizeNow = eligible.slice(0, MAX_SENTENCES_PER_BOOK_RUN);
-  skipped += eligible.length - toSynthesizeNow.length;
 
   for (const item of toSynthesizeNow) {
     const direction = directionBySentenceId.get(item.sentence.id);
