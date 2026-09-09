@@ -14,8 +14,22 @@ import {
 import { isDailyVoiceGenerationCapReached } from "@/lib/voice/daily-cap";
 import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
 
-const MAX_BULK_LESSONS_PER_RUN = 20;
-const MAX_BULK_BOOKS_PER_RUN = 10;
+/**
+ * Matches MAX_LESSON_VOICE_PAIRS_PER_RUN/MAX_BOOK_VOICE_PAIRS_PER_RUN in
+ * src/app/api/cron/voice-sweep/route.ts exactly — that file's own doc
+ * comment documents the measured incident this mirrors: a 20+10-candidate
+ * batch reliably exceeded Netlify's function timeout in production,
+ * because each candidate isn't one query, it's a real Voice Director call
+ * plus one real TTS provider call per sentence, all sequential within a
+ * single invocation (a 12-sentence lesson alone is 13 real network calls).
+ * The cron sweep was shrunk after that measurement; this bulk button was
+ * missed and kept crashing on real admin use (confirmed 2026-09-09: "works
+ * fine, then suddenly fails" on every attempt) until reduced to the same
+ * proven-safe size. A big backlog now needs a few clicks instead of one,
+ * same trade-off the cron sweep already made.
+ */
+const MAX_BULK_LESSONS_PER_RUN = 5;
+const MAX_BULK_BOOKS_PER_RUN = 3;
 
 function summarize(outcome: {
   generated: number;
