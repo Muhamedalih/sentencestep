@@ -26,7 +26,7 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import { cn } from "@/lib/utils";
-import type { Lesson } from "@/types/content";
+import type { Lesson, NextLessonRef } from "@/types/content";
 
 const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
 
@@ -39,7 +39,7 @@ export function LessonSession({
   speakerVoiceMap,
 }: {
   unit: Lesson;
-  nextLesson?: Lesson;
+  nextLesson?: NextLessonRef;
   /** Admin content preview (see src/app/admin/content/[lessonId]/preview) — reuses this exact component and the real typing engine, but never writes progress or fires analytics/email triggers for what isn't a real learner session. */
   previewMode?: boolean;
   /** Already resolved server-side (unit.voiceId ?? globalDefaultVoiceId — see resolveVoiceId) and passed straight through to TypingSentence/PronunciationButton; this component never re-derives it. */

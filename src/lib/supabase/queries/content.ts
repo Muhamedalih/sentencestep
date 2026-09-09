@@ -20,6 +20,8 @@ import type { Lesson, LearningMode, PreviewSentence, Sentence } from "@/types/co
  */
 
 type SentenceRow = Database["public"]["Tables"]["sentences"]["Row"];
+type LessonRow = Database["public"]["Tables"]["lessons"]["Row"];
+type LessonRowWithSentences = LessonRow & { sentences: SentenceRow[] | null };
 
 /**
  * `locale`/`sentenceTranslations` are optional — every existing caller that
@@ -190,14 +192,28 @@ export async function fetchLevelPreviews(
 export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): Promise<Lesson[]> {
   const supabase = await createClient();
 
+  // A single round trip: sentences are embedded on the lessons row via the
+  // sentences.lesson_id -> lessons.id foreign key (see
+  // supabase/migrations/20250101000000_init_schema.sql), so PostgREST can
+  // return both in one request instead of the two sequential round trips
+  // this used to take (lessons+levels, then a dependent sentences query
+  // keyed off the first result's lesson ids). levels has no relationship to
+  // lessons.mode, so it stays a separate query, but it no longer needs to
+  // wait on the first result — both queries below now fire together. This
+  // goes through the same session-aware client as before, so the sentences
+  // RLS policy (which checks auth.uid() per lesson) is evaluated identically
+  // whether the row is reached via a direct select or an embed — see this
+  // function's own doc comment above for why that matters for premium
+  // content.
   const [{ data: lessonRows, error: lessonsError }, { data: levels, error: levelsError }] =
     await Promise.all([
       supabase
         .from("lessons")
-        .select("*")
+        .select("*, sentences(*)")
         .eq("mode", mode)
         .eq("status", "published")
-        .order("order_index"),
+        .order("order_index")
+        .order("order_index", { referencedTable: "sentences" }),
       supabase.from("levels").select("*").eq("mode", mode),
     ]);
 
@@ -206,24 +222,18 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
   // Defensive double-check (see isLearnerVisibleStatus's doc comment) — the
   // query above is the real filter, this just means a regression there
   // can't silently leak draft/archived lessons to learners.
-  const lessons = (lessonRows ?? []).filter((lesson) => isLearnerVisibleStatus(lesson.status));
+  const lessonRowsWithSentences = (lessonRows ?? []) as unknown as LessonRowWithSentences[];
+  const lessons = lessonRowsWithSentences.filter((lesson) => isLearnerVisibleStatus(lesson.status));
   if (lessons.length === 0) return [];
 
   const levelIndexById = new Map((levels ?? []).map((level) => [level.id, level.index]));
 
-  const { data: sentences, error: sentencesError } = await supabase
-    .from("sentences")
-    .select("*")
-    .in(
-      "lesson_id",
-      lessons.map((lesson) => lesson.id),
-    )
-    .order("order_index");
-
-  if (sentencesError) throw sentencesError;
+  const sentences: SentenceRow[] = lessons.flatMap(
+    (lesson) => (lesson.sentences ?? []) as SentenceRow[],
+  );
 
   const lessonIds = lessons.map((lesson) => lesson.id);
-  const sentenceIds = (sentences ?? []).map((sentence) => sentence.id);
+  const sentenceIds = sentences.map((sentence) => sentence.id);
   const [lessonTranslations, sentenceTranslations] = locale
     ? await Promise.all([
         getContentTranslations("lesson", lessonIds, locale),
@@ -232,9 +242,9 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
     : [undefined, undefined];
 
   return lessons.map((lesson) => {
-    const lessonSentences = (sentences ?? [])
-      .filter((sentence) => sentence.lesson_id === lesson.id)
-      .map((sentence) => toSentence(sentence, locale, sentenceTranslations));
+    const lessonSentences = ((lesson.sentences ?? []) as SentenceRow[]).map((sentence) =>
+      toSentence(sentence, locale, sentenceTranslations),
+    );
     const level = levelIndexById.get(lesson.level_id) ?? 1;
 
     // Stories-only, isolated feature — see buildStoryVocabulary's doc
@@ -295,6 +305,56 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
   });
 }
 
+/** The subset of a lesson findNextLesson actually needs to pick the next one and build its `/learn/{mode}/{id}` link — see fetchLessonNav's doc comment. */
+export interface LessonNavEntry {
+  id: string;
+  mode: LearningMode;
+  level: number;
+  order: number;
+}
+
+type LessonNavRow = Pick<LessonRow, "id" | "mode" | "order_index" | "status"> & {
+  levels: Pick<Database["public"]["Tables"]["levels"]["Row"], "index"> | null;
+};
+
+/**
+ * A lightweight stand-in for fetchLessons, used only to find the lesson that
+ * comes after a given one (see the lesson page's `nextLesson` prop, which
+ * only ever reads `.id`/`.mode` off the result — never its title, sentences,
+ * or anything else a full Lesson carries). The lesson page used to call the
+ * full fetchLessons(mode, locale) for this alone, which meant loading every
+ * lesson's complete sentence body (and, for stories mode, running full
+ * vocabulary derivation on all of them) on every single lesson page view
+ * just to compute one adjacent id — by far the most expensive call on that
+ * page after fetchLessons' own two-round-trip shape. This does the one
+ * round trip it actually needs: id/order/status plus the level's index via
+ * the same lessons.level_id -> levels.id embed fetchLessons uses, no
+ * sentences, no translations, no per-mode vocabulary derivation.
+ */
+export async function fetchLessonNav(mode: LearningMode): Promise<LessonNavEntry[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("id, mode, order_index, status, levels(index)")
+    .eq("mode", mode)
+    .eq("status", "published")
+    .order("order_index");
+
+  if (error) throw error;
+
+  // Same defensive double-check as fetchLessons — see isLearnerVisibleStatus's
+  // doc comment.
+  return ((data ?? []) as unknown as LessonNavRow[])
+    .filter((lesson) => isLearnerVisibleStatus(lesson.status))
+    .map((lesson) => ({
+      id: lesson.id,
+      mode: lesson.mode,
+      level: lesson.levels?.index ?? 1,
+      order: lesson.order_index,
+    }));
+}
+
 /**
  * Unlike fetchLessons (list views, and generateStaticParams which has no
  * request to read a session from — both only ever need free-lesson data),
@@ -311,26 +371,38 @@ export async function fetchLessonById(
 ): Promise<Lesson | undefined> {
   const supabase = await createClient();
 
-  const { data: lesson, error: lessonError } = await supabase
-    .from("lessons")
-    .select("*")
-    .eq("mode", mode)
-    .eq("id", id)
-    .eq("status", "published")
-    .maybeSingle();
+  // Both queries below only need `id`/`mode`, which are already known from
+  // the caller — this used to fetch the lesson row first and only start the
+  // level+sentences pair once it resolved, but neither of those actually
+  // depends on anything read back off that row: the sentences filter uses
+  // `id` directly (identical to lesson.id once the row exists), and the
+  // level is now embedded on the lessons query itself via the same
+  // lessons.level_id -> levels.id join fetchLessons uses, instead of a
+  // separate lookup keyed off lesson.level_id. So both fire together as one
+  // round trip instead of two sequential ones. The lesson-not-found/
+  // not-published case still fires the sentences query for nothing, but
+  // that's the rare path — the common case (a real lesson id) was always
+  // going to need both anyway.
+  const [{ data: lesson, error: lessonError }, { data: sentences, error: sentencesError }] =
+    await Promise.all([
+      supabase
+        .from("lessons")
+        .select("*, levels(*)")
+        .eq("mode", mode)
+        .eq("id", id)
+        .eq("status", "published")
+        .maybeSingle(),
+      supabase.from("sentences").select("*").eq("lesson_id", id).order("order_index"),
+    ]);
 
   if (lessonError) throw lessonError;
+  if (sentencesError) throw sentencesError;
   // Defensive double-check, see isLearnerVisibleStatus's doc comment.
   if (!lesson || !isLearnerVisibleStatus(lesson.status)) return undefined;
 
-  const [{ data: level, error: levelError }, { data: sentences, error: sentencesError }] =
-    await Promise.all([
-      supabase.from("levels").select("*").eq("id", lesson.level_id).maybeSingle(),
-      supabase.from("sentences").select("*").eq("lesson_id", lesson.id).order("order_index"),
-    ]);
-
-  if (levelError) throw levelError;
-  if (sentencesError) throw sentencesError;
+  const level = (
+    lesson as unknown as { levels: Database["public"]["Tables"]["levels"]["Row"] | null }
+  ).levels;
 
   const sentenceIds = (sentences ?? []).map((sentence) => sentence.id);
   const [lessonTranslations, sentenceTranslations] = locale

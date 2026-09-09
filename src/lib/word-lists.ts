@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { wordGroups as localWordGroups } from "@/data/word-lists";
 import { fetchWordGroupById, fetchWordGroupSummaries } from "@/lib/supabase/queries/word-lists";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -26,10 +28,17 @@ export async function getWordGroupSummaries(locale?: SupportLocale): Promise<Wor
   return localWordGroups.map(toSummary);
 }
 
-export async function getWordGroupById(
+/**
+ * React-cache()'d: both /learn/word-lists/[groupId] and
+ * /learn/word-lists/[groupId]/learn call this same word group twice per
+ * request (once from generateMetadata, once from the page component) — see
+ * src/lib/content.ts's getLessonById for the identical reasoning and the
+ * same per-request-only memoization guarantee.
+ */
+export const getWordGroupById = cache(async function getWordGroupById(
   groupId: string,
   locale?: SupportLocale,
 ): Promise<WordGroup | undefined> {
   if (isSupabaseConfigured()) return fetchWordGroupById(groupId, locale);
   return localWordGroups.find((group) => group.id === groupId);
-}
+});

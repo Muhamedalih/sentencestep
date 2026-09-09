@@ -36,9 +36,16 @@ export default async function BookOverviewPage({
   const book = await fetchBookById(bookId, supabase, locale);
   if (!book) notFound();
 
+  // countsPromise is shared with fetchBookProgressAction below instead of
+  // each independently calling fetchBookContentCounts — same duplicate-query
+  // fix as the Home dashboard's identical book-progress-counts pattern (see
+  // fetchBookProgressAction's own doc comment): without this, every Book
+  // Overview view fired the exact same book_sections/book_sentences count
+  // query twice.
+  const countsPromise = fetchBookContentCounts(bookId, supabase);
   const [counts, progress, sections] = await Promise.all([
-    fetchBookContentCounts(bookId, supabase),
-    fetchBookProgressAction(bookId),
+    countsPromise,
+    fetchBookProgressAction(bookId, countsPromise),
     fetchBookSections(bookId, locale ?? undefined),
   ]);
   const chapterStates = deriveChapterStates(sections, progress);

@@ -1,10 +1,14 @@
+import { cache } from "react";
+
 import { unitsByMode } from "@/data/units";
 import { lessonsByMode } from "@/data/lessons";
 import {
   fetchLessonById,
+  fetchLessonNav,
   fetchLessons,
   fetchLevelNames,
   fetchLevelPreviews,
+  type LessonNavEntry,
 } from "@/lib/supabase/queries/content";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { LEARNING_MODES } from "@/lib/learning-modes";
@@ -57,7 +61,16 @@ export async function getLessons(mode: LearningMode, locale?: SupportLocale): Pr
   return lessonsByMode[mode].map(withLessonVocabulary);
 }
 
-export async function getLessonById(
+/**
+ * React-cache()'d: the lesson page's generateMetadata and its page component
+ * both need this same lesson (see src/app/(app)/learn/[mode]/[lessonId]/page.tsx),
+ * and Next.js runs both for the same request. Wrapping in cache() means two
+ * calls with the same (mode, id, locale) within that one request share a
+ * single fetch instead of issuing it twice — request-scoped only, exactly
+ * like every other React cache() use in the App Router, so it never risks
+ * serving one request's data to another.
+ */
+export const getLessonById = cache(async function getLessonById(
   mode: LearningMode,
   id: string,
   locale?: SupportLocale,
@@ -66,6 +79,22 @@ export async function getLessonById(
   const lesson = lessonsByMode[mode].find((unit) => unit.id === id);
   if (!lesson) return undefined;
   return mode === "stories" ? withStoryVocabulary(lesson) : withLessonVocabulary(lesson);
+});
+
+/**
+ * The id/level/order (and mode, unchanged per entry) of every published
+ * lesson in a mode — everything findNextLesson needs and nothing else. See
+ * fetchLessonNav's doc comment for why the lesson page uses this instead of
+ * a full getLessons(mode) call just to find one adjacent lesson.
+ */
+export async function getLessonNav(mode: LearningMode): Promise<LessonNavEntry[]> {
+  if (isSupabaseConfigured()) return fetchLessonNav(mode);
+  return lessonsByMode[mode].map((lesson) => ({
+    id: lesson.id,
+    mode: lesson.mode,
+    level: lesson.level,
+    order: lesson.order,
+  }));
 }
 
 /**
