@@ -221,14 +221,14 @@ export function VocabularyLearn({
 
             <p
               dir="ltr"
-              className="text-primary text-[clamp(5rem,2.75rem+9vw,11rem)] leading-none font-extrabold tracking-tight"
+              className="text-primary text-[clamp(3.75rem,2.06rem+6.75vw,8.25rem)] leading-none font-extrabold tracking-tight"
             >
               {word.targetWord}
             </p>
 
             <p
               dir="ltr"
-              className="text-foreground w-full max-w-2xl text-center text-[clamp(1.8rem,1.56rem+1.9vw,2.35rem)] leading-relaxed font-medium text-balance"
+              className="text-foreground w-full max-w-2xl text-center text-[clamp(1.35rem,1.17rem+1.43vw,1.76rem)] leading-relaxed font-medium text-balance"
             >
               {prefix && <span>{prefix} </span>}
               <span className="bg-primary/10 text-primary mx-1 inline-block rounded-md px-2 py-0.5 font-semibold">
