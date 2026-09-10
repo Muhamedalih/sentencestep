@@ -85,7 +85,7 @@ export default async function AdminVoicePage() {
         currentVoiceId={defaultNormalLessonVoiceId}
       />
       <PronunciationDefaultVoiceForm
-        voices={cartesiaVoices}
+        voices={edgeTtsVoices}
         currentVoiceId={defaultPronunciationVoiceId}
       />
       <VoiceSettingsForm initial={settings} />

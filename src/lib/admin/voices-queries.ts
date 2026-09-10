@@ -62,12 +62,13 @@ export async function getDefaultVoiceId(): Promise<string | null> {
  * The default voice for Word Lists (tts_settings.default_pronunciation_voice_id)
  * — deliberately a separate column from getDefaultVoiceId's (Stories/
  * Conversation's own setting) and from getDefaultNormalLessonVoiceId's
- * (Normal lessons' own setting). Must be a Cartesia voice — see
- * content-provider-map.ts and word-list-voice-generation.ts. Falls back to
- * a fixed Edge-TTS voice id when unset purely so a fresh deployment has
- * *some* value to read before an admin has picked a real Cartesia voice
- * yet; word-list-voice-generation.ts still rejects it (and reports an
- * error) if it doesn't resolve to an actual Cartesia voice.
+ * (Normal lessons' own setting). Must be an Edge-TTS voice (reassigned from
+ * Cartesia 2026-09-10) — see content-provider-map.ts and
+ * word-list-voice-generation.ts. Falls back to a fixed Edge-TTS voice id
+ * when unset purely so a fresh deployment has *some* value to read before
+ * an admin has picked one explicitly; word-list-voice-generation.ts still
+ * rejects it (and reports an error) if it doesn't resolve to an actual
+ * voice from the currently-assigned provider.
  */
 export async function getDefaultPronunciationVoiceId(): Promise<string> {
   const FALLBACK_VOICE_ID = "edge-tts-en-us-aria";

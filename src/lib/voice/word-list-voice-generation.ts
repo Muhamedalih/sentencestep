@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { DEFAULT_CARTESIA_MODEL, WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
+import { WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
 import { createProviderForSource } from "@/lib/voice/provider-registry";
 import { cacheKeyParts } from "@/lib/voice/resolution";
 import { uploadVoiceClip } from "@/lib/voice/storage";
@@ -27,11 +27,11 @@ type DbClient = SupabaseClient<Database>;
  * vocabulary words instead of lesson/book sentences.
  *
  * Deliberately isolated from Stories/Books/Conversation's narration
- * pipeline: always Cartesia specifically (a fixed assignment, see
- * content-provider-map.ts — never auto-detected), never elevenlabs_settings
- * — that table is Stories/Books' own settings and must never be read from
- * or affect Word Lists. The default voice comes from
- * tts_settings.default_pronunciation_voice_id (see
+ * pipeline: always Edge-TTS specifically (a fixed assignment, see
+ * content-provider-map.ts — never auto-detected; reassigned from Cartesia
+ * 2026-09-10), never elevenlabs_settings — that table is Stories/Books' own
+ * settings and must never be read from or affect Word Lists. The default
+ * voice comes from tts_settings.default_pronunciation_voice_id (see
  * getDefaultPronunciationVoiceId, admin-configurable independently of
  * Stories/Books and of Normal lessons' own
  * default_normal_lesson_voice_id). No per-group voice override exists yet
@@ -42,16 +42,17 @@ type DbClient = SupabaseClient<Database>;
  * vocabulary word has no story arc or character for an LLM to interpret —
  * every word gets the same flat, neutral delivery.
  */
-const WORD_LIST_MODEL = DEFAULT_CARTESIA_MODEL;
+/** Edge-TTS ignores the model argument entirely (see providers/edge-tts.ts's doc comment) — "edge-tts" here only satisfies buildProviderSynthesisInput/synthesize's shared shape and is stored as voice_audio_cache.model, mirroring voice-audio.ts's identical `model: "edge-tts"` for isolated word clips. */
+const WORD_LIST_MODEL = "edge-tts";
 /**
- * Bumped from the old "edge-tts:word-list:v1" (and provider identity
- * dropped from the string entirely, see story-voice-generation.ts's
- * generationVersionFor doc comment) — this deliberately invalidates every
- * previously-cached Edge-TTS word clip now that Word Lists moved to
- * Cartesia, so the whole vocabulary re-generates once under the new
- * provider. Bounded by the cron sweep's MAX_VOICE_GENERATIONS_PER_DAY cap
- * (voice-sweep/route.ts) so that regeneration happens gradually and safely
- * instead of repeating the incident this rebuild fixes.
+ * generation_version is intentionally unchanged across the Cartesia ->
+ * Edge-TTS reassignment (2026-09-10): provider identity was already dropped
+ * from this string (see content-provider-map.ts's doc comment), because a
+ * different provider's voice_id is already a different cache key on its
+ * own (see resolution.ts's cacheKeyParts). Switching to the
+ * edge-tts-en-us-emma voice id naturally produces fresh cache rows without
+ * touching or invalidating the existing Cartesia-voiced rows still sitting
+ * in voice_audio_cache.
  */
 const WORD_LIST_GENERATION_VERSION = "word-list:v2";
 
@@ -122,7 +123,7 @@ export async function generateWordGroupVoiceDraft(
       generated: 0,
       skipped: 0,
       failed: words.length,
-      error: `The Word Lists voice (${defaultVoiceId}) is missing or isn't a Cartesia voice.`,
+      error: `The Word Lists voice (${defaultVoiceId}) is missing or isn't a ${provider.name} voice.`,
     };
   }
   const voiceId = voiceRow.id;

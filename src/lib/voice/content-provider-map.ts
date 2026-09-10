@@ -12,7 +12,12 @@
  *
  * Each content type below is pinned to one provider on purpose: Stories,
  * Conversation, and Books keep the original expressive-narration provider
- * (ElevenLabs); Word Lists use Cartesia. A provider is never silently
+ * (ElevenLabs); Word Lists use Edge-TTS (reassigned from Cartesia
+ * 2026-09-10 at the user's explicit request, to the free "Emma" Edge-TTS
+ * voice — tts_settings.default_pronunciation_voice_id already pointed at
+ * edge-tts-en-us-emma before this change, so word-list-voice-generation.ts
+ * was rejecting every word with "isn't a Cartesia voice" until this mapping
+ * caught up). A provider is never silently
  * substituted for another — see createProviderForSource in
  * provider-registry.ts, which throws rather than falling back when the
  * assigned provider's API key is missing. Changing this mapping is a
@@ -41,7 +46,7 @@
  */
 export const STORIES_AND_BOOKS_PROVIDER = "elevenlabs";
 export const NORMAL_LESSON_PROVIDER = "cartesia";
-export const WORD_LIST_PROVIDER = "cartesia";
+export const WORD_LIST_PROVIDER = "edge-tts";
 
 /**
  * Cartesia's own model id — never elevenlabs_settings.model. That column
