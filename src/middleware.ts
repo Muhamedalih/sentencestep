@@ -121,9 +121,16 @@ function buildCsp(nonce: string, isStaticRoute: boolean): string {
   // standard mitigation, scoped to exactly these three read-only,
   // unauthenticated, no-form marketing pages — every other route (login,
   // learn, admin, ...) keeps the strict nonce-based policy unchanged.
+  // Dev mode's webpack/React Fast Refresh runtime needs 'unsafe-eval'
+  // regardless of which script-src branch below applies — without this,
+  // "next dev" on "/", "/privacy", "/terms" (and their locale variants)
+  // throws a CSP violation on that runtime script and hydration never
+  // completes, even though the exact same routes work fine once built for
+  // production (where this stays omitted, unchanged from before).
+  const devEval = isProd ? "" : " 'unsafe-eval'";
   const scriptSrc = isStaticRoute
-    ? "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com"
-    : `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}'${isProd ? "" : " 'unsafe-eval'"} https://challenges.cloudflare.com`;
+    ? `script-src 'self' 'unsafe-inline'${devEval} https://challenges.cloudflare.com`
+    : `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}'${devEval} https://challenges.cloudflare.com`;
   return [
     "default-src 'self'",
     scriptSrc,
