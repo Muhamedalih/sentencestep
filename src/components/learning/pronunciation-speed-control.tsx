@@ -85,55 +85,54 @@ export function PronunciationSpeedControl({
   }
 
   return (
-    <div className={cn("fixed top-28 right-4 z-30 sm:right-6", className)}>
-      <button
-        type="button"
-        onMouseDown={handleMouseDown}
-        onClick={handleClick}
-        aria-label={t.pronunciation.speedButtonLabel
-          .replace("{label}", speedLabel)
-          .replace("{level}", String(level))}
-        title={speedLabel}
-        className={cn(
-          "group border-border/60 bg-background/85 flex items-center gap-2.5 rounded-full border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md",
-          "transition-[transform,box-shadow,border-color] duration-200 ease-out",
-          "hover:border-border hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.97]",
-        )}
-      >
-        <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--lesson-secondary)]">
-          <AnimatePresence mode="popLayout" initial={false} custom={goingSlower}>
-            <motion.span
-              key={step.key}
-              custom={goingSlower}
-              variants={reducedMotion ? undefined : iconVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={transitions.snappy}
-              className="flex items-center justify-center"
-            >
-              <Icon className="size-4.5 text-[var(--lesson-icon)]" aria-hidden="true" />
-            </motion.span>
-          </AnimatePresence>
-        </span>
+    <button
+      type="button"
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      aria-label={t.pronunciation.speedButtonLabel
+        .replace("{label}", speedLabel)
+        .replace("{level}", String(level))}
+      title={speedLabel}
+      className={cn(
+        "group border-border/60 bg-background/85 flex items-center gap-2.5 rounded-lg border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md",
+        "transition-[transform,box-shadow,border-color] duration-200 ease-out",
+        "hover:border-border hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.97]",
+        className,
+      )}
+    >
+      <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--lesson-secondary)]">
+        <AnimatePresence mode="popLayout" initial={false} custom={goingSlower}>
+          <motion.span
+            key={step.key}
+            custom={goingSlower}
+            variants={reducedMotion ? undefined : iconVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={transitions.snappy}
+            className="flex items-center justify-center"
+          >
+            <Icon className="size-4.5 text-[var(--lesson-icon)]" aria-hidden="true" />
+          </motion.span>
+        </AnimatePresence>
+      </span>
 
-        <span className="flex flex-col items-start gap-1">
-          <span dir={dir} className="text-foreground text-xs leading-none font-semibold">
-            {speedLabel}
-          </span>
-          <span className="flex items-center gap-0.5">
-            {[0, 1, 2].map((dot) => (
-              <span
-                key={dot}
-                className={cn(
-                  "size-1 rounded-full transition-colors duration-200",
-                  dot < level ? "bg-[var(--lesson-icon)]" : "bg-border",
-                )}
-              />
-            ))}
-          </span>
+      <span className="flex flex-col items-start gap-1">
+        <span dir={dir} className="text-foreground text-xs leading-none font-semibold">
+          {speedLabel}
         </span>
-      </button>
-    </div>
+        <span className="flex items-center gap-0.5">
+          {[0, 1, 2].map((dot) => (
+            <span
+              key={dot}
+              className={cn(
+                "size-1 rounded-full transition-colors duration-200",
+                dot < level ? "bg-[var(--lesson-icon)]" : "bg-border",
+              )}
+            />
+          ))}
+        </span>
+      </span>
+    </button>
   );
 }

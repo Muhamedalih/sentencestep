@@ -173,12 +173,7 @@ export function FixYourMistakesSession({
 
   return (
     <div className="flex flex-col lg:h-full">
-      {queue !== null && queue.length > 0 && (
-        <>
-          <ShiftReplayHint />
-          <PronunciationSpeedControl inputRef={inputRef} />
-        </>
-      )}
+      {queue !== null && queue.length > 0 && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-primary text-xs font-semibold tracking-wide uppercase">
@@ -267,7 +262,8 @@ function MistakeItemSession({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <PronunciationSpeedControl inputRef={inputRef} />
         <PronunciationButton
           text={item.displayWord}
           audioUrl={item.audioUrl}

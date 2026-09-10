@@ -260,7 +260,6 @@ export function TypingSentence({
         {...enterExit}
         className={cn("flex", isReplier ? "justify-end" : "justify-start")}
       >
-        <PronunciationSpeedControl inputRef={engine.inputRef} />
         <div
           className={cn(
             "flex max-w-[92%] items-start gap-3 sm:max-w-[75%]",
@@ -288,17 +287,20 @@ export function TypingSentence({
               <div className="min-w-0 flex-1">
                 {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
               </div>
-              <PronunciationButton
-                text={sentence.en}
-                audioUrl={sentence.audioUrl}
-                onPlay={onAudioPlay}
-                autoPlay
-                resetKey={sentence.id}
-                inputRef={engine.inputRef}
-                kokoroVoiceId={sentenceVoiceId}
-                contentType="sentence"
-                contentId={sentence.id}
-              />
+              <div className="flex shrink-0 items-center gap-2">
+                <PronunciationSpeedControl inputRef={engine.inputRef} />
+                <PronunciationButton
+                  text={sentence.en}
+                  audioUrl={sentence.audioUrl}
+                  onPlay={onAudioPlay}
+                  autoPlay
+                  resetKey={sentence.id}
+                  inputRef={engine.inputRef}
+                  kokoroVoiceId={sentenceVoiceId}
+                  contentType="sentence"
+                  contentId={sentence.id}
+                />
+              </div>
             </div>
             <p className="mt-4 text-base text-[var(--lesson-subtitle)]" dir={dir}>
               {supportText}
@@ -327,7 +329,6 @@ export function TypingSentence({
   if (mode === "stories") {
     return (
       <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
-        <PronunciationSpeedControl inputRef={engine.inputRef} />
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <StoryProgressRing current={sentenceNumber} total={totalSentences} />
@@ -353,6 +354,7 @@ export function TypingSentence({
               {storyTimeRemainingLabel && <span className="text-foreground/30">·</span>}
               {storyTimeRemainingLabel && <span>{storyTimeRemainingLabel}</span>}
             </div>
+            <PronunciationSpeedControl inputRef={engine.inputRef} />
             <PronunciationButton
               text={sentence.en}
               audioUrl={sentence.audioUrl}
@@ -393,8 +395,8 @@ export function TypingSentence({
 
   return (
     <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
-      <PronunciationSpeedControl inputRef={engine.inputRef} />
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <PronunciationSpeedControl inputRef={engine.inputRef} />
         <PronunciationButton
           text={sentence.en}
           audioUrl={sentence.audioUrl}

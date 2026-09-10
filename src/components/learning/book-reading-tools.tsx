@@ -46,11 +46,11 @@ type PanelView = "closed" | "menu" | "note" | "signin";
  * Bookmark + Note keep their original private-annotation behavior and data
  * flow entirely (see useBookSentenceMark) — only Speed is new here: it used
  * to be BookSentenceReader's own PronunciationSpeedControl (a persistent
- * fixed pill), folded into this menu as a row instead so cycling speed
- * doesn't need its own separate floating control. Every other caller of
+ * floating control), folded into this menu as a row instead so cycling speed
+ * doesn't need its own separate control. Every other caller of
  * PronunciationSpeedControl (normal lessons, stories, conversation, word
- * lists) is untouched — that component still exists and still owns its own
- * fixed-pill rendering there.
+ * lists) is untouched — that component still exists and is rendered inline
+ * beside each of those screens' own PronunciationButton there.
  */
 export function BookReadingTools({
   bookId,

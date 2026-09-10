@@ -113,12 +113,7 @@ export function WordReviewSession({
 
   return (
     <div className="flex h-svh w-full flex-col">
-      {!isComplete && (
-        <>
-          <ShiftReplayHint />
-          <PronunciationSpeedControl inputRef={inputRef} />
-        </>
-      )}
+      {!isComplete && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -173,17 +168,20 @@ export function WordReviewSession({
                 <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                   {t.wordLists.needsReviewHeading}
                 </span>
-                <PronunciationButton
-                  text={word.targetWord}
-                  audioUrl={word.audioUrl}
-                  onPlay={undefined}
-                  autoPlay
-                  resetKey={word.id}
-                  inputRef={inputRef}
-                  kokoroVoiceId={defaultVoiceId}
-                  contentType="word"
-                  contentId={word.id}
-                />
+                <div className="flex items-center gap-2">
+                  <PronunciationSpeedControl inputRef={inputRef} />
+                  <PronunciationButton
+                    text={word.targetWord}
+                    audioUrl={word.audioUrl}
+                    onPlay={undefined}
+                    autoPlay
+                    resetKey={word.id}
+                    inputRef={inputRef}
+                    kokoroVoiceId={defaultVoiceId}
+                    contentType="word"
+                    contentId={word.id}
+                  />
+                </div>
               </div>
 
               {word.supportHint && (

@@ -161,12 +161,7 @@ export function VocabularyPractice({
 
   return (
     <div className="flex h-svh w-full flex-col">
-      {!isComplete && (
-        <>
-          <ShiftReplayHint />
-          <PronunciationSpeedControl inputRef={inputRef} />
-        </>
-      )}
+      {!isComplete && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -183,6 +178,7 @@ export function VocabularyPractice({
                   {doneInBlock.size} / {blockSize}
                 </span>
               )}
+              <PronunciationSpeedControl inputRef={inputRef} />
               <PronunciationButton
                 // Only the target word is pronounced — never the full
                 // sentence. This is the one rule this whole screen is
