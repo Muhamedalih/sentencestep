@@ -12,7 +12,6 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
-import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
@@ -106,25 +105,29 @@ export function BookSentenceReader({
   // translation when one exists, English otherwise — never a mismatched
   // language.
   const supportText = sentence.supportText ?? sentence.en;
-  const wordSpeech = useSpeech();
-  const wordClip = useAudioClip();
+  const wordClip = useAudioClip(undefined, { maxRetries: 2, retryDelayMs: 400 });
   const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
 
-  /** Same rule as TypingSentence's identical handler: a word click always speaks with this sentence's own resolved voice (cache hit, a free Edge-TTS on-demand synthesis, or — for a paid narration provider — a gender-matched free Edge-TTS substitute, never a fresh paid synthesis just for one word), falling back to the browser's speech synthesis only when nothing resolves at all. */
+  /**
+   * Books-only rule (explicit product decision, 2026-09-11): a word click
+   * plays this sentence's own resolved ElevenLabs voice on a cache hit, and
+   * otherwise plays nothing at all — never a different voice. This used to
+   * fall back to a gender-matched Edge-TTS substitute (see
+   * resolvePronunciationAudioAction's book_sentence_word branch, now
+   * disabled) or, failing that, the browser's own speech synthesis; both are
+   * exactly the "some other voice speaking in the Books section" behavior
+   * the product decision rules out, so a miss here is silent rather than
+   * reaching for either.
+   */
   async function handleWordClick(word: string) {
-    if (resolvedVoiceId && isTrackableWord(word)) {
-      const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
-      const url = await resolveAudio({
-        contentType: "book_sentence_word",
-        contentId,
-        voiceId: resolvedVoiceId,
-      });
-      if (url) {
-        wordClip.play(url);
-        return;
-      }
-    }
-    wordSpeech.speakWord(word);
+    if (!resolvedVoiceId || !isTrackableWord(word)) return;
+    const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
+    const url = await resolveAudio({
+      contentType: "book_sentence_word",
+      contentId,
+      voiceId: resolvedVoiceId,
+    });
+    if (url) wordClip.play(url);
   }
 
   // See TypingSentence's identical effect's own doc comment: warms every
@@ -224,6 +227,7 @@ export function BookSentenceReader({
           kokoroVoiceId={resolvedVoiceId}
           contentType="book_sentence"
           contentId={sentence.id}
+          disableSpeechFallback
           className="hidden"
         />
       )}

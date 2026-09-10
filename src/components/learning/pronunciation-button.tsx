@@ -21,9 +21,11 @@ import type { VoiceAudioContentType } from "@/lib/voice/voice-audio";
  * immediately, a miss generates once and every learner after that gets the
  * cache hit); (3) the browser's speech synthesis (useSpeech), the original
  * fallback, now also what a failed/unavailable Kokoro resolution degrades
- * to. The rest of the learner UI never needs to know which source was
- * used. Renders nothing if no source is available at all, so it never
- * leaves a dead control on screen.
+ * to — UNLESS `disableSpeechFallback` is set (see that prop's own doc
+ * comment), in which case step (3) never happens at all. The rest of the
+ * learner UI never needs to know which source was used. Renders nothing if
+ * no source is available at all, so it never leaves a dead control on
+ * screen.
  */
 export function PronunciationButton({
   text,
@@ -39,6 +41,7 @@ export function PronunciationButton({
   label,
   variant = "ghost",
   size = "icon",
+  disableSpeechFallback = false,
 }: {
   text: string;
   audioUrl?: string | null;
@@ -67,6 +70,21 @@ export function PronunciationButton({
   /** Required alongside kokoroVoiceId — identifies which real sentence/word to resolve audio for server-side (see resolvePronunciationAudioAction's doc comment for why this is a content reference, never raw text). */
   contentType?: VoiceAudioContentType;
   contentId?: string;
+  /**
+   * Books-only requirement (explicit product decision, 2026-09-11): a book's
+   * sentences must only ever be heard in the one ElevenLabs voice actually
+   * generated for that book — never the browser's speech synthesis, which
+   * used to fill in silently (and audibly jarringly) whenever a clip briefly
+   * failed to play or hadn't resolved yet. When set, every speech-synthesis
+   * fallback below is skipped entirely: a resolution/playback failure is
+   * silent rather than substituting a different voice. Paired with
+   * useAudioClip's retry option (see the `clip` below) so a genuinely
+   * transient playback error gets a couple of silent retries on the SAME
+   * clip before ever giving up, rather than reaching for a fallback voice at
+   * the first hiccup. Defaults to false — every other lesson type keeps the
+   * original browser-speech fallback unchanged.
+   */
+  disableSpeechFallback?: boolean;
 }) {
   const reducedMotion = useReducedMotion() ?? false;
   const speech = useSpeech();
@@ -80,7 +98,10 @@ export function PronunciationButton({
   const [kokoroUrl, setKokoroUrl] = useState<string | null>(null);
   const [isResolvingKokoro, setIsResolvingKokoro] = useState(false);
   const resolvedForKeyRef = useRef<string | undefined>(undefined);
-  const clip = useAudioClip(audioUrl ?? kokoroUrl);
+  const clip = useAudioClip(
+    audioUrl ?? kokoroUrl,
+    disableSpeechFallback ? { maxRetries: 2, retryDelayMs: 400 } : undefined,
+  );
 
   useEffect(() => {
     setKokoroUrl(null);
@@ -155,7 +176,7 @@ export function PronunciationButton({
     const url = await resolvePlaybackUrl();
     if (url) {
       clip.play(url, speedMultiplier);
-    } else {
+    } else if (!disableSpeechFallback) {
       speech.speakSentence(text, speedMultiplier);
     }
     onPlay?.();
@@ -165,7 +186,7 @@ export function PronunciationButton({
     const url = await resolvePlaybackUrl();
     if (url) {
       clip.play(url, speedMultiplier);
-    } else {
+    } else if (!disableSpeechFallback) {
       speech.replaySentence(text, speedMultiplier);
     }
     onPlay?.();
@@ -191,9 +212,13 @@ export function PronunciationButton({
   // starts a fresh Audio element (see useAudioClip), so status always
   // passes back through "loading" first — this fires again on every
   // subsequent replay attempt, not just the first, so a permanently broken
-  // clip never leaves the learner without pronunciation.
+  // clip never leaves the learner without pronunciation. Skipped entirely
+  // when disableSpeechFallback is set (Books) — useAudioClip's own retries
+  // (see the `clip` above) already got a couple of silent shots at the SAME
+  // clip first, so reaching "error" here means genuinely giving up rather
+  // than substituting a different voice.
   useEffect(() => {
-    if (clip.status === "error") {
+    if (clip.status === "error" && !disableSpeechFallback) {
       speech.speakSentence(text);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the clip's own status changes
@@ -228,7 +253,7 @@ export function PronunciationButton({
   }, [autoPlay, resetKey, audioUrl, kokoroVoiceId, speech.voicesReady]);
 
   const hasAudioSource = Boolean(audioUrl) || Boolean(kokoroVoiceId);
-  const isSupported = hasAudioSource || speech.isSupported;
+  const isSupported = hasAudioSource || (!disableSpeechFallback && speech.isSupported);
   if (!isSupported) return null;
 
   const isLoading = clip.status === "loading" || isResolvingKokoro;

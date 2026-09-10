@@ -328,6 +328,46 @@ export function BookReadingSession({
     setViewPageIndex((index) => Math.min(pages.length - 1, index + 1));
   }
 
+  // Keyboard shortcut request: ArrowRight/ArrowLeft mirror the active
+  // sentence's own Next sentence / Previous sentence buttons exactly
+  // (handleSentenceComplete / goToPreviousSentence above), not the separate
+  // page-navigation buttons (goToNextPage/goToPreviousPage). Only armed while
+  // the reader is actually looking at the active sentence's page — those
+  // buttons themselves only render there (see BookSentenceReader's
+  // onComplete/onPrevious wiring below), so a stray arrow press while paged
+  // away to browse a different page does nothing rather than silently
+  // advancing progress the reader can't see happen. Skips the note editor's
+  // textarea and any contenteditable so those keep their normal text-editing
+  // arrow-key behavior.
+  useEffect(() => {
+    if (screen !== "reading" || !sentence) return;
+    const activePageIndex = findPageIndexForSentenceId(pages, sentence.id);
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+      if (viewPageIndex !== activePageIndex) return;
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        void handleSentenceComplete();
+      } else if (event.key === "ArrowLeft" && sentenceIndex > 0) {
+        event.preventDefault();
+        goToPreviousSentence();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed whenever the active sentence/page actually changes; handleSentenceComplete/goToPreviousSentence are recreated every render alongside these same deps, so the closure is never stale
+  }, [screen, sentence, pages, viewPageIndex, sentenceIndex]);
+
   const percent =
     totalSentenceCount > 0 ? Math.min(100, (completedCount / totalSentenceCount) * 100) : 0;
   const learnerLevel = getLearnerLevel(xp);
