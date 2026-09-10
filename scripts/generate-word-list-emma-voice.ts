@@ -26,7 +26,9 @@ const envPath = path.join(process.cwd(), ".env.local");
 if (fs.existsSync(envPath)) {
   for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
     const match = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
-    if (match && !process.env[match[1]]) process.env[match[1]] = match[2];
+    if (!match) continue;
+    const [, key, value] = match;
+    if (key && value !== undefined && !process.env[key]) process.env[key] = value;
   }
 }
 

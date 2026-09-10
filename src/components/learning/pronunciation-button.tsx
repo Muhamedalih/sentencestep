@@ -114,7 +114,22 @@ export function PronunciationButton({
    */
   async function resolvePlaybackUrl(): Promise<string | null> {
     if (audioUrl) return audioUrl;
-    if (kokoroUrl) return kokoroUrl;
+    // Guarded by resolvedForKeyRef (not just `if (kokoroUrl)`) to close a
+    // real race: on a resetKey change, the reset effect below and the
+    // autoPlay effect both fire in the same commit. The reset effect's
+    // setKokoroUrl(null) is only *scheduled*, not yet applied, when the
+    // autoPlay effect's closure reads `kokoroUrl` moments later in that same
+    // flush — so without this guard, a fresh word/sentence's very first
+    // auto-play could read and play the PREVIOUS word's still-stale kokoroUrl
+    // state (confirmed live: Word Lists autoplay spoke the prior word, and
+    // only a manual replay click — safely after the state had actually
+    // settled — played the correct one). resolvedForKeyRef, in contrast, is a
+    // ref: its reset to `undefined` on line below is synchronous and already
+    // visible to this same-flush read, so comparing it against the current
+    // resetKey reliably tells a genuinely-current kokoroUrl apart from a
+    // stale one left over from the word/sentence this button just moved on
+    // from.
+    if (kokoroUrl && resolvedForKeyRef.current === resetKey) return kokoroUrl;
     if (!kokoroVoiceId || !contentType || !contentId) return null;
 
     const shared = getResolvedAudio(contentId);
