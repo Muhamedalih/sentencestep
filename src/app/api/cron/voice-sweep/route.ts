@@ -72,6 +72,24 @@ const MAX_LESSON_VOICE_PAIRS_PER_RUN = 3;
  * silently raising it to 7.
  */
 const MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN = 2;
+/**
+ * Normal lessons' own candidate pool is fetched with this fixed size
+ * instead of CANDIDATE_POOL_MULTIPLIER * MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN
+ * (6) — confirmed live 2026-09-10 that 6 wasn't enough: the very first
+ * batch of real Normal-lesson generations filled that entire window with
+ * newly-'ready' lessons within two runs, and every run after that refetched
+ * that same now-fully-done 6-lesson window forever (the exact stuck-window
+ * failure findNormalLessonIdsNeedingVoiceGeneration's own doc comment
+ * describes, just recurring one level deeper). Normal lessons are a small,
+ * closed set (39 published today, no cross-content contamination the way
+ * the combined Stories/Conversation pool has), so a window sized to cover
+ * the realistic whole backlog — comfortably above 39 — means this can't get
+ * stuck the same way again as more of them finish: a "done" prefix can grow
+ * to cover the entire set without ever exceeding this pool size. Still
+ * cheap even at this size since every skip is a same-project Supabase read
+ * with no TTS/Director network call.
+ */
+const NORMAL_LESSON_CANDIDATE_POOL_SIZE = 60;
 const MAX_BOOK_VOICE_PAIRS_PER_RUN = 3;
 const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 5;
 const MAX_ERRORS_REPORTED = 20;
@@ -138,7 +156,7 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
     );
     normalLessonPool = await findNormalLessonIdsNeedingVoiceGeneration(
       supabase,
-      MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
+      NORMAL_LESSON_CANDIDATE_POOL_SIZE,
     );
     bookPool = await findBookIdsNeedingVoiceGeneration(
       supabase,
