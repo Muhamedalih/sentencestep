@@ -33,8 +33,10 @@ const RESTART_DELAY_MS = 900;
  * hands off to it. Gated purely on `!locale`, the same as
  * FirstTimeLanguagePicker itself: no isMarketingHomePath check, so a
  * first-time visitor sees it on top of whatever page they land on, not just
- * the homepage. `t` here is always the English fallback dictionary in
- * practice, since this step only ever renders before a locale is chosen.
+ * the homepage. `t` here resolves through LocaleProvider's browser-language
+ * detection (see that component's own doc comment) — English until it
+ * resolves, then whichever SupportLocale the visitor's browser reports, all
+ * before `locale` itself is ever set.
  *
  * The demo card is a static, hardcoded illustration (DEMO_SENTENCE above),
  * not a live excerpt of the real onboarding lesson — its letter-by-letter
