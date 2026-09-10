@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { getAllLessons } from "@/lib/content";
 import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -96,6 +98,14 @@ export async function markMistakeCorrectedAction(word: string): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await markMistakeCorrected(userId, normalizeMistakeWord(word));
+  // The Word Lists dashboard card and the review queue page are both
+  // server-rendered reads of this same table (see fetchWeakWordsAction) —
+  // without this, a learner who corrects a word from somewhere other than
+  // that queue's own completion screen (e.g. ordinary Word Lists practice)
+  // would keep seeing the stale pre-correction list/count on next visit,
+  // since Next's client router cache doesn't know this write happened.
+  revalidatePath("/learn/word-lists");
+  revalidatePath("/learn/word-lists/review");
 }
 
 /**
@@ -112,6 +122,9 @@ export async function markReviewCompletedAction(word: string, hadErrors: boolean
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await recordMistakeReview(normalizeMistakeWord(word), hadErrors);
+  // Same reasoning as markMistakeCorrectedAction's identical pair of calls.
+  revalidatePath("/learn/word-lists");
+  revalidatePath("/learn/word-lists/review");
 }
 
 /**
