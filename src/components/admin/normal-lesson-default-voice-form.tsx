@@ -5,10 +5,11 @@ import { Loader2, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { previewHumeAction } from "@/lib/admin/hume-actions";
+import { previewCartesiaAction } from "@/lib/admin/cartesia-actions";
 import { setDefaultNormalLessonVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
 import { dataUriToBlobUrl } from "@/lib/audio-preview";
+import { DEFAULT_CARTESIA_MODEL } from "@/lib/voice/content-provider-map";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside.";
@@ -19,14 +20,15 @@ const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside
  * no `voice_id` override (see getDefaultNormalLessonVoiceId). Deliberately
  * separate from VoiceCollections' "Set as Stories default" button
  * (tts_settings.default_voice_id), PronunciationDefaultVoiceForm's own
- * setting (tts_settings.default_pronunciation_voice_id, now Word Lists'
- * only), and ElevenLabsSettingsForm's "Default narration voice (Stories &
- * Books)" (elevenlabs_settings.default_story_voice_id) — picking a voice
- * here can never affect Stories, Conversation, Books, or Word Lists. Only
- * lists Hume voices: Normal lessons' generation pipeline always uses Hume
- * specifically (see story-voice-generation.ts's own doc comment and
- * content-provider-map.ts), so any other source would just fail to
- * resolve.
+ * setting (tts_settings.default_pronunciation_voice_id, Word Lists' own —
+ * a different setting even though both happen to use Cartesia today), and
+ * ElevenLabsSettingsForm's "Default narration voice (Stories & Books)"
+ * (elevenlabs_settings.default_story_voice_id) — picking a voice here can
+ * never affect Stories, Conversation, Books, or Word Lists. Only lists
+ * Cartesia voices: Normal lessons' generation pipeline always uses Cartesia
+ * specifically (reassigned from Hume 2026-09-10 — see
+ * story-voice-generation.ts's own doc comment and content-provider-map.ts),
+ * so any other source would just fail to resolve.
  */
 export function NormalLessonDefaultVoiceForm({
   voices,
@@ -64,9 +66,10 @@ export function NormalLessonDefaultVoiceForm({
     });
     setIsPreviewing(true);
     startTransition(async () => {
-      const result = await previewHumeAction({
+      const result = await previewCartesiaAction({
         text: PREVIEW_TEXT,
         providerVoiceId: current.providerVoiceId,
+        model: DEFAULT_CARTESIA_MODEL,
       });
       setIsPreviewing(false);
       if (result.error || !result.audioDataUri) {
@@ -98,7 +101,7 @@ export function NormalLessonDefaultVoiceForm({
       <CardContent className="flex flex-col gap-4">
         {voices.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No Hume voices registered yet — add some from the Hume AI section below first.
+            No Cartesia voices registered yet — add some from the Cartesia section below first.
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-3">

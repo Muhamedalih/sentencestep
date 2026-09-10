@@ -12,15 +12,27 @@
  *
  * Each content type below is pinned to one provider on purpose: Stories,
  * Conversation, and Books keep the original expressive-narration provider
- * (ElevenLabs); Normal lessons (Daily Lessons) use Hume AI; Word Lists use
- * Cartesia. A provider is never silently substituted for another — see
- * createProviderForSource in provider-registry.ts, which throws rather than
- * falling back when the assigned provider's API key is missing. Changing
- * this mapping is a deliberate code change, and because generation_version
- * no longer folds provider identity into itself, it only ever invalidates
- * the one content type being reassigned (a different provider's voice_id is
- * already a different cache key on its own — see resolution.ts's
- * cacheKeyParts), never the whole library at once.
+ * (ElevenLabs); Word Lists use Cartesia. A provider is never silently
+ * substituted for another — see createProviderForSource in
+ * provider-registry.ts, which throws rather than falling back when the
+ * assigned provider's API key is missing. Changing this mapping is a
+ * deliberate code change, and because generation_version no longer folds
+ * provider identity into itself, it only ever invalidates the one content
+ * type being reassigned (a different provider's voice_id is already a
+ * different cache key on its own — see resolution.ts's cacheKeyParts),
+ * never the whole library at once.
+ *
+ * Normal lessons (Daily Lessons) were originally assigned to Hume AI, but
+ * zero Hume voices were ever actually registered (see
+ * candidates.ts's now-removed NORMAL_LESSON_SWEEP_PAUSED), so the pipeline
+ * never generated a single clip under that assignment. Reassigned to
+ * Cartesia 2026-09-10 at the user's explicit request, using the "Skylar -
+ * Friendly Guide" voice already registered in `voices`, specifically to
+ * spend down this account's remaining ~2000 Cartesia credits on Daily
+ * Lessons narration before those credits run out and a different solution
+ * is picked. This is a deliberate, temporary-but-real assignment — not a
+ * placeholder — so it stays in effect (and Normal lessons keep generating
+ * via the cron sweep) until the user says otherwise.
  *
  * Mistake Review's isolated single-word audio (voice-audio.ts) is
  * deliberately not part of this map — it always uses free Edge-TTS,
@@ -28,7 +40,7 @@
  * generateIsolatedWordAudio's own doc comment).
  */
 export const STORIES_AND_BOOKS_PROVIDER = "elevenlabs";
-export const NORMAL_LESSON_PROVIDER = "hume";
+export const NORMAL_LESSON_PROVIDER = "cartesia";
 export const WORD_LIST_PROVIDER = "cartesia";
 
 /**

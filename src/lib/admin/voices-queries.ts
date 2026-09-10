@@ -88,12 +88,15 @@ export async function getDefaultPronunciationVoiceId(): Promise<string> {
  * The default voice for Normal lessons / Daily Lessons
  * (tts_settings.default_normal_lesson_voice_id) — split out from
  * getDefaultPronunciationVoiceId (now Word Lists' own setting) so the two
- * content types can use two different paid providers (Hume vs. Cartesia)
- * without ever sharing a voice id that only resolves for one of them. See
- * 20250225000000_normal_lesson_default_voice.sql. Falls back to the same
- * fixed Edge-TTS voice id for the same reason as
+ * content types can each be repointed independently even though both
+ * currently use Cartesia (see content-provider-map.ts's NORMAL_LESSON_PROVIDER
+ * doc comment for why Normal lessons moved from Hume to Cartesia
+ * 2026-09-10) — a voice id set here must never leak into Word Lists'
+ * setting or vice versa. See 20250225000000_normal_lesson_default_voice.sql.
+ * Falls back to the same fixed Edge-TTS voice id for the same reason as
  * getDefaultPronunciationVoiceId — a placeholder for a fresh deployment,
- * rejected by story-voice-generation.ts if it isn't an actual Hume voice.
+ * rejected by story-voice-generation.ts if it isn't an actual Cartesia
+ * voice.
  */
 export async function getDefaultNormalLessonVoiceId(): Promise<string> {
   const FALLBACK_VOICE_ID = "edge-tts-en-us-aria";

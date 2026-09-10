@@ -57,10 +57,11 @@ export async function setDefaultPronunciationVoiceAction(voiceId: string): Promi
 
 /**
  * The default voice for Normal lessons / Daily Lessons
- * (tts_settings.default_normal_lesson_voice_id, must be a Hume voice) —
- * split out from setDefaultPronunciationVoiceAction (now Word Lists' own
- * setting) so the two content types can each point at a voice from their
- * own provider. Never touches setDefaultVoiceAction's or
+ * (tts_settings.default_normal_lesson_voice_id, must be a Cartesia voice —
+ * see content-provider-map.ts's NORMAL_LESSON_PROVIDER) — split out from
+ * setDefaultPronunciationVoiceAction (now Word Lists' own setting) so the
+ * two content types can each be repointed independently even though both
+ * currently use Cartesia. Never touches setDefaultVoiceAction's or
  * saveElevenLabsSettingsAction's settings either.
  */
 export async function setDefaultNormalLessonVoiceAction(voiceId: string): Promise<ActionResult> {

@@ -7,6 +7,7 @@ import { toElevenLabsInput } from "@/lib/voice/direction-to-tags";
 import { toProsodyInput } from "@/lib/voice/direction-to-prosody";
 import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
 import {
+  DEFAULT_CARTESIA_MODEL,
   NORMAL_LESSON_PROVIDER,
   STORIES_AND_BOOKS_PROVIDER,
 } from "@/lib/voice/content-provider-map";
@@ -36,19 +37,35 @@ export interface VoiceGenerationOutcome {
 export const MAX_VOICE_RETRY_ATTEMPTS = 5;
 
 /**
- * Normal lessons (Daily Lessons) always use Hume AI specifically — never
- * elevenlabs_settings.default_story_voice_id. This is a deliberate,
- * permanent split from Stories/Conversation/Books: those keep using
- * ElevenLabs and their own default_story_voice_id exactly as before,
- * completely unaffected by anything here. The actual fallback voice (when a
- * lesson has no `voice_id` override) is
- * tts_settings.default_normal_lesson_voice_id — see
- * getDefaultNormalLessonVoiceId, admin-configurable independently of
+ * Normal lessons (Daily Lessons) use Cartesia specifically (reassigned from
+ * Hume 2026-09-10 — see content-provider-map.ts's own doc comment for why)
+ * — never elevenlabs_settings.default_story_voice_id. This is a deliberate
+ * split from Stories/Conversation/Books: those keep using ElevenLabs and
+ * their own default_story_voice_id exactly as before, completely
+ * unaffected by anything here. The actual fallback voice (when a lesson
+ * has no `voice_id` override) is tts_settings.default_normal_lesson_voice_id
+ * — see getDefaultNormalLessonVoiceId, admin-configurable independently of
  * Stories/Books and of Word Lists. Changing one specific lesson's voice is
  * done the same way as any lesson — its own `voice_id` (see the "Normal
  * Lessons" admin dashboard). See content-provider-map.ts for why this
  * assignment is fixed rather than auto-detected.
  */
+
+/**
+ * `elevenlabs_settings.model` is Stories/Books' own ElevenLabs model id
+ * (default "eleven_v3") — sending it to Cartesia's API as `model_id` 404s
+ * ("Model not found"), exactly the mismatch content-provider-map.ts's
+ * DEFAULT_CARTESIA_MODEL doc comment warns about. Hume ignores `model`
+ * entirely (see providers/hume.ts), which is why passing
+ * elevenlabs_settings.model straight through never broke Normal lessons
+ * while they were still Hume-assigned; now that Normal lessons can be
+ * Cartesia too, every call site that used to pass settingsRow.model
+ * unconditionally must go through this instead, mirroring
+ * word-list-voice-generation.ts's own WORD_LIST_MODEL constant.
+ */
+function resolveSynthesisModel(providerName: string, settingsRow: ElevenLabsSettingsRow): string {
+  return providerName === "cartesia" ? DEFAULT_CARTESIA_MODEL : settingsRow.model;
+}
 
 /**
  * A 'generating' row older than this is treated as abandoned rather than
@@ -461,7 +478,12 @@ async function loadLessonForVoiceWork(
       const index = sentences.indexOf(s);
       const { prev, next } = neighborEn(index);
       const { voiceId, providerVoiceId } = voiceBySentence.get(s.id)!;
-      const generationVersion = generationVersionFor(settingsRow.model, prev, s.en, next);
+      const generationVersion = generationVersionFor(
+        resolveSynthesisModel(providerName, settingsRow),
+        prev,
+        s.en,
+        next,
+      );
       return {
         sentence: s,
         voiceId,
@@ -724,6 +746,7 @@ export async function generateStoryVoiceDraft(
   let generated = 0;
   let failed = unresolvedCount;
   const notes: string[] = unresolvedCount > 0 ? [...new Set(unresolved.values())] : [];
+  const synthesisModel = resolveSynthesisModel(provider.name, settingsRow);
 
   for (const item of eligible) {
     const direction = directionBySentenceId.get(item.sentence.id);
@@ -736,7 +759,7 @@ export async function generateStoryVoiceDraft(
     const claimed = await claimCacheRow(
       supabase,
       item.key,
-      settingsRow.model,
+      synthesisModel,
       direction,
       existingByKey,
       provider.name,
@@ -757,7 +780,7 @@ export async function generateStoryVoiceDraft(
       const { audio, durationMs } = await provider.synthesize({
         text,
         voiceId: item.providerVoiceId,
-        model: settingsRow.model,
+        model: synthesisModel,
         voiceSettings,
       });
       const audioUrl = await uploadVoiceClip(

@@ -81,7 +81,7 @@ export default async function AdminVoicePage() {
       </div>
       <VoiceCollections voices={voices} defaultVoiceId={defaultVoiceId} />
       <NormalLessonDefaultVoiceForm
-        voices={humeVoices}
+        voices={cartesiaVoices}
         currentVoiceId={defaultNormalLessonVoiceId}
       />
       <PronunciationDefaultVoiceForm

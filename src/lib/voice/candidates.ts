@@ -6,24 +6,26 @@ import type { LearningMode } from "@/types/content";
 type DbClient = SupabaseClient<Database>;
 
 /**
- * Temporary pause, not a removal — flip back to `false` to re-include
- * Normal lessons in the automatic bulk/cron sweep. Requested 2026-09-10:
- * the admin Voice page's own "Default voice — Normal Lessons" section
- * reads "No Hume voices registered yet" — zero Hume voices have ever been
- * added, so every Normal lesson's own lessons.voice_id is necessarily
- * either empty or (as confirmed on two real lessons, "The Side Project"
- * and "Moving Abroad Sort Of") a leftover value from a different provider
- * that Hume was never going to accept. Because these are the
- * oldest-updated published lessons in the whole library, they permanently
- * occupied the front of findLessonIdsNeedingVoiceGeneration's combined
- * (Stories + Conversation + Normal) result, so every sweep/bulk-generate
- * round spent its one-lesson budget on a Normal lesson that could only
- * ever fail, and Stories/Conversation lessons (ElevenLabs) never got a
- * turn. Pausing Normal here — until Hume voices actually exist to assign —
- * lets ElevenLabs-backed content generate normally in the meantime; no
- * lesson data, audio, or voice_id was touched to do this.
+ * Was a temporary pause (2026-09-10): the admin Voice page's own "Default
+ * voice — Normal Lessons" section read "No Hume voices registered yet" —
+ * zero Hume voices had ever been added, so every Normal lesson's own
+ * lessons.voice_id was necessarily either empty or (as confirmed on two
+ * real lessons, "The Side Project" and "Moving Abroad Sort Of") a leftover
+ * value from a different provider that Hume was never going to accept.
+ * Because these are the oldest-updated published lessons in the whole
+ * library, they permanently occupied the front of
+ * findLessonIdsNeedingVoiceGeneration's combined (Stories + Conversation +
+ * Normal) result, so every sweep/bulk-generate round spent its one-lesson
+ * budget on a Normal lesson that could only ever fail, and
+ * Stories/Conversation lessons (ElevenLabs) never got a turn.
+ *
+ * Re-enabled the same day, once Normal lessons were reassigned from Hume to
+ * Cartesia (see content-provider-map.ts) and tts_settings.default_normal_lesson_voice_id
+ * was pointed at the "Skylar - Friendly Guide" Cartesia voice — a real
+ * voice now resolves for every Normal lesson, so the sweep can actually
+ * make progress on them again instead of failing every round.
  */
-const NORMAL_LESSON_SWEEP_PAUSED = true;
+const NORMAL_LESSON_SWEEP_PAUSED = false;
 
 /**
  * Lesson ids worth attempting voice generation for, bounded to `limit` —
