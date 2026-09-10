@@ -17,14 +17,14 @@ import { useLessonFontSettings } from "@/components/providers/lesson-font-settin
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
-import { markMistakeCorrectedAction, markReviewCompletedAction } from "@/lib/mistakes/actions";
+import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { popIn } from "@/lib/motion";
 import type { WeakWordReason } from "@/lib/weak-words/types";
 import { splitWordHint } from "@/lib/word-lists-hint";
 import type { VocabularyWord } from "@/types/word-lists";
 
 export interface ReviewWord extends VocabularyWord {
-  /** Same distinction as WeakWordItem.reason — which completion action a right answer triggers (see handleResult below). */
+  /** No longer read here (see handleResult below) — kept on the type since fetchWeakWordsAction still reports it, and it's still meaningful data even though this screen's own completion no longer branches on it. */
   reason: WeakWordReason;
 }
 
@@ -37,10 +37,14 @@ export interface ReviewWord extends VocabularyWord {
  * right, same retry feel, just without the block structure that only makes
  * sense for a full group.
  *
- * A right answer reuses the exact same completion actions "Fix Your
- * Mistakes" already calls (markMistakeCorrectedAction/
- * markReviewCompletedAction) — this screen is a second entry point into
- * that one account-wide mistake ledger, not a parallel tracking system.
+ * A right answer here fully clears the word (masterMistakeWordAction), the
+ * same as VocabularyPractice's own completion — not the gradual,
+ * multi-session schedule FixYourMistakesSession's own items still use (see
+ * that screen's markMistakeCorrectedAction/markReviewCompletedAction calls).
+ * Answering correctly in a screen called "Review All Words" is the whole
+ * point of the visit: a learner who does that shouldn't find the same word
+ * back in this list days later just because it takes two clean passes to
+ * graduate under the ordinary spaced-repetition schedule.
  */
 export function WordReviewSession({
   words,
@@ -54,12 +58,6 @@ export function WordReviewSession({
   const [queue, setQueue] = useState<number[]>(() => words.map((_, i) => i));
   const [correctedCount, setCorrectedCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
-  // Whether THIS presentation of the current word has had any wrong
-  // Enter-submission yet — reset whenever the front of the queue changes
-  // (a genuinely new word, or the same word coming back around after a
-  // wrong attempt). Feeds markReviewCompletedAction's hadErrors param,
-  // same as FixYourMistakesSession's identical per-item ref.
-  const hadErrorRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const sectionFontFamily = resolveSectionFontFamily(useLessonFontSettings(), "wordLists");
   const typingSoundSettings = useTypingSoundSettings();
@@ -78,10 +76,6 @@ export function WordReviewSession({
     : { term: undefined, definition: undefined };
 
   useEffect(() => {
-    hadErrorRef.current = false;
-  }, [currentIndex]);
-
-  useEffect(() => {
     if (queue.length === 0) setIsComplete(true);
   }, [queue]);
 
@@ -97,20 +91,15 @@ export function WordReviewSession({
     if (correct) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       setCorrectedCount((count) => count + 1);
-      const action =
-        word.reason === "review"
-          ? markReviewCompletedAction(word.targetWord, hadErrorRef.current)
-          : markMistakeCorrectedAction(word.targetWord);
       // Fire-and-forget, same reasoning as FixYourMistakesSession's
       // identical call: the word is already off the local queue below,
       // so a failed write is logged, not retried by re-blocking the learner.
-      action.catch((error: unknown) => {
-        console.error("[word-review] completion action failed", error);
+      masterMistakeWordAction(word.targetWord).catch((error: unknown) => {
+        console.error("[word-review] masterMistakeWordAction failed", error);
       });
       setQueue((prev) => prev.slice(1));
     } else {
       play("error");
-      hadErrorRef.current = true;
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
