@@ -105,36 +105,40 @@ export function IntroLanding() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="grid w-full max-w-4xl items-center gap-12 lg:grid-cols-2"
+          className="grid w-full max-w-6xl items-center gap-16 lg:grid-cols-2"
         >
-          <div className="flex flex-col items-start gap-5">
-            <span className="bg-brand-muted text-primary rounded-full px-4 py-1.5 text-sm font-medium">
+          <div className="flex flex-col items-start gap-6">
+            <span className="bg-brand-muted text-primary rounded-full px-4 py-1.5 text-base font-medium">
               {t.introLanding.eyebrow}
             </span>
-            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
               {t.hero.headingPrefix} <span className="text-primary">{t.hero.headingEmphasis}</span>
             </h1>
-            <p className="text-muted-foreground max-w-md text-base text-balance">
+            <p className="text-muted-foreground max-w-lg text-lg text-balance">
               {t.introLanding.subtitle}
             </p>
 
-            <div className="flex flex-wrap gap-5">
+            <div className="flex flex-wrap gap-6">
               {steps.map(([Icon, label], index) => (
                 <span
                   key={index}
-                  className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium"
+                  className="text-muted-foreground flex items-center gap-2 text-base font-medium"
                 >
-                  <Icon aria-hidden="true" className="text-primary size-4" />
+                  <Icon aria-hidden="true" className="text-primary size-5" />
                   {label}
                 </span>
               ))}
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <Button size="lg" onClick={() => setIntroContinued(true)}>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <Button
+                size="lg"
+                className="h-14 px-10 text-lg"
+                onClick={() => setIntroContinued(true)}
+              >
                 {t.firstTimePicker.confirm}
               </Button>
-              <span className="text-muted-foreground text-sm">{t.introLanding.nextHint}</span>
+              <span className="text-muted-foreground text-base">{t.introLanding.nextHint}</span>
             </div>
           </div>
 
@@ -142,20 +146,17 @@ export function IntroLanding() {
             <div className="bg-border h-[3px]">
               <div className="bg-primary h-full w-[18%]" />
             </div>
-            <div className="p-6 sm:p-7">
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <span className="text-muted-foreground text-xs font-semibold">
+            <div className="p-8 sm:p-10">
+              <div className="mb-6 flex items-center justify-between gap-3">
+                <span className="text-muted-foreground text-sm font-semibold">
                   {t.introLanding.demoBadge}
                 </span>
-                <span className="text-muted-foreground text-xs font-medium" dir="ltr">
+                <span className="text-muted-foreground text-sm font-medium" dir="ltr">
                   2 / 11
                 </span>
               </div>
 
-              <p
-                dir="ltr"
-                className="font-serif text-2xl leading-snug font-semibold sm:text-[28px]"
-              >
+              <p dir="ltr" className="font-serif text-3xl leading-snug font-semibold sm:text-4xl">
                 {DEMO_SENTENCE.split("").map((char, index) => (
                   <span
                     key={index}
@@ -168,23 +169,23 @@ export function IntroLanding() {
                   </span>
                 ))}
               </p>
-              <div className="bg-border mt-3 h-0.5 w-14 overflow-hidden rounded-full">
+              <div className="bg-border mt-4 h-0.5 w-16 overflow-hidden rounded-full">
                 <div
                   className="bg-primary h-full transition-[width] duration-150"
                   style={{ width: `${percent}%` }}
                 />
               </div>
 
-              <p className="text-muted-foreground mt-4 text-sm" dir="rtl">
+              <p className="text-muted-foreground mt-5 text-base" dir="rtl">
                 {DEMO_TRANSLATION}
               </p>
 
-              <div className="border-border mt-5 flex items-center justify-between gap-3 border-t pt-4">
-                <span className="text-muted-foreground flex items-center gap-2 text-xs">
+              <div className="border-border mt-6 flex items-center justify-between gap-3 border-t pt-5">
+                <span className="text-muted-foreground flex items-center gap-2 text-sm">
                   <span className="bg-success size-1.5 rounded-full" aria-hidden="true" />
                   {t.introLanding.demoLiveNote}
                 </span>
-                <span className="text-muted-foreground text-xs font-medium" dir="ltr">
+                <span className="text-muted-foreground text-sm font-medium" dir="ltr">
                   100% {t.lesson.accuracyLabel}
                 </span>
               </div>

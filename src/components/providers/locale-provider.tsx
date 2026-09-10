@@ -1,11 +1,19 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { setPreferredLanguageAction } from "@/lib/i18n/locale-actions";
 import { fallbackDictionary, getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
-import { dirFor, SUPPORT_LOCALES, type SupportLocale } from "@/lib/i18n/locales";
+import { dirFor, isSupportLocale, SUPPORT_LOCALES, type SupportLocale } from "@/lib/i18n/locales";
 
 /** Matches a leading "/ar", "/es", or "/tr" path segment — used to strip an existing locale prefix before computing a new one. */
 const LOCALE_PREFIX_PATTERN = new RegExp(`^/(${SUPPORT_LOCALES.join("|")})(?=/|$)`);
@@ -55,6 +63,30 @@ export function LocaleProvider({
   const router = useRouter();
   const pathname = usePathname();
 
+  // Pre-choice chrome (IntroLanding, FirstTimeLanguagePicker) otherwise
+  // always renders the English fallback dictionary below, regardless of who's
+  // looking at it — this detects the browser's own language once, client-side
+  // only, and swaps just the displayed dictionary to match when it's one of
+  // SUPPORT_LOCALES. It never touches `locale` itself (still null until the
+  // visitor actually picks): the "choose your language" step still always
+  // shows and still requires an explicit tap, this only changes what
+  // language asks the question. Starts null so the very first render (SSR
+  // and the client's initial hydration pass) matches exactly — no mismatch —
+  // and only swaps a moment after mount, same tradeoff as any client-only
+  // detection (a brief flash of English first is expected, not a bug).
+  const [browserLocale, setBrowserLocale] = useState<SupportLocale | null>(null);
+  useEffect(() => {
+    if (initialLocale !== null) return;
+    const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
+    for (const lang of candidates) {
+      const base = lang.split("-")[0]?.toLowerCase();
+      if (base && isSupportLocale(base)) {
+        setBrowserLocale(base);
+        return;
+      }
+    }
+  }, [initialLocale]);
+
   const setLocale = useCallback(
     (next: SupportLocale) => {
       // Applied to the DOM immediately — no reload, matches useTheme's
@@ -101,14 +133,22 @@ export function LocaleProvider({
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
+      // dirFor is "ltr" for every SupportLocale today (see its own doc
+      // comment — a deliberate product decision, not an oversight), so this
+      // stays "ltr" whether `t` below resolves to fallbackDictionary or a
+      // browser-detected one.
       dir: locale ? dirFor(locale) : "ltr",
-      // A locale of null (picker still showing) renders the English
-      // fallback dictionary — exactly what already shows today, so there's
-      // nothing jarring about the pre-choice state.
-      t: locale ? getDictionary(locale) : fallbackDictionary,
+      // A locale of null (picker still showing) renders browserLocale's
+      // dictionary once detected, English until then — see browserLocale's
+      // own doc comment above for why this never touches `locale` itself.
+      t: locale
+        ? getDictionary(locale)
+        : browserLocale
+          ? getDictionary(browserLocale)
+          : fallbackDictionary,
       setLocale,
     }),
-    [locale, setLocale],
+    [locale, browserLocale, setLocale],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
