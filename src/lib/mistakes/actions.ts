@@ -24,6 +24,7 @@ import {
   markMistakeCorrected,
   recordMistake,
   recordMistakeReview,
+  recordMistakeReviewEarly,
 } from "@/lib/supabase/queries/mistakes";
 import { createClient } from "@/lib/supabase/server";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
@@ -117,11 +118,31 @@ export async function markMistakeCorrectedAction(word: string): Promise<void> {
  * word THIS time (the typing engine still requires them to get it right
  * before moving on, same as everywhere else — this only affects how soon
  * it comes back, never whether it "passes").
+ *
+ * `bypassDueGate` (default false, preserving every existing caller's exact
+ * behavior) is for VocabularyPractice's own call: a word can show as "needs
+ * review" in Review All Words before its next_review_at is actually due
+ * (see isWeakWord's review_stage threshold) — record_mistake_review's own
+ * `next_review_at <= now()` guard would silently no-op on a not-yet-due row,
+ * which is correct for a REPLAYED call to the SAME due review (its whole
+ * reason for existing) but wrong for a learner who answers that same word
+ * correctly, early, somewhere else entirely. `true` routes to
+ * recordMistakeReviewEarly instead, which applies the identical
+ * advance-or-reset schedule without that gate.
  */
-export async function markReviewCompletedAction(word: string, hadErrors: boolean): Promise<void> {
+export async function markReviewCompletedAction(
+  word: string,
+  hadErrors: boolean,
+  bypassDueGate = false,
+): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
-  await recordMistakeReview(normalizeMistakeWord(word), hadErrors);
+  const normalized = normalizeMistakeWord(word);
+  if (bypassDueGate) {
+    await recordMistakeReviewEarly(userId, normalized, hadErrors);
+  } else {
+    await recordMistakeReview(normalized, hadErrors);
+  }
   // Same reasoning as markMistakeCorrectedAction's identical pair of calls.
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");

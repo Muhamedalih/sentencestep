@@ -231,3 +231,61 @@ export async function recordMistakeReview(word: string, hadErrors: boolean): Pro
   });
   if (error) throw error;
 }
+
+/** Same day-based schedule as record_mistake_review's v_schedule — kept in sync manually, same reasoning as FIRST_REVIEW_INTERVAL_DAYS above. */
+const REVIEW_SCHEDULE_DAYS = [1, 3, 7, 16];
+
+/**
+ * Same advance-or-reset schedule as record_mistake_review, but without that
+ * RPC's `next_review_at <= now()` guard — for the one caller that
+ * deliberately completes a review EARLY (see markReviewCompletedAction's
+ * `bypassDueGate` param): a word answered correctly in ordinary Word Lists
+ * practice, before its next scheduled check-in was actually due. isWeakWord
+ * (src/lib/weak-words/types.ts) still counts a not-yet-due scheduled word as
+ * "needs review" — that's what makes it visible in Review All Words in the
+ * first place — so without this, answering it correctly anywhere other than
+ * that dedicated queue could never clear it: the RPC's due-gate would just
+ * no-op every time. A plain client-side read-then-write, not the atomic RPC:
+ * this path only ever runs from one learner's own single in-flight request,
+ * not the RPC's higher-contention "might replay/duplicate" case the due-gate
+ * exists to protect against, so that atomicity isn't needed here.
+ */
+export async function recordMistakeReviewEarly(
+  userId: string,
+  word: string,
+  hadErrors: boolean,
+): Promise<void> {
+  const supabase = await createClient();
+  const { data, error: selectError } = await supabase
+    .from("mistakes")
+    .select("review_stage")
+    .eq("user_id", userId)
+    .eq("word", word)
+    .eq("status", "corrected")
+    .not("next_review_at", "is", null)
+    .maybeSingle();
+  if (selectError) throw selectError;
+  // Not a currently-scheduled review (already mastered, or never was one
+  // to begin with) — nothing to advance, same as the RPC's guard producing
+  // a no-op for a non-matching row.
+  if (!data) return;
+
+  const now = new Date();
+  const nextStage = hadErrors ? 0 : data.review_stage + 1;
+  const intervalDays = hadErrors ? REVIEW_SCHEDULE_DAYS[0] : REVIEW_SCHEDULE_DAYS[nextStage - 1];
+  const nextReviewAt = intervalDays
+    ? new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000).toISOString()
+    : null;
+
+  const { error: updateError } = await supabase
+    .from("mistakes")
+    .update({
+      review_stage: nextStage,
+      next_review_at: nextReviewAt,
+      updated_at: now.toISOString(),
+    })
+    .eq("user_id", userId)
+    .eq("word", word)
+    .eq("status", "corrected");
+  if (updateError) throw updateError;
+}

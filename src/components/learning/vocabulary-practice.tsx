@@ -178,7 +178,7 @@ export function VocabularyPractice({
         markMistakeCorrectedAction(word.targetWord).catch((error: unknown) => {
           console.error("[word-lists] markMistakeCorrectedAction failed", error);
         });
-        markReviewCompletedAction(word.targetWord, hadErrors).catch((error: unknown) => {
+        markReviewCompletedAction(word.targetWord, hadErrors, true).catch((error: unknown) => {
           console.error("[word-lists] markReviewCompletedAction failed", error);
         });
       }
