@@ -94,6 +94,38 @@ export async function findLessonIdsNeedingVoiceGeneration(
 }
 
 /**
+ * A Normal-lessons-only counterpart to findLessonIdsNeedingVoiceGeneration,
+ * confirmed necessary 2026-09-10: with 113 total Stories+Conversation+Normal
+ * candidates and only 2 Normal lessons old enough to sit inside the combined
+ * query's oldest-updated front window (see that function's own "why a wide
+ * pool, not a full backlog scan" doc comment), the other 37 Normal lessons
+ * were structurally unreachable — a run whose entire fetched pool happens to
+ * already be 'ready' does zero real work and, since nothing updates
+ * `updated_at` on a successful generation, refetches that exact same
+ * all-already-done pool forever. This mirrors findBookIdsNeedingVoiceGeneration/
+ * findWordGroupIdsNeedingVoiceGeneration's own reasoning for being separate
+ * per-content-type pools rather than one giant mixed one: Normal lessons now
+ * get a guaranteed slice of every sweep run regardless of how far back they
+ * sit in the combined Stories/Conversation ordering.
+ */
+export async function findNormalLessonIdsNeedingVoiceGeneration(
+  supabase: DbClient,
+  limit: number,
+): Promise<string[]> {
+  const { data: lessons, error } = await supabase
+    .from("lessons")
+    .select("id")
+    .eq("mode", "normal")
+    .eq("status", "published")
+    .eq("voice_generation_excluded", false)
+    .order("updated_at", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+
+  return (lessons ?? []).map((lesson) => lesson.id);
+}
+
+/**
  * Book ids worth attempting narration generation for, bounded to `limit` —
  * the book-voice-generation.ts counterpart to
  * findLessonIdsNeedingVoiceGeneration, shared by the same cron sweep (see

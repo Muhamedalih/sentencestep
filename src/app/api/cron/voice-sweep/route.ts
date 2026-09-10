@@ -5,6 +5,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import {
   findBookIdsNeedingVoiceGeneration,
   findLessonIdsNeedingVoiceGeneration,
+  findNormalLessonIdsNeedingVoiceGeneration,
   findWordGroupIdsNeedingVoiceGeneration,
 } from "@/lib/voice/candidates";
 import { generateBookVoiceDraft } from "@/lib/voice/book-voice-generation";
@@ -14,16 +15,21 @@ import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generat
 
 /**
  * The recovery mechanism for narration voice generation (ElevenLabs for
- * Stories/Conversation/Books, Hume for Normal lessons, Cartesia for Word
- * Lists — see content-provider-map.ts) that `after()` may have missed —
- * mirrors src/app/api/cron/translation-sweep/route.ts directly (same
- * CRON_SECRET gate, same isValidCronAuth, same "fails closed without it"
- * behavior, same GET+POST dual export).
+ * Stories/Conversation/Books, Cartesia for Normal lessons and Word Lists —
+ * see content-provider-map.ts) that `after()` may have missed — mirrors
+ * src/app/api/cron/translation-sweep/route.ts directly (same CRON_SECRET
+ * gate, same isValidCronAuth, same "fails closed without it" behavior, same
+ * GET+POST dual export).
  *
- * Bounded on purpose: MAX_LESSON_VOICE_PAIRS_PER_RUN caps how many lessons
+ * Bounded on purpose: MAX_LESSON_VOICE_PAIRS_PER_RUN (Stories/Conversation/
+ * Normal combined) and MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN (Normal
+ * lessons' own dedicated slice — see its doc comment) cap how many lessons
  * a single invocation attempts — a "do a little, safely, often" sweep, not
- * a full-library backfill. Candidate selection is shared with the admin
- * bulk-generate action via findLessonIdsNeedingVoiceGeneration.
+ * a full-library backfill. The combined pool's candidate selection is
+ * shared with the admin bulk-generate action via
+ * findLessonIdsNeedingVoiceGeneration; the Normal-only pool
+ * (findNormalLessonIdsNeedingVoiceGeneration) is specific to this cron
+ * route.
  *
  * Kept deliberately small (not the 20/10/20 this shipped with originally):
  * loadLessonForVoiceWork/its Book equivalent is several sequential Supabase
@@ -52,7 +58,20 @@ import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generat
  * plan/spend limits — tune it via the MAX_VOICE_GENERATIONS_PER_DAY env var
  * once real per-generation cost is known.
  */
-const MAX_LESSON_VOICE_PAIRS_PER_RUN = 5;
+const MAX_LESSON_VOICE_PAIRS_PER_RUN = 3;
+/**
+ * A dedicated Normal-lessons slice, separate from MAX_LESSON_VOICE_PAIRS_PER_RUN
+ * — see findNormalLessonIdsNeedingVoiceGeneration's own doc comment for why:
+ * the combined Stories+Conversation+Normal pool's oldest-updated-first
+ * window can be (and, confirmed 2026-09-10, was) entirely occupied by
+ * already-'ready' Stories, structurally starving Normal lessons of any real
+ * work forever. Lowered MAX_LESSON_VOICE_PAIRS_PER_RUN from 5 to 3 so this
+ * addition keeps the same total worst-case real-generation-calls-per-run
+ * (5) this route was originally tuned against (see this file's own doc
+ * comment on the Netlify platform timeout that caused), rather than
+ * silently raising it to 7.
+ */
+const MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN = 2;
 const MAX_BOOK_VOICE_PAIRS_PER_RUN = 3;
 const MAX_WORD_GROUP_VOICE_PAIRS_PER_RUN = 5;
 const MAX_ERRORS_REPORTED = 20;
@@ -109,12 +128,17 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   }
 
   let lessonPool: string[];
+  let normalLessonPool: string[];
   let bookPool: string[];
   let wordGroupPool: string[];
   try {
     lessonPool = await findLessonIdsNeedingVoiceGeneration(
       supabase,
       MAX_LESSON_VOICE_PAIRS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
+    );
+    normalLessonPool = await findNormalLessonIdsNeedingVoiceGeneration(
+      supabase,
+      MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN * CANDIDATE_POOL_MULTIPLIER,
     );
     bookPool = await findBookIdsNeedingVoiceGeneration(
       supabase,
@@ -138,9 +162,16 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
   let processed = 0;
 
   let lessonWorkDone = 0;
+  // Tracked so the dedicated Normal-lessons loop below can skip an id this
+  // loop already attempted this same run (the two pools can overlap at
+  // their oldest end) — generateStoryVoiceDraft's own cheap short-circuit
+  // would make a repeat call harmless anyway, but there's no reason to
+  // spend the extra round trip.
+  const attemptedThisRun = new Set<string>();
   for (const lessonId of lessonPool) {
     if (lessonWorkDone >= MAX_LESSON_VOICE_PAIRS_PER_RUN) break;
     processed += 1;
+    attemptedThisRun.add(lessonId);
     const outcome = await generateStoryVoiceDraft(supabase, lessonId);
     generated += outcome.generated;
     skipped += outcome.skipped;
@@ -149,6 +180,21 @@ async function handleVoiceSweepCron(request: Request): Promise<NextResponse> {
       errors.push(`${lessonId}: ${outcome.error}`);
     }
     if (outcome.generated > 0 || outcome.failed > 0) lessonWorkDone += 1;
+  }
+
+  let normalLessonWorkDone = 0;
+  for (const lessonId of normalLessonPool) {
+    if (normalLessonWorkDone >= MAX_NORMAL_LESSON_VOICE_PAIRS_PER_RUN) break;
+    if (attemptedThisRun.has(lessonId)) continue;
+    processed += 1;
+    const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+    generated += outcome.generated;
+    skipped += outcome.skipped;
+    failed += outcome.failed;
+    if (outcome.error && errors.length < MAX_ERRORS_REPORTED) {
+      errors.push(`${lessonId}: ${outcome.error}`);
+    }
+    if (outcome.generated > 0 || outcome.failed > 0) normalLessonWorkDone += 1;
   }
 
   let bookWorkDone = 0;
