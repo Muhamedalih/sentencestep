@@ -149,6 +149,25 @@ export const es: Dictionary = {
     subtitle: "Nos ayuda a personalizar un poco tu experiencia.",
     searchPlaceholder: "Busca tu país...",
     noResults: "No se encontraron países",
+    modalTitle: "Elige tu país",
+    closeLabel: "Cerrar",
+  },
+  tutorialOnboarding: {
+    title1: "Escribe cada palabra de la historia",
+    body1:
+      "Concéntrate en leer y escribir. Aunque no entiendas el 90% de lo que se dice, lo entenderás con el tiempo gracias a la exposición repetida. Es un método probado.",
+    title2: "Repite las frases",
+    body2:
+      "No te conformes con escucharlo una sola vez antes de escribir. Repite el audio tantas veces como quieras y cambia la velocidad de reproducción como prefieras.",
+    title3: "Imita la pronunciación",
+    body3:
+      "Pronuncia cada línea en voz alta mientras escribes. Tu pronunciación mejora poco a poco con el tiempo, y lo notarás antes de darte cuenta de cómo ocurrió.",
+    title4: "Repite las historias",
+    body4:
+      "Cada vez que repites las mismas historias, captas significados y formas distintas de usar las palabras. Y con cada historia completa descubres nuevos caminos en la biblioteca. Sigue escribiendo — así es como el idioma se queda contigo.",
+    continueCta: "Continuar",
+    startCta: "Empezar",
+    skip: "Omitir",
   },
   onboardingComplete: {
     eyebrow: "Lo lograste — tu primera lección está completa",

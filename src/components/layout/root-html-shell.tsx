@@ -5,6 +5,7 @@ import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-pi
 import { IntroLanding } from "@/components/app/intro-landing";
 import { OnboardingIntroCard } from "@/components/app/onboarding-intro-card";
 import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
+import { TutorialOnboarding } from "@/components/app/tutorial-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { dirFor, type SupportLocale } from "@/lib/i18n/locales";
@@ -104,6 +105,7 @@ export function RootHtmlShell({
             <FirstTimeLanguagePicker />
             <StartingLevelOnboarding />
             <CountryOnboarding />
+            <TutorialOnboarding />
             <OnboardingIntroCard />
           </GetStartedStepProvider>
           {children}

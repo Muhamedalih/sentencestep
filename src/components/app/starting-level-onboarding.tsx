@@ -26,8 +26,8 @@ const TIER_DOT_CLASS: Record<Difficulty, string> = {
 };
 
 /**
- * The second of the five steps in the homepage's "get started" flow
- * (language -> level -> country -> OnboardingIntroCard -> lesson)
+ * The second of the six steps in the homepage's "get started" flow
+ * (language -> level -> country -> tutorial -> OnboardingIntroCard -> lesson)
  * FirstTimeLanguagePicker starts (identical minimal-top-bar/step-badge
  * shell, same full-page takeover, no backdrop-blur-through), not a modal
  * popped up later inside the dashboard. Gated on `startingLevel === null`
@@ -94,7 +94,7 @@ export function StartingLevelOnboarding() {
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          2/4
+          2/5
         </span>
       </div>
 

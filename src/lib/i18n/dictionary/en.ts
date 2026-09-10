@@ -146,6 +146,25 @@ export const en: Dictionary = {
     subtitle: "Helps us tailor your experience a little.",
     searchPlaceholder: "Search for your country...",
     noResults: "No matching countries",
+    modalTitle: "Choose your country",
+    closeLabel: "Close",
+  },
+  tutorialOnboarding: {
+    title1: "Type every word in the story",
+    body1:
+      "Focus on reading and writing. Even if you don't understand 90% of what's said, you'll understand it over time through repeated exposure. It's a tried-and-tested method.",
+    title2: "Replay the sentences",
+    body2:
+      "Don't settle for hearing it once before you type. Replay the audio as many times as you like, and change the playback speed however you want.",
+    title3: "Mimic the pronunciation",
+    body3:
+      "Say each line out loud as you type it. Your pronunciation improves bit by bit over time, and you'll feel it before you notice how it happened.",
+    title4: "Redo the stories",
+    body4:
+      "Every time you redo the same stories, you pick up new meanings and ways of using the words. And with every story you finish, new paths open up in the library. Keep writing — that's how the language sticks.",
+    continueCta: "Continue",
+    startCta: "Start",
+    skip: "Skip",
   },
   onboardingComplete: {
     eyebrow: "You did it — your first lesson is complete",

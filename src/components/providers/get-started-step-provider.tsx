@@ -5,10 +5,10 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import type { Difficulty } from "@/lib/levels";
 
 /**
- * The state shared between the five steps of the homepage's "get started"
+ * The state shared between the six steps of the homepage's "get started"
  * flow — IntroLanding, FirstTimeLanguagePicker, StartingLevelOnboarding,
- * CountryOnboarding, and OnboardingIntroCard (see root-html-shell.tsx, where
- * all five mount side by side). Neither step's own persisted state (the
+ * CountryOnboarding, TutorialOnboarding, and OnboardingIntroCard (see
+ * root-html-shell.tsx, where all six mount side by side). Neither step's own persisted state (the
  * locale cookie, startingLevel) is ever touched by "going back":
  * forceLanguageStep just tells the language step to show again even though a
  * locale is already set, so the level step's back button can return to it
@@ -27,12 +27,18 @@ import type { Difficulty } from "@/lib/levels";
  * forceLanguageStep/forceLevelStep for the steps after it): it's a one-time
  * introduction, not a step worth revisiting.
  *
- * countryStepDone gates the last step, OnboardingIntroCard, the same way
- * pendingDifficulty/startingLevel already does: it starts false, and flips
- * true either once the guest picks a country (CountryOnboarding) or taps its
- * skip control — either way, "this optional step has been shown and
- * resolved," never persisted, so it's simply false again on a fresh page
- * load (matching every other step's fully client-session-scoped state here).
+ * countryStepDone gates TutorialOnboarding the same way pendingDifficulty/
+ * startingLevel already does: it starts false, and flips true either once
+ * the guest picks a country (CountryOnboarding) or taps its skip control —
+ * either way, "this optional step has been shown and resolved," never
+ * persisted, so it's simply false again on a fresh page load (matching
+ * every other step's fully client-session-scoped state here).
+ *
+ * tutorialStepDone is the same pattern one step later: it gates the actual
+ * last step, OnboardingIntroCard, and flips true once the guest finishes
+ * TutorialOnboarding's four slides or taps its skip link — skip resolves it
+ * exactly like finishing the last slide does, since the tutorial is purely
+ * informational and never blocks reaching the first lesson.
  *
  * pendingDifficulty exists purely for cross-component reactivity:
  * useProgress() keeps its state in a plain useState local to each call site,
@@ -57,6 +63,8 @@ interface GetStartedStepContextValue {
   setPendingDifficulty: (value: Difficulty | null) => void;
   countryStepDone: boolean;
   setCountryStepDone: (value: boolean) => void;
+  tutorialStepDone: boolean;
+  setTutorialStepDone: (value: boolean) => void;
 }
 
 const GetStartedStepContext = createContext<GetStartedStepContextValue>({
@@ -70,6 +78,8 @@ const GetStartedStepContext = createContext<GetStartedStepContextValue>({
   setPendingDifficulty: () => {},
   countryStepDone: false,
   setCountryStepDone: () => {},
+  tutorialStepDone: false,
+  setTutorialStepDone: () => {},
 });
 
 export function GetStartedStepProvider({ children }: { children: ReactNode }) {
@@ -78,6 +88,7 @@ export function GetStartedStepProvider({ children }: { children: ReactNode }) {
   const [forceLevelStep, setForceLevelStep] = useState(false);
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   const [countryStepDone, setCountryStepDone] = useState(false);
+  const [tutorialStepDone, setTutorialStepDone] = useState(false);
   return (
     <GetStartedStepContext.Provider
       value={{
@@ -91,6 +102,8 @@ export function GetStartedStepProvider({ children }: { children: ReactNode }) {
         setPendingDifficulty,
         countryStepDone,
         setCountryStepDone,
+        tutorialStepDone,
+        setTutorialStepDone,
       }}
     >
       {children}

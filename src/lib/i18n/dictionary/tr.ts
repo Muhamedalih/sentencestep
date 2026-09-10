@@ -144,6 +144,25 @@ export const tr: Dictionary = {
     subtitle: "Deneyimini biraz kişiselleştirmemize yardımcı olur.",
     searchPlaceholder: "Ülkeni ara...",
     noResults: "Eşleşen ülke bulunamadı",
+    modalTitle: "Ülkeni seç",
+    closeLabel: "Kapat",
+  },
+  tutorialOnboarding: {
+    title1: "Hikayedeki her kelimeyi yaz",
+    body1:
+      "Okumaya ve yazmaya odaklan. Söylenenin %90'ını anlamasan bile, tekrarlı maruziyet sayesinde zamanla anlarsın. Bu denenmiş bir yöntem.",
+    title2: "Cümleleri tekrar dinle",
+    body2:
+      "Yazmadan önce bir kez dinlemekle yetinme. Sesi istediğin kadar tekrar çal, dinleme hızını da dilediğin gibi değiştir.",
+    title3: "Telaffuzu taklit et",
+    body3:
+      "Yazarken her satırı sesli olarak söyle. Telaffuzun zamanla azar azar gelişir ve nasıl olduğunu fark etmeden bunu hissedersin.",
+    title4: "Hikayeleri tekrar oku",
+    body4:
+      "Aynı hikayeleri her tekrar okuduğunda, kelimeleri kullanmanın yeni anlamlarını ve yollarını yakalarsın. Ve her tamamladığın hikayeyle kütüphanede yeni yollar keşfedersin. Yazmaya devam et — dili kalıcı kılan budur.",
+    continueCta: "Devam et",
+    startCta: "Başla",
+    skip: "Atla",
   },
   onboardingComplete: {
     eyebrow: "İlk dersini tamamladın",

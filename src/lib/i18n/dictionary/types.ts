@@ -173,6 +173,31 @@ export interface Dictionary {
     subtitle: string;
     searchPlaceholder: string;
     noResults: string;
+    /** Heading inside the search modal that opens once the collapsed field is tapped — distinct from `heading` above, which stays on the page behind it. */
+    modalTitle: string;
+    /** Aria-label for the modal's close (X) button. */
+    closeLabel: string;
+  };
+  /**
+   * The "get started" flow's fourth step (src/components/app/tutorial-onboarding.tsx),
+   * between CountryOnboarding and OnboardingIntroCard — a four-slide, dot-progress
+   * walkthrough of how the app's learning loop works, shown once per guest session.
+   * Skippable at any slide via `skip`, which resolves the step exactly like finishing
+   * slide 4 does. `continueCta` advances slides 1-3; slide 4 shows `startCta` instead,
+   * since it hands off to OnboardingIntroCard rather than looping to another slide.
+   */
+  tutorialOnboarding: {
+    title1: string;
+    body1: string;
+    title2: string;
+    body2: string;
+    title3: string;
+    body3: string;
+    title4: string;
+    body4: string;
+    continueCta: string;
+    startCta: string;
+    skip: string;
   };
   /** The premium "pitch" screen shown instead of the ordinary LessonCompletion when a first-time learner finishes their opening lesson (src/components/learning/onboarding-lesson-complete.tsx) — the get-started flow's real final step, bookending onboarding.heading/onboardingIntroCard's startCta. Four fixed benefit points, not a dynamic list. */
   onboardingComplete: {
