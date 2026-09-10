@@ -273,6 +273,8 @@ function MistakeItemSession({
           kokoroVoiceId={defaultVoiceId}
           contentType="sentence_word"
           contentId={`${item.sentenceId}::${item.word}`}
+          variant="outline"
+          className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
         />
       </div>
 

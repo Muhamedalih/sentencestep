@@ -299,6 +299,8 @@ export function TypingSentence({
                   kokoroVoiceId={sentenceVoiceId}
                   contentType="sentence"
                   contentId={sentence.id}
+                  variant="outline"
+                  className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
                 />
               </div>
             </div>
@@ -341,32 +343,34 @@ export function TypingSentence({
               </span>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <div
-              className="text-muted-foreground hidden items-center gap-1.5 text-xs font-medium tabular-nums sm:flex"
-              dir="ltr"
-            >
-              {sentenceNumber != null && totalSentences != null && (
-                <span>
-                  {sentenceNumber} / {totalSentences}
-                </span>
-              )}
-              {storyTimeRemainingLabel && <span className="text-foreground/30">·</span>}
-              {storyTimeRemainingLabel && <span>{storyTimeRemainingLabel}</span>}
-            </div>
-            <PronunciationSpeedControl inputRef={engine.inputRef} />
-            <PronunciationButton
-              text={sentence.en}
-              audioUrl={sentence.audioUrl}
-              onPlay={onAudioPlay}
-              autoPlay
-              resetKey={sentence.id}
-              inputRef={engine.inputRef}
-              kokoroVoiceId={sentenceVoiceId}
-              contentType="sentence"
-              contentId={sentence.id}
-            />
+          <div
+            className="text-muted-foreground hidden items-center gap-1.5 text-xs font-medium tabular-nums sm:flex"
+            dir="ltr"
+          >
+            {sentenceNumber != null && totalSentences != null && (
+              <span>
+                {sentenceNumber} / {totalSentences}
+              </span>
+            )}
+            {storyTimeRemainingLabel && <span className="text-foreground/30">·</span>}
+            {storyTimeRemainingLabel && <span>{storyTimeRemainingLabel}</span>}
           </div>
+        </div>
+        <div className="mb-4 flex items-center justify-end gap-2">
+          <PronunciationSpeedControl inputRef={engine.inputRef} />
+          <PronunciationButton
+            text={sentence.en}
+            audioUrl={sentence.audioUrl}
+            onPlay={onAudioPlay}
+            autoPlay
+            resetKey={sentence.id}
+            inputRef={engine.inputRef}
+            kokoroVoiceId={sentenceVoiceId}
+            contentType="sentence"
+            contentId={sentence.id}
+            variant="outline"
+            className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
+          />
         </div>
         <div className="mb-4 min-h-20">
           <CurrentWordCard word={currentWord} dir={dir} />
@@ -407,6 +411,8 @@ export function TypingSentence({
           kokoroVoiceId={sentenceVoiceId}
           contentType="sentence"
           contentId={sentence.id}
+          variant="outline"
+          className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
         />
       </div>
       {/* The current-word card sits right under the audio-button row, top-
