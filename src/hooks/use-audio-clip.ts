@@ -31,16 +31,37 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
   const maxRetries = options?.maxRetries ?? 0;
   const retryDelayMs = options?.retryDelayMs ?? 300;
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [status, setStatus] = useState<AudioClipStatus>("idle");
+
+  // Cancels any retry still in flight, and — critically — clears audioRef so
+  // a pending retry's own isCurrent() check (see `attempt` below) reads
+  // false and gives up instead of starting a brand-new Audio element and
+  // calling play() on it. Without the audioRef clear here, a retry
+  // scheduled by a PronunciationButton instance that has since UNMOUNTED
+  // (the learner moved to the next/previous sentence) would still fire on
+  // its own timer, since a plain setTimeout outlives the component that
+  // scheduled it — confirmed live: a sentence the learner had already
+  // skipped past would suddenly start speaking on its own moments later.
+  // Pausing alone (the original cleanup) stops sound already playing, but
+  // does nothing to stop a retry that hasn't created its Audio element yet.
+  function invalidate() {
+    if (retryTimeoutRef.current !== undefined) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = undefined;
+    }
+    audioRef.current?.pause();
+    audioRef.current = null;
+  }
 
   useEffect(() => {
     return () => {
-      audioRef.current?.pause();
+      invalidate();
     };
   }, []);
 
   const stop = useCallback(() => {
-    audioRef.current?.pause();
+    invalidate();
     setStatus("idle");
   }, []);
 
@@ -53,8 +74,10 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
       const resolvedSrc = overrideSrc ?? src;
       if (!resolvedSrc) return;
 
-      // Replace any in-flight playback so repeated/rapid clicks never overlap.
-      audioRef.current?.pause();
+      // Replace any in-flight playback/retry so repeated/rapid clicks never
+      // overlap, and so this fresh play() can't later race a still-pending
+      // retry from whatever was playing before it.
+      invalidate();
 
       function attempt(url: string, retriesLeft: number) {
         const audio = new Audio(url);
@@ -74,13 +97,16 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         // necessarily fired yet. Without this guard, an old element's late
         // event (including a retry's own late failure) could overwrite the
         // status of the element that's actually current — only apply an
-        // event if it's still the one audioRef points at.
+        // event if it's still the one audioRef points at. Also false once
+        // this hook has unmounted or stop()/a new play() has invalidated it
+        // (audioRef.current is null then) — see invalidate() above.
         const isCurrent = () => audioRef.current === audio;
 
         function handleFailure() {
           if (!isCurrent()) return;
           if (retriesLeft > 0) {
-            window.setTimeout(() => {
+            retryTimeoutRef.current = setTimeout(() => {
+              retryTimeoutRef.current = undefined;
               if (isCurrent()) attempt(url, retriesLeft - 1);
             }, retryDelayMs);
             return;
