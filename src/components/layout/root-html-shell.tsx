@@ -8,7 +8,7 @@ import { StartingLevelOnboarding } from "@/components/app/starting-level-onboard
 import { TutorialOnboarding } from "@/components/app/tutorial-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
-import { dirFor, type SupportLocale } from "@/lib/i18n/locales";
+import { dirFor, SUPPORT_LOCALES, type SupportLocale } from "@/lib/i18n/locales";
 
 /**
  * Applies the `dark` class (see globals.css's `.dark` token overrides)
@@ -97,6 +97,27 @@ export function RootHtmlShell({
         />
         {/* Authorized by middleware.ts's CSP via a fixed sha256 hash of this exact script body, not a per-request nonce — this script never changes per request, so it needs no per-request value, which is what lets this Server Component render without calling headers()/cookies() itself. */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/*
+         * Only on the unprefixed "/" for a genuinely first-time, cookie-less
+         * visitor (localizedNavigation && locale === null — true for
+         * src/app/(default)/layout.tsx, never for src/app/[locale]/layout.tsx
+         * since that one always has a real locale): FirstTimeLanguagePicker
+         * is about to show, and picking a language there navigates to
+         * "/{locale}" (see LocaleProvider's setLocale). That destination has
+         * its OWN root layout ([locale]/layout.tsx) — a different <html> tree
+         * than this one — which the Next.js App Router cannot soft-transition
+         * into; it's a real, full browser navigation no matter what. These
+         * hints get that destination's HTML into the browser's cache before
+         * the visitor ever picks, so the otherwise-jarring reload resolves
+         * close to instantly instead of visibly flashing/reloading mid-flow.
+         * (Safari doesn't honor rel=prefetch, so this helps Chrome/Firefox
+         * visitors fully and does nothing — not harm — for Safari ones.)
+         */}
+        {localizedNavigation &&
+          locale === null &&
+          SUPPORT_LOCALES.map((supportLocale) => (
+            <link key={supportLocale} rel="prefetch" href={`/${supportLocale}`} />
+          ))}
       </head>
       <body>
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
