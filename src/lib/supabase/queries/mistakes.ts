@@ -232,60 +232,43 @@ export async function recordMistakeReview(word: string, hadErrors: boolean): Pro
   if (error) throw error;
 }
 
-/** Same day-based schedule as record_mistake_review's v_schedule — kept in sync manually, same reasoning as FIRST_REVIEW_INTERVAL_DAYS above. */
-const REVIEW_SCHEDULE_DAYS = [1, 3, 7, 16];
-
 /**
- * Same advance-or-reset schedule as record_mistake_review, but without that
- * RPC's `next_review_at <= now()` guard — for the one caller that
- * deliberately completes a review EARLY (see markReviewCompletedAction's
- * `bypassDueGate` param): a word answered correctly in ordinary Word Lists
- * practice, before its next scheduled check-in was actually due. isWeakWord
- * (src/lib/weak-words/types.ts) still counts a not-yet-due scheduled word as
- * "needs review" — that's what makes it visible in Review All Words in the
- * first place — so without this, answering it correctly anywhere other than
- * that dedicated queue could never clear it: the RPC's due-gate would just
- * no-op every time. A plain client-side read-then-write, not the atomic RPC:
- * this path only ever runs from one learner's own single in-flight request,
- * not the RPC's higher-contention "might replay/duplicate" case the due-gate
- * exists to protect against, so that atomicity isn't needed here.
+ * Fully clears a word out of "weak" (see isWeakWord) in one step, no matter
+ * which state its mistakes row is currently in — active, or corrected with
+ * a schedule still below WEAK_WORD_REVIEW_STAGE_THRESHOLD. Used only when
+ * ordinary Word Lists practice (never the dedicated Review/Fix-Your-Mistakes
+ * queues) is the one reporting the correct answer.
+ *
+ * This is deliberately NOT the same one-stage-at-a-time advance those two
+ * queues use (markMistakeCorrected / recordMistakeReview): that gradual
+ * schedule is real spaced repetition, and staying at review_stage 1 or 2
+ * after just one clean pass is its whole point (see isWeakWord's doc
+ * comment) — a word answered right in the dedicated Review queue is
+ * SUPPOSED to still come back for another check a few days later. Ordinary
+ * practice makes a strictly different promise: the learner got this word
+ * right just now, so stop flagging it, full stop — jumping straight to the
+ * fully-graduated state (`next_review_at: null`) is what actually delivers
+ * that, since isWeakWord only ever reads review_stage when a review is
+ * still scheduled at all.
+ *
+ * A plain update, not an RPC: this only ever runs from one learner's own
+ * single in-flight request, not the concurrent-write case record_mistake's
+ * atomic increment exists for. A no-op if the word was never tracked as a
+ * mistake to begin with — nothing matches the filter.
  */
-export async function recordMistakeReviewEarly(
-  userId: string,
-  word: string,
-  hadErrors: boolean,
-): Promise<void> {
+export async function masterMistakeWord(userId: string, word: string): Promise<void> {
   const supabase = await createClient();
-  const { data, error: selectError } = await supabase
-    .from("mistakes")
-    .select("review_stage")
-    .eq("user_id", userId)
-    .eq("word", word)
-    .eq("status", "corrected")
-    .not("next_review_at", "is", null)
-    .maybeSingle();
-  if (selectError) throw selectError;
-  // Not a currently-scheduled review (already mastered, or never was one
-  // to begin with) — nothing to advance, same as the RPC's guard producing
-  // a no-op for a non-matching row.
-  if (!data) return;
-
-  const now = new Date();
-  const nextStage = hadErrors ? 0 : data.review_stage + 1;
-  const intervalDays = hadErrors ? REVIEW_SCHEDULE_DAYS[0] : REVIEW_SCHEDULE_DAYS[nextStage - 1];
-  const nextReviewAt = intervalDays
-    ? new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000).toISOString()
-    : null;
-
-  const { error: updateError } = await supabase
+  const now = new Date().toISOString();
+  const { error } = await supabase
     .from("mistakes")
     .update({
-      review_stage: nextStage,
-      next_review_at: nextReviewAt,
-      updated_at: now.toISOString(),
+      status: "corrected",
+      corrected_at: now,
+      review_stage: 0,
+      next_review_at: null,
+      updated_at: now,
     })
     .eq("user_id", userId)
-    .eq("word", word)
-    .eq("status", "corrected");
-  if (updateError) throw updateError;
+    .eq("word", word);
+  if (error) throw error;
 }

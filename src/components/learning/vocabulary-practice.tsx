@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordProgress } from "@/hooks/use-word-progress";
-import { markMistakeCorrectedAction, markReviewCompletedAction } from "@/lib/mistakes/actions";
+import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
 import { splitWordHint } from "@/lib/word-lists-hint";
@@ -75,15 +75,6 @@ export function VocabularyPractice({
   // never needs to be awarded it again if a later block somehow reintroduces
   // it — resets alongside everything else on "Practice again".
   const markedWordIdsRef = useRef<Set<string>>(new Set());
-  // Slots (of the CURRENT block) that have had at least one wrong attempt
-  // since they were last asked — read (and cleared) the moment that slot
-  // finally lands correct, so markReviewCompletedAction below can report
-  // whether this specific pass was clean, same as WordReviewSession's own
-  // hadErrorRef. Resets alongside doneInBlock on every block advance and on
-  // "Practice again", never partially — a stale entry from an earlier block
-  // could otherwise misreport a totally different later occurrence of the
-  // same slot number.
-  const erroredSlotsRef = useRef<Set<number>>(new Set());
 
   const currentBlock = blocks[blockIndex] ?? [];
   const currentSlot: number | undefined = queue[0];
@@ -101,7 +92,6 @@ export function VocabularyPractice({
       setBlockIndex(nextIndex);
       setQueue(blocks[nextIndex]!.map((_, i) => i));
       setDoneInBlock(new Set());
-      erroredSlotsRef.current = new Set();
     } else {
       setIsComplete(true);
     }
@@ -167,26 +157,18 @@ export function VocabularyPractice({
         // Words" too, not just award word-list progress — this is the same
         // account-wide mistake ledger WordReviewSession corrects into, and a
         // learner who already nailed the word during ordinary practice
-        // shouldn't still be asked to review it separately. Exactly one of
-        // these two updates ever actually matches a row (see
-        // markMistakeCorrected's status='active' filter and
-        // record_mistake_review's status='corrected' + due guard) — the
-        // other is a harmless no-op — so firing both, rather than needing to
-        // already know which state this word's mistake row is in, is safe.
-        const hadErrors = erroredSlotsRef.current.has(currentSlot);
-        erroredSlotsRef.current.delete(currentSlot);
-        markMistakeCorrectedAction(word.targetWord).catch((error: unknown) => {
-          console.error("[word-lists] markMistakeCorrectedAction failed", error);
-        });
-        markReviewCompletedAction(word.targetWord, hadErrors, true).catch((error: unknown) => {
-          console.error("[word-lists] markReviewCompletedAction failed", error);
+        // shouldn't still be asked to review it separately, regardless of
+        // whether it was a fresh mistake or a scheduled-but-not-yet-due
+        // review (see masterMistakeWord's doc comment for why this needs its
+        // own action rather than the queues' own one-step-at-a-time ones).
+        masterMistakeWordAction(word.targetWord).catch((error: unknown) => {
+          console.error("[word-lists] masterMistakeWordAction failed", error);
         });
       }
       setDoneInBlock((prev) => new Set(prev).add(currentSlot));
       setQueue((prev) => prev.slice(1));
     } else {
       play("error");
-      erroredSlotsRef.current.add(currentSlot);
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
@@ -279,7 +261,6 @@ export function VocabularyPractice({
                     setQueue(blocks[0]?.map((_, i) => i) ?? []);
                     setDoneInBlock(new Set());
                     markedWordIdsRef.current = new Set();
-                    erroredSlotsRef.current = new Set();
                     setIsComplete(false);
                   }}
                 >
