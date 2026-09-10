@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { CountryOnboarding } from "@/components/app/country-onboarding";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
 import { IntroLanding } from "@/components/app/intro-landing";
 import { OnboardingIntroCard } from "@/components/app/onboarding-intro-card";
@@ -102,6 +103,7 @@ export function RootHtmlShell({
             <IntroLanding />
             <FirstTimeLanguagePicker />
             <StartingLevelOnboarding />
+            <CountryOnboarding />
             <OnboardingIntroCard />
           </GetStartedStepProvider>
           {children}

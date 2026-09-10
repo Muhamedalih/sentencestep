@@ -56,6 +56,12 @@ export type AnalyticsEvent =
       category: "ENGAGEMENT";
       /** One event per session (first use), not per click/replay — see track-actions.ts. Mode only: no lesson id, no audio URL, no click history. */
       properties: { mode: LearningMode };
+    }
+  | {
+      name: "ONBOARDING_COUNTRY_SELECTED";
+      category: "ENGAGEMENT";
+      /** The "which country are you in?" onboarding step (CountryOnboarding) — an ISO 3166-1 alpha-2 code (see country-codes.ts), only ever fired when the guest actually picks one, never on skip. Aggregate signal only: no IP lookup, no geolocation API, self-reported. */
+      properties: { countryCode: string };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

@@ -3,6 +3,7 @@
 import { startedEvent } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { getCurrentUser } from "@/lib/supabase/auth";
+import { isCountryCode } from "@/lib/i18n/country-codes";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -46,6 +47,24 @@ export async function trackAudioPlayedAction(mode: LearningMode): Promise<void> 
   const user = await getCurrentUser();
   await track(
     { name: "AUDIO_PLAYED", category: "ENGAGEMENT", properties: { mode } },
+    user?.id ?? null,
+  );
+}
+
+/**
+ * Called once from CountryOnboarding's fire-and-forget click handler when a
+ * guest picks a country — never awaited before advancing to the next
+ * onboarding step, so a slow or failed write (track() never throws anyway)
+ * can't delay or block onboarding. `countryCode` is re-validated against the
+ * known COUNTRY_CODES list here (silently no-ops otherwise) since it arrives
+ * as client input, even though it can currently only ever be one this
+ * component's own list produced.
+ */
+export async function trackOnboardingCountryAction(countryCode: string): Promise<void> {
+  if (!isCountryCode(countryCode)) return;
+  const user = await getCurrentUser();
+  await track(
+    { name: "ONBOARDING_COUNTRY_SELECTED", category: "ENGAGEMENT", properties: { countryCode } },
     user?.id ?? null,
   );
 }

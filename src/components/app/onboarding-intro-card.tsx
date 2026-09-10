@@ -16,10 +16,14 @@ import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-setting
 import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
 
 /**
- * The third and last step of the homepage's "get started" flow, right after
- * StartingLevelOnboarding — same full-page-takeover shell, same
+ * The fourth and last step of the homepage's "get started" flow, right
+ * after CountryOnboarding — same full-page-takeover shell, same
  * `pathname === "/"` / zero-completions gating, mounted right after it in
- * layout.tsx. Shows an admin-configurable image + headline (see
+ * root-html-shell.tsx. Also gated on `countryStepDone` (GetStartedStepProvider),
+ * so this never flashes in ahead of the country step for the instant between
+ * a tier being picked and CountryOnboarding's own render — see that
+ * component's own doc comment for how it flips countryStepDone. Shows an
+ * admin-configurable image + headline (see
  * src/app/admin/onboarding-card, src/lib/admin/onboarding-card-actions.ts)
  * and only routes into OPENING_LESSON_ID[difficulty] once the learner taps
  * "Start" — the same level-agnostic card regardless of which tier they just
@@ -53,7 +57,7 @@ import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/st
 export function OnboardingIntroCard() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel } = useProgress();
-  const { pendingDifficulty } = useGetStartedStep();
+  const { pendingDifficulty, countryStepDone } = useGetStartedStep();
   const pathname = usePathname();
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -65,6 +69,7 @@ export function OnboardingIntroCard() {
     !!locale &&
     isLoaded &&
     difficulty !== null &&
+    countryStepDone &&
     completions.length === 0;
 
   useEffect(() => {
@@ -114,7 +119,7 @@ export function OnboardingIntroCard() {
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          3/3
+          4/4
         </span>
       </div>
 

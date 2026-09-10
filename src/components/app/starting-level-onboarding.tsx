@@ -26,12 +26,14 @@ const TIER_DOT_CLASS: Record<Difficulty, string> = {
 };
 
 /**
- * The second of the three steps in the homepage's "get started" flow
- * (language -> level -> OnboardingIntroCard -> lesson) FirstTimeLanguagePicker
- * starts (identical minimal-top-bar/step-badge shell, same full-page
- * takeover, no backdrop-blur-through), not a modal popped up later inside
- * the dashboard. Gated on `startingLevel === null` (never asked yet) AND
- * zero completions, so it can never interrupt a returning learner or one who
+ * The second of the five steps in the homepage's "get started" flow
+ * (language -> level -> country -> OnboardingIntroCard -> lesson)
+ * FirstTimeLanguagePicker starts (identical minimal-top-bar/step-badge
+ * shell, same full-page takeover, no backdrop-blur-through), not a modal
+ * popped up later inside the dashboard. Gated on `startingLevel === null`
+ * (never asked yet, UNLESS CountryOnboarding's back button set
+ * forceLevelStep — same pattern as forceLanguageStep below) AND zero
+ * completions, so it can never interrupt a returning learner or one who
  * already has real progress; also gated on isMarketingHomePath(pathname)
  * (true for "/" and its locale-prefixed static variants "/ar"/"/es"/"/tr" —
  * see that helper's own doc comment) — mounted at the root layout (same as
@@ -44,28 +46,42 @@ const TIER_DOT_CLASS: Record<Difficulty, string> = {
  * setStartingLevel(level) (persistence) and setPendingDifficulty(difficulty)
  * (the GetStartedStepProvider context write OnboardingIntroCard actually
  * reacts to — see that context's own doc comment for why a plain
- * setStartingLevel call alone can't reactively reach a sibling component).
- * setStartingLevel flips this component's own gate to hidden; OnboardingIntroCard
- * (mounted right after this one in layout.tsx) then takes over as the third
- * step, and is what actually routes into OPENING_LESSON_ID[difficulty] once
- * the learner confirms there. See that component's own doc comment for the
- * `isNavigating`-style loading-spinner treatment this used to need itself.
+ * setStartingLevel call alone can't reactively reach a sibling component),
+ * plus setForceLevelStep(false)/setCountryStepDone(false) so re-picking a
+ * tier after using CountryOnboarding's back button falls through to that
+ * country step again rather than skipping straight to OnboardingIntroCard
+ * with its previous answer still marked done. CountryOnboarding (mounted
+ * right after this one in root-html-shell.tsx) takes over as the third
+ * step; OnboardingIntroCard is what actually routes into
+ * OPENING_LESSON_ID[difficulty] once the learner confirms there. See that
+ * component's own doc comment for the `isNavigating`-style loading-spinner
+ * treatment this used to need itself.
  */
 export function StartingLevelOnboarding() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel, setStartingLevel } = useProgress();
-  const { forceLanguageStep, setForceLanguageStep, setPendingDifficulty } = useGetStartedStep();
+  const {
+    forceLanguageStep,
+    setForceLanguageStep,
+    forceLevelStep,
+    setForceLevelStep,
+    setPendingDifficulty,
+    setCountryStepDone,
+  } = useGetStartedStep();
   const pathname = usePathname();
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (!isMarketingHomePath(pathname)) return null;
-  if (!locale || !isLoaded || startingLevel !== null || completions.length > 0) return null;
+  if (!locale || !isLoaded || completions.length > 0) return null;
+  if (startingLevel !== null && !forceLevelStep) return null;
 
   function handleSelect(difficulty: Difficulty, level: number) {
     setStartingLevel(level);
     setPendingDifficulty(difficulty);
+    setForceLevelStep(false);
+    setCountryStepDone(false);
   }
 
   return (
@@ -78,7 +94,7 @@ export function StartingLevelOnboarding() {
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          2/3
+          2/4
         </span>
       </div>
 

@@ -158,6 +158,22 @@ export interface Dictionary {
     /** Onboarding intro card's (src/components/app/onboarding-intro-card.tsx) "enter the lesson" button — the flow's third and last step. */
     startCta: string;
   };
+  /**
+   * The "get started" flow's third step (src/components/app/country-onboarding.tsx),
+   * between StartingLevelOnboarding and OnboardingIntroCard — optional, so
+   * its own copy is the only thing distinguishing it from a required step;
+   * `onboarding.back` is reused for its back button rather than duplicated
+   * here. Country names themselves come from the browser's own
+   * Intl.DisplayNames per src/lib/i18n/country-codes.ts's doc comment, never
+   * translated by hand in this dictionary.
+   */
+  countryOnboarding: {
+    heading: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    noResults: string;
+    skip: string;
+  };
   /** The premium "pitch" screen shown instead of the ordinary LessonCompletion when a first-time learner finishes their opening lesson (src/components/learning/onboarding-lesson-complete.tsx) — the get-started flow's real final step, bookending onboarding.heading/onboardingIntroCard's startCta. Four fixed benefit points, not a dynamic list. */
   onboardingComplete: {
     eyebrow: string;

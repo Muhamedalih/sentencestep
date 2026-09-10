@@ -45,7 +45,7 @@ export function FirstTimeLanguagePicker() {
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          1/3
+          1/4
         </span>
       </div>
 

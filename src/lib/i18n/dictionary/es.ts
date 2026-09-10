@@ -144,6 +144,13 @@ export const es: Dictionary = {
     back: "Atrás",
     startCta: "Comenzar la lección",
   },
+  countryOnboarding: {
+    heading: "¿Desde qué país usas la aplicación?",
+    subtitle: "Opcional — nos ayuda a personalizar un poco tu experiencia.",
+    searchPlaceholder: "Busca tu país...",
+    noResults: "No se encontraron países",
+    skip: "Omitir",
+  },
   onboardingComplete: {
     eyebrow: "Lo lograste — tu primera lección está completa",
     headline: "Tu viaje con el inglés ya comenzó",

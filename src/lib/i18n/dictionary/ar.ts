@@ -132,6 +132,13 @@ export const ar: Dictionary = {
     back: "رجوع",
     startCta: "ابدأ الدرس",
   },
+  countryOnboarding: {
+    heading: "من أي دولة تستخدم التطبيق؟",
+    subtitle: "اختياري — يساعدنا على تخصيص تجربتك قليلًا.",
+    searchPlaceholder: "ابحث عن دولتك...",
+    noResults: "لا توجد نتائج مطابقة",
+    skip: "تخطي",
+  },
   onboardingComplete: {
     eyebrow: "خلّصت درسك الأول",
     headline: "رحلتك مع الإنجليزية بدأت فعليًا",

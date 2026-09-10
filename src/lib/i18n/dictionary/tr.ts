@@ -139,6 +139,13 @@ export const tr: Dictionary = {
     back: "Geri",
     startCta: "Derse başla",
   },
+  countryOnboarding: {
+    heading: "Uygulamayı hangi ülkeden kullanıyorsun?",
+    subtitle: "İsteğe bağlı — deneyimini biraz kişiselleştirmemize yardımcı olur.",
+    searchPlaceholder: "Ülkeni ara...",
+    noResults: "Eşleşen ülke bulunamadı",
+    skip: "Geç",
+  },
   onboardingComplete: {
     eyebrow: "İlk dersini tamamladın",
     headline: "İngilizce yolculuğun artık başladı",

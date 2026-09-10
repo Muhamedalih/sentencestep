@@ -30,10 +30,15 @@ const RESTART_DELAY_MS = 900;
  * The new first step of the homepage's "get started" flow, mounted right
  * before FirstTimeLanguagePicker in root-html-shell.tsx — see that
  * component's own doc comment for how `introContinued` (GetStartedStepProvider)
- * hands off to it. Gated purely on `!locale`, the same as
- * FirstTimeLanguagePicker itself: no isMarketingHomePath check, so a
- * first-time visitor sees it on top of whatever page they land on, not just
- * the homepage. `t` here resolves through LocaleProvider's browser-language
+ * hands off to it. Gated on `!locale && !introContinued`: no
+ * isMarketingHomePath check, so a first-time visitor sees it on top of
+ * whatever page they land on, not just the homepage. The `locale` half of
+ * that check matters on its own, not just as a starting condition —
+ * picking a language navigates to "/{locale}" (see LocaleProvider's
+ * localizedNavigation), a full page load that remounts
+ * GetStartedStepProvider and resets introContinued back to false, so
+ * without also re-checking `locale` this would flash back in on that exact
+ * navigation. `t` here resolves through LocaleProvider's browser-language
  * detection (see that component's own doc comment) — English until it
  * resolves, then whichever SupportLocale the visitor's browser reports, all
  * before `locale` itself is ever set.
@@ -47,7 +52,7 @@ const RESTART_DELAY_MS = 900;
  * visual language once they reach a real lesson.
  */
 export function IntroLanding() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const { introContinued, setIntroContinued } = useGetStartedStep();
   const reducedMotion = useReducedMotion();
   const restState = Math.round(DEMO_SENTENCE.length * REST_FRACTION);
@@ -78,7 +83,13 @@ export function IntroLanding() {
     };
   }, [reducedMotion]);
 
-  if (introContinued) return null;
+  // `locale` (not just introContinued) matters here: picking a language
+  // navigates to "/{locale}" (see LocaleProvider's localizedNavigation),
+  // a full page load that remounts GetStartedStepProvider and resets
+  // introContinued back to false — without this check, IntroLanding would
+  // flash back in on that very navigation for anyone who already has a
+  // real locale, cookie-backed or not.
+  if (locale || introContinued) return null;
 
   const percent = Math.max(6, Math.round((typed / DEMO_SENTENCE.length) * 100));
   const steps = [
