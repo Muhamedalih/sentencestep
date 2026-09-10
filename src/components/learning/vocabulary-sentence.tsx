@@ -18,6 +18,30 @@ const REVEAL_TAIL_MS = 450;
 /** Settle time for a correct (auto-matched) attempt — just long enough for the green flash to register before advancing. */
 const CORRECT_DELAY_MS = 550;
 
+/** The typing stage's natural size range — unchanged from before the word-length cap was added below. */
+const STAGE_MIN_REM = 3.5;
+const STAGE_MAX_REM = 8.4;
+/** Rough average glyph width, in ems, for this stage's bold/extrabold weight — used only to keep a long word from overflowing its line (see stageFontSize). */
+const STAGE_AVG_CHAR_EM = 0.62;
+/** The stage's available width, in rem, once it's inside VocabularySentence's max-w-2xl container. */
+const STAGE_CONTAINER_REM = 40;
+
+/**
+ * The typing stage is always one line (see `whitespace-nowrap` below) — for
+ * most words that just means picking the same large, viewport-responsive
+ * size every word used to render at. A handful of words in this content
+ * (e.g. "accommodation") are long enough that STAGE_MAX_REM would run them
+ * past the container's edge, so the max end of the clamp additionally
+ * shrinks to whatever size actually lets this specific word's full length
+ * fit — never below STAGE_MIN_REM, and never above STAGE_MAX_REM for
+ * everything short enough not to need it.
+ */
+function stageFontSize(word: string): string {
+  const lengthCapRem = STAGE_CONTAINER_REM / (word.length * STAGE_AVG_CHAR_EM);
+  const maxRem = Math.max(Math.min(STAGE_MAX_REM, lengthCapRem), STAGE_MIN_REM);
+  return `clamp(${STAGE_MIN_REM}rem, 1.68rem + 7vw, ${maxRem}rem)`;
+}
+
 /**
  * The core Word Lists interaction: a context sentence with exactly one
  * blank, rendered as a plain empty box (never the letters themselves —
@@ -142,9 +166,12 @@ export function VocabularySentence({
               : { x: 0, scale: engine.status === "correct" && !reducedMotion ? [0.96, 1] : 1 }
           }
           transition={{ duration: isDiffPhase ? 0.35 : 0.2 }}
-          style={fontFamily ? { fontFamily } : undefined}
+          style={{
+            fontSize: stageFontSize(targetWord),
+            ...(fontFamily ? { fontFamily } : undefined),
+          }}
           className={cn(
-            "text-[clamp(3.5rem,1.68rem+7vw,8.4rem)] leading-none font-extrabold tracking-tight",
+            "leading-none font-extrabold tracking-tight whitespace-nowrap",
             isDiffPhase && "decoration-danger line-through decoration-[0.07em]",
           )}
         >
