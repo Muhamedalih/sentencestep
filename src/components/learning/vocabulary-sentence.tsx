@@ -144,7 +144,7 @@ export function VocabularySentence({
           transition={{ duration: isDiffPhase ? 0.35 : 0.2 }}
           style={fontFamily ? { fontFamily } : undefined}
           className={cn(
-            "text-[clamp(3.5rem,1.68rem+7vw,8.4rem)] leading-none font-extrabold tracking-tight",
+            "text-[clamp(1.4rem,1rem+1.8vw,2.25rem)] leading-none font-extrabold tracking-tight whitespace-nowrap",
             isDiffPhase && "decoration-danger line-through decoration-[0.07em]",
           )}
         >
