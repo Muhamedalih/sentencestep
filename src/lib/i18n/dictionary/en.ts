@@ -79,6 +79,16 @@ export const en: Dictionary = {
     label: "Language",
     ariaLabel: "Choose your support language",
   },
+  introLanding: {
+    eyebrow: "Before we start",
+    subtitle:
+      "Hear the sentence, type it letter by letter, and see the translation instantly — that's how you learn the word and its pronunciation at the same time.",
+    noAccountNote: "No email or account needed",
+    nextHint: "Next: choose your language",
+    demoBadge: "Example from our Stories",
+    demoMeta: "Free story · Level 1",
+    demoLiveNote: "Live example from Stories",
+  },
   firstTimePicker: {
     heading: "Choose your language",
     subtitle: "We'll use this to explain lessons, hints, and translations as you learn English.",

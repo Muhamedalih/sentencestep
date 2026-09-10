@@ -18,16 +18,22 @@ import { cn } from "@/lib/utils";
  * through to the level step exactly as the first time through. Otherwise a
  * genuinely first-time, cookie-less visitor sees it on top of whatever page
  * they landed on and it disappears the instant they choose, no redirect or
- * reload. Fully opaque (not a backdrop-blur-through modal) and paired with
- * StartingLevelOnboarding's identical minimal-top-bar/step-badge shell —
- * together they read as step 1 and 2 of one linear "get started" flow
- * rather than a popup interrupting a marketing page, which is exactly what
- * replaces that marketing page as a brand-new guest's first impression.
+ * reload — EXCEPT for the very first moment of all, which now belongs to
+ * IntroLanding (mounted right before this one in root-html-shell.tsx):
+ * this component also waits on `introContinued` alongside `locale`, so a
+ * brand-new visitor sees IntroLanding's introduction first and only reaches
+ * this step once they tap its Continue button. Fully opaque (not a
+ * backdrop-blur-through modal) and paired with StartingLevelOnboarding's
+ * identical minimal-top-bar/step-badge shell — together they read as steps
+ * of one linear "get started" flow rather than a popup interrupting a
+ * marketing page, which is exactly what replaces that marketing page as a
+ * brand-new guest's first impression.
  */
 export function FirstTimeLanguagePicker() {
   const { locale, t, setLocale } = useLocale();
-  const { forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
+  const { introContinued, forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
   if (locale && !forceLanguageStep) return null;
+  if (!locale && !introContinued) return null; // IntroLanding is still showing — see its own doc comment
 
   return (
     <div

@@ -81,6 +81,16 @@ export const es: Dictionary = {
     label: "Idioma",
     ariaLabel: "Elige tu idioma de apoyo",
   },
+  introLanding: {
+    eyebrow: "Antes de empezar",
+    subtitle:
+      "Escuchas la frase, la escribes letra por letra y ves la traducción al instante — así aprendes la palabra y su pronunciación a la vez.",
+    noAccountNote: "Sin correo ni cuenta",
+    nextHint: "Siguiente: elige tu idioma",
+    demoBadge: "Ejemplo de nuestras Historias",
+    demoMeta: "Historia gratuita · Nivel 1",
+    demoLiveNote: "Ejemplo en vivo de Historias",
+  },
   firstTimePicker: {
     heading: "Elige tu idioma",
     subtitle:

@@ -86,6 +86,24 @@ export interface Dictionary {
     label: string;
     ariaLabel: string;
   };
+  /**
+   * The homepage "get started" flow's brand-new first step
+   * (src/components/app/intro-landing.tsx), shown before firstTimePicker
+   * for a first-time, cookie-less visitor. Reuses hero.headingPrefix/
+   * headingEmphasis for its heading, marketing.demoStepSee/Hear/Type/
+   * Progress for its four-icon row, firstTimePicker.confirm for its
+   * Continue button, and lesson.wpmLabel/accuracyLabel for the demo card's
+   * stat pills — this section only holds the strings unique to this step.
+   */
+  introLanding: {
+    eyebrow: string;
+    subtitle: string;
+    noAccountNote: string;
+    nextHint: string;
+    demoBadge: string;
+    demoMeta: string;
+    demoLiveNote: string;
+  };
   firstTimePicker: {
     heading: string;
     subtitle: string;

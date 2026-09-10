@@ -76,6 +76,16 @@ export const tr: Dictionary = {
     label: "Dil",
     ariaLabel: "Destek dilinizi seçin",
   },
+  introLanding: {
+    eyebrow: "Başlamadan önce",
+    subtitle:
+      "Cümleyi dinler, harf harf yazar ve çevirisini anında görürsün — kelimeyi ve telaffuzunu böylece aynı anda öğrenirsin.",
+    noAccountNote: "E-posta veya hesap gerekmez",
+    nextHint: "Sıradaki: dilini seç",
+    demoBadge: "Hikayelerimizden bir örnek",
+    demoMeta: "Ücretsiz hikaye · Seviye 1",
+    demoLiveNote: "Hikayelerden canlı örnek",
+  },
   firstTimePicker: {
     heading: "Dilinizi seçin",
     subtitle:

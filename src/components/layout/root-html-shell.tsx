@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
+import { IntroLanding } from "@/components/app/intro-landing";
 import { OnboardingIntroCard } from "@/components/app/onboarding-intro-card";
 import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
@@ -98,6 +99,7 @@ export function RootHtmlShell({
       <body>
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
           <GetStartedStepProvider>
+            <IntroLanding />
             <FirstTimeLanguagePicker />
             <StartingLevelOnboarding />
             <OnboardingIntroCard />
