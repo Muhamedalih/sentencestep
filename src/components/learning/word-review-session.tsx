@@ -20,7 +20,6 @@ import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-se
 import { markMistakeCorrectedAction, markReviewCompletedAction } from "@/lib/mistakes/actions";
 import { popIn } from "@/lib/motion";
 import type { WeakWordReason } from "@/lib/weak-words/types";
-import { splitWordHint } from "@/lib/word-lists-hint";
 import type { VocabularyWord } from "@/types/word-lists";
 
 export interface ReviewWord extends VocabularyWord {
@@ -73,9 +72,6 @@ export function WordReviewSession({
   const currentIndex: number | undefined = queue[0];
   const word = currentIndex !== undefined ? words[currentIndex] : undefined;
   const total = words.length;
-  const hint = word?.supportHint
-    ? splitWordHint(word.supportHint)
-    : { term: undefined, definition: undefined };
 
   useEffect(() => {
     hadErrorRef.current = false;
@@ -127,26 +123,10 @@ export function WordReviewSession({
             <ArrowLeft className="size-4" aria-hidden="true" />
             {t.wordLists.navLabel}
           </Link>
-          {!isComplete && word && (
-            <div className="flex shrink-0 items-center gap-3">
-              <span className="text-muted-foreground text-sm font-medium" dir="ltr">
-                {correctedCount + 1} / {total}
-              </span>
-              <PronunciationSpeedControl inputRef={inputRef} />
-              <PronunciationButton
-                text={word.targetWord}
-                audioUrl={word.audioUrl}
-                autoPlay
-                resetKey={word.id}
-                inputRef={inputRef}
-                kokoroVoiceId={defaultVoiceId}
-                contentType="word"
-                contentId={word.id}
-                label={t.wordLists.replayAction}
-                variant="outline"
-                size="sm"
-              />
-            </div>
+          {!isComplete && (
+            <span className="text-muted-foreground shrink-0 text-sm font-medium" dir="ltr">
+              {correctedCount + 1} / {total}
+            </span>
           )}
         </div>
       </div>
@@ -184,26 +164,34 @@ export function WordReviewSession({
               initial={false}
               className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16"
             >
-              {hint.term && (
-                <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                  <p
-                    className="text-foreground text-[clamp(1.75rem,1.4rem+1.6vw,2.25rem)] leading-tight font-bold text-balance"
-                    dir={dir}
-                  >
-                    {hint.term}
-                  </p>
-                  {hint.definition && (
-                    <p
-                      className="text-muted-foreground text-[clamp(0.85rem,0.8rem+0.3vw,1rem)] font-medium"
-                      dir={dir}
-                    >
-                      {hint.definition}
-                    </p>
-                  )}
+              <div className="flex w-full max-w-2xl items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  {t.wordLists.needsReviewHeading}
+                </span>
+                <div className="flex items-center gap-2">
+                  <PronunciationSpeedControl inputRef={inputRef} />
+                  <PronunciationButton
+                    text={word.targetWord}
+                    audioUrl={word.audioUrl}
+                    onPlay={undefined}
+                    autoPlay
+                    resetKey={word.id}
+                    inputRef={inputRef}
+                    kokoroVoiceId={defaultVoiceId}
+                    contentType="word"
+                    contentId={word.id}
+                  />
                 </div>
-              )}
+              </div>
 
-              <div className="bg-border h-10 w-px" aria-hidden="true" />
+              {word.supportHint && (
+                <p
+                  className="text-foreground w-full max-w-2xl text-center text-2xl font-semibold text-balance sm:text-3xl"
+                  dir={dir}
+                >
+                  {word.supportHint}
+                </p>
+              )}
 
               <div className="w-full max-w-2xl">
                 <VocabularySentence
