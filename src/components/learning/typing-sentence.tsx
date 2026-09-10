@@ -161,7 +161,7 @@ export function TypingSentence({
    * different provider/voice than the sentence it's part of. A cache hit, or
    * a free Edge-TTS on-demand synthesis when the sentence itself is
    * Edge-TTS-sourced, plays the resolved clip directly; a paid-provider
-   * sentence voice (Hume for Normal lessons, ElevenLabs for Stories) instead
+   * sentence voice (Cartesia for Normal lessons, ElevenLabs for Stories) instead
    * gets a gender-matched free Edge-TTS substitute for just this one word
    * (see resolvePronunciationAudioAction's own doc comment) — the sentence's
    * own paid voice is never touched, only this isolated word is spoken by a
