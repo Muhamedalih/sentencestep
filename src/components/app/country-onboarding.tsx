@@ -51,7 +51,25 @@ import { difficultyForStartingLevel } from "@/lib/progress/starting-level";
  * awaited before advancing): a single small analytics-event insert, not a
  * blocking round trip, matching the light-touch treatment every other event
  * in this app's analytics pipeline already gets.
+ *
+ * The list is windowed (startIndex/endIndex below), not a plain `.map` over
+ * every `filtered` row: each row's flag is a `flag-icons` CSS class, and the
+ * browser fetches that background-image the instant an element carrying the
+ * class exists in the DOM — mounting all ~195 countries at once (the
+ * default, query-less state) fired ~195 simultaneous image requests and
+ * visibly janked the modal open on a real device/network, occasionally bad
+ * enough to trip the browser's own low-memory page-reload recovery (which
+ * reads as a spurious refresh, sometimes landing back in the OS's light
+ * theme if no explicit preference was stored yet). Rendering only the rows
+ * within/near the scrolled viewport (plus OVERSCAN rows of buffer) keeps the
+ * list fully scrollable and searchable while capping how many flags are ever
+ * mounted at once to roughly a screenful.
  */
+/** Fixed per-row height (px) the windowed list below renders every row at — must match the row's actual rendered height, since layout no longer determines it. */
+const ROW_HEIGHT = 44;
+/** Extra rows rendered above/below the visible window so a fast scroll or flick doesn't outrun the newly-mounted rows before they paint. */
+const OVERSCAN = 10;
+
 export function CountryOnboarding() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel } = useProgress();
@@ -67,11 +85,35 @@ export function CountryOnboarding() {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [listHeight, setListHeight] = useState(0);
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   useEffect(() => {
     if (isOpen) searchRef.current?.focus();
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = listRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setListHeight(entry.contentRect.height);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen]);
+
+  // A shorter, filtered list can leave a stale scroll offset pointed past
+  // its own end (or mid-way through rows that no longer exist) — reset both
+  // the DOM's real scrollTop and the state driving the window on every
+  // query change, not just when it grows.
+  useEffect(() => {
+    setScrollTop(0);
+    if (listRef.current) listRef.current.scrollTop = 0;
+  }, [query]);
 
   const regionNames = useMemo(
     () => new Intl.DisplayNames([locale ?? "en"], { type: "region" }),
@@ -93,6 +135,15 @@ export function CountryOnboarding() {
     if (!needle) return countries;
     return countries.filter((country) => country.name.toLowerCase().includes(needle));
   }, [countries, query]);
+
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+  const endIndex = Math.min(
+    filtered.length,
+    Math.ceil((scrollTop + listHeight) / ROW_HEIGHT) + OVERSCAN,
+  );
+  const visibleCountries = filtered.slice(startIndex, endIndex);
+  const topSpacer = startIndex * ROW_HEIGHT;
+  const bottomSpacer = (filtered.length - endIndex) * ROW_HEIGHT;
 
   if (forceLevelStep) return null; // back button below sent them to the level step instead
   if (!isMarketingHomePath(pathname)) return null;
@@ -209,21 +260,31 @@ export function CountryOnboarding() {
                 />
               </div>
 
-              <div className="mt-3 min-h-0 flex-1 overflow-y-auto text-start">
-                {filtered.map((country) => (
-                  <button
-                    key={country.code}
-                    type="button"
-                    onClick={() => handleSelect(country.code)}
-                    className="border-border hover:bg-secondary focus-visible:ring-ring flex w-full items-center gap-3 border-b px-1 py-3 text-start outline-none last:border-b-0 focus-visible:ring-2 focus-visible:-outline-offset-2"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`fi fi-${country.code} !block !h-4 !w-5.5 shrink-0 rounded-sm bg-center shadow-[0_0_0_1px_var(--border)]`}
-                    />
-                    <span className="truncate text-sm font-medium">{country.name}</span>
-                  </button>
-                ))}
+              <div
+                ref={listRef}
+                onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+                className="mt-3 min-h-0 flex-1 overflow-y-auto text-start"
+              >
+                <div style={{ height: topSpacer }} aria-hidden="true" />
+                {visibleCountries.map((country, index) => {
+                  const isLast = startIndex + index === filtered.length - 1;
+                  return (
+                    <button
+                      key={country.code}
+                      type="button"
+                      onClick={() => handleSelect(country.code)}
+                      style={{ height: ROW_HEIGHT }}
+                      className={`border-border hover:bg-secondary focus-visible:ring-ring flex w-full items-center gap-3 px-1 text-start outline-none focus-visible:ring-2 focus-visible:-outline-offset-2 ${isLast ? "" : "border-b"}`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`fi fi-${country.code} !block !h-4 !w-5.5 shrink-0 rounded-sm bg-center shadow-[0_0_0_1px_var(--border)]`}
+                      />
+                      <span className="truncate text-sm font-medium">{country.name}</span>
+                    </button>
+                  );
+                })}
+                <div style={{ height: bottomSpacer }} aria-hidden="true" />
                 {filtered.length === 0 && (
                   <p className="text-muted-foreground px-1 py-6 text-center text-sm">
                     {t.countryOnboarding.noResults}
