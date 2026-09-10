@@ -146,10 +146,9 @@ export const es: Dictionary = {
   },
   countryOnboarding: {
     heading: "¿Desde qué país usas la aplicación?",
-    subtitle: "Opcional — nos ayuda a personalizar un poco tu experiencia.",
+    subtitle: "Nos ayuda a personalizar un poco tu experiencia.",
     searchPlaceholder: "Busca tu país...",
     noResults: "No se encontraron países",
-    skip: "Omitir",
   },
   onboardingComplete: {
     eyebrow: "Lo lograste — tu primera lección está completa",

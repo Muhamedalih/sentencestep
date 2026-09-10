@@ -165,14 +165,14 @@ export interface Dictionary {
    * `onboarding.back` is reused for its back button rather than duplicated
    * here. Country names themselves come from the browser's own
    * Intl.DisplayNames per src/lib/i18n/country-codes.ts's doc comment, never
-   * translated by hand in this dictionary.
+   * translated by hand in this dictionary. Required, not skippable — see
+   * CountryOnboarding's own doc comment — so there is no "skip" string here.
    */
   countryOnboarding: {
     heading: string;
     subtitle: string;
     searchPlaceholder: string;
     noResults: string;
-    skip: string;
   };
   /** The premium "pitch" screen shown instead of the ordinary LessonCompletion when a first-time learner finishes their opening lesson (src/components/learning/onboarding-lesson-complete.tsx) — the get-started flow's real final step, bookending onboarding.heading/onboardingIntroCard's startCta. Four fixed benefit points, not a dynamic list. */
   onboardingComplete: {

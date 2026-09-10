@@ -134,10 +134,9 @@ export const ar: Dictionary = {
   },
   countryOnboarding: {
     heading: "من أي دولة تستخدم التطبيق؟",
-    subtitle: "اختياري — يساعدنا على تخصيص تجربتك قليلًا.",
+    subtitle: "يساعدنا على تخصيص تجربتك قليلًا.",
     searchPlaceholder: "ابحث عن دولتك...",
     noResults: "لا توجد نتائج مطابقة",
-    skip: "تخطي",
   },
   onboardingComplete: {
     eyebrow: "خلّصت درسك الأول",

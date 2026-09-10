@@ -141,10 +141,9 @@ export const tr: Dictionary = {
   },
   countryOnboarding: {
     heading: "Uygulamayı hangi ülkeden kullanıyorsun?",
-    subtitle: "İsteğe bağlı — deneyimini biraz kişiselleştirmemize yardımcı olur.",
+    subtitle: "Deneyimini biraz kişiselleştirmemize yardımcı olur.",
     searchPlaceholder: "Ülkeni ara...",
     noResults: "Eşleşen ülke bulunamadı",
-    skip: "Geç",
   },
   onboardingComplete: {
     eyebrow: "İlk dersini tamamladın",

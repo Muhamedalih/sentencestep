@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, Globe, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -30,9 +30,17 @@ import { difficultyForStartingLevel } from "@/lib/progress/starting-level";
  * setStartingLevel() the instant a tier is picked — only pendingDifficulty,
  * a real context write, does. A chosen country is never written to the
  * guest's local progress or a cookie, only reported once as an analytics
- * event (see trackOnboardingCountryAction) — this step is purely optional
- * and its own "have I been shown" state is deliberately as ephemeral as the
- * rest of this in-memory-only context.
+ * event (see trackOnboardingCountryAction) — this step's own "have I been
+ * shown" state is deliberately as ephemeral as the rest of this
+ * in-memory-only context.
+ *
+ * Required, not skippable: `countryStepDone` only ever flips true from
+ * handleSelect below, so OnboardingIntroCard (gated on it) can't be reached
+ * without an actual pick. The list itself stays collapsed behind a single
+ * field (`isOpen` below) until tapped — picking a country from the language
+ * step's three flag cards is one glance; picking one of ~195 needs a
+ * deliberate "I'm ready to search" action first, not a wall of countries as
+ * the very first thing this step shows.
  *
  * Country names are resolved at render time via the browser's own
  * Intl.DisplayNames rather than a hand-translated list (see
@@ -56,7 +64,13 @@ export function CountryOnboarding() {
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const pathname = usePathname();
   const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
+
+  useEffect(() => {
+    if (isOpen) searchRef.current?.focus();
+  }, [isOpen]);
 
   const regionNames = useMemo(
     () => new Intl.DisplayNames([locale ?? "en"], { type: "region" }),
@@ -87,10 +101,6 @@ export function CountryOnboarding() {
   function handleSelect(code: CountryCode) {
     setCountryStepDone(true);
     trackOnboardingCountryAction(code).catch(() => {});
-  }
-
-  function handleSkip() {
-    setCountryStepDone(true);
   }
 
   return (
@@ -132,50 +142,59 @@ export function CountryOnboarding() {
             {t.countryOnboarding.subtitle}
           </p>
 
-          <div className="relative mt-8">
-            <Search
-              aria-hidden="true"
-              className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2"
-            />
-            <Input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t.countryOnboarding.searchPlaceholder}
-              className="ps-10"
-              aria-label={t.countryOnboarding.searchPlaceholder}
-            />
-          </div>
-
-          <div className="border-border bg-card mt-4 min-h-0 flex-1 overflow-y-auto rounded-2xl border text-start">
-            {filtered.map((country) => (
-              <button
-                key={country.code}
-                type="button"
-                onClick={() => handleSelect(country.code)}
-                className="border-border hover:bg-secondary focus-visible:ring-ring flex w-full items-center gap-3 border-b px-4 py-3 text-start outline-none last:border-b-0 focus-visible:ring-2 focus-visible:-outline-offset-2"
-              >
-                <span
+          {!isOpen ? (
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="border-border bg-card hover:border-primary focus-visible:ring-ring mt-8 flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-start transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
+              <Globe aria-hidden="true" className="text-muted-foreground size-4.5 shrink-0" />
+              <span className="text-muted-foreground flex-1 text-sm font-medium">
+                {t.countryOnboarding.searchPlaceholder}
+              </span>
+              <ChevronDown aria-hidden="true" className="text-muted-foreground size-4 shrink-0" />
+            </button>
+          ) : (
+            <>
+              <div className="relative mt-8">
+                <Search
                   aria-hidden="true"
-                  className={`fi fi-${country.code} !block !h-4 !w-5.5 shrink-0 rounded-sm bg-center shadow-[0_0_0_1px_var(--border)]`}
+                  className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2"
                 />
-                <span className="truncate text-sm font-medium">{country.name}</span>
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-                {t.countryOnboarding.noResults}
-              </p>
-            )}
-          </div>
+                <Input
+                  ref={searchRef}
+                  type="text"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t.countryOnboarding.searchPlaceholder}
+                  className="ps-10"
+                  aria-label={t.countryOnboarding.searchPlaceholder}
+                />
+              </div>
 
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="text-muted-foreground hover:text-foreground mx-auto mt-4 w-fit text-sm font-medium transition-colors"
-          >
-            {t.countryOnboarding.skip}
-          </button>
+              <div className="border-border bg-card mt-4 min-h-0 flex-1 overflow-y-auto rounded-2xl border text-start">
+                {filtered.map((country) => (
+                  <button
+                    key={country.code}
+                    type="button"
+                    onClick={() => handleSelect(country.code)}
+                    className="border-border hover:bg-secondary focus-visible:ring-ring flex w-full items-center gap-3 border-b px-4 py-3 text-start outline-none last:border-b-0 focus-visible:ring-2 focus-visible:-outline-offset-2"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`fi fi-${country.code} !block !h-4 !w-5.5 shrink-0 rounded-sm bg-center shadow-[0_0_0_1px_var(--border)]`}
+                    />
+                    <span className="truncate text-sm font-medium">{country.name}</span>
+                  </button>
+                ))}
+                {filtered.length === 0 && (
+                  <p className="text-muted-foreground px-4 py-6 text-center text-sm">
+                    {t.countryOnboarding.noResults}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     </div>
