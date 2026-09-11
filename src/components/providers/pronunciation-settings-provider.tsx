@@ -15,6 +15,7 @@ import {
   resolvePronunciationAudioAction,
   type VoiceAudioContentType,
 } from "@/lib/voice/voice-audio";
+import { lookupWordTimings, type WordTiming } from "@/lib/voice/word-timing";
 
 /**
  * The three playback-speed states a learner can cycle through for spoken
@@ -86,6 +87,22 @@ interface PronunciationSettingsValue {
     contentId: string;
     voiceId: string;
   }) => void;
+  /**
+   * Word-timing lookup (see word-timing.ts) — cache-only, mirrors
+   * resolveAudio's own dedup/caching shape (a session-lifetime Map, joins an
+   * in-flight lookup rather than duplicating it) but is otherwise
+   * independent: a miss here (no row, or a sentence Whisper couldn't align
+   * cleanly) just means the caller falls back to resolveAudio's own
+   * isolated-word path exactly as it did before this existed. `contentType`
+   * here is the SENTENCE's type ("sentence"/"book_sentence"), never
+   * "sentence_word" — this resolves timing for the WHOLE sentence's word
+   * list in one call, not one word at a time.
+   */
+  resolveWordTimings: (input: {
+    contentType: "sentence" | "book_sentence";
+    contentId: string;
+    voiceId: string;
+  }) => Promise<WordTiming[] | null>;
 }
 
 const noop = () => {};
@@ -101,6 +118,7 @@ const DEFAULT_VALUE: PronunciationSettingsValue = {
   getResolvedAudio: () => undefined,
   registerResolvedAudio: noop,
   resolveAudio: () => Promise.resolve(null),
+  resolveWordTimings: () => Promise.resolve(null),
   prefetchPronunciation: noop,
 };
 
@@ -126,6 +144,11 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
   // call time anyway, never during render.
   const resolvedAudioRef = useRef<Map<string, string>>(new Map());
   const inFlightRef = useRef<Map<string, Promise<string | null>>>(new Map());
+  // Separate cache/in-flight maps from resolveAudio's own — word timings and
+  // resolved audio URLs are different data for (usually) the same contentId,
+  // so sharing one map would collide.
+  const wordTimingsRef = useRef<Map<string, WordTiming[] | null>>(new Map());
+  const wordTimingsInFlightRef = useRef<Map<string, Promise<WordTiming[] | null>>>(new Map());
 
   const getResolvedAudio = useCallback(
     (contentId: string) => resolvedAudioRef.current.get(contentId),
@@ -167,6 +190,38 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
           inFlightRef.current.delete(contentId);
         });
       inFlightRef.current.set(contentId, promise);
+      return promise;
+    },
+    [],
+  );
+
+  const resolveWordTimings = useCallback(
+    (input: {
+      contentType: "sentence" | "book_sentence";
+      contentId: string;
+      voiceId: string;
+    }): Promise<WordTiming[] | null> => {
+      const key = `${input.contentType}:${input.contentId}:${input.voiceId}`;
+
+      if (wordTimingsRef.current.has(key)) {
+        return Promise.resolve(wordTimingsRef.current.get(key) ?? null);
+      }
+      const inFlight = wordTimingsInFlightRef.current.get(key);
+      if (inFlight) return inFlight;
+
+      const promise = lookupWordTimings(input.contentType, input.contentId, input.voiceId)
+        .then((words) => {
+          wordTimingsRef.current.set(key, words);
+          return words;
+        })
+        .catch((error: unknown) => {
+          console.error("[pronunciation] word-timing lookup failed", { key, error });
+          return null;
+        })
+        .finally(() => {
+          wordTimingsInFlightRef.current.delete(key);
+        });
+      wordTimingsInFlightRef.current.set(key, promise);
       return promise;
     },
     [],
@@ -284,6 +339,7 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
       registerResolvedAudio,
       resolveAudio,
       prefetchPronunciation,
+      resolveWordTimings,
     }),
     [
       speedIndex,
@@ -295,6 +351,7 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
       registerResolvedAudio,
       resolveAudio,
       prefetchPronunciation,
+      resolveWordTimings,
     ],
   );
 

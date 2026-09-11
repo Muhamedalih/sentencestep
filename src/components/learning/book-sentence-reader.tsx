@@ -117,27 +117,49 @@ export function BookSentenceReader({
   // element with no coordination at all: two clips audibly overlapping,
   // confirmed live in Books.
   const sentenceAudioRef = useRef<PronunciationButtonHandle>(null);
-  const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
+  const { resolveAudio, prefetchPronunciation, resolveWordTimings } = usePronunciationSettings();
 
   /**
-   * A word click plays this sentence's own resolved ElevenLabs voice on a
-   * cache hit; otherwise resolveAudio falls back to a gender-matched free
+   * Priority (2026-09-11, word-timing prototype — see word-timing.ts's own
+   * doc comment): (1) if this sentence has been aligned, play the matching
+   * SLICE of its own already-resolved ElevenLabs narration clip — the exact
+   * narrator voice, no substitute; (2) otherwise, the pre-existing
+   * isolated-word path — a cache hit plays this sentence's own resolved
+   * ElevenLabs voice, or resolveAudio falls back to a gender-matched free
    * Edge-TTS substitute (see resolvePronunciationAudioAction's
-   * book_sentence_word branch) — the same mechanism Normal/Stories word
-   * clicks already use successfully — never the browser's own speech
-   * synthesis, which this component never calls at all. Books briefly
-   * (2026-09-11) special-cased book_sentence_word to skip that substitute
-   * and stay silent instead, which in practice meant a book's word clicks
-   * never made any sound; reverted the same day at the user's explicit
-   * request. A genuine resolution failure (the substitute pipeline itself
-   * erroring) is still silent rather than falling further back to the
-   * browser's own speech synthesis — this component never calls it.
+   * book_sentence_word branch) — never the browser's own speech synthesis,
+   * which this component never calls at all. Books briefly (2026-09-11)
+   * special-cased book_sentence_word to skip that substitute and stay
+   * silent instead, which in practice meant a book's word clicks never made
+   * any sound; reverted the same day at the user's explicit request. A
+   * genuine resolution failure (the substitute pipeline itself erroring) is
+   * still silent rather than falling further back to the browser's own
+   * speech synthesis — this component never calls it.
    */
-  async function handleWordClick(word: string) {
+  async function handleWordClick(word: string, index: number) {
     if (!resolvedVoiceId || !isTrackableWord(word)) return;
     // Stop the sentence's own narration first — see sentenceAudioRef's doc
     // comment above for why this exists at all.
     sentenceAudioRef.current?.stop();
+
+    const timings = await resolveWordTimings({
+      contentType: "book_sentence",
+      contentId: sentence.id,
+      voiceId: resolvedVoiceId,
+    });
+    const timing = timings?.[index];
+    if (timing) {
+      const sentenceUrl = await resolveAudio({
+        contentType: "book_sentence",
+        contentId: sentence.id,
+        voiceId: resolvedVoiceId,
+      });
+      if (sentenceUrl) {
+        wordClip.play(sentenceUrl, undefined, { start: timing.start, end: timing.end });
+        return;
+      }
+    }
+
     const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
     const url = await resolveAudio({
       contentType: "book_sentence_word",
@@ -289,7 +311,7 @@ export function BookSentenceReader({
               "text-[clamp(1.03rem,0.81rem+0.59vw,1.35rem)]"
         }
         textStyle={textStyle}
-        onWordClick={(word) => void handleWordClick(word)}
+        onWordClick={(word, index) => void handleWordClick(word, index)}
         wordTranslations={sentence.supportWordTranslations}
         translationDir={dir}
         enableWordHighlight

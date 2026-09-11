@@ -66,7 +66,19 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
   }, []);
 
   const play = useCallback(
-    (overrideSrc?: string, rate?: number) => {
+    (
+      overrideSrc?: string,
+      rate?: number,
+      /**
+       * Plays only the [start, end] slice (seconds) of the clip instead of
+       * the whole thing — the word-timing feature's own use case (see
+       * word-timing.ts): a word click plays a slice of the SENTENCE's own
+       * already-loaded narration clip instead of a separate isolated-word
+       * file. Omitted (the default, every pre-existing caller) plays the
+       * whole clip from 0, exactly as before this parameter existed.
+       */
+      range?: { start: number; end: number },
+    ) => {
       // Lets a caller play a just-resolved URL immediately in the same tick
       // it learned it, rather than waiting a render cycle for `src` (passed
       // into this hook) to catch up — this closure otherwise only sees `src`
@@ -174,10 +186,23 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         audio.addEventListener("ended", () => isCurrent() && setStatus("idle"));
         audio.addEventListener("error", handleFailure);
 
+        // Stops at the slice's own end instead of playing into whatever
+        // comes after it in the underlying clip — checked on every
+        // `timeupdate` tick (the same native event the browser already
+        // fires many times a second during playback), not a separate timer.
+        if (range) {
+          audio.addEventListener("timeupdate", () => {
+            if (isCurrent() && audio.currentTime >= range.end) {
+              audio.pause();
+              if (isCurrent()) setStatus("idle");
+            }
+          });
+        }
+
         audio.play().catch(handleFailure);
       }
 
-      attempt(resolvedSrc, maxRetries, 0);
+      attempt(resolvedSrc, maxRetries, range?.start ?? 0);
     },
     [src, maxRetries, retryDelayMs],
   );

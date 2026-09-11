@@ -152,7 +152,8 @@ export function TypingSentence({
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
   const wordClip = useAudioClip();
-  const { resolveAudio, prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
+  const { resolveAudio, prefetchPronunciation, registerResolvedAudio, resolveWordTimings } =
+    usePronunciationSettings();
 
   // Feeds LessonPage's server-side pre-resolution (see wordAudioUrls' own
   // doc comment) into the SAME shared cache resolveAudio itself checks
@@ -170,13 +171,21 @@ export function TypingSentence({
   /**
    * A word click's real voice, same rule as PronunciationButton's own
    * `kokoroVoiceId` prop (sentenceVoiceId, computed above) — never a
-   * different provider/voice than the sentence it's part of. A cache hit, or
-   * a free Edge-TTS on-demand synthesis when the sentence itself is
-   * Edge-TTS-sourced, plays the resolved clip directly; a paid-provider
-   * sentence voice (Cartesia for Normal lessons, ElevenLabs for Stories) instead
-   * gets a gender-matched free Edge-TTS substitute for just this one word
-   * (see resolvePronunciationAudioAction's own doc comment) — the sentence's
-   * own paid voice is never touched, only this isolated word is spoken by a
+   * different provider/voice than the sentence it's part of.
+   *
+   * Priority (2026-09-11, word-timing prototype confirmed live on a full
+   * lesson before this was wired in — see word-timing.ts's own doc
+   * comment): (1) if this sentence has been aligned, play the matching
+   * SLICE of the sentence's own already-resolved narration clip — the
+   * exact narrator voice, zero marginal synthesis cost, since it's the same
+   * clip already playing for the sentence itself; (2) otherwise, the
+   * pre-existing isolated-word path — a cache hit, or a free Edge-TTS
+   * on-demand synthesis when the sentence itself is Edge-TTS-sourced, plays
+   * the resolved clip directly; a paid-provider sentence voice (Cartesia for
+   * Normal lessons, ElevenLabs for Stories) instead gets a gender-matched
+   * free Edge-TTS substitute for just this one word (see
+   * resolvePronunciationAudioAction's own doc comment) — the sentence's own
+   * paid voice is never touched, only this isolated word is spoken by a
    * different (free) voice. Matches the same rule already shipped for Books'
    * word clicks (see book-sentence-reader.tsx's handleWordClick, explicit
    * product decision 2026-09-11): no resolvable voice, or a token that isn't
@@ -185,8 +194,27 @@ export function TypingSentence({
    * synthesis — a word click must never be heard in a different voice than
    * the sentence it's part of.
    */
-  async function handleWordClick(word: string) {
+  async function handleWordClick(word: string, index: number) {
     if (!sentenceVoiceId || !isTrackableWord(word)) return;
+
+    const timings = await resolveWordTimings({
+      contentType: "sentence",
+      contentId: sentence.id,
+      voiceId: sentenceVoiceId,
+    });
+    const timing = timings?.[index];
+    if (timing) {
+      const sentenceUrl = await resolveAudio({
+        contentType: "sentence",
+        contentId: sentence.id,
+        voiceId: sentenceVoiceId,
+      });
+      if (sentenceUrl) {
+        wordClip.play(sentenceUrl, undefined, { start: timing.start, end: timing.end });
+        return;
+      }
+    }
+
     const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
     const url = await resolveAudio({
       contentType: "sentence_word",
@@ -280,7 +308,9 @@ export function TypingSentence({
         reducedMotion={reducedMotion}
         textClassName={sizeClass}
         textStyle={textStyle}
-        onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
+        onWordClick={
+          enableWordClick ? (word, index) => void handleWordClick(word, index) : undefined
+        }
         targetVocabularyIndices={targetVocabularyIndices}
       />
     );

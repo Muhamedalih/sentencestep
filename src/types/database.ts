@@ -429,6 +429,28 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["voice_audio_cache"]["Insert"]>;
         Relationships: [];
       };
+      sentence_word_timings: {
+        Row: {
+          id: string;
+          content_type: "sentence" | "book_sentence";
+          content_id: string;
+          voice_id: string;
+          words: unknown;
+          status: "ready" | "skipped";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          content_type: "sentence" | "book_sentence";
+          content_id: string;
+          voice_id: string;
+          words: unknown;
+          status?: "ready" | "skipped";
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["sentence_word_timings"]["Insert"]>;
+        Relationships: [];
+      };
       lesson_speaker_voices: {
         Row: {
           lesson_id: string;
