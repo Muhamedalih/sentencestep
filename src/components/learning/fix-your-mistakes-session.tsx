@@ -275,6 +275,12 @@ function MistakeItemSession({
           contentId={`${item.sentenceId}::${item.word}`}
           variant="outline"
           className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
+          // Never the browser's own speech synthesis for this single word —
+          // same rule already shipped for Books' and Stories'/Normal's
+          // in-sentence word clicks (see typing-sentence.tsx's
+          // handleWordClick): silent on a genuine resolution failure rather
+          // than substituting a different voice.
+          disableSpeechFallback
         />
       </div>
 

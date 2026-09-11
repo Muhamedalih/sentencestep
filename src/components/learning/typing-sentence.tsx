@@ -13,7 +13,6 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
-import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
@@ -149,9 +148,6 @@ export function TypingSentence({
     positions.add(engine.errorIndex - located.startOffset);
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
-  // Independent of PronunciationButton's own speech instance — a word click
-  // never restarts or interrupts the full-sentence audio (see items 3-4).
-  const wordSpeech = useSpeech();
   const wordClip = useAudioClip();
   const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
 
@@ -165,24 +161,23 @@ export function TypingSentence({
    * gets a gender-matched free Edge-TTS substitute for just this one word
    * (see resolvePronunciationAudioAction's own doc comment) — the sentence's
    * own paid voice is never touched, only this isolated word is spoken by a
-   * different (free) voice. No resolvable voice, or a token that isn't a
-   * real trackable word (stray punctuation), falls back to the browser's
-   * own speech synthesis exactly as this always did before.
+   * different (free) voice. Matches the same rule already shipped for Books'
+   * word clicks (see book-sentence-reader.tsx's handleWordClick, explicit
+   * product decision 2026-09-11): no resolvable voice, or a token that isn't
+   * a real trackable word (stray punctuation), or a genuine resolution
+   * failure is silent rather than substituting the browser's own speech
+   * synthesis — a word click must never be heard in a different voice than
+   * the sentence it's part of.
    */
   async function handleWordClick(word: string) {
-    if (sentenceVoiceId && isTrackableWord(word)) {
-      const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
-      const url = await resolveAudio({
-        contentType: "sentence_word",
-        contentId,
-        voiceId: sentenceVoiceId,
-      });
-      if (url) {
-        wordClip.play(url);
-        return;
-      }
-    }
-    wordSpeech.speakWord(word);
+    if (!sentenceVoiceId || !isTrackableWord(word)) return;
+    const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
+    const url = await resolveAudio({
+      contentType: "sentence_word",
+      contentId,
+      voiceId: sentenceVoiceId,
+    });
+    if (url) wordClip.play(url);
   }
 
   // Warms every trackable word's clip in the background the moment this
