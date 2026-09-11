@@ -206,8 +206,15 @@ export function BookReadingSession({
   useEffect(() => {
     if (!resolvedVoiceId) return;
     const currentPage = pages[viewPageIndex] ?? [];
-    const toWarm = [...currentPage, pages[viewPageIndex + 1]?.[0]].filter((s) => s !== undefined);
-    for (const s of toWarm) {
+    // The WHOLE next page, not just its first sentence (reader feedback:
+    // page 2 of a section specifically kept lagging) — a page boundary
+    // crossed mid-section has no equivalent of the section-boundary crossing's
+    // own early "last sentence of the old one" trigger below, so this is the
+    // only lead time a next page's sentences 2-4 get at all; giving them only
+    // a single sentence's worth of warm-up left them no better off than
+    // resolving cold the instant the reader actually reached them.
+    const nextPage = pages[viewPageIndex + 1] ?? [];
+    for (const s of [...currentPage, ...nextPage]) {
       prefetchPronunciation({
         contentType: "book_sentence",
         contentId: s.id,
