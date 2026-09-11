@@ -191,17 +191,39 @@ export function TypingSentence({
   // near-instant play instead of a multi-second wait. Only for
   // Normal/Stories (enableWordClick's own scope — Conversation never
   // enables word click at all), and only once real content/voice exist.
+  //
+  // Staggered and delayed (root-cause fix, matching
+  // BookSentenceReader's identical effect — see that component's own doc
+  // comment): firing every word's prefetch (a server action plus a
+  // follow-up warm fetch each) all at once, right as this sentence becomes
+  // active, competed for the browser's own per-origin connection limit with
+  // THIS SAME sentence's own narration-audio fetch (the autoPlay
+  // PronunciationButton above) — the measured cause of the reported "word
+  // click takes a long time to play" delay: an early click's own resolve/
+  // fetch queued behind every other word's prefetch instead of running
+  // promptly. Giving the narration a 600ms head start, then trickling word
+  // prefetches in one at a time, costs nothing (none of this is needed
+  // immediately — it only pays off on a later word click) and stops them
+  // from starving the audio that actually matters at this moment. Cleared on
+  // unmount/sentence change so a sentence the learner already left behind
+  // never keeps competing for bandwidth the newly-active sentence needs.
   useEffect(() => {
     if (mode !== "normal" && mode !== "stories") return;
     if (!sentenceVoiceId) return;
-    const words = new Set(tokenize(sentence.en).filter(isTrackableWord));
-    for (const word of words) {
-      prefetchPronunciation({
-        contentType: "sentence_word",
-        contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
-        voiceId: sentenceVoiceId,
-      });
-    }
+    const words = Array.from(new Set(tokenize(sentence.en).filter(isTrackableWord)));
+    const timers = words.map((word, index) =>
+      setTimeout(
+        () => {
+          prefetchPronunciation({
+            contentType: "sentence_word",
+            contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
+            voiceId: sentenceVoiceId,
+          });
+        },
+        600 + index * 150,
+      ),
+    );
+    return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice actually changes, not on every render
   }, [sentence.id, sentenceVoiceId, mode]);
 

@@ -120,15 +120,18 @@ export function BookSentenceReader({
   const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
 
   /**
-   * Books-only rule (explicit product decision, 2026-09-11): a word click
-   * plays this sentence's own resolved ElevenLabs voice on a cache hit, and
-   * otherwise plays nothing at all — never a different voice. This used to
-   * fall back to a gender-matched Edge-TTS substitute (see
-   * resolvePronunciationAudioAction's book_sentence_word branch, now
-   * disabled) or, failing that, the browser's own speech synthesis; both are
-   * exactly the "some other voice speaking in the Books section" behavior
-   * the product decision rules out, so a miss here is silent rather than
-   * reaching for either.
+   * A word click plays this sentence's own resolved ElevenLabs voice on a
+   * cache hit; otherwise resolveAudio falls back to a gender-matched free
+   * Edge-TTS substitute (see resolvePronunciationAudioAction's
+   * book_sentence_word branch) — the same mechanism Normal/Stories word
+   * clicks already use successfully — never the browser's own speech
+   * synthesis, which this component never calls at all. Books briefly
+   * (2026-09-11) special-cased book_sentence_word to skip that substitute
+   * and stay silent instead, which in practice meant a book's word clicks
+   * never made any sound; reverted the same day at the user's explicit
+   * request. A genuine resolution failure (the substitute pipeline itself
+   * erroring) is still silent rather than falling further back to the
+   * browser's own speech synthesis — this component never calls it.
    */
   async function handleWordClick(word: string) {
     if (!resolvedVoiceId || !isTrackableWord(word)) return;

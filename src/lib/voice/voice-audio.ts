@@ -53,11 +53,12 @@ import { uploadVoiceClip } from "@/lib/voice/storage";
  * paid-provider voice never triggers a real synthesis call on that provider
  * — a gender-matched free Edge-TTS voice stands in for just this one word
  * instead (see pickGenderMatchedEdgeTtsVoice), leaving the narrator's own
- * paid voice completely untouched. Books are the one exception to that
- * substitute path (explicit product decision, 2026-09-11): a book's word
- * clicks may only ever be heard in the book's own ElevenLabs voice, so a
- * "book_sentence_word" cache miss on a non-Edge-TTS voice returns null
- * instead of substituting anything — see the book_sentence_word check
+ * paid voice — and its own already-generated sentence audio — completely
+ * untouched. This applies identically to Books' "book_sentence_word": an
+ * earlier same-day special case that made a book_sentence_word cache miss
+ * return null instead of reaching this substitute (leaving Books' word
+ * clicks permanently silent, since nothing else ever populates that cache)
+ * was reverted at the user's explicit request — see the resolution logic
  * inside resolvePronunciationAudioAction below.
  *
  * "book_sentence" is the Book Learning Engine's addition — a book_sentences
@@ -383,20 +384,21 @@ export async function resolvePronunciationAudioAction(input: {
     return generateIsolatedWordAudio(text, voiceId, voice.providerVoiceId);
   }
 
-  // Books' word clicks must never be heard in any voice other than the one
-  // actually generated for that book (explicit product decision,
-  // 2026-09-11) — a miss here returns null, leaving the word silently
-  // unplayable rather than substituting a different voice. Story/Conversation
-  // sentence words ("sentence_word", handled above this branch) keep the
-  // original gender-matched Edge-TTS substitute below.
-  if (contentType === "book_sentence_word") return null;
-
-  // A Story sentence's narrator is a paid provider — never spend a real
-  // synthesis call isolating just one word of content that's already fully
-  // narrated. Substitute a gender-matched free Edge-TTS voice instead (see
-  // pickGenderMatchedEdgeTtsVoice): the narrator's own voice is never
-  // touched, only this one isolated-word request is served by a different
-  // (free) voice.
+  // A Story/Book sentence's narrator is a paid provider (ElevenLabs) — never
+  // spend a real synthesis call isolating just one word of content that's
+  // already fully narrated. Substitute a gender-matched free Edge-TTS voice
+  // instead (see pickGenderMatchedEdgeTtsVoice): the narrator's own voice —
+  // and its own already-generated sentence audio — is never touched, only
+  // this one isolated-word request is served by a different (free) voice.
+  //
+  // Books briefly special-cased "book_sentence_word" to return null here
+  // instead of reaching this substitute ("never a different voice, silence
+  // instead" — 2026-09-11) — which in practice meant a book's word clicks
+  // never made any sound at all, since nothing else ever populates a
+  // book_sentence_word cache row. Reverted the same day at the user's
+  // explicit request: Books now get the identical free Edge-TTS substitute
+  // Story/Normal words already use successfully (>99.8% resolve success
+  // measured in production) instead of permanent silence.
   const substitute = await pickGenderMatchedEdgeTtsVoice(voice.gender);
   if (!substitute) return null;
   return generateIsolatedWordAudio(text, substitute.id, substitute.providerVoiceId);
