@@ -203,6 +203,31 @@ export function BookReadingSession({
     });
   }, [sentenceIndex, section.sentences, resolvedVoiceId, prefetchPronunciation]);
 
+  // Reader feedback (2026-09-11): completing a section's last sentence used
+  // to show a bare loading screen for as long as fetchSectionAfterAction's
+  // own network round trip took — a real Supabase fetch of the ENTIRE next
+  // section (title + every sentence), started only once the learner had
+  // already finished typing. Starting that same fetch here, the moment the
+  // learner reaches the section's LAST sentence (while they're still
+  // reading/typing it), gives it a real head start — by the time
+  // handleSentenceComplete's own await runs below, the promise has often
+  // already settled, so the loading screen flashes far more briefly or not
+  // at all. Keyed by section.id (not just a boolean) so moving on to a new
+  // section always fires a fresh prefetch instead of reusing a stale one.
+  const nextSectionPrefetchRef = useRef<{
+    sectionId: string;
+    promise: Promise<BookSectionWithSentences | null>;
+  } | null>(null);
+  useEffect(() => {
+    const isLastSentence = sentenceIndex === section.sentences.length - 1;
+    if (!isLastSentence) return;
+    if (nextSectionPrefetchRef.current?.sectionId === section.id) return;
+    nextSectionPrefetchRef.current = {
+      sectionId: section.id,
+      promise: fetchSectionAfterAction(book.id, section.id),
+    };
+  }, [sentenceIndex, section.id, section.sentences.length, book.id]);
+
   async function handleSentenceComplete() {
     if (!sentence) return;
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "books"));
@@ -268,9 +293,14 @@ export function BookReadingSession({
 
     // Section boundary. Resolved independently of the signed-in-only
     // book_progress pointer — see fetchSectionAfterAction's doc comment —
-    // so this works identically for a guest and a signed-in reader.
+    // so this works identically for a guest and a signed-in reader. Reuses
+    // the background prefetch (see nextSectionPrefetchRef above) when one
+    // was actually started for THIS section, instead of always paying the
+    // fetch's full latency here.
     setScreen("loadingNextSection");
-    const next = await fetchSectionAfterAction(book.id, section.id);
+    const next = await (nextSectionPrefetchRef.current?.sectionId === section.id
+      ? nextSectionPrefetchRef.current.promise
+      : fetchSectionAfterAction(book.id, section.id));
     if (next) {
       setPendingNextSection(next);
       setScreen("sectionComplete");
@@ -417,24 +447,23 @@ export function BookReadingSession({
         {screen === "reading" && sentence && viewedPage.length > 0 ? (
           <div key="reading" className="flex flex-col lg:h-full">
             {/*
-              Reader feedback (2026-09-11): two separate floating hints in two
-              different corners read as clutter competing with the sentence
-              itself. Reunited into the one bottom-right stack ShiftReplayHint
-              already supports via `below` (ONE instructional note instead of
-              two scattered ones), rather than each screen inventing its own
-              fixed-position wrapper. Scoped to the "reading" screen only,
-              matching where these hints were always shown before.
+              Reader feedback (2026-09-11): back to two separate corners (an
+              earlier pass briefly merged them into one bottom-right stack),
+              but the click-hint is now a proper pill matching the Shift hint's
+              own visual language instead of bare floating text, and the Shift
+              hint itself sits a little closer to the true bottom edge — see
+              its own `className` override below.
             */}
-            <ShiftReplayHint
-              below={
-                <span dir={dir} className="text-muted-foreground text-xs font-medium">
-                  {renderHintWithHighlight(
-                    t.bookLibrary.clickHint,
-                    t.bookLibrary.clickHintHighlight,
-                  )}
-                </span>
-              }
-            />
+            <div
+              aria-hidden="true"
+              dir={dir}
+              className="border-border/50 bg-background/80 pointer-events-none fixed bottom-4 left-4 z-30 flex items-center rounded-2xl border px-3.5 py-2 text-xs font-medium shadow-sm backdrop-blur-md select-none sm:bottom-6 sm:left-6"
+            >
+              <span className="text-muted-foreground">
+                {renderHintWithHighlight(t.bookLibrary.clickHint, t.bookLibrary.clickHintHighlight)}
+              </span>
+            </div>
+            <ShiftReplayHint className="bottom-2 sm:bottom-3" />
             <div className="shrink-0 px-6 pt-3 lg:px-16 lg:pt-4">
               {/*
                 Just the centered book title now — the section-title (start)
@@ -461,7 +490,7 @@ export function BookReadingSession({
               </div>
               <Progress value={percent} />
             </div>
-            <div className="flex flex-1 flex-col justify-start overflow-y-auto px-6 pb-4 lg:px-16 lg:pt-3">
+            <div className="flex flex-1 flex-col justify-between overflow-y-auto px-6 pb-4 lg:px-16 lg:pt-3">
               {/*
                 A real page renders all four of `viewedPage`'s sentences as
                 one persistent slot each — keyed by the sentence's OWN id,
@@ -490,31 +519,49 @@ export function BookReadingSession({
                 grows when it becomes active and shrinks when it stops being
                 active, instead of an instant cut.
               */}
-              <div className="flex flex-col gap-2">
+              <div
+                className={cn(
+                  "flex flex-col gap-4",
+                  // A page that's down to its single last sentence (the tail
+                  // of a section) gets the extra room centered on it instead
+                  // of left stranded at the top — biased a bit above true
+                  // center (via the uneven bottom padding) rather than dead
+                  // center, which read as sitting too low relative to the
+                  // header above it.
+                  viewedPage.length === 1 && "flex-1 justify-center pb-[18vh]",
+                )}
+              >
                 {viewedPage.map((pageSentence) => {
                   const isActiveSentence = pageSentence.id === sentence.id;
                   return (
                     <motion.div
                       key={pageSentence.id}
                       layout
-                      // A smooth deceleration curve rather than the previous
-                      // spring's bounce/overshoot — reader feedback asked for
-                      // a more polished feel here. Paired with the plain CSS
-                      // opacity/background transition below (Tailwind's
-                      // `transition-*` classes) rather than more Framer Motion
-                      // props: those two properties don't affect layout, so a
-                      // cheap CSS crossfade is enough and keeps this the only
-                      // thing actually driving the size/position tween.
+                      // A quicker, smooth deceleration curve rather than the
+                      // original bouncy spring — reader feedback asked for a
+                      // more polished AND a snappier feel here (the first
+                      // pass at this, at 0.45s, still read as sluggish).
                       transition={
                         reducedMotion
                           ? { duration: 0 }
-                          : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
+                          : { duration: 0.26, ease: [0.22, 1, 0.36, 1] }
                       }
+                      // Every slot keeps the exact same padded/rounded/bordered
+                      // footprint regardless of active state — only its
+                      // border/background COLOR (and opacity) change. Reader
+                      // feedback: an earlier version only gave the active
+                      // slot this padding, so becoming active also meant the
+                      // slot's box suddenly grew — an extra, avoidable chunk
+                      // of layout work for Framer Motion's `layout` animation
+                      // to interpolate on top of the sentence text's own
+                      // (unavoidable) size change between active/context
+                      // font sizes, and part of what made the transition feel
+                      // laggy.
                       className={cn(
-                        "rounded-2xl transition-[opacity,background-color,border-color] duration-300",
+                        "rounded-2xl border px-5 py-4 transition-[opacity,background-color,border-color] duration-300 sm:px-6 sm:py-5",
                         isActiveSentence
-                          ? "border-border/40 bg-card/70 border px-5 py-4 sm:px-6 sm:py-5"
-                          : "opacity-55",
+                          ? "border-border/40 bg-card/70"
+                          : "border-transparent bg-transparent opacity-55",
                       )}
                     >
                       <BookSentenceReader

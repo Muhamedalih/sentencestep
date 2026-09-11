@@ -282,19 +282,31 @@ export function BookSentenceReader({
               // in BookReadingSession), it can afford to read a little larger
               // than before — bumped both ends of the clamp.
               "text-[clamp(1.7rem,1.15rem+1.75vw,2.85rem)]"
-            : "text-[clamp(0.95rem,0.75rem+0.55vw,1.25rem)]"
+            : // Reader feedback: with more breathing room on the page now
+              // (bigger gap between sentences), the context sentences read as
+              // too small relative to it — bumped up a step.
+              "text-[clamp(1.05rem,0.85rem+0.6vw,1.35rem)]"
         }
         textStyle={textStyle}
         onWordClick={(word) => void handleWordClick(word)}
         wordTranslations={sentence.supportWordTranslations}
         translationDir={dir}
         enableWordHighlight
-        showTypingCursor={!readOnly}
+        // Reader feedback: the word-level "current word" underline (a real,
+        // separate indicator from the actual typing-progress bar below it —
+        // see TypingText's own doc comment) was showing under the sentence's
+        // very first word even before the learner had typed anything, since
+        // it's derived from typed.length being 0 at rest, not from whether
+        // typing has actually begun. Only meaningful once the learner is
+        // actually typing (practiceMode or hasStartedTyping) — before that,
+        // this is the read/listen-first screen, with nothing "current" to
+        // point at yet.
+        showTypingCursor={!readOnly && (practiceMode || hasStartedTyping)}
         disabled={readOnly}
       />
       <p
         className={
-          isLarge ? "text-muted-foreground mt-1 text-base" : "text-muted-foreground mt-1 text-sm"
+          isLarge ? "text-muted-foreground mt-1.5 text-lg" : "text-muted-foreground mt-1 text-base"
         }
         dir={dir}
       >
