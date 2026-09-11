@@ -146,6 +146,30 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       disableSpeechFallback ? { maxRetries: 2, retryDelayMs: 400 } : undefined,
     );
 
+    // Root-cause fix for audible overlap when quickly navigating back and
+    // forth between sentences in Books (e.g. sentence 3 -> back to 2 ->
+    // forward to 3 again): this component fully unmounts when its sentence
+    // stops being active (see BookSentenceReader's `{!readOnly && (...)}`),
+    // but `playAuto`'s own `await resolveAudio(...)` — a real server round
+    // trip whenever a sentence's clip isn't pre-generated yet — can still be
+    // in flight at that moment. Nothing previously stopped that orphaned
+    // `playAuto` call from finishing later and calling `clip.play(url)` on
+    // its OWN Audio element regardless of whether this instance was still
+    // mounted — confirmed live as two sentences audibly playing at once
+    // (the orphaned one, resolving late, plus whichever sentence had since
+    // become active). useAudioClip's own retry-invalidation (see its
+    // `invalidate`) only protects a clip already past its first `play()`
+    // call; it can't help here since play() itself was never reached yet.
+    // `mountedRef` closes this by making both playAuto/playReplay bail out
+    // immediately after their await if the component is no longer mounted.
+    const mountedRef = useRef(true);
+    useEffect(() => {
+      mountedRef.current = true;
+      return () => {
+        mountedRef.current = false;
+      };
+    }, []);
+
     useEffect(() => {
       setKokoroUrl(null);
       resolvedForKeyRef.current = undefined;
@@ -198,26 +222,27 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
 
       const shared = getResolvedAudio(contentId);
       if (shared) {
-        setKokoroUrl(shared);
+        if (mountedRef.current) setKokoroUrl(shared);
         return shared;
       }
 
       if (resolvedForKeyRef.current === resetKey && !kokoroUrl) return null; // already tried and failed for this content — don't hammer the server on every replay click
 
       resolvedForKeyRef.current = resetKey;
-      setIsResolvingKokoro(true);
+      if (mountedRef.current) setIsResolvingKokoro(true);
       try {
         const url = await resolveAudio({ contentType, contentId, voiceId: kokoroVoiceId });
-        if (url) setKokoroUrl(url);
+        if (url && mountedRef.current) setKokoroUrl(url);
         return url;
       } finally {
-        setIsResolvingKokoro(false);
+        if (mountedRef.current) setIsResolvingKokoro(false);
       }
     }
 
     async function playAuto() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
+      if (!mountedRef.current) return;
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
@@ -229,6 +254,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     async function playReplay() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
+      if (!mountedRef.current) return;
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
