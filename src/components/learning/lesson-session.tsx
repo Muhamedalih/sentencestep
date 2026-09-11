@@ -39,6 +39,7 @@ export function LessonSession({
   resolvedVoiceId,
   defaultVoiceId,
   speakerVoiceMap,
+  firstSentenceWordAudio,
 }: {
   unit: Lesson;
   nextLesson?: NextLessonRef;
@@ -50,6 +51,8 @@ export function LessonSession({
   defaultVoiceId?: string | null;
   /** Conversation-mode speaker -> voice_id overrides (empty for every other mode) — see TypingSentence's own resolution of resolvedVoiceId vs. a sentence's speaker-specific voice. */
   speakerVoiceMap?: Record<string, string>;
+  /** Server-side pre-resolved `{contentId: audioUrl}` for the FIRST sentence's trackable words only (see LessonPage's own lookupCachedWordAudioUrls call and its doc comment for the measured root cause this fixes) — passed straight through to the first TypingSentence instance, which registers these into the shared resolved-audio cache on mount so its word clicks skip the resolve round trip entirely, the same way a pre-resolved sentence.audioUrl already does for that sentence's own narration. undefined for every sentence after the first, and for Conversation mode, where word click doesn't exist. */
+  firstSentenceWordAudio?: Record<string, string>;
 }) {
   // Never true in previewMode: an admin previewing content has no
   // "get started" flow underway, so the real dashboard pitch would be a
@@ -519,6 +522,7 @@ export function LessonSession({
                         mode={unit.mode}
                         resolvedVoiceId={resolvedVoiceId}
                         speakerVoiceMap={speakerVoiceMap}
+                        wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
                         onComplete={handleSentenceComplete}
                         onCorrectLetter={() => {
                           correctCountRef.current += 1;

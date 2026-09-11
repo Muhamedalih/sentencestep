@@ -186,6 +186,72 @@ export async function lookupCachedAudioUrl(text: string, voiceId: string): Promi
   return cached?.audio_url ?? null;
 }
 
+/**
+ * Batched sibling of lookupCachedAudioUrl, for many isolated words in ONE
+ * Supabase round trip instead of one per word — measured root cause of "the
+ * very first sentence's word clicks take 10-20+ seconds, every single
+ * lesson, every single time" (live-tested across two full lessons,
+ * mode=normal and mode=stories: sentence 1 consistently 15-19s, every later
+ * sentence a consistent ~200-300ms). Only the sentence's own narration
+ * ever got this same server-side, cache-only pre-resolution treatment (see
+ * LessonPage's firstSentence handling below) — its individual WORDS had no
+ * server-side head start at all, so a click on the very first sentence
+ * (before TypingSentence's own within-sentence prefetch, or
+ * LessonSession's next-sentence prefetch, have ever had a chance to run)
+ * raced cold against a page that's simultaneously still loading its own JS,
+ * images, and the sentence's own narration — the same connection/resource
+ * contention documented on the Books narration fix, just far worse here
+ * because literally everything on the page is loading at once.
+ *
+ * Takes a Map of normalizedWord -> the caller's own contentId (so this
+ * function never needs to know about sentence ids) and returns
+ * `{ [contentId]: audioUrl }` for every cache hit; a miss for any word is
+ * simply absent from the result, left to resolve on demand client-side
+ * exactly as before. Never generates. Callers register the result into the
+ * shared resolved-audio cache (see PronunciationSettingsProvider's
+ * registerResolvedAudio) so a word click never even calls resolveAudio's
+ * own network path in the first place — an instant, synchronous cache hit,
+ * not just a faster one.
+ */
+export async function lookupCachedWordAudioUrls(
+  contentIdByNormalizedWord: Map<string, string>,
+  voiceId: string,
+): Promise<Record<string, string>> {
+  if (contentIdByNormalizedWord.size === 0) return {};
+
+  const contentIdsByHash = new Map<string, string[]>();
+  for (const [word, contentId] of contentIdByNormalizedWord) {
+    const hash = hashText(normalizeTextForVoice(word));
+    const existing = contentIdsByHash.get(hash);
+    if (existing) existing.push(contentId);
+    else contentIdsByHash.set(hash, [contentId]);
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("voice_audio_cache")
+    .select("text_hash, audio_url, updated_at")
+    .eq("voice_id", voiceId)
+    .in("text_hash", [...contentIdsByHash.keys()])
+    .eq("status", "ready")
+    .not("audio_url", "is", null)
+    .order("updated_at", { ascending: false });
+
+  const result: Record<string, string> = {};
+  for (const row of data ?? []) {
+    if (!row.audio_url) continue;
+    const contentIds = contentIdsByHash.get(row.text_hash);
+    if (!contentIds) continue;
+    // Rows arrive most-recently-updated first, so the first row seen for a
+    // given contentId is already the freshest — later, older duplicate rows
+    // for the same hash are skipped.
+    for (const contentId of contentIds) {
+      if (!(contentId in result)) result[contentId] = row.audio_url;
+    }
+  }
+  return result;
+}
+
 /** A single isolated word has no narrative context (no neighboring sentences, no character arc) for the Voice Director to interpret — the exact same reasoning generateWordGroupVoiceDraft already applies to vocabulary words, reused here for the same shape of content. */
 const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
   emotion: "neutral",

@@ -59,6 +59,8 @@ interface TypingSentenceProps {
   totalSentences?: number;
   /** Stories mode only — LessonSession's pre-formatted "~n min left" string (see its own storyTimeRemainingLabel), already localized; this component never computes or formats it itself. */
   storyTimeRemainingLabel?: string;
+  /** Server-side pre-resolved `{contentId: audioUrl}` for this sentence's trackable words (LessonSession passes this only for the lesson's first sentence — see its own doc comment and LessonPage's lookupCachedWordAudioUrls call). Registered into the shared resolved-audio cache on mount so a word click here skips the resolve round trip entirely, closing the one gap the next-sentence word prefetch below can't: the very first sentence has no PREVIOUS sentence to have prefetched its words during. undefined for every other sentence, which behaves exactly as before. */
+  wordAudioUrls?: Record<string, string>;
 }
 
 export function TypingSentence({
@@ -75,6 +77,7 @@ export function TypingSentence({
   sentenceNumber,
   totalSentences,
   storyTimeRemainingLabel,
+  wordAudioUrls,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -149,7 +152,20 @@ export function TypingSentence({
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
   const wordClip = useAudioClip();
-  const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
+  const { resolveAudio, prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
+
+  // Feeds LessonPage's server-side pre-resolution (see wordAudioUrls' own
+  // doc comment) into the SAME shared cache resolveAudio itself checks
+  // first — a word click below is then a synchronous cache hit, not just a
+  // faster network call. Effect (not read during render) because
+  // registerResolvedAudio writes to a ref, never triggers a re-render, and
+  // only needs to happen once when this data arrives.
+  useEffect(() => {
+    if (!wordAudioUrls) return;
+    for (const [contentId, url] of Object.entries(wordAudioUrls)) {
+      registerResolvedAudio(contentId, url);
+    }
+  }, [wordAudioUrls, registerResolvedAudio]);
 
   /**
    * A word click's real voice, same rule as PronunciationButton's own
