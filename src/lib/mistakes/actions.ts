@@ -145,6 +145,29 @@ export async function masterMistakeWordAction(word: string): Promise<void> {
 }
 
 /**
+ * The Word-List-practice counterpart to recordSentenceMistakesAction — the
+ * one place a wrong answer in VocabularyPractice ever reaches this table
+ * (see VocabularyPractice.handleWordResult's `else` branch, where a wrong
+ * attempt was previously only requeued in local component state and never
+ * persisted at all). Passes sentence_id = null: a Word List word has no
+ * owning row in `sentences` to attach the mistake to (vocabulary_words is
+ * deliberately separate — see 20250119000000_word_lists.sql), so this
+ * mistake can never surface in the per-lesson "Fix Your Mistakes" queue
+ * (fetchMistakesAction drops any row with no resolvable sentence), only in
+ * "Review All Words" (fetchWeakWordsAction never reads sentence_id at all).
+ * A no-op for a word too trivial to track — same isMistakeWorthTracking
+ * filter recordSentenceMistakesAction already applies per word.
+ */
+export async function recordWordListMistakeAction(word: string): Promise<void> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) throw new Error("Sign in to save progress.");
+  if (!isMistakeWorthTracking(word)) return;
+  await recordMistake(normalizeMistakeWord(word), null);
+  revalidatePath("/learn/word-lists");
+  revalidatePath("/learn/word-lists/review");
+}
+
+/**
  * The full, ordered "Fix Your Mistakes" queue for the signed-in learner,
  * scoped to one specific lesson (`lessonId` — always the lesson whose
  * completion screen opened this flow, see FixYourMistakesSession/
@@ -188,7 +211,13 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
   ];
   if (rows.length === 0) return [];
 
-  const sentenceIds = [...new Set(rows.map((row) => row.sentenceId))];
+  // A Word-List-originated mistake (see recordWordListMistakeAction) has no
+  // sentence_id at all — filtered out here before the lookup rather than
+  // passed through, since it can never resolve to a sentence/lesson and the
+  // loop below already drops anything that doesn't.
+  const sentenceIds = [
+    ...new Set(rows.map((row) => row.sentenceId).filter((id): id is string => id !== null)),
+  ];
   const sentences = await fetchSentencesByIds(sentenceIds);
   const sentenceById = new Map(sentences.map((sentence) => [sentence.id, sentence]));
 
@@ -206,6 +235,7 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
 
   const items: MistakeQueueItem[] = [];
   for (const row of rows) {
+    if (row.sentenceId === null) continue;
     const sentence = sentenceById.get(row.sentenceId);
     if (!sentence) continue;
     if (sentence.lessonId !== lessonId) continue;

@@ -41,11 +41,16 @@ export async function fetchDueReviewCount(userId: string): Promise<number> {
  * inside the function itself, never trusted from the caller. `errorIndexes`
  * are every word-relative position of a wrong keystroke that produced this
  * mistake (see mistakes.error_indexes) — an empty/omitted array is treated
- * the same as "keep whatever was there" by the function itself.
+ * the same as "keep whatever was there" by the function itself. `sentenceId`
+ * is null for a mistake with no owning lesson sentence (Word Lists practice
+ * — see recordWordListMistakeAction in mistakes/actions.ts); every
+ * sentence-scoped reader already treats an unresolvable sentence as "drop
+ * this row" (see fetchMistakesAction), so a null one is simply never picked
+ * up there while still counting toward "Review All Words".
  */
 export async function recordMistake(
   word: string,
-  sentenceId: string,
+  sentenceId: string | null,
   errorIndexes: number[] = [],
 ): Promise<void> {
   const supabase = await createClient();
@@ -95,7 +100,8 @@ export async function fetchWeakCandidateMistakeRows(
 
 export interface ActiveMistakeRow {
   word: string;
-  sentenceId: string;
+  /** Null for a Word-List-originated mistake — see recordMistake's doc comment. */
+  sentenceId: string | null;
   errorIndexes: number[];
 }
 

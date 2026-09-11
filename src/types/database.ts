@@ -787,7 +787,8 @@ export interface Database {
           id: string;
           user_id: string;
           word: string;
-          sentence_id: string;
+          /** Null for a Word-List-originated mistake, which has no owning row in `sentences` — see 20250226000000_word_list_mistakes_nullable_sentence.sql. */
+          sentence_id: string | null;
           status: "active" | "corrected";
           mistake_count: number;
           corrected_at: string | null;
@@ -804,7 +805,7 @@ export interface Database {
           id?: string;
           user_id: string;
           word: string;
-          sentence_id: string;
+          sentence_id?: string | null;
           status?: "active" | "corrected";
           mistake_count?: number;
           corrected_at?: string | null;
@@ -1061,7 +1062,7 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       record_mistake: {
-        Args: { p_word: string; p_sentence_id: string; p_error_indexes?: number[] | null };
+        Args: { p_word: string; p_sentence_id: string | null; p_error_indexes?: number[] | null };
         Returns: undefined;
       };
       record_mistake_review: {

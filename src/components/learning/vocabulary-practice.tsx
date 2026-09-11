@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordProgress } from "@/hooks/use-word-progress";
-import { masterMistakeWordAction } from "@/lib/mistakes/actions";
+import { masterMistakeWordAction, recordWordListMistakeAction } from "@/lib/mistakes/actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
 import { splitWordHint } from "@/lib/word-lists-hint";
@@ -169,6 +169,16 @@ export function VocabularyPractice({
       setQueue((prev) => prev.slice(1));
     } else {
       play("error");
+      if (!previewMode) {
+        // The missing half of the pair above: a wrong attempt here used to
+        // only requeue locally and never reach the account-wide mistake
+        // ledger at all, so it could never show up in "Review All Words"
+        // (see recordWordListMistakeAction's doc comment for why this is
+        // its own action rather than reusing recordSentenceMistakesAction).
+        recordWordListMistakeAction(word.targetWord).catch((error: unknown) => {
+          console.error("[word-lists] recordWordListMistakeAction failed", error);
+        });
+      }
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
