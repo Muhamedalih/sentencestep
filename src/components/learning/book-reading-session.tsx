@@ -22,9 +22,11 @@ import { fetchBookSentenceMarksAction } from "@/lib/book-progress/marks-actions"
 import { EMPTY_MARK } from "@/lib/book-progress/marks";
 import type { BookSentenceMark } from "@/lib/book-progress/marks";
 import { findPageIndexForSentenceId, paginateSentences } from "@/lib/book-progress/pagination";
+import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { emptyDailyProgress } from "@/lib/progress/types";
 import type { DailyProgressState } from "@/lib/progress/types";
+import { tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import type { Book, BookSectionWithSentences } from "@/types/library";
 
@@ -214,13 +216,45 @@ export function BookReadingSession({
     // a single sentence's worth of warm-up left them no better off than
     // resolving cold the instant the reader actually reached them.
     const nextPage = pages[viewPageIndex + 1] ?? [];
-    for (const s of [...currentPage, ...nextPage]) {
+    const sentences = [...currentPage, ...nextPage];
+    for (const s of sentences) {
       prefetchPronunciation({
         contentType: "book_sentence",
         contentId: s.id,
         voiceId: resolvedVoiceId,
       });
     }
+
+    // Root-cause fix for "word clicks are still noticeably delayed": this
+    // warmed every sentence's own narration across the current+next page,
+    // but BookSentenceReader's own word-prefetch effect only ever warms the
+    // ACTIVE sentence's words (see its `readOnly` guard) — a context
+    // sentence sitting right there on the same page, or any sentence on the
+    // next page, got no word warm-up at all until the reader actually
+    // reached it. Flattened into one staggered list across every sentence
+    // here (rather than restarting the stagger per sentence, which would
+    // burst every sentence's first word at the same moment) so this never
+    // fires more than one resolve at a time. A no-op for anything already
+    // cached/in flight (see prefetchPronunciation's own dedup), so paging
+    // back and forth never duplicates a round trip.
+    const words = sentences.flatMap((s) =>
+      Array.from(new Set(tokenize(s.en).filter(isTrackableWord))).map((word) => ({
+        contentId: `${s.id}::${normalizeMistakeWord(word)}`,
+      })),
+    );
+    const timers = words.map(({ contentId }, index) =>
+      setTimeout(
+        () => {
+          prefetchPronunciation({
+            contentType: "book_sentence_word",
+            contentId,
+            voiceId: resolvedVoiceId,
+          });
+        },
+        600 + index * 150,
+      ),
+    );
+    return () => timers.forEach(clearTimeout);
   }, [viewPageIndex, pages, resolvedVoiceId, prefetchPronunciation]);
 
   // Reader feedback (2026-09-11): completing a section's last sentence used

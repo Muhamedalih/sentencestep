@@ -24,7 +24,9 @@ import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
+import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
+import { tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
@@ -106,6 +108,25 @@ export function LessonSession({
   // already did. Deliberately only ONE sentence ahead, never the whole
   // lesson — see prefetchPronunciation's own doc comment for why bulk
   // pre-resolving was avoided.
+  //
+  // Extended (root-cause fix for "word clicks are still noticeably
+  // delayed"): this gave the NEXT sentence's own narration a full
+  // typing-the-current-sentence head start, but never did the same for that
+  // next sentence's individual WORDS — those only ever started resolving
+  // once TypingSentence itself mounted for that sentence (see its own
+  // word-prefetch effect, staggered 600ms+ after mount). A learner who reads
+  // ahead and clicks a word within the first second or two of a new sentence
+  // was still hitting a cold resolve every time, sentence after sentence,
+  // which is what made the delay read as "nothing changed" even after the
+  // contention fix in TypingSentence. Prefetching this sentence's words too,
+  // right alongside its narration, gives them the exact same multi-second
+  // lead time — by the time the learner actually reaches this sentence, most
+  // clicks land on an already-cached clip instead of a fresh round trip.
+  // Only for Normal/Stories (mirrors TypingSentence's own enableWordClick
+  // scope — Conversation never enables word click at all), and staggered the
+  // same way TypingSentence's own effect is, so this sentence's words don't
+  // burst all at once and compete with the CURRENT sentence's own
+  // still-in-flight prefetches for the browser's connection limit.
   useEffect(() => {
     const nextSentence = unit.sentences[sentenceIndex + 1];
     if (!nextSentence) return;
@@ -117,7 +138,30 @@ export function LessonSession({
       contentId: nextSentence.id,
       voiceId,
     });
-  }, [sentenceIndex, unit.sentences, resolvedVoiceId, speakerVoiceMap, prefetchPronunciation]);
+
+    if (unit.mode !== "normal" && unit.mode !== "stories") return;
+    const words = Array.from(new Set(tokenize(nextSentence.en).filter(isTrackableWord)));
+    const timers = words.map((word, index) =>
+      setTimeout(
+        () => {
+          prefetchPronunciation({
+            contentType: "sentence_word",
+            contentId: `${nextSentence.id}::${normalizeMistakeWord(word)}`,
+            voiceId,
+          });
+        },
+        600 + index * 150,
+      ),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [
+    sentenceIndex,
+    unit.sentences,
+    unit.mode,
+    resolvedVoiceId,
+    speakerVoiceMap,
+    prefetchPronunciation,
+  ]);
 
   useEffect(() => {
     if (previewMode) return;
