@@ -137,6 +137,16 @@ export async function fetchBookSections(
  * once (Section 26 of the spec: performance) — the reading session fetches
  * exactly one section at a time, on mount and again each time a section
  * boundary is crossed (see fetchSectionForReadingAction).
+ *
+ * The section row and its sentences are two entirely independent queries —
+ * neither needs the other's result — but used to run one after the other.
+ * Fetched in parallel now (2026-09-11, found while chasing reader reports of
+ * the section-complete transition taking multiple seconds): this function
+ * sits on that same critical path (via fetchSectionAfter), so its own two
+ * sequential round trips were real, avoidable latency stacked on top of
+ * fetchSectionAfter's own two sequential lookups (current section's
+ * order_index, then the next section's id) — those two DO genuinely depend
+ * on each other and stay sequential.
  */
 export async function fetchBookSectionWithSentences(
   sectionId: string,
@@ -145,19 +155,17 @@ export async function fetchBookSectionWithSentences(
   if (!isSupabaseConfigured()) return null;
 
   const supabase = createPublicClient();
-  const { data: sectionRow, error: sectionError } = await supabase
-    .from("book_sections")
-    .select("*")
-    .eq("id", sectionId)
-    .maybeSingle();
+  const [{ data: sectionRow, error: sectionError }, { data: sentenceRows, error: sentenceError }] =
+    await Promise.all([
+      supabase.from("book_sections").select("*").eq("id", sectionId).maybeSingle(),
+      supabase
+        .from("book_sentences")
+        .select("*")
+        .eq("section_id", sectionId)
+        .order("order_index", { ascending: true }),
+    ]);
   if (sectionError) throw sectionError;
   if (!sectionRow) return null;
-
-  const { data: sentenceRows, error: sentenceError } = await supabase
-    .from("book_sentences")
-    .select("*")
-    .eq("section_id", sectionId)
-    .order("order_index", { ascending: true });
   if (sentenceError) throw sentenceError;
 
   const [[section], sentences] = await Promise.all([

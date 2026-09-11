@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import { isBookProgressComplete } from "@/lib/book-progress/completion";
-import { getBookNarrationVoiceId } from "@/lib/admin/elevenlabs-queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getStreakMilestone } from "@/lib/email/milestones";
 import { isDailyGoalMet } from "@/lib/progress/daily-goal";
@@ -11,8 +10,6 @@ import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { todayLocalISODate, updateStreak } from "@/lib/progress/streak";
 import { calculateLessonXp } from "@/lib/progress/xp";
 import { DEFAULT_DAILY_GOAL, emptyProgressState } from "@/lib/progress/types";
-import { resolveVoiceId } from "@/lib/voice/resolution";
-import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 import {
   fetchBookContentCounts,
   fetchBookSectionWithSentences,
@@ -21,7 +18,6 @@ import {
   fetchSectionAfter,
 } from "@/lib/supabase/queries/book-content";
 import { completeBookSentence, fetchBookProgressRow } from "@/lib/supabase/queries/book-progress";
-import { fetchBookById } from "@/lib/supabase/queries/library";
 import {
   fetchDailyProgress,
   fetchStreak,
@@ -134,45 +130,25 @@ export async function fetchSectionForReadingAction(
  * reading UI forward, for guest and signed-in readers alike — see
  * fetchSectionAfter's own doc comment.
  *
- * Root-cause fix (2026-09-11) for a 100%-reproducible audio delay: the
- * reading page's own Server Component pre-resolves the very FIRST sentence
- * of a brand-new reading session this same way (see its own doc comment),
- * but every later section crossing came through here instead, which never
- * did — so a section's first sentence (the one that autoplays the instant
- * the reader clicks past its intro screen) always had to pay a full
- * client→server resolve round trip with zero prefetch warm-up (there's
- * nothing to prefetch a section's first sentence's audio ahead of time from
- * — the client only ever prefetches the sentence immediately after the one
- * it's currently on, and this is a fresh section it hasn't reached yet).
- * Mirrors that same page's exact pre-resolution: cache-only
- * (lookupCachedAudioUrl never triggers generation), and a no-op — same
- * section, unmodified — if the clip isn't cached yet or no voice resolves.
+ * Deliberately does NOT also pre-resolve the new section's first sentence's
+ * audio (a 2026-09-11 attempt at exactly that was reverted the same day):
+ * doing it here means the CLIENT's own await on this action — which drives
+ * how long the "loadingNextSection" spinner stays up before the section-
+ * complete card can even appear — pays for that extra work too, directly
+ * lengthening the one delay reader feedback flagged as the worst ("catastrophic")
+ * of all of them, in exchange for shortening a different, less noticeable one.
+ * BookReadingSession now prefetches that first sentence's audio itself once
+ * this resolves and the section-complete card is already showing (see its
+ * own doc comment) — the learner reading that card and clicking Continue
+ * gives it real background time to finish without this fetch ever blocking
+ * on it.
  */
 export async function fetchSectionAfterAction(
   bookId: string,
   sectionId: string,
 ): Promise<BookSectionWithSentences | null> {
   const locale = await getLocale();
-  const section = await fetchSectionAfter(bookId, sectionId, locale ?? undefined);
-  if (!section) return null;
-
-  const firstSentence = section.sentences[0];
-  if (!firstSentence || firstSentence.audioUrl) return section;
-
-  const [book, globalDefaultVoiceId] = await Promise.all([
-    fetchBookById(bookId),
-    getBookNarrationVoiceId(),
-  ]);
-  const resolvedVoiceId = resolveVoiceId(book?.voiceId, globalDefaultVoiceId);
-  if (!resolvedVoiceId) return section;
-
-  const audioUrl = await lookupCachedAudioUrl(firstSentence.en, resolvedVoiceId);
-  if (!audioUrl) return section;
-
-  return {
-    ...section,
-    sentences: section.sentences.map((s) => (s.id === firstSentence.id ? { ...s, audioUrl } : s)),
-  };
+  return fetchSectionAfter(bookId, sectionId, locale ?? undefined);
 }
 
 /**

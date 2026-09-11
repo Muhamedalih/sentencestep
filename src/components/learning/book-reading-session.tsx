@@ -241,6 +241,24 @@ export function BookReadingSession({
     };
   }, [sentenceIndex, section.id, section.sentences.length, book.id]);
 
+  // Warms the NEW section's first sentence's audio (see
+  // fetchSectionAfterAction's own doc comment for why this moved out of
+  // that fetch and here instead) the moment the section-complete card
+  // actually appears — reading "X XP earned" and clicking Continue already
+  // takes the learner a couple of seconds, real background time this can
+  // use for free, well before that sentence's own PronunciationButton would
+  // otherwise ask for it cold the instant the reading screen returns.
+  useEffect(() => {
+    if (!pendingNextSection || !resolvedVoiceId) return;
+    const firstSentence = pendingNextSection.sentences[0];
+    if (!firstSentence) return;
+    prefetchPronunciation({
+      contentType: "book_sentence",
+      contentId: firstSentence.id,
+      voiceId: resolvedVoiceId,
+    });
+  }, [pendingNextSection, resolvedVoiceId, prefetchPronunciation]);
+
   async function handleSentenceComplete() {
     if (!sentence) return;
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "books"));
