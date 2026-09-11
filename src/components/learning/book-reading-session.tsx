@@ -227,6 +227,21 @@ export function BookReadingSession({
   // already settled, so the loading screen flashes far more briefly or not
   // at all. Keyed by section.id (not just a boolean) so moving on to a new
   // section always fires a fresh prefetch instead of reusing a stale one.
+  //
+  // Chained onto that same promise (2026-09-11, same day, next round):
+  // warming the new section's whole FIRST PAGE of audio — not just its
+  // first sentence — the INSTANT the section data itself resolves, which
+  // can happen while the learner is still reading/typing the OLD section's
+  // last sentence, well before the section-complete card even appears. An
+  // earlier version instead waited for pendingNextSection (i.e. the card
+  // actually being on screen) before warming even just the first sentence;
+  // that gave real but comparatively little lead time and only ever
+  // reached one sentence, which reader feedback still caught as an audible
+  // wait on the new section's later context sentences. Deliberately kept
+  // out of handleSentenceComplete's own critical path (a .then() on the
+  // ALREADY-independent prefetch promise, not something it awaits) so it
+  // can never re-introduce the section-complete card's own delay — see
+  // fetchSectionAfterAction's doc comment for that history.
   const nextSectionPrefetchRef = useRef<{
     sectionId: string;
     promise: Promise<BookSectionWithSentences | null>;
@@ -235,29 +250,28 @@ export function BookReadingSession({
     const isLastSentence = sentenceIndex === section.sentences.length - 1;
     if (!isLastSentence) return;
     if (nextSectionPrefetchRef.current?.sectionId === section.id) return;
-    nextSectionPrefetchRef.current = {
-      sectionId: section.id,
-      promise: fetchSectionAfterAction(book.id, section.id),
-    };
-  }, [sentenceIndex, section.id, section.sentences.length, book.id]);
-
-  // Warms the NEW section's first sentence's audio (see
-  // fetchSectionAfterAction's own doc comment for why this moved out of
-  // that fetch and here instead) the moment the section-complete card
-  // actually appears — reading "X XP earned" and clicking Continue already
-  // takes the learner a couple of seconds, real background time this can
-  // use for free, well before that sentence's own PronunciationButton would
-  // otherwise ask for it cold the instant the reading screen returns.
-  useEffect(() => {
-    if (!pendingNextSection || !resolvedVoiceId) return;
-    const firstSentence = pendingNextSection.sentences[0];
-    if (!firstSentence) return;
-    prefetchPronunciation({
-      contentType: "book_sentence",
-      contentId: firstSentence.id,
-      voiceId: resolvedVoiceId,
-    });
-  }, [pendingNextSection, resolvedVoiceId, prefetchPronunciation]);
+    const promise = fetchSectionAfterAction(book.id, section.id);
+    nextSectionPrefetchRef.current = { sectionId: section.id, promise };
+    if (resolvedVoiceId) {
+      void promise.then((next) => {
+        const firstPage = next ? (paginateSentences(next.sentences)[0] ?? []) : [];
+        for (const s of firstPage) {
+          prefetchPronunciation({
+            contentType: "book_sentence",
+            contentId: s.id,
+            voiceId: resolvedVoiceId,
+          });
+        }
+      });
+    }
+  }, [
+    sentenceIndex,
+    section.id,
+    section.sentences.length,
+    book.id,
+    resolvedVoiceId,
+    prefetchPronunciation,
+  ]);
 
   async function handleSentenceComplete() {
     if (!sentence) return;
