@@ -277,15 +277,11 @@ export function BookSentenceReader({
         reducedMotion={reducedMotion}
         textClassName={
           isLarge
-            ? // Reader feedback (2026-09-11): with the active sentence now the
-              // one clear focal point on the page (see its focus-card wrapper
-              // in BookReadingSession), it can afford to read a little larger
-              // than before — bumped both ends of the clamp.
-              "text-[clamp(1.7rem,1.15rem+1.75vw,2.85rem)]"
-            : // Reader feedback: with more breathing room on the page now
-              // (bigger gap between sentences), the context sentences read as
-              // too small relative to it — bumped up a step.
-              "text-[clamp(1.05rem,0.85rem+0.6vw,1.35rem)]"
+            ? // Reverted (2026-09-11): the earlier bump made the reading page
+              // tall enough to need scrolling, which is a harder constraint
+              // than "use the empty space" — back to the original size.
+              "text-[clamp(1.55rem,1.1rem+1.55vw,2.5rem)]"
+            : "text-[clamp(0.95rem,0.75rem+0.55vw,1.25rem)]"
         }
         textStyle={textStyle}
         onWordClick={(word) => void handleWordClick(word)}
@@ -306,7 +302,7 @@ export function BookSentenceReader({
       />
       <p
         className={
-          isLarge ? "text-muted-foreground mt-1.5 text-lg" : "text-muted-foreground mt-1 text-base"
+          isLarge ? "text-muted-foreground mt-1 text-base" : "text-muted-foreground mt-1 text-sm"
         }
         dir={dir}
       >

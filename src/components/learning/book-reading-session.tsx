@@ -521,7 +521,11 @@ export function BookReadingSession({
               */}
               <div
                 className={cn(
-                  "flex flex-col gap-4",
+                  // Reverted to the original gap (2026-09-11): combined with
+                  // the bigger text sizes, the wider gap made the reading
+                  // page tall enough to need scrolling — not acceptable, so
+                  // this went back rather than trimming text size alone.
+                  "flex flex-col gap-2",
                   // A page that's down to its single last sentence (the tail
                   // of a section) gets the extra room centered on it instead
                   // of left stranded at the top — biased a bit above true
@@ -548,17 +552,15 @@ export function BookReadingSession({
                       }
                       // Every slot keeps the exact same padded/rounded/bordered
                       // footprint regardless of active state — only its
-                      // border/background COLOR (and opacity) change. Reader
-                      // feedback: an earlier version only gave the active
-                      // slot this padding, so becoming active also meant the
-                      // slot's box suddenly grew — an extra, avoidable chunk
-                      // of layout work for Framer Motion's `layout` animation
-                      // to interpolate on top of the sentence text's own
-                      // (unavoidable) size change between active/context
-                      // font sizes, and part of what made the transition feel
-                      // laggy.
+                      // border/background COLOR (and opacity) change (see this
+                      // block's own history above for why). Kept deliberately
+                      // modest (not the original active-only padding) since
+                      // this now applies to every sentence on the page at
+                      // once — four sentences' worth of padding is real
+                      // height, and stacking too much of it was what forced
+                      // the whole page to need scrolling.
                       className={cn(
-                        "rounded-2xl border px-5 py-4 transition-[opacity,background-color,border-color] duration-300 sm:px-6 sm:py-5",
+                        "rounded-xl border px-4 py-1.5 transition-[opacity,background-color,border-color] duration-300 sm:px-5 sm:py-2",
                         isActiveSentence
                           ? "border-border/40 bg-card/70"
                           : "border-transparent bg-transparent opacity-55",
