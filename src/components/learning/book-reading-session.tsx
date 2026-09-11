@@ -192,15 +192,28 @@ export function BookReadingSession({
   // Same fix as LessonSession's identical effect: resolve the next
   // sentence's pronunciation in the background while the current one is
   // being typed, so its PronunciationButton finds it already cached.
+  // Looks two sentences ahead, not just one — a reader moving on quickly
+  // (reading/listening rather than typing, or just a fast typist) can
+  // otherwise reach a sentence before its own resolve, kicked off only once
+  // the PRIOR sentence became active, has actually finished; the extra
+  // lookahead gives that resolve roughly double the head start. Both calls
+  // are cheap no-ops once cached — resolveAudio's shared cache/in-flight
+  // dedup (see PronunciationSettingsProvider) means re-requesting an
+  // already-resolved or already-in-flight sentence here on every advance
+  // never triggers a duplicate round trip.
   useEffect(() => {
     if (!resolvedVoiceId) return;
-    const nextSentence = section.sentences[sentenceIndex + 1];
-    if (!nextSentence) return;
-    prefetchPronunciation({
-      contentType: "book_sentence",
-      contentId: nextSentence.id,
-      voiceId: resolvedVoiceId,
-    });
+    for (const nextSentence of [
+      section.sentences[sentenceIndex + 1],
+      section.sentences[sentenceIndex + 2],
+    ]) {
+      if (!nextSentence) continue;
+      prefetchPronunciation({
+        contentType: "book_sentence",
+        contentId: nextSentence.id,
+        voiceId: resolvedVoiceId,
+      });
+    }
   }, [sentenceIndex, section.sentences, resolvedVoiceId, prefetchPronunciation]);
 
   // Reader feedback (2026-09-11): completing a section's last sentence used
