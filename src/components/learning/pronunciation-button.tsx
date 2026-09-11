@@ -230,8 +230,25 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
 
       resolvedForKeyRef.current = resetKey;
       if (mountedRef.current) setIsResolvingKokoro(true);
+      // Books-only diagnostic (disableSpeechFallback is exclusively true
+      // there today): logs how long the actual server round trip took
+      // whenever it's slow enough to be audible, so a reported "this
+      // sentence lagged" can be matched to real numbers in the browser
+      // console instead of guessed at — this is the one client→server
+      // round trip in the whole playback path that current code can't
+      // shorten further (see fetchSectionAfterAction/uploadVoiceClip's own
+      // fixes for the two causes already found and closed this way).
+      const startedAt = disableSpeechFallback ? performance.now() : 0;
       try {
         const url = await resolveAudio({ contentType, contentId, voiceId: kokoroVoiceId });
+        if (disableSpeechFallback) {
+          const elapsedMs = Math.round(performance.now() - startedAt);
+          if (elapsedMs > 250) {
+            console.debug(
+              `[book-audio] slow resolve (${elapsedMs}ms) for ${contentId}${url ? "" : " — no cached clip found"}`,
+            );
+          }
+        }
         if (url && mountedRef.current) setKokoroUrl(url);
         return url;
       } finally {

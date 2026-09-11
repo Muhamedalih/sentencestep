@@ -189,32 +189,32 @@ export function BookReadingSession({
     };
   }, [isSignedIn, section]);
 
-  // Same fix as LessonSession's identical effect: resolve the next
-  // sentence's pronunciation in the background while the current one is
-  // being typed, so its PronunciationButton finds it already cached.
-  // Looks two sentences ahead, not just one — a reader moving on quickly
-  // (reading/listening rather than typing, or just a fast typist) can
-  // otherwise reach a sentence before its own resolve, kicked off only once
-  // the PRIOR sentence became active, has actually finished; the extra
-  // lookahead gives that resolve roughly double the head start. Both calls
-  // are cheap no-ops once cached — resolveAudio's shared cache/in-flight
-  // dedup (see PronunciationSettingsProvider) means re-requesting an
-  // already-resolved or already-in-flight sentence here on every advance
-  // never triggers a duplicate round trip.
+  // Same fix as LessonSession's identical effect, widened for Books' real
+  // page shape (2026-09-11): rather than only ever warming the ONE sentence
+  // right after the active one — which gave a sentence three or four slots
+  // deep on the same page almost no lead time even though it's already
+  // sitting on screen as a context sentence — this warms every sentence on
+  // the CURRENTLY VIEWED PAGE at once, plus the very first sentence of the
+  // next page. A learner reading normally sees every one of those sentences
+  // the instant the page renders, so there's no reason their audio resolves
+  // should wait for sequential advancement to even start. Cheap: all of
+  // this is a no-op the moment something's already resolved or in flight
+  // (see resolveAudio's shared cache/in-flight dedup in
+  // PronunciationSettingsProvider), so re-requesting the same page's
+  // sentences on every render this effect fires for never duplicates a
+  // round trip.
   useEffect(() => {
     if (!resolvedVoiceId) return;
-    for (const nextSentence of [
-      section.sentences[sentenceIndex + 1],
-      section.sentences[sentenceIndex + 2],
-    ]) {
-      if (!nextSentence) continue;
+    const currentPage = pages[viewPageIndex] ?? [];
+    const toWarm = [...currentPage, pages[viewPageIndex + 1]?.[0]].filter((s) => s !== undefined);
+    for (const s of toWarm) {
       prefetchPronunciation({
         contentType: "book_sentence",
-        contentId: nextSentence.id,
+        contentId: s.id,
         voiceId: resolvedVoiceId,
       });
     }
-  }, [sentenceIndex, section.sentences, resolvedVoiceId, prefetchPronunciation]);
+  }, [viewPageIndex, pages, resolvedVoiceId, prefetchPronunciation]);
 
   // Reader feedback (2026-09-11): completing a section's last sentence used
   // to show a bare loading screen for as long as fetchSectionAfterAction's

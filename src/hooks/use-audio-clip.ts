@@ -79,7 +79,17 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
       // retry from whatever was playing before it.
       invalidate();
 
+      // Books-only diagnostic (the only caller that opts into retries today
+      // — see maxRetries below): times how long each attempt actually takes
+      // from "asked the browser to play" to real sound, and flags a retry
+      // firing at all, so a reported lag can be pinned on the specific
+      // stage (server resolve — see PronunciationButton's own timing log —
+      // vs. the audio FILE itself being slow to fetch, vs. a genuine
+      // playback error needing a retry) instead of guessed at.
+      const diagnostics = maxRetries > 0;
+
       function attempt(url: string, retriesLeft: number, resumeFromSeconds: number) {
+        const attemptStartedAt = diagnostics ? performance.now() : 0;
         const audio = new Audio(url);
         // Same file, just played back slower — never a separate audio asset
         // per speed (see PronunciationSettingsProvider). preservesPitch keeps
@@ -114,6 +124,14 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         function handleFailure() {
           if (handled || !isCurrent()) return;
           handled = true;
+          if (diagnostics) {
+            console.debug(
+              `[book-audio] playback attempt failed after ${Math.round(performance.now() - attemptStartedAt)}ms` +
+                (retriesLeft > 0
+                  ? ` — retrying in ${retryDelayMs}ms`
+                  : " — giving up (no more retries)"),
+            );
+          }
           if (retriesLeft > 0) {
             // Resuming near where playback actually stopped — rather than
             // restarting the clip from 0:00 — is what keeps a transient
@@ -143,6 +161,14 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
 
         audio.addEventListener("playing", () => {
           if (!isCurrent()) return;
+          if (diagnostics) {
+            const elapsedMs = Math.round(performance.now() - attemptStartedAt);
+            if (elapsedMs > 250) {
+              console.debug(
+                `[book-audio] slow audio fetch (${elapsedMs}ms) before playback started`,
+              );
+            }
+          }
           setStatus("playing");
         });
         audio.addEventListener("ended", () => isCurrent() && setStatus("idle"));
