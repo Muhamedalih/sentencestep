@@ -19,6 +19,7 @@ import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { getLetterStates, tokenize } from "@/lib/typing";
+import { cn } from "@/lib/utils";
 import type { BookSentence } from "@/types/library";
 import type { BookSentenceMark } from "@/lib/book-progress/marks";
 
@@ -277,11 +278,12 @@ export function BookSentenceReader({
         reducedMotion={reducedMotion}
         textClassName={
           isLarge
-            ? // Reverted (2026-09-11): the earlier bump made the reading page
-              // tall enough to need scrolling, which is a harder constraint
-              // than "use the empty space" — back to the original size.
-              "text-[clamp(1.55rem,1.1rem+1.55vw,2.5rem)]"
-            : "text-[clamp(0.95rem,0.75rem+0.55vw,1.25rem)]"
+            ? // +8% over the original clamp(1.55rem,1.1rem+1.55vw,2.5rem) —
+              // a small, precise nudge after the full-size bump forced a
+              // scroll and got reverted.
+              "text-[clamp(1.67rem,1.19rem+1.67vw,2.7rem)]"
+            : // +8% over the original clamp(0.95rem,0.75rem+0.55vw,1.25rem).
+              "text-[clamp(1.03rem,0.81rem+0.59vw,1.35rem)]"
         }
         textStyle={textStyle}
         onWordClick={(word) => void handleWordClick(word)}
@@ -301,9 +303,11 @@ export function BookSentenceReader({
         disabled={readOnly}
       />
       <p
-        className={
-          isLarge ? "text-muted-foreground mt-1 text-base" : "text-muted-foreground mt-1 text-sm"
-        }
+        className={cn(
+          "text-muted-foreground mt-1",
+          // +25% over the original 1rem (active) / 0.875rem (context).
+          isLarge ? "text-[1.25rem]" : "text-[1.09rem]",
+        )}
         dir={dir}
       >
         {supportText}
