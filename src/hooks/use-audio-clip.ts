@@ -187,16 +187,35 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         audio.addEventListener("error", handleFailure);
 
         // Stops at the slice's own end instead of playing into whatever
-        // comes after it in the underlying clip — checked on every
-        // `timeupdate` tick (the same native event the browser already
-        // fires many times a second during playback), not a separate timer.
+        // comes after it in the underlying clip. A single setTimeout, timed
+        // from the real "playing" moment (not scheduled up front, in case
+        // buffering delays when playback actually starts) — root-cause fix
+        // for word clicks confirmed live to bleed audibly into the NEXT
+        // word: `timeupdate` (the original approach) only fires a handful of
+        // times a second, coarse enough that a short word (some well under
+        // 300ms) had often already finished playing past its own end,
+        // partway into the next word, before a timeupdate tick ever caught
+        // it. A precise timer fires within a few ms regardless of word
+        // length. { once: true } — only the FIRST "playing" (the one after
+        // the initial seek) starts the clock; a later stall-then-resume
+        // "playing" (unlikely for a clip this short, but not impossible on a
+        // slow connection) must never reschedule and extend the slice.
         if (range) {
-          audio.addEventListener("timeupdate", () => {
-            if (isCurrent() && audio.currentTime >= range.end) {
-              audio.pause();
-              if (isCurrent()) setStatus("idle");
-            }
-          });
+          audio.addEventListener(
+            "playing",
+            () => {
+              if (!isCurrent()) return;
+              const remainingSeconds = Math.max(0, range.end - audio.currentTime);
+              const remainingMs = (remainingSeconds / (audio.playbackRate || 1)) * 1000;
+              setTimeout(() => {
+                if (isCurrent() && !audio.paused) {
+                  audio.pause();
+                  setStatus("idle");
+                }
+              }, remainingMs);
+            },
+            { once: true },
+          );
         }
 
         audio.play().catch(handleFailure);

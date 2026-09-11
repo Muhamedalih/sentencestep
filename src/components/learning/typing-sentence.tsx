@@ -197,22 +197,23 @@ export function TypingSentence({
   async function handleWordClick(word: string, index: number) {
     if (!sentenceVoiceId || !isTrackableWord(word)) return;
 
-    const timings = await resolveWordTimings({
-      contentType: "sentence",
-      contentId: sentence.id,
-      voiceId: sentenceVoiceId,
-    });
-    const timing = timings?.[index];
-    if (timing) {
-      const sentenceUrl = await resolveAudio({
+    // Independent lookups (one's just a timing row, the other's the
+    // sentence's own audio URL — usually already cache-hit, since the
+    // sentence's own narration resolved it moments earlier) — run together
+    // instead of one after the other, so a slice-play never waits out two
+    // round trips back to back.
+    const [timings, sentenceUrl] = await Promise.all([
+      resolveWordTimings({
         contentType: "sentence",
         contentId: sentence.id,
         voiceId: sentenceVoiceId,
-      });
-      if (sentenceUrl) {
-        wordClip.play(sentenceUrl, undefined, { start: timing.start, end: timing.end });
-        return;
-      }
+      }),
+      resolveAudio({ contentType: "sentence", contentId: sentence.id, voiceId: sentenceVoiceId }),
+    ]);
+    const timing = timings?.[index];
+    if (timing && sentenceUrl) {
+      wordClip.play(sentenceUrl, undefined, { start: timing.start, end: timing.end });
+      return;
     }
 
     const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;

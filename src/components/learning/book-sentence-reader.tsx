@@ -142,22 +142,24 @@ export function BookSentenceReader({
     // comment above for why this exists at all.
     sentenceAudioRef.current?.stop();
 
-    const timings = await resolveWordTimings({
-      contentType: "book_sentence",
-      contentId: sentence.id,
-      voiceId: resolvedVoiceId,
-    });
-    const timing = timings?.[index];
-    if (timing) {
-      const sentenceUrl = await resolveAudio({
+    // Independent lookups — run together rather than one after the other
+    // (see TypingSentence's identical handleWordClick for the same fix).
+    const [timings, sentenceUrl] = await Promise.all([
+      resolveWordTimings({
         contentType: "book_sentence",
         contentId: sentence.id,
         voiceId: resolvedVoiceId,
-      });
-      if (sentenceUrl) {
-        wordClip.play(sentenceUrl, undefined, { start: timing.start, end: timing.end });
-        return;
-      }
+      }),
+      resolveAudio({
+        contentType: "book_sentence",
+        contentId: sentence.id,
+        voiceId: resolvedVoiceId,
+      }),
+    ]);
+    const timing = timings?.[index];
+    if (timing && sentenceUrl) {
+      wordClip.play(sentenceUrl, undefined, { start: timing.start, end: timing.end });
+      return;
     }
 
     const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
