@@ -55,7 +55,7 @@ function normalizeTextForVoice(text: string): string {
 }
 
 async function main() {
-  const { computeWordTiming } = await import("../src/lib/voice/word-timing");
+  const { computeWordTiming } = await import("../src/lib/voice/word-timing-align");
 
   const supabase = createClient<Database>(url!, serviceRoleKey!, {
     auth: { autoRefreshToken: false, persistSession: false },
