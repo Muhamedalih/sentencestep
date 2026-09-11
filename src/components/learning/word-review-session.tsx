@@ -47,7 +47,7 @@ export interface ReviewWord extends VocabularyWord {
  * graduate under the ordinary spaced-repetition schedule.
  */
 export function WordReviewSession({
-  words,
+  words: initialWords,
   defaultVoiceId,
 }: {
   words: ReviewWord[];
@@ -55,6 +55,22 @@ export function WordReviewSession({
   defaultVoiceId?: string | null;
 }) {
   const { t, dir } = useLocale();
+  // Snapshotted once at mount, deliberately NOT read live off the `words`
+  // prop below: masterMistakeWordAction's own revalidatePath calls target
+  // this exact page, since it's the one place they need to take effect on a
+  // plain "go back" too (see that action's doc comment) — but that also
+  // means completing a word HERE, on this already-mounted page, can trigger
+  // Next's router to quietly refetch this route in the background and swap
+  // in a fresh (now shorter, possibly reordered) `words` prop while a
+  // session is still in progress. `queue` (below) already only ever holds
+  // indices into whatever `words` looked like at mount — reading the LIVE
+  // prop for anything else would silently misalign those indices against a
+  // different array the moment that background refetch lands, which is
+  // exactly what was pulling the current word out from under a learner
+  // mid-keystroke. This local copy is what queue's indices actually index
+  // into, for the entire lifetime of this session, regardless of anything
+  // the server refetches in the meantime.
+  const [words] = useState(initialWords);
   const [queue, setQueue] = useState<number[]>(() => words.map((_, i) => i));
   const [correctedCount, setCorrectedCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
