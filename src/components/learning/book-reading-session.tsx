@@ -25,6 +25,7 @@ import { findPageIndexForSentenceId, paginateSentences } from "@/lib/book-progre
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { emptyDailyProgress } from "@/lib/progress/types";
 import type { DailyProgressState } from "@/lib/progress/types";
+import { cn } from "@/lib/utils";
 import type { Book, BookSectionWithSentences } from "@/types/library";
 
 type Screen =
@@ -416,32 +417,24 @@ export function BookReadingSession({
         {screen === "reading" && sentence && viewedPage.length > 0 ? (
           <div key="reading" className="flex flex-col lg:h-full">
             {/*
-              Reuses the main lessons' exact ShiftReplayHint pill/position
-              (fixed bottom-right, same pill styling, same isActive gating)
-              rather than approximating it. Reader feedback: with the
-              click-to-highlight hint no longer stacked underneath it (see
-              the separate bottom-left hint below), this now renders exactly
-              like every other lesson mode's Shift hint. Scoped to the
-              "reading" screen only (this branch), matching where this hint
-              was always shown before — section intro/complete and book
-              complete never had it and still don't.
+              Reader feedback (2026-09-11): two separate floating hints in two
+              different corners read as clutter competing with the sentence
+              itself. Reunited into the one bottom-right stack ShiftReplayHint
+              already supports via `below` (ONE instructional note instead of
+              two scattered ones), rather than each screen inventing its own
+              fixed-position wrapper. Scoped to the "reading" screen only,
+              matching where these hints were always shown before.
             */}
-            <ShiftReplayHint />
-            {/*
-              The click-to-highlight hint used to stack directly under the
-              Shift pill (same bottom-right corner) — reader feedback moved
-              it to its own bottom-left corner instead, so the two
-              instructional hints read as two distinct, uncluttered notes
-              rather than one dense stack. Purely informational (aria-hidden,
-              pointer-events-none), matching the Shift pill's own treatment.
-            */}
-            <p
-              aria-hidden="true"
-              dir={dir}
-              className="text-muted-foreground/70 pointer-events-none fixed bottom-4 left-4 z-30 text-sm select-none sm:bottom-6 sm:left-6"
-            >
-              {renderHintWithHighlight(t.bookLibrary.clickHint, t.bookLibrary.clickHintHighlight)}
-            </p>
+            <ShiftReplayHint
+              below={
+                <span dir={dir} className="text-muted-foreground text-xs font-medium">
+                  {renderHintWithHighlight(
+                    t.bookLibrary.clickHint,
+                    t.bookLibrary.clickHintHighlight,
+                  )}
+                </span>
+              }
+            />
             <div className="shrink-0 px-6 pt-3 lg:px-16 lg:pt-4">
               {/*
                 Just the centered book title now — the section-title (start)
@@ -504,11 +497,25 @@ export function BookReadingSession({
                     <motion.div
                       key={pageSentence.id}
                       layout
+                      // A smooth deceleration curve rather than the previous
+                      // spring's bounce/overshoot — reader feedback asked for
+                      // a more polished feel here. Paired with the plain CSS
+                      // opacity/background transition below (Tailwind's
+                      // `transition-*` classes) rather than more Framer Motion
+                      // props: those two properties don't affect layout, so a
+                      // cheap CSS crossfade is enough and keeps this the only
+                      // thing actually driving the size/position tween.
                       transition={
                         reducedMotion
                           ? { duration: 0 }
-                          : { type: "spring", stiffness: 300, damping: 30 }
+                          : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
                       }
+                      className={cn(
+                        "rounded-2xl transition-[opacity,background-color,border-color] duration-300",
+                        isActiveSentence
+                          ? "border-border/40 bg-card/70 border px-5 py-4 sm:px-6 sm:py-5"
+                          : "opacity-55",
+                      )}
                     >
                       <BookSentenceReader
                         sentence={pageSentence}

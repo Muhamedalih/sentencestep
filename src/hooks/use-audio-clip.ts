@@ -79,7 +79,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
       // retry from whatever was playing before it.
       invalidate();
 
-      function attempt(url: string, retriesLeft: number) {
+      function attempt(url: string, retriesLeft: number, resumeFromSeconds: number) {
         const audio = new Audio(url);
         // Same file, just played back slower — never a separate audio asset
         // per speed (see PronunciationSettingsProvider). preservesPitch keeps
@@ -102,16 +102,43 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         // (audioRef.current is null then) — see invalidate() above.
         const isCurrent = () => audioRef.current === audio;
 
+        // A single real failure reliably fires BOTH the element's "error"
+        // event AND a rejection of the play() promise below — confirmed live
+        // as the cause of audible overlap/echo on retry: each call scheduled
+        // its own retry timer, so one failure produced TWO independent retry
+        // chains, each eventually starting its own Audio element and playing
+        // the same clip at the same time. `handled` makes this attempt's
+        // failure path run at most once no matter which path (or both) fires.
+        let handled = false;
+
         function handleFailure() {
-          if (!isCurrent()) return;
+          if (handled || !isCurrent()) return;
+          handled = true;
           if (retriesLeft > 0) {
+            // Resuming near where playback actually stopped — rather than
+            // restarting the clip from 0:00 — is what keeps a transient
+            // mid-sentence hiccup sounding like a brief stumble instead of
+            // the sentence audibly restarting from the beginning.
+            const resumePoint = audio.currentTime > 0 ? audio.currentTime : resumeFromSeconds;
             retryTimeoutRef.current = setTimeout(() => {
               retryTimeoutRef.current = undefined;
-              if (isCurrent()) attempt(url, retriesLeft - 1);
+              if (isCurrent()) attempt(url, retriesLeft - 1, resumePoint);
             }, retryDelayMs);
             return;
           }
           setStatus("error");
+        }
+
+        if (resumeFromSeconds > 0) {
+          audio.addEventListener(
+            "loadedmetadata",
+            () => {
+              if (isCurrent() && resumeFromSeconds < audio.duration) {
+                audio.currentTime = resumeFromSeconds;
+              }
+            },
+            { once: true },
+          );
         }
 
         audio.addEventListener("playing", () => {
@@ -124,7 +151,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         audio.play().catch(handleFailure);
       }
 
-      attempt(resolvedSrc, maxRetries);
+      attempt(resolvedSrc, maxRetries, 0);
     },
     [src, maxRetries, retryDelayMs],
   );

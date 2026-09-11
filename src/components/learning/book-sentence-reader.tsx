@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { BookReadingTools } from "@/components/learning/book-reading-tools";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
+import {
+  PronunciationButton,
+  type PronunciationButtonHandle,
+} from "@/components/learning/pronunciation-button";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { Button } from "@/components/ui/button";
@@ -106,6 +109,13 @@ export function BookSentenceReader({
   // language.
   const supportText = sentence.supportText ?? sentence.en;
   const wordClip = useAudioClip(undefined, { maxRetries: 2, retryDelayMs: 400 });
+  // Handle onto the hidden sentence-narration PronunciationButton below —
+  // the only way to stop ITS clip from here, since that Audio element lives
+  // entirely inside that component. Without this, a word click while the
+  // sentence was still narrating started a second, independent Audio
+  // element with no coordination at all: two clips audibly overlapping,
+  // confirmed live in Books.
+  const sentenceAudioRef = useRef<PronunciationButtonHandle>(null);
   const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
 
   /**
@@ -121,6 +131,9 @@ export function BookSentenceReader({
    */
   async function handleWordClick(word: string) {
     if (!resolvedVoiceId || !isTrackableWord(word)) return;
+    // Stop the sentence's own narration first — see sentenceAudioRef's doc
+    // comment above for why this exists at all.
+    sentenceAudioRef.current?.stop();
     const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
     const url = await resolveAudio({
       contentType: "book_sentence_word",
@@ -137,16 +150,36 @@ export function BookSentenceReader({
   // entirely in the read-only page-preview state (readOnly) — that
   // rendering has no live typing cursor and isn't the sentence the learner
   // is actually reading right now.
+  //
+  // Staggered and delayed on purpose (Books only — TypingSentence's own copy
+  // of this effect is untouched): firing every word's prefetch (a server
+  // action plus a follow-up warm fetch each) all at once, right as this
+  // sentence becomes active, competes for the browser's own per-origin
+  // connection limit with THIS SAME sentence's own narration-audio fetch —
+  // confirmed live as net::ERR_INSUFFICIENT_RESOURCES and the narration
+  // audibly stalling right after autoplay started. None of this prefetching
+  // is needed immediately (it only pays off on a later word click), so
+  // giving the narration a head start and then trickling word prefetches in
+  // one at a time costs nothing and stops them from starving the audio that
+  // actually matters at this moment. Cleared on unmount/sentence change so
+  // a sentence the learner already left behind never keeps competing for
+  // bandwidth the newly-active sentence needs.
   useEffect(() => {
     if (readOnly || !resolvedVoiceId) return;
-    const words = new Set(tokenize(sentence.en).filter(isTrackableWord));
-    for (const word of words) {
-      prefetchPronunciation({
-        contentType: "book_sentence_word",
-        contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
-        voiceId: resolvedVoiceId,
-      });
-    }
+    const words = Array.from(new Set(tokenize(sentence.en).filter(isTrackableWord)));
+    const timers = words.map((word, index) =>
+      setTimeout(
+        () => {
+          prefetchPronunciation({
+            contentType: "book_sentence_word",
+            contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
+            voiceId: resolvedVoiceId,
+          });
+        },
+        600 + index * 150,
+      ),
+    );
+    return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice/readOnly actually changes, not on every render
   }, [sentence.id, resolvedVoiceId, readOnly]);
 
@@ -182,29 +215,29 @@ export function BookSentenceReader({
     <motion.div initial={false} className="relative">
       {/*
         Save/Note/Speed live behind BookReadingTools' one trigger (see that
-        component's own doc comment for why). A read-only page-preview
-        sentence gets just this row — no per-sentence replay button anymore
-        (removed: reader feedback was that a small speaker icon on every
-        context sentence read as clutter competing with the active
-        sentence's own big, primary Play button, and freed the row to sit
-        more tightly against the sentence text below it). The active
-        sentence's large, centered Play button (audio-first redesign) stays
-        the one and only playback control on the page.
+        component's own doc comment for why). Reader feedback (2026-09-11):
+        repeating this trigger on every context sentence on the page (up to
+        four of them) alongside the active one read as noise competing for
+        attention — it's now shown on the active sentence only, matching that
+        same feedback's request for a calmer page. A read-only page-preview
+        sentence renders none of this row at all.
       */}
-      <div className="mb-3 flex min-w-0 items-center gap-3">
-        {sectionTitle && (
-          <span className="text-primary text-xs font-semibold tracking-wide uppercase" dir={dir}>
-            {sectionTitle}
-          </span>
-        )}
-        <BookReadingTools
-          bookId={bookId}
-          sentenceId={sentence.id}
-          inputRef={engine.inputRef}
-          mark={mark}
-          showSpeed={!readOnly}
-        />
-      </div>
+      {!readOnly && (
+        <div className="mb-3 flex min-w-0 items-center gap-3">
+          {sectionTitle && (
+            <span className="text-primary text-xs font-semibold tracking-wide uppercase" dir={dir}>
+              {sectionTitle}
+            </span>
+          )}
+          <BookReadingTools
+            bookId={bookId}
+            sentenceId={sentence.id}
+            inputRef={engine.inputRef}
+            mark={mark}
+            showSpeed={!readOnly}
+          />
+        </div>
+      )}
 
       {!readOnly && (
         // Reader feedback: with audio already autoplaying and the Shift
@@ -218,9 +251,11 @@ export function BookSentenceReader({
         // losing either of those would silently break Shift-to-replay too,
         // not just autoplay.
         <PronunciationButton
+          ref={sentenceAudioRef}
           text={sentence.en}
           audioUrl={sentence.audioUrl}
           onPlay={onAudioPlay}
+          onBeforePlay={() => wordClip.stop()}
           autoPlay
           resetKey={sentence.id}
           inputRef={engine.inputRef}
@@ -242,7 +277,11 @@ export function BookSentenceReader({
         reducedMotion={reducedMotion}
         textClassName={
           isLarge
-            ? "text-[clamp(1.55rem,1.1rem+1.55vw,2.5rem)]"
+            ? // Reader feedback (2026-09-11): with the active sentence now the
+              // one clear focal point on the page (see its focus-card wrapper
+              // in BookReadingSession), it can afford to read a little larger
+              // than before — bumped both ends of the clamp.
+              "text-[clamp(1.7rem,1.15rem+1.75vw,2.85rem)]"
             : "text-[clamp(0.95rem,0.75rem+0.55vw,1.25rem)]"
         }
         textStyle={textStyle}
