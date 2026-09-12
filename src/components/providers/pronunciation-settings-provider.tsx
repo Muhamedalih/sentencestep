@@ -125,6 +125,31 @@ const DEFAULT_VALUE: PronunciationSettingsValue = {
 const PronunciationSettingsContext = createContext<PronunciationSettingsValue>(DEFAULT_VALUE);
 
 /**
+ * Ceiling on how many prefetchPronunciation-driven network round trips run
+ * at once — added (2026-09-12) after tracing reader reports of a book
+ * section transition taking minutes: a single Books section can queue over
+ * a hundred individual prefetchPronunciation calls in quick succession (one
+ * sentence-narration resolve plus one per trackable word, across the
+ * current+next PAGE of sentences — see BookReadingSession's own prefetch
+ * effect), each a separate Server Action round trip. Browsers cap
+ * concurrent connections per origin at ~6, so a burst that size saturated
+ * that pool outright — and any request issued while it was still draining,
+ * including the section-boundary fetchSectionAfterAction call the reader
+ * was actually waiting on, simply queued behind it in the SAME connection
+ * pool, sometimes for minutes. The per-call setTimeout stagger already in
+ * place (see that effect's own doc comment) spaces out when each prefetch
+ * STARTS but does nothing to cap how many are simultaneously in flight once
+ * started, so a burst large enough (or with even a few slow individual
+ * resolves) still saturated the pool the same way. This queue caps actual
+ * concurrent network activity outright, independent of how many calls are
+ * queued or how long any one of them takes — on-demand resolves (a real
+ * word click, a real replay) go through resolveAudio directly and are never
+ * queued here, so they stay instant regardless of how much background
+ * prefetch is pending.
+ */
+const MAX_CONCURRENT_PREFETCH_REQUESTS = 2;
+
+/**
  * Shared, session-scoped state for the two global learning-audio features
  * (Shift-to-replay and the speed toggle) — mounted once in
  * src/app/learn/layout.tsx so it covers Normal, Stories, Conversation, and
@@ -149,6 +174,13 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
   // so sharing one map would collide.
   const wordTimingsRef = useRef<Map<string, WordTiming[] | null>>(new Map());
   const wordTimingsInFlightRef = useRef<Map<string, Promise<WordTiming[] | null>>>(new Map());
+  // See MAX_CONCURRENT_PREFETCH_REQUESTS's own doc comment — pure in-memory
+  // bookkeeping (never state), since queueing/draining a background prefetch
+  // is not a UI event.
+  const prefetchQueueRef = useRef<
+    Array<{ contentType: VoiceAudioContentType; contentId: string; voiceId: string }>
+  >([]);
+  const activePrefetchesRef = useRef(0);
 
   const getResolvedAudio = useCallback(
     (contentId: string) => resolvedAudioRef.current.get(contentId),
@@ -227,25 +259,48 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
     [],
   );
 
-  const prefetchPronunciation = useCallback(
+  // See MAX_CONCURRENT_PREFETCH_REQUESTS's own doc comment. Recurses into
+  // itself from the `.finally()` below to pull the next queued item the
+  // instant a slot frees — by the time that callback actually runs (a real
+  // network round trip later), `runPrefetchTask` is already fully assigned,
+  // so the self-reference through the closure is safe.
+  const runPrefetchTask = useCallback(
     (input: { contentType: VoiceAudioContentType; contentId: string; voiceId: string }) => {
-      void resolveAudio(input).then((url) => {
-        if (!url) return;
-        // Resolving the URL alone isn't the whole story: measured
-        // separately, a sentence whose URL was already known but whose
-        // audio bytes the browser had never fetched still took ~800ms from
-        // play() to the audible "playing" event — a cold Supabase Storage
-        // GET, not a resolve delay. A plain fetch() here, discarded once
-        // read, lets the browser cache the response per the bucket's own
-        // Cache-Control headers (no different from a real learner's
-        // browser having visited the URL before) — never bypassed or
-        // duplicated, and irrelevant to on-demand resolves that are about
-        // to play immediately anyway (see resolveAudio, called directly
-        // there without this).
-        fetch(url).catch(() => {});
-      });
+      activePrefetchesRef.current += 1;
+      void resolveAudio(input)
+        .then((url) => {
+          if (!url) return;
+          // Resolving the URL alone isn't the whole story: measured
+          // separately, a sentence whose URL was already known but whose
+          // audio bytes the browser had never fetched still took ~800ms from
+          // play() to the audible "playing" event — a cold Supabase Storage
+          // GET, not a resolve delay. A plain fetch() here, discarded once
+          // read, lets the browser cache the response per the bucket's own
+          // Cache-Control headers (no different from a real learner's
+          // browser having visited the URL before) — never bypassed or
+          // duplicated, and irrelevant to on-demand resolves that are about
+          // to play immediately anyway (see resolveAudio, called directly
+          // there without this).
+          fetch(url).catch(() => {});
+        })
+        .finally(() => {
+          activePrefetchesRef.current -= 1;
+          const next = prefetchQueueRef.current.shift();
+          if (next) runPrefetchTask(next);
+        });
     },
     [resolveAudio],
+  );
+
+  const prefetchPronunciation = useCallback(
+    (input: { contentType: VoiceAudioContentType; contentId: string; voiceId: string }) => {
+      if (activePrefetchesRef.current < MAX_CONCURRENT_PREFETCH_REQUESTS) {
+        runPrefetchTask(input);
+      } else {
+        prefetchQueueRef.current.push(input);
+      }
+    },
+    [runPrefetchTask],
   );
 
   const cycleSpeed = useCallback(() => {
