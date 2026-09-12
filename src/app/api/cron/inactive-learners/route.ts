@@ -26,6 +26,19 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
  * schedulers (GitHub Actions, cron-job.org, a manual curl) more commonly use
  * POST — both are gated by the exact same isValidCronAuth check either way.
  */
+/**
+ * Bounded on purpose, mirroring translation-sweep/voice-sweep's own
+ * per-run caps (see those routes' doc comments for the Netlify timeout
+ * incident that motivated them): a plain per-row loop of a DB write + an
+ * admin user lookup + an email send scales linearly with how many
+ * learners cross the inactivity threshold on a given day, so it needs a
+ * ceiling to avoid timing out once the learner base is large. Safe to cap
+ * without losing anyone — shouldNotify's `>=` threshold plus its weekly
+ * dedupe bucket mean a learner left over this run is still eligible (not
+ * yet notified for that week) on tomorrow's run.
+ */
+const MAX_NOTIFICATIONS_PER_RUN = 500;
+
 async function handleInactiveLearnersCron(request: Request): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
@@ -62,13 +75,15 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   // constraint, so it's batched into one query instead of one-per-eligible-row
   // — the previous version did a round trip per streak row that passed
   // shouldNotify, which scales linearly with active learner count.
-  const eligible = (streaks ?? []).filter((row) => {
-    if (!row.last_active_date) return false;
-    const daysInactive = Math.floor(
-      (now.getTime() - new Date(row.last_active_date).getTime()) / 86_400_000,
-    );
-    return shouldNotify({ type: "INACTIVE_LEARNER", daysInactive });
-  });
+  const eligible = (streaks ?? [])
+    .filter((row) => {
+      if (!row.last_active_date) return false;
+      const daysInactive = Math.floor(
+        (now.getTime() - new Date(row.last_active_date).getTime()) / 86_400_000,
+      );
+      return shouldNotify({ type: "INACTIVE_LEARNER", daysInactive });
+    })
+    .slice(0, MAX_NOTIFICATIONS_PER_RUN);
 
   const { data: prefsRows } = eligible.length
     ? await supabase

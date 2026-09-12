@@ -24,10 +24,27 @@ export interface WordGroupInput {
   status: WordGroupStatus;
 }
 
+const MAX_TITLE_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 1000;
+const MAX_TARGET_WORD_LENGTH = 50;
+const MAX_SENTENCE_LENGTH = 500;
+const MAX_HINT_LENGTH = 200;
+
 export function validateWordGroupInput(input: WordGroupInput): ValidationResult {
   const errors: string[] = [];
   if (!input.title?.trim()) errors.push("Title is required.");
+  if (input.title && input.title.trim().length > MAX_TITLE_LENGTH)
+    errors.push(`Title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
   if (!input.titleAr?.trim()) errors.push("Arabic title is required.");
+  if (input.titleAr && input.titleAr.trim().length > MAX_TITLE_LENGTH)
+    errors.push(`Arabic title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
+  for (const [label, value] of [
+    ["Description", input.description],
+    ["Arabic description", input.descriptionAr],
+  ] as const) {
+    if (value && value.trim().length > MAX_DESCRIPTION_LENGTH)
+      errors.push(`${label} must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`);
+  }
   if (!Number.isInteger(input.level) || input.level < 1 || input.level > 3) {
     errors.push("Level must be 1 (Beginner), 2 (Intermediate), or 3 (Advanced).");
   }
@@ -64,11 +81,18 @@ export function validateVocabularyWordInput(input: VocabularyWordInput): string[
     errors.push("Target word is required.");
   } else if (/\s/.test(targetWord)) {
     errors.push(`"${targetWord}": target word must be a single word, no spaces.`);
+  } else if (targetWord.length > MAX_TARGET_WORD_LENGTH) {
+    errors.push(
+      `"${targetWord}": target word must be ${MAX_TARGET_WORD_LENGTH} characters or fewer.`,
+    );
   }
 
   if (!sentence) {
     errors.push("Sentence is required.");
   } else {
+    if (sentence.length > MAX_SENTENCE_LENGTH) {
+      errors.push(`Sentence must be ${MAX_SENTENCE_LENGTH} characters or fewer.`);
+    }
     const blankCount = sentence.split(BLANK_TOKEN).length - 1;
     if (blankCount !== 1) {
       errors.push(
@@ -87,6 +111,10 @@ export function validateVocabularyWordInput(input: VocabularyWordInput): string[
     errors.push(`"${targetWord || "word"}": Arabic hint is required.`);
   } else if (!ARABIC_CHAR_RE.test(hintAr)) {
     errors.push(`"${targetWord || "word"}": the hint doesn't look like Arabic text.`);
+  } else if (hintAr.length > MAX_HINT_LENGTH) {
+    errors.push(
+      `"${targetWord || "word"}": Arabic hint must be ${MAX_HINT_LENGTH} characters or fewer.`,
+    );
   }
 
   return errors;

@@ -144,6 +144,11 @@ export const MIN_STORY_SENTENCE_COUNT = 6;
  * pre-existing sentence with no Spanish/Turkish yet can still be edited
  * (e.g. reordered, its audio URL set) without being forced to add them.
  */
+const MAX_SENTENCE_LENGTH = 500;
+const MAX_SPEAKER_LENGTH = 100;
+const MAX_TITLE_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 1000;
+
 export function validateSentenceInput(
   sentence: SentenceInput,
   mode: LearningMode,
@@ -151,14 +156,24 @@ export function validateSentenceInput(
 ): string[] {
   const errors: string[] = [];
   if (!sentence.en?.trim()) errors.push("English text is required.");
+  if (sentence.en && sentence.en.trim().length > MAX_SENTENCE_LENGTH)
+    errors.push(`English text must be ${MAX_SENTENCE_LENGTH} characters or fewer.`);
   if (!sentence.ar?.trim()) errors.push("Arabic translation is required.");
+  if (sentence.ar && sentence.ar.trim().length > MAX_SENTENCE_LENGTH)
+    errors.push(`Arabic translation must be ${MAX_SENTENCE_LENGTH} characters or fewer.`);
   if (requireAllTranslations) {
     if (!sentence.es?.trim()) errors.push("Spanish translation is required.");
     if (!sentence.tr?.trim()) errors.push("Turkish translation is required.");
   }
+  if (sentence.es && sentence.es.trim().length > MAX_SENTENCE_LENGTH)
+    errors.push(`Spanish translation must be ${MAX_SENTENCE_LENGTH} characters or fewer.`);
+  if (sentence.tr && sentence.tr.trim().length > MAX_SENTENCE_LENGTH)
+    errors.push(`Turkish translation must be ${MAX_SENTENCE_LENGTH} characters or fewer.`);
   if (mode === "conversation" && !sentence.speaker?.trim()) {
     errors.push("A speaker is required for conversation lines.");
   }
+  if (sentence.speaker && sentence.speaker.trim().length > MAX_SPEAKER_LENGTH)
+    errors.push(`Speaker must be ${MAX_SPEAKER_LENGTH} characters or fewer.`);
   const audioUrl = sentence.audioUrl?.trim();
   if (audioUrl && !/^(https?:\/\/|\/)\S+$/.test(audioUrl)) {
     errors.push("Audio URL must be a full link (https://...) or a site-relative path (/...).");
@@ -186,15 +201,32 @@ export function validateLessonInput(input: LessonInput): ValidationResult {
   if (!VALID_MODES.includes(input.mode)) errors.push("Invalid content type.");
   if (!input.levelId) errors.push("A level is required.");
   if (!input.title?.trim()) errors.push("Title is required.");
+  if (input.title && input.title.trim().length > MAX_TITLE_LENGTH)
+    errors.push(`Title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
   if (!input.titleAr?.trim()) errors.push("Arabic title is required.");
+  if (input.titleAr && input.titleAr.trim().length > MAX_TITLE_LENGTH)
+    errors.push(`Arabic title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
   if (requireAllTranslations) {
     if (!input.titleEs?.trim()) errors.push("Spanish title is required.");
     if (!input.titleTr?.trim()) errors.push("Turkish title is required.");
   }
+  if (input.titleEs && input.titleEs.trim().length > MAX_TITLE_LENGTH)
+    errors.push(`Spanish title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
+  if (input.titleTr && input.titleTr.trim().length > MAX_TITLE_LENGTH)
+    errors.push(`Turkish title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
   if (requireAllTranslations && input.description?.trim()) {
     if (!input.descriptionAr?.trim()) errors.push("Arabic description is required.");
     if (!input.descriptionEs?.trim()) errors.push("Spanish description is required.");
     if (!input.descriptionTr?.trim()) errors.push("Turkish description is required.");
+  }
+  for (const [label, value] of [
+    ["Description", input.description],
+    ["Arabic description", input.descriptionAr],
+    ["Spanish description", input.descriptionEs],
+    ["Turkish description", input.descriptionTr],
+  ] as const) {
+    if (value && value.trim().length > MAX_DESCRIPTION_LENGTH)
+      errors.push(`${label} must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`);
   }
   if (!Number.isInteger(input.orderIndex) || input.orderIndex < 1) {
     errors.push("Order must be a positive whole number.");
