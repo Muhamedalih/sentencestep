@@ -32,39 +32,45 @@ export function WordGroupLocked({
       variants={popIn}
       initial="hidden"
       animate="visible"
-      className="border-border bg-card flex flex-col items-center gap-5 rounded-2xl border p-10 text-center shadow-sm sm:p-12"
+      className="border-border bg-card relative flex flex-col items-center gap-6 overflow-hidden rounded-2xl border p-8 text-center shadow-sm sm:flex-row sm:items-center sm:gap-8 sm:p-10 sm:text-start"
     >
-      <div className="bg-brand-muted text-primary flex size-14 items-center justify-center rounded-full">
-        <Lock className="size-7" aria-hidden="true" />
+      <div className="bg-brand absolute inset-x-0 top-0 h-[3px] opacity-60" aria-hidden="true" />
+
+      <div className="flex flex-col items-center gap-4 sm:flex-1 sm:items-start">
+        <div className="flex items-center gap-3">
+          <div className="bg-brand-muted text-primary flex size-11 shrink-0 items-center justify-center rounded-full">
+            <Lock className="size-5" aria-hidden="true" />
+          </div>
+          <Badge variant="muted">{t.wordLists.lockedBadge}</Badge>
+        </div>
+
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight" dir="ltr">
+            {title}
+          </h1>
+          {supportTitle && (
+            <p className="text-muted-foreground mt-1" dir={dir}>
+              {supportTitle}
+            </p>
+          )}
+        </div>
+
+        <p className="text-muted-foreground max-w-sm text-sm">{t.wordLists.lockedBody}</p>
       </div>
 
-      <div>
-        <Badge variant="muted" className="mb-3">
-          {t.wordLists.lockedBadge}
-        </Badge>
-        <h1 className="text-2xl font-semibold tracking-tight" dir="ltr">
-          {title}
-        </h1>
-        {supportTitle && (
-          <p className="text-muted-foreground mt-1" dir={dir}>
-            {supportTitle}
-          </p>
-        )}
-      </div>
-
-      <p className="text-muted-foreground max-w-sm text-sm">{t.wordLists.lockedBody}</p>
-
-      <div className="text-foreground flex items-center gap-2 text-sm">
-        <Sparkles className="text-primary size-4 shrink-0" aria-hidden="true" />
-        <span>{t.wordLists.wordsAndHintDetail}</span>
-      </div>
-
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-        <Button variant="outline" asChild>
-          <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
-        </Button>
-        <Button asChild>
+      <div className="flex w-full flex-col items-center gap-3 sm:w-56 sm:shrink-0">
+        <Button asChild size="lg" className="w-full">
           <Link href="/upgrade">{t.premium.upgradeCta.replace("{price}", formatPrice())}</Link>
+        </Button>
+        <p className="text-muted-foreground text-xs">{t.premium.priceAnchorCaption}</p>
+
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
+          <Sparkles className="text-primary size-3.5 shrink-0" aria-hidden="true" />
+          <span>{t.wordLists.wordsAndHintDetail}</span>
+        </div>
+
+        <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+          <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
         </Button>
       </div>
     </motion.div>
