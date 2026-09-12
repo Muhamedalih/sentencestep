@@ -12,7 +12,11 @@ import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { tokenize } from "@/lib/typing";
 import { resolveVoiceId } from "@/lib/voice/resolution";
-import { lookupCachedAudioUrl, lookupCachedWordAudioUrls } from "@/lib/voice/voice-audio";
+import {
+  lookupCachedAudioUrl,
+  lookupCachedWordAudioUrls,
+  resolveWordCacheVoiceId,
+} from "@/lib/voice/voice-audio";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { fetchDailyProgress, fetchStreak, fetchXp } from "@/lib/supabase/queries/progress";
@@ -206,15 +210,27 @@ export default async function BookReadingPage({
   // scripts/backfill-word-audio.ts) and sitting in cache. Cache-only: never
   // generates, so a miss here just leaves that word to resolve on demand
   // client-side exactly as before.
+  //
+  // Looked up under resolveWordCacheVoiceId(resolvedVoiceId), NOT
+  // resolvedVoiceId directly (2026-09-12 fix): an isolated word's own cache
+  // row never lives under a book's paid ElevenLabs narrator voice — only
+  // ever under the free gender-matched Edge-TTS substitute
+  // resolvePronunciationAudioAction's own word branch actually generates
+  // and caches it under (see that function, and resolveWordCacheVoiceId's
+  // own doc comment). Querying under the narrator's id directly, as this
+  // did before, was a guaranteed miss every time for every book — confirmed
+  // live against production (voice_audio_cache rows for this book's actual
+  // narrator id are all full sentences, never a single word).
+  const wordCacheVoiceId = resolvedVoiceId ? await resolveWordCacheVoiceId(resolvedVoiceId) : null;
   const firstSentenceWordAudio =
-    initialSentence && resolvedVoiceId
+    initialSentence && wordCacheVoiceId
       ? await lookupCachedWordAudioUrls(
           new Map(
             Array.from(new Set(tokenize(initialSentence.en).filter(isTrackableWord))).map(
               (word) => [word, `${initialSentence.id}::${normalizeMistakeWord(word)}`] as const,
             ),
           ),
-          resolvedVoiceId,
+          wordCacheVoiceId,
         )
       : undefined;
 

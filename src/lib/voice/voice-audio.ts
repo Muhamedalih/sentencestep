@@ -418,6 +418,26 @@ async function pickGenderMatchedEdgeTtsVoice(
 }
 
 /**
+ * The voice_id a WORD-level cache row (sentence_word/book_sentence_word)
+ * actually lives under for a given narrator/lesson voice: that voice's own
+ * id unchanged if it's already Edge-TTS, otherwise the same free
+ * gender-matched Edge-TTS substitute resolvePronunciationAudioAction's own
+ * word branch below picks (see pickGenderMatchedEdgeTtsVoice) — never a
+ * second, drifting copy of that decision, just this one exposed for a
+ * caller that needs to look several words up in bulk (see
+ * lookupCachedWordAudioUrls above) rather than one at a time. Read-only:
+ * never generates, never claims a cache row, so calling this can never
+ * itself kick off a synthesis.
+ */
+export async function resolveWordCacheVoiceId(narratorVoiceId: string): Promise<string | null> {
+  const voice = await lookupVoice(narratorVoiceId);
+  if (!voice) return null;
+  if (voice.source === "edge-tts") return narratorVoiceId;
+  const substitute = await pickGenderMatchedEdgeTtsVoice(voice.gender);
+  return substitute?.id ?? null;
+}
+
+/**
  * Resolves a ready-to-play audio URL for real SentenceStep content spoken
  * by a real, existing voice. Cache-only for every content type except
  * "sentence_word"/"book_sentence_word" (see generateIsolatedWordAudio) — a

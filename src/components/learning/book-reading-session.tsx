@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
 
@@ -30,7 +30,8 @@ import { emptyDailyProgress } from "@/lib/progress/types";
 import type { DailyProgressState } from "@/lib/progress/types";
 import { tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
-import type { Book, BookSectionWithSentences } from "@/types/library";
+import { resolveBookPageAudioAction } from "@/lib/voice/book-audio-batch";
+import type { Book, BookSentence, BookSectionWithSentences } from "@/types/library";
 
 type Screen =
   | "sectionIntro"
@@ -128,7 +129,7 @@ export function BookReadingSession({
     volume: typingSoundSettings.volume,
     sentenceCompleteSound: typingSoundSettings.sentenceCompleteSound,
   });
-  const { prefetchPronunciation } = usePronunciationSettings();
+  const { registerResolvedAudio } = usePronunciationSettings();
 
   const [section, setSection] = useState(initialSection);
   const initialIndex = Math.max(
@@ -204,83 +205,79 @@ export function BookReadingSession({
     };
   }, [isSignedIn, section]);
 
-  // Same fix as LessonSession's identical effect, widened for Books' real
-  // page shape (2026-09-11): rather than only ever warming the ONE sentence
-  // right after the active one — which gave a sentence three or four slots
-  // deep on the same page almost no lead time even though it's already
-  // sitting on screen as a context sentence — this warms every sentence on
-  // the CURRENTLY VIEWED PAGE at once, plus the very first sentence of the
-  // next page. A learner reading normally sees every one of those sentences
-  // the instant the page renders, so there's no reason their audio resolves
-  // should wait for sequential advancement to even start. Cheap: all of
-  // this is a no-op the moment something's already resolved or in flight
-  // (see resolveAudio's shared cache/in-flight dedup in
-  // PronunciationSettingsProvider), so re-requesting the same page's
-  // sentences on every render this effect fires for never duplicates a
-  // round trip.
+  // Batched page-audio warm-up (2026-09-12) — replaces what used to be one
+  // prefetchPronunciation call per sentence PLUS one per trackable word
+  // (100+ individual Server Action round trips on a typical page). Reader
+  // reports traced this exact volume to two DIFFERENT symptoms depending on
+  // how it was throttled client-side: unthrottled, a burst that size
+  // saturated the connection pool and made the section-boundary fetch queue
+  // behind it for minutes; throttled to 1 concurrent, the backlog instead
+  // took minutes to fully drain, keeping a background request continuously
+  // in flight the whole time the reader stayed on that page — either way,
+  // competing with the reader's own on-demand plays. resolveBookPageAudioAction
+  // (Books-only; see its own doc comment) collapses a whole page's worth of
+  // "is this already cached?" checks into one or two round trips instead —
+  // it never generates anything itself, so a miss for any sentence or word
+  // is exactly as before: silently left for the existing on-demand
+  // resolveAudio path (PronunciationButton/BookSentenceReader, both
+  // unchanged) to resolve when the reader actually reaches it. Skips
+  // entirely for a sentence whose audioUrl is already known (the book's own
+  // pre-generated narration, already on the row from the initial fetch) —
+  // registering that directly is a pure client-side cache write, no network
+  // call needed at all.
+  const prefetchedPagesRef = useRef<Set<string>>(new Set());
+  const warmPageAudio = useCallback(
+    (pageSentences: BookSentence[], voiceId: string) => {
+      if (pageSentences.length === 0) return;
+      const pageKey = `${voiceId}::${pageSentences.map((s) => s.id).join(",")}`;
+      if (prefetchedPagesRef.current.has(pageKey)) return;
+      prefetchedPagesRef.current.add(pageKey);
+
+      const sentencesNeeded: { contentId: string; text: string }[] = [];
+      const wordsNeeded: { contentId: string; word: string }[] = [];
+      for (const s of pageSentences) {
+        if (s.audioUrl) {
+          registerResolvedAudio(s.id, s.audioUrl);
+        } else {
+          sentencesNeeded.push({ contentId: s.id, text: s.en });
+        }
+        for (const word of new Set(tokenize(s.en).filter(isTrackableWord))) {
+          wordsNeeded.push({ contentId: `${s.id}::${normalizeMistakeWord(word)}`, word });
+        }
+      }
+      if (sentencesNeeded.length === 0 && wordsNeeded.length === 0) return;
+
+      void resolveBookPageAudioAction({
+        narratorVoiceId: voiceId,
+        sentences: sentencesNeeded,
+        words: wordsNeeded,
+      })
+        .then(({ sentenceAudio, wordAudio }) => {
+          for (const [contentId, url] of Object.entries(sentenceAudio))
+            registerResolvedAudio(contentId, url);
+          for (const [contentId, url] of Object.entries(wordAudio))
+            registerResolvedAudio(contentId, url);
+        })
+        .catch((error: unknown) => {
+          console.error("[book-audio] batched page warm-up failed", error);
+        });
+    },
+    [registerResolvedAudio],
+  );
+
+  // Pipeline: the CURRENT page is warmed the instant it becomes current,
+  // and the NEXT page is warmed at the same time, in the background, while
+  // the reader is still on the current one — by the time they actually
+  // page or sentence forward into it, its audio is normally already sitting
+  // in the shared cache (see PronunciationSettingsProvider.getResolvedAudio)
+  // with zero further round trips. warmPageAudio's own pageKey de-dup means
+  // paging back and forth, or this effect re-firing for any other reason,
+  // never re-warms the same page twice.
   useEffect(() => {
     if (!resolvedVoiceId) return;
-    const currentPage = pages[viewPageIndex] ?? [];
-    // The WHOLE next page, not just its first sentence (reader feedback:
-    // page 2 of a section specifically kept lagging) — a page boundary
-    // crossed mid-section has no equivalent of the section-boundary crossing's
-    // own early "last sentence of the old one" trigger below, so this is the
-    // only lead time a next page's sentences 2-4 get at all; giving them only
-    // a single sentence's worth of warm-up left them no better off than
-    // resolving cold the instant the reader actually reached them.
-    const nextPage = pages[viewPageIndex + 1] ?? [];
-    const sentences = [...currentPage, ...nextPage];
-    for (const s of sentences) {
-      prefetchPronunciation({
-        contentType: "book_sentence",
-        contentId: s.id,
-        voiceId: resolvedVoiceId,
-      });
-    }
-
-    // Root-cause fix for "word clicks are still noticeably delayed": this
-    // warmed every sentence's own narration across the current+next page,
-    // but BookSentenceReader's own word-prefetch effect only ever warms the
-    // ACTIVE sentence's words (see its `readOnly` guard) — a context
-    // sentence sitting right there on the same page got no word warm-up at
-    // all until the reader actually reached it. Flattened into one staggered
-    // list (rather than restarting the stagger per sentence, which would
-    // burst every sentence's first word at the same moment) so this never
-    // fires more than one resolve at a time. A no-op for anything already
-    // cached/in flight (see prefetchPronunciation's own dedup), so paging
-    // back and forth never duplicates a round trip.
-    //
-    // CURRENT page's sentences only (2026-09-12) — this used to also cover
-    // the NEXT page's words, but reader reports of the ACTIVE sentence's own
-    // audio (and a real word click on it) now taking 1.5s+ traced straight to
-    // this: on a typical page, current+next page's word count alone was
-    // easily 100+ items, which — even throttled to a handful concurrent
-    // requests (see MAX_CONCURRENT_PREFETCH_REQUESTS) — kept a background
-    // request continuously in flight for minutes, competing with the SAME
-    // backend the reader's own on-demand plays hit for every click, the
-    // whole time they were reading that page. The next page's words still
-    // get their own head start the moment the reader actually turns to it —
-    // this effect re-fires then with THAT page as "current" — just not two
-    // pages in advance.
-    const words = currentPage.flatMap((s) =>
-      Array.from(new Set(tokenize(s.en).filter(isTrackableWord))).map((word) => ({
-        contentId: `${s.id}::${normalizeMistakeWord(word)}`,
-      })),
-    );
-    const timers = words.map(({ contentId }, index) =>
-      setTimeout(
-        () => {
-          prefetchPronunciation({
-            contentType: "book_sentence_word",
-            contentId,
-            voiceId: resolvedVoiceId,
-          });
-        },
-        600 + index * 150,
-      ),
-    );
-    return () => timers.forEach(clearTimeout);
-  }, [viewPageIndex, pages, resolvedVoiceId, prefetchPronunciation]);
+    warmPageAudio(pages[viewPageIndex] ?? [], resolvedVoiceId);
+    warmPageAudio(pages[viewPageIndex + 1] ?? [], resolvedVoiceId);
+  }, [viewPageIndex, pages, resolvedVoiceId, warmPageAudio]);
 
   // Reader feedback (2026-09-11): completing a section's last sentence used
   // to show a bare loading screen for as long as fetchSectionAfterAction's
@@ -322,13 +319,7 @@ export function BookReadingSession({
       void promise
         .then((next) => {
           const firstPage = next ? (paginateSentences(next.sentences)[0] ?? []) : [];
-          for (const s of firstPage) {
-            prefetchPronunciation({
-              contentType: "book_sentence",
-              contentId: s.id,
-              voiceId: resolvedVoiceId,
-            });
-          }
+          warmPageAudio(firstPage, resolvedVoiceId);
         })
         // A rejected prefetch is surfaced properly once handleSentenceComplete
         // itself awaits this same promise (see loadNextSection below) — this
@@ -344,7 +335,7 @@ export function BookReadingSession({
     section.sentences.length,
     book.id,
     resolvedVoiceId,
-    prefetchPronunciation,
+    warmPageAudio,
   ]);
 
   async function handleSentenceComplete() {
