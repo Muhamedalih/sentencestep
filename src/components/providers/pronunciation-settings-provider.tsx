@@ -146,8 +146,19 @@ const PronunciationSettingsContext = createContext<PronunciationSettingsValue>(D
  * word click, a real replay) go through resolveAudio directly and are never
  * queued here, so they stay instant regardless of how much background
  * prefetch is pending.
+ *
+ * Lowered from 2 to 1 (still 2026-09-12, same investigation): measured live
+ * against production — 10 concurrent calls to an otherwise-fast (~300ms)
+ * Supabase-backed route split cleanly into a fast group (~1.3s) and a slow
+ * group (~6.8s), meaning the backend itself (Supabase's connection pool,
+ * Netlify's function concurrency, or both) starts queueing well before the
+ * browser's own ~6-per-origin connection limit would. Background prefetch
+ * competing for even 2 of those slots was enough to occasionally push a
+ * real, concurrent request (the section-boundary fetch, or another
+ * reader's request) into that slow group. 1 keeps this at essentially the
+ * cost of a single extra concurrent reader, not a meaningful one.
  */
-const MAX_CONCURRENT_PREFETCH_REQUESTS = 2;
+const MAX_CONCURRENT_PREFETCH_REQUESTS = 1;
 
 /**
  * Shared, session-scoped state for the two global learning-audio features
