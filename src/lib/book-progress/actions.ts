@@ -124,11 +124,13 @@ export async function fetchSectionForReadingAction(
 }
 
 /**
- * The section immediately after `sectionId`, with its sentences — null when
- * `sectionId` was the book's last section (the reading session's cue to
+ * The section immediately after `afterOrderIndex`, with its sentences —
+ * null when it was the book's last section (the reading session's cue to
  * show Book Completion instead). The one navigation step used to move the
  * reading UI forward, for guest and signed-in readers alike — see
- * fetchSectionAfter's own doc comment.
+ * fetchSectionAfter's own doc comment. Takes the current section's
+ * order_index (not its id — see fetchSectionAfter's doc comment for why)
+ * since the caller always already has it from the section it's currently on.
  *
  * Deliberately does NOT also pre-resolve the new section's first sentence's
  * audio (a 2026-09-11 attempt at exactly that was reverted the same day):
@@ -145,10 +147,10 @@ export async function fetchSectionForReadingAction(
  */
 export async function fetchSectionAfterAction(
   bookId: string,
-  sectionId: string,
+  afterOrderIndex: number,
 ): Promise<BookSectionWithSentences | null> {
   const locale = await getLocale();
-  return fetchSectionAfter(bookId, sectionId, locale ?? undefined);
+  return fetchSectionAfter(bookId, afterOrderIndex, locale ?? undefined);
 }
 
 /**

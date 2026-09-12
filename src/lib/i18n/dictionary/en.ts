@@ -526,6 +526,7 @@ export const en: Dictionary = {
     bookCompleteBody: "You've finished every sentence in this book.",
     bookCompleteLead: "Besides learning English, here's what you gained from this book",
     backToBookOverview: "Back to Book",
+    sectionLoadError: "Couldn't load the next section. Check your connection and try again.",
     pageLabel: "Page {n}",
     pageOfTotal: "Page {n} of {total}",
     clickHint: "Click a word to highlight it.",

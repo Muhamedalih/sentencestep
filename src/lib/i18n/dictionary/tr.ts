@@ -535,6 +535,7 @@ export const tr: Dictionary = {
     bookCompleteBody: "Bu kitaptaki her cümleyi tamamladın.",
     bookCompleteLead: "İngilizce öğrenmenin yanında, bu kitaptan kazandıkların",
     backToBookOverview: "Kitaba Dön",
+    sectionLoadError: "Sonraki bölüm yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
     pageLabel: "Sayfa {n}",
     pageOfTotal: "Sayfa {n} / {total}",
     clickHint: "Bir kelimeyi vurgulamak için tıklayın.",

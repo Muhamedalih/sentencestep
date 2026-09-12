@@ -588,6 +588,8 @@ export interface Dictionary {
     /** Lead-in above the Book Completion screen's quote from the book's own `description` — framed retrospectively as what the reader actually gained, never an invented takeaway field. */
     bookCompleteLead: string;
     backToBookOverview: string;
+    /** Shown in place of the reading screen while moving to the next section if that fetch fails (a flaky connection) — paired with common.tryAgain, since without it a failure here used to leave the reader stuck on a bare loading spinner with no way forward short of reloading the page. */
+    sectionLoadError: string;
     /** `Page {n}` — the reading screen's page-navigation indicator (Book Reading Experience Enhancements, addition 2). Always derived from the real sentence position, never an invented count. */
     pageLabel: string;
     /** `Page {n} of {total}` — the Real Page Model's page-navigation indicator (Phase 4): a real, multi-sentence page within the current section, never a sentence count. */

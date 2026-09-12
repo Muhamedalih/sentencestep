@@ -513,6 +513,7 @@ export const ar: Dictionary = {
     bookCompleteBody: "أنهيت كل جملة في هذا الكتاب.",
     bookCompleteLead: "إلى جانب تعلّم الإنجليزية، هذا ما استفدته من هذا الكتاب",
     backToBookOverview: "العودة إلى الكتاب",
+    sectionLoadError: "تعذّر تحميل القسم التالي. تحقّق من اتصالك وحاول مرة أخرى.",
     pageLabel: "صفحة {n}",
     pageOfTotal: "صفحة {n} من {total}",
     clickHint: "انقر على الكلمة لتمييزها",

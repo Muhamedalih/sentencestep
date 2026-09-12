@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AlertCircle } from "lucide-react";
 
 import { BookCompletion } from "@/components/learning/book-completion";
 import { BookPageNav } from "@/components/learning/book-page-nav";
@@ -9,6 +10,7 @@ import { BookSectionComplete } from "@/components/learning/book-section-complete
 import { BookSectionIntro } from "@/components/learning/book-section-intro";
 import { BookSentenceReader } from "@/components/learning/book-sentence-reader";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
+import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/page-loading";
 import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -31,7 +33,12 @@ import { cn } from "@/lib/utils";
 import type { Book, BookSectionWithSentences } from "@/types/library";
 
 type Screen =
-  "sectionIntro" | "reading" | "sectionComplete" | "loadingNextSection" | "bookComplete";
+  | "sectionIntro"
+  | "reading"
+  | "sectionComplete"
+  | "loadingNextSection"
+  | "sectionLoadError"
+  | "bookComplete";
 
 /** BookSentenceReader's onComplete for a read-only page-preview render — belt-and-suspenders alongside its own disabled input (see that component's readOnly doc comment): completion can never fire for a page the reader is only browsing to, not actively typing. */
 const NOOP = () => {};
@@ -297,23 +304,31 @@ export function BookReadingSession({
     const isLastSentence = sentenceIndex === section.sentences.length - 1;
     if (!isLastSentence) return;
     if (nextSectionPrefetchRef.current?.sectionId === section.id) return;
-    const promise = fetchSectionAfterAction(book.id, section.id);
+    const promise = fetchSectionAfterAction(book.id, section.orderIndex);
     nextSectionPrefetchRef.current = { sectionId: section.id, promise };
     if (resolvedVoiceId) {
-      void promise.then((next) => {
-        const firstPage = next ? (paginateSentences(next.sentences)[0] ?? []) : [];
-        for (const s of firstPage) {
-          prefetchPronunciation({
-            contentType: "book_sentence",
-            contentId: s.id,
-            voiceId: resolvedVoiceId,
-          });
-        }
-      });
+      void promise
+        .then((next) => {
+          const firstPage = next ? (paginateSentences(next.sentences)[0] ?? []) : [];
+          for (const s of firstPage) {
+            prefetchPronunciation({
+              contentType: "book_sentence",
+              contentId: s.id,
+              voiceId: resolvedVoiceId,
+            });
+          }
+        })
+        // A rejected prefetch is surfaced properly once handleSentenceComplete
+        // itself awaits this same promise (see loadNextSection below) — this
+        // .catch exists purely so an early rejection (the reader still typing
+        // the section's last sentence, well before that await runs) doesn't
+        // also log as an unrelated unhandled promise rejection here.
+        .catch(() => {});
     }
   }, [
     sentenceIndex,
     section.id,
+    section.orderIndex,
     section.sentences.length,
     book.id,
     resolvedVoiceId,
@@ -389,16 +404,45 @@ export function BookReadingSession({
     // the background prefetch (see nextSectionPrefetchRef above) when one
     // was actually started for THIS section, instead of always paying the
     // fetch's full latency here.
+    await loadNextSection();
+  }
+
+  /**
+   * The actual "fetch the next section" step of a section boundary —
+   * pulled out of handleSentenceComplete so handleRetryNextSection (the
+   * sectionLoadError screen's "Try again" button) can re-run exactly the
+   * same logic. Root-cause fix (2026-09-12) for reader reports of a section
+   * transition hanging forever on "loadingNextSection" for some books,
+   * needing a full page refresh: fetchSectionAfterAction is a real network
+   * call (Supabase RPC + translation joins — see its own doc comment) that
+   * CAN reject on a flaky connection, and this await used to have nothing
+   * catching that — an unhandled rejection here left `screen` stuck at
+   * "loadingNextSection" forever, with no error shown and no way forward
+   * short of reloading the page. A rejected prefetch is discarded (never
+   * retried as-is) rather than reused, since awaiting an already-rejected
+   * promise again would just fail instantly with the same stale error.
+   */
+  async function loadNextSection() {
     setScreen("loadingNextSection");
-    const next = await (nextSectionPrefetchRef.current?.sectionId === section.id
-      ? nextSectionPrefetchRef.current.promise
-      : fetchSectionAfterAction(book.id, section.id));
-    if (next) {
-      setPendingNextSection(next);
-      setScreen("sectionComplete");
-    } else {
-      setScreen("bookComplete");
+    try {
+      const next = await (nextSectionPrefetchRef.current?.sectionId === section.id
+        ? nextSectionPrefetchRef.current.promise
+        : fetchSectionAfterAction(book.id, section.orderIndex));
+      if (next) {
+        setPendingNextSection(next);
+        setScreen("sectionComplete");
+      } else {
+        setScreen("bookComplete");
+      }
+    } catch (error) {
+      console.error("Failed to load the next section", error);
+      nextSectionPrefetchRef.current = null;
+      setScreen("sectionLoadError");
     }
+  }
+
+  function handleRetryNextSection() {
+    void loadNextSection();
   }
 
   /**
@@ -719,6 +763,19 @@ export function BookReadingSession({
         ) : screen === "loadingNextSection" ? (
           <div key="loadingNextSection">
             <PageLoading />
+          </div>
+        ) : screen === "sectionLoadError" ? (
+          <div
+            key="sectionLoadError"
+            className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center lg:min-h-svh lg:px-16"
+          >
+            <div className="bg-danger/10 text-danger flex size-14 items-center justify-center rounded-full">
+              <AlertCircle className="size-7" aria-hidden="true" />
+            </div>
+            <p className="text-muted-foreground max-w-sm text-sm">
+              {t.bookLibrary.sectionLoadError}
+            </p>
+            <Button onClick={handleRetryNextSection}>{t.common.tryAgain}</Button>
           </div>
         ) : screen === "sectionComplete" ? (
           <div

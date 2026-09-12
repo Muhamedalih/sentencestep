@@ -144,9 +144,9 @@ export async function fetchBookSections(
  * the section-complete transition taking multiple seconds): this function
  * sits on that same critical path (via fetchSectionAfter), so its own two
  * sequential round trips were real, avoidable latency stacked on top of
- * fetchSectionAfter's own two sequential lookups (current section's
- * order_index, then the next section's id) — those two DO genuinely depend
- * on each other and stay sequential.
+ * fetchSectionAfter's own next-section-id lookup (which, as of 2026-09-12,
+ * no longer needs a preceding lookup of its own — see that function's doc
+ * comment).
  */
 export async function fetchBookSectionWithSentences(
   sectionId: string,
@@ -223,37 +223,39 @@ export async function fetchBookContentCounts(
 }
 
 /**
- * The section immediately after `afterSectionId` in book order, with its
- * sentences — null when `afterSectionId` is the book's last section. This
- * is the ONE navigation primitive the reading session uses to move between
- * sections, for both guest and signed-in readers alike (see
+ * The section immediately after `afterOrderIndex` in book order, with its
+ * sentences — null when `afterOrderIndex` belongs to the book's last
+ * section. This is the ONE navigation primitive the reading session uses to
+ * move between sections, for both guest and signed-in readers alike (see
  * BookReadingSession's doc comment): "was this the section's last sentence?
  * If so, is there a next section?" is answered the same way regardless of
  * who's reading, independent of — and never trusting — the signed-in-only
  * book_progress pointer, which exists purely to persist/reward progress,
  * not to drive what's shown next.
+ *
+ * Takes the CURRENT section's order_index directly rather than its id
+ * (2026-09-12, chasing reader reports of section transitions being slow or,
+ * for larger books, hanging outright): every caller already has the current
+ * section loaded client-side — id AND order_index both — so re-deriving
+ * order_index from id here was a whole extra sequential round trip to
+ * Supabase, on a call already on the reading session's most latency-
+ * sensitive path (see fetchSectionAfterAction's own doc comment on the
+ * "loadingNextSection" spinner). Dropping it removes one of the four
+ * sequential round trips this one navigation used to require.
  */
 export async function fetchSectionAfter(
   bookId: string,
-  afterSectionId: string,
+  afterOrderIndex: number,
   locale?: SupportLocale,
 ): Promise<BookSectionWithSentences | null> {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = createPublicClient();
-  const { data: current, error: currentError } = await supabase
-    .from("book_sections")
-    .select("order_index")
-    .eq("id", afterSectionId)
-    .maybeSingle();
-  if (currentError) throw currentError;
-  if (!current) return null;
-
   const { data: next, error: nextError } = await supabase
     .from("book_sections")
     .select("id")
     .eq("book_id", bookId)
-    .gt("order_index", current.order_index)
+    .gt("order_index", afterOrderIndex)
     .order("order_index", { ascending: true })
     .limit(1)
     .maybeSingle();

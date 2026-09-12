@@ -542,6 +542,8 @@ export const es: Dictionary = {
     bookCompleteBody: "Has terminado cada oración de este libro.",
     bookCompleteLead: "Además de aprender inglés, esto es lo que te llevas de este libro",
     backToBookOverview: "Volver al libro",
+    sectionLoadError:
+      "No se pudo cargar la siguiente sección. Revisa tu conexión e inténtalo de nuevo.",
     pageLabel: "Página {n}",
     pageOfTotal: "Página {n} de {total}",
     clickHint: "Haz clic en una palabra para resaltarla.",
