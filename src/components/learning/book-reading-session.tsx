@@ -72,9 +72,13 @@ interface BookReadingSessionProps {
   initialCompletedSentenceCount: number;
   totalSentenceCount: number;
   totalSectionCount: number;
+  /** The book's first section, forwarded to Book Completion's "back to book" button (see its own doc comment) so finishing the book live, in this same session, reopens actual content — not just when the completed-book page is loaded fresh. Undefined only for a book with no sections, or the admin preview route. */
+  firstSectionId?: string;
   resolvedVoiceId?: string | null;
   /** Admin's "Preview" action on a draft section (see /admin/library/[bookId]/sections/[sectionId]/preview) — renders the exact same reading/typing experience but never persists anything to the signed-in admin's own account: no sentence-completion writes (no XP/streak/daily-progress/book_progress), and no bookmark/note fetch. Everything else (typing, paging, section transitions) behaves identically to a real session. */
   previewMode?: boolean;
+  /** Server-side pre-resolved `{contentId: audioUrl}` for `initialSentenceId`'s own trackable words (see the reading page's own doc comment and TypingSentence's identical `wordAudioUrls` prop) — only ever applied to that one sentence below, never any other. undefined for the admin preview route, which behaves exactly as before this prop existed. */
+  firstSentenceWordAudio?: Record<string, string>;
 }
 
 /**
@@ -97,8 +101,10 @@ export function BookReadingSession({
   initialCompletedSentenceCount,
   totalSentenceCount,
   totalSectionCount,
+  firstSectionId,
   resolvedVoiceId,
   previewMode = false,
+  firstSentenceWordAudio,
 }: BookReadingSessionProps) {
   const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
@@ -657,6 +663,9 @@ export function BookReadingSession({
                         bookId={book.id}
                         mark={marksBySentence[pageSentence.id] ?? EMPTY_MARK}
                         resolvedVoiceId={resolvedVoiceId}
+                        wordAudioUrls={
+                          pageSentence.id === initialSentenceId ? firstSentenceWordAudio : undefined
+                        }
                         readOnly={!isActiveSentence}
                         large={isActiveSentence || viewedPage.length === 1}
                         onPrevious={
@@ -737,6 +746,7 @@ export function BookReadingSession({
               streak={streak}
               dailyProgress={dailyProgress}
               learnerLevel={learnerLevel}
+              firstSectionId={firstSectionId}
             />
           </div>
         )}

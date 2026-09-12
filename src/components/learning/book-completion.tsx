@@ -38,6 +38,7 @@ export function BookCompletion({
   streak,
   dailyProgress,
   learnerLevel,
+  firstSectionId,
 }: {
   book: Book;
   sectionCount: number;
@@ -48,6 +49,8 @@ export function BookCompletion({
   streak: number;
   dailyProgress: DailyProgressState;
   learnerLevel: LearnerLevelProgress;
+  /** The book's first section, so "back to book" reopens its actual content (the first lesson) instead of bouncing straight back to this same completion screen — see BookReadingPage. Undefined only for a book with no sections. */
+  firstSectionId?: string;
 }) {
   const reducedMotion = useReducedMotion();
   const { t, dir } = useLocale();
@@ -155,7 +158,15 @@ export function BookCompletion({
             <Link href="/learn/library">{t.bookLibrary.backToLibrary}</Link>
           </Button>
           <Button asChild className="flex-1 rounded-full">
-            <Link href={`/learn/library/${book.id}`}>{t.bookLibrary.backToBookOverview}</Link>
+            <Link
+              href={
+                firstSectionId
+                  ? `/learn/library/${book.id}/read?section=${firstSectionId}`
+                  : `/learn/library/${book.id}`
+              }
+            >
+              {t.bookLibrary.backToBookOverview}
+            </Link>
           </Button>
         </div>
       </div>

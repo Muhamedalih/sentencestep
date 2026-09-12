@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { BookReadingTools } from "@/components/learning/book-reading-tools";
-import {
-  PronunciationButton,
-  type PronunciationButtonHandle,
-} from "@/components/learning/pronunciation-button";
+import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { Button } from "@/components/ui/button";
@@ -52,6 +49,7 @@ export function BookSentenceReader({
   readOnly = false,
   large,
   mark,
+  wordAudioUrls,
 }: {
   sentence: BookSentence;
   /** The parent book's id — identifies this sentence's bookmark/note for BookMarkControls (Book Reading Experience Enhancements Phase 2). */
@@ -67,6 +65,8 @@ export function BookSentenceReader({
    */
   sectionTitle?: string;
   resolvedVoiceId?: string | null;
+  /** Server-side pre-resolved `{contentId: audioUrl}` for this sentence's trackable words — mirrors TypingSentence's identical prop (see its own doc comment). BookReadingSession passes this only for `initialSentenceId`, the one sentence rendered active the instant the reading page first loads; undefined for every other sentence, which behaves exactly as before. */
+  wordAudioUrls?: Record<string, string>;
   onComplete: (wpm: number) => void;
   onCorrectLetter: () => void;
   onErrorLetter?: () => void;
@@ -110,14 +110,23 @@ export function BookSentenceReader({
   // language.
   const supportText = sentence.supportText ?? sentence.en;
   const wordClip = useAudioClip(undefined, { maxRetries: 2, retryDelayMs: 400 });
-  // Handle onto the hidden sentence-narration PronunciationButton below —
-  // the only way to stop ITS clip from here, since that Audio element lives
-  // entirely inside that component. Without this, a word click while the
-  // sentence was still narrating started a second, independent Audio
-  // element with no coordination at all: two clips audibly overlapping,
-  // confirmed live in Books.
-  const sentenceAudioRef = useRef<PronunciationButtonHandle>(null);
-  const { resolveAudio, prefetchPronunciation } = usePronunciationSettings();
+  const { resolveAudio, prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
+
+  // Feeds the reading page's server-side pre-resolution (see wordAudioUrls'
+  // own doc comment) into the SAME shared cache resolveAudio itself checks
+  // first — mirrors TypingSentence's identical effect. A word click on
+  // initialSentenceId is then a synchronous cache hit instead of an
+  // awaited resolveAudio() round trip, closing the one gap the staggered
+  // word-prefetch effect below can't: a click landing before that prefetch
+  // has even started (the very first thing a reader might do on a freshly
+  // loaded page) previously always paid that round trip regardless of the
+  // word's audio already existing in cache.
+  useEffect(() => {
+    if (!wordAudioUrls) return;
+    for (const [contentId, url] of Object.entries(wordAudioUrls)) {
+      registerResolvedAudio(contentId, url);
+    }
+  }, [wordAudioUrls, registerResolvedAudio]);
 
   /**
    * Books-only rule: a word click plays this sentence's own resolved
@@ -140,9 +149,6 @@ export function BookSentenceReader({
    */
   async function handleWordClick(word: string) {
     if (!resolvedVoiceId || !isTrackableWord(word)) return;
-    // Stop the sentence's own narration first — see sentenceAudioRef's doc
-    // comment above for why this exists at all.
-    sentenceAudioRef.current?.stop();
     const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
     const url = await resolveAudio({
       contentType: "book_sentence_word",
@@ -260,7 +266,6 @@ export function BookSentenceReader({
         // losing either of those would silently break Shift-to-replay too,
         // not just autoplay.
         <PronunciationButton
-          ref={sentenceAudioRef}
           text={sentence.en}
           audioUrl={sentence.audioUrl}
           onPlay={onAudioPlay}

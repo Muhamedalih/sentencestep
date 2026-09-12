@@ -9,8 +9,10 @@ import { fetchBookProgressAction, fetchSectionForReadingAction } from "@/lib/boo
 import { isSectionUnlocked } from "@/lib/book-progress/chapter-state";
 import { getBookNarrationVoiceId } from "@/lib/admin/elevenlabs-queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
+import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { tokenize } from "@/lib/typing";
 import { resolveVoiceId } from "@/lib/voice/resolution";
-import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
+import { lookupCachedAudioUrl, lookupCachedWordAudioUrls } from "@/lib/voice/voice-audio";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { fetchDailyProgress, fetchStreak, fetchXp } from "@/lib/supabase/queries/progress";
@@ -92,11 +94,33 @@ export default async function BookReadingPage({
     );
   }
 
+  // Sequential chapter unlocking: a section opened from the Book Overview's
+  // section list (see BookSectionList) arrives here as ?section=<id>. Only a
+  // completed or currently-available section is ever honored — a locked
+  // section (whether from a stale link or a hand-edited URL) silently falls
+  // back to the reader's real resume position instead, the same
+  // server-side gate deriveChapterStates/isSectionUnlocked apply on the Book
+  // Overview page itself, so the sequence can't be bypassed by navigating
+  // straight to a section's URL. Always fetched (not just when a section is
+  // requested) so its first entry is available below as `firstSectionId` —
+  // that's what lets Book Completion's "back to book" button reopen the
+  // book's actual first lesson, both here (a completed book, reloaded) and
+  // via BookReadingSession (completing the book live, mid-session) — instead
+  // of always bouncing back to the completion screen.
+  const sections = await fetchBookSections(bookId);
+  const firstSectionId = sections[0]?.id;
+  const targetSectionId =
+    requestedSectionId && isSectionUnlocked(sections, progress, requestedSectionId)
+      ? requestedSectionId
+      : progress.currentSectionId;
+
   // isComplete is only ever true for a signed-in reader (see
   // fetchBookProgressAction — a guest never has a real book_progress row to
-  // read), so `user` is guaranteed here; the check still guards notFound()
-  // below from ever needing to run for this branch.
-  if (progress.isComplete && user) {
+  // read). Only shown when there's no valid section to jump into instead —
+  // otherwise a completed reader opening a specific section (from the
+  // section list, or Book Completion's own "back to book" button) would
+  // just be bounced straight back to this same completion screen.
+  if (progress.isComplete && user && !targetSectionId) {
     const todayISO = todayLocalISODate();
     const [xp, streak, dailyProgress, counts] = await Promise.all([
       fetchXp(user.id),
@@ -117,28 +141,13 @@ export default async function BookReadingPage({
           streak={streak.currentStreak}
           dailyProgress={dailyProgress}
           learnerLevel={getLearnerLevel(xp)}
+          firstSectionId={firstSectionId}
         />
       </div>
     );
   }
 
-  // Unreachable in practice (see the guards above), kept only so
-  // `currentSentenceId` narrows to `string` below rather than `string | null`.
-  if (!progress.currentSentenceId) notFound();
-
-  // Sequential chapter unlocking: a section opened from the Book Overview's
-  // section list (see BookSectionList) arrives here as ?section=<id>. Only a
-  // completed or currently-available section is ever honored — a locked
-  // section (whether from a stale link or a hand-edited URL) silently falls
-  // back to the reader's real resume position instead, the same
-  // server-side gate deriveChapterStates/isSectionUnlocked apply on the Book
-  // Overview page itself, so the sequence can't be bypassed by navigating
-  // straight to a section's URL.
-  const sections = requestedSectionId ? await fetchBookSections(bookId) : [];
-  const targetSectionId =
-    requestedSectionId && isSectionUnlocked(sections, progress, requestedSectionId)
-      ? requestedSectionId
-      : progress.currentSectionId;
+  if (!targetSectionId) notFound();
 
   const [section, globalDefaultVoiceId, counts] = await Promise.all([
     fetchSectionForReadingAction(bookId, targetSectionId),
@@ -162,7 +171,7 @@ export default async function BookReadingPage({
   // would otherwise silently fail to find in `section.sentences` and desync
   // completedSentenceCount for the rest of the visit.
   const initialSentenceId =
-    targetSectionId === progress.currentSectionId
+    targetSectionId === progress.currentSectionId && progress.currentSentenceId
       ? progress.currentSentenceId
       : section.sentences[0]!.id;
 
@@ -187,16 +196,40 @@ export default async function BookReadingPage({
         }
       : section;
 
+  // Root-cause fix for "the first sentence's word clicks are still slow" —
+  // mirrors /learn/[mode]/[lessonId]'s identical fix (see
+  // lookupCachedWordAudioUrls' own doc comment for the measured evidence
+  // there). Only the initial sentence's own narration above ever got this
+  // server-side, cache-only pre-resolution; its individual words never did,
+  // so a word click on it always paid a client→server round trip even
+  // though every word's audio is now pre-generated (see
+  // scripts/backfill-word-audio.ts) and sitting in cache. Cache-only: never
+  // generates, so a miss here just leaves that word to resolve on demand
+  // client-side exactly as before.
+  const firstSentenceWordAudio =
+    initialSentence && resolvedVoiceId
+      ? await lookupCachedWordAudioUrls(
+          new Map(
+            Array.from(new Set(tokenize(initialSentence.en).filter(isTrackableWord))).map(
+              (word) => [word, `${initialSentence.id}::${normalizeMistakeWord(word)}`] as const,
+            ),
+          ),
+          resolvedVoiceId,
+        )
+      : undefined;
+
   return (
     <div className="lesson-shell bg-background text-foreground h-svh w-full">
       <BookReadingSession
         book={book}
         initialSection={initialSection}
         initialSentenceId={initialSentenceId}
+        firstSentenceWordAudio={firstSentenceWordAudio}
         initialCompletedSentenceCount={progress.completedSentenceCount}
         totalSentenceCount={progress.totalSentenceCount}
         totalSectionCount={counts.sectionCount}
         resolvedVoiceId={resolvedVoiceId}
+        firstSectionId={firstSectionId}
       />
     </div>
   );
