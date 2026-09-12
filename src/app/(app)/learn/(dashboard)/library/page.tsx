@@ -28,7 +28,7 @@ export default async function LibraryHomePage() {
   const supabase = isSupabaseConfigured() ? createPublicClient() : undefined;
   const [categoriesWithBooks, featuredBooks, continueReading, completedBooks] = await Promise.all([
     fetchCategoriesWithBooks(supabase, locale),
-    fetchFeaturedBooks(supabase),
+    fetchFeaturedBooks(supabase, locale),
     fetchContinueReadingBooks(user?.id ?? null, supabase),
     fetchCompletedBooks(user?.id ?? null, supabase),
   ]);

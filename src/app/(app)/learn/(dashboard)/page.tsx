@@ -99,8 +99,8 @@ export default async function LearnHomePage() {
     getLessons("stories", locale ?? undefined),
     getLessons("conversation", locale ?? undefined),
     attemptCountPromise,
-    fetchFeaturedBooks(supabase),
-    fetchFirstPublishedBook(supabase),
+    fetchFeaturedBooks(supabase, locale),
+    fetchFirstPublishedBook(supabase, locale),
     fetchWeakWordsAction(),
   ]);
 

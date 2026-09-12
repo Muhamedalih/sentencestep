@@ -117,9 +117,12 @@ export function HomeBookCard({
           </p>
         </div>
 
-        {book.description && (
-          <p className="text-muted-foreground line-clamp-2 text-xs" dir="ltr">
-            {book.description}
+        {(book.supportDescription ?? book.description) && (
+          <p
+            className="text-muted-foreground line-clamp-2 text-xs"
+            dir={book.supportDescription ? dir : "ltr"}
+          >
+            {book.supportDescription ?? book.description}
           </p>
         )}
 

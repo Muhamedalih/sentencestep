@@ -39,6 +39,8 @@ export interface Book {
   voiceId: string | null;
   /** Resolved category links — always present, possibly empty for a book with no categories assigned yet. */
   categories: BookCategoryLink[];
+  /** Locale-resolved translation of `description` (content_translations, content_type "book") — same resolution rules as BookSection.supportDescription. Only populated when the fetch layer was given a locale; `title` has no counterpart since a book's title is a proper noun, never translated. */
+  supportDescription?: string;
 }
 
 /** A book grouped under one of its categories for the homepage's category-section layout — `category` here is that section's category, not necessarily the book's primary one. */

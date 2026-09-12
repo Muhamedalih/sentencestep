@@ -20,7 +20,7 @@ import type { Book } from "@/types/library";
  * `<button>`.
  */
 export function FeaturedBook({ book }: { book: Book }) {
-  const { locale, t } = useLocale();
+  const { locale, dir, t } = useLocale();
   const difficulty = difficultyForLevel(book.difficultyLevel);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
 
@@ -58,9 +58,12 @@ export function FeaturedBook({ book }: { book: Book }) {
               {t.bookLibrary.byAuthor.replace("{author}", book.author)}
             </p>
           </div>
-          {book.description && (
-            <p className="text-muted-foreground line-clamp-2 max-w-xl" dir="ltr">
-              {book.description}
+          {(book.supportDescription ?? book.description) && (
+            <p
+              className="text-muted-foreground line-clamp-2 max-w-xl"
+              dir={book.supportDescription ? dir : "ltr"}
+            >
+              {book.supportDescription ?? book.description}
             </p>
           )}
           <span className={cn(buttonVariants({ size: "lg" }), "mt-1 w-fit")}>

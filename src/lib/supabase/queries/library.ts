@@ -70,6 +70,7 @@ async function resolveCategoryNames(
 function toBook(
   row: BookRow,
   categoryLinks: Map<string, { category: Category; isPrimary: boolean }[]>,
+  translatedDescription?: string,
 ): Book {
   return {
     id: row.id,
@@ -85,7 +86,35 @@ function toBook(
     orderIndex: row.order_index,
     voiceId: row.voice_id,
     categories: categoryLinks.get(row.id) ?? [],
+    supportDescription: translatedDescription,
   };
+}
+
+/**
+ * Resolves each book's `description` against content_translations
+ * (content_type "book", field "description") for the current locale — same
+ * pattern as resolveCategoryNames above. No legacy `_ar` column to fall back
+ * to (a book's description never had one), and no `title` counterpart: a
+ * book's title is a proper noun and is never translated (see Book.supportDescription's
+ * doc comment).
+ */
+async function resolveBookDescriptions(
+  rows: BookRow[],
+  locale: SupportLocale | null,
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!locale || rows.length === 0) return map;
+
+  const translations = await getContentTranslations(
+    "book",
+    rows.map((row) => row.id),
+    locale,
+  );
+  for (const row of rows) {
+    const translated = resolveScalarField(translations, row.id, "description", undefined, locale);
+    if (translated) map.set(row.id, translated);
+  }
+  return map;
 }
 
 /**
@@ -158,7 +187,10 @@ async function fetchCategoryLinksForBooks(
 }
 
 /** Published books flagged Featured, in display order. Empty while no book is both published and featured — the normal state until the next phase adds real books. Accepts an already-created client — see fetchCategories's doc comment. */
-export async function fetchFeaturedBooks(client?: PublicClient): Promise<Book[]> {
+export async function fetchFeaturedBooks(
+  client?: PublicClient,
+  locale: SupportLocale | null = null,
+): Promise<Book[]> {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = client ?? createPublicClient();
@@ -171,11 +203,14 @@ export async function fetchFeaturedBooks(client?: PublicClient): Promise<Book[]>
   if (error) throw error;
   if (!data || data.length === 0) return [];
 
-  const links = await fetchCategoryLinksForBooks(
-    data.map((row) => row.id),
-    supabase,
-  );
-  return data.map((row) => toBook(row, links));
+  const [links, translatedDescriptions] = await Promise.all([
+    fetchCategoryLinksForBooks(
+      data.map((row) => row.id),
+      supabase,
+    ),
+    resolveBookDescriptions(data, locale),
+  ]);
+  return data.map((row) => toBook(row, links, translatedDescriptions.get(row.id)));
 }
 
 /**
@@ -193,7 +228,10 @@ export async function fetchFeaturedBooks(client?: PublicClient): Promise<Book[]>
  * case — into 3-4 sequential extra round-trips on every single Home load.
  * This is the one query that actually answers "give me any published book."
  */
-export async function fetchFirstPublishedBook(client?: PublicClient): Promise<Book | null> {
+export async function fetchFirstPublishedBook(
+  client?: PublicClient,
+  locale: SupportLocale | null = null,
+): Promise<Book | null> {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = client ?? createPublicClient();
@@ -207,7 +245,8 @@ export async function fetchFirstPublishedBook(client?: PublicClient): Promise<Bo
   if (error) throw error;
   if (!data) return null;
 
-  return toBook(data, new Map());
+  const translatedDescriptions = await resolveBookDescriptions([data], locale);
+  return toBook(data, new Map(), translatedDescriptions.get(data.id));
 }
 
 /**
@@ -229,15 +268,19 @@ export async function fetchCategoriesWithBooks(
   const { data, error } = await supabase.from("books").select("*").eq("status", "published");
   if (error) throw error;
 
-  const links =
-    data && data.length > 0
-      ? await fetchCategoryLinksForBooks(
-          data.map((row) => row.id),
-          supabase,
-          locale,
-        )
-      : new Map();
-  const books = (data ?? []).map((row) => toBook(row, links));
+  let links: Map<string, { category: Category; isPrimary: boolean }[]> = new Map();
+  let translatedDescriptions: Map<string, string> = new Map();
+  if (data && data.length > 0) {
+    [links, translatedDescriptions] = await Promise.all([
+      fetchCategoryLinksForBooks(
+        data.map((row) => row.id),
+        supabase,
+        locale,
+      ),
+      resolveBookDescriptions(data, locale),
+    ]);
+  }
+  const books = (data ?? []).map((row) => toBook(row, links, translatedDescriptions.get(row.id)));
 
   return categories.map((category) => ({
     category,
@@ -425,6 +468,9 @@ export async function fetchBookById(
   if (error) throw error;
   if (!data) return null;
 
-  const links = await fetchCategoryLinksForBooks([data.id], supabase, locale);
-  return toBook(data, links);
+  const [links, translatedDescriptions] = await Promise.all([
+    fetchCategoryLinksForBooks([data.id], supabase, locale),
+    resolveBookDescriptions([data], locale),
+  ]);
+  return toBook(data, links, translatedDescriptions.get(data.id));
 }

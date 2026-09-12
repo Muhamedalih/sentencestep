@@ -87,9 +87,12 @@ export function BookOverview({
             </p>
           </div>
 
-          {book.description && (
-            <p className="text-muted-foreground max-w-2xl" dir="ltr">
-              {book.description}
+          {(book.supportDescription ?? book.description) && (
+            <p
+              className="text-muted-foreground max-w-2xl"
+              dir={book.supportDescription ? dir : "ltr"}
+            >
+              {book.supportDescription ?? book.description}
             </p>
           )}
 
