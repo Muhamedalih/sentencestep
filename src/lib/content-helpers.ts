@@ -1,5 +1,6 @@
 import { unitsByMode } from "@/data/units";
 import { modeMeta } from "@/lib/learning-modes";
+import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { ContentStatus } from "@/lib/admin/validation";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type {
@@ -58,6 +59,35 @@ export function getLevels(units: LessonUnit[]): number[] {
 
 export function getLessonsByLevel(units: LessonUnit[], level: number): LessonUnit[] {
   return units.filter((unit) => unit.level === level);
+}
+
+/**
+ * The onboarding "First Steps" lesson exists as three near-identical rows —
+ * onboarding-beginner/intermediate/advanced, one per starting-level tier
+ * (see OPENING_LESSON_ID in starting-level.ts) — each reached directly by
+ * the get-started flow's own routing, never by browsing the Daily Lessons
+ * catalog. Left as plain published lessons, all three surface in this
+ * catalog too: once per level section, wherever their order_index happens
+ * to land them. This trims that down to what a learner browsing the catalog
+ * should actually see: only the Beginner copy, pinned as the first card of
+ * its level, since a learner placed into Intermediate/Advanced already met
+ * "First Steps" during onboarding and doesn't need it repeated in every
+ * level section (or buried at the end of Beginner's).
+ */
+export function withOpeningLessonPlacement<T extends { id: string; level: number }>(
+  units: T[],
+): T[] {
+  const hidden = [OPENING_LESSON_ID.intermediate, OPENING_LESSON_ID.advanced] as string[];
+  const visible = units.filter((unit) => !hidden.includes(unit.id));
+
+  const openingIndex = visible.findIndex((unit) => unit.id === OPENING_LESSON_ID.beginner);
+  if (openingIndex <= 0) return visible;
+
+  const opening = visible[openingIndex]!;
+  const rest = [...visible.slice(0, openingIndex), ...visible.slice(openingIndex + 1)];
+  const firstOfLevel = rest.findIndex((unit) => unit.level === opening.level);
+  if (firstOfLevel === -1) return [...rest, opening];
+  return [...rest.slice(0, firstOfLevel), opening, ...rest.slice(firstOfLevel)];
 }
 
 /**

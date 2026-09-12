@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
-import { getLessonsByLevel, getUnits } from "@/lib/content-helpers";
+import { getLessonsByLevel, getUnits, withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { useProgress } from "@/hooks/use-progress";
 import {
   difficultyForLevel,
@@ -346,7 +346,7 @@ export function LessonListView({
   mode,
   title,
   description,
-  units,
+  units: rawUnits,
   isPremiumUser,
   levelNames = {},
 }: {
@@ -361,6 +361,7 @@ export function LessonListView({
   const { t } = useLocale();
   const { isCompleted, getCompletedIds, isLoaded, startingLevel } = useProgress();
 
+  const units = withOpeningLessonPlacement(rawUnits);
   const courseUnits = getUnits(mode);
   const completedIds = isLoaded ? getCompletedIds(mode) : [];
   const currentLessonId = findCurrentLesson(units, completedIds, isPremiumUser, startingLevel)?.id;
