@@ -242,15 +242,27 @@ export function BookReadingSession({
     // warmed every sentence's own narration across the current+next page,
     // but BookSentenceReader's own word-prefetch effect only ever warms the
     // ACTIVE sentence's words (see its `readOnly` guard) — a context
-    // sentence sitting right there on the same page, or any sentence on the
-    // next page, got no word warm-up at all until the reader actually
-    // reached it. Flattened into one staggered list across every sentence
-    // here (rather than restarting the stagger per sentence, which would
+    // sentence sitting right there on the same page got no word warm-up at
+    // all until the reader actually reached it. Flattened into one staggered
+    // list (rather than restarting the stagger per sentence, which would
     // burst every sentence's first word at the same moment) so this never
     // fires more than one resolve at a time. A no-op for anything already
     // cached/in flight (see prefetchPronunciation's own dedup), so paging
     // back and forth never duplicates a round trip.
-    const words = sentences.flatMap((s) =>
+    //
+    // CURRENT page's sentences only (2026-09-12) — this used to also cover
+    // the NEXT page's words, but reader reports of the ACTIVE sentence's own
+    // audio (and a real word click on it) now taking 1.5s+ traced straight to
+    // this: on a typical page, current+next page's word count alone was
+    // easily 100+ items, which — even throttled to a handful concurrent
+    // requests (see MAX_CONCURRENT_PREFETCH_REQUESTS) — kept a background
+    // request continuously in flight for minutes, competing with the SAME
+    // backend the reader's own on-demand plays hit for every click, the
+    // whole time they were reading that page. The next page's words still
+    // get their own head start the moment the reader actually turns to it —
+    // this effect re-fires then with THAT page as "current" — just not two
+    // pages in advance.
+    const words = currentPage.flatMap((s) =>
       Array.from(new Set(tokenize(s.en).filter(isTrackableWord))).map((word) => ({
         contentId: `${s.id}::${normalizeMistakeWord(word)}`,
       })),

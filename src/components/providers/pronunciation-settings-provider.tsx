@@ -155,10 +155,24 @@ const PronunciationSettingsContext = createContext<PronunciationSettingsValue>(D
  * browser's own ~6-per-origin connection limit would. Background prefetch
  * competing for even 2 of those slots was enough to occasionally push a
  * real, concurrent request (the section-boundary fetch, or another
- * reader's request) into that slow group. 1 keeps this at essentially the
- * cost of a single extra concurrent reader, not a meaningful one.
+ * reader's request) into that slow group.
+ *
+ * Raised back to 3 (still 2026-09-12, same investigation, one step later):
+ * capping at 1 traded that away for a DIFFERENT regression — reader reports
+ * of the active sentence's own audio, and a real word click, now taking
+ * 1.5s+. Root cause: BookReadingSession's page-level prefetch effect was
+ * still queuing 100+ items per page (see its own doc comment on the fix
+ * that trimmed this), and at only 1 concurrent, draining that fully took
+ * MINUTES — meaning a background request was essentially ALWAYS in flight
+ * for as long as the reader stayed on that page, continuously competing
+ * with every on-demand play the whole time, not just in a single early
+ * burst. That page-level effect no longer queues nearly that much (trimmed
+ * to the current page's words only), so 3 concurrent — comfortably under
+ * the ~5 that stayed fast in the same measurement above — drains the
+ * now-much-smaller remaining backlog quickly without reintroducing a burst
+ * large enough to saturate the pool the original way.
  */
-const MAX_CONCURRENT_PREFETCH_REQUESTS = 1;
+const MAX_CONCURRENT_PREFETCH_REQUESTS = 3;
 
 /**
  * Shared, session-scoped state for the two global learning-audio features
