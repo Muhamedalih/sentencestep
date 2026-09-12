@@ -272,23 +272,16 @@ export async function fetchFirstSentenceRef(
   if (!isSupabaseConfigured()) return null;
 
   const supabase = createPublicClient();
-  const { data: sectionIds, error: sectionError } = await supabase
-    .from("book_sections")
-    .select("id")
-    .eq("book_id", bookId)
-    .order("order_index", { ascending: true });
-  if (sectionError) throw sectionError;
+  const { data: sentence, error } = await supabase
+    .from("book_sentences")
+    .select("id, section_id, book_sections!inner(book_id, order_index)")
+    .eq("book_sections.book_id", bookId)
+    .order("order_index", { foreignTable: "book_sections", ascending: true })
+    .order("order_index", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!sentence) return null;
 
-  for (const { id: sectionId } of sectionIds ?? []) {
-    const { data: sentence, error: sentenceError } = await supabase
-      .from("book_sentences")
-      .select("id")
-      .eq("section_id", sectionId)
-      .order("order_index", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (sentenceError) throw sentenceError;
-    if (sentence) return { sectionId, sentenceId: sentence.id };
-  }
-  return null;
+  return { sectionId: sentence.section_id, sentenceId: sentence.id };
 }
