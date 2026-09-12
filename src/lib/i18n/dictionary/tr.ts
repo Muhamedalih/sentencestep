@@ -268,6 +268,7 @@ export const tr: Dictionary = {
     lockedBody:
       "Bu ders SentenceStep Premium'un bir parçasıdır. Kütüphanenin geri kalanıyla birlikte kilidini açmak için planınızı yükseltin.",
     backToLessons: "Derslere dön",
+    priceAnchorCaption: "Bir kahveden daha ucuz",
     upgradeCta: "Planı yükselt — {price}",
     contentUnavailableBody:
       "Bu ders şu anda kullanılamıyor. Hiçbir şey kaybolmadı: birazdan tekrar deneyin veya başka bir ders seçin.",

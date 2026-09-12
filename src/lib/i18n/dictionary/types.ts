@@ -288,6 +288,8 @@ export interface Dictionary {
     lockedBody: string;
     backToLessons: string;
     upgradeCta: string;
+    /** Small price-anchor caption shown under the upgrade CTA on the locked-lesson card (e.g. "Less than a cup of coffee") — reduces price sensitivity by framing the cost against a cheap everyday reference. */
+    priceAnchorCaption: string;
     contentUnavailableBody: string;
     /** Home hero's dead-end state once a free learner has completed every free lesson (see HomeHero) — distinct from lockedBody, which is per-lesson. */
     homeFreeCompleteHeading: string;

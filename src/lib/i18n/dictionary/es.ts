@@ -276,6 +276,7 @@ export const es: Dictionary = {
       "Esta lección es parte de SentenceStep Premium. Mejora tu plan para desbloquearla, junto con el resto de la biblioteca.",
     backToLessons: "Volver a las lecciones",
     upgradeCta: "Mejorar plan — {price}",
+    priceAnchorCaption: "Menos que un café",
     contentUnavailableBody:
       "Esta lección no está disponible en este momento. No se perdió nada: inténtalo de nuevo en un momento o elige otra lección.",
     homeFreeCompleteHeading: "Has completado todas las lecciones gratuitas",

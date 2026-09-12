@@ -265,6 +265,7 @@ export const en: Dictionary = {
       "This lesson is part of SentenceStep Premium. Upgrade to unlock it — and the rest of the library.",
     backToLessons: "Back to lessons",
     upgradeCta: "Upgrade — {price}",
+    priceAnchorCaption: "Less than a cup of coffee",
     contentUnavailableBody:
       "This lesson isn't available right now. Nothing was lost — please try again in a moment, or pick a different lesson.",
     homeFreeCompleteHeading: "You've completed every free lesson",

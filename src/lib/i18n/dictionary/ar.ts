@@ -255,6 +255,7 @@ export const ar: Dictionary = {
     lockedBody: "هذا الدرس جزء من SentenceStep المميز. قم بالترقية لفتحه — وبقية المكتبة.",
     backToLessons: "العودة إلى الدروس",
     upgradeCta: "الترقية — {price}",
+    priceAnchorCaption: "أقل من سعر فنجان قهوة",
     contentUnavailableBody:
       "هذا الدرس غير متاح حاليًا. لم يُفقد شيء — يرجى المحاولة مرة أخرى بعد قليل، أو اختيار درس آخر.",
     homeFreeCompleteHeading: "لقد أكملت جميع الدروس المجانية",
