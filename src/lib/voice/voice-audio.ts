@@ -15,6 +15,7 @@ import {
   MAX_VOICE_RETRY_ATTEMPTS,
 } from "@/lib/voice/story-voice-generation";
 import { uploadVoiceClip } from "@/lib/voice/storage";
+import { headers } from "next/headers";
 
 /**
  * The on-demand, cached pronunciation-audio pipeline every lesson type
@@ -72,6 +73,35 @@ export type VoiceAudioContentType =
   "sentence" | "word" | "sentence_word" | "book_sentence" | "book_sentence_word";
 
 const MAX_TEXT_LENGTH = 300;
+
+/**
+ * Caps how often a single caller can trigger a *new* word-audio synthesis
+ * (never a cache hit — those stay free) via resolvePronunciationAudioAction.
+ * Guests aren't authenticated (guest access to /learn is intentional), so
+ * the only identity available is IP. In-memory and per-server-instance by
+ * design — cheap (no DB/Redis round trip, no added Netlify function cost)
+ * at the price of not being perfectly accurate across instances; enough to
+ * blunt a scripted client enumerating content to force mass generation
+ * without touching normal lesson use, since a real learner's new-word rate
+ * is far below this ceiling.
+ */
+const SYNTHESIS_RATE_LIMIT = 20;
+const SYNTHESIS_RATE_WINDOW_MS = 60_000;
+const synthesisRateBuckets = new Map<string, { count: number; windowStart: number }>();
+
+async function isSynthesisRateLimited(): Promise<boolean> {
+  const forwardedFor = (await headers()).get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+
+  const now = Date.now();
+  const bucket = synthesisRateBuckets.get(ip);
+  if (!bucket || now - bucket.windowStart >= SYNTHESIS_RATE_WINDOW_MS) {
+    synthesisRateBuckets.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  bucket.count += 1;
+  return bucket.count > SYNTHESIS_RATE_LIMIT;
+}
 
 async function lookupContentText(
   contentType: VoiceAudioContentType,
@@ -465,6 +495,8 @@ export async function resolvePronunciationAudioAction(input: {
   if (cached) return cached;
 
   if (contentType !== "sentence_word" && contentType !== "book_sentence_word") return null;
+
+  if (await isSynthesisRateLimited()) return null;
 
   if (voice.source === "edge-tts") {
     return generateIsolatedWordAudio(text, voiceId, voice.providerVoiceId);
