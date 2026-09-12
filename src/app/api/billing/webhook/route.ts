@@ -52,44 +52,81 @@ export async function POST(request: Request) {
   const billingEvents = provider.translateWebhookEvent(event);
   const supabase = createServiceRoleClient();
 
+  // Optimistic concurrency: two webhook deliveries for the same user
+  // arriving close together (e.g. a renewal and a payment-failure racing
+  // each other) could otherwise both read the same `current` row, compute
+  // conflicting `next` states, and have the second UPDATE blindly clobber
+  // the first's already-applied change. Re-checking `updated_at` in the
+  // UPDATE's WHERE clause makes the loser's write affect zero rows instead
+  // of silently overwriting — it then re-reads the now-current row (which
+  // includes the winner's change) and recomputes `next` from that, so both
+  // events end up applied instead of one being lost. A normal, non-racing
+  // delivery still succeeds on its first attempt exactly as before.
+  const MAX_CONCURRENT_UPDATE_ATTEMPTS = 5;
+
   for (const billingEvent of billingEvents) {
-    const { data: current, error: fetchError } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", billingEvent.providerCustomerId)
-      .maybeSingle();
-    if (fetchError) throw fetchError;
-    // No matching user — nothing safe to apply. Never invented/guessed.
-    if (!current) continue;
+    let applied = false;
+    let userExists = true;
 
-    const next = applyBillingEvent(
-      {
-        plan: current.plan,
-        status: current.status,
-        currentPeriodStart: current.current_period_start,
-        currentPeriodEnd: current.current_period_end,
-        cancelAtPeriodEnd: current.cancel_at_period_end,
-        providerCustomerId: current.provider_customer_id,
-        providerSubscriptionId: current.provider_subscription_id,
-      },
-      billingEvent,
-    );
+    for (let attempt = 0; attempt < MAX_CONCURRENT_UPDATE_ATTEMPTS; attempt++) {
+      const { data: current, error: fetchError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", billingEvent.providerCustomerId)
+        .maybeSingle();
+      if (fetchError) throw fetchError;
+      // No matching user — nothing safe to apply. Never invented/guessed.
+      if (!current) {
+        userExists = false;
+        break;
+      }
 
-    const { error: updateError } = await supabase
-      .from("subscriptions")
-      .update({
-        plan: next.plan,
-        status: next.status,
-        current_period_start: next.currentPeriodStart,
-        current_period_end: next.currentPeriodEnd,
-        cancel_at_period_end: next.cancelAtPeriodEnd,
-        provider: provider.name,
-        provider_customer_id: next.providerCustomerId,
-        provider_subscription_id: next.providerSubscriptionId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", billingEvent.providerCustomerId);
-    if (updateError) throw updateError;
+      const next = applyBillingEvent(
+        {
+          plan: current.plan,
+          status: current.status,
+          currentPeriodStart: current.current_period_start,
+          currentPeriodEnd: current.current_period_end,
+          cancelAtPeriodEnd: current.cancel_at_period_end,
+          providerCustomerId: current.provider_customer_id,
+          providerSubscriptionId: current.provider_subscription_id,
+        },
+        billingEvent,
+      );
+
+      const { data: updatedRows, error: updateError } = await supabase
+        .from("subscriptions")
+        .update({
+          plan: next.plan,
+          status: next.status,
+          current_period_start: next.currentPeriodStart,
+          current_period_end: next.currentPeriodEnd,
+          cancel_at_period_end: next.cancelAtPeriodEnd,
+          provider: provider.name,
+          provider_customer_id: next.providerCustomerId,
+          provider_subscription_id: next.providerSubscriptionId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", billingEvent.providerCustomerId)
+        .eq("updated_at", current.updated_at)
+        .select("user_id");
+      if (updateError) throw updateError;
+
+      if ((updatedRows?.length ?? 0) > 0) {
+        applied = true;
+        break;
+      }
+      // Zero rows updated: another delivery changed this row between our
+      // read and write. Loop around and retry against the fresh state.
+    }
+
+    if (!userExists) continue;
+
+    if (!applied) {
+      throw new Error(
+        `Too many concurrent update conflicts applying a billing event for user ${billingEvent.providerCustomerId}.`,
+      );
+    }
   }
 
   await markWebhookEventProcessed(event.id);
