@@ -1,8 +1,9 @@
-// Regression tests for the Real Page Model, updated for the Reading
-// Experience Polish's "exactly two sentences per page" rule: pages must be
-// deterministic, must never cross a section boundary (callers only ever
-// pass one section's sentences), must never leave a sentence out, and must
-// hold exactly two sentences except for a section's possible odd final page.
+// Regression tests for the Real Page Model, updated for the Read/listen-first
+// redesign's "exactly four sentences per page" rule (see pagination.ts's own
+// doc comment on SENTENCES_PER_PAGE): pages must be deterministic, must
+// never cross a section boundary (callers only ever pass one section's
+// sentences), must never leave a sentence out, and must hold exactly four
+// sentences except for a section's possible partial final page.
 //
 // Run with `npm test` (runs every *.test.ts).
 
@@ -16,37 +17,30 @@ function makeSentence(id: string, orderIndex: number, en: string): BookSentence 
   return { id, sectionId: "section-1", orderIndex, en, audioUrl: null };
 }
 
-test("groups sentences into pages of exactly two", () => {
-  const sentences = [
-    makeSentence("s1", 0, "I wake up early."),
-    makeSentence("s2", 1, "I drink water."),
-    makeSentence("s3", 2, "I go for a run."),
-    makeSentence("s4", 3, "I eat breakfast."),
-  ];
+test("groups sentences into pages of exactly four", () => {
+  const sentences = Array.from({ length: 8 }, (_, i) =>
+    makeSentence(`s${i + 1}`, i, `Sentence number ${i + 1}.`),
+  );
   const pages = paginateSentences(sentences);
   assert.equal(pages.length, 2);
   assert.deepEqual(
     pages[0]!.map((s) => s.id),
-    ["s1", "s2"],
+    ["s1", "s2", "s3", "s4"],
   );
   assert.deepEqual(
     pages[1]!.map((s) => s.id),
-    ["s3", "s4"],
+    ["s5", "s6", "s7", "s8"],
   );
 });
 
-test("an odd sentence count ends in a one-sentence final page", () => {
-  const sentences = [
-    makeSentence("s1", 0, "One."),
-    makeSentence("s2", 1, "Two."),
-    makeSentence("s3", 2, "Three."),
-    makeSentence("s4", 3, "Four."),
-    makeSentence("s5", 4, "Five."),
-  ];
+test("a sentence count not divisible by four ends in a partial final page", () => {
+  const sentences = Array.from({ length: 9 }, (_, i) =>
+    makeSentence(`s${i + 1}`, i, `Sentence number ${i + 1}.`),
+  );
   const pages = paginateSentences(sentences);
   assert.deepEqual(
     pages.map((page) => page.map((s) => s.id)),
-    [["s1", "s2"], ["s3", "s4"], ["s5"]],
+    [["s1", "s2", "s3", "s4"], ["s5", "s6", "s7", "s8"], ["s9"]],
   );
 });
 
@@ -63,12 +57,12 @@ test("every sentence appears in exactly one page, in original order, none droppe
   );
 });
 
-test("no page ever holds more than two sentences", () => {
+test("no page ever holds more than four sentences", () => {
   const sentences = Array.from({ length: 23 }, (_, i) =>
     makeSentence(`s${i}`, i, `Sentence number ${i} here.`),
   );
   const pages = paginateSentences(sentences);
-  for (const page of pages) assert.ok(page.length <= 2);
+  for (const page of pages) assert.ok(page.length <= 4);
 });
 
 test("is deterministic: the same sentences always produce the same page boundaries", () => {

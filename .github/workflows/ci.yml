@@ -1,0 +1,32 @@
+name: CI
+
+# Catches a broken type, lint error, or failing test before it reaches
+# master (Netlify auto-deploys every push there) — currently the only gate
+# is a local pre-commit hook that only lints staged files, not the full
+# type-check or test suite, and it's skippable/forgettable.
+#
+# Deliberately self-contained: runs on GitHub's own runners, never touches
+# Netlify or Supabase (no deploy trigger, no API call, no network I/O — the
+# test suite is pure logic per each test file's own doc comments), and adds
+# no load to either. Stops at type-check/lint/test on purpose, skipping
+# `next build`, so no Supabase project credentials need to exist as a
+# GitHub secret at all.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm test
