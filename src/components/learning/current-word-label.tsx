@@ -10,15 +10,20 @@ import { motion, useReducedMotion } from "framer-motion";
  * see Sentence.supportWordTranslations.
  *
  * A quiet caption, not a card: no border, fill, or background at all — the
- * English word set apart by weight/tracking/case (a small kicker label,
- * the same idiom a photo caption or eyebrow uses elsewhere on the site)
- * rather than by putting it in a box, with a thin rule underneath as the
- * one graphic touch. Colors stay muted greys throughout, never the purple
- * accent an earlier version tried and the user rejected as too loud for a
- * reading aid. Stays in one fixed spot above the sentence (wherever its
- * caller places it) as the current word changes underneath it, rather
- * than chasing that word's own on-screen position — an earlier version
- * tried exactly that and it read as distracting motion, not a steady aid.
+ * English word set apart by weight/tracking (a small kicker label, the
+ * same idiom a photo caption or eyebrow uses elsewhere on the site) rather
+ * than by putting it in a box, with a thin rule underneath as the one
+ * graphic touch. Deliberately NOT forced to uppercase (an earlier version
+ * did, kicker-label style): `word.en` renders in whatever casing it
+ * actually has, matching how that same word is capitalized in the
+ * sentence itself below it — a name mid-sentence stays capitalized here
+ * too, an ordinary word stays lowercase, exactly like the sentence. Colors
+ * stay muted greys throughout, never the purple accent an earlier version
+ * tried and the user rejected as too loud for a reading aid. Stays in one
+ * fixed spot above the sentence (wherever its caller places it) as the
+ * current word changes underneath it, rather than chasing that word's own
+ * on-screen position — an earlier version tried exactly that and it read
+ * as distracting motion, not a steady aid.
  *
  * Deliberately not wrapped in framer-motion's AnimatePresence: an earlier
  * version of this lesson screen used AnimatePresence for the sentence
@@ -50,12 +55,12 @@ export function CurrentWordLabel({
       className="inline-flex flex-col gap-2"
     >
       <div className="flex items-baseline gap-3">
-        <span className="text-[34px] font-bold tracking-[0.09em] text-[var(--lesson-title)]/75 uppercase">
+        <span className="text-[27px] font-bold tracking-[0.09em] text-[var(--lesson-title)]/75">
           {word.en}
         </span>
         <span
           dir={dir}
-          className="text-[34px] font-semibold tracking-wide text-[var(--lesson-subtitle)]"
+          className="text-[27px] font-semibold tracking-wide text-[var(--lesson-subtitle)]"
         >
           {word.text}
         </span>
