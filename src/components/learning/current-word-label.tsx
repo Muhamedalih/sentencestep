@@ -9,13 +9,17 @@ import { motion, useReducedMotion } from "framer-motion";
  * translation for the current locale yet, or the current index has none —
  * see Sentence.supportWordTranslations.
  *
- * Plain inline text — deliberately no card, border, or background (unlike
- * CurrentWordCard, which this replaces in the typing screen specifically):
- * a quiet reading aid, not a piece of chrome. Stays in one fixed spot above
- * the sentence (wherever its caller places it) as the current word changes
- * underneath it, rather than chasing that word's own on-screen position —
- * an earlier version tried exactly that and it read as distracting motion,
- * not a steady aid.
+ * A quiet glass pill — the same frosted-white-on-black treatment the
+ * illustration corner's image/list toggle already uses (border-white/10 +
+ * bg-white/5), chosen specifically so its shape alone (a rounded capsule)
+ * reads as clearly not the sentence, without reaching for a brand color:
+ * both the English word and its translation stay muted greys, never the
+ * purple accent an earlier version tried and the user rejected as too
+ * loud for a reading aid. Stays in one fixed spot above the sentence
+ * (wherever its caller places it) as the current word changes underneath
+ * it, rather than chasing that word's own on-screen position — an earlier
+ * version tried exactly that and it read as distracting motion, not a
+ * steady aid.
  *
  * Deliberately not wrapped in framer-motion's AnimatePresence: an earlier
  * version of this lesson screen used AnimatePresence for the sentence
@@ -44,12 +48,12 @@ export function CurrentWordLabel({
       initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="flex items-baseline gap-3"
+      className="inline-flex items-baseline gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-3"
     >
-      <span className="text-[34px] font-semibold text-[var(--lesson-title)]">{word.en}</span>
+      <span className="text-[34px] font-bold text-[var(--lesson-title)]/80">{word.en}</span>
       <span
         aria-hidden="true"
-        className="h-[3px] w-5 shrink-0 rounded-full bg-[var(--lesson-subtitle)]/40"
+        className="size-[3px] shrink-0 self-center rounded-full bg-[var(--lesson-subtitle)]/70"
       />
       <span dir={dir} className="text-[34px] font-medium text-[var(--lesson-subtitle)]">
         {word.text}
