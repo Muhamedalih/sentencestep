@@ -16,6 +16,7 @@ import {
 } from "@/components/learning/story-previous-sentences";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TypingSentence } from "@/components/learning/typing-sentence";
+import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
@@ -349,14 +350,27 @@ export function LessonSession({
           otherwise has no visible exit link by design (see sessionLabel's
           own doc comment above: the browser's own Back was the only way out
           before this). Deliberately tiny: this is a quiet escape hatch, not
-          a navigation bar competing with the sentence for attention. */}
+          a navigation bar competing with the sentence for attention. No
+          border-b here — the faint divider line that used to run under it
+          is gone, replaced by the title row directly below (see next). */}
       <Link
         href="/learn"
         aria-label={t.marketing.dashboardLinkAriaLabel}
-        className="border-border/60 flex h-12 shrink-0 items-center border-b px-3"
+        className="flex h-12 shrink-0 items-center px-3"
       >
         <Logo size="sm" />
       </Link>
+
+      {/* Sits where that old divider line used to run — the lesson/story
+          title, centered, replacing a bare separator with something worth
+          reading. aria-hidden since it restates the same title the sr-only
+          <h1> (sessionLabel, above) already gives assistive tech. */}
+      <div
+        aria-hidden="true"
+        className="shrink-0 px-4 pb-3 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
+      >
+        {unit.title}
+      </div>
 
       {/* isComplete switches the ENTIRE content region, not just the
           sentence side — completion is a full state transition (lesson
@@ -576,19 +590,18 @@ export function LessonSession({
                         </span>
                       </div>
                     )}
-                    {/* Replaces the old thin "how far I've come" progress
-                      bar that used to sit here — the counter above already
-                      states position numerically, so this row's job now is
-                      just naming what the learner is in, centered and
-                      legible rather than a barely-visible sliver. aria-hidden
-                      since it restates the same title the sr-only <h1>
-                      (sessionLabel, above) already gives assistive tech. */}
-                    <div
-                      aria-hidden="true"
-                      className="text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
-                    >
-                      {unit.title}
-                    </div>
+                    {/* How much of the lesson is already behind the learner —
+                      complements the counter above rather than duplicating
+                      it: the counter reads as "position," this reads as
+                      "how far I've come." Deliberately thinner than the
+                      shared Progress default (h-1 vs h-2) so it stays a
+                      quiet, secondary cue beside the sentence, never
+                      competing with it for attention. Stories mode moves the
+                      counter itself into TypingSentence's own header row
+                      (alongside the story label/reading time/sound button)
+                      instead of duplicating it up here — this bar is all
+                      that's left of the original counter row for that mode. */}
+                    <Progress value={(sentenceIndex / total) * 100} className="h-1" />
                   </div>
                 </div>
                 <div
