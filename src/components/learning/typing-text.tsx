@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import {
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -165,6 +166,14 @@ export function TypingText({
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
+  // Chrome keys its own saved-field-values autofill by (origin, field name),
+  // independent of the DOM node's lifecycle — a static name here meant every
+  // sentence's input shared the same browser-side history bucket, so typing
+  // the start of a new sentence could surface a *previous* lesson's typed
+  // sentence as a floating suggestion overlapping the current one. useId
+  // gives every mounted instance (i.e. every sentence) its own name, so
+  // there's never more than one entry under any given name to recall.
+  const autofillId = useId();
 
   // Replaces the native `autoFocus` attribute — see that prop's own doc
   // comment for why baking it into server-rendered HTML was the actual bug.
@@ -422,7 +431,7 @@ export function TypingText({
         // heuristics — worth trying since it can only help, but Chrome's own
         // stance means this is not guaranteed to suppress the strip.
         autoComplete="sentencestep-no-suggestions"
-        name="sentencestep-typing-input"
+        name={`sentencestep-typing-input-${autofillId}`}
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}
