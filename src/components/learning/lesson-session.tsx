@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Image as ImageIcon, List as ListIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Image as ImageIcon, List as ListIcon } from "lucide-react";
 
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
@@ -82,6 +82,13 @@ export function LessonSession({
   // what preview should always show, same as every other lesson.
   const isOpeningLesson = !previewMode && OPENING_LESSON_IDS.has(unit.id);
   const [sentenceIndex, setSentenceIndex] = useState(0);
+  // The furthest sentence this session has ever actually completed by
+  // typing it — distinct from sentenceIndex, which can move BACKWARD (see
+  // handleGoBackSentence) without this ever moving with it. This is what
+  // the forward button below is allowed to step through: already-typed
+  // ground the learner backed out of, never a sentence they haven't
+  // actually finished yet (that still has to be typed, same as always).
+  const [maxSentenceIndexReached, setMaxSentenceIndexReached] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isFixingMistakes, setIsFixingMistakes] = useState(false);
   const [finalAccuracy, setFinalAccuracy] = useState(1);
@@ -276,7 +283,9 @@ export function LessonSession({
     }
 
     if (sentenceIndex + 1 < total) {
-      setSentenceIndex((index) => index + 1);
+      const nextIndex = sentenceIndex + 1;
+      setSentenceIndex(nextIndex);
+      setMaxSentenceIndexReached((max) => Math.max(max, nextIndex));
     } else {
       const attempts = correctCountRef.current + errorCountRef.current;
       const accuracy = attempts === 0 ? 1 : correctCountRef.current / attempts;
@@ -301,6 +310,18 @@ export function LessonSession({
   function handleGoBackSentence() {
     setPreviousSentences((prev) => prev.slice(0, -1));
     setSentenceIndex((index) => index - 1);
+  }
+
+  // The forward counterpart — only ever called while sentenceIndex is
+  // still behind maxSentenceIndexReached (the button below isn't rendered
+  // otherwise), so this never advances into a sentence the learner hasn't
+  // actually typed yet. previousSentences isn't touched here: stepping
+  // forward re-mounts TypingSentence for that sentence exactly like
+  // stepping back did, and retyping it is what naturally re-appends it via
+  // handleSentenceComplete's own ordinary completion path above — the same
+  // one every sentence normally goes through.
+  function handleGoForwardSentence() {
+    setSentenceIndex((index) => index + 1);
   }
 
   /* lg:h-full (not lg:h-[...svh...]) deliberately: this component is reused
@@ -591,6 +612,17 @@ export function LessonSession({
                         <span className="text-muted-foreground shrink-0 text-sm font-medium">
                           {Math.min(sentenceIndex + 1, total)} / {total}
                         </span>
+                        {sentenceIndex < maxSentenceIndexReached && (
+                          <button
+                            type="button"
+                            onClick={handleGoForwardSentence}
+                            aria-label={t.lesson.nextSentenceButton}
+                            title={t.lesson.nextSentenceButton}
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors"
+                          >
+                            <ChevronRight className="size-3.5" aria-hidden="true" />
+                          </button>
+                        )}
                       </div>
                     )}
                     {/* How much of the lesson is already behind the learner —
@@ -647,6 +679,11 @@ export function LessonSession({
                           showTapToStart={!tapped}
                           onStart={() => setTapped(true)}
                           onGoBack={handleGoBackSentence}
+                          onGoForward={
+                            sentenceIndex < maxSentenceIndexReached
+                              ? handleGoForwardSentence
+                              : undefined
+                          }
                         />
                       );
                       // Stories only: a plain mount-in transition (no

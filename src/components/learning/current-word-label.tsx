@@ -44,13 +44,16 @@ export function CurrentWordLabel({
       initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="flex items-baseline gap-2.5"
+      className="flex items-baseline gap-3"
     >
-      <span className="text-2xl font-semibold text-[var(--lesson-title)]">{word.en}</span>
-      <span className="text-xl text-[var(--lesson-subtitle)]/50" aria-hidden="true">
-        –
+      <span className="text-[34px] font-semibold text-[var(--lesson-title)]">{word.en}</span>
+      <span
+        className="text-[22px] leading-none text-[var(--lesson-subtitle)]/40"
+        aria-hidden="true"
+      >
+        •
       </span>
-      <span dir={dir} className="text-2xl font-medium text-[var(--lesson-icon)]">
+      <span dir={dir} className="text-[34px] font-medium text-[var(--lesson-subtitle)]">
         {word.text}
       </span>
     </motion.div>

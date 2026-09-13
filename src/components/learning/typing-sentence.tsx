@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BookOpen, ChevronLeft } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
@@ -95,6 +95,8 @@ interface TypingSentenceProps {
   onStart?: () => void;
   /** Stories mode only — steps back one sentence (LessonSession owns the actual state change). Rendered as a small button beside the counter only when provided AND sentenceNumber > 1; every other mode gets its own copy of this button from LessonSession's separate counter row instead. */
   onGoBack?: () => void;
+  /** Stories mode only — steps forward again, one sentence. LessonSession only ever passes this when sentenceNumber is still behind maxSentenceIndexReached (see its own doc comment) — undefined otherwise, which is what hides the button entirely rather than this component re-deriving that condition itself. */
+  onGoForward?: () => void;
 }
 
 export function TypingSentence({
@@ -116,6 +118,7 @@ export function TypingSentence({
   showTapToStart = false,
   onStart,
   onGoBack,
+  onGoForward,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -454,6 +457,17 @@ export function TypingSentence({
                 {sentenceNumber} / {totalSentences}
               </span>
             )}
+            {onGoForward && (
+              <button
+                type="button"
+                onClick={onGoForward}
+                aria-label={t.lesson.nextSentenceButton}
+                title={t.lesson.nextSentenceButton}
+                className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
+              >
+                <ChevronRight className="size-3" aria-hidden="true" />
+              </button>
+            )}
             {storyTimeRemainingLabel && <span className="text-foreground/30">·</span>}
             {storyTimeRemainingLabel && <span>{storyTimeRemainingLabel}</span>}
           </div>
@@ -479,7 +493,7 @@ export function TypingSentence({
             className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           />
         </div>
-        <div className="mb-2 min-h-16">
+        <div className="mb-1 min-h-12">
           <CurrentWordLabel word={currentWord} dir={dir} />
         </div>
         {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
@@ -543,7 +557,7 @@ export function TypingSentence({
           group's internal spacing (mt-6 on the translation, TypingStats'
           own mt-7 in its centered form) stays exactly as tight as it always
           was — only where the whole group sits within the column changes. */}
-      <div className="mb-1.5 min-h-10">
+      <div className="mb-1 min-h-12">
         <CurrentWordLabel word={currentWord} dir={dir} />
       </div>
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">

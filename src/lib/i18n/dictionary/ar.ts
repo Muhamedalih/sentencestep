@@ -317,6 +317,7 @@ export const ar: Dictionary = {
     illustrationViewImage: "الصورة",
     illustrationViewList: "الجمل السابقة",
     previousSentenceButton: "الجملة السابقة",
+    nextSentenceButton: "الجملة التالية",
     tapToStartHeading: "اضغط في أي مكان للبدء",
     tapToStartBody: "ستفتح لوحة المفاتيح تلقائيًا",
     savingProgress: "جارٍ حفظ تقدّمك…",

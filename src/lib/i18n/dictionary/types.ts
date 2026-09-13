@@ -358,6 +358,8 @@ export interface Dictionary {
     illustrationViewList: string;
     /** aria-label/title for the small button next to the sentence counter that steps back one sentence. Hidden entirely on the first sentence. */
     previousSentenceButton: string;
+    /** aria-label/title for the small button next to the sentence counter that steps forward again — only shown once the learner has stepped back from a sentence they'd already typed, and only as far as that (see maxSentenceIndexReached in LessonSession). */
+    nextSentenceButton: string;
     tapToStartHeading: string;
     tapToStartBody: string;
     /** Shown on the completion screen while recordCompletionAction is still in flight for a signed-in learner. */

@@ -339,6 +339,7 @@ export const es: Dictionary = {
     illustrationViewImage: "Ilustración",
     illustrationViewList: "Oraciones anteriores",
     previousSentenceButton: "Oración anterior",
+    nextSentenceButton: "Oración siguiente",
     tapToStartHeading: "Toca en cualquier lugar para empezar",
     tapToStartBody: "Tu teclado se abrirá automáticamente",
     savingProgress: "Guardando tu progreso…",
