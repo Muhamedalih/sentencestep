@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Home, Library, ListChecks, NotebookText, Type } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { ScrollFadeEdges } from "@/components/ui/scroll-fade-edges";
+import { useScrollEdgeFade } from "@/hooks/use-scroll-edge-fade";
 import { cn } from "@/lib/utils";
 
 /**
@@ -65,34 +67,55 @@ export function LearnSidebar() {
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
   ] as const;
 
+  // On mobile this strip scrolls horizontally (see the doc comment above),
+  // which means Library/Stories/Word Lists start out scrolled off the edge
+  // with nothing to hint they're there — the fade overlays below make that
+  // discoverable. `md:hidden` on both keeps them out at md:+, where the
+  // sidebar switches to a vertical, non-scrolling layout and there's never
+  // anything cut off to hint at.
+  const { ref: scrollRef, showStartFade, showEndFade } = useScrollEdgeFade<HTMLDivElement>();
+
   return (
     <nav
       aria-label={t.nav.ariaLabel}
       className={cn(
-        "border-border/60 bg-background/80 sticky top-16 z-40 flex shrink-0 items-center gap-1 overflow-x-auto border-b px-4 py-2 backdrop-blur-md",
-        "md:h-[calc(100svh-4rem)] md:w-56 md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:border-r md:border-b-0 md:px-3 md:py-6",
+        "border-border/60 bg-background/80 relative sticky top-16 z-40 shrink-0 border-b backdrop-blur-md",
+        "md:h-[calc(100svh-4rem)] md:w-56 md:border-r md:border-b-0",
       )}
     >
-      {NAV_ITEMS.map((item) => {
-        const Icon = item.icon;
-        const isActive = active === item.key;
-        return (
-          <Link
-            key={item.key}
-            href={item.href}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "focus-visible:ring-ring focus-visible:ring-offset-background flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-              isActive
-                ? "bg-brand-muted text-primary"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-            )}
-          >
-            <Icon className="size-4 shrink-0" aria-hidden="true" />
-            <span dir={dir}>{item.label}</span>
-          </Link>
-        );
-      })}
+      <div
+        ref={scrollRef}
+        className={cn(
+          "flex items-center gap-1 overflow-x-auto px-4 py-2",
+          "md:h-full md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:px-3 md:py-6",
+        )}
+      >
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = active === item.key;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "focus-visible:ring-ring focus-visible:ring-offset-background flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                isActive
+                  ? "bg-brand-muted text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              )}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              <span dir={dir}>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+      <ScrollFadeEdges
+        showStartFade={showStartFade}
+        showEndFade={showEndFade}
+        className="md:hidden"
+      />
     </nav>
   );
 }

@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { ScrollFadeEdges } from "@/components/ui/scroll-fade-edges";
+import { useScrollEdgeFade } from "@/hooks/use-scroll-edge-fade";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types/library";
 
@@ -26,26 +28,38 @@ export function LibraryCategoryNav({
   onSelect: (id: string | null) => void;
 }) {
   const { t, dir } = useLocale();
+  // Same "hidden past the edge with no hint" gap as LearnSidebar's tab strip
+  // (see ScrollFadeEdges) — with enough categories this row overflows on
+  // narrow screens and the fade is the only cue more are a swipe away.
+  const { ref: scrollRef, showStartFade, showEndFade } = useScrollEdgeFade<HTMLElement>();
 
   return (
-    <nav
-      aria-label={t.bookLibrary.categoryNavAriaLabel}
-      dir={dir}
-      className="flex items-center gap-2 overflow-x-auto pb-1"
-    >
-      <CategoryPill active={selectedId === null} onClick={() => onSelect(null)}>
-        {t.bookLibrary.allCategories}
-      </CategoryPill>
-      {categories.map((category) => (
-        <CategoryPill
-          key={category.id}
-          active={selectedId === category.id}
-          onClick={() => onSelect(category.id)}
-        >
-          {category.name}
+    <div className="relative md:contents">
+      <nav
+        ref={scrollRef}
+        aria-label={t.bookLibrary.categoryNavAriaLabel}
+        dir={dir}
+        className="flex items-center gap-2 overflow-x-auto pb-1"
+      >
+        <CategoryPill active={selectedId === null} onClick={() => onSelect(null)}>
+          {t.bookLibrary.allCategories}
         </CategoryPill>
-      ))}
-    </nav>
+        {categories.map((category) => (
+          <CategoryPill
+            key={category.id}
+            active={selectedId === category.id}
+            onClick={() => onSelect(category.id)}
+          >
+            {category.name}
+          </CategoryPill>
+        ))}
+      </nav>
+      <ScrollFadeEdges
+        showStartFade={showStartFade}
+        showEndFade={showEndFade}
+        className="md:hidden"
+      />
+    </div>
   );
 }
 

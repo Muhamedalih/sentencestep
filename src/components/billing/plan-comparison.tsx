@@ -1,6 +1,10 @@
+"use client";
+
 import { Check } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollFadeEdges } from "@/components/ui/scroll-fade-edges";
+import { useScrollEdgeFade } from "@/hooks/use-scroll-edge-fade";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /**
@@ -52,42 +56,55 @@ export function PlanComparison({ t }: { t: Dictionary }) {
     },
   ];
 
+  // Same "cut off with no hint" gap the mobile tab strips have (see
+  // ScrollFadeEdges) — this table's min-w-[26rem] is wider than a typical
+  // phone screen, so it scrolls horizontally there with nothing to signal
+  // that the Premium column isn't just missing.
+  const { ref: scrollRef, showStartFade, showEndFade } = useScrollEdgeFade<HTMLDivElement>();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-xl">{t.premium.comparisonHeading}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[26rem] border-collapse text-sm">
-            <thead>
-              <tr className="border-border border-b text-start">
-                <th className="text-muted-foreground px-2 py-2 text-start font-medium">
-                  {t.premium.featureColumnHeading}
-                </th>
-                <th className="text-muted-foreground px-2 py-2 text-start font-medium">
-                  {t.common.freePlan}
-                </th>
-                <th className="text-primary px-2 py-2 text-start font-medium">
-                  {t.common.premium}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.feature} className="border-border/60 border-b last:border-0">
-                  <td className="px-2 py-2.5 font-medium">{row.feature}</td>
-                  <td className="text-muted-foreground px-2 py-2.5">{row.free}</td>
-                  <td className="px-2 py-2.5">
-                    <span className="text-foreground inline-flex items-center gap-1.5">
-                      <Check className="text-success size-4 shrink-0" aria-hidden="true" />
-                      {row.premium}
-                    </span>
-                  </td>
+        <div className="relative">
+          <div ref={scrollRef} className="overflow-x-auto">
+            <table className="w-full min-w-[26rem] border-collapse text-sm">
+              <thead>
+                <tr className="border-border border-b text-start">
+                  <th className="text-muted-foreground px-2 py-2 text-start font-medium">
+                    {t.premium.featureColumnHeading}
+                  </th>
+                  <th className="text-muted-foreground px-2 py-2 text-start font-medium">
+                    {t.common.freePlan}
+                  </th>
+                  <th className="text-primary px-2 py-2 text-start font-medium">
+                    {t.common.premium}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.feature} className="border-border/60 border-b last:border-0">
+                    <td className="px-2 py-2.5 font-medium">{row.feature}</td>
+                    <td className="text-muted-foreground px-2 py-2.5">{row.free}</td>
+                    <td className="px-2 py-2.5">
+                      <span className="text-foreground inline-flex items-center gap-1.5">
+                        <Check className="text-success size-4 shrink-0" aria-hidden="true" />
+                        {row.premium}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ScrollFadeEdges
+            showStartFade={showStartFade}
+            showEndFade={showEndFade}
+            className="md:hidden"
+          />
         </div>
       </CardContent>
     </Card>
