@@ -466,7 +466,13 @@ export function TypingSentence({
         <CurrentWordCard word={currentWord} dir={dir} />
       </div>
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
-        {renderText("text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]", true)}
+        {/* A fixed, smaller size below sm: (the illustration panel above is
+            hidden there too — see LessonSession — so this no longer needs to
+            share the screen with it) instead of the same fluid clamp every
+            other viewport uses, which sat at a flat 44px floor on any phone
+            width and read as oversized/inconsistent from one phone to the
+            next. sm:+ keeps the exact original clamp, untouched. */}
+        {renderText("text-3xl sm:text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]", true)}
         <p className="mt-6 text-lg text-[var(--lesson-subtitle)]" dir={dir}>
           {supportText}
         </p>

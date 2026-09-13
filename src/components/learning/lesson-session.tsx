@@ -379,7 +379,18 @@ export function LessonSession({
             {unit.mode === "stories" ? (
               <StoryPreviousSentences sentences={previousSentences} />
             ) : (
-              <div className="relative lg:h-full">
+              <div
+                className={cn(
+                  "relative lg:h-full",
+                  // Normal mode's topic illustration is a nice-to-have next to
+                  // the real task (typing), but on a phone it eats the top of
+                  // the screen before the learner even reaches the sentence —
+                  // hidden below sm: (tablet and up keep it, unchanged).
+                  // Conversation mode's own illustration is left alone: this
+                  // was asked for regular lessons specifically.
+                  unit.mode === "normal" && "max-sm:hidden",
+                )}
+              >
                 {illustrationView === "list" ? (
                   <StoryPreviousSentences sentences={previousSentences} />
                 ) : (

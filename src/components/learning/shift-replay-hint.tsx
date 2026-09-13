@@ -51,7 +51,7 @@ export function ShiftReplayHint({ className }: { className?: string } = {}) {
     <div
       aria-hidden="true"
       className={cn(
-        "border-border/50 bg-background/80 pointer-events-none fixed right-4 bottom-4 z-30 flex items-center gap-2.5 rounded-2xl border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md select-none sm:right-6 sm:bottom-6",
+        "border-border/50 bg-background/80 pointer-events-none fixed right-4 bottom-4 z-30 flex items-center gap-2.5 rounded-2xl border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md select-none max-sm:pr-1.5 sm:right-6 sm:bottom-6",
         className,
       )}
     >
@@ -69,7 +69,10 @@ export function ShiftReplayHint({ className }: { className?: string } = {}) {
         <ArrowBigUp className="size-3.5 opacity-80" aria-hidden="true" />
         <span className="text-[10.5px] font-semibold tracking-wide">Shift</span>
       </div>
-      <span dir={dir} className="text-muted-foreground text-xs font-medium">
+      {/* Label hidden below sm: — the keycap alone is still self-explanatory,
+          and dropping the label's width is what actually gives back the
+          space this pill was taking up on a phone screen. */}
+      <span dir={dir} className="text-muted-foreground text-xs font-medium max-sm:hidden">
         {t.pronunciation.replayHint}
       </span>
     </div>
