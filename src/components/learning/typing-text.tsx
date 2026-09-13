@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -90,6 +91,29 @@ interface TypingTextProps {
   /** Disables the underlying (invisible) input and skips autoFocus — Book Reading's read-only page-preview rendering, so navigating pages never steals focus or accepts keystrokes for a sentence that isn't the active one. */
   disabled?: boolean;
   /**
+   * Separately from `disabled`: whether the input should grab focus on
+   * mount at all. Defaults true (today's unconditional autoFocus behavior,
+   * unchanged for every caller that doesn't pass this). Applied via a
+   * client-only `useEffect` calling `inputRef.current.focus()` below,
+   * deliberately NOT the native `autoFocus` JSX/HTML attribute: that
+   * attribute gets baked into the server-rendered HTML and is honored by
+   * the browser's own parser the instant it reads the markup — BEFORE
+   * React ever hydrates or any client-side "is this actually a phone"
+   * check can run. Since the server can never know the real viewport
+   * width, it always rendered `autofocus` present, which is what popped a
+   * real phone's soft keyboard open immediately even while
+   * TapToStartOverlay (gated on that same client-only check) was still
+   * showing on top of it — the two were never actually in sync, no matter
+   * how `autoFocus` here was computed. A `useEffect` only ever runs on the
+   * client, after hydration, once the real viewport is known, which is
+   * what actually closes that gap. Normal/Stories' mobile "tap to start"
+   * gate (see LessonSession's `hasStarted`) passes this false for the very
+   * first sentence of a session; the overlay's own tap calls
+   * `inputRef.current?.focus()` directly instead (a real user gesture),
+   * which is what actually opens the keyboard once the learner asks for it.
+   */
+  autoFocus?: boolean;
+  /**
    * Fix Your Mistakes' red-letter hint (addition — see MistakeReviewSentence):
    * every character index within `target` the learner previously got wrong,
    * shown in the same red used for an active typing mistake. Only ever
@@ -136,10 +160,22 @@ export function TypingText({
   enableWordHighlight = false,
   showTypingCursor = true,
   disabled = false,
+  autoFocus = true,
   highlightIndexes = null,
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Replaces the native `autoFocus` attribute — see that prop's own doc
+  // comment for why baking it into server-rendered HTML was the actual bug.
+  // Mount-only (empty deps): each new sentence is a fresh TypingText
+  // instance (every caller keys it by sentence/word id), so this doesn't
+  // need to react to `autoFocus` changing after mount, matching the native
+  // attribute's own once-per-mount behavior.
+  useEffect(() => {
+    if (autoFocus && !disabled) inputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount only, exactly like the native autoFocus attribute it replaces
+  }, []);
   // Which word's translation popover is open (at most one at a time — clean
   // and lightweight rather than a sentence full of open popovers) and which
   // words are double-click-highlighted. Local, transient UI state: both
@@ -375,9 +411,18 @@ export function TypingText({
         onPaste={onPaste}
         className="pointer-events-none absolute inset-0 cursor-text opacity-0"
         dir="ltr"
-        autoFocus={!disabled}
         disabled={disabled}
-        autoComplete="off"
+        // A literal "off" is explicitly special-cased and ignored by Chrome
+        // for its own autofill/password-manager heuristics (a deliberate,
+        // documented Chrome decision — not something any page can override,
+        // confirmed both in Chromium's own bug tracker and by Chrome's help
+        // forum threads about this exact keyboard-accessory strip). An
+        // unrecognized, unique token here is an unofficial but low-risk
+        // workaround some sites use to fall outside those hard-coded
+        // heuristics — worth trying since it can only help, but Chrome's own
+        // stance means this is not guaranteed to suppress the strip.
+        autoComplete="sentencestep-no-suggestions"
+        name="sentencestep-typing-input"
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}

@@ -65,12 +65,33 @@ interface TypingSentenceProps {
    * Whether this lesson session has already been started (LessonSession
    * owns this, not local state here, precisely because it must survive
    * this component's own per-sentence remount — see the `key={sentence.id}`
-   * on every caller). Normal/Stories only: Conversation never gates on it.
-   * Undefined behaves as already-started (every other caller, and the
-   * admin preview, keeps today's immediate-autoFocus behavior unchanged).
+   * on every caller). Gates the input's focus-on-mount and the narration's
+   * autoPlay — never the overlay's own presence in the DOM, see
+   * `showTapToStart`'s doc comment for why those two had to be split.
+   * Normal/Stories only: Conversation never gates on it. Undefined behaves
+   * as already-started (every other caller, and the admin preview, keeps
+   * today's immediate-autofocus/autoplay behavior unchanged).
    */
   hasStarted?: boolean;
-  /** Fired once, the first time the learner taps the mobile-only "tap to start" overlay below — see `hasStarted`'s own doc comment. */
+  /**
+   * Whether to render TapToStartOverlay at all — deliberately NOT derived
+   * from `hasStarted` (which folds in a client-only "is this actually a
+   * mobile viewport" check LessonSession can't know during SSR). A value
+   * that mismatches between the server-rendered HTML and the client's first
+   * render is exactly what a hydration mismatch is, and for a WHOLE EXTRA
+   * ELEMENT (not just an attribute), that reliably left the overlay never
+   * actually appearing in the committed DOM at all in testing — the
+   * server's "no overlay" version won even once the client "corrected"
+   * itself. `showTapToStart` instead reflects only `tapped` (LessonSession's
+   * own plain `useState(false)`, identical on server and client, so there's
+   * nothing to reconcile), and relies purely on TapToStartOverlay's own
+   * `sm:hidden` CSS class — evaluated by the browser at paint time, not
+   * baked into the markup one way or the other — to stay invisible on
+   * tablet/desktop. Undefined behaves as "never show it" (every caller that
+   * doesn't pass it, including Conversation and the admin preview).
+   */
+  showTapToStart?: boolean;
+  /** Fired once, the first time the learner taps the mobile-only "tap to start" overlay below — see `showTapToStart`'s own doc comment. */
   onStart?: () => void;
 }
 
@@ -90,6 +111,7 @@ export function TypingSentence({
   storyTimeRemainingLabel,
   wordAudioUrls,
   hasStarted = true,
+  showTapToStart = false,
   onStart,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
@@ -298,6 +320,7 @@ export function TypingSentence({
         textStyle={textStyle}
         onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
         targetVocabularyIndices={targetVocabularyIndices}
+        autoFocus={hasStarted}
       />
     );
   }
@@ -380,7 +403,7 @@ export function TypingSentence({
   if (mode === "stories") {
     return (
       <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
-        {!hasStarted && (
+        {showTapToStart && (
           <TapToStartOverlay
             heading={t.lesson.tapToStartHeading}
             body={t.lesson.tapToStartBody}
@@ -417,11 +440,16 @@ export function TypingSentence({
         </div>
         <div className="mb-4 flex items-center justify-end gap-2">
           <PronunciationSpeedControl inputRef={engine.inputRef} />
+          {/* Mobile only (see hasStarted's own doc comment): a guest who
+              hasn't tapped the "tap to start" overlay yet shouldn't hear the
+              first sentence narrate itself before they've even engaged with
+              the lesson. Every sentence after the first, and every desktop/
+              tablet session, keeps the original always-autoPlay behavior. */}
           <PronunciationButton
             text={sentence.en}
             audioUrl={sentence.audioUrl}
             onPlay={onAudioPlay}
-            autoPlay
+            autoPlay={hasStarted}
             resetKey={sentence.id}
             inputRef={engine.inputRef}
             kokoroVoiceId={sentenceVoiceId}
@@ -458,7 +486,7 @@ export function TypingSentence({
 
   return (
     <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
-      {!hasStarted && (
+      {showTapToStart && (
         <TapToStartOverlay
           heading={t.lesson.tapToStartHeading}
           body={t.lesson.tapToStartBody}
@@ -470,11 +498,12 @@ export function TypingSentence({
       )}
       <div className="mb-4 flex items-center justify-end gap-2">
         <PronunciationSpeedControl inputRef={engine.inputRef} />
+        {/* Mobile only — see the Stories branch's identical comment above. */}
         <PronunciationButton
           text={sentence.en}
           audioUrl={sentence.audioUrl}
           onPlay={onAudioPlay}
-          autoPlay
+          autoPlay={hasStarted}
           resetKey={sentence.id}
           inputRef={engine.inputRef}
           kokoroVoiceId={sentenceVoiceId}

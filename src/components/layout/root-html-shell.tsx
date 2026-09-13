@@ -38,6 +38,45 @@ export const THEME_INIT_SCRIPT = `
 `;
 
 /**
+ * Sends a returning MOBILE guest who already finished the "get started"
+ * flow (localStorage's "looma:progress:v2".startingLevel is only ever
+ * non-null once StartingLevelOnboarding has run — see setStartingLevel's
+ * own doc comment in src/lib/progress/store.ts) straight to /learn instead
+ * of ever letting them see this marketing homepage — mirroring what
+ * src/middleware.ts's handleRootRoute already does for a real signed-in
+ * visitor, except that visitor's equivalent state (a Supabase session) is a
+ * cookie middleware can read server-side, while a guest's is localStorage,
+ * which middleware can never see.
+ *
+ * Deliberately a plain synchronous inline script (same pattern as
+ * THEME_INIT_SCRIPT above), not a client component's useEffect: an effect
+ * only runs after this page has already mounted and painted, which is
+ * exactly the "flash of the marketing homepage, then it jumps to /learn a
+ * moment later" an earlier version of this feature had. Running
+ * synchronously here, before <body> ever parses, means a matching guest
+ * never sees this page's content at all — the navigation away happens
+ * mid-parse. Only ever injected on the two marketing route groups (see
+ * `localizedNavigation` below), which is also exactly why this doesn't need
+ * a CSP hash the way THEME_INIT_SCRIPT does on every OTHER route: those two
+ * route groups already run script-src 'unsafe-inline' (see
+ * middleware.ts's buildCsp — a documented, static-rendering-specific
+ * carve-out), so this authorizes itself for free by only ever being present
+ * in the HTML of pages that already allow it.
+ */
+export const RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT = `
+(function () {
+  try {
+    if (!window.matchMedia("(max-width: 639px)").matches) return;
+    var raw = window.localStorage.getItem("looma:progress:v2");
+    if (!raw) return;
+    var parsed = JSON.parse(raw);
+    if (parsed.startingLevel === null || parsed.startingLevel === undefined) return;
+    window.location.replace("/learn");
+  } catch (e) {}
+})();
+`;
+
+/**
  * The actual <html>/<head>/<body> shell every root layout in the app
  * renders — factored out here because there is no longer exactly one root
  * layout (see src/app/(app)/layout.tsx's doc comment for why). Next.js
@@ -97,6 +136,13 @@ export function RootHtmlShell({
         />
         {/* Authorized by middleware.ts's CSP via a fixed sha256 hash of this exact script body, not a per-request nonce — this script never changes per request, so it needs no per-request value, which is what lets this Server Component render without calling headers()/cookies() itself. */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Marketing route groups only (see RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT's own doc comment for why this needs no CSP hash) — never present in the HTML of any other route, so it can never run there. */}
+        {localizedNavigation && (
+          <script
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT }}
+          />
+        )}
         {/*
          * Only on the unprefixed "/" for a genuinely first-time, cookie-less
          * visitor (localizedNavigation && locale === null — true for

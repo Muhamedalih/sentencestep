@@ -20,6 +20,7 @@ import { usePronunciationSettings } from "@/components/providers/pronunciation-s
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { transitions } from "@/lib/motion";
 import { trackAudioPlayedAction, trackLessonViewAction } from "@/lib/analytics/track-actions";
+import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
@@ -31,6 +32,25 @@ import { cn } from "@/lib/utils";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
 const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
+
+/**
+ * A single short, light haptic tick per keystroke (correct or error alike —
+ * this mirrors typingSoundSettings' own "a sound plays either way" design,
+ * just felt instead of heard), mobile only: `navigator.vibrate` already
+ * doesn't exist on desktop Chrome/Safari, but the explicit width check
+ * keeps this consistent with every other mobile-only behavior on this
+ * screen rather than relying on that absence. Best-effort — a browser that
+ * blocks or lacks the Vibration API (iOS Safari never shipped it) just
+ * silently does nothing, exactly as if this call were never made.
+ */
+function vibrateLightly(): void {
+  if (typeof window === "undefined" || !window.matchMedia("(max-width: 639px)").matches) return;
+  try {
+    navigator.vibrate?.(8);
+  } catch {
+    // Vibration is cosmetic feedback, never worth surfacing a failure for.
+  }
+}
 
 export function LessonSession({
   unit,
@@ -80,8 +100,16 @@ export function LessonSession({
   // — held here, not inside TypingSentence, specifically so it survives
   // that component's own per-sentence remount (key={sentence.id} below) and
   // the overlay only ever shows once per lesson session, not once per
-  // sentence. Conversation mode never reads it (no overlay there).
-  const [hasStarted, setHasStarted] = useState(false);
+  // sentence.
+  const [tapped, setTapped] = useState(false);
+  const isMobileViewport = useIsMobileViewport();
+  // The single value TypingSentence actually reads: true (no gate at all)
+  // on desktop/tablet and in Conversation mode — neither shows the overlay,
+  // and forcing it true here is what keeps the input's autoFocus and the
+  // narration's autoPlay firing immediately for them, exactly as before this
+  // feature existed. Only a mobile Normal/Stories session starts this false,
+  // gated on `tapped`.
+  const hasStarted = !isMobileViewport || unit.mode === "conversation" || tapped;
   const {
     markComplete,
     streak,
@@ -544,10 +572,12 @@ export function LessonSession({
                         onCorrectLetter={() => {
                           correctCountRef.current += 1;
                           play("letter");
+                          vibrateLightly();
                         }}
                         onErrorLetter={() => {
                           errorCountRef.current += 1;
                           play("error");
+                          vibrateLightly();
                         }}
                         onAudioPlay={handleAudioPlay}
                         onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
@@ -556,7 +586,8 @@ export function LessonSession({
                         totalSentences={total}
                         storyTimeRemainingLabel={storyTimeRemainingLabel}
                         hasStarted={hasStarted}
-                        onStart={() => setHasStarted(true)}
+                        showTapToStart={!tapped}
+                        onStart={() => setTapped(true)}
                       />
                     );
                     // Stories only: a plain mount-in transition (no
