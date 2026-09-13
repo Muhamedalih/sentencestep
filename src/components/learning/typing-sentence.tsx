@@ -170,6 +170,12 @@ export function TypingSentence({
     onComplete: handleComplete,
     onCorrectChar: onCorrectLetter,
     onErrorChar: onErrorLetter,
+    // The actual root cause of the keyboard opening before the mobile "tap
+    // to start" gate was tapped: this hook refocuses the input on every
+    // resetKey change independently of TypingText's own autoFocus prop
+    // (which only ever covered TypingText's OWN mount-time focus call) —
+    // both need to read the same gate.
+    autoFocus: hasStarted,
   });
 
   // Fires once per genuinely new wrong keystroke (errorIndex transitions
@@ -557,6 +563,18 @@ export function TypingSentence({
  * a later sentence in the same session. Absent on tablet/desktop, where the
  * sentence was always click-to-focus already (see TypingText's own
  * container onClick) and there's no keyboard-appearing surprise to soften.
+ *
+ * `fixed inset-0` (not `absolute`, despite living inside a `relative`
+ * parent): that parent only grows as tall as the audio row/word card/
+ * sentence/translation actually are on mobile (no lg:h-full below that
+ * breakpoint), so an absolutely-positioned overlay centered on IT lands
+ * wherever that content happens to end — routinely nowhere near the middle
+ * of the actual screen. Anchoring to the viewport instead is what reliably
+ * centers the card in the middle of the screen, a little below the
+ * sentence, matching the reference layout this was built from. A light
+ * dim (bg-background/45, no blur) — not the earlier heavy 85%-opacity/
+ * blurred version — is deliberate too: the sentence should still read as
+ * present and legible-ish behind the card, not obscured.
  */
 function TapToStartOverlay({
   heading,
@@ -577,9 +595,9 @@ function TapToStartOverlay({
         event.preventDefault();
         onStart();
       }}
-      className="bg-background/85 absolute inset-0 z-20 flex cursor-pointer items-center justify-center rounded-2xl backdrop-blur-sm sm:hidden"
+      className="bg-background/45 fixed inset-0 z-20 flex cursor-pointer items-center justify-center sm:hidden"
     >
-      <div className="border-border/60 bg-card mx-6 flex flex-col items-center gap-1 rounded-2xl border px-6 py-5 text-center shadow-lg shadow-black/20">
+      <div className="border-border/60 bg-card/95 mx-6 flex flex-col items-center gap-1.5 rounded-2xl border px-7 py-5 text-center shadow-xl shadow-black/30">
         <span className="text-foreground text-base font-semibold">{heading}</span>
         <span className="text-muted-foreground text-sm">{body}</span>
       </div>

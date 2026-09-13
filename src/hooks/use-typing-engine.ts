@@ -46,6 +46,19 @@ interface UseTypingEngineOptions {
    * behavior, for every other caller.
    */
   inputRef?: RefObject<HTMLInputElement | null>;
+  /**
+   * Whether the reset-on-`resetKey`-change effect below should focus the
+   * input. Defaults true (today's unconditional behavior, unchanged for
+   * every caller that doesn't pass this) — LessonSession's mobile "tap to
+   * start" gate is the one caller that passes false for the very first
+   * sentence, until the learner taps. This is the ACTUAL root cause of the
+   * soft keyboard opening before that tap: TypingText's own autoFocus prop
+   * only ever covered its own mount-time focus call, but this hook
+   * independently re-focuses the input every time `resetKey` changes
+   * (i.e., mount too, since the effect fires on first run) — completely
+   * bypassing whatever TypingText decided. Both now read the same gate.
+   */
+  autoFocus?: boolean;
 }
 
 /**
@@ -65,6 +78,7 @@ export function useTypingEngine({
   completeDelayMs = 350,
   errorDelayMs = 300,
   inputRef: externalInputRef,
+  autoFocus = true,
 }: UseTypingEngineOptions) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
@@ -96,8 +110,8 @@ export function useTypingEngine({
     startTimeRef.current = null;
     correctKeystrokesRef.current = 0;
     totalKeystrokesRef.current = 0;
-    inputRef.current?.focus();
-  }, [resetKey, inputRef]);
+    if (autoFocus) inputRef.current?.focus();
+  }, [resetKey, inputRef, autoFocus]);
 
   useEffect(() => {
     return () => {
