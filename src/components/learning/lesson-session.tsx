@@ -354,7 +354,7 @@ export function LessonSession({
       <Link
         href="/learn"
         aria-label={t.marketing.dashboardLinkAriaLabel}
-        className="border-border/60 flex h-7 shrink-0 items-center border-b px-2"
+        className="border-border/60 flex h-12 shrink-0 items-center border-b px-3"
       >
         <Logo size="sm" />
       </Link>
