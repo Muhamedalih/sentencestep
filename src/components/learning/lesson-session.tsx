@@ -76,6 +76,12 @@ export function LessonSession({
   // switching back and forth at will (unlike Stories, where the swap is
   // permanent for the whole lesson).
   const [illustrationView, setIllustrationView] = useState<"image" | "list">("image");
+  // Mobile-only "tap to start" gate (see TypingSentence's TapToStartOverlay)
+  // — held here, not inside TypingSentence, specifically so it survives
+  // that component's own per-sentence remount (key={sentence.id} below) and
+  // the overlay only ever shows once per lesson session, not once per
+  // sentence. Conversation mode never reads it (no overlay there).
+  const [hasStarted, setHasStarted] = useState(false);
   const {
     markComplete,
     streak,
@@ -549,6 +555,8 @@ export function LessonSession({
                         sentenceNumber={sentenceIndex + 1}
                         totalSentences={total}
                         storyTimeRemainingLabel={storyTimeRemainingLabel}
+                        hasStarted={hasStarted}
+                        onStart={() => setHasStarted(true)}
                       />
                     );
                     // Stories only: a plain mount-in transition (no

@@ -356,6 +356,8 @@ export interface Dictionary {
     illustrationViewImage: string;
     /** Normal-mode lesson screen — label/title for the toggle button that swaps the illustration for a running list of already-typed sentences. */
     illustrationViewList: string;
+    tapToStartHeading: string;
+    tapToStartBody: string;
     /** Shown on the completion screen while recordCompletionAction is still in flight for a signed-in learner. */
     savingProgress: string;
     /** Shown in place of savingProgress if that save fails — paired with retry. */

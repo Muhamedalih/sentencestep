@@ -338,6 +338,8 @@ export const es: Dictionary = {
     illustrationAlt: 'Ilustración de la lección "{title}"',
     illustrationViewImage: "Ilustración",
     illustrationViewList: "Oraciones anteriores",
+    tapToStartHeading: "Toca en cualquier lugar para empezar",
+    tapToStartBody: "Tu teclado se abrirá automáticamente",
     savingProgress: "Guardando tu progreso…",
     saveFailed: "No se pudo guardar tu progreso.",
     retry: "Reintentar",

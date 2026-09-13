@@ -316,6 +316,8 @@ export const ar: Dictionary = {
     illustrationAlt: 'رسم توضيحي لدرس "{title}"',
     illustrationViewImage: "الصورة",
     illustrationViewList: "الجمل السابقة",
+    tapToStartHeading: "اضغط في أي مكان للبدء",
+    tapToStartBody: "ستفتح لوحة المفاتيح تلقائيًا",
     savingProgress: "جارٍ حفظ تقدّمك…",
     saveFailed: "تعذّر حفظ تقدّمك.",
     retry: "إعادة المحاولة",

@@ -61,6 +61,17 @@ interface TypingSentenceProps {
   storyTimeRemainingLabel?: string;
   /** Server-side pre-resolved `{contentId: audioUrl}` for this sentence's trackable words (LessonSession passes this only for the lesson's first sentence — see its own doc comment and LessonPage's lookupCachedWordAudioUrls call). Registered into the shared resolved-audio cache on mount so a word click here skips the resolve round trip entirely, closing the one gap the next-sentence word prefetch below can't: the very first sentence has no PREVIOUS sentence to have prefetched its words during. undefined for every other sentence, which behaves exactly as before. */
   wordAudioUrls?: Record<string, string>;
+  /**
+   * Whether this lesson session has already been started (LessonSession
+   * owns this, not local state here, precisely because it must survive
+   * this component's own per-sentence remount — see the `key={sentence.id}`
+   * on every caller). Normal/Stories only: Conversation never gates on it.
+   * Undefined behaves as already-started (every other caller, and the
+   * admin preview, keeps today's immediate-autoFocus behavior unchanged).
+   */
+  hasStarted?: boolean;
+  /** Fired once, the first time the learner taps the mobile-only "tap to start" overlay below — see `hasStarted`'s own doc comment. */
+  onStart?: () => void;
 }
 
 export function TypingSentence({
@@ -78,6 +89,8 @@ export function TypingSentence({
   totalSentences,
   storyTimeRemainingLabel,
   wordAudioUrls,
+  hasStarted = true,
+  onStart,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -367,6 +380,16 @@ export function TypingSentence({
   if (mode === "stories") {
     return (
       <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
+        {!hasStarted && (
+          <TapToStartOverlay
+            heading={t.lesson.tapToStartHeading}
+            body={t.lesson.tapToStartBody}
+            onStart={() => {
+              engine.inputRef.current?.focus();
+              onStart?.();
+            }}
+          />
+        )}
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <StoryProgressRing current={sentenceNumber} total={totalSentences} />
@@ -435,6 +458,16 @@ export function TypingSentence({
 
   return (
     <motion.div {...enterExit} className="relative lg:flex lg:h-full lg:flex-col">
+      {!hasStarted && (
+        <TapToStartOverlay
+          heading={t.lesson.tapToStartHeading}
+          body={t.lesson.tapToStartBody}
+          onStart={() => {
+            engine.inputRef.current?.focus();
+            onStart?.();
+          }}
+        />
+      )}
       <div className="mb-4 flex items-center justify-end gap-2">
         <PronunciationSpeedControl inputRef={engine.inputRef} />
         <PronunciationButton
@@ -479,6 +512,49 @@ export function TypingSentence({
         <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
       </div>
     </motion.div>
+  );
+}
+
+/**
+ * Mobile-only (sm:hidden) gate shown once per lesson, before the learner has
+ * tapped anything yet: dims the sentence behind it and asks for a deliberate
+ * tap before the keyboard opens, rather than the keyboard trying to appear
+ * on its own the instant the lesson loads (unreliable on a phone — most
+ * mobile browsers only open the soft keyboard in response to a real user
+ * gesture, never a programmatic autoFocus) with no explanation of what's
+ * about to happen. Tapping anywhere in it (not just the small card) both
+ * focuses the underlying input and tells the caller (LessonSession, via
+ * `hasStarted`) that this lesson is now underway, so it never reappears on
+ * a later sentence in the same session. Absent on tablet/desktop, where the
+ * sentence was always click-to-focus already (see TypingText's own
+ * container onClick) and there's no keyboard-appearing surprise to soften.
+ */
+function TapToStartOverlay({
+  heading,
+  body,
+  onStart,
+}: {
+  heading: string;
+  body: string;
+  onStart: () => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onStart}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        onStart();
+      }}
+      className="bg-background/85 absolute inset-0 z-20 flex cursor-pointer items-center justify-center rounded-2xl backdrop-blur-sm sm:hidden"
+    >
+      <div className="border-border/60 bg-card mx-6 flex flex-col items-center gap-1 rounded-2xl border px-6 py-5 text-center shadow-lg shadow-black/20">
+        <span className="text-foreground text-base font-semibold">{heading}</span>
+        <span className="text-muted-foreground text-sm">{body}</span>
+      </div>
+    </div>
   );
 }
 
