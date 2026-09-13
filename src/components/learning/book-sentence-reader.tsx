@@ -317,7 +317,7 @@ export function BookSentenceReader({
       />
       <p
         className={cn(
-          "text-muted-foreground mt-1",
+          "text-muted-foreground mt-1 select-none",
           // +25% over the original 1rem (active) / 0.875rem (context).
           isLarge ? "text-[1.25rem]" : "text-[1.09rem]",
         )}

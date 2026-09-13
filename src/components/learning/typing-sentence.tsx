@@ -388,7 +388,7 @@ export function TypingSentence({
                 />
               </div>
             </div>
-            <p className="mt-4 text-base text-[var(--lesson-subtitle)]" dir={dir}>
+            <p className="mt-4 text-base text-[var(--lesson-subtitle)] select-none" dir={dir}>
               {supportText}
             </p>
           </div>
@@ -510,7 +510,7 @@ export function TypingSentence({
             intentional rather than just a random font swap. */}
         {renderText("font-serif text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]", true)}
         {spacer}
-        <p className="mt-6 text-2xl text-[var(--lesson-subtitle)]" dir={dir}>
+        <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
         <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
@@ -570,7 +570,7 @@ export function TypingSentence({
             width and read as oversized/inconsistent from one phone to the
             next. sm:+ keeps the exact original clamp, untouched. */}
         {renderText("text-3xl sm:text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]", true)}
-        <p className="mt-6 text-lg text-[var(--lesson-subtitle)]" dir={dir}>
+        <p className="mt-6 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
         <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />

@@ -224,7 +224,17 @@ export function TypingText({
     <div
       ref={containerRef}
       onClick={() => inputRef.current?.focus()}
-      className={cn("relative cursor-text outline-none", className)}
+      // select-none: every word interaction here (play pronunciation,
+      // reveal a translation, toggle a highlight) is click/double-click
+      // driven, never a native text selection — but the letters are still
+      // real selectable DOM text underneath. A learner's ordinary clicking
+      // around this text (or a click-drag that catches a neighboring
+      // letter) could still leave a native selection standing, which is
+      // exactly what triggers the browser's own "translate this selection"
+      // popup — an unrelated, unstyled bubble that has nothing to do with
+      // this lesson and can land anywhere the selection ends up. Blocking
+      // native selection here removes that trigger entirely, for every mode.
+      className={cn("relative cursor-text outline-none select-none", className)}
     >
       <div
         aria-hidden="true"

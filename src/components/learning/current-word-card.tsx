@@ -36,7 +36,7 @@ export function CurrentWordCard({
       initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="border-border/60 bg-card inline-flex flex-col gap-0.5 rounded-xl border px-3 py-2 shadow-lg shadow-black/20"
+      className="border-border/60 bg-card inline-flex flex-col gap-0.5 rounded-xl border px-3 py-2 shadow-lg shadow-black/20 select-none"
     >
       <span className="text-lg font-semibold text-[var(--lesson-title)]">{word.en}</span>
       <span className="text-base text-[var(--lesson-subtitle)]" dir={dir}>
