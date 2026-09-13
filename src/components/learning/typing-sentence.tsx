@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { CurrentWordCard } from "@/components/learning/current-word-card";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
 import { TypingStats } from "@/components/learning/typing-stats";
@@ -330,6 +329,8 @@ export function TypingSentence({
         onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
         targetVocabularyIndices={targetVocabularyIndices}
         autoFocus={hasStarted}
+        currentWordTranslation={currentWord}
+        translationDir={dir}
       />
     );
   }
@@ -479,9 +480,6 @@ export function TypingSentence({
             className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           />
         </div>
-        <div className="mb-4 min-h-20">
-          <CurrentWordCard word={currentWord} dir={dir} />
-        </div>
         {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
             renderText call): sized specifically for the narrow fixed-width
             Stories left column (see LessonSession's "content" grid) rather
@@ -533,20 +531,13 @@ export function TypingSentence({
           className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
         />
       </div>
-      {/* The current-word card sits right under the audio-button row, top-
-          anchored, not inside the centered group below — matching Stories
-          mode's own word-card placement (see that branch above) and the
-          reference layout this was aligned to. The sentence/translation/
-          stats group centers as one block within whatever leftover column
-          height remains under the word card: lg:flex-1 lets this div claim
-          that space, lg:justify-center centers its own children inside it,
-          and the group's internal spacing (mt-6 on the translation,
-          TypingStats' own mt-7 in its centered form) stays exactly as tight
-          as it always was — only where the whole group sits within the
-          column changes. */}
-      <div className="mb-3 min-h-11">
-        <CurrentWordCard word={currentWord} dir={dir} />
-      </div>
+      {/* The current word's translation used to sit in its own reserved row
+          here (a block-level CurrentWordCard, top-anchored above the
+          sentence) — now it renders inline, directly above that exact word
+          inside the sentence itself (see TypingText's currentWordTranslation
+          prop), so this row is gone entirely and the sentence/translation/
+          stats group below just centers within the full leftover column
+          height. */}
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
         {/* A fixed, smaller size below sm: (the illustration panel above is
             hidden there too — see LessonSession — so this no longer needs to

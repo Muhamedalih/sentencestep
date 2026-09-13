@@ -60,8 +60,23 @@ interface TypingTextProps {
    * double-click becomes available to toggle a highlight on the word.
    */
   wordTranslations?: { en: string; text: string }[];
-  /** The support locale's writing direction, for the translation popover's own text (see WordTranslationPopover) — never used to flip the English sentence itself, which stays LTR unconditionally. Only meaningful when wordTranslations is set. */
+  /** The support locale's writing direction, for the translation popover's own text (see WordTranslationPopover) — never used to flip the English sentence itself, which stays LTR unconditionally. Meaningful whenever either wordTranslations or currentWordTranslation is set. */
   translationDir?: "rtl" | "ltr";
+  /**
+   * Normal/Stories' auto-tracking word translation (formerly a separate
+   * block-level CurrentWordCard rendered above the whole sentence) — the
+   * CURRENT word's own `{en, text}` pair, already resolved by the caller
+   * (TypingSentence, via getCurrentWordIndex against sentence.en/typed.length
+   * — the exact same index this component derives `currentWordIndex` from,
+   * so the two can never disagree on which word it's for). Shown as plain
+   * inline text directly above that word's own span (see CurrentWordLabel),
+   * completely independent of wordTranslations/isRevealed above: it's never
+   * click-triggered and never toggles, it just follows whichever word is
+   * current. undefined (every caller that doesn't pass it, and any sentence
+   * with no word-level gloss yet) renders nothing extra, exactly as before
+   * this existed.
+   */
+  currentWordTranslation?: { en: string; text: string };
   /**
    * Story Vocabulary feature (see src/lib/content/story-vocabulary.ts) —
    * word indices (into `target`'s non-space tokens, same indexing as
@@ -157,6 +172,7 @@ export function TypingText({
   errorChar = null,
   wordTranslations,
   translationDir = "ltr",
+  currentWordTranslation,
   targetVocabularyIndices,
   enableWordHighlight = false,
   showTypingCursor = true,
@@ -376,6 +392,13 @@ export function TypingText({
               {isRevealed && translation && (
                 <WordTranslationPopover text={translation.text} dir={translationDir} />
               )}
+              {isCurrentWord && currentWordTranslation && (
+                <CurrentWordLabel
+                  en={currentWordTranslation.en}
+                  text={currentWordTranslation.text}
+                  dir={translationDir}
+                />
+              )}
             </span>
           );
         })}
@@ -487,8 +510,8 @@ function HighlightMark({ reducedMotion }: { reducedMotion: boolean }) {
  * sentence, with no shared-position measurement needed the way the typing
  * cursor underline requires. `dir` governs only this popover's own text
  * (the translation) — the English word underneath is unaffected, exactly
- * like every other translation label in this codebase (see CurrentWordCard,
- * BookSentenceReader's supportText paragraph).
+ * like every other translation label in this codebase (see
+ * CurrentWordLabel below, BookSentenceReader's supportText paragraph).
  */
 function WordTranslationPopover({ text, dir }: { text: string; dir: "rtl" | "ltr" }) {
   return (
@@ -501,6 +524,35 @@ function WordTranslationPopover({ text, dir }: { text: string; dir: "rtl" | "ltr
       className="border-border/60 bg-card text-foreground pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 max-w-[min(70vw,180px)] -translate-x-1/2 rounded-md border px-2 py-1 text-center text-xs font-medium shadow-lg shadow-black/20"
     >
       {text}
+    </motion.span>
+  );
+}
+
+/**
+ * The word currently being typed, shown with its translation as plain
+ * inline text directly above that word's own span — deliberately no card,
+ * border, or background (unlike WordTranslationPopover above): this is a
+ * quiet, always-on reading aid that follows the typing position, not a
+ * discrete piece of UI a learner reveals and dismisses. Positioned the same
+ * way as WordTranslationPopover (bottom-full, centered on the word) for the
+ * same reason — correct across line-wraps with no separate measurement.
+ */
+function CurrentWordLabel({ en, text, dir }: { en: string; text: string; dir: "rtl" | "ltr" }) {
+  return (
+    <motion.span
+      aria-hidden="true"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.16, ease: easeOut }}
+      className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 flex -translate-x-1/2 items-baseline gap-2 whitespace-nowrap"
+    >
+      <span className="text-base font-semibold text-[var(--lesson-title)]">{en}</span>
+      <span className="text-sm text-[var(--lesson-subtitle)]/50" aria-hidden="true">
+        –
+      </span>
+      <span dir={dir} className="text-base font-medium text-[var(--lesson-subtitle)]">
+        {text}
+      </span>
     </motion.span>
   );
 }
