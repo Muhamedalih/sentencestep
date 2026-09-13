@@ -12,14 +12,14 @@ export function Logo({
     <span
       className={cn(
         "inline-flex items-center font-semibold tracking-tight",
-        size === "sm" ? "gap-2 text-[22px]" : "gap-1.5 text-base",
+        size === "sm" ? "gap-1.5 text-[18px]" : "gap-1.5 text-base",
         className,
       )}
     >
       <span
         className={cn(
           "bg-primary text-primary-foreground flex items-center justify-center rounded-md font-bold",
-          size === "sm" ? "size-7 text-[18px]" : "size-6.5 text-sm",
+          size === "sm" ? "size-[22px] text-[14px]" : "size-6.5 text-sm",
         )}
       >
         S

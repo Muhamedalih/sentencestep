@@ -479,7 +479,7 @@ export function TypingSentence({
             className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           />
         </div>
-        <div className="mb-4 min-h-20">
+        <div className="mb-2 min-h-16">
           <CurrentWordLabel word={currentWord} dir={dir} />
         </div>
         {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
@@ -543,7 +543,7 @@ export function TypingSentence({
           group's internal spacing (mt-6 on the translation, TypingStats'
           own mt-7 in its centered form) stays exactly as tight as it always
           was — only where the whole group sits within the column changes. */}
-      <div className="mb-3 min-h-12">
+      <div className="mb-1.5 min-h-10">
         <CurrentWordLabel word={currentWord} dir={dir} />
       </div>
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">

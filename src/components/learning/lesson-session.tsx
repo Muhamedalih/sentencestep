@@ -350,27 +350,18 @@ export function LessonSession({
           otherwise has no visible exit link by design (see sessionLabel's
           own doc comment above: the browser's own Back was the only way out
           before this). Deliberately tiny: this is a quiet escape hatch, not
-          a navigation bar competing with the sentence for attention. No
-          border-b here — the faint divider line that used to run under it
-          is gone, replaced by the title row directly below (see next). */}
+          a navigation bar competing with the sentence for attention. Sized
+          by padding rather than a fixed height, with a touch more on top
+          than bottom (pt-2.5 vs pb-2), so it reads as nudged down slightly
+          from the viewport's true corner rather than pinned flush to it —
+          still just above the illustration/sentence grid below. */}
       <Link
         href="/learn"
         aria-label={t.marketing.dashboardLinkAriaLabel}
-        className="flex h-12 shrink-0 items-center px-3"
+        className="flex shrink-0 items-center px-3 pt-2.5 pb-2"
       >
         <Logo size="sm" />
       </Link>
-
-      {/* Sits where that old divider line used to run — the lesson/story
-          title, centered, replacing a bare separator with something worth
-          reading. aria-hidden since it restates the same title the sr-only
-          <h1> (sessionLabel, above) already gives assistive tech. */}
-      <div
-        aria-hidden="true"
-        className="shrink-0 px-4 pb-3 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
-      >
-        {unit.title}
-      </div>
 
       {/* isComplete switches the ENTIRE content region, not just the
           sentence side — completion is a full state transition (lesson
@@ -571,6 +562,18 @@ export function LessonSession({
                       {t.wordLists.previewModeNotice}
                     </div>
                   )}
+                  {/* Centered on this column's own width (matching the
+                      counter/progress bar right below it), not the full
+                      page width — the illustration column to the side isn't
+                      part of what it's centered against. aria-hidden since
+                      it restates the same title the sr-only <h1>
+                      (sessionLabel, above) already gives assistive tech. */}
+                  <div
+                    aria-hidden="true"
+                    className="mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
+                  >
+                    {unit.title}
+                  </div>
                   <div className="mb-3 flex flex-col gap-1.5">
                     {unit.mode !== "stories" && (
                       <div className="flex items-center justify-end gap-1" dir="ltr">

@@ -50,7 +50,7 @@ export function CurrentWordLabel({
       <span className="text-xl text-[var(--lesson-subtitle)]/50" aria-hidden="true">
         –
       </span>
-      <span dir={dir} className="text-2xl font-medium text-[var(--lesson-subtitle)]">
+      <span dir={dir} className="text-2xl font-medium text-[var(--lesson-icon)]">
         {word.text}
       </span>
     </motion.div>
