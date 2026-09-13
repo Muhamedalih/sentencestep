@@ -547,20 +547,22 @@ export function TypingSentence({
           className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
         />
       </div>
-      {/* The current-word translation sits right under the audio-button row,
-          top-anchored, not inside the centered group below — matching
-          Stories mode's own placement (see that branch above) and the
-          reference layout this was aligned to. The sentence/translation/
-          stats group centers as one block within whatever leftover column
-          height remains under it: lg:flex-1 lets this div claim that space,
-          lg:justify-center centers its own children inside it, and the
-          group's internal spacing (mt-6 on the translation, TypingStats'
-          own mt-7 in its centered form) stays exactly as tight as it always
-          was — only where the whole group sits within the column changes. */}
-      <div className="mb-1">
-        <CurrentWordLabel word={currentWord} dir={dir} />
-      </div>
+      {/* The current-word translation now lives INSIDE this centered group,
+          immediately before the sentence it belongs to — not as a sibling
+          before the group (an earlier version tried that, top-anchored
+          "matching Stories mode's placement"). On a tall viewport, lg:flex-1
+          + lg:justify-center centers this whole group within whatever
+          column height is left, which pushed the sentence well down the
+          page while the label stayed pinned at the very top — the two read
+          as unrelated, with a huge gap between them, even though the actual
+          margin between them was tiny. Being part of the same centered
+          group is what keeps it snug against the sentence at every
+          viewport height, not just the short ones this was ever actually
+          tested against. */}
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
+        <div className="mb-1">
+          <CurrentWordLabel word={currentWord} dir={dir} />
+        </div>
         {/* A fixed, smaller size below sm: (the illustration panel above is
             hidden there too — see LessonSession — so this no longer needs to
             share the screen with it) instead of the same fluid clamp every
