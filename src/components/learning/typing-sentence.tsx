@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, ChevronLeft } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordCard } from "@/components/learning/current-word-card";
@@ -93,6 +93,8 @@ interface TypingSentenceProps {
   showTapToStart?: boolean;
   /** Fired once, the first time the learner taps the mobile-only "tap to start" overlay below — see `showTapToStart`'s own doc comment. */
   onStart?: () => void;
+  /** Stories mode only — steps back one sentence (LessonSession owns the actual state change). Rendered as a small button beside the counter only when provided AND sentenceNumber > 1; every other mode gets its own copy of this button from LessonSession's separate counter row instead. */
+  onGoBack?: () => void;
 }
 
 export function TypingSentence({
@@ -113,6 +115,7 @@ export function TypingSentence({
   hasStarted = true,
   showTapToStart = false,
   onStart,
+  onGoBack,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -432,9 +435,20 @@ export function TypingSentence({
             )}
           </div>
           <div
-            className="text-muted-foreground hidden items-center gap-1.5 text-xs font-medium tabular-nums sm:flex"
+            className="text-muted-foreground hidden items-center gap-1 text-xs font-medium tabular-nums sm:flex"
             dir="ltr"
           >
+            {onGoBack && sentenceNumber != null && sentenceNumber > 1 && (
+              <button
+                type="button"
+                onClick={onGoBack}
+                aria-label={t.lesson.previousSentenceButton}
+                title={t.lesson.previousSentenceButton}
+                className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
+              >
+                <ChevronLeft className="size-3" aria-hidden="true" />
+              </button>
+            )}
             {sentenceNumber != null && totalSentences != null && (
               <span>
                 {sentenceNumber} / {totalSentences}

@@ -326,6 +326,7 @@ export const en: Dictionary = {
     illustrationAlt: 'Illustration for the "{title}" lesson',
     illustrationViewImage: "Illustration",
     illustrationViewList: "Previous sentences",
+    previousSentenceButton: "Previous sentence",
     tapToStartHeading: "Tap anywhere to start",
     tapToStartBody: "Your keyboard will open automatically",
     savingProgress: "Saving your progress…",

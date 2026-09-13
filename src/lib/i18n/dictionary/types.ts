@@ -356,6 +356,8 @@ export interface Dictionary {
     illustrationViewImage: string;
     /** Normal-mode lesson screen — label/title for the toggle button that swaps the illustration for a running list of already-typed sentences. */
     illustrationViewList: string;
+    /** aria-label/title for the small button next to the sentence counter that steps back one sentence. Hidden entirely on the first sentence. */
+    previousSentenceButton: string;
     tapToStartHeading: string;
     tapToStartBody: string;
     /** Shown on the completion screen while recordCompletionAction is still in flight for a signed-in learner. */

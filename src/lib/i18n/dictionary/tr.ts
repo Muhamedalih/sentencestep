@@ -331,6 +331,7 @@ export const tr: Dictionary = {
     illustrationAlt: '"{title}" dersinin illüstrasyonu',
     illustrationViewImage: "Illüstrasyon",
     illustrationViewList: "Önceki cümleler",
+    previousSentenceButton: "Önceki cümle",
     tapToStartHeading: "Başlamak için herhangi bir yere dokun",
     tapToStartBody: "Klavyeniz otomatik olarak açılacak",
     savingProgress: "İlerlemen kaydediliyor…",
