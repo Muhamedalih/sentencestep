@@ -48,11 +48,9 @@ export function CurrentWordLabel({
     >
       <span className="text-[34px] font-semibold text-[var(--lesson-title)]">{word.en}</span>
       <span
-        className="text-[22px] leading-none text-[var(--lesson-subtitle)]/40"
         aria-hidden="true"
-      >
-        •
-      </span>
+        className="h-[3px] w-5 shrink-0 rounded-full bg-[var(--lesson-subtitle)]/40"
+      />
       <span dir={dir} className="text-[34px] font-medium text-[var(--lesson-subtitle)]">
         {word.text}
       </span>
