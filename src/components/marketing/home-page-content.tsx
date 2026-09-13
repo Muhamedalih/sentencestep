@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/marketing/how-it-works";
 import { ModeSection } from "@/components/marketing/mode-section";
 import { PremiumSection } from "@/components/marketing/premium-section";
 import { ProgressSection } from "@/components/marketing/progress-section";
+import { ReturningMobileGuestRedirect } from "@/components/marketing/returning-mobile-guest-redirect";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
@@ -33,6 +34,7 @@ export function HomePageContent({ locale }: { locale: SupportLocale | null }) {
 
   return (
     <div className="flex min-h-svh flex-col">
+      <ReturningMobileGuestRedirect />
       <SiteHeader />
       <main className="flex-1">
         <Hero isAuthenticated={false} />
