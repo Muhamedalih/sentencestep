@@ -50,12 +50,12 @@ export function CurrentWordLabel({
       className="inline-flex flex-col gap-2"
     >
       <div className="flex items-baseline gap-3">
-        <span className="text-[15px] font-bold tracking-[0.09em] text-[var(--lesson-title)]/75 uppercase">
+        <span className="text-[34px] font-bold tracking-[0.09em] text-[var(--lesson-title)]/75 uppercase">
           {word.en}
         </span>
         <span
           dir={dir}
-          className="text-[15px] font-semibold tracking-wide text-[var(--lesson-subtitle)]"
+          className="text-[34px] font-semibold tracking-wide text-[var(--lesson-subtitle)]"
         >
           {word.text}
         </span>
