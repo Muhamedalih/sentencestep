@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import {
   useEffect,
-  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -166,14 +165,20 @@ export function TypingText({
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
-  // Chrome keys its own saved-field-values autofill by (origin, field name),
-  // independent of the DOM node's lifecycle — a static name here meant every
-  // sentence's input shared the same browser-side history bucket, so typing
-  // the start of a new sentence could surface a *previous* lesson's typed
-  // sentence as a floating suggestion overlapping the current one. useId
-  // gives every mounted instance (i.e. every sentence) its own name, so
-  // there's never more than one entry under any given name to recall.
-  const autofillId = useId();
+  // The browser's own saved-field-values autofill is keyed by (origin,
+  // field name), independent of the DOM node's lifecycle — a static name
+  // here meant every sentence's input shared the same browser-side history
+  // bucket, so typing the start of a new sentence could surface a
+  // *previously typed* sentence (this one's own earlier attempt, or an
+  // unrelated one) as a floating suggestion overlapping the current one.
+  // This field's name must therefore be different on every single mount,
+  // everywhere, forever — NOT `useId()`: that hook returns a value derived
+  // from the component's position in the render tree, which is the *same*
+  // on every fresh page load that reaches this same position (e.g. "the
+  // first sentence typed after a fresh page load" always got the same id
+  // across every story, still colliding in the exact same way). A random
+  // token generated fresh per mount has no such collision.
+  const [autofillId] = useState(() => crypto.randomUUID?.() ?? Math.random().toString(36).slice(2));
 
   // Replaces the native `autoFocus` attribute — see that prop's own doc
   // comment for why baking it into server-rendered HTML was the actual bug.
