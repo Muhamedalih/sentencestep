@@ -89,6 +89,13 @@ function sentryConnectSrc(): string {
 const THEME_SCRIPT_HASH = "sha256-wsUdzDaf48DVgowQHlmZS5LH85z4u/iIq9XHllJtjn4=";
 
 /**
+ * The exact SHA-256 hash of root-html-shell.tsx's CLARITY_INIT_SCRIPT
+ * string, byte for byte — see THEME_SCRIPT_HASH's own doc comment for how
+ * this kind of hash is derived and why a hash (not a nonce) is used.
+ */
+const CLARITY_SCRIPT_HASH = "sha256-7JNj9S49KK1i24bKN7OMCz4StI+SOY2k8zKGm6ZfCsU=";
+
+/**
  * True for "/", "/privacy", "/terms" and every one of their locale-prefixed
  * static siblings ("/ar", "/es/privacy", "/tr/terms", ...) — see
  * buildCsp's `isStaticRoute` param for why this distinction exists.
@@ -128,17 +135,22 @@ function buildCsp(nonce: string, isStaticRoute: boolean): string {
   // completes, even though the exact same routes work fine once built for
   // production (where this stays omitted, unchanged from before).
   const devEval = isProd ? "" : " 'unsafe-eval'";
+  // Clarity's tag redirects to scripts.clarity.ms for the actual player
+  // script and falls back to an img-src beacon (c.clarity.ms/c.gif) when a
+  // blocker kills the script — https://*.clarity.ms covers both plus
+  // whatever regional subdomain Microsoft routes a given visitor to,
+  // instead of hardcoding one that could silently change.
   const scriptSrc = isStaticRoute
-    ? `script-src 'self' 'unsafe-inline'${devEval} https://challenges.cloudflare.com`
-    : `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}'${devEval} https://challenges.cloudflare.com`;
+    ? `script-src 'self' 'unsafe-inline'${devEval} https://challenges.cloudflare.com https://*.clarity.ms`
+    : `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}' '${CLARITY_SCRIPT_HASH}'${devEval} https://challenges.cloudflare.com https://*.clarity.ms`;
   return [
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https://*.supabase.co",
+    "img-src 'self' data: blob: https://*.supabase.co https://*.clarity.ms",
     "media-src 'self' blob: https://*.supabase.co",
-    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com${sentryConnectSrc()}`,
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://*.clarity.ms${sentryConnectSrc()}`,
     "frame-src https://challenges.cloudflare.com",
     "object-src 'none'",
     "base-uri 'self'",

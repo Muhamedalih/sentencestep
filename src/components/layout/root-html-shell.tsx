@@ -38,6 +38,27 @@ export const THEME_INIT_SCRIPT = `
 `;
 
 /**
+ * Microsoft Clarity's own bootstrap snippet, verbatim — session-recording
+ * and heatmap analytics (visit counts, device breakdown, time-on-page, what
+ * a visitor actually clicked/scrolled), entirely third-party: it writes
+ * nothing to this app's own Supabase project and adds no build-time cost,
+ * just this one inline script plus the external tag it loads from
+ * clarity.ms. Kept as a fixed, hardcoded string with no interpolated data
+ * (the project id "yids081ut7" is baked in, same as any other Clarity
+ * embed) so it can be authorized in middleware.ts's CSP by a static
+ * sha256 hash — CLARITY_SCRIPT_HASH there — exactly like THEME_INIT_SCRIPT
+ * above; if this string ever changes, that hash must be recomputed too or
+ * the script silently fails CSP and never runs.
+ */
+export const CLARITY_INIT_SCRIPT = `
+(function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "yids081ut7");
+`;
+
+/**
  * Sends a returning MOBILE guest who already finished the "get started"
  * flow (localStorage's "looma:progress:v2".startingLevel is only ever
  * non-null once StartingLevelOnboarding has run — see setStartingLevel's
@@ -136,6 +157,11 @@ export function RootHtmlShell({
         />
         {/* Authorized by middleware.ts's CSP via a fixed sha256 hash of this exact script body, not a per-request nonce — this script never changes per request, so it needs no per-request value, which is what lets this Server Component render without calling headers()/cookies() itself. */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Same hash-based CSP authorization as the theme script above — see CLARITY_INIT_SCRIPT's own doc comment. Present on every route, not just marketing, since visit/session tracking is the point. */}
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: CLARITY_INIT_SCRIPT }}
+        />
         {/* Marketing route groups only (see RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT's own doc comment for why this needs no CSP hash) — never present in the HTML of any other route, so it can never run there. */}
         {localizedNavigation && (
           <script
