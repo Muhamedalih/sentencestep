@@ -59,15 +59,20 @@ export const CLARITY_INIT_SCRIPT = `
 `;
 
 /**
- * Sends a returning MOBILE guest who already finished the "get started"
- * flow (localStorage's "looma:progress:v2".startingLevel is only ever
- * non-null once StartingLevelOnboarding has run — see setStartingLevel's
- * own doc comment in src/lib/progress/store.ts) straight to /learn instead
- * of ever letting them see this marketing homepage — mirroring what
+ * Sends a returning guest who already finished the "get started" flow
+ * (localStorage's "looma:progress:v2".startingLevel is only ever non-null
+ * once StartingLevelOnboarding has run — see setStartingLevel's own doc
+ * comment in src/lib/progress/store.ts) straight to /learn instead of ever
+ * letting them see this marketing homepage again — mirroring what
  * src/middleware.ts's handleRootRoute already does for a real signed-in
  * visitor, except that visitor's equivalent state (a Supabase session) is a
  * cookie middleware can read server-side, while a guest's is localStorage,
- * which middleware can never see.
+ * which middleware can never see. Applies on every viewport: this used to
+ * check for a narrow (mobile) viewport before redirecting, leaving a
+ * returning desktop guest stuck seeing the marketing pitch again on every
+ * visit instead of picking up where they left off — there was never a
+ * product reason for that split, just an earlier pass that happened to only
+ * fix the mobile report in front of it at the time.
  *
  * Deliberately a plain synchronous inline script (same pattern as
  * THEME_INIT_SCRIPT above), not a client component's useEffect: an effect
@@ -84,10 +89,9 @@ export const CLARITY_INIT_SCRIPT = `
  * carve-out), so this authorizes itself for free by only ever being present
  * in the HTML of pages that already allow it.
  */
-export const RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT = `
+export const RETURNING_GUEST_REDIRECT_SCRIPT = `
 (function () {
   try {
-    if (!window.matchMedia("(max-width: 639px)").matches) return;
     var raw = window.localStorage.getItem("looma:progress:v2");
     if (!raw) return;
     var parsed = JSON.parse(raw);
@@ -162,11 +166,11 @@ export function RootHtmlShell({
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: CLARITY_INIT_SCRIPT }}
         />
-        {/* Marketing route groups only (see RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT's own doc comment for why this needs no CSP hash) — never present in the HTML of any other route, so it can never run there. */}
+        {/* Marketing route groups only (see RETURNING_GUEST_REDIRECT_SCRIPT's own doc comment for why this needs no CSP hash) — never present in the HTML of any other route, so it can never run there. */}
         {localizedNavigation && (
           <script
             suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: RETURNING_MOBILE_GUEST_REDIRECT_SCRIPT }}
+            dangerouslySetInnerHTML={{ __html: RETURNING_GUEST_REDIRECT_SCRIPT }}
           />
         )}
         {/*
