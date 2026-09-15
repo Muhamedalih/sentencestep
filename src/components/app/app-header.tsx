@@ -83,7 +83,7 @@ export function AppHeader({
         scrolled && "shadow-sm shadow-black/5",
       )}
     >
-      <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6">
+      <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
         <Link
           href="/learn"
           aria-label={t.marketing.dashboardLinkAriaLabel}
@@ -94,7 +94,7 @@ export function AppHeader({
 
         <div className="justify-self-center">{user && <ProgressHud />}</div>
 
-        <div className="flex items-center gap-3 justify-self-end">
+        <div className="flex items-center gap-2 justify-self-end sm:gap-3">
           {user ? (
             <>
               {/* Utility cluster first (saved items, language, theme), the
@@ -140,7 +140,7 @@ export function AppHeader({
                 <LanguageSwitcher />
                 <ThemeToggle />
               </div>
-              <div className="bg-border/60 h-6 w-px" aria-hidden="true" />
+              <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
               <AccountMenu />
             </>
           ) : (
@@ -149,7 +149,7 @@ export function AppHeader({
                 <LanguageSwitcher />
                 <ThemeToggle />
               </div>
-              <div className="bg-border/60 h-6 w-px" aria-hidden="true" />
+              <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
               <Link
                 href="/login"
                 className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
