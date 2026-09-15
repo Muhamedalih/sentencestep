@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { deriveAccessState } from "@/lib/billing/domain";
+import { getAccessSettings } from "@/lib/billing/access-settings-queries";
 import { FREE_ACCESS } from "@/lib/billing/types";
 import type { AccessState, Plan } from "@/lib/billing/types";
 
@@ -11,6 +12,24 @@ import type { AccessState, Plan } from "@/lib/billing/types";
 export const DEV_PLAN_COOKIE = "sentencestep-dev-plan";
 
 const PREMIUM_DEV_ACCESS: AccessState = {
+  plan: "premium",
+  status: "active",
+  expiresAt: null,
+  cancelAtPeriodEnd: false,
+  isPremium: true,
+};
+
+/**
+ * Returned for every visitor while an admin has free_for_all switched on
+ * (see /admin/free-access) — a temporary, sitewide promotion, not a real
+ * subscription. Shaped identically to a real active premium subscriber so
+ * it flows through every existing isPremium-gated screen (lesson locks,
+ * upgrade CTAs, the checkout button) unchanged. Nothing about any real
+ * subscriptions row is ever written by this path, so switching free_for_all
+ * back off restores each learner's real plan exactly as it was computed
+ * before the promotion.
+ */
+const FREE_FOR_ALL_ACCESS: AccessState = {
   plan: "premium",
   status: "active",
   expiresAt: null,
@@ -44,6 +63,9 @@ export async function getAccessState(): Promise<AccessState> {
   if (devOverride === "premium") return PREMIUM_DEV_ACCESS;
 
   if (!isSupabaseConfigured()) return FREE_ACCESS;
+
+  const { freeForAll } = await getAccessSettings();
+  if (freeForAll) return FREE_FOR_ALL_ACCESS;
 
   const user = await getCurrentUser();
   if (!user) return FREE_ACCESS;

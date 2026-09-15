@@ -110,6 +110,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                     Lesson completion
                   </Link>
                   <Link
+                    href="/admin/free-access"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Free access
+                  </Link>
+                  <Link
                     href="/admin/color-settings"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >

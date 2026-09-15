@@ -267,6 +267,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["billing_events"]["Insert"]>;
         Relationships: [];
       };
+      access_settings: {
+        Row: {
+          id: number;
+          /** Sitewide "everything is free" promotion switch — see src/lib/billing/access.ts. */
+          free_for_all: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          free_for_all?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;
+        Relationships: [];
+      };
       analytics_events: {
         Row: {
           id: string;

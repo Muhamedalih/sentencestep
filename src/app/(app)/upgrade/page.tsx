@@ -57,15 +57,18 @@ export default async function UpgradePage() {
 
       <div className="mx-auto w-full max-w-lg text-center">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          {access.isPremium ? t.premium.premiumHeading : t.premium.upgradeHeading}
+          {user && access.isPremium ? t.premium.premiumHeading : t.premium.upgradeHeading}
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
-          {access.isPremium ? t.premium.premiumSubtitle : t.premium.upgradeSubtitle}
+          {user && access.isPremium ? t.premium.premiumSubtitle : t.premium.upgradeSubtitle}
         </p>
       </div>
 
       <div className="mx-auto w-full max-w-lg">
-        {access.isPremium ? (
+        {/* `user &&`: free_for_all (/admin/free-access) makes isPremium true
+            even for a signed-out visitor, who should still see the regular
+            sign-in/pricing card below, never the real-subscriber one. */}
+        {user && access.isPremium ? (
           <Card>
             <CardHeader>
               <Badge className="w-fit">{t.common.premium}</Badge>
