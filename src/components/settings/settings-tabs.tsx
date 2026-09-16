@@ -33,7 +33,7 @@ export function SettingsTabs({
               onClick={() => setActive(tab.id)}
               aria-current={isActive ? "true" : undefined}
               className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors md:gap-3 md:px-5 md:py-3.5 md:text-lg",
+                "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 md:gap-3 md:px-5 md:py-3.5 md:text-lg",
                 tab.tone === "danger"
                   ? isActive
                     ? "bg-danger/10 text-danger"

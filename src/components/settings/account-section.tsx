@@ -17,8 +17,13 @@ import type { StreakState } from "@/lib/progress/types";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { AccessState } from "@/lib/billing/types";
+import { cn } from "@/lib/utils";
 
 const initialNameState: AuthActionState = {};
+
+/** A clear, restrained "this is clickable" cue — a small lift + shadow on hover, settling back on press — shared by every button on this card so they read as one consistent set rather than each having its own feel. */
+const buttonLift =
+  "transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0";
 
 function StatTile({ value, label }: { value: number; label: string }) {
   return (
@@ -145,9 +150,19 @@ export function AccountSection({
               {access.isPremium ? t.common.premium : t.common.freePlan}
             </Badge>
             {access.isPremium ? (
-              <ManageBillingButton />
+              <ManageBillingButton
+                className={cn(buttonLift, "hover:shadow-md md:h-10 md:px-5 md:text-base")}
+              />
             ) : (
-              <Button asChild size="sm" variant="outline" className="md:h-10 md:px-5 md:text-base">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className={cn(
+                  buttonLift,
+                  "hover:border-primary/50 hover:shadow-md md:h-10 md:px-5 md:text-base",
+                )}
+              >
                 <Link href="/upgrade">{t.common.upgrade}</Link>
               </Button>
             )}
@@ -182,7 +197,10 @@ export function AccountSection({
               type="submit"
               disabled={namePending}
               size="sm"
-              className="w-fit md:h-10 md:px-5 md:text-base"
+              className={cn(
+                buttonLift,
+                "hover:shadow-primary/25 w-fit hover:shadow-lg md:h-10 md:px-5 md:text-base",
+              )}
             >
               {namePending ? t.settings.savingDisplayName : t.settings.saveDisplayName}
             </Button>
@@ -197,7 +215,10 @@ export function AccountSection({
             type="submit"
             variant="ghost"
             size="sm"
-            className="text-danger w-fit md:h-10 md:px-5 md:text-base md:[&_svg]:size-[18px]"
+            className={cn(
+              buttonLift,
+              "text-danger hover:shadow-danger/20 w-fit hover:shadow-md md:h-10 md:px-5 md:text-base md:[&_svg]:size-[18px]",
+            )}
           >
             <LogOut aria-hidden="true" />
             {t.common.signOut}
