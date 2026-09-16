@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { useLocale } from "@/components/providers/locale-provider";
 import { updateEmailPreferencesAction } from "@/lib/email/preferences-actions";
 import type { PreferencesActionState } from "@/lib/email/preferences-actions";
@@ -32,35 +33,25 @@ export function EmailPreferencesForm({ preferences }: { preferences: EmailPrefer
         <form action={formAction} className="flex flex-col gap-5">
           <input type="hidden" name="timezone" ref={timezoneRef} />
 
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              name="learningReminders"
-              defaultChecked={preferences.learningReminders}
-              className="accent-primary mt-1 size-4"
-            />
+          <div className="flex items-start justify-between gap-4">
             <span>
               <span className="block text-sm font-medium">{t.settings.learningReminders}</span>
               <span className="text-muted-foreground block text-sm">
                 {t.settings.learningRemindersBody}
               </span>
             </span>
-          </label>
+            <Switch name="learningReminders" defaultChecked={preferences.learningReminders} />
+          </div>
 
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              name="progressEmails"
-              defaultChecked={preferences.progressEmails}
-              className="accent-primary mt-1 size-4"
-            />
+          <div className="flex items-start justify-between gap-4">
             <span>
               <span className="block text-sm font-medium">{t.settings.progressEmails}</span>
               <span className="text-muted-foreground block text-sm">
                 {t.settings.progressEmailsBody}
               </span>
             </span>
-          </label>
+            <Switch name="progressEmails" defaultChecked={preferences.progressEmails} />
+          </div>
 
           {state?.error && (
             <p role="alert" className="text-danger text-sm">

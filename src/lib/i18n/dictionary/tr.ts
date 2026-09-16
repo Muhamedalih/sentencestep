@@ -364,6 +364,11 @@ export const tr: Dictionary = {
     signInSubtitle: "E-posta tercihleri hesabınıza bağlıdır.",
     heading: "Ayarlar",
     signedInAs: "{email} olarak giriş yapıldı",
+    tabProfile: "Profil",
+    tabSecurity: "Güvenlik",
+    tabPreferences: "Tercihler",
+    tabAccount: "Hesap",
+    tabDangerZone: "Tehlikeli bölge",
     emailPrefsHeading: "E-posta tercihleri",
     emailPrefsSubtitle:
       "SentenceStep'in size hangi öğrenme e-postalarını gönderdiğini kontrol edin.",

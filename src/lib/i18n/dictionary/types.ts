@@ -399,6 +399,12 @@ export interface Dictionary {
     signInSubtitle: string;
     heading: string;
     signedInAs: string;
+    /** Tab labels for the settings page's section rail. */
+    tabProfile: string;
+    tabSecurity: string;
+    tabPreferences: string;
+    tabAccount: string;
+    tabDangerZone: string;
     emailPrefsHeading: string;
     emailPrefsSubtitle: string;
     learningReminders: string;

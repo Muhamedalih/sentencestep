@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AlertTriangle, KeyRound, SlidersHorizontal, UserRound, Wallet } from "lucide-react";
 
 import { AccountSection } from "@/components/settings/account-section";
 import { DailyGoalForm } from "@/components/settings/daily-goal-form";
@@ -7,6 +8,7 @@ import { DangerZone } from "@/components/settings/danger-zone";
 import { EmailPreferencesForm } from "@/components/settings/email-preferences-form";
 import { PasswordForm } from "@/components/settings/password-form";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { StartingLevelForm } from "@/components/settings/starting-level-form";
 import { TwoFactorSettings } from "@/components/settings/two-factor-settings";
 import { Button } from "@/components/ui/button";
@@ -62,24 +64,62 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-lg px-6 py-16 sm:py-24">
-      <div className="mb-8">
+    <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="mb-10">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t.settings.heading}</h1>
         <p className="text-muted-foreground mt-2 text-lg">
           {t.settings.signedInAs.replace("{email}", user.email)}
         </p>
       </div>
 
-      <div className="flex flex-col gap-6">
-        <ProfileForm displayName={user.displayName} />
-        <PasswordForm />
-        <TwoFactorSettings />
-        <DailyGoalForm dailyGoal={dailyGoal} />
-        <StartingLevelForm startingLevel={startingLevel} />
-        <EmailPreferencesForm preferences={preferences} />
-        <AccountSection t={t} email={user.email} access={access} memberSince={createdAt} />
-        <DangerZone canDeleteAccount={isServiceRoleConfigured()} />
-      </div>
+      <SettingsTabs
+        tabs={[
+          {
+            id: "profile",
+            label: t.settings.tabProfile,
+            icon: <UserRound />,
+            content: <ProfileForm displayName={user.displayName} />,
+          },
+          {
+            id: "security",
+            label: t.settings.tabSecurity,
+            icon: <KeyRound />,
+            content: (
+              <>
+                <PasswordForm />
+                <TwoFactorSettings />
+              </>
+            ),
+          },
+          {
+            id: "preferences",
+            label: t.settings.tabPreferences,
+            icon: <SlidersHorizontal />,
+            content: (
+              <>
+                <DailyGoalForm dailyGoal={dailyGoal} />
+                <StartingLevelForm startingLevel={startingLevel} />
+                <EmailPreferencesForm preferences={preferences} />
+              </>
+            ),
+          },
+          {
+            id: "account",
+            label: t.settings.tabAccount,
+            icon: <Wallet />,
+            content: (
+              <AccountSection t={t} email={user.email} access={access} memberSince={createdAt} />
+            ),
+          },
+          {
+            id: "danger-zone",
+            label: t.settings.tabDangerZone,
+            icon: <AlertTriangle />,
+            tone: "danger",
+            content: <DangerZone canDeleteAccount={isServiceRoleConfigured()} />,
+          },
+        ]}
+      />
     </div>
   );
 }
