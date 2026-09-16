@@ -400,7 +400,6 @@ export interface Dictionary {
     signInHeading: string;
     signInSubtitle: string;
     heading: string;
-    signedInAs: string;
     /** Tab labels for the settings page's section rail. */
     tabProfile: string;
     tabSecurity: string;

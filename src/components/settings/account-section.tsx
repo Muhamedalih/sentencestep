@@ -22,11 +22,14 @@ const initialNameState: AuthActionState = {};
 
 function StatTile({ value, label }: { value: number; label: string }) {
   return (
-    <div className="bg-muted flex flex-col items-center gap-1 rounded-lg py-3 text-center">
-      <span className="font-mono text-xl leading-none font-extrabold tabular-nums" dir="ltr">
+    <div className="bg-muted flex flex-col items-center gap-1 rounded-lg py-3 text-center md:py-4">
+      <span
+        className="font-mono text-xl leading-none font-extrabold tabular-nums md:text-2xl"
+        dir="ltr"
+      >
         {value}
       </span>
-      <span className="text-muted-foreground text-[11px] font-semibold">{label}</span>
+      <span className="text-muted-foreground text-[11px] font-semibold md:text-xs">{label}</span>
     </div>
   );
 }
@@ -80,27 +83,29 @@ export function AccountSection({
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">{t.settings.profileHeading}</CardTitle>
+    <Card className="md:py-8">
+      <CardHeader className="md:px-8">
+        <CardTitle className="text-xl md:text-2xl">{t.settings.profileHeading}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-5">
-        <div className="flex items-center gap-3.5">
+      <CardContent className="flex flex-col gap-5 md:gap-6 md:px-8">
+        <div className="flex items-center gap-3.5 md:gap-4">
           <InitialsAvatar
             seed={userId}
             displayName={displayName}
             email={email}
-            className="size-14 text-lg"
+            className="size-14 text-lg md:size-16 md:text-xl"
           />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="truncate text-lg font-extrabold tracking-tight">
+              <span className="truncate text-lg font-extrabold tracking-tight md:text-xl">
                 {displayName || email}
               </span>
-              <Badge variant="muted">{learnerLevelSupportLabel(learnerLevel.level.name, t)}</Badge>
+              <Badge variant="muted" className="md:px-3 md:py-1 md:text-sm">
+                {learnerLevelSupportLabel(learnerLevel.level.name, t)}
+              </Badge>
             </div>
-            <p className="text-muted-foreground truncate text-sm">{email}</p>
-            <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs">
+            <p className="text-muted-foreground truncate text-sm md:text-base">{email}</p>
+            <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs md:text-sm">
               {memberSince && (
                 <span>
                   {t.settings.memberSinceLabel.replace(
@@ -114,7 +119,7 @@ export function AccountSection({
                 <span className="inline-flex items-center gap-1.5">
                   <span
                     aria-hidden="true"
-                    className={`fi fi-${country} !block !h-3 !w-4 rounded-[2px] bg-center`}
+                    className={`fi fi-${country} !block !h-3 !w-4 rounded-[2px] bg-center md:!h-3.5 md:!w-5`}
                   />
                   {countryName}
                 </span>
@@ -123,32 +128,37 @@ export function AccountSection({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3">
           <StatTile value={xp} label={t.settings.xpLabel} />
           <StatTile value={streak?.currentStreak ?? 0} label={t.lesson.streakLabel} />
           <StatTile value={sessionCount} label={t.stats.sessionsLabel} />
           <StatTile value={wordsLearnedCount} label={t.settings.wordsLearnedLabel} />
         </div>
 
-        <div className="border-border flex items-center justify-between gap-4 border-t pt-4 text-sm">
+        <div className="border-border flex items-center justify-between gap-4 border-t pt-4 text-sm md:pt-5 md:text-base">
           <span className="text-muted-foreground">{t.settings.planLabel}</span>
           <div className="flex items-center gap-2">
-            <Badge variant={access.isPremium ? "default" : "muted"}>
+            <Badge
+              variant={access.isPremium ? "default" : "muted"}
+              className="md:px-3 md:py-1 md:text-sm"
+            >
               {access.isPremium ? t.common.premium : t.common.freePlan}
             </Badge>
             {access.isPremium ? (
               <ManageBillingButton />
             ) : (
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline" className="md:h-10 md:px-5 md:text-base">
                 <Link href="/upgrade">{t.common.upgrade}</Link>
               </Button>
             )}
           </div>
         </div>
 
-        <div className="border-border border-t pt-4">
-          <h3 className="text-sm font-semibold">{t.settings.displayNameLabel}</h3>
-          <p className="text-muted-foreground mt-1 text-sm">{t.settings.profileSubtitle}</p>
+        <div className="border-border border-t pt-4 md:pt-5">
+          <h3 className="text-sm font-semibold md:text-base">{t.settings.displayNameLabel}</h3>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            {t.settings.profileSubtitle}
+          </p>
 
           <form action={nameFormAction} className="mt-3 flex flex-col gap-3">
             <Input
@@ -158,7 +168,7 @@ export function AccountSection({
               maxLength={50}
               defaultValue={displayName ?? ""}
               aria-invalid={Boolean(nameState?.error)}
-              className="max-w-sm"
+              className="max-w-sm md:h-11 md:max-w-md md:text-base"
             />
 
             {nameState?.error && (
@@ -168,7 +178,12 @@ export function AccountSection({
             )}
             {nameState?.success && <p className="text-success text-sm">{nameState.success}</p>}
 
-            <Button type="submit" disabled={namePending} size="sm" className="w-fit">
+            <Button
+              type="submit"
+              disabled={namePending}
+              size="sm"
+              className="w-fit md:h-10 md:px-5 md:text-base"
+            >
               {namePending ? t.settings.savingDisplayName : t.settings.saveDisplayName}
             </Button>
           </form>
@@ -177,8 +192,13 @@ export function AccountSection({
         {/* The account header's own trigger now links straight here instead
             of opening a popover (see AccountMenu) — sign-out used to live
             only in that popover, so it moved here to keep it reachable. */}
-        <form action={signOut} className="border-border border-t pt-4">
-          <Button type="submit" variant="ghost" size="sm" className="text-danger w-fit">
+        <form action={signOut} className="border-border border-t pt-4 md:pt-5">
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            className="text-danger w-fit md:h-10 md:px-5 md:text-base md:[&_svg]:size-[18px]"
+          >
             <LogOut aria-hidden="true" />
             {t.common.signOut}
           </Button>
