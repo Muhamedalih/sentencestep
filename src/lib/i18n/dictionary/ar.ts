@@ -10,6 +10,7 @@ export const ar: Dictionary = {
     freePlan: "خطة مجانية",
     startLearning: "ابدأ التعلم",
     continueLearning: "متابعة التعلم",
+    resumeLesson: "أكمل من حيث توقفت",
     save: "حفظ",
     saved: "محفوظ",
     cancel: "إلغاء",

@@ -118,7 +118,11 @@ export function HomeHero({
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
   const { isLoaded, getCompletedIds, startingLevel } = progress;
-  const { completedIds, currentLesson } = useCurrentLesson(units, isPremiumUser, progress);
+  const { completedIds, currentLesson, isResumed } = useCurrentLesson(
+    units,
+    isPremiumUser,
+    progress,
+  );
   // Not `units.length === 0` (no content authored at all — LessonListView's
   // own empty state handles that): specifically "there IS content, but this
   // learner has exhausted everything they're eligible for right now."
@@ -173,8 +177,20 @@ export function HomeHero({
         {currentLesson && (
           <MainLessonCardBody
             lesson={currentLesson}
-            eyebrow={completedIds.length > 0 ? t.common.continueLearning : t.common.startLearning}
-            ctaLabel={completedIds.length > 0 ? t.common.continueLearning : t.common.startLearning}
+            eyebrow={
+              isResumed
+                ? t.common.resumeLesson
+                : completedIds.length > 0
+                  ? t.common.continueLearning
+                  : t.common.startLearning
+            }
+            ctaLabel={
+              isResumed
+                ? t.common.resumeLesson
+                : completedIds.length > 0
+                  ? t.common.continueLearning
+                  : t.common.startLearning
+            }
             href={`/learn/normal/${currentLesson.id}`}
             dir={dir}
           />

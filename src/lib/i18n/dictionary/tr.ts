@@ -15,6 +15,7 @@ export const tr: Dictionary = {
     freePlan: "Ücretsiz plan",
     startLearning: "Öğrenmeye başla",
     continueLearning: "Öğrenmeye devam et",
+    resumeLesson: "Kaldığın yerden devam et",
     save: "Kaydet",
     saved: "Kaydedildi",
     cancel: "İptal",

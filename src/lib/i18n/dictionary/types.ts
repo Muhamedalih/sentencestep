@@ -24,6 +24,8 @@ export interface Dictionary {
     freePlan: string;
     startLearning: string;
     continueLearning: string;
+    /** Home's main card eyebrow/CTA specifically when there's a real mid-lesson checkpoint to resume (see lesson-resume.ts) — distinct from continueLearning, which just means "not this learner's very first lesson ever." */
+    resumeLesson: string;
     save: string;
     /** The Save toggle's active/pressed state — "Saved" (Lightweight Save + Notes system). Distinct from `save` above, which is the unpressed action label. */
     saved: string;

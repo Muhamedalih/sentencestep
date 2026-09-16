@@ -28,6 +28,7 @@ import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import { tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
@@ -81,6 +82,14 @@ export function LessonSession({
   // non-sequitur there — LessonCompletion (the ordinary stats recap) is
   // what preview should always show, same as every other lesson.
   const isOpeningLesson = !previewMode && OPENING_LESSON_IDS.has(unit.id);
+  // Always starts at 0 — this is a Client Component that's still
+  // server-rendered, and localStorage doesn't exist on the server, so
+  // seeding this from getLessonResume() right here would render sentence 0
+  // server-side and a different sentence client-side: a guaranteed
+  // hydration mismatch (the exact class of bug just fixed on the typing
+  // input's own name attribute — see that component's doc comment). The
+  // resume effect right below applies the real checkpoint post-hydration
+  // instead, same pattern, client-only timing on purpose.
   const [sentenceIndex, setSentenceIndex] = useState(0);
   // The furthest sentence this session has ever actually completed by
   // typing it — distinct from sentenceIndex, which can move BACKWARD (see
@@ -143,6 +152,42 @@ export function LessonSession({
   const hasTrackedAudioRef = useRef(false);
   const { prefetchPronunciation } = usePronunciationSettings();
   const { t } = useLocale();
+
+  // Applies this lesson's real checkpoint (see src/lib/progress/lesson-resume.ts)
+  // exactly once, right after mount — deliberately not read into sentenceIndex's
+  // own useState initializer above; see that state's doc comment for why
+  // (hydration). Mount-only (empty deps): a fresh TypingText/lesson instance
+  // per lesson (this whole component remounts on lessonId change via its
+  // caller's key), so this never needs to re-fire mid-session.
+  useEffect(() => {
+    if (previewMode) return;
+    const resumeIndex = getLessonResume(unit.mode, unit.id);
+    if (resumeIndex === null) return;
+    const clamped = Math.min(resumeIndex, Math.max(unit.sentences.length - 1, 0));
+    if (clamped <= 0) return;
+    setSentenceIndex(clamped);
+    setMaxSentenceIndexReached(clamped);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persists this lesson's checkpoint on every sentence-index change (see
+  // src/lib/progress/lesson-resume.ts) — the actual mechanism behind Home's
+  // "continue where you left off" card. Never in previewMode, and not once
+  // isComplete (the completion branch below clears the checkpoint instead;
+  // re-saving sentenceIndex === total - 1 here right after would immediately
+  // undo that clear). Also skipped on the very first render (sentenceIndex
+  // still 0 before the resume effect above has had a chance to run), so a
+  // fresh page load can't race its own resume application and clear a real
+  // checkpoint before it's even applied.
+  const resumeAppliedRef = useRef(false);
+  useEffect(() => {
+    if (previewMode || isComplete) return;
+    if (!resumeAppliedRef.current) {
+      resumeAppliedRef.current = true;
+      return;
+    }
+    saveLessonResume(unit.mode, unit.id, sentenceIndex);
+  }, [previewMode, isComplete, unit.mode, unit.id, sentenceIndex]);
 
   // Root-cause fix for "every sentence after the first still shows a
   // pronunciation loading delay": the learner spends real time typing the
@@ -296,7 +341,10 @@ export function LessonSession({
           : Math.round(samples.reduce((sum, value) => sum + value, 0) / samples.length);
       setFinalAccuracy(accuracy);
       setFinalWpm(averageWpm);
-      if (!previewMode) markComplete(unit.mode, unit.id, accuracy, total, averageWpm);
+      if (!previewMode) {
+        markComplete(unit.mode, unit.id, accuracy, total, averageWpm);
+        clearLessonResume(unit.mode, unit.id);
+      }
       setIsComplete(true);
     }
   }

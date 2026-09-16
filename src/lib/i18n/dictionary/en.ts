@@ -18,6 +18,7 @@ export const en: Dictionary = {
     freePlan: "Free plan",
     startLearning: "Start learning",
     continueLearning: "Continue learning",
+    resumeLesson: "Pick up where you left off",
     save: "Save",
     saved: "Saved",
     cancel: "Cancel",
