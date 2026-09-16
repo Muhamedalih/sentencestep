@@ -353,7 +353,6 @@ export const ar: Dictionary = {
     tabProfile: "الملف الشخصي",
     tabSecurity: "الأمان",
     tabPreferences: "التفضيلات",
-    tabAccount: "الحساب",
     tabDangerZone: "منطقة الخطر",
     emailPrefsHeading: "تفضيلات البريد الإلكتروني",
     emailPrefsSubtitle: "تحكم في رسائل التعلم التي يرسلها لك SentenceStep.",

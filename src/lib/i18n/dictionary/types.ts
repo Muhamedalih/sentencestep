@@ -405,7 +405,6 @@ export interface Dictionary {
     tabProfile: string;
     tabSecurity: string;
     tabPreferences: string;
-    tabAccount: string;
     tabDangerZone: string;
     emailPrefsHeading: string;
     emailPrefsSubtitle: string;

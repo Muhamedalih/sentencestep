@@ -376,7 +376,6 @@ export const es: Dictionary = {
     tabProfile: "Perfil",
     tabSecurity: "Seguridad",
     tabPreferences: "Preferencias",
-    tabAccount: "Cuenta",
     tabDangerZone: "Zona de peligro",
     emailPrefsHeading: "Preferencias de correo",
     emailPrefsSubtitle: "Controla qué correos de aprendizaje te envía SentenceStep.",

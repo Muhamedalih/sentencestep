@@ -368,7 +368,6 @@ export const tr: Dictionary = {
     tabProfile: "Profil",
     tabSecurity: "Güvenlik",
     tabPreferences: "Tercihler",
-    tabAccount: "Hesap",
     tabDangerZone: "Tehlikeli bölge",
     emailPrefsHeading: "E-posta tercihleri",
     emailPrefsSubtitle:

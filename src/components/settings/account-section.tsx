@@ -1,17 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { useActionState } from "react";
 import { LogOut } from "lucide-react";
 
 import { InitialsAvatar } from "@/components/app/initials-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { ManageBillingButton } from "@/components/billing/manage-billing-button";
-import { signOut } from "@/lib/supabase/auth-actions";
+import { signOut, updateDisplayNameAction } from "@/lib/supabase/auth-actions";
+import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { getLearnerLevel, learnerLevelSupportLabel } from "@/lib/progress/learner-level";
 import type { StreakState } from "@/lib/progress/types";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { AccessState } from "@/lib/billing/types";
+
+const initialNameState: AuthActionState = {};
 
 function StatTile({ value, label }: { value: number; label: string }) {
   return (
@@ -24,6 +31,15 @@ function StatTile({ value, label }: { value: number; label: string }) {
   );
 }
 
+/**
+ * The old separate "الملف الشخصي" (display-name form) and "الحساب" (account
+ * overview) tabs merged into one — both were really the same "who am I on
+ * this account" concept split across two clicks for no reason. This is now
+ * the single Profile tab: identity + stat tiles + plan first (what used to
+ * be AccountSection), then the display-name edit form directly below it
+ * (what used to be ProfileForm), then sign-out last — one Card so the two
+ * pieces read as one coherent section instead of two stacked boxes.
+ */
 export function AccountSection({
   t,
   locale,
@@ -58,11 +74,15 @@ export function AccountSection({
     ? (new Intl.DisplayNames([locale ?? "en"], { type: "region" }).of(country.toUpperCase()) ??
       country.toUpperCase())
     : null;
+  const [nameState, nameFormAction, namePending] = useActionState(
+    updateDisplayNameAction,
+    initialNameState,
+  );
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{t.settings.accountHeading}</CardTitle>
+        <CardTitle className="text-xl">{t.settings.profileHeading}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         <div className="flex items-center gap-3.5">
@@ -110,28 +130,54 @@ export function AccountSection({
           <StatTile value={wordsLearnedCount} label={t.settings.wordsLearnedLabel} />
         </div>
 
-        <div className="border-border border-t pt-4">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span className="text-muted-foreground">{t.settings.planLabel}</span>
-            <div className="flex items-center gap-2">
-              <Badge variant={access.isPremium ? "default" : "muted"}>
-                {access.isPremium ? t.common.premium : t.common.freePlan}
-              </Badge>
-              {access.isPremium ? (
-                <ManageBillingButton />
-              ) : (
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/upgrade">{t.common.upgrade}</Link>
-                </Button>
-              )}
-            </div>
+        <div className="border-border flex items-center justify-between gap-4 border-t pt-4 text-sm">
+          <span className="text-muted-foreground">{t.settings.planLabel}</span>
+          <div className="flex items-center gap-2">
+            <Badge variant={access.isPremium ? "default" : "muted"}>
+              {access.isPremium ? t.common.premium : t.common.freePlan}
+            </Badge>
+            {access.isPremium ? (
+              <ManageBillingButton />
+            ) : (
+              <Button asChild size="sm" variant="outline">
+                <Link href="/upgrade">{t.common.upgrade}</Link>
+              </Button>
+            )}
           </div>
+        </div>
+
+        <div className="border-border border-t pt-4">
+          <h3 className="text-sm font-semibold">{t.settings.displayNameLabel}</h3>
+          <p className="text-muted-foreground mt-1 text-sm">{t.settings.profileSubtitle}</p>
+
+          <form action={nameFormAction} className="mt-3 flex flex-col gap-3">
+            <Input
+              name="displayName"
+              type="text"
+              autoComplete="name"
+              maxLength={50}
+              defaultValue={displayName ?? ""}
+              aria-invalid={Boolean(nameState?.error)}
+              className="max-w-sm"
+            />
+
+            {nameState?.error && (
+              <p role="alert" className="text-danger text-sm">
+                {nameState.error}
+              </p>
+            )}
+            {nameState?.success && <p className="text-success text-sm">{nameState.success}</p>}
+
+            <Button type="submit" disabled={namePending} size="sm" className="w-fit">
+              {namePending ? t.settings.savingDisplayName : t.settings.saveDisplayName}
+            </Button>
+          </form>
         </div>
 
         {/* The account header's own trigger now links straight here instead
             of opening a popover (see AccountMenu) — sign-out used to live
             only in that popover, so it moved here to keep it reachable. */}
-        <form action={signOut} className="-mt-1">
+        <form action={signOut} className="border-border border-t pt-4">
           <Button type="submit" variant="ghost" size="sm" className="text-danger w-fit">
             <LogOut aria-hidden="true" />
             {t.common.signOut}

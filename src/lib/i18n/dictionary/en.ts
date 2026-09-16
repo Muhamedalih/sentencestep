@@ -363,7 +363,6 @@ export const en: Dictionary = {
     tabProfile: "Profile",
     tabSecurity: "Security",
     tabPreferences: "Preferences",
-    tabAccount: "Account",
     tabDangerZone: "Danger zone",
     emailPrefsHeading: "Email preferences",
     emailPrefsSubtitle: "Control which learning emails SentenceStep sends you.",

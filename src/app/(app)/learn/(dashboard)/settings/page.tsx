@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, KeyRound, SlidersHorizontal, UserRound, Wallet } from "lucide-react";
+import { AlertTriangle, KeyRound, SlidersHorizontal, UserRound } from "lucide-react";
 
 import { AccountSection } from "@/components/settings/account-section";
 import { DailyGoalForm } from "@/components/settings/daily-goal-form";
 import { DangerZone } from "@/components/settings/danger-zone";
 import { EmailPreferencesForm } from "@/components/settings/email-preferences-form";
 import { PasswordForm } from "@/components/settings/password-form";
-import { ProfileForm } from "@/components/settings/profile-form";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { StartingLevelForm } from "@/components/settings/starting-level-form";
 import { TwoFactorSettings } from "@/components/settings/two-factor-settings";
@@ -92,13 +91,28 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsTabs
-        defaultTab="account"
+        defaultTab="profile"
         tabs={[
           {
             id: "profile",
             label: t.settings.tabProfile,
             icon: <UserRound />,
-            content: <ProfileForm displayName={user.displayName} />,
+            content: (
+              <AccountSection
+                t={t}
+                locale={locale}
+                userId={user.id}
+                displayName={user.displayName}
+                email={user.email}
+                access={access}
+                memberSince={createdAt}
+                country={country}
+                xp={xp}
+                streak={streak}
+                sessionCount={sessionCount}
+                wordsLearnedCount={wordsLearned.length}
+              />
+            ),
           },
           {
             id: "security",
@@ -121,27 +135,6 @@ export default async function SettingsPage() {
                 <StartingLevelForm startingLevel={startingLevel} />
                 <EmailPreferencesForm preferences={preferences} />
               </>
-            ),
-          },
-          {
-            id: "account",
-            label: t.settings.tabAccount,
-            icon: <Wallet />,
-            content: (
-              <AccountSection
-                t={t}
-                locale={locale}
-                userId={user.id}
-                displayName={user.displayName}
-                email={user.email}
-                access={access}
-                memberSince={createdAt}
-                country={country}
-                xp={xp}
-                streak={streak}
-                sessionCount={sessionCount}
-                wordsLearnedCount={wordsLearned.length}
-              />
             ),
           },
           {
