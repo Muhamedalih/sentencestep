@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,28 @@ import type { AuthActionState } from "@/lib/supabase/auth-actions";
 
 const initialState: AuthActionState = {};
 
+const TURNSTILE_CALLBACK_NAME = "onSentenceStepTurnstileSuccess";
+
 export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [state, formAction, pending] = useActionState(signUp, initialState);
   const { t } = useLocale();
+
+  // Turnstile solves invisibly in the background after its script loads from
+  // Cloudflare's CDN, which takes a moment — submitting before that finishes
+  // sends an empty cf-turnstile-response and the server rejects it as a
+  // failed captcha (isTurnstileConfigured fails closed on a missing token).
+  // Disabling the submit button until Turnstile's own success callback fires
+  // closes that race instead of asking the learner to just try again.
+  const [turnstileReady, setTurnstileReady] = useState(!turnstileSiteKey);
+
+  useEffect(() => {
+    if (!turnstileSiteKey) return;
+    (window as unknown as Record<string, () => void>)[TURNSTILE_CALLBACK_NAME] = () =>
+      setTurnstileReady(true);
+    return () => {
+      delete (window as unknown as Record<string, unknown>)[TURNSTILE_CALLBACK_NAME];
+    };
+  }, [turnstileSiteKey]);
 
   if (state?.success) {
     return (
@@ -90,7 +109,12 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
                   injects a hidden "cf-turnstile-response" input into this form —
                   signUp (auth-actions.ts) reads that field directly, no extra
                   client-side wiring needed. */}
-              <div className="cf-turnstile" data-sitekey={turnstileSiteKey} data-theme="auto" />
+              <div
+                className="cf-turnstile"
+                data-sitekey={turnstileSiteKey}
+                data-theme="auto"
+                data-callback={TURNSTILE_CALLBACK_NAME}
+              />
             </>
           )}
 
@@ -100,7 +124,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
             </p>
           )}
 
-          <Button type="submit" disabled={pending} className="mt-2">
+          <Button type="submit" disabled={pending || !turnstileReady} className="mt-2">
             {pending ? t.auth.creatingAccount : t.nav.createAccount}
           </Button>
         </form>
