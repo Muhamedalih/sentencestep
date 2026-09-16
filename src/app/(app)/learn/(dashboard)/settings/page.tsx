@@ -83,7 +83,7 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="max-w-4xl px-6 py-16 sm:py-24 md:mx-auto md:max-w-5xl md:px-10 md:py-20">
+    <div className="max-w-4xl px-6 py-16 sm:py-24 md:max-w-5xl md:px-10 md:py-20">
       <div className="mb-10">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t.settings.heading}</h1>
         <p className="text-muted-foreground mt-2 text-lg">

@@ -23,7 +23,7 @@ export function SettingsTabs({
 
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-10">
-      <nav className="border-border flex gap-1 overflow-x-auto border-b pb-2 md:w-48 md:shrink-0 md:flex-col md:border-e md:border-b-0 md:pe-5 md:pb-0">
+      <nav className="border-border flex gap-1 overflow-x-auto border-b pb-2 md:w-56 md:shrink-0 md:flex-col md:border-e md:border-b-0 md:pe-6 md:pb-0">
         {tabs.map((tab) => {
           const isActive = tab.id === active;
           return (
@@ -33,7 +33,7 @@ export function SettingsTabs({
               onClick={() => setActive(tab.id)}
               aria-current={isActive ? "true" : undefined}
               className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors",
+                "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors md:px-4 md:py-3 md:text-base",
                 tab.tone === "danger"
                   ? isActive
                     ? "bg-danger/10 text-danger"
@@ -43,7 +43,7 @@ export function SettingsTabs({
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              <span className="[&_svg]:size-4" aria-hidden="true">
+              <span className="[&_svg]:size-4 md:[&_svg]:size-[18px]" aria-hidden="true">
                 {tab.icon}
               </span>
               {tab.label}
