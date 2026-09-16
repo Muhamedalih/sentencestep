@@ -453,6 +453,12 @@ export interface Dictionary {
     accountSubtitle: string;
     planLabel: string;
     memberSinceLabel: string;
+    /** Same "member since" fact as memberSinceLabel, but as a bare row label (no {date} placeholder) for the account tab's label/value list — memberSinceLabel stays a full sentence for wherever it's already used as standalone text. */
+    memberSinceRowLabel: string;
+    /** Account tab's progress rows — reuse getLearnerLevel/learnerLevelSupportLabel and the shared lesson.streakLabel rather than duplicating that logic. */
+    currentLevelLabel: string;
+    xpLabel: string;
+    wordsLearnedLabel: string;
     /** Danger zone: data export + account deletion. */
     dangerZoneHeading: string;
     dangerZoneSubtitle: string;

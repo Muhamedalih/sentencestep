@@ -12,8 +12,14 @@ type SettingsTab = {
   tone?: "danger";
 };
 
-export function SettingsTabs({ tabs }: { tabs: [SettingsTab, ...SettingsTab[]] }) {
-  const [active, setActive] = useState(tabs[0].id);
+export function SettingsTabs({
+  tabs,
+  defaultTab,
+}: {
+  tabs: [SettingsTab, ...SettingsTab[]];
+  defaultTab?: string;
+}) {
+  const [active, setActive] = useState(defaultTab ?? tabs[0].id);
 
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-10">

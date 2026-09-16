@@ -22,6 +22,8 @@ import {
   fetchProfileDailyGoal,
   fetchProfileStartingLevel,
 } from "@/lib/supabase/queries/profile";
+import { fetchAttemptCount, fetchStreak, fetchXp } from "@/lib/supabase/queries/progress";
+import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 
@@ -55,12 +57,26 @@ export default async function SettingsPage() {
     );
   }
 
-  const [preferences, dailyGoal, startingLevel, createdAt, access] = await Promise.all([
+  const [
+    preferences,
+    dailyGoal,
+    startingLevel,
+    createdAt,
+    access,
+    xp,
+    streak,
+    sessionCount,
+    wordsLearned,
+  ] = await Promise.all([
     getEmailPreferences(user.id),
     fetchProfileDailyGoal(user.id),
     fetchProfileStartingLevel(user.id),
     fetchProfileCreatedAt(user.id),
     getAccessState(),
+    fetchXp(user.id),
+    fetchStreak(user.id),
+    fetchAttemptCount(user.id),
+    fetchWordProgress(user.id),
   ]);
 
   return (
@@ -73,6 +89,7 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsTabs
+        defaultTab="account"
         tabs={[
           {
             id: "profile",
@@ -108,7 +125,16 @@ export default async function SettingsPage() {
             label: t.settings.tabAccount,
             icon: <Wallet />,
             content: (
-              <AccountSection t={t} email={user.email} access={access} memberSince={createdAt} />
+              <AccountSection
+                t={t}
+                email={user.email}
+                access={access}
+                memberSince={createdAt}
+                xp={xp}
+                streak={streak}
+                sessionCount={sessionCount}
+                wordsLearnedCount={wordsLearned.length}
+              />
             ),
           },
           {
