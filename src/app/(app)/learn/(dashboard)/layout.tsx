@@ -34,7 +34,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
       <AppHeader user={user} savedCount={savedCount} />
       <div className="flex flex-1 flex-col md:flex-row">
         <LearnSidebar />
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 pb-16 md:pb-0">{children}</main>
       </div>
       {/* Guests have no email to follow up on — see submitProblemReport and problem_reports' RLS insert policy. */}
       {user?.email && <ReportProblemButton />}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Sparkles } from "lucide-react";
+import { Bookmark, Flame, Menu, Sparkles, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -66,6 +66,7 @@ export function AppHeader({
 }) {
   const { t } = useLocale();
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     function handleScroll() {
@@ -75,6 +76,57 @@ export function AppHeader({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Below sm: the utility cluster moves off the compact logo-only top bar
+  // and into this dropdown panel instead of fighting for space beside it
+  // (see the mobile-nav report's "compact top bar + menu" recommendation).
+  // Same cluster markup as the sm:+ inline row, just rendered once here and
+  // reused via `utilityCluster` below so the two placements can't drift.
+  const utilityCluster = user ? (
+    <>
+      <div className="flex items-center gap-1">
+        <div className="relative">
+          <Button asChild variant="ghost" size="icon-sm">
+            <Link href="/learn/saved" aria-label={t.nav.mySaves} title={t.nav.mySaves}>
+              <Bookmark
+                className={cn(
+                  "size-4",
+                  savedCount ? "fill-accent text-accent" : "text-muted-foreground",
+                )}
+                aria-hidden="true"
+              />
+            </Link>
+          </Button>
+          {Boolean(savedCount) && (
+            <span
+              className="bg-accent text-accent-foreground ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2"
+              aria-hidden="true"
+            >
+              {savedCount! > 9 ? "9+" : savedCount}
+            </span>
+          )}
+        </div>
+        <LanguageSwitcher />
+        <ThemeToggle />
+      </div>
+      <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
+      <AccountMenu />
+    </>
+  ) : (
+    <>
+      <div className="flex items-center gap-1.5">
+        <LanguageSwitcher />
+        <ThemeToggle />
+      </div>
+      <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
+      <Link
+        href="/login"
+        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+      >
+        {t.common.signIn}
+      </Link>
+    </>
+  );
 
   return (
     <header
@@ -95,71 +147,38 @@ export function AppHeader({
         <div className="justify-self-center">{user && <ProgressHud />}</div>
 
         <div className="flex items-center gap-2 justify-self-end sm:gap-3">
-          {user ? (
-            <>
-              {/* Utility cluster first (saved items, language, theme), the
-                  account avatar last — the true outer edge, not sandwiched
-                  in the middle of the row. Matches how every major app
-                  anchors the profile avatar at the corner (Gmail, Notion,
-                  Linear, GitHub, Slack, regardless of interface language)
-                  — and since this app's chrome direction is deliberately
-                  LTR even under Arabic (see locales.ts's dirFor), the far
-                  edge here is the physical right side of the screen, which
-                  is also where an Arabic reader's eye naturally lands
-                  first. One placement, both reasons. */}
-              <div className="flex items-center gap-1">
-                <div className="relative">
-                  {/* Same icon-sm ghost-button treatment as ThemeToggle
-                      (32px hit target, 16px icon) — previously just a bare
-                      icon with 4px padding, which read as noticeably
-                      smaller/lighter-weight than every other control here. */}
-                  <Button asChild variant="ghost" size="icon-sm">
-                    <Link href="/learn/saved" aria-label={t.nav.mySaves} title={t.nav.mySaves}>
-                      {/* Filled + accent-toned once something is actually saved — an
-                          outline icon in flat gray read as a dead utility control next
-                          to the colored streak/XP pair; matching their treatment gives
-                          it the same "this is alive" weight. */}
-                      <Bookmark
-                        className={cn(
-                          "size-4",
-                          savedCount ? "fill-accent text-accent" : "text-muted-foreground",
-                        )}
-                        aria-hidden="true"
-                      />
-                    </Link>
-                  </Button>
-                  {Boolean(savedCount) && (
-                    <span
-                      className="bg-accent text-accent-foreground ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2"
-                      aria-hidden="true"
-                    >
-                      {savedCount! > 9 ? "9+" : savedCount}
-                    </span>
-                  )}
-                </div>
-                <LanguageSwitcher />
-                <ThemeToggle />
-              </div>
-              <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
-              <AccountMenu />
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-1.5">
-                <LanguageSwitcher />
-                <ThemeToggle />
-              </div>
-              <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
-              <Link
-                href="/login"
-                className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-              >
-                {t.common.signIn}
-              </Link>
-            </>
-          )}
+          {/* Matches how every major app anchors the profile avatar at the
+              corner (Gmail, Notion, Linear, GitHub, Slack) — and since this
+              app's chrome direction is deliberately LTR even under Arabic
+              (see locales.ts's dirFor), the far edge here is the physical
+              right side of the screen either way. */}
+          <div className="hidden items-center gap-2 sm:flex sm:gap-3">{utilityCluster}</div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="sm:hidden"
+            aria-label={menuOpen ? t.marketing.closeMenu : t.marketing.openMenu}
+            aria-expanded={menuOpen}
+            aria-controls="app-header-menu"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            {menuOpen ? (
+              <X className="size-4" aria-hidden="true" />
+            ) : (
+              <Menu className="size-4" aria-hidden="true" />
+            )}
+          </Button>
         </div>
       </div>
+
+      {menuOpen && (
+        <div
+          id="app-header-menu"
+          className="border-border/60 bg-background flex items-center gap-3 border-t px-3 py-3 sm:hidden"
+        >
+          {utilityCluster}
+        </div>
+      )}
     </header>
   );
 }

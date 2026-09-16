@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import { Home, Library, ListChecks, NotebookText, Type } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { ScrollFadeEdges } from "@/components/ui/scroll-fade-edges";
-import { useScrollEdgeFade } from "@/hooks/use-scroll-edge-fade";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,8 +19,10 @@ import { cn } from "@/lib/utils";
  * roadmap for now (product call, not a removed feature: /learn/conversation
  * and its content are untouched, this just stops linking to it from primary
  * nav). Re-add its NAV_ITEMS entry to bring it back.
- * Renders as a horizontal, scrollable tab strip under the header on small
- * screens and switches to a fixed vertical sidebar at md: — one component,
+ * Renders as a fixed bottom tab bar (5 even-width icon+label buttons) on
+ * small screens — the standard mobile-app nav pattern, replacing an earlier
+ * horizontal scrollable strip that clipped off-screen items with no visible
+ * hint — and switches to a fixed vertical sidebar at md: — one component,
  * two responsive layouts, so there's no risk of the two ever drifting apart.
  * Labels come from the active learner-support locale (see useLocale) —
  * previously hardcoded to Arabic regardless of the chosen language, which
@@ -67,27 +67,19 @@ export function LearnSidebar() {
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
   ] as const;
 
-  // On mobile this strip scrolls horizontally (see the doc comment above),
-  // which means Library/Stories/Word Lists start out scrolled off the edge
-  // with nothing to hint they're there — the fade overlays below make that
-  // discoverable. `md:hidden` on both keeps them out at md:+, where the
-  // sidebar switches to a vertical, non-scrolling layout and there's never
-  // anything cut off to hint at.
-  const { ref: scrollRef, showStartFade, showEndFade } = useScrollEdgeFade<HTMLDivElement>();
-
   return (
     <nav
       aria-label={t.nav.ariaLabel}
       className={cn(
-        "border-border/60 bg-background/80 relative sticky top-16 z-40 shrink-0 border-b backdrop-blur-md",
-        "md:h-[calc(100svh-4rem)] md:w-56 md:border-r md:border-b-0",
+        "border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-md",
+        "md:bg-background/80 md:sticky md:top-16 md:bottom-auto md:h-[calc(100svh-4rem)] md:w-56 md:border-t-0 md:border-r",
       )}
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div
-        ref={scrollRef}
         className={cn(
-          "flex items-center gap-1 overflow-x-auto px-4 py-2",
-          "md:h-full md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:px-3 md:py-6",
+          "flex items-stretch justify-around px-1 py-1.5",
+          "md:h-full md:flex-col md:items-stretch md:justify-start md:gap-1 md:px-3 md:py-6",
         )}
       >
         {NAV_ITEMS.map((item) => {
@@ -99,23 +91,19 @@ export function LearnSidebar() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "focus-visible:ring-ring focus-visible:ring-offset-background flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                "focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap",
                 isActive
-                  ? "bg-brand-muted text-primary"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  ? "text-primary md:bg-brand-muted"
+                  : "text-muted-foreground hover:text-foreground md:hover:bg-secondary",
               )}
             >
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              <Icon className="size-5 shrink-0 md:size-4" aria-hidden="true" />
               <span dir={dir}>{item.label}</span>
             </Link>
           );
         })}
       </div>
-      <ScrollFadeEdges
-        showStartFade={showStartFade}
-        showEndFade={showEndFade}
-        className="md:hidden"
-      />
     </nav>
   );
 }
