@@ -23,7 +23,7 @@ export function SettingsTabs({
 
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-10">
-      <nav className="border-border flex gap-1 overflow-x-auto border-b pb-2 md:w-56 md:shrink-0 md:flex-col md:border-e md:border-b-0 md:pe-6 md:pb-0">
+      <nav className="border-border flex gap-1 overflow-x-auto border-b pb-2 md:order-2 md:w-56 md:shrink-0 md:flex-col md:border-s md:border-b-0 md:ps-6 md:pb-0">
         {tabs.map((tab) => {
           const isActive = tab.id === active;
           return (
@@ -52,7 +52,7 @@ export function SettingsTabs({
         })}
       </nav>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 md:order-1">
         {tabs.map((tab) => (
           <div key={tab.id} hidden={tab.id !== active} className="flex flex-col gap-6">
             {tab.content}
