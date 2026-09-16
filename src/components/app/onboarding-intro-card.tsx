@@ -143,7 +143,7 @@ export function OnboardingIntroCard() {
           </div>
 
           <h1
-            dir="ltr"
+            dir={dir}
             className="mt-6 text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
           >
             {settings.title}
