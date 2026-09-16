@@ -414,8 +414,6 @@ export const tr: Dictionary = {
     accountSubtitle: "Hesap bilgileriniz ve planınız.",
     planLabel: "Plan",
     memberSinceLabel: "Üyelik başlangıcı: {date}",
-    memberSinceRowLabel: "Üyelik başlangıcı",
-    currentLevelLabel: "Mevcut seviye",
     xpLabel: "XP",
     wordsLearnedLabel: "Öğrenilen kelimeler",
     dangerZoneHeading: "Tehlike bölgesi",

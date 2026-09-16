@@ -156,6 +156,8 @@ export interface Database {
           daily_goal: number;
           /** Null until the first-time placement picker has been shown; 0 means "asked, no preference"; a positive integer is the chosen tier level (matching src/data/units.ts) — see StartingLevelOnboarding. */
           starting_level: number | null;
+          /** Lowercase ISO 3166-1 alpha-2 code (matching CountryCode, src/lib/i18n/country-codes.ts), or null until CountryOnboarding has been answered. */
+          country: string | null;
           role: "user" | "editor" | "admin";
           created_at: string;
           updated_at: string;
@@ -168,6 +170,7 @@ export interface Database {
           avatar_id?: string | null;
           daily_goal?: number;
           starting_level?: number | null;
+          country?: string | null;
           role?: "user" | "editor" | "admin";
           created_at?: string;
           updated_at?: string;

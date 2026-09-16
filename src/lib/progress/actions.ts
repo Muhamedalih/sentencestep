@@ -12,7 +12,11 @@ import {
   upsertLessonCompletion,
   upsertStreak,
 } from "@/lib/supabase/queries/progress";
-import { fetchProfileDailyGoal, fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
+import {
+  fetchProfileCountry,
+  fetchProfileDailyGoal,
+  fetchProfileStartingLevel,
+} from "@/lib/supabase/queries/profile";
 import { evaluateAndNotify } from "@/lib/email/notification-triggers";
 import { getLessonCountMilestone, getStreakMilestone } from "@/lib/email/milestones";
 import { completedEvent } from "@/lib/analytics/events";
@@ -31,7 +35,7 @@ import {
   selectCompletionsToMigrate,
 } from "@/lib/progress/guest-migration";
 import { emptyProgressState } from "@/lib/progress/types";
-import { setStartingLevelAction } from "@/lib/supabase/profile-actions";
+import { setCountryAction, setStartingLevelAction } from "@/lib/supabase/profile-actions";
 import type { ValidatedGuestCompletion } from "@/lib/progress/guest-migration";
 import type { LessonCompletion, ProgressState, RewardEvent } from "@/lib/progress/types";
 import type { LearningMode } from "@/types/content";
@@ -71,13 +75,14 @@ export async function fetchProgressAction(todayISO: string): Promise<ProgressSta
   const userId = await getAuthenticatedUserId();
   if (!userId) return emptyProgressState;
 
-  const [rows, streak, xp, dailyProgress, dailyGoal, startingLevel] = await Promise.all([
+  const [rows, streak, xp, dailyProgress, dailyGoal, startingLevel, country] = await Promise.all([
     fetchUserProgress(userId),
     fetchStreak(userId),
     fetchXp(userId),
     fetchDailyProgress(userId, todayISO),
     fetchProfileDailyGoal(userId),
     fetchProfileStartingLevel(userId),
+    fetchProfileCountry(userId),
   ]);
   return {
     completions: toCompletions(rows),
@@ -96,6 +101,7 @@ export async function fetchProgressAction(todayISO: string): Promise<ProgressSta
     rewards: [],
     xpEarned: 0,
     startingLevel,
+    country,
   };
 }
 
@@ -264,15 +270,23 @@ export async function migrateGuestProgressAction(
   const userId = await getAuthenticatedUserId();
   if (!userId) return emptyProgressState;
 
-  const [existingRows, existingStreak, dailyGoal, existingStartingLevel, isPremium, isAdminUser] =
-    await Promise.all([
-      fetchUserProgress(userId),
-      fetchStreak(userId),
-      fetchProfileDailyGoal(userId),
-      fetchProfileStartingLevel(userId),
-      hasPremiumAccess(),
-      isAdmin(),
-    ]);
+  const [
+    existingRows,
+    existingStreak,
+    dailyGoal,
+    existingStartingLevel,
+    existingCountry,
+    isPremium,
+    isAdminUser,
+  ] = await Promise.all([
+    fetchUserProgress(userId),
+    fetchStreak(userId),
+    fetchProfileDailyGoal(userId),
+    fetchProfileStartingLevel(userId),
+    fetchProfileCountry(userId),
+    hasPremiumAccess(),
+    isAdmin(),
+  ]);
   const existingLessonIds = new Set(
     existingRows.filter((row) => row.completed_at).map((row) => row.lesson_id),
   );
@@ -319,6 +333,10 @@ export async function migrateGuestProgressAction(
 
   if (existingStartingLevel === null && guest.startingLevel !== null) {
     await setStartingLevelAction(guest.startingLevel);
+  }
+
+  if (existingCountry === null && guest.country !== null) {
+    await setCountryAction(guest.country);
   }
 
   return fetchProgressAction(todayISO);

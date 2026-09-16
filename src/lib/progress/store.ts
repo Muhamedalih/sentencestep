@@ -22,6 +22,7 @@ export function readProgress(): ProgressState {
       rewards: [],
       xpEarned: 0,
       startingLevel: parsed.startingLevel ?? null,
+      country: parsed.country ?? null,
     };
   } catch {
     return emptyProgressState;
@@ -53,6 +54,13 @@ export function clearProgress(): void {
 /** A guest's counterpart to setStartingLevelAction — same null/0/N meaning, kept in the same localStorage blob as the rest of a guest's progress rather than a separate key. */
 export function setStartingLevel(state: ProgressState, level: number): ProgressState {
   const next: ProgressState = { ...state, startingLevel: level };
+  writeProgress(next);
+  return next;
+}
+
+/** A guest's counterpart to setCountryAction — kept in the same localStorage blob as the rest of a guest's progress rather than a separate key. */
+export function setCountry(state: ProgressState, country: string): ProgressState {
+  const next: ProgressState = { ...state, country };
   writeProgress(next);
   return next;
 }
@@ -116,6 +124,7 @@ export function recordCompletion(
     rewards,
     xpEarned,
     startingLevel: state.startingLevel,
+    country: state.country,
   };
 
   writeProgress(next);

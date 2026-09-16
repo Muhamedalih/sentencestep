@@ -408,8 +408,6 @@ export const en: Dictionary = {
     accountSubtitle: "Your account details and plan.",
     planLabel: "Plan",
     memberSinceLabel: "Member since {date}",
-    memberSinceRowLabel: "Member since",
-    currentLevelLabel: "Current level",
     xpLabel: "XP",
     wordsLearnedLabel: "Words learned",
     dangerZoneHeading: "Danger zone",

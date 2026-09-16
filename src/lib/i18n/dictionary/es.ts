@@ -421,8 +421,6 @@ export const es: Dictionary = {
     accountSubtitle: "Los detalles y el plan de tu cuenta.",
     planLabel: "Plan",
     memberSinceLabel: "Miembro desde {date}",
-    memberSinceRowLabel: "Miembro desde",
-    currentLevelLabel: "Nivel actual",
     xpLabel: "XP",
     wordsLearnedLabel: "Palabras aprendidas",
     dangerZoneHeading: "Zona de peligro",

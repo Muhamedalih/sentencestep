@@ -50,6 +50,8 @@ export interface ProgressState {
   xpEarned: number;
   /** Null = never asked (see StartingLevelOnboarding), 0 = asked and skipped, a positive integer = the chosen tier level. Guests keep this in localStorage alongside the rest of their progress; signed-in learners keep it on profiles.starting_level. */
   startingLevel: number | null;
+  /** Lowercase ISO 3166-1 alpha-2 code chosen in CountryOnboarding, or null if never asked — same guest-localStorage/profiles.country split as startingLevel. */
+  country: string | null;
 }
 
 export const DEFAULT_DAILY_GOAL = 5;
@@ -74,4 +76,5 @@ export const emptyProgressState: ProgressState = {
   rewards: [],
   xpEarned: 0,
   startingLevel: null,
+  country: null,
 };

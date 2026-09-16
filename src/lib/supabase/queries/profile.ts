@@ -37,6 +37,18 @@ export async function fetchProfileStartingLevel(userId: string): Promise<number 
   return data?.starting_level ?? null;
 }
 
+/** Lowercase ISO 3166-1 alpha-2 code chosen in CountryOnboarding, or null if never asked. */
+export async function fetchProfileCountry(userId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("country")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.country ?? null;
+}
+
 /** The profile row's own created_at — set once at signup by the handle_new_user trigger, used as "member since" on the Settings account section. */
 export async function fetchProfileCreatedAt(userId: string): Promise<string | null> {
   const supabase = await createClient();

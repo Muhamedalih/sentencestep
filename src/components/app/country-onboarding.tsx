@@ -28,11 +28,12 @@ import { difficultyForStartingLevel } from "@/lib/progress/starting-level";
  * call site, so reading this component's own `startingLevel` alone would
  * never reactively see StartingLevelOnboarding's sibling instance calling
  * setStartingLevel() the instant a tier is picked — only pendingDifficulty,
- * a real context write, does. A chosen country is never written to the
- * guest's local progress or a cookie, only reported once as an analytics
- * event (see trackOnboardingCountryAction) — this step's own "have I been
- * shown" state is deliberately as ephemeral as the rest of this
- * in-memory-only context.
+ * a real context write, does. A chosen country is both persisted (via
+ * useProgress().setCountry — same guest-localStorage/profiles.country split
+ * as startingLevel, migrated to the profile row on sign-up) and reported
+ * once as an analytics event (see trackOnboardingCountryAction) — this
+ * step's own "have I been shown" state is deliberately as ephemeral as the
+ * rest of this in-memory-only context.
  *
  * Required, not skippable: `countryStepDone` only ever flips true from
  * handleSelect below, so TutorialOnboarding (gated on it) can't be reached
@@ -63,7 +64,7 @@ import { difficultyForStartingLevel } from "@/lib/progress/starting-level";
  */
 export function CountryOnboarding() {
   const { locale, t, dir } = useLocale();
-  const { isLoaded, completions, startingLevel } = useProgress();
+  const { isLoaded, completions, startingLevel, setCountry } = useProgress();
   const {
     forceLevelStep,
     setForceLevelStep,
@@ -110,6 +111,7 @@ export function CountryOnboarding() {
 
   function handleSelect(code: CountryCode) {
     setCountryStepDone(true);
+    setCountry(code);
     trackOnboardingCountryAction(code).catch(() => {});
   }
 

@@ -398,8 +398,6 @@ export const ar: Dictionary = {
     accountSubtitle: "تفاصيل حسابك وخطتك.",
     planLabel: "الخطة",
     memberSinceLabel: "عضو منذ {date}",
-    memberSinceRowLabel: "عضو منذ",
-    currentLevelLabel: "المستوى الحالي",
     xpLabel: "نقاط الخبرة",
     wordsLearnedLabel: "الكلمات التي تعلمتها",
     dangerZoneHeading: "منطقة الخطر",

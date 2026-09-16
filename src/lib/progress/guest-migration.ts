@@ -99,5 +99,5 @@ export function mergeStreak(
  * device).
  */
 export function hasMigratableGuestState(guest: ProgressState): boolean {
-  return guest.completions.length > 0 || guest.startingLevel !== null;
+  return guest.completions.length > 0 || guest.startingLevel !== null || guest.country !== null;
 }

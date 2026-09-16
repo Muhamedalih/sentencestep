@@ -18,6 +18,7 @@ import { getEmailPreferences } from "@/lib/email/preferences";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import {
+  fetchProfileCountry,
   fetchProfileCreatedAt,
   fetchProfileDailyGoal,
   fetchProfileStartingLevel,
@@ -62,6 +63,7 @@ export default async function SettingsPage() {
     dailyGoal,
     startingLevel,
     createdAt,
+    country,
     access,
     xp,
     streak,
@@ -72,6 +74,7 @@ export default async function SettingsPage() {
     fetchProfileDailyGoal(user.id),
     fetchProfileStartingLevel(user.id),
     fetchProfileCreatedAt(user.id),
+    fetchProfileCountry(user.id),
     getAccessState(),
     fetchXp(user.id),
     fetchStreak(user.id),
@@ -127,9 +130,13 @@ export default async function SettingsPage() {
             content: (
               <AccountSection
                 t={t}
+                locale={locale}
+                userId={user.id}
+                displayName={user.displayName}
                 email={user.email}
                 access={access}
                 memberSince={createdAt}
+                country={country}
                 xp={xp}
                 streak={streak}
                 sessionCount={sessionCount}

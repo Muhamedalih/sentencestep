@@ -15,12 +15,13 @@ import {
   clearProgress,
   readProgress,
   recordCompletion,
+  setCountry as setCountryLocal,
   setStartingLevel as setStartingLevelLocal,
 } from "@/lib/progress/store";
 import { emptyProgressState } from "@/lib/progress/types";
 import type { ProgressState } from "@/lib/progress/types";
 import type { LearningMode } from "@/types/content";
-import { setStartingLevelAction } from "@/lib/supabase/profile-actions";
+import { setCountryAction, setStartingLevelAction } from "@/lib/supabase/profile-actions";
 
 /**
  * Whether the most recent markComplete call has been durably saved.
@@ -210,6 +211,21 @@ export function useProgress() {
     [userId],
   );
 
+  /** Persists a CountryOnboarding choice — signed-in learners write it to profiles.country, guests keep it in the same localStorage blob as the rest of their progress. */
+  const setCountry = useCallback(
+    (country: string) => {
+      if (userId) {
+        setState((prev) => ({ ...prev, country }));
+        setCountryAction(country).catch((error: unknown) => {
+          console.error("[progress] setCountryAction failed", error);
+        });
+      } else {
+        setState((prev) => setCountryLocal(prev, country));
+      }
+    },
+    [userId],
+  );
+
   return {
     isLoaded,
     completions: state.completions,
@@ -221,6 +237,8 @@ export function useProgress() {
     rewards: state.rewards,
     startingLevel: state.startingLevel,
     setStartingLevel,
+    country: state.country,
+    setCountry,
     isCompleted,
     getCompletedIds,
     markComplete,

@@ -59,6 +59,21 @@ export async function setStartingLevelAction(level: number): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * The direct (non-form) counterpart used by CountryOnboarding, mirroring
+ * setStartingLevelAction exactly — persists optimistically for a single
+ * one-time choice rather than showing its own loading/error state.
+ */
+export async function setCountryAction(country: string): Promise<void> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return;
+
+  const { error } = await supabase.from("profiles").update({ country }).eq("id", claims.sub);
+  if (error) throw error;
+}
+
 /** Lets a learner change their starting level later from Settings — same column StartingLevelOnboarding writes on first visit (see its doc comment for the null/0/N meaning). */
 export async function updateStartingLevelAction(
   _prevState: ProfileActionState | null,
