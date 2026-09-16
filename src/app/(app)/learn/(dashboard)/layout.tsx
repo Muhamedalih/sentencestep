@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/app/app-header";
+import { DashboardChrome } from "@/components/app/dashboard-chrome";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -24,6 +25,13 @@ import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentenc
  * the second step of one linear language→level→lesson flow a brand-new
  * guest hits at "/" — it self-gates on pathname now, so it no longer needs
  * to live inside this specific layout to only ever fire once.
+ *
+ * DashboardChrome hides both header and sidebar above md: specifically on
+ * /learn/settings, so that page reads as its own focused desktop screen
+ * instead of sitting inside the same header+sidebar shell as every other
+ * /learn/* page — a deliberate one-route exception, not a general escape
+ * hatch. Below md:, nothing changes: DashboardChrome only ever toggles a
+ * wrapper's md:hidden, never AppHeader/LearnSidebar's own mobile markup.
  */
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
@@ -31,11 +39,12 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
 
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
-      <AppHeader user={user} savedCount={savedCount} />
-      <div className="flex flex-1 flex-col md:flex-row">
-        <LearnSidebar />
-        <main className="min-w-0 flex-1 pb-16 md:pb-0">{children}</main>
-      </div>
+      <DashboardChrome
+        header={<AppHeader user={user} savedCount={savedCount} />}
+        sidebar={<LearnSidebar />}
+      >
+        {children}
+      </DashboardChrome>
       {/* Guests have no email to follow up on — see submitProblemReport and problem_reports' RLS insert policy. */}
       {user?.email && <ReportProblemButton />}
     </div>
