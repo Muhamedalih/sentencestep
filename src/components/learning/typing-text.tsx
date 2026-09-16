@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -21,6 +22,15 @@ import { cn } from "@/lib/utils";
 const NBSP = " ";
 
 const REPEAT_CLICK_DETAIL_THRESHOLD = 1;
+
+/** Deterministic (djb2) string hash — same output on server and client for the same input, unlike `crypto.randomUUID()`. Used to derive the typing input's autofill `name` from the sentence text; see that field's own doc comment. */
+function hashToAutofillId(value: string): string {
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 33) ^ value.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(36);
+}
 
 interface TypingTextProps {
   target: string;
@@ -171,14 +181,21 @@ export function TypingText({
   // bucket, so typing the start of a new sentence could surface a
   // *previously typed* sentence (this one's own earlier attempt, or an
   // unrelated one) as a floating suggestion overlapping the current one.
-  // This field's name must therefore be different on every single mount,
-  // everywhere, forever — NOT `useId()`: that hook returns a value derived
-  // from the component's position in the render tree, which is the *same*
-  // on every fresh page load that reaches this same position (e.g. "the
-  // first sentence typed after a fresh page load" always got the same id
-  // across every story, still colliding in the exact same way). A random
-  // token generated fresh per mount has no such collision.
-  const [autofillId] = useState(() => crypto.randomUUID?.() ?? Math.random().toString(36).slice(2));
+  // This field's name must therefore differ across different sentences —
+  // NOT `useId()`: that hook returns a value derived from the component's
+  // position in the render tree, which is the *same* on every fresh page
+  // load that reaches this same position (e.g. "the first sentence typed
+  // after a fresh page load" always got the same id across every story,
+  // still colliding in the exact same way).
+  // A per-mount `crypto.randomUUID()` fixed that, but runs independently on
+  // the server render and the client hydration pass, so the two never agree
+  // — a guaranteed React hydration-mismatch warning on this attribute, on
+  // every single sentence. Hashing `target` instead is deterministic (same
+  // input, same output, on server and client alike) while still varying
+  // across sentences exactly like the random id did — the only case it
+  // doesn't change is retyping the literal same sentence text again, which
+  // isn't the bleed this was ever guarding against.
+  const autofillId = useMemo(() => hashToAutofillId(target), [target]);
 
   // Replaces the native `autoFocus` attribute — see that prop's own doc
   // comment for why baking it into server-rendered HTML was the actual bug.
