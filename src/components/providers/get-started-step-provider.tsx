@@ -6,6 +6,13 @@ import type { Difficulty } from "@/lib/levels";
 import { clearProgress } from "@/lib/progress/store";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 
+/**
+ * How long the tab must stay hidden before a hidden→visible edge counts as
+ * "left and came back," rather than a momentary notification glance or app
+ * switch that shouldn't wipe an in-progress guest's language/level choice.
+ */
+const HIDDEN_RESET_THRESHOLD_MS = 60_000;
+
 /** Mirrors middleware.ts's hasSupabaseAuthCookie (same substring match, same reasoning) — the one client-side signal available for "is this visitor actually signed in," with no server round trip. */
 function hasSupabaseAuthCookie(): boolean {
   return document.cookie
@@ -119,11 +126,16 @@ export function GetStartedStepProvider({
   // doesn't necessarily do that: most mobile browsers just keep the same
   // page instance running in the background rather than unloading it, so
   // neither a reload nor even a bfcache `pageshow` restore is guaranteed to
-  // fire — `visibilitychange` is the one signal that reliably does, on
-  // every hidden→visible edge, matching "leave and reopen" rather than some
-  // arbitrary away-duration. `pageshow`'s `persisted` flag is kept
-  // alongside it as a second, narrower signal for an actual bfcache
-  // restore, which doesn't always also fire visibilitychange.
+  // fire — `visibilitychange` is the one signal that reliably does.
+  // `visibilitychange` fires on every hidden→visible edge though, including
+  // a glance at a notification or a momentary app switch — nowhere close to
+  // "left and came back to the site" — so a minimum away-duration
+  // (HIDDEN_RESET_THRESHOLD_MS) gates it: only a hidden spell at least that
+  // long counts as a real departure. `pageshow`'s `persisted` flag is kept
+  // alongside it, ungated, as a second signal for an actual bfcache
+  // restore, which only fires from real navigation history traversal (back/
+  // forward to and from another page) and so is never triggered by a brief
+  // focus blip the way `visibilitychange` is.
   //
   // But a visitor who'd already picked a language (or a starting level)
   // before leaving wasn't landing back on IntroLanding either way, even
@@ -160,8 +172,17 @@ export function GetStartedStepProvider({
       // cookie, which is also exactly "the first page" being asked for.
       window.location.href = "/";
     }
+    let hiddenAt: number | null = null;
     function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+        return;
+      }
       if (document.visibilityState !== "visible") return;
+      const wasHiddenLongEnough =
+        hiddenAt !== null && Date.now() - hiddenAt >= HIDDEN_RESET_THRESHOLD_MS;
+      hiddenAt = null;
+      if (!wasHiddenLongEnough) return;
       resetIntro();
       forgetGuestChoices();
     }

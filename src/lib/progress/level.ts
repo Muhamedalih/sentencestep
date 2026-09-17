@@ -1,3 +1,4 @@
+import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
 import type { LessonUnit } from "@/types/content";
 
 /**
@@ -37,11 +38,20 @@ export function getCurrentLevel(
  * past the point a free learner would dead-end (see HomeHero).
  *
  * `startingLevel` shifts the recommendation to that level's first lesson for
- * a brand-new learner (no completions at all) who chose a placement above
- * Beginner — see getCurrentLevel's doc comment for the exact same guard. If
- * every lesson at or above that level happens to be locked/unavailable for
- * this learner, this quietly falls back to the ordinary first-eligible-lesson
- * behavior rather than recommending nothing.
+ * a brand-new learner (no completions at all) — see getCurrentLevel's doc
+ * comment for the exact same guard. That tier's dedicated OPENING_LESSON_ID
+ * (the exact lesson OnboardingIntroCard's own "Start" button routes to) is
+ * preferred first, when it's actually in this eligible set: plain `order`
+ * doesn't guarantee it sorts before the tier's other lessons (its
+ * order_index just reflects wherever it was published in the catalog), so
+ * without this a learner who left it mid-way (or who reached the dashboard
+ * before ever tapping OnboardingIntroCard's "Start") could get recommended
+ * an ordinary lesson instead of the one lesson written for this exact first
+ * moment. Falls through to the plain "first lesson at or above this level"
+ * pick when that opening lesson isn't eligible (wrong catalog/mode, filtered
+ * out for a free learner, or already completed elsewhere), and once more to
+ * ordinary first-eligible-lesson behavior if every lesson at or above that
+ * level happens to be locked/unavailable, rather than recommending nothing.
  *
  * Sorted by level first and `order` only as the tiebreaker within a level —
  * `order` is a single sequence per mode (see LessonUnit.order's doc comment)
@@ -62,6 +72,12 @@ export function findCurrentLesson(
   const sorted = eligible.slice().sort((a, b) => a.level - b.level || a.order - b.order);
 
   if (completedIds.length === 0 && startingLevel) {
+    const difficulty = difficultyForStartingLevel(startingLevel);
+    const openingLesson = difficulty
+      ? sorted.find((unit) => unit.id === OPENING_LESSON_ID[difficulty])
+      : undefined;
+    if (openingLesson) return openingLesson;
+
     const fromStartingLevel = sorted.find((unit) => unit.level >= startingLevel);
     if (fromStartingLevel) return fromStartingLevel;
   }

@@ -211,23 +211,27 @@ export function AccountSection({
         {/* The account header's own trigger now links straight here instead
             of opening a popover (see AccountMenu) — sign-out used to live
             only in that popover, so it moved here to keep it reachable.
-            clearProgress() (client-only, localStorage) runs alongside the
-            signOut server action (which clears the session + locale cookie):
-            without it, this browser's own guest-progress blob still has a
-            real startingLevel in it, and root-html-shell.tsx's
+            A plain onClick (not a <form action={signOut}>) guarantees
+            clearProgress() (client-only, localStorage) always runs, in
+            order, before the signOut server action's own redirect: a
+            <form action> falls back to a native, JS-free POST when hydration
+            hasn't finished yet, which would call signOut without ever
+            running an onSubmit handler. Without clearProgress() running,
+            this browser's own guest-progress blob still has a real
+            startingLevel in it, and root-html-shell.tsx's
             RETURNING_GUEST_REDIRECT_SCRIPT reads exactly that, before React
             even hydrates, to bounce a "returning guest" straight to /learn —
             which would skip right past IntroLanding on the very next visit
             to "/", the same page signOut redirects to. */}
-        <form
-          action={signOut}
-          onSubmit={() => clearProgress()}
-          className="border-border border-t pt-4 md:pt-5"
-        >
+        <div className="border-border border-t pt-4 md:pt-5">
           <Button
-            type="submit"
+            type="button"
             variant="ghost"
             size="sm"
+            onClick={() => {
+              clearProgress();
+              void signOut();
+            }}
             className={cn(
               buttonLift,
               "text-danger hover:shadow-danger/20 w-fit hover:shadow-md md:h-10 md:px-5 md:text-base md:[&_svg]:size-[18px]",
@@ -236,7 +240,7 @@ export function AccountSection({
             <LogOut aria-hidden="true" />
             {t.common.signOut}
           </Button>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );
