@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import type { Difficulty } from "@/lib/levels";
 
@@ -89,6 +89,27 @@ export function GetStartedStepProvider({ children }: { children: ReactNode }) {
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   const [countryStepDone, setCountryStepDone] = useState(false);
   const [tutorialStepDone, setTutorialStepDone] = useState(false);
+
+  // introContinued is deliberately in-memory only (see its own doc comment),
+  // which assumes "leaving the site" always means a real page load that
+  // remounts this provider fresh. On a phone (and some desktop browsers)
+  // switching away and back instead resumes the SAME page instance from the
+  // back/forward cache — no reload, no remount — so a visitor who tapped
+  // Continue, got as far as the language step, then switched apps and came
+  // back was landing mid-picker instead of back on IntroLanding, the exact
+  // "leaving and reopening the site" case a signed-out visitor now expects
+  // (see signOut's own locale-cookie/clearProgress reset for the sibling
+  // fix). `pageshow`'s `persisted` flag is true specifically for a bfcache
+  // restore, never for an ordinary first load (where this is simply already
+  // false) or an ordinary client-side navigation within the site.
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) setIntroContinued(false);
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   return (
     <GetStartedStepContext.Provider
       value={{
