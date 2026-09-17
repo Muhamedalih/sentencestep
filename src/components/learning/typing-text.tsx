@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -22,15 +21,6 @@ import { cn } from "@/lib/utils";
 const NBSP = " ";
 
 const REPEAT_CLICK_DETAIL_THRESHOLD = 1;
-
-/** Deterministic (djb2) string hash — same output on server and client for the same input, unlike `crypto.randomUUID()`. Used to derive the typing input's autofill `name` from the sentence text; see that field's own doc comment. */
-function hashToAutofillId(value: string): string {
-  let hash = 5381;
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash * 33) ^ value.charCodeAt(i);
-  }
-  return (hash >>> 0).toString(36);
-}
 
 interface TypingTextProps {
   target: string;
@@ -175,27 +165,6 @@ export function TypingText({
 }: TypingTextProps) {
   const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
-  // The browser's own saved-field-values autofill is keyed by (origin,
-  // field name), independent of the DOM node's lifecycle — a static name
-  // here meant every sentence's input shared the same browser-side history
-  // bucket, so typing the start of a new sentence could surface a
-  // *previously typed* sentence (this one's own earlier attempt, or an
-  // unrelated one) as a floating suggestion overlapping the current one.
-  // This field's name must therefore differ across different sentences —
-  // NOT `useId()`: that hook returns a value derived from the component's
-  // position in the render tree, which is the *same* on every fresh page
-  // load that reaches this same position (e.g. "the first sentence typed
-  // after a fresh page load" always got the same id across every story,
-  // still colliding in the exact same way).
-  // A per-mount `crypto.randomUUID()` fixed that, but runs independently on
-  // the server render and the client hydration pass, so the two never agree
-  // — a guaranteed React hydration-mismatch warning on this attribute, on
-  // every single sentence. Hashing `target` instead is deterministic (same
-  // input, same output, on server and client alike) while still varying
-  // across sentences exactly like the random id did — the only case it
-  // doesn't change is retyping the literal same sentence text again, which
-  // isn't the bleed this was ever guarding against.
-  const autofillId = useMemo(() => hashToAutofillId(target), [target]);
 
   // Replaces the native `autoFocus` attribute — see that prop's own doc
   // comment for why baking it into server-rendered HTML was the actual bug.
@@ -463,7 +432,21 @@ export function TypingText({
         // heuristics — worth trying since it can only help, but Chrome's own
         // stance means this is not guaranteed to suppress the strip.
         autoComplete="sentencestep-no-suggestions"
-        name={`sentencestep-typing-input-${autofillId}`}
+        // Chrome's "previously typed values" suggestion dropdown is keyed by
+        // this field's `name` (falling back to `id`, which this input also
+        // doesn't set), scoped to origin + that exact string — NOT to the
+        // DOM node, the page, or the signed-in account. Earlier attempts
+        // here gave the field a name unique per mount or per sentence text,
+        // but every fix that keeps *some* stable name still leaves one gap:
+        // retyping the literal same sentence text resurfaces whatever was
+        // saved under that name before — including another account's (or an
+        // earlier session's) own correct answer, which is exactly what
+        // happens on First Steps, the one sentence every single account
+        // types first. This input is never part of a submitted `<form>`
+        // (state is fully controlled via `typed`/`onChange`), so `name` has
+        // no functional purpose here — omitting it entirely leaves Chrome
+        // nothing to key a saved value on, for any sentence, closing the gap
+        // for good rather than choosing a new name to collide on.
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}
