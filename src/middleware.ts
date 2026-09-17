@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 import { DEV_ADMIN_COOKIE } from "@/lib/admin/constants";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { SUPABASE_AUTH_COOKIE_PATTERN } from "@/lib/supabase/auth-cookie-pattern";
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "@/lib/i18n/locale-cookie";
 import { isSupportLocale, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 
@@ -171,24 +172,22 @@ function withCsp(response: NextResponse, csp: string): NextResponse {
 }
 
 /**
- * Whether this request carries a Supabase session cookie at all
- * (`sb-<project-ref>-auth-token`, possibly chunked into `.0`/`.1` suffixes
- * by supabase-js when the JWT is large — hence a substring check rather
- * than an exact name match). Lets every call site below skip
- * `getClaims()`'s JWT verification (and, on projects still using
- * symmetric signing keys, its network round trip to the Auth server —
- * see the doc comments at each call site) entirely for a guest with no
- * session: there is provably no JWT to verify, so the result is always
- * `null` claims, just reached without the extra request/CPU work. This
- * matters here specifically because middleware runs on literally every
- * matched request (see this file's own matcher) — signed-out traffic
- * (every marketing-page visit, most of this app's actual volume) was
- * paying that cost on every single page view for no behavioral gain.
+ * Whether this request carries a Supabase session cookie at all — see
+ * SUPABASE_AUTH_COOKIE_PATTERN's own doc comment for exactly what shape
+ * that is and why it's a pattern match rather than a substring check. Lets
+ * every call site below skip `getClaims()`'s JWT verification (and, on
+ * projects still using symmetric signing keys, its network round trip to
+ * the Auth server — see the doc comments at each call site) entirely for a
+ * guest with no session: there is provably no JWT to verify, so the result
+ * is always `null` claims, just reached without the extra request/CPU
+ * work. This matters here specifically because middleware runs on
+ * literally every matched request (see this file's own matcher) —
+ * signed-out traffic (every marketing-page visit, most of this app's
+ * actual volume) was paying that cost on every single page view for no
+ * behavioral gain.
  */
 function hasSupabaseAuthCookie(request: NextRequest): boolean {
-  return request.cookies
-    .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+  return request.cookies.getAll().some((c) => SUPABASE_AUTH_COOKIE_PATTERN.test(c.name));
 }
 
 function createMiddlewareSupabaseClient(request: NextRequest) {

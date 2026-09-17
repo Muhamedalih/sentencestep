@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
@@ -98,6 +99,7 @@ export function OnboardingIntroCard() {
   if (isNavigating || !settings) {
     return (
       <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
+        <LockBodyScroll />
         <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
       </div>
     );
@@ -116,6 +118,7 @@ export function OnboardingIntroCard() {
       aria-modal="true"
       aria-label={settings.title}
     >
+      <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">

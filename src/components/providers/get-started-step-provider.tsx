@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Difficulty } from "@/lib/levels";
 import { clearProgress } from "@/lib/progress/store";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
+import { hasSupabaseAuthCookieClient } from "@/lib/supabase/has-session-cookie-client";
 
 /**
  * How long the tab must stay hidden before a hidden→visible edge counts as
@@ -12,13 +13,6 @@ import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
  * switch that shouldn't wipe an in-progress guest's language/level choice.
  */
 const HIDDEN_RESET_THRESHOLD_MS = 60_000;
-
-/** Mirrors middleware.ts's hasSupabaseAuthCookie (same substring match, same reasoning) — the one client-side signal available for "is this visitor actually signed in," with no server round trip. */
-function hasSupabaseAuthCookie(): boolean {
-  return document.cookie
-    .split(";")
-    .some((c) => c.trim().startsWith("sb-") && c.includes("-auth-token"));
-}
 
 /**
  * The state shared between the six steps of the homepage's "get started"
@@ -153,7 +147,7 @@ export function GetStartedStepProvider({
   // localStorage flags this component doesn't own. Scoped to
   // `localizedNavigation` (the two marketing route groups only, see this
   // component's own prop doc comment) and to a signed-out visitor
-  // (hasSupabaseAuthCookie) specifically, so it can never fire while a
+  // (hasSupabaseAuthCookieClient) specifically, so it can never fire while a
   // guest is mid-lesson on /learn, and never touches a signed-in learner's
   // real, server-backed preferred_language.
   useEffect(() => {
@@ -161,7 +155,7 @@ export function GetStartedStepProvider({
       setIntroContinued(false);
     }
     function forgetGuestChoices() {
-      if (!localizedNavigation || hasSupabaseAuthCookie()) return;
+      if (!localizedNavigation || hasSupabaseAuthCookieClient()) return;
       document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0`;
       clearProgress();
       // A plain reload isn't enough on a locale-prefixed path ("/ar", ...):

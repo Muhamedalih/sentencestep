@@ -1,13 +1,12 @@
 import { cookies } from "next/headers";
 
+import { SUPABASE_AUTH_COOKIE_PATTERN } from "@/lib/supabase/auth-cookie-pattern";
+
 /**
  * Server-side counterpart to src/middleware.ts's hasSupabaseAuthCookie()
  * and has-session-cookie-client.ts's hasSupabaseAuthCookieClient() — same
- * heuristic (`sb-<project-ref>-auth-token`, possibly chunked into `.0`/`.1`
- * suffixes by supabase-js when the JWT is large, hence a substring check
- * rather than an exact name match), reading the Server Component/Route
- * Handler cookie jar via next/headers instead of a NextRequest or
- * document.cookie.
+ * SUPABASE_AUTH_COOKIE_PATTERN, reading the Server Component/Route Handler
+ * cookie jar via next/headers instead of a NextRequest or document.cookie.
  *
  * Only ever used to decide whether it's worth standing up a Supabase
  * client and calling getClaims() at all (see getCurrentUser's own doc
@@ -19,7 +18,5 @@ import { cookies } from "next/headers";
  */
 export async function hasSupabaseAuthCookie(): Promise<boolean> {
   const cookieStore = await cookies();
-  return cookieStore
-    .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+  return cookieStore.getAll().some((c) => SUPABASE_AUTH_COOKIE_PATTERN.test(c.name));
 }

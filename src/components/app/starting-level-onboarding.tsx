@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { tierSupportLabel, type Difficulty } from "@/lib/levels";
@@ -91,6 +92,7 @@ export function StartingLevelOnboarding() {
       aria-modal="true"
       aria-label={t.onboarding.heading}
     >
+      <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">

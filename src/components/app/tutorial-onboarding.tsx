@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
@@ -70,6 +71,7 @@ export function TutorialOnboarding() {
       aria-modal="true"
       aria-label={t.tutorialOnboarding[current.titleKey]}
     >
+      <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
         <div className="flex items-center gap-1.5" dir="ltr">

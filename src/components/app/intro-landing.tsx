@@ -6,6 +6,7 @@ import { Eye, Keyboard, TrendingUp, Volume2 } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,7 @@ export function IntroLanding() {
       aria-modal="true"
       aria-label={`${t.hero.headingPrefix} ${t.hero.headingEmphasis}`}
     >
+      <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium">

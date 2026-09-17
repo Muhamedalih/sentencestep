@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { Input } from "@/components/ui/input";
 import { trackOnboardingCountryAction } from "@/lib/analytics/track-actions";
@@ -135,6 +136,7 @@ export function CountryOnboarding() {
       aria-modal="true"
       aria-label={t.countryOnboarding.heading}
     >
+      <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">

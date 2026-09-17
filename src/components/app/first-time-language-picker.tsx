@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ export function FirstTimeLanguagePicker() {
       aria-modal="true"
       aria-label={t.firstTimePicker.heading}
     >
+      <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
