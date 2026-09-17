@@ -82,6 +82,7 @@ export const tr: Dictionary = {
     subtitle:
       "Cümleyi dinler, harf harf yazar ve çevirisini anında görürsün — kelimeyi ve telaffuzunu böylece aynı anda öğrenirsin.",
     noAccountNote: "E-posta veya hesap gerekmez",
+    signInInstead: "Giriş yap",
     nextHint: "Sıradaki: dilini seç",
     demoBadge: "Hikayelerimizden bir örnek",
     demoMeta: "Ücretsiz hikaye · Seviye 1",

@@ -9,6 +9,25 @@ import { useGetStartedStep } from "@/components/providers/get-started-step-provi
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { setPreferredLanguageAction } from "@/lib/i18n/locale-actions";
+import { DEFAULT_LOCALE, isSupportLocale, type SupportLocale } from "@/lib/i18n/locales";
+
+/**
+ * Mirrors LocaleProvider's own browser-language detection (see that
+ * component's `browserLocale` doc comment) — used only by the "already have
+ * an account" shortcut below, which needs a REAL SupportLocale to persist
+ * (there's no such thing as a persisted "English UI" choice; English is only
+ * ever a transient pre-choice rendering fallback), not just the display-only
+ * detection LocaleProvider does for itself.
+ */
+function detectBrowserLocale(): SupportLocale {
+  const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const lang of candidates) {
+    const base = lang.split("-")[0]?.toLowerCase();
+    if (base && isSupportLocale(base)) return base;
+  }
+  return DEFAULT_LOCALE;
+}
 
 /**
  * story-1's ("A New Neighbor") second sentence, copied verbatim from
@@ -55,6 +74,30 @@ export function IntroLanding() {
   const { locale, t } = useLocale();
   const { introContinued, setIntroContinued } = useGetStartedStep();
   const reducedMotion = useReducedMotion();
+  const [signingIn, setSigningIn] = useState(false);
+
+  // A returning learner landing here has no ss_locale cookie yet (a new
+  // device, or cookies cleared) — same gate IntroLanding itself renders on.
+  // Continuing straight to the sign-in flow through the ordinary tap-a-flag
+  // FirstTimeLanguagePicker would just swap one gate for the next one in the
+  // chain (see root-html-shell.tsx: IntroLanding, FirstTimeLanguagePicker,
+  // StartingLevelOnboarding, ... all gate on the exact same `!locale`), so a
+  // "Sign in" tap here still wouldn't reach the login form. Persisting a
+  // detected locale server-side first (exactly what picking a flag would
+  // have written) clears every one of those gates in one request, then a
+  // real browser navigation (not Link/router.push — /login lives under a
+  // different root layout, see root-html-shell.tsx's own doc comment on why
+  // that's always a full navigation anyway) lands on a /login that already
+  // resolves a real locale server-side and never renders any of them.
+  async function handleSignIn() {
+    setSigningIn(true);
+    try {
+      await setPreferredLanguageAction(detectBrowserLocale());
+    } catch (error) {
+      console.error("[intro-landing] setPreferredLanguageAction failed", error);
+    }
+    window.location.href = "/login";
+  }
   const restState = Math.round(DEMO_SENTENCE.length * REST_FRACTION);
   const [typed, setTyped] = useState(restState);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -151,8 +194,17 @@ export function IntroLanding() {
               >
                 {t.firstTimePicker.confirm}
               </Button>
-              <span className="text-muted-foreground text-base">{t.introLanding.nextHint}</span>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 text-lg"
+                disabled={signingIn}
+                onClick={handleSignIn}
+              >
+                {t.introLanding.signInInstead}
+              </Button>
             </div>
+            <span className="text-muted-foreground text-base">{t.introLanding.nextHint}</span>
           </div>
 
           <div className="border-border bg-card overflow-hidden rounded-2xl border">

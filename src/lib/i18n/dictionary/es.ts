@@ -87,6 +87,7 @@ export const es: Dictionary = {
     subtitle:
       "Escuchas la frase, la escribes letra por letra y ves la traducción al instante — así aprendes la palabra y su pronunciación a la vez.",
     noAccountNote: "Sin correo ni cuenta",
+    signInInstead: "Iniciar sesión",
     nextHint: "Siguiente: elige tu idioma",
     demoBadge: "Ejemplo de nuestras Historias",
     demoMeta: "Historia gratuita · Nivel 1",

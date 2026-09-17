@@ -85,6 +85,7 @@ export const en: Dictionary = {
     subtitle:
       "Hear the sentence, type it letter by letter, and see the translation instantly — that's how you learn the word and its pronunciation at the same time.",
     noAccountNote: "No email or account needed",
+    signInInstead: "Sign in",
     nextHint: "Next: choose your language",
     demoBadge: "Example from our Stories",
     demoMeta: "Free story · Level 1",

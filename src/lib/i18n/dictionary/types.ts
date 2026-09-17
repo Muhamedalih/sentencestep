@@ -101,6 +101,7 @@ export interface Dictionary {
     eyebrow: string;
     subtitle: string;
     noAccountNote: string;
+    signInInstead: string;
     nextHint: string;
     demoBadge: string;
     demoMeta: string;
