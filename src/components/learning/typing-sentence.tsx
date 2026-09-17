@@ -508,7 +508,10 @@ export function TypingSentence({
             actually cover) is deliberately scoped to only this mode's own
             English sentence text — the one place a "storybook" feel reads as
             intentional rather than just a random font swap. */}
-        {renderText("font-serif text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]", true)}
+        {renderText(
+          "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
+          true,
+        )}
         {spacer}
         <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}

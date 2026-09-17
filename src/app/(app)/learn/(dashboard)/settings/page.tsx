@@ -8,6 +8,7 @@ import { DangerZone } from "@/components/settings/danger-zone";
 import { EmailPreferencesForm } from "@/components/settings/email-preferences-form";
 import { PasswordForm } from "@/components/settings/password-form";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
+import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { StartingLevelForm } from "@/components/settings/starting-level-form";
 import { TwoFactorSettings } from "@/components/settings/two-factor-settings";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,9 @@ export default async function SettingsPage() {
                 <DailyGoalForm dailyGoal={dailyGoal} />
                 <StartingLevelForm startingLevel={startingLevel} />
                 <EmailPreferencesForm preferences={preferences} />
+                <div className="sm:hidden">
+                  <ReportProblemButton variant="inline" />
+                </div>
               </>
             ),
           },

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Loader2, TriangleAlert, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitProblemReport } from "@/lib/reports/actions";
 
@@ -13,13 +14,19 @@ const MAX_MESSAGE_LENGTH = 1000;
 const SUCCESS_AUTOCLOSE_MS = 1800;
 
 /**
- * A floating "Report a problem" affordance, mounted once for every
- * signed-in learner (src/app/learn/(dashboard)/layout.tsx) — guests are
- * never shown this, since a report needs a real email to follow up on (see
+ * A "Report a problem" affordance, mounted once for every signed-in learner
+ * (src/app/learn/(dashboard)/layout.tsx) — guests are never shown this,
+ * since a report needs a real email to follow up on (see
  * submitProblemReport, and problem_reports' RLS insert policy). Submissions
  * land in Admin > Reports (src/app/admin/reports/page.tsx).
+ *
+ * On mobile the floating pill (`variant="floating"`, the default) is hidden
+ * via `max-sm:hidden` — it crowded the small viewport in a bad spot — and a
+ * `variant="inline"` instance is rendered instead inside Settings >
+ * Preferences (src/app/(app)/learn/(dashboard)/settings/page.tsx), wrapped
+ * in `sm:hidden` so desktop keeps only the floating pill.
  */
-export function ReportProblemButton() {
+export function ReportProblemButton({ variant = "floating" }: { variant?: "floating" | "inline" }) {
   const { t } = useLocale();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -72,24 +79,39 @@ export function ReportProblemButton() {
 
   return (
     <>
-      <motion.button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: "spring", stiffness: 300, damping: 22 }}
-        className="border-border bg-card text-foreground fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40"
-        aria-haspopup="dialog"
-      >
-        <span className="relative flex size-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/60 opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
-        </span>
-        <TriangleAlert className="size-4 text-amber-500" aria-hidden="true" />
-        {t.reportProblem.buttonLabel}
-      </motion.button>
+      {variant === "floating" ? (
+        <motion.button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          className="border-border bg-card text-foreground fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40 max-sm:hidden"
+          aria-haspopup="dialog"
+        >
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/60 opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
+          </span>
+          <TriangleAlert className="size-4 text-amber-500" aria-hidden="true" />
+          {t.reportProblem.buttonLabel}
+        </motion.button>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">{t.reportProblem.modalTitle}</CardTitle>
+            <CardDescription>{t.reportProblem.modalSubtitle}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(true)}>
+              <TriangleAlert className="size-4 text-amber-500" aria-hidden="true" />
+              {t.reportProblem.buttonLabel}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <AnimatePresence>
         {isOpen && (
