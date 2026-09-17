@@ -104,9 +104,11 @@ export function HomeHeaderBar({
           />
         )}
         <div className="flex flex-col gap-0.5">
-          <span className="text-muted-foreground text-sm font-medium">
-            {t.progress.welcomeBackLabel}
-          </span>
+          {user?.displayName && (
+            <span className="text-muted-foreground text-sm font-medium">
+              {t.progress.welcomeBackLabel}
+            </span>
+          )}
           {user?.displayName ? (
             <span dir="ltr" className="truncate text-lg font-extrabold tracking-tight">
               {user.displayName}
