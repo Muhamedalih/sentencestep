@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, List, X } from "lucide-react";
@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, List, X } from "lucide-react";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { useLocale } from "@/components/providers/locale-provider";
+import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { splitWordHint } from "@/lib/word-lists-hint";
@@ -71,6 +72,25 @@ export function VocabularyLearn({
     const parts = word.sentence.split(BLANK_TOKEN);
     return [parts[0]?.trim() ?? "", parts[1]?.trim() ?? ""];
   }, [word]);
+
+  // Same fix as VocabularyPractice's identical effect (and LessonSession's):
+  // resolve neighboring words' pronunciation in the background so their
+  // PronunciationButton finds it already cached instead of paying the
+  // resolve round trip when the learner navigates to it. Both directions,
+  // not just forward — unlike Practice, Learn is a free browse (prev/next
+  // buttons and the sidebar jump list), so "next" isn't always ahead.
+  const { prefetchPronunciation } = usePronunciationSettings();
+  useEffect(() => {
+    if (!defaultVoiceId) return;
+    for (const neighbor of [words[index + 1], words[index - 1]]) {
+      if (!neighbor || neighbor.audioUrl) continue;
+      prefetchPronunciation({
+        contentType: "word",
+        contentId: neighbor.id,
+        voiceId: defaultVoiceId,
+      });
+    }
+  }, [words, index, defaultVoiceId, prefetchPronunciation]);
 
   if (!word) return null;
 

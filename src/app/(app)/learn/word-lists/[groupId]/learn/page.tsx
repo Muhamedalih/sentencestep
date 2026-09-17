@@ -9,6 +9,7 @@ import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
+import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 
 /**
  * Full-screen Learn (flashcard/study) route for one word group — the
@@ -62,5 +63,20 @@ export default async function WordGroupLearnPage({
 
   const defaultVoiceId = await getDefaultPronunciationVoiceId();
 
-  return <VocabularyLearn group={group} defaultVoiceId={defaultVoiceId} />;
+  // Same fix as the Practice route's identical pre-resolution
+  // (../page.tsx): only the first word, cache-only, so a miss just leaves
+  // the word to resolve on demand exactly as before.
+  const firstWord = group.words[0];
+  const words =
+    firstWord && !firstWord.audioUrl && defaultVoiceId
+      ? [
+          {
+            ...firstWord,
+            audioUrl: await lookupCachedAudioUrl(firstWord.targetWord, defaultVoiceId),
+          },
+          ...group.words.slice(1),
+        ]
+      : group.words;
+
+  return <VocabularyLearn group={{ ...group, words }} defaultVoiceId={defaultVoiceId} />;
 }
