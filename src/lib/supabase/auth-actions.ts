@@ -219,9 +219,21 @@ export async function signUp(
   return { success: t.auth.checkInboxBody };
 }
 
+/**
+ * Also clears the ss_locale cookie, not just the Supabase session — without
+ * it, a signed-out visitor still carries a locale cookie from their
+ * session, so src/middleware.ts's redirectToLocalizedMarketingPath sends
+ * them straight to the localized "/{locale}" marketing page (HomePageContent)
+ * instead of the unprefixed "/", skipping the first-time "before we start"
+ * welcome (IntroLanding) entirely. Signing out is meant to hand back a
+ * clean, logged-out-visitor experience, matching what anyone else opening
+ * this browser next would see, rather than resuming mid-onboarding.
+ */
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  const cookieStore = await cookies();
+  cookieStore.delete(LOCALE_COOKIE);
   redirect("/");
 }
 

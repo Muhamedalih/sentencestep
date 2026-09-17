@@ -13,6 +13,7 @@ import { ManageBillingButton } from "@/components/billing/manage-billing-button"
 import { signOut, updateDisplayNameAction } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { getLearnerLevel, learnerLevelSupportLabel } from "@/lib/progress/learner-level";
+import { clearProgress } from "@/lib/progress/store";
 import type { StreakState } from "@/lib/progress/types";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -209,8 +210,20 @@ export function AccountSection({
 
         {/* The account header's own trigger now links straight here instead
             of opening a popover (see AccountMenu) — sign-out used to live
-            only in that popover, so it moved here to keep it reachable. */}
-        <form action={signOut} className="border-border border-t pt-4 md:pt-5">
+            only in that popover, so it moved here to keep it reachable.
+            clearProgress() (client-only, localStorage) runs alongside the
+            signOut server action (which clears the session + locale cookie):
+            without it, this browser's own guest-progress blob still has a
+            real startingLevel in it, and root-html-shell.tsx's
+            RETURNING_GUEST_REDIRECT_SCRIPT reads exactly that, before React
+            even hydrates, to bounce a "returning guest" straight to /learn —
+            which would skip right past IntroLanding on the very next visit
+            to "/", the same page signOut redirects to. */}
+        <form
+          action={signOut}
+          onSubmit={() => clearProgress()}
+          className="border-border border-t pt-4 md:pt-5"
+        >
           <Button
             type="submit"
             variant="ghost"
