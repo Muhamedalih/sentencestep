@@ -197,7 +197,7 @@ export function RootHtmlShell({
       </head>
       <body>
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
-          <GetStartedStepProvider>
+          <GetStartedStepProvider localizedNavigation={localizedNavigation}>
             <IntroLanding />
             <FirstTimeLanguagePicker />
             <StartingLevelOnboarding />

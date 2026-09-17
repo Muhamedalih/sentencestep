@@ -3,6 +3,15 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import type { Difficulty } from "@/lib/levels";
+import { clearProgress } from "@/lib/progress/store";
+import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
+
+/** Mirrors middleware.ts's hasSupabaseAuthCookie (same substring match, same reasoning) — the one client-side signal available for "is this visitor actually signed in," with no server round trip. */
+function hasSupabaseAuthCookie(): boolean {
+  return document.cookie
+    .split(";")
+    .some((c) => c.trim().startsWith("sb-") && c.includes("-auth-token"));
+}
 
 /**
  * The state shared between the six steps of the homepage's "get started"
@@ -82,7 +91,20 @@ const GetStartedStepContext = createContext<GetStartedStepContextValue>({
   setTutorialStepDone: () => {},
 });
 
-export function GetStartedStepProvider({ children }: { children: ReactNode }) {
+export function GetStartedStepProvider({
+  localizedNavigation = false,
+  children,
+}: {
+  /**
+   * True only under the two marketing root layouts ((default) and
+   * [locale]) — mirrors LocaleProvider's own prop of the same name (see
+   * root-html-shell.tsx). Scopes the "forget everything while signed out"
+   * reset below to the marketing entry surface only, so it can never fire
+   * while a guest is mid-lesson on /learn.
+   */
+  localizedNavigation?: boolean;
+  children: ReactNode;
+}) {
   const [introContinued, setIntroContinued] = useState(false);
   const [forceLanguageStep, setForceLanguageStep] = useState(false);
   const [forceLevelStep, setForceLevelStep] = useState(false);
@@ -97,31 +119,56 @@ export function GetStartedStepProvider({ children }: { children: ReactNode }) {
   // doesn't necessarily do that: most mobile browsers just keep the same
   // page instance running in the background rather than unloading it, so
   // neither a reload nor even a bfcache `pageshow` restore is guaranteed to
-  // fire. A visitor who tapped Continue, got as far as the language step,
-  // then switched away and back was landing mid-picker instead of back on
-  // IntroLanding — the exact "leaving and reopening the site" case a
-  // signed-out visitor now expects (see signOut's own locale-cookie/
-  // clearProgress reset for the sibling fix).
+  // fire — `visibilitychange` is the one signal that reliably does, on
+  // every hidden→visible edge, matching "leave and reopen" rather than some
+  // arbitrary away-duration. `pageshow`'s `persisted` flag is kept
+  // alongside it as a second, narrower signal for an actual bfcache
+  // restore, which doesn't always also fire visibilitychange.
   //
-  // `visibilitychange` is the one signal that reliably fires across
-  // browsers/platforms for exactly that "left and came back" transition —
-  // resetting on every hidden→visible edge (not just a long-away one) is
-  // deliberate: the visitor said "leave and reopen", not "leave for a
-  // while", and there's no reliable cross-browser signal for elapsed time
-  // away that's worth the added complexity. `pageshow`'s `persisted` flag
-  // is kept alongside it as a second, narrower signal for the specific case
-  // of an actual bfcache restore, which doesn't always also fire
-  // visibilitychange (e.g. Safari restoring a tab that was fully swiped
-  // away and relaunched).
+  // But a visitor who'd already picked a language (or a starting level)
+  // before leaving wasn't landing back on IntroLanding either way, even
+  // with introContinued reset: that choice lives in the ss_locale cookie
+  // and the guest-progress localStorage blob, both deliberately durable
+  // (see LocaleProvider and progress/store.ts) so an ordinary returning
+  // guest doesn't get re-asked every visit — but confirmed as explicitly
+  // NOT wanted here: for a signed-out visitor specifically, every return to
+  // the marketing entry surface should restart from IntroLanding with
+  // nothing remembered, same as the very first visit ever. Clearing both
+  // and reloading (rather than just resetting local state) is what actually
+  // gets there — a plain state reset would leave a stale locale cookie
+  // that'd just re-resolve non-null on the very next request, or leave
+  // StartingLevelOnboarding/CountryOnboarding still gated open by
+  // localStorage flags this component doesn't own. Scoped to
+  // `localizedNavigation` (the two marketing route groups only, see this
+  // component's own prop doc comment) and to a signed-out visitor
+  // (hasSupabaseAuthCookie) specifically, so it can never fire while a
+  // guest is mid-lesson on /learn, and never touches a signed-in learner's
+  // real, server-backed preferred_language.
   useEffect(() => {
-    function reset() {
+    function resetIntro() {
       setIntroContinued(false);
     }
+    function forgetGuestChoices() {
+      if (!localizedNavigation || hasSupabaseAuthCookie()) return;
+      document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0`;
+      clearProgress();
+      // A plain reload isn't enough on a locale-prefixed path ("/ar", ...):
+      // [locale]/layout.tsx resolves `locale` from the URL segment itself,
+      // never a cookie read, so reloading "/ar" would still render with
+      // locale="ar" regardless of the cookie just cleared above. "/" is the
+      // one path whose layout resolves `locale` from the (now-cleared)
+      // cookie, which is also exactly "the first page" being asked for.
+      window.location.href = "/";
+    }
     function handleVisibilityChange() {
-      if (document.visibilityState === "visible") reset();
+      if (document.visibilityState !== "visible") return;
+      resetIntro();
+      forgetGuestChoices();
     }
     function handlePageShow(event: PageTransitionEvent) {
-      if (event.persisted) reset();
+      if (!event.persisted) return;
+      resetIntro();
+      forgetGuestChoices();
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pageshow", handlePageShow);
@@ -129,7 +176,7 @@ export function GetStartedStepProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pageshow", handlePageShow);
     };
-  }, []);
+  }, [localizedNavigation]);
 
   return (
     <GetStartedStepContext.Provider
