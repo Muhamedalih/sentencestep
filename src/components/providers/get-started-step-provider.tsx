@@ -92,22 +92,43 @@ export function GetStartedStepProvider({ children }: { children: ReactNode }) {
 
   // introContinued is deliberately in-memory only (see its own doc comment),
   // which assumes "leaving the site" always means a real page load that
-  // remounts this provider fresh. On a phone (and some desktop browsers)
-  // switching away and back instead resumes the SAME page instance from the
-  // back/forward cache — no reload, no remount — so a visitor who tapped
-  // Continue, got as far as the language step, then switched apps and came
-  // back was landing mid-picker instead of back on IntroLanding, the exact
-  // "leaving and reopening the site" case a signed-out visitor now expects
-  // (see signOut's own locale-cookie/clearProgress reset for the sibling
-  // fix). `pageshow`'s `persisted` flag is true specifically for a bfcache
-  // restore, never for an ordinary first load (where this is simply already
-  // false) or an ordinary client-side navigation within the site.
+  // remounts this provider fresh. Switching away from the tab (another app
+  // on a phone, another browser tab, the device lock screen) and back
+  // doesn't necessarily do that: most mobile browsers just keep the same
+  // page instance running in the background rather than unloading it, so
+  // neither a reload nor even a bfcache `pageshow` restore is guaranteed to
+  // fire. A visitor who tapped Continue, got as far as the language step,
+  // then switched away and back was landing mid-picker instead of back on
+  // IntroLanding — the exact "leaving and reopening the site" case a
+  // signed-out visitor now expects (see signOut's own locale-cookie/
+  // clearProgress reset for the sibling fix).
+  //
+  // `visibilitychange` is the one signal that reliably fires across
+  // browsers/platforms for exactly that "left and came back" transition —
+  // resetting on every hidden→visible edge (not just a long-away one) is
+  // deliberate: the visitor said "leave and reopen", not "leave for a
+  // while", and there's no reliable cross-browser signal for elapsed time
+  // away that's worth the added complexity. `pageshow`'s `persisted` flag
+  // is kept alongside it as a second, narrower signal for the specific case
+  // of an actual bfcache restore, which doesn't always also fire
+  // visibilitychange (e.g. Safari restoring a tab that was fully swiped
+  // away and relaunched).
   useEffect(() => {
-    function handlePageShow(event: PageTransitionEvent) {
-      if (event.persisted) setIntroContinued(false);
+    function reset() {
+      setIntroContinued(false);
     }
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") reset();
+    }
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) reset();
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
   }, []);
 
   return (
