@@ -219,6 +219,8 @@ export interface Dictionary {
     loginHeading: string;
     loginSubtitle: string;
     confirmationFailed: string;
+    googleSignIn: string;
+    orDivider: string;
     emailLabel: string;
     passwordLabel: string;
     signingIn: string;
@@ -248,6 +250,7 @@ export interface Dictionary {
       passwordMismatch: string;
       tooManyAttempts: string;
       captchaFailed: string;
+      oauthFailed: string;
     };
     forgotPassword: string;
     forgotPasswordHeading: string;

@@ -8,18 +8,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useLocale } from "@/components/providers/locale-provider";
-import { signIn } from "@/lib/supabase/auth-actions";
+import { signIn, signInWithGoogle } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
+import { GoogleIcon } from "@/components/auth/google-icon";
 
 const initialState: AuthActionState = {};
 
 export function LoginForm({
   next,
   confirmationFailed,
+  oauthFailed,
 }: {
   next?: string;
   /** Set when src/app/auth/callback/route.ts couldn't exchange the email confirmation code. */
   confirmationFailed?: boolean;
+  /** Set when signInWithGoogle (auth-actions.ts) couldn't reach Google, or the learner cancelled the consent screen. */
+  oauthFailed?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(signIn, initialState);
   const { t } = useLocale();
@@ -36,6 +40,27 @@ export function LoginForm({
             {t.auth.confirmationFailed}
           </p>
         )}
+        {oauthFailed && !state?.error && (
+          <p role="alert" className="text-danger mb-4 text-sm">
+            {t.auth.errors.oauthFailed}
+          </p>
+        )}
+
+        <form action={signInWithGoogle}>
+          <input type="hidden" name="next" value={next ?? "/learn"} />
+          <Button type="submit" variant="outline" className="w-full">
+            <GoogleIcon className="size-4" />
+            {t.auth.googleSignIn}
+          </Button>
+        </form>
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="bg-border h-px flex-1" />
+          <span className="text-muted-foreground text-xs font-medium uppercase">
+            {t.auth.orDivider}
+          </span>
+          <div className="bg-border h-px flex-1" />
+        </div>
 
         <form action={formAction} className="flex flex-col gap-4" noValidate>
           <input type="hidden" name="next" value={next ?? "/learn"} />

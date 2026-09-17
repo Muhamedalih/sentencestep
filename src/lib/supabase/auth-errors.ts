@@ -15,3 +15,14 @@ export const CONFIRMATION_FAILED_ERROR = "confirmation-failed";
 export function isConfirmationFailedError(error: string | undefined): boolean {
   return error === CONFIRMATION_FAILED_ERROR;
 }
+
+/**
+ * The `?error=` value signInWithGoogle (auth-actions.ts) sets on the
+ * /login redirect when Supabase can't start the Google OAuth flow (e.g. the
+ * provider isn't configured yet).
+ */
+export const OAUTH_FAILED_ERROR = "oauth-failed";
+
+export function isOAuthFailedError(error: string | undefined): boolean {
+  return error === OAUTH_FAILED_ERROR;
+}

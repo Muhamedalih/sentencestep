@@ -18,6 +18,7 @@ import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { friendlyAuthError } from "@/lib/supabase/friendly-auth-error";
 import { isLoginLockedOut, recordLoginAttempt } from "@/lib/supabase/login-rate-limit";
 import { isTurnstileConfigured, verifyTurnstileToken } from "@/lib/turnstile/verify";
+import { OAUTH_FAILED_ERROR } from "@/lib/supabase/auth-errors";
 
 export interface AuthActionState {
   error?: string;
@@ -100,6 +101,33 @@ export async function signIn(
   }
 
   return completeSignIn(userId, next);
+}
+
+/**
+ * Starts the Google OAuth flow: asks Supabase for the provider's consent-
+ * screen URL and redirects the browser straight there. The rest of the flow
+ * (Google redirecting back with a code, exchanging it for a session) is
+ * handled by src/app/auth/callback/route.ts, the same route the email-
+ * confirmation link already uses — Supabase's PKCE flow delivers both as a
+ * `?code=` on the same redirect URI.
+ */
+export async function signInWithGoogle(formData: FormData): Promise<void> {
+  const next = safeNextPath(formData.get("next"));
+  const origin = (await headers()).get("origin") ?? getSiteUrl();
+
+  const supabase = await createClient();
+  let url: string | null = null;
+  try {
+    const result = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+    });
+    if (!result.error) url = result.data.url;
+  } catch {
+    url = null;
+  }
+
+  redirect(url ?? `/login?error=${OAUTH_FAILED_ERROR}`);
 }
 
 export async function signUp(

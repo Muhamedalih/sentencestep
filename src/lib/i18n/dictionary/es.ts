@@ -189,6 +189,8 @@ export const es: Dictionary = {
     loginSubtitle: "Inicia sesión para mantener tu progreso sincronizado.",
     confirmationFailed:
       "Ese enlace de confirmación no funcionó: puede haber caducado o ya haberse usado. Intenta iniciar sesión, o crea tu cuenta de nuevo para obtener un enlace nuevo.",
+    googleSignIn: "Continuar con Google",
+    orDivider: "o",
     emailLabel: "Correo electrónico",
     passwordLabel: "Contraseña",
     signingIn: "Iniciando sesión…",
@@ -223,6 +225,7 @@ export const es: Dictionary = {
       passwordMismatch: "Las contraseñas no coinciden.",
       tooManyAttempts: "Demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo.",
       captchaFailed: "La verificación ha fallado. Inténtalo de nuevo.",
+      oauthFailed: "El inicio de sesión con Google no se completó. Inténtalo de nuevo.",
     },
     forgotPassword: "¿Olvidaste tu contraseña?",
     forgotPasswordHeading: "Restablece tu contraseña",

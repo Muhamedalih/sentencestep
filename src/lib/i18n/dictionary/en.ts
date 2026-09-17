@@ -187,6 +187,8 @@ export const en: Dictionary = {
     loginSubtitle: "Sign in to keep your progress in sync.",
     confirmationFailed:
       "That confirmation link didn't work — it may have expired or already been used. Try signing in, or create your account again to get a new link.",
+    googleSignIn: "Continue with Google",
+    orDivider: "or",
     emailLabel: "Email",
     passwordLabel: "Password",
     signingIn: "Signing in…",
@@ -218,6 +220,7 @@ export const en: Dictionary = {
       passwordMismatch: "Passwords don't match.",
       tooManyAttempts: "Too many failed attempts. Please wait a few minutes and try again.",
       captchaFailed: "Verification failed. Please try again.",
+      oauthFailed: "Google sign-in didn't go through. Please try again.",
     },
     forgotPassword: "Forgot password?",
     forgotPasswordHeading: "Reset your password",

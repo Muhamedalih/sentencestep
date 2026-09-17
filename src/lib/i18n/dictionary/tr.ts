@@ -184,6 +184,8 @@ export const tr: Dictionary = {
     loginSubtitle: "İlerlemenizi senkronize tutmak için giriş yapın.",
     confirmationFailed:
       "Bu onay bağlantısı çalışmadı — süresi dolmuş ya da zaten kullanılmış olabilir. Giriş yapmayı deneyin veya yeni bir bağlantı almak için hesabınızı tekrar oluşturun.",
+    googleSignIn: "Google ile devam et",
+    orDivider: "veya",
     emailLabel: "E-posta",
     passwordLabel: "Şifre",
     signingIn: "Giriş yapılıyor…",
@@ -216,6 +218,7 @@ export const tr: Dictionary = {
       passwordMismatch: "Şifreler eşleşmiyor.",
       tooManyAttempts: "Çok fazla başarısız deneme. Lütfen birkaç dakika bekleyip tekrar deneyin.",
       captchaFailed: "Doğrulama başarısız oldu. Lütfen tekrar deneyin.",
+      oauthFailed: "Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.",
     },
     forgotPassword: "Şifrenizi mi unuttunuz?",
     forgotPasswordHeading: "Şifrenizi sıfırlayın",

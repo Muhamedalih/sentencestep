@@ -10,8 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useLocale } from "@/components/providers/locale-provider";
-import { signUp } from "@/lib/supabase/auth-actions";
+import { signUp, signInWithGoogle } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
+import { GoogleIcon } from "@/components/auth/google-icon";
 
 const initialState: AuthActionState = {};
 
@@ -59,6 +60,21 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
         <CardDescription>{t.auth.registerSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
+        <form action={signInWithGoogle}>
+          <Button type="submit" variant="outline" className="w-full">
+            <GoogleIcon className="size-4" />
+            {t.auth.googleSignIn}
+          </Button>
+        </form>
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="bg-border h-px flex-1" />
+          <span className="text-muted-foreground text-xs font-medium uppercase">
+            {t.auth.orDivider}
+          </span>
+          <div className="bg-border h-px flex-1" />
+        </div>
+
         <form action={formAction} className="flex flex-col gap-4" noValidate>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="displayName" className="text-sm font-medium">

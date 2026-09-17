@@ -176,6 +176,8 @@ export const ar: Dictionary = {
     loginSubtitle: "سجّل الدخول للحفاظ على تقدّمك متزامنًا.",
     confirmationFailed:
       "لم يعمل رابط التأكيد — ربما انتهت صلاحيته أو تم استخدامه من قبل. حاول تسجيل الدخول، أو أنشئ حسابك مرة أخرى للحصول على رابط جديد.",
+    googleSignIn: "المتابعة عبر Google",
+    orDivider: "أو",
     emailLabel: "البريد الإلكتروني",
     passwordLabel: "كلمة المرور",
     signingIn: "جارٍ تسجيل الدخول…",
@@ -208,6 +210,7 @@ export const ar: Dictionary = {
       passwordMismatch: "كلمتا المرور غير متطابقتين.",
       tooManyAttempts: "محاولات فاشلة كثيرة جدًا. يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى.",
       captchaFailed: "فشل التحقق. يرجى المحاولة مرة أخرى.",
+      oauthFailed: "لم يكتمل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.",
     },
     forgotPassword: "نسيت كلمة المرور؟",
     forgotPasswordHeading: "إعادة تعيين كلمة المرور",
