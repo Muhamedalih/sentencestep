@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -18,21 +20,48 @@ import { cn } from "@/lib/utils";
  * — picking again (even the same language) just clears that flag and falls
  * through to the level step exactly as the first time through. Otherwise a
  * genuinely first-time, cookie-less visitor sees it on top of whatever page
- * they landed on and it disappears the instant they choose, no redirect or
- * reload — EXCEPT for the very first moment of all, which now belongs to
- * IntroLanding (mounted right before this one in root-html-shell.tsx):
- * this component also waits on `introContinued` alongside `locale`, so a
- * brand-new visitor sees IntroLanding's introduction first and only reaches
- * this step once they tap its Continue button. Fully opaque (not a
- * backdrop-blur-through modal) and paired with StartingLevelOnboarding's
- * identical minimal-top-bar/step-badge shell — together they read as steps
- * of one linear "get started" flow rather than a popup interrupting a
- * marketing page, which is exactly what replaces that marketing page as a
- * brand-new guest's first impression.
+ * they landed on, EXCEPT for the very first moment of all, which now
+ * belongs to IntroLanding (mounted right before this one in
+ * root-html-shell.tsx): this component also waits on `introContinued`
+ * alongside `locale`, so a brand-new visitor sees IntroLanding's
+ * introduction first and only reaches this step once they tap its Continue
+ * button. Fully opaque (not a backdrop-blur-through modal) and paired with
+ * StartingLevelOnboarding's identical minimal-top-bar/step-badge shell —
+ * together they read as steps of one linear "get started" flow rather than
+ * a popup interrupting a marketing page, which is exactly what replaces
+ * that marketing page as a brand-new guest's first impression.
+ *
+ * Picking a language does involve a real reload, though, unlike every step
+ * after it: setLocale's `localizedNavigation` branch (see LocaleProvider's
+ * own doc comment) does a full `router.push` to "/{locale}" — a different
+ * static root layout ((default) vs. [locale]), which Next.js can only ever
+ * reach with a full page load, never a client-side transition. `locale`
+ * itself flips truthy the instant that click handler runs though (plain
+ * useState, no navigation to wait on), which used to make this component's
+ * own `locale && !forceLanguageStep` gate hide it immediately — well before
+ * the browser had actually swapped documents — uncovering the marketing
+ * page mounted underneath for however long that reload actually takes
+ * (typically a couple hundred ms, more on a slow connection). `isNavigating`
+ * closes that gap the same way OnboardingIntroCard's own identically-named
+ * flag closes the same kind of gap at the flow's other cross-layout
+ * navigation (see that component's doc comment): once a language is
+ * tapped, this keeps rendering a full-screen loading state — instead of
+ * returning null — for as long as this component instance survives, which
+ * is exactly until the real navigation actually takes over.
  */
 export function FirstTimeLanguagePicker() {
   const { locale, t, setLocale } = useLocale();
   const { introContinued, forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  if (isNavigating) {
+    return (
+      <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
+        <LockBodyScroll />
+        <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
+      </div>
+    );
+  }
   if (locale && !forceLanguageStep) return null;
   if (!locale && !introContinued) return null; // IntroLanding is still showing — see its own doc comment
 
@@ -72,6 +101,7 @@ export function FirstTimeLanguagePicker() {
                 type="button"
                 dir={LOCALE_META[option].dir}
                 onClick={() => {
+                  setIsNavigating(true);
                   setLocale(option);
                   setForceLanguageStep(false);
                 }}
