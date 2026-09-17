@@ -9,7 +9,16 @@
 export type SoundVariant = "letter" | "error" | "complete";
 
 export type SoundPack =
-  "soft" | "gentle" | "minimal" | "click" | "pop" | "bubble" | "typewriter" | "premium";
+  | "soft"
+  | "gentle"
+  | "minimal"
+  | "click"
+  | "pop"
+  | "bubble"
+  | "typewriter"
+  | "premium"
+  | "mechanical"
+  | "crystal";
 
 export interface ToneConfig {
   type: OscillatorType;
@@ -66,6 +75,18 @@ export const SOUND_PACKS: Record<SoundPack, Record<SoundVariant, ToneConfig>> = 
     error: { type: "sine", duration: 0.1, frequency: 230, peakGain: 0.045 },
     complete: { type: "sine", duration: 0.5, frequency: 920, peakGain: 0.1 },
   },
+  /** A heavier, punchier clack than "click" — a lower square-wave thump meant to read like a satisfying mechanical-keyboard switch rather than a thin beep. */
+  mechanical: {
+    letter: { type: "square", duration: 0.035, frequency: 1100, peakGain: 0.055 },
+    error: { type: "square", duration: 0.07, frequency: 190, peakGain: 0.05 },
+    complete: { type: "square", duration: 0.26, frequency: 850, peakGain: 0.08 },
+  },
+  /** The richest, most polished pack — a bright triangle tone with more headroom than every other pack, for an admin who wants the most "premium"-feeling keystroke sound available. */
+  crystal: {
+    letter: { type: "triangle", duration: 0.13, frequency: 980, peakGain: 0.075 },
+    error: { type: "triangle", duration: 0.11, frequency: 240, peakGain: 0.05 },
+    complete: { type: "triangle", duration: 0.55, frequency: 1050, peakGain: 0.11 },
+  },
 };
 
 export const SOUND_PACK_NAMES = Object.keys(SOUND_PACKS) as SoundPack[];
@@ -79,6 +100,8 @@ export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
   bubble: "Bubble",
   typewriter: "Typewriter",
   premium: "Premium",
+  mechanical: "Mechanical",
+  crystal: "Crystal",
 };
 
 export const DEFAULT_SOUND_PACK: SoundPack = "soft";

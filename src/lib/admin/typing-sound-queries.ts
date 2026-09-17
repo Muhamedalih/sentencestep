@@ -9,6 +9,8 @@ import { SOUND_PACK_NAMES } from "@/lib/typing-sound-packs";
 import type { SoundPack } from "@/lib/typing-sound-packs";
 import { SENTENCE_COMPLETE_SOUND_NAMES } from "@/lib/sentence-complete-sounds";
 import type { SentenceCompleteSound } from "@/lib/sentence-complete-sounds";
+import { LESSON_END_SOUND_NAMES } from "@/lib/lesson-end-sounds";
+import type { LessonEndSound } from "@/lib/lesson-end-sounds";
 
 function isSoundPack(value: string): value is SoundPack {
   return (SOUND_PACK_NAMES as string[]).includes(value);
@@ -16,6 +18,10 @@ function isSoundPack(value: string): value is SoundPack {
 
 function isSentenceCompleteSound(value: string): value is SentenceCompleteSound {
   return (SENTENCE_COMPLETE_SOUND_NAMES as string[]).includes(value);
+}
+
+function isLessonEndSound(value: string): value is LessonEndSound {
+  return (LESSON_END_SOUND_NAMES as string[]).includes(value);
 }
 
 /**
@@ -32,7 +38,7 @@ export async function getTypingSoundSettings(): Promise<TypingSoundSettings> {
   const { data, error } = await supabase
     .from("typing_sound_settings")
     .select(
-      "enabled, sound_pack, volume, sentence_complete_sound, section_sentence_complete_sounds",
+      "enabled, sound_pack, volume, sentence_complete_sound, section_sentence_complete_sounds, lesson_end_sound_enabled, lesson_end_sound",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -64,6 +70,8 @@ export async function getTypingSoundSettings(): Promise<TypingSoundSettings> {
         ? legacy.data.sentence_complete_sound
         : DEFAULT_TYPING_SOUND_SETTINGS.sentenceCompleteSound,
       sectionSentenceCompleteSounds: DEFAULT_TYPING_SOUND_SETTINGS.sectionSentenceCompleteSounds,
+      lessonEndSoundEnabled: DEFAULT_TYPING_SOUND_SETTINGS.lessonEndSoundEnabled,
+      lessonEndSound: DEFAULT_TYPING_SOUND_SETTINGS.lessonEndSound,
     };
   }
 
@@ -88,5 +96,12 @@ export async function getTypingSoundSettings(): Promise<TypingSoundSettings> {
       typeof data.section_sentence_complete_sounds === "object"
         ? sanitizeSectionSentenceCompleteSounds(data.section_sentence_complete_sounds)
         : DEFAULT_TYPING_SOUND_SETTINGS.sectionSentenceCompleteSounds,
+    lessonEndSoundEnabled:
+      typeof data.lesson_end_sound_enabled === "boolean"
+        ? data.lesson_end_sound_enabled
+        : DEFAULT_TYPING_SOUND_SETTINGS.lessonEndSoundEnabled,
+    lessonEndSound: isLessonEndSound(data.lesson_end_sound)
+      ? data.lesson_end_sound
+      : DEFAULT_TYPING_SOUND_SETTINGS.lessonEndSound,
   };
 }

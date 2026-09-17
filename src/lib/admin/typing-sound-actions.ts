@@ -12,6 +12,7 @@ import {
 import type { TypingSoundSettings } from "@/lib/admin/typing-sound-settings";
 import { SOUND_PACK_NAMES } from "@/lib/typing-sound-packs";
 import { SENTENCE_COMPLETE_SOUND_NAMES } from "@/lib/sentence-complete-sounds";
+import { LESSON_END_SOUND_NAMES } from "@/lib/lesson-end-sounds";
 import { createClient } from "@/lib/supabase/server";
 
 async function requireAdmin(): Promise<string | null> {
@@ -38,6 +39,9 @@ export async function saveTypingSoundSettings(input: TypingSoundSettings): Promi
   if (!SENTENCE_COMPLETE_SOUND_NAMES.includes(input.sentenceCompleteSound)) {
     return { error: "Not a recognized sentence completion sound." };
   }
+  if (!LESSON_END_SOUND_NAMES.includes(input.lessonEndSound)) {
+    return { error: "Not a recognized lesson end sound." };
+  }
   if (!inRange(input.volume, TYPING_SOUND_VOLUME_RANGE)) {
     return {
       error: `Volume must be between ${TYPING_SOUND_VOLUME_RANGE.min} and ${TYPING_SOUND_VOLUME_RANGE.max}.`,
@@ -57,6 +61,8 @@ export async function saveTypingSoundSettings(input: TypingSoundSettings): Promi
       volume: input.volume,
       sentence_complete_sound: input.sentenceCompleteSound,
       section_sentence_complete_sounds: cleanSectionSounds as unknown as Record<string, unknown>,
+      lesson_end_sound_enabled: input.lessonEndSoundEnabled,
+      lesson_end_sound: input.lessonEndSound,
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1);

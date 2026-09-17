@@ -19,8 +19,8 @@ export default async function AdminTypingSoundPage() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Typing sound</h1>
         <p className="text-muted-foreground mt-1">
-          The feedback sound every learner hears on each correct keystroke, mistake, and sentence
-          completion.
+          The feedback sound every learner hears on each correct keystroke, mistake, sentence
+          completion, and — on desktop/laptop only — whole-lesson completion.
         </p>
       </div>
       <TypingSoundSettingsForm initial={settings} />

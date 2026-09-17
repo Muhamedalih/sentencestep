@@ -140,11 +140,13 @@ export function LessonSession({
   } = useProgress();
   const mistakes = useMistakes();
   const typingSoundSettings = useTypingSoundSettings();
-  const { play, playSentenceComplete } = useTypingSound({
+  const { play, playSentenceComplete, playLessonComplete } = useTypingSound({
     pack: typingSoundSettings.soundPack,
     enabled: typingSoundSettings.enabled,
     volume: typingSoundSettings.volume,
     sentenceCompleteSound: typingSoundSettings.sentenceCompleteSound,
+    lessonEndSoundEnabled: typingSoundSettings.lessonEndSoundEnabled,
+    lessonEndSound: typingSoundSettings.lessonEndSound,
   });
   const correctCountRef = useRef(0);
   const errorCountRef = useRef(0);
@@ -346,6 +348,10 @@ export function LessonSession({
         clearLessonResume(unit.mode, unit.id);
       }
       setIsComplete(true);
+      // Desktop/laptop only, by design — not a mobile-parity gap to fix,
+      // this whole-lesson sound is deliberately scoped to non-mobile
+      // viewports (see useIsMobileViewport above).
+      if (!isMobileViewport) playLessonComplete();
     }
   }
 

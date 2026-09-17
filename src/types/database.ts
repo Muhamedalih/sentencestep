@@ -522,6 +522,9 @@ export interface Database {
           sentence_complete_sound: string;
           /** Only the LearningSection keys an admin has overridden (see src/lib/admin/typing-sound-settings.ts) — a missing key means "use sentence_complete_sound above." */
           section_sentence_complete_sounds: Record<string, unknown>;
+          /** Independent of `enabled` above — gates the whole-lesson-completion sound (see src/lib/lesson-end-sounds.ts), which is itself desktop-only by design regardless of this flag. */
+          lesson_end_sound_enabled: boolean;
+          lesson_end_sound: string;
           updated_at: string;
         };
         Insert: {
@@ -531,6 +534,8 @@ export interface Database {
           volume?: number;
           sentence_complete_sound?: string;
           section_sentence_complete_sounds?: Record<string, unknown>;
+          lesson_end_sound_enabled?: boolean;
+          lesson_end_sound?: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["typing_sound_settings"]["Insert"]>;

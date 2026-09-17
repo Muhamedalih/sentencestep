@@ -18,6 +18,8 @@ import {
   SENTENCE_COMPLETE_SOUND_NAMES,
 } from "@/lib/sentence-complete-sounds";
 import type { SentenceCompleteSound } from "@/lib/sentence-complete-sounds";
+import { LESSON_END_SOUND_LABELS, LESSON_END_SOUND_NAMES } from "@/lib/lesson-end-sounds";
+import type { LessonEndSound } from "@/lib/lesson-end-sounds";
 import { cn } from "@/lib/utils";
 
 /** The literal option value meaning "no override — inherit the plain global default" in each section's <select>, distinct from any real SentenceCompleteSound name. */
@@ -33,6 +35,8 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
   const [sectionSounds, setSectionSounds] = useState<
     Partial<Record<LearningSection, SentenceCompleteSound>>
   >(initial.sectionSentenceCompleteSounds);
+  const [lessonEndSoundEnabled, setLessonEndSoundEnabled] = useState(initial.lessonEndSoundEnabled);
+  const [lessonEndSound, setLessonEndSound] = useState<LessonEndSound>(initial.lessonEndSound);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
@@ -51,6 +55,8 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
         volume,
         sentenceCompleteSound,
         sectionSentenceCompleteSounds: sectionSounds,
+        lessonEndSoundEnabled,
+        lessonEndSound,
       });
       if (result.error) {
         setMessage({ kind: "error", text: result.error });
@@ -234,6 +240,75 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
               </div>
             );
           })}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Lesson end sound</CardTitle>
+          <CardDescription>
+            Plays once when a learner finishes a whole lesson — independent of the keystroke and
+            sentence sounds above. Desktop/laptop only; mobile learners never hear this.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Button
+            type="button"
+            variant={lessonEndSoundEnabled ? "default" : "outline"}
+            size="sm"
+            className="w-fit"
+            onClick={() => setLessonEndSoundEnabled((value) => !value)}
+          >
+            {lessonEndSoundEnabled ? "Enabled" : "Disabled"}
+          </Button>
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {LESSON_END_SOUND_NAMES.map((sound) => {
+              const isSelected = lessonEndSound === sound;
+              return (
+                <div
+                  key={sound}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setLessonEndSound(sound)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    setLessonEndSound(sound);
+                  }}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+                    isSelected ? "bg-primary/10" : "hover:bg-muted",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "flex size-5 shrink-0 items-center justify-center rounded-full border",
+                      isSelected ? "border-primary bg-primary" : "border-border",
+                    )}
+                    aria-hidden="true"
+                  >
+                    {isSelected && <Check className="text-primary-foreground size-3.5" />}
+                  </div>
+                  <span className="flex-1 text-sm font-medium">
+                    {LESSON_END_SOUND_LABELS[sound]}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Preview ${LESSON_END_SOUND_LABELS[sound]}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      preview.playLessonComplete(sound);
+                    }}
+                    className="shrink-0"
+                  >
+                    <Play className="size-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 

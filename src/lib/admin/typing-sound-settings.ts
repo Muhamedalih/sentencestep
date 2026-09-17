@@ -5,6 +5,8 @@ import {
   SENTENCE_COMPLETE_SOUND_NAMES,
 } from "@/lib/sentence-complete-sounds";
 import type { SentenceCompleteSound } from "@/lib/sentence-complete-sounds";
+import { DEFAULT_LESSON_END_SOUND } from "@/lib/lesson-end-sounds";
+import type { LessonEndSound } from "@/lib/lesson-end-sounds";
 import { LEARNING_SECTION_NAMES } from "@/lib/admin/learning-sections";
 import type { LearningSection } from "@/lib/admin/learning-sections";
 
@@ -37,6 +39,17 @@ export interface TypingSoundSettings {
    * them into something else.
    */
   sectionSentenceCompleteSounds: Partial<Record<LearningSection, SentenceCompleteSound>>;
+  /**
+   * Whether a sound plays once when a whole lesson (not just one sentence)
+   * finishes — see src/lib/lesson-end-sounds.ts. Independent of `enabled`
+   * above, so an admin can run this without keystroke sounds or vice versa.
+   * Playback itself is desktop-only by design (see the isMobileViewport
+   * gate at the LessonSession call site) — there's no separate field for
+   * that here, since it's a fixed product decision, not an admin toggle.
+   */
+  lessonEndSoundEnabled: boolean;
+  /** Which sound plays on whole-lesson completion — see lessonEndSoundEnabled. */
+  lessonEndSound: LessonEndSound;
 }
 
 export const DEFAULT_TYPING_SOUND_SETTINGS: TypingSoundSettings = {
@@ -49,6 +62,8 @@ export const DEFAULT_TYPING_SOUND_SETTINGS: TypingSoundSettings = {
     stories: "whoosh",
     wordLists: "pop",
   },
+  lessonEndSoundEnabled: true,
+  lessonEndSound: DEFAULT_LESSON_END_SOUND,
 };
 
 export const TYPING_SOUND_VOLUME_RANGE = { min: 0, max: 1 };

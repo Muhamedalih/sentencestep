@@ -9,6 +9,8 @@ import {
   SENTENCE_COMPLETE_SOUNDS,
 } from "@/lib/sentence-complete-sounds";
 import type { SentenceCompleteSound } from "@/lib/sentence-complete-sounds";
+import { DEFAULT_LESSON_END_SOUND, LESSON_END_SOUNDS } from "@/lib/lesson-end-sounds";
+import type { LessonEndSound } from "@/lib/lesson-end-sounds";
 
 export type { SoundPack, SoundVariant } from "@/lib/typing-sound-packs";
 export { DEFAULT_SOUND_PACK, SOUND_PACK_LABELS, SOUND_PACK_NAMES } from "@/lib/typing-sound-packs";
@@ -18,6 +20,12 @@ export {
   SENTENCE_COMPLETE_SOUND_LABELS,
   SENTENCE_COMPLETE_SOUND_NAMES,
 } from "@/lib/sentence-complete-sounds";
+export type { LessonEndSound } from "@/lib/lesson-end-sounds";
+export {
+  DEFAULT_LESSON_END_SOUND,
+  LESSON_END_SOUND_LABELS,
+  LESSON_END_SOUND_NAMES,
+} from "@/lib/lesson-end-sounds";
 
 interface UseTypingSoundOptions {
   pack?: SoundPack;
@@ -26,6 +34,10 @@ interface UseTypingSoundOptions {
   volume?: number;
   /** Which sound plays via playSentenceComplete() — independent of `pack` (see src/lib/sentence-complete-sounds.ts). */
   sentenceCompleteSound?: SentenceCompleteSound;
+  /** Gates playLessonComplete() independently of `enabled` above (see src/lib/admin/typing-sound-settings.ts). */
+  lessonEndSoundEnabled?: boolean;
+  /** Which sound plays via playLessonComplete() — independent of `pack`/`sentenceCompleteSound` (see src/lib/lesson-end-sounds.ts). */
+  lessonEndSound?: LessonEndSound;
 }
 
 /**
@@ -54,6 +66,8 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
     enabled = true,
     volume = 1,
     sentenceCompleteSound = DEFAULT_SENTENCE_COMPLETE_SOUND,
+    lessonEndSoundEnabled = true,
+    lessonEndSound = DEFAULT_LESSON_END_SOUND,
   } = options;
   const contextRef = useRef<AudioContext | undefined>(undefined);
 
@@ -185,5 +199,69 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
     [getContext, sentenceCompleteSound, enabled, volume],
   );
 
-  return { play, playSentenceComplete };
+  /**
+   * Plays the admin-selected lesson-end sound once, when a whole lesson (not
+   * just one sentence) finishes — see LessonSession's isComplete transition,
+   * which is the only call site and already guards against firing more than
+   * once per lesson (the branch only runs once, on the final sentence).
+   * Shares the same step-sequence player as playSentenceComplete (tone and
+   * noise steps alike — see CompleteSoundStep) since LESSON_END_SOUNDS uses
+   * the identical shape, just longer/more celebratory sequences.
+   */
+  const playLessonComplete = useCallback(
+    (overrideSound?: LessonEndSound) => {
+      const gainScale = Math.min(1, Math.max(0, volume)) * GAIN_BOOST;
+      if (!lessonEndSoundEnabled || gainScale <= 0) return;
+
+      try {
+        const ctx = getContext();
+        const now = ctx.currentTime;
+        const steps = LESSON_END_SOUNDS[overrideSound ?? lessonEndSound];
+
+        for (const step of steps) {
+          const start = now + step.startOffset;
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(step.peakGain * gainScale, start + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + step.duration);
+          gain.connect(ctx.destination);
+
+          if (step.kind === "tone") {
+            const oscillator = ctx.createOscillator();
+            oscillator.type = step.type;
+            oscillator.frequency.setValueAtTime(step.frequency, start);
+            oscillator.connect(gain);
+            oscillator.start(start);
+            oscillator.stop(start + step.duration + 0.05);
+          } else {
+            const bufferSize = Math.ceil(ctx.sampleRate * step.duration);
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+              data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = "bandpass";
+            filter.Q.setValueAtTime(step.filterQ, start);
+            filter.frequency.setValueAtTime(step.filterFrom, start);
+            filter.frequency.exponentialRampToValueAtTime(step.filterTo, start + step.duration);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            noise.start(start);
+            noise.stop(start + step.duration + 0.05);
+          }
+        }
+      } catch {
+        // Same rationale as play(): a missed sound cue isn't worth surfacing.
+      }
+    },
+    [getContext, lessonEndSound, lessonEndSoundEnabled, volume],
+  );
+
+  return { play, playSentenceComplete, playLessonComplete };
 }
