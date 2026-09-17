@@ -55,6 +55,8 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
       ).replace("{n}", String(reward.count));
     case "dailyGoalReached":
       return t.lesson.rewardDailyGoalReached;
+    case "streakGraceDay":
+      return t.lesson.streakGraceNote;
   }
 }
 
@@ -196,6 +198,14 @@ export function LessonCompletion({
     { id: "home" as const, icon: Home, label: t.mistakes.learningHome, href: "/learn" },
   ];
   const [primaryAction, ...secondaryActions] = actions;
+
+  // The grace-day note is intentionally split out of `rewards` before it
+  // ever reaches formatReward's accent-colored join below — it isn't a
+  // reward to celebrate, just a quiet, plain-text fact about the streak
+  // number just above it (see streakGraceNote's doc comment in the
+  // dictionary types).
+  const graceReward = rewards.find((reward) => reward.type === "streakGraceDay");
+  const celebratedRewards = rewards.filter((reward) => reward.type !== "streakGraceDay");
 
   // Secondary stat cells beneath the hero number — accuracy itself is the
   // hero, so it's never repeated here. Built as a filtered list (not fixed
@@ -378,6 +388,16 @@ export function LessonCompletion({
           </motion.div>
         )}
 
+        {graceReward && (
+          <motion.p
+            variants={fadeInUp}
+            style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+            className="text-center"
+          >
+            {formatReward(graceReward, t)}
+          </motion.p>
+        )}
+
         {/* ---------------------------------------------------------------
             PROGRESS — XP toward the next level. No card, no gradient.
             --------------------------------------------------------------- */}
@@ -394,13 +414,13 @@ export function LessonCompletion({
           />
         </motion.div>
 
-        {rewards.length > 0 && (
+        {celebratedRewards.length > 0 && (
           <motion.p
             variants={fadeInUp}
             style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
             className="text-center font-medium"
           >
-            {rewards.map((reward) => formatReward(reward, t)).join(" · ")}
+            {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
           </motion.p>
         )}
 

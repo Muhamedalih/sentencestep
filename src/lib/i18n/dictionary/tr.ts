@@ -345,6 +345,7 @@ export const tr: Dictionary = {
     rewardLessonCompleteSingular: "{n} ders tamamlandı",
     rewardLessonCompletePlural: "{n} ders tamamlandı",
     rewardDailyGoalReached: "Günlük hedefe ulaşıldı",
+    streakGraceNote: "Bir günü kaçırdın, serin devam ediyor.",
   },
   mistakes: {
     itemsLeft: "{n} kaldı",

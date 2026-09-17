@@ -330,6 +330,7 @@ export const ar: Dictionary = {
     rewardLessonCompleteSingular: "{n} درس مكتمل",
     rewardLessonCompletePlural: "{n} دروس مكتملة",
     rewardDailyGoalReached: "تم تحقيق الهدف اليومي",
+    streakGraceNote: "فاتك يوم واحد، وتتابعك مستمر.",
   },
   mistakes: {
     itemsLeft: "{n} متبقية",

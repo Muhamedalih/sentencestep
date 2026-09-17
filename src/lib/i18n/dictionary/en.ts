@@ -340,6 +340,7 @@ export const en: Dictionary = {
     rewardLessonCompleteSingular: "{n} lesson complete",
     rewardLessonCompletePlural: "{n} lessons complete",
     rewardDailyGoalReached: "Daily goal reached",
+    streakGraceNote: "You missed a day — your streak continues.",
   },
   mistakes: {
     itemsLeft: "{n} left",

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { todayLocalISODate, updateStreak } from "./streak";
+import { isGraceDay, todayLocalISODate, updateStreak } from "./streak";
 import { emptyStreak } from "./types";
 
 test("updateStreak: first-ever activity starts the streak at 1", () => {
@@ -44,6 +44,34 @@ test("updateStreak: a gap of more than one day resets the streak to 1, not 0", (
     longestStreak: 5,
     lastActiveDate: "2026-08-13",
   });
+});
+
+test("updateStreak: a single missed day is a quiet grace — the streak extends instead of resetting", () => {
+  const state = { currentStreak: 5, longestStreak: 5, lastActiveDate: "2026-08-10" };
+  const result = updateStreak(state, "2026-08-12");
+  assert.deepEqual(result, {
+    currentStreak: 6,
+    longestStreak: 6,
+    lastActiveDate: "2026-08-12",
+  });
+});
+
+test("updateStreak: two consecutive grace days in a row both extend the streak", () => {
+  const afterFirstGap = updateStreak(
+    { currentStreak: 5, longestStreak: 5, lastActiveDate: "2026-08-10" },
+    "2026-08-12",
+  );
+  const afterSecondGap = updateStreak(afterFirstGap, "2026-08-14");
+  assert.equal(afterFirstGap.currentStreak, 6);
+  assert.equal(afterSecondGap.currentStreak, 7);
+});
+
+test("isGraceDay: true only when exactly one calendar day was missed", () => {
+  assert.equal(isGraceDay("2026-08-10", "2026-08-12"), true);
+  assert.equal(isGraceDay("2026-08-10", "2026-08-11"), false); // consecutive, not a gap
+  assert.equal(isGraceDay("2026-08-10", "2026-08-10"), false); // same day
+  assert.equal(isGraceDay("2026-08-10", "2026-08-13"), false); // two days missed
+  assert.equal(isGraceDay(null, "2026-08-12"), false);
 });
 
 test("updateStreak: longestStreak never decreases, even after a reset", () => {

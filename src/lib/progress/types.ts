@@ -13,7 +13,9 @@ export type RewardEvent =
   | { type: "levelUp"; levelName: string }
   | { type: "streakMilestone"; days: number }
   | { type: "lessonCountMilestone"; count: number }
-  | { type: "dailyGoalReached" };
+  | { type: "dailyGoalReached" }
+  /** The streak survived a single missed day (see isGraceDay in streak.ts) — shown once, quietly, never as a celebratory reward. */
+  | { type: "streakGraceDay" };
 
 export interface LessonCompletion {
   lessonId: string;

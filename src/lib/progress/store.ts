@@ -1,7 +1,7 @@
 import { isDailyGoalMet, updateDailyProgress } from "@/lib/progress/daily-goal";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { getLessonCountMilestone, getStreakMilestone } from "@/lib/email/milestones";
-import { todayLocalISODate, updateStreak } from "@/lib/progress/streak";
+import { isGraceDay, todayLocalISODate, updateStreak } from "@/lib/progress/streak";
 import { calculateLessonXp } from "@/lib/progress/xp";
 import { emptyDailyProgress, emptyProgressState } from "@/lib/progress/types";
 import type { LessonCompletion, ProgressState, RewardEvent } from "@/lib/progress/types";
@@ -89,6 +89,7 @@ export function recordCompletion(
   const streakJustMilestoned =
     nextStreak.currentStreak !== state.streak.currentStreak &&
     getStreakMilestone(nextStreak.currentStreak) !== null;
+  const streakGraceDayUsed = isGraceDay(state.streak.lastActiveDate, todayISO);
 
   const dailyGoalMetBefore = isDailyGoalMet(state.dailyProgress);
   const nextDailyProgress = updateDailyProgress(state.dailyProgress, todayISO, sentenceCount);
@@ -115,6 +116,7 @@ export function recordCompletion(
   if (lessonCountJustMilestoned)
     rewards.push({ type: "lessonCountMilestone", count: lessonCountAfter });
   if (dailyGoalJustMet) rewards.push({ type: "dailyGoalReached" });
+  if (streakGraceDayUsed) rewards.push({ type: "streakGraceDay" });
 
   const next: ProgressState = {
     completions,

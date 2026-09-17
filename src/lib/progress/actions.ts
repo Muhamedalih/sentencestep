@@ -26,7 +26,7 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { isAdmin } from "@/lib/admin/access";
 import { isDailyGoalMet } from "@/lib/progress/daily-goal";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
-import { updateStreak } from "@/lib/progress/streak";
+import { isGraceDay, updateStreak } from "@/lib/progress/streak";
 import { calculateLessonXp } from "@/lib/progress/xp";
 import {
   computeMigrationDailyProgress,
@@ -178,6 +178,7 @@ export async function recordCompletionAction(
   const streakJustMilestoned =
     nextStreak.currentStreak !== beforeStreak.currentStreak &&
     getStreakMilestone(nextStreak.currentStreak) !== null;
+  const streakGraceDayUsed = isGraceDay(beforeStreak.lastActiveDate, todayISO);
 
   // Daily progress is incremented first, atomically, because dailyGoalMet
   // feeds into calculateLessonXp below — xpEarned can't be computed (and
@@ -212,6 +213,7 @@ export async function recordCompletionAction(
   if (lessonCountJustMilestoned)
     rewards.push({ type: "lessonCountMilestone", count: lessonCountAfter });
   if (dailyGoalJustMet) rewards.push({ type: "dailyGoalReached" });
+  if (streakGraceDayUsed) rewards.push({ type: "streakGraceDay" });
 
   await Promise.all([
     upsertStreak(userId, {

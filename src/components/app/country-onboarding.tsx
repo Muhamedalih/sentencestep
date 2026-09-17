@@ -87,21 +87,34 @@ export function CountryOnboarding() {
     () => new Intl.DisplayNames([locale ?? "en"], { type: "region" }),
     [locale],
   );
+  // Search always also matches each country's English name, regardless of
+  // the active locale — a learner typing "Iraq" while the UI is in Arabic
+  // (very common: country names are often typed in English out of habit,
+  // or because the learner doesn't know the local-language spelling) would
+  // otherwise hit an empty list, since `name` below is locale-resolved and
+  // "Iraq".includes(needle) never matches "العراق". Only used for matching;
+  // the label shown in the list stays `name`, in the active locale.
+  const englishRegionNames = useMemo(() => new Intl.DisplayNames(["en"], { type: "region" }), []);
   const collator = useMemo(() => new Intl.Collator(locale ?? "en"), [locale]);
 
   const countries = useMemo(() => {
     const list = COUNTRY_CODES.map((code) => ({
       code,
       name: regionNames.of(code.toUpperCase()) ?? code.toUpperCase(),
+      englishName: englishRegionNames.of(code.toUpperCase()) ?? code.toUpperCase(),
     }));
     list.sort((a, b) => collator.compare(a.name, b.name));
     return list;
-  }, [regionNames, collator]);
+  }, [regionNames, englishRegionNames, collator]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return countries;
-    return countries.filter((country) => country.name.toLowerCase().includes(needle));
+    return countries.filter(
+      (country) =>
+        country.name.toLowerCase().includes(needle) ||
+        country.englishName.toLowerCase().includes(needle),
+    );
   }, [countries, query]);
 
   if (forceLevelStep) return null; // back button below sent them to the level step instead

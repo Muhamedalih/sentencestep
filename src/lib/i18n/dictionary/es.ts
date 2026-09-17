@@ -352,6 +352,7 @@ export const es: Dictionary = {
     rewardLessonCompleteSingular: "{n} lección completada",
     rewardLessonCompletePlural: "{n} lecciones completadas",
     rewardDailyGoalReached: "Meta diaria alcanzada",
+    streakGraceNote: "Te perdiste un día, pero tu racha continúa.",
   },
   mistakes: {
     itemsLeft: "{n} restantes",

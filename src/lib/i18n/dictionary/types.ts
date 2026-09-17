@@ -377,6 +377,8 @@ export interface Dictionary {
     rewardLessonCompleteSingular: string;
     rewardLessonCompletePlural: string;
     rewardDailyGoalReached: string;
+    /** Quiet, non-celebratory note shown once when a single missed day didn't break the streak (see isGraceDay in src/lib/progress/streak.ts) — deliberately plain text, never styled like the rewardStreak* strings above. */
+    streakGraceNote: string;
   };
   mistakes: {
     itemsLeft: string;
