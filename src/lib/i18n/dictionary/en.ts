@@ -376,6 +376,7 @@ export const en: Dictionary = {
     signInHeading: "Sign in to manage settings",
     signInSubtitle: "Email preferences are tied to your account.",
     heading: "Settings",
+    backToHome: "Home",
     tabProfile: "Profile",
     tabSecurity: "Security",
     tabPreferences: "Preferences",

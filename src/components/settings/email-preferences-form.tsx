@@ -26,7 +26,7 @@ export function EmailPreferencesForm({ preferences }: { preferences: EmailPrefer
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{t.settings.emailPrefsHeading}</CardTitle>
+        <CardTitle className="text-lg">{t.settings.emailPrefsHeading}</CardTitle>
         <CardDescription>{t.settings.emailPrefsSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>

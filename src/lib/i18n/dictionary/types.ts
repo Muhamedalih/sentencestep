@@ -418,6 +418,8 @@ export interface Dictionary {
     signInHeading: string;
     signInSubtitle: string;
     heading: string;
+    /** Label for the top-right link back to the dashboard, shown only on the settings page's focused desktop screen (no header/sidebar there — see DashboardChrome). */
+    backToHome: string;
     /** Tab labels for the settings page's section rail. */
     tabProfile: string;
     tabSecurity: string;

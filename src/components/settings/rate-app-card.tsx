@@ -25,7 +25,7 @@ export function RateAppCard() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{t.settings.rateAppHeading}</CardTitle>
+          <CardTitle className="text-lg">{t.settings.rateAppHeading}</CardTitle>
           <CardDescription>{t.settings.rateAppSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>

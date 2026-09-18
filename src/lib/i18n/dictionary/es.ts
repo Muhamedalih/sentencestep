@@ -389,6 +389,7 @@ export const es: Dictionary = {
     signInHeading: "Inicia sesión para administrar la configuración",
     signInSubtitle: "Las preferencias de correo electrónico están vinculadas a tu cuenta.",
     heading: "Configuración",
+    backToHome: "Inicio",
     tabProfile: "Perfil",
     tabSecurity: "Seguridad",
     tabPreferences: "Preferencias",

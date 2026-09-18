@@ -21,7 +21,7 @@ export function StartingLevelForm({ startingLevel }: { startingLevel: number | n
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{t.settings.startingLevelHeading}</CardTitle>
+        <CardTitle className="text-lg">{t.settings.startingLevelHeading}</CardTitle>
         <CardDescription>{t.settings.startingLevelSubtitle}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

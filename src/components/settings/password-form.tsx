@@ -25,7 +25,7 @@ export function PasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{t.settings.passwordHeading}</CardTitle>
+        <CardTitle className="text-lg">{t.settings.passwordHeading}</CardTitle>
         <CardDescription>{t.settings.passwordSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>

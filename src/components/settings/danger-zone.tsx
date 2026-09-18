@@ -66,7 +66,7 @@ export function DangerZone({ canDeleteAccount }: { canDeleteAccount: boolean }) 
   return (
     <Card className="border-danger/30">
       <CardHeader>
-        <CardTitle className="text-danger text-xl">{t.settings.dangerZoneHeading}</CardTitle>
+        <CardTitle className="text-danger text-lg">{t.settings.dangerZoneHeading}</CardTitle>
         <CardDescription>{t.settings.dangerZoneSubtitle}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">

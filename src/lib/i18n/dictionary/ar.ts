@@ -366,6 +366,7 @@ export const ar: Dictionary = {
     signInHeading: "سجّل الدخول لإدارة الإعدادات",
     signInSubtitle: "تفضيلات البريد الإلكتروني مرتبطة بحسابك.",
     heading: "الإعدادات",
+    backToHome: "الرئيسية",
     tabProfile: "الملف الشخصي",
     tabSecurity: "الأمان",
     tabPreferences: "التفضيلات",

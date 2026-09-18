@@ -18,7 +18,7 @@ export function DailyGoalForm({ dailyGoal }: { dailyGoal: number }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{t.settings.dailyGoalHeading}</CardTitle>
+        <CardTitle className="text-lg">{t.settings.dailyGoalHeading}</CardTitle>
         <CardDescription>{t.settings.dailyGoalSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>

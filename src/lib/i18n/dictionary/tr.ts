@@ -381,6 +381,7 @@ export const tr: Dictionary = {
     signInHeading: "Ayarları yönetmek için giriş yapın",
     signInSubtitle: "E-posta tercihleri hesabınıza bağlıdır.",
     heading: "Ayarlar",
+    backToHome: "Ana Sayfa",
     tabProfile: "Profil",
     tabSecurity: "Güvenlik",
     tabPreferences: "Tercihler",

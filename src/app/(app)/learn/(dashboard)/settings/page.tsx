@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, KeyRound, SlidersHorizontal, UserRound } from "lucide-react";
+import { AlertTriangle, Home, KeyRound, SlidersHorizontal, UserRound } from "lucide-react";
 
 import { AccountSection } from "@/components/settings/account-section";
 import { DailyGoalForm } from "@/components/settings/daily-goal-form";
@@ -84,9 +84,20 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="max-w-4xl px-6 py-16 sm:py-24 md:max-w-6xl md:px-10 md:pt-8 md:pb-16">
+    <div className="relative w-full px-6 py-16 sm:py-24 md:px-10 md:pt-6 md:pb-16">
+      {/* Only shown at md:+, where DashboardChrome hides the header/sidebar
+          for this one route (a focused desktop screen) — below md: the
+          header's own logo already links home, so this would be redundant. */}
+      <Link
+        href="/learn"
+        className="border-border/60 bg-card/80 text-foreground hover:border-primary/40 absolute top-6 right-6 hidden items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 md:inline-flex"
+      >
+        <Home className="size-4" aria-hidden="true" />
+        {t.settings.backToHome}
+      </Link>
+
       <div className="mb-10 md:mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+        <h1 className="text-[1.6875rem] font-semibold tracking-tight sm:text-[2.025rem] md:text-[2.7rem]">
           {t.settings.heading}
         </h1>
       </div>

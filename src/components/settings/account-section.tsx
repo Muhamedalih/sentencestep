@@ -91,7 +91,7 @@ export function AccountSection({
   return (
     <Card className="md:py-8">
       <CardHeader className="md:px-8">
-        <CardTitle className="text-xl md:text-2xl">{t.settings.profileHeading}</CardTitle>
+        <CardTitle className="text-lg md:text-[1.35rem]">{t.settings.profileHeading}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5 md:gap-6 md:px-8">
         <div className="flex items-center gap-3.5 md:gap-4">

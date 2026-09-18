@@ -100,7 +100,7 @@ export function TwoFactorSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
+        <CardTitle className="flex items-center gap-2 text-lg">
           {t.twoFactor.heading}
           {phase === "on" && <Badge variant="success">{t.twoFactor.enabledBadge}</Badge>}
         </CardTitle>
