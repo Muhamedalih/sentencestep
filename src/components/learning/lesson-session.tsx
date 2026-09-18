@@ -530,7 +530,10 @@ export function LessonSession({
               }
             >
               {unit.mode === "stories" ? (
-                <StoryPreviousSentences sentences={previousSentences} />
+                <StoryPreviousSentences
+                  sentences={previousSentences}
+                  resolvedVoiceId={resolvedVoiceId}
+                />
               ) : (
                 <div
                   className={cn(
@@ -545,7 +548,10 @@ export function LessonSession({
                   )}
                 >
                   {illustrationView === "list" ? (
-                    <StoryPreviousSentences sentences={previousSentences} />
+                    <StoryPreviousSentences
+                      sentences={previousSentences}
+                      resolvedVoiceId={resolvedVoiceId}
+                    />
                   ) : (
                     <LessonIllustration
                       mode={unit.mode}

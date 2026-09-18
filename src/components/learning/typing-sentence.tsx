@@ -499,7 +499,18 @@ export function TypingSentence({
             separate from the header on purpose: LessonSession's own column
             now top-aligns this whole component (see its own doc comment) so
             the header sits right under the progress bar, and this wrapper is
-            what still centers the rest exactly as it always looked. */}
+            what still centers the rest exactly as it always looked.
+            Deliberately does NOT include the shared `spacer` (lg:flex-1) the
+            "normal" branch below uses: that spacer only ever did anything
+            once this wrapper actually had leftover height to give it (which
+            it didn't until the header was pulled out above), and once it
+            does, a flex-grow child inside a `justify-center` parent consumes
+            ALL of that leftover space for itself, leaving nothing for
+            justify-center to distribute — collapsing word label + sentence
+            to the very top and shoving translation + stats to the very
+            bottom instead of centering the group. Omitting it here is what
+            keeps this group reading as one centered block, same as before
+            the header was split out. */}
         <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
           <div className="mb-1">
             <CurrentWordLabel word={currentWord} dir={dir} />
@@ -520,7 +531,6 @@ export function TypingSentence({
             "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
             true,
           )}
-          {spacer}
           <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
             {supportText}
           </p>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useSpeech } from "@/hooks/use-speech";
 import { transitions } from "@/lib/motion";
@@ -20,15 +21,14 @@ export interface CompletedStorySentence {
   /** Locale-resolved translation (see Sentence.supportText), shown beneath the English line. */
   translation: string;
   /**
-   * This sentence's own already-generated narration clip (Sentence.audioUrl
-   * — the exact same URL PronunciationButton autoplayed when this was the
-   * active sentence), captured at the moment it completed. Replaying THIS
-   * on click is what makes a past entry sound like the same narrator as the
-   * rest of the lesson (ElevenLabs/Cartesia, whichever this content uses)
-   * instead of the browser's own speech synthesis — see this component's
-   * own click handler. Undefined only if the sentence itself never got a
-   * generated clip (falls back to speakSentence, exactly as before this
-   * field existed) — never fetched or regenerated here, just reused.
+   * A static, pre-recorded clip for this sentence (Sentence.audioUrl), when
+   * one exists — the rare, highest-priority case (matches
+   * PronunciationButton's own priority order). In this app almost every
+   * sentence's real narration instead comes from the on-demand
+   * Kokoro/ElevenLabs resolution this component's own click handler now
+   * also uses (see `replay`'s own doc comment) — this field is kept purely
+   * for parity with that same priority order, never fetched or regenerated
+   * here.
    */
   audioUrl?: string;
 }
@@ -74,28 +74,63 @@ export interface CompletedStorySentence {
  */
 export function StoryPreviousSentences({
   sentences,
+  resolvedVoiceId,
   className,
 }: {
   sentences: CompletedStorySentence[];
+  /**
+   * This lesson's resolved narration voice (LessonSession's own
+   * `resolvedVoiceId` — the exact same value TypingSentence/
+   * PronunciationButton use for every sentence's OWN narration). Required
+   * for `replay` to reach the real narrator: without it, every past
+   * sentence falls back straight to the browser's speech synthesis, since
+   * there's no voice to resolve Kokoro/ElevenLabs audio against. Undefined
+   * for a lesson with no resolved voice at all — same fallback, unchanged
+   * from before this prop existed.
+   */
+  resolvedVoiceId?: string | null;
   className?: string;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   const { dir, t } = useLocale();
   const { speakSentence } = useSpeech();
-  // Plays a past entry's own already-generated narration clip (see
-  // CompletedStorySentence.audioUrl's own doc comment) — a plain,
-  // zero-fetch replay of a URL the browser most likely already cached from
-  // this same clip's autoplay a moment ago, so it's never slower than the
-  // browser-voice fallback it replaces. Falls back to the Web Speech API
-  // (speakSentence) only when a sentence genuinely has no generated clip;
-  // this never generates or touches audio itself.
+  const { resolveAudio } = usePronunciationSettings();
+  // Plays a past entry's own narration — a plain, no-frills replay, never a
+  // second synthesis: `resolveAudio` below is the SAME cache
+  // PronunciationButton already populated the moment this sentence first
+  // autoplayed, so this call is a synchronous-fast cache hit, not a fresh
+  // generation. this never triggers new audio; it only ever reuses what's
+  // already there.
   const narrationClip = useAudioClip();
   const hasSentences = sentences.length > 0;
 
-  function replay(sentence: CompletedStorySentence) {
+  /**
+   * Same priority order PronunciationButton itself uses for a sentence's
+   * narration: (1) a static, pre-recorded clip when the sentence happens to
+   * have one; (2) the lesson's resolved Kokoro/ElevenLabs voice, via the
+   * exact same `resolveAudio({ contentType: "sentence", contentId, voiceId
+   * })` call every sentence's own PronunciationButton already made — a
+   * cache hit here almost always, since this sentence autoplayed under that
+   * same voice moments ago; (3) only if neither resolves (no voice
+   * configured, or a genuine resolution failure), the browser's own speech
+   * synthesis. Never generates or overwrites any lesson's audio — this is a
+   * read-only lookup against whatever's already cached.
+   */
+  async function replay(sentence: CompletedStorySentence) {
     if (sentence.audioUrl) {
       narrationClip.play(sentence.audioUrl);
       return;
+    }
+    if (resolvedVoiceId) {
+      const url = await resolveAudio({
+        contentType: "sentence",
+        contentId: sentence.id,
+        voiceId: resolvedVoiceId,
+      });
+      if (url) {
+        narrationClip.play(url);
+        return;
+      }
     }
     speakSentence(sentence.text);
   }
@@ -171,7 +206,7 @@ export function StoryPreviousSentences({
                 >
                   <button
                     type="button"
-                    onClick={() => replay(sentence)}
+                    onClick={() => void replay(sentence)}
                     aria-label={`${t.pronunciation.replayLabel}: ${sentence.text}`}
                     className="hover:bg-foreground/5 -m-1.5 flex w-full flex-col gap-1.5 rounded-lg p-1.5 text-left transition-colors"
                   >
