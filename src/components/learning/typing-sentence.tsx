@@ -493,30 +493,39 @@ export function TypingSentence({
             className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           />
         </div>
-        <div className="mb-1">
-          <CurrentWordLabel word={currentWord} dir={dir} />
+        {/* Centers this group (word label through stats) within whatever
+            leftover height sits below the header row above — mirrors the
+            "normal" branch's identical wrapper further down this file. Kept
+            separate from the header on purpose: LessonSession's own column
+            now top-aligns this whole component (see its own doc comment) so
+            the header sits right under the progress bar, and this wrapper is
+            what still centers the rest exactly as it always looked. */}
+        <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
+          <div className="mb-1">
+            <CurrentWordLabel word={currentWord} dir={dir} />
+          </div>
+          {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
+              renderText call): sized specifically for the narrow fixed-width
+              Stories left column (see LessonSession's "content" grid) rather
+              than as a share of the row's remaining width, so it no longer
+              needs to shrink/grow with that column. Below lg:, where Stories'
+              left column collapses to a plain stacked spacer, the original
+              clamp() keeps governing size exactly as it always has.
+              font-serif here (not on the translation line below, which is
+              Arabic/Spanish/Turkish support text a Latin-serif stack doesn't
+              actually cover) is deliberately scoped to only this mode's own
+              English sentence text — the one place a "storybook" feel reads as
+              intentional rather than just a random font swap. */}
+          {renderText(
+            "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
+            true,
+          )}
+          {spacer}
+          <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
+            {supportText}
+          </p>
+          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
         </div>
-        {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
-            renderText call): sized specifically for the narrow fixed-width
-            Stories left column (see LessonSession's "content" grid) rather
-            than as a share of the row's remaining width, so it no longer
-            needs to shrink/grow with that column. Below lg:, where Stories'
-            left column collapses to a plain stacked spacer, the original
-            clamp() keeps governing size exactly as it always has.
-            font-serif here (not on the translation line below, which is
-            Arabic/Spanish/Turkish support text a Latin-serif stack doesn't
-            actually cover) is deliberately scoped to only this mode's own
-            English sentence text — the one place a "storybook" feel reads as
-            intentional rather than just a random font swap. */}
-        {renderText(
-          "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
-          true,
-        )}
-        {spacer}
-        <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
-          {supportText}
-        </p>
-        <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
       </motion.div>
     );
   }

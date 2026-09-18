@@ -190,23 +190,15 @@ test("levels used: all content stays within the already-named levels 1-3", () =>
 // sentence. Not required for conversation mode, which doesn't have the card.
 //
 // The 9 stories added by the story-diversification pass (story-25 through
-// story-33) are a deliberate, temporary exception: an initial hand-authored
-// pass at their word-by-word glosses had real token-alignment mistakes, and
-// shipping that wrong would be worse than the card simply not appearing for
-// these stories yet — the same graceful-absence behavior conversation mode
-// already has in production. Remove an id from this list once its story has
-// a verified wordTranslations pass; new stories should not be added here.
-const STORIES_PENDING_WORD_TRANSLATIONS = new Set([
-  "story-25",
-  "story-26",
-  "story-27",
-  "story-28",
-  "story-29",
-  "story-30",
-  "story-31",
-  "story-32",
-  "story-33",
-]);
+// story-33) previously had a deliberate, temporary exception here: an
+// initial hand-authored pass at their word-by-word glosses had real
+// token-alignment mistakes, and shipping that wrong would have been worse
+// than the card simply not appearing for these stories, the same
+// graceful-absence behavior conversation mode already has in production.
+// All 9 now have a verified wordTranslations pass (2026-09-18), so this set
+// is empty; new stories should not be added here — author their
+// wordTranslations up front instead.
+const STORIES_PENDING_WORD_TRANSLATIONS = new Set<string>([]);
 
 test("wordTranslations: every normal/story sentence has one entry per word, in order", () => {
   const lessons: Lesson[] = [...normalLessons, ...storyLessons];

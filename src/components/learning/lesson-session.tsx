@@ -325,6 +325,12 @@ export function LessonSession({
           // Same locale-resolution rule as TypingSentence's own supportText
           // (see its doc comment) — never falls back to `sentence.ar`.
           translation: sentence.supportText ?? sentence.en,
+          // This sentence's own already-generated narration clip (the same
+          // URL PronunciationButton just autoplayed above) — see
+          // StoryPreviousSentences' own doc comment for why replaying THIS
+          // is what makes a past entry's "read it again" sound like the
+          // same narrator as the rest of the lesson, never a separate voice.
+          audioUrl: sentence.audioUrl ?? undefined,
         },
       ]);
     }
@@ -696,7 +702,20 @@ export function LessonSession({
                 <div
                   className={
                     unit.mode === "stories"
-                      ? "flex flex-1 flex-col justify-center px-6 pb-8 lg:px-12"
+                      ? // justify-start (not justify-center, unlike every
+                        // other mode here): Stories' own header row (story
+                        // label + counter, see TypingSentence's stories
+                        // branch) used to be part of this same centered
+                        // block, which on a tall lg:+ viewport visibly
+                        // floated it far below the progress bar right above
+                        // it. That header now sits right after this div's
+                        // own top edge; TypingSentence's stories branch
+                        // recreates the centering ONLY for the word
+                        // label/sentence/translation/stats group below its
+                        // header (its own lg:flex-1 lg:justify-center
+                        // wrapper), matching the "normal" branch's identical
+                        // existing pattern for the same split.
+                        "flex flex-1 flex-col justify-start px-6 pb-8 lg:px-12"
                       : unit.mode === "normal"
                         ? "flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-center lg:px-16"
                         : "flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16"
@@ -754,6 +773,20 @@ export function LessonSession({
                           initial={{ opacity: 0, x: 28 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={transitions.snappy}
+                          // lg:flex lg:h-full lg:flex-col: without this, this
+                          // plain wrapper has no height of its own at lg:+ (a
+                          // flex child's height defaults to its content, not
+                          // its flex-column parent's), which broke the
+                          // percentage-based lg:h-full TypingSentence's own
+                          // stories-branch root relies on to fill this row —
+                          // silently collapsing that root to its own content
+                          // height and, with it, the lg:flex-1/justify-center
+                          // wrapper inside it (see that branch's own doc
+                          // comment) that re-centers the word label/sentence/
+                          // translation/stats group below the now top-pinned
+                          // header. This class chain is what makes that
+                          // height actually reach TypingSentence.
+                          className="lg:flex lg:h-full lg:flex-col"
                         >
                           {typingSentence}
                         </motion.div>

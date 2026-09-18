@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useSpeech } from "@/hooks/use-speech";
 import { transitions } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,18 @@ export interface CompletedStorySentence {
   text: string;
   /** Locale-resolved translation (see Sentence.supportText), shown beneath the English line. */
   translation: string;
+  /**
+   * This sentence's own already-generated narration clip (Sentence.audioUrl
+   * — the exact same URL PronunciationButton autoplayed when this was the
+   * active sentence), captured at the moment it completed. Replaying THIS
+   * on click is what makes a past entry sound like the same narrator as the
+   * rest of the lesson (ElevenLabs/Cartesia, whichever this content uses)
+   * instead of the browser's own speech synthesis — see this component's
+   * own click handler. Undefined only if the sentence itself never got a
+   * generated clip (falls back to speakSentence, exactly as before this
+   * field existed) — never fetched or regenerated here, just reused.
+   */
+  audioUrl?: string;
 }
 
 /**
@@ -69,7 +82,23 @@ export function StoryPreviousSentences({
   const listRef = useRef<HTMLUListElement>(null);
   const { dir, t } = useLocale();
   const { speakSentence } = useSpeech();
+  // Plays a past entry's own already-generated narration clip (see
+  // CompletedStorySentence.audioUrl's own doc comment) — a plain,
+  // zero-fetch replay of a URL the browser most likely already cached from
+  // this same clip's autoplay a moment ago, so it's never slower than the
+  // browser-voice fallback it replaces. Falls back to the Web Speech API
+  // (speakSentence) only when a sentence genuinely has no generated clip;
+  // this never generates or touches audio itself.
+  const narrationClip = useAudioClip();
   const hasSentences = sentences.length > 0;
+
+  function replay(sentence: CompletedStorySentence) {
+    if (sentence.audioUrl) {
+      narrationClip.play(sentence.audioUrl);
+      return;
+    }
+    speakSentence(sentence.text);
+  }
 
   // Keeps the newest entry in view as the list grows past the box's own
   // height — smooth, not instant, matching every other transition in this
@@ -142,7 +171,7 @@ export function StoryPreviousSentences({
                 >
                   <button
                     type="button"
-                    onClick={() => speakSentence(sentence.text)}
+                    onClick={() => replay(sentence)}
                     aria-label={`${t.pronunciation.replayLabel}: ${sentence.text}`}
                     className="hover:bg-foreground/5 -m-1.5 flex w-full flex-col gap-1.5 rounded-lg p-1.5 text-left transition-colors"
                   >
