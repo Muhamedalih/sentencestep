@@ -173,7 +173,7 @@ export function HomeHero({
         area (equal grid columns, right column split into two equal-height
         stacked cards) rather than an arbitrarily large/small ratio.
       */}
-      <div className="border-border bg-card flex flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_0_28px_6px_color-mix(in_oklch,var(--primary)_55%,transparent),0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]">
+      <div className="border-border bg-card flex flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]">
         {currentLesson && (
           <MainLessonCardBody
             lesson={currentLesson}
@@ -264,7 +264,7 @@ export function HomeHero({
 
         <Link
           href="/learn/stories"
-          className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_0_28px_6px_color-mix(in_oklch,var(--primary)_55%,transparent),0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
+          className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
         >
           <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32">
             {currentStoryLesson?.illustrationUrl ? (
