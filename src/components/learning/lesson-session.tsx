@@ -10,6 +10,7 @@ import { LessonCompletion } from "@/components/learning/lesson-completion";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Logo } from "@/components/layout/logo";
 import { OnboardingLessonComplete } from "@/components/learning/onboarding-lesson-complete";
+import { RatingPrompt } from "@/components/learning/rating-prompt";
 import {
   StoryPreviousSentences,
   type CompletedStorySentence,
@@ -137,7 +138,27 @@ export function LessonSession({
     rewards,
     saveStatus,
     retryMarkComplete,
+    completions,
   } = useProgress();
+  // The one-time "rate the app" card's own eligibility check — never the
+  // opening lesson (OnboardingLessonComplete has its own dedicated pitch
+  // screen instead), never mid fix-your-mistakes, and only once `saveStatus`
+  // has actually settled to "saved": for a signed-in learner `completions`
+  // only updates once recordCompletionAction resolves (see useProgress's own
+  // doc comment), so reading `completions.length` any earlier would race a
+  // stale value. `completions` is deduped by lessonId (one entry per
+  // distinct lesson ever completed, not per attempt), so `=== 2` fires
+  // exactly once — the first non-opening lesson completed after the opening
+  // one — and never again for a replay of that same second lesson.
+  // RatingPrompt itself still gates on its own one-time localStorage flag on
+  // top of this, so this only ever needs to be "roughly right," not perfect.
+  const eligibleForRatingPrompt =
+    !previewMode &&
+    isComplete &&
+    !isOpeningLesson &&
+    !isFixingMistakes &&
+    saveStatus === "saved" &&
+    completions.length === 2;
   const mistakes = useMistakes();
   const typingSoundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete, playLessonComplete } = useTypingSound({
@@ -497,6 +518,7 @@ export function LessonSession({
                   onRetrySave={previewMode ? undefined : retryMarkComplete}
                 />
               </div>
+              <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
             </div>
           ) : (
             // Illustration/transcript stays mounted for the whole session

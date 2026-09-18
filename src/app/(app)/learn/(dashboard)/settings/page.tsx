@@ -7,6 +7,7 @@ import { DailyGoalForm } from "@/components/settings/daily-goal-form";
 import { DangerZone } from "@/components/settings/danger-zone";
 import { EmailPreferencesForm } from "@/components/settings/email-preferences-form";
 import { PasswordForm } from "@/components/settings/password-form";
+import { RateAppCard } from "@/components/settings/rate-app-card";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { StartingLevelForm } from "@/components/settings/starting-level-form";
@@ -134,6 +135,7 @@ export default async function SettingsPage() {
                 <DailyGoalForm dailyGoal={dailyGoal} />
                 <StartingLevelForm startingLevel={startingLevel} />
                 <EmailPreferencesForm preferences={preferences} />
+                <RateAppCard />
                 <div className="sm:hidden">
                   <ReportProblemButton variant="inline" />
                 </div>

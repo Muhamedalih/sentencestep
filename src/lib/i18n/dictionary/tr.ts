@@ -180,6 +180,18 @@ export const tr: Dictionary = {
       "Kısa ve düzenli pratik, uzun ama seyrek oturumlardan daha güçlüdür — ve bunu yapabildiğini az önce kanıtladın.",
     cta: "Devam et",
   },
+  rateApp: {
+    headline: "SentenceStep deneyimin şimdiye kadar nasıldı?",
+    subtitle:
+      "Değerlendirmen tamamen isteğe bağlıdır ve SentenceStep'i geliştirmemize yardımcı olur — bu mesajı bir daha görmeyeceksin.",
+    commentPlaceholder: "Herhangi bir geri bildirim veya öneri? (isteğe bağlı)",
+    skip: "Atla",
+    submit: "Gönder",
+    thanksTitle: "Teşekkürler!",
+    thanksBody: "Değerlendirmen bize ulaştı — teşekkür ederiz.",
+    starLabelSingular: "{n} yıldız",
+    starLabelPlural: "{n} yıldız",
+  },
   auth: {
     loginHeading: "Tekrar hoş geldiniz",
     loginSubtitle: "İlerlemenizi senkronize tutmak için giriş yapın.",
@@ -412,6 +424,10 @@ export const tr: Dictionary = {
     startingLevelNotChosen: "Henüz ayarlanmadı — dersler başlangıç seviyesinden başlar.",
     startingLevelSaved: "Başlangıç seviyesi güncellendi.",
     startingLevelError: "Başlangıç seviyeniz güncellenemedi. Lütfen tekrar deneyin.",
+    rateAppHeading: "SentenceStep'i değerlendir",
+    rateAppSubtitle:
+      "Uygulamayı beğendin mi? İstediğin zaman bize puan verebilirsin — tamamen isteğe bağlı.",
+    rateAppButton: "Uygulamayı değerlendir",
     avatarHeading: "Avatar",
     avatarSubtitle: "Hesabınızda gösterilen simgeyi seçin.",
     accountHeading: "Hesap",

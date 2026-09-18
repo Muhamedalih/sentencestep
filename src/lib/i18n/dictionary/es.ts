@@ -185,6 +185,18 @@ export const es: Dictionary = {
       "La práctica breve y constante gana a las sesiones largas y ocasionales — y ya demostraste que puedes.",
     cta: "Continuar",
   },
+  rateApp: {
+    headline: "¿Cómo ha sido tu experiencia con SentenceStep hasta ahora?",
+    subtitle:
+      "Tu calificación es totalmente opcional y nos ayuda a mejorar SentenceStep — no volverás a ver este mensaje.",
+    commentPlaceholder: "¿Algún comentario o sugerencia? (opcional)",
+    skip: "Omitir",
+    submit: "Enviar",
+    thanksTitle: "¡Gracias!",
+    thanksBody: "Recibimos tu calificación — lo apreciamos.",
+    starLabelSingular: "{n} estrella",
+    starLabelPlural: "{n} estrellas",
+  },
   auth: {
     loginHeading: "Bienvenido de nuevo",
     loginSubtitle: "Inicia sesión para mantener tu progreso sincronizado.",
@@ -419,6 +431,10 @@ export const es: Dictionary = {
     startingLevelNotChosen: "Sin definir — las lecciones comienzan en nivel principiante.",
     startingLevelSaved: "Nivel de inicio actualizado.",
     startingLevelError: "No se pudo actualizar tu nivel de inicio. Inténtalo de nuevo.",
+    rateAppHeading: "Califica SentenceStep",
+    rateAppSubtitle:
+      "¿Te está gustando la app? Déjanos tu calificación cuando quieras — es totalmente opcional.",
+    rateAppButton: "Calificar la app",
     avatarHeading: "Avatar",
     avatarSubtitle: "Elige el ícono que se muestra en tu cuenta.",
     accountHeading: "Cuenta",

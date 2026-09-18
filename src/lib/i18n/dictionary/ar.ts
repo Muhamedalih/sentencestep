@@ -172,6 +172,18 @@ export const ar: Dictionary = {
     point4Body: "الاستمرار البسيط أقوى من الجلسات الطويلة النادرة — وأنت الحين أثبت إنك تقدر.",
     cta: "متابعة",
   },
+  rateApp: {
+    headline: "شلونك لقيت تجربتك بالتطبيق؟",
+    subtitle:
+      "تقييمك اختياري بالكامل ويساعدنا نطوّر SentenceStep — ما راح تشوف هالرسالة مرة ثانية.",
+    commentPlaceholder: "أي ملاحظات أو اقتراحات؟ (اختياري)",
+    skip: "تخطي",
+    submit: "إرسال",
+    thanksTitle: "شكراً إلك!",
+    thanksBody: "وصلنا تقييمك، ونقدّر وقتك.",
+    starLabelSingular: "نجمة وحدة",
+    starLabelPlural: "{n} نجوم",
+  },
   auth: {
     loginHeading: "مرحبًا بعودتك",
     loginSubtitle: "سجّل الدخول للحفاظ على تقدّمك متزامنًا.",
@@ -396,6 +408,9 @@ export const ar: Dictionary = {
     startingLevelNotChosen: "لم يُحدَّد بعد — تبدأ الدروس من مستوى المبتدئين.",
     startingLevelSaved: "تم تحديث مستوى البداية.",
     startingLevelError: "تعذّر تحديث مستوى البداية. يرجى المحاولة مرة أخرى.",
+    rateAppHeading: "قيّم SentenceStep",
+    rateAppSubtitle: "عجبتك التجربة؟ گدر تعطينا تقييمك بأي وقت — اختياري بالكامل.",
+    rateAppButton: "قيّم التطبيق",
     avatarHeading: "الصورة الرمزية",
     avatarSubtitle: "اختر الرمز الذي يظهر على حسابك.",
     accountHeading: "الحساب",

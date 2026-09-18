@@ -216,6 +216,18 @@ export interface Dictionary {
     point4Body: string;
     cta: string;
   };
+  /** The optional, one-time "rate the app" prompt shown over the ordinary LessonCompletion screen — see RatingPrompt. */
+  rateApp: {
+    headline: string;
+    subtitle: string;
+    commentPlaceholder: string;
+    skip: string;
+    submit: string;
+    thanksTitle: string;
+    thanksBody: string;
+    starLabelSingular: string;
+    starLabelPlural: string;
+  };
   auth: {
     loginHeading: string;
     loginSubtitle: string;
@@ -451,6 +463,10 @@ export interface Dictionary {
     startingLevelNotChosen: string;
     startingLevelSaved: string;
     startingLevelError: string;
+    /** "Rate the app" section — Settings' always-available counterpart to RatingPrompt's one-time automatic pop-up; opens the same RatingModal on demand. */
+    rateAppHeading: string;
+    rateAppSubtitle: string;
+    rateAppButton: string;
     /** Avatar section (moved/exposed here — see AccountMenu, which keeps its own copy too). */
     avatarHeading: string;
     avatarSubtitle: string;

@@ -183,6 +183,18 @@ export const en: Dictionary = {
       "Small, steady practice beats long, rare sessions — and you just proved you can do it.",
     cta: "Continue",
   },
+  rateApp: {
+    headline: "How's your experience with SentenceStep so far?",
+    subtitle:
+      "Your rating is completely optional and helps us improve SentenceStep — you won't see this again.",
+    commentPlaceholder: "Any feedback or suggestions? (optional)",
+    skip: "Skip",
+    submit: "Submit",
+    thanksTitle: "Thank you!",
+    thanksBody: "Your rating was received — we appreciate it.",
+    starLabelSingular: "{n} star",
+    starLabelPlural: "{n} stars",
+  },
   auth: {
     loginHeading: "Welcome back",
     loginSubtitle: "Sign in to keep your progress in sync.",
@@ -406,6 +418,9 @@ export const en: Dictionary = {
     startingLevelNotChosen: "Not set — lessons start at Beginner.",
     startingLevelSaved: "Starting level updated.",
     startingLevelError: "Couldn't update your starting level. Please try again.",
+    rateAppHeading: "Rate SentenceStep",
+    rateAppSubtitle: "Enjoying the app? Give us a rating any time — it's completely optional.",
+    rateAppButton: "Rate the app",
     avatarHeading: "Avatar",
     avatarSubtitle: "Pick the sticker shown on your account.",
     accountHeading: "Account",
