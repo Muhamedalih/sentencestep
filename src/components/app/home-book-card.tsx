@@ -83,7 +83,7 @@ export function HomeBookCard({
       href={`/learn/library/${book.id}`}
       aria-label={book.title}
       className={cn(
-        "group border-border/80 bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-none gap-4 overflow-hidden rounded-2xl border p-3 transition-[transform,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_0_28px_6px_color-mix(in_oklch,var(--primary)_55%,transparent),0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] sm:p-4",
+        "group border-border/80 bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-none gap-4 overflow-hidden rounded-2xl border p-3 transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_0_28px_6px_color-mix(in_oklch,var(--primary)_55%,transparent),0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] sm:p-4",
         className,
       )}
     >
