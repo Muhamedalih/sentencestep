@@ -83,7 +83,7 @@ export function HomeBookCard({
       href={`/learn/library/${book.id}`}
       aria-label={book.title}
       className={cn(
-        "group border-border/80 bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-none gap-4 overflow-hidden rounded-2xl border p-3 transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-1.5 motion-safe:hover:scale-[1.02] sm:p-4",
+        "group border-border/80 bg-card focus-visible:ring-ring focus-visible:ring-offset-background hover:shadow-primary/25 flex flex-none gap-4 overflow-hidden rounded-2xl border p-3 transition-[transform,box-shadow] duration-300 outline-none hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] sm:p-4",
         className,
       )}
     >
@@ -99,7 +99,7 @@ export function HomeBookCard({
           <img
             src={book.coverImageUrl}
             alt=""
-            className="size-full object-contain transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:scale-110"
+            className="size-full object-contain transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
           />
         ) : (
           <div className="from-brand-muted to-muted flex size-full items-center justify-center bg-gradient-to-br">

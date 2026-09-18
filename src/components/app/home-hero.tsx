@@ -173,7 +173,7 @@ export function HomeHero({
         area (equal grid columns, right column split into two equal-height
         stacked cards) rather than an arbitrarily large/small ratio.
       */}
-      <div className="border-border bg-card flex flex-col overflow-hidden rounded-2xl border transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-xl motion-safe:hover:-translate-y-1.5 motion-safe:hover:scale-[1.02]">
+      <div className="border-border bg-card hover:shadow-primary/25 flex flex-col overflow-hidden rounded-2xl border transition-[transform,box-shadow] duration-300 hover:shadow-2xl motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]">
         {currentLesson && (
           <MainLessonCardBody
             lesson={currentLesson}
@@ -264,7 +264,7 @@ export function HomeHero({
 
         <Link
           href="/learn/stories"
-          className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-1.5 motion-safe:hover:scale-[1.02]"
+          className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background hover:shadow-primary/25 flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[transform,box-shadow] duration-300 outline-none hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
         >
           <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32">
             {currentStoryLesson?.illustrationUrl ? (
@@ -281,7 +281,7 @@ export function HomeHero({
               <img
                 src={currentStoryLesson.illustrationUrl}
                 alt=""
-                className="size-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:scale-110"
+                className="size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
               />
             ) : (
               <div className="from-brand-muted to-muted flex size-full items-center justify-center bg-gradient-to-br">
