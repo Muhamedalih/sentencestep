@@ -102,6 +102,61 @@ export const RETURNING_GUEST_REDIRECT_SCRIPT = `
 `;
 
 /**
+ * Covers this page's own static marketing content the instant it starts
+ * parsing, for the one visitor this matters to: a guest who already has an
+ * `ss_locale` cookie (they picked a language on some earlier request) but
+ * hasn't finished onboarding yet (RETURNING_GUEST_REDIRECT_SCRIPT above
+ * already sends anyone with a real `startingLevel` on to /learn before this
+ * ever runs) — almost always landing here via FirstTimeLanguagePicker's own
+ * `router.push("/{locale}")`, the one navigation in the "get started" flow
+ * that crosses from the (default) root layout to [locale]'s, which Next.js
+ * can only ever do with a full browser page load.
+ *
+ * That reload's own destination page has no way to skip painting its own
+ * marketing content on arrival: this is a statically pre-rendered page (see
+ * RootHtmlShell's own doc comment for why), so its HTML contains that
+ * content already, and every "get started" step past this one is gated on
+ * useProgress()'s `isLoaded` — necessarily still false for one instant even
+ * with that hook's own useLayoutEffect (see its doc comment), because
+ * nothing client-side can run before this page's raw server-rendered HTML
+ * has already been parsed and painted at least once. The `<link
+ * rel="prefetch">` hints below mask most of this by warming the browser's
+ * cache before a visitor ever picks a language, but Safari doesn't honor
+ * rel=prefetch at all, and even where it's honored a prefetched response
+ * still has to be parsed and hydrated — this script is the one thing that
+ * covers that gap unconditionally, in every browser, regardless of whether
+ * the prefetch actually helped.
+ *
+ * Removed by GetStartedMaskCleanup (get-started-step-provider.tsx) the
+ * instant useProgress()'s `isLoaded` actually turns true — whichever step
+ * that reveals (or, rarely, no step at all: a guest with real completions
+ * but no recorded startingLevel) is the correct one already resolved by
+ * then, so there's nothing left for this to hide.
+ */
+export const ONBOARDING_TRANSITION_MASK_SCRIPT = `
+(function () {
+  try {
+    var hasLocaleCookie = document.cookie.split("; ").some(function (c) {
+      return c.indexOf("ss_locale=") === 0;
+    });
+    if (!hasLocaleCookie) return;
+    var raw = window.localStorage.getItem("looma:progress:v2");
+    var startingLevel = null;
+    if (raw) {
+      try {
+        startingLevel = JSON.parse(raw).startingLevel;
+      } catch (e) {}
+    }
+    if (startingLevel !== null && startingLevel !== undefined) return;
+    var mask = document.createElement("div");
+    mask.id = "get-started-mask";
+    mask.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:var(--background);";
+    document.documentElement.appendChild(mask);
+  } catch (e) {}
+})();
+`;
+
+/**
  * The actual <html>/<head>/<body> shell every root layout in the app
  * renders — factored out here because there is no longer exactly one root
  * layout (see src/app/(app)/layout.tsx's doc comment for why). Next.js
@@ -171,6 +226,13 @@ export function RootHtmlShell({
           <script
             suppressHydrationWarning
             dangerouslySetInnerHTML={{ __html: RETURNING_GUEST_REDIRECT_SCRIPT }}
+          />
+        )}
+        {/* Same marketing-route-only CSP carve-out as RETURNING_GUEST_REDIRECT_SCRIPT just above — see ONBOARDING_TRANSITION_MASK_SCRIPT's own doc comment. Ordered after it: a matching startingLevel there already means this page is about to be abandoned for /learn, so there's no point masking it too. */}
+        {localizedNavigation && (
+          <script
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: ONBOARDING_TRANSITION_MASK_SCRIPT }}
           />
         )}
         {/*

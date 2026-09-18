@@ -1,11 +1,38 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
+import { useProgress } from "@/hooks/use-progress";
 import type { Difficulty } from "@/lib/levels";
 import { clearProgress } from "@/lib/progress/store";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { hasSupabaseAuthCookieClient } from "@/lib/supabase/has-session-cookie-client";
+
+/**
+ * Removes root-html-shell.tsx's ONBOARDING_TRANSITION_MASK_SCRIPT's mask element
+ * the instant useProgress()'s `isLoaded` turns true — see that script's own
+ * doc comment for what it's covering and why. A separate component (not
+ * inline in GetStartedStepProvider itself) purely so this useProgress()
+ * instance — and the guest-progress read/signed-in fetch it triggers — only
+ * ever exists on the two marketing route groups this mask can possibly be
+ * present on, never on every other route GetStartedStepProvider also mounts
+ * on (see its own `localizedNavigation` prop doc comment).
+ */
+function GetStartedMaskCleanup() {
+  const { isLoaded } = useProgress();
+  useLayoutEffect(() => {
+    if (!isLoaded) return;
+    document.getElementById("get-started-mask")?.remove();
+  }, [isLoaded]);
+  return null;
+}
 
 /**
  * How long the tab must stay hidden before a hidden→visible edge counts as
@@ -210,6 +237,7 @@ export function GetStartedStepProvider({
         setTutorialStepDone,
       }}
     >
+      {localizedNavigation && <GetStartedMaskCleanup />}
       {children}
     </GetStartedStepContext.Provider>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import {
@@ -77,7 +77,20 @@ export function useProgress() {
   // can close.
   const migratingRef = useRef(false);
 
-  useEffect(() => {
+  // useLayoutEffect, not useEffect, specifically for the guest branch below:
+  // readProgress() is a plain synchronous localStorage read, so isLoaded can
+  // flip true before the browser ever paints a frame with it still false —
+  // useEffect fires after paint, which on a guest's very first render of a
+  // fresh page (a hard navigation, e.g. FirstTimeLanguagePicker's own
+  // cross-layout reload into "/{locale}") left one real, sometimes-visible
+  // frame where every isLoaded-gated "get started" step (StartingLevel-
+  // Onboarding, CountryOnboarding, TutorialOnboarding, OnboardingIntroCard)
+  // renders null, uncovering the marketing page mounted underneath before
+  // snapping back to the correct step. Doesn't change the signed-in branch's
+  // actual timing at all — its setIsLoaded(true) still only ever fires once
+  // fetchProgressAction's real network round trip resolves, same as before;
+  // this only moves the synchronous guest path earlier relative to paint.
+  useLayoutEffect(() => {
     let cancelled = false;
     setIsLoaded(false);
 
