@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -31,37 +29,20 @@ import { cn } from "@/lib/utils";
  * a popup interrupting a marketing page, which is exactly what replaces
  * that marketing page as a brand-new guest's first impression.
  *
- * Picking a language does involve a real reload, though, unlike every step
- * after it: setLocale's `localizedNavigation` branch (see LocaleProvider's
- * own doc comment) does a full `router.push` to "/{locale}" — a different
- * static root layout ((default) vs. [locale]), which Next.js can only ever
- * reach with a full page load, never a client-side transition. `locale`
- * itself flips truthy the instant that click handler runs though (plain
- * useState, no navigation to wait on), which used to make this component's
- * own `locale && !forceLanguageStep` gate hide it immediately — well before
- * the browser had actually swapped documents — uncovering the marketing
- * page mounted underneath for however long that reload actually takes
- * (typically a couple hundred ms, more on a slow connection). `isNavigating`
- * closes that gap the same way OnboardingIntroCard's own identically-named
- * flag closes the same kind of gap at the flow's other cross-layout
- * navigation (see that component's doc comment): once a language is
- * tapped, this keeps rendering a full-screen loading state — instead of
- * returning null — for as long as this component instance survives, which
- * is exactly until the real navigation actually takes over.
+ * Picking a language calls setLocaleForOnboarding, not the ordinary
+ * setLocale LanguageSwitcher (the header control) uses — see that
+ * function's own doc comment in LocaleProvider for why: unlike the header,
+ * nothing here is ever looking at the real marketing page underneath, so
+ * there's no reason to pay for a hard "/{locale}" navigation (a real
+ * browser reload, since (default) and [locale] are separate root layouts)
+ * just to update chrome text this step already re-renders instantly from
+ * `t` the moment `locale` changes. Advancing to the level step is a plain
+ * synchronous state update now, same tick as the tap — nothing to mask.
  */
 export function FirstTimeLanguagePicker() {
-  const { locale, t, setLocale } = useLocale();
+  const { locale, t, setLocaleForOnboarding } = useLocale();
   const { introContinued, forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
-  const [isNavigating, setIsNavigating] = useState(false);
 
-  if (isNavigating) {
-    return (
-      <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
-        <LockBodyScroll />
-        <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
-      </div>
-    );
-  }
   if (locale && !forceLanguageStep) return null;
   if (!locale && !introContinued) return null; // IntroLanding is still showing — see its own doc comment
 
@@ -101,8 +82,7 @@ export function FirstTimeLanguagePicker() {
                 type="button"
                 dir={LOCALE_META[option].dir}
                 onClick={() => {
-                  setIsNavigating(true);
-                  setLocale(option);
+                  setLocaleForOnboarding(option);
                   setForceLanguageStep(false);
                 }}
                 whileHover={{ scale: 1.04 }}

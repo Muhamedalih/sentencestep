@@ -24,6 +24,8 @@ interface LocaleContextValue {
   dir: "rtl" | "ltr";
   t: Dictionary;
   setLocale: (locale: SupportLocale) => void;
+  /** See its own doc comment just above where it's built, in LocaleProvider. */
+  setLocaleForOnboarding: (locale: SupportLocale) => void;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -130,6 +132,33 @@ export function LocaleProvider({
     [router, pathname, localizedNavigation],
   );
 
+  // FirstTimeLanguagePicker's own variant of the choice above: it only ever
+  // renders while the "get started" flow's full-screen steps already cover
+  // the real page underneath (see that component's gate — `locale` is null
+  // or `forceLanguageStep` is set, both of which mean no one can currently
+  // see this route's own marketing content), so unlike LanguageSwitcher
+  // (the header control, used while actually looking at that content)
+  // there is nothing here that navigating to "/{locale}" would reveal that
+  // the dictionary swap below doesn't already show. Every step after this
+  // one reads its text from `t`, which updates the instant `next` is set —
+  // no reload needed to see it in the right language. Skipping setLocale's
+  // own `router.push` here is what actually removes the "/{locale}" hard
+  // reload from the flow, rather than just masking its content (see
+  // ONBOARDING_TRANSITION_MASK_SCRIPT's doc comment for the difference):
+  // there's simply no navigation left to mask. The one thing given up is
+  // the URL bar/cookie briefly disagreeing with the real page underneath
+  // (still "/", not "/{locale}") for as long as the guest stays on this
+  // flow — invisible the whole time it covers the screen, and moot the
+  // instant OnboardingIntroCard's own "Start" routes into the real lesson.
+  const setLocaleForOnboarding = useCallback((next: SupportLocale) => {
+    document.documentElement.lang = next;
+    document.documentElement.dir = dirFor(next);
+    setLocaleState(next);
+    void setPreferredLanguageAction(next).catch((error: unknown) => {
+      console.error("[locale] setPreferredLanguageAction failed", error);
+    });
+  }, []);
+
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
@@ -147,8 +176,9 @@ export function LocaleProvider({
           ? getDictionary(browserLocale)
           : fallbackDictionary,
       setLocale,
+      setLocaleForOnboarding,
     }),
-    [locale, browserLocale, setLocale],
+    [locale, browserLocale, setLocale, setLocaleForOnboarding],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
