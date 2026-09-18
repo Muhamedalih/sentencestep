@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 
 import { BookCompletion } from "@/components/learning/book-completion";
 import { BookPageNav } from "@/components/learning/book-page-nav";
@@ -581,6 +582,26 @@ export function BookReadingSession({
 
   return (
     <div className="lg:h-full">
+      {/* Books had no way back to the book overview at all (reader report,
+          2026-09-19) — every other full-screen learning surface has one
+          (LessonSession's corner Logo, the admin preview's own "Back to
+          editor" button above), this was just missing. Fixed at the literal
+          top-left corner regardless of `dir`, matching every screen this
+          component renders (not just "reading") since the gap applied to
+          all of them equally. Skipped in previewMode: the admin preview
+          route already renders its own back-to-editor button in the header
+          above this component (see that page), so this would just duplicate
+          it. */}
+      {!previewMode && (
+        <Link
+          href={`/learn/library/${book.id}`}
+          aria-label={t.bookLibrary.backToLibrary}
+          title={t.bookLibrary.backToLibrary}
+          className="text-muted-foreground hover:text-foreground fixed top-4 left-4 z-40 flex size-8 items-center justify-center transition-colors"
+        >
+          <ArrowLeft className="size-5" aria-hidden="true" />
+        </Link>
+      )}
       {sessionLabel}
       <AnimatePresence mode="wait">
         {screen === "reading" && sentence && viewedPage.length > 0 ? (
