@@ -21,7 +21,7 @@ export async function getOnboardingCardSettings(): Promise<OnboardingCardSetting
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("onboarding_intro_card")
-    .select("image_url, completion_image_url, title")
+    .select("image_url, completion_image_url, title, title_ar, title_es, title_tr")
     .eq("id", 1)
     .maybeSingle();
 
@@ -31,6 +31,9 @@ export async function getOnboardingCardSettings(): Promise<OnboardingCardSetting
     imageUrl: data.image_url,
     completionImageUrl: data.completion_image_url,
     title: data.title || DEFAULT_ONBOARDING_CARD_SETTINGS.title,
+    titleAr: data.title_ar || DEFAULT_ONBOARDING_CARD_SETTINGS.titleAr,
+    titleEs: data.title_es || DEFAULT_ONBOARDING_CARD_SETTINGS.titleEs,
+    titleTr: data.title_tr || DEFAULT_ONBOARDING_CARD_SETTINGS.titleTr,
   };
 }
 

@@ -569,6 +569,10 @@ export interface Database {
           /** Admin-uploaded image (same "onboarding-card" bucket) shown on the screen a learner sees right after finishing the opening lesson — independent of image_url above, null means "no image set yet" (see src/components/learning/onboarding-lesson-complete.tsx's fallback). */
           completion_image_url: string | null;
           title: string;
+          /** Learner-facing headline for Arabic/Spanish/Turkish support locales — see title's own doc comment; these three, not title, are what OnboardingIntroCard actually renders. */
+          title_ar: string;
+          title_es: string;
+          title_tr: string;
           updated_at: string;
         };
         Insert: {
@@ -576,6 +580,9 @@ export interface Database {
           image_url?: string | null;
           completion_image_url?: string | null;
           title?: string;
+          title_ar?: string;
+          title_es?: string;
+          title_tr?: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["onboarding_intro_card"]["Insert"]>;

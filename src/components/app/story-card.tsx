@@ -23,8 +23,9 @@ import {
 } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { difficultyForLevel, tierLabel, tierSupportLabel, type Difficulty } from "@/lib/levels";
+import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
+import { TIER_BADGE_CLASS } from "@/lib/tier-colors";
 import { cn, stableIndex } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
 
@@ -108,24 +109,6 @@ const ICON_ACCENTS: [badge: string, icon: string][] = [
 const DEFAULT_ICON_ACCENT = ICON_ACCENTS[0]!;
 
 /**
- * The same green/amber/red tier language as the tab bar's own underline
- * (see TIER_BG_ACCENT/TIER_TEXT_ACCENT in stories-library.tsx), applied to
- * each card's own tier chip instead of a flat white-on-black pill — a
- * card's level now reads from its badge color alone, tying into a color
- * language the page already teaches via its tabs, rather than inventing a
- * new one. Unlike CARD_SURFACE/ICON_ACCENTS above, these lean on the site's
- * real success/accent/danger tokens on purpose: the tier tabs elsewhere on
- * this same page already do the same, and staying consistent with them
- * matters more here than the tile-level theme-independence those two care
- * about.
- */
-const TIER_BADGE_ACCENT: Record<Difficulty, string> = {
-  beginner: "border-success/30 bg-success/15 text-success",
-  intermediate: "border-accent/30 bg-accent/15 text-accent",
-  advanced: "border-danger/30 bg-danger/15 text-danger",
-};
-
-/**
  * The Stories Library's card — a poster tile, not an info card: a single
  * calm dark tile (see CARD_SURFACE) carries a colored icon badge and the
  * title/subtitle, deliberately unlike Word Lists' cards (see WordGroupCard),
@@ -182,7 +165,7 @@ export function StoryCard({
           <span
             className={cn(
               "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
-              TIER_BADGE_ACCENT[difficulty],
+              TIER_BADGE_CLASS[difficulty],
             )}
           >
             {tierText}

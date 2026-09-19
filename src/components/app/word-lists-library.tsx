@@ -9,18 +9,12 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
 import { staggerChildren } from "@/lib/motion";
+import { TIER_RING_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 const LEVELS = [1, 2, 3];
-
-/** One accent per tier, reusing the app's existing semantic color tokens (no new colors) so Beginner/Intermediate/Advanced read as a quick, distinct progression at a glance. */
-const TIER_ACCENT: Record<number, string> = {
-  1: "bg-success/15 text-success ring-success/30",
-  2: "bg-accent/20 text-accent ring-accent/40",
-  3: "bg-primary/15 text-primary ring-primary/30",
-};
 
 /**
  * A quiet "1/2/3" cue inside each tier badge — filled dots count up with the
@@ -101,7 +95,7 @@ export function WordListsLibrary({
                     dir={dir}
                     className={cn(
                       "inline-flex items-center rounded-full px-3.5 py-1 text-sm font-semibold ring-1 ring-inset",
-                      TIER_ACCENT[level],
+                      TIER_RING_CLASS[difficultyForLevel(level)],
                     )}
                   >
                     {tierText}

@@ -29,25 +29,12 @@ import {
 import { fadeInUp, staggerChildren } from "@/lib/motion";
 import { findCurrentLesson, getCurrentLevel } from "@/lib/progress/level";
 import { modeMeta } from "@/lib/learning-modes";
+import { TIER_BADGE_CLASS, TIER_DOT_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { Lesson, LearningMode, LessonUnit, Unit } from "@/types/content";
 
 /** How many lessons a level page shows at once — Ordinary Lessons/Stories/Conversation catalog redesign (bigger, image-led cards need real pagination instead of one long scroll). */
 const LESSONS_PER_PAGE = 4;
-
-/** Subtle, distinct color per difficulty tier — deliberately not just three shades of the same accent, so a learner scanning several level sections can tell them apart at a glance without reading the label. `success` reuses the app's own theme-aware green token; intermediate/advanced use the same low-opacity-fill + colored-border language on plain palette colors, since no dedicated "info"/"advanced" token exists yet. */
-const TIER_BADGE_CLASS: Record<Difficulty, string> = {
-  beginner: "bg-success/10 text-success border-success/25",
-  intermediate: "bg-sky-500/10 text-sky-500 border-sky-500/25",
-  advanced: "bg-violet-500/10 text-violet-500 border-violet-500/25",
-};
-
-/** The colored dot alone, kept legible on a photo where the tinted-fill pill above isn't (see TierBadge's `onImage` variant). */
-const TIER_DOT_CLASS: Record<Difficulty, string> = {
-  beginner: "bg-success",
-  intermediate: "bg-sky-500",
-  advanced: "bg-violet-500",
-};
 
 function TierBadge({
   difficulty,

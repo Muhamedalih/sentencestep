@@ -13,7 +13,10 @@ import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { getOnboardingCardSettings } from "@/lib/admin/onboarding-card-queries";
-import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-settings";
+import {
+  onboardingCardTitleForLocale,
+  type OnboardingCardSettings,
+} from "@/lib/admin/onboarding-card-settings";
 import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/starting-level";
 
 /**
@@ -85,7 +88,7 @@ export function OnboardingIntroCard() {
   }, [shouldShow, settings]);
 
   if (!isMarketingHomePath(pathname)) return null;
-  if (!shouldShow || !difficulty) return null;
+  if (!shouldShow || !difficulty || !locale) return null;
 
   // Deliberately a SEPARATE condition from the `!shouldShow` check above,
   // not folded into it: `shouldShow` alone would let this component return
@@ -105,6 +108,7 @@ export function OnboardingIntroCard() {
     );
   }
   const openingLessonPath = `/learn/normal/${OPENING_LESSON_ID[difficulty]}`;
+  const title = onboardingCardTitleForLocale(settings, locale);
 
   function handleStart() {
     setIsNavigating(true);
@@ -116,7 +120,7 @@ export function OnboardingIntroCard() {
       className="bg-background fixed inset-0 z-100 flex flex-col p-6"
       role="dialog"
       aria-modal="true"
-      aria-label={settings.title}
+      aria-label={title}
     >
       <LockBodyScroll />
       <div className="flex items-center justify-between">
@@ -149,7 +153,7 @@ export function OnboardingIntroCard() {
             dir={dir}
             className="mt-6 text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
           >
-            {settings.title}
+            {title}
           </h1>
 
           <Button size="lg" className="mt-8 w-fit" onClick={handleStart}>

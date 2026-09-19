@@ -19,11 +19,11 @@ const TIER_BODY_KEY = {
   advanced: "advancedBody",
 } as const;
 
-/** Matches the reference onboarding's colored placement dots — purely decorative, one fixed color per tier, not theme-derived. */
+/** Matches the reference onboarding's colored placement dots — purely decorative, one fixed color per tier, not theme-derived. Same green/blue/purple progression as every other tier badge in the app (see src/lib/tier-colors.ts). */
 const TIER_DOT_CLASS: Record<Difficulty, string> = {
   beginner: "bg-emerald-500",
   intermediate: "bg-sky-500",
-  advanced: "bg-amber-500",
+  advanced: "bg-violet-500",
 };
 
 /**

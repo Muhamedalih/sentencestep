@@ -10,6 +10,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { difficultyForLevel, tierSupportLabel, type Difficulty } from "@/lib/levels";
 import { staggerChildren } from "@/lib/motion";
+import { TIER_DOT_CLASS, TIER_TEXT_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
 
@@ -26,27 +27,6 @@ const CEFR_BY_TIER: Record<Difficulty, string> = {
   beginner: "A1",
   intermediate: "A2–B1",
   advanced: "B2+",
-};
-
-/**
- * One accent per tier, always visible (not just on the active tab — see
- * below) so all three read as a real green→amber→red progression at a
- * glance. Advanced uses `danger` rather than the app's own `primary`
- * brand purple: primary is a fairly desaturated blue-violet that reads as
- * near-white/gray at small text size against a dark background — visually
- * indistinguishable from "no color" — where danger's higher chroma red
- * actually shows up, and green/amber/red is the more universally legible
- * difficulty progression anyway.
- */
-const TIER_TEXT_ACCENT: Record<Difficulty, string> = {
-  beginner: "text-success",
-  intermediate: "text-accent",
-  advanced: "text-danger",
-};
-const TIER_BG_ACCENT: Record<Difficulty, string> = {
-  beginner: "bg-success",
-  intermediate: "bg-accent",
-  advanced: "bg-danger",
 };
 
 /**
@@ -143,7 +123,7 @@ export function StoriesLibrary({
                 dir="ltr"
                 className={cn(
                   "text-xs",
-                  TIER_TEXT_ACCENT[tier],
+                  TIER_TEXT_CLASS[tier],
                   isActive ? "font-semibold" : "opacity-80",
                 )}
               >
@@ -154,7 +134,7 @@ export function StoriesLibrary({
                   layoutId="stories-tier-underline"
                   className={cn(
                     "absolute inset-x-3 -bottom-px h-0.5 rounded-full",
-                    TIER_BG_ACCENT[tier],
+                    TIER_DOT_CLASS[tier],
                   )}
                   transition={{ type: "spring", stiffness: 500, damping: 35 }}
                 />

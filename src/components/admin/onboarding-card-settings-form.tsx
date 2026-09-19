@@ -80,6 +80,9 @@ export function OnboardingCardSettingsForm({
     });
   }
   const [title, setTitle] = useState(initial.title);
+  const [titleAr, setTitleAr] = useState(initial.titleAr);
+  const [titleEs, setTitleEs] = useState(initial.titleEs);
+  const [titleTr, setTitleTr] = useState(initial.titleTr);
   const [url, setUrl] = useState(initial.imageUrl);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [titleMessage, setTitleMessage] = useState<{
@@ -222,7 +225,7 @@ export function OnboardingCardSettingsForm({
   function handleSaveTitle() {
     setTitleMessage(null);
     startSavingTitle(async () => {
-      const result = await saveOnboardingCardTitle(title);
+      const result = await saveOnboardingCardTitle({ title, titleAr, titleEs, titleTr });
       if (result.error) {
         setTitleMessage({ kind: "error", text: result.error });
         return;
@@ -738,18 +741,58 @@ export function OnboardingCardSettingsForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Headline</CardTitle>
-          <CardDescription>The one line of text shown under the image.</CardDescription>
+          <CardDescription>
+            The one line of text shown under the image. Learners only ever see the Arabic, Spanish,
+            or Turkish version below, matching their chosen support language — English is never
+            shown in the app itself, so the English field here is a reference copy only.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <input
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            maxLength={ONBOARDING_CARD_TITLE_MAX_LENGTH}
-            dir="ltr"
-            className="border-border bg-background w-full rounded-md border px-3 py-2 text-sm"
-            placeholder="Your English Journey Starts Here"
-          />
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">English (reference only)</span>
+            <input
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              maxLength={ONBOARDING_CARD_TITLE_MAX_LENGTH}
+              dir="ltr"
+              className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+              placeholder="Your English Journey Starts Here"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">Arabic</span>
+            <input
+              type="text"
+              value={titleAr}
+              onChange={(event) => setTitleAr(event.target.value)}
+              maxLength={ONBOARDING_CARD_TITLE_MAX_LENGTH}
+              dir="rtl"
+              className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">Spanish</span>
+            <input
+              type="text"
+              value={titleEs}
+              onChange={(event) => setTitleEs(event.target.value)}
+              maxLength={ONBOARDING_CARD_TITLE_MAX_LENGTH}
+              dir="ltr"
+              className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">Turkish</span>
+            <input
+              type="text"
+              value={titleTr}
+              onChange={(event) => setTitleTr(event.target.value)}
+              maxLength={ONBOARDING_CARD_TITLE_MAX_LENGTH}
+              dir="ltr"
+              className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
           <div className="flex items-center gap-3">
             <Button type="button" onClick={handleSaveTitle} disabled={isSavingTitle}>
               {isSavingTitle ? "Saving…" : "Save headline"}

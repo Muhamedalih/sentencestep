@@ -44,25 +44,46 @@ function lessonIllustrationPathFromUrl(url: string): string | null {
 }
 
 /**
- * Saves the admin-authored headline shown on the get-started flow's third
+ * Saves the admin-authored headline shown on the get-started flow's fifth
  * step (see OnboardingIntroCard) — a plain global setting, gated on full
  * admin like typing sound / color settings / fonts, not the narrower
- * editor-or-admin content-authoring tier.
+ * editor-or-admin content-authoring tier. Four fields at once (English
+ * reference copy + the three actual support-locale headlines it renders),
+ * same single-button-multi-field shape as saveOpeningLessonSentences, so a
+ * partial save (an Arabic headline with a stale Spanish one) can't happen.
  */
-export async function saveOnboardingCardTitle(title: string): Promise<ActionResult> {
+export async function saveOnboardingCardTitle(titles: {
+  title: string;
+  titleAr: string;
+  titleEs: string;
+  titleTr: string;
+}): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
-  const trimmed = title.trim();
-  if (!trimmed) return { error: "Title can't be empty." };
-  if (trimmed.length > ONBOARDING_CARD_TITLE_MAX_LENGTH) {
-    return { error: `Title must be ${ONBOARDING_CARD_TITLE_MAX_LENGTH} characters or fewer.` };
+  const trimmed = {
+    title: titles.title.trim(),
+    titleAr: titles.titleAr.trim(),
+    titleEs: titles.titleEs.trim(),
+    titleTr: titles.titleTr.trim(),
+  };
+  for (const value of Object.values(trimmed)) {
+    if (!value) return { error: "Title can't be empty." };
+    if (value.length > ONBOARDING_CARD_TITLE_MAX_LENGTH) {
+      return { error: `Title must be ${ONBOARDING_CARD_TITLE_MAX_LENGTH} characters or fewer.` };
+    }
   }
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("onboarding_intro_card")
-    .update({ title: trimmed, updated_at: new Date().toISOString() })
+    .update({
+      title: trimmed.title,
+      title_ar: trimmed.titleAr,
+      title_es: trimmed.titleEs,
+      title_tr: trimmed.titleTr,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", 1);
   if (error) return { error: "Couldn't save the title. Please try again." };
 
