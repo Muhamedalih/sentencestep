@@ -447,6 +447,9 @@ export interface Dictionary {
     pushNotificationsUnsupported: string;
     pushNotificationsError: string;
     pushNotificationsUnavailable: string;
+    pushNotificationsTestButton: string;
+    pushNotificationsTestSending: string;
+    pushNotificationsTestSent: string;
     /** Profile section: display name. */
     profileHeading: string;
     profileSubtitle: string;

@@ -59,6 +59,17 @@ export async function hasPushSubscription(userId: string): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
+/** RLS-scoped — this learner's own subscribed browsers/devices, for the Settings "send test notification" button (see sendTestPushNotificationAction). Not the cron route's own lookup (that needs every user's rows at once — see getPushSubscriptionsForUsers below). */
+export async function getOwnPushSubscriptions(userId: string): Promise<PushSubscriptionRecord[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("push_subscriptions")
+    .select("endpoint, p256dh, auth")
+    .eq("user_id", userId);
+  if (error) throw error;
+  return data ?? [];
+}
+
 /**
  * Service-role only (bypasses RLS to read across every user) — the cron
  * route's own lookup, batched into one `in(...)` query rather than one round

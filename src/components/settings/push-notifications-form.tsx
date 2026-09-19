@@ -2,13 +2,19 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useLocale } from "@/components/providers/locale-provider";
-import { deletePushSubscriptionAction, savePushSubscriptionAction } from "@/lib/push/actions";
+import {
+  deletePushSubscriptionAction,
+  savePushSubscriptionAction,
+  sendTestPushNotificationAction,
+} from "@/lib/push/actions";
 import { isPushSupported, subscribeToPush, unsubscribeFromPush } from "@/lib/push/client";
 
 type Status = "idle" | "busy" | "unsupported" | "blocked" | "error";
+type TestStatus = "idle" | "sending" | "sent" | "error";
 
 /**
  * The "Enable notifications" toggle — unlike EmailPreferencesForm, this
@@ -31,6 +37,7 @@ export function PushNotificationsForm({
   const { t } = useLocale();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [status, setStatus] = useState<Status>("idle");
+  const [testStatus, setTestStatus] = useState<TestStatus>("idle");
 
   if (!vapidPublicKey) {
     return (
@@ -82,6 +89,12 @@ export function PushNotificationsForm({
     }
   }
 
+  async function handleSendTest() {
+    setTestStatus("sending");
+    const result = await sendTestPushNotificationAction();
+    setTestStatus(result.error ? "error" : "sent");
+  }
+
   const statusMessage =
     status === "unsupported"
       ? t.settings.pushNotificationsUnsupported
@@ -118,6 +131,30 @@ export function PushNotificationsForm({
           <p role="alert" className="text-danger mt-4 text-sm">
             {statusMessage}
           </p>
+        )}
+
+        {enabled && (
+          <div className="mt-4 flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={testStatus === "sending"}
+              onClick={handleSendTest}
+            >
+              {testStatus === "sending"
+                ? t.settings.pushNotificationsTestSending
+                : t.settings.pushNotificationsTestButton}
+            </Button>
+            {testStatus === "sent" && (
+              <span className="text-success text-sm">{t.settings.pushNotificationsTestSent}</span>
+            )}
+            {testStatus === "error" && (
+              <span role="alert" className="text-danger text-sm">
+                {t.settings.pushNotificationsError}
+              </span>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
