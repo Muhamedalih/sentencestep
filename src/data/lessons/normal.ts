@@ -1141,12 +1141,12 @@ export const normalLessons: Lesson[] = [
       },
       {
         id: "normal-9-s3",
-        en: "I clicked buy without reading the details carefully",
+        en: 'I clicked "buy" without reading the details carefully',
         ar: 'ضغطت على "شراء" دون قراءة التفاصيل بعناية.',
         wordTranslations: [
           { en: "I", ar: "أنا" },
           { en: "clicked", ar: "ضغطت" },
-          { en: "buy", ar: "شراء" },
+          { en: '"buy"', ar: "شراء" },
           { en: "without", ar: "دون" },
           { en: "reading", ar: "قراءة" },
           { en: "the", ar: "الـ" },

@@ -54,6 +54,33 @@ export function isValidPrefixEdit(target: string, nextValue: string): boolean {
 }
 
 /**
+ * Punctuation (commas, quotes, question/exclamation marks, etc.) and
+ * apostrophes are shown to the learner as part of the sentence but are never
+ * something they have to press a key for — only letters, digits, and spaces
+ * are real keystrokes. This is what `advanceAutoSkip` checks: anything that
+ * isn't a letter, a digit, or whitespace.
+ */
+export function isAutoSkipChar(char: string): boolean {
+  return /[^\p{L}\p{N}\s]/u.test(char);
+}
+
+/**
+ * Extends an already-accepted `typed` prefix forward through any run of
+ * auto-skip characters (see `isAutoSkipChar`) that comes next in `target` —
+ * so punctuation/apostrophes are folded into the buffer automatically the
+ * moment the learner reaches them, instead of waiting for a keystroke that
+ * should never be required. Called both on reset (a sentence can *start*
+ * with punctuation) and after every accepted real character.
+ */
+export function advanceAutoSkip(target: string, typed: string): string {
+  let result = typed;
+  while (result.length < target.length && isAutoSkipChar(target.charAt(result.length))) {
+    result += target.charAt(result.length);
+  }
+  return result;
+}
+
+/**
  * Splits a sentence into word and single-space tokens so word-wrapping only
  * happens between words — each word's letters render inside their own
  * whitespace-nowrap span so long sentences never break mid-word.

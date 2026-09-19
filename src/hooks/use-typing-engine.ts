@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import {
+  advanceAutoSkip,
   calculateAccuracy,
   calculateWpm,
   getLetterStates,
@@ -99,9 +100,11 @@ export function useTypingEngine({
   const totalKeystrokesRef = useRef(0);
   const [, setStatsTick] = useState(0);
 
-  // Reset cleanly whenever we move to a new sentence.
+  // Reset cleanly whenever we move to a new sentence. A sentence can itself
+  // start with punctuation (e.g. an opening quote), so the auto-skip pass
+  // runs here too, not just after each accepted keystroke below.
   useEffect(() => {
-    setTyped("");
+    setTyped(advanceAutoSkip(target, ""));
     setErrorIndex(null);
     setErrorChar(null);
     completedRef.current = false;
@@ -209,7 +212,7 @@ export function useTypingEngine({
 
       if (isCorrectChar(target, typed.length, nextChar)) {
         correctKeystrokesRef.current += 1;
-        const updated = typed + nextChar;
+        const updated = advanceAutoSkip(target, typed + nextChar);
         setTyped(updated);
         setErrorIndex(null);
         setErrorChar(null);

@@ -2,10 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  advanceAutoSkip,
   calculateAccuracy,
   calculateWpm,
   getCurrentWordIndex,
   getLetterStates,
+  isAutoSkipChar,
   isCorrectChar,
   isValidPrefixEdit,
   locateWordAtCharIndex,
@@ -231,6 +233,55 @@ test("getLetterStates: current position advances past a completed space to the n
   assert.equal(target.charAt(3), "t");
   assert.equal(states[2], "correct");
   assert.equal(states[3], "current");
+});
+
+// --- isAutoSkipChar / advanceAutoSkip: punctuation and apostrophes are shown
+// but never require a keystroke — only letters, digits, and spaces do. ---
+
+test("isAutoSkipChar: punctuation and apostrophes are auto-skip", () => {
+  for (const char of [",", ".", "?", "!", "'", '"', ";", ":", "-", "(", ")"]) {
+    assert.equal(isAutoSkipChar(char), true, char);
+  }
+});
+
+test("isAutoSkipChar: letters, digits, and spaces are not auto-skip", () => {
+  for (const char of ["a", "Z", "5", " "]) {
+    assert.equal(isAutoSkipChar(char), false, char);
+  }
+});
+
+test("advanceAutoSkip: folds a single following punctuation mark into typed", () => {
+  assert.equal(advanceAutoSkip("Hi, there", "Hi"), "Hi,");
+});
+
+test("advanceAutoSkip: folds a run of consecutive punctuation at once, stopping at a real space", () => {
+  // The comma is folded in immediately; the space after it is still a real
+  // keystroke, so advancement stops there rather than also skipping it.
+  assert.equal(advanceAutoSkip('He said, "wow!"', "He said"), "He said,");
+});
+
+test("advanceAutoSkip: folds a run of consecutive punctuation with no space between", () => {
+  assert.equal(advanceAutoSkip('wow!"', "wow"), 'wow!"');
+});
+
+test("advanceAutoSkip: a sentence that starts with punctuation is pre-filled from empty", () => {
+  assert.equal(advanceAutoSkip('"Hello," she said', ""), '"');
+});
+
+test("advanceAutoSkip: an apostrophe inside a contraction is skipped, letters on both sides still required", () => {
+  assert.equal(advanceAutoSkip("didn't", "didn"), "didn'");
+});
+
+test("advanceAutoSkip: stops at the next real letter and never overruns the target", () => {
+  assert.equal(advanceAutoSkip("Hi, world", "Hi,"), "Hi,");
+});
+
+test("advanceAutoSkip: trailing punctuation completes the sentence without an extra keystroke", () => {
+  assert.equal(advanceAutoSkip("Really?!", "Really"), "Really?!");
+});
+
+test("advanceAutoSkip: a no-op when typed is already at the target's length", () => {
+  assert.equal(advanceAutoSkip("Hi", "Hi"), "Hi");
 });
 
 // --- tokenize: sanity check, unrelated to the bug but shares this module ---
