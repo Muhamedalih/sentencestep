@@ -156,6 +156,7 @@ export default async function LearnHomePage() {
           sessionCount={attemptCount}
           className="mb-10"
         />
+        <NeedsReviewWords words={weakWords} />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}
         </p>
@@ -167,8 +168,8 @@ export default async function LearnHomePage() {
           bookSentenceCount={bookSentenceCount}
           bookProgressPercent={bookProgressPercent}
           isPremiumUser={isPremiumUser}
+          hasWeakWords={weakWords.length > 0}
         />
-        <NeedsReviewWords words={weakWords} />
       </div>
     </ProgressProvider>
   );

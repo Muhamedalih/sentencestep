@@ -102,6 +102,7 @@ export function HomeHero({
   bookSentenceCount,
   bookProgressPercent,
   isPremiumUser,
+  hasWeakWords,
 }: {
   units: LessonUnit[];
   /** Stories-mode lessons — same shape/fetch as `units`, already resolved server-side by (dashboard)/[mode]/page.tsx (it fetches all three modes' content for lessonStats already; this is that same array, not a new query). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
@@ -114,6 +115,8 @@ export function HomeHero({
   /** This learner's real completion percent for `book` (fetchBookProgressAction) — undefined for "not started yet" or a book with no sentences, matching BookCard's identical convention (see HomeBookCard). */
   bookProgressPercent: number | undefined;
   isPremiumUser: boolean;
+  /** Whether this learner currently has any weak/due review words (src/lib/weak-words) — same data NeedsReviewWords shows on Home. Used only to give the "cleared the whole catalog" state below a real next action instead of a dead end. */
+  hasWeakWords: boolean;
 }) {
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
@@ -247,6 +250,18 @@ export function HomeHero({
               </h2>
               <p className="text-muted-foreground mt-1 text-sm">{t.premium.homeAllDoneBody}</p>
             </div>
+            {hasWeakWords && (
+              // The catalog being fully sequential means finishing it used to
+              // be a genuine dead end here (text only, no link at all) —
+              // this reuses the exact same weak-words review queue
+              // NeedsReviewWords/FixYourMistakesSession already maintain, so
+              // there's always a real next action once new lessons run out,
+              // instead of the learner having nothing to do until new
+              // content ships.
+              <Button asChild size="lg" className="mt-1 w-fit">
+                <Link href="/learn/word-lists/review">{t.lesson.fixMistakes}</Link>
+              </Button>
+            )}
           </div>
         )}
       </div>
