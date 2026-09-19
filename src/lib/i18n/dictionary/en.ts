@@ -343,6 +343,8 @@ export const en: Dictionary = {
     illustrationAlt: 'Illustration for the "{title}" lesson',
     illustrationViewImage: "Illustration",
     illustrationViewList: "Previous sentences",
+    storyPanelHide: "Hide previous sentences",
+    storyPanelShow: "Show previous sentences",
     previousSentenceButton: "Previous sentence",
     nextSentenceButton: "Next sentence",
     tapToStartHeading: "Tap anywhere to start",

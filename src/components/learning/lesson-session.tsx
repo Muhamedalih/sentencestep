@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Image as ImageIcon, List as ListIcon } from "lucide-react";
@@ -115,6 +115,12 @@ export function LessonSession({
   // switching back and forth at will (unlike Stories, where the swap is
   // permanent for the whole lesson).
   const [illustrationView, setIllustrationView] = useState<"image" | "list">("image");
+  // Stories mode only — the box always exists (see StoryPreviousSentences'
+  // own doc comment) but the learner can shrink it to a thin rail via its
+  // own toggle button. Lives here rather than inside that component because
+  // LessonSession is what sizes its grid column (see the "content" grid
+  // below); local state, not persisted, same as illustrationView above.
+  const [storyPanelCollapsed, setStoryPanelCollapsed] = useState(false);
   // Mobile-only "tap to start" gate (see TypingSentence's TapToStartOverlay)
   // — held here, not inside TypingSentence, specifically so it survives
   // that component's own per-sentence remount (key={sentence.id} below) and
@@ -537,24 +543,41 @@ export function LessonSession({
             // via the grid track here, not via width classes on the component
             // itself, is what lets it stay a plain w-full fill of whatever
             // track it's handed. That track itself widens once there's
-            // something to show (195px empty-spacer / 275px once the numbered
+            // something to show (210px empty-spacer / 300px once the numbered
             // list has real entries and needs a bit more room), keyed off the
             // same `previousSentences` state StoryPreviousSentences itself
-            // reads, so the two always agree on which width applies.
+            // reads, so the two always agree on which width applies — or
+            // shrinks to a 60px rail once the learner collapses the box via
+            // its own toggle button (storyPanelCollapsed above). The width
+            // itself is a CSS custom property rather than a plain arbitrary
+            // class so the lg:transition-[grid-template-columns] below can
+            // actually animate it — a class swap alone would jump instantly.
             <div
               key="content"
               className={
                 unit.mode === "stories"
-                  ? previousSentences.length > 0
-                    ? "grid gap-0 lg:h-full lg:grid-cols-[275px_minmax(0,1fr)] lg:items-stretch"
-                    : "grid gap-0 lg:h-full lg:grid-cols-[195px_minmax(0,1fr)] lg:items-stretch"
+                  ? "grid gap-0 lg:h-full lg:grid-cols-[var(--story-col-w)_minmax(0,1fr)] lg:items-stretch lg:transition-[grid-template-columns] lg:duration-[420ms] lg:ease-[cubic-bezier(0.32,0.72,0,1)]"
                   : "grid gap-4 lg:h-full lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-stretch"
+              }
+              style={
+                unit.mode === "stories"
+                  ? ({
+                      "--story-col-w":
+                        previousSentences.length === 0
+                          ? "210px"
+                          : storyPanelCollapsed
+                            ? "60px"
+                            : "300px",
+                    } as CSSProperties)
+                  : undefined
               }
             >
               {unit.mode === "stories" ? (
                 <StoryPreviousSentences
                   sentences={previousSentences}
                   resolvedVoiceId={resolvedVoiceId}
+                  collapsed={storyPanelCollapsed}
+                  onToggleCollapsed={() => setStoryPanelCollapsed((collapsed) => !collapsed)}
                 />
               ) : (
                 <div

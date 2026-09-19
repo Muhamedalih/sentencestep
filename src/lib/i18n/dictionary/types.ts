@@ -374,6 +374,10 @@ export interface Dictionary {
     illustrationViewImage: string;
     /** Normal-mode lesson screen — label/title for the toggle button that swaps the illustration for a running list of already-typed sentences. */
     illustrationViewList: string;
+    /** Stories mode only — aria-label/title for the small button inside the previous-sentences box that collapses it to a thin rail. */
+    storyPanelHide: string;
+    /** Stories mode only — aria-label/title for the same button once the box is collapsed, to expand it back. */
+    storyPanelShow: string;
     /** aria-label/title for the small button next to the sentence counter that steps back one sentence. Hidden entirely on the first sentence. */
     previousSentenceButton: string;
     /** aria-label/title for the small button next to the sentence counter that steps forward again — only shown once the learner has stepped back from a sentence they'd already typed, and only as far as that (see maxSentenceIndexReached in LessonSession). */

@@ -348,6 +348,8 @@ export const tr: Dictionary = {
     illustrationAlt: '"{title}" dersinin illüstrasyonu',
     illustrationViewImage: "Illüstrasyon",
     illustrationViewList: "Önceki cümleler",
+    storyPanelHide: "Önceki cümleleri gizle",
+    storyPanelShow: "Önceki cümleleri göster",
     previousSentenceButton: "Önceki cümle",
     nextSentenceButton: "Sonraki cümle",
     tapToStartHeading: "Başlamak için herhangi bir yere dokun",

@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronsLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -71,11 +72,20 @@ export interface CompletedStorySentence {
  * "lesson-shell-stories" in globals.css/page.tsx) regardless of the viewer's
  * light/dark theme, and this box's own fill matches that canvas exactly
  * rather than standing out as a lighter card against it.
+ *
+ * Collapsible (Stories mode only — see LessonSession's own doc comment on
+ * why `collapsed`/`onToggleCollapsed` are only wired up for that mode's grid
+ * track): the small button in the top-right corner shrinks the box down to a
+ * thin rail rather than removing it outright, so the toggle itself — and the
+ * option to reopen it — stays reachable no matter how long the learner
+ * leaves it closed.
  */
 export function StoryPreviousSentences({
   sentences,
   resolvedVoiceId,
   className,
+  collapsed = false,
+  onToggleCollapsed,
 }: {
   sentences: CompletedStorySentence[];
   /**
@@ -90,6 +100,10 @@ export function StoryPreviousSentences({
    */
   resolvedVoiceId?: string | null;
   className?: string;
+  /** Whether the box is shrunk to its collapsed rail. Ignored (always expanded, no button) while `onToggleCollapsed` is undefined. */
+  collapsed?: boolean;
+  /** Omit to render the box with no collapse button at all (e.g. Normal mode's list view, which doesn't offer this). */
+  onToggleCollapsed?: () => void;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   const { dir, t } = useLocale();
@@ -145,6 +159,8 @@ export function StoryPreviousSentences({
     list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [sentences.length]);
 
+  const showToggle = hasSentences && Boolean(onToggleCollapsed);
+
   return (
     <div
       className={cn(
@@ -154,7 +170,7 @@ export function StoryPreviousSentences({
         // "content" grid: Stories mode gives this a fixed, narrow track
         // instead of the fr-based split every other mode's LessonIllustration
         // gets, which is where this box's actual on-screen width comes from).
-        hasSentences && "aspect-[16/9] rounded-2xl lg:aspect-auto",
+        hasSentences && "aspect-[16/9] rounded-[20px] lg:aspect-auto",
         className,
       )}
     >
@@ -167,21 +183,53 @@ export function StoryPreviousSentences({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={transitions.smooth}
-            className="border-foreground/15 pointer-events-none absolute inset-0 rounded-2xl border bg-black shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
-          />
+            className="border-foreground/10 pointer-events-none absolute inset-0 rounded-[20px] border bg-black shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_40px_-8px_rgba(0,0,0,0.6),0_2px_10px_rgba(0,0,0,0.4)]"
+          >
+            <div className="absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,transparent,color-mix(in_oklch,var(--lesson-story-label)_35%,transparent),transparent)]" />
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {showToggle && (
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? t.lesson.storyPanelShow : t.lesson.storyPanelHide}
+          title={collapsed ? t.lesson.storyPanelShow : t.lesson.storyPanelHide}
+          className={cn(
+            "absolute z-10 flex size-[30px] items-center justify-center rounded-full border border-white/10 bg-white/[0.06] backdrop-blur-md transition-[top,right,left,transform,background-color,border-color] duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-white/20 hover:bg-white/[0.13]",
+            collapsed
+              ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              : "top-[14px] right-[14px]",
+          )}
+        >
+          <ChevronsLeft
+            aria-hidden="true"
+            className="size-[14px] text-white/75 transition-transform duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+            style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+        </button>
+      )}
 
       {hasSentences && (
         // min-h-0 is what actually lets this list scroll within the flex
         // column instead of stretching the whole box past its own
         // aspect-[16/9]/lg:h-full bounds — without it a long story quietly
         // grows the box (and therefore the whole illustration row) taller
-        // with every sentence instead of scrolling internally.
+        // with every sentence instead of scrolling internally. min-w-[252px]
+        // keeps the content from reflowing mid-animation as the box's own
+        // width (the grid track LessonSession hands it) transitions down to
+        // the collapsed rail — the outer div's overflow-hidden clips it
+        // instead, matching the opacity fade below.
         <ul
           ref={listRef}
           dir="ltr"
-          className="relative min-h-0 flex-1 space-y-6 overflow-y-auto p-6 sm:p-8"
+          className={cn(
+            "relative min-h-0 min-w-[252px] flex-1 space-y-6 overflow-y-auto p-6 transition-opacity sm:p-8",
+            collapsed
+              ? "pointer-events-none opacity-0 duration-[160ms] ease-out"
+              : "opacity-100 delay-[140ms] duration-[280ms] ease-out",
+          )}
         >
           <AnimatePresence initial={false} mode="popLayout">
             {sentences.map((sentence, index) => {

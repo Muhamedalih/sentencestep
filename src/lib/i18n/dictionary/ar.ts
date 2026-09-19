@@ -333,6 +333,8 @@ export const ar: Dictionary = {
     illustrationAlt: 'رسم توضيحي لدرس "{title}"',
     illustrationViewImage: "الصورة",
     illustrationViewList: "الجمل السابقة",
+    storyPanelHide: "إخفاء قائمة الجمل",
+    storyPanelShow: "إظهار قائمة الجمل",
     previousSentenceButton: "الجملة السابقة",
     nextSentenceButton: "الجملة التالية",
     tapToStartHeading: "اضغط في أي مكان للبدء",

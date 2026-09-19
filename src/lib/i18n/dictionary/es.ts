@@ -355,6 +355,8 @@ export const es: Dictionary = {
     illustrationAlt: 'Ilustración de la lección "{title}"',
     illustrationViewImage: "Ilustración",
     illustrationViewList: "Oraciones anteriores",
+    storyPanelHide: "Ocultar oraciones anteriores",
+    storyPanelShow: "Mostrar oraciones anteriores",
     previousSentenceButton: "Oración anterior",
     nextSentenceButton: "Oración siguiente",
     tapToStartHeading: "Toca en cualquier lugar para empezar",
