@@ -7,6 +7,7 @@ import { DailyGoalForm } from "@/components/settings/daily-goal-form";
 import { DangerZone } from "@/components/settings/danger-zone";
 import { EmailPreferencesForm } from "@/components/settings/email-preferences-form";
 import { PasswordForm } from "@/components/settings/password-form";
+import { PushNotificationsForm } from "@/components/settings/push-notifications-form";
 import { RateAppCard } from "@/components/settings/rate-app-card";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAccessState } from "@/lib/billing/access";
 import { getEmailPreferences } from "@/lib/email/preferences";
+import { hasPushSubscription } from "@/lib/push/subscriptions";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import {
@@ -61,6 +63,7 @@ export default async function SettingsPage() {
 
   const [
     preferences,
+    pushEnabled,
     dailyGoal,
     startingLevel,
     createdAt,
@@ -72,6 +75,7 @@ export default async function SettingsPage() {
     wordsLearned,
   ] = await Promise.all([
     getEmailPreferences(user.id),
+    hasPushSubscription(user.id),
     fetchProfileDailyGoal(user.id),
     fetchProfileStartingLevel(user.id),
     fetchProfileCreatedAt(user.id),
@@ -146,6 +150,10 @@ export default async function SettingsPage() {
                 <DailyGoalForm dailyGoal={dailyGoal} />
                 <StartingLevelForm startingLevel={startingLevel} />
                 <EmailPreferencesForm preferences={preferences} />
+                <PushNotificationsForm
+                  initialEnabled={pushEnabled}
+                  vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+                />
                 <RateAppCard />
                 <div className="sm:hidden">
                   <ReportProblemButton variant="inline" />

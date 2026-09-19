@@ -17,7 +17,8 @@ export type NotificationEventType =
   | "CONVERSATION_COMPLETED"
   | "LEVEL_COMPLETED"
   | "STREAK_MILESTONE"
-  | "INACTIVE_LEARNER";
+  | "INACTIVE_LEARNER"
+  | "INACTIVE_LEARNER_PUSH";
 
 export type NotificationEvent =
   | { type: "LESSON_COMPLETED"; totalCompleted: number }
@@ -25,7 +26,12 @@ export type NotificationEvent =
   | { type: "CONVERSATION_COMPLETED"; lessonId: string }
   | { type: "LEVEL_COMPLETED"; mode: LearningMode; level: number }
   | { type: "STREAK_MILESTONE"; streak: number }
-  | { type: "INACTIVE_LEARNER"; daysInactive: number };
+  | { type: "INACTIVE_LEARNER"; daysInactive: number }
+  // A distinct type (not a reuse of INACTIVE_LEARNER) specifically so its
+  // dedupe_key never collides with the email reminder's — a learner who
+  // gets the email must still be able to get the push, and vice versa,
+  // since email_preferences and push_subscriptions are independent opt-ins.
+  | { type: "INACTIVE_LEARNER_PUSH"; daysInactive: number };
 
 /**
  * Whether this event clears the bar for "meaningful" — the single place
@@ -45,6 +51,7 @@ export function shouldNotify(event: NotificationEvent): boolean {
     case "STREAK_MILESTONE":
       return getStreakMilestone(event.streak) !== null;
     case "INACTIVE_LEARNER":
+    case "INACTIVE_LEARNER_PUSH":
       return event.daysInactive >= INACTIVITY_THRESHOLD_DAYS;
     default:
       return false;
@@ -77,5 +84,7 @@ export function dedupeKeyFor(event: NotificationEvent, now: Date = new Date()): 
       return `STREAK_MILESTONE:${event.streak}`;
     case "INACTIVE_LEARNER":
       return `INACTIVE_LEARNER:${weekBucket(now)}`;
+    case "INACTIVE_LEARNER_PUSH":
+      return `INACTIVE_LEARNER_PUSH:${weekBucket(now)}`;
   }
 }

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { isValidCronAuth } from "@/lib/cron/auth";
-import { shouldNotify } from "@/lib/email/events";
 import type { NotificationEvent } from "@/lib/email/events";
+import { getInactiveLearners } from "@/lib/email/inactive-learners";
 import {
   markNotificationEventSent,
   recordNotificationEvent,
@@ -61,10 +61,10 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   // this sends to real users.
   const origin = new URL(request.url).origin;
 
-  const { data: streaks, error: streaksError } = await supabase
-    .from("streaks")
-    .select("user_id, last_active_date");
-  if (streaksError) {
+  let inactiveLearners;
+  try {
+    inactiveLearners = (await getInactiveLearners(now)).slice(0, MAX_NOTIFICATIONS_PER_RUN);
+  } catch {
     return NextResponse.json({ error: "Failed to read learner activity." }, { status: 500 });
   }
 
@@ -75,23 +75,13 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   // constraint, so it's batched into one query instead of one-per-eligible-row
   // — the previous version did a round trip per streak row that passed
   // shouldNotify, which scales linearly with active learner count.
-  const eligible = (streaks ?? [])
-    .filter((row) => {
-      if (!row.last_active_date) return false;
-      const daysInactive = Math.floor(
-        (now.getTime() - new Date(row.last_active_date).getTime()) / 86_400_000,
-      );
-      return shouldNotify({ type: "INACTIVE_LEARNER", daysInactive });
-    })
-    .slice(0, MAX_NOTIFICATIONS_PER_RUN);
-
-  const { data: prefsRows } = eligible.length
+  const { data: prefsRows } = inactiveLearners.length
     ? await supabase
         .from("email_preferences")
         .select("user_id, learning_reminders")
         .in(
           "user_id",
-          eligible.map((row) => row.user_id),
+          inactiveLearners.map((row) => row.userId),
         )
     : { data: [] };
   const prefsByUserId = new Map((prefsRows ?? []).map((p) => [p.user_id, p]));
@@ -100,22 +90,19 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   let skipped = 0;
   let failed = 0;
 
-  for (const row of eligible) {
-    const daysInactive = Math.floor(
-      (now.getTime() - new Date(row.last_active_date!).getTime()) / 86_400_000,
-    );
+  for (const { userId, daysInactive } of inactiveLearners) {
     const event: NotificationEvent = { type: "INACTIVE_LEARNER", daysInactive };
 
-    const prefs = prefsByUserId.get(row.user_id);
+    const prefs = prefsByUserId.get(userId);
     if (prefs && !prefs.learning_reminders) {
       skipped += 1;
       continue;
     }
 
-    const record = await recordNotificationEvent(row.user_id, event, "queued");
+    const record = await recordNotificationEvent(userId, event, "queued");
     if (record.status === "duplicate") continue;
 
-    const { data: authUser } = await supabase.auth.admin.getUserById(row.user_id);
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
     const email = authUser.user?.email;
     if (!email) continue;
 
@@ -135,7 +122,7 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
     } catch (error) {
       failed += 1;
       console.error("[cron:inactive-learners] sendTemplateEmail failed", {
-        userId: row.user_id,
+        userId,
         error,
       });
     }

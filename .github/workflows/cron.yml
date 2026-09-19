@@ -36,6 +36,21 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://sentencestep.com/api/cron/inactive-learners
 
+  # Push's own opt-in (push_subscriptions) is independent of the email
+  # reminder's (email_preferences.learning_reminders) — same schedule/signal,
+  # a separate route (src/app/api/cron/inactive-learners-push) and dedupe
+  # entry so neither channel silently starves the other. No-ops (501) until
+  # VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY are set — see .env.example.
+  inactive-learners-push:
+    if: github.event.schedule == '0 15 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/inactive-learners-push
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/inactive-learners-push
+
   translation-sweep:
     if: github.event.schedule == '0 3 * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

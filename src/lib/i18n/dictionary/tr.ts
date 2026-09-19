@@ -399,6 +399,15 @@ export const tr: Dictionary = {
     savingPreferences: "Kaydediliyor…",
     essentialEmailNotice:
       "Hesapla ilgili e-postalar (giriş onayları gibi) bu ayarların kapsamında değildir — bunlar zorunludur ve her zaman gönderilir.",
+    pushNotificationsHeading: "Tarayıcı bildirimleri",
+    pushNotificationsSubtitle: "E-postaya ek olarak tarayıcınızda da bir bildirim alın.",
+    pushNotificationsToggleLabel: "Bildirimleri etkinleştir",
+    pushNotificationsToggleBody: "Birkaç gündür pratik yapmadıysanız tarayıcınızda bir hatırlatma.",
+    pushNotificationsBlocked:
+      "Bu site için bildirimler engellenmiş — tarayıcınızın site ayarlarını kontrol edin.",
+    pushNotificationsUnsupported: "Tarayıcınız push bildirimlerini desteklemiyor.",
+    pushNotificationsError: "Bildirimler etkinleştirilemedi. Lütfen tekrar deneyin.",
+    pushNotificationsUnavailable: "Bu sürümde henüz kullanılamıyor.",
     profileHeading: "Profil",
     profileSubtitle: "Hesabınızda gösterilen ad.",
     displayNameLabel: "Görünen ad",

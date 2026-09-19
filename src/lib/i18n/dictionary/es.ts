@@ -406,6 +406,17 @@ export const es: Dictionary = {
     savingPreferences: "Guardando…",
     essentialEmailNotice:
       "El correo relacionado con la cuenta (como las confirmaciones de inicio de sesión) no está cubierto por estos ajustes — es esencial y siempre se envía.",
+    pushNotificationsHeading: "Notificaciones del navegador",
+    pushNotificationsSubtitle:
+      "Recibe también una notificación en tu navegador, además del correo.",
+    pushNotificationsToggleLabel: "Activar notificaciones",
+    pushNotificationsToggleBody:
+      "Un recordatorio en tu navegador si no has practicado en unos días.",
+    pushNotificationsBlocked:
+      "Las notificaciones están bloqueadas para este sitio — revisa la configuración de tu navegador.",
+    pushNotificationsUnsupported: "Tu navegador no admite notificaciones push.",
+    pushNotificationsError: "No se pudieron activar las notificaciones. Inténtalo de nuevo.",
+    pushNotificationsUnavailable: "Aún no disponible en este despliegue.",
     profileHeading: "Perfil",
     profileSubtitle: "El nombre que se muestra en tu cuenta.",
     displayNameLabel: "Nombre para mostrar",

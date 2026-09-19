@@ -393,6 +393,16 @@ export const en: Dictionary = {
     savingPreferences: "Saving…",
     essentialEmailNotice:
       "Account-related email (like sign-in confirmations) isn't covered by these settings — it's essential and always sent.",
+    pushNotificationsHeading: "Push notifications",
+    pushNotificationsSubtitle: "Get a browser notification too, on top of email.",
+    pushNotificationsToggleLabel: "Enable notifications",
+    pushNotificationsToggleBody:
+      "A reminder in your browser if you haven't practiced in a few days.",
+    pushNotificationsBlocked:
+      "Notifications are blocked for this site — check your browser's site settings.",
+    pushNotificationsUnsupported: "Your browser doesn't support push notifications.",
+    pushNotificationsError: "Couldn't enable notifications. Please try again.",
+    pushNotificationsUnavailable: "Not available on this deployment yet.",
     profileHeading: "Profile",
     profileSubtitle: "The name shown on your account.",
     displayNameLabel: "Display name",

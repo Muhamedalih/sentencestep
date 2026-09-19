@@ -438,6 +438,15 @@ export interface Dictionary {
     savePreferences: string;
     savingPreferences: string;
     essentialEmailNotice: string;
+    /** Push notifications toggle (Web Push, src/lib/push). */
+    pushNotificationsHeading: string;
+    pushNotificationsSubtitle: string;
+    pushNotificationsToggleLabel: string;
+    pushNotificationsToggleBody: string;
+    pushNotificationsBlocked: string;
+    pushNotificationsUnsupported: string;
+    pushNotificationsError: string;
+    pushNotificationsUnavailable: string;
     /** Profile section: display name. */
     profileHeading: string;
     profileSubtitle: string;
