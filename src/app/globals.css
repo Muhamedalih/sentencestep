@@ -182,10 +182,9 @@
  * like. Restored to just inherit the ordinary :root/.dark brand-purple
  * tokens (no override here at all) so the lesson player's original
  * purple/orange identity comes back; --background/--foreground are
- * likewise left alone, falling back to the site-wide theme. Only
- * .lesson-shell-stories' pure-black canvas below is intentionally
- * theme-independent — that was a deliberate Stories-mode design choice, not
- * part of the over-neutralization, so it's kept as-is.
+ * likewise left alone here, falling back to the site-wide theme (see the
+ * .dark-scoped .lesson-shell rule below for the deliberate dark-mode-only
+ * pure-black canvas).
  *
  * The admin-customizable per-role tokens below (--lesson-*) are what
  * Admin -> Color Settings actually writes to (see
@@ -221,19 +220,24 @@
 /*
  * Every lesson-player surface (Normal, Conversation, Stories, and Book
  * Reading — anything rendered inside .lesson-shell) sits on the same pure
- * black canvas, regardless of the viewer's light/dark theme preference —
- * matching the rest of the learning experience's premium, cinematic feel
- * instead of falling back to the site-wide dashboard's dark-gray
- * --background. Originally scoped to Stories mode only (via the
- * "lesson-shell-stories" modifier class still present on that route's
- * page.tsx), then extended to every mode so Normal/Conversation lessons no
- * longer read as a visibly lighter, less-polished shade next to Stories and
- * Book Reading. Unscoped by .dark so it applies in both light and dark
- * alike. Only --background/--foreground move — buttons, the progress bar,
- * and focus rings keep reading whatever primary/ring tokens the active
- * theme already set.
+ * black canvas in dark mode — matching the rest of the learning experience's
+ * premium, cinematic feel instead of falling back to the site-wide
+ * dashboard's dark-gray --background. Originally scoped to Stories mode only
+ * (via the "lesson-shell-stories" modifier class still present on that
+ * route's page.tsx), then extended to every mode so Normal/Conversation
+ * lessons no longer read as a visibly lighter, less-polished shade next to
+ * Stories and Book Reading.
+ *
+ * Scoped to .dark — a prior version applied this unconditionally, which
+ * meant a viewer who explicitly chose light mode still landed on a pure
+ * black lesson player with no indication why, silently overriding their own
+ * theme choice. In light mode the shell now falls back to :root's ordinary
+ * light --background/--foreground, same as the rest of the app. Only
+ * --background/--foreground move — buttons, the progress bar, and focus
+ * rings keep reading whatever primary/ring tokens the active theme already
+ * set.
  */
-.lesson-shell {
+.dark .lesson-shell {
   --background: oklch(0 0 0);
   --foreground: oklch(0.97 0 0);
 }

@@ -90,7 +90,10 @@ export function BookCard({
 
           {/* Fixed dark overlays, not theme tokens — legible over any cover
               or generated gradient in either site theme, same reasoning as
-              StoryCard's identical pair. */}
+              StoryCard's identical pair. Admin-uploaded covers can be any
+              brightness, and this gradient's opacity doesn't adapt to it,
+              so the title/author/progress text below also carries its own
+              text-shadow as a brightness-independent legibility floor. */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/40 to-transparent"
@@ -114,10 +117,16 @@ export function BookCard({
           )}
 
           <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-4">
-            <h3 className="truncate leading-snug font-semibold text-white" dir="ltr">
+            <h3
+              className="truncate leading-snug font-semibold text-white [text-shadow:0_1px_4px_rgb(0_0_0_/_0.8)]"
+              dir="ltr"
+            >
               {book.title}
             </h3>
-            <p className="truncate text-sm text-white/70" dir="ltr">
+            <p
+              className="truncate text-sm text-white/70 [text-shadow:0_1px_3px_rgb(0_0_0_/_0.75)]"
+              dir="ltr"
+            >
               {t.bookLibrary.byAuthor.replace("{author}", book.author)}
             </p>
 
@@ -129,7 +138,7 @@ export function BookCard({
                     style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-white/70">
+                <span className="text-xs font-medium text-white/70 [text-shadow:0_1px_3px_rgb(0_0_0_/_0.75)]">
                   {t.bookLibrary.percentComplete.replace(
                     "{percent}",
                     String(Math.round(progressPercent)),

@@ -131,7 +131,10 @@ function LessonCard({
 
           {/* Fixed dark overlays, not theme tokens — same reasoning as
               StoryCard/BookCard: legible over any illustration/photo in
-              either site theme. */}
+              either site theme. The gradient's opacity is still a flat
+              ratio regardless of the illustration's own brightness, so the
+              title/subtitle text below also carries its own text-shadow as
+              a brightness-independent legibility floor. */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/45 to-transparent"
@@ -168,7 +171,7 @@ function LessonCard({
               {isCurrent && <Badge className="shrink-0">{t.progress.continueMode}</Badge>}
             </div>
             {(mode === "stories" || mode === "conversation") && (
-              <span className="inline-flex w-fit items-center gap-1 text-xs font-medium text-white/70">
+              <span className="inline-flex w-fit items-center gap-1 text-xs font-medium text-white/70 [text-shadow:0_1px_3px_rgb(0_0_0_/_0.75)]">
                 {mode === "stories" ? (
                   <>
                     <Clock className="size-3" aria-hidden="true" />~{estimateMinutes(lesson)} min
@@ -181,10 +184,16 @@ function LessonCard({
                 )}
               </span>
             )}
-            <h3 className="truncate leading-snug font-semibold text-white" dir="ltr">
+            <h3
+              className="truncate leading-snug font-semibold text-white [text-shadow:0_1px_4px_rgb(0_0_0_/_0.8)]"
+              dir="ltr"
+            >
               {lesson.title}
             </h3>
-            <p className="truncate text-sm text-white/70" dir={dir}>
+            <p
+              className="truncate text-sm text-white/70 [text-shadow:0_1px_3px_rgb(0_0_0_/_0.75)]"
+              dir={dir}
+            >
               {supportTitle}
             </p>
           </div>
