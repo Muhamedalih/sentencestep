@@ -126,11 +126,26 @@ export function StoryCard({
           <div
             aria-hidden="true"
             className={cn(
-              "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
-              TIER_ICON_CLASS[difficulty],
+              "relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl ring-1 ring-white/10 transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
+              !lesson.illustrationUrl && TIER_ICON_CLASS[difficulty],
             )}
           >
-            <Icon className="size-5" />
+            {lesson.illustrationUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element -- admin-provided external URL, not a static local asset (same as BookCard's cover). */}
+                <img
+                  src={lesson.illustrationUrl}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover"
+                />
+                {/* A faint dark wash, not a flat tint — keeps a bright admin
+                    photo from clashing against the tile's near-black card
+                    surface while still reading as a photo, not a duotone. */}
+                <div aria-hidden="true" className="absolute inset-0 bg-black/15" />
+              </>
+            ) : (
+              <Icon className="size-6" />
+            )}
           </div>
 
           <span
