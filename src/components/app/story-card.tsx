@@ -83,14 +83,17 @@ function iconForLesson(lessonId: string, title: string): LucideIcon {
  * The Stories Library's card — a poster tile, not an info card: the app's
  * real card surface (bg-card — the same dark near-black token every other
  * card in the signed-in shell uses, see .dark .app-shell in globals.css)
- * carries a colored icon badge and the title/subtitle. The icon badge's
- * color comes from TIER_ICON_CLASS below — the lesson's actual difficulty —
- * rather than a random per-lesson hash, so the same tile family reads as
- * one system with Word Lists' cards (see WordGroupCard), which share this
- * exact tile shape and the same tier-color mapping. The two status chips
- * (tier, locked/completed) are styled as overlays — a fixed
- * dark/translucent treatment, not the page's own light/dark theme tokens —
- * since they have to stay legible on top of the tile in either site theme.
+ * carries a tier-tinted teaser panel (a one-line hook pulled from the
+ * lesson's own description — see the `hook` local below) and the
+ * title/subtitle. The panel's tint comes from TIER_ICON_CLASS below — the
+ * lesson's actual difficulty — rather than a random per-lesson hash, so the
+ * same tile family reads as one system with Word Lists' cards (see
+ * WordGroupCard), which share this exact tile shape and the same
+ * tier-color mapping (WordGroupCard keeps the plain icon tile — no per-word
+ * "description" content exists to tease). The two status chips (tier,
+ * locked/completed) are styled as overlays — a fixed dark/translucent
+ * treatment, not the page's own light/dark theme tokens — since they have
+ * to stay legible on top of the tile in either site theme.
  */
 export function StoryCard({
   lesson,
@@ -106,6 +109,7 @@ export function StoryCard({
   const difficulty = difficultyForLevel(lesson.level);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
   const supportTitle = lesson.supportTitle ?? lesson.title;
+  const hook = lesson.supportDescription ?? lesson.description;
   const Icon = iconForLesson(lesson.id, lesson.title);
 
   return (
@@ -123,15 +127,39 @@ export function StoryCard({
             locked ? "opacity-90" : "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
           )}
         >
-          <div
-            aria-hidden="true"
-            className={cn(
-              "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
-              TIER_ICON_CLASS[difficulty],
-            )}
-          >
-            <Icon className="size-5" />
-          </div>
+          {hook ? (
+            // The teaser panel — one line from the lesson's own
+            // description/supportDescription (an existing content field,
+            // already written as a hook: see src/data/lessons/stories.ts),
+            // replacing the plain topic icon so the card sells the story
+            // instead of just labeling it. Falls back to the icon-only tile
+            // below for any lesson that doesn't have a description yet, so
+            // older/uncovered content never shows an empty box.
+            <div
+              className={cn(
+                "flex w-full flex-col gap-1.5 rounded-2xl p-3 text-start",
+                TIER_ICON_CLASS[difficulty],
+              )}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              <p
+                className="text-foreground line-clamp-2 text-sm leading-snug font-medium"
+                dir={lesson.supportDescription ? dir : "ltr"}
+              >
+                {hook}
+              </p>
+            </div>
+          ) : (
+            <div
+              aria-hidden="true"
+              className={cn(
+                "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
+                TIER_ICON_CLASS[difficulty],
+              )}
+            >
+              <Icon className="size-5" />
+            </div>
+          )}
 
           <span
             className={cn(
