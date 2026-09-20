@@ -127,39 +127,15 @@ export function StoryCard({
             locked ? "opacity-90" : "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
           )}
         >
-          {hook ? (
-            // The teaser panel — one line from the lesson's own
-            // description/supportDescription (an existing content field,
-            // already written as a hook: see src/data/lessons/stories.ts),
-            // replacing the plain topic icon so the card sells the story
-            // instead of just labeling it. Falls back to the icon-only tile
-            // below for any lesson that doesn't have a description yet, so
-            // older/uncovered content never shows an empty box.
-            <div
-              className={cn(
-                "flex w-full flex-col gap-1.5 rounded-2xl p-3 text-start",
-                TIER_ICON_CLASS[difficulty],
-              )}
-            >
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
-              <p
-                className="text-foreground line-clamp-2 text-sm leading-snug font-medium"
-                dir={lesson.supportDescription ? dir : "ltr"}
-              >
-                {hook}
-              </p>
-            </div>
-          ) : (
-            <div
-              aria-hidden="true"
-              className={cn(
-                "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
-                TIER_ICON_CLASS[difficulty],
-              )}
-            >
-              <Icon className="size-5" />
-            </div>
-          )}
+          <div
+            aria-hidden="true"
+            className={cn(
+              "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
+              TIER_ICON_CLASS[difficulty],
+            )}
+          >
+            <Icon className="size-5" />
+          </div>
 
           <span
             className={cn(
@@ -200,6 +176,23 @@ export function StoryCard({
               {supportTitle}
             </p>
           </div>
+
+          {hook && (
+            // One line from the lesson's own description/supportDescription
+            // (an existing content field, already written as a hook: see
+            // src/data/lessons/stories.ts) — below the title, not replacing
+            // it, and on a neutral/muted surface rather than the tier tint:
+            // a full-width block of that color read as too loud repeated
+            // across a whole grid of cards (verified live). Absent for any
+            // lesson that doesn't have a description yet, so nothing shows
+            // an empty box.
+            <p
+              className="border-foreground/10 bg-foreground/5 text-muted-foreground line-clamp-3 w-full rounded-xl border p-3 text-start text-sm leading-relaxed"
+              dir={lesson.supportDescription ? dir : "ltr"}
+            >
+              {hook}
+            </p>
+          )}
         </div>
       </Link>
     </motion.div>
