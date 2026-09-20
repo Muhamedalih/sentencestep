@@ -25,7 +25,7 @@ import {
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
-import { TIER_BADGE_CLASS } from "@/lib/tier-colors";
+import { TIER_BADGE_CLASS, TIER_ICON_CLASS } from "@/lib/tier-colors";
 import { cn, stableIndex } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
 
@@ -80,40 +80,15 @@ function iconForLesson(lessonId: string, title: string): LucideIcon {
 }
 
 /**
- * One fixed dark tile color for every card — deliberately not themed (like
- * the status chips below), so the grid reads as one calm, premium set
- * rather than the site's actual brand/accent tokens, which the signed-in
- * dashboard neutralizes to grayscale anyway (see .app-shell in globals.css).
- * A first pass gave every card its own hue (see git history), which read as
- * a loud, inconsistent rainbow across a full grid — color now lives only in
- * each card's icon badge below, which is what an actually premium-feeling
- * tile grid (Linear, Notion) does: one quiet surface, color used sparingly
- * as an accent rather than as the whole tile's identity.
- */
-const CARD_SURFACE = "oklch(0.24 0.02 265)";
-
-/**
- * A restrained three-tone accent set for the icon badge only — not the
- * whole tile (see CARD_SURFACE above). Each tone is a [badge background,
- * icon color] pair from the same hue, picked stably per lesson so neighbors
- * vary a little without the grid turning into a rainbow.
- */
-const ICON_ACCENTS: [badge: string, icon: string][] = [
-  ["oklch(0.32 0.09 273)", "oklch(0.78 0.12 273)"],
-  ["oklch(0.34 0.08 75)", "oklch(0.8 0.14 75)"],
-  ["oklch(0.32 0.07 165)", "oklch(0.75 0.11 165)"],
-];
-// Non-null: a literal array declared right above with 3 entries always has
-// an index 0 — this exists only to give the ?? fallback below a value
-// noUncheckedIndexedAccess accepts without widening it back to `| undefined`.
-const DEFAULT_ICON_ACCENT = ICON_ACCENTS[0]!;
-
-/**
- * The Stories Library's card — a poster tile, not an info card: a single
- * calm dark tile (see CARD_SURFACE) carries a colored icon badge and the
- * title/subtitle, deliberately unlike Word Lists' cards (see WordGroupCard),
- * which are text-and-badge tiles with no artwork at all. The two status
- * chips (tier, locked/completed) are styled as overlays — a fixed
+ * The Stories Library's card — a poster tile, not an info card: the app's
+ * real card surface (bg-card — the same dark near-black token every other
+ * card in the signed-in shell uses, see .dark .app-shell in globals.css)
+ * carries a colored icon badge and the title/subtitle. The icon badge's
+ * color comes from TIER_ICON_CLASS below — the lesson's actual difficulty —
+ * rather than a random per-lesson hash, so the same tile family reads as
+ * one system with Word Lists' cards (see WordGroupCard), which share this
+ * exact tile shape and the same tier-color mapping. The two status chips
+ * (tier, locked/completed) are styled as overlays — a fixed
  * dark/translucent treatment, not the page's own light/dark theme tokens —
  * since they have to stay legible on top of the tile in either site theme.
  */
@@ -132,11 +107,6 @@ export function StoryCard({
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
   const supportTitle = lesson.supportTitle ?? lesson.title;
   const Icon = iconForLesson(lesson.id, lesson.title);
-  // ?? DEFAULT_ICON_ACCENT is unreachable in practice (stableIndex's modulo
-  // always lands inside the array's real length) — same never-actually-
-  // undefined caveat as iconForLesson's own fallback branch above.
-  const [iconBadge, iconColor] =
-    ICON_ACCENTS[stableIndex(`accent:${lesson.id}`, ICON_ACCENTS.length)] ?? DEFAULT_ICON_ACCENT;
 
   return (
     <motion.div variants={fadeInUp} className="group h-full">
@@ -149,17 +119,18 @@ export function StoryCard({
       >
         <div
           className={cn(
-            "border-border/60 relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300",
+            "border-border/60 bg-card relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300",
             locked ? "opacity-90" : "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
           )}
-          style={{ backgroundColor: CARD_SURFACE }}
         >
           <div
             aria-hidden="true"
-            className="flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
-            style={{ backgroundColor: iconBadge }}
+            className={cn(
+              "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
+              TIER_ICON_CLASS[difficulty],
+            )}
           >
-            <Icon className="size-5" style={{ color: iconColor }} />
+            <Icon className="size-5" />
           </div>
 
           <span
@@ -194,13 +165,10 @@ export function StoryCard({
               asked for here, and clamping both lines would make the tile
               noticeably taller than this fix calls for. */}
           <div className="flex w-full flex-col items-center gap-0.5 px-1 text-center">
-            <h3
-              className="line-clamp-2 w-full text-sm leading-snug font-semibold text-white"
-              dir="ltr"
-            >
+            <h3 className="line-clamp-2 w-full text-sm leading-snug font-semibold" dir="ltr">
               {lesson.title}
             </h3>
-            <p className="w-full truncate text-xs text-white/70" dir={dir}>
+            <p className="text-muted-foreground w-full truncate text-xs" dir={dir}>
               {supportTitle}
             </p>
           </div>

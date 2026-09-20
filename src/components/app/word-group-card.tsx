@@ -4,55 +4,92 @@ import { useId, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Briefcase,
+  BookOpen,
   ChevronDown,
-  ChevronRight,
-  Crown,
+  CloudSun,
+  Cpu,
   GraduationCap,
+  HeartHandshake,
+  HeartPulse,
+  Home,
+  Landmark,
+  Leaf,
   Lock,
+  Newspaper,
+  Palette,
+  PawPrint,
   PencilLine,
-  Sprout,
-  Zap,
+  Plane,
+  Shirt,
+  ShoppingBag,
+  Users,
+  UtensilsCrossed,
+  Wallet,
+  type LucideIcon,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
+import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
+import { TIER_BADGE_CLASS, TIER_ICON_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 /**
- * A small per-tier icon badge next to the card's title — a quieter, more
- * distinctive substitute for the thick colored left-border stripe every
- * card used to carry (that read as a generic templated pattern once every
- * card had one). Sprout/Zap/Crown read as "just starting → building
- * momentum → mastery" at a glance, on top of the color, so the three tiers
- * stay visually distinct even for a learner who can't tell the accent
- * colors apart.
+ * Word group titles are a small, fixed English category set (see
+ * src/data/word-lists/{beginner,intermediate,advanced}.ts) unlike Stories'
+ * open-ended lesson titles, so a plain exact-match lookup is enough — none
+ * of story-card.tsx's regex-then-stable-hash fallback machinery is needed
+ * here. A category added later without an icon yet falls back to a generic
+ * book icon rather than crashing.
  */
-const TIER_ICON: Record<number, typeof Sprout> = { 1: Sprout, 2: Zap, 3: Crown };
-const TIER_TINT: Record<number, string> = {
-  1: "bg-success/12 text-success",
-  2: "bg-accent/15 text-accent",
-  3: "bg-primary/12 text-primary",
+const TOPIC_ICON: Record<string, LucideIcon> = {
+  Family: Users,
+  Friendship: HeartHandshake,
+  Colors: Palette,
+  Animals: PawPrint,
+  Food: UtensilsCrossed,
+  House: Home,
+  Clothes: Shirt,
+  Travel: Plane,
+  Health: HeartPulse,
+  Shopping: ShoppingBag,
+  Weather: CloudSun,
+  Work: Briefcase,
+  Politics: Landmark,
+  Finance: Wallet,
+  Technology: Cpu,
+  Environment: Leaf,
+  Education: GraduationCap,
+  Media: Newspaper,
 };
 
+function iconForGroup(title: string): LucideIcon {
+  return TOPIC_ICON[title] ?? BookOpen;
+}
+
 /**
- * One vocabulary group in the Word Lists library — the group-level
- * equivalent of story-card.tsx, but for a word count + optional
- * completed-count instead of a lesson's sentence count.
+ * One vocabulary group in the Word Lists library — the same poster-tile
+ * shape as story-card.tsx's StoryCard (real card surface, icon badge, tier
+ * chip, corner badge, centered title/subtitle), so the two libraries read
+ * as one card family instead of two unrelated designs. The tier chip and
+ * the icon badge's color both come from the same shared tier-colors.ts map
+ * StoryCard uses, so "Beginner" is the same green in both places.
  *
- * Locked state mirrors StoryCard's exact pattern (a lock badge, not a
- * disabled link — clicking still navigates, and the practice screen itself
- * explains the lock, same as PremiumLocked does for lessons).
+ * Locked mirrors StoryCard's locked tile exactly (dimmed, a lock badge in
+ * the tile's corner, the whole tile a single Link) — clicking still
+ * navigates, and the practice screen itself explains the lock.
  *
- * An unlocked card no longer navigates on click — it expands in place to
- * offer the two ways to work through the group: Learn (the flashcard/study
- * view at .../learn) or Practice (the existing fill-in-the-blank exercise).
- * Only one action needs a click to reach, same cost as the old direct link,
- * but the learner now picks which mode before committing to either screen.
+ * An unlocked tile's face is a toggle button, not a Link — clicking it
+ * expands the tile in place to offer the two ways to work through the group
+ * (Learn or Practice), the same interaction this card had before this
+ * redesign; only the visual shell changed. The corner badge that used to
+ * show an inline trailing chevron now sits in the tile's top-end corner —
+ * the same slot StoryCard uses for its completed/locked badge — and still
+ * rotates open exactly as it did before.
  */
 export function WordGroupCard({
   group,
@@ -67,12 +104,14 @@ export function WordGroupCard({
 }) {
   const locked = !group.isFree && !isPremiumUser;
   const percent = group.wordCount === 0 ? 0 : Math.round((completedCount / group.wordCount) * 100);
-  const { dir, t } = useLocale();
+  const { locale, dir, t } = useLocale();
   const supportTitle = group.supportTitle ?? group.title;
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
 
-  const TierIcon = TIER_ICON[group.level] ?? Sprout;
+  const difficulty = difficultyForLevel(group.level);
+  const tierText = locale ? tierSupportLabel(difficulty, locale) : "";
+  const Icon = iconForGroup(group.title);
 
   if (locked) {
     return (
@@ -82,111 +121,120 @@ export function WordGroupCard({
           aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
           className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
-          <Card className="flex-row items-center gap-3 px-4 py-3.5 opacity-70 transition-[box-shadow] duration-200">
-            <div
+          <div className="border-border/60 bg-card relative flex w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-4 opacity-90 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            <span
               className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-full",
-                TIER_TINT[group.level],
+                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+                TIER_BADGE_CLASS[difficulty],
               )}
             >
-              <TierIcon className="size-4" aria-hidden="true" />
+              {tierText}
+            </span>
+            <span
+              aria-hidden="true"
+              className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white shadow-sm backdrop-blur-sm"
+            >
+              <Lock className="size-3" />
+            </span>
+            <div
+              aria-hidden="true"
+              className={cn(
+                "flex size-10 items-center justify-center rounded-xl",
+                TIER_ICON_CLASS[difficulty],
+              )}
+            >
+              <Icon className="size-5" />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <p className="truncate font-medium" dir="ltr">
-                  {group.title}
-                </p>
-                <Badge variant="muted" className="shrink-0">
-                  <Lock aria-hidden="true" />
-                  {t.wordLists.premiumGroup}
-                </Badge>
-              </div>
-              <p className="text-muted-foreground truncate text-sm" dir={dir}>
+            <div className="flex w-full flex-col items-center gap-0.5 px-1 text-center">
+              <h3 className="line-clamp-2 w-full text-sm leading-snug font-semibold" dir="ltr">
+                {group.title}
+              </h3>
+              <p className="text-muted-foreground w-full truncate text-xs" dir={dir}>
                 {supportTitle}
               </p>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-muted-foreground text-xs font-medium">
-                  {t.wordLists.wordCount.replace("{n}", String(group.wordCount))}
-                </span>
-              </div>
             </div>
-            <ChevronRight className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-          </Card>
+          </div>
         </Link>
       </motion.div>
     );
   }
 
   return (
-    <motion.div
-      variants={fadeInUp}
-      whileHover={{ scale: 1.025 }}
-      transition={{ type: "spring", stiffness: 400, damping: 22 }}
-    >
-      <Card
-        className={cn(
-          "gap-0 overflow-hidden p-0 transition-[box-shadow,border-color] duration-200",
-          "hover:border-border hover:shadow-md",
-        )}
-      >
+    <motion.div variants={fadeInUp}>
+      <div className="border-border/60 bg-card overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-colors duration-200 hover:border-white/15">
         <button
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
           aria-controls={panelId}
-          className="focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center gap-3 px-4 py-3.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="focus-visible:ring-ring focus-visible:ring-offset-background relative flex w-full flex-col items-center gap-2 p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
-          <div
+          <span
             className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full",
-              TIER_TINT[group.level],
+              "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+              TIER_BADGE_CLASS[difficulty],
             )}
           >
-            <TierIcon className="size-4" aria-hidden="true" />
+            {tierText}
+          </span>
+          <span
+            aria-hidden="true"
+            className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white shadow-sm backdrop-blur-sm"
+          >
+            <ChevronDown
+              className={cn("size-3.5 transition-transform duration-200", expanded && "rotate-180")}
+            />
+          </span>
+
+          <div
+            className={cn(
+              "flex size-10 items-center justify-center rounded-xl",
+              TIER_ICON_CLASS[difficulty],
+            )}
+          >
+            <Icon className="size-5" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium" dir="ltr">
+
+          <div className="flex w-full flex-col items-center gap-0.5 px-1">
+            <p className="w-full truncate text-sm font-semibold" dir="ltr">
               {group.title}
             </p>
-            <p className="text-muted-foreground truncate text-sm" dir={dir}>
+            <p className="text-muted-foreground w-full truncate text-xs" dir={dir}>
               {supportTitle}
             </p>
-            <div className="mt-2 flex items-center gap-2">
-              {isLoaded ? (
-                <>
-                  <Progress value={percent} className="h-1.5" />
-                  <span
-                    className="text-muted-foreground shrink-0 text-xs font-medium tabular-nums"
-                    dir="ltr"
-                  >
-                    {completedCount} / {group.wordCount}
-                  </span>
-                </>
-              ) : (
-                <span className="text-muted-foreground text-xs font-medium">
-                  {t.wordLists.wordCount.replace("{n}", String(group.wordCount))}
-                </span>
-              )}
-            </div>
           </div>
-          <ChevronDown
-            className={cn(
-              "text-muted-foreground size-4 shrink-0 transition-transform duration-200",
-              expanded && "rotate-180",
+
+          <div className="mt-1 flex w-full flex-col items-center gap-1">
+            {isLoaded ? (
+              <>
+                <Progress value={percent} className="h-1.5 w-full" />
+                <span className="text-muted-foreground text-xs font-medium tabular-nums" dir="ltr">
+                  {completedCount} / {group.wordCount}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground text-xs font-medium">
+                {t.wordLists.wordCount.replace("{n}", String(group.wordCount))}
+              </span>
             )}
-            aria-hidden="true"
-          />
+          </div>
         </button>
 
         <AnimatePresence initial={false}>
           {expanded && (
+            // A plain opacity fade, not an animated height (0 -> "auto"):
+            // Framer Motion's "auto" height animation never actually ran
+            // here (verified live — the panel stayed pinned at the
+            // `initial` height:0/opacity:0 keyframe, with aria-expanded
+            // already true, leaving the Learn/Practice buttons rendered
+            // but visually collapsed and unreachable). A fade is simple
+            // enough to never hit that failure mode.
             <motion.div
               id={panelId}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
             >
               <div className="flex items-center gap-2 px-4 pt-1 pb-4">
                 <Button asChild variant="outline" className="flex-1 gap-1.5">
@@ -205,7 +253,7 @@ export function WordGroupCard({
             </motion.div>
           )}
         </AnimatePresence>
-      </Card>
+      </div>
     </motion.div>
   );
 }
