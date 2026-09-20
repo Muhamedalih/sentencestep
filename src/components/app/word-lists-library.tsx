@@ -37,15 +37,15 @@ function TierDots({ level, total = 3 }: { level: number; total?: number }) {
 }
 
 /**
- * The Word Lists library: three stacked level sections (Beginner/
- * Intermediate/Advanced, same tier labels as everywhere else in the app —
- * see src/lib/levels.ts), each a responsive grid of WordGroupCard poster
- * tiles — the same grid classes StoriesLibrary uses for its own tile grid,
- * so the two libraries read as one card family (see WordGroupCard/
- * StoryCard's shared shape and tier-colors.ts). All three levels are still
- * visible at once without pagination/tabs — Word Lists groups are few
- * enough per level (3 today) that a full vertical scroll through all three
- * sections still reads as one library, not three separate pages.
+ * The Word Lists library: three level columns (Beginner/Intermediate/
+ * Advanced, same tier labels as everywhere else in the app — see
+ * src/lib/levels.ts), each a vertical stack of WordGroupCard poster tiles —
+ * the same tile shape StoryCard uses (see WordGroupCard/StoryCard's shared
+ * shape and tier-colors.ts), just arranged as Word Lists' own tall column
+ * sequence rather than copying Stories' wide multi-per-row grid. All three
+ * levels are visible at once, unlike the Stories library's one-tier-at-a-
+ * time tabs — Word Lists groups are few enough per level that showing all
+ * three side by side reads as one library, not three separate pages.
  */
 export function WordListsLibrary({
   groups,
@@ -83,7 +83,7 @@ export function WordListsLibrary({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-10">
+        <div className="grid gap-8 lg:grid-cols-3">
           {LEVELS.map((level) => {
             const tierText = locale ? tierSupportLabel(difficultyForLevel(level), locale) : "";
             const levelGroups = groups
@@ -91,8 +91,8 @@ export function WordListsLibrary({
               .sort((a, b) => a.order - b.order);
 
             return (
-              <section key={level}>
-                <div className="border-border/60 mb-4 flex items-center gap-2 border-b pb-3">
+              <section key={level} className="flex min-w-0 flex-col gap-4">
+                <div className="border-border/60 flex items-center gap-2 border-b pb-3">
                   <span
                     dir={dir}
                     className={cn(
@@ -114,15 +114,11 @@ export function WordListsLibrary({
                 {levelGroups.length === 0 ? (
                   <p className="text-muted-foreground text-sm">{t.library.moreGroupsSoon}</p>
                 ) : (
-                  // items-start: unlike Stories' tile grid, a card here can
-                  // expand in place (see WordGroupCard) — without this, CSS
-                  // Grid's default stretch alignment would force every other
-                  // card in that row to grow to the expanded card's height.
                   <motion.div
                     initial="hidden"
                     animate="visible"
                     variants={staggerChildren}
-                    className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3 lg:grid-cols-4"
+                    className="flex flex-col gap-3"
                   >
                     {levelGroups.map((group) => (
                       <WordGroupCard
