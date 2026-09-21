@@ -171,6 +171,17 @@ export const ar: Dictionary = {
     point4Title: "دقايق قليلة باليوم كافية",
     point4Body: "الاستمرار البسيط أقوى من الجلسات الطويلة النادرة — وأنت الحين أثبت إنك تقدر.",
     cta: "متابعة",
+    ctaSignup: "أنشئ حسابك مجانًا",
+    ctaSignupHelper: "تحفظ فيه الستريك والنقاط اللي سويتها اليوم — أقل من دقيقة.",
+    ctaGuestContinue: "لا، خليني أكمل كضيف",
+  },
+  guestBanner: {
+    titleSingular: "عندك يوم واحد متتالي",
+    titlePlural: "عندك {n} أيام متتالية",
+    titleFallback: "تتعلم حاليًا كضيف",
+    subtitle: "تقدمك محفوظ بهالمتصفح بس. سجّل مجانًا تضمنه.",
+    cta: "سجّل الآن",
+    dismissAria: "تجاهل",
   },
   rateApp: {
     headline: "شلونك لقيت تجربتك بالتطبيق؟",

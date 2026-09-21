@@ -8,6 +8,7 @@ import {
   migrateGuestProgressAction,
   recordCompletionAction,
 } from "@/lib/progress/actions";
+import { trackGuestLessonCompletionAction } from "@/lib/analytics/track-actions";
 import { hasMigratableGuestState } from "@/lib/progress/guest-migration";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { todayLocalISODate } from "@/lib/progress/streak";
@@ -211,6 +212,11 @@ export function useProgress(
         // Synchronous and local — nothing to retry, nothing that can fail.
         setState((prev) => recordCompletion(prev, mode, lessonId, accuracy, sentenceCount));
         setSaveStatus("saved");
+        // Fire-and-forget, same as trackOnboardingCountryAction elsewhere —
+        // never awaited or allowed to affect the (already-synchronous, local)
+        // completion above. See trackGuestLessonCompletionAction's own doc
+        // comment for why this exists.
+        void trackGuestLessonCompletionAction(mode, lessonId, accuracy).catch(() => {});
       }
     },
     [userId],

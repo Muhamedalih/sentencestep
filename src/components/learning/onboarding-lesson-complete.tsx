@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import type { OnboardingCardSettings } from "@/lib/admin/onboarding-card-setting
  */
 export function OnboardingLessonComplete() {
   const { t, dir } = useLocale();
+  const userId = useAuthUserId();
   const [settings, setSettings] = useState<OnboardingCardSettings | null>(null);
 
   useEffect(() => {
@@ -89,9 +91,33 @@ export function OnboardingLessonComplete() {
               ))}
             </div>
 
-            <Button size="lg" asChild className="w-fit">
-              <Link href="/learn">{t.onboardingComplete.cta}</Link>
-            </Button>
+            {userId ? (
+              <Button size="lg" asChild className="w-fit">
+                <Link href="/learn">{t.onboardingComplete.cta}</Link>
+              </Button>
+            ) : (
+              // This is the single highest-intent moment in the whole guest
+              // journey to ask for an account — the guest→account progress
+              // migration (useProgress's sign-in effect, guest-migration.ts)
+              // already runs automatically the moment they do, so signing up
+              // here loses nothing they've built so far. Still never
+              // required: ctaGuestContinue goes straight to /learn, same
+              // destination the old single "Continue" button always used.
+              <div className="flex flex-col items-start gap-2">
+                <Button size="lg" asChild className="w-fit">
+                  <Link href="/register">{t.onboardingComplete.ctaSignup}</Link>
+                </Button>
+                <p className="text-muted-foreground text-sm">
+                  {t.onboardingComplete.ctaSignupHelper}
+                </p>
+                <Link
+                  href="/learn"
+                  className="text-muted-foreground hover:text-foreground mt-1 text-sm underline underline-offset-4"
+                >
+                  {t.onboardingComplete.ctaGuestContinue}
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="border-border bg-card mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl border">

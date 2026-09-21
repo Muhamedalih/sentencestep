@@ -179,6 +179,17 @@ export const tr: Dictionary = {
     point4Body:
       "Kısa ve düzenli pratik, uzun ama seyrek oturumlardan daha güçlüdür — ve bunu yapabildiğini az önce kanıtladın.",
     cta: "Devam et",
+    ctaSignup: "Ücretsiz hesabını oluştur",
+    ctaSignupHelper: "Bugün kazandığın seriyi ve XP'yi kaydet — bir dakikadan az sürer.",
+    ctaGuestContinue: "Hayır, misafir olarak devam et",
+  },
+  guestBanner: {
+    titleSingular: "1 günlük serin var",
+    titlePlural: "{n} günlük serin var",
+    titleFallback: "Misafir olarak öğreniyorsun",
+    subtitle: "İlerlemen sadece bu tarayıcıda duruyor. Kaydetmek için ücretsiz kaydol.",
+    cta: "Kaydol",
+    dismissAria: "Kapat",
   },
   rateApp: {
     headline: "SentenceStep deneyimin şimdiye kadar nasıldı?",

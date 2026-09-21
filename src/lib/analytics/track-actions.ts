@@ -1,7 +1,8 @@
 "use server";
 
-import { startedEvent } from "@/lib/analytics/events";
+import { completedEvent, startedEvent } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
+import { getLessonById } from "@/lib/content";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isCountryCode } from "@/lib/i18n/country-codes";
 import type { LearningMode } from "@/types/content";
@@ -49,6 +50,30 @@ export async function trackAudioPlayedAction(mode: LearningMode): Promise<void> 
     { name: "AUDIO_PLAYED", category: "ENGAGEMENT", properties: { mode } },
     user?.id ?? null,
   );
+}
+
+/**
+ * A guest's counterpart to recordCompletionAction's own LESSON_COMPLETED
+ * track() call (src/lib/progress/actions.ts) — that one only ever fires for
+ * a signed-in learner, since a guest's completion is recorded entirely
+ * client-side (see useProgress's markComplete). Without this, the internal
+ * analytics could see a guest *start* a lesson but never see them *finish*
+ * one, making it impossible to measure whether a guest completing their
+ * first lesson correlates with them signing up. No-ops if the caller turns
+ * out to already be signed in (recordCompletionAction owns that case) rather
+ * than trusting the client's own guess.
+ */
+export async function trackGuestLessonCompletionAction(
+  mode: LearningMode,
+  lessonId: string,
+  accuracy: number,
+): Promise<void> {
+  const user = await getCurrentUser();
+  if (user) return;
+
+  const lesson = await getLessonById(mode, lessonId);
+  const safeAccuracy = Math.min(1, Math.max(0, accuracy));
+  await track(completedEvent(mode, lessonId, lesson?.level ?? 0, safeAccuracy), null);
 }
 
 /**

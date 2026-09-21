@@ -215,6 +215,26 @@ export interface Dictionary {
     point4Title: string;
     point4Body: string;
     cta: string;
+    /** Guest-only variant of `cta` — the primary button on this screen when there's no account yet to lose progress in. */
+    ctaSignup: string;
+    ctaSignupHelper: string;
+    /** The low-pressure secondary link next to ctaSignup — guests are never blocked from moving on without an account. */
+    ctaGuestContinue: string;
+  };
+  /**
+   * The dismissible "you're browsing as a guest" reminder on the Home
+   * dashboard (src/components/app/guest-progress-banner.tsx) — only ever
+   * shown once a guest has real progress worth protecting (see that
+   * component's own doc comment), never to a brand-new visitor.
+   */
+  guestBanner: {
+    titleSingular: string;
+    titlePlural: string;
+    /** Shown when currentStreak is 0 (progress exists as completions/XP, just no active streak) — never shown alongside a real day count. */
+    titleFallback: string;
+    subtitle: string;
+    cta: string;
+    dismissAria: string;
   };
   /** The optional, one-time "rate the app" prompt shown over the ordinary LessonCompletion screen — see RatingPrompt. */
   rateApp: {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
@@ -179,6 +180,7 @@ export default async function LearnHomePage() {
           sessionCount={attemptCount}
           className="mb-10"
         />
+        <GuestProgressBanner isGuest={!user} className="mb-6" />
         <NeedsReviewWords words={weakWords} />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}

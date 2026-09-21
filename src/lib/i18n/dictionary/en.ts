@@ -182,6 +182,17 @@ export const en: Dictionary = {
     point4Body:
       "Small, steady practice beats long, rare sessions — and you just proved you can do it.",
     cta: "Continue",
+    ctaSignup: "Create your free account",
+    ctaSignupHelper: "Save the streak and XP you just earned — takes less than a minute.",
+    ctaGuestContinue: "No thanks, continue as a guest",
+  },
+  guestBanner: {
+    titleSingular: "You're on a 1-day streak",
+    titlePlural: "You're on a {n}-day streak",
+    titleFallback: "You're learning as a guest",
+    subtitle: "Your progress only lives in this browser. Sign up free to keep it.",
+    cta: "Sign up",
+    dismissAria: "Dismiss",
   },
   rateApp: {
     headline: "How's your experience with SentenceStep so far?",

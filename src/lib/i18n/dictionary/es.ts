@@ -184,6 +184,17 @@ export const es: Dictionary = {
     point4Body:
       "La práctica breve y constante gana a las sesiones largas y ocasionales — y ya demostraste que puedes.",
     cta: "Continuar",
+    ctaSignup: "Crea tu cuenta gratis",
+    ctaSignupHelper: "Guarda la racha y los XP que acabas de ganar — toma menos de un minuto.",
+    ctaGuestContinue: "No, gracias, continuar como invitado",
+  },
+  guestBanner: {
+    titleSingular: "Llevas 1 día de racha",
+    titlePlural: "Llevas {n} días de racha",
+    titleFallback: "Estás aprendiendo como invitado",
+    subtitle: "Tu progreso solo vive en este navegador. Regístrate gratis para guardarlo.",
+    cta: "Registrarme",
+    dismissAria: "Descartar",
   },
   rateApp: {
     headline: "¿Cómo ha sido tu experiencia con SentenceStep hasta ahora?",
