@@ -42,13 +42,17 @@ async function getAuthenticatedUserId(): Promise<string | null> {
  */
 export async function fetchVocabularyRecallCountAction(mode?: LearningMode): Promise<number> {
   const userId = await getAuthenticatedUserId();
-  // TEMPORARY diagnostic — remove once the Stories/Normal card visibility
-  // issue is confirmed fixed.
-  console.log("[vocabulary-recall][debug] countAction", { mode, userId });
+  // TEMPORARY diagnostic (console.error, not console.log — this platform's
+  // function log view only surfaces error-level lines) — remove once the
+  // Stories/Normal card visibility issue is confirmed fixed.
+  console.error("[vocabulary-recall][debug] countAction", JSON.stringify({ mode, userId }));
   if (!userId) return 0;
   try {
     const result = await fetchDueVocabularyRecallCount(userId, toRecallMode(mode));
-    console.log("[vocabulary-recall][debug] countAction result", { mode, userId, result });
+    console.error(
+      "[vocabulary-recall][debug] countAction result",
+      JSON.stringify({ mode, userId, result }),
+    );
     return result;
   } catch (error) {
     console.error("[vocabulary-recall] fetchDueVocabularyRecallCount failed", error);
