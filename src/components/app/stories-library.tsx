@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { StoryCard } from "@/components/app/story-card";
+import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
@@ -39,9 +40,12 @@ const CEFR_BY_TIER: Record<Difficulty, string> = {
 export function StoriesLibrary({
   lessons,
   isPremiumUser,
+  recallCount = 0,
 }: {
   lessons: Lesson[];
   isPremiumUser: boolean;
+  /** This section's own due Vocabulary Recall count (see fetchVocabularyRecallCountAction) — drives VocabularySectionRecallCard, shown right under the title. */
+  recallCount?: number;
 }) {
   const { isCompleted, isLoaded } = useProgress();
   const { locale, dir, t } = useLocale();
@@ -90,6 +94,8 @@ export function StoriesLibrary({
           </p>
         </div>
       </div>
+
+      <VocabularySectionRecallCard mode="stories" count={recallCount} />
 
       {/* Editorial underline tabs, deliberately not the filled/ringed pill
           style Word Lists' tier badges use (see WordGroupCard/

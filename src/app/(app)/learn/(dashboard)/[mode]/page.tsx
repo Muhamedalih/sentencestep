@@ -48,17 +48,18 @@ export async function generateMetadata({
  * (dashboard)/page.tsx) — this page is purely "browse this mode's full
  * lesson list," the same job it already did for Stories/Conversation,
  * consistent across all three modes with nothing mode-specific left here.
+ *
+ * In practice this only ever serves Normal and Conversation: Stories has
+ * its own literal route (see ../stories/page.tsx), which Next.js's router
+ * always prefers over this dynamic [mode] segment for the exact path
+ * /learn/stories — the two routes never compete, but that also means a
+ * change made only here (e.g. VocabularySectionRecallCard below) never
+ * reaches /learn/stories on its own; see StoriesLibraryPage for that route's
+ * own copy of the same wiring.
  */
-export default async function ModeLessonsPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ mode: string }>;
-  searchParams: Promise<{ debug?: string }>;
-}) {
+export default async function ModeLessonsPage({ params }: { params: Promise<{ mode: string }> }) {
   const { mode } = await params;
   if (!isLearningMode(mode)) notFound();
-  const { debug } = await searchParams;
 
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
@@ -77,10 +78,6 @@ export default async function ModeLessonsPage({
 
   return (
     <div className="mx-auto max-w-5xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
-      {/* TEMPORARY, UNCONDITIONAL for one diagnostic round — remove immediately once confirmed. */}
-      <p style={{ background: "yellow", color: "black", padding: 8, fontFamily: "monospace" }}>
-        DEBUG2 mode={mode} recallCount={recallCount} debugParam={String(debug)}
-      </p>
       <LessonListView
         mode={mode}
         title={title}
