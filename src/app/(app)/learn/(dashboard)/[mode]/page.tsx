@@ -49,9 +49,16 @@ export async function generateMetadata({
  * lesson list," the same job it already did for Stories/Conversation,
  * consistent across all three modes with nothing mode-specific left here.
  */
-export default async function ModeLessonsPage({ params }: { params: Promise<{ mode: string }> }) {
+export default async function ModeLessonsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ mode: string }>;
+  searchParams: Promise<{ debug?: string }>;
+}) {
   const { mode } = await params;
   if (!isLearningMode(mode)) notFound();
+  const { debug } = await searchParams;
 
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
@@ -70,6 +77,12 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
 
   return (
     <div className="mx-auto max-w-5xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
+      {/* TEMPORARY — remove once the Stories/Normal recall-card visibility issue is confirmed fixed. */}
+      {debug === "1" && (
+        <p style={{ background: "yellow", color: "black", padding: 8, fontFamily: "monospace" }}>
+          DEBUG mode={mode} recallCount={recallCount}
+        </p>
+      )}
       <LessonListView
         mode={mode}
         title={title}
