@@ -42,9 +42,14 @@ async function getAuthenticatedUserId(): Promise<string | null> {
  */
 export async function fetchVocabularyRecallCountAction(mode?: LearningMode): Promise<number> {
   const userId = await getAuthenticatedUserId();
+  // TEMPORARY diagnostic — remove once the Stories/Normal card visibility
+  // issue is confirmed fixed.
+  console.log("[vocabulary-recall][debug] countAction", { mode, userId });
   if (!userId) return 0;
   try {
-    return await fetchDueVocabularyRecallCount(userId, toRecallMode(mode));
+    const result = await fetchDueVocabularyRecallCount(userId, toRecallMode(mode));
+    console.log("[vocabulary-recall][debug] countAction result", { mode, userId, result });
+    return result;
   } catch (error) {
     console.error("[vocabulary-recall] fetchDueVocabularyRecallCount failed", error);
     return 0;
