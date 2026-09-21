@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -16,6 +17,78 @@ import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { hasSupabaseAuthCookieClient } from "@/lib/supabase/has-session-cookie-client";
 
 /**
+ * How long the tab must stay hidden before a hidden→visible edge counts as
+ * "left and came back," rather than a momentary notification glance or app
+ * switch that shouldn't wipe an in-progress guest's language/level choice.
+ * Also the threshold `wasAwayTooLong` below applies across a genuinely
+ * closed-and-reopened tab/browser, via `lastActive` — see its own doc
+ * comment for why that needs a second, persisted mechanism instead of just
+ * this one.
+ */
+const HIDDEN_RESET_THRESHOLD_MS = 60_000;
+
+/** localStorage key: a plain timestamp, refreshed on every mount and every visibility-regain — see `wasAwayTooLong` and `markActive`. */
+const LAST_ACTIVE_KEY = "looma:lastActive";
+
+/** Records "this signed-out visitor's browser was just here" so a later, brand-new tab can tell how long it's actually been. */
+function markActive() {
+  try {
+    localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
+  } catch {}
+}
+
+/**
+ * True once at least HIDDEN_RESET_THRESHOLD_MS has passed since `markActive`
+ * last ran — including across a fully closed-and-reopened tab or browser,
+ * which is exactly the case the existing `visibilitychange`/`pageshow`
+ * listeners below (see the main effect's own doc comment) CAN'T catch: both
+ * only fire within an already-running tab instance, and a closed tab leaves
+ * no such instance behind to fire them. `lastActive` persists to
+ * localStorage specifically so a genuinely fresh page load (a new tab, the
+ * browser reopened, or just typing the URL back in after a while) can still
+ * recover "how long has it actually been" retroactively. No recorded value
+ * at all (a real first-ever visit) is treated as NOT stale — there's nothing
+ * to forget yet, and IntroLanding already shows correctly on its own in that
+ * case (no `ss_locale` cookie either).
+ */
+function wasAwayTooLong(): boolean {
+  try {
+    const raw = localStorage.getItem(LAST_ACTIVE_KEY);
+    if (!raw) return false;
+    return Date.now() - Number(raw) >= HIDDEN_RESET_THRESHOLD_MS;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Clears a signed-out visitor's language/level choice and sends them back to
+ * "/" — the shared action behind both the `visibilitychange`/`pageshow`
+ * listeners in the main effect below and GetStartedMaskCleanup's own
+ * stale-return check, so a browser that "left and came back" forgets
+ * everything and restarts from IntroLanding regardless of which of those two
+ * mechanisms is the one that actually noticed. Scoped to a signed-out
+ * visitor only (hasSupabaseAuthCookieClient) so it never touches a signed-in
+ * learner's real, server-backed preferred_language, and never fires while a
+ * guest is mid-lesson on /learn: `marketingOnly` is true only from the two
+ * call sites that are themselves already scoped to the marketing route
+ * groups (see `localizedNavigation`'s own doc comment below).
+ */
+function forgetGuestChoices(marketingOnly: boolean) {
+  if (!marketingOnly || hasSupabaseAuthCookieClient()) return false;
+  document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0`;
+  clearProgress();
+  // A plain reload isn't enough on a locale-prefixed path ("/ar", ...):
+  // [locale]/layout.tsx resolves `locale` from the URL segment itself, never
+  // a cookie read, so reloading "/ar" would still render with locale="ar"
+  // regardless of the cookie just cleared above. "/" is the one path whose
+  // layout resolves `locale` from the (now-cleared) cookie, which is also
+  // exactly "the first page" being asked for.
+  window.location.href = "/";
+  return true;
+}
+
+/**
  * Removes root-html-shell.tsx's ONBOARDING_TRANSITION_MASK_SCRIPT's mask element
  * the instant useProgress()'s `isLoaded` turns true — see that script's own
  * doc comment for what it's covering and why. A separate component (not
@@ -24,22 +97,40 @@ import { hasSupabaseAuthCookieClient } from "@/lib/supabase/has-session-cookie-c
  * ever exists on the two marketing route groups this mask can possibly be
  * present on, never on every other route GetStartedStepProvider also mounts
  * on (see its own `localizedNavigation` prop doc comment).
+ *
+ * Also where a stale returning-guest gets caught before the mask ever comes
+ * down: this mask is exactly what's covering the raw marketing homepage
+ * underneath while `isLoaded` is still false, so this is the one place that
+ * can check "should this visitor actually be sent back to IntroLanding"
+ * and, if so, keep the mask up through the reload that decides it — see
+ * `wasAwayTooLong`'s own doc comment for why `visibilitychange`/`pageshow`
+ * alone (GetStartedStepProvider's main effect, below) can't already cover
+ * this. `wasStaleReturn` is captured once, as a ref's LAZY initial value —
+ * evaluated during this component's very first render, before any effect
+ * (layout or passive) has run at all — rather than called fresh inside the
+ * effect below: GetStartedStepProvider's own effect (a passive one, further
+ * down this file) calls `markActive()` unconditionally on mount too, and
+ * passive effects across the whole tree only run after the first paint,
+ * strictly after every component's layout effects for that same commit —
+ * except `isLoaded` starts false, so THIS effect's first pass (still
+ * pre-paint) does nothing, and the isLoaded=true re-render it schedules
+ * (via useProgress's own layout effect) still doesn't land until AFTER that
+ * first paint's passive effects have already run — by which point
+ * `markActive()` has already overwritten `lastActive` with "now." Reading
+ * `wasAwayTooLong()` this way sidesteps that race entirely: whatever it
+ * returns on the first render is fixed for this component instance's whole
+ * lifetime, long before `markActive()` ever gets a chance to run.
  */
 function GetStartedMaskCleanup() {
-  const { isLoaded } = useProgress();
+  const { isLoaded, startingLevel } = useProgress();
+  const wasStaleReturn = useRef(wasAwayTooLong());
   useLayoutEffect(() => {
     if (!isLoaded) return;
+    if (startingLevel === null && wasStaleReturn.current && forgetGuestChoices(true)) return;
     document.getElementById("get-started-mask")?.remove();
-  }, [isLoaded]);
+  }, [isLoaded, startingLevel]);
   return null;
 }
-
-/**
- * How long the tab must stay hidden before a hidden→visible edge counts as
- * "left and came back," rather than a momentary notification glance or app
- * switch that shouldn't wipe an in-progress guest's language/level choice.
- */
-const HIDDEN_RESET_THRESHOLD_MS = 60_000;
 
 /**
  * The state shared between the six steps of the homepage's "get started"
@@ -147,7 +238,12 @@ export function GetStartedStepProvider({
   // doesn't necessarily do that: most mobile browsers just keep the same
   // page instance running in the background rather than unloading it, so
   // neither a reload nor even a bfcache `pageshow` restore is guaranteed to
-  // fire — `visibilitychange` is the one signal that reliably does.
+  // fire — `visibilitychange` is the one signal that reliably does WITHIN AN
+  // ALREADY-RUNNING TAB INSTANCE. A fully closed tab/browser, later reopened
+  // fresh (no prior instance left to fire anything here), is a different
+  // case entirely — see GetStartedMaskCleanup's `wasAwayTooLong` for how
+  // that one gets caught instead, via a timestamp persisted to localStorage
+  // rather than an in-memory listener.
   // `visibilitychange` fires on every hidden→visible edge though, including
   // a glance at a notification or a momentary app switch — nowhere close to
   // "left and came back to the site" — so a minimum away-duration
@@ -181,18 +277,11 @@ export function GetStartedStepProvider({
     function resetIntro() {
       setIntroContinued(false);
     }
-    function forgetGuestChoices() {
-      if (!localizedNavigation || hasSupabaseAuthCookieClient()) return;
-      document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0`;
-      clearProgress();
-      // A plain reload isn't enough on a locale-prefixed path ("/ar", ...):
-      // [locale]/layout.tsx resolves `locale` from the URL segment itself,
-      // never a cookie read, so reloading "/ar" would still render with
-      // locale="ar" regardless of the cookie just cleared above. "/" is the
-      // one path whose layout resolves `locale` from the (now-cleared)
-      // cookie, which is also exactly "the first page" being asked for.
-      window.location.href = "/";
-    }
+    // Records this visit so a LATER, brand-new tab/window can tell it's been
+    // away — see `wasAwayTooLong`'s own doc comment. Only meaningful for a
+    // signed-out visitor (nothing here reads it for a signed-in one), but
+    // cheap enough to just always write.
+    markActive();
     let hiddenAt: number | null = null;
     function handleVisibilityChange() {
       if (document.visibilityState === "hidden") {
@@ -200,17 +289,19 @@ export function GetStartedStepProvider({
         return;
       }
       if (document.visibilityState !== "visible") return;
+      markActive();
       const wasHiddenLongEnough =
         hiddenAt !== null && Date.now() - hiddenAt >= HIDDEN_RESET_THRESHOLD_MS;
       hiddenAt = null;
       if (!wasHiddenLongEnough) return;
       resetIntro();
-      forgetGuestChoices();
+      forgetGuestChoices(localizedNavigation);
     }
     function handlePageShow(event: PageTransitionEvent) {
+      markActive();
       if (!event.persisted) return;
       resetIntro();
-      forgetGuestChoices();
+      forgetGuestChoices(localizedNavigation);
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pageshow", handlePageShow);
