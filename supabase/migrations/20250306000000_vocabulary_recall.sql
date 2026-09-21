@@ -4,11 +4,14 @@
 -- `mistakes` (typing errors) and from Word Lists' own catalog/progress. One
 -- row per (user, word): the first lesson/story that introduces a word claims
 -- it via ON CONFLICT DO NOTHING below, so later re-encounters of the same
--- word never reset its schedule. Content is denormalized onto the row at
--- write time (sentence text, lesson title) rather than joined live against
--- `sentences`/`lessons` — this feature only ever shows the sentence the
--- learner actually met the word in, which never changes after the fact, so
--- there's nothing a live join would give that a snapshot doesn't.
+-- word never reset its schedule. Display content (sentence text, lesson
+-- title) is denormalized onto the row at write time rather than joined live
+-- against `lessons` — this feature only ever shows the sentence the learner
+-- actually met the word in, which never changes after the fact. sentence_id
+-- itself is kept as a live FK (not just a snapshot) purely so the review
+-- screen's pronunciation can resolve a real voice through the existing
+-- "sentence_word" isolated-word pipeline (see record-encounters.ts's doc
+-- comment) — everything else about this row is read-only history.
 begin;
 
 create table vocabulary_encounters (
@@ -23,6 +26,15 @@ create table vocabulary_encounters (
   mode text not null check (mode in ('normal', 'stories')),
   lesson_id text not null,
   lesson_title text not null,
+  -- Kept live (not just the sentence_en snapshot below) so the review
+  -- screen's pronunciation button can resolve a real synthesized voice via
+  -- the existing "sentence_word" isolated-word pipeline
+  -- (resolvePronunciationAudioAction, the exact one Fix Your Mistakes
+  -- already uses) instead of falling back to the browser's own speech
+  -- synthesis. Same on delete cascade as mistakes.sentence_id: if the
+  -- sentence is ever deleted, any pending encounter for a word from it goes
+  -- with it rather than lingering with unresolvable audio.
+  sentence_id text not null references sentences (id) on delete cascade,
   sentence_en text not null,
   -- Index into sentence_en's whitespace-split words (same convention as
   -- Sentence.targetVocabularyIndices) — where `word` sits, so the review
@@ -61,6 +73,7 @@ create or replace function public.record_vocabulary_encounter(
   p_mode text,
   p_lesson_id text,
   p_lesson_title text,
+  p_sentence_id text,
   p_sentence_en text,
   p_word_index integer
 )
@@ -70,9 +83,11 @@ security invoker
 set search_path = public
 as $$
   insert into vocabulary_encounters (
-    user_id, word, ar, mode, lesson_id, lesson_title, sentence_en, word_index
+    user_id, word, ar, mode, lesson_id, lesson_title, sentence_id, sentence_en, word_index
   )
-  values (auth.uid(), p_word, p_ar, p_mode, p_lesson_id, p_lesson_title, p_sentence_en, p_word_index)
+  values (
+    auth.uid(), p_word, p_ar, p_mode, p_lesson_id, p_lesson_title, p_sentence_id, p_sentence_en, p_word_index
+  )
   on conflict (user_id, word) do nothing;
 $$;
 

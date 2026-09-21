@@ -1,3 +1,4 @@
+import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { recordVocabularyEncounter } from "@/lib/supabase/queries/vocabulary-recall";
 import type { Lesson } from "@/types/content";
 
@@ -39,11 +40,18 @@ export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promi
 
       try {
         await recordVocabularyEncounter({
-          word: item.en.toLowerCase(),
+          // Normalized the exact same way resolvePronunciationAudioAction's
+          // "sentence_word" lookup re-derives a word from the live sentence
+          // (see that function's doc comment) — a mismatch here would mean
+          // the isolated-word pronunciation pipeline can never find this
+          // word inside its own sentence, silently falling back to the
+          // browser's speech synthesis.
+          word: normalizeMistakeWord(item.en),
           ar: item.ar,
           mode: lesson.mode,
           lessonId: lesson.id,
           lessonTitle: lesson.title,
+          sentenceId,
           sentenceEn: sentence.en,
           wordIndex,
         });

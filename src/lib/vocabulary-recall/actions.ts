@@ -83,6 +83,14 @@ export async function fetchVocabularyRecallWordsAction(): Promise<ReviewWord[]> 
       reason: "review",
       lessonTitle: row.lessonTitle,
       daysAgo,
+      // Routes PronunciationButton to the real, synthesized isolated-word
+      // pipeline (see resolvePronunciationAudioAction) instead of its
+      // "word" default, which would look this id up against Word Lists'
+      // own vocabulary_words catalog and always miss — silently falling
+      // back to the browser's own speech synthesis. "sentence_word" instead
+      // re-resolves the word live from row.sentenceId's real sentence.
+      pronunciationContentType: "sentence_word",
+      pronunciationContentId: `${row.sentenceId}::${row.word}`,
     };
   });
 }

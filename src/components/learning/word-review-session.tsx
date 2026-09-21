@@ -21,6 +21,7 @@ import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { popIn } from "@/lib/motion";
 import type { WeakWordReason } from "@/lib/weak-words/types";
 import { splitWordHint } from "@/lib/word-lists-hint";
+import type { VoiceAudioContentType } from "@/lib/voice/voice-audio";
 import type { VocabularyWord } from "@/types/word-lists";
 
 export interface ReviewWord extends VocabularyWord {
@@ -30,6 +31,19 @@ export interface ReviewWord extends VocabularyWord {
   lessonTitle?: string;
   /** Vocabulary Recall only — how many days ago this word was first met, paired with lessonTitle in the same context line. */
   daysAgo?: number;
+  /**
+   * Overrides PronunciationButton's default `contentType="word"` (which
+   * looks this word up against Word Lists' own vocabulary_words catalog by
+   * `id`) — Vocabulary Recall words aren't in that catalog at all, so they
+   * set this to "sentence_word" instead (see fetchVocabularyRecallWordsAction),
+   * which re-resolves real, synthesized pronunciation from the actual
+   * lesson/story sentence via resolvePronunciationAudioAction, never the
+   * browser's speech synthesis. Absent (default "word") for Word Lists'
+   * own queue, unchanged from before this field existed.
+   */
+  pronunciationContentType?: VoiceAudioContentType;
+  /** Paired with pronunciationContentType — defaults to this word's own `id` (a real vocabulary_words id) when absent, exactly as before this field existed. */
+  pronunciationContentId?: string;
 }
 
 /**
@@ -193,8 +207,8 @@ export function WordReviewSession({
                 resetKey={word.id}
                 inputRef={inputRef}
                 kokoroVoiceId={defaultVoiceId}
-                contentType="word"
-                contentId={word.id}
+                contentType={word.pronunciationContentType ?? "word"}
+                contentId={word.pronunciationContentId ?? word.id}
                 label={t.wordLists.replayAction}
                 variant="outline"
                 size="sm"

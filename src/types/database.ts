@@ -900,6 +900,8 @@ export interface Database {
           mode: "normal" | "stories";
           lesson_id: string;
           lesson_title: string;
+          /** Live FK to `sentences` — used to resolve real (never browser-fallback) pronunciation via the "sentence_word" isolated-word pipeline. */
+          sentence_id: string;
           sentence_en: string;
           /** Index into sentence_en's whitespace-split words — where `word` sits. */
           word_index: number;
@@ -917,6 +919,7 @@ export interface Database {
           mode: "normal" | "stories";
           lesson_id: string;
           lesson_title: string;
+          sentence_id: string;
           sentence_en: string;
           word_index: number;
           review_stage?: number;
@@ -1185,6 +1188,7 @@ export interface Database {
           p_mode: string;
           p_lesson_id: string;
           p_lesson_title: string;
+          p_sentence_id: string;
           p_sentence_en: string;
           p_word_index: number;
         };

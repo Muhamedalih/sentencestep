@@ -25,6 +25,8 @@ export interface DueVocabularyRecallRow {
   word: string;
   ar: string;
   lessonTitle: string;
+  /** Real `sentences.id` this word came from — see recordVocabularyEncounter's doc comment for why this rides along instead of just the sentence_en snapshot. */
+  sentenceId: string;
   sentenceEn: string;
   wordIndex: number;
   createdAt: string;
@@ -37,7 +39,7 @@ export async function fetchDueVocabularyRecallRows(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vocabulary_encounters")
-    .select("word, ar, lesson_title, sentence_en, word_index, created_at")
+    .select("word, ar, lesson_title, sentence_id, sentence_en, word_index, created_at")
     .eq("user_id", userId)
     .not("next_review_at", "is", null)
     .lte("next_review_at", new Date().toISOString())
@@ -48,6 +50,7 @@ export async function fetchDueVocabularyRecallRows(
     word: row.word,
     ar: row.ar,
     lessonTitle: row.lesson_title,
+    sentenceId: row.sentence_id,
     sentenceEn: row.sentence_en,
     wordIndex: row.word_index,
     createdAt: row.created_at,
@@ -60,6 +63,7 @@ export interface VocabularyEncounterInput {
   mode: LearningMode;
   lessonId: string;
   lessonTitle: string;
+  sentenceId: string;
   sentenceEn: string;
   wordIndex: number;
 }
@@ -70,6 +74,14 @@ export interface VocabularyEncounterInput {
  * rather than a client read-then-write). Silently a no-op for a word this
  * learner already has a row for — that's the intended behavior, not an
  * error, so callers never need to check for it.
+ *
+ * `sentenceId` is kept alongside the `sentenceEn` snapshot specifically so
+ * the review screen can resolve real, synthesized pronunciation for this
+ * word through the same "sentence_word" isolated-word pipeline Fix Your
+ * Mistakes already relies on (see resolvePronunciationAudioAction) — that
+ * pipeline re-derives the word from the real `sentences` row server-side
+ * rather than trusting arbitrary client text, so a live sentence id is
+ * required, not just the word/sentence text.
  */
 export async function recordVocabularyEncounter(input: VocabularyEncounterInput): Promise<void> {
   const supabase = await createClient();
@@ -79,6 +91,7 @@ export async function recordVocabularyEncounter(input: VocabularyEncounterInput)
     p_mode: input.mode,
     p_lesson_id: input.lessonId,
     p_lesson_title: input.lessonTitle,
+    p_sentence_id: input.sentenceId,
     p_sentence_en: input.sentenceEn,
     p_word_index: input.wordIndex,
   });
