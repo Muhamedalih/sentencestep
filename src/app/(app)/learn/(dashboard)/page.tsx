@@ -4,7 +4,6 @@ import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
-import { VocabularyRecallCard } from "@/components/app/vocabulary-recall-card";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -20,7 +19,6 @@ import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/quer
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
-import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
 import { fetchProgressAction } from "@/lib/progress/actions";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Book } from "@/types/library";
@@ -115,7 +113,6 @@ export default async function LearnHomePage() {
     featuredBooks,
     fallbackBook,
     weakWords,
-    recallCount,
     initialProgress,
   ] = await Promise.all([
     getLessons("normal", locale ?? undefined),
@@ -128,7 +125,6 @@ export default async function LearnHomePage() {
     fetchFeaturedBooks(supabase, locale),
     fetchFirstPublishedBook(supabase, locale),
     fetchWeakWordsAction(),
-    fetchVocabularyRecallCountAction(),
     progressPromise,
   ]);
 
@@ -186,7 +182,6 @@ export default async function LearnHomePage() {
         />
         <GuestProgressBanner isGuest={!user} className="mb-6" />
         <NeedsReviewWords words={weakWords} />
-        <VocabularyRecallCard count={recallCount} />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}
         </p>

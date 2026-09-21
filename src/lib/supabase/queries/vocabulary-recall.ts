@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { MAX_RECALL_SESSION_WORDS } from "@/lib/vocabulary-recall/constants";
-import type { LearningMode } from "@/types/content";
+import { MAX_RECALL_SESSION_WORDS, type RecallMode } from "@/lib/vocabulary-recall/constants";
 
 /**
  * Vocabulary Recall: signed-in-only reads/writes for `vocabulary_encounters`
@@ -9,14 +8,25 @@ import type { LearningMode } from "@/types/content";
  * separate from `mistakes` (typing errors) and Word Lists' own catalog.
  */
 
-export async function fetchDueVocabularyRecallCount(userId: string): Promise<number> {
+/**
+ * `mode` scopes the count to one section (Normal or Stories) — the card
+ * lives inside each mode's own lesson-list page now, not a single
+ * mode-agnostic Home card, so a learner only ever sees "words from this
+ * section" here, never a mixed count.
+ */
+export async function fetchDueVocabularyRecallCount(
+  userId: string,
+  mode?: RecallMode,
+): Promise<number> {
   const supabase = await createClient();
-  const { count, error } = await supabase
+  let query = supabase
     .from("vocabulary_encounters")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .not("next_review_at", "is", null)
     .lte("next_review_at", new Date().toISOString());
+  if (mode) query = query.eq("mode", mode);
+  const { count, error } = await query;
   if (error) throw error;
   return count ?? 0;
 }
@@ -32,17 +42,25 @@ export interface DueVocabularyRecallRow {
   createdAt: string;
 }
 
-/** Oldest-due first, capped at MAX_RECALL_SESSION_WORDS — a review visit is always a short queue, never the learner's entire backlog at once. */
+/**
+ * Oldest-due first, capped at MAX_RECALL_SESSION_WORDS — a review visit is
+ * always a short queue, never the learner's entire backlog at once. `mode`
+ * scopes the queue to one section, same reasoning as
+ * fetchDueVocabularyRecallCount.
+ */
 export async function fetchDueVocabularyRecallRows(
   userId: string,
+  mode?: RecallMode,
 ): Promise<DueVocabularyRecallRow[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("vocabulary_encounters")
     .select("word, ar, lesson_title, sentence_id, sentence_en, word_index, created_at")
     .eq("user_id", userId)
     .not("next_review_at", "is", null)
-    .lte("next_review_at", new Date().toISOString())
+    .lte("next_review_at", new Date().toISOString());
+  if (mode) query = query.eq("mode", mode);
+  const { data, error } = await query
     .order("next_review_at", { ascending: true })
     .limit(MAX_RECALL_SESSION_WORDS);
   if (error) throw error;
@@ -60,7 +78,7 @@ export async function fetchDueVocabularyRecallRows(
 export interface VocabularyEncounterInput {
   word: string;
   ar: string;
-  mode: LearningMode;
+  mode: RecallMode;
   lessonId: string;
   lessonTitle: string;
   sentenceId: string;

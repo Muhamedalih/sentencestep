@@ -26,6 +26,10 @@ const VOCAB_ID_MARKER = "-vocab-";
 export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promise<void> {
   if (!lesson.vocabulary || lesson.vocabulary.length === 0) return;
   if (lesson.mode !== "normal" && lesson.mode !== "stories") return;
+  // Captured into a local const: TS narrows `lesson.mode` right after the
+  // guard above, but that narrowing doesn't survive into the async closure
+  // below (an object property, not a local binding) — this does.
+  const mode = lesson.mode;
 
   const sentenceById = new Map(lesson.sentences.map((sentence) => [sentence.id, sentence]));
 
@@ -48,7 +52,7 @@ export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promi
           // browser's speech synthesis.
           word: normalizeMistakeWord(item.en),
           ar: item.ar,
-          mode: lesson.mode,
+          mode,
           lessonId: lesson.id,
           lessonTitle: lesson.title,
           sentenceId,

@@ -9,6 +9,7 @@ import { getLessons, getLevelNames } from "@/lib/content";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { LEARNING_MODES, isLearningMode, modeMeta } from "@/lib/learning-modes";
+import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
 
 export function generateStaticParams() {
   return LEARNING_MODES.map((mode) => ({ mode }));
@@ -57,11 +58,12 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
   const title = t.nav[MODE_TITLE_KEY[mode]];
   const description = t.marketing[MODE_DESCRIPTION_KEY[mode]];
 
-  const [units, hasPremium, isAdminUser, levelNames] = await Promise.all([
+  const [units, hasPremium, isAdminUser, levelNames, recallCount] = await Promise.all([
     getLessons(mode, locale ?? undefined),
     hasPremiumAccess(),
     isAdmin(),
     getLevelNames(mode, locale ?? undefined),
+    fetchVocabularyRecallCountAction(mode),
   ]);
 
   const isPremiumUser = hasPremium || isAdminUser;
@@ -75,6 +77,7 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
         units={units}
         isPremiumUser={isPremiumUser}
         levelNames={levelNames}
+        recallCount={recallCount}
       />
     </div>
   );

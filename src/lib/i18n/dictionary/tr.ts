@@ -541,7 +541,7 @@ export const tr: Dictionary = {
   },
   vocabularyRecall: {
     cardHeading: "Tanıdığın kelimeler",
-    cardSubtitle: "Son derslerinden — nasıl kullanıldıklarını gör",
+    cardSubtitle: "Onları kendi cümlelerinde nasıl kullandığını gör",
     sourceLabel: '"{title}" — {n} gün önce',
     completeHeading: "Harika, hepsini hatırladın",
     completeSubtitle: "{n} kelimeyi tekrar ettin.",

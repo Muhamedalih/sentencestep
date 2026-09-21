@@ -5,16 +5,24 @@ import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { MIN_DUE_WORDS_TO_SHOW } from "@/lib/vocabulary-recall/constants";
+import type { LearningMode } from "@/types/content";
 
 /**
- * "Words you've met" — the one place Vocabulary Recall (src/lib/vocabulary-recall)
- * surfaces on Home, right below NeedsReviewWords. Deliberately its own card
- * rather than folded into that one: a due Recall word was never mistyped, so
- * "mistake"/"fix"/"weak" framing would misrepresent it — this is a lighter,
- * curiosity-framed invitation ("see how you used this word"), not a chore,
- * and it's easy to ignore: omitted entirely below MIN_DUE_WORDS_TO_SHOW
- * (never shown for just one or two words) and never blocks anything, costs
- * no streak/XP, and carries no repeated nagging if left untouched.
+ * "Words you've met" — Vocabulary Recall (src/lib/vocabulary-recall)'s one
+ * surface, rendered inside each mode's own lesson-list page (see
+ * LessonListView, right under its title) rather than a single mode-agnostic
+ * Home card: a learner browsing Stories should only ever see words from
+ * Stories here, never a count mixing in Normal lessons. `mode` both scopes
+ * the count this card is handed (see fetchVocabularyRecallCountAction) and
+ * the review queue it links to (`/learn/recall?mode=`).
+ *
+ * Deliberately its own card rather than folded into NeedsReviewWords: a due
+ * Recall word was never mistyped, so "mistake"/"fix"/"weak" framing would
+ * misrepresent it — this is a lighter, curiosity-framed invitation ("see how
+ * you used this word"), not a chore, and it's easy to ignore: omitted
+ * entirely below MIN_DUE_WORDS_TO_SHOW (never shown for just one or two
+ * words) and never blocks anything, costs no streak/XP, and carries no
+ * repeated nagging if left untouched.
  *
  * Same "hero card, not a list of pills" shape as NeedsReviewWords, reusing
  * its exact sticker-chip/gradient-border language for visual consistency —
@@ -22,7 +30,13 @@ import { MIN_DUE_WORDS_TO_SHOW } from "@/lib/vocabulary-recall/constants";
  * not a backlog number) and its own copy so it never reads as "you have
  * outstanding mistakes."
  */
-export function VocabularyRecallCard({ count }: { count: number }) {
+export function VocabularySectionRecallCard({
+  mode,
+  count,
+}: {
+  mode: LearningMode;
+  count: number;
+}) {
   const { t, dir } = useLocale();
   if (count < MIN_DUE_WORDS_TO_SHOW) return null;
 
@@ -30,7 +44,7 @@ export function VocabularyRecallCard({ count }: { count: number }) {
 
   return (
     <Link
-      href="/learn/recall"
+      href={`/learn/recall?mode=${mode}`}
       className="border-border from-primary/10 hover:border-primary/40 focus-visible:ring-ring focus-visible:ring-offset-background group relative mb-10 flex flex-col gap-5 overflow-hidden rounded-2xl border bg-gradient-to-br via-transparent to-transparent p-6 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-8 sm:p-8"
     >
       <div

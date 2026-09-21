@@ -9,8 +9,15 @@ import {
   fetchDueVocabularyRecallRows,
   recordVocabularyReview,
 } from "@/lib/supabase/queries/vocabulary-recall";
+import { type RecallMode } from "@/lib/vocabulary-recall/constants";
 import { BLANK_TOKEN } from "@/types/word-lists";
 import type { ReviewWord } from "@/components/learning/word-review-session";
+import type { LearningMode } from "@/types/content";
+
+/** Narrows an arbitrary LearningMode down to the two Vocabulary Recall actually covers — see RecallMode's own doc comment. A caller passing "conversation" (or nothing) just gets the unscoped/all-zero behavior, never a type error. */
+function toRecallMode(mode: LearningMode | undefined): RecallMode | undefined {
+  return mode === "normal" || mode === "stories" ? mode : undefined;
+}
 
 /** Same fast path as fetchWeakWordsAction — a guest with no session cookie can never produce claims, so skip standing up a client and calling getClaims() at all for that guaranteed-null case. Home renders for every visitor, guests included, so this matters here. */
 async function getAuthenticatedUserId(): Promise<string | null> {
@@ -22,19 +29,22 @@ async function getAuthenticatedUserId(): Promise<string | null> {
 
 /**
  * Same purpose as fetchActiveMistakeCountAction — cheap, count-only, for
- * VocabularyRecallCard's "show/hide" decision on Home. Guests always get 0.
+ * VocabularySectionRecallCard's "show/hide" decision on each mode's own
+ * lesson-list page. Guests always get 0. `mode` scopes the count to that
+ * one section (see fetchDueVocabularyRecallCount) — a learner browsing
+ * Stories only ever sees a count for Stories words, never Normal lessons'.
  *
- * Caught, not thrown: this runs inside Home's own Promise.all alongside
- * everything else the dashboard needs, so a query failure here (e.g. this
+ * Caught, not thrown: this runs inside that page's own Promise.all
+ * alongside everything else it needs, so a query failure here (e.g. this
  * environment's `vocabulary_encounters` migration not applied yet) must
- * never take the whole Home page down — a missing/broken feature degrades
- * to "card hidden," exactly like "no due words" already does.
+ * never take the whole page down — a missing/broken feature degrades to
+ * "card hidden," exactly like "no due words" already does.
  */
-export async function fetchVocabularyRecallCountAction(): Promise<number> {
+export async function fetchVocabularyRecallCountAction(mode?: LearningMode): Promise<number> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return 0;
   try {
-    return await fetchDueVocabularyRecallCount(userId);
+    return await fetchDueVocabularyRecallCount(userId, toRecallMode(mode));
   } catch (error) {
     console.error("[vocabulary-recall] fetchDueVocabularyRecallCount failed", error);
     return 0;
@@ -54,9 +64,11 @@ function buildBlankSentence(sentenceEn: string, wordIndex: number): string {
  * shape WordReviewSession already renders for Word Lists — see that
  * component's `variant="recall"`. `lessonTitle`/`daysAgo` ride along on each
  * word so the review screen can show which sentence/how-long-ago context it
- * came from without a second round trip.
+ * came from without a second round trip. `mode` scopes the queue to one
+ * section (see /learn/recall/page.tsx's `?mode=` param) — a learner opening
+ * this from the Stories page reviews Stories words only, never a mix.
  */
-export async function fetchVocabularyRecallWordsAction(): Promise<ReviewWord[]> {
+export async function fetchVocabularyRecallWordsAction(mode?: LearningMode): Promise<ReviewWord[]> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return [];
   // Same "degrade, never throw" reasoning as fetchVocabularyRecallCountAction
@@ -64,7 +76,7 @@ export async function fetchVocabularyRecallWordsAction(): Promise<ReviewWord[]> 
   // failure reads exactly like "nothing due" instead of a crashed page.
   let rows: Awaited<ReturnType<typeof fetchDueVocabularyRecallRows>>;
   try {
-    rows = await fetchDueVocabularyRecallRows(userId);
+    rows = await fetchDueVocabularyRecallRows(userId, toRecallMode(mode));
   } catch (error) {
     console.error("[vocabulary-recall] fetchDueVocabularyRecallRows failed", error);
     return [];
@@ -96,9 +108,9 @@ export async function fetchVocabularyRecallWordsAction(): Promise<ReviewWord[]> 
 }
 
 /**
- * Advances this word's Recall schedule — called once a learner types it
- * correctly in the Recall review screen (see WordReviewSession's
- * onWordCompleted prop). `hadErrors` is whether they got it wrong at least
+ * Advances this word's Recall schedule — called directly from
+ * WordReviewSession's handleResult (variant="recall") once a learner types
+ * this word correctly. `hadErrors` is whether they got it wrong at least
  * once first this visit (still required to eventually get it right, same as
  * everywhere else — this only affects how soon it comes back).
  */

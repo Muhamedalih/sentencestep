@@ -532,7 +532,7 @@ export const en: Dictionary = {
   },
   vocabularyRecall: {
     cardHeading: "Words you've met",
-    cardSubtitle: "From your recent lessons — see how they're used",
+    cardSubtitle: "See how you used them in your own sentences",
     sourceLabel: 'From "{title}" — {n} day(s) ago',
     completeHeading: "Nice, you remembered them",
     completeSubtitle: "You reviewed {n} word(s).",

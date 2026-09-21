@@ -549,7 +549,7 @@ export const es: Dictionary = {
   },
   vocabularyRecall: {
     cardHeading: "Palabras que has conocido",
-    cardSubtitle: "De tus lecciones recientes — mira cómo se usan",
+    cardSubtitle: "Mira cómo las usaste en tus propias oraciones",
     sourceLabel: 'De "{title}" — hace {n} día(s)',
     completeHeading: "Bien hecho, las recordaste",
     completeSubtitle: "Repasaste {n} palabra(s).",

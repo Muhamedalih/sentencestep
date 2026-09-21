@@ -517,7 +517,7 @@ export const ar: Dictionary = {
   },
   vocabularyRecall: {
     cardHeading: "كلمات تعرّفت عليها",
-    cardSubtitle: "من دروسك وقصصك الأخيرة — تذكّرها في جملها الأصلية.",
+    cardSubtitle: "تذكّرها في نفس الجملة اللي تعلّمتها بيها.",
     sourceLabel: "من «{title}» — قبل {n} يوم/أيام",
     completeHeading: "أحسنت، تذكرتها كلها",
     completeSubtitle: "راجعت {n} كلمة/كلمات.",

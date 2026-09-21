@@ -611,7 +611,7 @@ export interface Dictionary {
    * look in the sentence it first appeared in.
    */
   vocabularyRecall: {
-    /** Home dashboard card heading (see VocabularyRecallCard) — shown only once at least MIN_DUE_WORDS_TO_SHOW words are due. */
+    /** Heading for the card inside each mode's own lesson-list page (see VocabularySectionRecallCard) — shown only once at least MIN_DUE_WORDS_TO_SHOW words are due. */
     cardHeading: string;
     cardSubtitle: string;
     /** Small context line under the review sentence — e.g. `From "The Wrong Apartment" — 6 days ago`. {title} and {n} are replaced. */

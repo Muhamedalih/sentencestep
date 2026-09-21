@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -345,6 +346,7 @@ export function LessonListView({
   units: rawUnits,
   isPremiumUser,
   levelNames = {},
+  recallCount = 0,
 }: {
   mode: LearningMode;
   title: string;
@@ -353,6 +355,8 @@ export function LessonListView({
   isPremiumUser: boolean;
   /** Admin-authored names (via /admin/levels) for any level beyond the three static units in src/data/units.ts. */
   levelNames?: Record<number, { title: string; titleAr: string; supportTitle?: string }>;
+  /** This mode's own due Vocabulary Recall count (see fetchVocabularyRecallCountAction) — drives VocabularySectionRecallCard, shown right under the title. 0 for Conversation, which Vocabulary Recall never populates. */
+  recallCount?: number;
 }) {
   const { t } = useLocale();
   const { isCompleted, getCompletedIds, isLoaded, startingLevel } = useProgress();
@@ -389,6 +393,8 @@ export function LessonListView({
           <p className="text-muted-foreground mt-1 text-lg">{description}</p>
         </div>
       </div>
+
+      <VocabularySectionRecallCard mode={mode} count={recallCount} />
 
       {units.length > 0 &&
         (isLoaded ? (

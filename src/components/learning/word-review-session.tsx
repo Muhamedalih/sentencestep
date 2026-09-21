@@ -18,6 +18,7 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { masterMistakeWordAction } from "@/lib/mistakes/actions";
+import { markVocabularyRecallCompletedAction } from "@/lib/vocabulary-recall/actions";
 import { popIn } from "@/lib/motion";
 import type { WeakWordReason } from "@/lib/weak-words/types";
 import { splitWordHint } from "@/lib/word-lists-hint";
@@ -57,40 +58,53 @@ export interface ReviewWord extends VocabularyWord {
  * Two callers, picked via `variant`:
  *  - "wordLists" (default) — "Review All Words", quizzing exactly the words
  *    src/lib/weak-words flagged as currently weak. A right answer here fully
- *    clears the word (masterMistakeWordAction, the default onWordCompleted),
- *    the same as VocabularyPractice's own completion — not the gradual,
- *    multi-session schedule FixYourMistakesSession's own items still use.
- *    Answering correctly in a screen called "Review All Words" is the whole
- *    point of the visit: a learner who does that shouldn't find the same
- *    word back in this list days later just because it takes two clean
- *    passes to graduate under the ordinary spaced-repetition schedule.
+ *    clears the word (masterMistakeWordAction), the same as
+ *    VocabularyPractice's own completion — not the gradual, multi-session
+ *    schedule FixYourMistakesSession's own items still use. Answering
+ *    correctly in a screen called "Review All Words" is the whole point of
+ *    the visit: a learner who does that shouldn't find the same word back
+ *    in this list days later just because it takes two clean passes to
+ *    graduate under the ordinary spaced-repetition schedule.
  *  - "recall" — Vocabulary Recall (src/lib/vocabulary-recall), quizzing
  *    words met in Normal lessons/Stories. A right answer here instead
- *    advances a real multi-session spaced schedule (markVocabularyRecallCompletedAction,
- *    passed as onWordCompleted) — this queue is explicitly allowed to hand
- *    the same word back days later, since "words you've met" is meant to
- *    resurface on purpose, not graduate on one pass.
+ *    advances a real multi-session spaced schedule
+ *    (markVocabularyRecallCompletedAction) — this queue is explicitly
+ *    allowed to hand the same word back days later, since "words you've
+ *    met" is meant to resurface on purpose, not graduate on one pass.
+ *
+ * The completion action is picked internally from `variant` (see
+ * handleResult) rather than accepted as a function prop: this component is
+ * rendered from a Server Component page (see /learn/recall/page.tsx), and
+ * Next.js can only pass a real Server Action across that boundary, never an
+ * inline arrow function wrapping one — importing both actions directly here
+ * and branching on `variant` avoids that boundary entirely.
  */
 export function WordReviewSession({
   words: initialWords,
   defaultVoiceId,
   variant = "wordLists",
-  onWordCompleted,
+  backHref,
 }: {
   words: ReviewWord[];
   /** Word Lists' one global voice (see VocabularyPractice's identical prop) — a review queue can span multiple word groups, so there's no single group-level voice to prefer here either. */
   defaultVoiceId?: string | null;
   /**
    * Which flow this queue belongs to — picks copy, the back link, and the
-   * default completion action. "wordLists" (default) is the original
-   * "Review All Words" flow this component was built for; "recall" is
-   * Vocabulary Recall (src/lib/vocabulary-recall), sourced from Normal
-   * lesson/Story sentences instead of Word Lists' own catalog, and framed as
-   * "words you've met" rather than "words you got wrong."
+   * completion action. "wordLists" (default) is the original "Review All
+   * Words" flow this component was built for; "recall" is Vocabulary Recall
+   * (src/lib/vocabulary-recall), sourced from Normal lesson/Story sentences
+   * instead of Word Lists' own catalog, and framed as "words you've met"
+   * rather than "words you got wrong."
    */
   variant?: "wordLists" | "recall";
-  /** Called once a word is answered correctly, in place of the default masterMistakeWordAction — required for variant="recall" (see markVocabularyRecallCompletedAction). `hadErrors` is whether this word was gotten wrong at least once earlier THIS visit before landing correctly. */
-  onWordCompleted?: (word: ReviewWord, hadErrors: boolean) => Promise<void>;
+  /**
+   * Overrides variant's default back link (a plain string, not a function —
+   * safe to pass from a Server Component, unlike onWordCompleted used to be).
+   * Vocabulary Recall opens from a specific mode's own lesson-list page now
+   * (see VocabularySectionRecallCard/`?mode=` on /learn/recall), so "back"
+   * should return there, not to the generic /learn default.
+   */
+  backHref?: string;
 }) {
   const { t, dir } = useLocale();
   // Snapshotted once at mount, deliberately NOT read live off the `words`
@@ -114,10 +128,10 @@ export function WordReviewSession({
   const [isComplete, setIsComplete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   // Which word ids have had at least one wrong attempt so far this visit —
-  // read once a word finally lands correct, to report hadErrors to
-  // onWordCompleted (see handleResult). A plain ref, not state: it never
-  // drives a render itself, only what gets reported alongside the next
-  // correct answer.
+  // read once a word finally lands correct, to report hadErrors to the
+  // recall completion action (see handleResult). A plain ref, not state: it
+  // never drives a render itself, only what gets reported alongside the
+  // next correct answer.
   const failedWordIdsRef = useRef<Set<string>>(new Set());
   const sectionFontFamily = resolveSectionFontFamily(useLessonFontSettings(), "wordLists");
   const typingSoundSettings = useTypingSoundSettings();
@@ -135,7 +149,7 @@ export function WordReviewSession({
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
 
-  const backHref = variant === "recall" ? "/learn" : "/learn/word-lists";
+  const resolvedBackHref = backHref ?? (variant === "recall" ? "/learn" : "/learn/word-lists");
   const backLabel = variant === "recall" ? t.mistakes.learningHome : t.wordLists.navLabel;
   const completeHeading =
     variant === "recall" ? t.vocabularyRecall.completeHeading : t.mistakes.allCaughtUp;
@@ -170,9 +184,11 @@ export function WordReviewSession({
       // identical call: the word is already off the local queue below,
       // so a failed write is logged, not retried by re-blocking the learner.
       const complete =
-        onWordCompleted ?? ((w: ReviewWord) => masterMistakeWordAction(w.targetWord));
-      complete(word, hadErrors).catch((error: unknown) => {
-        console.error("[word-review] onWordCompleted failed", error);
+        variant === "recall"
+          ? markVocabularyRecallCompletedAction(word.targetWord, hadErrors)
+          : masterMistakeWordAction(word.targetWord);
+      complete.catch((error: unknown) => {
+        console.error("[word-review] completion action failed", error);
       });
       setQueue((prev) => prev.slice(1));
     } else {
@@ -188,7 +204,7 @@ export function WordReviewSession({
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
-            href={backHref}
+            href={resolvedBackHref}
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
@@ -238,7 +254,7 @@ export function WordReviewSession({
                 <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
               </div>
               <Button asChild className="mt-2">
-                <Link href={backHref}>
+                <Link href={resolvedBackHref}>
                   {variant === "recall" ? backLabel : t.wordLists.backToWordLists}
                 </Link>
               </Button>
