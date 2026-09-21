@@ -42,9 +42,11 @@ function generateNonce(): string {
  * `*.supabase.co` subdomain — this app's one real external data dependency
  * (the learner's own Supabase project), matching next.config.ts's existing
  * images.remotePatterns hostname exactly. challenges.cloudflare.com is
- * Cloudflare Turnstile (the sign-up bot check — see register-form.tsx);
- * fonts.googleapis.com/fonts.gstatic.com are the Google Fonts already
- * loaded in src/app/layout.tsx for Amiri/Lora. PayTabs checkout is a real
+ * Cloudflare Turnstile (the sign-up bot check — see register-form.tsx).
+ * Amiri/Lora (root-html-shell.tsx) are self-hosted via next/font/google —
+ * served from this app's own origin, so they need no fonts.googleapis.com/
+ * fonts.gstatic.com entry here at all, unlike a classic Google Fonts
+ * <link>. PayTabs checkout is a real
  * top-level navigation (redirect(), see checkout-actions.ts), never a form
  * POST or fetch from this origin, so it needs no entry here at all.
  * media-src includes blob: (mirroring img-src's own blob: entry) for
@@ -147,8 +149,8 @@ function buildCsp(nonce: string, isStaticRoute: boolean): string {
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com data:",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
     "img-src 'self' data: blob: https://*.supabase.co https://*.clarity.ms",
     "media-src 'self' blob: https://*.supabase.co",
     `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://*.clarity.ms${sentryConnectSrc()}`,

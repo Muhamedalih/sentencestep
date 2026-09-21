@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Amiri, Lora } from "next/font/google";
 
 import { CountryOnboarding } from "@/components/app/country-onboarding";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
@@ -9,6 +10,34 @@ import { TutorialOnboarding } from "@/components/app/tutorial-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { dirFor, SUPPORT_LOCALES, type SupportLocale } from "@/lib/i18n/locales";
+
+/**
+ * Amiri (--font-book, globals.css) and Lora (--font-quote) — self-hosted via
+ * next/font/google instead of the classic <link rel="stylesheet"> this
+ * replaced: next/font downloads the font files at build time and serves them
+ * from this app's own origin, so there's no runtime DNS/connection/request
+ * to fonts.googleapis.com/fonts.gstatic.com on the critical rendering path,
+ * and no render-blocking external stylesheet. `preload: false` on both
+ * because each is used on exactly one route (Book Learning Engine's Section
+ * Intro cover; My Saves' quote card) — preloading them on every OTHER page
+ * that never renders either font would be pure waste. `display: "swap"`
+ * keeps the same "never block text on the font" behavior the old <link> already had.
+ */
+const amiri = Amiri({
+  weight: "700",
+  subsets: ["arabic"],
+  display: "swap",
+  preload: false,
+  variable: "--font-amiri",
+});
+const lora = Lora({
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-lora",
+});
 
 /**
  * Applies the `dark` class (see globals.css's `.dark` token overrides)
@@ -205,15 +234,13 @@ export function RootHtmlShell({
   children: ReactNode;
 }) {
   return (
-    <html lang={locale ?? "en"} dir={locale ? dirFor(locale) : "ltr"} suppressHydrationWarning>
+    <html
+      lang={locale ?? "en"}
+      dir={locale ? dirFor(locale) : "ltr"}
+      className={`${amiri.variable} ${lora.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        {/* Amiri — the literary Arabic serif used only for the Book Learning Engine's Section Intro cover (see globals.css's --font-book). Lora — My Saves' quote-card English sentence (see --font-quote). Neither is self-hosted via next/font since no other font in this project is either (--font-arabic's "Noto Sans Arabic" already relies on the OS/browser having it, same pattern this follows). */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap"
-          rel="stylesheet"
-        />
         {/* Authorized by middleware.ts's CSP via a fixed sha256 hash of this exact script body, not a per-request nonce — this script never changes per request, so it needs no per-request value, which is what lets this Server Component render without calling headers()/cookies() itself. */}
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/* Same hash-based CSP authorization as the theme script above — see CLARITY_INIT_SCRIPT's own doc comment. Present on every route, not just marketing, since visit/session tracking is the point. */}

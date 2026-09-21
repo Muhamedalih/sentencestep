@@ -3,6 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 
 import { useProgress } from "@/hooks/use-progress";
+import type { ProgressState } from "@/lib/progress/types";
 
 type ProgressValue = ReturnType<typeof useProgress>;
 
@@ -23,8 +24,15 @@ const ProgressContext = createContext<ProgressValue | null>(null);
  * header, lesson sessions, Stories, etc. — is unaffected and keeps calling
  * it directly), just this one page's own tree.
  */
-export function ProgressProvider({ children }: { children: ReactNode }) {
-  const value = useProgress();
+export function ProgressProvider({
+  children,
+  initialProgress,
+}: {
+  children: ReactNode;
+  /** See useProgress's identically-named parameter — passed through unchanged. */
+  initialProgress?: ProgressState;
+}) {
+  const value = useProgress(initialProgress);
   return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;
 }
 

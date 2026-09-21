@@ -47,10 +47,25 @@ interface LastCompletionArgs {
  * localStorage behavior unchanged — there's still no requirement to create
  * an account just to try a free lesson.
  */
-export function useProgress() {
+export function useProgress(
+  /**
+   * A signed-in learner's real progress, already fetched server-side in the
+   * same render that produced this page (see ProgressProvider's call site on
+   * the Home dashboard) — lets that page paint its real content on the very
+   * first render instead of a skeleton-then-real-content swap that waits on
+   * this hook's own network round trip below. Consumed at most once per
+   * mount (see initialProgressRef below): a later re-run of the effect
+   * (e.g. userId actually changing) always goes through the normal fetch,
+   * since a stale server snapshot from a previous user must never be reused.
+   * Every other call site (header, lesson sessions, Stories, ...) simply
+   * doesn't pass this, so its behavior is entirely unchanged.
+   */
+  initialProgress?: ProgressState,
+) {
   const userId = useAuthUserId();
-  const [state, setState] = useState<ProgressState>(emptyProgressState);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [state, setState] = useState<ProgressState>(initialProgress ?? emptyProgressState);
+  const [isLoaded, setIsLoaded] = useState(initialProgress !== undefined);
+  const initialProgressRef = useRef(initialProgress);
   const [saveStatus, setSaveStatus] = useState<CompletionSaveStatus>("idle");
   const lastCompletionRef = useRef<LastCompletionArgs | null>(null);
   // Guards markComplete/retryMarkComplete against re-entry — a fast
@@ -92,7 +107,11 @@ export function useProgress() {
   // this only moves the synchronous guest path earlier relative to paint.
   useLayoutEffect(() => {
     let cancelled = false;
-    setIsLoaded(false);
+    // Consumed at most once: a later re-run of this effect (userId actually
+    // changing) must never reuse a snapshot fetched for a different user.
+    const preloaded = initialProgressRef.current;
+    initialProgressRef.current = undefined;
+    if (!preloaded) setIsLoaded(false);
 
     async function load() {
       if (!userId) {
@@ -114,12 +133,18 @@ export function useProgress() {
       if (hasMigratableGuestState(guest)) {
         if (migratingRef.current) return;
         migratingRef.current = true;
+        setIsLoaded(false);
         try {
           next = await migrateGuestProgressAction(guest, todayISO);
           clearProgress();
         } finally {
           migratingRef.current = false;
         }
+      } else if (preloaded) {
+        // Already fetched server-side for this exact request — the state
+        // above was already initialized from it, so there's nothing left to
+        // do and no reason to re-fetch the same rows over the network again.
+        return;
       } else {
         next = await fetchProgressAction(todayISO);
       }

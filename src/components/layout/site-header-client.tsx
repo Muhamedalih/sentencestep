@@ -62,6 +62,11 @@ export function SiteHeaderClient({
     setLooksSignedIn(hasSupabaseAuthCookieClient());
   }, []);
 
+  // prefetch: false on /upgrade and /login below — unlike /learn (the
+  // hero's own primary CTA, already worth warming), these aren't where a
+  // first-time visitor is headed next, so letting Next.js prefetch them the
+  // instant this header enters the viewport just competes for bandwidth
+  // with the homepage's own critical render for no real benefit.
   const NAV_LINKS = [
     { href: "/#how-it-works", label: t.nav.howItWorks },
     { href: "/#modes", label: t.nav.learningModes },
@@ -99,7 +104,9 @@ export function SiteHeaderClient({
   ) : (
     <>
       <Button variant="ghost" size="sm" asChild>
-        <Link href="/login">{t.common.signIn}</Link>
+        <Link href="/login" prefetch={false}>
+          {t.common.signIn}
+        </Link>
       </Button>
       <Button size="sm" asChild>
         <Link href="/learn">{t.common.startLearning}</Link>
@@ -128,6 +135,7 @@ export function SiteHeaderClient({
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={false}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}

@@ -18,6 +18,8 @@ import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/quer
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
+import { fetchProgressAction } from "@/lib/progress/actions";
+import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Book } from "@/types/library";
 
 export const metadata: Metadata = { title: "Home" };
@@ -80,6 +82,25 @@ export default async function LearnHomePage() {
   const attemptCountPromise = userPromise.then((user) =>
     user ? fetchAttemptCount(user.id) : null,
   );
+  // Prefetches the same data useProgress() would otherwise only fetch
+  // client-side after hydration (see ProgressProvider below) — folded into
+  // this same parallel batch rather than a separate round trip once the
+  // page reaches the browser, which is what used to leave HomeHeaderBar/
+  // HomeHero stuck on their skeleton state for a full extra network hop on
+  // every load. `todayISO` here is the SERVER's local calendar date, not
+  // this learner's own (see fetchProgressAction's own doc comment on why
+  // that distinction normally matters) — accepted here because the only
+  // field it affects is dailyProgress's "goal met today" ring on
+  // HomeHeaderBar, which self-corrects the moment this learner completes a
+  // lesson (recordCompletionAction always recomputes it from their real
+  // local date) or reloads this page after their own midnight has passed.
+  // Getting the learner's true local date would need a second client-side
+  // fetch to reconcile it, which would just reintroduce the extra Supabase
+  // round trip this exists to remove.
+  const todayISO = todayLocalISODate();
+  const progressPromise = userPromise.then((user) =>
+    user ? fetchProgressAction(todayISO) : undefined,
+  );
   const [
     units,
     hasPremium,
@@ -91,6 +112,7 @@ export default async function LearnHomePage() {
     featuredBooks,
     fallbackBook,
     weakWords,
+    initialProgress,
   ] = await Promise.all([
     getLessons("normal", locale ?? undefined),
     hasPremiumAccess(),
@@ -102,6 +124,7 @@ export default async function LearnHomePage() {
     fetchFeaturedBooks(supabase, locale),
     fetchFirstPublishedBook(supabase, locale),
     fetchWeakWordsAction(),
+    progressPromise,
   ]);
 
   const byMode = { normal: units, stories: storiesLessons, conversation: conversationLessons };
@@ -148,7 +171,7 @@ export default async function LearnHomePage() {
   const isPremiumUser = hasPremium || isAdminUser;
 
   return (
-    <ProgressProvider>
+    <ProgressProvider initialProgress={initialProgress}>
       <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
         <HomeHeaderBar
           user={user}
