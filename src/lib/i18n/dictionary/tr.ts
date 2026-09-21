@@ -539,6 +539,13 @@ export const tr: Dictionary = {
     prevWordAria: "Önceki kelime",
     nextWordAria: "Sonraki kelime",
   },
+  vocabularyRecall: {
+    cardHeading: "Tanıdığın kelimeler",
+    cardSubtitle: "Son derslerinden — nasıl kullanıldıklarını gör",
+    sourceLabel: '"{title}" — {n} gün önce',
+    completeHeading: "Harika, hepsini hatırladın",
+    completeSubtitle: "{n} kelimeyi tekrar ettin.",
+  },
   library: {
     storiesHeading: "Hikayeler",
     storiesSubtitle: "Eğlenceli bir hikaye seçin ve öğrenme yolculuğunuza başlayın.",

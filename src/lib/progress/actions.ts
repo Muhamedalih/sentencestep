@@ -36,6 +36,7 @@ import {
 } from "@/lib/progress/guest-migration";
 import { emptyProgressState } from "@/lib/progress/types";
 import { setCountryAction, setStartingLevelAction } from "@/lib/supabase/profile-actions";
+import { recordVocabularyEncountersForLesson } from "@/lib/vocabulary-recall/record-encounters";
 import type { ValidatedGuestCompletion } from "@/lib/progress/guest-migration";
 import type { LessonCompletion, ProgressState, RewardEvent } from "@/lib/progress/types";
 import type { LearningMode } from "@/types/content";
@@ -242,6 +243,11 @@ export async function recordCompletionAction(
       userId,
     );
   }
+
+  // Vocabulary Recall scheduling is likewise a side effect only — it never
+  // throws (see its own doc comment) and never affects what this completion
+  // returns.
+  await recordVocabularyEncountersForLesson(lesson);
 
   return progress;
 }

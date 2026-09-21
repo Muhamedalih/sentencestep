@@ -530,6 +530,13 @@ export const en: Dictionary = {
     prevWordAria: "Previous word",
     nextWordAria: "Next word",
   },
+  vocabularyRecall: {
+    cardHeading: "Words you've met",
+    cardSubtitle: "From your recent lessons — see how they're used",
+    sourceLabel: 'From "{title}" — {n} day(s) ago',
+    completeHeading: "Nice, you remembered them",
+    completeSubtitle: "You reviewed {n} word(s).",
+  },
   library: {
     storiesHeading: "Stories",
     storiesSubtitle: "Choose a fun story and start your learning journey.",

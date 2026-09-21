@@ -26,33 +26,57 @@ import type { VocabularyWord } from "@/types/word-lists";
 export interface ReviewWord extends VocabularyWord {
   /** No longer read here (see handleResult below) — kept on the type since fetchWeakWordsAction still reports it, and it's still meaningful data even though this screen's own completion no longer branches on it. */
   reason: WeakWordReason;
+  /** Vocabulary Recall only (variant="recall") — the lesson/story title this word's sentence came from, shown as a small context line under it (see sourceLabel below). Absent for Word Lists' own review queue. */
+  lessonTitle?: string;
+  /** Vocabulary Recall only — how many days ago this word was first met, paired with lessonTitle in the same context line. */
+  daysAgo?: number;
 }
 
 /**
- * "Review All Words" — quizzes exactly the words src/lib/weak-words flagged
- * as currently weak, one at a time, until each is answered correctly. Not a
- * re-skin of VocabularyPractice's 4x5-block system: a review queue is
- * already a short, curated list (never a full 20-word group), so it's a
- * flat queue — wrong answers go to the back and keep coming back until
- * right, same retry feel, just without the block structure that only makes
- * sense for a full group.
+ * Quizzes a short, curated queue of words one at a time, until each is
+ * answered correctly — not a re-skin of VocabularyPractice's 4x5-block
+ * system: a review queue is already short (never a full 20-word group), so
+ * it's a flat queue where wrong answers go to the back and keep coming back
+ * until right, same retry feel, just without the block structure that only
+ * makes sense for a full group.
  *
- * A right answer here fully clears the word (masterMistakeWordAction), the
- * same as VocabularyPractice's own completion — not the gradual,
- * multi-session schedule FixYourMistakesSession's own items still use (see
- * that screen's markMistakeCorrectedAction/markReviewCompletedAction calls).
- * Answering correctly in a screen called "Review All Words" is the whole
- * point of the visit: a learner who does that shouldn't find the same word
- * back in this list days later just because it takes two clean passes to
- * graduate under the ordinary spaced-repetition schedule.
+ * Two callers, picked via `variant`:
+ *  - "wordLists" (default) — "Review All Words", quizzing exactly the words
+ *    src/lib/weak-words flagged as currently weak. A right answer here fully
+ *    clears the word (masterMistakeWordAction, the default onWordCompleted),
+ *    the same as VocabularyPractice's own completion — not the gradual,
+ *    multi-session schedule FixYourMistakesSession's own items still use.
+ *    Answering correctly in a screen called "Review All Words" is the whole
+ *    point of the visit: a learner who does that shouldn't find the same
+ *    word back in this list days later just because it takes two clean
+ *    passes to graduate under the ordinary spaced-repetition schedule.
+ *  - "recall" — Vocabulary Recall (src/lib/vocabulary-recall), quizzing
+ *    words met in Normal lessons/Stories. A right answer here instead
+ *    advances a real multi-session spaced schedule (markVocabularyRecallCompletedAction,
+ *    passed as onWordCompleted) — this queue is explicitly allowed to hand
+ *    the same word back days later, since "words you've met" is meant to
+ *    resurface on purpose, not graduate on one pass.
  */
 export function WordReviewSession({
   words: initialWords,
   defaultVoiceId,
+  variant = "wordLists",
+  onWordCompleted,
 }: {
   words: ReviewWord[];
   /** Word Lists' one global voice (see VocabularyPractice's identical prop) — a review queue can span multiple word groups, so there's no single group-level voice to prefer here either. */
   defaultVoiceId?: string | null;
+  /**
+   * Which flow this queue belongs to — picks copy, the back link, and the
+   * default completion action. "wordLists" (default) is the original
+   * "Review All Words" flow this component was built for; "recall" is
+   * Vocabulary Recall (src/lib/vocabulary-recall), sourced from Normal
+   * lesson/Story sentences instead of Word Lists' own catalog, and framed as
+   * "words you've met" rather than "words you got wrong."
+   */
+  variant?: "wordLists" | "recall";
+  /** Called once a word is answered correctly, in place of the default masterMistakeWordAction — required for variant="recall" (see markVocabularyRecallCompletedAction). `hadErrors` is whether this word was gotten wrong at least once earlier THIS visit before landing correctly. */
+  onWordCompleted?: (word: ReviewWord, hadErrors: boolean) => Promise<void>;
 }) {
   const { t, dir } = useLocale();
   // Snapshotted once at mount, deliberately NOT read live off the `words`
@@ -75,6 +99,12 @@ export function WordReviewSession({
   const [correctedCount, setCorrectedCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Which word ids have had at least one wrong attempt so far this visit —
+  // read once a word finally lands correct, to report hadErrors to
+  // onWordCompleted (see handleResult). A plain ref, not state: it never
+  // drives a render itself, only what gets reported alongside the next
+  // correct answer.
+  const failedWordIdsRef = useRef<Set<string>>(new Set());
   const sectionFontFamily = resolveSectionFontFamily(useLessonFontSettings(), "wordLists");
   const typingSoundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete } = useTypingSound({
@@ -90,6 +120,20 @@ export function WordReviewSession({
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
+
+  const backHref = variant === "recall" ? "/learn" : "/learn/word-lists";
+  const backLabel = variant === "recall" ? t.mistakes.learningHome : t.wordLists.navLabel;
+  const completeHeading =
+    variant === "recall" ? t.vocabularyRecall.completeHeading : t.mistakes.allCaughtUp;
+  const completeSubtitle = (
+    variant === "recall" ? t.vocabularyRecall.completeSubtitle : t.mistakes.correctedCount
+  ).replace("{n}", String(correctedCount));
+  const contextLabel =
+    variant === "recall" && word?.lessonTitle
+      ? t.vocabularyRecall.sourceLabel
+          .replace("{title}", word.lessonTitle)
+          .replace("{n}", String(word.daysAgo ?? 1))
+      : undefined;
 
   useEffect(() => {
     if (queue.length === 0) setIsComplete(true);
@@ -107,15 +151,19 @@ export function WordReviewSession({
     if (correct) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       setCorrectedCount((count) => count + 1);
+      const hadErrors = failedWordIdsRef.current.delete(word.id);
       // Fire-and-forget, same reasoning as FixYourMistakesSession's
       // identical call: the word is already off the local queue below,
       // so a failed write is logged, not retried by re-blocking the learner.
-      masterMistakeWordAction(word.targetWord).catch((error: unknown) => {
-        console.error("[word-review] masterMistakeWordAction failed", error);
+      const complete =
+        onWordCompleted ?? ((w: ReviewWord) => masterMistakeWordAction(w.targetWord));
+      complete(word, hadErrors).catch((error: unknown) => {
+        console.error("[word-review] onWordCompleted failed", error);
       });
       setQueue((prev) => prev.slice(1));
     } else {
       play("error");
+      failedWordIdsRef.current.add(word.id);
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
@@ -126,11 +174,11 @@ export function WordReviewSession({
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
-            href="/learn/word-lists"
+            href={backHref}
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            {t.wordLists.navLabel}
+            {backLabel}
           </Link>
           {!isComplete && word && (
             <div className="flex shrink-0 items-center gap-3">
@@ -172,13 +220,13 @@ export function WordReviewSession({
                 <CheckCircle2 className="size-7" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight">{t.mistakes.allCaughtUp}</h2>
-                <p className="text-muted-foreground mt-1">
-                  {t.mistakes.correctedCount.replace("{n}", String(correctedCount))}
-                </p>
+                <h2 className="text-2xl font-semibold tracking-tight">{completeHeading}</h2>
+                <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
               </div>
               <Button asChild className="mt-2">
-                <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
+                <Link href={backHref}>
+                  {variant === "recall" ? backLabel : t.wordLists.backToWordLists}
+                </Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -210,7 +258,7 @@ export function WordReviewSession({
 
               <div className="bg-border h-10 w-px" aria-hidden="true" />
 
-              <div className="w-full max-w-2xl">
+              <div className="flex w-full max-w-2xl flex-col items-center gap-2">
                 <VocabularySentence
                   sentence={word.sentence}
                   targetWord={word.targetWord}
@@ -218,6 +266,9 @@ export function WordReviewSession({
                   inputRef={inputRef}
                   fontFamily={sectionFontFamily}
                 />
+                {contextLabel && (
+                  <p className="text-muted-foreground text-xs font-medium">{contextLabel}</p>
+                )}
               </div>
             </motion.div>
           )

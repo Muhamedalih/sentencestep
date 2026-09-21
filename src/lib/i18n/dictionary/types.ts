@@ -603,6 +603,24 @@ export interface Dictionary {
     /** Aria-label for the Learn view's "next word" arrow control. */
     nextWordAria: string;
   };
+  /**
+   * Vocabulary Recall (src/lib/vocabulary-recall) — a curiosity-framed, opt-in
+   * spaced-repetition queue for words met in Normal lessons and Stories,
+   * deliberately separate in tone from `mistakes` (never "wrong"/"fix"
+   * language): a word here was never mistyped, it's just due for another
+   * look in the sentence it first appeared in.
+   */
+  vocabularyRecall: {
+    /** Home dashboard card heading (see VocabularyRecallCard) — shown only once at least MIN_DUE_WORDS_TO_SHOW words are due. */
+    cardHeading: string;
+    cardSubtitle: string;
+    /** Small context line under the review sentence — e.g. `From "The Wrong Apartment" — 6 days ago`. {title} and {n} are replaced. */
+    sourceLabel: string;
+    /** Completion screen heading once every due word this visit is reviewed. */
+    completeHeading: string;
+    /** e.g. "You reviewed {n} word(s)." — {n} replaced with the count. */
+    completeSubtitle: string;
+  };
   library: {
     storiesHeading: string;
     storiesSubtitle: string;

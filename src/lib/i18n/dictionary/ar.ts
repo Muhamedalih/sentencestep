@@ -515,6 +515,13 @@ export const ar: Dictionary = {
     prevWordAria: "الكلمة السابقة",
     nextWordAria: "الكلمة التالية",
   },
+  vocabularyRecall: {
+    cardHeading: "كلمات تعرّفت عليها",
+    cardSubtitle: "من دروسك وقصصك الأخيرة — تذكّرها في جملها الأصلية.",
+    sourceLabel: "من «{title}» — قبل {n} يوم/أيام",
+    completeHeading: "أحسنت، تذكرتها كلها",
+    completeSubtitle: "راجعت {n} كلمة/كلمات.",
+  },
   library: {
     storiesHeading: "القصص",
     storiesSubtitle: "اختر قصة ممتعة وابدأ رحلتك في التعلم.",

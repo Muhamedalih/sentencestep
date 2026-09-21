@@ -547,6 +547,13 @@ export const es: Dictionary = {
     prevWordAria: "Palabra anterior",
     nextWordAria: "Palabra siguiente",
   },
+  vocabularyRecall: {
+    cardHeading: "Palabras que has conocido",
+    cardSubtitle: "De tus lecciones recientes — mira cómo se usan",
+    sourceLabel: 'De "{title}" — hace {n} día(s)',
+    completeHeading: "Bien hecho, las recordaste",
+    completeSubtitle: "Repasaste {n} palabra(s).",
+  },
   library: {
     storiesHeading: "Historias",
     storiesSubtitle: "Elige una historia divertida y comienza tu viaje de aprendizaje.",

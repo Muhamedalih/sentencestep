@@ -890,6 +890,43 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["mistakes"]["Insert"]>;
         Relationships: [];
       };
+      vocabulary_encounters: {
+        Row: {
+          id: string;
+          user_id: string;
+          /** Always lowercase — see 20250306000000_vocabulary_recall.sql's doc comment. Also the dedup identity (unique per user). */
+          word: string;
+          ar: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_en: string;
+          /** Index into sentence_en's whitespace-split words — where `word` sits. */
+          word_index: number;
+          review_stage: number;
+          /** Next spaced-review due time; null = mastered (schedule exhausted). */
+          next_review_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          word: string;
+          ar: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_en: string;
+          word_index: number;
+          review_stage?: number;
+          next_review_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["vocabulary_encounters"]["Insert"]>;
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;
@@ -1138,6 +1175,22 @@ export interface Database {
         Returns: undefined;
       };
       record_mistake_review: {
+        Args: { p_word: string; p_had_errors: boolean };
+        Returns: undefined;
+      };
+      record_vocabulary_encounter: {
+        Args: {
+          p_word: string;
+          p_ar: string;
+          p_mode: string;
+          p_lesson_id: string;
+          p_lesson_title: string;
+          p_sentence_en: string;
+          p_word_index: number;
+        };
+        Returns: undefined;
+      };
+      record_vocabulary_review: {
         Args: { p_word: string; p_had_errors: boolean };
         Returns: undefined;
       };
