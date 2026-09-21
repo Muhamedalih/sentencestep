@@ -20,11 +20,25 @@ async function getAuthenticatedUserId(): Promise<string | null> {
   return data?.claims.sub ?? null;
 }
 
-/** Same purpose as fetchActiveMistakeCountAction — cheap, count-only, for VocabularyRecallCard's "show/hide" decision on Home. Guests always get 0. */
+/**
+ * Same purpose as fetchActiveMistakeCountAction — cheap, count-only, for
+ * VocabularyRecallCard's "show/hide" decision on Home. Guests always get 0.
+ *
+ * Caught, not thrown: this runs inside Home's own Promise.all alongside
+ * everything else the dashboard needs, so a query failure here (e.g. this
+ * environment's `vocabulary_encounters` migration not applied yet) must
+ * never take the whole Home page down — a missing/broken feature degrades
+ * to "card hidden," exactly like "no due words" already does.
+ */
 export async function fetchVocabularyRecallCountAction(): Promise<number> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return 0;
-  return fetchDueVocabularyRecallCount(userId);
+  try {
+    return await fetchDueVocabularyRecallCount(userId);
+  } catch (error) {
+    console.error("[vocabulary-recall] fetchDueVocabularyRecallCount failed", error);
+    return 0;
+  }
 }
 
 /** `sentence` with its target word blanked back out — same convention Word Lists content is hand-authored in (see BLANK_TOKEN), just derived here instead of pre-written, since a Recall word's sentence is a real lesson/story sentence rather than a purpose-built one. */
@@ -45,7 +59,16 @@ function buildBlankSentence(sentenceEn: string, wordIndex: number): string {
 export async function fetchVocabularyRecallWordsAction(): Promise<ReviewWord[]> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return [];
-  const rows = await fetchDueVocabularyRecallRows(userId);
+  // Same "degrade, never throw" reasoning as fetchVocabularyRecallCountAction
+  // — this page redirects to /learn on an empty result already, so a query
+  // failure reads exactly like "nothing due" instead of a crashed page.
+  let rows: Awaited<ReturnType<typeof fetchDueVocabularyRecallRows>>;
+  try {
+    rows = await fetchDueVocabularyRecallRows(userId);
+  } catch (error) {
+    console.error("[vocabulary-recall] fetchDueVocabularyRecallRows failed", error);
+    return [];
+  }
 
   const now = Date.now();
   return rows.map((row) => {
