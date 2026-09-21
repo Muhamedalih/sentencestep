@@ -77,12 +77,10 @@ export default async function ModeLessonsPage({
 
   return (
     <div className="mx-auto max-w-5xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
-      {/* TEMPORARY — remove once the Stories/Normal recall-card visibility issue is confirmed fixed. */}
-      {debug === "1" && (
-        <p style={{ background: "yellow", color: "black", padding: 8, fontFamily: "monospace" }}>
-          DEBUG mode={mode} recallCount={recallCount}
-        </p>
-      )}
+      {/* TEMPORARY, UNCONDITIONAL for one diagnostic round — remove immediately once confirmed. */}
+      <p style={{ background: "yellow", color: "black", padding: 8, fontFamily: "monospace" }}>
+        DEBUG2 mode={mode} recallCount={recallCount} debugParam={String(debug)}
+      </p>
       <LessonListView
         mode={mode}
         title={title}
