@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 import { useProgress } from "@/hooks/use-progress";
 import type { Difficulty } from "@/lib/levels";
@@ -230,6 +231,15 @@ export function GetStartedStepProvider({
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   const [countryStepDone, setCountryStepDone] = useState(false);
   const [tutorialStepDone, setTutorialStepDone] = useState(false);
+  const pathname = usePathname();
+
+  // introContinued is in-memory, so a soft navigation that keeps this
+  // provider mounted (e.g. signOut's redirect("/") from /learn) would carry a
+  // stale `true` over and skip IntroLanding straight to the language picker.
+  // Any route change means the visitor isn't mid-intro anymore — reset it.
+  useEffect(() => {
+    setIntroContinued(false);
+  }, [pathname]);
 
   // introContinued is deliberately in-memory only (see its own doc comment),
   // which assumes "leaving the site" always means a real page load that
