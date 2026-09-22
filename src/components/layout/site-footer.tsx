@@ -23,7 +23,6 @@ export function SiteFooter() {
       title: t.footer.learningColumn,
       links: [
         { href: "/learn/normal", label: t.nav.normalLessons },
-        { href: "/learn/stories", label: t.nav.stories },
         { href: "/learn/conversation", label: t.nav.conversation },
       ],
     },

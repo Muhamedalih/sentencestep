@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { StoriesLibrary } from "@/components/app/stories-library";
 import { isAdmin } from "@/lib/admin/access";
@@ -15,11 +16,16 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Stories" };
 
 export default async function StoriesLibraryPage() {
+  // Stories is temporarily admin-only while it's being rebuilt — checked
+  // first, before any of the page's other queries run, so a regular learner
+  // never pays for the lessons/recall-count fetches below.
+  const isAdminUser = await isAdmin();
+  if (!isAdminUser) redirect("/learn");
+
   const locale = await getLocale();
-  const [lessons, hasPremium, isAdminUser, recallCount] = await Promise.all([
+  const [lessons, hasPremium, recallCount] = await Promise.all([
     getLessons("stories", locale ?? undefined),
     hasPremiumAccess(),
-    isAdmin(),
     fetchVocabularyRecallCountAction("stories"),
   ]);
 

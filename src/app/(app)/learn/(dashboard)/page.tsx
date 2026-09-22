@@ -194,6 +194,7 @@ export default async function LearnHomePage() {
           bookProgressPercent={bookProgressPercent}
           isPremiumUser={isPremiumUser}
           hasWeakWords={weakWords.length > 0}
+          isAdminUser={isAdminUser}
         />
       </div>
     </ProgressProvider>

@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
  * that one is visible on every viewport, not just md:+, so keeping a second
  * copy here would just be the same numbers shown twice.
  */
-export function LearnSidebar() {
+export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean }) {
   const pathname = usePathname();
   const { t, dir } = useLocale();
   // Home is an exact match (not a prefix) — "/learn" is a short enough
@@ -59,13 +59,16 @@ export function LearnSidebar() {
                 ? "library"
                 : null;
 
+  // Stories is temporarily admin-only while it's being rebuilt (see
+  // stories/page.tsx and [mode]/[lessonId]/page.tsx, which enforce this same
+  // gate server-side) — this just keeps the tab off regular learners' nav.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
     { key: "normal-lessons", href: "/learn/normal", label: t.nav.normalLessons, icon: Type },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
-  ] as const;
+  ].filter((item) => item.key !== "stories" || isAdminUser);
 
   return (
     <nav
