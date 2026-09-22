@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { requireEditorOrAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
@@ -67,6 +67,7 @@ export async function updateLevelPreview(
 
   revalidatePath("/admin/levels");
   revalidatePath("/learn");
+  revalidateTag("levels");
   return { success: "Preview sentences saved." };
 }
 
@@ -95,6 +96,7 @@ export async function createLevel(input: LevelInput): Promise<ActionResult> {
 
   void logAdminAction("level.created", "level", data.id, { mode: input.mode, index: input.index });
   revalidatePath("/admin/levels");
+  revalidateTag("levels");
   return { success: "Level created.", id: data.id };
 }
 
@@ -132,6 +134,7 @@ export async function updateLevel(input: LevelInput & { id: string }): Promise<A
 
   void logAdminAction("level.updated", "level", input.id);
   revalidatePath("/admin/levels");
+  revalidateTag("levels");
   return { success: "Level saved." };
 }
 
@@ -171,6 +174,7 @@ export async function deleteLevel(id: string): Promise<ActionResult> {
 
   void logAdminAction("level.deleted", "level", id);
   revalidatePath("/admin/levels");
+  revalidateTag("levels");
   return { success: "Level deleted." };
 }
 

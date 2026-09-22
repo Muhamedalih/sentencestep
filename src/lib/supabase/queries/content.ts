@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { createClient } from "@/lib/supabase/server";
 import { isLearnerVisibleStatus } from "@/lib/content-helpers";
@@ -72,7 +74,7 @@ function toSentence(
  * list view can show a real name for any level beyond the three baked into
  * src/data/units.ts, instead of a generic "More Lessons" bucket.
  */
-export async function fetchLevelNames(
+async function fetchLevelNamesUncached(
   mode: LearningMode,
   locale?: SupportLocale,
 ): Promise<Record<number, { title: string; titleAr: string; supportTitle?: string }>> {
@@ -115,6 +117,18 @@ export async function fetchLevelNames(
 }
 
 /**
+ * Cached wrapper around fetchLevelNamesUncached — this data is genuinely
+ * public (createPublicClient, no session/RLS dependency, unlike fetchLessons
+ * below), changes only through the four admin actions in content-actions.ts
+ * that call revalidateTag("levels"), and is re-fetched on every "/learn"
+ * navigation otherwise. Tagged (not time-based) so an admin edit is reflected
+ * immediately rather than after some TTL.
+ */
+export const fetchLevelNames = unstable_cache(fetchLevelNamesUncached, ["fetch-level-names"], {
+  tags: ["levels"],
+});
+
+/**
  * Admin-authored "Start Simple" preview sentences (via /admin/levels), keyed
  * by level index — the handful of standalone example sentences shown on the
  * homepage before any lesson, not tied to a lesson/activity. Falls back to
@@ -122,7 +136,7 @@ export async function fetchLevelNames(
  * (src/lib/content.ts's getStartSimplePreviews) is responsible for falling
  * back further to the static src/data/units.ts previews in that case.
  */
-export async function fetchLevelPreviews(
+async function fetchLevelPreviewsUncached(
   mode: LearningMode,
   locale?: SupportLocale,
 ): Promise<Record<number, PreviewSentence[]>> {
@@ -175,6 +189,13 @@ export async function fetchLevelPreviews(
   }
   return result;
 }
+
+/** Cached wrapper around fetchLevelPreviewsUncached — see fetchLevelNames's cached wrapper above for why this is safe to share-cache and how it's invalidated. */
+export const fetchLevelPreviews = unstable_cache(
+  fetchLevelPreviewsUncached,
+  ["fetch-level-previews"],
+  { tags: ["levels"] },
+);
 
 /**
  * Session-aware, like fetchLessonById (see that function's doc comment for
