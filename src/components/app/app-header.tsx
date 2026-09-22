@@ -13,10 +13,11 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/supabase/auth";
+import type { ProgressState } from "@/lib/progress/types";
 
 /** Duolingo-style always-visible streak/XP pair, centered in the header — see AppHeader's own doc comment for why this replaced empty header space. Renders nothing until progress has actually loaded, never a flashing "0". */
-function ProgressHud() {
-  const { isLoaded, streak, xp } = useProgress();
+function ProgressHud({ initialProgress }: { initialProgress?: ProgressState }) {
+  const { isLoaded, streak, xp } = useProgress(initialProgress);
   if (!isLoaded) return null;
 
   return (
@@ -59,10 +60,13 @@ function ProgressHud() {
 export function AppHeader({
   user,
   savedCount,
+  initialProgress,
 }: {
   user: CurrentUser | null;
   /** This learner's saved-sentence count, for the bookmark icon's badge — 0/undefined renders no badge at all. */
   savedCount?: number;
+  /** Already fetched server-side by the layout rendering this header — see ProgressHud/useProgress's own doc comments for why this avoids a client-side flash on every /learn/* page, not just the Home dashboard. */
+  initialProgress?: ProgressState;
 }) {
   const { t } = useLocale();
   const [scrolled, setScrolled] = useState(false);
@@ -144,7 +148,9 @@ export function AppHeader({
           <Logo />
         </Link>
 
-        <div className="justify-self-center">{user && <ProgressHud />}</div>
+        <div className="justify-self-center">
+          {user && <ProgressHud initialProgress={initialProgress} />}
+        </div>
 
         <div className="flex items-center gap-2 justify-self-end sm:gap-3">
           {/* Matches how every major app anchors the profile avatar at the

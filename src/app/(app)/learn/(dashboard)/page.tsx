@@ -19,7 +19,7 @@ import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/quer
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
-import { fetchProgressAction } from "@/lib/progress/actions";
+import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Book } from "@/types/library";
 
@@ -100,7 +100,7 @@ export default async function LearnHomePage() {
   // round trip this exists to remove.
   const todayISO = todayLocalISODate();
   const progressPromise = userPromise.then((user) =>
-    user ? fetchProgressAction(todayISO) : undefined,
+    user ? fetchProgressCached(todayISO) : undefined,
   );
   const [
     units,

@@ -4,6 +4,8 @@ import { AppHeader } from "@/components/app/app-header";
 import { DashboardChrome } from "@/components/app/dashboard-chrome";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
+import { fetchProgressCached } from "@/lib/progress/cached";
+import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
 
@@ -35,12 +37,19 @@ import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentenc
  */
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
-  const savedCount = user ? await fetchMySavedSentencesCount(user.id) : 0;
+  // Both depend only on user.id, not on each other — safe to run together
+  // instead of one after the other.
+  const [savedCount, initialProgress] = user
+    ? await Promise.all([
+        fetchMySavedSentencesCount(user.id),
+        fetchProgressCached(todayLocalISODate()),
+      ])
+    : [0, undefined];
 
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
-        header={<AppHeader user={user} savedCount={savedCount} />}
+        header={<AppHeader user={user} savedCount={savedCount} initialProgress={initialProgress} />}
         sidebar={<LearnSidebar />}
       >
         {children}
