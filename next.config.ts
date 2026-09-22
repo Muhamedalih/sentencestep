@@ -38,6 +38,23 @@ const nextConfig: NextConfig = {
   // via real Node require() at runtime instead, using the real `ws`/`net`
   // implementation.
   serverExternalPackages: ["msedge-tts"],
+  experimental: {
+    // Next 15 defaults the client Router Cache's staleTime for dynamic
+    // routes to 0 — every client-side navigation between /learn/* sections
+    // re-runs the full server round trip even for a page the same visitor
+    // already loaded seconds ago, which is what made switching between
+    // sections (word-lists, saved, settings, library, lessons) feel slow. 30s
+    // lets a repeat soft-navigation within that window reuse the already-
+    // fetched RSC payload instead. This is a per-browser-tab, in-memory
+    // cache only — never shared across users/devices, and every hard reload,
+    // new tab, or elapsed window still hits the server fresh, so it can't
+    // leak one learner's content to another. The one real risk (a learner or
+    // admin seeing an up-to-30s-stale lesson list after a content edit) is
+    // closed by content-actions.ts's saveLesson/archiveLesson/restoreLesson/
+    // bulkUpdateLessonStatus all calling revalidatePath on the affected
+    // mode's /learn/[mode] list — see those call sites.
+    staleTimes: { dynamic: 30 },
+  },
   images: {
     remotePatterns: [
       {

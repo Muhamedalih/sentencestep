@@ -30,7 +30,14 @@ export async function setFreeForAll(enabled: boolean): Promise<ActionResult> {
     enabled,
   });
   revalidatePath("/admin/free-access");
-  revalidatePath("/learn");
+  // "layout" (not the default "page") so this busts every /learn/* route's
+  // client Router Cache entry too — /learn/normal, /learn/stories,
+  // /learn/conversation, etc. — not just the literal "/learn" path. With
+  // next.config.ts's experimental.staleTimes.dynamic now caching a visitor's
+  // already-loaded lesson list client-side for up to 30s, flipping this
+  // switch off must invalidate that cache immediately everywhere premium
+  // content could be showing, not just on the next unrelated revalidation.
+  revalidatePath("/learn", "layout");
   revalidatePath("/upgrade");
   return {
     success: enabled

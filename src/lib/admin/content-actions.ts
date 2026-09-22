@@ -428,6 +428,7 @@ export async function saveLesson(input: LessonMutationInput): Promise<ActionResu
   });
   revalidatePath("/admin/content");
   revalidatePath(`/admin/content/${lessonId}/edit`);
+  revalidatePath(`/learn/${input.mode}`);
   return { success: "Lesson saved.", id: lessonId };
 }
 
@@ -437,14 +438,17 @@ export async function archiveLesson(id: string): Promise<ActionResult> {
   if (forbidden) return { error: forbidden };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("lessons")
     .update({ status: "archived", updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("mode")
+    .single();
   if (error) return { error: "Couldn't archive the lesson. Please try again." };
 
   void logAdminAction("lesson.archived", "lesson", id);
   revalidatePath("/admin/content");
+  revalidatePath(`/learn/${data.mode}`);
   return { success: "Lesson archived." };
 }
 
@@ -453,14 +457,17 @@ export async function restoreLesson(id: string): Promise<ActionResult> {
   if (forbidden) return { error: forbidden };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("lessons")
     .update({ status: "draft", updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("mode")
+    .single();
   if (error) return { error: "Couldn't restore the lesson. Please try again." };
 
   void logAdminAction("lesson.restored", "lesson", id);
   revalidatePath("/admin/content");
+  revalidatePath(`/learn/${data.mode}`);
   return { success: "Lesson restored to draft." };
 }
 
@@ -474,10 +481,11 @@ export async function bulkUpdateLessonStatus(
   if (ids.length === 0) return { error: "No content selected." };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("lessons")
     .update({ status, updated_at: new Date().toISOString() })
-    .in("id", ids);
+    .in("id", ids)
+    .select("mode");
   if (error) {
     return {
       error:
@@ -485,6 +493,10 @@ export async function bulkUpdateLessonStatus(
           ? "Couldn't archive the selected content. Please try again."
           : "Couldn't restore the selected content. Please try again.",
     };
+  }
+
+  for (const mode of new Set((data ?? []).map((row) => row.mode))) {
+    revalidatePath(`/learn/${mode}`);
   }
 
   void logAdminAction(
