@@ -27,6 +27,18 @@ export interface WordTranslation {
  * status (the translation review dashboard, src/lib/admin/translation-
  * queries.ts) intentionally do NOT go through this function.
  */
+// PostgREST encodes .in("content_id", [...]) as a literal comma-separated
+// list in the request's query string. A mode's full sentence-id list (every
+// caller of getLessons() passes ALL of a mode's ids in one call — see
+// src/lib/supabase/queries/content.ts) grows with the catalog itself, and
+// once Stories crossed ~1000 sentences that single query string blew past
+// Node's ~16KB request-header limit (measured: 1170 ids -> ~19.5KB ->
+// UND_ERR_HEADERS_OVERFLOW, taking down every page that reads Stories
+// content for a non-English locale). Chunking keeps each request's id list
+// small regardless of how large any one mode's catalog grows, with no
+// change to this function's inputs/outputs or callers.
+const CONTENT_IDS_CHUNK_SIZE = 300;
+
 export async function getContentTranslations(
   contentType: ContentType,
   contentIds: string[],
@@ -36,36 +48,46 @@ export async function getContentTranslations(
   if (contentIds.length === 0) return map;
 
   const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("content_translations")
-    .select("content_id, field, value")
-    .eq("content_type", contentType)
-    .eq("locale", locale)
-    .eq("status", "approved")
-    .in("content_id", contentIds);
-
-  if (error) {
-    // PGRST205 = "relation not found" — the locale-foundation migration
-    // hasn't been applied to this project yet. Same defensive shape as
-    // getStartSimplePreviews' handling of a not-yet-applied
-    // levels.preview_sentences column in src/lib/content.ts: a real,
-    // expected state right after this code ships and before someone runs
-    // the migration, not a bug — every caller already falls back to the
-    // legacy `_ar` column (for Arabic) or English (for Spanish, with a dev
-    // warning) when this map comes back empty, so degrading to "no
-    // translations found" here is correct, not silent data loss. Any other
-    // error is a real failure and still thrown.
-    if (error.code === "PGRST205") {
-      console.error(
-        `[i18n] content_translations table not found — has supabase/migrations/20250122000000_locale_foundation.sql been applied yet? Falling back to legacy columns.`,
-      );
-      return map;
-    }
-    throw error;
+  const chunks: string[][] = [];
+  for (let i = 0; i < contentIds.length; i += CONTENT_IDS_CHUNK_SIZE) {
+    chunks.push(contentIds.slice(i, i + CONTENT_IDS_CHUNK_SIZE));
   }
 
-  for (const row of data ?? []) {
-    map.set(`${row.content_id}:${row.field}`, row.value);
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      supabase
+        .from("content_translations")
+        .select("content_id, field, value")
+        .eq("content_type", contentType)
+        .eq("locale", locale)
+        .eq("status", "approved")
+        .in("content_id", chunk),
+    ),
+  );
+
+  for (const { data, error } of results) {
+    if (error) {
+      // PGRST205 = "relation not found" — the locale-foundation migration
+      // hasn't been applied to this project yet. Same defensive shape as
+      // getStartSimplePreviews' handling of a not-yet-applied
+      // levels.preview_sentences column in src/lib/content.ts: a real,
+      // expected state right after this code ships and before someone runs
+      // the migration, not a bug — every caller already falls back to the
+      // legacy `_ar` column (for Arabic) or English (for Spanish, with a dev
+      // warning) when this map comes back empty, so degrading to "no
+      // translations found" here is correct, not silent data loss. Any other
+      // error is a real failure and still thrown.
+      if (error.code === "PGRST205") {
+        console.error(
+          `[i18n] content_translations table not found — has supabase/migrations/20250122000000_locale_foundation.sql been applied yet? Falling back to legacy columns.`,
+        );
+        return new Map();
+      }
+      throw error;
+    }
+    for (const row of data ?? []) {
+      map.set(`${row.content_id}:${row.field}`, row.value);
+    }
   }
   return map;
 }
