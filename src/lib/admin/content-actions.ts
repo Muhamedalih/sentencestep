@@ -571,7 +571,7 @@ export async function uploadLessonImage(
 
   const { error: uploadError } = await supabase.storage
     .from("lesson-illustrations")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, file, { contentType: file.type, upsert: false, cacheControl: "31536000" });
   if (uploadError) {
     console.error("[admin] uploadLessonImage: Storage upload failed", {
       bucket: "lesson-illustrations",

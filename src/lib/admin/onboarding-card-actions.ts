@@ -118,7 +118,7 @@ export async function uploadOnboardingCardImage(
 
   const { error: uploadError } = await supabase.storage
     .from("onboarding-card")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, file, { contentType: file.type, upsert: false, cacheControl: "31536000" });
   if (uploadError) {
     console.error("[admin] uploadOnboardingCardImage: Storage upload failed", {
       path,
@@ -224,7 +224,7 @@ export async function uploadOnboardingCompletionImage(
 
   const { error: uploadError } = await supabase.storage
     .from("onboarding-card")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, file, { contentType: file.type, upsert: false, cacheControl: "31536000" });
   if (uploadError) {
     console.error("[admin] uploadOnboardingCompletionImage: Storage upload failed", {
       path,
@@ -350,7 +350,7 @@ export async function uploadOpeningLessonImage(
 
   const { error: uploadError } = await supabase.storage
     .from("lesson-illustrations")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, file, { contentType: file.type, upsert: false, cacheControl: "31536000" });
   if (uploadError) {
     console.error("[admin] uploadOpeningLessonImage: Storage upload failed", {
       path,

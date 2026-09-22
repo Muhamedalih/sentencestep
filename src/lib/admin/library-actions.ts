@@ -610,7 +610,7 @@ export async function uploadBookCoverImage(
 
   const { error: uploadError } = await supabase.storage
     .from("book-covers")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, file, { contentType: file.type, upsert: false, cacheControl: "31536000" });
   if (uploadError) {
     console.error("[admin] uploadBookCoverImage: Storage upload failed", {
       bucket: "book-covers",
