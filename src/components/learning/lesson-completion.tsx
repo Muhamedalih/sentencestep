@@ -3,7 +3,15 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, Wand2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  ChevronRight,
+  Home,
+  Loader2,
+  Wand2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -20,6 +28,7 @@ import {
   type LearnerLevelProgress,
 } from "@/lib/progress/learner-level";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
+import { cn } from "@/lib/utils";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
@@ -102,6 +111,7 @@ export function LessonCompletion({
   rewards,
   mistakeCount = 0,
   onFixMistakes,
+  onViewWords,
   saveStatus = "saved",
   onRetrySave,
 }: {
@@ -128,8 +138,10 @@ export function LessonCompletion({
    * other in previewMode, where the whole feature is skipped.
    */
   mistakeCount?: number;
-  /** Enters the Fix Your Mistakes flow (see FixYourMistakesSession) — never a Link, since it swaps this same screen's content in place rather than navigating. */
+  /** Enters the Fix Your Mistakes flow (see FixYourMistakesSession) — never a Link, since it swaps this same screen's content in place rather than navigating. Ignored for Stories mode regardless of mistakeCount (see `hasMistakes` below) — Stories intentionally never surfaces this CTA, so a learner's outstanding mistakes from other modes are never framed as something to fix right after a story. */
   onFixMistakes?: () => void;
+  /** Opens StoryWordsPanel in place of this screen (see LessonSession's isViewingWords branch) — Stories mode only; every other mode keeps the plain inline vocabulary chips below since they have no per-word practice flow yet. */
+  onViewWords?: () => void;
   /**
    * Status of the signed-in save this completion triggered (see useProgress).
    * Defaults to "saved" so every other caller (and any test/story that
@@ -145,7 +157,8 @@ export function LessonCompletion({
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
   const accuracyPercent = Math.round(accuracy * 100);
-  const hasMistakes = mistakeCount > 0 && Boolean(onFixMistakes);
+  // Stories never shows this CTA — see onFixMistakes's own doc comment.
+  const hasMistakes = mode !== "stories" && mistakeCount > 0 && Boolean(onFixMistakes);
   const levelPercent = Math.round(learnerLevel.progress * 100);
 
   // The bar animates from where XP stood *before* this completion to where
@@ -426,16 +439,45 @@ export function LessonCompletion({
 
         {vocabulary && vocabulary.length > 0 && (
           <motion.div variants={fadeInUp}>
-            <p
-              style={{
-                color: styles.textSecondary,
-                fontSize: Math.max(9, Math.round(theme.bodySize * 0.8)),
-              }}
-              className="mb-2 font-semibold tracking-widest uppercase"
+            <div className="mb-2 flex items-center justify-between">
+              <p
+                style={{
+                  color: styles.textSecondary,
+                  fontSize: Math.max(9, Math.round(theme.bodySize * 0.8)),
+                }}
+                className="font-semibold tracking-widest uppercase"
+              >
+                {theme.vocabTitle || t.lesson.vocabularyHeading}
+              </p>
+              {onViewWords && (
+                <button
+                  type="button"
+                  onClick={onViewWords}
+                  style={{ color: theme.colorAccent, fontSize: Math.round(theme.bodySize * 0.85) }}
+                  className="inline-flex items-center gap-0.5 font-semibold hover:opacity-80"
+                >
+                  {t.lesson.practiceWord}
+                  <ChevronRight
+                    className={cn("size-3.5", dir === "rtl" && "rotate-180")}
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
+            </div>
+            <div
+              onClick={onViewWords}
+              role={onViewWords ? "button" : undefined}
+              tabIndex={onViewWords ? 0 : undefined}
+              onKeyDown={
+                onViewWords
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") onViewWords();
+                    }
+                  : undefined
+              }
+              style={{ gap: theme.chipSpacing }}
+              className={cn("flex flex-wrap", onViewWords && "cursor-pointer")}
             >
-              {theme.vocabTitle || t.lesson.vocabularyHeading}
-            </p>
-            <div style={{ gap: theme.chipSpacing }} className="flex flex-wrap">
               {vocabulary.slice(0, 3).map((item) => (
                 <span
                   key={item.id}

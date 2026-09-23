@@ -15,6 +15,7 @@ import {
   StoryPreviousSentences,
   type CompletedStorySentence,
 } from "@/components/learning/story-previous-sentences";
+import { StoryWordsPanel } from "@/components/learning/story-words-panel";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { Progress } from "@/components/ui/progress";
@@ -101,6 +102,7 @@ export function LessonSession({
   const [maxSentenceIndexReached, setMaxSentenceIndexReached] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isFixingMistakes, setIsFixingMistakes] = useState(false);
+  const [isViewingWords, setIsViewingWords] = useState(false);
   const [finalAccuracy, setFinalAccuracy] = useState(1);
   const [finalWpm, setFinalWpm] = useState(0);
   // The running numbered transcript (see StoryPreviousSentences). Stories
@@ -163,9 +165,10 @@ export function LessonSession({
     isComplete &&
     !isOpeningLesson &&
     !isFixingMistakes &&
+    !isViewingWords &&
     saveStatus === "saved" &&
     completions.length === 2;
-  const mistakes = useMistakes();
+  const mistakes = useMistakes({ skipCountFetch: unit.mode === "stories" });
   const typingSoundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete, playLessonComplete } = useTypingSound({
     pack: typingSoundSettings.soundPack,
@@ -494,6 +497,15 @@ export function LessonSession({
                 nextLesson={nextLesson}
               />
             </div>
+          ) : isComplete && isViewingWords && unit.vocabulary && unit.vocabulary.length > 0 ? (
+            <div key="story-words" className="flex flex-col lg:h-full">
+              <StoryWordsPanel
+                vocabulary={unit.vocabulary}
+                sentences={unit.sentences}
+                defaultVoiceId={defaultVoiceId}
+                onBack={() => setIsViewingWords(false)}
+              />
+            </div>
           ) : isComplete ? (
             <div key="complete" className="flex flex-col bg-black lg:h-full">
               {previewMode && (
@@ -520,6 +532,7 @@ export function LessonSession({
                   rewards={previewMode ? [] : rewards}
                   mistakeCount={previewMode ? 0 : mistakes.count}
                   onFixMistakes={previewMode ? undefined : () => setIsFixingMistakes(true)}
+                  onViewWords={unit.mode === "stories" ? () => setIsViewingWords(true) : undefined}
                   saveStatus={previewMode ? "saved" : saveStatus}
                   onRetrySave={previewMode ? undefined : retryMarkComplete}
                 />

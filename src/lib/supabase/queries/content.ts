@@ -9,7 +9,11 @@ import {
   resolveWordArrayField,
   warnIfMissing,
 } from "@/lib/i18n/content-translations";
-import { buildStoryVocabulary, deriveStoryVocabulary } from "@/lib/content/story-vocabulary";
+import {
+  applyCuratedStoryVocabulary,
+  buildStoryVocabulary,
+  deriveStoryVocabulary,
+} from "@/lib/content/story-vocabulary";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { Database } from "@/types/database";
 import type { Lesson, LearningMode, PreviewSentence, Sentence } from "@/types/content";
@@ -275,8 +279,14 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
     // same ranking engine (deriveStoryVocabulary, recap-list-only — it never
     // mutates sentences/in-context markers) when the content itself has no
     // hand-curated one. See LessonCompletion's vocabulary section.
+    // Curated (applyCuratedStoryVocabulary) takes priority over the
+    // heuristic when this lesson has authored target words — see that
+    // function's own doc comment.
     const storyVocab =
-      mode === "stories" ? buildStoryVocabulary(lessonSentences, level, lesson.title) : null;
+      mode === "stories"
+        ? (applyCuratedStoryVocabulary(lessonSentences, lesson.id) ??
+          buildStoryVocabulary(lessonSentences, level, lesson.title))
+        : null;
     const derivedVocabulary = storyVocab
       ? null
       : deriveStoryVocabulary(lessonSentences, level, lesson.title);
@@ -441,9 +451,14 @@ export async function fetchLessonById(
   // Stories-only, isolated feature — see buildStoryVocabulary's doc
   // comment. Normal/conversation lessons are untouched by it (storyVocab
   // stays null); they instead get a derived recap vocabulary list — see the
-  // matching comment in fetchLessons above.
+  // matching comment in fetchLessons above. Curated vocabulary takes
+  // priority when this lesson has authored target words — see
+  // applyCuratedStoryVocabulary's own doc comment.
   const storyVocab =
-    mode === "stories" ? buildStoryVocabulary(lessonSentences, levelIndex, lesson.title) : null;
+    mode === "stories"
+      ? (applyCuratedStoryVocabulary(lessonSentences, lesson.id) ??
+        buildStoryVocabulary(lessonSentences, levelIndex, lesson.title))
+      : null;
   const derivedVocabulary = storyVocab
     ? null
     : deriveStoryVocabulary(lessonSentences, levelIndex, lesson.title);

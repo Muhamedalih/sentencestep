@@ -327,6 +327,8 @@ export const ar: Dictionary = {
     wordReadyToReview: "كلمة جاهزة للمراجعة",
     wordsReadyToReview: "كلمات جاهزة للمراجعة",
     vocabularyHeading: "كلمات من هذا الدرس",
+    practiceWord: "تدرب",
+    typeToRevealPlaceholder: "اكتب الكلمة لتظهر",
     nextLesson: "الدرس القادم",
     fixMistakes: "تصحيح الأخطاء",
     youAreOn: "أنت في {unit}",

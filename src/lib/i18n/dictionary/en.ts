@@ -337,6 +337,8 @@ export const en: Dictionary = {
     wordReadyToReview: "word ready to review",
     wordsReadyToReview: "words ready to review",
     vocabularyHeading: "Words from this lesson",
+    practiceWord: "Practice",
+    typeToRevealPlaceholder: "Type the word to reveal it",
     nextLesson: "Next lesson",
     fixMistakes: "Fix Your Mistakes",
     youAreOn: "You're on {unit}",

@@ -1,4 +1,5 @@
 import { difficultyForLevel, type Difficulty } from "@/lib/levels";
+import { STORY_TARGET_VOCABULARY } from "@/lib/content/story-target-vocabulary";
 import type { Lesson, Sentence, VocabularyItem } from "@/types/content";
 
 /**
@@ -976,6 +977,61 @@ export function buildStoryVocabulary<S extends Sentence>(
     const existing = indicesBySentence.get(sentenceId);
     if (existing) existing.push(wordIndex);
     else indicesBySentence.set(sentenceId, [wordIndex]);
+  }
+
+  const annotatedSentences = sentences.map((sentence) => {
+    const indices = indicesBySentence.get(sentence.id);
+    return indices
+      ? { ...sentence, targetVocabularyIndices: indices.sort((a, b) => a - b) }
+      : sentence;
+  });
+
+  return { vocabulary, sentences: annotatedSentences };
+}
+
+/**
+ * Curated alternative to buildStoryVocabulary, for the redesigned
+ * short-format Stories catalog (see STORY_TARGET_VOCABULARY's own doc
+ * comment) — the 2-3 target words for a lesson were authored directly
+ * alongside its sentences rather than discovered by selectTargetVocabulary's
+ * heuristic, so this skips scoring entirely and just locates each curated
+ * word's occurrences by matching plain text (case-insensitive, punctuation-
+ * stripped) against `sentence.en`'s own whitespace-split words — no
+ * dependency on `wordTranslations` being populated, since these lessons
+ * don't have it. Same output shape as buildStoryVocabulary (vocabulary +
+ * annotated sentences from one pass), so callers never need to know which
+ * path produced it. A curated word with zero occurrences in the given
+ * sentences (shouldn't happen — see the validation this data was built
+ * against) is silently skipped rather than crashing the read path.
+ */
+export function applyCuratedStoryVocabulary<S extends Sentence>(
+  sentences: S[],
+  lessonId: string,
+): { vocabulary: VocabularyItem[]; sentences: S[] } | null {
+  const curated = STORY_TARGET_VOCABULARY[lessonId];
+  if (!curated || curated.length === 0) return null;
+
+  const vocabulary: VocabularyItem[] = [];
+  const indicesBySentence = new Map<string, number[]>();
+
+  for (const item of curated) {
+    const target = item.en.toLowerCase();
+    let found = false;
+
+    for (const sentence of sentences) {
+      const words = sentence.en.split(/\s+/);
+      words.forEach((rawWord, wordIndex) => {
+        if (stripPunctuation(rawWord).toLowerCase() !== target) return;
+        found = true;
+        const existing = indicesBySentence.get(sentence.id);
+        if (existing) existing.push(wordIndex);
+        else indicesBySentence.set(sentence.id, [wordIndex]);
+      });
+    }
+
+    if (found) {
+      vocabulary.push({ id: `${lessonId}-vocab-${item.en}`, en: item.en, ar: item.ar });
+    }
   }
 
   const annotatedSentences = sentences.map((sentence) => {

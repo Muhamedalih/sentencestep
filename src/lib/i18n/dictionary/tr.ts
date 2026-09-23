@@ -342,6 +342,8 @@ export const tr: Dictionary = {
     wordReadyToReview: "gözden geçirilecek kelime",
     wordsReadyToReview: "gözden geçirilecek kelimeler",
     vocabularyHeading: "Bu dersteki kelimeler",
+    practiceWord: "Alıştır",
+    typeToRevealPlaceholder: "Görmek için kelimeyi yaz",
     nextLesson: "Sonraki ders",
     fixMistakes: "Hatalarını düzelt",
     youAreOn: "{unit} üzerindesiniz",
