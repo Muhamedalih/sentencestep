@@ -8,6 +8,7 @@ import { FeaturedBook } from "@/components/app/featured-book";
 import { LibraryCategoryNav } from "@/components/app/library-category-nav";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
 import { LibrarySearch } from "@/components/app/library-search";
+import { LibraryTypeToggle } from "@/components/app/library-type-toggle";
 import { useLocale } from "@/components/providers/locale-provider";
 import { staggerChildren } from "@/lib/motion";
 import type { Book, CategoryWithBooks, ContinueReadingEntry } from "@/types/library";
@@ -18,6 +19,8 @@ interface LibraryHomeProps {
   continueReading: ContinueReadingEntry[];
   /** Books this learner has fully finished, most-recently-completed first — empty for a guest or a learner who hasn't finished one yet, in which case the shelf below simply doesn't render (see fetchCompletedBooks). */
   completedBooks: Book[];
+  /** Shows the Books/Novels toggle — admin-only while the Novels catalog is still being written, see LibraryTypeToggle's own doc comment. */
+  isAdminUser: boolean;
 }
 
 /**
@@ -37,6 +40,7 @@ export function LibraryHome({
   featuredBooks,
   continueReading,
   completedBooks,
+  isAdminUser,
 }: LibraryHomeProps) {
   const { t } = useLocale();
   const [query, setQuery] = useState("");
@@ -80,6 +84,7 @@ export function LibraryHome({
           <p className="text-muted-foreground mt-2 text-lg">{t.bookLibrary.subtitle}</p>
           <p className="text-muted-foreground/80 mt-2 text-sm">{t.bookLibrary.libraryDisclaimer}</p>
         </div>
+        {isAdminUser && <LibraryTypeToggle active="books" />}
         <LibrarySearch value={query} onChange={setQuery} />
         <LibraryCategoryNav
           categories={populatedCategories.map(({ category }) => category)}

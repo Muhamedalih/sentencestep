@@ -8,6 +8,7 @@ import type { Database } from "@/types/database";
 import type {
   Book,
   BookDifficultyLevel,
+  BookType,
   Category,
   CategoryWithBooks,
   ContinueReadingEntry,
@@ -187,10 +188,11 @@ async function fetchCategoryLinksForBooks(
   return map;
 }
 
-/** Published books flagged Featured, in display order. Empty while no book is both published and featured — the normal state until the next phase adds real books. Accepts an already-created client — see fetchCategories's doc comment. */
+/** Published books flagged Featured, in display order. Empty while no book is both published and featured — the normal state until the next phase adds real books. Accepts an already-created client — see fetchCategories's doc comment. `type` defaults to 'book' so every existing call site is unaffected; the Novels homepage passes 'novel' to reuse this same query. */
 export async function fetchFeaturedBooks(
   client?: PublicClient,
   locale: SupportLocale | null = null,
+  type: BookType = "book",
 ): Promise<Book[]> {
   if (!isSupabaseConfigured()) return [];
 
@@ -200,7 +202,7 @@ export async function fetchFeaturedBooks(
     .select("*")
     .eq("status", "published")
     .eq("is_featured", true)
-    .eq("type", "book")
+    .eq("type", type)
     .order("order_index", { ascending: true });
   if (error) throw error;
   if (!data || data.length === 0) return [];
@@ -298,6 +300,37 @@ export async function fetchCategoriesWithBooks(
 }
 
 /**
+ * Every published Novel, in display order — the Novels homepage's main
+ * grid. Deliberately not category-grouped like fetchCategoriesWithBooks:
+ * the Novels catalog is a small, hand-curated set (Section: Library ->
+ * Novels rollout), so a category-by-category layout would just be empty
+ * sections around one real one. Every novel still carries exactly one
+ * required category under the hood (validateBookInput requires at least
+ * one) — a single shared, permanently-inactive "Fiction Summaries" category
+ * that exists only to satisfy that constraint and is never surfaced in any
+ * category nav or section on either this page or the Library's.
+ */
+export async function fetchAllNovels(
+  client?: PublicClient,
+  locale: SupportLocale | null = null,
+): Promise<Book[]> {
+  if (!isSupabaseConfigured()) return [];
+
+  const supabase = client ?? createPublicClient();
+  const { data, error } = await supabase
+    .from("books")
+    .select("*")
+    .eq("status", "published")
+    .eq("type", "novel")
+    .order("order_index", { ascending: true });
+  if (error) throw error;
+  if (!data || data.length === 0) return [];
+
+  const translatedDescriptions = await resolveBookDescriptions(data, locale);
+  return data.map((row) => toBook(row, new Map(), translatedDescriptions.get(row.id)));
+}
+
+/**
  * Title/author/category search across published books — a simple `ilike`
  * on title/author plus a category-name match, not a separate search engine
  * (Section 11 of the spec explicitly asks for this, not something new).
@@ -374,10 +407,13 @@ export async function searchBooks(query: string): Promise<Book[]> {
  * position across visits), so this is the same empty state it always was
  * for a guest. progressPercent is always computed from real content
  * (completed / total sentences), never stored — see fetchInProgressBooks.
+ * `type` defaults to 'book'; the Novels homepage passes 'novel' to reuse
+ * this same query for a reader's in-progress novels.
  */
 export async function fetchContinueReadingBooks(
   userId: string | null,
   client?: PublicClient,
+  type: BookType = "book",
 ): Promise<ContinueReadingEntry[]> {
   if (!userId || !isSupabaseConfigured()) return [];
 
@@ -389,7 +425,7 @@ export async function fetchContinueReadingBooks(
     .from("books")
     .select("*")
     .eq("status", "published")
-    .eq("type", "book")
+    .eq("type", type)
     .in(
       "id",
       inProgress.map((entry) => entry.bookId),
@@ -432,10 +468,13 @@ export async function fetchContinueReadingBooks(
  * fetchContinueReadingBooks (book_progress is signed-in-only). Unlike that
  * function this needs no per-book sentence-count fetch: a completed book
  * has nothing to show a percentage of, just the fact that it's done.
+ * `type` defaults to 'book'; the Novels homepage passes 'novel' to reuse
+ * this same query for a reader's completed novels.
  */
 export async function fetchCompletedBooks(
   userId: string | null,
   client?: PublicClient,
+  type: BookType = "book",
 ): Promise<Book[]> {
   if (!userId || !isSupabaseConfigured()) return [];
 
@@ -447,7 +486,7 @@ export async function fetchCompletedBooks(
     .from("books")
     .select("*")
     .eq("status", "published")
-    .eq("type", "book")
+    .eq("type", type)
     .in("id", completedIds);
   if (error) throw error;
   if (!bookRows || bookRows.length === 0) return [];
@@ -462,7 +501,7 @@ export async function fetchCompletedBooks(
     .sort((a, b) => (orderById.get(a.id) ?? 0) - (orderById.get(b.id) ?? 0));
 }
 
-/** One published book by id, with its resolved categories — for the Book Overview page. Null for a missing/unpublished id (never throws for "not found"). Accepts an already-created client — see fetchCategories's doc comment. */
+/** One published book (or novel — see types/library.ts's BookType) by id, with its resolved categories — for the Book/Novel Overview page. Null for a missing/unpublished id (never throws for "not found"). Deliberately not type-scoped: unlike the browsing queries above, this is only ever called with an id a browsing surface (Library, Novels, a reader's own saved/progress data) already surfaced, so there's nothing left to gate here beyond `status`. Accepts an already-created client — see fetchCategories's doc comment. */
 export async function fetchBookById(
   id: string,
   client?: PublicClient,
@@ -476,7 +515,6 @@ export async function fetchBookById(
     .select("*")
     .eq("id", id)
     .eq("status", "published")
-    .eq("type", "book")
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;

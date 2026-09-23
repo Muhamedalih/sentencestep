@@ -659,6 +659,19 @@ export interface Dictionary {
     continueReading: string;
     /** Heading for the Library homepage's "books you've finished" shelf — only rendered when the signed-in learner has actually completed at least one book. */
     completedBooksHeading: string;
+    /** Books/Novels segmented-toggle labels, shown at the top of both the Library and Novels homepages — admin-only for now, while the Novels catalog is still being written. */
+    booksTabLabel: string;
+    novelsTabLabel: string;
+    /** The Novels homepage (same layout/order as the Library homepage, minus category browsing — the catalog is small and curated). */
+    novelsHeading: string;
+    novelsSubtitle: string;
+    /** Same role as libraryDisclaimer, worded for novels specifically: these are original condensed retellings, never the original book's full text or an official/licensed edition. */
+    novelsDisclaimer: string;
+    allNovelsHeading: string;
+    /** Novels homepage's counterpart to completedBooksHeading. */
+    completedNovelsHeading: string;
+    novelsEmptyHeading: string;
+    novelsEmptyBody: string;
     startReading: string;
     percentComplete: string;
     sections: string;
