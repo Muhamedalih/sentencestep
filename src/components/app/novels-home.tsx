@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 
 import { BookCard } from "@/components/app/book-card";
-import { FeaturedBook } from "@/components/app/featured-book";
+import { FeaturedNovel } from "@/components/app/featured-novel";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
 import { LibraryTypeToggle } from "@/components/app/library-type-toggle";
+import { NovelShelf } from "@/components/app/novel-shelf";
 import { useLocale } from "@/components/providers/locale-provider";
 import { staggerChildren } from "@/lib/motion";
 import type { Book, ContinueReadingEntry } from "@/types/library";
@@ -84,7 +85,7 @@ export function NovelsHome({
               <h2 className="text-xl font-semibold tracking-tight">
                 {t.bookLibrary.featuredHeading}
               </h2>
-              <FeaturedBook book={featuredNovels[0]!} />
+              <FeaturedNovel book={featuredNovels[0]!} />
             </section>
           )}
 
@@ -92,7 +93,7 @@ export function NovelsHome({
             <h2 className="text-xl font-semibold tracking-tight">
               {t.bookLibrary.allNovelsHeading}
             </h2>
-            <BookGrid books={novels} />
+            <NovelShelf books={novels} />
           </section>
         </>
       )}
