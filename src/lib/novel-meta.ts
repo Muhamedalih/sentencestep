@@ -119,6 +119,36 @@ export const NOVEL_META: Record<string, NovelMeta> = {
     },
     estimatedMinutes: 54,
   },
+  "book-novel-frankenstein": {
+    genre: {
+      en: "Gothic science fiction",
+      ar: "خيال علمي قوطي",
+      es: "Ciencia ficción gótica",
+      tr: "Gotik bilim kurgu",
+    },
+    teaser: {
+      en: "Instead of triumph Victor felt only sudden overwhelming horror at what he had truly made",
+      ar: "بدلًا من الانتصار شعر فيكتور فقط برعب مفاجئ طاغٍ مما صنعه بالفعل",
+      es: "En lugar de triunfo, Victor solo sintió un horror súbito y abrumador por lo que realmente había creado",
+      tr: "Zafer yerine Victor, gerçekten yarattığı şeyden ani ve ezici bir dehşet duydu",
+    },
+    estimatedMinutes: 57,
+  },
+  "book-novel-old-man-sea": {
+    genre: {
+      en: "Literary adventure",
+      ar: "مغامرة أدبية",
+      es: "Aventura literaria",
+      tr: "Edebi macera",
+    },
+    teaser: {
+      en: "He talked to the unseen fish calling it brother and admiring its incredible hidden strength",
+      ar: "تحدث إلى السمكة غير المرئية مناديًا إياها أخاه ومعجبًا بقوتها الخفية المذهلة",
+      es: "Le hablaba al pez invisible llamándolo hermano y admirando su increíble fuerza oculta",
+      tr: "Görünmeyen balığa kardeşim diyerek seslendi ve onun inanılmaz gizli gücüne hayran kaldı",
+    },
+    estimatedMinutes: 58,
+  },
 };
 
 /** Resolves a novel's metadata text for the current locale, English when no support locale is active — same fallback convention as tierLabel/tierSupportLabel. */
