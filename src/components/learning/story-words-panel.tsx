@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
@@ -107,23 +107,21 @@ export function StoryWordsPanel({
     [item, sentences],
   );
 
-  // Same fix as VocabularyLearn's identical effect: resolve neighboring
-  // words' pronunciation in the background so PronunciationButton's autoPlay
-  // finds it already cached instead of paying the resolve round trip live
-  // on every navigation — this is what was causing the visible stutter when
-  // stepping between words (see this feature's own UI feedback).
+  // Resolves every word's pronunciation up front, once, on mount — stronger
+  // than VocabularyLearn's own neighbor-only prefetch (fine for its 20+ word
+  // lists, where prefetching everything would be wasteful) but this panel
+  // only ever holds 2-3 words, so eagerly warming all of them costs nothing
+  // and guarantees PronunciationButton's autoPlay never pays a live resolve
+  // round trip while the slide transition is also animating — that overlap
+  // is what was reading as stutter/glitching when stepping between words.
   const { prefetchPronunciation } = usePronunciationSettings();
   useEffect(() => {
     if (!defaultVoiceId) return;
-    for (const neighbor of [vocabulary[index + 1], vocabulary[index - 1]]) {
-      if (!neighbor) continue;
-      prefetchPronunciation({
-        contentType: "word",
-        contentId: neighbor.id,
-        voiceId: defaultVoiceId,
-      });
+    for (const word of vocabulary) {
+      prefetchPronunciation({ contentType: "word", contentId: word.id, voiceId: defaultVoiceId });
     }
-  }, [vocabulary, index, defaultVoiceId, prefetchPronunciation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately once-on-mount, not re-run per navigation (see comment above)
+  }, []);
 
   if (!item) return null;
 
@@ -153,7 +151,6 @@ export function StoryWordsPanel({
             text={item.en}
             autoPlay
             resetKey={item.id}
-            inputRef={inputRef}
             kokoroVoiceId={defaultVoiceId}
             contentType="word"
             contentId={item.id}
@@ -179,7 +176,15 @@ export function StoryWordsPanel({
             <VocabularySentence
               sentence={blankedSentence}
               targetWord={item.en}
-              onResult={() => setPracticing(false)}
+              onResult={(correct) => {
+                // A correct answer keeps momentum going by advancing to the
+                // next word automatically; on the last word (nowhere to
+                // advance to) or a wrong answer (already revealed inline by
+                // VocabularySentence itself), this just exits practice mode
+                // back to the normal word view instead.
+                if (correct && index < total - 1) goTo(index + 1, 1);
+                else setPracticing(false);
+              }}
               inputRef={inputRef}
             />
           ) : (
@@ -250,7 +255,6 @@ export function StoryWordsPanel({
                   a plain outline) — a deliberate visual echo, per explicit
                   request, so the button reads as "practice THIS word." */}
               <Button type="button" size="lg" onClick={() => setPracticing(true)}>
-                <Sparkles className="size-4" aria-hidden="true" />
                 {t.lesson.practiceWord}
               </Button>
             </motion.div>

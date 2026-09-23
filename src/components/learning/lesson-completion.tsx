@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, Wand2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -471,7 +471,7 @@ export function LessonCompletion({
                 not an afterthought (see this screen's UI feedback). */}
             {onViewWords && (
               <PrimaryActionButton
-                icon={Sparkles}
+                icon={BookOpen}
                 label={t.lesson.practiceWord}
                 onClick={onViewWords}
                 theme={theme}
