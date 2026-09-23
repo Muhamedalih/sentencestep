@@ -41,6 +41,11 @@ export function BookTable({
         onClear={clear}
         actions={[
           {
+            label: "Publish selected",
+            pendingLabel: "Publishing…",
+            run: (bulkIds) => bulkUpdateBookStatus(bulkIds, "published"),
+          },
+          {
             label: "Archive selected",
             pendingLabel: "Archiving…",
             run: (bulkIds) => bulkUpdateBookStatus(bulkIds, "archived"),

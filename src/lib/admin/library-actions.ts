@@ -317,10 +317,10 @@ export async function restoreBook(id: string): Promise<ActionResult> {
   return { success: "Book restored to draft." };
 }
 
-/** Bulk counterpart of archiveBook/restoreBook — same shape as bulkUpdateLessonStatus in content-actions.ts. */
+/** Bulk counterpart of archiveBook/restoreBook — same shape as bulkUpdateLessonStatus in content-actions.ts. Also accepts 'published' (Novels rollout): selecting a batch of reviewed drafts and publishing them together, rather than opening each one's edit form individually. */
 export async function bulkUpdateBookStatus(
   ids: string[],
-  status: "archived" | "draft",
+  status: "archived" | "draft" | "published",
 ): Promise<ActionResult> {
   const forbidden = await requireEditorOrAdmin();
   if (forbidden) return { error: forbidden };
@@ -336,23 +336,32 @@ export async function bulkUpdateBookStatus(
       error:
         status === "archived"
           ? "Couldn't archive the selected books. Please try again."
-          : "Couldn't restore the selected books. Please try again.",
+          : status === "published"
+            ? "Couldn't publish the selected books. Please try again."
+            : "Couldn't restore the selected books. Please try again.",
     };
   }
 
   void logAdminAction(
-    status === "archived" ? "book.bulk_archived" : "book.bulk_restored",
+    status === "archived"
+      ? "book.bulk_archived"
+      : status === "published"
+        ? "book.bulk_published"
+        : "book.bulk_restored",
     "book",
     null,
     { ids },
   );
   revalidatePath("/admin/library");
   revalidatePath("/learn/library");
+  revalidatePath("/learn/library/novels");
   return {
     success:
       status === "archived"
         ? `${ids.length} book${ids.length === 1 ? "" : "s"} archived.`
-        : `${ids.length} book${ids.length === 1 ? "" : "s"} restored to draft.`,
+        : status === "published"
+          ? `${ids.length} book${ids.length === 1 ? "" : "s"} published.`
+          : `${ids.length} book${ids.length === 1 ? "" : "s"} restored to draft.`,
   };
 }
 
