@@ -84,7 +84,6 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
         description={description}
         units={units}
         isPremiumUser={isPremiumUser}
-        isAdminUser={isAdminUser}
         levelNames={levelNames}
         recallCount={recallCount}
       />

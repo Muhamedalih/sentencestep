@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
-import { StoriesHubToggle } from "@/components/app/stories-hub-toggle";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -346,7 +345,6 @@ export function LessonListView({
   description,
   units: rawUnits,
   isPremiumUser,
-  isAdminUser = false,
   levelNames = {},
   recallCount = 0,
 }: {
@@ -355,8 +353,6 @@ export function LessonListView({
   description: string;
   units: LessonUnit[];
   isPremiumUser: boolean;
-  /** Shows the Stories/Ordinary Lessons toggle on the Normal mode page — admin-only for now, see StoriesHubToggle's own doc comment. Ignored for every other mode. */
-  isAdminUser?: boolean;
   /** Admin-authored names (via /admin/levels) for any level beyond the three static units in src/data/units.ts. */
   levelNames?: Record<number, { title: string; titleAr: string; supportTitle?: string }>;
   /** This mode's own due Vocabulary Recall count (see fetchVocabularyRecallCountAction) — drives VocabularySectionRecallCard, shown right under the title. 0 for Conversation, which Vocabulary Recall never populates. */
@@ -397,8 +393,6 @@ export function LessonListView({
           <p className="text-muted-foreground mt-1 text-lg">{description}</p>
         </div>
       </div>
-
-      {mode === "normal" && isAdminUser && <StoriesHubToggle active="longer" />}
 
       <VocabularySectionRecallCard mode={mode} count={recallCount} />
 

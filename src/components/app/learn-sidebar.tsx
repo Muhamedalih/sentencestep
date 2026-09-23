@@ -11,16 +11,21 @@ import { cn } from "@/lib/utils";
  * Persistent primary navigation for the learning app. Home (the dashboard,
  * at the bare /learn route) is nav item #1. For admins, Stories and Ordinary
  * Lessons (Stories/Ordinary Lessons merge) collapse into a single "Stories"
- * item pointing at /learn/stories — StoriesHubToggle (rendered on both the
- * Stories and Ordinary Lessons pages) is what actually switches between the
- * two, this sidebar just opens the pair on the Stories side first. Regular
- * learners never had a Stories tab (still admin-only while it's being
- * rebuilt), so their nav keeps its own direct "Ordinary Lessons" item to
- * /learn/normal instead, unchanged from before this merge. Same `Type`/
- * `NotebookText` icons Ordinary Lessons/Stories already use everywhere else
- * (see learning-modes.ts's modeMeta). Conversation (also a LEARNING_MODE —
- * see @/lib/learning-modes) is deliberately NOT listed here — off the
- * current roadmap for now (product call, not a removed feature:
+ * item pointing at /learn/stories. Once that item is the active section
+ * (current route under /learn/stories or /learn/normal), it grows two
+ * indented sub-links right beneath it — "Simple Stories" (/learn/stories)
+ * and "Longer Stories" (/learn/normal) — same route split as before, just
+ * reached from inside the sidebar itself instead of a second top-level nav
+ * item. Desktop-only (see the sub-nav's own `hidden md:flex`): the mobile
+ * bottom tab bar has no room for a nested sub-list, so there "Stories"
+ * stays one plain button straight to /learn/stories, same as every other
+ * mobile tab. Regular learners never had a Stories tab (still admin-only
+ * while it's being rebuilt), so their nav keeps its own direct "Ordinary
+ * Lessons" item to /learn/normal instead, unchanged from before this merge.
+ * Same `Type`/`NotebookText` icons Ordinary Lessons/Stories already use
+ * everywhere else (see learning-modes.ts's modeMeta). Conversation (also a
+ * LEARNING_MODE — see @/lib/learning-modes) is deliberately NOT listed here
+ * — off the current roadmap for now (product call, not a removed feature:
  * /learn/conversation and its content are untouched, this just stops
  * linking to it from primary nav). Re-add its NAV_ITEMS entry to bring it
  * back.
@@ -69,11 +74,10 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
   // Stories is temporarily admin-only while it's being rebuilt (see
   // stories/page.tsx and [mode]/[lessonId]/page.tsx, which enforce this same
   // gate server-side). For admins, Stories and Ordinary Lessons collapse
-  // into one "Stories" nav item — it opens on /learn/stories (the Simplified
-  // Stories tab, shown first) and StoriesHubToggle (see stories-library.tsx/
-  // lesson-list-view.tsx) is what lets them switch over to Ordinary Lessons
-  // from there. Regular learners never had a Stories tab to merge, so their
-  // nav is untouched: still a direct "Ordinary Lessons" item straight to
+  // into one "Stories" nav item, which opens on /learn/stories (Simple
+  // Stories, shown first) — see the sub-nav rendered right below it further
+  // down. Regular learners never had a Stories tab to merge, so their nav
+  // is untouched: still a direct "Ordinary Lessons" item straight to
   // /learn/normal.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
@@ -98,10 +102,10 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
           "md:h-full md:flex-col md:items-stretch md:justify-start md:gap-1 md:px-3 md:py-6",
         )}
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.flatMap((item) => {
           const Icon = item.icon;
           const isActive = active === item.key;
-          return (
+          const navLink = (
             <Link
               key={item.key}
               href={item.href}
@@ -118,6 +122,44 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
               <span dir={dir}>{item.label}</span>
             </Link>
           );
+
+          // The Stories/Ordinary Lessons sub-nav (see this file's own doc
+          // comment): only once "Stories" is the active section, and only
+          // on the md:+ sidebar — the mobile bottom bar has no room for it.
+          if (item.key !== "stories" || !isActive) return [navLink];
+
+          const subActive = pathname.startsWith("/learn/stories") ? "simplified" : "longer";
+          const SUB_ITEMS = [
+            { key: "simplified", href: "/learn/stories", label: t.storiesHub.simplifiedTab },
+            { key: "longer", href: "/learn/normal", label: t.storiesHub.longerTab },
+          ] as const;
+
+          return [
+            navLink,
+            <div
+              key="stories-sub-nav"
+              className="hidden md:flex md:flex-col md:gap-0.5 md:ps-11 md:pe-3"
+            >
+              {SUB_ITEMS.map((subItem) => {
+                const isSubActive = subActive === subItem.key;
+                return (
+                  <Link
+                    key={subItem.key}
+                    href={subItem.href}
+                    aria-current={isSubActive ? "page" : undefined}
+                    className={cn(
+                      "focus-visible:ring-ring focus-visible:ring-offset-background rounded-lg px-2 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                      isSubActive
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                    )}
+                  >
+                    <span dir={dir}>{subItem.label}</span>
+                  </Link>
+                );
+              })}
+            </div>,
+          ];
         })}
       </div>
     </nav>

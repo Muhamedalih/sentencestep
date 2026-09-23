@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { StoriesHubToggle } from "@/components/app/stories-hub-toggle";
 import { StoryCard } from "@/components/app/story-card";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Button } from "@/components/ui/button";
@@ -41,13 +40,10 @@ const CEFR_BY_TIER: Record<Difficulty, string> = {
 export function StoriesLibrary({
   lessons,
   isPremiumUser,
-  isAdminUser = false,
   recallCount = 0,
 }: {
   lessons: Lesson[];
   isPremiumUser: boolean;
-  /** Shows the Stories/Ordinary Lessons toggle — admin-only for now, see StoriesHubToggle's own doc comment. */
-  isAdminUser?: boolean;
   /** This section's own due Vocabulary Recall count (see fetchVocabularyRecallCountAction) — drives VocabularySectionRecallCard, shown right under the title. */
   recallCount?: number;
 }) {
@@ -98,8 +94,6 @@ export function StoriesLibrary({
           </p>
         </div>
       </div>
-
-      {isAdminUser && <StoriesHubToggle active="simplified" />}
 
       <VocabularySectionRecallCard mode="stories" count={recallCount} />
 
