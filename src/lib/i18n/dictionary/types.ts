@@ -638,6 +638,11 @@ export interface Dictionary {
     checkBackSoon: string;
     moreGroupsSoon: string;
   };
+  /** Segmented-toggle labels shown at the top of both the Stories page (/learn/stories) and the Ordinary Lessons page (/learn/normal) — the sidebar merges those two into one "Stories" nav item (see learn-sidebar.tsx), and this toggle is how a learner switches between the two underlying sections without their content, routes, or lesson data changing at all. Admin-only for now, same rollout gate as LibraryTypeToggle, since Stories itself is still admin-only. */
+  storiesHub: {
+    simplifiedTab: string;
+    longerTab: string;
+  };
   /** The Library homepage (books/summaries) — see `nav.library` for the nav item and `library` above for the unrelated Stories/Word Lists heading namespace. Foundation-phase UI chrome only; book/category content itself is translated later via content_translations, not here. */
   bookLibrary: {
     heading: string;

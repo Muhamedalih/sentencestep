@@ -570,6 +570,10 @@ export const es: Dictionary = {
     checkBackSoon: "Vuelve pronto.",
     moreGroupsSoon: "Más grupos próximamente.",
   },
+  storiesHub: {
+    simplifiedTab: "Historias simples",
+    longerTab: "Historias más largas",
+  },
   bookLibrary: {
     heading: "Biblioteca",
     subtitle: "Aprende inglés a través de ideas que vale la pena leer.",

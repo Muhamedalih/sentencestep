@@ -34,6 +34,7 @@ export default async function StoriesLibraryPage() {
       <StoriesLibrary
         lessons={lessons}
         isPremiumUser={hasPremium || isAdminUser}
+        isAdminUser={isAdminUser}
         recallCount={recallCount}
       />
     </div>

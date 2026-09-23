@@ -562,6 +562,10 @@ export const tr: Dictionary = {
     checkBackSoon: "Yakında tekrar gelin.",
     moreGroupsSoon: "Daha fazla grup yakında.",
   },
+  storiesHub: {
+    simplifiedTab: "Basit Hikayeler",
+    longerTab: "Daha Uzun Hikayeler",
+  },
   bookLibrary: {
     heading: "Kütüphane",
     subtitle: "Okumaya değer fikirlerle İngilizce öğrenin.",

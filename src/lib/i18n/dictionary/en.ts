@@ -553,6 +553,10 @@ export const en: Dictionary = {
     checkBackSoon: "Check back soon.",
     moreGroupsSoon: "More groups coming soon.",
   },
+  storiesHub: {
+    simplifiedTab: "Simple Stories",
+    longerTab: "Longer Stories",
+  },
   bookLibrary: {
     heading: "Library",
     subtitle: "Learn English through ideas worth reading.",

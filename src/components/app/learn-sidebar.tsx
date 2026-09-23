@@ -8,18 +8,23 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 
 /**
- * Persistent primary navigation for the learning app (Home dashboard/
- * Ordinary Lessons separation): Home (the dashboard, at the bare /learn
- * route) is nav item #1, Ordinary Lessons is #2 right after it — its own
- * sibling route now (/learn/normal), structurally consistent with Library/
- * Stories/Word Lists rather than living inside Home the way it used to. Same
- * `Type` icon Ordinary Lessons already uses everywhere else (see
- * learning-modes.ts's modeMeta). Conversation (also a LEARNING_MODE — see
- * @/lib/learning-modes) is deliberately NOT listed here — off the current
- * roadmap for now (product call, not a removed feature: /learn/conversation
- * and its content are untouched, this just stops linking to it from primary
- * nav). Re-add its NAV_ITEMS entry to bring it back.
- * Renders as a fixed bottom tab bar (5 even-width icon+label buttons) on
+ * Persistent primary navigation for the learning app. Home (the dashboard,
+ * at the bare /learn route) is nav item #1. For admins, Stories and Ordinary
+ * Lessons (Stories/Ordinary Lessons merge) collapse into a single "Stories"
+ * item pointing at /learn/stories — StoriesHubToggle (rendered on both the
+ * Stories and Ordinary Lessons pages) is what actually switches between the
+ * two, this sidebar just opens the pair on the Stories side first. Regular
+ * learners never had a Stories tab (still admin-only while it's being
+ * rebuilt), so their nav keeps its own direct "Ordinary Lessons" item to
+ * /learn/normal instead, unchanged from before this merge. Same `Type`/
+ * `NotebookText` icons Ordinary Lessons/Stories already use everywhere else
+ * (see learning-modes.ts's modeMeta). Conversation (also a LEARNING_MODE —
+ * see @/lib/learning-modes) is deliberately NOT listed here — off the
+ * current roadmap for now (product call, not a removed feature:
+ * /learn/conversation and its content are untouched, this just stops
+ * linking to it from primary nav). Re-add its NAV_ITEMS entry to bring it
+ * back.
+ * Renders as a fixed bottom tab bar (even-width icon+label buttons) on
  * small screens — the standard mobile-app nav pattern, replacing an earlier
  * horizontal scrollable strip that clipped off-screen items with no visible
  * hint — and switches to a fixed vertical sidebar at md: — one component,
@@ -48,7 +53,9 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
     pathname === "/learn"
       ? "home"
       : pathname.startsWith("/learn/normal")
-        ? "normal-lessons"
+        ? isAdminUser
+          ? "stories"
+          : "normal-lessons"
         : pathname.startsWith("/learn/conversation")
           ? "conversation"
           : pathname.startsWith("/learn/stories")
@@ -61,14 +68,20 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
 
   // Stories is temporarily admin-only while it's being rebuilt (see
   // stories/page.tsx and [mode]/[lessonId]/page.tsx, which enforce this same
-  // gate server-side) — this just keeps the tab off regular learners' nav.
+  // gate server-side). For admins, Stories and Ordinary Lessons collapse
+  // into one "Stories" nav item — it opens on /learn/stories (the Simplified
+  // Stories tab, shown first) and StoriesHubToggle (see stories-library.tsx/
+  // lesson-list-view.tsx) is what lets them switch over to Ordinary Lessons
+  // from there. Regular learners never had a Stories tab to merge, so their
+  // nav is untouched: still a direct "Ordinary Lessons" item straight to
+  // /learn/normal.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
     { key: "normal-lessons", href: "/learn/normal", label: t.nav.normalLessons, icon: Type },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
-  ].filter((item) => item.key !== "stories" || isAdminUser);
+  ].filter((item) => (isAdminUser ? item.key !== "normal-lessons" : item.key !== "stories"));
 
   return (
     <nav

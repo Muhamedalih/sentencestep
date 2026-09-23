@@ -538,6 +538,10 @@ export const ar: Dictionary = {
     checkBackSoon: "تحقق مرة أخرى قريبًا.",
     moreGroupsSoon: "المزيد من المجموعات قريبًا.",
   },
+  storiesHub: {
+    simplifiedTab: "قصص مبسطة",
+    longerTab: "قصص أطول",
+  },
   bookLibrary: {
     heading: "المكتبة",
     subtitle: "تعلّم الإنجليزية من خلال أفكار تستحق القراءة.",
