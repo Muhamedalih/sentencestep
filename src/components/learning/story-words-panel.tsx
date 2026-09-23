@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
+import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import { useLocale } from "@/components/providers/locale-provider";
+import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { Button } from "@/components/ui/button";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
-import { cn } from "@/lib/utils";
+import { BLANK_TOKEN } from "@/types/word-lists";
 import type { Sentence, VocabularyItem } from "@/types/content";
 
 /** Same direction-aware slide as VocabularyLearn (src/components/learning/vocabulary-learn.tsx) — kept in sync deliberately so the two "one word at a time" screens feel identical. */
@@ -31,7 +33,22 @@ function stripPunctuation(word: string): string {
   return word.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "");
 }
 
-/** Finds the first sentence containing `word` (case-insensitive, whole word) and splits it around that occurrence — same shape VocabularyLearn gets for free from WordGroup's own pre-split `sentence`/BLANK_TOKEN, rebuilt here from plain sentence text since a story's VocabularyItem carries no sentence of its own. */
+/** Finds the first sentence containing `word` (case-insensitive, whole word) and rebuilds it with BLANK_TOKEN standing in for that occurrence — the exact shape VocabularySentence expects (see its own `sentence` prop doc comment), constructed here from plain sentence text since a story's VocabularyItem carries no pre-blanked sentence of its own the way a WordGroup's VocabularyWord does. */
+function findBlankedSentence(word: string, sentences: Sentence[]): string | null {
+  const target = word.toLowerCase();
+  for (const sentence of sentences) {
+    const words = sentence.en.split(/\s+/);
+    const index = words.findIndex((w) => stripPunctuation(w).toLowerCase() === target);
+    if (index !== -1) {
+      const prefix = words.slice(0, index).join(" ");
+      const suffix = words.slice(index + 1).join(" ");
+      return [prefix, BLANK_TOKEN, suffix].filter(Boolean).join(" ");
+    }
+  }
+  return null;
+}
+
+/** Same lookup, but returns the plain (unblanked) prefix/word/suffix split — used for the non-practicing preview, where the word should read normally in context rather than through VocabularySentence's blank+typing machinery. */
 function findExample(word: string, sentences: Sentence[]) {
   const target = word.toLowerCase();
   for (const sentence of sentences) {
@@ -58,14 +75,12 @@ function findExample(word: string, sentences: Sentence[]) {
  * vocabulary/sentences it needs are already sitting in that lesson's own
  * already-fetched data, so opening this costs no additional request.
  *
- * The one real behavioral difference from VocabularyLearn: there is no
- * "Start the test" hand-off to a separate graded session. Instead each word
- * gets its own lightweight, ungraded recall check inline — pressing
- * "Practice" masks the big word (and its highlighted occurrence in the
- * example sentence) and swaps in a text input; typing the word correctly
- * reveals both again. Nothing here writes to word progress or any other
- * account state, matching this feature's explicitly optional, low-stakes
- * framing ("if they want to").
+ * Practice mode reuses VocabularySentence — the exact same Enter-to-submit
+ * typing engine Word Lists' own Practice session runs (see that
+ * component's doc comment: exact match settles instantly, anything else
+ * only grades on Enter and then reveals the correct spelling letter by
+ * letter) — rather than a bespoke mask-and-match input, per explicit
+ * instruction to match "the same system as the Word Lists section."
  */
 export function StoryWordsPanel({
   vocabulary,
@@ -82,11 +97,33 @@ export function StoryWordsPanel({
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [practicing, setPracticing] = useState(false);
-  const [typedValue, setTypedValue] = useState("");
   const total = vocabulary.length;
   const item = vocabulary[index];
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const example = useMemo(() => (item ? findExample(item.en, sentences) : null), [item, sentences]);
+  const blankedSentence = useMemo(
+    () => (item ? findBlankedSentence(item.en, sentences) : null),
+    [item, sentences],
+  );
+
+  // Same fix as VocabularyLearn's identical effect: resolve neighboring
+  // words' pronunciation in the background so PronunciationButton's autoPlay
+  // finds it already cached instead of paying the resolve round trip live
+  // on every navigation — this is what was causing the visible stutter when
+  // stepping between words (see this feature's own UI feedback).
+  const { prefetchPronunciation } = usePronunciationSettings();
+  useEffect(() => {
+    if (!defaultVoiceId) return;
+    for (const neighbor of [vocabulary[index + 1], vocabulary[index - 1]]) {
+      if (!neighbor) continue;
+      prefetchPronunciation({
+        contentType: "word",
+        contentId: neighbor.id,
+        voiceId: defaultVoiceId,
+      });
+    }
+  }, [vocabulary, index, defaultVoiceId, prefetchPronunciation]);
 
   if (!item) return null;
 
@@ -96,11 +133,7 @@ export function StoryWordsPanel({
     setDirection(dir);
     setIndex(clamped);
     setPracticing(false);
-    setTypedValue("");
   }
-
-  const revealed = !practicing || typedValue.trim().toLowerCase() === item.en.toLowerCase();
-  const masked = "•".repeat(item.en.length);
 
   return (
     <div className="flex h-svh w-full flex-col">
@@ -120,6 +153,7 @@ export function StoryWordsPanel({
             text={item.en}
             autoPlay
             resetKey={item.id}
+            inputRef={inputRef}
             kokoroVoiceId={defaultVoiceId}
             contentType="word"
             contentId={item.id}
@@ -141,45 +175,42 @@ export function StoryWordsPanel({
           transition={{ type: "spring", stiffness: 340, damping: 32, mass: 0.9 }}
           className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-6 lg:px-16"
         >
-          <p
-            className="text-foreground text-[clamp(1.75rem,1.4rem+1.6vw,2.25rem)] leading-tight font-bold text-balance"
-            dir={dir}
-          >
-            {resolveVocabularySupportText(item, locale)}
-          </p>
-
-          <p
-            dir="ltr"
-            className={cn(
-              "text-primary text-[clamp(3.75rem,2.06rem+6.75vw,8.25rem)] leading-none font-extrabold tracking-tight",
-              !revealed && "tracking-widest",
-            )}
-          >
-            {revealed ? item.en : masked}
-          </p>
-
-          {example && (
-            <p
-              dir="ltr"
-              className="text-foreground w-full max-w-2xl text-center text-[clamp(1.35rem,1.17rem+1.43vw,1.76rem)] leading-relaxed font-medium text-balance"
-            >
-              {example.prefix && <span>{example.prefix} </span>}
-              <span className="bg-primary/10 text-primary mx-1 inline-block rounded-md px-2 py-0.5 font-semibold">
-                {revealed ? example.word : masked}
-              </span>
-              {example.suffix && <span> {example.suffix}</span>}
-            </p>
-          )}
-
-          {practicing && !revealed && (
-            <input
-              autoFocus
-              value={typedValue}
-              onChange={(event) => setTypedValue(event.target.value)}
-              dir="ltr"
-              placeholder={t.lesson.typeToRevealPlaceholder}
-              className="border-border bg-card text-foreground focus-visible:ring-ring w-full max-w-xs rounded-lg border px-4 py-2.5 text-center text-lg outline-none focus-visible:ring-2"
+          {practicing && blankedSentence ? (
+            <VocabularySentence
+              sentence={blankedSentence}
+              targetWord={item.en}
+              onResult={() => setPracticing(false)}
+              inputRef={inputRef}
             />
+          ) : (
+            <>
+              <p
+                className="text-foreground text-[clamp(1.75rem,1.4rem+1.6vw,2.25rem)] leading-tight font-bold text-balance"
+                dir={dir}
+              >
+                {resolveVocabularySupportText(item, locale)}
+              </p>
+
+              <p
+                dir="ltr"
+                className="text-primary text-[clamp(3.75rem,2.06rem+6.75vw,8.25rem)] leading-none font-extrabold tracking-tight"
+              >
+                {item.en}
+              </p>
+
+              {example && (
+                <p
+                  dir="ltr"
+                  className="text-foreground w-full max-w-2xl text-center text-[clamp(1.35rem,1.17rem+1.43vw,1.76rem)] leading-relaxed font-medium text-balance"
+                >
+                  {example.prefix && <span>{example.prefix} </span>}
+                  <span className="bg-primary/10 text-primary mx-1 inline-block rounded-md px-2 py-0.5 font-semibold">
+                    {example.word}
+                  </span>
+                  {example.suffix && <span> {example.suffix}</span>}
+                </p>
+              )}
+            </>
           )}
 
           {total > 1 && (
@@ -208,22 +239,18 @@ export function StoryWordsPanel({
             </div>
           )}
 
-          {!practicing && (
+          {!practicing && blankedSentence && (
             <motion.div
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 420, damping: 22 }}
               className="mt-2"
             >
-              <Button
-                type="button"
-                size="lg"
-                variant="outline"
-                onClick={() => {
-                  setPracticing(true);
-                  setTypedValue("");
-                }}
-              >
+              {/* Filled in the same primary color as the big word above (not
+                  a plain outline) — a deliberate visual echo, per explicit
+                  request, so the button reads as "practice THIS word." */}
+              <Button type="button" size="lg" onClick={() => setPracticing(true)}>
+                <Sparkles className="size-4" aria-hidden="true" />
                 {t.lesson.practiceWord}
               </Button>
             </motion.div>

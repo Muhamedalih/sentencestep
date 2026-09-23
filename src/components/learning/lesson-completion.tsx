@@ -3,15 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  AlertCircle,
-  ArrowRight,
-  BookOpen,
-  ChevronRight,
-  Home,
-  Loader2,
-  Wand2,
-} from "lucide-react";
+import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, Sparkles, Wand2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -28,7 +20,6 @@ import {
   type LearnerLevelProgress,
 } from "@/lib/progress/learner-level";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
-import { cn } from "@/lib/utils";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
@@ -438,69 +429,54 @@ export function LessonCompletion({
         )}
 
         {vocabulary && vocabulary.length > 0 && (
-          <motion.div variants={fadeInUp}>
-            <div className="mb-2 flex items-center justify-between">
+          <motion.div variants={fadeInUp} className="flex flex-col items-center gap-4">
+            <div className="w-full">
               <p
                 style={{
                   color: styles.textSecondary,
                   fontSize: Math.max(9, Math.round(theme.bodySize * 0.8)),
                 }}
-                className="font-semibold tracking-widest uppercase"
+                className="mb-2 font-semibold tracking-widest uppercase"
               >
                 {theme.vocabTitle || t.lesson.vocabularyHeading}
               </p>
-              {onViewWords && (
-                <button
-                  type="button"
-                  onClick={onViewWords}
-                  style={{ color: theme.colorAccent, fontSize: Math.round(theme.bodySize * 0.85) }}
-                  className="inline-flex items-center gap-0.5 font-semibold hover:opacity-80"
-                >
-                  {t.lesson.practiceWord}
-                  <ChevronRight
-                    className={cn("size-3.5", dir === "rtl" && "rotate-180")}
-                    aria-hidden="true"
-                  />
-                </button>
-              )}
-            </div>
-            <div
-              onClick={onViewWords}
-              role={onViewWords ? "button" : undefined}
-              tabIndex={onViewWords ? 0 : undefined}
-              onKeyDown={
-                onViewWords
-                  ? (event) => {
-                      if (event.key === "Enter" || event.key === " ") onViewWords();
-                    }
-                  : undefined
-              }
-              style={{ gap: theme.chipSpacing }}
-              className={cn("flex flex-wrap", onViewWords && "cursor-pointer")}
-            >
-              {vocabulary.slice(0, 3).map((item) => (
-                <span
-                  key={item.id}
-                  style={{
-                    borderRadius: theme.chipRadius,
-                    borderColor: styles.border,
-                    padding: `${Math.round(theme.cardPadding * 0.4)}px ${Math.round(theme.cardPadding * 0.9)}px`,
-                    fontSize: theme.bodySize,
-                  }}
-                  className="inline-flex items-center gap-1.5 border"
-                >
+              <div style={{ gap: theme.chipSpacing }} className="flex flex-wrap">
+                {vocabulary.slice(0, 3).map((item) => (
                   <span
-                    style={{ color: styles.textPrimary, fontWeight: theme.bodyWeight }}
-                    dir="ltr"
+                    key={item.id}
+                    style={{
+                      borderRadius: theme.chipRadius,
+                      borderColor: styles.border,
+                      padding: `${Math.round(theme.cardPadding * 0.4)}px ${Math.round(theme.cardPadding * 0.9)}px`,
+                      fontSize: theme.bodySize,
+                    }}
+                    className="inline-flex items-center gap-1.5 border"
                   >
-                    {item.en}
+                    <span
+                      style={{ color: styles.textPrimary, fontWeight: theme.bodyWeight }}
+                      dir="ltr"
+                    >
+                      {item.en}
+                    </span>
+                    <span style={{ color: styles.textSecondary }} dir={dir}>
+                      {resolveVocabularySupportText(item, locale)}
+                    </span>
                   </span>
-                  <span style={{ color: styles.textSecondary }} dir={dir}>
-                    {resolveVocabularySupportText(item, locale)}
-                  </span>
-                </span>
-              ))}
+                ))}
+              </div>
             </div>
+            {/* Same PrimaryActionButton the Next Lesson/Fix Mistakes CTA below
+                uses — deliberately equal visual weight, not a quiet text
+                link, so practicing these words reads as a real next step,
+                not an afterthought (see this screen's UI feedback). */}
+            {onViewWords && (
+              <PrimaryActionButton
+                icon={Sparkles}
+                label={t.lesson.practiceWord}
+                onClick={onViewWords}
+                theme={theme}
+              />
+            )}
           </motion.div>
         )}
 
