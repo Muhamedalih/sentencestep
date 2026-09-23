@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { BookCard } from "@/components/app/book-card";
 import { FeaturedNovel } from "@/components/app/featured-novel";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
-import { LibraryTypeToggle } from "@/components/app/library-type-toggle";
 import { NovelShelf } from "@/components/app/novel-shelf";
 import { useLocale } from "@/components/providers/locale-provider";
 import { staggerChildren } from "@/lib/motion";
@@ -47,7 +46,6 @@ export function NovelsHome({
           <p className="text-muted-foreground mt-2 text-lg">{t.bookLibrary.novelsSubtitle}</p>
           <p className="text-muted-foreground/80 mt-2 text-sm">{t.bookLibrary.novelsDisclaimer}</p>
         </div>
-        <LibraryTypeToggle active="novels" />
       </header>
 
       {isEmpty ? (

@@ -638,7 +638,7 @@ export interface Dictionary {
     checkBackSoon: string;
     moreGroupsSoon: string;
   };
-  /** Segmented-toggle labels shown at the top of both the Stories page (/learn/stories) and the Ordinary Lessons page (/learn/normal) — the sidebar merges those two into one "Stories" nav item (see learn-sidebar.tsx), and this toggle is how a learner switches between the two underlying sections without their content, routes, or lesson data changing at all. Admin-only for now, same rollout gate as LibraryTypeToggle, since Stories itself is still admin-only. */
+  /** Labels for the sidebar's Stories sub-nav (see learn-sidebar.tsx) — the sidebar merges the Stories and Ordinary Lessons nav items into one "Stories" item, which grows these two sub-links once active, switching between /learn/stories and /learn/normal without their content, routes, or lesson data changing at all. Admin-only for now, since Stories itself is still admin-only. */
   storiesHub: {
     simplifiedTab: string;
     longerTab: string;
@@ -664,7 +664,7 @@ export interface Dictionary {
     continueReading: string;
     /** Heading for the Library homepage's "books you've finished" shelf — only rendered when the signed-in learner has actually completed at least one book. */
     completedBooksHeading: string;
-    /** Books/Novels segmented-toggle labels, shown at the top of both the Library and Novels homepages — admin-only for now, while the Novels catalog is still being written. */
+    /** Books/Novels labels, used by the sidebar's Library sub-nav (see learn-sidebar.tsx) — admin-only for now, while the Novels catalog is still being written. */
     booksTabLabel: string;
     novelsTabLabel: string;
     /** The Novels homepage (same layout/order as the Library homepage, minus category browsing — the catalog is small and curated). */

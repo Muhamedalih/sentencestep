@@ -16,16 +16,24 @@ import { cn } from "@/lib/utils";
  * indented sub-links right beneath it — "Simple Stories" (/learn/stories)
  * and "Longer Stories" (/learn/normal) — same route split as before, just
  * reached from inside the sidebar itself instead of a second top-level nav
- * item. Desktop-only (see the sub-nav's own `hidden md:flex`): the mobile
- * bottom tab bar has no room for a nested sub-list, so there "Stories"
- * stays one plain button straight to /learn/stories, same as every other
- * mobile tab. Regular learners never had a Stories tab (still admin-only
- * while it's being rebuilt), so their nav keeps its own direct "Ordinary
- * Lessons" item to /learn/normal instead, unchanged from before this merge.
- * Same `Type`/`NotebookText` icons Ordinary Lessons/Stories already use
- * everywhere else (see learning-modes.ts's modeMeta). Conversation (also a
- * LEARNING_MODE — see @/lib/learning-modes) is deliberately NOT listed here
- * — off the current roadmap for now (product call, not a removed feature:
+ * item. "Library" gets the identical treatment for admins: once active
+ * (under /learn/library), it grows "Books" (/learn/library) and "Novels"
+ * (/learn/library/novels) beneath it — this replaced the old top-of-page
+ * Books/Novels pill toggle (formerly LibraryTypeToggle) both pages used to
+ * render, same reasoning as the Stories merge: the split now lives in the
+ * sidebar itself. Both sub-navs are desktop-only (see their own `hidden
+ * md:flex`): the mobile bottom tab bar has no room for a nested sub-list,
+ * so there "Stories"/"Library" stay single plain buttons, same as every
+ * other mobile tab. Regular learners never had a Stories tab (still
+ * admin-only while it's being rebuilt), so their nav keeps its own direct
+ * "Ordinary Lessons" item to /learn/normal instead, unchanged from before
+ * this merge; they still reach Library too, just without the Novels
+ * sub-link (Novels is its own separate admin-only rollout gate, same as
+ * Stories — see library/novels/page.tsx's isAdmin() check). Same `Type`/
+ * `NotebookText`/`Library` icons already used everywhere else (see
+ * learning-modes.ts's modeMeta). Conversation (also a LEARNING_MODE — see
+ * @/lib/learning-modes) is deliberately NOT listed here — off the current
+ * roadmap for now (product call, not a removed feature:
  * /learn/conversation and its content are untouched, this just stops
  * linking to it from primary nav). Re-add its NAV_ITEMS entry to bring it
  * back.
@@ -75,10 +83,11 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
   // stories/page.tsx and [mode]/[lessonId]/page.tsx, which enforce this same
   // gate server-side). For admins, Stories and Ordinary Lessons collapse
   // into one "Stories" nav item, which opens on /learn/stories (Simple
-  // Stories, shown first) — see the sub-nav rendered right below it further
-  // down. Regular learners never had a Stories tab to merge, so their nav
-  // is untouched: still a direct "Ordinary Lessons" item straight to
-  // /learn/normal.
+  // Stories, shown first) — see the Stories/Library sub-navs rendered right
+  // below their parent items further down. Regular learners never had a
+  // Stories tab to merge, so their nav is untouched: still a direct
+  // "Ordinary Lessons" item straight to /learn/normal, and a plain Library
+  // item with no Books/Novels sub-nav.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
     { key: "normal-lessons", href: "/learn/normal", label: t.nav.normalLessons, icon: Type },
@@ -123,41 +132,69 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
             </Link>
           );
 
-          // The Stories/Ordinary Lessons sub-nav (see this file's own doc
-          // comment): only once "Stories" is the active section, and only
-          // on the md:+ sidebar — the mobile bottom bar has no room for it.
-          if (item.key !== "stories" || !isActive) return [navLink];
+          // The Stories/Ordinary Lessons and Library/Novels sub-navs (see
+          // this file's own doc comment): only once the parent item is the
+          // active section, and only on the md:+ sidebar — the mobile
+          // bottom bar has no room for a nested sub-list. Library's sub-nav
+          // is admin-only (Novels' own separate rollout gate); Stories'
+          // isn't gated again here since the whole "stories" nav item is
+          // already admin-only.
+          const subItems =
+            item.key === "stories" && isActive
+              ? [
+                  {
+                    key: "simplified",
+                    href: "/learn/stories",
+                    label: t.storiesHub.simplifiedTab,
+                    isSubActive: pathname.startsWith("/learn/stories"),
+                  },
+                  {
+                    key: "longer",
+                    href: "/learn/normal",
+                    label: t.storiesHub.longerTab,
+                    isSubActive: pathname.startsWith("/learn/normal"),
+                  },
+                ]
+              : item.key === "library" && isActive && isAdminUser
+                ? [
+                    {
+                      key: "books",
+                      href: "/learn/library",
+                      label: t.bookLibrary.booksTabLabel,
+                      isSubActive: !pathname.startsWith("/learn/library/novels"),
+                    },
+                    {
+                      key: "novels",
+                      href: "/learn/library/novels",
+                      label: t.bookLibrary.novelsTabLabel,
+                      isSubActive: pathname.startsWith("/learn/library/novels"),
+                    },
+                  ]
+                : null;
 
-          const subActive = pathname.startsWith("/learn/stories") ? "simplified" : "longer";
-          const SUB_ITEMS = [
-            { key: "simplified", href: "/learn/stories", label: t.storiesHub.simplifiedTab },
-            { key: "longer", href: "/learn/normal", label: t.storiesHub.longerTab },
-          ] as const;
+          if (!subItems) return [navLink];
 
           return [
             navLink,
             <div
-              key="stories-sub-nav"
-              className="hidden md:flex md:flex-col md:gap-0.5 md:ps-11 md:pe-3"
+              key={`${item.key}-sub-nav`}
+              className="hidden md:flex md:flex-col md:gap-0.5 md:ps-9 md:pe-3"
             >
-              {SUB_ITEMS.map((subItem) => {
-                const isSubActive = subActive === subItem.key;
-                return (
-                  <Link
-                    key={subItem.key}
-                    href={subItem.href}
-                    aria-current={isSubActive ? "page" : undefined}
-                    className={cn(
-                      "focus-visible:ring-ring focus-visible:ring-offset-background rounded-lg px-2 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-                      isSubActive
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                    )}
-                  >
-                    <span dir={dir}>{subItem.label}</span>
-                  </Link>
-                );
-              })}
+              {subItems.map((subItem) => (
+                <Link
+                  key={subItem.key}
+                  href={subItem.href}
+                  aria-current={subItem.isSubActive ? "page" : undefined}
+                  className={cn(
+                    "focus-visible:ring-ring focus-visible:ring-offset-background rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                    subItem.isSubActive
+                      ? "text-primary bg-brand-muted"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                  )}
+                >
+                  <span dir={dir}>{subItem.label}</span>
+                </Link>
+              ))}
             </div>,
           ];
         })}

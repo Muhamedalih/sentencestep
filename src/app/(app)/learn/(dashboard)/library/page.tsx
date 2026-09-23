@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { LibraryHome } from "@/components/app/library-home";
-import { isAdmin } from "@/lib/admin/access";
 import {
   fetchCategoriesWithBooks,
   fetchCompletedBooks,
@@ -21,7 +20,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Library" };
 
 export default async function LibraryHomePage() {
-  const [user, locale, isAdminUser] = await Promise.all([getCurrentUser(), getLocale(), isAdmin()]);
+  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
   // One shared client for every library query this page fires — creating a
   // separate createPublicClient() per query (as each of these functions
   // does on its own) has been observed to hang this request's streamed
@@ -41,7 +40,6 @@ export default async function LibraryHomePage() {
         featuredBooks={featuredBooks}
         continueReading={continueReading}
         completedBooks={completedBooks}
-        isAdminUser={isAdminUser}
       />
     </div>
   );
