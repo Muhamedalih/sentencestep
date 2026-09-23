@@ -85,6 +85,7 @@ function toBook(
     status: row.status,
     orderIndex: row.order_index,
     voiceId: row.voice_id,
+    type: row.type,
     categories: categoryLinks.get(row.id) ?? [],
     supportDescription: translatedDescription,
   };
@@ -199,6 +200,7 @@ export async function fetchFeaturedBooks(
     .select("*")
     .eq("status", "published")
     .eq("is_featured", true)
+    .eq("type", "book")
     .order("order_index", { ascending: true });
   if (error) throw error;
   if (!data || data.length === 0) return [];
@@ -239,6 +241,7 @@ export async function fetchFirstPublishedBook(
     .from("books")
     .select("*")
     .eq("status", "published")
+    .eq("type", "book")
     .order("order_index", { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -265,7 +268,11 @@ export async function fetchCategoriesWithBooks(
   if (!isSupabaseConfigured()) return categories.map((category) => ({ category, books: [] }));
 
   const supabase = client ?? createPublicClient();
-  const { data, error } = await supabase.from("books").select("*").eq("status", "published");
+  const { data, error } = await supabase
+    .from("books")
+    .select("*")
+    .eq("status", "published")
+    .eq("type", "book");
   if (error) throw error;
 
   let links: Map<string, { category: Category; isPrimary: boolean }[]> = new Map();
@@ -309,6 +316,7 @@ export async function searchBooks(query: string): Promise<Book[]> {
       .from("books")
       .select("*")
       .eq("status", "published")
+      .eq("type", "book")
       .order("order_index", { ascending: true });
     if (error) throw error;
     bookRows = data ?? [];
@@ -318,6 +326,7 @@ export async function searchBooks(query: string): Promise<Book[]> {
         .from("books")
         .select("*")
         .eq("status", "published")
+        .eq("type", "book")
         .or(`title.ilike.%${trimmed}%,author.ilike.%${trimmed}%`),
       supabase.from("categories").select("id").eq("is_active", true).ilike("name", `%${trimmed}%`),
     ]);
@@ -341,6 +350,7 @@ export async function searchBooks(query: string): Promise<Book[]> {
           .from("books")
           .select("*")
           .eq("status", "published")
+          .eq("type", "book")
           .in("id", bookIdsByCategory);
         if (extraBooksError) throw extraBooksError;
         for (const row of extraBooks ?? []) byId.set(row.id, row);
@@ -379,6 +389,7 @@ export async function fetchContinueReadingBooks(
     .from("books")
     .select("*")
     .eq("status", "published")
+    .eq("type", "book")
     .in(
       "id",
       inProgress.map((entry) => entry.bookId),
@@ -436,6 +447,7 @@ export async function fetchCompletedBooks(
     .from("books")
     .select("*")
     .eq("status", "published")
+    .eq("type", "book")
     .in("id", completedIds);
   if (error) throw error;
   if (!bookRows || bookRows.length === 0) return [];
@@ -464,6 +476,7 @@ export async function fetchBookById(
     .select("*")
     .eq("id", id)
     .eq("status", "published")
+    .eq("type", "book")
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;

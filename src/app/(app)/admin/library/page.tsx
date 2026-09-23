@@ -25,11 +25,16 @@ interface AdminLibrarySearchParams {
   access?: string;
   difficulty?: string;
   category?: string;
+  type?: string;
   page?: string;
 }
 
 function isBookStatus(value: string | undefined): value is BookStatus {
   return value === "draft" || value === "published" || value === "archived";
+}
+
+function isBookType(value: string | undefined): value is "book" | "novel" {
+  return value === "book" || value === "novel";
 }
 
 export default async function AdminLibraryBooksPage({
@@ -46,13 +51,15 @@ export default async function AdminLibraryBooksPage({
     access: params.access === "free" || params.access === "premium" ? params.access : undefined,
     difficultyLevel: params.difficulty ? Number(params.difficulty) : undefined,
     categoryId: params.category || undefined,
+    type: isBookType(params.type) ? params.type : undefined,
   };
   const hasActiveFilters = Boolean(
     filters.search ||
     filters.status ||
     filters.access ||
     filters.difficultyLevel ||
-    filters.categoryId,
+    filters.categoryId ||
+    filters.type,
   );
 
   const page = Math.max(1, Number(params.page) || 1);
@@ -132,6 +139,16 @@ export default async function AdminLibraryBooksPage({
                 { value: "archived", label: "Archived" },
               ]}
             />
+            <FilterSelect
+              name="type"
+              label="Type"
+              value={params.type}
+              options={[
+                { value: "", label: "All" },
+                { value: "book", label: "Book" },
+                { value: "novel", label: "Novel" },
+              ]}
+            />
             <Button type="submit" variant="secondary" size="sm">
               Apply
             </Button>
@@ -157,6 +174,7 @@ export default async function AdminLibraryBooksPage({
           access: params.access,
           difficulty: params.difficulty,
           category: params.category,
+          type: params.type,
         }}
       />
     </div>

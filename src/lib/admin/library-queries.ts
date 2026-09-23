@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { BookStatus } from "@/lib/admin/library-validation";
+import type { BookStatus, BookType } from "@/lib/admin/library-validation";
 import type { BookSectionWithSentences } from "@/types/library";
 
 /**
@@ -87,6 +87,7 @@ export interface AdminBookSummary {
   createdAt: string;
   primaryCategoryId: string | null;
   primaryCategoryName: string | null;
+  type: BookType;
 }
 
 export interface LibraryBookListFilters {
@@ -96,6 +97,7 @@ export interface LibraryBookListFilters {
   access?: "free" | "premium";
   difficultyLevel?: number;
   categoryId?: string;
+  type?: BookType;
 }
 
 export interface LibraryBookListPage {
@@ -139,6 +141,7 @@ export async function listBooksAdmin(
   if (filters.access === "free") query = query.eq("is_free", true);
   if (filters.access === "premium") query = query.eq("is_free", false);
   if (filters.difficultyLevel) query = query.eq("difficulty_level", filters.difficultyLevel);
+  if (filters.type) query = query.eq("type", filters.type);
   if (filters.search)
     query = query.or(`title.ilike.%${filters.search}%,author.ilike.%${filters.search}%`);
   if (bookIds) query = query.in("id", bookIds);
@@ -178,6 +181,7 @@ export async function listBooksAdmin(
     createdAt: row.created_at,
     primaryCategoryId: primaryCategoryByBook.get(row.id)?.id ?? null,
     primaryCategoryName: primaryCategoryByBook.get(row.id)?.name ?? null,
+    type: row.type,
   }));
 
   return { books: rows, totalCount: count ?? 0 };
@@ -198,6 +202,7 @@ export interface AdminBookDetail {
   /** Per-book narration voice override (books.voice_id) — see the learner-facing Book type's identical field for why the reading/preview pages must resolve through this, not just the global default. */
   voiceId: string | null;
   categories: { categoryId: string; isPrimary: boolean }[];
+  type: BookType;
 }
 
 export async function getBookByIdAdmin(id: string): Promise<AdminBookDetail | null> {
@@ -225,6 +230,7 @@ export async function getBookByIdAdmin(id: string): Promise<AdminBookDetail | nu
     status: book.status,
     orderIndex: book.order_index,
     voiceId: book.voice_id,
+    type: book.type,
     categories: (links ?? []).map((row) => ({
       categoryId: row.category_id,
       isPrimary: row.is_primary,

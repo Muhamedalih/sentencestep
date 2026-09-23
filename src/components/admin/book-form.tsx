@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { BookCoverImageField } from "@/components/admin/book-cover-image-field";
 import { saveBook } from "@/lib/admin/library-actions";
-import type { BookStatus } from "@/lib/admin/library-validation";
+import type { BookStatus, BookType } from "@/lib/admin/library-validation";
 import type { AdminBookDetail, AdminCategory } from "@/lib/admin/library-queries";
 import { tierLabel, type Difficulty } from "@/lib/levels";
 
@@ -46,6 +46,7 @@ export function BookForm({ categories, initial }: BookFormProps) {
   );
   const [status, setStatus] = useState<BookStatus>(initial?.status ?? "draft");
   const [orderIndex, setOrderIndex] = useState(String(initial?.orderIndex ?? 0));
+  const [type, setType] = useState<BookType>(initial?.type ?? "book");
 
   const initialPrimaryId = initial?.categories.find((c) => c.isPrimary)?.categoryId ?? null;
   const initialSelectedIds = initial?.categories.map((c) => c.categoryId) ?? [];
@@ -81,6 +82,7 @@ export function BookForm({ categories, initial }: BookFormProps) {
         freePreviewSentenceCount: Number(freePreviewSentenceCount),
         status,
         orderIndex: Number(orderIndex),
+        type,
         categories: selectedCategoryIds.map((categoryId) => ({
           categoryId,
           isPrimary: categoryId === primaryCategoryId,
@@ -138,6 +140,21 @@ export function BookForm({ categories, initial }: BookFormProps) {
           </Field>
           <BookCoverImageField bookId={initial?.id} initialUrl={initial?.coverImageUrl ?? null} />
 
+          <Field label="Type" htmlFor="book-type">
+            <select
+              id="book-type"
+              value={type}
+              onChange={(e) => setType(e.target.value as BookType)}
+              className="border-input bg-background h-11 rounded-lg border px-3 text-sm"
+            >
+              <option value="book">Book</option>
+              <option value="novel">Novel</option>
+            </select>
+            <p className="text-muted-foreground text-xs">
+              Novel entries never appear in the learner-facing Library yet — admin-only while that
+              section is built.
+            </p>
+          </Field>
           <Field label="Difficulty" htmlFor="book-difficulty">
             <select
               id="book-difficulty"

@@ -973,6 +973,8 @@ export interface Database {
           voice_generation_excluded: boolean;
           /** Per-book narration voice override — mirrors lessons.voice_id (see 20250218000000_book_voice_override.sql). Null falls back to elevenlabs_settings.default_story_voice_id, exactly like a Story with no override. */
           voice_id: string | null;
+          /** 'book' (default) or 'novel' — a Novel is a copyright-safe summary of a famous novel, reusing the same Book Learning Engine. See 20250307000000_book_novel_type.sql. */
+          type: "book" | "novel";
           created_at: string;
           updated_at: string;
         };
@@ -990,6 +992,7 @@ export interface Database {
           order_index?: number;
           voice_generation_excluded?: boolean;
           voice_id?: string | null;
+          type?: "book" | "novel";
           created_at?: string;
           updated_at?: string;
         };

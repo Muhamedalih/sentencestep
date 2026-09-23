@@ -227,6 +227,7 @@ export async function saveBook(input: BookMutationInput): Promise<ActionResult> 
     free_preview_sentence_count: input.freePreviewSentenceCount,
     status: input.status,
     order_index: input.orderIndex,
+    type: input.type ?? "book",
     updated_at: nowIso,
   };
 

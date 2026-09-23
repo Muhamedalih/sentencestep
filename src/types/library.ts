@@ -8,6 +8,8 @@
 
 export type BookDifficultyLevel = 1 | 2 | 3;
 export type BookStatus = "draft" | "published" | "archived";
+/** 'book' (default) or 'novel' — a Novel is a copyright-safe, curated summary of a famous novel, reusing the same Book Learning Engine as a regular Book. Admin-only for now: every learner-facing query filters to 'book' until the Library's Books/Novels split ships. */
+export type BookType = "book" | "novel";
 
 export interface Category {
   id: string;
@@ -37,6 +39,7 @@ export interface Book {
   orderIndex: number;
   /** Per-book narration voice override (books.voice_id) — null falls back to elevenlabs_settings.default_story_voice_id, exactly like a Story with no override. See getBookNarrationVoiceId's doc comment. */
   voiceId: string | null;
+  type: BookType;
   /** Resolved category links — always present, possibly empty for a book with no categories assigned yet. */
   categories: BookCategoryLink[];
   /** Locale-resolved translation of `description` (content_translations, content_type "book") — same resolution rules as BookSection.supportDescription. Only populated when the fetch layer was given a locale; `title` has no counterpart since a book's title is a proper noun, never translated. */

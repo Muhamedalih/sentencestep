@@ -100,6 +100,7 @@ export function BookTable({
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
                       {book.title}
+                      {book.type === "novel" && <Badge variant="secondary">Novel</Badge>}
                       {book.isFeatured && <Badge variant="secondary">Featured</Badge>}
                     </div>
                   </td>

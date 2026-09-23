@@ -27,6 +27,8 @@ export function validateCategoryInput(input: CategoryInput): ValidationResult {
 }
 
 export type BookStatus = "draft" | "published" | "archived";
+/** 'book' (default) or 'novel' — see types/library.ts's BookType doc comment. */
+export type BookType = "book" | "novel";
 
 export interface BookCategoryInput {
   categoryId: string;
@@ -46,9 +48,12 @@ export interface BookInput {
   status: BookStatus;
   orderIndex: number;
   categories: BookCategoryInput[];
+  /** Defaults to 'book' when omitted, so existing callers/tests are unaffected. */
+  type?: BookType;
 }
 
 const VALID_STATUSES: BookStatus[] = ["draft", "published", "archived"];
+const VALID_TYPES: BookType[] = ["book", "novel"];
 
 export function validateBookInput(input: BookInput): ValidationResult {
   const errors: string[] = [];
@@ -66,6 +71,8 @@ export function validateBookInput(input: BookInput): ValidationResult {
     errors.push("Free preview sentence count must be 0 or greater.");
   }
   if (!VALID_STATUSES.includes(input.status)) errors.push("Invalid publishing status.");
+  if (input.type !== undefined && !VALID_TYPES.includes(input.type))
+    errors.push("Invalid book type.");
   if (!Number.isInteger(input.orderIndex) || input.orderIndex < 0) {
     errors.push("Order must be a whole number, 0 or greater.");
   }
