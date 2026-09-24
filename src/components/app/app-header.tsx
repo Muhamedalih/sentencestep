@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Menu, Sparkles, X } from "lucide-react";
+import { Bookmark, Flame, Menu, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -15,29 +15,23 @@ import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/supabase/auth";
 import type { ProgressState } from "@/lib/progress/types";
 
-/** Duolingo-style always-visible streak/XP pair, centered in the header — see AppHeader's own doc comment for why this replaced empty header space. Renders nothing until progress has actually loaded, never a flashing "0". */
+/** Duolingo-style always-visible streak counter, centered in the header — see AppHeader's own doc comment for why this replaced empty header space. Renders nothing until progress has actually loaded, never a flashing "0". */
 function ProgressHud({ initialProgress }: { initialProgress?: ProgressState }) {
-  const { isLoaded, streak, xp } = useProgress(initialProgress);
+  const { isLoaded, streak } = useProgress(initialProgress);
   if (!isLoaded) return null;
 
   return (
     <div className="text-muted-foreground hidden items-center gap-4 text-sm font-semibold sm:flex">
-      <span className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-1.5 text-base sm:gap-2 sm:text-lg">
         <Flame
           className={cn(
-            "size-4",
+            "size-4 sm:size-5",
             streak.currentStreak > 0 ? "text-accent" : "text-muted-foreground",
           )}
           aria-hidden="true"
         />
         <span className="tabular-nums" dir="ltr">
           {streak.currentStreak}
-        </span>
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Sparkles className="size-4" aria-hidden="true" />
-        <span className="tabular-nums" dir="ltr">
-          {xp}
         </span>
       </span>
     </div>
@@ -90,7 +84,7 @@ export function AppHeader({
     <>
       <div className="flex items-center gap-1">
         <div className="relative">
-          <Button asChild variant="ghost" size="icon-sm">
+          <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
             <Link href="/learn/saved" aria-label={t.nav.mySaves} title={t.nav.mySaves}>
               <Bookmark
                 className={cn(

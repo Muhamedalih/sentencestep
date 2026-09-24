@@ -25,11 +25,11 @@ export function AccountMenu() {
   return (
     <Link
       href="/learn/settings"
-      className="border-border/60 bg-card/60 hover:bg-card hover:border-border group inline-flex items-center gap-1 rounded-lg border px-4 py-2 text-sm font-semibold transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-md"
+      className="border-border/60 bg-card/60 hover:bg-card hover:border-border group inline-flex items-center gap-1 rounded-lg border px-4 py-2 text-sm font-semibold transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-md sm:px-5 sm:py-2.5 sm:text-base"
     >
       {t.account.manageAccountLabel}
       <ChevronLeft
-        className="size-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+        className="size-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5 sm:size-4"
         aria-hidden="true"
       />
     </Link>

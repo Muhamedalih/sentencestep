@@ -33,7 +33,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       role="radiogroup"
       aria-label={t.localeSwitcher.ariaLabel}
       className={cn(
-        "bg-muted/60 ring-border/50 relative inline-flex items-center gap-0.5 rounded-full p-1 ring-1",
+        "bg-muted/60 ring-border/50 relative inline-flex items-center gap-0.5 rounded-full p-1 ring-1 sm:gap-1 sm:p-1.5",
         className,
       )}
     >
@@ -50,7 +50,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={meta.nativeLabel}
             onClick={() => setLocale(option)}
             className={cn(
-              "focus-visible:ring-ring focus-visible:ring-offset-background relative flex h-7 w-8 items-center justify-center rounded-full outline-none",
+              "focus-visible:ring-ring focus-visible:ring-offset-background relative flex h-7 w-8 items-center justify-center rounded-full outline-none sm:h-9 sm:w-11",
               "motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out",
               "motion-safe:hover:-translate-y-px motion-safe:hover:scale-110 motion-safe:active:translate-y-0 motion-safe:active:scale-95",
               "focus-visible:ring-2 focus-visible:ring-offset-2",
@@ -70,7 +70,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
               aria-hidden="true"
               className={cn(
                 `fi fi-${meta.flagCountryCode}`,
-                "relative !block !h-3.5 !w-5 rounded-[3px] bg-center shadow-[0_0_0_1px_var(--border)]",
+                "relative !block !h-3.5 !w-5 rounded-[3px] bg-center shadow-[0_0_0_1px_var(--border)] sm:!h-4 sm:!w-6",
               )}
             />
           </button>

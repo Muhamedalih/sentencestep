@@ -18,7 +18,12 @@ export function Logo({
     >
       <span
         className={cn(
-          "bg-primary text-primary-foreground flex items-center justify-center rounded-md font-bold",
+          // Fixed to the PWA/favicon icon's own colors (public/favicon.svg,
+          // public/icon-*.png: #4F3FE0 on #F5F4FF) rather than the
+          // theme-driven --primary token, so the in-app mark reads as the
+          // exact same brand color as the installed app icon in both light
+          // and dark mode instead of two different shades of it.
+          "flex items-center justify-center rounded-md bg-[#4F3FE0] font-bold text-[#F5F4FF]",
           size === "sm" ? "size-[22px] text-[14px]" : "size-6.5 text-sm",
         )}
       >
