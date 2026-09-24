@@ -429,6 +429,7 @@ export async function saveLesson(input: LessonMutationInput): Promise<ActionResu
   revalidatePath("/admin/content");
   revalidatePath(`/admin/content/${lessonId}/edit`);
   revalidatePath(`/learn/${input.mode}`);
+  revalidateTag("lesson-nav");
   return { success: "Lesson saved.", id: lessonId };
 }
 
@@ -449,6 +450,7 @@ export async function archiveLesson(id: string): Promise<ActionResult> {
   void logAdminAction("lesson.archived", "lesson", id);
   revalidatePath("/admin/content");
   revalidatePath(`/learn/${data.mode}`);
+  revalidateTag("lesson-nav");
   return { success: "Lesson archived." };
 }
 
@@ -468,6 +470,7 @@ export async function restoreLesson(id: string): Promise<ActionResult> {
   void logAdminAction("lesson.restored", "lesson", id);
   revalidatePath("/admin/content");
   revalidatePath(`/learn/${data.mode}`);
+  revalidateTag("lesson-nav");
   return { success: "Lesson restored to draft." };
 }
 
@@ -498,6 +501,7 @@ export async function bulkUpdateLessonStatus(
   for (const mode of new Set((data ?? []).map((row) => row.mode))) {
     revalidatePath(`/learn/${mode}`);
   }
+  revalidateTag("lesson-nav");
 
   void logAdminAction(
     status === "archived" ? "lesson.bulk_archived" : "lesson.bulk_restored",

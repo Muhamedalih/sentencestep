@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
 import {
   fetchDailyProgress,
@@ -229,25 +231,42 @@ export async function recordCompletionAction(
   progress.rewards = rewards;
   progress.xpEarned = xpEarned;
 
-  // Milestone emails are a side effect, never a requirement for completion
-  // to succeed — evaluateAndNotify catches its own errors internally.
-  const { level, levelCompleted } = await evaluateAndNotify(userId, mode, lessonId, progress);
+  // Milestone emails, analytics, and Vocabulary Recall scheduling are all
+  // side effects that never change what this action returns — none of their
+  // results feed back into `progress`, and each already catches its own
+  // errors internally (evaluateAndNotify, track, recordVocabularyEncountersForLesson
+  // — see their own doc comments). They used to run here, awaited, before
+  // the learner's "lesson complete" screen could render: on an ordinary
+  // completion that's a handful of fast Supabase calls, but the moment a
+  // milestone actually fires, evaluateAndNotify also sends a real email
+  // through an external provider in the same critical path — the measured
+  // cause of "exiting a lesson" occasionally taking far longer than usual
+  // (fast on most completions, multi-second on a streak/level/lesson-count
+  // milestone day). after() runs this exact same sequence, in the exact
+  // same order, immediately once the response carrying `progress` has
+  // already been sent to the learner — same total work, same eventual
+  // milestone emails/analytics/recall scheduling, just no longer something
+  // the learner's screen waits on. Wrapped in its own try/catch purely to
+  // keep an unexpected failure here from surfacing as server-log noise; it
+  // can no longer affect the response either way, since that already went
+  // out.
+  after(async () => {
+    try {
+      const { level, levelCompleted } = await evaluateAndNotify(userId, mode, lessonId, progress);
 
-  // Analytics is likewise a side effect only — track() never throws, and a
-  // missing/unresolvable level (level === null) just means the completed
-  // event carries no level rather than blocking anything.
-  await track(completedEvent(mode, lessonId, level ?? 0, safeAccuracy), userId);
-  if (levelCompleted && level !== null) {
-    await track(
-      { name: "LEVEL_COMPLETED", category: "PROGRESS", properties: { mode, level } },
-      userId,
-    );
-  }
+      await track(completedEvent(mode, lessonId, level ?? 0, safeAccuracy), userId);
+      if (levelCompleted && level !== null) {
+        await track(
+          { name: "LEVEL_COMPLETED", category: "PROGRESS", properties: { mode, level } },
+          userId,
+        );
+      }
 
-  // Vocabulary Recall scheduling is likewise a side effect only — it never
-  // throws (see its own doc comment) and never affects what this completion
-  // returns.
-  await recordVocabularyEncountersForLesson(lesson);
+      await recordVocabularyEncountersForLesson(lesson);
+    } catch (error) {
+      console.error("[progress] recordCompletionAction: post-response side effects failed", error);
+    }
+  });
 
   return progress;
 }

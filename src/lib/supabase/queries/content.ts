@@ -362,8 +362,18 @@ type LessonNavRow = Pick<LessonRow, "id" | "mode" | "order_index" | "status"> & 
  * the same lessons.level_id -> levels.id embed fetchLessons uses, no
  * sentences, no translations, no per-mode vocabulary derivation.
  */
-export async function fetchLessonNav(mode: LearningMode): Promise<LessonNavEntry[]> {
-  const supabase = await createClient();
+async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntry[]> {
+  // createPublicClient, not createClient: this cached wrapper is not just
+  // *safe* to share across viewers (see its own doc comment on why the
+  // `lessons` RLS policy makes that true) — Next.js actively forbids
+  // reading cookies() inside an unstable_cache()-wrapped function at all
+  // (confirmed live: "used 'cookies' inside a function cached with
+  // 'unstable_cache(...)'" the moment this used the session-aware client),
+  // and createClient() reads cookies() to build its client regardless of
+  // whether the query itself ends up depending on the session. Same
+  // anonymous-client pattern fetchLevelNames/fetchLevelPreviews already use
+  // just above for the identical reason.
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("lessons")
@@ -385,6 +395,27 @@ export async function fetchLessonNav(mode: LearningMode): Promise<LessonNavEntry
       order: lesson.order_index,
     }));
 }
+
+/**
+ * Cached wrapper around fetchLessonNavUncached — safe to share-cache across
+ * every viewer, unlike fetchLessons/fetchLessonById just below (see those
+ * functions' own doc comments): this query only ever reads the `lessons`
+ * table, whose RLS policy ("Published lessons are public; admins see all",
+ * see supabase/migrations/20250108000000_admin_cms.sql) has no auth.uid()
+ * check for a published row — unlike `sentences`, which this query never
+ * touches at all. A published lesson's id/mode/order/level is therefore
+ * byte-identical for a guest, a free learner, a premium subscriber, and an
+ * admin alike, which is exactly what makes one shared cache entry safe here
+ * (fetchLessons/fetchLessonById below embed `sentences`, whose RLS answer
+ * genuinely differs per viewer, so those are deliberately NOT cached this
+ * way). Invalidated by every admin action that can change a lesson's
+ * status/order/mode — see content-actions.ts's
+ * saveLesson/archiveLesson/restoreLesson/bulkUpdateLessonStatus, all of
+ * which call revalidateTag("lesson-nav").
+ */
+export const fetchLessonNav = unstable_cache(fetchLessonNavUncached, ["fetch-lesson-nav"], {
+  tags: ["lesson-nav"],
+});
 
 /**
  * Unlike fetchLessons (list views, and generateStaticParams which has no

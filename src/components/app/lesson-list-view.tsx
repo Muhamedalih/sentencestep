@@ -110,6 +110,15 @@ function LessonCard({
         aria-label={
           locked ? t.premium.lockedContentAriaLabel.replace("{title}", lesson.title) : lesson.title
         }
+        // A locked card always opens to the same static PremiumLocked
+        // upsell (see the lesson route's own canAccess gate) rather than
+        // the real lesson, and the visible lock icon already tells a free
+        // learner they'd need to upgrade first — the least likely card in
+        // any list to actually get tapped. Skipping its prefetch trims a
+        // few guaranteed-wasted background requests off every catalog page
+        // load without touching prefetch on any card the learner can
+        // actually open (still the Next.js default there, unchanged).
+        prefetch={locked ? false : undefined}
         className="focus-visible:ring-ring focus-visible:ring-offset-background block h-full rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <div

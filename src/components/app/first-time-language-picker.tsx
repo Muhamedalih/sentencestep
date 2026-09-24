@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
@@ -42,6 +43,33 @@ import { cn } from "@/lib/utils";
 export function FirstTimeLanguagePicker() {
   const { locale, t, setLocaleForOnboarding } = useLocale();
   const { introContinued, forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
+
+  // Warms the browser's cache for every locale's "/{locale}" marketing page
+  // in the background — moved here, deferred, from a static
+  // <link rel="prefetch"> that used to render unconditionally in
+  // root-html-shell.tsx's <head> for every first-time visitor (see that
+  // file's own doc comment at this same spot). That version fired at the
+  // very start of page parsing, competing with the page's own critical JS
+  // chunks for the browser's limited concurrent-request budget. Still the
+  // exact same <link rel="prefetch"> mechanism — a real full browser
+  // navigation crosses root layouts here, so next/navigation's
+  // router.prefetch(), built for soft client-side transitions, wouldn't warm
+  // anything useful for it — just started ~300ms after this step actually
+  // mounts instead of at the very first byte of HTML, by which point the
+  // page's own critical rendering is already done. Skipped once a locale is
+  // already chosen (nothing left to warm up for).
+  useEffect(() => {
+    if (locale) return;
+    const timer = setTimeout(() => {
+      for (const supportLocale of SUPPORT_LOCALES) {
+        const link = document.createElement("link");
+        link.rel = "prefetch";
+        link.href = `/${supportLocale}`;
+        document.head.appendChild(link);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [locale]);
 
   if (locale && !forceLanguageStep) return null;
   if (!locale && !introContinued) return null; // IntroLanding is still showing — see its own doc comment

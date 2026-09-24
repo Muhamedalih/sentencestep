@@ -9,7 +9,7 @@ import { StartingLevelOnboarding } from "@/components/app/starting-level-onboard
 import { TutorialOnboarding } from "@/components/app/tutorial-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
-import { dirFor, SUPPORT_LOCALES, type SupportLocale } from "@/lib/i18n/locales";
+import { dirFor, type SupportLocale } from "@/lib/i18n/locales";
 
 /**
  * Amiri (--font-book, globals.css) and Lora (--font-quote) — self-hosted via
@@ -263,26 +263,22 @@ export function RootHtmlShell({
           />
         )}
         {/*
-         * Only on the unprefixed "/" for a genuinely first-time, cookie-less
-         * visitor (localizedNavigation && locale === null — true for
-         * src/app/(default)/layout.tsx, never for src/app/[locale]/layout.tsx
-         * since that one always has a real locale): FirstTimeLanguagePicker
-         * is about to show, and picking a language there navigates to
-         * "/{locale}" (see LocaleProvider's setLocale). That destination has
-         * its OWN root layout ([locale]/layout.tsx) — a different <html> tree
-         * than this one — which the Next.js App Router cannot soft-transition
-         * into; it's a real, full browser navigation no matter what. These
-         * hints get that destination's HTML into the browser's cache before
-         * the visitor ever picks, so the otherwise-jarring reload resolves
-         * close to instantly instead of visibly flashing/reloading mid-flow.
-         * (Safari doesn't honor rel=prefetch, so this helps Chrome/Firefox
-         * visitors fully and does nothing — not harm — for Safari ones.)
+         * A genuinely first-time, cookie-less visitor on the unprefixed "/"
+         * still gets these three locale pages warmed into the browser's
+         * cache before they pick a language (picking one navigates to
+         * "/{locale}", a real full browser reload — see
+         * FirstTimeLanguagePicker's own doc comment for why that can't be a
+         * soft transition) — but the <link rel="prefetch"> tags that used to
+         * live here, unconditionally in every first-time visitor's initial
+         * HTML, were measured firing at the very start of page parsing and
+         * competing with this same page's own critical JS chunks for the
+         * browser's limited concurrent-request budget (3+ seconds added to
+         * first paint on a cold cache). FirstTimeLanguagePicker now issues
+         * the identical <link rel="prefetch"> tags itself, client-side,
+         * shortly after it actually mounts — by then the critical first
+         * paint is already done, so the same warm-up happens with none of
+         * that contention.
          */}
-        {localizedNavigation &&
-          locale === null &&
-          SUPPORT_LOCALES.map((supportLocale) => (
-            <link key={supportLocale} rel="prefetch" href={`/${supportLocale}`} />
-          ))}
       </head>
       <body>
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
