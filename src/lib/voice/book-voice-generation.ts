@@ -147,37 +147,42 @@ async function loadBookForVoiceWork(
     bookRow = data;
   }
 
-  const { data: sections, error: sectionsError } = await supabase
-    .from("book_sections")
-    .select("id")
-    .eq("book_id", bookId)
-    .order("order_index");
-  if (sectionsError) return { ok: false, error: "Couldn't load the book's sections." };
-  const sectionIds = (sections ?? []).map((s) => s.id);
+  let sentences: BookSentenceRow[];
+  if (preloaded?.bookSentencesByBookId) {
+    sentences = preloaded.bookSentencesByBookId.get(bookId) ?? [];
+  } else {
+    const { data: sections, error: sectionsError } = await supabase
+      .from("book_sections")
+      .select("id")
+      .eq("book_id", bookId)
+      .order("order_index");
+    if (sectionsError) return { ok: false, error: "Couldn't load the book's sections." };
+    const sectionIds = (sections ?? []).map((s) => s.id);
 
-  // One batched query across every section instead of one sequential query
-  // per section — a book with N sections used to cost N round trips here
-  // alone. Grouped and re-sorted in JS (by sectionIds' own order, then each
-  // section's order_index) rather than relying on the query's own .order()
-  // across sections, since order_index is only meaningful *within* a
-  // section and a single cross-section .order("order_index") would
-  // interleave sections whose local indexes happen to overlap.
-  const { data: sentenceRows, error: sentencesError } = sectionIds.length
-    ? await supabase
-        .from("book_sentences")
-        .select("id, en, order_index, section_id")
-        .in("section_id", sectionIds)
-    : { data: [] as BookSentenceRow[], error: null };
-  if (sentencesError) return { ok: false, error: "Couldn't load the book's sentences." };
-  const sentencesBySection = new Map<string, BookSentenceRow[]>();
-  for (const row of sentenceRows ?? []) {
-    const list = sentencesBySection.get(row.section_id) ?? [];
-    list.push(row);
-    sentencesBySection.set(row.section_id, list);
+    // One batched query across every section instead of one sequential query
+    // per section — a book with N sections used to cost N round trips here
+    // alone. Grouped and re-sorted in JS (by sectionIds' own order, then each
+    // section's order_index) rather than relying on the query's own .order()
+    // across sections, since order_index is only meaningful *within* a
+    // section and a single cross-section .order("order_index") would
+    // interleave sections whose local indexes happen to overlap.
+    const { data: sentenceRows, error: sentencesError } = sectionIds.length
+      ? await supabase
+          .from("book_sentences")
+          .select("id, en, order_index, section_id")
+          .in("section_id", sectionIds)
+      : { data: [] as BookSentenceRow[], error: null };
+    if (sentencesError) return { ok: false, error: "Couldn't load the book's sentences." };
+    const sentencesBySection = new Map<string, BookSentenceRow[]>();
+    for (const row of sentenceRows ?? []) {
+      const list = sentencesBySection.get(row.section_id) ?? [];
+      list.push(row);
+      sentencesBySection.set(row.section_id, list);
+    }
+    sentences = sectionIds.flatMap(
+      (id) => sentencesBySection.get(id)?.sort((a, b) => a.order_index - b.order_index) ?? [],
+    );
   }
-  const sentences: BookSentenceRow[] = sectionIds.flatMap(
-    (id) => sentencesBySection.get(id)?.sort((a, b) => a.order_index - b.order_index) ?? [],
-  );
 
   if (sentences.length === 0) {
     return {
@@ -265,15 +270,31 @@ async function loadBookForVoiceWork(
     return { sentence: s, key: cacheKeyParts(s.en, voiceId!, generationVersion) };
   });
 
-  const textHashes = [...new Set(keyedSentences.map((k) => k.key.textHash))];
-  const { data: existingRowsRaw } = await supabase
-    .from("voice_audio_cache")
-    .select("id, text_hash, generation_version, status, attempts, audio_url, updated_at")
-    .eq("voice_id", voiceId)
-    .in("text_hash", textHashes);
-  const existingByKey = new Map<string, ExistingCacheRow>(
-    (existingRowsRaw ?? []).map((row) => [`${row.text_hash}:${row.generation_version}`, row]),
-  );
+  // preloaded.cacheRowsByKey (when given) is already keyed
+  // `${voiceId}:${textHash}:${generationVersion}` across every voice this
+  // dashboard load could need (see PreloadedVoiceWorkContext's own doc
+  // comment) — read this book's own rows straight out of it instead of
+  // running a `voice_audio_cache` query per book.
+  let existingByKey: Map<string, ExistingCacheRow>;
+  if (preloaded?.cacheRowsByKey) {
+    existingByKey = new Map();
+    for (const item of keyedSentences) {
+      const row = preloaded.cacheRowsByKey.get(
+        `${voiceId}:${item.key.textHash}:${item.key.generationVersion}`,
+      );
+      if (row) existingByKey.set(`${item.key.textHash}:${item.key.generationVersion}`, row);
+    }
+  } else {
+    const textHashes = [...new Set(keyedSentences.map((k) => k.key.textHash))];
+    const { data: existingRowsRaw } = await supabase
+      .from("voice_audio_cache")
+      .select("id, text_hash, generation_version, status, attempts, audio_url, updated_at")
+      .eq("voice_id", voiceId)
+      .in("text_hash", textHashes);
+    existingByKey = new Map<string, ExistingCacheRow>(
+      (existingRowsRaw ?? []).map((row) => [`${row.text_hash}:${row.generation_version}`, row]),
+    );
+  }
 
   return {
     ok: true,

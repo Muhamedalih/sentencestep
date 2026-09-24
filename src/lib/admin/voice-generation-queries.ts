@@ -4,7 +4,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getBookVoiceStatus } from "@/lib/voice/book-voice-generation";
 import {
   getLessonVoiceStatus,
+  type ExistingCacheRow,
   type PreloadedVoiceWorkContext,
+  type SentenceRow,
   type SentenceVoiceStatus,
 } from "@/lib/voice/story-voice-generation";
 import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
@@ -70,45 +72,138 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
   // requests at Supabase's connection pool on a large library.
   const serviceClient = createServiceRoleClient();
 
-  // elevenlabs_settings, the Normal-lesson default voice, and
-  // every `voices` row this library's lessons/books could possibly
-  // reference are each fetched exactly once here and handed to every item
-  // below (see PreloadedVoiceWorkContext's own doc comment) — without this,
-  // loadLessonForVoiceWork/loadBookForVoiceWork re-ran the same
-  // elevenlabs_settings read and up to two more `voices` reads *per lesson
-  // and per book*, which is what actually timed this dashboard out once the
-  // library grew past ~100 published items (bounded concurrency alone
-  // doesn't help: total query count still scaled with library size, not
-  // with the concurrency limit).
+  // elevenlabs_settings and the Normal-lesson default voice first — the
+  // referencedVoiceIds set right below can't be finalized until both are
+  // known (a lesson/book with no per-item override resolves straight to one
+  // of these two defaults, so the `voices`/cache preloads below must include
+  // them too, not just per-item overrides).
+  const [{ data: settingsRow, error: settingsError }, defaultNormalLessonVoiceId] =
+    await Promise.all([
+      serviceClient
+        .from("elevenlabs_settings")
+        .select(
+          "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
+        )
+        .eq("id", 1)
+        .maybeSingle(),
+      getDefaultNormalLessonVoiceId(),
+    ]);
+
   const referencedVoiceIds = [
     ...new Set(
-      [...safeLessons, ...safeBooks]
-        .map((item) => item.voice_id)
-        .filter((id): id is string => Boolean(id)),
+      [
+        ...[...safeLessons, ...safeBooks].map((item) => item.voice_id),
+        settingsRow?.default_story_voice_id ?? null,
+        defaultNormalLessonVoiceId,
+      ].filter((id): id is string => Boolean(id)),
     ),
   ];
-  const [
-    { data: settingsRow, error: settingsError },
-    defaultNormalLessonVoiceId,
-    { data: voiceRows },
-  ] = await Promise.all([
-    serviceClient
-      .from("elevenlabs_settings")
-      .select(
-        "model, default_story_voice_id, stability, similarity_boost, style, speed, use_speaker_boost",
-      )
-      .eq("id", 1)
-      .maybeSingle(),
-    getDefaultNormalLessonVoiceId(),
-    referencedVoiceIds.length
-      ? serviceClient
-          .from("voices")
-          .select("id, source, provider_voice_id")
-          .in("id", referencedVoiceIds)
-      : Promise.resolve({
-          data: [] as { id: string; source: string; provider_voice_id: string }[],
-        }),
-  ]);
+  const lessonIds = safeLessons.map((l) => l.id);
+  const bookIds = safeBooks.map((b) => b.id);
+
+  // Every `voices` row this library could reference, every lesson's
+  // sentences, every book's sections, and every relevant voice_audio_cache
+  // row — each batched into exactly one query across the *whole* library
+  // instead of running once per lesson/book (see PreloadedVoiceWorkContext's
+  // own doc comment) — without this, loadLessonForVoiceWork/
+  // loadBookForVoiceWork re-ran a `sentences` (or `book_sections` +
+  // `book_sentences`) and `voice_audio_cache` query *per lesson and per
+  // book*, which is what actually timed this dashboard out (measured at a
+  // consistent 11-12s once the library grew to ~160 published lessons + 26
+  // books — comfortably within Netlify's own real ~25s ceiling most of the
+  // time, but not always, hence "sometimes it opens and sometimes it
+  // doesn't") even after the elevenlabs_settings/voices preload alone had
+  // already fixed the *other* per-item queries.
+  const [{ data: voiceRows }, { data: sentenceRows }, { data: bookSections }, { data: cacheRows }] =
+    await Promise.all([
+      referencedVoiceIds.length
+        ? serviceClient
+            .from("voices")
+            .select("id, source, provider_voice_id")
+            .in("id", referencedVoiceIds)
+        : Promise.resolve({
+            data: [] as { id: string; source: string; provider_voice_id: string }[],
+          }),
+      lessonIds.length
+        ? serviceClient
+            .from("sentences")
+            .select("id, en, speaker, order_index, lesson_id")
+            .in("lesson_id", lessonIds)
+            .order("order_index")
+        : Promise.resolve({ data: [] as (SentenceRow & { lesson_id: string })[] }),
+      bookIds.length
+        ? serviceClient
+            .from("book_sections")
+            .select("id, book_id, order_index")
+            .in("book_id", bookIds)
+            .order("order_index")
+        : Promise.resolve({ data: [] as { id: string; book_id: string; order_index: number }[] }),
+      referencedVoiceIds.length
+        ? serviceClient
+            .from("voice_audio_cache")
+            .select(
+              "id, voice_id, text_hash, generation_version, status, attempts, audio_url, updated_at",
+            )
+            .in("voice_id", referencedVoiceIds)
+        : Promise.resolve({ data: [] as ExistingCacheRow[] }),
+    ]);
+
+  const sentencesByLessonId = new Map<string, SentenceRow[]>();
+  for (const row of sentenceRows ?? []) {
+    const list = sentencesByLessonId.get(row.lesson_id) ?? [];
+    list.push(row);
+    sentencesByLessonId.set(row.lesson_id, list);
+  }
+  for (const list of sentencesByLessonId.values()) {
+    list.sort((a, b) => a.order_index - b.order_index);
+  }
+
+  // book_sentences depends on the section ids just fetched above, so this
+  // one query can't join the Promise.all above — still one query for every
+  // book's sentences at once rather than one per book.
+  const sectionIds = (bookSections ?? []).map((s) => s.id);
+  const { data: bookSentenceRows } = sectionIds.length
+    ? await serviceClient
+        .from("book_sentences")
+        .select("id, en, order_index, section_id")
+        .in("section_id", sectionIds)
+    : { data: [] as { id: string; en: string; order_index: number; section_id: string }[] };
+
+  const sentencesBySectionId = new Map<
+    string,
+    { id: string; en: string; order_index: number; section_id: string }[]
+  >();
+  for (const row of bookSentenceRows ?? []) {
+    const list = sentencesBySectionId.get(row.section_id) ?? [];
+    list.push(row);
+    sentencesBySectionId.set(row.section_id, list);
+  }
+  const sectionIdsByBookId = new Map<string, string[]>();
+  for (const section of bookSections ?? []) {
+    const list = sectionIdsByBookId.get(section.book_id) ?? [];
+    list.push(section.id);
+    sectionIdsByBookId.set(section.book_id, list);
+  }
+  const bookSentencesByBookId = new Map(
+    [...sectionIdsByBookId].map(([bookId, secIds]) => [
+      bookId,
+      secIds.flatMap(
+        (id) =>
+          sentencesBySectionId
+            .get(id)
+            ?.slice()
+            .sort((a, b) => a.order_index - b.order_index) ?? [],
+      ),
+    ]),
+  );
+
+  const cacheRowsByKey = new Map<string, ExistingCacheRow>(
+    (cacheRows ?? []).map((row) => [
+      `${row.voice_id}:${row.text_hash}:${row.generation_version}`,
+      row as ExistingCacheRow,
+    ]),
+  );
+
   // A missing/errored settings row can't be preloaded — fall back to letting
   // each item fetch (and fail) it individually, exactly as before this
   // optimization existed, rather than silently hiding every item behind one
@@ -129,6 +224,9 @@ export async function listVoiceGenerationDashboardRows(): Promise<VoiceDashboard
             safeLessons.map((l) => [l.id, { mode: l.mode, voice_id: l.voice_id }]),
           ),
           booksById: new Map(safeBooks.map((b) => [b.id, { voice_id: b.voice_id }])),
+          sentencesByLessonId,
+          bookSentencesByBookId,
+          cacheRowsByKey,
         };
 
   const storyRows = mapWithConcurrency(safeLessons, VOICE_STATUS_CONCURRENCY, async (lesson) => {

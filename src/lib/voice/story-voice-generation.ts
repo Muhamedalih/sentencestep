@@ -82,7 +82,7 @@ export function isStaleGenerating(updatedAt: string): boolean {
   return Date.now() - new Date(updatedAt).getTime() > STALE_GENERATING_MS;
 }
 
-interface SentenceRow {
+export interface SentenceRow {
   id: string;
   en: string;
   speaker: string | null;
@@ -178,6 +178,42 @@ export interface PreloadedVoiceWorkContext {
    */
   lessonsById?: Map<string, { mode: string; voice_id: string | null }>;
   booksById?: Map<string, { voice_id: string | null }>;
+  /**
+   * Every referenced lesson's sentences, batched into one `sentences` query
+   * up front and grouped by lesson_id — without this, loadLessonForVoiceWork
+   * ran its own `sentences` query per lesson, which is what actually timed
+   * the "Story audio status" dashboard out (confirmed via real ~11-12s loads
+   * once the library grew to ~160 published lessons + 26 books: ~185 tiny
+   * sequential-ish round trips, bounded concurrency only caps how many fire
+   * at once, not the total count) even after the elevenlabs_settings/voices
+   * preload above already cut out the *other* per-lesson queries. Each
+   * array is expected pre-sorted by order_index (see
+   * listVoiceGenerationDashboardRows). Optional and unused by every
+   * single-item caller (generateStoryVoiceDraft, the cron sweep, the admin
+   * "Generate" actions), which keep doing their own fresh single-lesson
+   * query exactly as before.
+   */
+  sentencesByLessonId?: Map<string, SentenceRow[]>;
+  /**
+   * Every book's sentences (already flattened across sections, in reading
+   * order), batched the same way as sentencesByLessonId above and for the
+   * same reason — a book's own sections+sentences queries
+   * (loadBookForVoiceWork) used to run once per book.
+   */
+  bookSentencesByBookId?: Map<
+    string,
+    { id: string; en: string; order_index: number; section_id: string }[]
+  >;
+  /**
+   * Every voice_audio_cache row for every voice id this preload's lessons/
+   * books could reference (default voices plus every per-item override),
+   * keyed exactly like claimCacheRow's own
+   * `${voiceId}:${textHash}:${generationVersion}` — content-addressed, so
+   * this one global map is valid to look up from for any lesson or book, not
+   * just the one it happened to be sized for. Replaces a `voice_audio_cache`
+   * query that used to run once per lesson and once per book.
+   */
+  cacheRowsByKey?: Map<string, ExistingCacheRow>;
 }
 
 /**
@@ -343,7 +379,7 @@ interface KeyedSentence {
   key: { normalizedText: string; textHash: string; voiceId: string; generationVersion: string };
 }
 
-interface ExistingCacheRow {
+export interface ExistingCacheRow {
   id: string;
   voice_id: string;
   text_hash: string;
@@ -416,13 +452,18 @@ async function loadLessonForVoiceWork(
     return { ok: false, error: message };
   }
 
-  const { data: sentenceRows, error: sentencesError } = await supabase
-    .from("sentences")
-    .select("id, en, speaker, order_index")
-    .eq("lesson_id", lessonId)
-    .order("order_index");
-  if (sentencesError) return { ok: false, error: "Couldn't load the lesson's sentences." };
-  const sentences = sentenceRows ?? [];
+  let sentences: SentenceRow[];
+  if (preloaded?.sentencesByLessonId) {
+    sentences = preloaded.sentencesByLessonId.get(lessonId) ?? [];
+  } else {
+    const { data: sentenceRows, error: sentencesError } = await supabase
+      .from("sentences")
+      .select("id, en, speaker, order_index")
+      .eq("lesson_id", lessonId)
+      .order("order_index");
+    if (sentencesError) return { ok: false, error: "Couldn't load the lesson's sentences." };
+    sentences = sentenceRows ?? [];
+  }
 
   let settingsRow: ElevenLabsSettingsRow;
   if (preloaded) {
@@ -495,23 +536,32 @@ async function loadLessonForVoiceWork(
   // Batch-load every existing cache row that could possibly match, by
   // (voice_id, text_hash) — generation_version is filtered precisely in
   // application code below since it varies per sentence's own context.
-  const voiceIds = [...new Set(keyedSentences.map((k) => k.voiceId))];
-  const textHashes = [...new Set(keyedSentences.map((k) => k.key.textHash))];
-  const { data: existingRowsRaw } = voiceIds.length
-    ? await supabase
-        .from("voice_audio_cache")
-        .select(
-          "id, voice_id, text_hash, generation_version, status, attempts, audio_url, updated_at",
-        )
-        .in("voice_id", voiceIds)
-        .in("text_hash", textHashes)
-    : { data: [] };
-  const existingByKey = new Map<string, ExistingCacheRow>(
-    (existingRowsRaw ?? []).map((row) => [
-      `${row.voice_id}:${row.text_hash}:${row.generation_version}`,
-      row as ExistingCacheRow,
-    ]),
-  );
+  // preloaded.cacheRowsByKey (when given) is already keyed exactly this way
+  // across every voice this whole dashboard load could need, so a lesson's
+  // lookups just read straight from it instead of running their own query —
+  // see PreloadedVoiceWorkContext's own doc comment.
+  let existingByKey: Map<string, ExistingCacheRow>;
+  if (preloaded?.cacheRowsByKey) {
+    existingByKey = preloaded.cacheRowsByKey;
+  } else {
+    const voiceIds = [...new Set(keyedSentences.map((k) => k.voiceId))];
+    const textHashes = [...new Set(keyedSentences.map((k) => k.key.textHash))];
+    const { data: existingRowsRaw } = voiceIds.length
+      ? await supabase
+          .from("voice_audio_cache")
+          .select(
+            "id, voice_id, text_hash, generation_version, status, attempts, audio_url, updated_at",
+          )
+          .in("voice_id", voiceIds)
+          .in("text_hash", textHashes)
+      : { data: [] };
+    existingByKey = new Map<string, ExistingCacheRow>(
+      (existingRowsRaw ?? []).map((row) => [
+        `${row.voice_id}:${row.text_hash}:${row.generation_version}`,
+        row as ExistingCacheRow,
+      ]),
+    );
+  }
 
   return {
     ok: true,
