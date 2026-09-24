@@ -92,7 +92,28 @@ export function VoiceDashboardRow({
   return (
     <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-2">
-        <Link href={titleHref} className="truncate text-sm font-medium hover:underline">
+        {/*
+         * prefetch={false}: this dashboard renders one Link per published
+         * Story/Conversation/Normal-lesson/Book (up to ~180 rows) — Next.js's
+         * default viewport-based prefetching was firing a real server
+         * request (getLessonVoiceDetail's own settings/sentences/voices/
+         * cache queries, unbatched, run once per lesson — see
+         * PreloadedVoiceWorkContext's own doc comment) for every row that
+         * scrolled into view, all roughly at once. Confirmed in production
+         * network logs as a wave of 503s on these exact
+         * /admin/voice/content/[lessonId] prefetch requests while browsing
+         * this dashboard — most likely the real mechanism behind "the site
+         * stops after a few minutes," not just this page's own initial load
+         * time (see listVoiceGenerationDashboardRows' batching fix). An
+         * admin clicking through to one lesson's detail occasionally doesn't
+         * need instant nav via prefetch badly enough to justify a background
+         * request storm against every row on screen.
+         */}
+        <Link
+          href={titleHref}
+          prefetch={false}
+          className="truncate text-sm font-medium hover:underline"
+        >
           {row.title}
         </Link>
         <span className="text-muted-foreground shrink-0 text-xs capitalize">{row.contentType}</span>
