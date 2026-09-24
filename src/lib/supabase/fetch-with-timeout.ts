@@ -1,8 +1,60 @@
 const REQUEST_TIMEOUT_MS = 8_000;
 
 /**
- * Passed as every Supabase client's `global.fetch` override (see client.ts,
- * server.ts, public-client.ts, service-role.ts) — added after the same
+ * Builds a Supabase `global.fetch` override with this file's timeout+retry
+ * behavior — factored out so server.ts/service-role.ts (genuinely
+ * server-only: server.ts reads next/headers' cookies(), which Next.js
+ * itself refuses to let a Client Component import at all) can layer an
+ * additional, Node-only connection-pooling fix on top (see
+ * server-fetch-with-timeout.ts) without that fix ever being reachable from
+ * this file itself. This file stays free of any Node-only import for
+ * exactly that reason: public-client.ts is the one Supabase client in this
+ * app that's genuinely isomorphic by design — OnboardingIntroCard (a Client
+ * Component) calls it directly from the browser, deliberately, to avoid
+ * paying a DB round trip on every request just for a rare first-time-visitor
+ * card (see getOnboardingCardSettings' own doc comment) — so anything
+ * public-client.ts pulls in has to keep working unmodified in a browser
+ * bundle. Confirmed the hard way: routing server-fetch-with-timeout.ts's
+ * undici import through this file instead broke exactly that — webpack
+ * can't bundle undici's own Node-builtin internals for the client at all
+ * ("UnhandledSchemeError: Reading from 'node:assert'"), and the page
+ * importing it rendered completely blank.
+ *
+ * `dispatcher`, not `setGlobalDispatcher`: passed straight through in the
+ * fetch init so a caller's own Agent only ever governs the calls made
+ * through the specific fetch function this returns, never any other fetch
+ * in the process (Node's global fetch when this parameter is omitted,
+ * i.e. every plain `supabaseFetchWithTimeout` call below).
+ */
+export function createSupabaseFetchWithTimeout(
+  dispatcher?: unknown,
+): (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> {
+  return function supabaseFetchWithTimeout(input, init) {
+    const method = (init?.method ?? "GET").toUpperCase();
+    const isRead = method === "GET" || method === "HEAD";
+
+    const attempt = () =>
+      fetch(input, {
+        ...init,
+        ...(dispatcher ? ({ dispatcher } as RequestInit) : {}),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+
+    if (!isRead) return attempt();
+
+    return attempt().catch((err) => {
+      if (!(err instanceof Error) || err.name !== "TimeoutError") throw err;
+      return attempt();
+    });
+  };
+}
+
+/**
+ * Passed as the plain, dispatcher-less Supabase `global.fetch` override —
+ * see client.ts (never imports this file at all) and public-client.ts
+ * (the one place this exact export is used; server.ts/service-role.ts use
+ * server-fetch-with-timeout.ts's dispatcher-carrying variant instead, built
+ * from createSupabaseFetchWithTimeout above). Added after the same
  * 2026-09-09 stale-connection incident documented in
  * src/lib/voice/providers/fetch-with-timeout.ts, which that fix addressed
  * for the TTS provider APIs. /admin/voice/content (Story audio status, which
@@ -37,19 +89,4 @@ const REQUEST_TIMEOUT_MS = 8_000;
  * the budget on their own. 8s keeps a single bad call's worst case at 16s
  * instead of 40s.
  */
-export function supabaseFetchWithTimeout(
-  input: RequestInfo | URL,
-  init?: RequestInit,
-): Promise<Response> {
-  const method = (init?.method ?? "GET").toUpperCase();
-  const isRead = method === "GET" || method === "HEAD";
-
-  const attempt = () => fetch(input, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-
-  if (!isRead) return attempt();
-
-  return attempt().catch((err) => {
-    if (!(err instanceof Error) || err.name !== "TimeoutError") throw err;
-    return attempt();
-  });
-}
+export const supabaseFetchWithTimeout = createSupabaseFetchWithTimeout();

@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-import { supabaseFetchWithTimeout } from "@/lib/supabase/fetch-with-timeout";
+import { supabaseServerFetchWithTimeout } from "@/lib/supabase/server-fetch-with-timeout";
 import type { Database } from "@/types/database";
 
 /**
@@ -46,6 +46,6 @@ export function createServiceRoleClient() {
 
   return createClient<Database>(url, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
-    global: { fetch: supabaseFetchWithTimeout },
+    global: { fetch: supabaseServerFetchWithTimeout },
   });
 }

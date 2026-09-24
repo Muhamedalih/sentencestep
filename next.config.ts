@@ -37,7 +37,20 @@ const nextConfig: NextConfig = {
   // code, only the bundling differs. Excluding it here makes Next load it
   // via real Node require() at runtime instead, using the real `ws`/`net`
   // implementation.
-  serverExternalPackages: ["msedge-tts"],
+  //
+  // undici (src/lib/supabase/server-fetch-with-timeout.ts's connection-
+  // pooling Agent, used only by server.ts/service-role.ts — never
+  // public-client.ts, see that file's own doc comment for why) hits the
+  // same class of problem from a different angle: webpack doesn't just
+  // mis-shim it, it refuses to bundle it at all — its dispatcher/client
+  // internals import real Node builtins (`node:assert` among them) in a way
+  // webpack's own bundling has no plugin for, which failed the build
+  // outright ("UnhandledSchemeError: Reading from 'node:assert' is not
+  // handled by plugins") the moment anything that imports it got pulled
+  // into a webpack-bundled chunk — server-side included, not just the
+  // client. Same fix, same reasoning: load it via real Node require() at
+  // runtime instead.
+  serverExternalPackages: ["msedge-tts", "undici"],
   experimental: {
     // Next 15 defaults the client Router Cache's staleTime for dynamic
     // routes to 0 — every client-side navigation between /learn/* sections
