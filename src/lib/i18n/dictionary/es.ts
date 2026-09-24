@@ -571,8 +571,8 @@ export const es: Dictionary = {
     moreGroupsSoon: "Más grupos próximamente.",
   },
   storiesHub: {
-    simplifiedTab: "Historias cortas",
-    longerTab: "Historias largas",
+    simplifiedTab: "Historias generales",
+    longerTab: "Historias cotidianas",
   },
   bookLibrary: {
     heading: "Biblioteca",

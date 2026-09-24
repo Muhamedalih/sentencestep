@@ -539,8 +539,8 @@ export const ar: Dictionary = {
     moreGroupsSoon: "المزيد من المجموعات قريبًا.",
   },
   storiesHub: {
-    simplifiedTab: "قصص قصيرة",
-    longerTab: "قصص طويلة",
+    simplifiedTab: "قصص عامة",
+    longerTab: "قصص يومية",
   },
   bookLibrary: {
     heading: "المكتبة",

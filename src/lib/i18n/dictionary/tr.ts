@@ -563,8 +563,8 @@ export const tr: Dictionary = {
     moreGroupsSoon: "Daha fazla grup yakında.",
   },
   storiesHub: {
-    simplifiedTab: "Kısa Hikayeler",
-    longerTab: "Uzun Hikayeler",
+    simplifiedTab: "Genel Hikayeler",
+    longerTab: "Günlük Hikayeler",
   },
   bookLibrary: {
     heading: "Kütüphane",

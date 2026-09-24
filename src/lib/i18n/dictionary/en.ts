@@ -554,8 +554,8 @@ export const en: Dictionary = {
     moreGroupsSoon: "More groups coming soon.",
   },
   storiesHub: {
-    simplifiedTab: "Short Stories",
-    longerTab: "Long Stories",
+    simplifiedTab: "General Stories",
+    longerTab: "Daily Stories",
   },
   bookLibrary: {
     heading: "Library",
