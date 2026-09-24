@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
 import { NovelsHome } from "@/components/app/novels-home";
 import { isAdmin } from "@/lib/admin/access";
 import {
@@ -42,6 +43,7 @@ export default async function NovelsHomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+      <LibraryMobileTabs active="novels" className="mb-6" />
       <NovelsHome
         novels={novels}
         featuredNovels={featuredNovels}

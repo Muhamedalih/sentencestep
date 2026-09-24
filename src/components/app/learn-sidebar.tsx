@@ -25,7 +25,11 @@ import { cn } from "@/lib/utils";
  * sidebar itself. Both sub-navs are desktop-only (see their own `hidden
  * md:flex`): the mobile bottom tab bar has no room for a nested sub-list,
  * so there "Stories"/"Library" stay single plain buttons, same as every
- * other mobile tab. Regular learners never had a Stories tab (still
+ * other mobile tab. Library's own switch reappears on mobile a different
+ * way — LibraryMobileTabs, rendered at the top of library/page.tsx and
+ * library/novels/page.tsx instead of in this nav shell (see that
+ * component's own doc comment). Stories doesn't have an equivalent yet.
+ * Regular learners never had a Stories tab (still
  * admin-only while it's being rebuilt), so their nav keeps its own direct
  * "Ordinary Lessons" item to /learn/normal instead, unchanged from before
  * this merge; they still reach Library too, just without the Novels
