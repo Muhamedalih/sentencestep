@@ -29,22 +29,27 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-83": [
     { en: "dog", ar: "كلب" },
     { en: "run", ar: "يركض" },
+    { en: "gate", ar: "بوابة" },
   ],
   "story-84": [
     { en: "cake", ar: "كيكة" },
     { en: "bake", ar: "يخبز" },
+    { en: "leaning", ar: "مائل" },
   ],
   "story-85": [
     { en: "umbrella", ar: "مظلة" },
     { en: "breaks", ar: "ينكسر" },
+    { en: "wind", ar: "ريح" },
   ],
   "story-86": [
     { en: "star", ar: "نجمة" },
     { en: "wish", ar: "يتمنى" },
+    { en: "bike", ar: "دراجة" },
   ],
   "story-87": [
     { en: "snow", ar: "ثلج" },
     { en: "build", ar: "يبني" },
+    { en: "snowman", ar: "رجل ثلج" },
   ],
   "story-88": [
     { en: "fish", ar: "سمكة" },
@@ -57,6 +62,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-90": [
     { en: "plant", ar: "نبتة" },
     { en: "grows", ar: "ينمو" },
+    { en: "watering", ar: "يسقي" },
   ],
   "story-91": [
     { en: "shoe", ar: "حذاء" },
@@ -77,6 +83,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-95": [
     { en: "race", ar: "سباق" },
     { en: "win", ar: "يفوز" },
+    { en: "second", ar: "ثاني" },
   ],
   "story-96": [
     { en: "nap", ar: "قيلولة" },
@@ -85,6 +92,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-97": [
     { en: "kite", ar: "طائرة ورقية" },
     { en: "wind", ar: "ريح" },
+    { en: "wait", ar: "ينتظر" },
   ],
   "story-98": [
     { en: "spider", ar: "عنكبوت" },
@@ -103,6 +111,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-101": [
     { en: "miss", ar: "يفتقد" },
     { en: "used", ar: "اعتاد" },
+    { en: "seat", ar: "مقعد" },
   ],
   "story-102": [
     { en: "give", ar: "يستسلم" },
@@ -115,6 +124,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-104": [
     { en: "argue", ar: "يتجادل" },
     { en: "apologize", ar: "يعتذر" },
+    { en: "remote", ar: "جهاز التحكم" },
   ],
   "story-105": [
     { en: "borrow", ar: "يستعير" },
@@ -127,6 +137,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-107": [
     { en: "save", ar: "يدخر" },
     { en: "spend", ar: "ينفق" },
+    { en: "trip", ar: "رحلة" },
   ],
   "story-108": [
     { en: "late", ar: "متأخر" },
@@ -135,22 +146,27 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-109": [
     { en: "breaks", ar: "ينكسر" },
     { en: "fix", ar: "يصلح" },
+    { en: "vase", ar: "مزهرية" },
   ],
   "story-110": [
     { en: "convince", ar: "يقنع" },
     { en: "agree", ar: "يوافق" },
+    { en: "place", ar: "مكان" },
   ],
   "story-111": [
     { en: "lie", ar: "يكذب" },
     { en: "confess", ar: "يعترف" },
+    { en: "small", ar: "صغير" },
   ],
   "story-112": [
     { en: "compete", ar: "يتنافس" },
     { en: "tie", ar: "يتعادل" },
+    { en: "score", ar: "نتيجة" },
   ],
   "story-113": [
     { en: "move", ar: "ينتقل" },
     { en: "adjust", ar: "يتأقلم" },
+    { en: "city", ar: "مدينة" },
   ],
   "story-114": [
     { en: "surprise", ar: "مفاجأة" },
@@ -188,6 +204,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-122": [
     { en: "impulsive", ar: "متهور" },
     { en: "regret", ar: "ندم" },
+    { en: "purchase", ar: "شراء" },
   ],
   "story-123": [
     { en: "estranged", ar: "متقاطع" },
@@ -197,7 +214,10 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
     { en: "procrastinate", ar: "يسوّف" },
     { en: "deadline", ar: "الموعد النهائي" },
   ],
-  "story-125": [{ en: "underestimates", ar: "يستهين" }],
+  "story-125": [
+    { en: "underestimates", ar: "يستهين" },
+    { en: "quietly", ar: "بهدوء" },
+  ],
   "story-126": [
     { en: "heartbroken", ar: "قلب محطم" },
     { en: "moved", ar: "تجاوز الأمر" },
@@ -237,6 +257,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-135": [
     { en: "grieve", ar: "يحزن" },
     { en: "heal", ar: "يشفى" },
+    { en: "spot", ar: "مكان" },
   ],
   "story-136": [
     { en: "overwhelmed", ar: "مرهق" },
@@ -245,6 +266,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-137": [
     { en: "cynical", ar: "متشكك" },
     { en: "inspired", ar: "ملهم" },
+    { en: "chapter", ar: "فصل" },
   ],
   "story-138": [
     { en: "reckless", ar: "متهور" },
@@ -254,14 +276,17 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-139": [
     { en: "melts", ar: "يذوب" },
     { en: "drip", ar: "يقطر" },
+    { en: "lick", ar: "يلعق" },
   ],
   "story-140": [
     { en: "bird", ar: "طائر" },
     { en: "sing", ar: "يغني" },
+    { en: "window", ar: "نافذة" },
   ],
   "story-141": [
     { en: "bubble", ar: "فقاعة" },
     { en: "pops", ar: "تنفجر" },
+    { en: "blow", ar: "ينفخ" },
   ],
   "story-142": [
     { en: "puddle", ar: "بركة ماء" },
@@ -274,6 +299,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-144": [
     { en: "sandcastle", ar: "قلعة رملية" },
     { en: "wave", ar: "موجة" },
+    { en: "build", ar: "يبني" },
   ],
   "story-145": [
     { en: "leaf", ar: "ورقة شجر" },
@@ -282,14 +308,17 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-146": [
     { en: "fireflies", ar: "يراعات" },
     { en: "jar", ar: "جرة" },
+    { en: "glows", ar: "يتوهج" },
   ],
   "story-147": [
     { en: "sock", ar: "جورب" },
     { en: "disappears", ar: "يختفي" },
+    { en: "single", ar: "واحد" },
   ],
   "story-148": [
     { en: "alarm", ar: "منبه" },
     { en: "snooze", ar: "غفوة" },
+    { en: "rings", ar: "يرن" },
   ],
   "story-149": [
     { en: "puzzle", ar: "أحجية" },
@@ -302,6 +331,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-151": [
     { en: "swing", ar: "أرجوحة" },
     { en: "push", ar: "يدفع" },
+    { en: "higher", ar: "أعلى" },
   ],
   "story-152": [
     { en: "hiccups", ar: "فواق" },
@@ -310,10 +340,12 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-153": [
     { en: "lemonade", ar: "عصير ليمون" },
     { en: "customers", ar: "زبائن" },
+    { en: "stand", ar: "كشك" },
   ],
   "story-154": [
     { en: "flashlight", ar: "مصباح يدوي" },
     { en: "battery", ar: "بطارية" },
+    { en: "dark", ar: "مظلم" },
   ],
   "story-155": [
     { en: "mirror", ar: "مرآة" },
@@ -322,6 +354,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-156": [
     { en: "turtle", ar: "سلحفاة" },
     { en: "races", ar: "يتسابق" },
+    { en: "rabbit", ar: "أرنب" },
   ],
   "story-157": [
     { en: "whistle", ar: "صفير" },
@@ -330,6 +363,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-158": [
     { en: "balloon", ar: "بالون" },
     { en: "throw", ar: "يرمي" },
+    { en: "water", ar: "ماء" },
   ],
   // Level 2 — New Chapters, batch 2
   "story-159": [
@@ -343,22 +377,27 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-161": [
     { en: "chores", ar: "مهام منزلية" },
     { en: "negotiate", ar: "يتفاوض" },
+    { en: "wheel", ar: "عجلة" },
   ],
   "story-162": [
     { en: "distracts", ar: "يشتت" },
     { en: "focus", ar: "يركز" },
+    { en: "drawer", ar: "درج" },
   ],
   "story-163": [
     { en: "exaggerate", ar: "يبالغ" },
     { en: "admit", ar: "يعترف" },
+    { en: "fish", ar: "سمكة" },
   ],
   "story-164": [
     { en: "volunteer", ar: "يتطوع" },
     { en: "regret", ar: "يندم" },
+    { en: "party", ar: "حفلة" },
   ],
   "story-165": [
     { en: "criticize", ar: "ينتقد" },
     { en: "defend", ar: "يدافع" },
+    { en: "business", ar: "عمل" },
   ],
   "story-166": [
     { en: "panic", ar: "ذعر" },
@@ -367,6 +406,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-167": [
     { en: "compare", ar: "يقارن" },
     { en: "scroll", ar: "يمرر" },
+    { en: "boring", ar: "ممل" },
   ],
   "story-168": [
     { en: "blame", ar: "يلوم" },
@@ -375,6 +415,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-169": [
     { en: "hesitate", ar: "يتردد" },
     { en: "commit", ar: "يلتزم" },
+    { en: "class", ar: "صف" },
   ],
   "story-170": [
     { en: "mock", ar: "يسخر" },
@@ -387,6 +428,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-172": [
     { en: "assume", ar: "يفترض" },
     { en: "correct", ar: "يصحح" },
+    { en: "mistake", ar: "خطأ" },
   ],
   "story-173": [
     { en: "flirt", ar: "يغازل" },
@@ -395,18 +437,22 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-174": [
     { en: "warns", ar: "يحذر" },
     { en: "ignore", ar: "يتجاهل" },
+    { en: "shortcut", ar: "اختصار" },
   ],
   "story-175": [
     { en: "reward", ar: "يكافئ" },
     { en: "earn", ar: "يكسب" },
+    { en: "dessert", ar: "حلوى" },
   ],
   "story-176": [
     { en: "whisper", ar: "يهمس" },
     { en: "overhears", ar: "يسترق السمع" },
+    { en: "secret", ar: "سر" },
   ],
   "story-177": [
     { en: "rehearse", ar: "يتدرب" },
     { en: "blank", ar: "فارغ" },
+    { en: "speech", ar: "خطاب" },
   ],
   "story-178": [
     { en: "rumor", ar: "شائعة" },
@@ -420,6 +466,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-180": [
     { en: "complacent", ar: "راضٍ عن ذاته بإفراط" },
     { en: "reignites", ar: "يشعل من جديد" },
+    { en: "comfortable", ar: "مرتاح" },
   ],
   "story-181": [
     { en: "vulnerable", ar: "منكشف عاطفياً" },
@@ -428,6 +475,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-182": [
     { en: "validation", ar: "تقدير الآخرين" },
     { en: "worth", ar: "قيمة" },
+    { en: "silence", ar: "صمت" },
   ],
   "story-183": [
     { en: "numb", ar: "مخدر المشاعر" },
@@ -440,6 +488,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-185": [
     { en: "disillusioned", ar: "فاقد الحماس" },
     { en: "renewed", ar: "متجدد" },
+    { en: "purpose", ar: "هدف" },
   ],
   "story-186": [
     { en: "petty", ar: "تافه" },
@@ -448,6 +497,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-187": [
     { en: "stagnant", ar: "راكد" },
     { en: "momentum", ar: "زخم" },
+    { en: "small", ar: "صغير" },
   ],
   "story-188": [
     { en: "aloof", ar: "متحفظ وبعيد" },
@@ -464,6 +514,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-191": [
     { en: "apathetic", ar: "لامبالٍ" },
     { en: "captivated", ar: "مفتون" },
+    { en: "clay", ar: "طين" },
   ],
   "story-192": [
     { en: "defensive", ar: "دفاعي" },
@@ -484,6 +535,7 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
   "story-196": [
     { en: "complicit", ar: "متواطئ" },
     { en: "accountable", ar: "مسؤول" },
+    { en: "decision", ar: "قرار" },
   ],
   "story-197": [
     { en: "detached", ar: "منفصل ذهنياً" },
