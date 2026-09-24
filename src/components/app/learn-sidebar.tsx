@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, Library, ListChecks, NotebookText, Type } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { cn } from "@/lib/utils";
 
 /**
@@ -96,6 +97,21 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
   ].filter((item) => (isAdminUser ? item.key !== "normal-lessons" : item.key !== "stories"));
 
+  // Every route this sidebar links to, present on every /learn/* page —
+  // warmed in the background instead of through each Link's own default
+  // prefetch (see this file's Links below, all `prefetch={false}`) so they
+  // don't all fire the instant this persistent nav mounts, competing with
+  // whatever the current page itself needs to load. See
+  // useDeferredPrefetch's own doc comment for why router.prefetch() (not a
+  // <link> tag) is the right mechanism here.
+  const subNavHrefs =
+    active === "stories"
+      ? ["/learn/stories", "/learn/normal"]
+      : active === "library" && isAdminUser
+        ? ["/learn/library", "/learn/library/novels"]
+        : [];
+  useDeferredPrefetch([...NAV_ITEMS.map((item) => item.href), ...subNavHrefs]);
+
   return (
     <nav
       aria-label={t.nav.ariaLabel}
@@ -118,6 +134,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
             <Link
               key={item.key}
               href={item.href}
+              prefetch={false}
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
@@ -184,6 +201,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
                 <Link
                   key={subItem.key}
                   href={subItem.href}
+                  prefetch={false}
                   aria-current={subItem.isSubActive ? "page" : undefined}
                   className={cn(
                     "focus-visible:ring-ring focus-visible:ring-offset-background rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
