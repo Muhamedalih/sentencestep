@@ -63,6 +63,7 @@ export function LessonSession({
   previewMode = false,
   resolvedVoiceId,
   defaultVoiceId,
+  storyNarratorVoiceId,
   speakerVoiceMap,
   firstSentenceWordAudio,
 }: {
@@ -74,6 +75,8 @@ export function LessonSession({
   resolvedVoiceId?: string | null;
   /** The site-wide default Kokoro voice, independent of this lesson's own resolvedVoiceId — see FixYourMistakesSession's own doc comment for why it deliberately uses this instead. */
   defaultVoiceId?: string | null;
+  /** This Story's actual ElevenLabs narrator voice (see resolveStoryNarratorVoice) — passed to StoryWordsPanel so its Replay button matches the story's own sentences instead of the older, separate tts_settings.default_voice_id defaultVoiceId resolves from. undefined/null (not computed for this lesson, or no ElevenLabs voice configured) falls back to defaultVoiceId inside StoryWordsPanel itself. */
+  storyNarratorVoiceId?: string | null;
   /** Conversation-mode speaker -> voice_id overrides (empty for every other mode) — see TypingSentence's own resolution of resolvedVoiceId vs. a sentence's speaker-specific voice. */
   speakerVoiceMap?: Record<string, string>;
   /** Server-side pre-resolved `{contentId: audioUrl}` for the FIRST sentence's trackable words only (see LessonPage's own lookupCachedWordAudioUrls call and its doc comment for the measured root cause this fixes) — passed straight through to the first TypingSentence instance, which registers these into the shared resolved-audio cache on mount so its word clicks skip the resolve round trip entirely, the same way a pre-resolved sentence.audioUrl already does for that sentence's own narration. undefined for every sentence after the first, and for Conversation mode, where word click doesn't exist. */
@@ -500,9 +503,11 @@ export function LessonSession({
           ) : isComplete && isViewingWords && unit.vocabulary && unit.vocabulary.length > 0 ? (
             <div key="story-words" className="flex flex-col lg:h-full">
               <StoryWordsPanel
+                lessonId={unit.id}
                 vocabulary={unit.vocabulary}
                 sentences={unit.sentences}
                 defaultVoiceId={defaultVoiceId}
+                narratorVoiceId={storyNarratorVoiceId}
                 onBack={() => setIsViewingWords(false)}
               />
             </div>

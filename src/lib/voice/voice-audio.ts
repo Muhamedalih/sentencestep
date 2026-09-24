@@ -68,9 +68,28 @@ import { headers } from "next/headers";
  * voice_audio_cache key is (voice_id, text_hash, generation_version), not
  * contentType/contentId, so a book sentence that happens to share exact text
  * with a lesson sentence already shares its cached clip for free.
+ *
+ * "story_vocab_word" pronounces one of a Story's own 2-6 target vocabulary
+ * words (StoryWordsPanel's "words from this lesson" recap screen) — cache-
+ * only, exactly like plain "word", never on-demand-synthesized here (see
+ * generateStoryVocabularyVoiceDraft, called from the admin "Generate"
+ * action, for the only thing that ever populates this cache). Unlike every
+ * other type, there is no backing database row to look the text up from: a
+ * story's target vocabulary is derived on the fly from its sentences (see
+ * story-vocabulary.ts's own doc comment), never persisted as its own
+ * `vocabulary_words` row. contentId is `${lessonId}::${word}`, resolved by
+ * re-deriving the word from that lesson's real sentence text server-side —
+ * never trusting the client-supplied word directly, the same "content
+ * reference, never raw text" guarantee every other type gets, just checked
+ * against the lesson's sentences instead of a single row.
  */
 export type VoiceAudioContentType =
-  "sentence" | "word" | "sentence_word" | "book_sentence" | "book_sentence_word";
+  | "sentence"
+  | "word"
+  | "sentence_word"
+  | "book_sentence"
+  | "book_sentence_word"
+  | "story_vocab_word";
 
 const MAX_TEXT_LENGTH = 300;
 
@@ -142,6 +161,20 @@ async function lookupContentText(
           token !== " " && isTrackableWord(token) && normalizeMistakeWord(token) === normalizedWord,
       ) ?? null
     );
+  }
+
+  if (contentType === "story_vocab_word") {
+    const [lessonId, rawWord] = contentId.split("::");
+    if (!lessonId || !rawWord) return null;
+    const target = rawWord.toLowerCase();
+    const { data } = await supabase.from("sentences").select("en").eq("lesson_id", lessonId);
+    for (const row of data ?? []) {
+      for (const rawToken of row.en.split(/\s+/)) {
+        const clean = rawToken.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "");
+        if (clean.toLowerCase() === target) return clean;
+      }
+    }
+    return null;
   }
 
   const { data } = await supabase

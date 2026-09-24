@@ -12,7 +12,9 @@ import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { tokenize } from "@/lib/typing";
+import { createPublicClient } from "@/lib/supabase/public-client";
 import { resolveVoiceId } from "@/lib/voice/resolution";
+import { resolveStoryNarratorVoice } from "@/lib/voice/story-voice-generation";
 import { lookupCachedAudioUrl, lookupCachedWordAudioUrls } from "@/lib/voice/voice-audio";
 import { getSpeakerVoiceMap } from "@/lib/voice/speaker-voices";
 import { cn } from "@/lib/utils";
@@ -120,14 +122,28 @@ export default async function LessonPage({
   // tts_settings.default_voice_id, which is Stories/Conversation's own
   // setting and must stay completely unaffected by Normal lessons'
   // resolution.
-  const [defaultVoiceId, speakerVoiceMap] = await Promise.all([
+  const [defaultVoiceId, speakerVoiceMap, storyNarratorVoice] = await Promise.all([
     mode === "normal" ? getDefaultNormalLessonVoiceId() : getDefaultVoiceId(),
     // Only Conversation lessons have per-speaker voices at all — every
     // other mode gets an empty map, which correctly falls through to
     // resolvedVoiceId everywhere it's consulted (see TypingSentence).
     mode === "conversation" ? getSpeakerVoiceMap(unit.id) : Promise.resolve({}),
+    // StoryWordsPanel's own Replay button needs the story's *actual*
+    // ElevenLabs narrator voice — deliberately resolveStoryNarratorVoice,
+    // never resolveVoiceId(unit.voiceId, defaultVoiceId) below: that one
+    // reads tts_settings.default_voice_id, an older, separate setting that
+    // can drift from elevenlabs_settings.default_story_voice_id (the
+    // setting sentence narration actually resolves through — see
+    // resolveStoryNarratorVoice's own doc comment), which would make a
+    // story's vocabulary words sound like a different narrator than its
+    // sentences. Skipped entirely outside Stories, and when this lesson has
+    // no target vocabulary at all, to avoid two extra queries for nothing.
+    mode === "stories" && unit.vocabulary && unit.vocabulary.length > 0
+      ? resolveStoryNarratorVoice(createPublicClient(), unit.voiceId ?? null)
+      : Promise.resolve(null),
   ]);
   const resolvedVoiceId = resolveVoiceId(unit.voiceId, defaultVoiceId);
+  const storyNarratorVoiceId = storyNarratorVoice?.voiceId ?? null;
 
   // Pre-resolves the first sentence's pronunciation URL here, server-side,
   // if it's already been generated for this voice before — the measured
@@ -189,6 +205,7 @@ export default async function LessonPage({
         nextLesson={nextLesson}
         resolvedVoiceId={resolvedVoiceId}
         defaultVoiceId={defaultVoiceId}
+        storyNarratorVoiceId={storyNarratorVoiceId}
         speakerVoiceMap={speakerVoiceMap}
         firstSentenceWordAudio={firstSentenceWordAudio}
       />

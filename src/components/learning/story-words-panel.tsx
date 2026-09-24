@@ -83,17 +83,23 @@ function findExample(word: string, sentences: Sentence[]) {
  * instruction to match "the same system as the Word Lists section."
  */
 export function StoryWordsPanel({
+  lessonId,
   vocabulary,
   sentences,
   defaultVoiceId,
+  narratorVoiceId,
   onBack,
 }: {
+  lessonId: string;
   vocabulary: VocabularyItem[];
   sentences: Sentence[];
   defaultVoiceId?: string | null;
+  /** This story's own resolved ElevenLabs narrator voice (see resolveStoryNarratorVoice) — preferred over defaultVoiceId whenever it resolves, so a word plays in the exact same voice as the story's sentences. Falls back to defaultVoiceId when null (no ElevenLabs voice configured yet for this story), preserving the pre-existing behavior rather than rendering no audio at all. */
+  narratorVoiceId?: string | null;
   onBack: () => void;
 }) {
   const { t, dir, locale } = useLocale();
+  const voiceId = narratorVoiceId ?? defaultVoiceId;
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [practicing, setPracticing] = useState(false);
@@ -116,9 +122,13 @@ export function StoryWordsPanel({
   // is what was reading as stutter/glitching when stepping between words.
   const { prefetchPronunciation } = usePronunciationSettings();
   useEffect(() => {
-    if (!defaultVoiceId) return;
+    if (!voiceId) return;
     for (const word of vocabulary) {
-      prefetchPronunciation({ contentType: "word", contentId: word.id, voiceId: defaultVoiceId });
+      prefetchPronunciation({
+        contentType: "story_vocab_word",
+        contentId: `${lessonId}::${word.en}`,
+        voiceId,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberately once-on-mount, not re-run per navigation (see comment above)
   }, []);
@@ -151,9 +161,9 @@ export function StoryWordsPanel({
             text={item.en}
             autoPlay
             resetKey={item.id}
-            kokoroVoiceId={defaultVoiceId}
-            contentType="word"
-            contentId={item.id}
+            kokoroVoiceId={voiceId}
+            contentType="story_vocab_word"
+            contentId={`${lessonId}::${item.en}`}
             label={t.wordLists.replayAction}
             variant="outline"
             size="sm"

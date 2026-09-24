@@ -372,6 +372,54 @@ async function resolveTargetVoices(
   return { resolved, unresolved };
 }
 
+/**
+ * Resolves a Story's actual narrator voice standalone — the exact same
+ * precedence loadLessonForVoiceWork/resolveTargetVoices use for sentence
+ * narration (`lessonVoiceId` when it's actually an ElevenLabs voice, else
+ * elevenlabs_settings.default_story_voice_id) — for a caller that only needs
+ * the resolved voice id itself, not a whole lesson's sentence-generation
+ * context. Used by generateStoryVocabularyVoiceDraft (to synthesize a
+ * story's target vocabulary words in that same voice) and by the
+ * learner-facing lesson page (to give StoryWordsPanel that same voice for
+ * its Replay button) — deliberately never tts_settings.default_voice_id,
+ * an older, separate setting (see that column's own getDefaultVoiceId doc
+ * comment) that can drift from elevenlabs_settings.default_story_voice_id
+ * and would otherwise make a story's vocabulary words sound like a
+ * different narrator than its sentences. Returns null if no ElevenLabs
+ * voice resolves at all — callers should treat that like any other
+ * "no narration voice configured" case.
+ */
+export async function resolveStoryNarratorVoice(
+  supabase: DbClient,
+  lessonVoiceId: string | null,
+): Promise<{ voiceId: string; providerVoiceId: string } | null> {
+  const { data: settingsRow } = await supabase
+    .from("elevenlabs_settings")
+    .select("default_story_voice_id")
+    .eq("id", 1)
+    .maybeSingle();
+
+  let candidateVoiceId = settingsRow?.default_story_voice_id ?? null;
+  if (lessonVoiceId) {
+    const { data: overrideVoice } = await supabase
+      .from("voices")
+      .select("id, source")
+      .eq("id", lessonVoiceId)
+      .maybeSingle();
+    if (overrideVoice?.source === STORIES_AND_BOOKS_PROVIDER) candidateVoiceId = overrideVoice.id;
+  }
+  if (!candidateVoiceId) return null;
+
+  const { data: voiceRow } = await supabase
+    .from("voices")
+    .select("id, provider_voice_id, source")
+    .eq("id", candidateVoiceId)
+    .maybeSingle();
+  if (!voiceRow || voiceRow.source !== STORIES_AND_BOOKS_PROVIDER) return null;
+
+  return { voiceId: voiceRow.id, providerVoiceId: voiceRow.provider_voice_id };
+}
+
 interface KeyedSentence {
   sentence: SentenceRow;
   voiceId: string;

@@ -13,6 +13,7 @@ import {
 } from "@/lib/voice/candidates";
 import { isDailyVoiceGenerationCapReached } from "@/lib/voice/daily-cap";
 import { generateStoryVoiceDraft } from "@/lib/voice/story-voice-generation";
+import { generateStoryVocabularyVoiceDraft } from "@/lib/voice/story-vocabulary-voice-generation";
 
 /**
  * Kept far smaller than the cron sweep's own MAX_LESSON_VOICE_PAIRS_PER_RUN/
@@ -69,18 +70,34 @@ function summarize(outcome: {
  * voice_audio_cache as it completes (not all-or-nothing), so an occasional
  * timeout on a long lesson doesn't lose progress — the short-circuit in
  * generateStoryVoiceDraft picks up wherever it left off on the next click.
+ *
+ * Also generates the lesson's own target vocabulary words (StoryWordsPanel's
+ * "words from this lesson" screen) in the same click — see
+ * generateStoryVocabularyVoiceDraft's own doc comment. Run in parallel with
+ * the sentence pipeline (independent content, independent cache keys) to
+ * keep total wall-clock time down rather than adding to it; self-guards to a
+ * no-op for anything other than a Stories lesson, so calling it
+ * unconditionally here is safe for Conversation/Normal lessons too.
  */
 export async function generateLessonVoice(lessonId: string): Promise<ActionResult> {
   const forbidden = await requireAdmin();
   if (forbidden) return { error: forbidden };
 
   const supabase = createServiceRoleClient();
-  const outcome = await generateStoryVoiceDraft(supabase, lessonId);
+  const [sentenceOutcome, vocabOutcome] = await Promise.all([
+    generateStoryVoiceDraft(supabase, lessonId),
+    generateStoryVocabularyVoiceDraft(supabase, lessonId),
+  ]);
   revalidatePath(`/admin/voice/content/${lessonId}`);
   // Deliberately NOT revalidating /admin/voice/content itself — see
   // generateBookVoice's own doc comment on why a single-row action here
   // must never force the whole ~150-query dashboard to reload.
-  return summarize(outcome);
+  return summarize({
+    generated: sentenceOutcome.generated + vocabOutcome.generated,
+    skipped: sentenceOutcome.skipped + vocabOutcome.skipped,
+    failed: sentenceOutcome.failed + vocabOutcome.failed,
+    error: [sentenceOutcome.error, vocabOutcome.error].filter(Boolean).join(" ") || undefined,
+  });
 }
 
 /** One sentence's "Regenerate" button — forces past an already-'ready' or retry-exhausted row. */
