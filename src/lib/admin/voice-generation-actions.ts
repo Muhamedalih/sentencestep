@@ -115,14 +115,31 @@ export async function regenerateSentenceVoice(
 }
 
 /**
+ * generateBookVoice's own result: `summarize(outcome)`'s human-readable
+ * message, plus the raw counts and `moreWork` a caller needs to loop a
+ * single book to completion (see generateBookVoiceDraft's
+ * MAX_SENTENCES_PER_BOOK_RUN doc comment — one call only ever advances a
+ * book by that many sentences).
+ */
+export interface BookVoiceGenerationResult extends ActionResult {
+  generated: number;
+  skipped: number;
+  failed: number;
+  moreWork: boolean;
+}
+
+/**
  * Manual whole-book trigger — used by both the Book Preview page's
  * "Generate book audio" button and the "Story audio status" dashboard's
  * per-row generate button. Synchronous — see generateLessonVoice's own doc
- * comment on why `after()` was tried and reverted here.
+ * comment on why `after()` was tried and reverted here. Callers that need
+ * a whole book (not just one MAX_SENTENCES_PER_BOOK_RUN-sized batch) done in
+ * one click loop on the returned `moreWork` — see
+ * generateBookVoiceUntilDone.ts.
  */
-export async function generateBookVoice(bookId: string): Promise<ActionResult> {
+export async function generateBookVoice(bookId: string): Promise<BookVoiceGenerationResult> {
   const forbidden = await requireAdmin();
-  if (forbidden) return { error: forbidden };
+  if (forbidden) return { error: forbidden, generated: 0, skipped: 0, failed: 0, moreWork: false };
 
   const supabase = createServiceRoleClient();
   const outcome = await generateBookVoiceDraft(supabase, bookId);
@@ -132,7 +149,13 @@ export async function generateBookVoice(bookId: string): Promise<ActionResult> {
   // reads for a library this size, and this action already gives the
   // admin an inline result via `summarize(outcome)` without needing a
   // dashboard-wide refetch.
-  return summarize(outcome);
+  return {
+    ...summarize(outcome),
+    generated: outcome.generated,
+    skipped: outcome.skipped,
+    failed: outcome.failed,
+    moreWork: outcome.moreWork,
+  };
 }
 
 /**
