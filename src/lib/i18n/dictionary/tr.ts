@@ -630,6 +630,8 @@ export const tr: Dictionary = {
     typingInviteHint: "Yazma pratiği yapmak ister misin? Buraya dokun",
     readingToolsLabel: "Araçlar",
     listenModeStart: "Dinle",
+    listenModeSlower: "Temposu yavaşlat",
+    listenModeSlowest: "Daha da yavaşlat",
     listenModeStop: "Dinlemeyi durdur",
     noteAdd: "Not ekle",
     noteEdit: "Notu düzenle",

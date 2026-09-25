@@ -606,6 +606,8 @@ export const ar: Dictionary = {
     typingInviteHint: "حاب تتمرن على الكتابة؟ اضغط هنا",
     readingToolsLabel: "أدوات",
     listenModeStart: "استماع",
+    listenModeSlower: "أبطئ السرعة",
+    listenModeSlowest: "أبطئ أكثر",
     listenModeStop: "إيقاف الاستماع",
     noteAdd: "إضافة ملاحظة",
     noteEdit: "تعديل الملاحظة",

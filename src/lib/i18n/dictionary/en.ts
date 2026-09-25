@@ -621,6 +621,8 @@ export const en: Dictionary = {
     typingInviteHint: "Want to practice typing? Tap here",
     readingToolsLabel: "Tools",
     listenModeStart: "Listen",
+    listenModeSlower: "Slow down the pace",
+    listenModeSlowest: "Slow down further",
     listenModeStop: "Stop listening",
     noteAdd: "Add a note",
     noteEdit: "Edit note",
