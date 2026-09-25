@@ -338,6 +338,7 @@ export const en: Dictionary = {
     wordsReadyToReview: "words ready to review",
     vocabularyHeading: "Words from this lesson",
     practiceWord: "Practice",
+    backToStoriesLibrary: "Home",
     typeToRevealPlaceholder: "Type the word to reveal it",
     nextLesson: "Next lesson",
     fixMistakes: "Fix Your Mistakes",

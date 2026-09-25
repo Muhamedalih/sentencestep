@@ -373,6 +373,8 @@ export interface Dictionary {
     vocabularyHeading: string;
     /** Stories-mode completion screen only — button on each word in the lesson-words panel (StoryWordsPanel) that hides the word and asks the learner to retype it from memory before it reveals again. */
     practiceWord: string;
+    /** StoryWordsPanel only — shown beside practiceWord once the learner is viewing the last word in the set (typically right after answering it correctly); links back to the Stories library (/learn/stories) rather than just this one lesson's own back button, since there's nothing left to practice in this lesson. */
+    backToStoriesLibrary: string;
     /** Placeholder for the retype-to-reveal input that appears after practiceWord is pressed. */
     typeToRevealPlaceholder: string;
     nextLesson: string;

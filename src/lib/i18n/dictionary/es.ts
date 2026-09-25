@@ -350,6 +350,7 @@ export const es: Dictionary = {
     wordsReadyToReview: "palabras listas para repasar",
     vocabularyHeading: "Palabras de esta lección",
     practiceWord: "Practicar",
+    backToStoriesLibrary: "Inicio",
     typeToRevealPlaceholder: "Escribe la palabra para revelarla",
     nextLesson: "Siguiente lección",
     fixMistakes: "Corrige tus errores",

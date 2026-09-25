@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
@@ -171,6 +172,28 @@ export function StoryWordsPanel({
     setPracticing(keepPracticing);
   }
 
+  /**
+   * Toggles practicing on the CURRENT word (starting it via "تدرب", or
+   * leaving it after a correct answer on the last word / any wrong answer)
+   * — as opposed to goTo, which moves to a different word. `direction` is
+   * reset to 0 here so the transition below reads as a plain fade/scale
+   * reveal in place, never a leftover slide direction from whatever
+   * word-to-word navigation happened to run last.
+   *
+   * This is the other half of what makes every state change in this panel
+   * animate consistently: the AnimatePresence key below includes both the
+   * word AND this practicing flag, so toggling it (even though `index`
+   * itself doesn't change) still changes the key and gets a proper
+   * exit/enter transition — before this, only goTo's word-to-word moves
+   * changed the key, so starting practice, finishing the last word, and a
+   * wrong answer all just snapped the layout instantly with no animation at
+   * all, which read as far more jarring than any mismatched slide ever did.
+   */
+  function setPracticingMode(next: boolean) {
+    setDirection(0);
+    setPracticing(next);
+  }
+
   return (
     <div className="flex h-svh w-full flex-col">
       <ShiftReplayHint />
@@ -201,7 +224,7 @@ export function StoryWordsPanel({
 
       <AnimatePresence mode="wait" custom={direction} initial={false}>
         <motion.div
-          key={item.id}
+          key={`${item.id}:${practicing ? "practice" : "view"}`}
           custom={direction}
           variants={wordVariants}
           initial="enter"
@@ -229,10 +252,10 @@ export function StoryWordsPanel({
                     resolveSectionSentenceCompleteSound(typingSoundSettings, "stories"),
                   );
                   if (index < total - 1) goTo(index + 1, 1, true);
-                  else setPracticing(false);
+                  else setPracticingMode(false);
                 } else {
                   play("error");
-                  setPracticing(false);
+                  setPracticingMode(false);
                 }
               }}
               inputRef={inputRef}
@@ -295,19 +318,38 @@ export function StoryWordsPanel({
           )}
 
           {!practicing && blankedSentence && (
-            <motion.div
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 420, damping: 22 }}
-              className="mt-2"
-            >
-              {/* Filled in the same primary color as the big word above (not
-                  a plain outline) — a deliberate visual echo, per explicit
-                  request, so the button reads as "practice THIS word." */}
-              <Button type="button" size="lg" onClick={() => setPracticing(true)}>
-                {t.lesson.practiceWord}
-              </Button>
-            </motion.div>
+            <div className="mt-2 flex items-center gap-3">
+              <motion.div
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 420, damping: 22 }}
+              >
+                {/* Filled in the same primary color as the big word above
+                    (not a plain outline) — a deliberate visual echo, per
+                    explicit request, so the button reads as "practice THIS
+                    word." */}
+                <Button type="button" size="lg" onClick={() => setPracticingMode(true)}>
+                  {t.lesson.practiceWord}
+                </Button>
+              </motion.div>
+
+              {/* Only once there's nothing left to advance to — reaching the
+                  last word (typically right after answering it correctly)
+                  is where a learner most needs a way out that isn't just
+                  "tap the disabled next arrow." Outline, not filled, so it
+                  reads as the secondary action next to تدرب. */}
+              {index === total - 1 && (
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 22 }}
+                >
+                  <Button type="button" variant="outline" size="lg" asChild>
+                    <Link href="/learn/stories">{t.lesson.backToStoriesLibrary}</Link>
+                  </Button>
+                </motion.div>
+              )}
+            </div>
           )}
         </motion.div>
       </AnimatePresence>
