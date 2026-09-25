@@ -1,13 +1,13 @@
 import type { SupportLocale } from "@/lib/i18n/locales";
 
 /**
- * Static, presentation-only metadata for the 11 curated Novels — a genre tag
+ * Static, presentation-only metadata for the 20 curated Novels — a genre tag
  * (shown instead of the Beginner/Intermediate tier the nonfiction Book
  * catalog uses, which reads oddly on a classic novel), a real reading-time
  * estimate (computed once from the actual sentence content via the same
  * formula as estimateMinutes in lib/levels.ts, not fetched live), and a
  * short teaser line pulled verbatim from each novel's own retelling for the
- * Featured card. Hardcoded rather than a new DB column/table: exactly 11
+ * Featured card. Hardcoded rather than a new DB column/table: exactly 20
  * known ids, changes only when new novels are curated by hand alongside
  * their content, and every string already has to be written and reviewed
  * directly regardless of where it lives.
@@ -193,6 +193,141 @@ export const NOVEL_META: Record<string, NovelMeta> = {
       tr: "Cansız bedeninin yakınındaki çamurda tuhaf derecede büyük pençe izleri keşfedildi",
     },
     estimatedMinutes: 53,
+  },
+  "book-novel-crime-punishment": {
+    genre: {
+      en: "Psychological drama",
+      ar: "دراما نفسية",
+      es: "Drama psicológico",
+      tr: "Psikolojik dram",
+    },
+    teaser: {
+      en: "He pawned a small silver watch just to study her apartment and her habits closely",
+      ar: "رهن ساعة فضية صغيرة لمجرد دراسة شقتها وعاداتها عن كثب",
+      es: "Empeñó un pequeño reloj de plata solo para estudiar de cerca su apartamento y sus costumbres",
+      tr: "Sadece dairesini ve alışkanlıklarını yakından incelemek için küçük gümüş bir saati rehine verdi",
+    },
+    estimatedMinutes: 62,
+  },
+  "book-novel-karamazov": {
+    genre: {
+      en: "Philosophical drama",
+      ar: "دراما فلسفية",
+      es: "Drama filosófico",
+      tr: "Felsefi dram",
+    },
+    teaser: {
+      en: "He told Alyosha a poem he had written about a returning Christ and a stern old Grand Inquisitor",
+      ar: "أخبر أليوشا بقصيدة كتبها عن عودة المسيح ومحقق أكبر عجوز صارم",
+      es: "Le contó a Aliosha un poema que había escrito sobre el regreso de Cristo y un severo y anciano Gran Inquisidor",
+      tr: "Alyoşa'ya, geri dönen İsa ve sert, yaşlı bir Büyük Engizisyoncu hakkında yazdığı bir şiiri anlattı",
+    },
+    estimatedMinutes: 67,
+  },
+  "book-novel-idiot": {
+    genre: {
+      en: "Tragic romance",
+      ar: "رومانسية مأساوية",
+      es: "Romance trágico",
+      tr: "Trajik romantizm",
+    },
+    teaser: {
+      en: "Rogozhin burst in dramatically and offered her a staggering hundred thousand rubles on the spot",
+      ar: "اقتحم روغوجين المكان بشكل درامي وعرض عليها على الفور مئة ألف روبل مذهلة",
+      es: "Rogozhin irrumpió dramáticamente y le ofreció en el acto la asombrosa suma de cien mil rublos",
+      tr: "Rogojin dramatik bir şekilde içeri daldı ve ona anında baş döndürücü yüz bin ruble teklif etti",
+    },
+    estimatedMinutes: 60,
+  },
+  "book-novel-hundred-years-solitude": {
+    genre: {
+      en: "Magical realism",
+      ar: "واقعية سحرية",
+      es: "Realismo mágico",
+      tr: "Büyülü gerçekçilik",
+    },
+    teaser: {
+      en: "She ascended calmly past the treetops, waving gently, and was never seen again by anyone",
+      ar: "صعدت بهدوء متجاوزة قمم الأشجار، تلوّح برفق، ولم يرها أحد مرة أخرى قط",
+      es: "Ascendió tranquilamente por encima de las copas de los árboles, saludando con la mano, y nadie volvió a verla jamás",
+      tr: "Ağaç tepelerinin üzerinden sakince yükseldi, hafifçe el salladı ve bir daha kimse tarafından görülmedi",
+    },
+    estimatedMinutes: 66,
+  },
+  "book-novel-memory-of-flesh": {
+    genre: {
+      en: "Literary romance",
+      ar: "رومانسية أدبية",
+      es: "Romance literario",
+      tr: "Edebi romantizm",
+    },
+    teaser: {
+      en: "She embodied his lost homeland, his lost youth, his lost arm, and his lost commander all at once",
+      ar: "جسّدت وطنه المفقود وشبابه المفقود وذراعه المفقودة وقائده المفقود كلهم في آن واحد",
+      es: "Ella encarnaba a la vez su patria perdida, su juventud perdida, su brazo perdido y su comandante perdido",
+      tr: "Kaybettiği vatanını, gençliğini, kolunu ve komutanını aynı anda somutlaştırıyordu",
+    },
+    estimatedMinutes: 53,
+  },
+  "book-novel-animal-farm": {
+    genre: {
+      en: "Political satire",
+      ar: "سخرية سياسية",
+      es: "Sátira política",
+      tr: "Siyasi hiciv",
+    },
+    teaser: {
+      en: "He taught them a stirring song called Beasts of England about that imagined animal paradise",
+      ar: "علّمهم أغنية مؤثرة اسمها وحوش إنجلترا عن تلك الجنة الحيوانية المتخيلة",
+      es: "Les enseñó una conmovedora canción llamada Bestias de Inglaterra sobre ese imaginado paraíso animal",
+      tr: "Onlara hayal edilen o hayvan cennetiyle ilgili İngiltere'nin Hayvanları adında etkileyici bir şarkı öğretti",
+    },
+    estimatedMinutes: 41,
+  },
+  "book-novel-letters-to-milena": {
+    genre: {
+      en: "Real correspondence",
+      ar: "مراسلات حقيقية",
+      es: "Correspondencia real",
+      tr: "Gerçek mektuplaşma",
+    },
+    teaser: {
+      en: "He once wrote that her letters were the only real air he had to breathe that week",
+      ar: "كتب مرة أن رسائلها كانت الهواء الحقيقي الوحيد الذي تنفسه ذلك الأسبوع",
+      es: "Una vez escribió que sus cartas eran el único aire real que tenía para respirar esa semana",
+      tr: "Bir keresinde onun mektuplarının o hafta solumak için sahip olduğu tek gerçek hava olduğunu yazdı",
+    },
+    estimatedMinutes: 42,
+  },
+  "book-novel-dear-theo": {
+    genre: {
+      en: "Artist's real letters",
+      ar: "رسائل فنان حقيقية",
+      es: "Cartas reales de un artista",
+      tr: "Bir Sanatçının Gerçek Mektupları",
+    },
+    teaser: {
+      en: "There he created Starry Night, its sky churning with the restless energy he felt inside himself",
+      ar: "هناك رسم ليلة النجوم، بسمائها المضطربة بالطاقة القلقة التي شعر بها في داخله",
+      es: "Allí creó La noche estrellada, con su cielo agitado por la energía inquieta que sentía en su interior",
+      tr: "Orada, içinde hissettiği huzursuz enerjiyle çalkalanan gökyüzüyle Yıldızlı Gece'yi yarattı",
+    },
+    estimatedMinutes: 44,
+  },
+  "book-novel-les-miserables": {
+    genre: {
+      en: "Epic redemption",
+      ar: "ملحمة خلاص",
+      es: "Épica de redención",
+      tr: "Destansı kurtuluş",
+    },
+    teaser: {
+      en: "Alone with Valjean, the bishop quietly told him his soul had just been bought for God",
+      ar: "بمفرده مع فالجان، أخبره الأسقف بهدوء أن روحه اشتُريت للتو من أجل الله",
+      es: "A solas con Valjean, el obispo le dijo en voz baja que su alma acababa de ser comprada para Dios",
+      tr: "Valjean'la yalnız kalan piskopos, ona ruhunun az önce Tanrı için satın alındığını sessizce söyledi",
+    },
+    estimatedMinutes: 65,
   },
 };
 

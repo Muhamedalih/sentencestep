@@ -5226,6 +5226,3887 @@ export const TRANSLATIONS: NovelTranslation[] = [
       },
     ],
   },
+  {
+    id: "book-novel-crime-punishment",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة فيودور دوستويفسكي عن راسكولينكوف، الطالب الفقير الذي تقوده نظريته عن الإنسان الخارق نحو جريمة قتل، ثم ببطء نحو الاعتراف والنعمة — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Fiódor Dostoievski sobre Raskólnikov, un estudiante pobre cuya teoría del hombre extraordinario lo conduce hacia el asesinato y, lentamente, hacia la confesión y la gracia — un relato personal, no el texto original.",
+      tr: "Fyodor Dostoyevski'nin, olağanüstü insan teorisi onu cinayete ve yavaşça itirafa ve lütfa sürükleyen yoksul öğrenci Raskolnikov'un hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "خطة يائسة", es: "Un plan desesperado", tr: "Çaresiz Bir Plan" },
+        sentences: [
+          {
+            ar: "كان راسكولينكوف طالبًا سابقًا فقيرًا يعيش في غرفة مستأجرة ضيقة في سانت بطرسبرغ",
+            es: "Raskólnikov era un pobre exestudiante que vivía en una habitación alquilada y estrecha en San Petersburgo",
+            tr: "Raskolnikov, St. Petersburg'da dar bir kiralık odada yaşayan yoksul, eski bir öğrenciydi",
+          },
+          {
+            ar: "توقف عن حضور المحاضرات وبالكاد كان يتحدث إلى أحد في المدينة المزدحمة من حوله",
+            es: "Había dejado de asistir a las clases y apenas hablaba con nadie en la ciudad abarrotada que lo rodeaba",
+            tr: "Derslere gitmeyi bırakmıştı ve çevresindeki kalabalık şehirde neredeyse kimseyle konuşmuyordu",
+          },
+          {
+            ar: "بنى في ذهنه نظرية باردة مفادها أن قلة من الرجال الخارقين يقفون فوق القانون العادي",
+            es: "En su mente había construido una fría teoría según la cual unos pocos hombres extraordinarios estaban por encima de la ley común",
+            tr: "Zihninde, birkaç olağanüstü insanın sıradan hukukun üzerinde durduğuna dair soğuk bir teori kurmuştu",
+          },
+          {
+            ar: "كان يعتقد أن الرجل العظيم حقًا يمكن أن يرتكب جريمة إذا كانت تخدم غاية أسمى",
+            es: "Creía que un hombre verdaderamente grande podía cometer un crimen si servía a un propósito superior",
+            tr: "Gerçekten büyük bir adamın, daha yüce bir amaca hizmet ediyorsa bir suç işleyebileceğine inanıyordu",
+          },
+          {
+            ar: "كانت مرابية عجوز تدعى ألينا إيفانوفنا تقرض المال بفوائد قاسية لأفقر سكان المدينة",
+            es: "Una vieja prestamista llamada Aliona Ivánovna prestaba dinero a tasas crueles a los más pobres de la ciudad",
+            tr: "Alyona Ivanovna adında yaşlı bir rehinci, şehrin en yoksullarına acımasız faizlerle para veriyordu",
+          },
+          {
+            ar: "بدأ راسكولينكوف يتخيل أن قتلها سيحرر ضحاياها ويثبت نظريته الخاصة",
+            es: "Raskólnikov comenzó a imaginar que matarla liberaría a sus víctimas y demostraría su propia teoría",
+            tr: "Raskolnikov, onu öldürmenin kurbanlarını özgürleştireceğini ve kendi teorisini kanıtlayacağını hayal etmeye başladı",
+          },
+          {
+            ar: "رهن ساعة فضية صغيرة لمجرد دراسة شقتها وعاداتها عن كثب",
+            es: "Empeñó un pequeño reloj de plata solo para estudiar de cerca su apartamento y sus costumbres",
+            tr: "Sadece dairesini ve alışkanlıklarını yakından incelemek için küçük gümüş bir saati rehine verdi",
+          },
+          {
+            ar: "تعاقب الشك والحمى في ذهنه لأيام قبل أن يقرر أخيرًا",
+            es: "La duda y la fiebre se persiguieron en su mente durante días antes de que finalmente decidiera",
+            tr: "Sonunda karar vermeden önce günlerce zihninde şüphe ve ateş birbirini kovaladı",
+          },
+          {
+            ar: "أخفى فأسًا تحت معطفه ومشى مرة أخرى نحو درجها الضيق",
+            es: "Bajo su abrigo escondió un hacha y caminó una vez más hacia su estrecha escalera",
+            tr: "Paltosunun altına bir balta sakladı ve bir kez daha onun dar merdivenine doğru yürüdü",
+          },
+        ],
+      },
+      {
+        title: { ar: "الجريمة", es: "El asesinato", tr: "Cinayet" },
+        sentences: [
+          {
+            ar: "فتحت ألينا إيفانوفنا بابها بريبة ولم تسمح له بالدخول إلا بفتحة ضيقة تدريجيًا",
+            es: "Aliona Ivánovna abrió la puerta con recelo y lo dejó entrar solo poco a poco, apenas una rendija",
+            tr: "Alyona Ivanovna kapıyı şüpheyle araladı ve onu içeri yalnızca azar azar aldı",
+          },
+          {
+            ar: "بينما كانت تفحص الرهن الذي أحضره، رفع الفأس وضربها فأسقطها",
+            es: "Mientras ella examinaba la prenda que él había traído, él levantó el hacha y la derribó",
+            tr: "O, getirdiği rehni incelerken, baltayı kaldırdı ve onu yere serdi",
+          },
+          {
+            ar: "بحث بجنون في غرفها عن المال والمجوهرات المخبأة بين الأغراض المرهونة القديمة",
+            es: "Buscó frenéticamente por sus habitaciones dinero y joyas escondidos entre viejos objetos empeñados",
+            tr: "Odalarında eski rehin eşyaları arasında saklı para ve mücevher aramak için çılgınca arandı",
+          },
+          {
+            ar: "عادت أختها الطيبة البسيطة العقل ليزافيتا بشكل مفاجئ ووجدته واقفًا فوق الجثة",
+            es: "Su hermana Lizaveta, dulce e ingenua, regresó inesperadamente y lo encontró de pie junto al cuerpo",
+            tr: "Onun sade kalpli, saf kız kardeşi Lizaveta beklenmedik şekilde döndü ve onu cesedin başında dikilirken buldu",
+          },
+          {
+            ar: "في نوبة ذعر ضربها هي الأخرى رغم أنه لم يقصد أبدًا إيذاءها",
+            es: "Presa del pánico, la golpeó a ella también, aunque nunca había querido hacerle daño",
+            tr: "Panik içinde ona da vurdu, oysa ona hiç zarar vermek istememişti",
+          },
+          {
+            ar: "سُمعت خطوات على الدرج وبالكاد تسلل هاربًا قبل أن يرى أحد وجهه",
+            es: "Se oyeron pasos en la escalera y apenas logró escabullirse antes de que alguien viera su rostro",
+            tr: "Merdivenlerde ayak sesleri duyuldu ve kimse yüzünü görmeden zar zor sıvıştı",
+          },
+          {
+            ar: "ترنح عائدًا إلى منزله عبر الشوارع متيقنًا أن كل عابر سبيل يستطيع رؤية ذنبه",
+            es: "Tambaleándose, volvió a casa por las calles, seguro de que cada transeúnte podía ver su culpa",
+            tr: "Sokaklardan sendeleyerek eve döndü, her yoldan geçenin suçluluğunu görebileceğinden emindi",
+          },
+          {
+            ar: "أخفى المحفظة المسروقة والحلي الصغيرة تحت حجر في فناء مهجور",
+            es: "Escondió el monedero robado y las baratijas bajo una piedra en un patio desierto",
+            tr: "Çalınan keseyi ve ıvır zıvırı ıssız bir avludaki bir taşın altına sakladı",
+          },
+          {
+            ar: "في تلك الليلة تملكته حمى عنيفة ولزم غرفته أيامًا",
+            es: "Esa noche una fiebre violenta se apoderó de él y permaneció en su habitación durante días",
+            tr: "O gece şiddetli bir ateş onu esir aldı ve günlerce odasında yattı",
+          },
+        ],
+      },
+      {
+        title: { ar: "حمى وشكوك", es: "Fiebre y sospecha", tr: "Ateş ve Şüphe" },
+        sentences: [
+          {
+            ar: "عندما تعافى، علم أن الشرطة تشتبه بالفعل بعاملين كانا يقومان بأعمال الدهان في الجوار",
+            es: "Cuando se recuperó, supo que la policía ya sospechaba de dos obreros que habían estado pintando cerca",
+            tr: "İyileştiğinde, polisin yakınlarda boya işi yapan iki işçiden zaten şüphelendiğini öğrendi",
+          },
+          {
+            ar: "بدأ محقق بارع يُدعى بورفيري بتروفيتش يقترب بهدوء من الحقيقة",
+            es: "Un brillante investigador llamado Porfiri Petróvich comenzó a acercarse silenciosamente a la verdad",
+            tr: "Porfiri Petroviç adında parlak bir müfettiş, sessizce gerçeğe yaklaşmaya başladı",
+          },
+          {
+            ar: "لم يتهمه بورفيري صراحة أبدًا لكنه طرح أسئلة بدت كفخاخ صغيرة تُطبق شيئًا فشيئًا",
+            es: "Porfiri nunca lo acusó abiertamente, pero hacía preguntas que parecían pequeñas trampas que se cerraban",
+            tr: "Porfiri onu hiç açıkça suçlamadı ama sorduğu sorular küçük, kapanan tuzaklar gibi hissettiriyordu",
+          },
+          {
+            ar: "نشر راسكولينكوف مقالًا قديمًا يدافع فيه عن نظريته حول الرجال الخارقين دون أن يقصد كشف نفسه",
+            es: "Raskólnikov había publicado un viejo artículo defendiendo su teoría del hombre extraordinario sin intención de delatarse",
+            tr: "Raskolnikov, kendini ele vermeyi amaçlamadan, olağanüstü insanlar teorisini savunan eski bir makale yayımlamıştı",
+          },
+          {
+            ar: "قرأ بورفيري المقال بعناية وبدا وكأنه يتعرف على عقل القاتل خلفه",
+            es: "Porfiri leyó el artículo con atención y pareció reconocer en él la mente del asesino",
+            tr: "Porfiri makaleyi dikkatle okudu ve ardındaki katilin zihnini tanıyor gibiydi",
+          },
+          {
+            ar: "تحولت كل محادثة مهذبة بينهما إلى معركة هادئة من الأعصاب والتلميحات",
+            es: "Cada conversación cortés entre ellos se convertía en una silenciosa batalla de nervios e insinuaciones",
+            tr: "Aralarındaki her nazik konuşma, sessiz bir sinir ve ima savaşına dönüşüyordu",
+          },
+          {
+            ar: "ازداد شحوب راسكولينكوف وانطواؤه مقتنعًا بأن بورفيري يعرف كل شيء بالفعل",
+            es: "Raskólnikov se volvía cada vez más pálido y retraído, convencido de que Porfiri ya lo sabía todo",
+            tr: "Raskolnikov, Porfiri'nin zaten her şeyi bildiğine ikna olmuş halde giderek daha solgun ve içine kapanık hale geldi",
+          },
+          {
+            ar: "مع ذلك لم يكن هناك دليل حقيقي وكان على بورفيري فقط أن ينتظر حتى تحطمه الحقيقة",
+            es: "Aun así no existía ninguna prueba real y Porfiri solo podía esperar a que la verdad lo quebrara",
+            tr: "Yine de gerçek bir kanıt yoktu ve Porfiri yalnızca gerçeğin onu kırmasını bekleyebilirdi",
+          },
+        ],
+      },
+      {
+        title: { ar: "عائلة مارميلادوف", es: "La familia Marmeládov", tr: "Marmeladov Ailesi" },
+        sentences: [
+          {
+            ar: "أثناء تجواله في الشوارع، التقى راسكولينكوف بموظف سكير محطم يُدعى مارميلادوف في حانة",
+            es: "Vagando por las calles, Raskólnikov conoció en una taberna a un oficinista arruinado y borracho llamado Marmeládov",
+            tr: "Sokaklarda dolaşırken Raskolnikov, bir meyhanede Marmeladov adında harap olmuş, sarhoş bir memurla tanıştı",
+          },
+          {
+            ar: "اعترف مارميلادوف بالدموع أن عائلته تتضور جوعًا بسبب ضعفه أمام الشراب",
+            es: "Marmeládov confesó entre lágrimas que su familia se moría de hambre por su propia debilidad ante la bebida",
+            tr: "Marmeladov gözyaşları içinde, ailesinin kendi içki zaafı yüzünden açlıktan kıvrandığını itiraf etti",
+          },
+          {
+            ar: "أُجبرت ابنته سونيا على العمل بالدعارة لإطعام زوجة أبيها وإخوتها غير الأشقاء الصغار",
+            es: "Su hija Sonia se había visto forzada a prostituirse para alimentar a su madrastra y a sus pequeños medio hermanos",
+            tr: "Kızı Sonya, üvey annesini ve küçük üvey kardeşlerini besleyebilmek için fuhşa zorlanmıştı",
+          },
+          {
+            ar: "سرعان ما سُحق مارميلادوف تحت عربة في الشارع ومات في منزله",
+            es: "Poco después Marmeládov fue aplastado por un carruaje en la calle y murió en su propia casa",
+            tr: "Marmeladov kısa süre sonra sokakta bir arabanın altında ezildi ve kendi evinde öldü",
+          },
+          {
+            ar: "أعطى راسكولينكوف آخر ما يملك من نقود للعائلة الحزينة دون أن يعرف تمامًا السبب",
+            es: "Raskólnikov dio sus últimas monedas a la familia doliente sin saber del todo por qué",
+            tr: "Raskolnikov, tam olarak nedenini bilmeden son parasını yas tutan aileye verdi",
+          },
+          {
+            ar: "التقى هناك بسونيا للمرة الأولى، شاحبة، خائفة، وصبورة بلا حدود مع عائلتها",
+            es: "Allí conoció a Sonia por primera vez, pálida, asustada e infinitamente paciente con su familia",
+            tr: "Orada Sonya ile ilk kez tanıştı; solgun, korkmuş ve ailesine karşı sonsuz sabırlıydı",
+          },
+          {
+            ar: "كان هناك شيء في معاناتها الصامتة يشبه الظلام الذي يحمله في داخله",
+            es: "Algo en su sufrimiento silencioso coincidía con la oscuridad que él llevaba dentro",
+            tr: "Onun sessiz acısında, kendi içinde taşıdığı karanlıkla örtüşen bir şey vardı",
+          },
+          {
+            ar: "وجد نفسه يعود إلى غرفتها الصغيرة المستأجرة مرارًا وتكرارًا بعد تلك الليلة",
+            es: "Después de aquella noche se descubrió regresando una y otra vez a su pequeña habitación alquilada",
+            tr: "O geceden sonra kendini defalarca onun küçük kiralık odasına dönerken buldu",
+          },
+        ],
+      },
+      {
+        title: { ar: "سونيا", es: "Sonia", tr: "Sonya" },
+        sentences: [
+          {
+            ar: "عاشت سونيا حياة متواضعة، شمعة واحدة ونسخة بالية من العهد الجديد",
+            es: "Sonia vivía con humildad, con una sola vela y un ejemplar gastado del Nuevo Testamento",
+            tr: "Sonya, tek bir mum ve yıpranmış bir İncil nüshasıyla mütevazı bir hayat sürüyordu",
+          },
+          {
+            ar: "في إحدى الأمسيات طلب راسكولينكوف منها أن تقرأ له قصة لعازر الذي أُقيم من الموت",
+            es: "Una noche Raskólnikov le pidió que le leyera la historia de Lázaro resucitado de entre los muertos",
+            tr: "Bir akşam Raskolnikov, ondan ölümden dirilen Lazarus'un hikayesini okumasını istedi",
+          },
+          {
+            ar: "ارتجف صوتها بإيمان لم يعد يظن أنه قادر على مشاركتها فيه",
+            es: "Su voz temblaba con una fe que él ya no creía poder llegar a compartir",
+            tr: "Sesi, artık asla paylaşabileceğine inanmadığı bir imanla titriyordu",
+          },
+          {
+            ar: "أحس أنها هي الأخرى تجاوزت حدًا رهيبًا لكنها لم تفقد روحها قط",
+            es: "Sintió que ella también había cruzado una línea terrible, pero nunca había perdido su alma",
+            tr: "Onun da korkunç bir sınırı geçtiğini ama ruhunu hiç kaybetmediğini hissetti",
+          },
+          {
+            ar: "بدأ يشعر ببطء أنها وحدها القادرة على فهم ما فعله",
+            es: "Poco a poco comenzó a sentir que solo ella podía entender lo que él había hecho",
+            tr: "Yavaş yavaş, yaptığı şeyi yalnızca onun anlayabileceğini hissetmeye başladı",
+          },
+          {
+            ar: "لمّح إلى أمور فظيعة دون أن ينطق بكلمة قتل أمامها بعد",
+            es: "Insinuó cosas terribles sin llegar todavía a decirle en voz alta la palabra asesinato",
+            tr: "Ona henüz cinayet kelimesini yüksek sesle söylemeden korkunç şeyler ima etti",
+          },
+          {
+            ar: "توسلت إليه سونيا أن يعترف ويقبل معاناته ليُغفر له يومًا ما",
+            es: "Sonia le suplicó que confesara y aceptara su sufrimiento para que algún día pudiera ser perdonado",
+            tr: "Sonya, bir gün affedilebilmesi için itiraf etmesi ve acısını kabullenmesi için ona yalvardı",
+          },
+          {
+            ar: "غادرها تلك الليلة وهو أكثر اضطرابًا مما كان عليه منذ الجريمة نفسها",
+            es: "Aquella noche la dejó más conmocionado de lo que había estado desde el propio asesinato",
+            tr: "O gece onun yanından, cinayetten bu yana olduğundan daha sarsılmış halde ayrıldı",
+          },
+        ],
+      },
+      {
+        title: { ar: "لعبة بورفيري", es: "El juego de Porfiri", tr: "Porfiri'nin Oyunu" },
+        sentences: [
+          {
+            ar: "دعا بورفيري راسكولينكوف إلى محادثة طويلة أخرى مليئة بالمنعطفات الحادة المفاجئة",
+            es: "Porfiri invitó a Raskólnikov a otra larga conversación llena de giros bruscos y repentinos",
+            tr: "Porfiri, Raskolnikov'u ani ve keskin dönüşlerle dolu bir başka uzun sohbete davet etti",
+          },
+          {
+            ar: "وصف بخفة تقريبًا كيف يمكن لأعصاب المذنب أن تخونه في النهاية بالضبط",
+            es: "Describió, casi con ligereza, exactamente cómo los nervios de un hombre culpable podrían finalmente traicionarlo",
+            tr: "Neredeyse hafif bir tonla, suçlu bir adamın sinirlerinin onu tam olarak nasıl ele vereceğini anlattı",
+          },
+          {
+            ar: "كاد راسكولينكوف ينهار لكنه تمكن من مغادرة الغرفة وهو لا يزال حرًا من الناحية الرسمية",
+            es: "Raskólnikov estuvo a punto de derrumbarse, pero logró salir de la habitación técnicamente aún libre",
+            tr: "Raskolnikov neredeyse çökecekti ama odadan teknik olarak hâlâ özgür şekilde ayrılmayı başardı",
+          },
+          {
+            ar: "اقترب منه لاحقًا غريب في الشارع وهمس ببساطة بكلمة قاتل",
+            es: "Más tarde un desconocido se le acercó en la calle y simplemente susurró la palabra asesino",
+            tr: "Daha sonra sokakta bir yabancı ona yaklaştı ve sadece katil kelimesini fısıldadı",
+          },
+          {
+            ar: "لم يستطع راسكولينكوف معرفة ما إذا كان الرجل يعرف حقًا أم أن الذنب نفسه هو من يتكلم",
+            es: "Raskólnikov no podía saber si aquel hombre realmente sabía algo o si era su propia culpa la que hablaba",
+            tr: "Raskolnikov, adamın gerçekten bilip bilmediğini yoksa konuşanın suçluluğun kendisi mi olduğunu anlayamadı",
+          },
+          {
+            ar: "تجول في المدينة ليلًا عاجزًا عن الأكل أو النوم أو التفكير في أي شيء آخر",
+            es: "Vagaba por la ciudad de noche, incapaz de comer, dormir o pensar en otra cosa",
+            tr: "Geceleri şehirde dolaşıyor, yiyemiyor, uyuyamıyor ya da başka bir şey düşünemiyordu",
+          },
+          {
+            ar: "عاد ذات مرة إلى شقة المرأة المقتولة الفارغة وطرح على العمال أسئلة غريبة",
+            es: "Una vez regresó al apartamento vacío de la mujer asesinada e hizo a los obreros preguntas extrañas",
+            tr: "Bir kez öldürülen kadının boş dairesine döndü ve işçilere garip sorular sordu",
+          },
+          {
+            ar: "لم تزده غرابته المتزايدة إلا مظهرًا أكثر إثارة للريبة في نظر من حوله",
+            es: "Su creciente rareza solo lograba hacerlo parecer más sospechoso ante todos los que lo rodeaban",
+            tr: "Giderek artan tuhaflığı, çevresindeki herkese daha şüpheli görünmesine yol açmaktan başka bir işe yaramıyordu",
+          },
+          {
+            ar: "قال له بورفيري بوضوح إنه لم يعد أمامه أي مكان في العالم يهرب إليه",
+            es: "Porfiri le dijo claramente que ya no le quedaba ningún lugar en el mundo adonde huir",
+            tr: "Porfiri ona açıkça, dünyada artık kaçacak hiçbir yeri kalmadığını söyledi",
+          },
+        ],
+      },
+      {
+        title: { ar: "سفيدريغايلوف", es: "Svidrigáilov", tr: "Svidrigaylov" },
+        sentences: [
+          {
+            ar: "في هذه الأثناء وصل إلى المدينة من الريف مالك أراضٍ ثري ومقلق يُدعى سفيدريغايلوف",
+            es: "Mientras tanto, un rico e inquietante terrateniente llamado Svidrigáilov llegó a la ciudad desde el campo",
+            tr: "Bu sırada, kırsaldan şehre zengin ve tedirgin edici bir toprak sahibi olan Svidrigaylov geldi",
+          },
+          {
+            ar: "كان مرتبطًا بأخت راسكولينكوف دونيا من خلال ماضٍ قديم مقلق من الهوس",
+            es: "Estaba vinculado a Dunia, la hermana de Raskólnikov, a través de una vieja y turbadora historia de obsesión",
+            tr: "Raskolnikov'un kız kardeşi Dunya ile eski, rahatsız edici bir saplantı geçmişiyle bağlantılıydı",
+          },
+          {
+            ar: "بدا سفيدريغايلوف وكأنه يستشعر، بخفة تقارب المزاح، الظلام المختبئ خلف كبرياء راسكولينكوف",
+            es: "Svidrigáilov parecía percibir, casi con picardía, la oscuridad oculta bajo la actitud orgullosa de Raskólnikov",
+            tr: "Svidrigaylov, Raskolnikov'un gururlu tavrının altında gizlenen karanlığı neredeyse şakacı bir şekilde sezmiş gibiydi",
+          },
+          {
+            ar: "استأجر غرفة يفصلها جدار رقيق عن شقة سونيا الصغيرة",
+            es: "Alquiló una habitación que compartía una pared delgada con el pequeño apartamento de Sonia",
+            tr: "Sonya'nın küçük dairesiyle ince bir duvarı paylaşan bir oda kiraladı",
+          },
+          {
+            ar: "من خلال ذلك الجدار سمع خلسة راسكولينكوف وهو يعترف أخيرًا لها بالجريمة",
+            es: "A través de esa pared escuchó en secreto cómo Raskólnikov finalmente le confesaba el asesinato a ella",
+            tr: "O duvarın arkasından, Raskolnikov'un cinayeti sonunda ona itiraf edişini gizlice duydu",
+          },
+          {
+            ar: "صار سفيدريغايلوف يملك الآن سلطة خاصة رهيبة على حرية راسكولينكوف وسلام عائلته",
+            es: "Svidrigáilov ahora poseía un terrible poder secreto sobre la libertad de Raskólnikov y la paz de su familia",
+            tr: "Svidrigaylov artık Raskolnikov'un özgürlüğü ve ailesinin huzuru üzerinde korkunç, gizli bir güce sahipti",
+          },
+          {
+            ar: "استخدم ما يعرفه للضغط على دونيا، وحاصرها وحيدة في غرفته المستأجرة",
+            es: "Usó lo que sabía para presionar a Dunia, acorralándola a solas en su habitación alquilada",
+            tr: "Bildiklerini Dunya'ya baskı yapmak için kullandı, onu kendi kiralık odasında yalnız köşeye sıkıştırdı",
+          },
+          {
+            ar: "عندما رفضته تمامًا بل وأطلقت عليه رصاصة من مسدس، انكسر شيء بداخله",
+            es: "Cuando ella lo rechazó por completo e incluso le disparó con una pistola, algo en él se quebró",
+            tr: "Onu tamamen reddedip üstüne bir tabancayla ateş ettiğinde, içindeki bir şey kırıldı",
+          },
+        ],
+      },
+      {
+        title: { ar: "نقطة الانهيار", es: "Punto de quiebre", tr: "Kırılma Noktası" },
+        sentences: [
+          {
+            ar: "جاءت والدة راسكولينكوف وأخته إلى المدينة يتوقعان له حياة جديدة مفعمة بالأمل",
+            es: "La madre y la hermana de Raskólnikov habían llegado a la ciudad esperando para él una nueva vida llena de esperanza",
+            tr: "Raskolnikov'un annesi ve kız kardeşi, onun için umut dolu yeni bir hayat bekleyerek şehre gelmişti",
+          },
+          {
+            ar: "لكنهما بدلًا من ذلك شاهدتاه يزداد شحوبًا وبرودًا وغرابة مع كل زيارة",
+            es: "En cambio lo veían volverse más pálido, más frío y más extraño con cada visita",
+            tr: "Bunun yerine onun her ziyarette daha solgun, daha soğuk ve daha tuhaf olduğunu gördüler",
+          },
+          {
+            ar: "بدأت دونيا تدريجيًا تشتبه بالحقيقة قبل أن يجرؤ أحد على قولها بصوت عالٍ",
+            es: "Dunia poco a poco comenzó a sospechar la verdad mucho antes de que alguien se atreviera a decirla en voz alta",
+            tr: "Dunya, kimse yüksek sesle söylemeye cesaret edemeden çok önce gerçeği sezmeye başlamıştı",
+          },
+          {
+            ar: "شعر راسكولينكوف بجدران حياته القديمة تنغلق عليه من كل اتجاه",
+            es: "Raskólnikov sentía que las paredes de su antigua vida se cerraban sobre él desde todas direcciones",
+            tr: "Raskolnikov, eski hayatının duvarlarının her yönden üzerine kapandığını hissetti",
+          },
+          {
+            ar: "تجول مرة أخرى نحو مفترق الطرق حيث توسلت إليه سونيا يومًا أن يعترف",
+            es: "Vagó una vez más hasta la encrucijada donde Sonia le había suplicado que confesara",
+            tr: "Bir kez daha, Sonya'nın ona itiraf etmesi için yalvardığı kavşağa doğru yürüdü",
+          },
+          {
+            ar: "ركع وقبّل الأرض القذرة، رغم أنه لم يستطع بعد إتمام الكلمات",
+            es: "Se arrodilló y besó el suelo sucio, aunque todavía no pudo terminar las palabras",
+            tr: "Diz çöküp kirli toprağı öptü, ama sözlerini henüz bitiremedi",
+          },
+          {
+            ar: "لم يفعل الحشد من الغرباء سوى الضحك، ظانّين أن يأسه مجرد سُكر",
+            es: "Una multitud de desconocidos solo se rió, confundiendo su desesperación con simple embriaguez",
+            tr: "Bir grup yabancı sadece güldü, umutsuzluğunu sıradan bir sarhoşlukla karıştırdılar",
+          },
+          {
+            ar: "أما سفيدريغايلوف فوحيدًا في تلك الليلة نفسها، وزّع ماله بهدوء واختفى في الظلام",
+            es: "Svidrigáilov, solo esa misma noche, repartió su dinero en silencio y desapareció en la oscuridad",
+            tr: "Svidrigaylov o gece yalnız başına sessizce parasını dağıttı ve karanlığa karıştı",
+          },
+        ],
+      },
+      {
+        title: { ar: "الاعتراف", es: "La confesión", tr: "İtiraf" },
+        sentences: [
+          {
+            ar: "بحلول الصباح كان سفيدريغايلوف قد مات بيده في غرفة مستأجرة رخيصة",
+            es: "Al amanecer, Svidrigáilov había muerto por su propia mano en una habitación alquilada barata",
+            tr: "Sabah olduğunda Svidrigaylov ucuz bir kiralık odada kendi eliyle ölmüştü",
+          },
+          {
+            ar: "مشى راسكولينكوف، وقد صار جوفًا من الداخل، أخيرًا نحو مركز الشرطة دون أي خطة على الإطلاق",
+            es: "Raskólnikov, vacío por dentro, caminó por fin hacia la comisaría sin ningún plan en absoluto",
+            tr: "İçi boşalmış Raskolnikov, hiçbir plan yapmadan sonunda karakola doğru yürüdü",
+          },
+          {
+            ar: "كاد يعود أدراجه عند الباب، إذ ثارت كبرياؤه القديمة لمرة أخيرة",
+            es: "Casi dio media vuelta en la puerta, cuando su vieja soberbia resurgió por última vez",
+            tr: "Kapının önünde neredeyse geri dönüyordu; eski gururu bir kez daha kabardı",
+          },
+          {
+            ar: "ثم فكر في سونيا واقفة في مكان ما بين الحشد، تراقبه، لا تزال تنتظره",
+            es: "Entonces pensó en Sonia, de pie en algún lugar entre la multitud, observando, todavía esperándolo",
+            tr: "Sonra kalabalığın bir yerinde duran, izleyen, hâlâ onu bekleyen Sonya'yı düşündü",
+          },
+          {
+            ar: "دخل واعترف بهدوء بجريمة قتل المرأتين كلتيهما",
+            es: "Entró y confesó en voz baja los asesinatos de ambas mujeres",
+            tr: "İçeri girdi ve her iki kadının da cinayetini sessizce itiraf etti",
+          },
+          {
+            ar: "بالكاد صدّق الضباط، الذين كانوا يشتبهون به نصف الوقت منذ أسابيع، مدى بساطة الأمر",
+            es: "Los oficiales, que llevaban semanas medio sospechando de él, apenas podían creer lo sencillo que había sido",
+            tr: "Haftalardır ondan yarı yarıya şüphelenen memurlar, bunun ne kadar basit olduğuna neredeyse inanamadı",
+          },
+          {
+            ar: "بكت سونيا لكنها لم تنظر إليه ولو للحظة بأي شيء يقارب الاشمئزاز",
+            es: "Sonia lloró, pero ni una sola vez lo miró con algo parecido al desprecio",
+            tr: "Sonya ağladı ama bir kez bile ona tiksintiye yakın bir şeyle bakmadı",
+          },
+          {
+            ar: "وعدته بأن تتبعه أينما أخذته عقوبته في النهاية",
+            es: "Le prometió seguirlo a donde su castigo finalmente lo llevara",
+            tr: "Cezasının onu nereye götürürse götürsün peşinden gideceğine söz verdi",
+          },
+          {
+            ar: "حُكم عليه بثماني سنوات من الأشغال الشاقة في معسكر اعتقال سيبيري",
+            es: "Fue condenado a ocho años de trabajos forzados en un campo de prisioneros de Siberia",
+            tr: "Sibirya'da bir çalışma kampında sekiz yıl ağır işçilik cezasına çarptırıldı",
+          },
+        ],
+      },
+      {
+        title: { ar: "سيبيريا", es: "Siberia", tr: "Sibirya" },
+        sentences: [
+          {
+            ar: "انتقلت سونيا إلى البلدة الصغيرة القريبة من السجن لمجرد أن تبقى قريبة منه",
+            es: "Sonia se mudó al pequeño pueblo cercano a la prisión solo para permanecer cerca de él",
+            tr: "Sonya, sadece ona yakın kalabilmek için hapishaneye yakın küçük kasabaya taşındı",
+          },
+          {
+            ar: "في البداية ظل راسكولينكوف فخورًا ونائيًا حتى عن زياراتها الصبورة المستمرة",
+            es: "Al principio Raskólnikov permaneció orgulloso y distante incluso ante sus constantes y pacientes visitas",
+            tr: "Başlarda Raskolnikov, onun sürekli ve sabırlı ziyaretlerine karşı bile gururlu ve mesafeli kaldı",
+          },
+          {
+            ar: "غريبًا، وثق السجناء الآخرون بل وأحبوا حضور سونيا اللطيف الخالي من الشكوى",
+            es: "Curiosamente, los demás presos confiaban e incluso llegaron a querer la presencia dulce y sin quejas de Sonia",
+            tr: "Diğer mahkumlar garip bir şekilde Sonya'nın nazik ve şikayetsiz varlığına güvendi, hatta onu sevdi",
+          },
+          {
+            ar: "ببطء، خلال شتاء سيبيري طويل وبارد، بدأ شيء قاسٍ بداخله يلين",
+            es: "Poco a poco, a lo largo de un largo y frío invierno siberiano, algo duro en él comenzó a ablandarse",
+            tr: "Yavaşça, uzun ve soğuk bir Sibirya kışı boyunca içindeki sert bir şey yumuşamaya başladı",
+          },
+          {
+            ar: "في أحد الأيام على ضفة النهر، انهار أخيرًا وبكى عند قدميها",
+            es: "Un día, junto al río, finalmente se derrumbó y lloró a sus pies",
+            tr: "Bir gün nehir kenarında sonunda çöktü ve ayaklarının dibinde ağladı",
+          },
+          {
+            ar: "للمرة الأولى شعر بشيء أكبر من نظريته القديمة الباردة عن العظمة",
+            es: "Por primera vez sintió algo más grande que su vieja y fría teoría de la grandeza",
+            tr: "İlk kez, büyüklük hakkındaki o eski soğuk teorisinden daha büyük bir şey hissetti",
+          },
+          {
+            ar: "التقط نسختها البالية من العهد الجديد، نفس النسخة التي قرأتها له",
+            es: "Tomó su gastado Nuevo Testamento, el mismo que ella le había leído",
+            tr: "Onun yıpranmış İncil'ini eline aldı, ona okuduğu aynı nüshayı",
+          },
+          {
+            ar: "لم يفهم بعد سعادته الجديدة لكنه استطاع أن يشعر ببدايتها",
+            es: "Todavía no comprendía su nueva felicidad, pero podía sentir que comenzaba",
+            tr: "Yeni mutluluğunu henüz anlamıyordu ama başladığını hissedebiliyordu",
+          },
+          {
+            ar: "كان أمامهما معًا سبع سنوات أخرى، وللمرة الأولى، أمل حقيقي",
+            es: "Ante ambos quedaban siete años más y, por primera vez, una esperanza real",
+            tr: "İkisinin de önünde yedi yıl daha vardı ve ilk kez gerçek bir umut",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-karamazov",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة فيودور دوستويفسكي عن ثلاثة إخوة — ديمتري المتّقد العاطفة، وإيفان الشكّاك، وأليوشا الرقيق — يجمعهم مقتل أبيهم وبحث كل منهم المختلف تمامًا عن الإيمان — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Fiódor Dostoievski sobre tres hermanos — el apasionado Dmitri, el escéptico Iván y el gentil Aliosha — unidos por el asesinato de su padre y por búsquedas muy distintas de la fe — un relato personal, no el texto original.",
+      tr: "Fyodor Dostoyevski'nin, babalarının cinayeti ve inanca dair çok farklı arayışlarıyla birbirine bağlanan üç kardeş — tutkulu Dmitri, şüpheci İvan ve nazik Alyoşa — hakkındaki hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "عائلة كارامازوف", es: "La familia Karamázov", tr: "Karamazov Ailesi" },
+        sentences: [
+          {
+            ar: "كان فيودور بافلوفيتش كارامازوف العجوز رجلاً ثريًا مبتذلاً لا يهتم إلا بالمال والملذات",
+            es: "El viejo Fiódor Pávlovich Karamázov era un hombre rico y vulgar que solo se preocupaba por el dinero y el placer",
+            tr: "Yaşlı Fyodor Pavloviç Karamazov, yalnızca para ve zevkle ilgilenen zengin, kaba bir adamdı",
+          },
+          {
+            ar: "أنجب ثلاثة أبناء مختلفين تمامًا وأهملهم جميعًا تقريبًا عندما كانوا أطفالًا",
+            es: "Había engendrado a tres hijos muy distintos y prácticamente había ignorado a todos ellos de niños",
+            tr: "Birbirinden çok farklı üç oğlu olmuştu ve çocukken neredeyse hepsini ihmal etmişti",
+          },
+          {
+            ar: "كان ديمتري، الابن الأكبر، متّقد العاطفة ومتهورًا وسريع الوقوع في الحب أو الغضب",
+            es: "Dmitri, el mayor, era apasionado, temerario y rápido tanto para amar como para enfurecerse",
+            tr: "En büyükleri Dmitri, tutkulu, pervasız, sevmeye ya da öfkelenmeye hazır biriydi",
+          },
+          {
+            ar: "أما إيفان، الابن الثاني، فكان مفكرًا بارعًا وباردًا يشك في كل شيء حتى في وجود الله نفسه",
+            es: "Iván, el segundo hijo, era un pensador brillante y frío que dudaba de todo, incluso de Dios mismo",
+            tr: "İkinci oğul İvan, her şeyden, hatta Tanrı'nın kendisinden bile şüphe eden soğuk, parlak bir düşünürdü",
+          },
+          {
+            ar: "أما أليوشا، الأصغر، فكان رقيقًا وتقيًا وقد التحق بدير قريب كراهب مبتدئ",
+            es: "Aliosha, el menor, era gentil y devoto, y había ingresado como novicio en un monasterio cercano",
+            tr: "En küçükleri Alyoşa ise nazik ve dindardı, yakındaki bir manastıra acemi keşiş olarak girmişti",
+          },
+          {
+            ar: "كانت الشائعات تهمس أيضًا بوجود ابن رابع، سميردياكوف، وُلد لخادمة ونشأ ليعمل طاهيًا",
+            es: "También corrían rumores de un cuarto hijo, Smerdiakov, nacido de una sirvienta y criado como cocinero",
+            tr: "Söylentiler ayrıca bir hizmetçiden doğan ve aşçı olarak yetiştirilen dördüncü bir oğul, Smerdyakov'dan da bahsediyordu",
+          },
+          {
+            ar: "كان سميردياكوف يخدم الرجل العجوز بصمت بينما كان يكرهه سرًا أكثر مما يعرف أحد",
+            es: "Smerdiakov servía al anciano en silencio mientras en privado lo despreciaba más de lo que nadie sabía",
+            tr: "Smerdyakov yaşlı adama sessizce hizmet ederken, içten içe kimsenin bilmediği kadar ondan nefret ediyordu",
+          },
+          {
+            ar: "تجمع الإخوة الثلاثة، المختلفون تمامًا عن بعضهم، ببطء في بلدة أبيهم الريفية",
+            es: "Los tres hermanos, tan distintos entre sí, fueron reuniéndose poco a poco en la ciudad provinciana de su padre",
+            tr: "Birbirlerinden çok farklı olan üç kardeş, yavaş yavaş babalarının taşra kasabasında bir araya geldi",
+          },
+          {
+            ar: "كان بينهم ضغائن قديمة وميراث لم يُدفع بعد وإغراء خطير مشترك واحد",
+            es: "Entre ellos había viejos rencores, una herencia sin pagar y una peligrosa tentación compartida",
+            tr: "Aralarında eski kırgınlıklar, ödenmemiş bir miras ve tehlikeli, ortak bir baştan çıkarma vardı",
+          },
+        ],
+      },
+      {
+        title: { ar: "ديمتري وأبوه", es: "Dmitri y su padre", tr: "Dmitri ve Babası" },
+        sentences: [
+          {
+            ar: "كان ديمتري يعتقد أن أباه مدين له بجزء كبير من ثروة والدته الراحلة",
+            es: "Dmitri creía que su padre le debía una gran parte de la fortuna de su difunta madre",
+            tr: "Dmitri, babasının ona merhum annesinin servetinin büyük bir kısmını borçlu olduğuna inanıyordu",
+          },
+          {
+            ar: "لكن فيودور بافلوفيتش سخر منه بدلًا من ذلك ورفض أن يسلمه روبلًا واحدًا",
+            es: "En cambio, Fiódor Pávlovich se burlaba de él y se negaba a entregarle un solo rublo",
+            tr: "Fyodor Pavloviç ise onunla alay etti ve tek bir ruble bile vermeyi reddetti",
+          },
+          {
+            ar: "أصبحت مشاجراتهما عنيفة لدرجة أن ديمتري ضرب أباه ذات مرة وهدده",
+            es: "Sus discusiones se volvieron tan violentas que Dmitri llegó a golpear y amenazar a su propio padre",
+            tr: "Tartışmaları öyle şiddetlendi ki Dmitri bir keresinde kendi babasına vurdu ve onu tehdit etti",
+          },
+          {
+            ar: "والأغرب أن كلا الرجلين وقعا في غرام المرأة الجميلة نفسها في البلدة",
+            es: "De manera absurda, ambos hombres también se habían enamorado de la misma mujer hermosa del pueblo",
+            tr: "Saçma bir şekilde, ikisi de kasabadaki aynı güzel kadına aşık olmuştu",
+          },
+          {
+            ar: "كانت حاجة ديمتري اليائسة للمال وغيرته يغذي أحدهما الآخر يومًا بعد يوم",
+            es: "La desesperada necesidad de dinero de Dmitri y sus celos se alimentaban mutuamente día tras día",
+            tr: "Dmitri'nin paraya olan çaresiz ihtiyacı ve kıskançlığı gün geçtikçe birbirini besliyordu",
+          },
+          {
+            ar: "استدان وتوسل من كل من يعرفه، وغرق أكثر فأكثر في العار والديون",
+            es: "Pidió prestado y suplicó a todos los que conocía, hundiéndose cada vez más en la deshonra y las deudas",
+            tr: "Tanıdığı herkesten borç istedi ve yalvardı, giderek daha fazla utanç ve borca battı",
+          },
+          {
+            ar: "أقسم علنًا أكثر من مرة أنه قد يقتل أباه في نوبة غضب",
+            es: "Juró públicamente, más de una vez, que podría matar a su padre en un arrebato de furia",
+            tr: "Bir öfke nöbetinde babasını öldürebileceğine dair birden fazla kez alenen yemin etti",
+          },
+          {
+            ar: "حاول أليوشا برفق أن يصنع السلام بينهما لكن لم يستمع له أي منهما حقًا",
+            es: "Aliosha intentó con delicadeza hacer las paces entre ellos, pero ninguno de los dos escuchó de verdad",
+            tr: "Alyoşa nazikçe aralarını bulmaya çalıştı ama ikisi de gerçekten dinlemedi",
+          },
+          {
+            ar: "بدأت البلدة بأكملها تهمس أن المأساة في تلك العائلة ما هي إلا مسألة وقت",
+            es: "Todo el pueblo comenzó a murmurar que la tragedia en esa familia era solo cuestión de tiempo",
+            tr: "Bütün kasaba, o ailede bir trajedinin yalnızca an meselesi olduğunu fısıldamaya başladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "تمرد إيفان", es: "La rebelión de Iván", tr: "İvan'ın İsyanı" },
+        sentences: [
+          {
+            ar: "أفضى إيفان لأليوشا ذات ليلة أنه لا يستطيع قبول عالم مبني على معاناة الأطفال",
+            es: "Una noche Iván le confió a Aliosha que no podía aceptar un mundo construido sobre el sufrimiento de los niños",
+            tr: "İvan bir gece Alyoşa'ya, çocukların acısı üzerine kurulu bir dünyayı kabul edemediğini itiraf etti",
+          },
+          {
+            ar: "روى قصة تلو الأخرى عن القسوة تجاه الأبرياء التي لا ينبغي لإله عادل أن يسمح بها",
+            es: "Describió historia tras historia de crueldad hacia los inocentes que ningún Dios justo debería permitir",
+            tr: "Adil bir Tanrı'nın asla izin vermemesi gereken, masumlara yönelik zulüm hikayelerini birbiri ardına anlattı",
+          },
+          {
+            ar: "أخبر أليوشا بقصيدة كتبها عن عودة المسيح ومحقق أكبر عجوز صارم",
+            es: "Le contó a Aliosha un poema que había escrito sobre el regreso de Cristo y un severo y anciano Gran Inquisidor",
+            tr: "Alyoşa'ya, geri dönen İsa ve sert, yaşlı bir Büyük Engizisyoncu hakkında yazdığı bir şiiri anlattı",
+          },
+          {
+            ar: "يتهم فيها المحقق الأكبر المسيح بأنه منح البشرية عبئًا رهيبًا اسمه الحرية",
+            es: "En él, el Inquisidor acusa a Cristo de haber dado a la humanidad una terrible carga llamada libertad",
+            tr: "Şiirde Engizisyoncu, İsa'yı insanlığa özgürlük denen korkunç bir yük vermekle suçlar",
+          },
+          {
+            ar: "يدّعي المحقق الأكبر أن الناس يريدون الخبز والسلطة أكثر بكثير مما يريدون الحرية الصعبة",
+            es: "El Inquisidor afirma que la gente quiere pan y autoridad mucho más de lo que quiere una difícil libertad",
+            tr: "Engizisyoncu, insanların zor bir özgürlükten çok ekmek ve otorite istediğini iddia eder",
+          },
+          {
+            ar: "استمع أليوشا بصمت، مهتزًا من حجة أخيه البارعة والمريرة",
+            es: "Aliosha escuchó en silencio, conmovido por el argumento brillante y amargo de su hermano",
+            tr: "Alyoşa sessizce dinledi, kardeşinin parlak ve acı dolu argümanı karşısında sarsıldı",
+          },
+          {
+            ar: "اعترف إيفان أنه يتمنى، بطريقة ما، أن يرفض عالم الله دون أن يرفض الله تمامًا",
+            es: "Iván admitió que deseaba, en cierto modo, rechazar el mundo de Dios sin rechazar del todo a Dios",
+            tr: "İvan, bir bakıma Tanrı'yı tümüyle reddetmeden Tanrı'nın dünyasını reddetmek istediğini kabul etti",
+          },
+          {
+            ar: "ازداد شحوبًا كل أسبوع، عالقًا بين المنطق البارد وشيء بداخله لا يزال يتوق إلى المعنى",
+            es: "Se volvía más pálido cada semana, atrapado entre la fría lógica y algo en él que aún anhelaba sentido",
+            tr: "Soğuk mantıkla içinde hâlâ anlam arayan bir şey arasında sıkışmış halde her hafta biraz daha solgunlaşıyordu",
+          },
+          {
+            ar: "خشي أليوشا ألا يكون عقل أخيه وحده قويًا بما يكفي ليحمله",
+            es: "Aliosha temía que la mente de su hermano por sí sola no fuera lo bastante fuerte para sostenerlo",
+            tr: "Alyoşa, kardeşinin aklının tek başına onu taşımaya yetecek kadar güçlü olmamasından korkuyordu",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "أليوشا والشيخ الناسك",
+          es: "Aliosha y el anciano",
+          tr: "Alyoşa ve Yaşlı Keşiş",
+        },
+        sentences: [
+          {
+            ar: "في الدير خدم أليوشا وأحب بعمق شيخًا ناسكًا حكيمًا يُدعى الأب زوسيما",
+            es: "En el monasterio, Aliosha servía y amaba profundamente a un sabio anciano llamado el padre Zósima",
+            tr: "Manastırda Alyoşa, Peder Zosima adında bilge, yaşlı bir keşişe hizmet etti ve onu derinden sevdi",
+          },
+          {
+            ar: "علّم زوسيما أن الحب في الفعل، مهما كان صغيرًا، أهم من أي فكرة بارعة",
+            es: "Zósima enseñaba que el amor en acción, por pequeño que fuera, importaba más que cualquier idea brillante",
+            tr: "Zosima, eylemdeki sevginin, ne kadar küçük olursa olsun, her parlak fikirden daha önemli olduğunu öğretti",
+          },
+          {
+            ar: "طلب برفق من أليوشا أن يغادر الدير لفترة ويعيش وسط عائلته المضطربة",
+            es: "Le pidió con delicadeza a Aliosha que dejara el monasterio por un tiempo y viviera junto a su familia problemática",
+            tr: "Alyoşa'ya nazikçe bir süreliğine manastırdan ayrılıp sorunlu ailesiyle yaşamasını söyledi",
+          },
+          {
+            ar: "تنبأ زوسيما بحزن قادم لكنه أخبر أليوشا أيضًا أن قلبه الطيب سينجو منه",
+            es: "Zósima predijo dolor por venir, pero también le dijo a Aliosha que su buen corazón lo sobreviviría",
+            tr: "Zosima önde gelen bir hüzün öngördü ama Alyoşa'ya iyi kalbinin bundan sağ çıkacağını da söyledi",
+          },
+          {
+            ar: "سرعان ما ضعف الشيخ العجوز ومات بهدوء محاطًا بالرهبان الحزانى",
+            es: "Poco después el anciano se debilitó y murió en silencio rodeado de monjes afligidos",
+            tr: "Kısa süre sonra yaşlı keşiş zayıfladı ve yas tutan keşişlerle çevrili şekilde sessizce öldü",
+          },
+          {
+            ar: "توقع كثيرون معجزة، لكن جسده بدأ يتحلل بدلًا من ذلك كأي جسد آخر",
+            es: "Muchos habían esperado un milagro, pero en cambio su cuerpo comenzó a descomponerse como cualquier otro",
+            tr: "Birçoğu bir mucize beklemişti ama bunun yerine bedeni herkesinki gibi çürümeye başladı",
+          },
+          {
+            ar: "همس بعض الرهبان بقسوة أن هذا يثبت أن زوسيما لم يكن قديسًا حقًا",
+            es: "Algunos monjes murmuraron con crueldad que esto probaba que Zósima nunca había sido realmente santo",
+            tr: "Bazı keşişler bunun Zosima'nın hiçbir zaman gerçekten kutsal olmadığını kanıtladığını acımasızca fısıldadı",
+          },
+          {
+            ar: "ابتعد أليوشا، مهزوزًا ومحبطًا، عن الدير للمرة الأولى منذ سنوات",
+            es: "Aliosha, conmocionado y decepcionado, se alejó del monasterio por primera vez en años",
+            tr: "Sarsılmış ve hayal kırıklığına uğramış Alyoşa, yıllardır ilk kez manastırdan uzaklaştı",
+          },
+          {
+            ar: "ببطء، من خلال لطف هادئ أظهره له آخرون، بدأ إيمانه يعود أقوى من قبل",
+            es: "Poco a poco, gracias a la callada bondad que otros le mostraron, su fe comenzó a regresar más fuerte que antes",
+            tr: "Yavaş yavaş, başkalarının ona gösterdiği sessiz iyilik sayesinde imanı eskisinden daha güçlü geri gelmeye başladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "غروشينكا", es: "Grúshenka", tr: "Gruşenka" },
+        sentences: [
+          {
+            ar: "كانت غروشينكا امرأة جميلة وفخورة ذات ماضٍ معقد وخُطّاب كثر في البلدة",
+            es: "Grúshenka era una mujer orgullosa y hermosa, con un pasado complicado y muchos pretendientes en el pueblo",
+            tr: "Gruşenka, karmaşık bir geçmişi ve kasabada pek çok talibi olan gururlu, güzel bir kadındı",
+          },
+          {
+            ar: "كان كل من فيودور بافلوفيتش العجوز وابنه ديمتري مهووسين بها بشكل يائس ومُذلّ",
+            es: "Tanto el viejo Fiódor Pávlovich como su hijo Dmitri estaban desesperada y humillantemente obsesionados con ella",
+            tr: "Hem yaşlı Fyodor Pavloviç hem de oğlu Dmitri, ona umutsuzca ve küçük düşürücü bir şekilde saplantılıydı",
+          },
+          {
+            ar: "استمتعت في البداية بإثارة الرجلين الكارامازوفيين ضد بعضهما لتسليتها الخاصة",
+            es: "Al principio ella disfrutaba enfrentando a los dos hombres Karamázov entre sí para su propia diversión",
+            tr: "Başlangıçta iki Karamazov erkeğini kendi eğlencesi için birbirine düşürmekten hoşlanıyordu",
+          },
+          {
+            ar: "عاد فجأة حبيب قديم من ماضيها، مهددًا بأخذها بعيدًا عنهما كليهما",
+            es: "Un antiguo amante de su pasado regresó de repente, amenazando con alejarla de ambos",
+            tr: "Geçmişinden eski bir aşığı aniden geri döndü, onu ikisinden de almakla tehdit etti",
+          },
+          {
+            ar: "احتاج ديمتري، يائسًا، إلى مال في تلك الليلة نفسها ليفوز بها ويسدد دَينًا قديمًا",
+            es: "Dmitri, desesperado, necesitaba dinero esa misma noche tanto para conquistarla como para pagar una vieja deuda",
+            tr: "Çaresiz kalan Dmitri, hem onu kazanmak hem de eski bir borcu ödemek için o gece paraya ihtiyaç duydu",
+          },
+          {
+            ar: "اشتبه بأن أباه يخفي ثلاثة آلاف روبل مخصصة سرًا كإشارة لغروشينكا",
+            es: "Sospechaba que su padre escondía tres mil rublos destinados en secreto como una señal para Grúshenka",
+            tr: "Babasının gizlice Gruşenka'ya bir işaret olarak sakladığı üç bin rubleyi sakladığından şüphelendi",
+          },
+          {
+            ar: "مستهلكًا بالغيرة، ركض ديمتري عبر الظلام نحو منزل أبيه في تلك الليلة نفسها",
+            es: "Consumido por los celos, Dmitri corrió en la oscuridad hacia la casa de su padre esa misma noche",
+            tr: "Kıskançlıkla yanıp tutuşan Dmitri, aynı gece karanlıkta babasının evine doğru koştu",
+          },
+          {
+            ar: "حمل معه مدقة نحاسية، رغم أنه أقنع نفسه أنه لا يقصد أذىً حقيقيًا",
+            es: "Llevaba consigo una maja de bronce, aunque se decía a sí mismo que no pretendía hacer ningún daño real",
+            tr: "Yanında pirinç bir havaneli taşıyordu, gerçi kendine gerçek bir zarar vermek istemediğini söylüyordu",
+          },
+          {
+            ar: "كان القدر، وطبعه العنيف، على وشك أن يتصادما بأسوأ طريقة ممكنة",
+            es: "El destino, y su propio temperamento violento, estaban a punto de chocar de la peor manera posible",
+            tr: "Kader ve kendi şiddetli mizacı, en kötü şekilde çarpışmak üzereydi",
+          },
+        ],
+      },
+      {
+        title: { ar: "ليلة الجريمة", es: "La noche del asesinato", tr: "Cinayet Gecesi" },
+        sentences: [
+          {
+            ar: "تسلل ديمتري إلى حديقة أبيه وحدّق عبر نافذة مضاءة في الظلام",
+            es: "Dmitri se deslizó al jardín de su padre y miró a través de una ventana iluminada en la oscuridad",
+            tr: "Dmitri babasının bahçesine sızdı ve karanlıkta aydınlanmış bir pencereden içeri baktı",
+          },
+          {
+            ar: "إذ لم ير أثرًا لغروشينكا بالداخل، خفّ توتر صدره للحظة براحة غريبة",
+            es: "Al no ver rastro de Grúshenka adentro, un extraño alivio aflojó brevemente su pecho tenso",
+            tr: "İçeride Gruşenka'dan iz görmeyince, gergin göğsü tuhaf bir rahatlamayla bir an gevşedi",
+          },
+          {
+            ar: "لاحظ أبوه فجأة، وحيدًا وخائفًا، ظلًا يتحرك قرب النافذة",
+            es: "Su padre, solo y asustado, notó de pronto una sombra moviéndose cerca de la ventana",
+            tr: "Yalnız ve korkmuş olan babası aniden pencerenin yakınında hareket eden bir gölge fark etti",
+          },
+          {
+            ar: "هرب ديمتري متسلقًا سياج الحديقة، وضرب خادمًا عجوزًا حاول إيقافه",
+            es: "Dmitri huyó saltando la cerca del jardín, derribando a un viejo criado que intentó detenerlo",
+            tr: "Dmitri bahçe çitinin üzerinden kaçtı, onu durdurmaya çalışan yaşlı bir hizmetçiyi yere serdi",
+          },
+          {
+            ar: "لاحقًا في تلك الليلة نفسها وُجد فيودور بافلوفيتش ميتًا وجمجمته مهشمة بوحشية",
+            es: "Más tarde esa misma noche Fiódor Pávlovich fue hallado muerto, con el cráneo brutalmente aplastado",
+            tr: "Aynı gecenin ilerleyen saatlerinde Fyodor Pavloviç, kafatası vahşice ezilmiş halde ölü bulundu",
+          },
+          {
+            ar: "اختفت ثلاثة آلاف روبل من مظروف مخبأ تحت وسادته",
+            es: "Tres mil rublos habían desaparecido de un sobre escondido bajo su almohada",
+            tr: "Yastığının altına saklanmış bir zarftan üç bin ruble kaybolmuştu",
+          },
+          {
+            ar: "وقعت الشبهة فورًا وبالكامل على ابنه الغاضب المدين والعنيف بوضوح",
+            es: "Las sospechas recayeron de inmediato y por completo sobre su furioso, endeudado y claramente violento hijo",
+            tr: "Şüpheler hemen ve tamamen onun öfkeli, borçlu ve açıkça şiddet eğilimli oğluna yöneldi",
+          },
+          {
+            ar: "سميردياكوف وحده، الهادئ وغير الملحوظ كعادته، كان يعرف حقًا ما جرى تلك الليلة",
+            es: "Solo Smerdiakov, callado e inadvertido como siempre, sabía realmente lo que había ocurrido esa noche",
+            tr: "Yalnızca her zamanki gibi sessiz ve fark edilmeyen Smerdyakov, o gece gerçekte ne olduğunu biliyordu",
+          },
+          {
+            ar: "كان قد تظاهر بنوبة صرع مفاجئة في وقت سابق، ليضمن ألا يشتبه به أحد إطلاقًا",
+            es: "Antes había fingido un repentino ataque de epilepsia, asegurándose de que nadie sospechara de él en absoluto",
+            tr: "Kimsenin kendisinden şüphelenmemesini sağlamak için daha önce ani bir sara nöbeti taklidi yapmıştı",
+          },
+        ],
+      },
+      {
+        title: { ar: "اعتقال ديمتري", es: "El arresto de Dmitri", tr: "Dmitri'nin Tutuklanması" },
+        sentences: [
+          {
+            ar: "وجدت الشرطة ديمتري في تلك الليلة نفسها، ثملًا، ملطخًا بالدماء، وبفرح غريب تقريبًا مع غروشينكا",
+            es: "La policía encontró a Dmitri esa misma noche, borracho, ensangrentado y extrañamente casi alegre junto a Grúshenka",
+            tr: "Polis Dmitri'yi o gece sarhoş, kana bulanmış ve tuhaf bir şekilde Gruşenka'yla neredeyse mutlu halde buldu",
+          },
+          {
+            ar: "كان يحمل مالًا ولم يستطع أن يفسر بوضوح من أين أتى بالضبط",
+            es: "Llevaba dinero encima y no podía explicar con claridad de dónde había salido exactamente",
+            tr: "Üzerinde para vardı ve tam olarak nereden geldiğini açıkça anlatamıyordu",
+          },
+          {
+            ar: "أقسم يائسًا أنه ضرب الخادم العجوز لكنه لم يلمس أباه إطلاقًا",
+            es: "Juró desesperadamente que había golpeado al viejo criado, pero que nunca tocó a su padre",
+            tr: "Yaşlı hizmetçiye vurduğuna ama babasına asla dokunmadığına çaresizce yemin etti",
+          },
+          {
+            ar: "لم يصدّق أحد حول الطاولة كلمة واحدة من تفسيره المذعور والمتقطع",
+            es: "Nadie en la mesa creyó una sola palabra de su explicación frenética y a medio hilvanar",
+            tr: "Masadakilerden hiçbiri onun çılgınca, yarım yamalak açıklamasına tek kelime bile inanmadı",
+          },
+          {
+            ar: "اعتُقل في الحال وسُحب بعيدًا وهو لا يزال يصرخ ببراءته للجميع",
+            es: "Fue arrestado en el acto y llevado a rastras mientras seguía gritando su inocencia a todos",
+            tr: "Olay yerinde tutuklandı ve herkese masumiyetini haykırarak sürüklenerek götürüldü",
+          },
+          {
+            ar: "عندما رأت غروشينكا اعتقاله، أدركت أخيرًا كم كان يحبها بعمق وتهور",
+            es: "Grúshenka, al verlo apresado, comprendió por fin cuán profunda y temerariamente la amaba",
+            tr: "Gruşenka onun götürüldüğünü görünce, onu ne kadar derinden ve pervasızca sevdiğini sonunda anladı",
+          },
+          {
+            ar: "عقدت العزم منذ تلك الليلة الرهيبة أن تبقى وفية له مهما كلّف الأمر",
+            es: "Desde aquella noche terrible resolvió permanecer fiel a él costara lo que costara",
+            tr: "O korkunç geceden itibaren, ne pahasına olursa olsun ona sadık kalmaya karar verdi",
+          },
+          {
+            ar: "أليوشا وحده ظل يؤمن بهدوء أن أخاه العنيف المتهور لم يقتل أباهما",
+            es: "Solo Aliosha seguía creyendo en silencio que su hermano violento y temerario no había matado a su padre",
+            tr: "Yalnızca Alyoşa, şiddet eğilimli, pervasız kardeşinin babalarını öldürmediğine sessizce inanmaya devam etti",
+          },
+          {
+            ar: "أما إيفان، على النقيض، فازداد برودة وغرابة وعذابًا مع كل يوم يمر",
+            es: "Iván, en cambio, se volvía más frío, más extraño y más atormentado con cada día que pasaba",
+            tr: "İvan ise tam tersine, geçen her günle birlikte daha soğuk, daha tuhaf ve daha eziyetli hale geldi",
+          },
+        ],
+      },
+      {
+        title: { ar: "عذاب إيفان", es: "El tormento de Iván", tr: "İvan'ın Azabı" },
+        sentences: [
+          {
+            ar: "زار إيفان سميردياكوف ثلاث مرات، وفي كل مرة أحس بشيء وحشي مختبئ خلف هدوئه",
+            es: "Iván visitó a Smerdiakov tres veces, y cada vez percibía algo monstruoso oculto bajo su calma",
+            tr: "İvan, Smerdyakov'u üç kez ziyaret etti, her seferinde onun sakinliğinin altında canavarca bir şey sezdi",
+          },
+          {
+            ar: "في الزيارة الأخيرة اعترف سميردياكوف بهدوء أنه هو وحده من قتل أباهما",
+            es: "En la última visita, Smerdiakov confesó con calma que él solo había asesinado a su padre",
+            tr: "Son ziyarette Smerdyakov sakince babalarını yalnızca kendisinin öldürdüğünü itiraf etti",
+          },
+          {
+            ar: "زعم، بشكل مرعب، أن فلسفة إيفان الباردة نفسها هي ما منحته الإذن ليفعل ذلك",
+            es: "Afirmó, de manera escalofriante, que la propia y fría filosofía de Iván le había dado permiso para hacerlo",
+            tr: "Ürpertici bir şekilde, İvan'ın kendi soğuk felsefesinin ona bunu yapma izni verdiğini iddia etti",
+          },
+          {
+            ar: "أدرك إيفان مرعوبًا أن كلماته اللامبالية ساهمت في تشكيل جريمة رجل آخر الفظيعة",
+            es: "Horrorizado, Iván comprendió que sus palabras descuidadas habían ayudado a moldear el terrible crimen de otro hombre",
+            tr: "Dehşete düşen İvan, kayıtsız sözlerinin başka bir adamın korkunç suçunu şekillendirmeye yardım ettiğini fark etti",
+          },
+          {
+            ar: "سلّمه سميردياكوف المال المسروق، وفي تلك الليلة نفسها شنق نفسه بهدوء",
+            es: "Smerdiakov le entregó el dinero robado y, esa misma noche, se ahorcó en silencio",
+            tr: "Smerdyakov çalınan parayı ona verdi ve aynı gece sessizce kendini astı",
+          },
+          {
+            ar: "بدأ إيفان، وقد كاد يُجن من الذنب، يرى ويجادل رؤية ساخرة للشيطان",
+            es: "Iván, medio enloquecido por la culpa, comenzó a ver y discutir con una burlona visión del diablo",
+            tr: "Suçluluktan yarı deliren İvan, şeytanın alaycı bir görüntüsünü görüp onunla tartışmaya başladı",
+          },
+          {
+            ar: "انهار بحمى دماغية حادة قبيل بدء محاكمة أخيه مباشرة",
+            es: "Se desplomó con una grave fiebre cerebral justo antes de que comenzara el juicio de su hermano",
+            tr: "Kardeşinin duruşması başlamadan hemen önce ağır bir beyin ateşiyle çöktü",
+          },
+          {
+            ar: "حاول يائسًا أن يشهد باعتراف سميردياكوف لكنه لم يعد قادرًا على الكلام بوضوح",
+            es: "Intentó desesperadamente testificar sobre la confesión de Smerdiakov, pero ya no podía hablar con claridad",
+            tr: "Smerdyakov'un itirafı hakkında çaresizce tanıklık etmeye çalıştı ama artık net konuşamıyordu",
+          },
+          {
+            ar: "لم تقنع شهادته المحطمة أحدًا تقريبًا في قاعة المحكمة المزدحمة والعدائية",
+            es: "Su testimonio destrozado no convenció a casi nadie en la abarrotada y hostil sala del tribunal",
+            tr: "Paramparça olmuş tanıklığı, kalabalık ve düşmanca mahkeme salonunda neredeyse kimseyi ikna edemedi",
+          },
+        ],
+      },
+      {
+        title: { ar: "المحاكمة", es: "El juicio", tr: "Duruşma" },
+        sentences: [
+          {
+            ar: "جذبت محاكمة ديمتري متفرجين من كل ركن في المقاطعة، متلهفين للفضيحة",
+            es: "El juicio de Dmitri atrajo espectadores de cada rincón de la provincia, ávidos de escándalo",
+            tr: "Dmitri'nin duruşması, skandal peşindeki eyaletin her köşesinden seyirci çekti",
+          },
+          {
+            ar: "تجادل محامون بارعون بشراسة حول طبعه العنيف وديونه ودافعه الواضح",
+            es: "Brillantes abogados discutieron ferozmente sobre su temperamento violento, sus deudas y su evidente motivo",
+            tr: "Parlak avukatlar onun şiddetli mizacı, borçları ve açık nedeni üzerine sertçe tartıştı",
+          },
+          {
+            ar: "تشابكت الأدلة والشائعات بإحكام حتى صار من الصعب رؤية الحقيقة البسيطة",
+            es: "Las pruebas y los rumores se enredaron tanto que la simple verdad se volvió más difícil de ver",
+            tr: "Kanıtlar ve söylentiler öylesine iç içe geçmişti ki yalın gerçeği görmek zorlaştı",
+          },
+          {
+            ar: "شهدت غروشينكا بين الدموع، معلنة ولاءها التام للرجل الذي أحبته الآن حقًا",
+            es: "Grúshenka testificó entre lágrimas, declarando su total lealtad al hombre al que ahora amaba de verdad",
+            tr: "Gruşenka gözyaşları içinde tanıklık etti, artık gerçekten sevdiği adama tam bağlılığını ilan etti",
+          },
+          {
+            ar: "تحدث أليوشا بصدق عن قلب أخيه الجامح، مصرًّا على أنه ليس قلب قاتل",
+            es: "Aliosha habló con sinceridad del corazón salvaje de su hermano, insistiendo en que no era el corazón de un asesino",
+            tr: "Alyoşa, kardeşinin vahşi kalbinden içtenlikle bahsetti, bunun bir katilin kalbi olmadığında ısrar etti",
+          },
+          {
+            ar: "رغم شك حقيقي، أدانت هيئة المحلفين في النهاية ديمتري بقتل أبيه",
+            es: "A pesar de una duda real, el jurado finalmente condenó a Dmitri por matar a su propio padre",
+            tr: "Gerçek bir şüpheye rağmen, jüri sonunda Dmitri'yi kendi babasını öldürmekten suçlu buldu",
+          },
+          {
+            ar: "حُكم عليه بسنوات من الأشغال الشاقة في برية سيبيريا المتجمدة",
+            es: "Fue sentenciado a años de trabajos forzados en la helada extensión de Siberia",
+            tr: "Sibirya'nın donmuş vahşi doğasında yıllarca ağır işçilik cezasına çarptırıldı",
+          },
+          {
+            ar: "بدأ الأصدقاء سرًا بالتخطيط لهروب يائس له ولغروشينكا إلى أمريكا بدلًا من ذلك",
+            es: "Los amigos comenzaron en secreto a planear una desesperada fuga para él y Grúshenka hacia América",
+            tr: "Arkadaşları gizlice onun ve Gruşenka'nın Amerika'ya çaresiz bir kaçışını planlamaya başladı",
+          },
+          {
+            ar: "ظل ديمتري، منهكًا، يأمل أن معاناته الظالمة قد تطهّر يومًا ما روحه المتهورة",
+            es: "Dmitri, agotado, aún esperaba que sufrir injustamente pudiera de algún modo purificar por fin su alma temeraria",
+            tr: "Bitkin düşen Dmitri, haksız yere çekilen acının bir gün pervasız ruhunu arındırabileceğini hâlâ umuyordu",
+          },
+        ],
+      },
+      {
+        title: { ar: "إيمان أليوشا", es: "La fe de Aliosha", tr: "Alyoşa'nın İmanı" },
+        sentences: [
+          {
+            ar: "خلال كل ذلك، كوّن أليوشا صداقة مع مجموعة من تلاميذ المدرسة، خاصة صبي هش وفخور يدعى إليوشا",
+            es: "Durante todo esto Aliosha había hecho amistad con un grupo de colegiales, especialmente con un niño frágil y orgulloso llamado Iliusha",
+            tr: "Bütün bu süreçte Alyoşa, bir grup okul çocuğuyla, özellikle İlyuşa adında kırılgan, gururlu bir çocukla arkadaş olmuştu",
+          },
+          {
+            ar: "مرض إليوشا مرضًا خطيرًا، وعلى الرغم من أمل الجميع، توفي في النهاية محاطًا بأصدقائه الحزانى",
+            es: "Iliusha enfermó gravemente y, a pesar de la esperanza de todos, finalmente murió rodeado de sus amigos afligidos",
+            tr: "İlyuşa ağır şekilde hastalandı ve herkesin umuduna rağmen sonunda yas tutan arkadaşlarıyla çevrili halde öldü",
+          },
+          {
+            ar: "في جنازة الصبي الصغيرة، جمع أليوشا التلاميذ الباكين حول حجر رمادي كبير",
+            es: "En el pequeño funeral del niño, Aliosha reunió a los llorosos colegiales alrededor de una gran piedra gris",
+            tr: "Çocuğun küçük cenazesinde Alyoşa, ağlayan okul çocuklarını büyük gri bir taşın etrafında topladı",
+          },
+          {
+            ar: "طلب منهم برفق أن يتذكروا دائمًا هذه اللحظة الطيبة الحزينة التي جمعتهم معًا",
+            es: "Les dijo con dulzura que recordaran siempre ese único momento bueno, triste y unificador que compartieron",
+            tr: "Onlara bu tek iyi, hüzünlü, birleştirici anı her zaman hatırlamalarını nazikçe söyledi",
+          },
+          {
+            ar: "وعدهم بأن ذكرى طيبة مستقبلية قد تنقذ يومًا ما حتى أكثر الأرواح اضطرابًا",
+            es: "Prometió que algún recuerdo futuro de bondad podría salvar algún día incluso al alma más atormentada",
+            tr: "Gelecekteki bir iyilik anısının bir gün en sıkıntılı ruhu bile kurtarabileceğine söz verdi",
+          },
+          {
+            ar: "هتف الصبية، متأثرين ومتحدين، باسم أليوشا فجأة بمودة صادقة لا تخفى",
+            es: "Los niños, conmovidos y unidos, vitorearon de repente el nombre de Aliosha con un afecto genuino y sin reservas",
+            tr: "Duygulanan ve birleşen çocuklar, birden Alyoşa'nın adını içten bir sevgiyle haykırdı",
+          },
+          {
+            ar: "بدأ إيفان يتعافى ببطء، لا يزال هشًا، لا يزال متسائلًا، لكنه لم يعد وحيدًا تمامًا",
+            es: "Iván comenzó lentamente a recuperarse, todavía frágil, todavía lleno de dudas, pero ya no del todo solo",
+            tr: "İvan yavaş yavaş iyileşmeye başladı, hâlâ kırılgan, hâlâ sorgulayan ama artık tamamen yalnız değildi",
+          },
+          {
+            ar: "بقي مصير ديمتري غامضًا، معلقًا بين سيبيريا وأمل يائس بالهروب",
+            es: "El destino de Dmitri seguía siendo incierto, suspendido entre Siberia y una desesperada esperanza de fuga",
+            tr: "Dmitri'nin kaderi belirsizliğini korudu, Sibirya ile çaresiz bir kaçış umudu arasında asılı kaldı",
+          },
+          {
+            ar: "عاد أليوشا إلى منزله في ذلك المساء وهو يؤمن، بهدوء وبشكل كامل، أن الحب لا يزال قادرًا على تجاوز المأساة",
+            es: "Aliosha caminó a casa esa noche creyendo, en silencio y por completo, que el amor aún podía sobrevivir a la tragedia",
+            tr: "Alyoşa o akşam eve doğru yürürken, sevginin trajediden daha uzun sürebileceğine sessizce ve tamamen inanıyordu",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-idiot",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة فيودور دوستويفسكي عن الأمير ميشكين، رجل ذو براءة ورحمة نادرتين تصطدم طيبته بعالم ساخر وحب مأساوي — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Fiódor Dostoievski sobre el príncipe Mishkin, un hombre de rara inocencia y compasión cuya bondad choca con un mundo cínico y un amor trágico — un relato personal, no el texto original.",
+      tr: "Fyodor Dostoyevski'nin, nadir bir masumiyet ve şefkate sahip, iyiliği alaycı bir dünya ve trajik bir aşkla çarpışan Prens Mişkin'in hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "العودة إلى روسيا", es: "El regreso a Rusia", tr: "Rusya'ya Dönüş" },
+        sentences: [
+          {
+            ar: "عاد الأمير ميشكين إلى روسيا بعد سنوات من التعافي من الصرع في مصحة سويسرية هادئة",
+            es: "El príncipe Mishkin regresó a Rusia tras años de recuperación de la epilepsia en un tranquilo sanatorio suizo",
+            tr: "Prens Mişkin, sessiz bir İsviçre sanatoryumunda epilepsiden yıllarca iyileştikten sonra Rusya'ya döndü",
+          },
+          {
+            ar: "في القطار عائدًا إلى الوطن التقى بغريب داكن الملامح شديد الحدة يُدعى روغوجين، يحترق بطاقة لا تهدأ",
+            es: "En el tren de regreso a casa conoció a un desconocido oscuro e intenso llamado Rogozhin, ardiendo de una energía inquieta",
+            tr: "Eve dönerken trende, dinmeyen bir enerjiyle yanan Rogojin adında karanlık, yoğun bir yabancıyla tanıştı",
+          },
+          {
+            ar: "تحدث روغوجين بهوس عن امرأة جميلة تُدعى ناستاسيا فيليبوفنا كان يحبها بيأس",
+            es: "Rogozhin hablaba obsesivamente de una hermosa mujer llamada Nastasia Filíppovna a quien amaba desesperadamente",
+            tr: "Rogojin, çaresizce aşık olduğu Nastasya Filippovna adında güzel bir kadından saplantılı bir şekilde bahsetti",
+          },
+          {
+            ar: "استمع ميشكين بلطف منفتح لا حذر فيه، وجده روغوجين غريبًا في رجل فقير إلى هذا الحد",
+            es: "Mishkin escuchaba con una bondad abierta y sin reservas que a Rogozhin le pareció extraña en un hombre tan pobre",
+            tr: "Mişkin, Rogojin'in bu kadar yoksul bir adamda tuhaf bulduğu açık, tetiksiz bir nezaketle dinledi",
+          },
+          {
+            ar: "سرعان ما لاحظ الناس شيئًا نادرًا في الأمير، صدقًا كاملًا يكاد يكون طفوليًا",
+            es: "La gente pronto notó algo raro en el príncipe, una honestidad total que parecía casi infantil",
+            tr: "İnsanlar kısa sürede prensteki nadir bir şeyi fark etti: neredeyse çocuksu hissettiren tam bir dürüstlük",
+          },
+          {
+            ar: "أشاع المجتمع أن هذه الطيبة المفرطة تعني بالتأكيد أن الأمير ما هو إلا أبله",
+            es: "La sociedad murmuraba que tanta bondad abierta seguramente significaba que el príncipe era simplemente un tonto",
+            tr: "Sosyete, bu kadar açık iyiliğin prensin sadece bir aptal olduğu anlamına geldiğini dedikodu olarak yaydı",
+          },
+          {
+            ar: "لم يحمل مالًا ولا لقبًا وتقريبًا لا وسيلة دفاع ضد عالم ساخر",
+            es: "No llevaba dinero, ni título, y casi ninguna defensa contra un mundo cínico",
+            tr: "Ne parası ne unvanı vardı ve alaycı bir dünyaya karşı neredeyse hiç savunması yoktu",
+          },
+          {
+            ar: "ومع ذلك، أينما ذهب، وجد الناس أنفسهم يبوحون له بأسرار لم يخبروا بها أحدًا آخر تقريبًا",
+            es: "Sin embargo, dondequiera que iba, la gente terminaba confiándole secretos que casi a nadie más contaban",
+            tr: "Yine de gittiği her yerde insanlar kendilerini, neredeyse başka kimseye anlatmadıkları sırları ona açarken buldu",
+          },
+        ],
+      },
+      {
+        title: { ar: "ناستاسيا فيليبوفنا", es: "Nastasia Filíppovna", tr: "Nastasya Filippovna" },
+        sentences: [
+          {
+            ar: "كانت ناستاسيا فيليبوفنا تحت رعاية رجل ثري يُدعى توتسكي منذ طفولتها، ما ترك في نفسها جرحًا عميقًا",
+            es: "Nastasia Filíppovna había sido mantenida desde niña por un hombre rico llamado Totski, lo que la marcó profundamente",
+            tr: "Nastasya Filippovna, çocukluğundan beri Totski adında zengin bir adam tarafından himaye altında tutulmuştu, bu onu derinden yaralamıştı",
+          },
+          {
+            ar: "أراد توتسكي الآن تزويجها بهدوء ليتمكن من السعي وراء زواج محترم في مكان آخر",
+            es: "Totski ahora deseaba casarla discretamente para poder buscar un enlace respetable en otro lugar",
+            tr: "Totski artık başka yerde saygın bir eş bulabilmek için onu sessizce evlendirmek istiyordu",
+          },
+          {
+            ar: "في حفلة عيد ميلادها، تجمّع الخُطّاب والمتآمرون، كلٌّ يأمل أن يفوز بها أو يستغلها",
+            es: "En su fiesta de cumpleaños se reunieron pretendientes e intrigantes, cada uno esperando ganarla o utilizarla",
+            tr: "Doğum günü partisinde talipler ve entrikacılar toplandı, her biri onu kazanmayı ya da kullanmayı umuyordu",
+          },
+          {
+            ar: "وصل ميشكين دون دعوة، وإذ راقب وجهها، لم يشعر إلا بشفقة طاغية بدلًا من الرغبة",
+            es: "Mishkin llegó sin ser invitado y, al observar su rostro, sintió solo una abrumadora compasión en lugar de deseo",
+            tr: "Mişkin davetsiz geldi ve yüzünü izlerken arzu yerine yalnızca ezici bir acıma hissetti",
+          },
+          {
+            ar: "اقتحم روغوجين المكان بشكل درامي وعرض عليها على الفور مئة ألف روبل مذهلة",
+            es: "Rogozhin irrumpió dramáticamente y le ofreció en el acto la asombrosa suma de cien mil rublos",
+            tr: "Rogojin dramatik bir şekilde içeri daldı ve ona anında baş döndürücü yüz bin ruble teklif etti",
+          },
+          {
+            ar: "وسط ذهول الجميع، تقدم ميشكين اللطيف فجأة لخطبتها بدلًا من ذلك، وكان يعني ذلك تمامًا",
+            es: "Para asombro de todos, el gentil Mishkin le propuso matrimonio de repente, y lo decía completamente en serio",
+            tr: "Herkesin şaşkınlığına rağmen, nazik Mişkin aniden ona evlilik teklif etti ve bunu tamamen ciddiyetle söyledi",
+          },
+          {
+            ar: "ناستاسيا، متأثرة لكنها متيقنة أنها ستدمره، رفضت وهربت في الليل مع روغوجين",
+            es: "Nastasia, conmovida pero convencida de que lo arruinaría, se negó y huyó en la noche con Rogozhin",
+            tr: "Nastasya, duygulanmış ama onu mahvedeceğinden emin olarak reddetti ve geceleyin Rogojin'le kaçtı",
+          },
+          {
+            ar: "تُرك الحضور بأكمله مذهولًا من تصادم الطمع والشفقة والحب في أمسية واحدة",
+            es: "Toda la reunión quedó atónita ante el choque de codicia, compasión y amor en una sola noche",
+            tr: "Bütün topluluk, bir akşamda açgözlülük, acıma ve aşkın çarpışması karşısında şaşkına döndü",
+          },
+        ],
+      },
+      {
+        title: { ar: "هوس روغوجين", es: "La obsesión de Rogozhin", tr: "Rogojin'in Saplantısı" },
+        sentences: [
+          {
+            ar: "كان روغوجين قد ورث ثروة للتو وأنفقها بتهور محاولًا كسب مودة ناستاسيا",
+            es: "Rogozhin acababa de heredar una fortuna y la gastaba sin control intentando ganarse el cariño de Nastasia",
+            tr: "Rogojin yeni bir servete konmuştu ve Nastasya'nın sevgisini kazanmak için pervasızca harcıyordu",
+          },
+          {
+            ar: "كان حبه لها شرسًا وغيورًا، ويظلله دومًا ظلام خاص عنيف",
+            es: "Su amor por ella era feroz, celoso y siempre ensombrecido por una violenta oscuridad personal",
+            tr: "Ona olan aşkı şiddetli, kıskanç ve her zaman şiddet dolu, kişisel bir karanlıkla gölgeliydi",
+          },
+          {
+            ar: "وجد ميشكين وروغوجين، المختلفان تمامًا، نفسيهما مرتبطين بغرابة بحب المرأة نفسها",
+            es: "Mishkin y Rogozhin, tan distintos, se encontraron extrañamente unidos por amar a la misma mujer",
+            tr: "Birbirinden çok farklı olan Mişkin ve Rogojin, aynı kadını sevmekle tuhaf bir şekilde bağlı olduklarını fark etti",
+          },
+          {
+            ar: "تبادلا الصلبان ذات ليلة في لفتة قصد بها إحكام ثقة أخوية هشة",
+            es: "Una noche intercambiaron cruces en un gesto destinado a sellar una frágil confianza fraternal",
+            tr: "Bir gece kırılgan bir kardeşlik güvenini mühürlemek amacıyla haçlarını değiştirdiler",
+          },
+          {
+            ar: "حذّر روغوجين ميشكين بوضوح من أن الغيرة قد تحوّل حبه يومًا ما إلى شيء خطير",
+            es: "Rogozhin advirtió claramente a Mishkin que los celos algún día podrían convertir su amor en algo peligroso",
+            tr: "Rogojin, Mişkin'i kıskançlığın bir gün aşkını tehlikeli bir şeye dönüştürebileceği konusunda açıkça uyardı",
+          },
+          {
+            ar: "ميشكين، غير القادر على الشك الحقيقي، اختار ببساطة أن يثق به رغم كل علامات التحذير",
+            es: "Mishkin, incapaz de una sospecha real, simplemente optó por confiar en él a pesar de cada señal de advertencia",
+            tr: "Gerçek bir şüpheye kapılamayan Mişkin, her uyarı işaretine rağmen ona güvenmeyi seçti",
+          },
+          {
+            ar: "تنقلت ناستاسيا بقلق بين الرجلين، ممزقة بين الخجل وحاجة يائسة إلى اللطف",
+            es: "Nastasia se movía inquieta entre los dos hombres, dividida entre la vergüenza y una desesperada necesidad de bondad",
+            tr: "Nastasya iki erkek arasında huzursuzca gidip geldi, utanç ile şefkate duyduğu çaresiz ihtiyaç arasında bocaladı",
+          },
+          {
+            ar: "أحس من حولهم جميعًا أن هذا المثلث الهش لن يبقى سلميًا لوقت طويل",
+            es: "Todos a su alrededor presentían que aquel frágil triángulo no podría permanecer en paz por mucho tiempo",
+            tr: "Etraflarındaki herkes bu kırılgan üçgenin uzun süre huzurlu kalamayacağını hissetti",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "خطبة مثيرة للفضيحة",
+          es: "Un compromiso escandaloso",
+          tr: "Skandal Bir Nişan",
+        },
+        sentences: [
+          {
+            ar: "جعلته ميراث غير متوقع فجأة رجلاً ثريًا حقًا في مجتمع بطرسبرغ",
+            es: "Una herencia inesperada convirtió de repente a Mishkin en un hombre genuinamente rico en la sociedad de Petersburgo",
+            tr: "Beklenmedik bir miras, Mişkin'i aniden Petersburg sosyetesinde gerçek anlamda zengin bir adam yaptı",
+          },
+          {
+            ar: "رغم ثروته الجديدة، أصرّ على أن مشاعره تجاه ناستاسيا لم تكن يومًا بسبب المال",
+            es: "A pesar de su nueva fortuna, insistió en que sus sentimientos por Nastasia nunca habían tenido que ver con el dinero",
+            tr: "Yeni servetine rağmen, Nastasya'ya olan hislerinin bir kez bile parayla ilgili olmadığında ısrar etti",
+          },
+          {
+            ar: "تقدم لخطبتها بجدية للمرة الثانية، مصممًا على إنقاذها من ماضيها المؤلم",
+            es: "Le propuso matrimonio en serio por segunda vez, decidido a salvarla de su doloroso pasado",
+            tr: "Onu acı verici geçmişinden kurtarmaya kararlı bir şekilde ikinci kez ciddiyetle evlenme teklif etti",
+          },
+          {
+            ar: "صُدم المجتمع الراقي من أن أميرًا سيتزوج علنًا امرأة بسمعتها",
+            es: "La alta sociedad se escandalizó de que un príncipe se casara abiertamente con una mujer de su reputación",
+            tr: "Kibar sosyete, bir prensin onun gibi bir üne sahip kadınla açıkça evlenmesinden dehşete düştü",
+          },
+          {
+            ar: "تأرجحت ناستاسيا بين أمل مفرح وقناعة مريرة بأنها لن تجلب له سوى العار",
+            es: "Nastasia alternaba entre una esperanza alegre y la amarga convicción de que solo lo deshonraría",
+            tr: "Nastasya, sevinçli bir umutla onu yalnızca utandıracağına dair acı bir kanaat arasında gidip geldi",
+          },
+          {
+            ar: "في يوم زفافهما الفعلي، أصابها الذعر عند درجات الكنيسة وهربت من الحفل بالكامل",
+            es: "El día de su boda, presa del pánico en los escalones de la iglesia, huyó por completo de la ceremonia",
+            tr: "Düğün günü kilisenin basamaklarında paniğe kapıldı ve töreni tamamen terk edip kaçtı",
+          },
+          {
+            ar: "ركضت مباشرة نحو عربة روغوجين المنتظرة، مفضّلة الفوضى على طيبة لم تستطع قبولها",
+            es: "Corrió directo hacia el carruaje de Rogozhin que la esperaba, eligiendo el caos sobre una bondad que no podía aceptar",
+            tr: "Doğruca Rogojin'in bekleyen arabasına koştu, kabul edemediği bir iyilik yerine kaosu seçti",
+          },
+          {
+            ar: "ميشكين، مفطور القلب لكن غير غاضب، سامحها بهدوء قبل أن تختفي العربة حتى عن ناظريه",
+            es: "Mishkin, con el corazón roto pero sin enfado, la perdonó en silencio antes de que el carruaje siquiera desapareciera de su vista",
+            tr: "Kalbi kırılan ama öfkelenmeyen Mişkin, araba gözünden kaybolmadan önce onu sessizce affetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "عائلة يبانتشين", es: "La familia Yepanchin", tr: "Yepançin Ailesi" },
+        sentences: [
+          {
+            ar: "رحّبت عائلة يبانتشين الثرية بميشكين بحرارة، فضولية بشأن هذا القريب البعيد الغريب",
+            es: "La adinerada familia Yepanchin había recibido calurosamente a Mishkin, curiosa por este extraño pariente lejano",
+            tr: "Zengin Yepançin ailesi, bu tuhaf uzak akrabaya meraklı bir şekilde Mişkin'i sıcak karşılamıştı",
+          },
+          {
+            ar: "كانت ابنتهم الصغرى أغلايا حادة الذكاء وفخورة ولا تشبه أحدًا قابله الأمير من قبل",
+            es: "Su hija menor, Aglaya, era aguda, orgullosa y distinta a cualquier persona que el príncipe hubiera conocido",
+            tr: "En küçük kızları Aglaya keskin zekalı, gururlu ve prensin daha önce tanıdığı hiç kimseye benzemiyordu",
+          },
+          {
+            ar: "سخرت منه علنًا في البداية، مختبرة ما إذا كانت الطيبة الحقيقية قادرة على الصمود أمام لسانها الحاد",
+            es: "Al principio se burlaba de él en público, poniendo a prueba si la bondad real podía sobrevivir a su lengua afilada",
+            tr: "Önce onunla alenen alay etti, gerçek iyiliğin keskin diline dayanıp dayanamayacağını sınadı",
+          },
+          {
+            ar: "تحوّلت مضايقاتها ببطء إلى شيء بدا، لكل من راقبهما، أشبه بالحب تمامًا",
+            es: "Poco a poco sus burlas se suavizaron en algo que, para todos los que observaban, se parecía mucho al amor",
+            tr: "Alayları yavaş yavaş, izleyen herkese göre aşka çok benzeyen bir şeye dönüştü",
+          },
+          {
+            ar: "وجد ميشكين فيها براءة مشرقة ومطالِبة مختلفة تمامًا عن كبرياء ناستاسيا الجريح",
+            es: "Mishkin encontró en ella una inocencia brillante y exigente, muy distinta del orgullo herido de Nastasia",
+            tr: "Mişkin onda, Nastasya'nın yaralı gururundan tamamen farklı, parlak ve talepkar bir masumiyet buldu",
+          },
+          {
+            ar: "بدأت عائلة أغلايا تأمل بهدوء في ارتباط محترم ومبشّر بينهما",
+            es: "La familia de Aglaya comenzó a esperar en silencio un compromiso respetable y prometedor entre ambos",
+            tr: "Aglaya'nın ailesi ikisi arasında saygın, umut verici bir eşleşme ummaya sessizce başladı",
+          },
+          {
+            ar: "ميشكين، الممزق بين الاثنتين، لم يستطع حتى لنفسه أن يوضح تمامًا أيّ المرأتين يحب أكثر",
+            es: "Mishkin, dividido, no podía explicarse del todo ni a sí mismo a cuál de las dos mujeres amaba más",
+            tr: "Bocalayan Mişkin, hangi kadını gerçekten daha çok sevdiğini kendine bile tam olarak açıklayamıyordu",
+          },
+          {
+            ar: "بدا أنه يحبهما بطريقتين مختلفتين، إحداهما بالشفقة والأخرى بفرح صادق مفعم بالأمل",
+            es: "Parecía amarlas de manera distinta, a una con compasión, a la otra con una alegría genuina y esperanzada",
+            tr: "Onları farklı şekillerde seviyor gibiydi; birini acımayla, diğerini gerçek, umut dolu bir sevinçle",
+          },
+        ],
+      },
+      {
+        title: { ar: "حبان", es: "Dos amores", tr: "İki Aşk" },
+        sentences: [
+          {
+            ar: "حاول ميشكين بصدق أن يشرح لأغلايا أن شعوره تجاه ناستاسيا ليس سوى الشفقة حقًا",
+            es: "Mishkin intentó explicarle honestamente a Aglaya que su sentimiento por Nastasia era en realidad solo compasión",
+            tr: "Mişkin, Aglaya'ya Nastasya'ya olan hissinin gerçekten sadece acıma olduğunu dürüstçe açıklamaya çalıştı",
+          },
+          {
+            ar: "رفضت أغلايا، الفخورة والجريحة، أن تصدق أن الشفقة والحب يمكن أن ينفصلا أبدًا",
+            es: "Aglaya, orgullosa y herida, se negó a creer que la compasión y el amor pudieran separarse alguna vez",
+            tr: "Gururlu ve incinmiş Aglaya, acıma ile aşkın hiçbir zaman ayrılabileceğine inanmayı reddetti",
+          },
+          {
+            ar: "في هذه الأثناء، كتبت ناستاسيا رسائل سرية تحثّ فيها أغلايا على الزواج من الأمير اللطيف بنفسها",
+            es: "Mientras tanto, Nastasia escribía en secreto cartas instando a Aglaya a casarse ella misma con el gentil príncipe",
+            tr: "Bu sırada Nastasya, gizlice Aglaya'ya nazik prensle kendisinin evlenmesi için mektuplar yazdı",
+          },
+          {
+            ar: "أصرّت أنها تريد فقط أن يكون ميشكين سعيدًا أخيرًا، مهما كلّف ذلك قلبها",
+            es: "Insistía en que solo quería que Mishkin fuera por fin feliz, costara lo que costara a su propio corazón",
+            tr: "Sadece Mişkin'in sonunda mutlu olmasını istediğinde ısrar etti, kendi kalbine ne pahasına olursa olsun",
+          },
+          {
+            ar: "راقب روغوجين كل هذا من الظلال بغيرة صامتة وخطيرة تتصاعد",
+            es: "Rogozhin observaba todo esto desde las sombras con unos celos silenciosos y peligrosos en aumento",
+            tr: "Rogojin bütün bunları gölgelerden, giderek artan, sessiz ve tehlikeli bir kıskançlıkla izledi",
+          },
+          {
+            ar: "تدهورت صحة ميشكين نفسه مجددًا تحت ضغط مطالب المرأتين المتنافسة",
+            es: "La propia salud de Mishkin volvió a debilitarse bajo la presión de las exigencias contrapuestas de las dos mujeres",
+            tr: "Mişkin'in kendi sağlığı, iki kadının çelişen talepleri altında yeniden kırılganlaştı",
+          },
+          {
+            ar: "قلق الأصدقاء من أن طيبته النادرة لم تُخلق ببساطة لتصمد أمام هذا القدر من الألم المتضارب",
+            es: "Los amigos temían que su rara bondad simplemente no estuviera hecha para sobrevivir a tanto dolor contradictorio",
+            tr: "Arkadaşları, onun ender iyiliğinin bu kadar çelişkili acıya dayanacak şekilde yaratılmadığından endişelendi",
+          },
+          {
+            ar: "مع ذلك رفض أن يختار بقسوة بين المرأتين اللتين تحتاجانه بطريقتين مختلفتين تمامًا",
+            es: "Aun así, se negó a elegir cruelmente entre las dos mujeres que lo necesitaban de manera tan distinta",
+            tr: "Yine de kendisine bu kadar farklı şekillerde ihtiyaç duyan iki kadın arasında acımasızca seçim yapmayı reddetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "هروب ناستاسيا", es: "La huida de Nastasia", tr: "Nastasya'nın Kaçışı" },
+        sentences: [
+          {
+            ar: "رُتّب لقاء علني بين أغلايا وناستاسيا، مشحون بمظالم قديمة وتنافس",
+            es: "Se organizó un encuentro público entre Aglaya y Nastasia, tenso por viejos agravios y rivalidad",
+            tr: "Aglaya ile Nastasya arasında, eski kırgınlıklar ve rekabetle gergin, alenen bir buluşma düzenlendi",
+          },
+          {
+            ar: "وصلت أغلايا باردة ومتعالية، مصممة على إذلال المرأة التي رأتها منافستها",
+            es: "Aglaya llegó fría y altiva, decidida a humillar a la mujer que veía como su rival",
+            tr: "Aglaya soğuk ve buyurgan bir tavırla geldi, rakibi olarak gördüğü kadını küçük düşürmeye kararlıydı",
+          },
+          {
+            ar: "ناستاسيا، الجريحة من احتقارها، تحولت فجأة إلى الكبرياء والقسوة أمام الجميع",
+            es: "Nastasia, herida por su desdén, se volvió de repente orgullosa y cruel frente a todos los presentes",
+            tr: "Onun küçümsemesiyle incinen Nastasya, orada bulunan herkesin önünde aniden gururlu ve acımasız bir hale geldi",
+          },
+          {
+            ar: "هربت أغلايا من المكان باكية، مقتنعة الآن بأن ميشكين سيختار الشفقة دومًا على حسابها",
+            es: "Aglaya huyó de la escena entre lágrimas, convencida ahora de que Mishkin siempre elegiría la compasión antes que a ella",
+            tr: "Aglaya gözyaşları içinde oradan kaçtı, artık Mişkin'in her zaman kendisi yerine acımayı seçeceğine ikna olmuştu",
+          },
+          {
+            ar: "ميشكين، الممزق واليائس، اندفع بغريزته خلف ناستاسيا بدلًا من أغلايا",
+            es: "Mishkin, desgarrado y desesperado, corrió instintivamente tras Nastasia en lugar de tras Aglaya",
+            tr: "Bocalayan ve çaresiz Mişkin, içgüdüsel olarak Aglaya yerine Nastasya'nın peşinden koştu",
+          },
+          {
+            ar: "في ذلك الاختيار الغريزي الواحد، شعرت أغلايا بأن أملها الهش فيه قد مات بصمت إلى الأبد",
+            es: "En esa única elección instintiva, Aglaya sintió que su frágil esperanza en él moría en silencio para siempre",
+            tr: "O tek içgüdüsel seçimde, Aglaya ona dair kırılgan umudunun sessizce sonsuza dek öldüğünü hissetti",
+          },
+          {
+            ar: "أعلنت ناستاسيا أنها ستتزوج ميشكين أخيرًا، متيقنة هذه المرة أنها لن تهرب مجددًا",
+            es: "Nastasia declaró que finalmente se casaría con Mishkin, segura esta vez de que no volvería a huir",
+            tr: "Nastasya, sonunda Mişkin'le evleneceğini, bu kez tekrar kaçmayacağından emin olarak ilan etti",
+          },
+          {
+            ar: "أدرك روغوجين، وهو يراقب من بعيد، على الفور أنه فقدها مرة أخرى",
+            es: "Rogozhin, observando desde lejos, comprendió de inmediato que la había perdido una vez más",
+            tr: "Uzaktan izleyen Rogojin, onu bir kez daha kaybettiğini hemen anladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "اختبار أغلايا", es: "La prueba de Aglaya", tr: "Aglaya'nın Sınavı" },
+        sentences: [
+          {
+            ar: "في صباح يوم الزفاف الفعلي، طغى على ناستاسيا رعبها وخجلها القديمان تمامًا",
+            es: "La mañana de la boda real, el viejo terror y la vergüenza de Nastasia la abrumaron por completo",
+            tr: "Gerçek düğün sabahı, Nastasya'nın eski dehşeti ve utancı onu tamamen ele geçirdi",
+          },
+          {
+            ar: "هربت من الكنيسة للمرة الثانية، مباشرة إلى أحضان روغوجين مرة أخرى",
+            es: "Huyó de la iglesia por segunda vez, esta vez directo de nuevo a los brazos de Rogozhin",
+            tr: "Kiliseden ikinci kez kaçtı, bu sefer yine doğruca Rogojin'in kollarına",
+          },
+          {
+            ar: "ميشكين، المحطم لكن الهادئ بغرابة، ذهب يبحث عنهما بصمت في أنحاء المدينة",
+            es: "Mishkin, devastado pero extrañamente tranquilo, salió a buscarlos a ambos en silencio por toda la ciudad",
+            tr: "Yıkılmış ama tuhaf bir şekilde sakin olan Mişkin, ikisini de sessizce şehrin her yerinde aramaya gitti",
+          },
+          {
+            ar: "وجد منزل روغوجين مغلقًا وصامتًا وساكنًا بشكل مقلق في ضوء المساء الخافت",
+            es: "Encontró la casa de Rogozhin cerrada, silenciosa e inquietantemente quieta bajo la luz menguante de la tarde",
+            tr: "Rogojin'in evini kilitli, sessiz ve solan akşam ışığında rahatsız edici bir şekilde hareketsiz buldu",
+          },
+          {
+            ar: "استقر عليه رعب غريب قبل أن يفهم تمامًا ماذا يعني ذلك",
+            es: "Un extraño temor se apoderó de él mucho antes de que comprendiera exactamente lo que significaba",
+            tr: "Tam olarak ne anlama geldiğini anlamadan çok önce, tuhaf bir dehşet üzerine çöktü",
+          },
+          {
+            ar: "طرق الباب مرارًا، محسًّا أن شيئًا فظيعًا لا رجعة فيه قد حدث داخل ذلك المنزل",
+            es: "Llamó repetidamente, presintiendo que algo terrible e irreversible había ocurrido dentro de esa casa",
+            tr: "Tekrar tekrar kapıyı çaldı, o evin içinde korkunç, geri dönüşü olmayan bir şeyin ters gittiğini hissederek",
+          },
+          {
+            ar: "فتح روغوجين الباب بنفسه أخيرًا، شاحبًا وصامتًا وهادئًا بطريقته الغريبة الخاصة",
+            es: "Rogozhin finalmente abrió la puerta él mismo, pálido, silencioso y extrañamente tranquilo a su manera",
+            tr: "Sonunda kapıyı Rogojin'in kendisi açtı, solgun, sessiz ve kendine has tuhaf bir sakinlikle",
+          },
+          {
+            ar: "قاد ميشكين دون أن ينبس بكلمة نحو غرفة مستورة في نهاية الممر",
+            es: "Guio a Mishkin sin decir una sola palabra hacia una habitación con cortinas al final del pasillo",
+            tr: "Mişkin'i tek kelime etmeden koridorun sonundaki perdeli bir odaya doğru götürdü",
+          },
+        ],
+      },
+      {
+        title: { ar: "السكين", es: "El cuchillo", tr: "Bıçak" },
+        sentences: [
+          {
+            ar: "خلف الستار، كانت ناستاسيا ملقاة بلا حراك، قُتلت بهدوء في وقت سابق من تلك الليلة نفسها",
+            es: "Detrás de la cortina, Nastasia yacía inmóvil, asesinada en silencio en algún momento de esa misma noche",
+            tr: "Perdenin arkasında Nastasya hareketsiz yatıyordu, o gecenin bir vaktinde sessizce öldürülmüştü",
+          },
+          {
+            ar: "شرح روغوجين ببساطة أن الغيرة، في النهاية، تغلبت على آخر ذرة من ضبط نفسه",
+            es: "Rogozhin explicó sin rodeos que los celos, finalmente, habían vencido cada resto de su autocontrol",
+            tr: "Rogojin, kıskançlığın sonunda öz kontrolünün son zerresini bile yendiğini düz bir tavırla anlattı",
+          },
+          {
+            ar: "ميشكين، بدلًا من أن يرتد رعبًا، جلس برفق بجانب صديقه المنكسر المرتجف",
+            es: "Mishkin, en lugar de retroceder horrorizado, se sentó con delicadeza junto a su amigo roto y tembloroso",
+            tr: "Mişkin dehşetle geri çekilmek yerine, kırılmış, titreyen arkadaşının yanına nazikçe oturdu",
+          },
+          {
+            ar: "طوال تلك الليلة الطويلة، واسى روغوجين بنفس الرحمة الكاملة التي يمنحها للجميع دون حذر",
+            es: "A lo largo de esa larga noche consoló a Rogozhin con la misma compasión total y sin reservas que le daba a todos",
+            tr: "O uzun gece boyunca, herkese gösterdiği aynı tam, tetiksiz şefkatle Rogojin'i teselli etti",
+          },
+          {
+            ar: "لم يتحدث أي منهما كثيرًا بينما كان الفجر ينبلج ببطء وهدوء فوق الغرفة الصامتة الرهيبة",
+            es: "Ninguno de los dos habló mucho mientras el amanecer rompía lenta y silenciosamente sobre la habitación silenciosa y terrible",
+            tr: "Şafak, sessiz, korkunç odanın üzerine yavaşça, sessizce sökerken ikisi de pek konuşmadı",
+          },
+          {
+            ar: "عندما وصل الآخرون أخيرًا، وجدوا الرجلين جالسين معًا بجانب الجثة",
+            es: "Cuando los demás finalmente llegaron, encontraron a los dos hombres sentados juntos junto al cuerpo",
+            tr: "Diğerleri sonunda geldiğinde, iki adamı cesedin yanında birlikte otururken buldular",
+          },
+          {
+            ar: "أُخذ روغوجين ليواجه المحاكمة، وفي النهاية النفي، عما فعله",
+            es: "Rogozhin fue llevado para enfrentar un juicio y, finalmente, el exilio por lo que había hecho",
+            tr: "Rogojin, yaptıkları yüzünden yargılanmak ve sonunda sürgüne gönderilmek üzere götürüldü",
+          },
+          {
+            ar: "ميشكين، اللطيف حتى اللحظة الأخيرة، لم يُظهر أي غضب تجاه الرجل الذي خسر كل شيء",
+            es: "Mishkin, gentil hasta el último momento, no mostró ninguna ira hacia el hombre que lo había perdido todo",
+            tr: "Son ana kadar nazik olan Mişkin, her şeyini kaybetmiş adama karşı hiç öfke göstermedi",
+          },
+        ],
+      },
+      {
+        title: { ar: "الليلة الأخيرة", es: "La última noche", tr: "Son Gece" },
+        sentences: [
+          {
+            ar: "طغت صدمة تلك الليلة الواحدة وحزنها أخيرًا على عقل ميشكين الهش المتصدّع",
+            es: "La conmoción y el dolor de aquella única noche finalmente abrumaron la frágil mente fracturada de Mishkin",
+            tr: "O tek gecenin şoku ve kederi, sonunda Mişkin'in kırılgan, çatlamış zihnini altüst etti",
+          },
+          {
+            ar: "عاد صرعه بكامل قوته، وجاء معه انسحاب كامل ودائم إلى الداخل",
+            es: "Su epilepsia regresó con toda su fuerza, y con ella llegó un retiro interior total y permanente",
+            tr: "Epilepsisi tüm şiddetiyle geri döndü ve beraberinde içe doğru tam, kalıcı bir çekilme getirdi",
+          },
+          {
+            ar: "انزلق ببطء مجددًا إلى الحالة الصامتة الطفولية التي وصفها الأطباء يومًا بالبلاهة التامة",
+            es: "Se deslizó lentamente de nuevo hacia el estado silencioso e infantil que los médicos una vez llamaron idiocia completa",
+            tr: "Doktorların bir zamanlar tam bir aptallık olarak adlandırdığı sessiz, çocuksu hale yavaşça geri döndü",
+          },
+          {
+            ar: "أغلايا، إذ علمت بما حدث، بكت بمرارة على حب رفضت يومًا أن تثق به",
+            es: "Aglaya, al enterarse de lo ocurrido, lloró amargamente por un amor en el que una vez se había negado a confiar",
+            tr: "Olanları öğrenen Aglaya, bir zamanlar güvenmeyi reddettiği bir aşk için acı acı ağladı",
+          },
+          {
+            ar: "زاره الأصدقاء بإخلاص في المصحة، رغم أنه نادرًا ما بدا يعرفهم بعد الآن",
+            es: "Los amigos lo visitaban fielmente en el sanatorio, aunque rara vez parecía reconocerlos ya",
+            tr: "Arkadaşları sanatoryumda onu sadakatle ziyaret etti, gerçi artık onları pek tanıyor gibi görünmüyordu",
+          },
+          {
+            ar: "استقبله طبيبه السويسري القديم من جديد، وعالجه بنفس الحنان الصبور كما كان من قبل",
+            es: "Su antiguo médico suizo volvió a recibirlo, tratándolo con la misma paciente ternura de antes",
+            tr: "Eski İsviçreli doktoru onu tekrar yanına aldı ve onu eskisi gibi aynı sabırlı şefkatle tedavi etti",
+          },
+          {
+            ar: "مضى المجتمع بسرعة، ناسيًا بالفعل ذلك الرجل الغريب الصادق بشكل مؤلم الذي عاش يومًا بينهم",
+            es: "La sociedad siguió adelante rápidamente, olvidando ya al extraño hombre, dolorosamente honesto, que una vez había convivido entre ellos",
+            tr: "Sosyete hızla yoluna devam etti, bir zamanlar aralarında dolaşan o tuhaf, acı verecek kadar dürüst adamı çoktan unutmuştu",
+          },
+          {
+            ar: "ومع ذلك اتفق كل من عرفه حقًا على أن طيبته، على الأقل، كانت حقيقية تمامًا",
+            es: "Sin embargo, todos los que realmente lo habían conocido coincidían en que su bondad, al menos, había sido completamente real",
+            tr: "Yine de onu gerçekten tanıyan herkes, en azından iyiliğinin tamamen gerçek olduğu konusunda hemfikirdi",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-hundred-years-solitude",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة غابرييل غارسيا ماركيز عن عائلة بوينديا وصعود بلدة ماكوندو وسقوطها عبر أجيال من الحب والحرب والعزلة — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Gabriel García Márquez sobre la familia Buendía y el auge y la caída del pueblo de Macondo a través de generaciones de amor, guerra y soledad — un relato personal, no el texto original.",
+      tr: "Gabriel García Márquez'in, Buendía ailesinin ve Macondo kasabasının nesiller boyu aşk, savaş ve yalnızlık içinde yükselişi ve çöküşü hakkındaki hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "تأسيس ماكوندو", es: "La fundación de Macondo", tr: "Macondo'nun Kuruluşu" },
+        sentences: [
+          {
+            ar: "أسس خوسيه أركاديو بوينديا وزوجته أورسولا بلدة ماكوندو المعزولة بجانب نهر",
+            es: "José Arcadio Buendía y su esposa Úrsula fundaron el aislado pueblo de Macondo junto a un río",
+            tr: "José Arcadio Buendía ve eşi Úrsula, bir nehir kıyısında tenha Macondo kasabasını kurdu",
+          },
+          {
+            ar: "كان حالمًا لا يهدأ يطارد بلا نهاية الاختراعات والكيمياء وعجائب الغجر المتجولين الغريبة",
+            es: "Era un soñador inquieto que perseguía sin fin inventos, alquimia y las extrañas maravillas de los gitanos errantes",
+            tr: "Durmadan icatların, simyanın ve gezgin çingenelerin tuhaf mucizelerinin peşinden koşan huzursuz bir hayalperestti",
+          },
+          {
+            ar: "كان غجري يُدعى ملكياديس يزور البلدة كل عام، حاملًا مغناطيسًا وتلسكوبات ورقوقًا قديمة غامضة",
+            es: "Un gitano llamado Melquíades los visitaba cada año, trayendo imanes, telescopios y misteriosos pergaminos antiguos",
+            tr: "Melquíades adında bir çingene her yıl ziyarete gelir, mıknatıslar, teleskoplar ve gizemli eski parşömenler getirirdi",
+          },
+          {
+            ar: "أورسولا، العملية التي لا تعرف الكلل، منعت المنزل المتنامي والبلدة من الانهيار في فوضى تامة",
+            es: "Úrsula, práctica e incansable, evitaba que el hogar en crecimiento y el pueblo se derrumbaran en pura anarquía",
+            tr: "Pratik ve yorulmak bilmeyen Úrsula, büyüyen evin ve kasabanın tam bir kaosa sürüklenmesini engelledi",
+          },
+          {
+            ar: "نمت ماكوندو ببطء من حفنة منازل إلى عالم صغير حيوي ومشمس ومعزول",
+            es: "Macondo creció lentamente de un puñado de casas a un pequeño mundo vivo, soleado y aislado",
+            tr: "Macondo, bir avuç evden yavaş yavaş canlı, güneşli, tenha küçük bir dünyaya dönüştü",
+          },
+          {
+            ar: "انغمس خوسيه أركاديو بوينديا في النهاية في أبحاث هوسية وقُيّد وهو يهذي إلى شجرة كستناء",
+            es: "José Arcadio Buendía terminó perdido en una investigación obsesiva y fue atado, delirando, a un castaño",
+            tr: "José Arcadio Buendía sonunda saplantılı araştırmalarında kendini kaybetti ve sayıklarken bir kestane ağacına bağlandı",
+          },
+          {
+            ar: "مات ملكياديس وعاد لاحقًا كشبح ودود، لا يزال مرحبًا به في منزل العائلة المزدحم",
+            es: "Melquíades murió y más tarde regresó como un fantasma amistoso, todavía bienvenido en la abarrotada casa familiar",
+            tr: "Melquíades öldü ve daha sonra dost bir hayalet olarak geri döndü, ailenin kalabalık evinde hâlâ hoş karşılanıyordu",
+          },
+          {
+            ar: "وُلدت أجيال من عائلة بوينديا وعاشت وماتت داخل ذلك المنزل السحري المضطرب نفسه",
+            es: "Generaciones de Buendía nacerían, vivirían y morirían dentro de esa misma casa inquieta y mágica",
+            tr: "Buendía ailesinin nesilleri, aynı huzursuz, büyülü evin içinde doğacak, yaşayacak ve ölecekti",
+          },
+          {
+            ar: "كاد كل واحد منهم يرث نسخة ما من طبيعة المؤسس الشرسة والمنعزلة",
+            es: "Casi todos ellos heredarían alguna versión de la naturaleza feroz y solitaria del fundador",
+            tr: "Neredeyse hepsi, kurucularının vahşi, yalnız doğasının bir versiyonunu miras alacaktı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "لعنة عائلة بوينديا",
+          es: "La maldición de los Buendía",
+          tr: "Buendía Laneti",
+        },
+        sentences: [
+          {
+            ar: "خشيت أورسولا من لعنة عائلية قديمة، أن زواج الأقارب قد ينجب طفلًا بذيل خنزير",
+            es: "Úrsula temía una vieja maldición familiar: que el matrimonio entre primos pudiera engendrar un hijo con cola de cerdo",
+            tr: "Úrsula, eski bir aile lanetinden korkuyordu: kuzenlerin evlenmesi domuz kuyruklu bir çocuk doğurabilirdi",
+          },
+          {
+            ar: "كانت هي وخوسيه أركاديو أنفسهما أبناء عمومة، وهو ما طارد بصمت كل جيل تلاهما",
+            es: "Ella y José Arcadio eran primos, lo cual atormentó silenciosamente a cada generación que los siguió",
+            tr: "Kendisi ve José Arcadio zaten kuzendi, bu durum onlardan sonraki her nesli sessizce rahatsız etti",
+          },
+          {
+            ar: "ظل أبناؤهم وأحفادهم يعيدون استخدام نفس الحفنة من أسماء العائلة عبر الأجيال",
+            es: "Sus hijos y nietos siguieron reutilizando el mismo puñado de nombres familiares durante generaciones",
+            tr: "Çocukları ve torunları nesiller boyunca aynı avuç dolusu aile ismini kullanmaya devam etti",
+          },
+          {
+            ar: "كاد كل أوريليانو ينمو منعزلًا ومنطويًا، بينما كاد كل خوسيه أركاديو ينمو مندفعًا وقويًا",
+            es: "Casi todos los Aureliano se volvían solitarios y retraídos, mientras casi todos los José Arcadio se volvían impulsivos y fuertes",
+            tr: "Neredeyse her Aureliano yalnız ve içine kapanık büyürken, neredeyse her José Arcadio dürtüsel ve güçlü büyüdü",
+          },
+          {
+            ar: "بدا أفراد العائلة محكومين بتكرار خيارات بعضهم وحبهم وأخطائهم دون أن يدركوا ذلك تمامًا",
+            es: "Los miembros de la familia parecían condenados a repetir las decisiones, amores y errores de los demás sin darse cuenta del todo",
+            tr: "Aile üyeleri, tam olarak farkına varmadan birbirlerinin seçimlerini, aşklarını ve hatalarını tekrarlamaya mahkum görünüyordu",
+          },
+          {
+            ar: "أورسولا، التي عاشت حتى شيخوخة مذهلة، راقبت تكرار النمط بقلق متزايد ومتعب",
+            es: "Úrsula, que vivió hasta una edad asombrosamente avanzada, observaba el patrón repetirse con una alarma creciente y cansada",
+            tr: "Şaşırtıcı derecede uzun yaşayan Úrsula, bu örüntünün tekrarını giderek artan, yorgun bir kaygıyla izledi",
+          },
+          {
+            ar: "حاولت مرارًا وتكرارًا تحذير أحفادها، الذين نادرًا ما استمعوا إليها باهتمام كافٍ",
+            es: "Intentó una y otra vez advertir a sus descendientes, que rara vez la escuchaban con suficiente atención",
+            tr: "Torunlarını uyarmayı defalarca denedi, ama onlar onu yeterince dikkatle dinlemedi",
+          },
+          {
+            ar: "توصلت إلى الاعتقاد بأن عزلة العائلة كانت في الحقيقة لعنتها الهادئة الموروثة الخاصة",
+            es: "Llegó a creer que la soledad de la familia era, en realidad, su propia y silenciosa maldición heredada",
+            tr: "Sonunda ailenin yalnızlığının, aslında kendi sessiz, kalıtsal laneti olduğuna inanmaya başladı",
+          },
+          {
+            ar: "مع ذلك، ظل أفراد بوينديا الجدد يقعون في الحب تمامًا كما فعل أسلافهم يومًا",
+            es: "Aun así, los nuevos Buendía seguían enamorándose exactamente igual que sus antepasados",
+            tr: "Yine de yeni Buendíalar, atalarının bir zamanlar yaptığı gibi aşık olmaya devam etti",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "حروب الكولونيل أوريليانو بوينديا",
+          es: "Las guerras del coronel Aureliano Buendía",
+          tr: "Albay Aureliano Buendía'nın Savaşları",
+        },
+        sentences: [
+          {
+            ar: "نما الكولونيل أوريليانو بوينديا من صبي هادئ منعزل ليصبح قائدًا ثوريًا أسطوريًا",
+            es: "El coronel Aureliano Buendía pasó de ser un niño callado y solitario a un legendario líder revolucionario",
+            tr: "Albay Aureliano Buendía, sessiz, yalnız bir çocuktan efsanevi bir devrimci lidere dönüştü",
+          },
+          {
+            ar: "أطلق اثنتين وثلاثين انتفاضة مسلحة فاشلة ضد الحكومة المحافظة الفاسدة في البلاد",
+            es: "Lanzó treinta y dos alzamientos armados fallidos contra el corrupto gobierno conservador del país",
+            tr: "Ülkenin yozlaşmış muhafazakar hükümetine karşı otuz iki başarısız silahlı ayaklanma başlattı",
+          },
+          {
+            ar: "نجا من أربع عشرة محاولة اغتيال وفرقة إعدام واحدة ومعارك يائسة منعزلة لا تُحصى",
+            es: "Sobrevivió a catorce intentos de asesinato, un pelotón de fusilamiento y innumerables batallas desesperadas y solitarias",
+            tr: "On dört suikast girişiminden, bir kurşuna dizilme mangasından ve sayısız çaresiz, yalnız savaştan sağ çıktı",
+          },
+          {
+            ar: "أفرغته الشهرة والقيادة ببطء من الداخل حتى لم يعد يشعر بأي شيء تقريبًا",
+            es: "La fama y el mando lo fueron vaciando lentamente hasta que ya casi no sentía nada en absoluto",
+            tr: "Şöhret ve komuta onu yavaşça içten boşalttı, ta ki artık neredeyse hiçbir şey hissetmez hale gelene dek",
+          },
+          {
+            ar: "وقّع معاهدة سلام كان يحتقرها في أعماقه، لتنهي حروبًا كلفته كل شيء",
+            es: "Firmó un tratado de paz que en el fondo despreciaba, poniendo fin a guerras que le habían costado todo",
+            tr: "İçten içe hor gördüğü bir barış antlaşması imzaladı ve ona her şeye mal olan savaşları sona erdirdi",
+          },
+          {
+            ar: "عند عودته إلى المنزل، انعزل يصنع أسماكًا ذهبية صغيرة، يصهر كل واحدة منها مجددًا",
+            es: "Al volver a casa, se encerró fabricando pequeños pescaditos de oro, derritiendo cada uno de nuevo",
+            tr: "Eve döndüğünde kendini kapattı ve küçük altın balıklar yapıp her birini tekrar eritti",
+          },
+          {
+            ar: "صنع وفكّك السمكة الصغيرة نفسها بلا نهاية، باحثًا عن نوع من السلام المنسي",
+            es: "Hizo y deshizo el mismo pequeño pez sin fin, buscando algún tipo de paz olvidada",
+            tr: "Aynı küçük balığı durmadan yapıp bozdu, unutulmuş bir tür huzur arayışı içindeydi",
+          },
+          {
+            ar: "تذكرته ماكوندو كبطل، رغم أنه هو نفسه لم يتذكر إلا الإرهاق والعزلة في الغالب",
+            es: "Macondo lo recordaba como un héroe, aunque él, en su mayor parte, solo recordaba el agotamiento y la soledad",
+            tr: "Macondo onu bir kahraman olarak hatırladı, oysa kendisi çoğunlukla yalnızca bitkinliği ve yalnızlığı hatırlıyordu",
+          },
+          {
+            ar: "مات بهدوء ذات ظهيرة، منسيًا من التاريخ تمامًا كما تمنى في سره",
+            es: "Murió tranquilamente una tarde, olvidado por la historia exactamente como en secreto había deseado",
+            tr: "Bir öğleden sonra sessizce öldü, tam da gizliden dilediği gibi tarih tarafından unutulmuş halde",
+          },
+        ],
+      },
+      {
+        title: { ar: "ريميديوس الجميلة", es: "Remedios, la bella", tr: "Güzel Remedios" },
+        sentences: [
+          {
+            ar: "نشأت ريميديوس الجميلة غريبة ومشرقة وغير مبالية تمامًا بالرغبة البشرية العادية",
+            es: "Remedios, la bella, creció extraña, radiante y completamente indiferente al deseo humano ordinario",
+            tr: "Güzel Remedios, tuhaf, ışıltılı ve sıradan insan arzusuna karşı tamamen kayıtsız büyüdü",
+          },
+          {
+            ar: "كان الرجال الذين ينظرون إليها طويلًا يواجهون غالبًا حظًا عاثرًا غريبًا أو موتًا مفاجئًا",
+            es: "Los hombres que la miraban demasiado tiempo a menudo sufrían una extraña mala suerte o una muerte repentina",
+            tr: "Ona uzun süre bakan erkekler sıklıkla tuhaf bir talihsizlikle ya da ani bir ölümle karşılaşırdı",
+          },
+          {
+            ar: "كانت تتجول في المنزل نصف مرتدية، بعيدة عن الغرور أو النميمة أو أي خجل اجتماعي عادي",
+            es: "Vagaba por la casa medio vestida, ajena a la vanidad, al chisme o a cualquier vergüenza social normal",
+            tr: "Evde yarı giyinik dolaşırdı, kibirden, dedikodudan ya da herhangi bir toplumsal utançtan tamamen uzaktı",
+          },
+          {
+            ar: "توقف أفراد العائلة في النهاية عن محاولة فهم أو تفسير سلوكها المنفصل غير الدنيوي",
+            es: "Los miembros de la familia finalmente dejaron de intentar entender o explicar su comportamiento distante y de otro mundo",
+            tr: "Aile üyeleri sonunda onun bu dünyaya ait olmayan, kopuk davranışını anlamaya ya da açıklamaya çalışmaktan vazgeçti",
+          },
+          {
+            ar: "في ظهيرة عادية بينما كانت تساعد في طي الغسيل في الفناء المشمس، بدأت ترتفع في الهواء",
+            es: "Una tarde cualquiera, mientras ayudaba a doblar la ropa en el patio soleado, comenzó a elevarse en el aire",
+            tr: "Sıradan bir öğleden sonra güneşli avluda çamaşır katlarken havaya yükselmeye başladı",
+          },
+          {
+            ar: "صعدت بهدوء متجاوزة قمم الأشجار، تلوّح برفق، ولم يرها أحد مرة أخرى قط",
+            es: "Ascendió tranquilamente por encima de las copas de los árboles, saludando con la mano, y nadie volvió a verla jamás",
+            tr: "Ağaç tepelerinin üzerinden sakince yükseldi, hafifçe el salladı ve bir daha kimse tarafından görülmedi",
+          },
+          {
+            ar: "تقبلت العائلة صعودها بهدوء تقريبًا، معجزة أخرى بين معجزات كثيرة في ذلك المنزل",
+            es: "La familia aceptó su ascensión con una calma casi total, una maravilla más entre muchas en aquella casa",
+            tr: "Aile onun yükselişini neredeyse sakin bir şekilde kabullendi, o evdeki pek çok mucizeden bir diğeri olarak",
+          },
+          {
+            ar: "همس الجيران عن الأمر لسنوات، غير متأكدين إن كانوا سيسمونها معجزة أم مجرد جنون",
+            es: "Los vecinos susurraron sobre ello durante años, sin saber si llamarlo milagro o simple locura",
+            tr: "Komşular yıllarca bunun hakkında fısıldadı, buna mucize mi yoksa sıradan bir delilik mi demeleri gerektiğinden emin olamadan",
+          },
+          {
+            ar: "في ماكوندو، تعلّم المستحيل والعادي منذ زمن طويل أن يعيشا معًا بارتياح",
+            es: "En Macondo, lo imposible y lo cotidiano habían aprendido hacía tiempo a convivir cómodamente",
+            tr: "Macondo'da imkansız ile sıradan, uzun zaman önce birlikte rahatça yaşamayı öğrenmişti",
+          },
+        ],
+      },
+      {
+        title: { ar: "وباء الأرق", es: "La peste del insomnio", tr: "Uykusuzluk Vebası" },
+        sentences: [
+          {
+            ar: "اجتاح ماكوندو وباء أرق غامض، سرق النوم وببطء الذاكرة نفسها",
+            es: "Una misteriosa peste de insomnio se extendió por Macondo, robando el sueño y, lentamente, la memoria misma",
+            tr: "Gizemli bir uykusuzluk vebası Macondo'yu sardı, uykuyu ve yavaş yavaş belleğin kendisini çaldı",
+          },
+          {
+            ar: "توقف سكان البلدة المصابون عن النوم تمامًا لكنهم أصبحوا أكثر نسيانًا مع كل يوم يمر",
+            es: "Los habitantes afectados dejaron de dormir por completo, pero se volvían cada vez más olvidadizos con cada día que pasaba",
+            tr: "Hastalığa yakalanan kasaba halkı tamamen uyumayı bıraktı ama her geçen gün daha unutkan hale geldi",
+          },
+          {
+            ar: "بدأوا بوضع بطاقات على الأشياء الشائعة، يكتبون طاولة أو بقرة حتى لا تضيع المعاني",
+            es: "Empezaron a etiquetar los objetos comunes, escribiendo mesa o vaca para que los significados no se perdieran",
+            tr: "Sıradan nesnelere etiket koymaya başladılar, anlamların kaybolmaması için masa ya da inek yazdılar",
+          },
+          {
+            ar: "حتى إن أحدهم وضع لافتة كبيرة تذكّر الجميع بأن الله، بطريقة ما، لا يزال موجودًا",
+            es: "Alguien incluso colocó un gran cartel para recordarle a todos que Dios, de algún modo, todavía existía",
+            tr: "Biri hatta herkese Tanrı'nın bir şekilde hâlâ var olduğunu hatırlatan büyük bir tabela bile astı",
+          },
+          {
+            ar: "حاول خوسيه أركاديو بوينديا يائسًا اختراع آلة تستطيع استعادة ذاكرة الجميع المتلاشية",
+            es: "José Arcadio Buendía intentó desesperadamente inventar una máquina que pudiera restaurar la memoria menguante de todos",
+            tr: "José Arcadio Buendía, herkesin sönmekte olan hafızasını geri getirecek bir makine icat etmeye çaresizce çalıştı",
+          },
+          {
+            ar: "وصل غجري متجول في النهاية بشراب مرّ غريب شفى البلدة بأكملها أخيرًا",
+            es: "Un gitano viajero finalmente llegó con una extraña bebida amarga que curó por fin a todo el pueblo",
+            tr: "Sonunda bütün kasabayı iyileştiren garip, acı bir içecekle gezgin bir çingene geldi",
+          },
+          {
+            ar: "ببطء وبامتنان، بدأ سكان البلدة بالنوم مجددًا وعادت ذكرياتهم سليمة",
+            es: "Lenta y agradecidamente, los habitantes volvieron a dormir y sus recuerdos regresaron intactos",
+            tr: "Yavaş yavaş, minnetle, kasaba halkı yeniden uyumaya başladı ve hafızaları eksiksiz geri geldi",
+          },
+          {
+            ar: "تحول الوباء الغريب إلى ذكرى محلية كواحدة أخرى من كوارث ماكوندو المستحيلة الصغيرة",
+            es: "La extraña peste pasó a la memoria local como uno más de los pequeños e imposibles desastres de Macondo",
+            tr: "Bu garip veba, Macondo'nun imkansız küçük felaketlerinden biri olarak yerel hafızaya geçti",
+          },
+          {
+            ar: "استأنفت الحياة سيرها تمامًا كما كانت من قبل، وكأن شيئًا بهذه الغرابة لم يحدث أبدًا",
+            es: "La vida se reanudó exactamente como antes, como si algo tan extraño nunca hubiera ocurrido en realidad",
+            tr: "Hayat tam olarak eskisi gibi devam etti, sanki bu kadar tuhaf bir şey hiç gerçekten olmamış gibi",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "رقوق ملكياديس",
+          es: "Los pergaminos de Melquíades",
+          tr: "Melquíades'in Parşömenleri",
+        },
+        sentences: [
+          {
+            ar: "ترك ملكياديس، قبل موته، مجموعة من الرقوق مكتوبة بشفرة قديمة غامضة",
+            es: "Melquíades, antes de morir, había dejado un conjunto de pergaminos escritos en un misterioso código antiguo",
+            tr: "Melquíades ölmeden önce, gizemli, eski bir şifreyle yazılmış bir dizi parşömen bırakmıştı",
+          },
+          {
+            ar: "على مدى أجيال، حاول أفراد مختلفون من عائلة بوينديا فك خط الغجري العجوز الغريب وفشلوا",
+            es: "Durante generaciones, varios Buendía intentaron sin éxito traducir la extraña caligrafía del viejo gitano",
+            tr: "Nesiller boyunca çeşitli Buendía üyeleri, yaşlı çingenenin garip el yazısını çevirmeye çalıştı ve başarısız oldu",
+          },
+          {
+            ar: "الغرفة الخلفية الصغيرة التي أقام فيها لم تشخ أو تتجمع فيها الأتربة أو تتحلل أبدًا بطريقة ما",
+            es: "El pequeño cuarto trasero donde se había alojado, de algún modo, nunca envejecía, ni acumulaba polvo, ni se deterioraba",
+            tr: "Kaldığı küçük arka oda, bir şekilde hiç yaşlanmadı, toz tutmadı, hiç çürümedi",
+          },
+          {
+            ar: "قيل إن الرقوق تنبأت سرًا بكل تاريخ عائلة بوينديا المستقبلي",
+            es: "Se rumoreaba que los pergaminos predecían en secreto toda la historia futura de la familia Buendía",
+            tr: "Söylentiye göre parşömenler, Buendía ailesinin tüm gelecek tarihini gizlice önceden bildiriyordu",
+          },
+          {
+            ar: "أصبح الشاب أوريليانو بابيلونيا، بعد أجيال، مهووسًا بصمت بحل معناها أخيرًا",
+            es: "El joven Aureliano Babilonia, generaciones después, se obsesionó en silencio con descifrar finalmente su significado",
+            tr: "Nesiller sonra genç Aureliano Babilonia, sonunda anlamlarını çözmeye sessizce saplantılı hale geldi",
+          },
+          {
+            ar: "درس اللغات القديمة وحيدًا لسنوات، مدفوعًا بعزلة ورثها عن أسلافه",
+            es: "Estudió lenguas antiguas solo durante años, impulsado por una soledad heredada de sus antepasados",
+            tr: "Atalarından miras kalan bir yalnızlığın dürtüsüyle, yıllarca yalnız başına eski dilleri inceledi",
+          },
+          {
+            ar: "أدرك ببطء أن الرقوق كُتبت بشفرة متداخلة بغرابة عبر الزمن نفسه",
+            es: "Poco a poco se dio cuenta de que los pergaminos estaban escritos en un código extrañamente superpuesto al propio tiempo",
+            tr: "Yavaş yavaş parşömenlerin, zamanın kendisi boyunca tuhaf bir şekilde katmanlanmış bir şifreyle yazıldığını fark etti",
+          },
+          {
+            ar: "أحس، بخوف متصاعد، أن قصته هو نفسه كانت مكتوبة بالفعل بطريقة ما بداخلها",
+            es: "Sintió, con creciente pavor, que su propia historia ya estaba de algún modo escrita dentro de ellos",
+            tr: "Giderek artan bir dehşetle, kendi hikayesinin bir şekilde zaten onların içinde yazılı olduğunu hissetti",
+          },
+          {
+            ar: "انتظرت الرقوق بصبر، عقدًا بعد عقد، قارئًا سيفهمها أخيرًا",
+            es: "Los pergaminos esperaron pacientemente, década tras década, a un lector que finalmente los comprendiera",
+            tr: "Parşömenler on yıllar boyunca sabırla, sonunda anlayacak bir okuyucuyu bekledi",
+          },
+        ],
+      },
+      {
+        title: { ar: "شركة الموز", es: "La compañía bananera", tr: "Muz Şirketi" },
+        sentences: [
+          {
+            ar: "وصلت شركة موز أجنبية إلى ماكوندو، جالبة الكهرباء والثروة وتغييرًا مفاجئًا مضطربًا",
+            es: "Una compañía bananera extranjera llegó a Macondo, trayendo electricidad, riqueza y un cambio repentino e inquieto",
+            tr: "Yabancı bir muz şirketi Macondo'ya geldi, elektrik, zenginlik ve ani, huzursuz bir değişim getirdi",
+          },
+          {
+            ar: "تدفق الغرباء إلى البلدة التي كانت معزولة يومًا، وبنوا الأسيجة وخطوط السكك الحديدية وحيًا أجنبيًا مسوّرًا",
+            es: "Los forasteros inundaron el pueblo antes aislado, construyendo cercas, vías férreas y un barrio extranjero amurallado",
+            tr: "Yabancılar bir zamanlar tenha olan kasabayı doldurdu, çitler, demiryolları ve duvarlarla çevrili yabancı bir mahalle inşa etti",
+          },
+          {
+            ar: "ازدهر أوريليانو سيغوندو، أحد أفراد بوينديا اللاحقين، لفترة وسط الرخاء الجديد الصاخب والحفلات التي لا تنتهي",
+            es: "Aureliano Segundo, un Buendía posterior, prosperó brevemente en medio de la ruidosa nueva prosperidad y las fiestas interminables",
+            tr: "Sonraki nesilden bir Buendía olan Aureliano Segundo, gürültülü yeni refah ve bitmeyen partiler arasında kısa süreliğine parladı",
+          },
+          {
+            ar: "في هذه الأثناء، كدح العمال في ظروف قاسية وظالمة مقابل أجور بالكاد كانت الشركة تكلف نفسها دفعها",
+            es: "Mientras tanto, los trabajadores laboraban en condiciones duras e injustas por salarios que la compañía apenas se molestaba en pagar",
+            tr: "Bu sırada işçiler, şirketin ödemeye bile zor katlandığı ücretler karşılığında ağır, adaletsiz koşullarda çalıştı",
+          },
+          {
+            ar: "تراكمت الاستياء ببطء تحت ثروة البلدة الجديدة الصاخبة وبريقها الأجنبي المستورد",
+            es: "El resentimiento se fue acumulando lentamente bajo la eufórica nueva riqueza del pueblo y su glamour extranjero importado",
+            tr: "Kasabanın baş döndürücü yeni zenginliğinin ve ithal yabancı ihtişamının altında yavaş yavaş bir hoşnutsuzluk birikti",
+          },
+          {
+            ar: "بدأ منظمو النقابات بجمع الدعم بهدوء بين قوة العمل المتزايدة اليأس في الشركة",
+            es: "Los organizadores sindicales comenzaron a reunir apoyo en silencio entre la fuerza laboral cada vez más desesperada de la compañía",
+            tr: "Sendika örgütçüleri, şirketin giderek çaresizleşen işgücü arasında sessizce destek toplamaya başladı",
+          },
+          {
+            ar: "تجاهلت الشركة مطالبهم إلى حد كبير، وتعاملت مع شكاوى العمال كإزعاج محلي بسيط",
+            es: "La compañía ignoró en gran medida sus demandas, tratando las quejas de los trabajadores como una molestia local menor",
+            tr: "Şirket taleplerini büyük ölçüde görmezden geldi, işçilerin şikayetlerini önemsiz yerel bir sıkıntı olarak ele aldı",
+          },
+          {
+            ar: "اختفى هدوء ماكوندو الترابي القديم، وحل محله رخاء صاخب مقلق غير مألوف",
+            es: "La vieja quietud polvorienta de Macondo había desaparecido, reemplazada por una prosperidad ruidosa, inquieta y desconocida",
+            tr: "Macondo'nun eski tozlu sessizliği kaybolmuş, yerini gürültülü, tedirgin, yabancı bir refaha bırakmıştı",
+          },
+          {
+            ar: "أحس الجميع، دون أن يسمّوا الأمر تمامًا، أن هذه الثروة المستعارة لا يمكن أن تدوم",
+            es: "Todos presentían, sin llegar a nombrarlo del todo, que aquella riqueza prestada no podía durar",
+            tr: "Herkes, tam olarak adını koymadan, bu ödünç alınmış zenginliğin süremeyeceğini hissetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "المجزرة", es: "La masacre", tr: "Katliam" },
+        sentences: [
+          {
+            ar: "تجمّع آلاف عمال الموز سلميًا في ساحة البلدة، مطالبين بظروف أساسية أكثر عدلًا",
+            es: "Miles de trabajadores bananeros se reunieron pacíficamente en la plaza del pueblo, exigiendo condiciones básicas más justas",
+            tr: "Binlerce muz işçisi, daha adil temel koşullar talep ederek kasaba meydanında barışçıl bir şekilde toplandı",
+          },
+          {
+            ar: "فتح جنود الحكومة، الذين أُرسلوا لحماية مصالح الشركة، النار دون أي تحذير حقيقي على الإطلاق",
+            es: "Los soldados del gobierno, enviados para proteger los intereses de la compañía, abrieron fuego sin ninguna advertencia real",
+            tr: "Şirketin çıkarlarını korumak için gönderilen hükümet askerleri, hiçbir gerçek uyarı yapmadan ateş açtı",
+          },
+          {
+            ar: "نجا خوسيه أركاديو سيغوندو، أحد أحفاد بوينديا، بالاختباء تحت جبل من الجثث",
+            es: "José Arcadio Segundo, descendiente de los Buendía, sobrevivió escondiéndose bajo una montaña de cadáveres",
+            tr: "Buendía soyundan gelen José Arcadio Segundo, bir ölü yığınının altına saklanarak hayatta kaldı",
+          },
+          {
+            ar: "أصرّ لاحقًا يائسًا على أن الآلاف قد ماتوا، كُدّسوا في قطار شحن صامت مغادر",
+            es: "Más tarde insistió desesperadamente en que miles habían muerto, amontonados en un tren de carga silencioso que partía",
+            tr: "Daha sonra binlerce kişinin öldüğünde ve hareket eden sessiz bir yük trenine yığıldığında çaresizce ısrar etti",
+          },
+          {
+            ar: "نفى المسؤولون حدوث أي مجزرة أو وفيات على الإطلاق في ماكوندو",
+            es: "Los funcionarios negaron que hubiera ocurrido jamás masacre o muerte alguna en Macondo",
+            tr: "Yetkililer, Macondo'da hiçbir zaman gerçekten bir katliam ya da ölüm yaşanmadığını inkar etti",
+          },
+          {
+            ar: "كررت الصحف وكتب التاريخ بهدوء رواية الحكومة، محوةً المجزرة بالكامل",
+            es: "Los periódicos y los libros de historia repitieron discretamente la versión del gobierno, borrando la masacre por completo",
+            tr: "Gazeteler ve tarih kitapları hükümetin versiyonunu sessizce tekrarladı, katliamı tamamen sildi",
+          },
+          {
+            ar: "لم يبقَ سوى حفنة من عائلة بوينديا، وذكرياتهم المتلاشية غير المؤكدة، تصر على أن الأمر كان حقيقيًا",
+            es: "Solo un puñado de Buendía, y sus recuerdos difusos e inciertos, seguían insistiendo en que había sido real",
+            tr: "Yalnızca bir avuç Buendía ve onların solan, belirsiz anıları bunun gerçek olduğunda ısrar etmeye devam etti",
+          },
+          {
+            ar: "بدأ المطر بالهطول بعد ذلك بوقت قصير، وبغرابة، رفض ببساطة أن يتوقف تمامًا مرة أخرى",
+            es: "Poco después comenzó a llover y, extrañamente, la lluvia simplemente se negó a detenerse del todo otra vez",
+            tr: "Kısa süre sonra yağmur yağmaya başladı ve garip bir şekilde bir daha asla tamamen durmayı reddetti",
+          },
+          {
+            ar: "تخلت شركة الموز عن ماكوندو سريعًا، تاركة خلفها الخراب وصمتًا عنيدًا فقط",
+            es: "La compañía bananera pronto abandonó Macondo, dejando atrás solo ruina y un silencio obstinado",
+            tr: "Muz şirketi kısa süre sonra Macondo'yu terk etti, arkasında yalnızca yıkım ve inatçı bir sessizlik bıraktı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "أوريليانو سيغوندو والمطر",
+          es: "Aureliano Segundo y la lluvia",
+          tr: "Aureliano Segundo ve Yağmur",
+        },
+        sentences: [
+          {
+            ar: "استمر المطر بلا هوادة قرابة أربع سنوات كاملة، مغرقًا الشوارع ومعفّنًا الذكريات القديمة",
+            es: "La lluvia continuó implacable durante casi cuatro años completos, inundando calles y pudriendo viejos recuerdos",
+            tr: "Yağmur, sokakları sel basıp eski anıları çürüterek neredeyse dört tam yıl boyunca amansızca sürdü",
+          },
+          {
+            ar: "تداعى منزل أوريليانو سيغوندو الذي كان يومًا نابضًا بالحياة ببطء تحت العفن والديون والتحلل الهادئ الزاحف",
+            es: "El hogar antes animado de Aureliano Segundo se fue desmoronando lentamente bajo el moho, las deudas y una silenciosa decadencia que avanzaba",
+            tr: "Aureliano Segundo'nun bir zamanlar canlı olan evi, küf, borç ve sinsi, sessiz bir çürüme altında yavaşça çöktü",
+          },
+          {
+            ar: "راقبت عشيقته بيترا كوتيس وزوجته فرناندا كلتاهما اختفاء ثروة العائلة القديمة",
+            es: "Su amante Petra Cotes y su esposa Fernanda vieron ambas desaparecer la vieja fortuna familiar",
+            tr: "Metresi Petra Cotes ve karısı Fernanda, ikisi de ailenin eski servetinin yok oluşunu izledi",
+          },
+          {
+            ar: "عندما توقف المطر أخيرًا، ظهرت ماكوندو مبيضّة بالشمس، منهكة، وأقرب بوضوح إلى الخراب",
+            es: "Cuando por fin dejó de llover, Macondo emergió decolorada por el sol, agotada y visiblemente más cerca de la ruina",
+            tr: "Yağmur sonunda durduğunda, Macondo güneşte solmuş, bitkin ve gözle görülür şekilde yıkıma daha yakın bir halde ortaya çıktı",
+          },
+          {
+            ar: "تضاءل عدد سكان البلدة مع رحيل أفراد بوينديا الأصغر سنًا، حالمين بمكان آخر أقل لعنة",
+            es: "La población del pueblo se redujo cuando los Buendía más jóvenes se marcharon, soñando con algún lugar menos maldito",
+            tr: "Genç Buendíalar, daha az lanetli bir yer hayal ederek ayrılınca kasabanın nüfusu azaldı",
+          },
+          {
+            ar: "أصبح من بقي أكبر سنًا وأكثر غرابة وأكثر تشابكًا مع تاريخ عائلي نصف متذكر",
+            es: "Los que se quedaron se volvieron más viejos, más extraños y cada vez más enredados en una historia familiar a medio recordar",
+            tr: "Kalanlar yaşlandı, tuhaflaştı ve yarı hatırlanan aile tarihine giderek daha fazla dolandı",
+          },
+          {
+            ar: "ترهّل المنزل الكبير نفسه ببطء، وامتلأت غرفه التي كانت فخمة يومًا بالغبار والنمل بهدوء",
+            es: "La gran casa misma se fue hundiendo lentamente, y sus antaño majestuosas habitaciones se llenaron en silencio de polvo y hormigas",
+            tr: "Büyük evin kendisi yavaşça çöktü, bir zamanlar görkemli olan odaları sessizce toz ve karıncalarla doldu",
+          },
+          {
+            ar: "أورسولا، التي أصبحت الآن طاعنة في السن وشبه عمياء، أبقت ذاكرة العائلة المتلاشية حية وحدها تقريبًا",
+            es: "Úrsula, ya imposiblemente anciana y casi ciega, mantenía viva casi sola la memoria menguante de la familia",
+            tr: "Artık inanılmaz derecede yaşlı ve neredeyse kör olan Úrsula, ailenin sönmekte olan hafızasını neredeyse tek başına canlı tuttu",
+          },
+          {
+            ar: "حتى هي، أخيرًا، شعرت بأن انحلال ماكوندو الطويل يقترب ببطء لكن بثبات من فصوله الأخيرة",
+            es: "Incluso ella, por fin, sintió que el largo declive de Macondo se acercaba lenta pero firmemente a sus últimos capítulos",
+            tr: "O bile sonunda Macondo'nun uzun çözülüşünün yavaş ama emin adımlarla son bölümlerine yaklaştığını hissetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "أوريليانو الأخير", es: "El último Aureliano", tr: "Son Aureliano" },
+        sentences: [
+          {
+            ar: "بعد موت أورسولا، وجد آخر أفراد بوينديا أنفسهم وحيدين أكثر فأكثر في المنزل المتداعي",
+            es: "Tras la muerte de Úrsula, los últimos Buendía se encontraron cada vez más solos en la casa en ruinas",
+            tr: "Úrsula'nın ölümünden sonra son Buendíalar, çürüyen evde giderek daha yalnız kaldıklarını fark etti",
+          },
+          {
+            ar: "وقع أوريليانو بابيلونيا في حب عميق مع عمته أمارانتا أورسولا، غير مدرك لقرابتهما الحقيقية",
+            es: "Aureliano Babilonia se enamoró profundamente de su propia tía Amaranta Úrsula, sin saber su verdadero parentesco",
+            tr: "Aureliano Babilonia, gerçek akrabalıklarının farkında olmadan kendi teyzesi Amaranta Úrsula'ya derinden aşık oldu",
+          },
+          {
+            ar: "وُلد طفلهما أخيرًا حاملًا اللعنة التي طال الخوف منها، ذيلًا صغيرًا غريبًا كذيل الخنزير",
+            es: "Su hijo finalmente nació con la maldición tan temida, una pequeña y extraña cola como la de un cerdo",
+            tr: "Çocukları sonunda uzun süredir korkulan laneti taşıyarak doğdu; domuzunkine benzer küçük, garip bir kuyruk",
+          },
+          {
+            ar: "توفيت أمارانتا أورسولا بعد الولادة بوقت قصير، تاركة أوريليانو وحيدًا تمامًا في النهاية",
+            es: "Amaranta Úrsula murió poco después de dar a luz, dejando a Aureliano completamente solo por fin",
+            tr: "Amaranta Úrsula doğumdan kısa süre sonra öldü ve Aureliano'yu sonunda tamamen yalnız bıraktı",
+          },
+          {
+            ar: "منكوبًا بالحزن، توجه أخيرًا إلى رقوق ملكياديس، مستعدًا أخيرًا لمواجهة سرها",
+            es: "Sumido en el dolor, finalmente recurrió a los pergaminos de Melquíades, listo por fin para enfrentar su secreto",
+            tr: "Kederden yıkılmış halde sonunda Melquíades'in parşömenlerine döndü, sırlarıyla yüzleşmeye nihayet hazırdı",
+          },
+          {
+            ar: "أدرك وهو يواصل القراءة أن الرقوق وصفت قصة عائلته بأكملها تمامًا كما حدثت",
+            es: "Al seguir leyendo, comprendió que los pergaminos describían toda la historia de su familia exactamente como había ocurrido",
+            tr: "Okumaya devam ederken, parşömenlerin tüm ailesinin hikayesini tam olarak yaşandığı gibi anlattığını fark etti",
+          },
+          {
+            ar: "كشفت السطور الأخيرة أن ماكوندو نفسها ستختفي في اللحظة التي ينتهي فيها من قراءتها",
+            es: "Las últimas líneas revelaron que Macondo misma desaparecería en el instante en que terminara de leerlas",
+            tr: "Son satırlar, onları okumayı bitirdiği anda Macondo'nun kendisinin de yok olacağını ortaya koydu",
+          },
+          {
+            ar: "هبت فجأة ريح عنيفة في الخارج، بدأت تمحو المنزل والبلدة والعائلة",
+            es: "Un viento repentino y violento se levantó afuera, comenzando a borrar la casa, el pueblo y la familia",
+            tr: "Dışarıda aniden şiddetli bir rüzgar yükseldi ve evi, kasabayı ve aileyi silmeye başladı",
+          },
+          {
+            ar: "واصل أوريليانو القراءة رغم ذلك، مدركًا أخيرًا أن بعض العزلات لا تحظى بفرصة ثانية أبدًا",
+            es: "Aureliano siguió leyendo de todos modos, comprendiendo por fin que algunas soledades nunca tienen una segunda oportunidad",
+            tr: "Aureliano yine de okumaya devam etti, bazı yalnızlıkların asla ikinci bir şansı olmadığını sonunda anlayarak",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-memory-of-flesh",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة أحلام مستغانمي عن خالد، الرسام والمقاتل السابق الذي يحب حياة، ابنة قائده الشهيد، ولا يستطيع أن يفصلها عن قسنطينة التي فقدها — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Ahlam Mosteghanemi sobre Jaled, un pintor y excombatiente que ama a Hayat, la hija de su comandante caído, y no puede separarla de la Constantina que perdió — un relato personal, no el texto original.",
+      tr: "Ahlam Mosteghanemi'nin, ressam ve eski savaşçı Halid'in, şehit komutanının kızı Hayat'ı sevmesi ve onu kaybettiği Constantine'den ayıramamasının hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "رسام قسنطينة", es: "El pintor de Constantina", tr: "Constantine'in Ressamı" },
+        sentences: [
+          {
+            ar: "قاتل خالد بن طوبال في شبابه في حرب الجزائر من أجل الاستقلال ضد فرنسا",
+            es: "Jaled Ben Toubal había luchado de joven en la guerra de independencia de Argelia contra Francia",
+            tr: "Halid Bin Tubal, gençliğinde Cezayir'in Fransa'ya karşı bağımsızlık savaşında dövüşmüştü",
+          },
+          {
+            ar: "فقد ذراعه اليسرى في تلك الحرب، جرح لم يتوقف يومًا عن تشكيل نظرته لنفسه",
+            es: "Perdió el brazo izquierdo en esa guerra, una herida que nunca dejó de moldear cómo se veía a sí mismo",
+            tr: "O savaşta sol kolunu kaybetti; bu yara, kendini görüş biçimini şekillendirmeyi hiç bırakmadı",
+          },
+          {
+            ar: "أصبح رسامًا بدلًا من ذلك، متعلمًا ببطء كيف يمسك بالفرشاة وبحياة جديدة كاملة بيد واحدة",
+            es: "En cambio se convirtió en pintor, aprendiendo poco a poco a sostener un pincel y toda una nueva vida con una sola mano",
+            tr: "Bunun yerine ressam oldu, bir fırçayı ve tamamen yeni bir hayatı tek elle tutmayı yavaşça öğrendi",
+          },
+          {
+            ar: "كان أعمق ولائه لسي الطاهر، القائد الثوري الذي خدمه يومًا وأحبه كأب",
+            es: "Su lealtad más profunda había sido para Si Taher, el comandante revolucionario al que una vez sirvió y amó como a un padre",
+            tr: "En derin bağlılığı, bir zamanlar hizmet ettiği ve baba gibi sevdiği devrimci komutan Si Taher'e aitti",
+          },
+          {
+            ar: "قُتل سي الطاهر في الحرب، فصار شهيدًا آخر بين آلاف سينساهم الوطن الفتي لاحقًا نصف نسيان",
+            es: "Si Taher murió en la guerra, convirtiéndose en un mártir más entre los miles que la joven nación medio olvidaría después",
+            tr: "Si Taher savaşta öldürüldü ve genç ulusun daha sonra yarı yarıya unutacağı binlerce şehitten biri oldu",
+          },
+          {
+            ar: "استقر خالد أخيرًا في باريس، يرسم لوحات كانت دائمًا، بطريقة ما، تعود إلى المدينة المفقودة نفسها",
+            es: "Jaled finalmente se instaló en París, pintando lienzos que siempre, de algún modo, regresaban a la misma ciudad perdida",
+            tr: "Halid sonunda Paris'e yerleşti, her zaman bir şekilde aynı kayıp şehre dönen tablolar resmetti",
+          },
+          {
+            ar: "كانت تلك المدينة قسنطينة، المتربعة على منحدراتها وجسورها الحجرية، مكان استطاع رسمه لكنه لم يستطع تركه خلفه تمامًا",
+            es: "Esa ciudad era Constantina, encaramada sobre sus acantilados y puentes de piedra, un lugar que podía pintar pero nunca dejar realmente atrás",
+            tr: "O şehir, uçurumlarına ve taş köprülerine kurulmuş, resmedebildiği ama asla tam olarak geride bırakamadığı bir yer olan Constantine'di",
+          },
+        ],
+      },
+      {
+        title: { ar: "ابنة سي الطاهر", es: "La hija de Si Taher", tr: "Si Taher'in Kızı" },
+        sentences: [
+          {
+            ar: "بعد سنوات، في معرض فني في باريس، تعرّف خالد على شابة جزائرية تُدعى حياة",
+            es: "Años más tarde, en una exposición de arte en París, presentaron a Jaled a una joven argelina llamada Hayat",
+            tr: "Yıllar sonra Paris'te bir sanat sergisinde Halid, Hayat adında genç bir Cezayirli kadınla tanıştırıldı",
+          },
+          {
+            ar: "تبين بشكل مذهل أنها ابنة سي الطاهر، وُلدت بعد استشهاد أبيها في الحرب",
+            es: "Resultó ser, sorprendentemente, la hija de Si Taher, nacida después de la muerte de su padre en la guerra",
+            tr: "Şaşırtıcı bir şekilde, babasının savaşta ölümünden sonra doğan Si Taher'in kızı olduğu ortaya çıktı",
+          },
+          {
+            ar: "شعر خالد بالأرض تهتز تحته، وكأن قائده القديم عاد إليه عبر ابنته",
+            es: "Jaled sintió que el suelo se movía bajo sus pies, como si su antiguo comandante hubiera regresado a él a través de su propia hija",
+            tr: "Halid, sanki eski komutanı kendi çocuğu aracılığıyla ona geri dönmüş gibi zeminin altında kaydığını hissetti",
+          },
+          {
+            ar: "كانت حياة متعلمة وأنيقة وتكتب روايتها الخاصة، عالقة بين لغتين وبلدين",
+            es: "Hayat era culta, elegante y escribía su propia novela, atrapada entre dos idiomas y dos países",
+            tr: "Hayat eğitimli, zarif ve kendi romanını yazan, iki dil ve iki ülke arasında sıkışmış biriydi",
+          },
+          {
+            ar: "نشأت في الغالب في المنفى، لا تعرف أباها الشهيد إلا من خلال القصص والصور والصمت",
+            es: "Había crecido casi siempre en el exilio, conociendo a su padre mártir solo a través de historias, fotografías y silencio",
+            tr: "Çoğunlukla sürgünde büyümüştü, şehit babasını yalnızca hikayeler, fotoğraflar ve sessizlik yoluyla tanıyordu",
+          },
+          {
+            ar: "وجد خالد نفسه يشعر بحماية فورية تجاهها، وبانجذاب عاجز فوري تمامًا",
+            es: "Jaled se descubrió de inmediato protector con ella, y con la misma inmediatez, irremediablemente atraído hacia ella",
+            tr: "Halid kendini aniden ona karşı koruyucu, aynı anda da çaresizce ona çekilmiş buldu",
+          },
+          {
+            ar: "أقنع نفسه في البداية بأن ما يشعر به ليس سوى ولاء لذكرى قائده القديم",
+            es: "Al principio se dijo a sí mismo que lo que sentía era solo lealtad a la memoria de su antiguo comandante",
+            tr: "Önce kendine hissettiği şeyin sadece eski komutanının anısına duyduğu bir sadakat olduğunu söyledi",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "شبه من الماضي",
+          es: "Un parecido con el pasado",
+          tr: "Geçmişe Bir Benzerlik",
+        },
+        sentences: [
+          {
+            ar: "كلما أمضى خالد وقتًا أطول مع حياة، قلّت قدرته على فصلها عن قسنطينة شبابه",
+            es: "Cuanto más tiempo pasaba Jaled con Hayat, menos podía separarla de la Constantina de su juventud",
+            tr: "Halid, Hayat'la ne kadar çok vakit geçirirse, onu gençliğinin Constantine'inden o kadar az ayırabiliyordu",
+          },
+          {
+            ar: "صوتها وإيماءاتها بل وحتى صمتها ذكّرته بألم بكل ما أخذته الحرب منه",
+            es: "Su voz, sus gestos, incluso sus silencios le recordaban dolorosamente todo lo que la guerra le había arrebatado",
+            tr: "Sesi, hareketleri, hatta sessizlikleri bile ona savaşın kendisinden aldığı her şeyi acıyla hatırlattı",
+          },
+          {
+            ar: "بدأ يشك في أنه لا يحب حياة نفسها بقدر ما يحب كل ما بدت تمثله",
+            es: "Comenzó a sospechar que no amaba a Hayat en sí misma tanto como todo lo que ella parecía representar",
+            tr: "Hayat'ın kendisini değil, onun temsil ettiği her şeyi sevdiğinden şüphelenmeye başladı",
+          },
+          {
+            ar: "جسّدت وطنه المفقود وشبابه المفقود وذراعه المفقودة وقائده المفقود كلهم في آن واحد",
+            es: "Ella encarnaba a la vez su patria perdida, su juventud perdida, su brazo perdido y su comandante perdido",
+            tr: "Kaybettiği vatanını, gençliğini, kolunu ve komutanını aynı anda somutlaştırıyordu",
+          },
+          {
+            ar: "أما حياة، فقد أحست بتفانيه دون أن تكون متأكدة تمامًا من نوع الحب الذي يحمله",
+            es: "Hayat, por su parte, sentía su devoción sin estar del todo segura de qué tipo de amor era",
+            tr: "Hayat ise onun bağlılığını hissetti ama bunun ne tür bir aşk olduğundan hiçbir zaman tam emin olamadı",
+          },
+          {
+            ar: "أعجبت به كفنان وكقطعة حية من تاريخ أبيها، لكنها ترددت في أي شيء أكثر من ذلك",
+            es: "Lo admiraba como artista y como un fragmento vivo de la historia de su padre, pero dudaba ante cualquier cosa más",
+            tr: "Ona bir sanatçı ve babasının tarihinden canlı bir parça olarak hayrandı ama daha fazlası konusunda tereddüt etti",
+          },
+          {
+            ar: "نمت بينهما ألفة لم يستطع أي منهما تسميتها بسهولة، محترمة ومؤلمة ولم تُقل بصوت عالٍ أبدًا",
+            es: "Entre ellos creció una cercanía que ninguno de los dos podía nombrar fácilmente, respetuosa, dolorosa y nunca del todo dicha en voz alta",
+            tr: "Aralarında ikisinin de kolayca adlandıramadığı bir yakınlık büyüdü; saygılı, acı verici ve hiçbir zaman tam olarak yüksek sesle söylenmemiş",
+          },
+        ],
+      },
+      {
+        title: { ar: "رسائل وصمت", es: "Cartas y silencios", tr: "Mektuplar ve Sessizlikler" },
+        sentences: [
+          {
+            ar: "كتب لها خالد رسائل طويلة كان أحيانًا يرسلها وأحيانًا يحرقها بهدوء بدلًا من ذلك",
+            es: "Jaled le escribía largas cartas que a veces enviaba y a veces, en cambio, quemaba en silencio",
+            tr: "Halid ona uzun mektuplar yazdı, bazen gönderdi bazen de bunun yerine sessizce yaktı",
+          },
+          {
+            ar: "كان يكبرها بعشرين عامًا، فجوة شعر بها كجرح قديم ينفتح مرارًا وتكرارًا",
+            es: "Le llevaba veinte años, una brecha que sentía como una vieja herida que se reabría una y otra vez",
+            tr: "Ondan yirmi yaş büyüktü, bunu tekrar tekrar açılan eski bir yara gibi hissediyordu",
+          },
+          {
+            ar: "قرأت حياة رسائله بعناية، متأثرة بها، لكنها عاجزة عن الرد باليقين الذي أراده",
+            es: "Hayat leía sus cartas con atención, conmovida por ellas, pero incapaz de responder con la certeza que él quería",
+            tr: "Hayat mektuplarını dikkatle okudu, onlardan etkilendi ama onun istediği kesinlikle cevap veremedi",
+          },
+          {
+            ar: "كانت مخطوبة بالفعل، بالطريقة الهادئة التي ترتب بها العائلات الجزائرية مثل هذه الأمور، لرجل آخر",
+            es: "Ya estaba prometida, de la manera silenciosa en que las familias argelinas arreglaban esas cosas, a otro hombre",
+            tr: "Cezayirli ailelerin bu tür şeyleri sessizce ayarladığı gibi, zaten başka bir adama söz verilmişti",
+          },
+          {
+            ar: "كان ذلك الرجل ينتمي إلى الطبقة السياسية الجديدة الصاعدة بسرعة في الجزائر المستقلة بعد الحرب",
+            es: "Ese hombre pertenecía a la nueva clase política que ascendía rápidamente en la Argelia independiente de posguerra",
+            tr: "O adam, savaştan sonra bağımsız Cezayir'de hızla yükselen yeni siyasi sınıfa aitti",
+          },
+          {
+            ar: "راقب خالد، بمرارة تقارب المرض، آمال عائلتها العملية وهي تُطبق ببطء على مستقبلها",
+            es: "Jaled observó, medio enfermo, cómo las esperanzas prácticas de la familia de ella se cerraban lentamente sobre su futuro",
+            tr: "Halid, ailesinin pratik umutlarının yavaşça onun geleceğinin etrafını sarmasını, midesi bulanarak izledi",
+          },
+          {
+            ar: "مع ذلك استمر في رسمها، عاجزًا عن التوقف، حتى وهو يدرك أنه ربما يفقدها",
+            es: "Aun así siguió pintándola, incapaz de detenerse, incluso mientras comprendía que quizás la estaba perdiendo",
+            tr: "Yine de onu resmetmeye devam etti, onu kaybedebileceğini anlasa bile duramadı",
+          },
+        ],
+      },
+      {
+        title: { ar: "مدينة الجسور", es: "La ciudad de los puentes", tr: "Köprüler Şehri" },
+        sentences: [
+          {
+            ar: "أصبحت قسنطينة نفسها شخصية في لوحات خالد، بجسورها الحجرية الممتدة فوق وادٍ مستحيل",
+            es: "La propia Constantina se convirtió en un personaje en los cuadros de Jaled, con sus puentes de piedra tendidos sobre un desfiladero imposible",
+            tr: "Constantine'in kendisi, imkansız bir vadinin üzerinden uzanan taş köprüleriyle Halid'in tablolarında bir karaktere dönüştü",
+          },
+          {
+            ar: "رسم أسواق المدينة وحيّها الفرنسي القديم ونهر الرمال الذي يشق طريقه بعيدًا أسفل المنحدرات",
+            es: "Pintó los mercados de la ciudad, su antiguo barrio francés y el río Rhumel abriéndose paso muy por debajo de los acantilados",
+            tr: "Şehrin pazarlarını, eski Fransız mahallesini ve uçurumların çok aşağısından geçen Rhumel Nehri'ni resmetti",
+          },
+          {
+            ar: "كانت كل لوحة في الحقيقة رسالة إلى وطن لم يعد موجودًا تمامًا كما تذكره",
+            es: "Cada cuadro era en realidad una carta a un hogar que ya no existía del todo como él lo recordaba",
+            tr: "Her tablo aslında hatırladığı şekliyle artık tam olarak var olmayan bir eve yazılmış bir mektuptu",
+          },
+          {
+            ar: "كان يقول غالبًا إن الرجل يمكن أن يفقد وطنه تمامًا كما فقد ذراعه، فجأة وبالكامل",
+            es: "Solía decir que un hombre podía perder un país de la misma manera en que había perdido su brazo, de repente y por completo",
+            tr: "Sık sık bir adamın kolunu kaybettiği gibi bir ülkeyi de aniden ve tamamen kaybedebileceğini söylerdi",
+          },
+          {
+            ar: "بدأت حياة، وهي تقرأ دفاتره القديمة، تفهم قسنطينة كمكان للذاكرة أكثر من كونها جغرافيا",
+            es: "Hayat, al leer sus antiguos cuadernos, comenzó a entender Constantina como un lugar de memoria más que de geografía",
+            tr: "Hayat, onun eski defterlerini okurken Constantine'i coğrafyadan çok bir hafıza mekanı olarak anlamaya başladı",
+          },
+          {
+            ar: "من خلال فنه، شعرت أنها فهمت أخيرًا الأب الذي لم تعرفه هي نفسها حقًا قط",
+            es: "A través de su arte sintió que finalmente comprendía al padre que ella misma nunca había conocido realmente",
+            tr: "Onun sanatı sayesinde, kendisinin hiç gerçekten tanımadığı babasını sonunda anladığını hissetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "خيانة وطن", es: "La traición de una nación", tr: "Bir Ulusun İhaneti" },
+        sentences: [
+          {
+            ar: "كان خالد يؤمن، كمقاتل شاب، بأن الاستقلال سيجلب الكرامة والعدالة لبلده",
+            es: "Jaled había creído, de joven combatiente, que la independencia traería dignidad y justicia a su país",
+            tr: "Halid genç bir savaşçıyken bağımsızlığın ülkesine onur ve adalet getireceğine inanıyordu",
+          },
+          {
+            ar: "بدلًا من ذلك، شاهد مسؤولين جددًا يثرون ويفسدون بينما يُنسى الثوار القدامى بهدوء",
+            es: "En cambio, vio a los nuevos funcionarios enriquecerse y corromperse mientras los viejos revolucionarios eran olvidados en silencio",
+            tr: "Bunun yerine yeni yetkililerin zenginleştiğini ve yozlaştığını, eski devrimcilerin ise sessizce unutulduğunu gördü",
+          },
+          {
+            ar: "صار رجال لم يطلقوا رصاصة واحدة يرتدون مجد الحرب كوسام لم يستحقوه",
+            es: "Hombres que nunca habían disparado un solo tiro ahora llevaban la gloria de la guerra como una medalla que no habían ganado",
+            tr: "Hiç tek bir kurşun bile sıkmamış adamlar, artık savaşın şerefini hak etmedikleri bir madalya gibi taşıyordu",
+          },
+          {
+            ar: "صار خالد مريرًا وهو يشاهد الانتهازيين يعيدون كتابة ذاكرة الثورة لخدمة طموحاتهم الخاصة",
+            es: "Jaled se volvió amargo al ver a los oportunistas reescribir la memoria de la revolución para servir a sus propias ambiciones",
+            tr: "Halid, fırsatçıların devrimin hafızasını kendi kişisel hırsları için yeniden yazmasını izlerken acılaştı",
+          },
+          {
+            ar: "أحس بذراعه المفقودة مجددًا بطريقة جديدة، كرمز للتضحية بدا الوطن حريصًا على نسيانه",
+            es: "Sintió su brazo ausente de una nueva manera, como un símbolo de sacrificio que la nación parecía ansiosa por olvidar",
+            tr: "Kayıp kolunu yeni bir şekilde hissetti; ulusun unutmaya can attığı bir fedakarlık simgesi olarak",
+          },
+          {
+            ar: "تحولت لوحاته إلى غضب متزايد، مليئة بالأبطال المدفونين والرجال الأحياء الذين استفادوا من قبورهم",
+            es: "Sus cuadros se volvieron cada vez más airados, llenos de héroes enterrados y de los hombres vivos que se beneficiaban de sus tumbas",
+            tr: "Tabloları giderek öfkeli bir hal aldı; gömülü kahramanlarla ve onların mezarlarından kâr sağlayan yaşayan adamlarla doluydu",
+          },
+          {
+            ar: "بدأ يخشى أن يكون زواج حياة المقترب قطعة أخرى من تلك الخيانة الوطنية نفسها",
+            es: "Comenzó a temer que el propio matrimonio cercano de Hayat fuera una pieza más de esa misma traición nacional",
+            tr: "Hayat'ın yaklaşan evliliğinin de aynı ulusal ihanetin bir başka parçası olmasından korkmaya başladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "أحمد الزاوي", es: "Ahmad Al-Zawi", tr: "Ahmed Zavi" },
+        sentences: [
+          {
+            ar: "كان الرجل الذي يتودد لحياة، أحمد الزاوي، ينتمي بالضبط إلى الطبقة الجديدة الفاسدة التي احتقرها خالد",
+            es: "El hombre que cortejaba a Hayat, Ahmad Al-Zawi, pertenecía exactamente a esa nueva clase corrupta que Jaled despreciaba",
+            tr: "Hayat'a kur yapan adam, Ahmed Zavi, tam olarak Halid'in hor gördüğü yozlaşmış yeni sınıfa aitti",
+          },
+          {
+            ar: "تسلق إلى الراحة والنفوذ عبر العلاقات لا عبر أي تضحية حقيقية زمن الحرب",
+            es: "Había ascendido a la comodidad y la influencia mediante contactos, no mediante ningún sacrificio real en tiempos de guerra",
+            tr: "Rahatlığa ve nüfuza gerçek bir savaş fedakarlığıyla değil, bağlantılar yoluyla tırmanmıştı",
+          },
+          {
+            ar: "تعرّف خالد فيه على كل سمة أمضى حياته الغاضبة المخيبة للآمال بأكملها يقاومها",
+            es: "Jaled reconoció en él cada rasgo contra el que había pasado toda su vida airada y decepcionada resistiendo",
+            tr: "Halid onda, öfkeli, hayal kırıklığına uğramış tüm hayatı boyunca direndiği her özelliği tanıdı",
+          },
+          {
+            ar: "حاول، بحذر ثم بيأس، أن يحذر حياة من زواج مبني على المصلحة",
+            es: "Intentó, primero con cautela y luego con desesperación, advertir a Hayat sobre un matrimonio construido por conveniencia",
+            tr: "Önce dikkatle sonra çaresizce, Hayat'ı çıkara dayalı bir evlilikten uzaklaştırmaya çalıştı",
+          },
+          {
+            ar: "أصغت إليه حياة بألم حقيقي في عينيها، ممزقة بين رغبات عائلتها وشكوكها الخاصة",
+            es: "Hayat lo escuchó con verdadero dolor en los ojos, dividida entre los deseos de su familia y sus propias dudas",
+            tr: "Hayat onu gözlerinde gerçek bir acıyla dinledi, ailesinin istekleri ile kendi şüpheleri arasında bocaladı",
+          },
+          {
+            ar: "في النهاية أثبت ضغط العائلة والواقعية وشكوكها الخاصة أنها أقوى من تحذيرات خالد",
+            es: "Al final, la presión familiar, la practicidad y su propia incertidumbre resultaron más fuertes que las advertencias de Jaled",
+            tr: "Sonunda aile baskısı, pratiklik ve kendi belirsizliği, Halid'in uyarılarından daha güçlü çıktı",
+          },
+        ],
+      },
+      {
+        title: { ar: "اختيار حياة", es: "La elección de Hayat", tr: "Hayat'ın Seçimi" },
+        sentences: [
+          {
+            ar: "تزوجت حياة أحمد الزاوي في حفل حضره خالد بصمت، وقلبه ينكسر خلف وجه هادئ",
+            es: "Hayat se casó con Ahmad Al-Zawi en una ceremonia a la que Jaled asistió en silencio, con el corazón rompiéndose tras un rostro calmado",
+            tr: "Hayat, Halid'in sessizce katıldığı bir törende Ahmed Zavi'yle evlendi, kalbi sakin bir yüzün ardında kırılıyordu",
+          },
+          {
+            ar: "هنأها بكلمات كلفته أكثر من أي لوحة أنهاها في حياته",
+            es: "La felicitó con palabras que le costaron más que cualquier cuadro que hubiera terminado jamás",
+            tr: "Onu, bitirdiği herhangi bir tablodan daha çok bedele mal olan sözlerle tebrik etti",
+          },
+          {
+            ar: "وهو يراها تبتعد كزوجة رجل آخر، شعر أنه يفقد قسنطينة من جديد",
+            es: "Al verla alejarse como esposa de otro hombre, sintió que perdía Constantina otra vez",
+            tr: "Onun başka bir adamın karısı olarak uzaklaştığını izlerken, Constantine'i bir kez daha kaybettiğini hissetti",
+          },
+          {
+            ar: "أدرك أخيرًا وبشكل كامل أنه أحب فكرة عنها بقدر ما أحب المرأة نفسها",
+            es: "Comprendió, por fin y por completo, que había amado una idea de ella tanto como a la mujer misma",
+            tr: "Sonunda ve tamamen, onun hakkındaki bir fikri, kadının kendisi kadar sevdiğini anladı",
+          },
+          {
+            ar: "أما حياة، فستقضي زواجها مدركة بهدوء لكل ما اختارت ألا تصبحه",
+            es: "Hayat, por su parte, pasaría su matrimonio consciente en silencio de todo lo que había elegido no llegar a ser",
+            tr: "Hayat ise evliliğini, olmamayı seçtiği her şeyin sessizce farkında olarak geçirecekti",
+          },
+          {
+            ar: "قلّت الرسائل بينهما، ثم توقفت تقريبًا تمامًا، مثقلة بكل ما لم يُقل",
+            es: "Las cartas entre ellos se hicieron más escasas, y luego cesaron casi por completo, cargadas de todo lo no dicho",
+            tr: "Aralarındaki mektuplar seyrekleşti, sonra söylenmemiş her şeyin ağırlığıyla neredeyse tamamen kesildi",
+          },
+          {
+            ar: "عاد خالد إلى مرسمه الفارغ ورسمها مرة أخيرة، من الذاكرة وحدها",
+            es: "Jaled regresó a su estudio vacío y la pintó una última vez, solo de memoria",
+            tr: "Halid boş atölyesine döndü ve onu bir kez daha, yalnızca hafızasından resmetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "ذاكرة الجسد", es: "Memoria en la carne", tr: "Beden Hafızası" },
+        sentences: [
+          {
+            ar: "بعد سنوات، بدأ خالد يكتب قصته بدلًا من رسمها فقط، صفحة تلو صفحة موجعة",
+            es: "Años más tarde, Jaled comenzó a escribir su historia en lugar de solo pintarla, página tras dolorosa página",
+            tr: "Yıllar sonra Halid, hikayesini sadece resmetmek yerine yazmaya başladı; acılı sayfa sayfa",
+          },
+          {
+            ar: "كتب عن سي الطاهر وعن جسور قسنطينة وعن حياة، عاجزًا عن الفصل بينهم بعد الآن",
+            es: "Escribió sobre Si Taher, sobre los puentes de Constantina y sobre Hayat, incapaz ya de separarlos",
+            tr: "Si Taher, Constantine'in köprüleri ve Hayat hakkında yazdı, artık hiçbirini birbirinden ayıramıyordu",
+          },
+          {
+            ar: "أدرك أن الكتابة هي نوعها الخاص من الطرف المفقود، تمتد نحو شيء لن يعود أبدًا بالكامل",
+            es: "Se dio cuenta de que escribir era su propio tipo de miembro ausente, que se extendía hacia algo que nunca podría regresar del todo",
+            tr: "Yazmanın, hiçbir zaman tam olarak geri gelemeyecek bir şeye uzanan, kendine has bir tür eksik uzuv olduğunu fark etti",
+          },
+          {
+            ar: "أدرك أخيرًا أن الذاكرة نفسها تعيش في ندوب الجسد أكثر مما تعيش في العقل",
+            es: "Comprendió por fin que la memoria misma vivía menos en la mente que en las propias cicatrices del cuerpo",
+            tr: "Sonunda hafızanın kendisinin zihinden çok bedenin izlerinde yaşadığını anladı",
+          },
+          {
+            ar: "تذكرت ذراعه المفقودة وقلبه المتقدم في العمر وعيناه الحنينتان الوطن المفقود نفسه، كل بطريقتها",
+            es: "Su brazo ausente, su corazón envejecido y sus ojos nostálgicos recordaban todos el mismo país perdido de manera distinta",
+            tr: "Kayıp kolu, yaşlanan kalbi ve gurbet çeken gözleri, aynı kayıp ülkeyi her biri farklı şekilde hatırlıyordu",
+          },
+          {
+            ar: "سامح حياة، ببطء، لاختيارها الأمان على حب أخافهما كليهما بالتساوي",
+            es: "Perdonó a Hayat, poco a poco, por elegir la seguridad antes que un amor que los había asustado a ambos por igual",
+            tr: "Hayat'ı, ikisini de eşit derecede korkutan bir aşk yerine güvenliği seçtiği için yavaş yavaş affetti",
+          },
+          {
+            ar: "في النهاية قرر أن بعض الحب لا يوجد إلا ليُكتب، محمولًا إلى الأبد في الذاكرة وفي الجسد",
+            es: "Al final decidió que algunos amores existen solo para ser escritos, llevados para siempre en la memoria y en la carne",
+            tr: "Sonunda bazı aşkların yalnızca yazılmak için var olduğuna, sonsuza dek hafızada ve bedende taşındığına karar verdi",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-animal-farm",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لحكاية جورج أورويل عن حيوانات مزرعة تطيح بمزارعها من أجل الحرية والمساواة، لتشهد سادة جددًا ينهضون من بينها هي نفسها — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la fábula de George Orwell sobre unos animales de granja que derrocan a su granjero en busca de libertad e igualdad, solo para ver surgir nuevos amos entre los suyos — un relato personal, no el texto original.",
+      tr: "George Orwell'ın, özgürlük ve eşitlik için çiftçilerini deviren ama kendi aralarından yeni efendilerin yükseldiğini gören çiftlik hayvanlarının masalının özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: {
+          ar: "حلم الميجور العجوز",
+          es: "El sueño del Viejo Mayor",
+          tr: "Yaşlı Binbaşı'nın Rüyası",
+        },
+        sentences: [
+          {
+            ar: "جمع الميجور العجوز، الخنزير البري المسن المحترم، كل حيوانات مزرعة مانور في ليلة هادئة",
+            es: "El Viejo Mayor, un jabalí anciano y respetado, reunió a todos los animales de la Granja Solariega una noche tranquila",
+            tr: "Saygın, yaşlı bir domuz olan Yaşlı Binbaşı, sakin bir gece Malikane Çiftliği'ndeki tüm hayvanları topladı",
+          },
+          {
+            ar: "وصف حلمًا متكررًا لمستقبل تعيش فيه الحيوانات حرة تمامًا من سادة بشريين",
+            es: "Describió un sueño recurrente de un futuro en el que los animales vivían completamente libres de amos humanos",
+            tr: "İnsan efendilerden tamamen özgür yaşayan hayvanların olduğu bir gelecekle ilgili tekrarlayan bir rüya anlattı",
+          },
+          {
+            ar: "علّمهم أغنية مؤثرة اسمها وحوش إنجلترا عن تلك الجنة الحيوانية المتخيلة",
+            es: "Les enseñó una conmovedora canción llamada Bestias de Inglaterra sobre ese imaginado paraíso animal",
+            tr: "Onlara hayal edilen o hayvan cennetiyle ilgili İngiltere'nin Hayvanları adında etkileyici bir şarkı öğretti",
+          },
+          {
+            ar: "حذّر من أن الإنسان هو العدو الحقيقي الوحيد، يستهلك دون أن ينتج شيئًا مفيدًا بنفسه أبدًا",
+            es: "Advirtió que el hombre era el único enemigo real, consumiendo sin producir jamás nada útil por sí mismo",
+            tr: "İnsanın tek gerçek düşman olduğu konusunda uyardı; tüketiyor ama asla kendisi faydalı bir şey üretmiyordu",
+          },
+          {
+            ar: "قال إن على كل حيوان أن يتعلم التعرف على كل عادة وضعف بشري ومقاومتهما",
+            es: "Dijo que cada animal debía aprender a reconocer y resistir cada hábito y debilidad humana",
+            tr: "Her hayvanın her insan alışkanlığını ve zayıflığını tanımayı ve bunlara direnmeyi öğrenmesi gerektiğini söyledi",
+          },
+          {
+            ar: "مات بسلام بعد أيام قليلة فقط، لكن رؤيته القوية كانت قد بدأت بالانتشار بينهم بالفعل",
+            es: "Murió apaciblemente solo unos días después, pero su poderosa visión ya había comenzado a extenderse entre ellos",
+            tr: "Sadece birkaç gün sonra huzur içinde öldü ama güçlü vizyonu aralarında yayılmaya çoktan başlamıştı",
+          },
+          {
+            ar: "بدأ خنزيران ذكيان، سنوبول ونابليون، بهدوء بتنظيم أفكاره المتناثرة إلى خطة حقيقية",
+            es: "Dos cerdos astutos, Snowball y Napoleón, comenzaron silenciosamente a organizar sus ideas dispersas en un plan real",
+            tr: "İki zeki domuz, Kartopu ve Napolyon, sessizce onun dağınık fikirlerini gerçek bir plana dönüştürmeye başladı",
+          },
+          {
+            ar: "أطلقوا على فلسفتهم المتنامية اسم الحيوانية وبدأوا بتعليمها سرًا للحيوانات الأخرى",
+            es: "Llamaron a su creciente filosofía Animalismo y comenzaron a enseñarla en secreto a los demás animales",
+            tr: "Gelişen felsefelerine Hayvancılık adını verdiler ve diğer hayvanlara gizlice öğretmeye başladılar",
+          },
+        ],
+      },
+      {
+        title: { ar: "التمرد", es: "La rebelión", tr: "İsyan" },
+        sentences: [
+          {
+            ar: "نسي المزارع جونز، السكير والمهمل، إطعام الحيوانات الجائعة في إحدى الأمسيات",
+            es: "El granjero Jones, borracho y negligente, olvidó alimentar a los animales hambrientos una noche en particular",
+            tr: "Sarhoş ve ihmalkar Çiftçi Jones, belirli bir akşam aç hayvanları beslemeyi unuttu",
+          },
+          {
+            ar: "الحيوانات، الجائعة والغاضبة، ثارت فجأة وطردت جونز تمامًا خارج المزرعة",
+            es: "Hambrientos y furiosos, los animales se levantaron de repente y expulsaron a Jones completamente de la granja",
+            tr: "Aç ve öfkeli hayvanlar aniden ayaklandı ve Jones'u çiftlikten tamamen kovdu",
+          },
+          {
+            ar: "أعادوا تسمية مزرعة مانور إلى مزرعة الحيوان، مالكين فخورين لأرضهم للمرة الأولى",
+            es: "Rebautizaron la Granja Solariega como Granja Animal, orgullosos dueños de su propia tierra por primera vez",
+            tr: "Malikane Çiftliği'ni Hayvan Çiftliği olarak yeniden adlandırdılar, ilk kez kendi topraklarının gururlu sahipleriydiler",
+          },
+          {
+            ar: "أعطت الأبقار حليبها بسخاء، لكن نابليون حوّله بهدوء نحو عجين الخنازير الخاص",
+            es: "Las vacas daban leche libremente, pero Napoleón la redirigía en silencio hacia la propia mezcla privada de los cerdos",
+            tr: "İnekler bolca süt verdi ama Napolyon sessizce bunu domuzların kendi özel yemine yönlendirdi",
+          },
+          {
+            ar: "عمل الحيوانات معًا في الحصاد بطاقة جديدة مبهجة لم تشهدها أي مزرعة بشرية من قبل",
+            es: "Los animales trabajaron juntos en la cosecha con una alegre energía nueva que ninguna granja humana había visto jamás",
+            tr: "Hayvanlar hasatta, hiçbir insan çiftliğinin daha önce görmediği neşeli, yeni bir enerjiyle birlikte çalıştı",
+          },
+          {
+            ar: "تبنى بوكسر، الحصان الضخم المخلص، شعاره الشخصي بأنه سيعمل بجهد أكبر فحسب",
+            es: "Boxer, un enorme y fiel caballo, adoptó como lema personal que simplemente trabajaría más duro",
+            tr: "Kocaman, sadık bir at olan Boxer, sadece daha çok çalışacağı kişisel sloganını benimsedi",
+          },
+          {
+            ar: "آمن الجميع بشدة بأنهم الآن يتحكمون بمصيرهم، متساوون أخيرًا فيما بينهم",
+            es: "Todos creían fervientemente que ahora controlaban su propio destino, iguales por fin entre ellos",
+            tr: "Herkes artık kendi kaderlerini kontrol ettiklerine, sonunda kendi aralarında eşit olduklarına şiddetle inanıyordu",
+          },
+          {
+            ar: "أما سنوبول ونابليون، فقد بدآ بالفعل بالاختلاف بهدوء على كل أمر مهم تقريبًا",
+            es: "Snowball y Napoleón, sin embargo, ya habían comenzado a discrepar en silencio sobre casi todo lo importante",
+            tr: "Ancak Kartopu ve Napolyon, önemli olan hemen her konuda sessizce anlaşmazlığa düşmeye çoktan başlamıştı",
+          },
+        ],
+      },
+      {
+        title: { ar: "الوصايا السبع", es: "Los siete mandamientos", tr: "Yedi Emir" },
+        sentences: [
+          {
+            ar: "رسم الخنازير سبع وصايا على جدار الحظيرة، القانون المشترك المقدس الجديد للحيوانات",
+            es: "Los cerdos pintaron Siete Mandamientos en la pared del granero, la nueva ley sagrada y compartida de los animales",
+            tr: "Domuzlar ahır duvarına Yedi Emir yazdı, hayvanların yeni kutsal ortak yasası",
+          },
+          {
+            ar: "من بينها قاعدة بسيطة واحدة، أن كل الحيوانات متساوية جوهريًا وتمامًا",
+            es: "Entre ellos había una regla simple: que todos los animales eran fundamental y completamente iguales",
+            tr: "Aralarında basit bir kural vardı: tüm hayvanlar temelde ve tamamen eşitti",
+          },
+          {
+            ar: "قاعدة أخرى منعت بحزم أي حيوان من النوم في سرير بشري ناعم أبدًا",
+            es: "Otra regla prohibía firmemente que cualquier animal durmiera jamás en una cama humana blanda",
+            tr: "Başka bir kural, herhangi bir hayvanın yumuşak bir insan yatağında uyumasını kesinlikle yasaklıyordu",
+          },
+          {
+            ar: "تولى الخنازير، بوصفهم أذكى الحيوانات، تدريجيًا زمام كل قرار مهم",
+            es: "Los cerdos, al ser los animales más listos, fueron asumiendo gradualmente el control de cada decisión importante",
+            tr: "En zeki hayvanlar olan domuzlar, her önemli kararın sorumluluğunu yavaş yavaş üstlendi",
+          },
+          {
+            ar: "برروا هذه القيادة بادعاء أنهم وحدهم من يفهم حقًا إدارة المزرعة المعقدة",
+            es: "Justificaron este liderazgo alegando que solo ellos comprendían de verdad la compleja gestión de la granja",
+            tr: "Bu liderliği, karmaşık çiftlik yönetimini gerçekten yalnızca kendilerinin anladığını iddia ederek meşrulaştırdılar",
+          },
+          {
+            ar: "اختفى الحليب والتفاح بهدوء ضمن غذاء الخنازير، وبُرر ذلك كضرورة خاصة",
+            es: "La leche y las manzanas desaparecían en silencio en la dieta de los cerdos, justificadas como una necesidad especial",
+            tr: "Süt ve elmalar sessizce domuzların diyetine karıştı, özel bir gereklilik olarak açıklandı",
+          },
+          {
+            ar: "قبل معظم الحيوانات، بثقة تامة، هذه الامتيازات الصغيرة المتنامية دون تساؤل حقيقي يُذكر",
+            es: "La mayoría de los animales, confiando por completo, aceptaron estos pequeños privilegios crecientes sin mucho cuestionamiento real",
+            tr: "Çoğu hayvan, tamamen güvenerek, bu küçük artan ayrıcalıkları fazla sorgulamadan kabul etti",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "سنوبول ضد نابليون",
+          es: "Snowball contra Napoleón",
+          tr: "Kartopu'na Karşı Napolyon",
+        },
+        sentences: [
+          {
+            ar: "كان سنوبول لامعًا ونشيطًا ومليئًا بخطط طموحة لمستقبل المزرعة بأكملها",
+            es: "Snowball era brillante, enérgico y estaba lleno de planes ambiciosos para el futuro de toda la granja",
+            tr: "Kartopu parlak, enerjik ve tüm çiftliğin geleceği için iddialı planlarla doluydu",
+          },
+          {
+            ar: "أما نابليون، الأكثر هدوءًا والأكثر قسوة بكثير، فقد كان يربي سرًا بمفرده مجموعة من الجراء",
+            es: "Napoleón, más callado y mucho más despiadado, había estado criando en secreto una camada de cachorros él solo",
+            tr: "Daha sessiz ve çok daha acımasız olan Napolyon, gizlice tek başına bir köpek yavrusu grubunu büyütüyordu",
+          },
+          {
+            ar: "نمت تلك الجراء لتصبح كلابًا كبيرة صامتة ومخلصة، مدربة على الطاعة له وحده",
+            es: "Esos cachorros crecieron hasta convertirse en perros grandes, silenciosos y leales, entrenados para obedecer solo a él",
+            tr: "O yavrular büyüyüp sadece ona itaat etmek üzere eğitilmiş, sessiz, sadık, iri köpekler oldu",
+          },
+          {
+            ar: "اقترح سنوبول بناء طاحونة هوائية يمكن أن تجلب للمزرعة الكهرباء والراحة الحقيقية",
+            es: "Snowball propuso construir un molino de viento que pudiera traer a la granja electricidad y verdadera comodidad",
+            tr: "Kartopu, çiftliğe elektrik ve gerçek konfor getirebilecek bir yel değirmeni inşa etmeyi önerdi",
+          },
+          {
+            ar: "عارض نابليون الطاحونة علنًا، رغم أن أسبابه الحقيقية ظلت مخفية بعناية عن الجميع",
+            es: "Napoleón se opuso públicamente al molino, aunque sus verdaderas razones permanecieron cuidadosamente ocultas para todos",
+            tr: "Napolyon yel değirmenine alenen karşı çıktı, gerçi asıl nedenleri herkesten dikkatle gizlenmişti",
+          },
+          {
+            ar: "خلال نقاش محتدم، استدعى نابليون فجأة كلابه الشرسة الكبيرة من الظلال",
+            es: "Durante un acalorado debate, Napoleón convocó de repente a sus feroces perros adultos desde las sombras",
+            tr: "Kızışmış bir tartışma sırasında Napolyon aniden gölgelerden azgın, büyümüş köpeklerini çağırdı",
+          },
+          {
+            ar: "طاردت الكلاب سنوبول المذعور خارج المزرعة إلى الأبد، تعضّ بشراسة على كعبيه وهو يهرب",
+            es: "Los perros persiguieron a un aterrorizado Snowball fuera de la granja para siempre, mordiendo ferozmente sus talones mientras huía",
+            tr: "Köpekler dehşete kapılmış Kartopu'nu çiftlikten sonsuza dek kovaladı, kaçarken topuklarına vahşice saldırdı",
+          },
+          {
+            ar: "أعلن نابليون بعدها، دون أي تصويت فعلي، أنه هو وحده من سيقود المزرعة الآن",
+            es: "Napoleón declaró entonces, sin votación real alguna, que él solo dirigiría ahora la granja",
+            tr: "Napolyon daha sonra herhangi bir gerçek oylama olmadan, artık yalnızca kendisinin çiftliğe liderlik edeceğini ilan etti",
+          },
+        ],
+      },
+      {
+        title: { ar: "الطاحونة الهوائية", es: "El molino de viento", tr: "Yel Değirmeni" },
+        sentences: [
+          {
+            ar: "أعلن نابليون سريعًا أن الطاحونة كانت في الواقع فكرته الذكية بالكامل",
+            es: "Napoleón pronto anunció que el molino había sido, de hecho, enteramente su propia idea ingeniosa",
+            tr: "Napolyon kısa süre sonra yel değirmeninin aslında tamamen kendi zekice fikri olduğunu duyurdu",
+          },
+          {
+            ar: "بدأت الحيوانات، المرتبكة لكن المطيعة، العمل المضني لبنائها على أي حال",
+            es: "Los animales, confundidos pero obedientes, comenzaron de todos modos el agotador trabajo de construirlo",
+            tr: "Şaşkın ama itaatkar hayvanlar, yine de onu inşa etmenin yorucu işine başladı",
+          },
+          {
+            ar: "أجهد بوكسر نفسه باستمرار، مرددًا شعاره المخلص خلال كل يوم مؤلم",
+            es: "Boxer se esforzaba constantemente, repitiendo su fiel lema durante cada agotador día",
+            tr: "Boxer sürekli kendini zorladı, her acı dolu günde sadık sloganını tekrarlayarak",
+          },
+          {
+            ar: "دمرت عاصفة عنيفة في النهاية الطاحونة نصف المكتملة في ليلة رهيبة واحدة",
+            es: "Una violenta tormenta finalmente destruyó el molino a medio terminar en una sola noche terrible",
+            tr: "Şiddetli bir fırtına sonunda yarı tamamlanmış yel değirmenini tek bir korkunç gecede yok etti",
+          },
+          {
+            ar: "اتهم نابليون فورًا وزورًا سنوبول المنفي بتخريب عملهم الشاق",
+            es: "Napoleón culpó de inmediato y falsamente al exiliado Snowball de sabotear su arduo trabajo",
+            tr: "Napolyon hemen ve yalan yere sürgündeki Kartopu'nu zorlu emeklerini sabote etmekle suçladı",
+          },
+          {
+            ar: "أصبح الخوف من سنوبول الغائب عذرًا مريحًا وقويًا لكل ما ساء تقريبًا",
+            es: "El miedo al ausente Snowball se convirtió en una excusa conveniente y poderosa para casi todo lo que salía mal",
+            tr: "Ortalıkta olmayan Kartopu'ndan korku, ters giden hemen her şey için kullanışlı, güçlü bir bahane haline geldi",
+          },
+          {
+            ar: "بدأت الحيوانات، المنهكة والخائفة، بإعادة بناء الطاحونة المتهدمة من جديد ببساطة",
+            es: "Los animales, exhaustos y asustados, simplemente comenzaron a reconstruir el molino caído una vez más",
+            tr: "Bitkin ve korkmuş hayvanlar, yıkılan yel değirmenini yeniden inşa etmeye baştan başladı",
+          },
+          {
+            ar: "تقلصت الحصص بهدوء للحيوانات العادية بينما ظل الخنازير دائمًا وبطريقة ما بصحة جيدة ومكتفين",
+            es: "Las raciones se reducían en silencio para los animales comunes, mientras los cerdos, de algún modo, siempre se mantenían cómodamente bien alimentados",
+            tr: "Sıradan hayvanlar için tayinler sessizce azalırken domuzlar bir şekilde her zaman rahatça iyi beslenmiş kaldı",
+          },
+        ],
+      },
+      {
+        title: { ar: "أكاذيب سكويلر", es: "Las mentiras de Squealer", tr: "Squealer'ın Yalanları" },
+        sentences: [
+          {
+            ar: "فسّر سكويلر، الخنزير الأملس المقنع، كل وعد مكسور بمنطق ذكي ملتوٍ",
+            es: "Squealer, un cerdo elocuente y persuasivo, justificaba cada promesa incumplida con una lógica astuta y retorcida",
+            tr: "Squealer, düzgün konuşan ikna edici bir domuz, her bozulan sözü kurnaz, çarpıtılmış bir mantıkla açıklayıp geçiştirdi",
+          },
+          {
+            ar: "أصرّ مرارًا على أن الأوضاع تتحسن فعليًا، حتى مع ازدياد جوع معظم الحيوانات",
+            es: "Insistía repetidamente en que las condiciones en realidad estaban mejorando, incluso mientras la mayoría de los animales pasaban más hambre",
+            tr: "Çoğu hayvan daha da açlaşırken bile koşulların aslında iyileştiğinde ısrarla tekrar tekrar diretti",
+          },
+          {
+            ar: "أُسكت بهدوء وفعالية أي حيوان تجرأ على التساؤل بفضل الكلاب الحاضرة دومًا",
+            es: "Los animales que se atrevían a cuestionar algo eran silenciados de forma silenciosa y efectiva por los perros siempre presentes",
+            tr: "Bir şeyi sorgulamaya cesaret eden hayvanlar, her zaman orada olan köpekler tarafından sessizce ve etkili bir şekilde susturuldu",
+          },
+          {
+            ar: "بدأت الوصايا السبع بالتغير بشكل غامض بين ليلة وضحاها، لصالح الخنازير الحاكمة دومًا بشكل طفيف",
+            es: "Los Siete Mandamientos comenzaron a cambiar misteriosamente de la noche a la mañana, siempre favoreciendo ligeramente a los cerdos gobernantes",
+            tr: "Yedi Emir, bir gecede gizemli bir şekilde değişmeye başladı, her zaman yönetici domuzları hafifçe kayırarak",
+          },
+          {
+            ar: "لم يعد أي حيوان يتذكر القواعد الأصلية بوضوح تام بعد الآن، سوى مشاعر غامضة غير مؤكدة",
+            es: "Ningún animal podía ya recordar con claridad las reglas originales, solo vagos e inciertos sentimientos",
+            tr: "Hiçbir hayvan artık orijinal kuralları tam olarak net hatırlayamıyordu, sadece belirsiz, kesin olmayan duygular vardı",
+          },
+          {
+            ar: "بيع بوكسر أخيرًا لجزار بعد أن أصيب بشدة إثر سنوات من العمل المخلص الدؤوب",
+            es: "Boxer, gravemente herido tras años de trabajo incansable y devoto, finalmente fue vendido a un matarife",
+            tr: "Boxer, yıllarca süren yorulmak bilmez, sadık emeğin ardından ağır yaralanmış halde sonunda bir kasaba satıldı",
+          },
+          {
+            ar: "كذب سكويلر بسلاسة بأن بوكسر مات بسلام وسعادة في مستشفى مريح بدلًا من ذلك",
+            es: "Squealer mintió con soltura diciendo que Boxer había muerto en paz y feliz en un cómodo hospital",
+            tr: "Squealer, Boxer'ın bunun yerine rahat bir hastanede huzur içinde ve mutlu öldüğü yalanını kolayca söyledi",
+          },
+          {
+            ar: "اختار معظم الحيوانات، المرهقة أو الخائفة جدًا من الجدال، أن يصدقوا ببساطة كل ما يُقال لهم",
+            es: "La mayoría de los animales, demasiado cansados o asustados para discutir, optaron simplemente por creer lo que se les decía",
+            tr: "Çoğu hayvan, tartışamayacak kadar yorgun ya da korkmuş halde, kendilerine söylenen her şeye inanmayı seçti",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "الخنازير تصبح بشرًا",
+          es: "Los cerdos se vuelven hombres",
+          tr: "Domuzlar İnsan Olur",
+        },
+        sentences: [
+          {
+            ar: "مرت السنوات، وبدأ الخنازير ببطء بالمشي منتصبين على قائمتيهما الخلفيتين فقط",
+            es: "Pasaron los años, y los cerdos comenzaron lentamente a caminar erguidos solo sobre sus dos patas traseras",
+            tr: "Yıllar geçti ve domuzlar yavaş yavaş yalnızca iki arka ayakları üzerinde dik yürümeye başladı",
+          },
+          {
+            ar: "ارتدوا ملابس بشرية قديمة وبدأوا بحمل السياط مثل سادتهم السابقين",
+            es: "Se vistieron con ropa humana vieja y comenzaron a llevar látigos como sus antiguos amos",
+            tr: "Eski insan kıyafetleri giydiler ve eski efendileri gibi kamçı taşımaya başladılar",
+          },
+          {
+            ar: "أصبحت الوصية الوحيدة المتبقية تنص على أن كل الحيوانات متساوية، لكن بعضها أكثر مساواة من غيرها",
+            es: "El único mandamiento que quedaba ahora decía que todos los animales eran iguales, pero algunos más iguales que otros",
+            tr: "Kalan tek emir artık tüm hayvanların eşit olduğunu, ama bazılarının diğerlerinden daha eşit olduğunu söylüyordu",
+          },
+          {
+            ar: "دعا نابليون مزارعين بشريين إلى الداخل لعشاء احتفالي ودي ولعبة ورق",
+            es: "Napoleón invitó a granjeros humanos a entrar para una cena amistosa de celebración y una partida de cartas",
+            tr: "Napolyon insan çiftçileri içeri, dostane bir kutlama yemeği ve bir kart oyunu için davet etti",
+          },
+          {
+            ar: "تجمعت باقي الحيوانات في الخارج، تحدّق بقلق وارتباك عبر نوافذ منزل المزرعة المضاءة",
+            es: "Los demás animales se reunieron afuera, mirando con ansiedad y confusión a través de las ventanas iluminadas de la granja",
+            tr: "Diğer hayvanlar dışarıda toplandı, çiftlik evinin aydınlık pencerelerinden endişeyle ve şaşkınlıkla içeri baktı",
+          },
+          {
+            ar: "وهم ينظرون بعناية من الخنزير إلى الإنسان ثم يعودون، وجدوا أنهم حقًا لا يستطيعون التمييز بينهما",
+            es: "Mirando con atención de cerdo a hombre y de nuevo, descubrieron que realmente no podían notar ninguna diferencia",
+            tr: "Dikkatle domuzdan insana, sonra tekrar domuza bakarak, gerçekten aralarında hiçbir fark göremediklerini fark ettiler",
+          },
+          {
+            ar: "الحلم الذي وصفه الميجور العجوز يومًا بوضوح شديد تحول إلى شيء لا يمكن التعرف عليه بشكل مؤلم",
+            es: "El sueño que el Viejo Mayor había descrito una vez tan vívidamente se había agriado hasta volverse algo dolorosamente irreconocible",
+            tr: "Yaşlı Binbaşı'nın bir zamanlar bu kadar canlı tarif ettiği rüya, acı verecek kadar tanınmaz bir şeye dönüşmüştü",
+          },
+          {
+            ar: "مزرعة الحيوان، في النهاية، استبدلت ببساطة مجموعة من السادة بأخرى جديدة تكاد تكون مطابقة لها",
+            es: "La Granja Animal, al final, simplemente había cambiado un conjunto de amos por otro casi idéntico",
+            tr: "Hayvan Çiftliği, sonunda, bir grup efendiyi neredeyse aynısı olan yeni bir grupla değiştirmişti",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-letters-to-milena",
+    description: {
+      ar: "سرد أصلي من سنتنس ستيب للمراسلات الحقيقية بين فرانز كافكا وميلينا يسنكا، المترجمة التي استخرجت رسائلها رقته النادرة وشكوكه وحنينه — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un relato original de SentenceStep de la correspondencia real entre Franz Kafka y Milena Jesenská, la traductora cuyas cartas sacaron a relucir su rara ternura, sus dudas y su anhelo — un relato personal, no el texto original.",
+      tr: "Franz Kafka ile mektupları onun ender görülen şefkatini, şüphesini ve özlemini ortaya çıkaran çevirmen Milena Jesenská arasındaki gerçek yazışmaların özgün bir SentenceStep anlatımı — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "مترجمة في براغ", es: "Una traductora en Praga", tr: "Prag'da Bir Çevirmen" },
+        sentences: [
+          {
+            ar: "كانت ميلينا يسنكا صحفية ومترجمة تشيكية شابة تعيش حياة مضطربة في فيينا",
+            es: "Milena Jesenská era una joven periodista y traductora checa que vivía inquieta en Viena",
+            tr: "Milena Jesenská, Viyana'da huzursuzca yaşayan genç bir Çek gazeteci ve çevirmendi",
+          },
+          {
+            ar: "كتبت إلى فرانز كافكا في براغ، طالبة الإذن بترجمة إحدى قصصه إلى التشيكية",
+            es: "Le escribió a Franz Kafka en Praga, pidiendo permiso para traducir uno de sus relatos al checo",
+            tr: "Prag'daki Franz Kafka'ya, hikayelerinden birini Çekçeye çevirmek için izin isteyerek yazdı",
+          },
+          {
+            ar: "أجابها كافكا ببساطة وحذر، كعادته مع أي شخص جديد يكتب إليه",
+            es: "Kafka le respondió de forma sencilla y cuidadosa, cauteloso como siempre con cualquiera nuevo que le escribiera",
+            tr: "Kafka ona basit ve dikkatli bir şekilde cevap verdi, kendisine yazan yeni biriyle her zamanki gibi temkinliydi",
+          },
+          {
+            ar: "شيء ما في صوتها المباشر الحيوي جذبه فورًا، على عكس أي شخص كتب إليه من قبل",
+            es: "Algo en su voz directa y vivaz lo cautivó de inmediato, a diferencia de cualquiera a quien hubiera escrito antes",
+            tr: "Doğrudan, canlı sesindeki bir şey onu hemen etkiledi, daha önce yazdığı hiç kimseye benzemiyordu",
+          },
+          {
+            ar: "ظلت رسائلهما الأولى عملية، تناقش اختيار الكلمات والترجمة ومجاملات لطيفة صغيرة",
+            es: "Sus primeras cartas se mantuvieron prácticas, tratando la elección de palabras, la traducción y pequeñas cortesías educadas",
+            tr: "İlk mektupları pratik kaldı; kelime seçimlerini, çeviriyi ve küçük nazik incelikleri tartışıyorlardı",
+          },
+          {
+            ar: "ببطء، وبدون أن يلاحظ أي منهما تقريبًا، بدأت الرسائل تصل بشكل أكثر تكرارًا وتطول أكثر",
+            es: "Poco a poco, casi sin que ninguno lo notara, las cartas comenzaron a llegar con más frecuencia y a alargarse",
+            tr: "Yavaş yavaş, ikisi de neredeyse fark etmeden, mektuplar daha sık gelmeye ve uzamaya başladı",
+          },
+          {
+            ar: "وجد كافكا نفسه ينتظر ردودها بشغف قلق أربكه هو نفسه",
+            es: "Kafka se descubrió esperando sus respuestas con una ansiosa impaciencia que lo inquietaba",
+            tr: "Kafka kendini onun cevaplarını, kendisini rahatsız eden endişeli bir istekle beklerken buldu",
+          },
+          {
+            ar: "أما ميلينا، فردت بدفء وصدق نادرًا ما تلقاه كافكا من أحد",
+            es: "Milena, por su parte, respondía con una calidez y una honestidad que Kafka rara vez había recibido de nadie",
+            tr: "Milena ise Kafka'nın nadiren kimseden alabildiği bir sıcaklık ve dürüstlükle cevap yazdı",
+          },
+        ],
+      },
+      {
+        title: { ar: "حياتان مضطربتان", es: "Dos vidas atribuladas", tr: "İki Zorlu Hayat" },
+        sentences: [
+          {
+            ar: "كان كافكا مريضًا بالفعل بشدة بالسل، ويستريح غالبًا في مصحات بعيدًا عن براغ",
+            es: "Kafka ya estaba gravemente enfermo de tuberculosis, y a menudo descansaba en sanatorios lejos de Praga",
+            tr: "Kafka zaten ciddi şekilde tüberkülozdan hastaydı, sık sık Prag'dan uzak sanatoryumlarda dinleniyordu",
+          },
+          {
+            ar: "كان يعمل بتعاسة في مكتب تأمين، ويكتب القصص غالبًا في وقت متأخر من الليل، منهكًا",
+            es: "Trabajaba infeliz en una oficina de seguros, escribiendo ficción sobre todo tarde por la noche, exhausto",
+            tr: "Bir sigorta ofisinde mutsuzca çalışıyor, çoğunlukla geceleri yorgun bir halde kurgu yazıyordu",
+          },
+          {
+            ar: "كانت ميلينا متزوجة بتعاسة من إرنست بولاك، شخصية أدبية ساحرة لكنها غير مخلصة في فيينا",
+            es: "Milena estaba infelizmente casada con Ernst Pollak, una figura literaria encantadora pero infiel en Viena",
+            tr: "Milena, Viyana'da çekici ama sadakatsiz bir edebiyat figürü olan Ernst Pollak ile mutsuz bir evlilik yapmıştı",
+          },
+          {
+            ar: "عاشت في فقر حقيقي رغم ثروة عائلتها، بعد أن قُطعت عنها بعد زواجها",
+            es: "Vivía en verdadera pobreza a pesar de la riqueza de su familia, pues la habían dejado sin apoyo tras su matrimonio",
+            tr: "Ailesinin zenginliğine rağmen gerçek bir yoksulluk içinde yaşıyordu, evliliğinden sonra maddi destekten kesilmişti",
+          },
+          {
+            ar: "أدرك كلاهما في الآخر اضطرابًا مشابهًا وصعوبة مشابهة في العيش ببساطة",
+            es: "Ambos reconocían en el otro una inquietud similar, una dificultad parecida para simplemente vivir",
+            tr: "İkisi de birbirinde benzer bir huzursuzluk, sadece yaşamakta benzer bir zorluk gördü",
+          },
+          {
+            ar: "أعجب كافكا بشجاعتها وصدقها حتى وهو يقلق باستمرار من مشقتها",
+            es: "Kafka admiraba su valentía y su honestidad, incluso mientras se preocupaba constantemente por sus penurias",
+            tr: "Kafka onun cesaretine ve dürüstlüğüne hayrandı, aynı zamanda yaşadığı zorluklar için sürekli endişeleniyordu",
+          },
+          {
+            ar: "أعجبت ميلينا بعقله الغريب الدقيق، وقلقت بدورها من صحته الهشة المتدهورة",
+            es: "Milena admiraba su mente extraña y precisa, y a su vez se preocupaba por su frágil salud menguante",
+            tr: "Milena onun tuhaf, kesin zihnine hayrandı ve karşılığında onun kırılgan, sönmekte olan sağlığı için endişelendi",
+          },
+          {
+            ar: "لم يسمِّ أي منهما في البداية ما كان ينمو بينهما بشيء بسيط كالحب",
+            es: "Al principio, ninguno de los dos llamó a lo que crecía entre ellos algo tan simple como amor",
+            tr: "İlk başta ikisi de aralarında büyüyen şeye aşk kadar basit bir şey demedi",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "رسائل كحياة ثانية",
+          es: "Cartas como una segunda vida",
+          tr: "İkinci Bir Hayat Gibi Mektuplar",
+        },
+        sentences: [
+          {
+            ar: "بدأ كافكا يكتب إلى ميلينا يوميًا تقريبًا، أحيانًا مرتين في اليوم نفسه",
+            es: "Kafka comenzó a escribirle a Milena casi a diario, a veces dos veces en un mismo día",
+            tr: "Kafka Milena'ya neredeyse her gün, bazen aynı gün içinde iki kez yazmaya başladı",
+          },
+          {
+            ar: "طالت رسائله وازدادت عمقًا، مليئة بالشك والرقة والاعترافات المفاجئة",
+            es: "Sus cartas se hicieron más largas, más indagadoras, llenas de duda, ternura y confesiones repentinas",
+            tr: "Mektupları uzadı, daha sorgulayıcı hale geldi, şüphe, şefkat ve ani itiraflarla doldu",
+          },
+          {
+            ar: "أخبرها بأمور عن مخاوفه وعن أبيه لم يخبر بها أحدًا تقريبًا",
+            es: "Le contó cosas sobre sus miedos y su padre que casi no le había contado a nadie más",
+            tr: "Ona korkuları ve babası hakkında neredeyse kimseye anlatmadığı şeyler anlattı",
+          },
+          {
+            ar: "منحته رسائل ميلينا بدورها شجاعة غريبة جديدة نادرًا ما شعر بها في حياته",
+            es: "Las cartas de Milena, a su vez, le daban un extraño valor nuevo que rara vez había sentido en su propia vida",
+            tr: "Milena'nın mektupları ise ona kendi hayatında nadiren hissettiği garip, yeni bir cesaret verdi",
+          },
+          {
+            ar: "كتب مرة أن رسائلها كانت الهواء الحقيقي الوحيد الذي تنفسه ذلك الأسبوع",
+            es: "Una vez escribió que sus cartas eran el único aire real que tenía para respirar esa semana",
+            tr: "Bir keresinde onun mektuplarının o hafta solumak için sahip olduğu tek gerçek hava olduğunu yazdı",
+          },
+          {
+            ar: "خشي، حتى في ذلك الحين، أنه يحب الرسائل نفسها بقدر حبه للمرأة التي تكتبها",
+            es: "Temía, incluso entonces, amar las cartas en sí tanto como a la mujer que las escribía",
+            tr: "Daha o zaman bile mektupların kendisini, onları yazan kadın kadar sevdiğinden korkuyordu",
+          },
+          {
+            ar: "سمحت له المسافة أن يكون أكثر شجاعة على الورق مما استطاع أن يكون شخصيًا يومًا",
+            es: "La distancia le permitía ser más valiente sobre el papel de lo que nunca lograba ser en persona",
+            tr: "Mesafe, ona kağıt üzerinde şahsen hiçbir zaman tam olarak başaramadığı kadar cesur olma imkanı verdi",
+          },
+          {
+            ar: "مع ذلك، بدأ يأمل بهدوء بفرصة ليلتقيها أخيرًا وجهًا لوجه",
+            es: "Aun así, comenzó a esperar en silencio una oportunidad para finalmente encontrarse con ella cara a cara",
+            tr: "Yine de sessizce onunla nihayet yüz yüze buluşma fırsatını ummaya başladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "لقاء في فيينا", es: "Un encuentro en Viena", tr: "Viyana'da Buluşma" },
+        sentences: [
+          {
+            ar: "في الصيف، سافر كافكا أخيرًا إلى فيينا ليلتقي ميلينا لأربعة أيام لا تُنسى",
+            es: "En verano, Kafka finalmente viajó a Viena para encontrarse con Milena durante cuatro días inolvidables",
+            tr: "Yazın Kafka sonunda Milena ile dört unutulmaz gün geçirmek üzere Viyana'ya gitti",
+          },
+          {
+            ar: "مشيا معًا في حدائق المدينة، يتحدثان لساعات عن الكتب والخوف وعن بعضهما البعض",
+            es: "Caminaron juntos por los parques de la ciudad, hablando durante horas sobre libros, miedo y el uno del otro",
+            tr: "Şehrin parklarında birlikte yürüdüler, saatlerce kitaplar, korku ve birbirleri hakkında konuştular",
+          },
+          {
+            ar: "للمرة الأولى بدت رسائله القلقة ووجوده المرتجف الفعلي متطابقين",
+            es: "Por primera vez, sus cartas ansiosas y su presencia temblorosa parecían coincidir",
+            tr: "İlk kez endişeli mektupları ve titrek gerçek varlığı birbirine uyuyor gibiydi",
+          },
+          {
+            ar: "كتبت ميلينا لاحقًا أنها لم تر أحدًا صادقًا بشكل كامل ومؤلم مثل كافكا",
+            es: "Milena escribió más tarde que nunca había visto a nadie tan completa y dolorosamente honesto como Kafka",
+            tr: "Milena daha sonra Kafka kadar tam ve acı verecek kadar dürüst kimseyi görmediğini yazdı",
+          },
+          {
+            ar: "اعترف بمرضه ورعبه من العلاقة الحميمة وشكوكه في استحقاقه الحقيقي للحب يومًا",
+            es: "Confesó su enfermedad, su terror a la intimidad y sus dudas sobre si alguna vez merecería de verdad el amor",
+            tr: "Hastalığını, yakınlıktan duyduğu dehşeti ve gerçekten sevgiyi hak edip etmediğine dair şüphelerini itiraf etti",
+          },
+          {
+            ar: "رغم كل شيء، شعر كلاهما بأن تلك الأيام الأربعة كانت نوعًا نادرًا وهشًا من السعادة",
+            es: "A pesar de todo, esos cuatro días se sintieron para ambos como un tipo raro y frágil de felicidad",
+            tr: "Her şeye rağmen, o dört gün ikisine de ender, kırılgan bir mutluluk gibi hissettirdi",
+          },
+          {
+            ar: "عاد كافكا إلى براغ متغيرًا، يحمل أملًا جديدًا ورعبًا مألوفًا عائدًا في آن واحد",
+            es: "Kafka regresó a Praga cambiado, cargando tanto una nueva esperanza como un familiar temor que volvía",
+            tr: "Kafka değişmiş bir halde Prag'a döndü, hem yeni bir umut hem de geri dönen tanıdık bir dehşet taşıyordu",
+          },
+          {
+            ar: "كتب إليها بعد وقت قصير جدًا، متلهفًا بالفعل للقاء ثانٍ بالكاد تجرأ على التخطيط له",
+            es: "Le escribió casi de inmediato, anhelando ya un segundo encuentro que apenas se atrevía a planear",
+            tr: "Neredeyse hemen ona yazdı, planlamaya bile zar zor cesaret ettiği ikinci bir buluşma için şimdiden özlem duyuyordu",
+          },
+        ],
+      },
+      {
+        title: { ar: "غموند", es: "Gmünd", tr: "Gmünd" },
+        sentences: [
+          {
+            ar: "بعد أشهر التقيا للمرة الثانية في غموند، بلدة صغيرة تمتد على الحدود بينهما",
+            es: "Meses después se reunieron por segunda vez en Gmünd, un pequeño pueblo a caballo entre la frontera que los separaba",
+            tr: "Aylar sonra ikinci kez, ikisi arasındaki sınıra yayılmış küçük bir kasaba olan Gmünd'de buluştular",
+          },
+          {
+            ar: "كانت الزيارة متوترة منذ البداية، مثقلة بقرارات غير معلنة لم يرغب أي منهما في اتخاذها",
+            es: "La visita fue tensa desde el principio, cargada de decisiones no dichas que ninguno de los dos quería tomar",
+            tr: "Ziyaret başından beri gergindi, ikisinin de almak istemediği söylenmemiş kararlarla ağırlaşmıştı",
+          },
+          {
+            ar: "أراد كافكا أن تترك زوجها وتبني حياة معًا، مهما كانت الصعوبة",
+            es: "Kafka quería que ella dejara a su marido y construyeran una vida juntos, fuera cual fuera la dificultad",
+            tr: "Kafka, zorluğu ne olursa olsun onun kocasını terk edip birlikte bir hayat kurmasını istedi",
+          },
+          {
+            ar: "لم تستطع ميلينا، الممزقة والمنهكة، أن تجبر نفسها تمامًا على ترك الزواج الذي كانت تمقته أيضًا",
+            es: "Milena, dividida y agotada, no lograba decidirse del todo a dejar el matrimonio que también resentía",
+            tr: "Bocalayan ve tükenmiş Milena, hoşnutsuz olduğu evliliği bırakmaya kendini bir türlü tam olarak getiremedi",
+          },
+          {
+            ar: "تجادلا وتصالحا ثم تجادلا مجددًا خلال الأيام القصيرة المؤلمة القليلة نفسها",
+            es: "Discutieron, se reconciliaron y volvieron a discutir dentro del mismo puñado corto y doloroso de días",
+            tr: "Aynı kısa, acı dolu birkaç gün içinde tartıştılar, barıştılar ve yeniden tartıştılar",
+          },
+          {
+            ar: "غادر كافكا غموند غير متأكد إن كان قد كسبها أو خسرها أخيرًا وبهدوء",
+            es: "Kafka dejó Gmünd sin saber si la había ganado o si, en silencio, finalmente la había perdido",
+            tr: "Kafka, onu kazanıp kazanmadığından ya da sessizce, sonunda kaybedip kaybetmediğinden emin olamadan Gmünd'den ayrıldı",
+          },
+          {
+            ar: "أصبحت رسائله بعد ذلك أثقل، تدور حول السؤال نفسه الذي لم تتم الإجابة عليه مرارًا وتكرارًا",
+            es: "Sus cartas después se volvieron más pesadas, girando una y otra vez en torno a la misma pregunta sin respuesta",
+            tr: "Daha sonraki mektupları ağırlaştı, aynı yanıtsız sorunun etrafında defalarca dönüp durdu",
+          },
+        ],
+      },
+      {
+        title: { ar: "خوف كافكا", es: "El miedo de Kafka", tr: "Kafka'nın Korkusu" },
+        sentences: [
+          {
+            ar: "كثيرًا ما وصف كافكا نفسه في رسائله بأنه غير مؤهل للسعادة الإنسانية العادية أو الزواج",
+            es: "Kafka a menudo se describía en sus cartas como no apto para la felicidad humana ordinaria o el matrimonio",
+            tr: "Kafka mektuplarında kendini sık sık sıradan insan mutluluğuna ya da evliliğe uygun olmayan biri olarak tanımladı",
+          },
+          {
+            ar: "قلق من أن مرضه يجعل أي مستقبل مشترك حقيقي مع ميلينا أنانيًا أو حتى مستحيلًا",
+            es: "Le preocupaba que su enfermedad hiciera egoísta, o incluso imposible, cualquier futuro compartido real con Milena",
+            tr: "Hastalığının Milena ile gerçek bir ortak geleceği bencilce ya da hatta imkansız kılmasından endişelendi",
+          },
+          {
+            ar: "كتب فقرات طويلة معذَّبة يحلل فيها خوفه الخاص حتى بدا الخوف نفسه يكبر أكثر",
+            es: "Escribió pasajes largos y torturados analizando su propio miedo hasta que el miedo mismo parecía crecer",
+            tr: "Kendi korkusunu analiz eden uzun, işkenceli pasajlar yazdı, öyle ki korkunun kendisi büyüyor gibiydi",
+          },
+          {
+            ar: "حاولت ميلينا بصبر طمأنته، رغم أن شكوكه كانت غالبًا تتجاوز أي شيء تستطيع قوله",
+            es: "Milena intentaba pacientemente tranquilizarlo, aunque sus dudas a menudo superaban cualquier cosa que ella pudiera decir",
+            tr: "Milena onu sabırla teselli etmeye çalıştı, gerçi şüpheleri genellikle onun söyleyebileceği her şeyi geride bırakıyordu",
+          },
+          {
+            ar: "أعجب بقوتها تحديدًا لأنه شك مرارًا وتكرارًا في قدرته الخاصة عليها",
+            es: "Admiraba su fortaleza precisamente porque dudaba, una y otra vez, de su propia capacidad para ello",
+            tr: "Onun gücüne hayrandı, çünkü tam olarak kendi bu kapasiteden defalarca şüphe duyuyordu",
+          },
+          {
+            ar: "في بعض الأسابيع كانت رسائله تحترق شوقًا، وفي أسابيع أخرى تصبح هادئة وحذرة وبعيدة",
+            es: "Algunas semanas sus cartas ardían de anhelo; otras semanas se volvían silenciosas, cautelosas y distantes",
+            tr: "Bazı haftalar mektupları özlemle yanıyordu; bazı haftalarsa sessiz, temkinli ve mesafeli hale geliyordu",
+          },
+          {
+            ar: "بدأت ميلينا تحس أن حبه يعني حب شخص لا يستطيع أن يسمح لنفسه بأن يُحب تمامًا",
+            es: "Milena empezó a sentir que amarlo significaba amar a alguien que no podía dejarse amar por completo",
+            tr: "Milena, onu sevmenin kendini tam olarak sevilmesine izin veremeyen birini sevmek anlamına geldiğini hissetmeye başladı",
+          },
+          {
+            ar: "مع ذلك استمرت بالكتابة، غير راغبة تمامًا في التخلي عما نما بينهما",
+            es: "Aun así siguió escribiendo, sin estar del todo dispuesta a dejar ir lo que había crecido entre ellos",
+            tr: "Yine de yazmaya devam etti, aralarında büyüyen şeyi tamamen bırakmaya istekli değildi",
+          },
+        ],
+      },
+      {
+        title: { ar: "نهاية الرسائل", es: "El final de las cartas", tr: "Mektupların Sonu" },
+        sentences: [
+          {
+            ar: "ببطء، على مدى أشهر صعبة عديدة، أصبحت الرسائل بينهما أقل تكرارًا وأقل يقينًا",
+            es: "Lentamente, a lo largo de muchos meses difíciles, las cartas entre ellos se hicieron menos frecuentes y más inciertas",
+            tr: "Yavaş yavaş, birçok zor ay boyunca, aralarındaki mektuplar seyrekleşti ve belirsizleşti",
+          },
+          {
+            ar: "بقيت ميلينا مع زوجها، عاجزة عن إحداث القطيعة الكاملة التي تمناها كافكا يومًا",
+            es: "Milena permaneció con su marido, incapaz de dar la ruptura completa que Kafka una vez había esperado",
+            tr: "Milena kocasının yanında kaldı, Kafka'nın bir zamanlar umduğu tam kopuşu gerçekleştiremedi",
+          },
+          {
+            ar: "تفاقم سل كافكا باطراد، جاذبًا إياه نحو المصحات وبعيدًا عن فيينا",
+            es: "La tuberculosis de Kafka empeoró de forma constante, arrastrándolo hacia los sanatorios y lejos de Viena",
+            tr: "Kafka'nın tüberkülozu sürekli kötüleşti, onu sanatoryumlara ve Viyana'dan uzağa çekti",
+          },
+          {
+            ar: "تضاءلت مراسلاتهما بهدوء، رغم أن أيًا منهما لم يكتب وداعًا واضحًا ونهائيًا قط",
+            es: "Su correspondencia se fue apagando en silencio, aunque ninguno de los dos escribió jamás una despedida clara y definitiva",
+            tr: "Yazışmaları sessizce azaldı, gerçi ikisi de asla net, kesin bir veda yazmadı",
+          },
+          {
+            ar: "طلب كافكا لاحقًا من صديق إتلاف كثير من أوراقه، لكن ميلينا احتفظت برسائله بعناية",
+            es: "Kafka más tarde le pidió a un amigo que destruyera muchos de sus papeles, aunque Milena conservó sus cartas cuidadosamente",
+            tr: "Kafka daha sonra bir arkadaşından evraklarının çoğunu yok etmesini istedi, ama Milena onun mektuplarını özenle sakladı",
+          },
+          {
+            ar: "قالت لاحقًا إن رسائله أظهرت لها نوعًا من الصدق لم تجده في أي مكان آخر",
+            es: "Más tarde diría que sus cartas le mostraron un tipo de honestidad que nunca encontró en ningún otro lugar",
+            tr: "Daha sonra onun mektuplarının kendisine başka hiçbir yerde bulamadığı bir tür dürüstlük gösterdiğini söyleyecekti",
+          },
+          {
+            ar: "مات كافكا بعد بضع سنوات، إذ تغلّب مرضه أخيرًا على جسده الهش الذي طالما شكك فيه",
+            es: "Kafka murió unos años después, su enfermedad finalmente venció al frágil cuerpo del que siempre había dudado",
+            tr: "Kafka birkaç yıl sonra öldü, hastalığı her zaman güvenmediği kırılgan bedenini sonunda ele geçirdi",
+          },
+          {
+            ar: "بقيت الرسائل بعده، سجلًا هادئًا لشخصين أحب أحدهما الآخر في الغالب عبر الورق",
+            es: "Las cartas le sobrevivieron, un silencioso testimonio de dos personas que se amaron sobre todo a través del papel",
+            tr: "Mektuplar ondan sonra da kaldı; büyük ölçüde kağıt üzerinden birbirini seven iki kişinin sessiz bir kaydı",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-dear-theo",
+    description: {
+      ar: "سرد أصلي من سنتنس ستيب لرسائل فنسنت فان كوخ الحقيقية إلى أخيه ثيو، الذي حمله حبه ودعمه الثابتان عبر الفقر والمرض وبعض أعظم لوحاته — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un relato original de SentenceStep de las cartas reales de Vincent van Gogh a su hermano Theo, cuyo amor y apoyo constantes llevaron a Vincent a través de la pobreza, la enfermedad y algunas de sus mejores pinturas — un relato personal, no el texto original.",
+      tr: "Vincent van Gogh'un, Vincent'ı yoksulluk, hastalık ve en büyük tablolarından bazılarının içinden geçiren istikrarlı sevgisi ve desteğiyle kardeşi Theo'ya yazdığı gerçek mektupların özgün bir SentenceStep anlatımı — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: { ar: "بداية متأخرة", es: "Un comienzo tardío", tr: "Geç Bir Başlangıç" },
+        sentences: [
+          {
+            ar: "جرب فنسنت فان كوخ عدة مهن وفشل فيها قبل أن يتجه أخيرًا بجدية إلى الرسم",
+            es: "Vincent van Gogh probó y fracasó en varias profesiones antes de dedicarse finalmente en serio a la pintura",
+            tr: "Vincent van Gogh, sonunda ciddi bir şekilde resme yönelmeden önce çeşitli mesleklerde denedi ve başarısız oldu",
+          },
+          {
+            ar: "عمل تاجر لوحات ومعلمًا، ولفترة وجيزة واعظًا بين عمال مناجم الفحم الفقراء",
+            es: "Había trabajado como marchante de arte, profesor y brevemente como predicador entre pobres mineros de carbón",
+            tr: "Bir sanat satıcısı, öğretmen ve kısa bir süre yoksul kömür madencileri arasında vaiz olarak çalışmıştı",
+          },
+          {
+            ar: "انتهت كل محاولة بخيبة أمل مضطربة مماثلة، شعور بأنه لا ينتمي حقًا إلى أي مكان",
+            es: "Cada intento terminaba en la misma decepción inquieta, la sensación de que no encajaba de verdad en ningún lugar",
+            tr: "Her girişim aynı huzursuz hayal kırıklığıyla, hiçbir yere gerçekten ait olmadığı hissiyle sonuçlandı",
+          },
+          {
+            ar: "في السابعة والعشرين قرر أخيرًا، بيأس تقريبًا، أن يكرس نفسه بالكامل للفن بدلًا من ذلك",
+            es: "A los veintisiete años finalmente decidió, casi con desesperación, dedicarse por completo al arte",
+            tr: "Yirmi yedi yaşında sonunda, neredeyse çaresizce, kendini tamamen sanata adamaya karar verdi",
+          },
+          {
+            ar: "آمن به أخوه الأصغر ثيو، تاجر اللوحات في باريس، منذ البداية تقريبًا",
+            es: "Su hermano menor Theo, marchante de arte en París, creyó en él casi desde el principio",
+            tr: "Paris'te kendisi de bir sanat satıcısı olan küçük kardeşi Theo, neredeyse en başından beri ona inandı",
+          },
+          {
+            ar: "بدأ ثيو بإرسال مبلغ شهري متواضع لكنه ثابت لفنسنت لدعم طريقه الجديد غير المؤكد",
+            es: "Theo comenzó a enviarle a Vincent una modesta pero constante asignación mensual para apoyar su incierto nuevo camino",
+            tr: "Theo, Vincent'ın belirsiz yeni yolunu desteklemek için ona mütevazı ama düzenli bir aylık ödenek göndermeye başladı",
+          },
+          {
+            ar: "في المقابل وعد فنسنت بإرسال لوحات له، وبالقدر نفسه من التكرار، رسائل طويلة تنقّب في الذات",
+            es: "A cambio, Vincent prometió enviarle cuadros y, con la misma frecuencia, largas cartas introspectivas",
+            tr: "Karşılığında Vincent ona tablolar ve aynı sıklıkta, uzun, sorgulayıcı mektuplar göndereceğine söz verdi",
+          },
+        ],
+      },
+      {
+        title: { ar: "أخوان عبر الرسائل", es: "Hermanos por carta", tr: "Mektuplaşan Kardeşler" },
+        sentences: [
+          {
+            ar: "خلال السنوات العشر التالية، تبادل الأخوان مئات الرسائل، بعضها قصير وكثير منها طويل بشكل استثنائي",
+            es: "Durante los siguientes diez años, los hermanos intercambiaron cientos de cartas, algunas breves y muchas extraordinariamente largas",
+            tr: "Sonraki on yıl boyunca kardeşler yüzlerce mektup değiş tokuş etti, bazıları kısa, çoğu olağanüstü uzundu",
+          },
+          {
+            ar: "كتب فنسنت عن اللون والضوء والتقنية بنفس الشدة التي جلبها إلى لوحاته",
+            es: "Vincent escribía sobre el color, la luz y la técnica con la misma intensidad que ponía en sus lienzos",
+            tr: "Vincent, tuvallerine kattığı aynı yoğunlukla renk, ışık ve teknik hakkında yazdı",
+          },
+          {
+            ar: "كتب أيضًا بصدق عن وحدته وفقره وحالاته المزاجية الصعبة المتكررة",
+            es: "También escribía con honestidad sobre su soledad, su pobreza y sus frecuentes estados de ánimo difíciles",
+            tr: "Ayrıca yalnızlığı, yoksulluğu ve sık sık yaşadığı zorlu ruh halleri hakkında dürüstçe yazdı",
+          },
+          {
+            ar: "أجابه ثيو، الصبور والثابت، بنصائح عملية وتشجيع لطيف ومال لا يتزعزع",
+            es: "Theo, paciente y firme, respondía con consejos prácticos, un aliento suave y un dinero inquebrantable",
+            tr: "Sabırlı ve istikrarlı Theo, pratik tavsiyeler, nazik teşvik ve sarsılmaz bir parayla karşılık verdi",
+          },
+          {
+            ar: "نجت رابطتهما من الجدالات والصمت الطويل وشخصية فنسنت الصعبة والمتطلبة غالبًا",
+            es: "Su vínculo sobrevivió a discusiones, largos silencios y la personalidad a menudo difícil y exigente de Vincent",
+            tr: "Bağları, tartışmalara, uzun sessizliklere ve Vincent'ın çoğu zaman zor, talepkar kişiliğine rağmen ayakta kaldı",
+          },
+          {
+            ar: "آمن ثيو بهدوء بعبقرية أخيه قبل أن يوافقه أي شخص آخر تقريبًا على ذلك بوقت طويل",
+            es: "Theo creía en silencio en el genio de su hermano mucho antes de que casi nadie más estuviera de acuerdo con él",
+            tr: "Theo, neredeyse hiç kimse aynı fikirde olmadan çok önce kardeşinin dehasına sessizce inandı",
+          },
+          {
+            ar: "عامل فنسنت بدوره ثيو كأقرب أصدقائه وسره الأمين وشريكه الفني الحقيقي الوحيد",
+            es: "Vincent, a su vez, trataba a Theo como su amigo más cercano, confidente y único verdadero socio artístico",
+            tr: "Vincent ise Theo'ya en yakın arkadaşı, sırdaşı ve tek gerçek sanatsal ortağı gibi davrandı",
+          },
+          {
+            ar: "اعترف فنسنت لاحقًا أنه لولا تلك الرسائل وذلك المال لما استطاع الاستمرار بالرسم على الإطلاق",
+            es: "Sin esas cartas y ese dinero, admitió Vincent más tarde, nunca habría podido seguir pintando en absoluto",
+            tr: "Vincent daha sonra, o mektuplar ve o para olmasaydı asla resim yapmaya devam edemeyeceğini itiraf etti",
+          },
+        ],
+      },
+      {
+        title: { ar: "آكلو البطاطس", es: "Los comedores de patatas", tr: "Patates Yiyenler" },
+        sentences: [
+          {
+            ar: "في الريف الهولندي رسم فنسنت عائلات فلاحية فقيرة بألوان ترابية ثقيلة وقاتمة",
+            es: "En el campo holandés, Vincent pintaba a familias campesinas pobres con pesados y sombríos tonos térreos",
+            tr: "Hollanda kırsalında Vincent, yoksul köylü aileleri ağır, kasvetli toprak tonlarıyla resmetti",
+          },
+          {
+            ar: "أظهرت تحفته المبكرة آكلو البطاطس عائلة بسيطة تتشارك وجبة متواضعة",
+            es: "Su obra maestra temprana, Los comedores de patatas, mostraba a una tosca familia compartiendo una comida sencilla y humilde",
+            tr: "Erken dönem başyapıtı Patates Yiyenler, basit, mütevazı bir yemeği paylaşan sade bir aileyi gösteriyordu",
+          },
+          {
+            ar: "أراد أن يشعر المشاهدون بكرامة حياة الفلاحين العادية الصعبة وصدقها المكتسب بشق الأنفس",
+            es: "Quería que los espectadores sintieran la dignidad y la honestidad ganada a pulso de la difícil vida campesina ordinaria",
+            tr: "İzleyicilerin, sıradan zorlu köylü hayatının onurunu ve zor kazanılmış dürüstlüğünü hissetmesini istedi",
+          },
+          {
+            ar: "لم يشترِ أحد تقريبًا لوحاته خلال هذه السنوات الأولى العجاف المحبطة من الكفاح الحقيقي",
+            es: "Casi nadie compraba sus cuadros durante estos magros y frustrantes primeros años de verdadera lucha",
+            tr: "Bu kıt, hayal kırıklığı yaratan gerçek mücadele yıllarında neredeyse kimse tablolarını satın almadı",
+          },
+          {
+            ar: "حاول ثيو برفق بيعها في باريس، لكن بنجاح محدود جدًا بين هواة الجمع من أصحاب الموضة",
+            es: "Theo intentaba venderlos con delicadeza en París, con muy limitado éxito entre los coleccionistas de moda",
+            tr: "Theo, Paris'te moda koleksiyoncular arasında çok sınırlı bir başarıyla onları nazikçe satmaya çalıştı",
+          },
+          {
+            ar: "أصيب فنسنت بالإحباط لكنه استمر بالعمل بلا هوادة، متيقنًا أن تقنيته لا تزال بحاجة إلى تحسن حقيقي",
+            es: "Vincent se frustraba, pero seguía trabajando sin descanso, convencido de que su técnica todavía necesitaba una mejora real",
+            tr: "Vincent hayal kırıklığına uğradı ama tekniğinin hâlâ gerçek bir gelişmeye ihtiyacı olduğuna emin olarak durmadan çalışmaya devam etti",
+          },
+          {
+            ar: "انتقل باستمرار بين البلدات الهولندية، يرسم دومًا، يبحث دومًا عن شيء أكثر وضوحًا",
+            es: "Se mudaba constantemente entre pueblos holandeses, siempre pintando, siempre buscando algo más claro",
+            tr: "Sürekli Hollanda kasabaları arasında dolaştı, her zaman resim yaptı, her zaman daha net bir şey aradı",
+          },
+        ],
+      },
+      {
+        title: { ar: "باريس ولون جديد", es: "París y el color nuevo", tr: "Paris ve Yeni Renk" },
+        sentences: [
+          {
+            ar: "في عام 1886 انتقل فنسنت إلى باريس ليعيش مع ثيو في شقته الصغيرة المزدحمة",
+            es: "En 1886 Vincent se mudó a París para vivir con Theo en su pequeño y abarrotado apartamento",
+            tr: "1886'da Vincent, Theo ile küçük, kalabalık dairesinde yaşamak üzere Paris'e taşındı",
+          },
+          {
+            ar: "هناك التقى أخيرًا برسامي الانطباعية وما بعد الانطباعية الذين كانوا يعيدون تشكيل الفن الفرنسي",
+            es: "Allí finalmente conoció a los pintores impresionistas y postimpresionistas que estaban remodelando el arte francés",
+            tr: "Orada sonunda Fransız sanatını yeniden şekillendiren İzlenimci ve Post-İzlenimci ressamlarla tanıştı",
+          },
+          {
+            ar: "أذهلته ضرباتهم اللونية المتقطعة الساطعة وألوانهم الزاهية كوحي مفاجئ",
+            es: "Sus pinceladas brillantes y fragmentadas y sus vívidos colores lo impactaron como una revelación repentina",
+            tr: "Onların parlak, kesik fırça darbeleri ve canlı renkleri onu ani bir vahiy gibi çarptı",
+          },
+          {
+            ar: "تحولت لوحة ألوانه الخاصة بين ليلة وضحاها تقريبًا من البني الموحل إلى درجات لامعة وحيوية",
+            es: "Su propia paleta se transformó casi de la noche a la mañana de marrones turbios a tonos brillantes y vibrantes",
+            tr: "Kendi paleti neredeyse bir gecede çamurlu kahverengilerden parlak, canlı tonlara dönüştü",
+          },
+          {
+            ar: "رسم صورًا ذاتية بشكل هوسي، جزئيًا لأنه لم يكن يقدر دومًا على تحمل تكلفة نماذج أخرى",
+            es: "Pintaba autorretratos obsesivamente, en parte porque no siempre podía permitirse otros modelos",
+            tr: "Kendi portrelerini saplantılı bir şekilde resmetti, kısmen her zaman başka modeller tutmaya gücü yetmediği için",
+          },
+          {
+            ar: "أرهق العيش معًا العلاقة بين الأخوين بشدة، إذ أنهكت شدة فنسنت حتى ثيو الصبور",
+            es: "Vivir juntos tensó mucho a los hermanos, la intensidad de Vincent agotaba incluso al paciente Theo",
+            tr: "Birlikte yaşamak kardeşleri ciddi şekilde gerdi, Vincent'ın yoğunluğu sabırlı Theo'yu bile yordu",
+          },
+          {
+            ar: "بعد سنتين صعبتين قرر فنسنت الانتقال جنوبًا بحثًا عن إيجار أرخص وضوء أوضح",
+            es: "Tras dos años difíciles, Vincent decidió mudarse al sur, buscando un alquiler más barato y una luz más clara",
+            tr: "İki zor yılın ardından Vincent, daha ucuz kira ve daha net bir ışık arayarak güneye taşınmaya karar verdi",
+          },
+          {
+            ar: "استمر ثيو، المرتاح لكن القلق، بإرسال المال والرسائل أينما استقر أخوه بعد ذلك",
+            es: "Theo, aliviado pero preocupado, siguió enviando dinero y cartas dondequiera que su hermano se instalara a continuación",
+            tr: "Rahatlamış ama endişeli olan Theo, kardeşi bundan sonra nereye yerleşirse yerleşsin para ve mektup göndermeye devam etti",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "البيت الأصفر في آرل",
+          es: "La casa amarilla en Arlés",
+          tr: "Arles'taki Sarı Ev",
+        },
+        sentences: [
+          {
+            ar: "استقر فنسنت في آرل، مستأجرًا بيتًا صغيرًا طلاه بحماس بلون أصفر ساطع من الداخل والخارج",
+            es: "Vincent se instaló en Arlés, alquilando una pequeña casa que pintó con entusiasmo de amarillo brillante por dentro y por fuera",
+            tr: "Vincent Arles'a yerleşti, heyecanla içini ve dışını parlak sarıya boyadığı küçük bir ev kiraladı",
+          },
+          {
+            ar: "حلم بتأسيس مستعمرة فنية هناك، رسامون يتشاركون العمل والأفكار والحياة اليومية البسيطة",
+            es: "Soñaba con fundar allí una colonia de artistas, pintores compartiendo trabajo, ideas y la vida cotidiana sencilla",
+            tr: "Orada bir sanatçı kolonisi kurmayı hayal etti; işlerini, fikirlerini ve basit günlük hayatlarını paylaşan ressamlar",
+          },
+          {
+            ar: "رسم زهور دوار الشمس بشكل هوسي، آملًا أن يرحب ذهبها الدافئ بزميل رسام يبقى معه",
+            es: "Pintaba girasoles obsesivamente, esperando que su cálido dorado diera la bienvenida a un compañero pintor para quedarse",
+            tr: "Ayçiçeklerini saplantılı bir şekilde resmetti, sıcak altın rengiyle kalması için bir ressam arkadaşını karşılamayı umuyordu",
+          },
+          {
+            ar: "قدم له الريف المحيط بآرل حقول قمح متوهجة وبساتين وضوءًا جنوبيًا خاطفًا",
+            es: "El campo alrededor de Arlés le ofrecía ardientes campos de trigo, huertos y una deslumbrante luz meridional",
+            tr: "Arles çevresindeki kırsal, ona alev alev yanan buğday tarlaları, meyve bahçeleri ve göz kamaştırıcı güney ışığı sundu",
+          },
+          {
+            ar: "عمل بوتيرة محمومة، وأنهى أحيانًا لوحة كاملة في يوم واحد مكثف",
+            es: "Trabajaba a un ritmo furioso, a veces terminando un lienzo entero en un solo día intenso",
+            tr: "Öfkeli bir hızla çalıştı, bazen tek bir yoğun günde koca bir tuvali bitirdi",
+          },
+          {
+            ar: "مع ذلك، لم تفارقه الوحدة تمامًا رغم الجمال المحيط ببيته الأصفر الصغير",
+            es: "Sin embargo, la soledad nunca lo abandonó del todo, a pesar de la belleza que rodeaba su pequeña casa amarilla",
+            tr: "Ancak küçük sarı evini çevreleyen güzelliğe rağmen yalnızlık onu hiçbir zaman tam olarak terk etmedi",
+          },
+          {
+            ar: "كتب إلى ثيو باستمرار، واصفًا الألوان بدقة جعلت أخاه يكاد يراها",
+            es: "Le escribía a Theo constantemente, describiendo los colores con tanta precisión que su hermano casi podía verlos",
+            tr: "Theo'ya sürekli yazdı, renkleri kardeşinin neredeyse görebileceği kadar hassas bir şekilde tarif etti",
+          },
+          {
+            ar: "أخيرًا، بعد إقناع طويل، وافق الرسام بول غوغان على السفر جنوبًا للانضمام إليه",
+            es: "Finalmente, tras mucha persuasión, el pintor Paul Gauguin aceptó viajar al sur y unirse a él",
+            tr: "Sonunda, uzun uğraşların ardından, ressam Paul Gauguin güneye gidip ona katılmayı kabul etti",
+          },
+        ],
+      },
+      {
+        title: { ar: "زيارة غوغان", es: "La visita de Gauguin", tr: "Gauguin'in Ziyareti" },
+        sentences: [
+          {
+            ar: "في البداية جلب وصول غوغان لفنسنت فرحًا حقيقيًا، رفيقًا فعليًا أخيرًا في بيته الأصفر",
+            es: "Al principio, la llegada de Gauguin trajo a Vincent una alegría genuina, un compañero real por fin en su casa amarilla",
+            tr: "Başlarda Gauguin'in gelişi Vincent'a gerçek bir sevinç getirdi, sarı evinde sonunda gerçek bir arkadaş",
+          },
+          {
+            ar: "عمل الرسامان جنبًا إلى جنب، رغم أن مزاجيهما وأفكارهما الفنية كثيرًا ما تصادمت",
+            es: "Los dos pintores trabajaban codo con codo, aunque sus temperamentos e ideas artísticas a menudo chocaban",
+            tr: "İki ressam yan yana çalıştı, gerçi mizaçları ve sanatsal fikirleri sık sık çatıştı",
+          },
+          {
+            ar: "ازدادت الجدالات حدة مع بقائهما محصورين معًا داخل البيت الصغير بسبب طقس الخريف",
+            es: "Las discusiones se agudizaron a medida que el clima otoñal los mantenía confinados juntos dentro de la pequeña casa",
+            tr: "Sonbahar havası onları küçük evin içinde birlikte hapsettikçe tartışmalar keskinleşti",
+          },
+          {
+            ar: "في ليلة من ديسمبر، بعد شجار مرير، أصيب فنسنت بانهيار حاد ومرعب",
+            es: "Una noche de diciembre, tras una amarga discusión, Vincent sufrió un colapso severo y aterrador",
+            tr: "Bir Aralık gecesi, acı bir kavganın ardından Vincent şiddetli ve korkutucu bir çöküş yaşadı",
+          },
+          {
+            ar: "في ضائقته آذى أذنه بنفسه، فعل صدم البلدة بأكملها وأخافها",
+            es: "En su angustia se lastimó su propia oreja, un acto que conmocionó y asustó a todo el pueblo",
+            tr: "Sıkıntısı içinde kendi kulağını yaraladı, bu eylem tüm kasabayı şok etti ve korkuttu",
+          },
+          {
+            ar: "غادر غوغان آرل فورًا بعد ذلك، وانهارت المستعمرة الفنية التي كان يحلم بها بهدوء",
+            es: "Gauguin se marchó de Arlés inmediatamente después, y la soñada colonia de artistas se derrumbó en silencio",
+            tr: "Gauguin bundan hemen sonra Arles'ı terk etti ve hayal edilen sanatçı kolonisi sessizce çöktü",
+          },
+          {
+            ar: "أُدخل فنسنت، الخجل والمريض، إلى المستشفى بينما هرع ثيو بقلق ليكون قريبًا منه",
+            es: "Vincent, avergonzado y enfermo, fue hospitalizado mientras Theo corría ansioso para estar cerca de él",
+            tr: "Utanmış ve rahatsız olan Vincent hastaneye kaldırıldı, Theo ise endişeyle ona yakın olmak için koştu",
+          },
+        ],
+      },
+      {
+        title: { ar: "سان ريمي", es: "Saint-Rémy", tr: "Saint-Rémy" },
+        sentences: [
+          {
+            ar: "دخل فنسنت طواعية مصحة عقلية في سان ريمي، آملًا أن يهدئ النظام عقله أخيرًا",
+            es: "Vincent ingresó voluntariamente en un asilo en Saint-Rémy, esperando que la estructura finalmente calmara su mente",
+            tr: "Vincent gönüllü olarak Saint-Rémy'deki bir akıl hastanesine girdi, düzenin sonunda zihnini sakinleştirmesini umarak",
+          },
+          {
+            ar: "بين النوبات الصعبة، استمر بالرسم بتركيز لافت يكاد يكون يائسًا",
+            es: "Entre episodios difíciles, siguió pintando con una concentración notable, casi desesperada",
+            tr: "Zor nöbetler arasında, dikkat çekici, neredeyse çaresiz bir yoğunlaşmayla resim yapmaya devam etti",
+          },
+          {
+            ar: "من نافذته المقضبة رسم التلال الدوامية وأشجار السرو نفسها مرارًا وتكرارًا",
+            es: "Desde su ventana enrejada pintó las mismas colinas arremolinadas y cipreses una y otra vez",
+            tr: "Parmaklıklı penceresinden aynı dalgalanan tepeleri ve selvi ağaçlarını defalarca resmetti",
+          },
+          {
+            ar: "هناك رسم ليلة النجوم، بسمائها المضطربة بالطاقة القلقة التي شعر بها في داخله",
+            es: "Allí creó La noche estrellada, con su cielo agitado por la energía inquieta que sentía en su interior",
+            tr: "Orada, içinde hissettiği huzursuz enerjiyle çalkalanan gökyüzüyle Yıldızlı Gece'yi yarattı",
+          },
+          {
+            ar: "استمر ثيو بالكتابة له بدعم، حاثًا إياه على الصبر بينما كان يرتب بلطف معارض كلما أمكن",
+            es: "Theo siguió escribiendo con apoyo, instando a la paciencia mientras organizaba suavemente exposiciones donde podía",
+            tr: "Theo desteğini sürdürerek yazmaya devam etti, sabrı teşvik ederken mümkün olduğunca nazikçe sergiler ayarladı",
+          },
+          {
+            ar: "ظلت رسائل فنسنت من المصحة واضحة ومتأملة حتى خلال أصعب فتراته",
+            es: "Las cartas de Vincent desde el asilo se mantuvieron lúcidas y reflexivas incluso durante sus periodos más difíciles",
+            tr: "Vincent'ın akıl hastanesinden yazdığı mektuplar, en zorlu dönemlerinde bile berrak ve düşünceli kaldı",
+          },
+          {
+            ar: "وصف الرسم بأنه الشيء الوحيد الذي يُهدئ بثبات العاصفة داخل عقله",
+            es: "Describió la pintura como lo único que apaciguaba de manera fiable la tormenta dentro de su propia mente",
+            tr: "Resim yapmayı, kendi zihnindeki fırtınayı güvenilir bir şekilde yatıştıran tek şey olarak tanımladı",
+          },
+          {
+            ar: "ببطء وحذر، بدأ يؤمن بأنه قد يتعافى في النهاية بما يكفي ليعيش مستقلًا مجددًا",
+            es: "Lenta, cautelosamente, comenzó a creer que quizás podría recuperarse lo suficiente como para volver a vivir de forma independiente",
+            tr: "Yavaş yavaş, temkinle, sonunda bağımsız yaşayabilecek kadar iyileşebileceğine inanmaya başladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "أوفير والنهاية", es: "Auvers y el final", tr: "Auvers ve Son" },
+        sentences: [
+          {
+            ar: "انتقل فنسنت إلى أوفير سور واز، الأقرب إلى باريس، تحت رعاية ودية من الدكتور غاشيه",
+            es: "Vincent se mudó a Auvers-sur-Oise, más cerca de París, bajo la vigilancia amistosa del doctor Gachet",
+            tr: "Vincent, Dr. Gachet'nin dostane gözetimi altında, Paris'e daha yakın olan Auvers-sur-Oise'a taşındı",
+          },
+          {
+            ar: "رسم هناك بسرعة مذهلة، منجزًا عشرات اللوحات خلال أسابيع قليلة فقط",
+            es: "Allí pintaba con una velocidad asombrosa, completando docenas de lienzos en solo unas pocas semanas",
+            tr: "Orada şaşırtıcı bir hızla resim yaptı, sadece birkaç hafta içinde onlarca tuval tamamladı",
+          },
+          {
+            ar: "أثقل عليه باستمرار القلق المالي والخوف من أن يصبح عبئًا دائمًا على ثيو",
+            es: "La preocupación financiera y el miedo a convertirse en una carga permanente para Theo pesaban constantemente sobre él",
+            tr: "Mali kaygı ve Theo'ya kalıcı bir yük olma korkusu sürekli üzerine çöktü",
+          },
+          {
+            ar: "في يوليو أطلق النار على نفسه في حقل قمح قريب ومات بعد يومين وثيو بجانبه",
+            es: "En julio se disparó en un campo de trigo cercano y murió dos días después con Theo a su lado",
+            tr: "Temmuz ayında yakındaki bir buğday tarlasında kendini vurdu ve iki gün sonra Theo yanındayken öldü",
+          },
+          {
+            ar: "لم يتعافَ ثيو، المحطم والمريض بالفعل، حقًا من موت أخيه",
+            es: "Theo, devastado y ya enfermo él mismo, nunca se recuperó realmente de la muerte de su hermano",
+            tr: "Yıkılmış ve kendisi de zaten sağlıksız olan Theo, kardeşinin ölümünden hiçbir zaman gerçekten kurtulamadı",
+          },
+          {
+            ar: "مات بعد ستة أشهر فقط، ودُفن في النهاية بجانب فنسنت في المقبرة الصغيرة نفسها",
+            es: "Murió solo seis meses después, y finalmente fue enterrado junto a Vincent en el mismo pequeño cementerio",
+            tr: "Sadece altı ay sonra öldü ve sonunda aynı küçük mezarlıkta Vincent'ın yanına gömüldü",
+          },
+          {
+            ar: "بقيت رسائل فنسنت إلى ثيو بعدهما كليهما، حب أخ ثابت مسجل صفحة بعد صفحة",
+            es: "Las cartas de Vincent a Theo sobrevivieron a ambos, el amor constante de un hermano registrado página tras página",
+            tr: "Vincent'ın Theo'ya yazdığı mektuplar ikisinden de sağ çıktı; bir kardeşin istikrarlı sevgisi sayfa sayfa kayıt altına alınmıştı",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-les-miserables",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة فيكتور هوغو عن جان فالجان، السجين المُفرج عنه الذي يضعه فعل رحمة واحد على طريق طويل نحو الخلاص، ملاحَقًا دومًا من المفتش جافير عديم الرحمة — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Victor Hugo sobre Jean Valjean, un convicto liberado a quien un solo acto de misericordia pone en un camino de toda la vida hacia la redención, perseguido siempre por el implacable inspector Javert — un relato personal, no el texto original.",
+      tr: "Victor Hugo'nun, tek bir merhamet eyleminin ömür boyu sürecek bir kurtuluş yoluna soktuğu, amansız Müfettiş Javert tarafından her zaman takip edilen serbest bırakılmış mahkum Jean Valjean'ın hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: {
+          ar: "تسعة عشر عامًا مقابل رغيف خبز",
+          es: "Diecinueve años por un pan",
+          tr: "Bir Somun Ekmek İçin On Dokuz Yıl",
+        },
+        sentences: [
+          {
+            ar: "حُكم على جان فالجان بالسجن خمس سنوات لسرقته رغيف خبز واحد ليطعم أطفال أخته الجائعين",
+            es: "Jean Valjean fue condenado a cinco años de prisión por robar un solo pan para alimentar a los hijos hambrientos de su hermana",
+            tr: "Jean Valjean, kız kardeşinin aç çocuklarını beslemek için tek bir somun ekmek çaldığı için beş yıl hapis cezasına çarptırıldı",
+          },
+          {
+            ar: "مددت محاولات الهروب الفاشلة المتكررة عقوبته إلى تسعة عشر عامًا وحشيًا من الأشغال الشاقة",
+            es: "Sus repetidos e infructuosos intentos de fuga extendieron su condena a diecinueve brutales años de trabajos forzados",
+            tr: "Tekrarlanan başarısız kaçış girişimleri cezasını on dokuz acımasız yıllık ağır işçiliğe uzattı",
+          },
+          {
+            ar: "خرج من السجن قاسيًا ومريرًا، موسومًا إلى الأبد بجواز أصفر يعلن خطورته",
+            es: "Salió de prisión endurecido, amargado y marcado para siempre por un pasaporte amarillo que lo declaraba peligroso",
+            tr: "Hapisten sertleşmiş, acı içinde ve onu tehlikeli ilan eden sarı bir pasaportla sonsuza dek damgalanmış olarak çıktı",
+          },
+          {
+            ar: "رفضه كل نزل في البلدة بمجرد أن رأوا الورقة التي تسميه مُدانًا",
+            es: "Cada posada del pueblo lo rechazó en cuanto vieron el papel que lo señalaba como convicto",
+            tr: "Kasabadaki her han, onu mahkum olarak adlandıran kağıdı görür görmez onu geri çevirdi",
+          },
+          {
+            ar: "حتى بيت كلب لم يوفر له مأوى، ما دفعه أكثر نحو البرد واليأس",
+            es: "Ni siquiera la caseta de un perro le ofreció refugio, empujándolo aún más hacia el frío y la desesperación",
+            tr: "Bir köpek kulübesi bile ona sığınak sunmadı, onu soğuğa ve umutsuzluğa daha da sürükledi",
+          },
+          {
+            ar: "منهكًا وغاضبًا، طرق أخيرًا باب أسقف البلدة المسن",
+            es: "Exhausto y furioso, finalmente llamó a la puerta del anciano obispo del pueblo",
+            tr: "Bitkin ve öfkeli halde, sonunda kasabanın yaşlı piskoposunun kapısını çaldı",
+          },
+          {
+            ar: "رحّب به الأسقف مورييل بحرارة، وقدم له الطعام والفراش دون أي حكم عليه",
+            es: "El obispo Myriel lo recibió calurosamente, ofreciéndole comida, una cama y ningún juicio en absoluto",
+            tr: "Piskopos Myriel onu sıcak bir şekilde karşıladı, yemek, bir yatak ve hiçbir yargı olmaksızın sundu",
+          },
+          {
+            ar: "في الليل سرق فالجان أطباق الأسقف الفضية وهرب بهدوء إلى الظلام",
+            es: "Por la noche, Valjean robó los platos de plata del obispo y huyó en silencio hacia la oscuridad",
+            tr: "Gece Valjean piskoposun gümüş tabaklarını çaldı ve sessizce karanlığa kaçtı",
+          },
+          {
+            ar: "قبضت عليه الشرطة على الفور تقريبًا وجرّته بعنف عائدة به إلى منزل الأسقف",
+            es: "La policía lo atrapó casi de inmediato y lo arrastró bruscamente de vuelta a la casa del obispo",
+            tr: "Polis onu neredeyse anında yakaladı ve kabaca piskoposun evine geri sürükledi",
+          },
+        ],
+      },
+      {
+        title: { ar: "رحمة الأسقف", es: "La misericordia del obispo", tr: "Piskoposun Merhameti" },
+        sentences: [
+          {
+            ar: "للشرطة المذهولة، ادّعى الأسقف بهدوء أنه أهدى فالجان الفضة",
+            es: "Ante la asombrada policía, el obispo afirmó con calma que le había regalado la plata a Valjean",
+            tr: "Şaşkın polise piskopos, gümüşü Valjean'a hediye olarak verdiğini sakince iddia etti",
+          },
+          {
+            ar: "عاتب فالجان برفق فقط لأنه نسي أن يأخذ أيضًا الشمعدانين الفضيين",
+            es: "Regañó suavemente a Valjean solo por haber olvidado llevarse también los dos candelabros de plata",
+            tr: "Valjean'ı sadece iki gümüş şamdanı da almayı unuttuğu için nazikçe azarladı",
+          },
+          {
+            ar: "لم يكن أمام الشرطة المذهولة خيار سوى إطلاق سراح سجين كانوا متيقنين من ذنبه",
+            es: "La atónita policía no tuvo más remedio que liberar a un prisionero de cuya culpabilidad habían estado seguros",
+            tr: "Şaşkın polis, suçlu olduğundan emin oldukları bir mahkumu serbest bırakmaktan başka çare bulamadı",
+          },
+          {
+            ar: "بمفرده مع فالجان، أخبره الأسقف بهدوء أن روحه اشتُريت للتو من أجل الله",
+            es: "A solas con Valjean, el obispo le dijo en voz baja que su alma acababa de ser comprada para Dios",
+            tr: "Valjean'la yalnız kalan piskopos, ona ruhunun az önce Tanrı için satın alındığını sessizce söyledi",
+          },
+          {
+            ar: "حثه على أن يصبح رجلًا شريفًا اعتبارًا من تلك اللحظة المذهلة الواحدة",
+            es: "Lo instó a convertirse en un hombre honesto a partir de ese único e impactante momento",
+            tr: "Ondan bu şaşırtıcı andan itibaren dürüst bir adam olmasını istedi",
+          },
+          {
+            ar: "تجوّل فالجان، المهتز حتى الأعماق، في الطرقات يصارع عقودًا من المرارة والعار",
+            es: "Valjean, conmocionado hasta la médula, vagó por los caminos luchando con décadas de amargura y vergüenza",
+            tr: "Derinden sarsılan Valjean, on yıllardır süren acı ve utançla boğuşarak yollarda dolaştı",
+          },
+          {
+            ar: "في لحظة من العادة القديمة كاد يسرق صبيًا صغيرًا قطعة فضية واحدة",
+            es: "En un momento de vieja costumbre, estuvo a punto de robarle a un niño pequeño una sola moneda de plata",
+            tr: "Eski bir alışkanlık anında küçük bir çocuktan tek bir gümüş parayı neredeyse çaldı",
+          },
+          {
+            ar: "مرعوبًا من نفسه بعد ذلك، انهار تمامًا، باكيًا وحيدًا على منحدر تل",
+            es: "Horrorizado consigo mismo después, se derrumbó por completo, llorando solo en una ladera",
+            tr: "Sonrasında kendinden dehşete düşerek tamamen çöktü, bir tepede yalnız ağladı",
+          },
+          {
+            ar: "من ذلك اليوم عقد العزم، بهدوء وحسم تام، أن يعيش كرجل جديد تمامًا",
+            es: "Desde ese día resolvió, en silencio y de manera absoluta, vivir como un hombre completamente nuevo",
+            tr: "O günden itibaren sessizce ve kesin bir kararlılıkla tamamen yeni bir adam olarak yaşamaya karar verdi",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "العمدة مادلين",
+          es: "El alcalde Madeleine",
+          tr: "Belediye Başkanı Madeleine",
+        },
+        sentences: [
+          {
+            ar: "بعد سنوات، وتحت اسم جديد، أدار السيد مادلين مصنعًا ناجحًا في بلدة صغيرة",
+            es: "Años después, bajo un nuevo nombre, el señor Madeleine dirigía una exitosa fábrica en un pequeño pueblo",
+            tr: "Yıllar sonra yeni bir isim altında, Bay Madeleine küçük bir kasabada başarılı bir fabrika işletti",
+          },
+          {
+            ar: "جلبت أجوره العادلة وممارساته التجارية الصادقة ازدهارًا حقيقيًا للمجتمع بأكمله",
+            es: "Sus salarios justos y sus honestas prácticas comerciales trajeron una verdadera prosperidad a toda la comunidad",
+            tr: "Adil ücretleri ve dürüst iş uygulamaları tüm topluluğa gerçek bir refah getirdi",
+          },
+          {
+            ar: "انتخب سكان البلدة الممتنون في النهاية الغريب الغامض والكريم عمدة لهم",
+            es: "Los agradecidos habitantes del pueblo finalmente eligieron al misterioso y generoso forastero como su alcalde",
+            tr: "Minnettar kasaba halkı sonunda bu gizemli, cömert yabancıyı belediye başkanları olarak seçti",
+          },
+          {
+            ar: "وزّع بهدوء الكثير من ثروته، متجنبًا دائمًا الانتباه أو الفضل العلني",
+            es: "Regaló en silencio gran parte de su fortuna, evitando siempre la atención o el reconocimiento público",
+            tr: "Servetinin büyük bir kısmını sessizce dağıttı, her zaman dikkat çekmekten ya da halkın takdirinden kaçındı",
+          },
+          {
+            ar: "بدأ مفتش شرطة صادق لكنه عديم الرحمة يُدعى جافير يشك في ماضي العمدة الخفي",
+            es: "Un honesto pero implacable inspector de policía llamado Javert comenzó a sospechar del pasado oculto del alcalde",
+            tr: "Dürüst ama amansız bir polis müfettişi olan Javert, belediye başkanının gizli geçmişinden şüphelenmeye başladı",
+          },
+          {
+            ar: "كان جافير قد عمل حارسًا في السجن نفسه الذي احتُجز فيه فالجان",
+            es: "Javert había servido una vez como guardia en la misma prisión donde Valjean había estado recluido",
+            tr: "Javert bir zamanlar Valjean'ın tutulduğu hapishanenin tam da kendisinde gardiyan olarak görev yapmıştı",
+          },
+          {
+            ar: "لم يستطع تحديد وجه العمدة تمامًا، لكن شيئًا مألوفًا ظل يُقلقه باستمرار",
+            es: "No lograba identificar del todo el rostro del alcalde, pero algo familiar lo inquietaba constantemente",
+            tr: "Belediye başkanının yüzünü tam olarak yerleştiremiyordu ama tanıdık bir şey onu sürekli rahatsız ediyordu",
+          },
+          {
+            ar: "عندما اعتُقل رجل آخر خطأً باعتباره جان فالجان الحقيقي، شعر جافير بالانتصار",
+            es: "Cuando otro hombre fue arrestado por error como el verdadero Jean Valjean, Javert se sintió triunfante",
+            tr: "Başka bir adam yanlışlıkla gerçek Jean Valjean olarak tutuklandığında Javert zafer duygusu yaşadı",
+          },
+          {
+            ar: "واجه مادلين، المعذّب بضميره، خيارًا موجعًا بين الصمت والاعتراف",
+            es: "Madeleine, atormentado por la conciencia, enfrentó una angustiosa elección entre el silencio y la confesión",
+            tr: "Vicdan azabı çeken Madeleine, sessizlik ile itiraf arasında acı bir seçimle karşı karşıya kaldı",
+          },
+        ],
+      },
+      {
+        title: { ar: "فانتين", es: "Fantine", tr: "Fantine" },
+        sentences: [
+          {
+            ar: "كانت فانتين، عاملة في مصنع مادلين، لديها ابنة صغيرة تُدعى كوزيت مخبأة بعيدًا",
+            es: "Fantine, una obrera de la fábrica de Madeleine, tenía una hija pequeña llamada Cosette escondida en otro lugar",
+            tr: "Madeleine'in fabrikasında işçi olan Fantine'in, saklanmış küçük bir kızı vardı: Cosette",
+          },
+          {
+            ar: "دفعت لزوجين من أصحاب النزل غير أمينين، آل تينارديه، لرعاية كوزيت في غيابها",
+            es: "Le pagaba a una deshonesta pareja de posaderos, los Thénardier, para que cuidaran de Cosette en su ausencia",
+            tr: "Yokluğunda Cosette'e bakması için dürüst olmayan bir hancı çift olan Thénardier'lere para ödüyordu",
+          },
+          {
+            ar: "عندما اكتشف زملاؤها سرها، فصلها مديرو المصنع من منصبها",
+            es: "Cuando sus compañeras de trabajo descubrieron su secreto, los gerentes de la fábrica despidieron a Fantine",
+            tr: "İş arkadaşları sırrını keşfedince fabrika yöneticileri Fantine'i işten çıkardı",
+          },
+          {
+            ar: "يائسة من أجل المال، باعت شعرها الجميل، ثم عدة أسنان، ثم أخيرًا نفسها",
+            es: "Desesperada por dinero, vendió su hermoso cabello, luego varios dientes y finalmente a sí misma",
+            tr: "Paraya çaresizce ihtiyaç duyan Fantine önce güzel saçlarını, sonra birkaç dişini, sonunda da kendini sattı",
+          },
+          {
+            ar: "في هذه الأثناء، أساء آل تينارديه معاملة كوزيت بقسوة بينما كانوا يطالبون بمزيد من المال من فانتين",
+            es: "Mientras tanto, los Thénardier maltrataban cruelmente a Cosette mientras exigían cada vez más dinero a Fantine",
+            tr: "Bu sırada Thénardier'ler Cosette'e acımasızca kötü davranırken Fantine'den giderek daha fazla para talep etti",
+          },
+          {
+            ar: "مرضت فانتين بشدة من الجوع والإرهاق وشوارع المدينة القاسية التي لا ترحم",
+            es: "Fantine enfermó gravemente por el hambre, el agotamiento y las duras e implacables calles de la ciudad",
+            tr: "Fantine, açlık, tükenmişlik ve şehrin sert, acımasız sokakları yüzünden ağır hasta oldu",
+          },
+          {
+            ar: "مادلين، الذي علم بقصتها متأخرًا جدًا، تعهد شخصيًا بإنقاذ ابنتها من أجلها",
+            es: "Madeleine, al conocer su historia demasiado tarde, juró rescatar personalmente a su hija por ella",
+            tr: "Hikayesini çok geç öğrenen Madeleine, onun için kızını bizzat kurtarmaya yemin etti",
+          },
+          {
+            ar: "لكن جافير وصل أولًا، مصممًا على اعتقال فانتين اليائسة المحتضرة بنفسه",
+            es: "Sin embargo, Javert llegó primero, decidido a arrestar él mismo a la desesperada y moribunda Fantine",
+            tr: "Ancak Javert önce geldi, çaresiz, ölmekte olan Fantine'i bizzat tutuklamaya kararlıydı",
+          },
+          {
+            ar: "دفعت صدمة اعتقال جافير القاسي صحة فانتين الهشة نحو انهيارها الأخير",
+            es: "La conmoción del duro arresto de Javert empujó la frágil salud de Fantine hacia su colapso final",
+            tr: "Javert'in sert tutuklamasının şoku, Fantine'in kırılgan sağlığını son çöküşüne doğru itti",
+          },
+        ],
+      },
+      {
+        title: { ar: "مطاردة جافير", es: "La persecución de Javert", tr: "Javert'in Takibi" },
+        sentences: [
+          {
+            ar: "تدخل مادلين بقوة، آمرًا جافير بإطلاق سراح فانتين الخائفة المحتضرة على الفور",
+            es: "Madeleine intervino con firmeza, ordenando a Javert que liberara de inmediato a la aterrorizada y moribunda Fantine",
+            tr: "Madeleine kararlılıkla araya girdi, Javert'e korkmuş, ölmekte olan Fantine'i hemen serbest bırakmasını emretti",
+          },
+          {
+            ar: "إذ علم أن رجلًا بريئًا يواجه المحاكمة مكانه، صارع مادلين ضميره طوال الليل",
+            es: "Al enterarse de que un hombre inocente enfrentaba juicio en su lugar, Madeleine luchó con su conciencia toda la noche",
+            tr: "Masum bir adamın kendi yerine yargılanacağını öğrenen Madeleine, tüm gece vicdanıyla boğuştu",
+          },
+          {
+            ar: "عند الفجر سافر إلى قاعة المحكمة البعيدة واعترف علنًا بهويته الحقيقية كفالجان",
+            es: "Al amanecer viajó hasta el lejano tribunal y confesó públicamente su verdadera identidad como Valjean",
+            tr: "Şafakta uzaktaki mahkeme salonuna gitti ve gerçek kimliğinin Valjean olduğunu alenen itiraf etti",
+          },
+          {
+            ar: "راقبت قاعة المحكمة المذهولة وهو يعود بهدوء إلى شارته الصفراء القديمة المكروهة كمُدان",
+            es: "La atónita sala del tribunal lo vio regresar en silencio a su vieja y odiada insignia amarilla de convicto",
+            tr: "Şaşkın mahkeme salonu, onun sessizce eski, nefret edilen sarı mahkum rozetine geri dönüşünü izledi",
+          },
+          {
+            ar: "هرع عائدًا بعد ذلك، ليجد أن فانتين ماتت قبل لحظات من وصوله إليها",
+            es: "Después corrió de regreso, solo para descubrir que Fantine había muerto momentos antes de que pudiera llegar a ella",
+            tr: "Sonrasında geri koştu, ama Fantine'in ona ulaşmasından hemen önce öldüğünü gördü",
+          },
+          {
+            ar: "اعتقله جافير فورًا، شاعرًا بتبرئة قاتمة بعد سنوات من الشك تأكدت أخيرًا",
+            es: "Javert lo arrestó de inmediato, sintiendo una sombría satisfacción tras años de sospechas por fin confirmadas",
+            tr: "Javert onu hemen tutukladı, yıllardır süren şüphesinin sonunda doğrulanmasından kasvetli bir tatmin duydu",
+          },
+          {
+            ar: "فالجان، يائسًا للوفاء بوعده، تغلّب لفترة وجيزة على جافير وهرب من الحجز",
+            es: "Valjean, desesperado por cumplir su promesa, dominó brevemente a Javert y escapó de la custodia",
+            tr: "Sözünü tutmak için çaresiz olan Valjean, kısa süreliğine Javert'i alt etti ve gözetimden kaçtı",
+          },
+          {
+            ar: "هرب مباشرة إلى نزل آل تينارديه، مصممًا على إنقاذ ابنة فانتين المهجورة",
+            es: "Huyó directamente a la posada de los Thénardier, decidido a rescatar a la abandonada hija de Fantine",
+            tr: "Doğruca Thénardier'lerin hanına kaçtı, Fantine'in terk edilmiş kızını kurtarmaya kararlıydı",
+          },
+          {
+            ar: "دفع للزوجين الجشعين مبلغًا سخيًا وحمل الفتاة الخائفة المهملة بعيدًا في تلك الليلة نفسها",
+            es: "Pagó generosamente a la codiciosa pareja y se llevó a la asustada y descuidada niña esa misma noche",
+            tr: "Açgözlü çifte cömertçe ödeme yaptı ve korkmuş, ihmal edilmiş kızı aynı gece alıp götürdü",
+          },
+        ],
+      },
+      {
+        title: { ar: "إنقاذ كوزيت", es: "Rescatando a Cosette", tr: "Cosette'i Kurtarmak" },
+        sentences: [
+          {
+            ar: "استقر فالجان وكوزيت الصغيرة بهدوء في باريس، يعيشان بحذر تحت اسم مستعار آخر",
+            es: "Valjean y la pequeña Cosette se instalaron discretamente en París, viviendo con cautela bajo otro nombre falso",
+            tr: "Valjean ve küçük Cosette sessizce Paris'e yerleşti, bir başka takma isim altında dikkatle yaşadılar",
+          },
+          {
+            ar: "ربّاها برقة حقيقية، أول لطف حقيقي عرفته في حياتها",
+            es: "La crió con auténtica ternura, la primera bondad real que ella jamás había conocido",
+            tr: "Onu gerçek bir şefkatle büyüttü, bu onun bildiği ilk gerçek iyilikti",
+          },
+          {
+            ar: "تتبع تحقيق جافير عديم الرحمة في النهاية شائعات عن فالجان إلى حيهم الهادئ في باريس",
+            es: "La implacable investigación de Javert finalmente rastreó rumores sobre Valjean hasta su tranquilo barrio parisino",
+            tr: "Javert'in amansız soruşturması sonunda Valjean hakkındaki söylentileri onların sessiz Paris mahallesine kadar izledi",
+          },
+          {
+            ar: "هرب فالجان وكوزيت مجددًا، ووجدا أمانًا مؤقتًا داخل الجدران الحجرية العالية لدير هادئ",
+            es: "Valjean y Cosette huyeron de nuevo, hallando una breve seguridad dentro de los altos muros de piedra de un convento apacible",
+            tr: "Valjean ve Cosette yeniden kaçtı, huzurlu bir manastırın yüksek taş duvarları içinde kısa bir güvenlik buldu",
+          },
+          {
+            ar: "نشأت كوزيت برقة داخل تلك الجدران الهادئة، غير مدركة لماضي وصيها الخفي",
+            es: "Cosette creció apaciblemente dentro de esos muros silenciosos, sin saber nada del pasado oculto de su tutor",
+            tr: "Cosette o sessiz duvarların içinde nazikçe büyüdü, vasisinin gizli geçmişinden habersizdi",
+          },
+          {
+            ar: "بعد سنوات غادرا الدير، واستقرا في منزل متواضع وغير لافت في المدينة",
+            es: "Años después dejaron el convento, instalándose en una casa modesta y discreta de la ciudad",
+            tr: "Yıllar sonra manastırdan ayrılıp şehirde mütevazı, göze çarpmayan bir eve yerleştiler",
+          },
+          {
+            ar: "أحبها فالجان بشكل كامل، خائفًا باستمرار من أن يأخذها أحد منه يومًا ما",
+            es: "Valjean la amaba por completo, temiendo constantemente que algún día alguien se la arrebatara",
+            tr: "Valjean onu tamamen sevdi, bir gün birinin onu alıp götürmesinden sürekli korktu",
+          },
+          {
+            ar: "بدأت كوزيت، الشابة الآن، تلاحظ العالم الأوسع خارج حديقتهم المحمية",
+            es: "Cosette, ya una joven mujer, comenzó a notar el mundo más amplio fuera de su jardín protegido",
+            tr: "Artık genç bir kadın olan Cosette, korunaklı bahçelerinin dışındaki daha geniş dünyayı fark etmeye başladı",
+          },
+          {
+            ar: "في نزهات المساء بدأت تلاحظ طالبًا شابًا خجولًا بدا أنه يلاحظها هو الآخر",
+            es: "En los paseos vespertinos comenzó a notar a un joven estudiante tímido que parecía notarla también a ella",
+            tr: "Akşam yürüyüşlerinde, onu da fark ediyor gibi görünen utangaç genç bir öğrenciyi fark etmeye başladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "كوزيت وماريوس", es: "Cosette y Marius", tr: "Cosette ve Marius" },
+        sentences: [
+          {
+            ar: "كان ذلك الطالب، ماريوس بونميرسي، محاميًا شابًا مثاليًا مقطوع الصلة بجده الثري",
+            es: "Ese estudiante, Marius Pontmercy, era un joven abogado idealista distanciado de su rico abuelo",
+            tr: "O öğrenci, Marius Pontmercy, zengin büyükbabasından uzaklaşmış idealist genç bir avukattı",
+          },
+          {
+            ar: "تبادل هو وكوزيت النظرات فقط في البداية، خجولان جدًا لمحادثة حقيقية بينهما",
+            es: "Al principio él y Cosette solo intercambiaban miradas, demasiado tímidos para una conversación real entre ellos",
+            tr: "O ve Cosette önce sadece bakışlar değiş tokuş etti, aralarında gerçek bir sohbet için fazla utangaçtılar",
+          },
+          {
+            ar: "تحدثا أخيرًا، ووقعا سريعًا في حب رقيق وسري وبريء متقد",
+            es: "Finalmente hablaron y rápidamente cayeron en un amor tierno, secreto y apasionadamente inocente",
+            tr: "Sonunda konuştular ve hızla nazik, gizli, tutkuyla masum bir aşka düştüler",
+          },
+          {
+            ar: "لاحظ فالجان ماريوس فورًا تقريبًا وأصبح خائفًا بهدوء وألم من فقدان كوزيت",
+            es: "Valjean notó a Marius casi de inmediato y comenzó a temer, en silencio y con dolor, perder a Cosette",
+            tr: "Valjean, Marius'u neredeyse hemen fark etti ve sessizce, acı verecek şekilde Cosette'i kaybetmekten korkmaya başladı",
+          },
+          {
+            ar: "كان ماريوس ينتمي إلى مجموعة من الطلاب الثوريين المثاليين الحالمين بفرنسا أكثر عدلًا",
+            es: "Marius pertenecía a un grupo de estudiantes revolucionarios idealistas que soñaban con una Francia más justa",
+            tr: "Marius, daha adil bir Fransa hayal eden idealist öğrenci devrimcilerden oluşan bir gruba aitti",
+          },
+          {
+            ar: "كان الاضطراب السياسي يتصاعد باطراد في أنحاء باريس نحو انتفاضة ضد الحكومة",
+            es: "El malestar político se acumulaba constantemente por todo París hacia un levantamiento contra el gobierno",
+            tr: "Paris genelinde siyasi huzursuzluk, hükümete karşı bir ayaklanmaya doğru istikrarlı bir şekilde büyüyordu",
+          },
+          {
+            ar: "شعر ماريوس، الممزق بين الحب والتمرد، بأنه مسحوب بقوة في اتجاهين في آن واحد",
+            es: "Marius, dividido entre el amor y la rebelión, se sentía arrastrado con fuerza en dos direcciones a la vez",
+            tr: "Aşk ile isyan arasında bocalayan Marius, aynı anda iki yöne güçlü bir şekilde çekildiğini hissetti",
+          },
+          {
+            ar: "بدأ فالجان، محسًّا بالخطر، بالتحضير بهدوء لحماية كوزيت وماريوس، رغم ممانعته، على حد سواء",
+            es: "Valjean, presintiendo el peligro, comenzó a prepararse en silencio para proteger tanto a Cosette como, a regañadientes, a Marius",
+            tr: "Tehlikeyi sezen Valjean, hem Cosette'i hem de isteksizce Marius'u korumak için sessizce hazırlanmaya başladı",
+          },
+          {
+            ar: "لم يكن أي منهم يعرف بعد كم ستتقارب مصائرهم قريبًا عند متراس واحد",
+            es: "Ninguno de ellos sabía todavía cuán de cerca sus destinos pronto chocarían en una sola barricada",
+            tr: "Hiçbiri henüz kaderlerinin yakında tek bir barikatta ne kadar yakından çarpışacağını bilmiyordu",
+          },
+        ],
+      },
+      {
+        title: { ar: "المتراس", es: "La barricada", tr: "Barikat" },
+        sentences: [
+          {
+            ar: "بنى الطلاب والعمال متراسًا مستعجلًا عبر شارع باريسي، مصممين على القتال من أجل التغيير",
+            es: "Estudiantes y obreros levantaron a toda prisa una barricada en una calle de París, decididos a luchar por el cambio",
+            tr: "Öğrenciler ve işçiler değişim için savaşmaya kararlı bir şekilde bir Paris sokağının karşısına aceleyle bir barikat kurdu",
+          },
+          {
+            ar: "انضم إليهم ماريوس بكامل قناعته، مستعدًا الآن للموت من أجل فرنسا الأعدل التي تخيلها دومًا",
+            es: "Marius se unió a ellos por completo, dispuesto ahora a morir por la Francia más justa que siempre había imaginado",
+            tr: "Marius onlara tamamen katıldı, her zaman hayal ettiği daha adil Fransa için ölmeye artık hazırdı",
+          },
+          {
+            ar: "فالجان، خائفًا على حياة ماريوس بسبب حب كوزيت له، تبعه بنفسه إلى المتراس",
+            es: "Valjean, temiendo por la vida de Marius a causa del amor de Cosette por él, lo siguió él mismo hasta la barricada",
+            tr: "Cosette'in ona olan aşkı yüzünden Marius'un hayatından korkan Valjean, barikata kendisi de gitti",
+          },
+          {
+            ar: "هاجم جنود الحكومة المتراس في النهاية، وامتلأ الشارع الباريسي الضيق بإطلاق النار",
+            es: "Los soldados del gobierno finalmente asaltaron la barricada, y los disparos llenaron la estrecha calle parisina",
+            tr: "Hükümet askerleri sonunda barikata saldırdı ve dar Paris sokağı silah sesleriyle doldu",
+          },
+          {
+            ar: "قُتل كل تقريبًا من المدافعين الطلاب باستثناء ماريوس الشاب الجريح بشدة والفاقد للوعي",
+            es: "Casi todos los estudiantes defensores murieron, excepto el joven Marius, gravemente herido e inconsciente",
+            tr: "Ağır yaralı, bilinci kapalı genç Marius dışında hemen hemen tüm öğrenci savunucular öldürüldü",
+          },
+          {
+            ar: "حمل فالجان الشاب الجريح عبر مجاري المدينة المظلمة والقذرة تحت الأرض",
+            es: "Valjean cargó al joven herido a través de las oscuras y sucias alcantarillas subterráneas de la ciudad",
+            tr: "Valjean yaralı genç adamı şehrin karanlık, pis yeraltı kanalizasyonlarından taşıdı",
+          },
+          {
+            ar: "منهكًا ويائسًا، خرج أخيرًا، شبه منهار، قرب حافة النهر الطينية",
+            es: "Exhausto y desesperado, finalmente emergió, medio desplomado, cerca del fangoso borde del río",
+            tr: "Bitkin ve çaresiz halde sonunda nehrin çamurlu kıyısına yakın bir yerde, yarı çökmüş olarak ortaya çıktı",
+          },
+          {
+            ar: "هناك، وبشكل غير متوقع، وجد نفسه وجهًا لوجه مرة أخرى مع مطارده القديم، المفتش جافير",
+            es: "Allí, inesperadamente, se encontró cara a cara una vez más con su antiguo perseguidor, el inspector Javert",
+            tr: "Orada, beklenmedik bir şekilde, eski takipçisi Müfettiş Javert ile bir kez daha yüz yüze geldi",
+          },
+          {
+            ar: "اختار جافير، بغرابة، تلك اللحظة ليدع فالجان المنهك المثقل يمشي حرًا ببساطة",
+            es: "Javert, extrañamente, eligió ese momento para dejar que el exhausto y agobiado Valjean simplemente se marchara libre",
+            tr: "Javert garip bir şekilde tam o anı, bitkin, yük altındaki Valjean'ın özgürce yürüyüp gitmesine izin vermek için seçti",
+          },
+        ],
+      },
+      {
+        title: { ar: "نهاية جافير", es: "El fin de Javert", tr: "Javert'in Sonu" },
+        sentences: [
+          {
+            ar: "أمضى جافير حياته الصارمة كلها مؤمنًا بأن المجرمين لا يمكن أن يتغيروا حقًا وبالكامل أبدًا",
+            es: "Javert había pasado toda su rígida vida creyendo que los criminales nunca podían cambiar de verdad y por completo",
+            tr: "Javert tüm katı hayatını, suçluların gerçekten ve tamamen değişemeyeceğine inanarak geçirmişti",
+          },
+          {
+            ar: "حطّمت رحمة فالجان الهادئة، المقدَّمة مجانًا دون أي مكسب، ذلك الاعتقاد الصارم مدى الحياة",
+            es: "La silenciosa misericordia de Valjean, ofrecida libremente sin nada que ganar, destrozó esa rígida creencia de toda la vida",
+            tr: "Valjean'ın kazanacak hiçbir şeyi olmadan özgürce sunduğu sessiz merhameti, o ömür boyu süren katı inancı paramparça etti",
+          },
+          {
+            ar: "عاجزًا عن التوفيق بين الرحمة وحسه الصارم غير المرن بالواجب، أصبح جافير معذَّبًا بعمق",
+            es: "Incapaz de conciliar la misericordia con su rígido e inflexible sentido del deber, Javert se sumió en un profundo tormento",
+            tr: "Merhameti katı, esnemez görev duygusuyla bağdaştıramayan Javert derin bir işkenceye sürüklendi",
+          },
+          {
+            ar: "لم يستطع اعتقال رجل عفا عنه للتو، لكنه لم يستطع أيضًا تجاهل القانون ببساطة",
+            es: "No podía arrestar a un hombre que acababa de perdonarle la vida, pero tampoco podía simplemente ignorar la ley",
+            tr: "Kendisini az önce bağışlayan bir adamı tutuklayamıyordu ama yasayı da öylece görmezden gelemiyordu",
+          },
+          {
+            ar: "وهو يمشي وحيدًا في تلك الليلة نفسها على ضفة النهر المظلمة، ظل عقله يفكر مرارًا وتكرارًا",
+            es: "Caminando solo esa misma noche por la oscura orilla del río, su mente daba vueltas una y otra vez",
+            tr: "O gece karanlık nehir kıyısında yalnız yürürken zihni defalarca dönüp durdu",
+          },
+          {
+            ar: "وجد نفسه عاجزًا تمامًا عن العيش بارتياح في أي من العالمين، الرحمة أو القانون الصارم",
+            es: "Se descubrió absolutamente incapaz de vivir con comodidad en ninguno de los dos mundos, ni la misericordia ni la ley rígida",
+            tr: "Kendini ne merhamet ne de katı yasa dünyasında rahatça yaşayamaz halde buldu",
+          },
+          {
+            ar: "في يأس هادئ وتام، ألقى جافير بنفسه في النهر البارد اللامبالي أسفله",
+            es: "En una desesperación silenciosa y total, Javert se arrojó al frío e indiferente río de abajo",
+            tr: "Sessiz, tam bir umutsuzluk içinde Javert kendini aşağıdaki soğuk, kayıtsız nehre attı",
+          },
+          {
+            ar: "عُثر على جثته في صباح اليوم التالي، وقد حُسم صراعه أخيرًا وبشكل دائم",
+            es: "Su cuerpo fue hallado a la mañana siguiente, con su conflicto finalmente y para siempre resuelto",
+            tr: "Cesedi ertesi sabah bulundu, çatışması sonunda ve kalıcı olarak çözülmüştü",
+          },
+          {
+            ar: "فالجان، غير المدرك في البداية، كان ممتنًا فحسب لحرية جديدة غير متوقعة وغير مفسّرة",
+            es: "Valjean, sin saberlo al principio, simplemente estaba agradecido por una nueva libertad inesperada e inexplicada",
+            tr: "Başta bundan habersiz olan Valjean, beklenmedik, açıklanamayan bu yeni özgürlük için sadece minnettardı",
+          },
+        ],
+      },
+      {
+        title: { ar: "سلام فالجان", es: "La paz de Valjean", tr: "Valjean'ın Huzuru" },
+        sentences: [
+          {
+            ar: "تعافى ماريوس ببطء، لا يزال غير مدرك بالضبط من حمله عبر المجاري تلك الليلة",
+            es: "Marius se recuperó lentamente, aún sin saber exactamente quién lo había llevado por las alcantarillas esa noche",
+            tr: "Marius yavaş yavaş iyileşti, o gece kanalizasyonlardan onu kimin taşıdığını hâlâ tam olarak bilmiyordu",
+          },
+          {
+            ar: "تزوج في النهاية من كوزيت في احتفال مفرح، متصالحًا أخيرًا مع جده",
+            es: "Finalmente se casó con Cosette en una alegre ceremonia, reconciliado por fin con su propio abuelo",
+            tr: "Sonunda büyükbabasıyla barışarak neşeli bir törende Cosette'le evlendi",
+          },
+          {
+            ar: "فالجان، وقد صار أكبر سنًا وأكثر هدوءًا، انسحب ببطء من حياة الزوجين الشابين الجديدة المزدحمة",
+            es: "Valjean, cada vez más viejo y silencioso, se fue retirando poco a poco de la ajetreada nueva vida de la joven pareja",
+            tr: "Yaşlanan ve sessizleşen Valjean, genç çiftin yoğun yeni hayatından yavaşça geri çekildi",
+          },
+          {
+            ar: "خشية أن يلطخ سعادتهما، اعترف أخيرًا لماريوس بماضيه الكامل كمُدان",
+            es: "Temiendo empañar su felicidad, finalmente confesó a Marius todo su pasado de convicto",
+            tr: "Mutluluklarını gölgeleyebileceğinden korkarak sonunda Marius'a mahkumluk geçmişini tamamen itiraf etti",
+          },
+          {
+            ar: "ماريوس، المصدوم في البداية، أدرك تدريجيًا أن فالجان أنقذ حياته فعليًا",
+            es: "Marius, sorprendido al principio, poco a poco comprendió que Valjean en realidad le había salvado la vida",
+            tr: "Önce şoke olan Marius, Valjean'ın aslında hayatını kurtardığını yavaş yavaş bir araya getirdi",
+          },
+          {
+            ar: "هرع هو وكوزيت معًا إلى جانب فالجان تمامًا عندما بدأت صحته تتدهور بسرعة",
+            es: "Él y Cosette corrieron juntos junto a Valjean justo cuando su salud comenzaba a fallar rápidamente",
+            tr: "O ve Cosette, sağlığı hızla bozulmaya başladığı sırada birlikte Valjean'ın yanına koştu",
+          },
+          {
+            ar: "تحدث فالجان برفق عن شمعدانات الأسقف الفضية القديمة، التي لا تزال محفوظة بمحبة على طاولته",
+            es: "Valjean habló con dulzura de los viejos candelabros de plata del obispo, aún guardados con cariño sobre su mesa",
+            tr: "Valjean, masasında hâlâ sevgiyle sakladığı piskoposun eski gümüş şamdanlarından yumuşak bir sesle bahsetti",
+          },
+          {
+            ar: "أخبر كوزيت أن حبها كان أصدق وأنقى سعادة في حياته الصعبة كلها",
+            es: "Le dijo a Cosette que amarla había sido la felicidad más verdadera y pura de toda su difícil vida",
+            tr: "Cosette'e onu sevmenin, tüm zorlu hayatının en gerçek, en saf mutluluğu olduğunu söyledi",
+          },
+          {
+            ar: "مات بسلام بين ذراعيهما، مغفورًا له تمامًا، وأخيرًا في سلام كامل",
+            es: "Murió en paz entre sus brazos, completamente perdonado y, por fin, plenamente en paz",
+            tr: "Kollarında huzur içinde öldü, tamamen affedilmiş ve sonunda, tam anlamıyla huzura kavuşmuş halde",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 async function main() {
