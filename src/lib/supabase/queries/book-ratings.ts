@@ -22,6 +22,14 @@ export interface BookRatingSummary {
  * the whole list, never one query per book (see that function's own doc
  * comment for why this is preferred over a cached column). A book with no
  * ratings yet is simply absent from the returned map.
+ *
+ * Deliberately swallows (not `if (error) throw error`, unlike every other
+ * read in this schema) rather than failing the whole Book Overview/Library
+ * page: the 20250308000000_book_ratings.sql migration this function depends
+ * on ships in the same PR as this code but is applied to the live Supabase
+ * project as a separate, manual step (this environment has no database
+ * credentials to run it itself) — a deploy landing before that migration
+ * runs must degrade to "no ratings shown yet," never a broken page.
  */
 export async function fetchBookRatingSummaries(
   bookIds: string[],
@@ -32,7 +40,10 @@ export async function fetchBookRatingSummaries(
 
   const supabase = client ?? createPublicClient();
   const { data, error } = await supabase.rpc("book_rating_summaries", { p_book_ids: bookIds });
-  if (error) throw error;
+  if (error) {
+    console.error("[book-ratings] book_rating_summaries failed", error);
+    return map;
+  }
 
   for (const row of data ?? []) {
     map.set(row.book_id, { average: row.average, count: row.rating_count });
@@ -49,7 +60,7 @@ export async function fetchBookRatingSummary(
   return map.get(bookId) ?? null;
 }
 
-/** This learner's own rating for one book, or null if they haven't rated it. */
+/** This learner's own rating for one book, or null if they haven't rated it (or the migration hasn't landed yet — see fetchBookRatingSummaries' doc comment). */
 export async function fetchMyBookRating(userId: string, bookId: string): Promise<number | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -58,11 +69,14 @@ export async function fetchMyBookRating(userId: string, bookId: string): Promise
     .eq("user_id", userId)
     .eq("book_id", bookId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {
+    console.error("[book-ratings] fetchMyBookRating failed", error);
+    return null;
+  }
   return data?.rating ?? null;
 }
 
-/** Sets (or replaces) this learner's rating for one book. */
+/** Sets (or replaces) this learner's rating for one book. Still throws on failure (unlike the reads above) — BookRating's optimistic UI needs the real outcome to know whether to revert. */
 export async function upsertBookRating(
   userId: string,
   bookId: string,
