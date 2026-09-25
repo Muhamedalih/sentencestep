@@ -3802,6 +3802,1430 @@ export const TRANSLATIONS: NovelTranslation[] = [
       },
     ],
   },
+  {
+    id: "book-novel-alice-wonderland",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة لويس كارول عن فتاة فضولية تتبع أرنبًا مستعجلًا إلى عالم عجيب تحت الأرض — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Lewis Carroll sobre una niña curiosa que sigue a un conejo apresurado hacia un mundo subterráneo sin sentido — un relato personal, no el texto original.",
+      tr: "Lewis Carroll'ın, meraklı bir kızın aceleci bir tavşanı yeraltındaki anlamsız bir dünyaya kadar takip etmesini anlatan hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: {
+          ar: "النزول إلى جحر الأرنب",
+          es: "Por la madriguera del conejo",
+          tr: "Tavşan Deliğinden Aşağı",
+        },
+        sentences: [
+          {
+            ar: "جلست أليس بنعاس على ضفة النهر بينما كانت أختها الكبرى تقرأ كتابًا بلا صور",
+            es: "Alicia estaba sentada somnolienta junto a la orilla del río mientras su hermana mayor leía un libro sin ilustraciones",
+            tr: "Alice, ablası resimsiz bir kitap okurken nehir kıyısında uyku sersemliğiyle oturuyordu",
+          },
+          {
+            ar: "فجأة مر أرنب أبيض مسرعًا يرتدي صدرية ويتمتم بأنه متأخر",
+            es: "De repente un Conejo Blanco pasó apresurado con un chaleco puesto, murmurando que llegaba tarde",
+            tr: "Aniden bir Beyaz Tavşan yelek giymiş halde koşarak geçti, geç kaldığını mırıldanıyordu",
+          },
+          {
+            ar: "مندهشة لرؤية أرنب يتفقد ساعة جيب قفزت أليس ولحقت به",
+            es: "Asombrada al ver a un conejo revisando un reloj de bolsillo, Alicia se levantó de un salto y lo siguió",
+            tr: "Bir tavşanın cep saatine baktığını görünce şaşıran Alice ayağa fırladı ve onu takip etti",
+          },
+          {
+            ar: "طاردته عبر الحقل حتى اختفى داخل جحر أرنب كبير",
+            es: "Lo persiguió a través del campo hasta que desapareció dentro de una gran madriguera de conejo",
+            tr: "Onu tarlanın öbür ucuna kadar kovaladı, ta ki büyük bir tavşan deliğine dalıp kayboluncaya dek",
+          },
+          {
+            ar: "دون أن تفكر مرتين تسلقت أليس داخل الجحر خلفه وبدأت تسقط ببطء إلى الأسفل",
+            es: "Sin pensarlo dos veces, Alicia se metió en el agujero detrás de él y comenzó a caer lentamente hacia abajo",
+            tr: "İki kez düşünmeden Alice onun peşinden deliğe girdi ve yavaşça aşağı doğru düşmeye başladı",
+          },
+          {
+            ar: "كان النفق مبطنًا بخزائن ورفوف كتب وخرائط معلقة في ذلك الضوء الخافت الغريب",
+            es: "El túnel estaba lleno de armarios, estanterías y mapas colgados bajo aquella extraña luz tenue",
+            tr: "Tünel, o tuhaf loş ışıkta asılı duran dolaplar, kitap rafları ve haritalarla kaplıydı",
+          },
+          {
+            ar: "سقطت لما شعرت أنه دقائق طويلة، وهبطت برفق على كومة من الأوراق",
+            es: "Cayó durante lo que le pareció muchos minutos, aterrizando suavemente sobre un montón de hojas",
+            tr: "Uzun dakikalar gibi hissettiren bir süre düştü ve bir yaprak yığınının üzerine yumuşakça indi",
+          },
+          {
+            ar: "أمامها اختفى الأرنب الأبيض عند منعطف، فأسرعت أليس خلفه",
+            es: "Delante de ella, el Conejo Blanco desapareció tras una esquina, y Alicia se apresuró a seguirlo",
+            tr: "Önünde, Beyaz Tavşan bir köşeyi dönüp gözden kayboldu ve Alice hemen peşinden koştu",
+          },
+        ],
+      },
+      {
+        title: { ar: "اشربيني، كليني", es: "Bébeme, cómeme", tr: "Beni İç, Beni Ye" },
+        sentences: [
+          {
+            ar: "وجدت أليس نفسها في ردهة طويلة مصطفة بأبواب موصدة من كل حجم",
+            es: "Alicia se encontró en un pasillo largo lleno de puertas cerradas de todos los tamaños",
+            tr: "Alice kendini her boyutta kilitli kapıyla dolu uzun bir koridorda buldu",
+          },
+          {
+            ar: "خلف ستارة صغيرة اكتشفت بابًا صغيرًا يؤدي إلى حديقة جميلة",
+            es: "Detrás de una pequeña cortina descubrió una puertecita que llevaba a un hermoso jardín",
+            tr: "Küçük bir perdenin arkasında güzel bir bahçeye açılan minik bir kapı keşfetti",
+          },
+          {
+            ar: "على طاولة زجاجية وجدت زجاجة مكتوبًا عليها اشربيني بحروف أنيقة",
+            es: "Sobre una mesa de cristal encontró una botella con la etiqueta Bébeme escrita con letras cuidadas",
+            tr: "Cam bir masanın üzerinde, üzerinde özenli harflerle Beni İç yazan bir şişe buldu",
+          },
+          {
+            ar: "شربت السائل الحلو وبدأت فورًا تتقلص وتصغر أكثر فأكثر",
+            es: "Bebió el dulce líquido y de inmediato comenzó a encogerse cada vez más",
+            tr: "Tatlı sıvıyı içti ve hemen küçülüp küçülmeye başladı",
+          },
+          {
+            ar: "أصبحت صغيرة جدًا بحيث لم تعد تصل إلى المفتاح، فوجدت كعكة مكتوبًا عليها كليني قريبًا",
+            es: "Se volvió tan pequeña que ya no alcanzaba la llave, así que encontró un pastel etiquetado Cómeme cerca",
+            tr: "O kadar küçülmüştü ki artık anahtara ulaşamıyordu, bu yüzden yakınlarda Beni Ye yazan bir kek buldu",
+          },
+          {
+            ar: "قضمة واحدة من الكعكة جعلتها تكبر بسرعة حتى اصطدم رأسها بالسقف",
+            es: "Un solo bocado del pastel la hizo crecer rápidamente hasta que su cabeza chocó con el techo",
+            tr: "Kekten bir ısırık onu öyle hızlı büyüttü ki başı tavana çarptı",
+          },
+          {
+            ar: "غمرها الإحباط من تغير حجمها الغريب وبدأت تبكي دموعًا ضخمة وثقيلة",
+            es: "Abrumada por su extraño y cambiante tamaño, Alicia comenzó a llorar lágrimas enormes y pesadas",
+            tr: "Tuhaf, sürekli değişen boyutu karşısında bunalan Alice, kocaman ve ağır gözyaşları dökmeye başladı",
+          },
+          {
+            ar: "متذكرة المروحة في يدها تقلصت من جديد وانزلقت عبر الباب الصغير",
+            es: "Recordando el abanico en su mano, se encogió de nuevo y se deslizó por la puertecita",
+            tr: "Elindeki yelpazeyi hatırlayınca yeniden küçüldü ve minik kapıdan içeri süzüldü",
+          },
+        ],
+      },
+      {
+        title: { ar: "بركة الدموع", es: "El charco de lágrimas", tr: "Gözyaşı Havuzu" },
+        sentences: [
+          {
+            ar: "وجدت أليس نفسها تسبح في بركة مكوّنة بالكامل من دموعها العملاقة",
+            es: "Alicia se encontró nadando en un charco formado enteramente por sus propias lágrimas gigantes",
+            tr: "Alice kendini, tamamen kendi kocaman gözyaşlarından oluşan bir havuzda yüzerken buldu",
+          },
+          {
+            ar: "سبح فأر مذعور بالقرب منها فسألته أليس بأدب عن الطريق إلى الشاطئ",
+            es: "Un Ratón asustado nadó cerca y Alicia le preguntó cortésmente el camino hacia la orilla",
+            tr: "Ürkmüş bir Fare yakınında yüzdü ve Alice ona nazikçe kıyıya giden yolu sordu",
+          },
+          {
+            ar: "سرعان ما جدّف حشد كامل من الحيوانات المبللة معًا نحو الضفة الموحلة",
+            es: "Pronto toda una multitud de animales empapados remó junta hacia la orilla fangosa",
+            tr: "Kısa süre sonra ıslanmış bir hayvan kalabalığı birlikte çamurlu kıyıya doğru kürek çekti",
+          },
+          {
+            ar: "اقترح طائر الدودو سباق حلقة حيث يركض الجميع في دوائر حتى يجفوا",
+            es: "El Dodo propuso una carrera en corro en la que todos corrían en círculos hasta secarse",
+            tr: "Dodo kuşu, herkesin kuruyana kadar daireler çizerek koştuğu bir Yarış Meclisi önerdi",
+          },
+          {
+            ar: "أُعلن كل حيوان فائزًا ووزعت أليس الحلوى كجوائز",
+            es: "Se declaró ganador a cada animal y Alicia repartió caramelos como premios",
+            tr: "Her hayvan kazanan ilan edildi ve Alice ödül olarak şeker dağıttı",
+          },
+          {
+            ar: "بدأ الفأر يروي حكاية طويلة حزينة عن متاعب عائلية قديمة وضغائن موروثة",
+            es: "El Ratón comenzó a contar una larga y triste historia sobre viejos problemas familiares y rencores antiguos",
+            tr: "Fare, eski aile sorunları ve köhne kırgınlıklar hakkında uzun, hüzünlü bir hikaye anlatmaya başladı",
+          },
+          {
+            ar: "شرد ذهن أليس أثناء الحكاية فأساءت للفأر الخجول دون قصد",
+            es: "La mente de Alicia se distrajo durante el relato y sin querer ofendió al tímido Ratón",
+            tr: "Alice'in aklı hikaye sırasında başka yere gitti ve istemeden çekingen Fare'yi gücendirdi",
+          },
+          {
+            ar: "واحدًا تلو الآخر ابتعدت الحيوانات تاركة أليس وحيدة مجددًا بجانب الماء",
+            es: "Uno a uno los animales se fueron alejando, dejando a Alicia sola de nuevo junto al agua",
+            tr: "Hayvanlar teker teker uzaklaştı ve Alice'i suyun kenarında yine yalnız bıraktı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "منزل الأرنب الأبيض",
+          es: "La casa del Conejo Blanco",
+          tr: "Beyaz Tavşan'ın Evi",
+        },
+        sentences: [
+          {
+            ar: "ظن الأرنب الأبيض خطأً أن أليس خادمته وأرسلها لإحضار قفازيه",
+            es: "El Conejo Blanco confundió a Alicia con su criada y la envió a buscar sus guantes",
+            tr: "Beyaz Tavşan, Alice'i hizmetçisiyle karıştırıp eldivenlerini getirmesi için gönderdi",
+          },
+          {
+            ar: "داخل منزله المرتب الصغير وجدت أليس زجاجة أخرى وشربت منها دون تفكير",
+            es: "Dentro de su ordenada casita, Alicia encontró otra botella y bebió de ella sin pensarlo",
+            tr: "Onun derli toplu küçük evinde Alice başka bir şişe buldu ve düşünmeden içti",
+          },
+          {
+            ar: "كبرت بشكل هائل حتى خرجت ذراع من النافذة وقدم من المدخنة",
+            es: "Creció tan enormemente que un brazo se salió por la ventana y un pie por la chimenea",
+            tr: "O kadar kocaman büyüdü ki bir kolu pencereden, bir ayağı bacadan dışarı fırladı",
+          },
+          {
+            ar: "أمر الأرنب المذعور بستانيه بيل بالنزول عبر المدخنة لإخراجها",
+            es: "El asustado Conejo ordenó a su jardinero Bill que bajara por la chimenea para sacarla",
+            tr: "Korkmuş Tavşan, bahçıvanı Bill'e onu çıkarmak için bacadan aşağı inmesini emretti",
+          },
+          {
+            ar: "ركلت أليس بشكل غريزي فأطارت بيل المسكين عاليًا في السماء",
+            es: "Alicia dio una patada por instinto y envió al pobre Bill volando alto hacia el cielo",
+            tr: "Alice içgüdüsel olarak tekme attı ve zavallı Bill'i gökyüzüne fırlattı",
+          },
+          {
+            ar: "تجمع حشد من الحيوانات الصغيرة في الخارج يرمون حصى تحوّل إلى كعكات صغيرة",
+            es: "Una multitud de animalitos se reunió afuera lanzando piedrecitas que se convertían en pastelitos",
+            tr: "Dışarıda küçük hayvanlardan oluşan bir kalabalık toplandı ve minik kekler haline dönüşen çakıl taşları fırlattı",
+          },
+          {
+            ar: "بتناول إحدى كعكات الحصى بدأت أليس تتقلص مرة أخرى إلى حجم صغير",
+            es: "Al comer uno de los pastelitos de piedrecita, Alicia comenzó a encogerse de nuevo a un tamaño pequeño",
+            tr: "Çakıl taşı keklerinden birini yiyince Alice yeniden küçük bir boyuta küçülmeye başladı",
+          },
+          {
+            ar: "مرتاحة لصغر حجمها مجددًا ركضت إلى الغابة هربًا من الحشد",
+            es: "Aliviada de volver a ser pequeña, corrió hacia el bosque para escapar de la multitud",
+            tr: "Yeniden küçük olmaktan rahatlayan Alice, kalabalıktan kaçmak için ormana koştu",
+          },
+        ],
+      },
+      {
+        title: { ar: "نصيحة من يسروع", es: "Consejo de una oruga", tr: "Bir Tırtıldan Öğüt" },
+        sentences: [
+          {
+            ar: "في عمق الغابة قابلت أليس يسروعًا أزرق كبيرًا يجلس بهدوء على فطر",
+            es: "En lo profundo del bosque, Alicia conoció a una gran oruga azul sentada tranquilamente sobre un hongo",
+            tr: "Ormanın derinliklerinde Alice, bir mantarın üzerinde sakince oturan iri mavi bir Tırtıl'la karşılaştı",
+          },
+          {
+            ar: "سألها ببساطة من أنتِ بصوت بطيء بلا اهتمام",
+            es: "Le preguntó sencillamente quién eres con una voz lenta y aburrida",
+            tr: "Ona sade bir şekilde sen kimsin diye yavaş ve ilgisiz bir sesle sordu",
+          },
+          {
+            ar: "اعترفت أليس بأنها بالكاد تعرف نفسها بعد أن تغير حجمها مرات عديدة ذلك اليوم",
+            es: "Alicia admitió que apenas se conocía a sí misma después de cambiar de tamaño tantas veces ese día",
+            tr: "Alice o gün o kadar çok boyut değiştirdikten sonra artık kendini zar zor tanıdığını itiraf etti",
+          },
+          {
+            ar: "أخبرها اليسروع أن جانبًا من الفطر سيجعلها تكبر والجانب الآخر سيجعلها تصغر",
+            es: "La oruga le dijo que un lado del hongo la haría crecer y el otro la haría encoger",
+            tr: "Tırtıl ona mantarın bir tarafının onu büyüteceğini, diğer tarafının ise küçülteceğini söyledi",
+          },
+          {
+            ar: "كسرت قطعتين دون أن تعرف في البداية أي جانب هو أيهما",
+            es: "Arrancó dos trozos sin saber al principio cuál lado era cuál",
+            tr: "Hangi tarafın hangisi olduğunu önce bilmeden iki parça kopardı",
+          },
+          {
+            ar: "بقضمها بحذر تقلصت بسرعة حتى اصطدمت ذقنها بقدمها بقوة",
+            es: "Al mordisquear con cuidado se encogió tan rápido que su barbilla golpeó fuerte contra su propio pie",
+            tr: "Dikkatlice ısırınca öyle hızlı küçüldü ki çenesi kendi ayağına sertçe çarptı",
+          },
+          {
+            ar: "قضمة من القطعة الأخرى مدّت رقبتها عاليًا فوق قمم الأشجار",
+            es: "Un mordisco del otro trozo estiró su cuello muy por encima de las copas de los árboles",
+            tr: "Diğer parçadan bir ısırık boynunu ağaç tepelerinin çok üzerine uzattı",
+          },
+          {
+            ar: "أخطأ حمام عابر في اعتبار رقبتها الطويلة أفعى تبحث عن بيضه",
+            es: "Una paloma que pasaba confundió su largo cuello con una serpiente en busca de sus huevos",
+            tr: "Oradan geçen bir güvercin, onun uzun boynunu yumurtalarını arayan bir yılan sandı",
+          },
+        ],
+      },
+      {
+        title: { ar: "خنزير وفلفل", es: "Cerdo y pimienta", tr: "Domuz ve Karabiber" },
+        sentences: [
+          {
+            ar: "وصلت أليس أخيرًا إلى منزل صغير حيث سلّمها خادم على هيئة سمكة دعوة إلى الداخل",
+            es: "Alicia llegó por fin a una casita donde un Lacayo Pez entregó una invitación para entrar",
+            tr: "Alice sonunda küçük bir eve ulaştı, bir Balık Uşak içeri girmesi için bir davetiye teslim etti",
+          },
+          {
+            ar: "بالداخل كانت دوقة تحمل طفلًا يصرخ بينما أضافت طاهيتها كمية كبيرة جدًا من الفلفل",
+            es: "Adentro, una Duquesa sostenía a un bebé que aullaba mientras su cocinera añadía demasiada pimienta",
+            tr: "İçeride bir Düşes uluyan bir bebeği tutuyordu, aşçısı ise fazlasıyla çok karabiber ekliyordu",
+          },
+          {
+            ar: "عطس الجميع في المطبخ باستمرار عدا الدوقة وقطتها الشيشاير ذات الابتسامة العريضة",
+            es: "Todos en la cocina estornudaban sin parar, excepto la Duquesa y su Gato de Cheshire de amplia sonrisa",
+            tr: "Mutfaktaki herkes durmadan hapşırdı, Düşes ve geniş sırıtışlı Cheshire Kedisi hariç",
+          },
+          {
+            ar: "سلّمت الدوقة فجأة الطفل لأليس واندفعت للعب الكروكيه",
+            es: "La Duquesa de repente le entregó el bebé a Alicia y se marchó a jugar al críquet",
+            tr: "Düşes aniden bebeği Alice'e verdi ve kroket oynamaya gitti",
+          },
+          {
+            ar: "حملت أليس الحزمة المتذمرة إلى الخارج لتشاهدها تتحول ببطء إلى خنزير",
+            es: "Alicia cargó el bulto quejumbroso afuera solo para verlo transformarse lentamente en un cerdo",
+            tr: "Alice huysuz bebeği dışarı taşıdı, sadece onun yavaşça bir domuza dönüştüğünü görmek için",
+          },
+          {
+            ar: "مرتاحة بطريقة غريبة أطلقت الخنزير الصغير حرًا بين الأشجار",
+            es: "Aliviada de una manera extraña, dejó al pequeño cerdo libre entre los árboles",
+            tr: "Tuhaf bir şekilde rahatlayan Alice, küçük domuzu ağaçların arasında serbest bıraktı",
+          },
+          {
+            ar: "ظهرت قطة الشيشاير مبتسمة فوق شجرة وعرضت الاتجاهات على شكل ألغاز",
+            es: "El Gato de Cheshire apareció sonriendo en un árbol y ofreció direcciones en forma de acertijos",
+            tr: "Cheshire Kedisi bir ağaçta sırıtarak belirdi ve bilmeceler şeklinde yol tarifleri verdi",
+          },
+          {
+            ar: "أوضح أن الجميع هنا مجانين تمامًا بمن فيهم أليس نفسها لمجرد زيارتها",
+            es: "Explicó que todos por aquí estaban bastante locos, incluida la propia Alicia por venir de visita",
+            tr: "Buradaki herkesin fazlasıyla deli olduğunu, ziyarete geldiği için Alice'in kendisi de dahil, açıkladı",
+          },
+        ],
+      },
+      {
+        title: { ar: "حفلة الشاي الجنونية", es: "La merienda de locos", tr: "Çılgın Çay Partisi" },
+        sentences: [
+          {
+            ar: "وصلت أليس إلى طاولة في الهواء الطلق معدّة لحفلة شاي لا تنتهي أبدًا",
+            es: "Alicia llegó a una mesa al aire libre preparada para una merienda que nunca terminaba",
+            tr: "Alice, hiç bitmeyen bir çay partisi için hazırlanmış açık havadaki bir masaya vardı",
+          },
+          {
+            ar: "تزاحم القبعجي والأرنب الآذاري ونعسان الفأر معًا في زاوية صغيرة واحدة",
+            es: "El Sombrerero, la Liebre de Marzo y un Lirón somnoliento se apretujaban juntos en una pequeña esquina",
+            tr: "Şapkacı, Mart Tavşanı ve uykulu Sıçan tek bir küçük köşeye sıkışmışlardı",
+          },
+          {
+            ar: "أصروا على عدم وجود مكان رغم أن الطاولة امتدت بلا نهاية بجانبهم",
+            es: "Insistían en que no había sitio, aunque la mesa se extendía sin fin a su lado",
+            tr: "Masa yanlarında sonsuza dek uzansa da yer olmadığında ısrar ettiler",
+          },
+          {
+            ar: "أظهرت ساعة القبعجي فقط يوم الشهر ولم تعرض الوقت الصحيح إطلاقًا",
+            es: "El reloj del Sombrerero solo mostraba el día del mes y nunca la hora correcta",
+            tr: "Şapkacı'nın saati yalnızca ayın gününü gösteriyordu, doğru saati asla göstermiyordu",
+          },
+          {
+            ar: "أوضح بحزن أن الزمن نفسه توقف عن الحديث معه منذ شجار قديم",
+            es: "Explicó tristemente que el Tiempo mismo había dejado de hablarle desde una vieja disputa",
+            tr: "Üzülerek Zaman'ın eski bir kavgadan beri kendisiyle konuşmayı kestiğini anlattı",
+          },
+          {
+            ar: "تناقلت ألغاز بلا إجابات حقيقية حول الطاولة مع أكواب الشاي",
+            es: "Acertijos sin respuestas reales circulaban por la mesa junto con las tazas de té",
+            tr: "Gerçek cevabı olmayan bilmeceler çay fincanlarıyla birlikte masada dolaştı",
+          },
+          {
+            ar: "كلما اتسخ كوب انتقلت الحفلة بأكملها إلى المقعد التالي",
+            es: "Cada vez que una taza se ensuciaba, todo el grupo simplemente se desplazaba al siguiente asiento",
+            tr: "Bir fincan kirlendiğinde tüm parti basitçe bir sonraki koltuğa kayıyordu",
+          },
+          {
+            ar: "منهكة ومنزعجة وقفت أليس أخيرًا وابتعدت عن الطاولة التي لا تنتهي",
+            es: "Exhausta e irritada, Alicia finalmente se levantó y se alejó de la mesa interminable",
+            tr: "Bitkin ve sinirlenen Alice sonunda ayağa kalktı ve sonu gelmeyen masadan uzaklaştı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "ملعب الكروكيه الخاص بالملكة",
+          es: "El campo de críquet de la Reina",
+          tr: "Kraliçe'nin Kroket Sahası",
+        },
+        sentences: [
+          {
+            ar: "تجولت أليس في حديقة حيث كانت أوراق اللعب بعصبية تصبغ الورود البيضاء باللون الأحمر",
+            es: "Alicia entró en un jardín donde unas cartas de baraja, nerviosas, pintaban de rojo rosas blancas",
+            tr: "Alice, iskambil kağıtlarının gergin bir şekilde beyaz gülleri kırmızıya boyadığı bir bahçeye girdi",
+          },
+          {
+            ar: "سرعان ما وصل موكب صاخب بقيادة ملكة القلوب الشرسة سريعة الغضب",
+            es: "Pronto llegó una ruidosa procesión encabezada por la feroz y colérica Reina de Corazones",
+            tr: "Kısa süre sonra öfkeli ve tez canlı Kupa Kraliçesi'nin önderlik ettiği gürültülü bir alay geldi",
+          },
+          {
+            ar: "طالبت الملكة باسم أليس ثم هددت فورًا بعبارتها المفضلة اقطعوا رأسها",
+            es: "La Reina exigió el nombre de Alicia y de inmediato amenazó con su frase favorita que le corten la cabeza",
+            tr: "Kraliçe Alice'in adını istedi ve hemen en sevdiği ifadeyle tehdit etti kellesini uçurun",
+          },
+          {
+            ar: "بدأت لعبة كروكيه غريبة تستخدم طيور فلامنغو حية كمضارب وقنافذ كأكرات",
+            es: "Comenzó un extraño partido de críquet usando flamencos vivos como mazos y erizos como bolas",
+            tr: "Canlı flamingoların sopa, kirpilerin ise top olarak kullanıldığı tuhaf bir kroket oyunu başladı",
+          },
+          {
+            ar: "تجادل كل لاعب باستمرار بينما أمرت الملكة بالإعدام لأتفه الأخطاء",
+            es: "Cada jugador discutía constantemente mientras la Reina ordenaba ejecuciones por los errores más pequeños",
+            tr: "Her oyuncu sürekli tartışırken Kraliçe en küçük hatalar için bile idam emri veriyordu",
+          },
+          {
+            ar: "ظهر رأس قطة الشيشاير المبتسم عائمًا في الهواء مربكًا الجلاد الغاضب",
+            es: "La cabeza sonriente del Gato de Cheshire apareció flotando en el aire, confundiendo al furioso verdugo",
+            tr: "Cheshire Kedisi'nin sırıtan kafası havada asılı belirdi ve öfkeli celladı şaşırttı",
+          },
+          {
+            ar: "لاحظت أليس بغرابة أنه بالكاد أُعدم أحد فعليًا رغم صراخ الملكة المستمر",
+            es: "Alicia notó con extrañeza que casi nadie era ejecutado realmente pese a los gritos constantes de la Reina",
+            tr: "Alice, Kraliçe'nin sürekli bağırmasına rağmen neredeyse hiç kimsenin gerçekten idam edilmediğini fark etti, tuhaf bir şekilde",
+          },
+          {
+            ar: "قادت الملكة أليس قريبًا لمقابلة مخلوق غريب يُدعى السلحفاة الوهمية",
+            es: "Pronto la Reina llevó a Alicia a conocer a una extraña criatura llamada la Falsa Tortuga",
+            tr: "Kraliçe kısa süre sonra Alice'i Sahte Kaplumbağa adındaki garip bir yaratıkla tanıştırmak için götürdü",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "قصة السلحفاة الوهمية",
+          es: "La historia de la Falsa Tortuga",
+          tr: "Sahte Kaplumbağa'nın Hikayesi",
+        },
+        sentences: [
+          {
+            ar: "قاد نسر متكلم أليس إلى الأسفل لمقابلة السلحفاة الوهمية الحزينة المتنهدة",
+            es: "Un Grifo parlante guio a Alicia hacia abajo para conocer a la triste y suspirante Falsa Tortuga",
+            tr: "Konuşan bir Grifon Alice'i aşağıya, hüzünlü ve iç çeken Sahte Kaplumbağa'yla tanışmaya götürdü",
+          },
+          {
+            ar: "بكت السلحفاة الوهمية باستمرار وهي تتذكر دروسها من أيام مدرستها تحت البحر",
+            es: "La Falsa Tortuga lloraba sin parar mientras recordaba sus lecciones de la escuela bajo el mar",
+            tr: "Sahte Kaplumbağa, denizin altındaki okul günlerinden derslerini hatırlarken durmadan ağladı",
+          },
+          {
+            ar: "وصفت مواد غريبة مثل التدحرج والتلوي وفروع مختلفة من الحساب",
+            es: "Describió materias extrañas como el Retorcerse y distintas ramas de la Aritmética",
+            tr: "Yuvarlanma ve Kıvranma gibi garip dersleri ve Aritmetiğin farklı dallarını anlattı",
+          },
+          {
+            ar: "معًا أدى النسر والسلحفاة الوهمية رقصة نشيطة تُدعى رقصة الكركند",
+            es: "Juntos, el Grifo y la Falsa Tortuga interpretaron un enérgico baile llamado la Cuadrilla de la Langosta",
+            tr: "Grifon ve Sahte Kaplumbağa birlikte Istakoz Kadrili adlı hareketli bir dans sergiledi",
+          },
+          {
+            ar: "استمعت أليس بأدب رغم أن الرقصة والأغاني الغريبة أربكتها أكثر في كل لحظة",
+            es: "Alicia escuchó cortésmente aunque el extraño baile y las canciones la confundían cada vez más",
+            tr: "Alice nazikçe dinledi, gerçi tuhaf dans ve şarkılar onu her an biraz daha şaşırtıyordu",
+          },
+          {
+            ar: "غنّت السلحفاة الوهمية بحزن عن الحساء وهي تذرف دموعًا غزيرة وحزينة",
+            es: "La Falsa Tortuga cantó con tristeza sobre la sopa mientras derramaba enormes y tristes lágrimas",
+            tr: "Sahte Kaplumbağa çorba hakkında hüzünle şarkı söylerken kocaman, kederli gözyaşları döktü",
+          },
+          {
+            ar: "دوّى صوت بوق فجأة في المسافة معلنًا أن محاكمة على وشك البدء",
+            es: "Un trompetazo sonó de repente a lo lejos anunciando que un juicio estaba a punto de comenzar",
+            tr: "Uzaktan aniden bir trompet sesi geldi ve bir duruşmanın başlamak üzere olduğunu duyurdu",
+          },
+          {
+            ar: "أمسك النسر يد أليس واندفع بها بسرعة نحو قاعة المحكمة البعيدة",
+            es: "El Grifo tomó la mano de Alicia y la llevó apresuradamente hacia el lejano tribunal",
+            tr: "Grifon Alice'in elini tuttu ve onu hızla uzaktaki mahkeme salonuna doğru sürükledi",
+          },
+        ],
+      },
+      {
+        title: { ar: "من سرق الفطائر؟", es: "¿Quién robó las tartas?", tr: "Turtaları Kim Çaldı?" },
+        sentences: [
+          {
+            ar: "في قاعة المحكمة المزدحمة وقف والد الوليت متهمًا بسرقة فطائر الملكة",
+            es: "En el abarrotado tribunal, la Sota de Corazones estaba acusada de robar las tartas de la Reina",
+            tr: "Kalabalık mahkeme salonunda Kupa Valesi, Kraliçe'nin turtalarını çalmakla suçlanarak durdu",
+          },
+          {
+            ar: "ترأس ملك القلوب الجلسة بعصبية بينما طالبت الملكة المتحمسة بحكم فوري",
+            es: "El Rey de Corazones presidía nervioso mientras la excitable Reina exigía una sentencia inmediata",
+            tr: "Kupa Kralı gergin bir şekilde başkanlık ederken çabuk heyecanlanan Kraliçe anında bir ceza istedi",
+          },
+          {
+            ar: "قدّم الشهود إفادات مربكة لا طائل منها لم توضح شيئًا عن السرقة الفعلية",
+            es: "Los testigos dieron testimonios confusos e inútiles que no explicaban absolutamente nada sobre el robo real",
+            tr: "Tanıklar, gerçek hırsızlık hakkında hiçbir şeyi açıklamayan kafa karıştırıcı, anlamsız ifadeler verdi",
+          },
+          {
+            ar: "استُدعيت أليس نفسها كشاهدة وبدأت فجأة تكبر مجددًا دون أي فطر",
+            es: "Llamada como testigo, Alicia de repente empezó a crecer de nuevo sin ningún hongo",
+            tr: "Tanık olarak çağrılan Alice, hiçbir mantar olmadan aniden yeniden büyümeye başladı",
+          },
+          {
+            ar: "صرخت الملكة بأمرها المعتاد مصرّة على قطع رأس أليس على الفور",
+            es: "La Reina gritó su orden habitual, insistiendo en que le cortaran la cabeza a Alicia de inmediato",
+            tr: "Kraliçe her zamanki emrini haykırdı ve Alice'in kellesinin hemen uçurulmasında ısrar etti",
+          },
+          {
+            ar: "أعلنت أليس بجرأة أنهم ليسوا سوى مجموعة من أوراق اللعب العادية",
+            es: "Alicia declaró con audacia que no eran más que un montón de simples cartas de baraja",
+            tr: "Alice cesurca onların sıradan bir deste iskambil kağıdından başka bir şey olmadığını ilan etti",
+          },
+          {
+            ar: "ارتفعت حزمة أوراق اللعب بأكملها وانطلقت غاضبة نحو وجهها",
+            es: "Todo el mazo de cartas se levantó y voló furiosamente hacia su cara",
+            tr: "Bütün kağıt destesi havaya kalktı ve öfkeyle onun yüzüne doğru uçtu",
+          },
+          {
+            ar: "استيقظت أليس فجأة على ضفة النهر مدركة أن المغامرة الغريبة بأكملها كانت مجرد حلم",
+            es: "Alicia despertó de repente a orillas del río, comprendiendo que toda la extraña aventura había sido solo un sueño",
+            tr: "Alice aniden nehir kıyısında uyandı ve bütün bu tuhaf maceranın sadece bir rüya olduğunu fark etti",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-dracula",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة برام ستوكر عن محامٍ شاب يُسجن في قلعة في ترانسلفانيا ومصاص دماء قديم يتبعه إلى وطنه — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Bram Stoker sobre un joven abogado encarcelado en un castillo de Transilvania y el antiguo vampiro que lo sigue hasta su hogar — un relato personal, no el texto original.",
+      tr: "Bram Stoker'ın, Transilvanya'daki bir şatoya hapsedilen genç bir avukat ve onu evine kadar takip eden kadim vampirin hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: {
+          ar: "رحلة جوناثان هاركر",
+          es: "El viaje de Jonathan Harker",
+          tr: "Jonathan Harker'ın Yolculuğu",
+        },
+        sentences: [
+          {
+            ar: "سافر جوناثان هاركر إلى أعماق ترانسلفانيا لإتمام صفقة عقارية للكونت دراكولا",
+            es: "Jonathan Harker viajó a lo profundo de Transilvania para finalizar la venta de una propiedad para el Conde Drácula",
+            tr: "Jonathan Harker, Kont Drakula için bir mülk satışını tamamlamak üzere Transilvanya'nın derinliklerine seyahat etti",
+          },
+          {
+            ar: "شعر القرويون على طول الطريق بالقلق ووضعوا صليبًا صغيرًا في يده",
+            es: "Los aldeanos a lo largo del camino se inquietaron y le pusieron un pequeño crucifijo en la mano",
+            tr: "Yol boyunca köylüler tedirgin oldu ve eline küçük bir haç sıkıştırdı",
+          },
+          {
+            ar: "همسوا بخوف عن الذئاب وحذروه من عدم السفر أبدًا بعد منتصف الليل",
+            es: "Susurraron con miedo sobre los lobos y le advirtieron que nunca viajara después de medianoche",
+            tr: "Kurtlar hakkında korkuyla fısıldadılar ve gece yarısından sonra asla yolculuk etmemesi konusunda onu uyardılar",
+          },
+          {
+            ar: "التقت به عربة سوداء غامضة عند الممر الجبلي وحملته بسرعة إلى القلعة",
+            es: "Un misterioso carruaje negro lo esperaba en el paso de montaña y lo llevó rápidamente al castillo",
+            tr: "Gizemli siyah bir araba onu geçitte karşıladı ve hızla şatoya götürdü",
+          },
+          {
+            ar: "استقبله الكونت دراكولا شخصيًا عند الباب لأنه على ما يبدو لا يحتفظ بخدم",
+            es: "El Conde Drácula lo recibió personalmente en la puerta, ya que aparentemente no tenía sirvientes",
+            tr: "Kont Drakula onu bizzat kapıda karşıladı, çünkü görünüşe göre hiç hizmetçisi yoktu",
+          },
+          {
+            ar: "كان الكونت شاحبًا وطويل القامة بقبضة قوية وأسنان مدببة غير معتادة",
+            es: "El Conde, pálido y alto, tenía un apretón fuerte y unos dientes puntiagudos inusuales",
+            tr: "Solgun ve uzun boylu olan Kont'un kavrayışı güçlüydü ve sivri dişleri alışılmadıktı",
+          },
+          {
+            ar: "سأله باهتمام عن لندن وتفاصيل منزله الإنجليزي الجديد",
+            es: "Le preguntó con interés sobre Londres y los detalles de su nueva casa inglesa",
+            tr: "Ona Londra'yı ve yeni İngiliz evinin ayrıntılarını hevesle sordu",
+          },
+          {
+            ar: "رغم أسلوب الكونت المهذب شعر هاركر برعب هادئ يتسلل إليه",
+            es: "A pesar de los modales educados del Conde, Harker sintió un extraño temor silencioso que crecía en él",
+            tr: "Kont'un kibar tavırlarına rağmen Harker içine sızan tuhaf, sessiz bir korku hissetti",
+          },
+        ],
+      },
+      {
+        title: { ar: "سجين في القلعة", es: "Prisionero en el castillo", tr: "Şatoda Bir Tutsak" },
+        sentences: [
+          {
+            ar: "لاحظ هاركر أن القلعة لا تحتوي على مرايا في أي مكان وأن الكونت لم يأكل معه أبدًا",
+            es: "Harker notó que el castillo no tenía espejos en ninguna parte y que el Conde nunca comía con él",
+            tr: "Harker şatoda hiçbir yerde ayna olmadığını ve Kont'un onunla asla yemek yemediğini fark etti",
+          },
+          {
+            ar: "متجولًا في الممرات ليلًا أدرك أن كل باب كان موصدًا بإحكام",
+            es: "Al vagar por los pasillos de noche, comprendió que cada puerta estaba firmemente cerrada",
+            tr: "Gece koridorlarda dolaşırken her kapının sımsıkı kilitli olduğunu fark etti",
+          },
+          {
+            ar: "من نافذته رأى مرة دراكولا يزحف رأسًا على عقب أسفل الجدار الخارجي للقلعة",
+            es: "Desde su ventana vio una vez a Drácula arrastrándose cabeza abajo por el muro exterior del castillo",
+            tr: "Penceresinden bir keresinde Drakula'yı şatonun dış duvarından baş aşağı sürünerek inerken gördü",
+          },
+          {
+            ar: "مرعوبًا من المشهد أدرك هاركر أنه أصبح الآن سجينًا حقيقيًا عاجزًا",
+            es: "Horrorizado por la escena, Harker comprendió que ahora era verdaderamente un prisionero indefenso",
+            tr: "Bu manzaradan dehşete düşen Harker artık gerçekten çaresiz bir tutsak olduğunu anladı",
+          },
+          {
+            ar: "كتب رسائل متوسلة إلى وطنه رغم أنه اشتبه بأن الكونت يتحكم سرًا بالبريد",
+            es: "Escribió cartas suplicantes a su hogar, aunque sospechaba que el Conde controlaba secretamente el correo",
+            tr: "Evine yalvaran mektuplar yazdı, gerçi Kont'un postayı gizlice kontrol ettiğinden şüpheleniyordu",
+          },
+          {
+            ar: "طافت ذئاب عواءها الغريب حول أرض القلعة كل ليلة دون استثناء",
+            es: "Extraños lobos aullantes rondaban los terrenos del castillo todas las noches sin excepción",
+            tr: "Tuhaf uluyan kurtlar hiç istisnasız her gece şatonun etrafında dolaştı",
+          },
+          {
+            ar: "بحث هاركر يائسًا عن أي باب غير موصد أو ممر مخفي يؤدي إلى الخارج",
+            es: "Harker buscó desesperadamente cualquier puerta sin cerrar o pasadizo oculto que llevara al exterior",
+            tr: "Harker dışarı açılan kilitli olmayan bir kapı ya da gizli bir geçit için çaresizce arandı",
+          },
+          {
+            ar: "أضعف الخوف والعزلة شجاعته ببطء مع مرور كل يوم وحيد",
+            es: "El miedo y el aislamiento fueron minando lentamente su valor con cada solitario día que pasaba",
+            tr: "Korku ve yalnızlık, geçen her yalnız günle birlikte cesaretini yavaş yavaş kemiriyordu",
+          },
+        ],
+      },
+      {
+        title: { ar: "العرائس الثلاث", es: "Las tres novias", tr: "Üç Gelin" },
+        sentences: [
+          {
+            ar: "أثناء استكشافه غرفة محظورة صادف هاركر ثلاث نساء غريبات جميلات بعيون جائعة متوهجة",
+            es: "Explorando una habitación prohibida, Harker se encontró con tres extrañas y hermosas mujeres de ojos hambrientos y brillantes",
+            tr: "Yasak bir odayı keşfederken Harker, parlayan aç gözlere sahip üç tuhaf, güzel kadınla karşılaştı",
+          },
+          {
+            ar: "اقتربن منه ببطء يتحركن برشاقة غير طبيعية جعلته يتجمد في مكانه",
+            es: "Se acercaron a él lentamente, moviéndose con una gracia antinatural que lo dejó paralizado",
+            tr: "Ona doğru yavaşça yaklaştılar, onu olduğu yere mıhlayan doğal olmayan bir zarafetle hareket ediyorlardı",
+          },
+          {
+            ar: "بالضبط عندما اقتربن اقتحم دراكولا الغرفة غاضبًا وأمرهن بالابتعاد",
+            es: "Justo cuando se acercaban, Drácula irrumpió furioso y les ordenó que se alejaran",
+            tr: "Tam yaklaştıkları sırada Drakula öfkeyle içeri daldı ve onlara uzaklaşmalarını emretti",
+          },
+          {
+            ar: "حذرهن بشدة بأن هاركر يخصه هو وحده ولا أحد غيره",
+            es: "Les advirtió severamente que Harker le pertenecía solo a él y a nadie más",
+            tr: "Onları sert bir şekilde Harker'ın yalnızca kendisine ait olduğu konusunda uyardı",
+          },
+          {
+            ar: "لاحقًا اكتشف هاركر دراكولا مستلقيًا بلا حراك داخل صندوق خشبي قديم من التراب",
+            es: "Más tarde, Harker descubrió a Drácula inmóvil dentro de una antigua caja de madera llena de tierra",
+            tr: "Daha sonra Harker, Drakula'yı eski bir tahta toprak kutusunun içinde hareketsiz yatarken buldu",
+          },
+          {
+            ar: "عازمًا على الهروب تسلق نفس الجدار المرعب الذي رأى الكونت يستخدمه من قبل",
+            es: "Decidido a escapar, trepó por el mismo muro aterrador que una vez vio usar al Conde",
+            tr: "Kaçmaya kararlı olan Harker, bir zamanlar Kont'u kullanırken gördüğü o korkunç duvara tırmandı",
+          },
+          {
+            ar: "فرّ عبر الريف ووصل إلى مستشفى حيث لازمته الحمى لأسابيع",
+            es: "Huyó a través del campo y llegó a un hospital donde la fiebre lo mantuvo postrado durante semanas",
+            tr: "Kırlardan kaçtı ve haftalarca ateş içinde kaldığı bir hastaneye ulaştı",
+          },
+          {
+            ar: "منهكًا ومهزوزًا تعافى هاركر أخيرًا بما يكفي للعودة إلى وطنه والزواج من مينا",
+            es: "Destrozado y conmocionado, Harker finalmente se recuperó lo suficiente para volver a casa y casarse con Mina",
+            tr: "Sarsılmış ve harap olan Harker sonunda eve dönüp Mina ile evlenecek kadar iyileşti",
+          },
+        ],
+      },
+      {
+        title: { ar: "الوصول إلى إنجلترا", es: "Llegada a Inglaterra", tr: "İngiltere'ye Varış" },
+        sentences: [
+          {
+            ar: "انجرفت سفينة محطمة تُدعى ديميتر إلى ميناء ويتبي دون طاقم على قيد الحياة",
+            es: "Un barco maltrecho llamado Deméter llegó a la deriva al puerto de Whitby sin tripulación viva",
+            tr: "Demeter adlı harap bir gemi, hayatta kalan mürettebatı olmadan Whitby limanına sürüklendi",
+          },
+          {
+            ar: "وصف سجل القبطان اختفاء أفراد الطاقم واحدًا تلو الآخر خلال الرحلة",
+            es: "El diario del capitán describía la desaparición de la tripulación uno a uno durante el viaje",
+            tr: "Kaptanın kayıt defteri, yolculuk boyunca mürettebatın teker teker kaybolduğunu anlatıyordu",
+          },
+          {
+            ar: "لم يتبقَّ سوى جثته مربوطة بإحكام إلى عجلة قيادة السفينة حتى النهاية",
+            es: "Solo su propio cuerpo quedó atado firmemente al timón del barco hasta el final",
+            tr: "Sadece kendi cesedi, sonuna kadar geminin dümenine sıkıca bağlı kalmıştı",
+          },
+          {
+            ar: "أقسم شهود على الشاطئ أنهم رأوا مخلوقًا يشبه الذئب يقفز إلى اليابسة",
+            es: "Testigos en la orilla juraron haber visto una criatura parecida a un lobo saltar a tierra",
+            tr: "Kıyıdaki tanıklar kurt benzeri bir yaratığın karaya sıçradığını gördüklerine yemin ettiler",
+          },
+          {
+            ar: "أُفرغت صناديق من تراب ترانسلفانيا بهدوء ونُقلت بعربة",
+            es: "Cajas de tierra transilvana fueron descargadas silenciosamente y llevadas en un carro",
+            tr: "Transilvanya toprağıyla dolu kutular sessizce boşaltıldı ve bir arabayla götürüldü",
+          },
+          {
+            ar: "في هذه الأثناء بدأت لوسي ويستنرا الشابة المرحة تمشي أثناء نومها ليلًا",
+            es: "Por esta época, Lucy Westenra, una joven alegre, comenzó a caminar dormida por las noches",
+            tr: "Bu sıralarda neşeli genç bir kadın olan Lucy Westenra geceleri uyurgezerlik yapmaya başladı",
+          },
+          {
+            ar: "وجدتها صديقتها القلقة مينا مرة جالسة شاحبة وساكنة بالقرب من المنحدرات",
+            es: "Su preocupada amiga Mina la encontró una vez sentada pálida e inmóvil cerca de los acantilados",
+            tr: "Endişeli arkadaşı Mina onu bir keresinde uçurumların yakınında solgun ve hareketsiz otururken buldu",
+          },
+          {
+            ar: "ظهرت علامتان صغيرتان بشكل غامض على رقبة لوسي لم يستطع أحد تفسيرهما تمامًا",
+            es: "Dos pequeñas marcas aparecieron misteriosamente en el cuello de Lucy que nadie podía explicar del todo",
+            tr: "Lucy'nin boynunda kimsenin tam olarak açıklayamadığı iki küçük iz gizemli bir şekilde belirdi",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "مرض لوسي الغريب",
+          es: "La extraña enfermedad de Lucy",
+          tr: "Lucy'nin Tuhaf Hastalığı",
+        },
+        sentences: [
+          {
+            ar: "ضعفت لوسي أكثر كل يوم مهما حصلت من راحة أو رعاية",
+            es: "Lucy se debilitaba más cada día sin importar cuánto descanso o cuidado recibiera",
+            tr: "Ne kadar dinlense ya da bakılsa da Lucy her geçen gün daha da güçsüzleşiyordu",
+          },
+          {
+            ar: "تناوب ثلاثة رجال أحبوها بصدق على مراقبتها بقلق",
+            es: "Tres hombres que la amaban profundamente se turnaban para vigilarla con ansiedad",
+            tr: "Onu içtenlikle seven üç adam onu endişeyle izlemek için nöbetleşiyordu",
+          },
+          {
+            ar: "اعترف الدكتور سيوارد أحد خطّابها القلقين بأن مرضها أربك خبرته الطبية",
+            es: "El Dr. Seward, uno de sus ansiosos pretendientes, admitió que su enfermedad desconcertaba su formación médica",
+            tr: "Endişeli taliplerinden biri olan Dr. Seward, hastalığının tıbbi bilgisini şaşırttığını itiraf etti",
+          },
+          {
+            ar: "كتب على عجل إلى معلمه القديم طبيب هولندي حكيم يُدعى فان هيلسنغ",
+            es: "Escribió urgentemente a su antiguo maestro, un sabio médico holandés llamado Van Helsing",
+            tr: "Eski öğretmeni, Van Helsing adlı bilge bir Hollandalı doktora acilen yazdı",
+          },
+          {
+            ar: "أصبح نوم لوسي مضطربًا أكثر فأكثر وبدت قوتها تتلاشى كل صباح",
+            es: "El sueño de Lucy se volvió cada vez más inquieto y su fuerza parecía desvanecerse cada mañana",
+            tr: "Lucy'nin uykusu giderek huzursuzlaştı ve gücü her sabah biraz daha eriyor gibiydi",
+          },
+          {
+            ar: "استمرت علامات العض الغريبة بالظهور على رقبتها رغم كل الاحتياطات الدقيقة المتخذة",
+            es: "Extrañas marcas de mordedura seguían reapareciendo en su cuello pese a todas las cuidadosas precauciones tomadas",
+            tr: "Alınan tüm dikkatli önlemlere rağmen boynunda tuhaf ısırık izleri belirmeye devam etti",
+          },
+          {
+            ar: "اقتحم ذئب نافذة غرفتها مرة خلال عاصفة رعدية عنيفة",
+            es: "Un lobo irrumpió una vez por la ventana de su habitación durante una violenta tormenta eléctrica",
+            tr: "Şiddetli bir gök gürültülü fırtına sırasında bir kurt bir keresinde odasının penceresinden içeri daldı",
+          },
+          {
+            ar: "أصبحت عائلتها وخطّابها يائسين وهم يراقبونها تذبل أمام أعينهم العاجزة",
+            es: "Su familia y sus pretendientes se desesperaban al verla marchitarse ante sus ojos impotentes",
+            tr: "Ailesi ve talipleri, onun çaresiz gözlerinin önünde solup gitmesini izlerken çaresizliğe kapıldı",
+          },
+        ],
+      },
+      {
+        title: { ar: "وصول فان هيلسنغ", es: "Llega Van Helsing", tr: "Van Helsing Geliyor" },
+        sentences: [
+          {
+            ar: "وصل فان هيلسنغ واشتبه فورًا بشيء أغرب بكثير من مرض عادي",
+            es: "Van Helsing llegó y de inmediato sospechó de algo mucho más extraño que una enfermedad común",
+            tr: "Van Helsing geldi ve hemen sıradan bir hastalıktan çok daha tuhaf bir şeyden şüphelendi",
+          },
+          {
+            ar: "أمر بتعليق أزهار الثوم بكثافة حول غرفة لوسي ورقبتها كل ليلة",
+            es: "Ordenó colgar flores de ajo en abundancia alrededor de la habitación y el cuello de Lucy cada noche",
+            tr: "Her gece Lucy'nin odasının ve boynunun etrafına bolca sarımsak çiçeği asılmasını emretti",
+          },
+          {
+            ar: "رغم احتياطاته الدقيقة أزالت والدة لوسي الأزهار دون أن تفهم غرضها الحقيقي",
+            es: "A pesar de sus cuidadosas precauciones, la madre de Lucy quitó las flores sin comprender su verdadero propósito",
+            tr: "Onun dikkatli önlemlerine rağmen Lucy'nin annesi gerçek amacını anlamadan çiçekleri kaldırdı",
+          },
+          {
+            ar: "بالكاد أبقت عمليات نقل الدم المتعددة من خطّابها المخلصين لوسي على قيد الحياة في كل مرة",
+            es: "Múltiples transfusiones de sangre de sus devotos pretendientes apenas mantenían con vida a Lucy cada vez",
+            tr: "Sadık taliplerinden yapılan çok sayıda kan nakli her seferinde Lucy'yi zar zor hayatta tutuyordu",
+          },
+          {
+            ar: "أصبح فان هيلسنغ أكثر جدية وألمح بهدوء إلى شيء قديم وشرير",
+            es: "Van Helsing se puso cada vez más grave e insinuó con calma algo antiguo y maligno",
+            tr: "Van Helsing giderek daha ciddileşti ve sessizce kadim ve kötücül bir şeye işaret etti",
+          },
+          {
+            ar: "رفض في البداية أن يشرح بالكامل شكه المتزايد حول مصاصي الدماء",
+            es: "Al principio se negó a explicar por completo su creciente sospecha sobre los vampiros",
+            tr: "Vampirlerle ilgili artan şüphesini başta tam olarak açıklamayı reddetti",
+          },
+          {
+            ar: "رغم كل الجهود استمرت حالة لوسي بالتدهور مع كل ليلة مرعبة تمر",
+            es: "A pesar de todos los esfuerzos, el estado de Lucy siguió empeorando con cada aterradora noche que pasaba",
+            tr: "Tüm çabalara rağmen Lucy'nin durumu geçen her korkunç geceyle birlikte kötüleşmeye devam etti",
+          },
+          {
+            ar: "في صباح مأساوي وجدت العائلة أخيرًا لوسي شاحبة وباردة وساكنة تمامًا",
+            es: "Una trágica mañana, la familia finalmente encontró a Lucy pálida, fría y completamente inmóvil",
+            tr: "Trajik bir sabah aile sonunda Lucy'yi solgun, soğuk ve tamamen hareketsiz buldu",
+          },
+        ],
+      },
+      {
+        title: { ar: "مصير لوسي", es: "El destino de Lucy", tr: "Lucy'nin Kaderi" },
+        sentences: [
+          {
+            ar: "بعد جنازتها انتشرت تقارير مقلقة عن امرأة شاحبة شوهدت بالقرب من أطفال المنطقة",
+            es: "Tras su funeral, surgieron inquietantes informes de una mujer pálida vista cerca de niños del lugar",
+            tr: "Cenazesinden sonra, yerel çocukların yakınında görülen solgun bir kadına dair rahatsız edici haberler yayıldı",
+          },
+          {
+            ar: "كشف فان هيلسنغ أخيرًا نظريته المروعة بأن لوسي أصبحت واحدة من الموتى الأحياء",
+            es: "Van Helsing finalmente reveló su terrible teoría de que Lucy se había convertido en una de los no muertos",
+            tr: "Van Helsing sonunda Lucy'nin ölümsüzlerden biri haline geldiğine dair korkunç teorisini açıkladı",
+          },
+          {
+            ar: "قاد خطّابها الحزانى إلى ضريحها في ليلة مقلقة مقمرة",
+            es: "Guio a sus afligidos pretendientes hasta su tumba en una inquietante noche de luna",
+            tr: "Yasa boğulmuş taliplerini ürkütücü, ay ışığıyla aydınlanan bir gecede mezarına götürdü",
+          },
+          {
+            ar: "بالداخل وجدوا تابوتها فارغًا تمامًا رغم دفنها الأخير",
+            es: "Adentro encontraron su ataúd completamente vacío a pesar de su reciente entierro",
+            tr: "İçeride, yakın zamanda gömülmüş olmasına rağmen tabutunun tamamen boş olduğunu buldular",
+          },
+          {
+            ar: "بعد ذلك بوقت قصير شاهدوا لوسي نفسها تنزلق بصمت عائدة نحو ضريحها",
+            es: "Poco después, presenciaron a la propia Lucy deslizarse silenciosamente de vuelta hacia su tumba",
+            tr: "Kısa süre sonra Lucy'nin kendisinin sessizce mezarına doğru süzüldüğüne tanık oldular",
+          },
+          {
+            ar: "بدا وجهها اللطيف يومًا ما باردًا وقاسيًا وجائعًا للدماء بلا شك",
+            es: "Su rostro, antes gentil, ahora se veía frío, cruel e indudablemente hambriento de sangre",
+            tr: "Bir zamanlar nazik olan yüzü artık soğuk, acımasız ve şüphesiz kan susamışı görünüyordu",
+          },
+          {
+            ar: "بقلب محطم لكنه عازم غرس خطيبها وتدًا في قلبها لتحريرها",
+            es: "Con el corazón roto pero decidido, su prometido le clavó una estaca en el corazón para liberarla",
+            tr: "Kalbi kırık ama kararlı olan nişanlısı, onu özgür kılmak için kalbine bir kazık sapladı",
+          },
+          {
+            ar: "قطعوا رأسها وملأوا فمها بالثوم لينهوا معاناتها إلى الأبد",
+            es: "Le cortaron la cabeza y le llenaron la boca de ajo, poniendo fin a su sufrimiento para siempre",
+            tr: "Başını kestiler ve acısına sonsuza dek son vermek için ağzını sarımsakla doldurdular",
+          },
+        ],
+      },
+      {
+        title: { ar: "مينا في خطر", es: "Mina en peligro", tr: "Mina Tehlikede" },
+        sentences: [
+          {
+            ar: "بعد رحيل لوسي وجّهت المجموعة اهتمامها العازم نحو تدمير دراكولا نفسه",
+            es: "Con Lucy fuera, el grupo dirigió su atención decidida hacia destruir al propio Drácula",
+            tr: "Lucy gittikten sonra grup kararlı dikkatini Drakula'nın kendisini yok etmeye yöneltti",
+          },
+          {
+            ar: "تعقّبوا وأغلقوا كل صندوق من التراب يحتاجه للراحة",
+            es: "Localizaron y sellaron cada caja de tierra que él necesitaba para descansar",
+            tr: "Onun dinlenmek için ihtiyaç duyduğu her toprak kutusunu buldular ve mühürlediler",
+          },
+          {
+            ar: "غاضبًا من تدخلهم بدأ دراكولا باستهداف مينا هاركر كضحيته التالية",
+            es: "Furioso por su intromisión, Drácula comenzó a apuntar a Mina Harker como su próxima víctima",
+            tr: "Müdahalelerine öfkelenen Drakula, bir sonraki kurbanı olarak Mina Harker'ı hedef almaya başladı",
+          },
+          {
+            ar: "تسلل إلى غرفتها ليلًا وأجبرها على شرب دمه الخاص",
+            es: "Se coló en su habitación por la noche y la obligó a beber su propia sangre",
+            tr: "Geceleyin odasına sızdı ve onu kendi kanını içmeye zorladı",
+          },
+          {
+            ar: "خلق هذا الفعل المروع رابطًا نفسيًا مظلمًا بين دراكولا ومينا",
+            es: "Este terrible acto creó un oscuro vínculo psíquico entre Drácula y Mina",
+            tr: "Bu korkunç eylem Drakula ile Mina arasında karanlık bir zihinsel bağ yarattı",
+          },
+          {
+            ar: "مرعوبة وخجلة توسلت مينا للمجموعة أن يدمروها إذا تحولت يومًا ما",
+            es: "Horrorizada y avergonzada, Mina suplicó al grupo que la destruyeran si alguna vez se transformaba",
+            tr: "Dehşete düşen ve utanan Mina, eğer bir gün dönüşürse kendisini yok etmeleri için gruba yalvardı",
+          },
+          {
+            ar: "حماها فان هيلسنغ بقربانة مباركة تركت علامة حارقة على جلدها",
+            es: "Van Helsing la protegió con una hostia bendita que dejó una marca ardiente en su piel",
+            tr: "Van Helsing onu kutsanmış bir ekmekle korudu ve bu cildinde yanan bir iz bıraktı",
+          },
+          {
+            ar: "سباقًا مع الزمن طاردت المجموعة صناديق دراكولا المتبقية المخفية في أنحاء لندن",
+            es: "Contra el tiempo, el grupo rastreó las cajas restantes y escondidas de Drácula por todo Londres",
+            tr: "Zamana karşı yarışan grup, Drakula'nın Londra genelinde gizli kalan kutularının peşine düştü",
+          },
+        ],
+      },
+      {
+        title: { ar: "الصيادون يقتربون", es: "Los cazadores se acercan", tr: "Avcılar Yaklaşıyor" },
+        sentences: [
+          {
+            ar: "واحدًا تلو الآخر حددوا موقع كل صندوق من تراب ترانسلفانيا في لندن ودمّروه",
+            es: "Uno por uno localizaron y destruyeron cada caja de tierra transilvana en Londres",
+            tr: "Teker teker Londra'daki her Transilvanya toprağı kutusunu buldular ve yok ettiler",
+          },
+          {
+            ar: "محاصَرًا وغاضبًا فرّ دراكولا من المدينة عازمًا على العودة إلى قلعته",
+            es: "Acorralado y furioso, Drácula huyó de la ciudad decidido a regresar a su castillo",
+            tr: "Köşeye sıkışan ve öfkelenen Drakula, şatosuna dönmeye kararlı bir şekilde şehirden kaçtı",
+          },
+          {
+            ar: "مستخدمًا رابطهما الغريب نوّم فان هيلسنغ مينا مغناطيسيًا لتحديد موقع الكونت",
+            es: "Usando su extraño vínculo, Van Helsing hipnotizó a Mina para sentir la ubicación del Conde",
+            tr: "Van Helsing, garip bağlarını kullanarak Mina'yı Kont'un konumunu hissetmesi için hipnotize etti",
+          },
+          {
+            ar: "انقسمت المجموعة وسارعت برًا ونهرًا لاعتراضه أولًا",
+            es: "El grupo se dividió, corriendo por tierra y río para interceptarlo primero",
+            tr: "Grup ikiye bölündü, onu ilk ele geçirmek için karadan ve nehirden yarıştılar",
+          },
+          {
+            ar: "أبطأ ثلج الشتاء رحلتهم الصعبة عبر ريف ترانسلفانيا البري",
+            es: "La nieve invernal ralentizó su difícil viaje a través del salvaje campo transilvano",
+            tr: "Kış karı, vahşi Transilvanya kırsalındaki zorlu yolculuklarını yavaşlattı",
+          },
+          {
+            ar: "حرس الغجر الموالون لدراكولا عربة تحمل صندوقه الأخير من التراب",
+            es: "Gitanos leales a Drácula custodiaban un carro que transportaba su última caja de tierra",
+            tr: "Drakula'ya sadık çingeneler, son toprak kutusunu taşıyan bir arabayı koruyordu",
+          },
+          {
+            ar: "اندلع قتال متوتر ويائس تمامًا مع بدء غروب الشمس",
+            es: "Estalló una lucha tensa y desesperada justo cuando el sol comenzaba a ponerse",
+            tr: "Güneş batmaya başladığı sırada gergin, çaresiz bir mücadele patlak verdi",
+          },
+          {
+            ar: "قاتل الصيادون بشراسة عازمين على إنهاء المطاردة قبل عودة الظلام",
+            es: "Los cazadores lucharon ferozmente, decididos a terminar la persecución antes de que volviera la oscuridad",
+            tr: "Avcılar karanlık geri dönmeden kovalamacayı bitirmeye kararlı bir şekilde şiddetle savaştı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "المطاردة إلى ترانسلفانيا",
+          es: "La persecución hacia Transilvania",
+          tr: "Transilvanya'ya Kovalamaca",
+        },
+        sentences: [
+          {
+            ar: "شق جوناثان هاركر حنجرة الكونت بالضبط عندما فُتح الغطاء",
+            es: "Jonathan Harker cortó la garganta del Conde justo cuando se abría la tapa",
+            tr: "Kapak açıldığı anda Jonathan Harker Kont'un boğazını kesti",
+          },
+          {
+            ar: "غرز كوينسي موريس نصله مباشرة في قلب دراكولا في اللحظة نفسها تمامًا",
+            es: "Quincy Morris clavó su cuchilla directamente en el corazón de Drácula en ese mismo instante",
+            tr: "Quincy Morris aynı anda bıçağını doğrudan Drakula'nın kalbine sapladı",
+          },
+          {
+            ar: "تفتت جسد دراكولا بسرعة إلى غبار في اللحظة التي لامسه فيها ضوء الشمس الأخير",
+            es: "El cuerpo de Drácula se desmoronó rápidamente en polvo en el instante en que lo tocó la última luz del sol",
+            tr: "Son güneş ışığı ona değdiği anda Drakula'nın bedeni hızla toz haline geldi",
+          },
+          {
+            ar: "اختفت العلامة المظلمة على جبين مينا فورًا محررة إياها من لعنته",
+            es: "La marca oscura en la frente de Mina desapareció al instante, liberándola de su maldición",
+            tr: "Mina'nın alnındaki karanlık iz anında kayboldu ve onu lanetinden özgür kıldı",
+          },
+          {
+            ar: "غمرت الراحة والإرهاق المجموعة بعد انتهاء مطاردتهم الطويلة والخطيرة",
+            es: "El alivio y el agotamiento invadieron al grupo tras el final de su larga y peligrosa persecución",
+            tr: "Uzun ve tehlikeli kovalamacaları sona erdikten sonra grubu rahatlama ve bitkinlik kapladı",
+          },
+          {
+            ar: "للأسف أُصيب كوينسي موريس إصابة قاتلة خلال المعركة ومات بين أصدقائه",
+            es: "Tristemente, Quincy Morris resultó mortalmente herido durante la lucha y murió entre sus amigos",
+            tr: "Ne yazık ki Quincy Morris mücadele sırasında ölümcül şekilde yaralandı ve arkadaşlarının arasında öldü",
+          },
+          {
+            ar: "سمّت مينا وجوناثان لاحقًا ابنهما جزئيًا تكريمًا لذلك الرجل الشجاع",
+            es: "Mina y Jonathan más tarde nombraron a su hijo en parte en honor a aquel hombre valiente",
+            tr: "Mina ve Jonathan daha sonra oğullarına kısmen o cesur adamın onuruna isim verdiler",
+          },
+          {
+            ar: "بعد سنوات احتفظوا بملاحظاتهم الغريبة كدليل على أن كابوسهم قد انتهى حقًا",
+            es: "Años después, conservaron sus extrañas notas como prueba de que su pesadilla realmente había terminado",
+            tr: "Yıllar sonra, kabuslarının gerçekten sona erdiğinin kanıtı olarak tuhaf notlarını sakladılar",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "book-novel-hound-baskervilles",
+    description: {
+      ar: "ملخص أصلي من سنتنس ستيب لقصة آرثر كونان دويل عن شيرلوك هولمز وهو يحقق في أسطورة مميتة تطارد أراضي عائلة باسكرفيل — إعادة سرد شخصية، وليست النص الأصلي.",
+      es: "Un resumen original de SentenceStep de la historia de Arthur Conan Doyle sobre Sherlock Holmes investigando una leyenda mortal que atormenta el páramo de la familia Baskerville — un relato personal, no el texto original.",
+      tr: "Arthur Conan Doyle'ın, Sherlock Holmes'un Baskerville ailesinin bozkırına musallat olan ölümcül bir efsaneyi araştırmasını anlatan hikayesinin özgün bir SentenceStep özeti — kişisel bir yeniden anlatım, orijinal metin değil.",
+    },
+    sections: [
+      {
+        title: {
+          ar: "زيارة الدكتور مورتيمر",
+          es: "La visita del Dr. Mortimer",
+          tr: "Dr. Mortimer'ın Ziyareti",
+        },
+        sentences: [
+          {
+            ar: "زار الدكتور جيمس مورتيمر شيرلوك هولمز حاملًا تعبيرًا قلقًا قديمًا وعصا مشي",
+            es: "El Dr. James Mortimer visitó a Sherlock Holmes con una vieja expresión preocupada y un bastón",
+            tr: "Dr. James Mortimer, endişeli eski bir ifade ve bir baston taşıyarak Sherlock Holmes'u ziyaret etti",
+          },
+          {
+            ar: "أوضح أن صديقه السير تشارلز باسكرفيل وُجد ميتًا مؤخرًا في الأراضي الموحشة",
+            es: "Explicó que su amigo Sir Charles Baskerville había sido hallado muerto recientemente en el páramo",
+            tr: "Arkadaşı Sör Charles Baskerville'in yakın zamanda bozkırda ölü bulunduğunu anlattı",
+          },
+          {
+            ar: "تجمّد وجه السير تشارلز في تعبير من الرعب المطلق الذي لا لبس فيه",
+            es: "El rostro de Sir Charles quedó congelado en una expresión de terror absoluto e inconfundible",
+            tr: "Sör Charles'ın yüzü, kesin ve mutlak bir dehşet ifadesiyle donup kalmıştı",
+          },
+          {
+            ar: "اكتُشفت آثار مخالب كبيرة بشكل غريب في الطين بالقرب من جثته",
+            es: "Se descubrieron extrañamente grandes huellas de garras en el barro cerca de su cuerpo sin vida",
+            tr: "Cansız bedeninin yakınındaki çamurda tuhaf derecede büyük pençe izleri keşfedildi",
+          },
+          {
+            ar: "وصف مورتيمر أسطورة عائلية قديمة عن كلب وحشي يلعن سلالة باسكرفيل",
+            es: "Mortimer describió una vieja leyenda familiar sobre un perro monstruoso que maldecía el linaje Baskerville",
+            tr: "Mortimer, Baskerville soyunu lanetleyen canavarca bir tazı hakkındaki eski bir aile efsanesini anlattı",
+          },
+          {
+            ar: "قبل قرون استدعى جد قاسٍ يُدعى هوغو المخلوق بنفسه على ما يبدو",
+            es: "Siglos atrás, un cruel antepasado llamado Hugo aparentemente había invocado a la criatura él mismo",
+            tr: "Yüzyıllar önce Hugo adında zalim bir ata görünüşe göre yaratığı kendisi çağırmıştı",
+          },
+          {
+            ar: "استمع هولمز بعناية رغم أنه ظل متشككًا علنًا تجاه أي تفسير خارق للطبيعة",
+            es: "Holmes escuchó con atención, aunque se mantuvo públicamente escéptico ante cualquier explicación sobrenatural",
+            tr: "Holmes dikkatle dinledi, gerçi doğaüstü herhangi bir açıklama konusunda açıkça şüpheci kaldı",
+          },
+          {
+            ar: "وافق على التحقيق خاصة أن وريثًا جديدًا كان مسافرًا للمطالبة بالعقار",
+            es: "Aceptó investigar, especialmente porque un nuevo heredero viajaba para reclamar la propiedad",
+            tr: "Özellikle yeni bir varisin mülkü talep etmek için yolculuk ettiğini öğrenince araştırmayı kabul etti",
+          },
+        ],
+      },
+      {
+        title: { ar: "الأسطورة", es: "La leyenda", tr: "Efsane" },
+        sentences: [
+          {
+            ar: "قرأ مورتيمر بصوت عالٍ مخطوطة قديمة مصفرّة تصف لعنة باسكرفيل الأصلية",
+            es: "Mortimer leyó en voz alta un viejo manuscrito amarillento que describía la maldición original de los Baskerville",
+            tr: "Mortimer, orijinal Baskerville lanetini anlatan eski, sararmış bir el yazmasını yüksek sesle okudu",
+          },
+          {
+            ar: "كان هوغو باسكرفيل الشرير قد اختطف يومًا ابنة مزارع محلي خائفة وصغيرة",
+            es: "El malvado Hugo Baskerville había secuestrado una vez a la joven y asustada hija de un granjero local",
+            tr: "Kötü Hugo Baskerville bir zamanlar yerel bir çiftçinin küçük, korkmuş kızını kaçırmıştı",
+          },
+          {
+            ar: "عندما هربت من النافذة طاردها هوغو بغضب عبر الأراضي المظلمة",
+            es: "Cuando ella escapó por la ventana, Hugo la persiguió furioso a través del páramo oscuro",
+            tr: "Kız pencereden kaçtığında Hugo onu karanlık bozkırda öfkeyle kovaladı",
+          },
+          {
+            ar: "وجد أصدقاؤه الثملون لاحقًا جثته الممزقة بجانب كلب ضخم متوهج",
+            es: "Sus amigos borrachos encontraron después su cuerpo destrozado junto a un enorme perro resplandeciente",
+            tr: "Sarhoş arkadaşları daha sonra onun parçalanmış cesedini kocaman, parıldayan bir köpeğin yanında buldu",
+          },
+          {
+            ar: "منذ تلك الليلة المروعة أُبلغ عن رؤية وحوش سوداء غريبة تطارد الأراضي",
+            es: "Desde aquella terrible noche se informó de extrañas bestias negras que rondaban el páramo",
+            tr: "O korkunç geceden beri bozkırda tuhaf kara canavarlar görüldüğü bildirildi",
+          },
+          {
+            ar: "توفي العديد من أفراد عائلة باسكرفيل فجأة في ظروف غامضة بنفس القدر",
+            es: "Varios miembros de la familia Baskerville murieron repentinamente en circunstancias igualmente misteriosas",
+            tr: "Baskerville ailesinden birçok kişi aynı derecede gizemli koşullar altında aniden öldü",
+          },
+          {
+            ar: "استجوب هولمز كل تفصيل عملي رافضًا قبول الأسطورة دون دليل حقيقي",
+            es: "Holmes cuestionó cada detalle práctico, negándose a aceptar la leyenda sin pruebas reales",
+            tr: "Holmes her pratik ayrıntıyı sorguladı, gerçek kanıt olmadan efsaneyi kabul etmeyi reddetti",
+          },
+          {
+            ar: "قرر أن اللغز يتطلب عملًا ميدانيًا دقيقًا بدلًا من الخرافات أو حكايات الأشباح القديمة",
+            es: "Decidió que el misterio requería un trabajo de campo cuidadoso en lugar de superstición o viejas historias de fantasmas",
+            tr: "Gizemin batıl inanç ya da eski hayalet hikayeleri yerine dikkatli saha çalışması gerektirdiğine karar verdi",
+          },
+        ],
+      },
+      {
+        title: { ar: "وصول السير هنري", es: "Llega Sir Henry", tr: "Sör Henry Geliyor" },
+        sentences: [
+          {
+            ar: "وصل السير هنري باسكرفيل من كندا متحمسًا للمطالبة بميراثه الجديد غير المتوقع",
+            es: "Sir Henry Baskerville llegó desde Canadá, ansioso por reclamar su inesperada nueva herencia",
+            tr: "Sör Henry Baskerville, beklenmedik yeni mirasını talep etmek için hevesle Kanada'dan geldi",
+          },
+          {
+            ar: "اختفى أحد حذائه الجديدين بشكل غامض من غرفته في الفندق بين عشية وضحاها",
+            es: "Una de sus botas nuevas desapareció misteriosamente de su habitación de hotel de la noche a la mañana",
+            tr: "Yeni çizmelerinden biri bir gecede otel odasından gizemli bir şekilde kayboldu",
+          },
+          {
+            ar: "حذّرته رسالة غريبة مُجمّعة من حروف صحف بالابتعاد عن الأراضي الموحشة",
+            es: "Una extraña nota compuesta con letras de periódico le advirtió que se mantuviera alejado del páramo",
+            tr: "Gazete harflerinden oluşturulmuş garip bir not, onu bozkırdan uzak durması konusunda uyardı",
+          },
+          {
+            ar: "لاحظ هولمز أن أحدهم كان يتبع السير هنري سرًا عبر شوارع لندن المزدحمة",
+            es: "Holmes notó que alguien había estado siguiendo en secreto a Sir Henry por las concurridas calles de Londres",
+            tr: "Holmes birinin Sör Henry'yi Londra'nın kalabalık sokaklarında gizlice takip ettiğini fark etti",
+          },
+          {
+            ar: "وقعت الشبهة سريعًا على باريمور الخادم الهادئ منذ فترة طويلة في منزل باسكرفيل",
+            es: "La sospecha recayó rápidamente sobre Barrymore, el mayordomo tranquilo y de largo servicio de la casa Baskerville",
+            tr: "Şüphe hızla Baskerville hanesinin uzun süredir sessiz uşağı Barrymore üzerine düştü",
+          },
+          {
+            ar: "قرر هولمز أنه لا يستطيع مغادرة لندن بعد رغم أن القضية تتطلب اهتمامًا أوثق",
+            es: "Holmes decidió que aún no podía dejar Londres, aunque el caso exigía una atención más cercana",
+            tr: "Holmes, dava daha yakından ilgi gerektirse de henüz Londra'dan ayrılamayacağına karar verdi",
+          },
+          {
+            ar: "بدلًا من ذلك أرسل الدكتور واطسون لمرافقة السير هنري بأمان إلى قصر باسكرفيل",
+            es: "En su lugar, envió al Dr. Watson para acompañar a Sir Henry con seguridad hasta la mansión Baskerville",
+            tr: "Bunun yerine Dr. Watson'ı Sör Henry'ye Baskerville Malikanesi'ne kadar güvenle eşlik etmesi için gönderdi",
+          },
+          {
+            ar: "وافق واطسون فورًا عازمًا على حماية موكل صديقه من أي خطر حقيقي",
+            es: "Watson aceptó de inmediato, decidido a proteger al cliente de su amigo de cualquier peligro real",
+            tr: "Watson hemen kabul etti, arkadaşının müvekkilini gerçek bir tehlikeden korumaya kararlıydı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "واطسون في قصر باسكرفيل",
+          es: "Watson en la mansión Baskerville",
+          tr: "Baskerville Malikanesi'nde Watson",
+        },
+        sentences: [
+          {
+            ar: "وقف القصر القديم كئيبًا ومهيبًا محاطًا بالأراضي الموحشة الشاسعة",
+            es: "La antigua mansión se erguía sombría e imponente, rodeada por el vasto y solitario páramo",
+            tr: "Eski malikane, geniş ve ıssız bozkırla çevrili, kasvetli ve heybetli bir şekilde duruyordu",
+          },
+          {
+            ar: "لاحظ واطسون أن زوجة باريمور كانت تبكي مؤخرًا رغم أنها أنكرت وجود أي مشكلة",
+            es: "Watson notó que la esposa de Barrymore había estado llorando recientemente, aunque ella negó cualquier problema",
+            tr: "Watson, Barrymore'un karısının yakın zamanda ağladığını fark etti, gerçi kadın herhangi bir sorunu inkar etti",
+          },
+          {
+            ar: "في إحدى الليالي المتأخرة سمع واطسون نحيبًا واضحًا يتردد صداه عبر المنزل القديم الصامت",
+            es: "Una noche tardía, Watson escuchó un llanto inconfundible resonando por la silenciosa casa antigua",
+            tr: "Geç bir gece Watson, sessiz eski evde yankılanan belirgin bir hıçkırık sesi duydu",
+          },
+          {
+            ar: "سرعان ما اكتشف أن باريمور كان يشير سرًا لشخص ما في الأراضي المظلمة بشمعة",
+            es: "Pronto descubrió que Barrymore estaba haciendo señales en secreto a alguien en el páramo oscuro con una vela",
+            tr: "Kısa süre sonra Barrymore'un bir mumla karanlık bozkırdaki birine gizlice işaret verdiğini keşfetti",
+          },
+          {
+            ar: "عند مواجهته مباشرة اعترف باريمور بأنه كان يساعد سجينًا هاربًا يُدعى سيلدن على البقاء حيًا",
+            es: "Confrontado directamente, Barrymore admitió que estaba ayudando a sobrevivir a un convicto fugado llamado Selden",
+            tr: "Doğrudan yüzleştirildiğinde Barrymore, Selden adlı kaçak bir mahkumun hayatta kalmasına yardım ettiğini itiraf etti",
+          },
+          {
+            ar: "بشكل مذهل تبيّن أن سيلدن هو شقيق زوجته اليائس المضطرب",
+            es: "Sorprendentemente, Selden resultó ser el propio hermano desesperado y problemático de su esposa",
+            tr: "Şaşırtıcı bir şekilde Selden, karısının çaresiz, sorunlu öz kardeşi çıktı",
+          },
+          {
+            ar: "بدت الأراضي نفسها خطيرة بشكل متزايد مع مستنقعاتها المخفية وضبابها الكثيف الذي لا يمكن التنبؤ به",
+            es: "El propio páramo se sentía cada vez más peligroso, con sus ciénagas ocultas y su espesa niebla impredecible",
+            tr: "Bozkırın kendisi, gizli bataklıkları ve öngörülemeyen yoğun sisiyle giderek daha tehlikeli hissettiriyordu",
+          },
+          {
+            ar: "كتب واطسون رسائل مفصلة إلى هولمز يصف كل حدث غريب ومقلق",
+            es: "Watson escribió cartas detalladas a Holmes describiendo cada extraño e inquietante suceso",
+            tr: "Watson, Holmes'a her tuhaf ve rahatsız edici olayı anlatan ayrıntılı mektuplar yazdı",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "الرجل على التلة الصخرية",
+          es: "El hombre en el peñasco",
+          tr: "Kayalıktaki Adam",
+        },
+        sentences: [
+          {
+            ar: "في إحدى الليالي رصد واطسون شخصية غامضة صامتة تقف وحدها فوق تلة صخرية",
+            es: "Una noche, Watson divisó una figura misteriosa y silenciosa de pie sola sobre un peñasco rocoso",
+            tr: "Bir gece Watson, kayalık bir tepenin üzerinde tek başına duran gizemli, sessiz bir figür gördü",
+          },
+          {
+            ar: "اختفى الرجل المجهول قبل أن يستطيع واطسون الاقتراب بما يكفي لرؤية وجهه",
+            es: "El hombre desconocido desapareció antes de que Watson pudiera acercarse lo suficiente para verle el rostro",
+            tr: "Watson yüzünü görecek kadar yaklaşamadan tanınmayan adam ortadan kayboldu",
+          },
+          {
+            ar: "صادف واطسون أيضًا سيلدن الشرس المتصلب مختبئًا بين صخور الأراضي الوعرة",
+            es: "Watson también se topó con el feroz y endurecido Selden escondido entre las rocas del páramo",
+            tr: "Watson ayrıca bozkırın kayalık uçurumları arasında saklanan vahşi, sertleşmiş Selden'le karşılaştı",
+          },
+          {
+            ar: "علم بوجود عائلة ستابلتون عالم طبيعة وأخته الصغرى اللذين يعيشان بالقرب",
+            es: "Se enteró de los Stapleton, un naturalista y su hermana menor, que vivían cerca",
+            tr: "Yakınlarda yaşayan bir doğa bilimci ve küçük kız kardeşi olan Stapleton'ları öğrendi",
+          },
+          {
+            ar: "طارد ستابلتون الفراشات بنشاط عبر الأراضي غير مكترث على ما يبدو بمستنقعاتها الخطيرة",
+            es: "Stapleton perseguía mariposas enérgicamente por el páramo, aparentemente indiferente a sus peligrosas ciénagas",
+            tr: "Stapleton, tehlikeli bataklıklarına aldırmıyormuş gibi görünerek bozkırda enerjik bir şekilde kelebek kovaladı",
+          },
+          {
+            ar: "أشار إلى مستنقع غريمبن سيئ السمعة محذرًا من أنه قد يبتلع شخصًا بالكامل",
+            es: "Señaló la infame Ciénaga de Grimpen, advirtiendo que podía tragarse a una persona por completo",
+            tr: "Bir kişiyi bütünüyle yutabileceği konusunda uyararak kötü şöhretli Grimpen Bataklığı'nı işaret etti",
+          },
+          {
+            ar: "وجد واطسون نفسه منجذبًا أكثر فأكثر لأخت ستابلتون الساحرة الذكية بيريل",
+            es: "Watson se sintió cada vez más atraído por la encantadora e inteligente hermana de Stapleton, Beryl",
+            tr: "Watson kendini Stapleton'ın çekici, zeki kız kardeşi Beryl'e giderek daha fazla çekilmiş buldu",
+          },
+          {
+            ar: "حذّرته بشكل غير متوقع بإلحاح بمغادرة الأراضي وعدم العودة أبدًا",
+            es: "Ella le advirtió inesperadamente y con urgencia que dejara el páramo y no regresara jamás",
+            tr: "Beklenmedik bir şekilde onu bozkırı terk etmesi ve asla geri dönmemesi konusunda aciliyetle uyardı",
+          },
+        ],
+      },
+      {
+        title: { ar: "جيران غريبون", es: "Vecinos extraños", tr: "Tuhaf Komşular" },
+        sentences: [
+          {
+            ar: "تتبّع واطسون أخيرًا الغريب الغامض المراقب إلى كوخ حجري مخفي في الأراضي",
+            es: "Watson finalmente rastreó al misterioso extraño vigilante hasta una choza de piedra escondida en el páramo",
+            tr: "Watson sonunda gizemli, gözetleyen yabancıyı bozkırda gizli bir taş kulübeye kadar izledi",
+          },
+          {
+            ar: "بالداخل فوجئ وسُرّ لاكتشاف شيرلوك هولمز ينتظره بهدوء",
+            es: "Adentro, se sorprendió y alegró al descubrir a Sherlock Holmes esperándolo tranquilamente",
+            tr: "İçeride, Sherlock Holmes'un sakince kendisini beklediğini keşfedince şaşırdı ve sevindi",
+          },
+          {
+            ar: "أوضح هولمز أنه كان يحقق سرًا في كل شيء من الظل طوال الوقت",
+            es: "Holmes explicó que había estado investigando todo en secreto desde las sombras todo este tiempo",
+            tr: "Holmes bunca zamandır gölgelerden her şeyi gizlice araştırdığını açıkladı",
+          },
+          {
+            ar: "كشف أن بيريل كانت في الواقع زوجة ستابلتون وليست أخته حقًا",
+            es: "Reveló que Beryl era en realidad la esposa de Stapleton y no verdaderamente su hermana",
+            tr: "Beryl'in aslında Stapleton'ın karısı olduğunu, gerçekten kız kardeşi olmadığını açıkladı",
+          },
+          {
+            ar: "ربطهم اسم عائلتهم الحقيقي سرًا بسلالة باسكرفيل الملعونة نفسها",
+            es: "Su verdadero apellido los conectaba en secreto con el propio linaje maldito de los Baskerville",
+            tr: "Gerçek soyadları onları gizlice lanetli Baskerville soyunun kendisine bağlıyordu",
+          },
+          {
+            ar: "فجأة اخترقت صرخة مرعبة الظلام الضبابي في مكان ما في الأراضي",
+            es: "De repente, un grito aterrador rasgó la oscuridad brumosa en algún lugar del páramo",
+            tr: "Aniden dehşet verici bir çığlık, bozkırda bir yerlerde sisli karanlığı yardı",
+          },
+          {
+            ar: "اندفع الرجلان بجنون نحو الصوت خائفين على السير هنري من الأسوأ",
+            es: "Ambos hombres corrieron frenéticamente hacia el sonido, temiendo lo peor para Sir Henry",
+            tr: "İki adam da sesin geldiği yöne çılgınca koştu, Sör Henry için en kötüsünden korkuyorlardı",
+          },
+          {
+            ar: "وجدا جثة سيلدن مرتدية ملابس مستعارة بوضوح من السير هنري",
+            es: "Encontraron el cuerpo de Selden vestido con ropas claramente prestadas de Sir Henry",
+            tr: "Selden'in cesedini, açıkça Sör Henry'den ödünç alınmış giysiler içinde buldular",
+          },
+        ],
+      },
+      {
+        title: { ar: "صرخة في الليل", es: "Un grito en la noche", tr: "Gecede Bir Çığlık" },
+        sentences: [
+          {
+            ar: "يبدو أن سيلدن سقط ميتًا وهو يهرب من شيء مرعب عبر الأراضي",
+            es: "Selden aparentemente había caído muerto mientras huía de algo aterrador a través del páramo",
+            tr: "Selden, görünüşe göre bozkırda korkunç bir şeyden kaçarken düşüp ölmüştü",
+          },
+          {
+            ar: "اشتبه هولمز أن الكلب أخطأ سيلدن بالسير هنري في الظلام والضباب",
+            es: "Holmes sospechó que el perro había confundido a Selden con Sir Henry en la oscuridad y la niebla",
+            tr: "Holmes, köpeğin karanlıkta ve siste Selden'i Sör Henry sanmış olabileceğinden şüphelendi",
+          },
+          {
+            ar: "وصل ستابلتون إلى مكان الحادثة متظاهرًا بالصدمة رغم أن عينيه خانتا خيبة أمل حقيقية",
+            es: "Stapleton llegó a la escena fingiendo conmoción, aunque sus ojos delataban una decepción real",
+            tr: "Stapleton olay yerine şok geçirmiş gibi davranarak geldi, gerçi gözleri gerçek bir hayal kırıklığını ele veriyordu",
+          },
+          {
+            ar: "قرر هولمز بهدوء استخدام السير هنري نفسه كطُعم للإمساك بالقاتل أخيرًا",
+            es: "Holmes decidió tranquilamente usar al propio Sir Henry como cebo para atrapar finalmente al asesino",
+            tr: "Holmes sessizce katili sonunda yakalamak için Sör Henry'nin kendisini yem olarak kullanmaya karar verdi",
+          },
+          {
+            ar: "عاد هو وواطسون سرًا إلى لندن لتعزيز أدلتهما ضد ستابلتون",
+            es: "Él y Watson regresaron en secreto a Londres para reforzar sus pruebas contra Stapleton",
+            tr: "O ve Watson, Stapleton'a karşı kanıtlarını güçlendirmek için gizlice Londra'ya döndüler",
+          },
+          {
+            ar: "اكتشفا لوحة قديمة تثبت صلة ستابلتون الحقيقية التي لا لبس فيها بعائلة باسكرفيل",
+            es: "Descubrieron un antiguo retrato que probaba la verdadera e inconfundible conexión de Stapleton con la familia Baskerville",
+            tr: "Stapleton'ın Baskerville ailesiyle gerçek ve kesin bağlantısını kanıtlayan eski bir portre keşfettiler",
+          },
+          {
+            ar: "واثقين من هذا الدليل الجديد أسرع هولمز وواطسون بالعودة نحو الأراضي الموحشة",
+            es: "Confiados con esta nueva evidencia, Holmes y Watson se apresuraron de vuelta hacia el solitario páramo",
+            tr: "Bu yeni kanıttan emin olan Holmes ve Watson, ıssız bozkıra doğru aceleyle geri döndüler",
+          },
+          {
+            ar: "وافق السير هنري بتوتر على المشي إلى المنزل وحيدًا من عشاء كما هو مخطط كطُعم",
+            es: "Sir Henry accedió nervioso a caminar solo a casa desde una cena, tal como se planeó, como cebo",
+            tr: "Sör Henry, planlandığı gibi yem olarak bir akşam yemeğinden yalnız yürüyerek eve dönmeyi gergin bir şekilde kabul etti",
+          },
+        ],
+      },
+      {
+        title: {
+          ar: "هولمز يكشف عن نفسه",
+          es: "Holmes se revela",
+          tr: "Holmes Kendini Gösteriyor",
+        },
+        sentences: [
+          {
+            ar: "أوضح هولمز أن غيابه الطويل السري كان ضروريًا لمراقبة ستابلتون دون أن يُرى",
+            es: "Holmes explicó que su larga ausencia secreta había sido necesaria para observar a Stapleton sin ser visto",
+            tr: "Holmes, uzun gizli yokluğunun Stapleton'ı görülmeden gözlemlemek için gerekli olduğunu açıkladı",
+          },
+          {
+            ar: "كشف أن ستابلتون درّب كلبًا ضخمًا باستخدام الفوسفور لجعله يتوهج",
+            es: "Reveló que Stapleton había entrenado a un perro enorme usando fósforo para hacerlo brillar",
+            tr: "Stapleton'ın kocaman bir köpeği fosfor kullanarak parlaması için eğittiğini açıkladı",
+          },
+          {
+            ar: "استُخدم هذا الكلب المتوهج المرعب نفسه لإخافة السير تشارلز حتى الموت",
+            es: "Ese mismo aterrador perro resplandeciente había sido usado para asustar a Sir Charles hasta la muerte",
+            tr: "Aynı korkunç, parlayan köpek, Sör Charles'ı korkudan öldürmek için kullanılmıştı",
+          },
+          {
+            ar: "أمل ستابلتون أن يرث ثروة باسكرفيل بأكملها بالقضاء على كل وريث متبقٍ",
+            es: "Stapleton esperaba heredar toda la fortuna Baskerville eliminando a cada heredero restante",
+            tr: "Stapleton, kalan her varisi ortadan kaldırarak Baskerville servetinin tamamını miras almayı umuyordu",
+          },
+          {
+            ar: "تمركز هولمز وواطسون بعناية في الضباب منتظرَين بالقرب من طريق الأراضي",
+            es: "Holmes y Watson se posicionaron cuidadosamente en la niebla, esperando cerca del sendero del páramo",
+            tr: "Holmes ve Watson bozkır patikasının yakınında bekleyerek sisin içinde dikkatlice konumlandılar",
+          },
+          {
+            ar: "انضم إليهم المفتش ليستراد بهدوء مسلحًا ومستعدًا لأي شيء قد يظهر",
+            es: "El inspector Lestrade se unió a ellos en silencio, armado y listo para lo que pudiera surgir",
+            tr: "Müfettiş Lestrade sessizce onlara katıldı, silahlıydı ve ne çıkarsa çıksın hazırdı",
+          },
+          {
+            ar: "جعل الضباب الكثيف المتدحرج الانتظار الخطير أكثر توترًا وإرهاقًا للأعصاب",
+            es: "La espesa niebla que se arrastraba hizo que la peligrosa espera fuera aún más tensa y angustiante",
+            tr: "Yuvarlanan yoğun sis, tehlikeli bekleyişi daha da gergin ve sinir bozucu hale getirdi",
+          },
+          {
+            ar: "أخيرًا سمعوا خطوات السير هنري تقترب بثبات على طول الطريق المظلم الموحش",
+            es: "Finalmente escucharon los pasos de Sir Henry acercándose firmemente por el oscuro y solitario camino",
+            tr: "Sonunda Sör Henry'nin adımlarının karanlık, ıssız yol boyunca kararlı bir şekilde yaklaştığını duydular",
+          },
+        ],
+      },
+      {
+        title: { ar: "الكلب يهاجم", es: "El sabueso ataca", tr: "Tazı Saldırıyor" },
+        sentences: [
+          {
+            ar: "انفجر كلب ضخم متوهج فجأة من الضباب مطاردًا السير هنري بلا رحمة",
+            es: "Un monstruoso perro resplandeciente irrumpió de repente entre la niebla, persiguiendo sin piedad a Sir Henry",
+            tr: "Canavarca, parlayan bir tazı aniden sisin içinden fırlayarak Sör Henry'yi acımasızca kovaladı",
+          },
+          {
+            ar: "أطلق هولمز وواطسون النار من مسدساتهما بسرعة مما أسقط المخلوق الضخم",
+            es: "Holmes y Watson dispararon sus revólveres rápidamente, derribando a la enorme criatura",
+            tr: "Holmes ve Watson tabancalarını hızla ateşleyerek kocaman yaratığı yere serdi",
+          },
+          {
+            ar: "نجا السير هنري وهو مصدوم بشدة لكنه لحسن الحظ لم يُصب من هجوم الوحش الضخم",
+            es: "Sir Henry sobrevivió gravemente conmocionado, pero afortunadamente ileso por el ataque de la enorme bestia",
+            tr: "Sör Henry ağır şekilde sarsılmış olarak hayatta kaldı ama neyse ki dev canavarın saldırısından zarar görmedi",
+          },
+          {
+            ar: "عند فحص الكلب عن قرب أكدوا أن التوهج الغريب جاء من الفوسفور المطلي",
+            es: "Al examinar al perro de cerca, confirmaron que el extraño resplandor provenía del fósforo pintado",
+            tr: "Köpeği yakından inceleyince o tuhaf parıltının boyalı fosfordan geldiğini doğruladılar",
+          },
+          {
+            ar: "اختفى ستابلتون في اللحظة التي فشلت فيها خطته الوحشية بوضوح وتمامًا",
+            es: "Stapleton había desaparecido en el momento en que su monstruoso plan fracasó clara y completamente",
+            tr: "Stapleton, canavarca planı açıkça ve tamamen başarısız olduğu anda ortadan kaybolmuştu",
+          },
+          {
+            ar: "اشتبه هولمز أنه فرّ يائسًا عبر الأراضي نحو مستنقع غريمبن الخطير",
+            es: "Holmes sospechó que había huido desesperadamente por el páramo hacia la peligrosa Ciénaga de Grimpen",
+            tr: "Holmes onun çaresizce bozkırdan tehlikeli Grimpen Bataklığı'na doğru kaçtığından şüphelendi",
+          },
+          {
+            ar: "بحثوا بإلحاح عبر الضباب متتبعين آثار أقدامه المتسرعة اليائسة والمتهورة",
+            es: "Buscaron urgentemente entre la niebla, siguiendo sus apresuradas, desesperadas y temerarias huellas",
+            tr: "Onun aceleci, çaresiz ve pervasız ayak izlerini takip ederek sisin içinde aceleyle arandılar",
+          },
+          {
+            ar: "لم يُعثر إلا على حذاء السير هنري المفقود مهجورًا في أعماق المستنقع الغادر",
+            es: "Solo se encontró la bota perdida de Sir Henry, abandonada en lo profundo de la traicionera ciénaga",
+            tr: "Sadece Sör Henry'nin kayıp çizmesi, hain bataklığın derinliklerinde terk edilmiş halde bulundu",
+          },
+        ],
+      },
+      {
+        title: { ar: "الحقيقة تُكشف", es: "La verdad revelada", tr: "Gerçek Ortaya Çıkıyor" },
+        sentences: [
+          {
+            ar: "استنتج هولمز أن ستابلتون غرق على الأرجح تمامًا داخل المستنقع الذي لا يرحم",
+            es: "Holmes concluyó que Stapleton casi con certeza se había ahogado dentro de la implacable ciénaga",
+            tr: "Holmes, Stapleton'ın neredeyse kesin olarak o acımasız bataklığın içinde boğulduğu sonucuna vardı",
+          },
+          {
+            ar: "أوضح أن ستابلتون كان سرًا سليل باسكرفيل منبوذًا يسعى وراء ثروة العائلة المفقودة",
+            es: "Explicó que Stapleton era en secreto un descendiente Baskerville repudiado que buscaba la fortuna perdida de la familia",
+            tr: "Stapleton'ın gizlice reddedilmiş bir Baskerville soyundan geldiğini ve ailenin kayıp servetinin peşinde olduğunu açıkladı",
+          },
+          {
+            ar: "استُخدم الحذاء المسروق لإعطاء الكلب رائحة السير هنري المميزة",
+            es: "La bota robada se había usado para darle al perro el olor distintivo de Sir Henry",
+            tr: "Çalınan çizme, köpeğe Sör Henry'nin ayırt edici kokusunu vermek için kullanılmıştı",
+          },
+          {
+            ar: "اعترفت بيريل بأنها حاولت يائسة تحذير السير هنري رغم تهديدات زوجها",
+            es: "Beryl admitió que había intentado desesperadamente advertir a Sir Henry a pesar de las amenazas de su esposo",
+            tr: "Beryl, kocasının tehditlerine rağmen Sör Henry'yi çaresizce uyarmaya çalıştığını itiraf etti",
+          },
+          {
+            ar: "تعافى السير هنري ببطء من المحنة المرعبة رغم أنه بقي مهزوزًا بعمق من الأحداث",
+            es: "Sir Henry se recuperó lentamente de la aterradora prueba, aunque quedó profundamente afectado por los sucesos",
+            tr: "Sör Henry korkunç sınavdan yavaşça toparlandı, gerçi olaylardan derinden sarsılmış olarak kaldı",
+          },
+          {
+            ar: "سافر في النهاية إلى الخارج آملًا أن تشفي المسافة والوقت أعصابه تمامًا",
+            es: "Finalmente viajó al extranjero, esperando que la distancia y el tiempo sanaran por completo sus nervios",
+            tr: "Sonunda mesafenin ve zamanın sinirlerini tamamen iyileştireceğini umarak yurt dışına gitti",
+          },
+          {
+            ar: "استنتج هولمز بحزم أنه لا توجد لعنة حقيقية بل فقط طمع وقسوة ذكية وعلم",
+            es: "Holmes concluyó firmemente que no existía ninguna maldición real, solo codicia, crueldad ingeniosa y ciencia",
+            tr: "Holmes kesin bir şekilde gerçek bir lanetin olmadığı, yalnızca açgözlülük, kurnaz zalimlik ve bilim olduğu sonucuna vardı",
+          },
+          {
+            ar: "ينتهي كلب عائلة باسكرفيل بحل اللغز العائلي القديم أخيرًا وبشكل كامل",
+            es: "El sabueso de los Baskerville termina con la vieja leyenda familiar finalmente y por completo resuelta",
+            tr: "Baskervilleların Tazısı, eski aile efsanesinin sonunda ve tamamen çözülmesiyle sona erer",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 async function main() {

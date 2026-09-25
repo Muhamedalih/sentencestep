@@ -1,13 +1,13 @@
 import type { SupportLocale } from "@/lib/i18n/locales";
 
 /**
- * Static, presentation-only metadata for the 6 curated Novels — a genre tag
+ * Static, presentation-only metadata for the 11 curated Novels — a genre tag
  * (shown instead of the Beginner/Intermediate tier the nonfiction Book
  * catalog uses, which reads oddly on a classic novel), a real reading-time
  * estimate (computed once from the actual sentence content via the same
  * formula as estimateMinutes in lib/levels.ts, not fetched live), and a
  * short teaser line pulled verbatim from each novel's own retelling for the
- * Featured card. Hardcoded rather than a new DB column/table: exactly 6
+ * Featured card. Hardcoded rather than a new DB column/table: exactly 11
  * known ids, changes only when new novels are curated by hand alongside
  * their content, and every string already has to be written and reviewed
  * directly regardless of where it lives.
@@ -148,6 +148,51 @@ export const NOVEL_META: Record<string, NovelMeta> = {
       tr: "Görünmeyen balığa kardeşim diyerek seslendi ve onun inanılmaz gizli gücüne hayran kaldı",
     },
     estimatedMinutes: 58,
+  },
+  "book-novel-alice-wonderland": {
+    genre: {
+      en: "Whimsical fantasy",
+      ar: "خيال طريف",
+      es: "Fantasía disparatada",
+      tr: "Tuhaf fantastik",
+    },
+    teaser: {
+      en: "The Caterpillar told her one side of the mushroom would make her grow and the other shrink",
+      ar: "أخبرها اليسروع أن جانبًا من الفطر سيجعلها تكبر والجانب الآخر سيجعلها تصغر",
+      es: "La oruga le dijo que un lado del hongo la haría crecer y el otro la haría encoger",
+      tr: "Tırtıl ona mantarın bir tarafının onu büyüteceğini, diğer tarafının ise küçülteceğini söyledi",
+    },
+    estimatedMinutes: 57,
+  },
+  "book-novel-dracula": {
+    genre: {
+      en: "Gothic horror",
+      ar: "رعب قوطي",
+      es: "Terror gótico",
+      tr: "Gotik korku",
+    },
+    teaser: {
+      en: "From his window he once saw Dracula crawling headfirst down the outer castle wall",
+      ar: "من نافذته رأى مرة دراكولا يزحف رأسًا على عقب أسفل الجدار الخارجي للقلعة",
+      es: "Desde su ventana vio una vez a Drácula arrastrándose cabeza abajo por el muro exterior del castillo",
+      tr: "Penceresinden bir keresinde Drakula'yı şatonun dış duvarından baş aşağı sürünerek inerken gördü",
+    },
+    estimatedMinutes: 54,
+  },
+  "book-novel-hound-baskervilles": {
+    genre: {
+      en: "Detective mystery",
+      ar: "لغز بوليسي",
+      es: "Misterio detectivesco",
+      tr: "Polisiye gizem",
+    },
+    teaser: {
+      en: "Strangely large paw prints were discovered in the mud near his lifeless body",
+      ar: "اكتُشفت آثار مخالب كبيرة بشكل غريب في الطين بالقرب من جثته",
+      es: "Se descubrieron extrañamente grandes huellas de garras en el barro cerca de su cuerpo sin vida",
+      tr: "Cansız bedeninin yakınındaki çamurda tuhaf derecede büyük pençe izleri keşfedildi",
+    },
+    estimatedMinutes: 53,
   },
 };
 
