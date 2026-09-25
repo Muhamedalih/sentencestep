@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Headphones, Pause } from "lucide-react";
+import { AlertCircle, ArrowLeft, Headphones } from "lucide-react";
 
 import { BookCompletion } from "@/components/learning/book-completion";
 import { BookPageNav } from "@/components/learning/book-page-nav";
@@ -41,6 +41,27 @@ type Screen =
   | "loadingNextSection"
   | "sectionLoadError"
   | "bookComplete";
+
+/**
+ * Listen Mode's own 4-position cycle — one tap of its toggle button steps
+ * forward through this list, wrapping from "verySlow" back to "off". Every
+ * non-"off" value still narrates and advances exactly the same way; only
+ * ADVANCE_DELAY_MS below (the pause BETWEEN sentences once one finishes
+ * narrating) changes — never the narration's own playback speed, which
+ * stays whatever usePronunciationSettings' separate speed control is set
+ * to. "off" stops advancing but never rewinds: the reader is left on
+ * whichever sentence was active when it was switched off.
+ */
+type ListenPace = "off" | "normal" | "slow" | "verySlow";
+const LISTEN_PACE_CYCLE: ListenPace[] = ["off", "normal", "slow", "verySlow"];
+const ADVANCE_DELAY_MS: Record<ListenPace, number> = {
+  off: 0,
+  normal: 0,
+  slow: 1500,
+  verySlow: 3500,
+};
+/** Toggle button dot indicator, "more lit = faster" — same convention as BookReadingTools' pronunciation-speed dots. */
+const LISTEN_PACE_LEVEL: Record<ListenPace, number> = { off: 0, normal: 3, slow: 2, verySlow: 1 };
 
 /** BookSentenceReader's onComplete for a read-only page-preview render — belt-and-suspenders alongside its own disabled input (see that component's readOnly doc comment): completion can never fire for a page the reader is only browsing to, not actively typing. */
 const NOOP = () => {};
@@ -137,26 +158,38 @@ export function BookReadingSession({
 
   // Listen Mode (competitor report, Section 6.1) — a hands-free "podcast"
   // pass through the book, built entirely from what already exists: no new
-  // audio, no new Supabase reads. Toggling it on just changes what happens
-  // when the ACTIVE sentence's already-autoplaying narration finishes (see
+  // audio, no new Supabase reads. Cycling it just changes what happens when
+  // the ACTIVE sentence's already-autoplaying narration finishes (see
   // handleNarrationEnded) — everything else (fetching sections, recording
   // progress/XP) reuses handleSentenceComplete/loadNextSection unchanged.
-  const [listenMode, setListenMode] = useState(false);
-  const listenModeRef = useRef(listenMode);
+  const [listenPace, setListenPace] = useState<ListenPace>("off");
+  const isListening = listenPace !== "off";
+  const listenPaceRef = useRef(listenPace);
   useEffect(() => {
-    listenModeRef.current = listenMode;
-  }, [listenMode]);
+    listenPaceRef.current = listenPace;
+  }, [listenPace]);
+  // The pending "advance to the next sentence" timer for the slow/verySlow
+  // paces — see handleNarrationEnded and the cleanup effect below it, once
+  // section/sentenceIndex actually exist.
+  const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  function handleToggleListenMode() {
-    const next = !listenMode;
-    setListenMode(next);
-    // Turning Listen Mode on mid-sentence (after its narration already
+  function handleCycleListenPace() {
+    const currentIndex = LISTEN_PACE_CYCLE.indexOf(listenPace);
+    const next = LISTEN_PACE_CYCLE[(currentIndex + 1) % LISTEN_PACE_CYCLE.length]!;
+    if (advanceTimeoutRef.current !== undefined) {
+      clearTimeout(advanceTimeoutRef.current);
+      advanceTimeoutRef.current = undefined;
+    }
+    setListenPace(next);
+    // Turning Listen Mode on from "off" (after its narration already
     // finished playing once) would otherwise leave nothing left to trigger
     // handleNarrationEnded until the reader manually moves on — replayCurrent
     // re-plays whichever sentence is currently registered for the global
     // Shift-to-replay shortcut (i.e. the active one), giving this a fresh,
-    // full playthrough to advance from.
-    if (next) replayCurrent();
+    // full playthrough to advance from. Not needed for a plain pace change
+    // (normal -> slow -> verySlow): the current sentence is already playing
+    // or already waiting on its own advance timer either way.
+    if (listenPace === "off") replayCurrent();
   }
 
   const [section, setSection] = useState(initialSection);
@@ -380,7 +413,7 @@ export function BookReadingSession({
     // Muted in Listen Mode: a chime after every sentence reads as a typing
     // reward, not a podcast-style continuous listen — see its own doc
     // comment above.
-    if (!listenMode) {
+    if (!isListening) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "books"));
     }
 
@@ -490,33 +523,65 @@ export function BookReadingSession({
     void loadNextSection();
   }
 
-  /** Listen Mode's advance step — see its own doc comment above. Guarded on
-   * the ref (not the `listenMode` state) since this is registered once as a
-   * DOM "ended" listener and must reflect whatever Listen Mode is set to at
-   * the moment the clip actually finishes, not whatever it was when this
-   * closure was created. */
+  /**
+   * Listen Mode's advance step — see its own doc comment above. Guarded on
+   * the ref (not the `listenPace` state) since this is registered once as a
+   * DOM "ended" listener and must reflect whatever pace is set at the moment
+   * the clip actually finishes, not whatever it was when this closure was
+   * created. `normal` advances immediately (unchanged from before this pace
+   * cycle existed); `slow`/`verySlow` insert ADVANCE_DELAY_MS of silence
+   * first — a pause between sentences, never a change to how fast the
+   * narration itself is spoken. Re-checks the ref again once the delay
+   * elapses: the reader may have cycled to "off" (or further changed the
+   * pace) during the wait, and a stale timer must never advance a sentence
+   * the reader has since left.
+   */
   function handleNarrationEnded() {
-    if (!listenModeRef.current) return;
-    void handleSentenceComplete();
+    const pace = listenPaceRef.current;
+    if (pace === "off") return;
+    const delay = ADVANCE_DELAY_MS[pace];
+    if (delay <= 0) {
+      void handleSentenceComplete();
+      return;
+    }
+    advanceTimeoutRef.current = setTimeout(() => {
+      advanceTimeoutRef.current = undefined;
+      if (listenPaceRef.current !== "off") void handleSentenceComplete();
+    }, delay);
   }
+
+  // Discards a pending advance timer the instant the active sentence
+  // changes, for ANY reason (the timer itself firing, a manual Next-sentence
+  // click, a section boundary) — otherwise a stale timer scheduled for the
+  // sentence just left behind could still fire later and skip one ahead.
+  useEffect(() => {
+    return () => {
+      if (advanceTimeoutRef.current !== undefined) {
+        clearTimeout(advanceTimeoutRef.current);
+        advanceTimeoutRef.current = undefined;
+      }
+    };
+  }, [sentenceIndex, section.id]);
 
   // Section boundary, hands-free: without this, Listen Mode would stop dead
   // at every "Section Complete" card waiting for a tap. A brief pause first
-  // (long enough to register the card appeared) rather than an instant jump.
+  // (long enough to register the card appeared) rather than an instant jump
+  // — a fixed pause regardless of pace, since this is a chapter boundary,
+  // not the inter-sentence pause the pace cycle controls.
   useEffect(() => {
-    if (screen !== "sectionComplete" || !listenMode) return;
+    if (screen !== "sectionComplete" || !isListening) return;
     const timer = setTimeout(() => handleContinueToNextSection(), 2500);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed whenever screen/listenMode actually change; handleContinueToNextSection is recreated every render alongside pendingNextSection, so this closure is never stale
-  }, [screen, listenMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed whenever screen/isListening actually change; handleContinueToNextSection is recreated every render alongside pendingNextSection, so this closure is never stale
+  }, [screen, isListening]);
 
   // Same reasoning, the section-intro screen: nothing else advances past it
   // for a hands-free listener.
   useEffect(() => {
-    if (screen !== "sectionIntro" || !listenMode) return;
+    if (screen !== "sectionIntro" || !isListening) return;
     const timer = setTimeout(() => setScreen("reading"), 1500);
     return () => clearTimeout(timer);
-  }, [screen, listenMode]);
+  }, [screen, isListening]);
 
   /**
    * Moves the active pointer back one sentence for review — client-only,
@@ -689,23 +754,51 @@ export function BookReadingSession({
       {/* Listen Mode's toggle — fixed at the literal top-right corner
           regardless of `dir`, mirroring the back arrow's opposite corner
           above, and reachable across every screen (not just "reading") so
-          a hands-free listener can stop it without hunting for it mid-book. */}
+          a hands-free listener can stop it without hunting for it mid-book.
+          A single button cycles off -> normal -> slow -> verySlow -> off
+          (see LISTEN_PACE_CYCLE); the dot row mirrors BookReadingTools' own
+          pronunciation-speed dots ("more lit = faster") so the same visual
+          language means the same thing across the reading page. */}
       {!previewMode && screen !== "bookComplete" && (
         <button
           type="button"
-          onClick={handleToggleListenMode}
-          aria-pressed={listenMode}
-          aria-label={listenMode ? t.bookLibrary.listenModeStop : t.bookLibrary.listenModeStart}
-          title={listenMode ? t.bookLibrary.listenModeStop : t.bookLibrary.listenModeStart}
+          onClick={handleCycleListenPace}
+          aria-label={
+            listenPace === "off"
+              ? t.bookLibrary.listenModeStart
+              : listenPace === "normal"
+                ? t.bookLibrary.listenModeSlower
+                : listenPace === "slow"
+                  ? t.bookLibrary.listenModeSlowest
+                  : t.bookLibrary.listenModeStop
+          }
+          title={
+            listenPace === "off"
+              ? t.bookLibrary.listenModeStart
+              : listenPace === "normal"
+                ? t.bookLibrary.listenModeSlower
+                : listenPace === "slow"
+                  ? t.bookLibrary.listenModeSlowest
+                  : t.bookLibrary.listenModeStop
+          }
           className={cn(
-            "fixed top-4 right-4 z-40 flex size-8 items-center justify-center rounded-full transition-colors",
-            listenMode ? "text-primary" : "text-muted-foreground hover:text-foreground",
+            "fixed top-4 right-4 z-40 flex flex-col items-center gap-1 rounded-full transition-colors",
+            isListening ? "text-primary" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {listenMode ? (
-            <Pause className="size-5" aria-hidden="true" />
-          ) : (
-            <Headphones className="size-5" aria-hidden="true" />
+          <Headphones className="size-5" aria-hidden="true" />
+          {isListening && (
+            <span className="flex items-center gap-0.5" aria-hidden="true">
+              {[0, 1, 2].map((dot) => (
+                <span
+                  key={dot}
+                  className={cn(
+                    "size-1 rounded-full transition-colors",
+                    dot < LISTEN_PACE_LEVEL[listenPace] ? "bg-primary" : "bg-border",
+                  )}
+                />
+              ))}
+            </span>
           )}
         </button>
       )}

@@ -730,6 +730,8 @@ export interface Dictionary {
     /** The combined Save/Note/Speed trigger's label (BookReadingTools) — kept short since it sits in a compact pill above the sentence. */
     readingToolsLabel: string;
     listenModeStart: string;
+    listenModeSlower: string;
+    listenModeSlowest: string;
     listenModeStop: string;
     noteAdd: string;
     noteEdit: string;

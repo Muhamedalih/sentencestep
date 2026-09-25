@@ -640,6 +640,8 @@ export const es: Dictionary = {
     typingInviteHint: "¿Quieres practicar escribiendo? Toca aquí",
     readingToolsLabel: "Herramientas",
     listenModeStart: "Escuchar",
+    listenModeSlower: "Reducir el ritmo",
+    listenModeSlowest: "Reducir el ritmo aún más",
     listenModeStop: "Detener la escucha",
     noteAdd: "Añadir una nota",
     noteEdit: "Editar nota",
