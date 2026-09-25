@@ -94,6 +94,31 @@ export async function fetchCompletedBookIds(userId: string): Promise<string[]> {
   return (data ?? []).map((row) => row.book_id);
 }
 
+/**
+ * How many books this learner has completed since the start of the current
+ * calendar month (server clock, UTC) — the Library's monthly reading-
+ * challenge banner (competitor report, Section 6.3). Reuses
+ * book_progress_user_last_read_idx, the same index fetchInProgressBooks/
+ * fetchCompletedBookIds already rely on for their own last_read_at
+ * ordering, so this is one more cheap indexed count, not a new query shape.
+ */
+export async function fetchCompletedBookCountThisMonth(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const startOfMonth = new Date();
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const { count, error } = await supabase
+    .from("book_progress")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .is("current_sentence_id", null)
+    .gt("completed_sentence_count", 0)
+    .gte("last_read_at", startOfMonth.toISOString());
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export interface CompleteBookSentenceResult {
   completedSentenceCount: number;
   currentSectionId: string | null;

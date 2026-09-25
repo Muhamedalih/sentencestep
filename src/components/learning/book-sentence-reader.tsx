@@ -50,6 +50,7 @@ export function BookSentenceReader({
   large,
   mark,
   wordAudioUrls,
+  onNarrationEnded,
 }: {
   sentence: BookSentence;
   /** The parent book's id — identifies this sentence's bookmark/note for BookMarkControls (Book Reading Experience Enhancements Phase 2). */
@@ -99,6 +100,16 @@ export function BookSentenceReader({
    * relative to, so it reads large even though it stays non-interactive.
    */
   large?: boolean;
+  /**
+   * Listen Mode's hook (BookReadingSession) — fires when this sentence's own
+   * narration clip finishes playing on its own, so the session can advance
+   * to the next sentence exactly as if "Next sentence" had been pressed.
+   * Reuses this same hidden autoplaying PronunciationButton; no new audio,
+   * no new network call. Omit for every other rendering (read-only page
+   * previews, and any sentence that isn't the active one) — see its one call
+   * site below.
+   */
+  onNarrationEnded?: () => void;
 }) {
   const reducedMotion = useReducedMotion() ?? false;
   const { t, dir } = useLocale();
@@ -277,6 +288,7 @@ export function BookSentenceReader({
           contentType="book_sentence"
           contentId={sentence.id}
           disableSpeechFallback
+          onEnded={onNarrationEnded}
           className="hidden"
         />
       )}

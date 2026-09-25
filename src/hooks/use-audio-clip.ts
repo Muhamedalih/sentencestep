@@ -18,6 +18,14 @@ export interface UseAudioClipOptions {
   maxRetries?: number;
   /** Delay before each retry. Defaults to 300ms. */
   retryDelayMs?: number;
+  /**
+   * Fired once the clip finishes playing on its own (the "ended" event) —
+   * never for stop()/pause or a retry's own invalidate(). Read from a ref
+   * updated every render (see `onEndedRef` below), the same "always latest
+   * callback" idiom PronunciationButton's own `playReplayRef` already uses,
+   * so a caller doesn't need to memoize this to keep it fresh.
+   */
+  onEnded?: () => void;
 }
 
 /**
@@ -33,6 +41,8 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [status, setStatus] = useState<AudioClipStatus>("idle");
+  const onEndedRef = useRef(options?.onEnded);
+  onEndedRef.current = options?.onEnded;
 
   // Cancels any retry still in flight, and — critically — clears audioRef so
   // a pending retry's own isCurrent() check (see `attempt` below) reads
@@ -183,7 +193,11 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
           }
           setStatus("playing");
         });
-        audio.addEventListener("ended", () => isCurrent() && setStatus("idle"));
+        audio.addEventListener("ended", () => {
+          if (!isCurrent()) return;
+          setStatus("idle");
+          onEndedRef.current?.();
+        });
         audio.addEventListener("error", handleFailure);
 
         // Stops at the slice's own end instead of playing into whatever

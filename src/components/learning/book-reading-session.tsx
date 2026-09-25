@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Headphones, Pause } from "lucide-react";
 
 import { BookCompletion } from "@/components/learning/book-completion";
 import { BookPageNav } from "@/components/learning/book-page-nav";
@@ -133,7 +133,31 @@ export function BookReadingSession({
     volume: typingSoundSettings.volume,
     sentenceCompleteSound: typingSoundSettings.sentenceCompleteSound,
   });
-  const { registerResolvedAudio } = usePronunciationSettings();
+  const { registerResolvedAudio, replayCurrent } = usePronunciationSettings();
+
+  // Listen Mode (competitor report, Section 6.1) — a hands-free "podcast"
+  // pass through the book, built entirely from what already exists: no new
+  // audio, no new Supabase reads. Toggling it on just changes what happens
+  // when the ACTIVE sentence's already-autoplaying narration finishes (see
+  // handleNarrationEnded) — everything else (fetching sections, recording
+  // progress/XP) reuses handleSentenceComplete/loadNextSection unchanged.
+  const [listenMode, setListenMode] = useState(false);
+  const listenModeRef = useRef(listenMode);
+  useEffect(() => {
+    listenModeRef.current = listenMode;
+  }, [listenMode]);
+
+  function handleToggleListenMode() {
+    const next = !listenMode;
+    setListenMode(next);
+    // Turning Listen Mode on mid-sentence (after its narration already
+    // finished playing once) would otherwise leave nothing left to trigger
+    // handleNarrationEnded until the reader manually moves on — replayCurrent
+    // re-plays whichever sentence is currently registered for the global
+    // Shift-to-replay shortcut (i.e. the active one), giving this a fresh,
+    // full playthrough to advance from.
+    if (next) replayCurrent();
+  }
 
   const [section, setSection] = useState(initialSection);
   const initialIndex = Math.max(
@@ -353,7 +377,12 @@ export function BookReadingSession({
 
   async function handleSentenceComplete() {
     if (!sentence) return;
-    playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "books"));
+    // Muted in Listen Mode: a chime after every sentence reads as a typing
+    // reward, not a podcast-style continuous listen — see its own doc
+    // comment above.
+    if (!listenMode) {
+      playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "books"));
+    }
 
     const totalAttempts = sectionCorrectRef.current + sectionErrorRef.current;
     const sectionAccuracy = totalAttempts === 0 ? 1 : sectionCorrectRef.current / totalAttempts;
@@ -460,6 +489,34 @@ export function BookReadingSession({
   function handleRetryNextSection() {
     void loadNextSection();
   }
+
+  /** Listen Mode's advance step — see its own doc comment above. Guarded on
+   * the ref (not the `listenMode` state) since this is registered once as a
+   * DOM "ended" listener and must reflect whatever Listen Mode is set to at
+   * the moment the clip actually finishes, not whatever it was when this
+   * closure was created. */
+  function handleNarrationEnded() {
+    if (!listenModeRef.current) return;
+    void handleSentenceComplete();
+  }
+
+  // Section boundary, hands-free: without this, Listen Mode would stop dead
+  // at every "Section Complete" card waiting for a tap. A brief pause first
+  // (long enough to register the card appeared) rather than an instant jump.
+  useEffect(() => {
+    if (screen !== "sectionComplete" || !listenMode) return;
+    const timer = setTimeout(() => handleContinueToNextSection(), 2500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed whenever screen/listenMode actually change; handleContinueToNextSection is recreated every render alongside pendingNextSection, so this closure is never stale
+  }, [screen, listenMode]);
+
+  // Same reasoning, the section-intro screen: nothing else advances past it
+  // for a hands-free listener.
+  useEffect(() => {
+    if (screen !== "sectionIntro" || !listenMode) return;
+    const timer = setTimeout(() => setScreen("reading"), 1500);
+    return () => clearTimeout(timer);
+  }, [screen, listenMode]);
 
   /**
    * Moves the active pointer back one sentence for review — client-only,
@@ -629,6 +686,29 @@ export function BookReadingSession({
           <ArrowLeft className="size-5" aria-hidden="true" />
         </Link>
       )}
+      {/* Listen Mode's toggle — fixed at the literal top-right corner
+          regardless of `dir`, mirroring the back arrow's opposite corner
+          above, and reachable across every screen (not just "reading") so
+          a hands-free listener can stop it without hunting for it mid-book. */}
+      {!previewMode && screen !== "bookComplete" && (
+        <button
+          type="button"
+          onClick={handleToggleListenMode}
+          aria-pressed={listenMode}
+          aria-label={listenMode ? t.bookLibrary.listenModeStop : t.bookLibrary.listenModeStart}
+          title={listenMode ? t.bookLibrary.listenModeStop : t.bookLibrary.listenModeStart}
+          className={cn(
+            "fixed top-4 right-4 z-40 flex size-8 items-center justify-center rounded-full transition-colors",
+            listenMode ? "text-primary" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {listenMode ? (
+            <Pause className="size-5" aria-hidden="true" />
+          ) : (
+            <Headphones className="size-5" aria-hidden="true" />
+          )}
+        </button>
+      )}
       {sessionLabel}
       <AnimatePresence mode="wait">
         {screen === "reading" && sentence && viewedPage.length > 0 ? (
@@ -766,6 +846,7 @@ export function BookReadingSession({
                         }
                         readOnly={!isActiveSentence}
                         large={isActiveSentence || viewedPage.length === 1}
+                        onNarrationEnded={isActiveSentence ? handleNarrationEnded : undefined}
                         onPrevious={
                           isActiveSentence && sentenceIndex > 0 ? goToPreviousSentence : undefined
                         }

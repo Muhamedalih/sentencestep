@@ -6,10 +6,12 @@ import { BookOpen, ChevronLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { BookRating } from "@/components/app/book-rating";
 import { BookSectionList } from "@/components/app/book-section-list";
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import type { ChapterStateInfo } from "@/lib/book-progress/chapter-state";
+import type { BookRatingSummary } from "@/lib/supabase/queries/book-ratings";
 import type { Book, BookProgressSummary } from "@/types/library";
 
 /**
@@ -31,6 +33,8 @@ export function BookOverview({
   sentenceCount,
   progress,
   chapterStates,
+  ratingSummary,
+  myRating,
 }: {
   book: Book;
   sectionCount: number;
@@ -38,6 +42,10 @@ export function BookOverview({
   progress: BookProgressSummary;
   /** Every section's unlock state, in reading order — see deriveChapterStates. Empty for a book with no sections yet. */
   chapterStates: ChapterStateInfo[];
+  /** This book's rating average/count (competitor report, Section 6.3) — server-fetched, null when nobody's rated it yet. */
+  ratingSummary: BookRatingSummary | null;
+  /** The current learner's own rating, or null for a guest or an unrated book. */
+  myRating: number | null;
 }) {
   const { locale, dir, t } = useLocale();
   const difficulty = difficultyForLevel(book.difficultyLevel);
@@ -99,6 +107,8 @@ export function BookOverview({
           <p className="text-muted-foreground/80 max-w-2xl text-sm" dir={dir}>
             {t.bookLibrary.libraryDisclaimer}
           </p>
+
+          <BookRating bookId={book.id} summary={ratingSummary} initialMyRating={myRating} />
 
           <dl
             className="text-muted-foreground grid grid-cols-3 gap-x-6 gap-y-2 text-sm sm:w-fit"
