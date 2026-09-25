@@ -81,6 +81,8 @@ interface BookReadingSessionProps {
   initialCompletedSentenceCount: number;
   totalSentenceCount: number;
   totalSectionCount: number;
+  /** How many sentences, book-wide, come before `initialSection` (see fetchSectionStartOffset's doc comment) — lets the progress bar place whichever section the reader is currently VIEWING on the same book-wide scale as their real furthest-reached percentage, instead of the two always being the same number regardless of which section is open. Defaults to 0 (the admin preview route, and any other caller with nothing to report, render exactly as if this section started the book). */
+  sectionStartOffset?: number;
   /** The book's first section, forwarded to Book Completion's "back to book" button (see its own doc comment) so finishing the book live, in this same session, reopens actual content — not just when the completed-book page is loaded fresh. Undefined only for a book with no sections, or the admin preview route. */
   firstSectionId?: string;
   resolvedVoiceId?: string | null;
@@ -110,6 +112,7 @@ export function BookReadingSession({
   initialCompletedSentenceCount,
   totalSentenceCount,
   totalSectionCount,
+  sectionStartOffset = 0,
   firstSectionId,
   resolvedVoiceId,
   previewMode = false,
@@ -166,6 +169,15 @@ export function BookReadingSession({
     null,
   );
   const [completedCount, setCompletedCount] = useState(initialCompletedSentenceCount);
+  // The currently-open section's own starting position on the book-wide
+  // sentence scale — starts from the server-computed value for
+  // `initialSection` and only ever moves forward, by that section's own
+  // sentence count, the one time this component crosses a section boundary
+  // client-side (handleContinueToNextSection below). Opening a DIFFERENT
+  // section instead always remounts this component fresh via the reading
+  // page's own ?section= navigation, with its own freshly-fetched
+  // `sectionStartOffset` prop — never patched in place here.
+  const [sectionOffset, setSectionOffset] = useState(sectionStartOffset);
   const [sessionXpEarned, setSessionXpEarned] = useState(0);
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -471,6 +483,7 @@ export function BookReadingSession({
 
   function handleContinueToNextSection() {
     if (!pendingNextSection) return;
+    setSectionOffset((offset) => offset + section.sentences.length);
     setSection(pendingNextSection);
     setSentenceIndex(0);
     setViewPageIndex(0);
@@ -539,6 +552,20 @@ export function BookReadingSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed whenever the active sentence/page actually changes; handleSentenceComplete/goToPreviousSentence are recreated every render alongside these same deps, so the closure is never stale
   }, [screen, sentence, pages, viewPageIndex, sentenceIndex]);
 
+  // Where the CURRENTLY VIEWED sentence sits on the book-wide 0..100% scale
+  // (sectionOffset + sentenceIndex both count in book-wide sentences — see
+  // sectionOffset's own doc comment) — this is what the progress bar's fill
+  // and header "%" actually track now, not the reader's furthest-ever
+  // position, so paging back into an earlier section visibly moves the bar
+  // back to where that section really sits instead of leaving it frozen at
+  // a number that no longer describes what's on screen.
+  const viewedSentencePosition = sectionOffset + sentenceIndex;
+  const viewPercent =
+    totalSentenceCount > 0 ? Math.min(100, (viewedSentencePosition / totalSentenceCount) * 100) : 0;
+  // The reader's real furthest-reached position, book-wide — unaffected by
+  // merely browsing an earlier or later section. Rendered as the bar's
+  // marker tick (see Progress's own doc comment) so that furthest position
+  // stays visible even while `viewPercent` above has moved somewhere else.
   const percent =
     totalSentenceCount > 0 ? Math.min(100, (completedCount / totalSentenceCount) * 100) : 0;
   const learnerLevel = getLearnerLevel(xp);
@@ -574,7 +601,7 @@ export function BookReadingSession({
         {screen === "bookComplete"
           ? t.bookLibrary.bookCompleteHeading
           : t.lesson.sentenceProgress
-              .replace("{n}", String(Math.min(completedCount + 1, totalSentenceCount)))
+              .replace("{n}", String(Math.min(viewedSentencePosition + 1, totalSentenceCount)))
               .replace("{total}", String(totalSentenceCount))}
       </p>
     </>
@@ -641,14 +668,17 @@ export function BookReadingSession({
               <div className="mb-1 flex items-center justify-between gap-4">
                 <span className="text-muted-foreground text-sm font-medium">
                   {t.lesson.sentenceProgress
-                    .replace("{n}", String(Math.min(completedCount + 1, totalSentenceCount)))
+                    .replace(
+                      "{n}",
+                      String(Math.min(viewedSentencePosition + 1, totalSentenceCount)),
+                    )
                     .replace("{total}", String(totalSentenceCount))}
                 </span>
                 <span className="text-muted-foreground text-sm font-medium">
-                  {Math.round(percent)}%
+                  {Math.round(viewPercent)}%
                 </span>
               </div>
-              <Progress value={percent} />
+              <Progress value={viewPercent} markerValue={percent} />
             </div>
             <div className="flex flex-1 flex-col justify-between overflow-y-auto px-6 pb-4 lg:px-16 lg:pt-3">
               {/*

@@ -20,7 +20,11 @@ import {
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
 import { fetchDailyProgress, fetchStreak, fetchXp } from "@/lib/supabase/queries/progress";
-import { fetchBookContentCounts, fetchBookSections } from "@/lib/supabase/queries/book-content";
+import {
+  fetchBookContentCounts,
+  fetchBookSections,
+  fetchSectionStartOffset,
+} from "@/lib/supabase/queries/book-content";
 import { fetchBookById } from "@/lib/supabase/queries/library";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -222,6 +226,15 @@ export default async function BookReadingPage({
   // live against production (voice_audio_cache rows for this book's actual
   // narrator id are all full sentences, never a single word).
   const wordCacheVoiceId = resolvedVoiceId ? await resolveWordCacheVoiceId(resolvedVoiceId) : null;
+
+  // This section's own starting position on the book-wide sentence scale —
+  // see fetchSectionStartOffset's doc comment. Needed whether or not this is
+  // the reader's real current section: deep-linking into an earlier,
+  // already-read one from Book Overview still needs its own (smaller) offset
+  // so the reading screen's progress bar can show where THIS section sits,
+  // separately from the reader's real furthest-reached percentage.
+  const sectionStartOffset = await fetchSectionStartOffset(bookId, section.orderIndex, supabase);
+
   const firstSentenceWordAudio =
     initialSentence && wordCacheVoiceId
       ? await lookupCachedWordAudioUrls(
@@ -244,6 +257,7 @@ export default async function BookReadingPage({
         initialCompletedSentenceCount={progress.completedSentenceCount}
         totalSentenceCount={progress.totalSentenceCount}
         totalSectionCount={counts.sectionCount}
+        sectionStartOffset={sectionStartOffset}
         resolvedVoiceId={resolvedVoiceId}
         firstSectionId={firstSectionId}
       />

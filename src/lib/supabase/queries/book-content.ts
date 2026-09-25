@@ -223,6 +223,46 @@ export async function fetchBookContentCounts(
 }
 
 /**
+ * How many sentences, across the whole book, come from sections BEFORE
+ * `beforeOrderIndex` — i.e. a section's own starting position on the book's
+ * 0..totalSentenceCount scale. The reading screen's progress bar needs this
+ * for whichever section the reader is currently VIEWING (Book Overview
+ * deep-links straight into any unlocked section, not just the reader's real
+ * furthest one — see BookReadingPage's own doc comment), so it can place
+ * that section's local reading position on the SAME book-wide scale as the
+ * reader's actual furthest-reached percentage, instead of conflating the two
+ * (reader report, 2026-09-25: reopening an earlier, already-read section
+ * left the header frozen on the book's furthest %, with nothing in the UI
+ * showing it had moved at all). A single section_id-only, count-only query
+ * (`head: true`) — never fetches any section's actual sentence rows.
+ */
+export async function fetchSectionStartOffset(
+  bookId: string,
+  beforeOrderIndex: number,
+  client?: ReturnType<typeof createPublicClient>,
+): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  const supabase = client ?? createPublicClient();
+  const { data: earlierSections, error: sectionError } = await supabase
+    .from("book_sections")
+    .select("id")
+    .eq("book_id", bookId)
+    .lt("order_index", beforeOrderIndex);
+  if (sectionError) throw sectionError;
+  const ids = (earlierSections ?? []).map((row) => row.id);
+  if (ids.length === 0) return 0;
+
+  const { count, error } = await supabase
+    .from("book_sentences")
+    .select("*", { count: "exact", head: true })
+    .in("section_id", ids);
+  if (error) throw error;
+
+  return count ?? 0;
+}
+
+/**
  * The section immediately after `afterOrderIndex` in book order, with its
  * sentences — null when `afterOrderIndex` belongs to the book's last
  * section. This is the ONE navigation primitive the reading session uses to
