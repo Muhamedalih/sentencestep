@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import { BookOverview } from "@/components/app/book-overview";
 import { fetchBookProgressAction } from "@/lib/book-progress/actions";
 import { deriveChapterStates } from "@/lib/book-progress/chapter-state";
+import { fetchMyBookRatingAction } from "@/lib/book-progress/rating-actions";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { fetchBookContentCounts, fetchBookSections } from "@/lib/supabase/queries/book-content";
 import { fetchBookById } from "@/lib/supabase/queries/library";
+import { fetchBookRatingSummary } from "@/lib/supabase/queries/book-ratings";
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -43,10 +45,12 @@ export default async function BookOverviewPage({
   // Overview view fired the exact same book_sections/book_sentences count
   // query twice.
   const countsPromise = fetchBookContentCounts(bookId, supabase);
-  const [counts, progress, sections] = await Promise.all([
+  const [counts, progress, sections, ratingSummary, myRating] = await Promise.all([
     countsPromise,
     fetchBookProgressAction(bookId, countsPromise),
     fetchBookSections(bookId, locale ?? undefined),
+    fetchBookRatingSummary(bookId, supabase),
+    fetchMyBookRatingAction(bookId),
   ]);
   const chapterStates = deriveChapterStates(sections, progress);
 
@@ -57,6 +61,8 @@ export default async function BookOverviewPage({
       sentenceCount={counts.sentenceCount}
       progress={progress}
       chapterStates={chapterStates}
+      ratingSummary={ratingSummary}
+      myRating={myRating}
     />
   );
 }

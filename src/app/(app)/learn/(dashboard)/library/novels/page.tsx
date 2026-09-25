@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
 import { NovelsHome } from "@/components/app/novels-home";
 import { isAdmin } from "@/lib/admin/access";
+import { fetchMonthlyReadingChallengeAction } from "@/lib/book-progress/actions";
 import {
   fetchAllNovels,
   fetchCompletedBooks,
@@ -34,12 +35,14 @@ export default async function NovelsHomePage() {
   // fetchCategories doc comment for why a separate createPublicClient() per
   // query must be avoided within one request.
   const supabase = isSupabaseConfigured() ? createPublicClient() : undefined;
-  const [novels, featuredNovels, continueReading, completedNovels] = await Promise.all([
-    fetchAllNovels(supabase, locale),
-    fetchFeaturedBooks(supabase, locale, "novel"),
-    fetchContinueReadingBooks(user?.id ?? null, supabase, "novel"),
-    fetchCompletedBooks(user?.id ?? null, supabase, "novel"),
-  ]);
+  const [novels, featuredNovels, continueReading, completedNovels, monthlyChallenge] =
+    await Promise.all([
+      fetchAllNovels(supabase, locale),
+      fetchFeaturedBooks(supabase, locale, "novel"),
+      fetchContinueReadingBooks(user?.id ?? null, supabase, "novel"),
+      fetchCompletedBooks(user?.id ?? null, supabase, "novel"),
+      fetchMonthlyReadingChallengeAction(),
+    ]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
@@ -49,6 +52,7 @@ export default async function NovelsHomePage() {
         featuredNovels={featuredNovels}
         continueReading={continueReading}
         completedNovels={completedNovels}
+        monthlyChallenge={monthlyChallenge}
       />
     </div>
   );

@@ -8,9 +8,11 @@ import { FeaturedBook } from "@/components/app/featured-book";
 import { LibraryCategoryNav } from "@/components/app/library-category-nav";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
 import { LibrarySearch } from "@/components/app/library-search";
+import { ReadingChallengeBanner } from "@/components/app/reading-challenge-banner";
 import { useLocale } from "@/components/providers/locale-provider";
 import { computeRecommendedBooks } from "@/lib/library-recommendations";
 import { staggerChildren } from "@/lib/motion";
+import type { MonthlyReadingChallenge } from "@/lib/reading-challenge";
 import type { Book, CategoryWithBooks, ContinueReadingEntry } from "@/types/library";
 
 interface LibraryHomeProps {
@@ -19,6 +21,8 @@ interface LibraryHomeProps {
   continueReading: ContinueReadingEntry[];
   /** Books this learner has fully finished, most-recently-completed first — empty for a guest or a learner who hasn't finished one yet, in which case the shelf below simply doesn't render (see fetchCompletedBooks). */
   completedBooks: Book[];
+  /** This month's reading-challenge progress (competitor report, Section 6.3) — server-computed from book_progress, renders nothing for a guest (see ReadingChallengeBanner). */
+  monthlyChallenge: MonthlyReadingChallenge;
 }
 
 /**
@@ -38,6 +42,7 @@ export function LibraryHome({
   featuredBooks,
   continueReading,
   completedBooks,
+  monthlyChallenge,
 }: LibraryHomeProps) {
   const { t } = useLocale();
   const [query, setQuery] = useState("");
@@ -81,6 +86,7 @@ export function LibraryHome({
 
   return (
     <div className="flex flex-col gap-12">
+      <ReadingChallengeBanner challenge={monthlyChallenge} />
       <header className="flex flex-col gap-5">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">

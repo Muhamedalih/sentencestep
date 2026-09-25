@@ -6,9 +6,11 @@ import { motion } from "framer-motion";
 import { BookCard } from "@/components/app/book-card";
 import { FeaturedNovel } from "@/components/app/featured-novel";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
+import { ReadingChallengeBanner } from "@/components/app/reading-challenge-banner";
 import { useLocale } from "@/components/providers/locale-provider";
 import { computeRecommendedBooks } from "@/lib/library-recommendations";
 import { staggerChildren } from "@/lib/motion";
+import type { MonthlyReadingChallenge } from "@/lib/reading-challenge";
 import type { Book, ContinueReadingEntry } from "@/types/library";
 
 interface NovelsHomeProps {
@@ -16,6 +18,8 @@ interface NovelsHomeProps {
   featuredNovels: Book[];
   continueReading: ContinueReadingEntry[];
   completedNovels: Book[];
+  /** Same shared monthly challenge as LibraryHome — see its own doc comment. */
+  monthlyChallenge: MonthlyReadingChallenge;
 }
 
 /**
@@ -32,6 +36,7 @@ export function NovelsHome({
   featuredNovels,
   continueReading,
   completedNovels,
+  monthlyChallenge,
 }: NovelsHomeProps) {
   const { t } = useLocale();
 
@@ -51,6 +56,7 @@ export function NovelsHome({
 
   return (
     <div className="flex flex-col gap-12">
+      <ReadingChallengeBanner challenge={monthlyChallenge} />
       <header className="flex flex-col gap-5">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">

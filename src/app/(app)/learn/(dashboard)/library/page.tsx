@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LibraryHome } from "@/components/app/library-home";
 import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
 import { isAdmin } from "@/lib/admin/access";
+import { fetchMonthlyReadingChallengeAction } from "@/lib/book-progress/actions";
 import {
   fetchCategoriesWithBooks,
   fetchCompletedBooks,
@@ -28,12 +29,14 @@ export default async function LibraryHomePage() {
   // does on its own) has been observed to hang this request's streamed
   // response client-side once more than one exists in the same request.
   const supabase = isSupabaseConfigured() ? createPublicClient() : undefined;
-  const [categoriesWithBooks, featuredBooks, continueReading, completedBooks] = await Promise.all([
-    fetchCategoriesWithBooks(supabase, locale),
-    fetchFeaturedBooks(supabase, locale),
-    fetchContinueReadingBooks(user?.id ?? null, supabase),
-    fetchCompletedBooks(user?.id ?? null, supabase),
-  ]);
+  const [categoriesWithBooks, featuredBooks, continueReading, completedBooks, monthlyChallenge] =
+    await Promise.all([
+      fetchCategoriesWithBooks(supabase, locale),
+      fetchFeaturedBooks(supabase, locale),
+      fetchContinueReadingBooks(user?.id ?? null, supabase),
+      fetchCompletedBooks(user?.id ?? null, supabase),
+      fetchMonthlyReadingChallengeAction(),
+    ]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
@@ -45,6 +48,7 @@ export default async function LibraryHomePage() {
         featuredBooks={featuredBooks}
         continueReading={continueReading}
         completedBooks={completedBooks}
+        monthlyChallenge={monthlyChallenge}
       />
     </div>
   );

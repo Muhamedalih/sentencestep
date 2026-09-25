@@ -17,7 +17,13 @@ import {
   fetchFirstSentenceRef,
   fetchSectionAfter,
 } from "@/lib/supabase/queries/book-content";
-import { completeBookSentence, fetchBookProgressRow } from "@/lib/supabase/queries/book-progress";
+import {
+  completeBookSentence,
+  fetchBookProgressRow,
+  fetchCompletedBookCountThisMonth,
+} from "@/lib/supabase/queries/book-progress";
+import { computeMonthlyReadingChallenge } from "@/lib/reading-challenge";
+import type { MonthlyReadingChallenge } from "@/lib/reading-challenge";
 import {
   fetchDailyProgress,
   fetchStreak,
@@ -104,6 +110,13 @@ export async function fetchBookProgressAction(
     currentSentenceId: first?.sentenceId ?? null,
     isComplete: false,
   };
+}
+
+/** This month's reading-challenge progress (competitor report, Section 6.3) — 0 for a guest, same "signed-in-only book_progress" scope as everything else here. */
+export async function fetchMonthlyReadingChallengeAction(): Promise<MonthlyReadingChallenge> {
+  const userId = await getAuthenticatedUserId();
+  const completedThisMonth = userId ? await fetchCompletedBookCountThisMonth(userId) : 0;
+  return computeMonthlyReadingChallenge(completedThisMonth);
 }
 
 /**

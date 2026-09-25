@@ -1104,6 +1104,25 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["book_sentence_marks"]["Insert"]>;
         Relationships: [];
       };
+      /** One row per (user, book) — a 1-5 star rating, publicly readable (see book_rating_summaries) but only ever written by its own owner. See 20250308000000_book_ratings.sql. */
+      book_ratings: {
+        Row: {
+          user_id: string;
+          book_id: string;
+          rating: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          book_id: string;
+          rating: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["book_ratings"]["Insert"]>;
+        Relationships: [];
+      };
       /** A learner-submitted problem report, surfaced in Admin > Reports. See 20250212000000_problem_reports.sql. */
       problem_reports: {
         Row: {
@@ -1209,6 +1228,10 @@ export interface Database {
           out_current_sentence_id: string | null;
           out_advanced: boolean;
         }[];
+      };
+      book_rating_summaries: {
+        Args: { p_book_ids: string[] };
+        Returns: { book_id: string; average: number; rating_count: number }[];
       };
       increment_xp: {
         Args: { p_delta: number };

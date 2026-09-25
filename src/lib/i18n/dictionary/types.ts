@@ -665,6 +665,8 @@ export interface Dictionary {
     categoryEmptyBody: string;
     byAuthor: string;
     continueReading: string;
+    monthlyChallengeHeading: string;
+    monthlyChallengeCompleteHeading: string;
     /** Heading for the Library homepage's "books you've finished" shelf — only rendered when the signed-in learner has actually completed at least one book. */
     completedBooksHeading: string;
     /** Books/Novels labels, used by the sidebar's Library sub-nav (see learn-sidebar.tsx) — admin-only for now, while the Novels catalog is still being written. */
@@ -736,6 +738,10 @@ export interface Dictionary {
     noteDelete: string;
     /** Shown in a compact popover when a signed-out reader taps Save or Note — explains why the action needs an account, next to a link into the existing login flow. */
     signInToSave: string;
+    yourRatingLabel: string;
+    rateStarsLabel: string;
+    ratingCountLabel: string;
+    signInToRate: string;
     /** "Practice" — a saved sentence card's action back into the existing reading flow (My Saves). */
     practice: string;
     /** My Saves page: no saved sentences yet. */
