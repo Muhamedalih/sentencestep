@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Loader2, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { generateBookVoice } from "@/lib/admin/voice-generation-actions";
+import { generateBookVoiceUntilDone } from "@/lib/admin/generate-book-voice-until-done";
 import { cn } from "@/lib/utils";
 
 /**
@@ -14,7 +14,9 @@ import { cn } from "@/lib/utils";
  * the voice-sweep cron's recovery pass), so this exists purely so an admin
  * can force an immediate attempt (e.g. right after configuring a default
  * narration voice for the first time) instead of waiting for the next
- * trigger.
+ * trigger. Loops via generateBookVoiceUntilDone rather than a single call —
+ * see that module's own doc comment for why one call alone only ever
+ * advances a long book by MAX_SENTENCES_PER_BOOK_RUN sentences.
  */
 export function GenerateBookAudioButton({ bookId }: { bookId: string }) {
   const [isPending, startTransition] = useTransition();
@@ -23,21 +25,15 @@ export function GenerateBookAudioButton({ bookId }: { bookId: string }) {
   function handleClick() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        const result = await generateBookVoice(bookId);
-        setMessage(
-          result.error
-            ? { kind: "error", text: result.error }
-            : { kind: "success", text: result.success ?? "Done." },
-        );
-      } catch {
-        // A network/platform hiccup throws out of the Server Action call
-        // itself rather than returning a normal ActionResult — see
-        // voice-bulk-generate-control.tsx's own try/catch for the same
-        // reasoning. Uncaught here it crashes this whole page instead of
-        // just showing an inline message.
-        setMessage({ kind: "error", text: "Couldn't reach the server. Safe to try again." });
-      }
+      const result = await generateBookVoiceUntilDone(bookId);
+      setMessage(
+        result.error
+          ? { kind: "error", text: result.error }
+          : {
+              kind: "success",
+              text: `${result.generated} generated, ${result.skipped} skipped, ${result.failed} failed.`,
+            },
+      );
     });
   }
 

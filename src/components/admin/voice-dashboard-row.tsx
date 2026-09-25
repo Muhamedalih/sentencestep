@@ -5,11 +5,8 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  generateBookVoice,
-  generateLessonVoice,
-  setContentVoiceOverride,
-} from "@/lib/admin/voice-generation-actions";
+import { generateBookVoiceUntilDone } from "@/lib/admin/generate-book-voice-until-done";
+import { generateLessonVoice, setContentVoiceOverride } from "@/lib/admin/voice-generation-actions";
 import { getStoryCharacterGenderLabelAr } from "@/lib/admin/story-character-gender";
 import type { VoiceDashboardRow as VoiceDashboardRowData } from "@/lib/admin/voice-generation-queries";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
@@ -54,11 +51,21 @@ export function VoiceDashboardRow({
   function handleGenerate() {
     setMessage(null);
     startTransition(async () => {
+      // Book rows loop via generateBookVoiceUntilDone (a single
+      // generateBookVoice call only ever advances a long book by
+      // MAX_SENTENCES_PER_BOOK_RUN sentences — see that module's own doc
+      // comment) and it already catches its own network/platform hiccups,
+      // unlike the lesson branch below.
+      if (row.contentType === "book") {
+        const result = await generateBookVoiceUntilDone(row.id);
+        setMessage(
+          result.error ??
+            `${result.generated} generated, ${result.skipped} skipped, ${result.failed} failed.`,
+        );
+        return;
+      }
       try {
-        const result =
-          row.contentType === "book"
-            ? await generateBookVoice(row.id)
-            : await generateLessonVoice(row.id);
+        const result = await generateLessonVoice(row.id);
         setMessage(result.error ?? result.success ?? null);
       } catch {
         // A network/platform hiccup (timeout, dropped connection) throws

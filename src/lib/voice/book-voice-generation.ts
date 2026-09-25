@@ -102,6 +102,21 @@ interface ExistingCacheRow {
   updated_at: string;
 }
 
+/**
+ * generateBookVoiceDraft's own outcome, extended with `moreWork`: whether
+ * this book still had eligible sentences left over after
+ * MAX_SENTENCES_PER_BOOK_RUN truncated this round's batch. Callers that only
+ * ever invoke generateBookVoiceDraft once per click (the "Generate book
+ * audio" button, the dashboard's per-book "Generate" button) previously had
+ * no way to tell "fully done" apart from "there's a 16th sentence still
+ * waiting" — both looked like an ordinary successful round. They now loop on
+ * this flag instead of leaving the rest for the admin to notice and trigger
+ * with another click.
+ */
+export interface BookVoiceGenerationOutcome extends VoiceGenerationOutcome {
+  moreWork: boolean;
+}
+
 interface LoadedBook {
   sentences: BookSentenceRow[];
   keyedSentences: KeyedBookSentence[];
@@ -385,16 +400,17 @@ export async function generateBookVoiceDraft(
   supabase: DbClient,
   bookId: string,
   forceSentenceIds?: ReadonlySet<string>,
-): Promise<VoiceGenerationOutcome> {
+): Promise<BookVoiceGenerationOutcome> {
   let provider;
   try {
     provider = createProviderForSource(STORIES_AND_BOOKS_PROVIDER);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return { generated: 0, skipped: 0, failed: 0, error: message };
+    return { generated: 0, skipped: 0, failed: 0, error: message, moreWork: false };
   }
   const result = await loadBookForVoiceWork(supabase, bookId, STORIES_AND_BOOKS_PROVIDER);
-  if (!result.ok) return { generated: 0, skipped: 0, failed: 0, error: result.error };
+  if (!result.ok)
+    return { generated: 0, skipped: 0, failed: 0, error: result.error, moreWork: false };
   const {
     sentences,
     keyedSentences,
@@ -404,13 +420,14 @@ export async function generateBookVoiceDraft(
     existingByKey,
     settingsRow,
   } = result.loaded;
-  if (sentences.length === 0) return { generated: 0, skipped: 0, failed: 0 };
+  if (sentences.length === 0) return { generated: 0, skipped: 0, failed: 0, moreWork: false };
   if (unresolvedReason || !voiceId || !providerVoiceId) {
     return {
       generated: 0,
       skipped: 0,
       failed: sentences.length,
       error: unresolvedReason ?? undefined,
+      moreWork: false,
     };
   }
 
@@ -440,7 +457,7 @@ export async function generateBookVoiceDraft(
     eligible.push(item);
   }
 
-  if (eligible.length === 0) return { generated: 0, skipped, failed: 0 };
+  if (eligible.length === 0) return { generated: 0, skipped, failed: 0, moreWork: false };
 
   // Bounded here too, and to the *same* chunk the Director is asked about
   // below — see MAX_SENTENCES_PER_BOOK_RUN's own doc comment. Originally
@@ -456,6 +473,12 @@ export async function generateBookVoiceDraft(
   // sentences actually being synthesized this round.
   const toSynthesizeNow = eligible.slice(0, MAX_SENTENCES_PER_BOOK_RUN);
   skipped += eligible.length - toSynthesizeNow.length;
+  // Sentences left over once this round's batch was capped — the signal
+  // callers loop on to finish a long book without a fresh manual click per
+  // MAX_SENTENCES_PER_BOOK_RUN-sized chunk. Frozen here, before the
+  // synthesis loop below can change `eligible`/`toSynthesizeNow`, since it's
+  // about what was left out of *this* batch, not how this batch went.
+  const moreWork = eligible.length > toSynthesizeNow.length;
 
   const director = getVoiceDirector();
   if (!director) {
@@ -464,6 +487,9 @@ export async function generateBookVoiceDraft(
       skipped,
       failed: toSynthesizeNow.length,
       error: "No Voice Director configured (ANTHROPIC_API_KEY is not set).",
+      // Blocked on missing config, not on a batch boundary — looping again
+      // right now would just fail the same way.
+      moreWork: false,
     };
   }
   let rawDirection: unknown;
@@ -478,6 +504,7 @@ export async function generateBookVoiceDraft(
       skipped,
       failed: toSynthesizeNow.length,
       error: `Voice direction failed: ${message}`,
+      moreWork: false,
     };
   }
 
@@ -501,6 +528,9 @@ export async function generateBookVoiceDraft(
       skipped,
       failed: toSynthesizeNow.length,
       error: `Malformed voice direction: ${validation.errors.join(" ")}`,
+      // Auto-excluded above; retrying without a manual fix would just fail
+      // the same way again.
+      moreWork: false,
     };
   }
   const directionBySentenceId = new Map<string, SentenceDirection>(
@@ -588,5 +618,11 @@ export async function generateBookVoiceDraft(
     }
   }
 
-  return { generated, skipped, failed, error: notes.length > 0 ? notes.join(" ") : undefined };
+  return {
+    generated,
+    skipped,
+    failed,
+    error: notes.length > 0 ? notes.join(" ") : undefined,
+    moreWork,
+  };
 }
