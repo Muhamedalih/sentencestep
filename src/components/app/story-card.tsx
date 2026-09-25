@@ -2,98 +2,30 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  Briefcase,
-  Cat,
-  Check,
-  Coffee,
-  DoorOpen,
-  Gift,
-  Guitar,
-  Key,
-  Lock,
-  MessageSquareWarning,
-  Package,
-  PhoneCall,
-  Radio,
-  StickyNote,
-  UtensilsCrossed,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { Check, Lock } from "lucide-react";
 
+import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
-import { TIER_BADGE_CLASS, TIER_ICON_CLASS } from "@/lib/tier-colors";
-import { cn, stableIndex } from "@/lib/utils";
+import { TIER_BADGE_CLASS } from "@/lib/tier-colors";
+import { cn } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
 
 /**
- * A handful of story titles map obviously to a topic icon ("The Guitar
- * Lesson" -> Guitar); everything else — most of the catalog, which leans on
- * abstract/emotional titles like "The Decision I Kept Avoiding" that no
- * keyword list could cover — falls back to a stable per-lesson pick from
- * ICON_POOL. Same id-then-keyword-then-pool shape as LessonIllustration's
- * scene picker, and for the same reason: without a fallback pool nearly the
- * whole library collapses onto one generic icon.
- */
-const ICON_BY_KEYWORD: [pattern: RegExp, icon: LucideIcon][] = [
-  [/neighbor|door|apartment/i, DoorOpen],
-  [/shoe|shirt|package|delivery/i, Package],
-  [/coffee|cafe|restaurant|recipe|slice|bill|table/i, UtensilsCrossed],
-  [/wallet|change|raise|auction|negotiation/i, Wallet],
-  [/interview|work|coworker|colleague|job|office|understudy|substitute/i, Briefcase],
-  [/guitar|piano|radio|music/i, Guitar],
-  [/cat|rooster|dog/i, Cat],
-  [/phone|call|voicemail|number/i, PhoneCall],
-  [/message|chat|reply|email/i, MessageSquareWarning],
-  [/note|letter/i, StickyNote],
-  [/key/i, Key],
-  [/gift|photo|photograph/i, Gift],
-];
-
-const ICON_POOL: LucideIcon[] = [
-  DoorOpen,
-  Coffee,
-  Package,
-  Wallet,
-  Briefcase,
-  Guitar,
-  Cat,
-  PhoneCall,
-  MessageSquareWarning,
-  StickyNote,
-  Key,
-  Gift,
-  Radio,
-  UtensilsCrossed,
-];
-
-function iconForLesson(lessonId: string, title: string): LucideIcon {
-  const keywordMatch = ICON_BY_KEYWORD.find(([pattern]) => pattern.test(title));
-  if (keywordMatch) return keywordMatch[1];
-  // ?? DoorOpen is unreachable in practice (stableIndex's modulo always
-  // lands inside ICON_POOL's real length) — same never-actually-undefined
-  // caveat as LessonIllustration's own fallback branch.
-  return ICON_POOL[stableIndex(lessonId, ICON_POOL.length)] ?? DoorOpen;
-}
-
-/**
- * The Stories Library's card — a poster tile, not an info card: the app's
- * real card surface (bg-card — the same dark near-black token every other
- * card in the signed-in shell uses, see .dark .app-shell in globals.css)
- * carries a tier-tinted teaser panel (a one-line hook pulled from the
- * lesson's own description — see the `hook` local below) and the
- * title/subtitle. The panel's tint comes from TIER_ICON_CLASS below — the
- * lesson's actual difficulty — rather than a random per-lesson hash, so the
- * same tile family reads as one system with Word Lists' cards (see
- * WordGroupCard), which share this exact tile shape and the same
- * tier-color mapping (WordGroupCard keeps the plain icon tile — no per-word
- * "description" content exists to tease). The two status chips (tier,
- * locked/completed) are styled as overlays — a fixed dark/translucent
- * treatment, not the page's own light/dark theme tokens — since they have
- * to stay legible on top of the tile in either site theme.
+ * The Stories Library's card — a poster tile, not an info card. The cover
+ * slot reuses LessonIllustration (mode="stories") rather than a per-lesson
+ * icon: the same id-then-keyword-then-pool scene picker and admin-photo
+ * override already built for Normal mode's 39 lessons (see that
+ * component's own doc comment), so all ~120 Stories get an actual
+ * illustrated cover with no new art produced per story and no ceiling on
+ * how many stories the catalog can hold. Below the cover, a tier-tinted
+ * teaser panel (a one-line hook pulled from the lesson's own description —
+ * see the `hook` local below) and the title/subtitle. The two status chips
+ * (tier, locked/completed) sit over the illustration — a fixed
+ * dark/translucent treatment, not the page's own light/dark theme tokens —
+ * since they have to stay legible over whatever the illustration paints
+ * underneath, same as HomeLessonCard's equivalent badges.
  */
 export function StoryCard({
   lesson,
@@ -110,7 +42,6 @@ export function StoryCard({
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
   const supportTitle = lesson.supportTitle ?? lesson.title;
   const hook = lesson.supportDescription ?? lesson.description;
-  const Icon = iconForLesson(lesson.id, lesson.title);
 
   return (
     <motion.div variants={fadeInUp} className="group h-full">
@@ -123,42 +54,42 @@ export function StoryCard({
       >
         <div
           className={cn(
-            "border-border/60 bg-card relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300",
+            "border-border/60 bg-card relative flex h-full w-full flex-col overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300",
             locked ? "opacity-90" : "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
           )}
         >
-          <div
-            aria-hidden="true"
-            className={cn(
-              "flex size-10 items-center justify-center rounded-xl transition-transform duration-500 ease-out motion-safe:group-hover:scale-110",
-              TIER_ICON_CLASS[difficulty],
-            )}
-          >
-            <Icon className="size-5" />
-          </div>
+          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
+            <LessonIllustration
+              mode="stories"
+              lessonId={lesson.id}
+              title={lesson.title}
+              illustrationUrl={lesson.illustrationUrl}
+              className="aspect-[4/3] w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
+            />
 
-          <span
-            className={cn(
-              "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
-              TIER_BADGE_CLASS[difficulty],
-            )}
-          >
-            {tierText}
-          </span>
-
-          {(completed || locked) && (
             <span
-              aria-hidden="true"
               className={cn(
-                "absolute top-2 right-2 flex size-6 items-center justify-center rounded-full shadow-sm",
-                completed
-                  ? "bg-success text-success-foreground"
-                  : "border border-white/15 bg-black/30 text-white backdrop-blur-sm",
+                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+                TIER_BADGE_CLASS[difficulty],
               )}
             >
-              {completed ? <Check className="size-3.5" /> : <Lock className="size-3" />}
+              {tierText}
             </span>
-          )}
+
+            {(completed || locked) && (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute top-2 right-2 flex size-6 items-center justify-center rounded-full shadow-sm",
+                  completed
+                    ? "bg-success text-success-foreground"
+                    : "border border-white/15 bg-black/30 text-white backdrop-blur-sm",
+                )}
+              >
+                {completed ? <Check className="size-3.5" /> : <Lock className="size-3" />}
+              </span>
+            )}
+          </div>
 
           {/* line-clamp-2 (not truncate) on the title so the full text is
               readable up to two lines — CSS Grid's default row stretch
@@ -168,31 +99,33 @@ export function StoryCard({
               single-line/truncated: showing it in full isn't what was
               asked for here, and clamping both lines would make the tile
               noticeably taller than this fix calls for. */}
-          <div className="flex w-full flex-col items-center gap-0.5 px-1 text-center">
-            <h3 className="line-clamp-2 w-full text-sm leading-snug font-semibold" dir="ltr">
-              {lesson.title}
-            </h3>
-            <p className="text-muted-foreground w-full truncate text-xs" dir={dir}>
-              {supportTitle}
-            </p>
-          </div>
+          <div className="flex flex-1 flex-col items-center gap-2 p-4 text-center">
+            <div className="flex w-full flex-col items-center gap-0.5">
+              <h3 className="line-clamp-2 w-full text-sm leading-snug font-semibold" dir="ltr">
+                {lesson.title}
+              </h3>
+              <p className="text-muted-foreground w-full truncate text-xs" dir={dir}>
+                {supportTitle}
+              </p>
+            </div>
 
-          {hook && (
-            // One line from the lesson's own description/supportDescription
-            // (an existing content field, already written as a hook: see
-            // src/data/lessons/stories.ts) — below the title, not replacing
-            // it, and on a neutral/muted surface rather than the tier tint:
-            // a full-width block of that color read as too loud repeated
-            // across a whole grid of cards (verified live). Absent for any
-            // lesson that doesn't have a description yet, so nothing shows
-            // an empty box.
-            <p
-              className="border-foreground/10 bg-foreground/5 text-muted-foreground line-clamp-3 w-full rounded-xl border p-3 text-start text-sm leading-relaxed"
-              dir={lesson.supportDescription ? dir : "ltr"}
-            >
-              {hook}
-            </p>
-          )}
+            {hook && (
+              // One line from the lesson's own description/supportDescription
+              // (an existing content field, already written as a hook: see
+              // src/data/lessons/stories.ts) — below the title, not replacing
+              // it, and on a neutral/muted surface rather than the tier tint:
+              // a full-width block of that color read as too loud repeated
+              // across a whole grid of cards (verified live). Absent for any
+              // lesson that doesn't have a description yet, so nothing shows
+              // an empty box.
+              <p
+                className="border-foreground/10 bg-foreground/5 text-muted-foreground line-clamp-3 w-full rounded-xl border p-3 text-start text-sm leading-relaxed"
+                dir={lesson.supportDescription ? dir : "ltr"}
+              >
+                {hook}
+              </p>
+            )}
+          </div>
         </div>
       </Link>
     </motion.div>
