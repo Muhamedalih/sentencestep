@@ -9,7 +9,10 @@ import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
+import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { Button } from "@/components/ui/button";
+import { useTypingSound } from "@/hooks/use-typing-sound";
+import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import { BLANK_TOKEN } from "@/types/word-lists";
 import type { Sentence, VocabularyItem } from "@/types/content";
@@ -113,6 +116,16 @@ export function StoryWordsPanel({
     [item, sentences],
   );
 
+  // Same success/error chime as Word Lists' own practice screen
+  // (VocabularyPractice) — see the onResult handler below.
+  const typingSoundSettings = useTypingSoundSettings();
+  const { play, playSentenceComplete } = useTypingSound({
+    pack: typingSoundSettings.soundPack,
+    enabled: typingSoundSettings.enabled,
+    volume: typingSoundSettings.volume,
+    sentenceCompleteSound: typingSoundSettings.sentenceCompleteSound,
+  });
+
   // Resolves every word's pronunciation up front, once, on mount — stronger
   // than VocabularyLearn's own neighbor-only prefetch (fine for its 20+ word
   // lists, where prefetching everything would be wasteful) but this panel
@@ -135,12 +148,27 @@ export function StoryWordsPanel({
 
   if (!item) return null;
 
-  function goTo(nextIndex: number, dir: number) {
+  /**
+   * `keepPracticing` stays false for manual Prev/Next navigation (browsing
+   * between words should land on the normal word view, same as before), but
+   * true for the auto-advance below once a word is answered correctly: it
+   * carries `practicing` straight through the navigation instead of letting
+   * it fall back to `false` and then get set back to `true` a beat later, so
+   * the AnimatePresence cross-fade below always exits and enters the SAME
+   * shape (VocabularySentence to VocabularySentence) instead of exiting a
+   * compact typing screen into an entering full "big word" view — two
+   * differently sized screens sliding past each other is what the slide/fade
+   * was actually reading as janky. It also means finishing a word correctly
+   * flows straight into typing the next one, matching Word Lists' own
+   * practice session (VocabularyPractice), instead of requiring a second tap
+   * on "تدرب" for every word after the first.
+   */
+  function goTo(nextIndex: number, dir: number, keepPracticing = false) {
     const clamped = Math.min(Math.max(nextIndex, 0), total - 1);
     if (clamped === index) return;
     setDirection(dir);
     setIndex(clamped);
-    setPracticing(false);
+    setPracticing(keepPracticing);
   }
 
   return (
@@ -187,13 +215,25 @@ export function StoryWordsPanel({
               sentence={blankedSentence}
               targetWord={item.en}
               onResult={(correct) => {
-                // A correct answer keeps momentum going by advancing to the
-                // next word automatically; on the last word (nowhere to
-                // advance to) or a wrong answer (already revealed inline by
-                // VocabularySentence itself), this just exits practice mode
-                // back to the normal word view instead.
-                if (correct && index < total - 1) goTo(index + 1, 1);
-                else setPracticing(false);
+                // Same success/error chime as Word Lists' own practice
+                // screen (VocabularyPractice), reusing the section's admin-
+                // configured sound (see resolveSectionSentenceCompleteSound)
+                // rather than a bespoke one. A correct answer keeps momentum
+                // going by advancing straight into practicing the next word
+                // (see goTo's keepPracticing doc comment); on the last word
+                // (nowhere to advance to) or a wrong answer (already
+                // revealed inline by VocabularySentence itself), this just
+                // exits practice mode back to the normal word view instead.
+                if (correct) {
+                  playSentenceComplete(
+                    resolveSectionSentenceCompleteSound(typingSoundSettings, "stories"),
+                  );
+                  if (index < total - 1) goTo(index + 1, 1, true);
+                  else setPracticing(false);
+                } else {
+                  play("error");
+                  setPracticing(false);
+                }
               }}
               inputRef={inputRef}
             />

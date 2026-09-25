@@ -171,7 +171,23 @@ async function lookupContentText(
     for (const row of data ?? []) {
       for (const rawToken of row.en.split(/\s+/)) {
         const clean = rawToken.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "");
-        if (clean.toLowerCase() === target) return clean;
+        // Returns rawWord itself (not `clean`) once its presence in this
+        // lesson's real sentences is confirmed — this loop only exists to
+        // verify the client-supplied word is genuine lesson content (the
+        // same "content reference, never raw text" guard every branch above
+        // applies), not to pick a canonical spelling. generateStoryVocabularyVoiceDraft
+        // hashes this exact word's VocabularyItem.en (the *representative*
+        // occurrence buildStoryVocabulary chose) to build the cache key, and
+        // hashText/normalizeTextForVoice is explicitly case-sensitive (see
+        // that doc comment) — so returning whatever *different* occurrence
+        // this unordered scan happens to hit first (e.g. an earlier,
+        // differently-cased mention of the same word elsewhere in the story)
+        // produced a different hash than generation used, a guaranteed cache
+        // miss for any word whose representative occurrence wasn't also the
+        // first the scan encountered. rawWord came from the client's own
+        // item.en, derived by the exact same buildStoryVocabulary call
+        // generation used, so it always hashes to generation's real key.
+        if (clean.toLowerCase() === target) return rawWord;
       }
     }
     return null;
