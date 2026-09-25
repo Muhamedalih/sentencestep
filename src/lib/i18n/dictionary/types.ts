@@ -658,6 +658,7 @@ export interface Dictionary {
     noSearchResultsHeading: string;
     noSearchResultsBody: string;
     featuredHeading: string;
+    recommendedHeading: string;
     emptyHeading: string;
     emptyBody: string;
     categoryEmptyHeading: string;
@@ -726,6 +727,8 @@ export interface Dictionary {
     /** Save + Note controls on the reading screen (Lightweight Save + Notes system) — `common.save`/`common.saved` label the Save toggle itself; these are the Note popover's own strings. */
     /** The combined Save/Note/Speed trigger's label (BookReadingTools) — kept short since it sits in a compact pill above the sentence. */
     readingToolsLabel: string;
+    listenModeStart: string;
+    listenModeStop: string;
     noteAdd: string;
     noteEdit: string;
     notePlaceholder: string;

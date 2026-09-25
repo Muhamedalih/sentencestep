@@ -9,6 +9,7 @@ import { LibraryCategoryNav } from "@/components/app/library-category-nav";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
 import { LibrarySearch } from "@/components/app/library-search";
 import { useLocale } from "@/components/providers/locale-provider";
+import { computeRecommendedBooks } from "@/lib/library-recommendations";
 import { staggerChildren } from "@/lib/motion";
 import type { Book, CategoryWithBooks, ContinueReadingEntry } from "@/types/library";
 
@@ -70,6 +71,14 @@ export function LibraryHome({
   const libraryIsEmpty = allBooks.length === 0;
   const populatedCategories = categoriesWithBooks.filter(({ books }) => books.length > 0);
 
+  // Zero-cost personalization (competitor report, Section 6.2): ranked
+  // entirely from data this page already fetched (allBooks + this learner's
+  // own completedBooks/continueReading) — never a new Supabase query.
+  const recommendedBooks = useMemo(
+    () => computeRecommendedBooks({ allBooks, completedBooks, continueReading }),
+    [allBooks, completedBooks, continueReading],
+  );
+
   return (
     <div className="flex flex-col gap-12">
       <header className="flex flex-col gap-5">
@@ -122,6 +131,15 @@ export function LibraryHome({
                   new Map(continueReading.map((entry) => [entry.book.id, entry.progressPercent]))
                 }
               />
+            </section>
+          )}
+
+          {recommendedBooks.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <h2 className="text-xl font-semibold tracking-tight">
+                {t.bookLibrary.recommendedHeading}
+              </h2>
+              <BookGrid books={recommendedBooks} />
             </section>
           )}
 

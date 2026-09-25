@@ -1,11 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 
 import { BookCard } from "@/components/app/book-card";
 import { FeaturedNovel } from "@/components/app/featured-novel";
 import { LibraryEmptyState } from "@/components/app/library-empty-state";
 import { useLocale } from "@/components/providers/locale-provider";
+import { computeRecommendedBooks } from "@/lib/library-recommendations";
 import { staggerChildren } from "@/lib/motion";
 import type { Book, ContinueReadingEntry } from "@/types/library";
 
@@ -34,6 +36,18 @@ export function NovelsHome({
   const { t } = useLocale();
 
   const isEmpty = novels.length === 0;
+  // Same zero-cost personalization as LibraryHome (competitor report,
+  // Section 6.2) — reuses the exact shared ranking function over data this
+  // page already fetched, so Books and Novels get it from one code path.
+  const recommendedNovels = useMemo(
+    () =>
+      computeRecommendedBooks({
+        allBooks: novels,
+        completedBooks: completedNovels,
+        continueReading,
+      }),
+    [novels, completedNovels, continueReading],
+  );
 
   return (
     <div className="flex flex-col gap-12">
@@ -65,6 +79,15 @@ export function NovelsHome({
                   new Map(continueReading.map((entry) => [entry.book.id, entry.progressPercent]))
                 }
               />
+            </section>
+          )}
+
+          {recommendedNovels.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <h2 className="text-xl font-semibold tracking-tight">
+                {t.bookLibrary.recommendedHeading}
+              </h2>
+              <BookGrid books={recommendedNovels} />
             </section>
           )}
 

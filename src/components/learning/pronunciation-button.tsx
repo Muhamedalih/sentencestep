@@ -101,6 +101,15 @@ interface PronunciationButtonProps {
    * simply doesn't pass it and nothing changes for them.
    */
   onBeforePlay?: () => void;
+  /**
+   * Fired when this sentence's own clip finishes playing on its own — Books'
+   * Listen Mode (BookReadingSession) uses this to auto-advance to the next
+   * sentence, reusing the exact same real narration this button already
+   * autoplays rather than any new audio. Never fires for the browser-speech
+   * fallback (Books always sets disableSpeechFallback, the only caller that
+   * passes this) or for a caller with no audio source at all.
+   */
+  onEnded?: () => void;
 }
 
 export const PronunciationButton = forwardRef<PronunciationButtonHandle, PronunciationButtonProps>(
@@ -121,6 +130,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       size = "icon",
       disableSpeechFallback = false,
       onBeforePlay,
+      onEnded,
     },
     ref,
   ) {
@@ -141,10 +151,10 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     const [kokoroUrl, setKokoroUrl] = useState<string | null>(null);
     const [isResolvingKokoro, setIsResolvingKokoro] = useState(false);
     const resolvedForKeyRef = useRef<string | undefined>(undefined);
-    const clip = useAudioClip(
-      audioUrl ?? kokoroUrl,
-      disableSpeechFallback ? { maxRetries: 2, retryDelayMs: 400 } : undefined,
-    );
+    const clip = useAudioClip(audioUrl ?? kokoroUrl, {
+      ...(disableSpeechFallback ? { maxRetries: 2, retryDelayMs: 400 } : {}),
+      onEnded,
+    });
 
     // Root-cause fix for audible overlap when quickly navigating back and
     // forth between sentences in Books (e.g. sentence 3 -> back to 2 ->
