@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { LessonListView } from "@/components/app/lesson-list-view";
+import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { MODE_TITLE_KEY, MODE_DESCRIPTION_KEY } from "@/components/marketing/mode-title-key";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -78,6 +79,13 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
 
   return (
     <div className="mx-auto max-w-5xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
+      {/* Only for admins: they're the ones for whom "normal" is really
+          Stories' "Longer Stories" half (see learn-sidebar.tsx's Stories
+          merge doc comment) and need the same switch back to Simple
+          Stories that LibraryMobileTabs already gives Books/Novels.
+          Regular learners have their own direct, unmerged "Ordinary
+          Lessons" tab here and never see Simple Stories at all. */}
+      {mode === "normal" && isAdminUser && <StoriesMobileTabs active="longer" className="mb-6" />}
       <LessonListView
         mode={mode}
         title={title}

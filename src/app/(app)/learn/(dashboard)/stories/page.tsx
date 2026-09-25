@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { StoriesLibrary } from "@/components/app/stories-library";
+import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessons } from "@/lib/content";
@@ -31,6 +32,7 @@ export default async function StoriesLibraryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
+      <StoriesMobileTabs active="simplified" className="mb-6" />
       <StoriesLibrary
         lessons={lessons}
         isPremiumUser={hasPremium || isAdminUser}
