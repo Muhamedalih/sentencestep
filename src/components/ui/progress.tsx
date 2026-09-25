@@ -25,23 +25,31 @@ function Progress({ value, markerValue, className, ...props }: ProgressProps) {
   const showMarker = clampedMarker !== undefined && clampedMarker - clamped > 0.5;
 
   return (
+    // Marker deliberately lives in THIS outer, unclipped element — the fill
+    // bar's own rounding needs overflow-hidden, but the marker needs to
+    // stand visibly taller than the bar itself (reader feedback: the first
+    // version, clipped flush to the bar's own 8px height, read as too small
+    // to notice) — so overflow-hidden is scoped to the inner track below
+    // instead of this wrapper.
     <div
       data-slot="progress"
       role="progressbar"
       aria-valuenow={clamped}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={cn("bg-muted relative h-2 w-full overflow-hidden rounded-full", className)}
+      className={cn("relative h-2 w-full", className)}
       {...props}
     >
-      <div
-        className="bg-primary h-full rounded-full transition-[width] duration-500 ease-out"
-        style={{ width: `${clamped}%` }}
-      />
+      <div className="bg-muted h-full w-full overflow-hidden rounded-full">
+        <div
+          className="bg-primary h-full rounded-full transition-[width] duration-500 ease-out"
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
       {showMarker && (
         <div
           aria-hidden="true"
-          className="bg-foreground/60 absolute top-1/2 h-3 w-px -translate-y-1/2 rounded-full transition-[inset-inline-start] duration-500 ease-out"
+          className="bg-accent ring-background absolute top-1/2 h-4 w-1 -translate-y-1/2 rounded-full ring-2 transition-[inset-inline-start] duration-500 ease-out"
           style={{ insetInlineStart: `${clampedMarker}%` }}
         />
       )}
