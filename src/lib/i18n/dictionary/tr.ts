@@ -564,7 +564,7 @@ export const tr: Dictionary = {
   },
   storiesHub: {
     simplifiedTab: "Genel Hikayeler",
-    longerTab: "Günlük Hikayeler",
+    longerTab: "Normal dersler",
   },
   bookLibrary: {
     heading: "Kütüphane",

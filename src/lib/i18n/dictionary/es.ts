@@ -572,7 +572,7 @@ export const es: Dictionary = {
   },
   storiesHub: {
     simplifiedTab: "Historias generales",
-    longerTab: "Historias cotidianas",
+    longerTab: "Lecciones normales",
   },
   bookLibrary: {
     heading: "Biblioteca",

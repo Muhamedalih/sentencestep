@@ -540,7 +540,7 @@ export const ar: Dictionary = {
   },
   storiesHub: {
     simplifiedTab: "قصص عامة",
-    longerTab: "قصص يومية",
+    longerTab: "الدروس اليومية",
   },
   bookLibrary: {
     heading: "المكتبة",

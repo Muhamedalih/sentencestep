@@ -555,7 +555,7 @@ export const en: Dictionary = {
   },
   storiesHub: {
     simplifiedTab: "General Stories",
-    longerTab: "Daily Stories",
+    longerTab: "Ordinary lessons",
   },
   bookLibrary: {
     heading: "Library",
