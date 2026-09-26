@@ -35,7 +35,7 @@ export interface LessonCompletionTheme {
   colorBorder: string;
 
   // Typography
-  /** The big accuracy number in its own card — this screen's one focal point. */
+  /** The accuracy number, shown as a quiet badge under the heading rather than this screen's focal point — see lesson-completion.tsx's HEADER section. Range recalibrated (was 40–140 for a 72px hero number) to suit a small badge. */
   heroNumberSize: number;
   headingSize: number;
   bodySize: number;
@@ -87,7 +87,7 @@ export const DEFAULT_LESSON_COMPLETION_THEME: LessonCompletionTheme = {
   colorXp: "#849bff",
   colorBorder: "#ffffff",
 
-  heroNumberSize: 72,
+  heroNumberSize: 14,
   headingSize: 24,
   bodySize: 14,
   statSize: 20,
@@ -131,7 +131,7 @@ export const LESSON_COMPLETION_THEME_RANGES: Record<
   }[keyof LessonCompletionTheme],
   NumberRange
 > = {
-  heroNumberSize: { min: 40, max: 140, step: 2 },
+  heroNumberSize: { min: 11, max: 20, step: 1 },
   headingSize: { min: 16, max: 40, step: 1 },
   bodySize: { min: 10, max: 20, step: 1 },
   statSize: { min: 14, max: 32, step: 1 },
@@ -270,6 +270,10 @@ export interface LessonCompletionStyles {
   border: string;
   /** The XP bar's own track (the unfilled portion) — a faint neutral wash, same strength as `border`. */
   xpTrackBg: string;
+  /** Wash background for the promoted "new word" vocabulary cards — colorAccent at low opacity. */
+  vocabCardBg: string;
+  /** Border for the promoted "new word" vocabulary cards — colorAccent at a stronger opacity than vocabCardBg. */
+  vocabCardBorder: string;
 }
 
 export function deriveLessonCompletionStyles(theme: LessonCompletionTheme): LessonCompletionStyles {
@@ -279,5 +283,7 @@ export function deriveLessonCompletionStyles(theme: LessonCompletionTheme): Less
     textSecondary: theme.colorTextSecondary,
     border: mix(theme.colorBorder, theme.borderOpacity),
     xpTrackBg: mix(theme.colorTextPrimary, theme.borderOpacity * 0.7),
+    vocabCardBg: mix(theme.colorAccent, 10),
+    vocabCardBorder: mix(theme.colorAccent, 35),
   };
 }
