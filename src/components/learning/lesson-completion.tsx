@@ -62,9 +62,14 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
 
 /**
  * Full-screen completion experience — a deliberately flat, near-monochrome
- * "Result → Progress → Vocabulary → Next Action" composition (see this
+ * "Header → Vocabulary → Progress → Next Action" composition (see this
  * file's git history for the earlier ring/glow/multi-color HUD version this
- * replaced), matching the same "always black" treatment the stories-mode
+ * replaced, and for the even earlier "Result → Progress → Vocabulary → Next
+ * Action" order, which led with a 72px accuracy number as the screen's
+ * focal point — vocabulary is promoted above the stats/XP panel now, and
+ * accuracy demoted to a quiet badge in the header, since the words a
+ * learner just produced matter more here than the accuracy score), matching
+ * the same "always black" treatment the stories-mode
  * lesson player already uses unconditionally (see .lesson-shell-stories in
  * globals.css) rather than the toggle-dependent near-black .dark
  * .lesson-shell gets everywhere else — a completion screen shouldn't flip to
@@ -211,9 +216,10 @@ export function LessonCompletion({
   const graceReward = rewards.find((reward) => reward.type === "streakGraceDay");
   const celebratedRewards = rewards.filter((reward) => reward.type !== "streakGraceDay");
 
-  // Secondary stat cells beneath the hero number — accuracy itself is the
-  // hero, so it's never repeated here. Built as a filtered list (not fixed
-  // JSX) purely so the divider between cells only ever appears between two
+  // Stat cells shown inside the stats/XP panel — accuracy has its own quiet
+  // badge in the header, so it's never repeated here. Built as a filtered
+  // list (not fixed JSX) purely so the divider between cells only ever
+  // appears between two
   // cells that both actually rendered — wpm is conditional, so a fixed
   // "second cell always gets a divider" rule would leave an orphaned
   // divider with nothing to its left whenever wpm is 0.
@@ -252,12 +258,14 @@ export function LessonCompletion({
         className="relative z-10 mx-auto flex w-full flex-1 flex-col px-6 py-10 sm:px-10 sm:py-14 lg:justify-center lg:px-6"
       >
         {/* ---------------------------------------------------------------
-            HERO — the accuracy number in the same off-white "sticker" chip
-            used for the Word Lists "Review All Words" count (see
-            NeedsReviewWords) — a resting tilt that settles in with a
-            springy wiggle on mount instead of NeedsReviewWords' hover-
-            triggered straighten, since this card isn't interactive. No
-            ring, no badge.
+            HEADER — heading + subtitle, with the accuracy number demoted
+            to a quiet badge underneath rather than the screen's focal
+            point (see this file's own doc comment on the "Header →
+            Vocabulary → Progress" order this screen now uses). This drops
+            the old cream "sticker" chip's family resemblance to
+            NeedsReviewWords' count badge — a deliberate trade against that
+            cross-screen consistency in favor of not competing with the
+            vocabulary hero below.
             --------------------------------------------------------------- */}
         <motion.div
           variants={fadeInUp}
@@ -267,11 +275,8 @@ export function LessonCompletion({
           {/* Stories mode's only decoration on this otherwise-identical,
               admin-themed completion screen (see this file's own doc
               comment on why everything else here stays uniform across
-              modes) — a small closing-book flourish above the accuracy
-              sticker, reusing that sticker's own rotate-in spring rather
-              than introducing a new motion style. Purely an icon; no text,
-              no layout change, so it never affects the admin theme's sizing
-              math below it. */}
+              modes) — a small closing-book flourish above the heading.
+              Purely an icon; no text, no layout change. */}
           {mode === "stories" && (
             <motion.div
               aria-hidden="true"
@@ -285,43 +290,7 @@ export function LessonCompletion({
               <BookOpen className="size-7" aria-hidden="true" />
             </motion.div>
           )}
-          <motion.div
-            dir="ltr"
-            initial={reducedMotion ? undefined : { rotate: -9 }}
-            animate={{ rotate: -2 }}
-            transition={
-              reducedMotion
-                ? { duration: 0 }
-                : { type: "spring", stiffness: 140, damping: 9, delay: 0.15 }
-            }
-            style={{
-              backgroundColor: "oklch(0.96 0.015 85)",
-              color: "oklch(0.32 0.03 60)",
-              boxShadow: "0 3px 0 0 oklch(0.85 0.03 80), 0 10px 20px -8px rgba(0,0,0,0.45)",
-              padding: `${Math.round(theme.cardPadding * 0.9)}px ${theme.cardPadding * 1.6}px`,
-            }}
-            className="flex flex-col items-center gap-0.5 rounded-2xl"
-          >
-            <div className="flex items-end justify-center gap-0.5">
-              <span
-                style={{ fontSize: theme.heroNumberSize }}
-                className="leading-none font-extrabold tabular-nums"
-              >
-                {accuracyPercent}
-              </span>
-              <span
-                style={{ fontSize: Math.round(theme.heroNumberSize * 0.35) }}
-                className="pb-0.5 font-bold opacity-70"
-              >
-                %
-              </span>
-            </div>
-            <span className="text-xs font-semibold tracking-wide uppercase opacity-70">
-              {t.lesson.accuracyLabel}
-            </span>
-          </motion.div>
-
-          <div className="mt-2">
+          <div>
             <h2
               style={{
                 fontSize: theme.headingSize,
@@ -338,6 +307,33 @@ export function LessonCompletion({
                 String(accuracyPercent),
               )}
             </p>
+          </div>
+
+          {/* Demoted accuracy badge — same number the old 72px hero sticker
+              showed, now sized and weighted like a quiet fact rather than
+              this screen's headline. theme.heroNumberSize's range was
+              recalibrated for this smaller role (see
+              lesson-completion-theme.ts). */}
+          <div
+            dir="ltr"
+            style={{ borderColor: styles.border }}
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
+          >
+            <span
+              style={{ fontSize: theme.heroNumberSize, color: styles.textPrimary }}
+              className="font-semibold tabular-nums"
+            >
+              {accuracyPercent}%
+            </span>
+            <span
+              style={{
+                color: styles.textSecondary,
+                fontSize: Math.max(9, Math.round(theme.heroNumberSize * 0.8)),
+              }}
+              className="font-medium tracking-wide uppercase"
+            >
+              {t.lesson.accuracyLabel}
+            </span>
           </div>
         </motion.div>
 
@@ -371,97 +367,62 @@ export function LessonCompletion({
         )}
 
         {/* ---------------------------------------------------------------
-            RESULT — supporting statistics, plain numbers, no icons.
+            VOCABULARY — promoted above the stats/XP panel: the words a
+            learner just produced are this screen's hero now, shown as
+            bigger tagged cards rather than the small inline chips this
+            section used to be lower down the page.
             --------------------------------------------------------------- */}
-        {statCells.length > 0 && (
+        {vocabulary && vocabulary.length > 0 && (
           <motion.div
             variants={fadeInUp}
-            className="mx-auto flex w-full max-w-sm items-stretch justify-center"
+            className="mx-auto flex w-full max-w-sm flex-col items-center gap-4"
           >
-            {statCells.map((cell, index) => (
-              <StatCell
-                key={cell.key}
-                label={cell.label}
-                value={cell.value}
-                valueColor={cell.accent ? theme.colorAccent : undefined}
-                theme={theme}
-                styles={styles}
-                dividerColor={index > 0 ? styles.border : undefined}
-              />
-            ))}
-          </motion.div>
-        )}
-
-        {graceReward && (
-          <motion.p
-            variants={fadeInUp}
-            style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
-            className="text-center"
-          >
-            {formatReward(graceReward, t)}
-          </motion.p>
-        )}
-
-        {/* ---------------------------------------------------------------
-            PROGRESS — XP toward the next level. No card, no gradient.
-            --------------------------------------------------------------- */}
-        <motion.div variants={fadeInUp}>
-          <XpProgressCard
-            label={learnerLevelSupportLabel(learnerLevel.level.name, t)}
-            fromPercent={xpBarFromPercent}
-            toPercent={levelPercent}
-            currentXp={xpIntoLevel}
-            neededXp={xpNeededForLevel}
-            reducedMotion={Boolean(reducedMotion)}
-            theme={theme}
-            styles={styles}
-          />
-        </motion.div>
-
-        {celebratedRewards.length > 0 && (
-          <motion.p
-            variants={fadeInUp}
-            style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
-            className="text-center font-medium"
-          >
-            {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
-          </motion.p>
-        )}
-
-        {vocabulary && vocabulary.length > 0 && (
-          <motion.div variants={fadeInUp} className="flex flex-col items-center gap-4">
             <div className="w-full">
               <p
                 style={{
                   color: styles.textSecondary,
                   fontSize: Math.max(9, Math.round(theme.bodySize * 0.8)),
                 }}
-                className="mb-2 font-semibold tracking-widest uppercase"
+                className="mb-2 text-center font-semibold tracking-widest uppercase"
               >
                 {theme.vocabTitle || t.lesson.vocabularyHeading}
               </p>
-              <div style={{ gap: theme.chipSpacing }} className="flex flex-wrap">
+              <div style={{ gap: theme.chipSpacing }} className="flex">
                 {vocabulary.slice(0, 3).map((item) => (
-                  <span
+                  <div
                     key={item.id}
                     style={{
-                      borderRadius: theme.chipRadius,
-                      borderColor: styles.border,
-                      padding: `${Math.round(theme.cardPadding * 0.4)}px ${Math.round(theme.cardPadding * 0.9)}px`,
-                      fontSize: theme.bodySize,
+                      borderRadius: Math.min(theme.chipRadius, 20),
+                      borderColor: styles.vocabCardBorder,
+                      backgroundColor: styles.vocabCardBg,
+                      padding: `${theme.cardPadding}px ${Math.round(theme.cardPadding * 0.6)}px`,
                     }}
-                    className="inline-flex items-center gap-1.5 border"
+                    className="flex flex-1 flex-col items-center gap-1.5 border text-center"
                   >
                     <span
-                      style={{ color: styles.textPrimary, fontWeight: theme.bodyWeight }}
+                      style={{
+                        backgroundColor: theme.colorAccent,
+                        color: ON_ACCENT_TEXT,
+                        fontSize: Math.max(8, Math.round(theme.bodySize * 0.7)),
+                      }}
+                      className="rounded-full px-2 py-0.5 font-bold"
+                    >
+                      {t.lesson.newWordTag}
+                    </span>
+                    <span
                       dir="ltr"
+                      style={{ color: styles.textPrimary, fontSize: theme.statSize }}
+                      className="font-extrabold"
                     >
                       {item.en}
                     </span>
-                    <span style={{ color: styles.textSecondary }} dir={dir}>
+                    <span
+                      style={{ color: styles.textSecondary, fontSize: theme.bodySize }}
+                      dir={dir}
+                    >
                       {resolveVocabularySupportText(item, locale)}
                     </span>
-                  </span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -479,6 +440,68 @@ export function LessonCompletion({
             )}
           </motion.div>
         )}
+
+        {/* ---------------------------------------------------------------
+            PROGRESS — stats, streak/XP rewards, and level progress grouped
+            into one quiet panel now that vocabulary (above) is the
+            screen's visual hero rather than these numbers. statCells
+            always has at least the streak cell (see its declaration
+            above), so this panel never needs an empty-state guard.
+            --------------------------------------------------------------- */}
+        <motion.div
+          variants={fadeInUp}
+          style={{
+            borderColor: styles.border,
+            borderRadius: Math.min(theme.actionCardRadius, 16),
+            padding: theme.cardPadding,
+          }}
+          className="mx-auto flex w-full max-w-sm flex-col border"
+        >
+          <div className="flex items-stretch justify-center">
+            {statCells.map((cell, index) => (
+              <StatCell
+                key={cell.key}
+                label={cell.label}
+                value={cell.value}
+                valueColor={cell.accent ? theme.colorAccent : undefined}
+                theme={theme}
+                styles={styles}
+                dividerColor={index > 0 ? styles.border : undefined}
+              />
+            ))}
+          </div>
+
+          {graceReward && (
+            <p
+              style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+              className="mt-3 text-center"
+            >
+              {formatReward(graceReward, t)}
+            </p>
+          )}
+
+          <div style={{ marginTop: theme.cardPadding }}>
+            <XpProgressCard
+              label={learnerLevelSupportLabel(learnerLevel.level.name, t)}
+              fromPercent={xpBarFromPercent}
+              toPercent={levelPercent}
+              currentXp={xpIntoLevel}
+              neededXp={xpNeededForLevel}
+              reducedMotion={Boolean(reducedMotion)}
+              theme={theme}
+              styles={styles}
+            />
+          </div>
+
+          {celebratedRewards.length > 0 && (
+            <p
+              style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
+              className="mt-3 text-center font-medium"
+            >
+              {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
+            </p>
+          )}
+        </motion.div>
 
         <motion.div
           variants={fadeInUp}

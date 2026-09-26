@@ -84,7 +84,7 @@ const ACCENT_COLOR_FIELDS: { key: ColorKey; label: string }[] = [
 ];
 
 const TYPOGRAPHY_FIELDS: { key: NumberKey; label: string; unit: string }[] = [
-  { key: "heroNumberSize", label: "Accuracy number size", unit: "px" },
+  { key: "heroNumberSize", label: "Accuracy badge size", unit: "px" },
   { key: "headingSize", label: "Heading size", unit: "px" },
   { key: "bodySize", label: "Body text size", unit: "px" },
   { key: "statSize", label: "Stat number size", unit: "px" },
@@ -412,9 +412,7 @@ export function LessonCompletionCustomizer({ initial }: { initial: LessonComplet
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Typography</CardTitle>
-          <CardDescription>
-            Text sizes and weights, including the big accuracy number.
-          </CardDescription>
+          <CardDescription>Text sizes and weights, including the accuracy badge.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           {TYPOGRAPHY_FIELDS.map(({ key, label, unit }) => {
