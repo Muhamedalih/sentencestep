@@ -7,6 +7,7 @@ import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { StoryCard } from "@/components/app/story-card";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { difficultyForLevel, tierSupportLabel, type Difficulty } from "@/lib/levels";
@@ -61,6 +62,19 @@ export function StoriesLibrary({
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Same "you're on X" / count / bar block as LessonListView's overall
+  // progress (Ordinary Lessons), but scoped to the active tier instead of
+  // the whole mode: this page browses one tier at a time via the tabs below,
+  // so a single mode-wide percentage would silently describe lessons the
+  // learner isn't even looking at. Recomputed from `filtered` (already the
+  // active tier's lessons) on every tier switch, but always rendered in this
+  // same spot in the JSX below the tabs — only the numbers change.
+  const tierCompletedCount = isLoaded
+    ? filtered.filter((lesson) => isCompleted("stories", lesson.id)).length
+    : 0;
+  const tierPercent =
+    filtered.length === 0 ? 0 : Math.round((tierCompletedCount / filtered.length) * 100);
 
   function selectTier(tier: Difficulty) {
     setActiveTier(tier);
@@ -149,6 +163,36 @@ export function StoriesLibrary({
           );
         })}
       </div>
+
+      {filtered.length > 0 &&
+        (isLoaded ? (
+          <div className="mt-6 mb-2 flex flex-col gap-2">
+            <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm font-medium">
+              <span>
+                {tierCompletedCount > 0
+                  ? t.lesson.youAreOn.replace(
+                      "{unit}",
+                      locale ? tierSupportLabel(activeTier, locale) : activeTier,
+                    )
+                  : t.lesson.readyToStart}
+              </span>
+              <span>
+                {t.lesson.completeCount
+                  .replace("{completed}", String(tierCompletedCount))
+                  .replace("{total}", String(filtered.length))}
+              </span>
+            </div>
+            <Progress value={tierPercent} />
+          </div>
+        ) : (
+          // Progress hasn't loaded yet — same neutral pulse as LessonListView's
+          // own skeleton, for the same reason: avoids a flash of "Ready to
+          // start" / 0% before a returning learner's real tier progress loads.
+          <div className="mt-6 mb-2 flex flex-col gap-2" aria-hidden="true">
+            <div className="bg-muted h-5 w-40 animate-pulse rounded" />
+            <div className="bg-muted h-2 w-full animate-pulse rounded-full" />
+          </div>
+        ))}
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
