@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   let event;
   try {
-    event = provider.verifyWebhookSignature(rawBody, signatureHeader);
+    event = await provider.verifyWebhookSignature(rawBody, signatureHeader);
   } catch {
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 400 });
   }

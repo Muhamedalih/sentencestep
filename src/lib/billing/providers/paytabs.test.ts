@@ -24,7 +24,7 @@ function stubFetch(handler: typeof fetch): () => void {
 
 // --- verifyWebhookSignature ---
 
-test("verifyWebhookSignature: a correctly signed body is accepted and parsed", () => {
+test("verifyWebhookSignature: a correctly signed body is accepted and parsed", async () => {
   const provider = createPaytabsProvider({
     profileId: "p1",
     serverKey: SERVER_KEY,
@@ -32,13 +32,13 @@ test("verifyWebhookSignature: a correctly signed body is accepted and parsed", (
   });
   const body = JSON.stringify({ tran_ref: "TST123", respStatus: "A" });
 
-  const event = provider.verifyWebhookSignature(body, sign(body));
+  const event = await provider.verifyWebhookSignature(body, sign(body));
 
   assert.equal(event.id, "TST123");
   assert.equal(event.type, "A");
 });
 
-test("verifyWebhookSignature: a tampered body is rejected even with the original signature", () => {
+test("verifyWebhookSignature: a tampered body is rejected even with the original signature", async () => {
   const provider = createPaytabsProvider({
     profileId: "p1",
     serverKey: SERVER_KEY,
@@ -48,13 +48,13 @@ test("verifyWebhookSignature: a tampered body is rejected even with the original
   const signature = sign(originalBody);
   const tamperedBody = JSON.stringify({ tran_ref: "TST123", respStatus: "A", cart_amount: 0.01 });
 
-  assert.throws(
+  await assert.rejects(
     () => provider.verifyWebhookSignature(tamperedBody, signature),
     /Invalid PayTabs webhook signature/,
   );
 });
 
-test("verifyWebhookSignature: the wrong signature is rejected", () => {
+test("verifyWebhookSignature: the wrong signature is rejected", async () => {
   const provider = createPaytabsProvider({
     profileId: "p1",
     serverKey: SERVER_KEY,
@@ -62,13 +62,13 @@ test("verifyWebhookSignature: the wrong signature is rejected", () => {
   });
   const body = JSON.stringify({ tran_ref: "TST123", respStatus: "A" });
 
-  assert.throws(
+  await assert.rejects(
     () => provider.verifyWebhookSignature(body, "0".repeat(64)),
     /Invalid PayTabs webhook signature/,
   );
 });
 
-test("verifyWebhookSignature: a missing signature header is rejected", () => {
+test("verifyWebhookSignature: a missing signature header is rejected", async () => {
   const provider = createPaytabsProvider({
     profileId: "p1",
     serverKey: SERVER_KEY,
@@ -76,13 +76,13 @@ test("verifyWebhookSignature: a missing signature header is rejected", () => {
   });
   const body = JSON.stringify({ tran_ref: "TST123", respStatus: "A" });
 
-  assert.throws(
+  await assert.rejects(
     () => provider.verifyWebhookSignature(body, null),
     /Missing PayTabs webhook signature/,
   );
 });
 
-test("verifyWebhookSignature: a signature computed with the wrong key is rejected (signed with someone else's server key can't pass)", () => {
+test("verifyWebhookSignature: a signature computed with the wrong key is rejected (signed with someone else's server key can't pass)", async () => {
   const provider = createPaytabsProvider({
     profileId: "p1",
     serverKey: SERVER_KEY,
@@ -91,7 +91,7 @@ test("verifyWebhookSignature: a signature computed with the wrong key is rejecte
   const body = JSON.stringify({ tran_ref: "TST123", respStatus: "A" });
   const wrongKeySignature = createHmac("sha256", "someone-elses-key").update(body).digest("hex");
 
-  assert.throws(
+  await assert.rejects(
     () => provider.verifyWebhookSignature(body, wrongKeySignature),
     /Invalid PayTabs webhook signature/,
   );

@@ -165,7 +165,11 @@ export function createPaytabsProvider(config: PaytabsConfig): BillingProvider {
       );
     },
 
-    verifyWebhookSignature(rawBody: string, signatureHeader: string | null): ProviderWebhookEvent {
+    // async only to satisfy the shared BillingProvider interface (see its doc comment) — PayTabs' webhook body is itself the confirmed outcome, no server-to-server round trip needed here.
+    async verifyWebhookSignature(
+      rawBody: string,
+      signatureHeader: string | null,
+    ): Promise<ProviderWebhookEvent> {
       if (!signatureHeader) {
         throw new Error("Missing PayTabs webhook signature header.");
       }

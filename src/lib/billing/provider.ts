@@ -62,8 +62,20 @@ export interface BillingProvider {
 
   cancelSubscription(providerSubscriptionId: string): Promise<void>;
 
-  /** Verifies the raw request against the provider's signature header. Must throw on an invalid signature — never treat an unverified body as trustworthy. */
-  verifyWebhookSignature(rawBody: string, signatureHeader: string | null): ProviderWebhookEvent;
+  /**
+   * Verifies the raw request against the provider's signature header. Must
+   * throw on an invalid signature — never treat an unverified body as
+   * trustworthy. Async because a provider whose webhook body isn't itself
+   * trustworthy proof of the outcome (see providers/wayl.ts) needs to make
+   * an authoritative server-to-server call here before returning anything
+   * downstream code will act on. A provider whose webhook body IS the
+   * confirmed outcome (see providers/paytabs.ts) can just stay synchronous
+   * logic wrapped in an async function.
+   */
+  verifyWebhookSignature(
+    rawBody: string,
+    signatureHeader: string | null,
+  ): Promise<ProviderWebhookEvent>;
 
   /** Maps a provider-specific event into our normalized, provider-agnostic events — see applyBillingEvent in domain.ts. A single provider event may translate to zero or more of these. */
   translateWebhookEvent(event: ProviderWebhookEvent): BillingEvent[];
