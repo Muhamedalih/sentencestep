@@ -64,7 +64,11 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
 
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
-  const title = t.nav[MODE_TITLE_KEY[mode]];
+  // "normal" gets its own page heading (library.normalHeading) instead of
+  // nav.normalLessons — that key is shared with the marketing footer link
+  // and the /upgrade plan-comparison table (see mode-title-key.ts's doc
+  // comment), so it can't carry this page-only clarifying suffix.
+  const title = mode === "normal" ? t.library.normalHeading : t.nav[MODE_TITLE_KEY[mode]];
   const description = t.marketing[MODE_DESCRIPTION_KEY[mode]];
 
   const [units, hasPremium, isAdminUser, levelNames, recallCount] = await Promise.all([

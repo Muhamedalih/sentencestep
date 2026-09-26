@@ -551,9 +551,10 @@ export const tr: Dictionary = {
     completeSubtitle: "{n} kelimeyi tekrar ettin.",
   },
   library: {
-    storiesHeading: "Hikayeler",
+    storiesHeading: "Hikayeler (dil öğrenmeye odaklı hikayeler)",
     storiesSubtitle:
       "Eğlenceli bir hikaye seçin ve öğrenme yolculuğunuza başlayın. Her hikaye, okurken öğreneceğiniz özenle seçilmiş birkaç kelime etrafında kurulur.",
+    normalHeading: "Normal dersler (yazmayı öğrenmeye odaklı)",
     storiesEmptyHeading: "Bu seviyede henüz hikaye yok",
     levelTabsAriaLabel: "Seviye",
     previousPage: "Önceki sayfa",
@@ -566,8 +567,8 @@ export const tr: Dictionary = {
     moreGroupsSoon: "Daha fazla grup yakında.",
   },
   storiesHub: {
-    simplifiedTab: "Genel Hikayeler",
-    longerTab: "Normal dersler",
+    simplifiedTab: "Genel Hikayeler (dil)",
+    longerTab: "Normal dersler (yazma)",
   },
   bookLibrary: {
     heading: "Kütüphane",

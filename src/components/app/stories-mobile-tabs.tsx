@@ -34,11 +34,11 @@ export function StoriesMobileTabs({
         className,
       )}
     >
-      <TabLink href="/learn/stories" active={active === "simplified"}>
-        {t.storiesHub.simplifiedTab}
-      </TabLink>
       <TabLink href="/learn/normal" active={active === "longer"}>
         {t.storiesHub.longerTab}
+      </TabLink>
+      <TabLink href="/learn/stories" active={active === "simplified"}>
+        {t.storiesHub.simplifiedTab}
       </TabLink>
     </div>
   );

@@ -542,9 +542,10 @@ export const en: Dictionary = {
     completeSubtitle: "You reviewed {n} word(s).",
   },
   library: {
-    storiesHeading: "Stories",
+    storiesHeading: "Stories (stories focused on learning the language)",
     storiesSubtitle:
       "Choose a fun story and start your learning journey. Every story is built around a handful of carefully chosen words for you to pick up along the way.",
+    normalHeading: "Ordinary lessons (focused on learning to write)",
     storiesEmptyHeading: "No stories in this level yet",
     levelTabsAriaLabel: "Level",
     previousPage: "Previous page",
@@ -557,8 +558,8 @@ export const en: Dictionary = {
     moreGroupsSoon: "More groups coming soon.",
   },
   storiesHub: {
-    simplifiedTab: "General Stories",
-    longerTab: "Ordinary lessons",
+    simplifiedTab: "General Stories (language)",
+    longerTab: "Ordinary lessons (writing)",
   },
   bookLibrary: {
     heading: "Library",

@@ -559,9 +559,10 @@ export const es: Dictionary = {
     completeSubtitle: "Repasaste {n} palabra(s).",
   },
   library: {
-    storiesHeading: "Historias",
+    storiesHeading: "Historias (historias centradas en aprender el idioma)",
     storiesSubtitle:
       "Elige una historia divertida y comienza tu viaje de aprendizaje. Cada historia gira en torno a un puñado de palabras cuidadosamente elegidas para que las aprendas mientras lees.",
+    normalHeading: "Lecciones normales (centradas en aprender a escribir)",
     storiesEmptyHeading: "Aún no hay historias en este nivel",
     levelTabsAriaLabel: "Nivel",
     previousPage: "Página anterior",
@@ -574,8 +575,8 @@ export const es: Dictionary = {
     moreGroupsSoon: "Más grupos próximamente.",
   },
   storiesHub: {
-    simplifiedTab: "Historias generales",
-    longerTab: "Lecciones normales",
+    simplifiedTab: "Historias generales (idioma)",
+    longerTab: "Lecciones normales (escritura)",
   },
   bookLibrary: {
     heading: "Biblioteca",

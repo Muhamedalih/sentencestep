@@ -527,9 +527,10 @@ export const ar: Dictionary = {
     completeSubtitle: "راجعت {n} كلمة/كلمات.",
   },
   library: {
-    storiesHeading: "القصص",
+    storiesHeading: "القصص (قصص مركزة لتعلم اللغة)",
     storiesSubtitle:
       "اختر قصة ممتعة وابدأ رحلتك في التعلم. كل قصة تدور حول كلمات مختارة بعناية لتتعلمها وأنت تستمتع بالقراءة.",
+    normalHeading: "الدروس اليومية (مركزة لتعلم الكتابة)",
     storiesEmptyHeading: "لا توجد قصص في هذا المستوى بعد",
     levelTabsAriaLabel: "المستوى",
     previousPage: "الصفحة السابقة",
@@ -542,8 +543,8 @@ export const ar: Dictionary = {
     moreGroupsSoon: "المزيد من المجموعات قريبًا.",
   },
   storiesHub: {
-    simplifiedTab: "قصص عامة",
-    longerTab: "الدروس اليومية",
+    simplifiedTab: "قصص عامة (للغة)",
+    longerTab: "الدروس اليومية (للكتابة)",
   },
   bookLibrary: {
     heading: "المكتبة",

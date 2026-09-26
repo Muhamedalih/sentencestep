@@ -632,6 +632,8 @@ export interface Dictionary {
   library: {
     storiesHeading: string;
     storiesSubtitle: string;
+    /** Daily Lessons (mode "normal") page heading, shown instead of nav.normalLessons on that one page — nav.normalLessons is shared with the marketing footer link and the /upgrade plan-comparison table (see mode-title-key.ts), so it can't carry this page-only clarifying suffix. */
+    normalHeading: string;
     storiesEmptyHeading: string;
     levelTabsAriaLabel: string;
     previousPage: string;
