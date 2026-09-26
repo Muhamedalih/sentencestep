@@ -527,7 +527,8 @@ export const ar: Dictionary = {
   },
   library: {
     storiesHeading: "القصص",
-    storiesSubtitle: "اختر قصة ممتعة وابدأ رحلتك في التعلم.",
+    storiesSubtitle:
+      "اختر قصة ممتعة وابدأ رحلتك في التعلم. كل قصة تدور حول كلمات مختارة بعناية لتتعلمها وأنت تستمتع بالقراءة.",
     storiesEmptyHeading: "لا توجد قصص في هذا المستوى بعد",
     levelTabsAriaLabel: "المستوى",
     previousPage: "الصفحة السابقة",

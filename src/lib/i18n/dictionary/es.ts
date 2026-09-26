@@ -559,7 +559,8 @@ export const es: Dictionary = {
   },
   library: {
     storiesHeading: "Historias",
-    storiesSubtitle: "Elige una historia divertida y comienza tu viaje de aprendizaje.",
+    storiesSubtitle:
+      "Elige una historia divertida y comienza tu viaje de aprendizaje. Cada historia gira en torno a un puñado de palabras cuidadosamente elegidas para que las aprendas mientras lees.",
     storiesEmptyHeading: "Aún no hay historias en este nivel",
     levelTabsAriaLabel: "Nivel",
     previousPage: "Página anterior",
