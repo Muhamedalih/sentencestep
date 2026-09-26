@@ -551,7 +551,8 @@ export const tr: Dictionary = {
   },
   library: {
     storiesHeading: "Hikayeler",
-    storiesSubtitle: "Eğlenceli bir hikaye seçin ve öğrenme yolculuğunuza başlayın.",
+    storiesSubtitle:
+      "Eğlenceli bir hikaye seçin ve öğrenme yolculuğunuza başlayın. Her hikaye, okurken öğreneceğiniz özenle seçilmiş birkaç kelime etrafında kurulur.",
     storiesEmptyHeading: "Bu seviyede henüz hikaye yok",
     levelTabsAriaLabel: "Seviye",
     previousPage: "Önceki sayfa",
