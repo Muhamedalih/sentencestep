@@ -370,12 +370,16 @@ export function LessonCompletion({
             VOCABULARY — promoted above the stats/XP panel: the words a
             learner just produced are this screen's hero now, shown as
             bigger tagged cards rather than the small inline chips this
-            section used to be lower down the page.
+            section used to be lower down the page. max-w-sm caps this at a
+            phone-friendly width, which is a no-op below md (the viewport
+            itself is already narrower); md:max-w-none lets it grow to fill
+            the outer column's own theme.contentWidth on tablet/laptop
+            instead of staying pinned to a mobile card width there too.
             --------------------------------------------------------------- */}
         {vocabulary && vocabulary.length > 0 && (
           <motion.div
             variants={fadeInUp}
-            className="mx-auto flex w-full max-w-sm flex-col items-center gap-4"
+            className="mx-auto flex w-full max-w-sm flex-col items-center gap-4 md:max-w-none"
           >
             <div className="w-full">
               <p
@@ -447,6 +451,10 @@ export function LessonCompletion({
             screen's visual hero rather than these numbers. statCells
             always has at least the streak cell (see its declaration
             above), so this panel never needs an empty-state guard.
+            Same md:max-w-none reasoning as the vocabulary block above —
+            without it this panel stayed pinned to a 384px mobile width on
+            tablet/laptop no matter how wide theme.contentWidth was set,
+            leaving it stranded in the middle of the screen.
             --------------------------------------------------------------- */}
         <motion.div
           variants={fadeInUp}
@@ -455,7 +463,7 @@ export function LessonCompletion({
             borderRadius: Math.min(theme.actionCardRadius, 16),
             padding: theme.cardPadding,
           }}
-          className="mx-auto flex w-full max-w-sm flex-col border"
+          className="mx-auto flex w-full max-w-sm flex-col border md:max-w-none"
         >
           <div className="flex items-stretch justify-center">
             {statCells.map((cell, index) => (
