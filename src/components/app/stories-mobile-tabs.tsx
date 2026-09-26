@@ -13,9 +13,7 @@ import { cn } from "@/lib/utils";
  * learn-sidebar.tsx) only renders on the md:+ desktop sidebar, so mobile had
  * no way to reach "Longer Stories" (/learn/normal) at all — the "Stories"
  * tab always opened Simple Stories. This is the mobile equivalent, rendered
- * at the top of each page instead of in the nav shell. Admin-only, matching
- * the sidebar's own gate (the whole Stories/Ordinary Lessons merge is
- * admin-only while Stories is being rebuilt).
+ * at the top of each page instead of in the nav shell.
  */
 export function StoriesMobileTabs({
   active,

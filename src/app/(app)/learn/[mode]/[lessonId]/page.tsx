@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { ContentUnavailable } from "@/components/learning/content-unavailable";
 import { LessonSession } from "@/components/learning/lesson-session";
@@ -56,14 +56,6 @@ export default async function LessonPage({
   const { mode, lessonId } = await params;
   if (!isLearningMode(mode)) notFound();
 
-  // Stories is temporarily admin-only while it's being rebuilt — checked
-  // before fetching any lesson content, so a regular learner never pays for
-  // the getLessonNav/getLessonById queries below (same gate enforced in
-  // stories/page.tsx for the catalog list).
-  if (mode === "stories" && !(await isAdmin())) {
-    redirect("/learn");
-  }
-
   const locale = await getLocale();
   // getLessonNav, not getLessons: finding the next lesson only needs every
   // published lesson's id/level/order, never their full sentence bodies —
@@ -83,13 +75,11 @@ export default async function LessonPage({
   // (matching every other hasPremiumAccess()+isAdmin() call site) rather
   // than a sequential `||` await chain — the sequential form left the
   // client stuck on the route's loading fallback forever for any non-free
-  // unit, since the response's streaming reveal never completed.
-  // Stories already redirected any non-admin above, so it skips straight to
-  // true here rather than paying for a second isAdmin() call.
+  // unit, since the response's streaming reveal never completed. Stories
+  // lessons go through this same isFree/premium check as every other mode
+  // now that Stories is open to every learner, not just admins.
   const canAccess =
-    mode === "stories" ||
-    unit.isFree ||
-    (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
+    unit.isFree || (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
   if (!canAccess) {
     return (
       <div className="lesson-shell bg-background text-foreground mx-auto max-w-3xl px-6 py-12 sm:py-16">

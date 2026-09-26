@@ -103,7 +103,6 @@ export function HomeHero({
   bookProgressPercent,
   isPremiumUser,
   hasWeakWords,
-  isAdminUser,
 }: {
   units: LessonUnit[];
   /** Stories-mode lessons — same shape/fetch as `units`, already resolved server-side by (dashboard)/[mode]/page.tsx (it fetches all three modes' content for lessonStats already; this is that same array, not a new query). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
@@ -118,8 +117,6 @@ export function HomeHero({
   isPremiumUser: boolean;
   /** Whether this learner currently has any weak/due review words (src/lib/weak-words) — same data NeedsReviewWords shows on Home. Used only to give the "cleared the whole catalog" state below a real next action instead of a dead end. */
   hasWeakWords: boolean;
-  /** Stories is temporarily admin-only while it's being rebuilt — gates the bottom-right Stories card the same way stories/page.tsx gates the route itself. */
-  isAdminUser: boolean;
 }) {
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
@@ -280,51 +277,47 @@ export function HomeHero({
           />
         )}
 
-        {isAdminUser && (
-          <Link
-            href="/learn/stories"
-            className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
-          >
-            <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32">
-              {currentStoryLesson?.illustrationUrl ? (
-                // Same plain-<img>/object-cover treatment as HomeBookCard right
-                // above it, deliberately not LessonIllustration here: that
-                // component's hand-drawn-scene fallback is sized for a full
-                // lesson-session panel (hundreds of px tall) and visibly
-                // overflows/clips at this card's much smaller h-28/h-32 band —
-                // an admin-set photo (this branch) crops fine at any size, but
-                // the SVG-scene fallback (the "no photo" case, below) does not,
-                // so it gets this card's own compact icon+gradient treatment
-                // instead, matching HomeBookCard's identical "no cover" state.
-                // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as LessonIllustration's own <Image>'s source, but at a thumbnail size next/image's pipeline isn't worth the extra config for.
-                <img
-                  src={currentStoryLesson.illustrationUrl}
-                  alt=""
-                  className="size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
-                />
-              ) : (
-                <div className="from-brand-muted to-muted flex size-full items-center justify-center bg-gradient-to-br">
-                  <Sparkles className="text-muted-foreground/50 size-8" aria-hidden="true" />
-                </div>
-              )}
-            </div>
-            <div className="flex flex-1 flex-col justify-center gap-0.5 p-4">
-              <h3 className="truncate text-sm font-semibold" dir={dir}>
-                {t.nav.stories}
-              </h3>
-              <p className="text-muted-foreground truncate text-xs" dir={dir}>
-                {currentStoryLesson
-                  ? (currentStoryLesson.supportTitle ?? currentStoryLesson.title)
-                  : t.marketing.storiesModeDescription}
-              </p>
-              <span className="text-primary mt-1.5 text-xs font-semibold">
-                {storiesCompletedIds.length > 0
-                  ? t.common.continueLearning
-                  : t.common.startLearning}
-              </span>
-            </div>
-          </Link>
-        )}
+        <Link
+          href="/learn/stories"
+          className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
+        >
+          <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32">
+            {currentStoryLesson?.illustrationUrl ? (
+              // Same plain-<img>/object-cover treatment as HomeBookCard right
+              // above it, deliberately not LessonIllustration here: that
+              // component's hand-drawn-scene fallback is sized for a full
+              // lesson-session panel (hundreds of px tall) and visibly
+              // overflows/clips at this card's much smaller h-28/h-32 band —
+              // an admin-set photo (this branch) crops fine at any size, but
+              // the SVG-scene fallback (the "no photo" case, below) does not,
+              // so it gets this card's own compact icon+gradient treatment
+              // instead, matching HomeBookCard's identical "no cover" state.
+              // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as LessonIllustration's own <Image>'s source, but at a thumbnail size next/image's pipeline isn't worth the extra config for.
+              <img
+                src={currentStoryLesson.illustrationUrl}
+                alt=""
+                className="size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
+              />
+            ) : (
+              <div className="from-brand-muted to-muted flex size-full items-center justify-center bg-gradient-to-br">
+                <Sparkles className="text-muted-foreground/50 size-8" aria-hidden="true" />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-1 flex-col justify-center gap-0.5 p-4">
+            <h3 className="truncate text-sm font-semibold" dir={dir}>
+              {t.nav.stories}
+            </h3>
+            <p className="text-muted-foreground truncate text-xs" dir={dir}>
+              {currentStoryLesson
+                ? (currentStoryLesson.supportTitle ?? currentStoryLesson.title)
+                : t.marketing.storiesModeDescription}
+            </p>
+            <span className="text-primary mt-1.5 text-xs font-semibold">
+              {storiesCompletedIds.length > 0 ? t.common.continueLearning : t.common.startLearning}
+            </span>
+          </div>
+        </Link>
       </div>
     </div>
   );

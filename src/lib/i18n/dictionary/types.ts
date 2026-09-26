@@ -640,7 +640,7 @@ export interface Dictionary {
     checkBackSoon: string;
     moreGroupsSoon: string;
   };
-  /** Labels for the sidebar's Stories sub-nav (see learn-sidebar.tsx) — the sidebar merges the Stories and Ordinary Lessons nav items into one "Stories" item, which grows these two sub-links once active, switching between /learn/stories and /learn/normal without their content, routes, or lesson data changing at all. Admin-only for now, since Stories itself is still admin-only. */
+  /** Labels for the sidebar's Stories sub-nav (see learn-sidebar.tsx) — the sidebar merges the Stories and Ordinary Lessons nav items into one "Stories" item, which grows these two sub-links once active, switching between /learn/stories and /learn/normal without their content, routes, or lesson data changing at all. */
   storiesHub: {
     simplifiedTab: string;
     longerTab: string;
@@ -669,7 +669,7 @@ export interface Dictionary {
     monthlyChallengeCompleteHeading: string;
     /** Heading for the Library homepage's "books you've finished" shelf — only rendered when the signed-in learner has actually completed at least one book. */
     completedBooksHeading: string;
-    /** Books/Novels labels, used by the sidebar's Library sub-nav (see learn-sidebar.tsx) — admin-only for now, while the Novels catalog is still being written. */
+    /** Books/Novels labels, used by the sidebar's Library sub-nav (see learn-sidebar.tsx). */
     booksTabLabel: string;
     novelsTabLabel: string;
     /** The Novels homepage (same layout/order as the Library homepage, minus category browsing — the catalog is small and curated). */

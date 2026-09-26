@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, ListChecks, NotebookText, Type } from "lucide-react";
+import { Home, Library, ListChecks, NotebookText } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
@@ -10,15 +10,15 @@ import { cn } from "@/lib/utils";
 
 /**
  * Persistent primary navigation for the learning app. Home (the dashboard,
- * at the bare /learn route) is nav item #1. For admins, Stories and Ordinary
- * Lessons (Stories/Ordinary Lessons merge) collapse into a single "Stories"
- * item pointing at /learn/stories. Once that item is the active section
- * (current route under /learn/stories or /learn/normal), it grows two
- * indented sub-links right beneath it — "Simple Stories" (/learn/stories)
- * and "Longer Stories" (/learn/normal) — same route split as before, just
+ * at the bare /learn route) is nav item #1. Stories and Ordinary Lessons
+ * (Stories/Ordinary Lessons merge) collapse into a single "Stories" item
+ * pointing at /learn/stories. Once that item is the active section (current
+ * route under /learn/stories or /learn/normal), it grows two indented
+ * sub-links right beneath it — "Simple Stories" (/learn/stories) and
+ * "Longer Stories" (/learn/normal) — same route split as before, just
  * reached from inside the sidebar itself instead of a second top-level nav
- * item. "Library" gets the identical treatment for admins: once active
- * (under /learn/library), it grows "Books" (/learn/library) and "Novels"
+ * item. "Library" gets the identical treatment: once active (under
+ * /learn/library), it grows "Books" (/learn/library) and "Novels"
  * (/learn/library/novels) beneath it — this replaced the old top-of-page
  * Books/Novels pill toggle (formerly LibraryTypeToggle) both pages used to
  * render, same reasoning as the Stories merge: the split now lives in the
@@ -28,16 +28,10 @@ import { cn } from "@/lib/utils";
  * other mobile tab. Both switches reappear on mobile a different way —
  * LibraryMobileTabs and StoriesMobileTabs, rendered at the top of each of
  * their pages instead of in this nav shell (see those components' own doc
- * comments). Regular learners never had a Stories tab (still
- * admin-only while it's being rebuilt), so their nav keeps its own direct
- * "Ordinary Lessons" item to /learn/normal instead, unchanged from before
- * this merge; they still reach Library too, just without the Novels
- * sub-link (Novels is its own separate admin-only rollout gate, same as
- * Stories — see library/novels/page.tsx's isAdmin() check). Same `Type`/
- * `NotebookText`/`Library` icons already used everywhere else (see
- * learning-modes.ts's modeMeta). Conversation (also a LEARNING_MODE — see
- * @/lib/learning-modes) is deliberately NOT listed here — off the current
- * roadmap for now (product call, not a removed feature:
+ * comments). Same `NotebookText`/`Library` icons already used everywhere
+ * else (see learning-modes.ts's modeMeta). Conversation (also a
+ * LEARNING_MODE — see @/lib/learning-modes) is deliberately NOT listed here
+ * — off the current roadmap for now (product call, not a removed feature:
  * /learn/conversation and its content are untouched, this just stops
  * linking to it from primary nav). Re-add its NAV_ITEMS entry to bring it
  * back.
@@ -55,7 +49,7 @@ import { cn } from "@/lib/utils";
  * that one is visible on every viewport, not just md:+, so keeping a second
  * copy here would just be the same numbers shown twice.
  */
-export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean }) {
+export function LearnSidebar() {
   const pathname = usePathname();
   const { t, dir } = useLocale();
   // Home is an exact match (not a prefix) — "/learn" is a short enough
@@ -70,9 +64,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
     pathname === "/learn"
       ? "home"
       : pathname.startsWith("/learn/normal")
-        ? isAdminUser
-          ? "stories"
-          : "normal-lessons"
+        ? "stories"
         : pathname.startsWith("/learn/conversation")
           ? "conversation"
           : pathname.startsWith("/learn/stories")
@@ -83,22 +75,16 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
                 ? "library"
                 : null;
 
-  // Stories is temporarily admin-only while it's being rebuilt (see
-  // stories/page.tsx and [mode]/[lessonId]/page.tsx, which enforce this same
-  // gate server-side). For admins, Stories and Ordinary Lessons collapse
-  // into one "Stories" nav item, which opens on /learn/stories (Simple
-  // Stories, shown first) — see the Stories/Library sub-navs rendered right
-  // below their parent items further down. Regular learners never had a
-  // Stories tab to merge, so their nav is untouched: still a direct
-  // "Ordinary Lessons" item straight to /learn/normal, and a plain Library
-  // item with no Books/Novels sub-nav.
+  // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
+  // opens on /learn/stories (Simple Stories, shown first) — see the
+  // Stories/Library sub-navs rendered right below their parent items further
+  // down.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
-    { key: "normal-lessons", href: "/learn/normal", label: t.nav.normalLessons, icon: Type },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
-  ].filter((item) => (isAdminUser ? item.key !== "normal-lessons" : item.key !== "stories"));
+  ];
 
   // Every route this sidebar links to, present on every /learn/* page —
   // warmed in the background instead of through each Link's own default
@@ -110,7 +96,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
   const subNavHrefs =
     active === "stories"
       ? ["/learn/stories", "/learn/normal"]
-      : active === "library" && isAdminUser
+      : active === "library"
         ? ["/learn/library", "/learn/library/novels"]
         : [];
   useDeferredPrefetch([...NAV_ITEMS.map((item) => item.href), ...subNavHrefs]);
@@ -155,10 +141,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
           // The Stories/Ordinary Lessons and Library/Novels sub-navs (see
           // this file's own doc comment): only once the parent item is the
           // active section, and only on the md:+ sidebar — the mobile
-          // bottom bar has no room for a nested sub-list. Library's sub-nav
-          // is admin-only (Novels' own separate rollout gate); Stories'
-          // isn't gated again here since the whole "stories" nav item is
-          // already admin-only.
+          // bottom bar has no room for a nested sub-list.
           const subItems =
             item.key === "stories" && isActive
               ? [
@@ -175,7 +158,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
                     isSubActive: pathname.startsWith("/learn/normal"),
                   },
                 ]
-              : item.key === "library" && isActive && isAdminUser
+              : item.key === "library" && isActive
                 ? [
                     {
                       key: "books",
