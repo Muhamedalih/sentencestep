@@ -142,6 +142,24 @@ export async function generateBookVoice(bookId: string): Promise<BookVoiceGenera
   if (forbidden) return { error: forbidden, generated: 0, skipped: 0, failed: 0, moreWork: false };
 
   const supabase = createServiceRoleClient();
+
+  // Every other entry point into paid-provider generation (the cron sweep,
+  // generateMissingVoiceForContent) checks this shared cap before doing any
+  // work — this one didn't, so generateBookVoiceUntilDone's own loop (up to
+  // MAX_ROUNDS_PER_CLICK rounds, unattended once the admin clicks "Generate
+  // book audio") could run straight through it. Same check, same pattern as
+  // generateMissingVoiceForContent above.
+  const capStatus = await isDailyVoiceGenerationCapReached(supabase);
+  if (capStatus.capped) {
+    return {
+      error: `Daily voice generation cap reached (${capStatus.generatedToday}/${capStatus.dailyCap}). Try again after midnight UTC, or raise MAX_VOICE_GENERATIONS_PER_DAY.`,
+      generated: 0,
+      skipped: 0,
+      failed: 0,
+      moreWork: false,
+    };
+  }
+
   const outcome = await generateBookVoiceDraft(supabase, bookId);
   revalidatePath(`/admin/library/${bookId}/edit`);
   // Deliberately NOT revalidating /admin/voice/content itself — that page's
