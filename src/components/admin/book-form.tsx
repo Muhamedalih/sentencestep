@@ -151,8 +151,7 @@ export function BookForm({ categories, initial }: BookFormProps) {
               <option value="novel">Novel</option>
             </select>
             <p className="text-muted-foreground text-xs">
-              Novel entries never appear in the learner-facing Library yet — admin-only while that
-              section is built.
+              Novel entries appear in the Library&rsquo;s Novels section once published.
             </p>
           </Field>
           <Field label="Difficulty" htmlFor="book-difficulty">

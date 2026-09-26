@@ -13,9 +13,6 @@ import { cn } from "@/lib/utils";
  * for a nested sub-list), which left mobile with literally no way to reach
  * Novels at all: the "Library" tab always opened Books. This is the mobile
  * equivalent, rendered at the top of each page instead of in the nav shell.
- * Admin-only, matching the sidebar's own gate (Novels' own separate rollout
- * — see library/novels/page.tsx's isAdmin() check) — a non-admin never sees
- * this since they'd just be redirected straight back to Books.
  */
 export function LibraryMobileTabs({
   active,

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { LibraryHome } from "@/components/app/library-home";
 import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
-import { isAdmin } from "@/lib/admin/access";
 import { fetchMonthlyReadingChallengeAction } from "@/lib/book-progress/actions";
 import {
   fetchCategoriesWithBooks,
@@ -23,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Library" };
 
 export default async function LibraryHomePage() {
-  const [user, locale, isAdminUser] = await Promise.all([getCurrentUser(), getLocale(), isAdmin()]);
+  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
   // One shared client for every library query this page fires — creating a
   // separate createPublicClient() per query (as each of these functions
   // does on its own) has been observed to hang this request's streamed
@@ -40,9 +39,7 @@ export default async function LibraryHomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
-      {/* Novels is still an admin-only rollout (see library/novels/page.tsx) — a
-          regular learner never sees this, same as the sidebar's desktop sub-nav. */}
-      {isAdminUser && <LibraryMobileTabs active="books" className="mb-6" />}
+      <LibraryMobileTabs active="books" className="mb-6" />
       <LibraryHome
         categoriesWithBooks={categoriesWithBooks}
         featuredBooks={featuredBooks}

@@ -27,9 +27,7 @@ interface NovelsHomeProps {
  * Reading, Completed, Featured, then the main catalog), deliberately
  * without LibraryHome's search box or category filter row: the Novels
  * catalog is a small, hand-curated set (a handful of titles), so neither
- * earns its keep the way they do over dozens of books. Admin-only route for
- * now — see this page's own isAdmin() gate in page.tsx — while the catalog
- * is still being written and reviewed as drafts.
+ * earns its keep the way they do over dozens of books.
  */
 export function NovelsHome({
   novels,

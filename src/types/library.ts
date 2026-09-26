@@ -8,7 +8,7 @@
 
 export type BookDifficultyLevel = 1 | 2 | 3;
 export type BookStatus = "draft" | "published" | "archived";
-/** 'book' (default) or 'novel' — a Novel is a copyright-safe, curated summary of a famous novel, reusing the same Book Learning Engine as a regular Book. Admin-only for now: every learner-facing query filters to 'book' until the Library's Books/Novels split ships. */
+/** 'book' (default) or 'novel' — a Novel is a copyright-safe, curated summary of a famous novel, reusing the same Book Learning Engine as a regular Book. The Library's Books/Novels split (fetchAllNovels et al. in queries/library.ts) surfaces 'novel' rows in their own Novels section, alongside the default 'book' queries. */
 export type BookType = "book" | "novel";
 
 export interface Category {

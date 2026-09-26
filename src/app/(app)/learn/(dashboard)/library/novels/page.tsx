@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
 import { NovelsHome } from "@/components/app/novels-home";
-import { isAdmin } from "@/lib/admin/access";
 import { fetchMonthlyReadingChallengeAction } from "@/lib/book-progress/actions";
 import {
   fetchAllNovels,
@@ -23,13 +21,6 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Novels" };
 
 export default async function NovelsHomePage() {
-  // Novels is admin-only while the catalog is still being written and
-  // reviewed as drafts — same rollout pattern Stories used while it was
-  // being rebuilt (see stories/page.tsx). Checked first, before any of this
-  // page's other queries run, so a regular learner never pays for them.
-  const isAdminUser = await isAdmin();
-  if (!isAdminUser) redirect("/learn/library");
-
   const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
   // One shared client for every query this page fires — see library.ts's
   // fetchCategories doc comment for why a separate createPublicClient() per
