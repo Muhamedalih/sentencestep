@@ -12,13 +12,14 @@ import { cn } from "@/lib/utils";
  * Persistent primary navigation for the learning app. Home (the dashboard,
  * at the bare /learn route) is nav item #1, Stories is nav item #2. Stories
  * and Ordinary Lessons (Stories/Ordinary Lessons merge) collapse into a
- * single "Stories" item pointing at /learn/stories. Once that item is the
- * active section (current route under /learn/stories or /learn/normal), it
- * grows two indented sub-links right beneath it — "Longer Stories" i.e.
- * Daily Lessons (/learn/normal), shown first, then "Simple Stories"
- * (/learn/stories) — same route split as before, just reached from inside
- * the sidebar itself instead of a second top-level nav item. "Library" gets
- * the identical treatment: once active (under
+ * single "Stories" item pointing at /learn/normal (Daily Lessons opens by
+ * default; the learner can still switch to General Stories from the sub-nav
+ * right beneath it). Once that item is the active section (current route
+ * under /learn/stories or /learn/normal), it grows two indented sub-links
+ * right beneath it — "Longer Stories" i.e. Daily Lessons (/learn/normal),
+ * shown first, then "Simple Stories" (/learn/stories) — same route split as
+ * before, just reached from inside the sidebar itself instead of a second
+ * top-level nav item. "Library" gets the identical treatment: once active (under
  * /learn/library), it grows "Books" (/learn/library) and "Novels"
  * (/learn/library/novels) beneath it — this replaced the old top-of-page
  * Books/Novels pill toggle (formerly LibraryTypeToggle) both pages used to
@@ -77,12 +78,12 @@ export function LearnSidebar() {
                 : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
-  // opens on /learn/stories (Simple Stories) — see the Stories/Library
-  // sub-navs rendered right below their parent items further down. Order is
-  // Home, Stories, Library, Word Lists.
+  // opens on /learn/normal (Daily Lessons) by default — see the
+  // Stories/Library sub-navs rendered right below their parent items
+  // further down. Order is Home, Stories, Library, Word Lists.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
-    { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
+    { key: "stories", href: "/learn/normal", label: t.nav.stories, icon: NotebookText },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
   ];
