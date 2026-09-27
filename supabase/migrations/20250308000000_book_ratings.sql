@@ -19,7 +19,11 @@
 -- costs Supabase essentially nothing at this site's traffic.
 begin;
 
-create table book_ratings (
+-- if not exists / if exists throughout: this must be safe to re-run after a
+-- partial failure (e.g. the SQL editor re-run hitting "book_ratings already
+-- exists" because an earlier attempt's create table committed before a
+-- later statement in the same script errored).
+create table if not exists book_ratings (
   user_id uuid not null references auth.users (id) on delete cascade,
   book_id text not null references books (id) on delete cascade,
   rating smallint not null check (rating between 1 and 5),
@@ -29,12 +33,13 @@ create table book_ratings (
 );
 
 -- Powers book_rating_summaries' `where book_id = any(...)` below.
-create index book_ratings_book_idx on book_ratings (book_id);
+create index if not exists book_ratings_book_idx on book_ratings (book_id);
 
 alter table book_ratings enable row level security;
 
 -- A learner manages only their own rating — same shape as
 -- book_progress/book_sentence_marks.
+drop policy if exists "Users manage their own book rating" on book_ratings;
 create policy "Users manage their own book rating" on book_ratings
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
@@ -42,6 +47,7 @@ create policy "Users manage their own book rating" on book_ratings
 -- is meant to be aggregated across every reader — this second, broader
 -- policy OR's in with the one above so SELECT is public while
 -- insert/update/delete stay owner-only.
+drop policy if exists "Book ratings are public to read" on book_ratings;
 create policy "Book ratings are public to read" on book_ratings
   for select using (true);
 
