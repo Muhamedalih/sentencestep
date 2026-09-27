@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app/app-header";
 import { DashboardChrome } from "@/components/app/dashboard-chrome";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
+import { isAdmin } from "@/lib/admin/access";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -36,7 +37,12 @@ import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentenc
  * wrapper's md:hidden, never AppHeader/LearnSidebar's own mobile markup.
  */
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
-  const user = await getCurrentUser();
+  // isAdmin() runs unconditionally (matching every other isAdmin() call site
+  // in the app, e.g. the Home dashboard page.tsx) rather than being gated
+  // behind `user` — it has its own non-production dev-cookie override that
+  // works without a real session, and getCurrentUser() inside it is
+  // React cache()-memoized, so this never costs a second round trip.
+  const [user, isAdminUser] = await Promise.all([getCurrentUser(), isAdmin()]);
   // Both depend only on user.id, not on each other — safe to run together
   // instead of one after the other.
   const [savedCount, initialProgress] = user
@@ -50,7 +56,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
         header={<AppHeader user={user} savedCount={savedCount} initialProgress={initialProgress} />}
-        sidebar={<LearnSidebar />}
+        sidebar={<LearnSidebar isAdminUser={isAdminUser} />}
       >
         {children}
       </DashboardChrome>

@@ -338,6 +338,86 @@ function isAdminRoute(pathname: string): boolean {
 }
 
 /**
+ * Gates the entire /learn/library route tree (Books and Novels, including
+ * the [bookId]/read route that deliberately lives outside the (dashboard)
+ * route group but shares this same URL prefix — route groups never affect
+ * the URL) — admin-only for now, same "real HTTP redirect before any page
+ * code runs" reasoning as isAdminRoute/handleAdminRoute above. This app's
+ * layouts stream (see e.g. (dashboard)/layout.tsx's own async data fetching
+ * above the page), so by the time a nested page's own isAdmin()+redirect()
+ * check ((dashboard)/library/page.tsx and its siblings) runs, the outer HTML
+ * shell has typically already flushed with a 200 status — the redirect can
+ * then only reach the client as a post-hydration navigation, which still
+ * leaves the real page body (real book/novel content, in production) inside
+ * that first response for any plain HTTP client (curl, a crawler,
+ * view-source before JS runs). Confirmed live against a production build:
+ * without this middleware gate, `curl /learn/library` returned a 200 with
+ * the full rendered page, never a redirect. The page-level checks stay in
+ * place as defense in depth (matching handleAdminRoute/admin/layout.tsx's
+ * own belt-and-suspenders relationship), but this is the real boundary.
+ * Fails closed exactly like handleAdminRoute: no Supabase project, no
+ * session, or no admin role all land on /learn, never the actual page —
+ * redirecting there rather than /login, since hiding this section shouldn't
+ * force a guest through sign-in just to be sent away again.
+ */
+async function handleLibraryRoute(request: NextRequest, csp: string): Promise<NextResponse> {
+  const devAdminOverride =
+    process.env.NODE_ENV !== "production" &&
+    request.cookies.get(DEV_ADMIN_COOKIE)?.value === "true";
+  if (devAdminOverride) return withCsp(NextResponse.next({ request }), csp);
+
+  if (!isSupabaseConfigured() || !hasSupabaseAuthCookie(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/learn";
+    url.search = "";
+    return withCsp(NextResponse.redirect(url), csp);
+  }
+
+  const { supabase, getResponse } = createMiddlewareSupabaseClient(request);
+
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims ?? null;
+
+  if (!claims) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/learn";
+    url.search = "";
+    return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
+  }
+
+  if (await isMfaPending(supabase)) {
+    const url = request.nextUrl.clone();
+    url.pathname = VERIFY_MFA_PATH;
+    url.search = "";
+    url.searchParams.set("next", request.nextUrl.pathname);
+    return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", claims.sub)
+    .maybeSingle();
+
+  if (profile?.role !== "admin") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/learn";
+    url.search = "";
+    return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
+  }
+
+  return withCsp(getResponse(), csp);
+}
+
+/**
+ * True for `/learn/library` itself and everything under it — not a bare
+ * substring match, for the same reason isAdminRoute isn't one.
+ */
+function isLibraryRoute(pathname: string): boolean {
+  return pathname === "/learn/library" || pathname.startsWith("/learn/library/");
+}
+
+/**
  * Areas the 'editor' role (20250215000000_editor_role.sql) never gets,
  * regardless of what its RLS policies would technically allow through —
  * sensitive global settings, Reports, the Audit log, and user management
@@ -508,6 +588,10 @@ export async function middleware(request: NextRequest) {
 
   if (isAdminRoute(request.nextUrl.pathname)) {
     return handleAdminRoute(request, csp);
+  }
+
+  if (isLibraryRoute(request.nextUrl.pathname)) {
+    return handleLibraryRoute(request, csp);
   }
 
   const isRoot = request.nextUrl.pathname === "/";

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { BookOverview } from "@/components/app/book-overview";
+import { isAdmin } from "@/lib/admin/access";
 import { fetchBookProgressAction } from "@/lib/book-progress/actions";
 import { deriveChapterStates } from "@/lib/book-progress/chapter-state";
 import { fetchMyBookRatingAction } from "@/lib/book-progress/rating-actions";
@@ -29,6 +30,11 @@ export default async function BookOverviewPage({
 }: {
   params: Promise<{ bookId: string }>;
 }) {
+  // The Library (Books and Novels) is admin-only for now — checked first,
+  // before any of this page's other queries run, so a regular learner never
+  // pays for them.
+  if (!(await isAdmin())) redirect("/learn");
+
   const { bookId } = await params;
   // One shared client for every library/book-content query this page fires —
   // see library.ts's fetchCategories doc comment for why a separate

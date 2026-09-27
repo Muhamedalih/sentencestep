@@ -103,6 +103,7 @@ export function HomeHero({
   bookProgressPercent,
   isPremiumUser,
   hasWeakWords,
+  isAdminUser,
 }: {
   units: LessonUnit[];
   /** Stories-mode lessons — same shape/fetch as `units`, already resolved server-side by (dashboard)/[mode]/page.tsx (it fetches all three modes' content for lessonStats already; this is that same array, not a new query). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
@@ -117,6 +118,8 @@ export function HomeHero({
   isPremiumUser: boolean;
   /** Whether this learner currently has any weak/due review words (src/lib/weak-words) — same data NeedsReviewWords shows on Home. Used only to give the "cleared the whole catalog" state below a real next action instead of a dead end. */
   hasWeakWords: boolean;
+  /** The Library is admin-only for now — gates the book-recommendation card the same way (dashboard)/library/page.tsx gates the route itself. */
+  isAdminUser: boolean;
 }) {
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
@@ -268,7 +271,7 @@ export function HomeHero({
 
       {/* Right column — book recommendation above, Stories below, matching dimensions/spacing. */}
       <div className="flex flex-col gap-4">
-        {book && (
+        {book && isAdminUser && (
           <HomeBookCard
             book={book}
             sectionCount={bookSectionCount}
