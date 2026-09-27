@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ContentUnavailable } from "@/components/learning/content-unavailable";
 import { LessonSession } from "@/components/learning/lesson-session";
 import { PremiumLocked } from "@/components/learning/premium-locked";
+import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
@@ -13,6 +14,7 @@ import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/vo
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { tokenize } from "@/lib/typing";
 import { createPublicClient } from "@/lib/supabase/public-client";
+import { getCurrentUser } from "@/lib/supabase/auth";
 import { resolveVoiceId } from "@/lib/voice/resolution";
 import { resolveStoryNarratorVoice } from "@/lib/voice/story-voice-generation";
 import { lookupCachedAudioUrl, lookupCachedWordAudioUrls } from "@/lib/voice/voice-audio";
@@ -62,11 +64,22 @@ export default async function LessonPage({
   // see fetchLessonNav's doc comment for why the previous full-list fetch
   // here was the single most expensive call on this page after
   // fetchLessonById's own.
-  const [lessonNav, unit] = await Promise.all([
+  const [lessonNav, unit, user] = await Promise.all([
     getLessonNav(mode),
     getLessonById(mode, lessonId, locale ?? undefined),
+    getCurrentUser(),
   ]);
   if (!unit) notFound();
+
+  // This route sits outside the (dashboard) layout (see this file's own
+  // doc comment) on purpose, so it never gets that layout's default-size
+  // floating pill — reused across every return below instead of repeating
+  // the user?.email guest check (same one that layout applies) three times.
+  // size="compact" is what makes it safe to keep on mobile here, unlike
+  // that default pill — see ReportProblemButton's own doc comment.
+  const reportProblemButton = user?.email ? (
+    <ReportProblemButton variant="floating" size="compact" />
+  ) : null;
 
   // Admins can open any lesson regardless of the normal subscription gate
   // (see the Phase 2 redesign) — this only ever adds isAdmin() as an
@@ -89,6 +102,7 @@ export default async function LessonPage({
           titleAr={unit.titleAr}
           supportTitle={unit.supportTitle}
         />
+        {reportProblemButton}
       </div>
     );
   }
@@ -102,6 +116,7 @@ export default async function LessonPage({
     return (
       <div className="lesson-shell bg-background text-foreground mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <ContentUnavailable mode={mode} title={unit.title} />
+        {reportProblemButton}
       </div>
     );
   }
@@ -199,6 +214,7 @@ export default async function LessonPage({
         speakerVoiceMap={speakerVoiceMap}
         firstSentenceWordAudio={firstSentenceWordAudio}
       />
+      {reportProblemButton}
     </div>
   );
 }

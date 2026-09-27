@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { LessonListView } from "@/components/app/lesson-list-view";
+import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { MODE_TITLE_KEY, MODE_DESCRIPTION_KEY } from "@/components/marketing/mode-title-key";
 import { isAdmin } from "@/lib/admin/access";
@@ -10,6 +11,7 @@ import { getLessons, getLevelNames } from "@/lib/content";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { LEARNING_MODES, isLearningMode, modeMeta } from "@/lib/learning-modes";
+import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
 
 export function generateStaticParams() {
@@ -71,12 +73,13 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
   const title = mode === "normal" ? t.library.normalHeading : t.nav[MODE_TITLE_KEY[mode]];
   const description = t.marketing[MODE_DESCRIPTION_KEY[mode]];
 
-  const [units, hasPremium, isAdminUser, levelNames, recallCount] = await Promise.all([
+  const [units, hasPremium, isAdminUser, levelNames, recallCount, user] = await Promise.all([
     getLessons(mode, locale ?? undefined),
     hasPremiumAccess(),
     isAdmin(),
     getLevelNames(mode, locale ?? undefined),
     fetchVocabularyRecallCountAction(mode),
+    getCurrentUser(),
   ]);
 
   const isPremiumUser = hasPremium || isAdminUser;
@@ -97,6 +100,14 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
         levelNames={levelNames}
         recallCount={recallCount}
       />
+      {/* The dashboard layout's floating pill covers this page on desktop
+          already (max-sm:hidden) — this is only the mobile fallback, same
+          pattern as Settings > Preferences. */}
+      {user?.email && (
+        <div className="mt-8 sm:hidden">
+          <ReportProblemButton variant="inline" />
+        </div>
+      )}
     </div>
   );
 }
