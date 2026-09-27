@@ -80,7 +80,7 @@ export interface LessonCompletionTheme {
  * identity with the rest of the app instead of a bespoke palette.
  */
 export const DEFAULT_LESSON_COMPLETION_THEME: LessonCompletionTheme = {
-  colorBackground: "#0e1218",
+  colorBackground: "#000000",
   colorTextPrimary: "#ffffff",
   colorTextSecondary: "#a3a3a3",
   colorAccent: "#849bff",
