@@ -29,6 +29,29 @@ import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/conten
 const ON_ACCENT_TEXT = "#12141c";
 
 /**
+ * Fixed feedback colors for this completion's accuracy tier — a stand-out
+ * result (excellent or, on the low end, worth another look) shifts the
+ * accuracy badge, the XP bar fill, and the earned-XP stat toward one of
+ * these (see accuracyTierColor's own declaration below); an ordinary
+ * 80-94% result is left uncolored, keeping each of those three elements'
+ * normal color. Unlike colorAccent/colorXp these are semantic feedback
+ * (excellent vs. needs-more-practice), not brand decoration, so — same
+ * reasoning as ON_ACCENT_TEXT above — they're deliberately fixed rather
+ * than another admin-configurable theme field.
+ */
+const TIER_EXCELLENT = "#34d399";
+const TIER_NEEDS_WORK = "#f2ae4c";
+
+/** Layout only (left offset + stagger delay) for showCelebration's confetti dots — colors come from the component's own confettiColors, since those depend on theme.colorAccent. */
+const CONFETTI_DOTS: { left: string; delay: string }[] = [
+  { left: "16%", delay: "0s" },
+  { left: "32%", delay: "0.3s" },
+  { left: "50%", delay: "0.6s" },
+  { left: "68%", delay: "0.15s" },
+  { left: "84%", delay: "0.45s" },
+];
+
+/**
  * The viewport height (in dvh units) at which every fluid() value below
  * reaches its full admin-configured size — see fluid()'s own doc comment.
  * Chosen empirically (measured with a static reproduction of this exact
@@ -204,6 +227,14 @@ export function LessonCompletion({
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
   const accuracyPercent = Math.round(accuracy * 100);
+  // Non-null only for a stand-out result — the same >=95% cutoff the
+  // accuracyExcellent/accuracyGood subtitle copy above already switches on,
+  // plus a below-80% band on the other end. Null for the ordinary 80-94%
+  // band, where the badge/XP-fill/earned-XP stat below all keep their
+  // normal (non-tiered) color — an unremarkable result shouldn't compete
+  // for attention the way a genuinely good or poor one should.
+  const accuracyTierColor =
+    accuracyPercent >= 95 ? TIER_EXCELLENT : accuracyPercent < 80 ? TIER_NEEDS_WORK : null;
   // Stories never shows this CTA — see onFixMistakes's own doc comment.
   const hasMistakes = mode !== "stories" && mistakeCount > 0 && Boolean(onFixMistakes);
   const levelPercent = Math.round(learnerLevel.progress * 100);
@@ -225,6 +256,21 @@ export function LessonCompletion({
   const xpNeededForLevel = learnerLevel.next
     ? learnerLevel.next.minXp - learnerLevel.level.minXp
     : null;
+
+  // A soft glow pulse behind the accuracy badge plus a few falling confetti
+  // dots above the header (rendered further down) — reserved for something
+  // actually worth celebrating (a stand-out accuracy or a level crossed by
+  // this completion), never every ordinary completion, and never at all
+  // for a viewer who prefers reduced motion.
+  const showCelebration = !reducedMotion && (accuracyPercent >= 95 || leveledUp);
+  const celebrationGlowColor = accuracyTierColor ?? theme.colorAccent;
+  // Real confetti isn't monochrome — alternates between the screen's brand
+  // color and TIER_EXCELLENT (the same green a >=95% result already colors
+  // the badge/XP bar/stat with) rather than tying every dot to one color.
+  // TIER_NEEDS_WORK never appears here — this only ever renders for
+  // something worth celebrating, so its one "needs more practice" color
+  // has no place in it.
+  const confettiColors = [theme.colorAccent, TIER_EXCELLENT];
 
   // The single primary action, in the same priority order the previous
   // design already used ("Fix Your Mistakes" first when outstanding, then
@@ -341,8 +387,28 @@ export function LessonCompletion({
         <motion.div
           variants={fadeInUp}
           style={{ gap: fluid(Math.max(theme.headerSpacing, 12), 6) }}
-          className="flex flex-col items-center text-center"
+          className="relative flex flex-col items-center text-center"
         >
+          {/* A handful of falling confetti dots above the header — see
+              showCelebration's own doc comment for when this renders at
+              all. Absolutely positioned over the header so it adds no
+              layout height of its own; pointer-events-none since it's
+              purely decorative. */}
+          {showCelebration && (
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-14" aria-hidden="true">
+              {CONFETTI_DOTS.map((dot, index) => (
+                <span
+                  key={index}
+                  className="animate-lc-confetti absolute top-0 block size-1.5 rounded-[2px]"
+                  style={{
+                    left: dot.left,
+                    backgroundColor: confettiColors[index % confettiColors.length],
+                    animationDelay: dot.delay,
+                  }}
+                />
+              ))}
+            </div>
+          )}
           {/* Stories mode's only decoration on this otherwise-identical,
               admin-themed completion screen (see this file's own doc
               comment on why everything else here stays uniform across
@@ -384,14 +450,42 @@ export function LessonCompletion({
               showed, now sized and weighted like a quiet fact rather than
               this screen's headline. theme.heroNumberSize's range was
               recalibrated for this smaller role (see
-              lesson-completion-theme.ts). */}
+              lesson-completion-theme.ts). borderColor/background pick up
+              accuracyTierColor's tinted wash only for a stand-out result;
+              the ordinary case renders exactly as before (plain neutral
+              border, transparent background). */}
           <div
             dir="ltr"
-            style={{ borderColor: styles.border }}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
+            style={{
+              borderColor: accuracyTierColor
+                ? `color-mix(in srgb, ${accuracyTierColor} 35%, transparent)`
+                : styles.border,
+              backgroundColor: accuracyTierColor
+                ? `color-mix(in srgb, ${accuracyTierColor} 10%, transparent)`
+                : undefined,
+            }}
+            className="relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
           >
+            {/* The celebration's glow pulse — see showCelebration's own doc
+                comment. -z-10 so it always sits behind the number/label
+                text regardless of DOM/paint order (a positioned sibling
+                with z-index:auto still paints above in-flow text by
+                default). */}
+            {showCelebration && (
+              <span
+                aria-hidden="true"
+                className="animate-lc-pulse absolute -z-10 rounded-full"
+                style={{
+                  inset: "-10px",
+                  background: `radial-gradient(circle, color-mix(in srgb, ${celebrationGlowColor} 45%, transparent), transparent 70%)`,
+                }}
+              />
+            )}
             <span
-              style={{ fontSize: theme.heroNumberSize, color: styles.textPrimary }}
+              style={{
+                fontSize: theme.heroNumberSize,
+                color: accuracyTierColor ?? styles.textPrimary,
+              }}
               className="font-semibold tabular-nums"
             >
               {accuracyPercent}%
@@ -535,7 +629,7 @@ export function LessonCompletion({
                 key={cell.key}
                 label={cell.label}
                 value={cell.value}
-                valueColor={cell.accent ? theme.colorAccent : undefined}
+                valueColor={cell.accent ? (accuracyTierColor ?? theme.colorAccent) : undefined}
                 theme={theme}
                 styles={styles}
                 dividerColor={index > 0 ? styles.border : undefined}
@@ -562,6 +656,7 @@ export function LessonCompletion({
               reducedMotion={Boolean(reducedMotion)}
               theme={theme}
               styles={styles}
+              tierColor={accuracyTierColor}
             />
           </div>
 
@@ -797,6 +892,7 @@ function XpProgressCard({
   reducedMotion,
   theme,
   styles,
+  tierColor,
 }: {
   label: string;
   fromPercent: number;
@@ -806,6 +902,8 @@ function XpProgressCard({
   reducedMotion: boolean;
   theme: LessonCompletionTheme;
   styles: LessonCompletionStyles;
+  /** Overrides the fill's usual theme.colorXp when this completion's accuracy earned a tier color (see accuracyTierColor at the call site) — null for the ordinary case, where the fill stays theme.colorXp exactly as before. */
+  tierColor: string | null;
 }) {
   const clampedFrom = Math.min(100, Math.max(0, fromPercent));
   const clampedTo = Math.min(100, Math.max(0, toPercent));
@@ -847,7 +945,7 @@ function XpProgressCard({
               : { duration: theme.xpAnimationDuration / 1000, ease: easeOut }
           }
           style={{
-            backgroundColor: theme.colorXp,
+            backgroundColor: tierColor ?? theme.colorXp,
             borderRadius: theme.progressBarRadius,
           }}
           className="h-full"
