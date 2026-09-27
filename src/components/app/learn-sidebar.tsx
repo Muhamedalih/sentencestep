@@ -19,15 +19,17 @@ import { cn } from "@/lib/utils";
  * right beneath it — "Longer Stories" i.e. Daily Lessons (/learn/normal),
  * shown first, then "Simple Stories" (/learn/stories) — same route split as
  * before, just reached from inside the sidebar itself instead of a second
- * top-level nav item. "Library" gets the identical treatment: once active (under
- * /learn/library), it grows "Books" (/learn/library) and "Novels"
- * (/learn/library/novels) beneath it — this replaced the old top-of-page
- * Books/Novels pill toggle (formerly LibraryTypeToggle) both pages used to
- * render, same reasoning as the Stories merge: the split now lives in the
- * sidebar itself. Both sub-navs are desktop-only (see their own `hidden
- * md:flex`): the mobile bottom tab bar has no room for a nested sub-list,
- * so there "Stories"/"Library" stay single plain buttons, same as every
- * other mobile tab. Both switches reappear on mobile a different way —
+ * top-level nav item. "Library" gets the identical treatment for admins: once
+ * active (under /learn/library), it grows "Books" (/learn/library) and
+ * "Novels" (/learn/library/novels) beneath it — this replaced the old
+ * top-of-page Books/Novels pill toggle (formerly LibraryTypeToggle) both
+ * pages used to render, same reasoning as the Stories merge: the split now
+ * lives in the sidebar itself. Regular learners never see the Library item
+ * at all (still admin-only — see (dashboard)/library/page.tsx's isAdmin()
+ * gate). Both sub-navs are desktop-only (see their own `hidden md:flex`):
+ * the mobile bottom tab bar has no room for a nested sub-list, so there
+ * "Stories"/"Library" stay single plain buttons, same as every other mobile
+ * tab. Both switches reappear on mobile a different way —
  * LibraryMobileTabs and StoriesMobileTabs, rendered at the top of each of
  * their pages instead of in this nav shell (see those components' own doc
  * comments). Same `NotebookText`/`Library` icons already used everywhere
@@ -51,7 +53,7 @@ import { cn } from "@/lib/utils";
  * that one is visible on every viewport, not just md:+, so keeping a second
  * copy here would just be the same numbers shown twice.
  */
-export function LearnSidebar() {
+export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean }) {
   const pathname = usePathname();
   const { t, dir } = useLocale();
   // Home is an exact match (not a prefix) — "/learn" is a short enough
@@ -81,12 +83,15 @@ export function LearnSidebar() {
   // opens on /learn/normal (Daily Lessons) by default — see the
   // Stories/Library sub-navs rendered right below their parent items
   // further down. Order is Home, Stories, Library, Word Lists.
+  // Library is admin-only for now (see (dashboard)/library/page.tsx and its
+  // sibling pages, which enforce this same gate server-side) — a regular
+  // learner never sees the nav item to it.
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
     { key: "stories", href: "/learn/normal", label: t.nav.stories, icon: NotebookText },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
-  ];
+  ].filter((item) => item.key !== "library" || isAdminUser);
 
   // Every route this sidebar links to, present on every /learn/* page —
   // warmed in the background instead of through each Link's own default
@@ -98,7 +103,7 @@ export function LearnSidebar() {
   const subNavHrefs =
     active === "stories"
       ? ["/learn/stories", "/learn/normal"]
-      : active === "library"
+      : active === "library" && isAdminUser
         ? ["/learn/library", "/learn/library/novels"]
         : [];
   useDeferredPrefetch([...NAV_ITEMS.map((item) => item.href), ...subNavHrefs]);
@@ -160,7 +165,7 @@ export function LearnSidebar() {
                     isSubActive: pathname.startsWith("/learn/stories"),
                   },
                 ]
-              : item.key === "library" && isActive
+              : item.key === "library" && isActive && isAdminUser
                 ? [
                     {
                       key: "books",

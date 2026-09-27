@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 
 import { BookCompletion } from "@/components/learning/book-completion";
 import { BookReadingSession } from "@/components/learning/book-reading-session";
+import { isAdmin } from "@/lib/admin/access";
 import { fetchBookProgressAction, fetchSectionForReadingAction } from "@/lib/book-progress/actions";
 import { isSectionUnlocked } from "@/lib/book-progress/chapter-state";
 import { getBookNarrationVoiceId } from "@/lib/admin/elevenlabs-queries";
@@ -59,6 +60,11 @@ export default async function BookReadingPage({
   params: Promise<{ bookId: string }>;
   searchParams: Promise<{ section?: string }>;
 }) {
+  // The Library (Books and Novels) is admin-only for now — checked first,
+  // before any of this page's other queries run, so a regular learner never
+  // pays for them.
+  if (!(await isAdmin())) redirect("/learn");
+
   const { bookId } = await params;
   const { section: requestedSectionId } = await searchParams;
   // One shared client for every library/book-content query this page fires —
