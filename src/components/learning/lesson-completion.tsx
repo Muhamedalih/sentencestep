@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, Wand2 } from "lucide-react";
+import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, RotateCcw, Wand2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -27,6 +27,54 @@ import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/conten
 
 /** Fixed, non-themed contrast color for text/icons sitting directly on the solid accent fill (PrimaryActionButton) — a contrast requirement, not a stylistic choice, so it isn't an admin field. theme.colorAccent defaults to a mid-brightness purple; white text on it reads poorly (~2:1 contrast), so this stays a near-black regardless of theme. */
 const ON_ACCENT_TEXT = "#12141c";
+
+/**
+ * The viewport height (in dvh units) at which every fluid() value below
+ * reaches its full admin-configured size — see fluid()'s own doc comment.
+ * Chosen empirically (measured with a static reproduction of this exact
+ * screen in a real browser, swept across common laptop resolutions) as the
+ * lowest saturation point that still leaves every stat/button/heading at
+ * its full configured size on a spacious display (a maximized window on a
+ * 1440p+ monitor, or a tall external display) while comfortably eliminating
+ * the internal scrollbar on a 13"-15" laptop's browser viewport (typically
+ * 650-900px tall after browser chrome, once far shorter than the 1920x1080+
+ * external-monitor viewports this screen was originally tuned against).
+ */
+const FLUID_SATURATION_DVH = 1200;
+
+/**
+ * A spacing/size value that equals `px` once the viewport is
+ * FLUID_SATURATION_DVH tall, and shrinks smoothly (never below `floor`) as
+ * the viewport gets shorter — see this file's own doc comment on the
+ * "Header → Vocabulary → Progress → Next Action" composition for why every
+ * one of this screen's admin-configured defaults was originally tuned
+ * against a full-height desktop monitor with no thought given to a
+ * shorter laptop viewport: at those defaults, this screen's real height
+ * left as little as 0-60px of margin against a 900px-tall browser
+ * viewport and actively overflowed by 70-250px anywhere from 600-768px
+ * tall (measured with the static reproduction above), meaning any
+ * 13"-15" laptop (or simply a non-maximized browser window) tipped it
+ * into an internal scrollbar that hid the primary action below the fold.
+ * Used for every spacing/size value on this screen that stacks vertically
+ * (gaps, padding, heading/stat font sizes, button heights) — never for a
+ * purely horizontal value (card gaps,
+ * button padding-inline), which don't contribute to this problem. `floor`
+ * is clamped to never exceed `px` itself, so an admin who's already
+ * configured a value at or below this screen's floor (e.g. the minimum end
+ * of a theme range slider) simply gets that fixed value back with no
+ * further shrinking — never a clamp() with its low bound above its high
+ * bound. dvh (not vh) so a mobile browser's address bar showing/hiding
+ * doesn't jitter this on every scroll; harmless below the lg breakpoint
+ * regardless, since only lg caps this screen's height/adds the internal
+ * scrollbar this exists to avoid — a mobile portrait viewport is tall
+ * enough that this almost always resolves at or near `px` anyway, and
+ * mobile was never height-constrained to begin with (see the outer
+ * motion.div's own min-h-[100svh] vs. lg:h-full split below).
+ */
+function fluid(px: number, floor: number): string {
+  const safeFloor = Math.min(floor, px);
+  return `clamp(${safeFloor}px, ${((px / FLUID_SATURATION_DVH) * 100).toFixed(3)}dvh, ${px}px)`;
+}
 
 /**
  * Localizes a single RewardEvent (see src/lib/progress/types.ts) for display
@@ -110,6 +158,7 @@ export function LessonCompletion({
   onViewWords,
   saveStatus = "saved",
   onRetrySave,
+  onRetryLesson,
 }: {
   mode: LearningMode;
   /** 0–1 ratio of correct to total keystrokes across the lesson. */
@@ -147,6 +196,8 @@ export function LessonCompletion({
   saveStatus?: CompletionSaveStatus;
   /** Re-attempts the save that produced saveStatus "error" — required together with it. */
   onRetrySave?: () => void;
+  /** Restarts this same lesson from its first sentence (see LessonSession's handleRetryLesson) — undefined for any caller that hasn't wired up a real reset (e.g. the admin theme preview), which simply omits the button rather than rendering one that does nothing. Ranked just above Home in the actions list below, so it's a secondary action alongside Home whenever Fix Mistakes or Next Lesson exists, and only becomes the primary CTA when neither does (see that list's own doc comment). */
+  onRetryLesson?: () => void;
 }) {
   const reducedMotion = useReducedMotion();
   const { t, locale, dir } = useLocale();
@@ -177,14 +228,19 @@ export function LessonCompletion({
 
   // The single primary action, in the same priority order the previous
   // design already used ("Fix Your Mistakes" first when outstanding, then
-  // Next Lesson, Home only ever as the fallback). Every other available
-  // action becomes a secondary, quieter action beside it. Exactly one of
-  // these three ever exists per render; Home always does. Unlike the
-  // earlier design, the primary button never varies its color by which
-  // action it is — one accent, always — so "which action is primary" is
-  // communicated by size/weight alone, never by a warning-colored border.
+  // Next Lesson, Home only ever as the fallback) — Retry Lesson is
+  // deliberately slotted in right before Home, never ahead of Fix
+  // Mistakes/Next Lesson, so it only ever becomes the primary action in the
+  // one case neither of those exists (the last lesson in a sequence, no
+  // outstanding mistakes) — a reasonable primary in exactly that case: with
+  // nothing else queued up, "do this again" is a better default than
+  // "leave." Every other available action becomes a secondary, quieter
+  // action beside it. Home always exists. Unlike the earlier design, the
+  // primary button never varies its color by which action it is — one
+  // accent, always — so "which action is primary" is communicated by
+  // size/weight alone, never by a warning-colored border.
   type CompletionAction = {
-    id: "fix" | "next" | "home";
+    id: "fix" | "next" | "retry" | "home";
     icon: typeof Wand2;
     label: string;
     href?: string;
@@ -201,6 +257,16 @@ export function LessonCompletion({
             icon: ArrowRight,
             label: t.lesson.nextLesson,
             href: `/learn/${mode}/${nextLesson.id}`,
+          },
+        ]
+      : []),
+    ...(onRetryLesson
+      ? [
+          {
+            id: "retry" as const,
+            icon: RotateCcw,
+            label: t.lesson.retryLesson,
+            onClick: onRetryLesson,
           },
         ]
       : []),
@@ -254,8 +320,13 @@ export function LessonCompletion({
       className="relative flex min-h-[100svh] w-full flex-col lg:h-full lg:min-h-0 lg:overflow-y-auto"
     >
       <div
-        style={{ maxWidth: `${theme.contentWidth}px`, gap: `${theme.sectionSpacing}px` }}
-        className="relative z-10 mx-auto flex w-full flex-1 flex-col px-6 py-10 sm:px-10 sm:py-14 lg:justify-center lg:px-6"
+        style={{
+          maxWidth: `${theme.contentWidth}px`,
+          gap: fluid(theme.sectionSpacing, 8),
+          paddingTop: fluid(56, 14),
+          paddingBottom: fluid(56, 14),
+        }}
+        className="relative z-10 mx-auto flex w-full flex-1 flex-col px-6 sm:px-10 lg:justify-center lg:px-6"
       >
         {/* ---------------------------------------------------------------
             HEADER — heading + subtitle, with the accuracy number demoted
@@ -269,7 +340,7 @@ export function LessonCompletion({
             --------------------------------------------------------------- */}
         <motion.div
           variants={fadeInUp}
-          style={{ gap: Math.max(theme.headerSpacing, 12) }}
+          style={{ gap: fluid(Math.max(theme.headerSpacing, 12), 6) }}
           className="flex flex-col items-center text-center"
         >
           {/* Stories mode's only decoration on this otherwise-identical,
@@ -293,7 +364,7 @@ export function LessonCompletion({
           <div>
             <h2
               style={{
-                fontSize: theme.headingSize,
+                fontSize: fluid(theme.headingSize, 19),
                 fontWeight: theme.headingWeight,
                 color: styles.textPrimary,
               }}
@@ -375,7 +446,8 @@ export function LessonCompletion({
         {vocabulary && vocabulary.length > 0 && (
           <motion.div
             variants={fadeInUp}
-            className="mx-auto flex w-full max-w-sm flex-col items-center gap-4"
+            style={{ gap: fluid(16, 8) }}
+            className="mx-auto flex w-full max-w-sm flex-col items-center"
           >
             <div className="w-full">
               <p
@@ -395,7 +467,7 @@ export function LessonCompletion({
                       borderRadius: Math.min(theme.chipRadius, 20),
                       borderColor: styles.vocabCardBorder,
                       backgroundColor: styles.vocabCardBg,
-                      padding: `${theme.cardPadding}px ${Math.round(theme.cardPadding * 0.6)}px`,
+                      padding: `${fluid(theme.cardPadding, 8)} ${Math.round(theme.cardPadding * 0.6)}px`,
                     }}
                     className="flex flex-1 flex-col items-center gap-1.5 border text-center"
                   >
@@ -411,7 +483,7 @@ export function LessonCompletion({
                     </span>
                     <span
                       dir="ltr"
-                      style={{ color: styles.textPrimary, fontSize: theme.statSize }}
+                      style={{ color: styles.textPrimary, fontSize: fluid(theme.statSize, 16) }}
                       className="font-extrabold"
                     >
                       {item.en}
@@ -453,7 +525,7 @@ export function LessonCompletion({
           style={{
             borderColor: styles.border,
             borderRadius: Math.min(theme.actionCardRadius, 16),
-            padding: theme.cardPadding,
+            padding: fluid(theme.cardPadding, 10),
           }}
           className="mx-auto flex w-full max-w-sm flex-col border"
         >
@@ -480,7 +552,7 @@ export function LessonCompletion({
             </p>
           )}
 
-          <div style={{ marginTop: theme.cardPadding }}>
+          <div style={{ marginTop: fluid(theme.cardPadding, 8) }}>
             <XpProgressCard
               label={learnerLevelSupportLabel(learnerLevel.level.name, t)}
               fromPercent={xpBarFromPercent}
@@ -514,7 +586,7 @@ export function LessonCompletion({
             --------------------------------------------------------------- */}
         <motion.div
           variants={fadeInUp}
-          style={{ gap: theme.cardSpacing }}
+          style={{ gap: fluid(theme.cardSpacing, 8) }}
           className="flex flex-col items-center"
         >
           {primaryAction && (
@@ -529,7 +601,7 @@ export function LessonCompletion({
           {secondaryActions.length > 0 && (
             <div
               className="flex flex-wrap items-center justify-center"
-              style={{ gap: theme.cardSpacing }}
+              style={{ gap: fluid(theme.cardSpacing, 8) }}
             >
               {secondaryActions.map((action) => (
                 <SecondaryActionButton
@@ -577,7 +649,7 @@ function StatCell({
     >
       <span
         style={{
-          fontSize: theme.statSize,
+          fontSize: fluid(theme.statSize, 16),
           color: valueColor ?? styles.textPrimary,
           fontWeight: theme.headingWeight,
         }}
@@ -624,7 +696,7 @@ export function PrimaryActionButton({
   const cardStyle: CSSProperties = {
     backgroundColor: theme.colorAccent,
     color: ON_ACCENT_TEXT,
-    height: Math.max(40, Math.round(theme.actionCardHeight * 0.46)),
+    height: fluid(Math.max(40, Math.round(theme.actionCardHeight * 0.46)), 36),
     borderRadius: Math.min(theme.actionCardRadius, 14),
     paddingInline: theme.cardPadding * 1.6,
   };
@@ -675,7 +747,7 @@ export function SecondaryActionButton({
   const cardStyle: CSSProperties = {
     borderColor: styles.border,
     color: styles.textSecondary,
-    height: Math.max(32, Math.round(theme.actionCardHeight * 0.38)),
+    height: fluid(Math.max(32, Math.round(theme.actionCardHeight * 0.38)), 30),
     borderRadius: Math.min(theme.actionCardRadius, 12),
     paddingInline: theme.cardPadding * 1.1,
   };
