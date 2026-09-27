@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitProblemReport } from "@/lib/reports/actions";
+import { cn } from "@/lib/utils";
 
 const MAX_MESSAGE_LENGTH = 1000;
 const SUCCESS_AUTOCLOSE_MS = 1800;
@@ -23,10 +24,27 @@ const SUCCESS_AUTOCLOSE_MS = 1800;
  * On mobile the floating pill (`variant="floating"`, the default) is hidden
  * via `max-sm:hidden` — it crowded the small viewport in a bad spot — and a
  * `variant="inline"` instance is rendered instead inside Settings >
- * Preferences (src/app/(app)/learn/(dashboard)/settings/page.tsx), wrapped
- * in `sm:hidden` so desktop keeps only the floating pill.
+ * Preferences (src/app/(app)/learn/(dashboard)/settings/page.tsx) and the
+ * Stories/Daily Lessons list pages, wrapped in `sm:hidden` so desktop keeps
+ * only the floating pill.
+ *
+ * `size="compact"` (~30% smaller: tighter padding, `text-xs`, smaller icon
+ * and status dot) is the one exception to `max-sm:hidden` — it's what the
+ * lesson player (src/app/(app)/learn/[mode]/[lessonId]/page.tsx) renders,
+ * on every viewport. That screen is full-viewport with no dashboard chrome
+ * around it at all (see that route's own doc comment for why it sits
+ * outside the (dashboard) layout that mounts the default-size pill), so
+ * without this there'd be no way to reach Report a Problem from inside an
+ * actual lesson — the smaller footprint is what makes it safe to keep on
+ * mobile there, unlike the default pill.
  */
-export function ReportProblemButton({ variant = "floating" }: { variant?: "floating" | "inline" }) {
+export function ReportProblemButton({
+  variant = "floating",
+  size = "default",
+}: {
+  variant?: "floating" | "inline";
+  size?: "default" | "compact";
+}) {
   const { t } = useLocale();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -88,14 +106,27 @@ export function ReportProblemButton({ variant = "floating" }: { variant?: "float
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 22 }}
-          className="border-border bg-card text-foreground fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40 max-sm:hidden"
+          className={cn(
+            "border-border bg-card text-foreground fixed z-40 flex items-center rounded-full border font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40",
+            size === "compact"
+              ? "bottom-3 left-3 gap-1.5 px-3 py-1.5 text-xs"
+              : "bottom-4 left-4 gap-2 px-4 py-2.5 text-sm max-sm:hidden",
+          )}
           aria-haspopup="dialog"
         >
-          <span className="relative flex size-2">
+          <span className={cn("relative flex", size === "compact" ? "size-1.5" : "size-2")}>
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/60 opacity-75" />
-            <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
+            <span
+              className={cn(
+                "relative inline-flex rounded-full bg-amber-500",
+                size === "compact" ? "size-1.5" : "size-2",
+              )}
+            />
           </span>
-          <TriangleAlert className="size-4 text-amber-500" aria-hidden="true" />
+          <TriangleAlert
+            className={cn("text-amber-500", size === "compact" ? "size-3.5" : "size-4")}
+            aria-hidden="true"
+          />
           {t.reportProblem.buttonLabel}
         </motion.button>
       ) : (
