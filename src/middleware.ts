@@ -192,6 +192,50 @@ function hasSupabaseAuthCookie(request: NextRequest): boolean {
   return request.cookies.getAll().some((c) => SUPABASE_AUTH_COOKIE_PATTERN.test(c.name));
 }
 
+/**
+ * How long any single Supabase call below is allowed to run before this
+ * function gives up on it and falls back to a safe default. This file
+ * compiles into one Netlify Edge Function that runs on almost every request
+ * (see this file's own `config.matcher`), so an unbounded or uncaught
+ * Supabase call here doesn't just fail that one feature — a slow, rate
+ * limited, or erroring Supabase project hangs/crashes the edge function
+ * itself, which takes down every route it covers, for every signed-in
+ * visitor, site-wide. Kept short and stacked calls (e.g. handleAdminRoute's
+ * getClaims -> isMfaPending -> profiles query) still land well under the
+ * platform's own edge function timeout even in the worst case.
+ */
+const SUPABASE_CALL_TIMEOUT_MS = 5000;
+
+/**
+ * Runs `fn`, but resolves to `fallback` instead of hanging or throwing if
+ * `fn` doesn't settle within SUPABASE_CALL_TIMEOUT_MS or rejects (network
+ * error, Supabase 5xx, etc). Every call site below already fails closed on
+ * its fallback value (no claims -> redirect to /login, no admin role ->
+ * redirect to /learn, MFA unverifiable -> treated as still pending) — this
+ * never grants access it couldn't actually verify, it only turns "the whole
+ * edge function hangs/crashes" into "this one request is treated as if
+ * Supabase said no."
+ */
+function withFallback<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+  ms = SUPABASE_CALL_TIMEOUT_MS,
+): Promise<T> {
+  return new Promise<T>((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    fn().then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
 function createMiddlewareSupabaseClient(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -248,8 +292,10 @@ const VERIFY_MFA_PATH = "/login/verify-mfa";
 async function isMfaPending(
   supabase: ReturnType<typeof createMiddlewareSupabaseClient>["supabase"],
 ): Promise<boolean> {
-  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  return Boolean(data && data.nextLevel === "aal2" && data.currentLevel !== "aal2");
+  return withFallback(async () => {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    return Boolean(data && data.nextLevel === "aal2" && data.currentLevel !== "aal2");
+  }, true); // unverifiable -> fail closed, same as a real pending MFA challenge
 }
 
 /**
@@ -286,8 +332,10 @@ async function handleAdminRoute(request: NextRequest, csp: string): Promise<Next
   // matcher), so that round trip was previously paid twice per action
   // (once here, once more inside whatever the action itself does) — a real,
   // measured source of "sometimes instant, sometimes seconds" latency.
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims ?? null;
+  const claims = await withFallback(
+    async () => (await supabase.auth.getClaims()).data?.claims ?? null,
+    null,
+  );
 
   if (!claims) {
     const url = request.nextUrl.clone();
@@ -304,13 +352,14 @@ async function handleAdminRoute(request: NextRequest, csp: string): Promise<Next
     return withCsp(carryCookies(getResponse(), NextResponse.redirect(url)), csp);
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", claims.sub)
-    .maybeSingle();
-
-  const role = profile?.role;
+  const role = await withFallback(async () => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", claims.sub)
+      .maybeSingle();
+    return profile?.role;
+  }, undefined);
   const hasAdminAccess =
     role === "admin" || (role === "editor" && !isAdminOnlyRoute(request.nextUrl.pathname));
 
@@ -388,20 +437,23 @@ async function reconcileLocaleCookie(
 ): Promise<NextResponse | null> {
   if (isSupportLocale(request.cookies.get(LOCALE_COOKIE)?.value)) return null;
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("preferred_language")
-    .eq("id", userId)
-    .maybeSingle();
-  if (!isSupportLocale(data?.preferred_language)) return null;
+  const preferredLanguage = await withFallback(async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("preferred_language")
+      .eq("id", userId)
+      .maybeSingle();
+    return data?.preferred_language;
+  }, undefined);
+  if (!isSupportLocale(preferredLanguage)) return null;
 
-  request.cookies.set(LOCALE_COOKIE, data.preferred_language);
+  request.cookies.set(LOCALE_COOKIE, preferredLanguage);
   // NextResponse.next({ request }) is what forwards the just-mutated
   // request cookie to this same request's Server Components — but it
   // starts a brand-new response with none of getUser()'s own staged
   // Set-Cookie headers, so those have to be carried over explicitly.
   const response = carryCookies(getResponse(), NextResponse.next({ request }));
-  response.cookies.set(LOCALE_COOKIE, data.preferred_language, {
+  response.cookies.set(LOCALE_COOKIE, preferredLanguage, {
     maxAge: LOCALE_COOKIE_MAX_AGE,
     path: "/",
     sameSite: "lax",
@@ -541,8 +593,10 @@ export async function middleware(request: NextRequest) {
     // replaces getUser() — same JWT-verification guarantee, without forcing a
     // network round trip to the Auth server on every request/action once the
     // Supabase project is on asymmetric signing keys.
-    const { data } = await supabase.auth.getClaims();
-    claims = data?.claims ?? null;
+    claims = await withFallback(
+      async () => (await supabase!.auth.getClaims()).data?.claims ?? null,
+      null,
+    );
     response = created.getResponse();
   }
 
