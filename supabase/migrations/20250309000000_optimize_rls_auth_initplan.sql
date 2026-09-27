@@ -40,8 +40,11 @@
 -- three functions this schema's policies ever call this way (verified: 63 +
 -- 87 + 32 call sites, 0 already wrapped as of this migration), so the
 -- substitution below is exhaustive. Idempotent — safe to re-run if ever
--- partially applied, since an already-wrapped `(select auth.uid())` no
--- longer matches the bare-call pattern below and is left alone.
+-- partially applied: matching is case-insensitive (`~*` / the `i` flag),
+-- since Postgres redisplays a stored `(select auth.uid())` back through
+-- pg_policies as `(SELECT auth.uid() AS uid)` — uppercased — so a
+-- case-sensitive check here would never recognize its own prior fix and
+-- would silently re-wrap it deeper on every re-run instead of leaving it.
 begin;
 
 do $$
@@ -57,8 +60,8 @@ begin
     from pg_policies
     where schemaname in ('public', 'storage')
       and (
-        qual ~ '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
-        or with_check ~ '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
+        qual ~* '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
+        or with_check ~* '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
       )
     order by schemaname, tablename, policyname
   loop
@@ -67,20 +70,20 @@ begin
 
     if new_qual is not null then
       new_qual := regexp_replace(
-        new_qual, '(?<!select )\y(public\.)?auth\.uid\(\)', '(select auth.uid())', 'g');
+        new_qual, '(?<!select )\y(public\.)?auth\.uid\(\)', '(select auth.uid())', 'gi');
       new_qual := regexp_replace(
-        new_qual, '(?<!select )\y(public\.)?is_admin\(\)', '(select is_admin())', 'g');
+        new_qual, '(?<!select )\y(public\.)?is_admin\(\)', '(select is_admin())', 'gi');
       new_qual := regexp_replace(
-        new_qual, '(?<!select )\y(public\.)?is_editor\(\)', '(select is_editor())', 'g');
+        new_qual, '(?<!select )\y(public\.)?is_editor\(\)', '(select is_editor())', 'gi');
     end if;
 
     if new_check is not null then
       new_check := regexp_replace(
-        new_check, '(?<!select )\y(public\.)?auth\.uid\(\)', '(select auth.uid())', 'g');
+        new_check, '(?<!select )\y(public\.)?auth\.uid\(\)', '(select auth.uid())', 'gi');
       new_check := regexp_replace(
-        new_check, '(?<!select )\y(public\.)?is_admin\(\)', '(select is_admin())', 'g');
+        new_check, '(?<!select )\y(public\.)?is_admin\(\)', '(select is_admin())', 'gi');
       new_check := regexp_replace(
-        new_check, '(?<!select )\y(public\.)?is_editor\(\)', '(select is_editor())', 'g');
+        new_check, '(?<!select )\y(public\.)?is_editor\(\)', '(select is_editor())', 'gi');
     end if;
 
     if new_qual is distinct from pol.qual or new_check is distinct from pol.with_check then
@@ -117,6 +120,6 @@ select schemaname, tablename, policyname, cmd, qual, with_check
 from pg_policies
 where schemaname in ('public', 'storage')
   and (
-    qual ~ '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
-    or with_check ~ '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
+    qual ~* '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
+    or with_check ~* '(?<!select )\y(public\.)?(auth\.uid|is_admin|is_editor)\(\)'
   );
