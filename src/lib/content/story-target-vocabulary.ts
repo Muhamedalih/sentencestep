@@ -545,4 +545,64 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
     { en: "resigned", ar: "مستسلم" },
     { en: "reclaiming", ar: "يستعيد" },
   ],
+  "story-199": [
+    { en: "notice", ar: "يلاحظ" },
+    { en: "smile", ar: "ابتسامة" },
+    { en: "brave", ar: "شجاع" },
+  ],
+  "story-200": [
+    { en: "reply", ar: "رد" },
+    { en: "giggle", ar: "ضحكة خفيفة" },
+    { en: "stranger", ar: "غريب" },
+  ],
+  "story-201": [
+    { en: "letter", ar: "رسالة" },
+    { en: "mailbox", ar: "صندوق البريد" },
+    { en: "excited", ar: "متحمس" },
+  ],
+  "story-202": [
+    { en: "sneeze", ar: "عطسة" },
+    { en: "quiet", ar: "هادئ" },
+    { en: "embarrassed", ar: "محرج" },
+  ],
+  "story-203": [
+    { en: "flustered", ar: "مرتبك" },
+    { en: "chemistry", ar: "انسجام" },
+    { en: "coincidence", ar: "صدفة" },
+  ],
+  "story-204": [
+    { en: "distance", ar: "مسافة" },
+    { en: "ache", ar: "ألم" },
+    { en: "reunite", ar: "يجتمع من جديد" },
+  ],
+  "story-205": [
+    { en: "anniversary", ar: "ذكرى سنوية" },
+    { en: "candlelight", ar: "ضوء الشموع" },
+    { en: "grateful", ar: "ممتن" },
+  ],
+  "story-206": [
+    { en: "disaster", ar: "كارثة" },
+    { en: "mortified", ar: "محرج جداً" },
+    { en: "hilarious", ar: "مضحك جداً" },
+  ],
+  "story-207": [
+    { en: "unspoken", ar: "غير معلن" },
+    { en: "jeopardize", ar: "يعرّض للخطر" },
+    { en: "yearning", ar: "شوق" },
+  ],
+  "story-208": [
+    { en: "mundane", ar: "عادي ورتيب" },
+    { en: "imperfect", ar: "غير كامل" },
+    { en: "steadfast", ar: "ثابت" },
+  ],
+  "story-209": [
+    { en: "fleeting", ar: "زائل" },
+    { en: "linger", ar: "يطول" },
+    { en: "cherish", ar: "يعتز بـ" },
+  ],
+  "story-210": [
+    { en: "retaliate", ar: "يرد" },
+    { en: "ridiculous", ar: "سخيف" },
+    { en: "ceasefire", ar: "وقف إطلاق النار" },
+  ],
 };
