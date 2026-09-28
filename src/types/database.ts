@@ -680,6 +680,8 @@ export interface Database {
           description_ar: string | null;
           is_free: boolean;
           status: "draft" | "published" | "archived";
+          /** Per-group narration voice override — mirrors books.voice_id (see 20250311000000_word_group_voice_override.sql). Null falls back to tts_settings.default_pronunciation_voice_id, exactly like a group with no override. Must resolve to an Edge-TTS voice; generateWordGroupVoiceDraft ignores it otherwise. */
+          voice_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -693,6 +695,7 @@ export interface Database {
           description_ar?: string | null;
           is_free?: boolean;
           status?: "draft" | "published" | "archived";
+          voice_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

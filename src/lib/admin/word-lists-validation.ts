@@ -22,6 +22,8 @@ export interface WordGroupInput {
   descriptionAr?: string;
   isFree: boolean;
   status: WordGroupStatus;
+  /** Per-group Edge-TTS narration override — see word_groups.voice_id's own doc comment (src/types/database.ts). Undefined/null means "use the site-wide Word Lists default voice". */
+  voiceId?: string | null;
 }
 
 const MAX_TITLE_LENGTH = 200;

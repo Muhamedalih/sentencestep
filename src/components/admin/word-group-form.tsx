@@ -8,9 +8,23 @@ import { Input } from "@/components/ui/input";
 import { createWordGroup, updateWordGroup } from "@/lib/admin/word-lists-actions";
 import type { WordGroupStatus } from "@/lib/admin/word-lists-validation";
 import type { AdminWordGroup } from "@/lib/admin/word-lists-queries";
+import type { VoiceRow } from "@/lib/admin/voices-queries";
 
-/** Same optional-`initial` pattern as CategoryForm/LessonForm — one component for both create and edit. */
-export function WordGroupForm({ initial }: { initial?: AdminWordGroup }) {
+/**
+ * Same optional-`initial` pattern as CategoryForm/LessonForm — one
+ * component for both create and edit. `voices` is every Edge-TTS voice
+ * (pre-filtered by the caller — see EditWordGroupPage/NewWordGroupPage),
+ * matching the "Story audio status" dashboard's own per-row voice picker
+ * (VoiceDashboardRow), which is likewise handed only the pickable subset
+ * rather than filtering client-side.
+ */
+export function WordGroupForm({
+  initial,
+  voices,
+}: {
+  initial?: AdminWordGroup;
+  voices: VoiceRow[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +37,7 @@ export function WordGroupForm({ initial }: { initial?: AdminWordGroup }) {
   const [descriptionAr, setDescriptionAr] = useState(initial?.descriptionAr ?? "");
   const [isFree, setIsFree] = useState(initial?.isFree ?? false);
   const [status, setStatus] = useState<WordGroupStatus>(initial?.status ?? "draft");
+  const [voiceId, setVoiceId] = useState(initial?.voiceId ?? "");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -38,6 +53,7 @@ export function WordGroupForm({ initial }: { initial?: AdminWordGroup }) {
         descriptionAr: descriptionAr || undefined,
         isFree,
         status,
+        voiceId: voiceId || null,
       };
       const result = initial
         ? await updateWordGroup({ ...input, id: initial.id })
@@ -126,6 +142,21 @@ export function WordGroupForm({ initial }: { initial?: AdminWordGroup }) {
             <option value="archived">Archived</option>
           </select>
         </Field>
+        <Field label="Narration voice" htmlFor="group-voice">
+          <select
+            id="group-voice"
+            value={voiceId}
+            onChange={(e) => setVoiceId(e.target.value)}
+            className="border-input bg-background h-9 rounded-lg border px-3 text-sm"
+          >
+            <option value="">Site default</option>
+            {voices.map((voice) => (
+              <option key={voice.id} value={voice.id}>
+                {voice.name} ({voice.gender}, {voice.accent})
+              </option>
+            ))}
+          </select>
+        </Field>
         <label className="flex items-center gap-2 self-end pb-2 text-sm font-medium">
           <input
             type="checkbox"
@@ -136,6 +167,12 @@ export function WordGroupForm({ initial }: { initial?: AdminWordGroup }) {
           Free (unchecked = Premium)
         </label>
       </div>
+      {voiceId && (
+        <p className="text-muted-foreground -mt-2 text-sm">
+          Saving re-generates every word in this group under the new voice — the pronunciation
+          button will keep using the old clip until that finishes (usually a few seconds).
+        </p>
+      )}
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={isPending}>

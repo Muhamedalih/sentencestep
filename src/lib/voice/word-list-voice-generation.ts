@@ -112,18 +112,42 @@ export async function generateWordGroupVoiceDraft(
     return { generated: 0, skipped: 0, failed: 0, error: "Couldn't load the word group's words." };
   if (!words || words.length === 0) return { generated: 0, skipped: 0, failed: 0 };
 
-  const defaultVoiceId = await getDefaultPronunciationVoiceId();
+  // A group's own voice_id wins when it actually resolves to an Edge-TTS
+  // voice — same override-then-fallback precedence
+  // resolveStoryNarratorVoice/resolveTargetVoices already use for a
+  // lesson/book's voice_id, applied here to word_groups.voice_id (see
+  // 20250311000000_word_group_voice_override.sql). A voice_id left over
+  // from some other provider (there's no admin path that could set one
+  // today, but nothing prevents it at the DB level) is silently ignored
+  // rather than rejected — falls through to the site-wide default exactly
+  // as if the group had no override at all.
+  const { data: group } = await supabase
+    .from("word_groups")
+    .select("voice_id")
+    .eq("id", groupId)
+    .maybeSingle();
+
+  let candidateVoiceId = await getDefaultPronunciationVoiceId();
+  if (group?.voice_id) {
+    const { data: overrideVoice } = await supabase
+      .from("voices")
+      .select("id, source")
+      .eq("id", group.voice_id)
+      .maybeSingle();
+    if (overrideVoice?.source === provider.name) candidateVoiceId = overrideVoice.id;
+  }
+
   const { data: voiceRow } = await supabase
     .from("voices")
     .select("id, provider_voice_id, source")
-    .eq("id", defaultVoiceId)
+    .eq("id", candidateVoiceId)
     .maybeSingle();
   if (!voiceRow || voiceRow.source !== provider.name) {
     return {
       generated: 0,
       skipped: 0,
       failed: words.length,
-      error: `The Word Lists voice (${defaultVoiceId}) is missing or isn't a ${provider.name} voice.`,
+      error: `The Word Lists voice (${candidateVoiceId}) is missing or isn't a ${provider.name} voice.`,
     };
   }
   const voiceId = voiceRow.id;

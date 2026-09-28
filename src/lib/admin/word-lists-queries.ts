@@ -20,6 +20,8 @@ export interface AdminWordGroup {
   descriptionAr: string | null;
   isFree: boolean;
   status: WordGroupStatus;
+  /** Per-group Edge-TTS narration override — see word_groups.voice_id's own doc comment (src/types/database.ts). Null means "use the site-wide Word Lists default voice". */
+  voiceId: string | null;
   wordCount: number;
 }
 
@@ -56,6 +58,7 @@ export async function listWordGroupsAdmin(): Promise<AdminWordGroup[]> {
     descriptionAr: row.description_ar,
     isFree: row.is_free,
     status: row.status as WordGroupStatus,
+    voiceId: row.voice_id,
     wordCount: countByGroup.get(row.id) ?? 0,
   }));
 }
@@ -100,6 +103,7 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
     descriptionAr: group.description_ar,
     isFree: group.is_free,
     status: group.status as WordGroupStatus,
+    voiceId: group.voice_id,
     wordCount: words?.length ?? 0,
     words: (words ?? []).map((w) => ({
       id: w.id,

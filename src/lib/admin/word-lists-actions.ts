@@ -46,6 +46,7 @@ export async function createWordGroup(input: WordGroupInput): Promise<ActionResu
       description_ar: input.descriptionAr?.trim() || null,
       is_free: input.isFree,
       status: input.status,
+      voice_id: input.voiceId || null,
     })
     .select("id")
     .single();
@@ -83,6 +84,7 @@ export async function updateWordGroup(
       description_ar: input.descriptionAr?.trim() || null,
       is_free: input.isFree,
       status: input.status,
+      voice_id: input.voiceId || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.id);
@@ -92,6 +94,14 @@ export async function updateWordGroup(
     }
     return { error: "Couldn't save the word group. Please try again." };
   }
+
+  // Best-effort, non-blocking: a changed voice is a different cache key
+  // (see resolution.ts's cacheKeyParts), so this re-generates this group's
+  // words under the new voice right away instead of waiting for the next
+  // voice-sweep cron tick — same trigger saveWordGroupWords already fires
+  // after a words edit, safe to call unconditionally since a voice that
+  // didn't actually change just hits the existing cache and no-ops.
+  triggerAutomaticWordGroupVoiceGeneration(input.id);
 
   void logAdminAction("word_group.updated", "word_group", input.id);
   revalidatePath("/admin/word-lists");
