@@ -129,6 +129,13 @@
 
   --animate-fade-in: fade-in 0.4s ease-out;
   --animate-rise-in: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  /* LessonCompletion's celebratory accent (see that file's showCelebration) —
+     a soft glow pulse behind the accuracy badge and a handful of falling
+     confetti dots above the header, both gated there on
+     !reducedMotion so these two keyframes only ever run for a viewer who
+     hasn't asked to reduce motion. */
+  --animate-lc-pulse: lc-pulse 2.4s ease-in-out infinite;
+  --animate-lc-confetti: lc-confetti-fall 2.8s ease-in infinite;
 
   @keyframes fade-in {
     from {
@@ -146,6 +153,30 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  @keyframes lc-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+  @keyframes lc-confetti-fall {
+    0% {
+      transform: translateY(-10px) rotate(0deg);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(56px) rotate(220deg);
+      opacity: 0;
     }
   }
 }

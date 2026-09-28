@@ -406,6 +406,27 @@ export function LessonSession({
     }
   }
 
+  // Restarts this same lesson from its first sentence — LessonCompletion's
+  // "Retry Lesson" secondary action. Resets every piece of per-attempt
+  // state this component itself owns (position, the stories transcript,
+  // and the cumulative accuracy/WPM counters handleSentenceComplete reads
+  // from above) back to a fresh mount's starting point. Never touches
+  // xp/streak/rewards itself — markComplete (see useProgress) already
+  // handles a lesson being completed more than once (its own xpEarned=0
+  // replay behavior), so a retry's eventual completion flows through
+  // exactly the same path as the first attempt did.
+  function handleRetryLesson() {
+    setPreviousSentences([]);
+    setSentenceIndex(0);
+    setMaxSentenceIndexReached(0);
+    setFinalAccuracy(1);
+    setFinalWpm(0);
+    correctCountRef.current = 0;
+    errorCountRef.current = 0;
+    wpmSamplesRef.current = [];
+    setIsComplete(false);
+  }
+
   // Steps back one sentence so a learner can reread/retype it — deliberately
   // narrow: it only rewinds position and the stories transcript this
   // component itself owns (previousSentences), never the cumulative
@@ -552,6 +573,7 @@ export function LessonSession({
                   onViewWords={unit.mode === "stories" ? () => setIsViewingWords(true) : undefined}
                   saveStatus={previewMode ? "saved" : saveStatus}
                   onRetrySave={previewMode ? undefined : retryMarkComplete}
+                  onRetryLesson={handleRetryLesson}
                 />
               </div>
               <RatingPrompt

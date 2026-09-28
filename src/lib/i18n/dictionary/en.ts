@@ -352,6 +352,7 @@ export const en: Dictionary = {
     typeToRevealPlaceholder: "Type the word to reveal it",
     nextLesson: "Next lesson",
     fixMistakes: "Fix Your Mistakes",
+    retryLesson: "Retry lesson",
     youAreOn: "You're on {unit}",
     readyToStart: "Ready to start",
     completeCount: "{completed} / {total} complete",

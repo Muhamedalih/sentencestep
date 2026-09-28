@@ -397,6 +397,8 @@ export interface Dictionary {
     typeToRevealPlaceholder: string;
     nextLesson: string;
     fixMistakes: string;
+    /** Completion screen only — restarts the same lesson from its first sentence (see LessonSession's handleRetryLesson). Always a secondary action, never fixMistakes/nextLesson's replacement. */
+    retryLesson: string;
     youAreOn: string;
     readyToStart: string;
     completeCount: string;

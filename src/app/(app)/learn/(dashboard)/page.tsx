@@ -151,7 +151,10 @@ export default async function LearnHomePage() {
   let bookSectionCount = 0;
   let bookSentenceCount = 0;
   let bookProgressPercent: number | undefined;
-  if (recommendedBook) {
+  // The Library (and this book-recommendation card into it) is admin-only
+  // for now — skip its extra queries for a regular learner, who'd never see
+  // the card HomeHero renders from them anyway.
+  if (recommendedBook && isAdminUser) {
     // countsPromise is shared with fetchBookProgressAction below (instead of
     // each independently calling fetchBookContentCounts) — see that
     // function's own doc comment for why it used to redundantly re-run the
@@ -194,6 +197,7 @@ export default async function LearnHomePage() {
           bookProgressPercent={bookProgressPercent}
           isPremiumUser={isPremiumUser}
           hasWeakWords={weakWords.length > 0}
+          isAdminUser={isAdminUser}
         />
       </div>
     </ProgressProvider>

@@ -214,31 +214,29 @@ export const fetchLevelPreviews = unstable_cache(
  * auth.uid(). Free lessons were never affected (their sentences are public
  * regardless of session).
  */
+// A mode's full sentence table now regularly exceeds a thousand rows once
+// word_translations is populated on every row (Stories crossed that point
+// once all 132 lessons had it) — a single embedded `sentences(*)` join
+// across every lesson in the mode started timing out under that payload
+// (measured: UND_ERR timeout on the stories catalog page). Chunking the
+// lesson id list mirrors CONTENT_IDS_CHUNK_SIZE's own rationale in
+// src/lib/i18n/content-translations.ts, just applied to this query instead.
+const LESSON_IDS_CHUNK_SIZE = 40;
+
 export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): Promise<Lesson[]> {
   const supabase = await createClient();
 
-  // A single round trip: sentences are embedded on the lessons row via the
-  // sentences.lesson_id -> lessons.id foreign key (see
-  // supabase/migrations/20250101000000_init_schema.sql), so PostgREST can
-  // return both in one request instead of the two sequential round trips
-  // this used to take (lessons+levels, then a dependent sentences query
-  // keyed off the first result's lesson ids). levels has no relationship to
-  // lessons.mode, so it stays a separate query, but it no longer needs to
-  // wait on the first result — both queries below now fire together. This
-  // goes through the same session-aware client as before, so the sentences
-  // RLS policy (which checks auth.uid() per lesson) is evaluated identically
-  // whether the row is reached via a direct select or an embed — see this
-  // function's own doc comment above for why that matters for premium
-  // content.
+  // levels has no relationship to lessons.mode, so it stays a separate
+  // query that fires alongside the lessons query below rather than waiting
+  // on it.
   const [{ data: lessonRows, error: lessonsError }, { data: levels, error: levelsError }] =
     await Promise.all([
       supabase
         .from("lessons")
-        .select("*, sentences(*)")
+        .select("*")
         .eq("mode", mode)
         .eq("status", "published")
-        .order("order_index")
-        .order("order_index", { referencedTable: "sentences" }),
+        .order("order_index"),
       supabase.from("levels").select("*").eq("mode", mode),
     ]);
 
@@ -247,17 +245,43 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
   // Defensive double-check (see isLearnerVisibleStatus's doc comment) — the
   // query above is the real filter, this just means a regression there
   // can't silently leak draft/archived lessons to learners.
-  const lessonRowsWithSentences = (lessonRows ?? []) as unknown as LessonRowWithSentences[];
-  const lessons = lessonRowsWithSentences.filter((lesson) => isLearnerVisibleStatus(lesson.status));
+  const lessons = (lessonRows ?? []).filter((lesson) =>
+    isLearnerVisibleStatus(lesson.status),
+  ) as LessonRowWithSentences[];
   if (lessons.length === 0) return [];
 
   const levelIndexById = new Map((levels ?? []).map((level) => [level.id, level.index]));
 
-  const sentences: SentenceRow[] = lessons.flatMap(
-    (lesson) => (lesson.sentences ?? []) as SentenceRow[],
-  );
-
+  // Sentences are fetched separately (not embedded), chunked by lesson id —
+  // see LESSON_IDS_CHUNK_SIZE's doc comment above. Same session-aware
+  // client as the lessons query, so the sentences RLS policy (which checks
+  // auth.uid() per lesson) is still evaluated identically to before — see
+  // this function's own doc comment for why that matters for premium
+  // content.
   const lessonIds = lessons.map((lesson) => lesson.id);
+  const lessonIdChunks: string[][] = [];
+  for (let i = 0; i < lessonIds.length; i += LESSON_IDS_CHUNK_SIZE) {
+    lessonIdChunks.push(lessonIds.slice(i, i + LESSON_IDS_CHUNK_SIZE));
+  }
+  const sentenceResults = await Promise.all(
+    lessonIdChunks.map((chunk) =>
+      supabase.from("sentences").select("*").in("lesson_id", chunk).order("order_index"),
+    ),
+  );
+  const sentences: SentenceRow[] = [];
+  const sentencesByLessonId = new Map<string, SentenceRow[]>();
+  for (const { data, error } of sentenceResults) {
+    if (error) throw error;
+    for (const sentence of data ?? []) {
+      sentences.push(sentence);
+      const existing = sentencesByLessonId.get(sentence.lesson_id);
+      if (existing) existing.push(sentence);
+      else sentencesByLessonId.set(sentence.lesson_id, [sentence]);
+    }
+  }
+  for (const lesson of lessons) {
+    lesson.sentences = sentencesByLessonId.get(lesson.id) ?? [];
+  }
   const sentenceIds = sentences.map((sentence) => sentence.id);
   const [lessonTranslations, sentenceTranslations] = locale
     ? await Promise.all([

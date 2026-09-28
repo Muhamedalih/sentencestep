@@ -364,6 +364,7 @@ export const es: Dictionary = {
     typeToRevealPlaceholder: "Escribe la palabra para revelarla",
     nextLesson: "Siguiente lección",
     fixMistakes: "Corrige tus errores",
+    retryLesson: "Repetir lección",
     youAreOn: "Estás en {unit}",
     readyToStart: "Listo para comenzar",
     completeCount: "{completed} / {total} completadas",

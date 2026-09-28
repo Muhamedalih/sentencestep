@@ -3,9 +3,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, Wand2 } from "lucide-react";
+import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, RotateCcw, Wand2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonCompletionTheme } from "@/components/providers/lesson-completion-theme-provider";
 import { fadeInUp, staggerChildren, easeOut } from "@/lib/motion";
@@ -27,6 +28,85 @@ import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/conten
 
 /** Fixed, non-themed contrast color for text/icons sitting directly on the solid accent fill (PrimaryActionButton) — a contrast requirement, not a stylistic choice, so it isn't an admin field. theme.colorAccent defaults to a mid-brightness purple; white text on it reads poorly (~2:1 contrast), so this stays a near-black regardless of theme. */
 const ON_ACCENT_TEXT = "#12141c";
+
+/** next/link's Link forwards its ref to the underlying <a>, same as any DOM element framer-motion wraps — created once at module scope (never per-render) for PrimaryActionButton/SecondaryActionButton's href branch below. */
+const MotionLink = motion.create(Link);
+
+/** Shared spring for every action button's hover/tap feel on this screen — one consistent, snappy physics curve rather than each button picking its own. */
+const BUTTON_SPRING = { type: "spring", stiffness: 420, damping: 25, mass: 0.7 } as const;
+
+/**
+ * Fixed feedback colors for this completion's accuracy tier — a stand-out
+ * result (excellent or, on the low end, worth another look) shifts the
+ * accuracy badge, the XP bar fill, and the earned-XP stat toward one of
+ * these (see accuracyTierColor's own declaration below); an ordinary
+ * 80-94% result is left uncolored, keeping each of those three elements'
+ * normal color. Unlike colorAccent/colorXp these are semantic feedback
+ * (excellent vs. needs-more-practice), not brand decoration, so — same
+ * reasoning as ON_ACCENT_TEXT above — they're deliberately fixed rather
+ * than another admin-configurable theme field.
+ */
+const TIER_EXCELLENT = "#34d399";
+const TIER_NEEDS_WORK = "#f2ae4c";
+
+/** Layout only (left offset + stagger delay) for showCelebration's confetti dots — colors come from the component's own confettiColors, since those depend on theme.colorAccent. */
+const CONFETTI_DOTS: { left: string; delay: string }[] = [
+  { left: "16%", delay: "0s" },
+  { left: "32%", delay: "0.3s" },
+  { left: "50%", delay: "0.6s" },
+  { left: "68%", delay: "0.15s" },
+  { left: "84%", delay: "0.45s" },
+];
+
+/**
+ * The viewport height (in dvh units) at which every fluid() value below
+ * reaches its full admin-configured size — see fluid()'s own doc comment.
+ * A first pass at this constant used 1200: safe against a scrollbar down to
+ * a genuinely short 720p-class laptop, but that meant a perfectly ordinary
+ * ~900-1000px-tall browser window (most laptops, undocked) rendered
+ * noticeably smaller than this screen's real configured size — reported
+ * back as "everything shrank." 880 instead: full configured size from
+ * ~880px up (an ordinary laptop window, not just a large external
+ * monitor), tapering to roughly 90% of that by 768px and further below —
+ * still meaningfully more breathing room than the original static sizing
+ * ever had there, just no longer chasing a guarantee against the shortest,
+ * least common viewports at the cost of how this looks everywhere else.
+ */
+const FLUID_SATURATION_DVH = 880;
+
+/**
+ * A spacing/size value that equals `px` once the viewport is
+ * FLUID_SATURATION_DVH tall, and shrinks smoothly (never below `floor`) as
+ * the viewport gets shorter — see this file's own doc comment on the
+ * "Header → Vocabulary → Progress → Next Action" composition for why every
+ * one of this screen's admin-configured defaults was originally tuned
+ * against a full-height desktop monitor with no thought given to a
+ * shorter laptop viewport: at those defaults, this screen's real height
+ * left as little as 0-60px of margin against a 900px-tall browser
+ * viewport and actively overflowed by 70-250px anywhere from 600-768px
+ * tall (measured with the static reproduction above), meaning any
+ * 13"-15" laptop (or simply a non-maximized browser window) tipped it
+ * into an internal scrollbar that hid the primary action below the fold.
+ * Used for every spacing/size value on this screen that stacks vertically
+ * (gaps, padding, heading/stat font sizes, button heights) — never for a
+ * purely horizontal value (card gaps,
+ * button padding-inline), which don't contribute to this problem. `floor`
+ * is clamped to never exceed `px` itself, so an admin who's already
+ * configured a value at or below this screen's floor (e.g. the minimum end
+ * of a theme range slider) simply gets that fixed value back with no
+ * further shrinking — never a clamp() with its low bound above its high
+ * bound. dvh (not vh) so a mobile browser's address bar showing/hiding
+ * doesn't jitter this on every scroll; harmless below the lg breakpoint
+ * regardless, since only lg caps this screen's height/adds the internal
+ * scrollbar this exists to avoid — a mobile portrait viewport is tall
+ * enough that this almost always resolves at or near `px` anyway, and
+ * mobile was never height-constrained to begin with (see the outer
+ * motion.div's own min-h-[100svh] vs. lg:h-full split below).
+ */
+function fluid(px: number, floor: number): string {
+  const safeFloor = Math.min(floor, px);
+  return `clamp(${safeFloor}px, ${((px / FLUID_SATURATION_DVH) * 100).toFixed(3)}dvh, ${px}px)`;
+}
 
 /**
  * Localizes a single RewardEvent (see src/lib/progress/types.ts) for display
@@ -110,6 +190,7 @@ export function LessonCompletion({
   onViewWords,
   saveStatus = "saved",
   onRetrySave,
+  onRetryLesson,
 }: {
   mode: LearningMode;
   /** 0–1 ratio of correct to total keystrokes across the lesson. */
@@ -147,12 +228,22 @@ export function LessonCompletion({
   saveStatus?: CompletionSaveStatus;
   /** Re-attempts the save that produced saveStatus "error" — required together with it. */
   onRetrySave?: () => void;
+  /** Restarts this same lesson from its first sentence (see LessonSession's handleRetryLesson) — undefined for any caller that hasn't wired up a real reset (e.g. the admin theme preview), which simply omits the button rather than rendering one that does nothing. Ranked just above Home in the actions list below, so it's a secondary action alongside Home whenever Fix Mistakes or Next Lesson exists, and only becomes the primary CTA when neither does (see that list's own doc comment). */
+  onRetryLesson?: () => void;
 }) {
   const reducedMotion = useReducedMotion();
   const { t, locale, dir } = useLocale();
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
   const accuracyPercent = Math.round(accuracy * 100);
+  // Non-null only for a stand-out result — the same >=95% cutoff the
+  // accuracyExcellent/accuracyGood subtitle copy above already switches on,
+  // plus a below-80% band on the other end. Null for the ordinary 80-94%
+  // band, where the badge/XP-fill/earned-XP stat below all keep their
+  // normal (non-tiered) color — an unremarkable result shouldn't compete
+  // for attention the way a genuinely good or poor one should.
+  const accuracyTierColor =
+    accuracyPercent >= 95 ? TIER_EXCELLENT : accuracyPercent < 80 ? TIER_NEEDS_WORK : null;
   // Stories never shows this CTA — see onFixMistakes's own doc comment.
   const hasMistakes = mode !== "stories" && mistakeCount > 0 && Boolean(onFixMistakes);
   const levelPercent = Math.round(learnerLevel.progress * 100);
@@ -175,16 +266,36 @@ export function LessonCompletion({
     ? learnerLevel.next.minXp - learnerLevel.level.minXp
     : null;
 
+  // A soft glow pulse behind the accuracy badge plus a few falling confetti
+  // dots above the header (rendered further down) — reserved for something
+  // actually worth celebrating (a stand-out accuracy or a level crossed by
+  // this completion), never every ordinary completion, and never at all
+  // for a viewer who prefers reduced motion.
+  const showCelebration = !reducedMotion && (accuracyPercent >= 95 || leveledUp);
+  const celebrationGlowColor = accuracyTierColor ?? theme.colorAccent;
+  // Real confetti isn't monochrome — alternates between the screen's brand
+  // color and TIER_EXCELLENT (the same green a >=95% result already colors
+  // the badge/XP bar/stat with) rather than tying every dot to one color.
+  // TIER_NEEDS_WORK never appears here — this only ever renders for
+  // something worth celebrating, so its one "needs more practice" color
+  // has no place in it.
+  const confettiColors = [theme.colorAccent, TIER_EXCELLENT];
+
   // The single primary action, in the same priority order the previous
   // design already used ("Fix Your Mistakes" first when outstanding, then
-  // Next Lesson, Home only ever as the fallback). Every other available
-  // action becomes a secondary, quieter action beside it. Exactly one of
-  // these three ever exists per render; Home always does. Unlike the
-  // earlier design, the primary button never varies its color by which
-  // action it is — one accent, always — so "which action is primary" is
-  // communicated by size/weight alone, never by a warning-colored border.
+  // Next Lesson, Home only ever as the fallback) — Retry Lesson is
+  // deliberately slotted in right before Home, never ahead of Fix
+  // Mistakes/Next Lesson, so it only ever becomes the primary action in the
+  // one case neither of those exists (the last lesson in a sequence, no
+  // outstanding mistakes) — a reasonable primary in exactly that case: with
+  // nothing else queued up, "do this again" is a better default than
+  // "leave." Every other available action becomes a secondary, quieter
+  // action beside it. Home always exists. Unlike the earlier design, the
+  // primary button never varies its color by which action it is — one
+  // accent, always — so "which action is primary" is communicated by
+  // size/weight alone, never by a warning-colored border.
   type CompletionAction = {
-    id: "fix" | "next" | "home";
+    id: "fix" | "next" | "retry" | "home";
     icon: typeof Wand2;
     label: string;
     href?: string;
@@ -201,6 +312,16 @@ export function LessonCompletion({
             icon: ArrowRight,
             label: t.lesson.nextLesson,
             href: `/learn/${mode}/${nextLesson.id}`,
+          },
+        ]
+      : []),
+    ...(onRetryLesson
+      ? [
+          {
+            id: "retry" as const,
+            icon: RotateCcw,
+            label: t.lesson.retryLesson,
+            onClick: onRetryLesson,
           },
         ]
       : []),
@@ -254,8 +375,13 @@ export function LessonCompletion({
       className="relative flex min-h-[100svh] w-full flex-col lg:h-full lg:min-h-0 lg:overflow-y-auto"
     >
       <div
-        style={{ maxWidth: `${theme.contentWidth}px`, gap: `${theme.sectionSpacing}px` }}
-        className="relative z-10 mx-auto flex w-full flex-1 flex-col px-6 py-10 sm:px-10 sm:py-14 lg:justify-center lg:px-6"
+        style={{
+          maxWidth: `${theme.contentWidth}px`,
+          gap: fluid(theme.sectionSpacing, 8),
+          paddingTop: fluid(56, 14),
+          paddingBottom: fluid(56, 14),
+        }}
+        className="relative z-10 mx-auto flex w-full flex-1 flex-col px-6 sm:px-10 lg:justify-center lg:px-6"
       >
         {/* ---------------------------------------------------------------
             HEADER — heading + subtitle, with the accuracy number demoted
@@ -269,9 +395,29 @@ export function LessonCompletion({
             --------------------------------------------------------------- */}
         <motion.div
           variants={fadeInUp}
-          style={{ gap: Math.max(theme.headerSpacing, 12) }}
-          className="flex flex-col items-center text-center"
+          style={{ gap: fluid(Math.max(theme.headerSpacing, 12), 6) }}
+          className="relative flex flex-col items-center text-center"
         >
+          {/* A handful of falling confetti dots above the header — see
+              showCelebration's own doc comment for when this renders at
+              all. Absolutely positioned over the header so it adds no
+              layout height of its own; pointer-events-none since it's
+              purely decorative. */}
+          {showCelebration && (
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-14" aria-hidden="true">
+              {CONFETTI_DOTS.map((dot, index) => (
+                <span
+                  key={index}
+                  className="animate-lc-confetti absolute top-0 block size-1.5 rounded-[2px]"
+                  style={{
+                    left: dot.left,
+                    backgroundColor: confettiColors[index % confettiColors.length],
+                    animationDelay: dot.delay,
+                  }}
+                />
+              ))}
+            </div>
+          )}
           {/* Stories mode's only decoration on this otherwise-identical,
               admin-themed completion screen (see this file's own doc
               comment on why everything else here stays uniform across
@@ -293,7 +439,7 @@ export function LessonCompletion({
           <div>
             <h2
               style={{
-                fontSize: theme.headingSize,
+                fontSize: fluid(theme.headingSize, 19),
                 fontWeight: theme.headingWeight,
                 color: styles.textPrimary,
               }}
@@ -313,14 +459,42 @@ export function LessonCompletion({
               showed, now sized and weighted like a quiet fact rather than
               this screen's headline. theme.heroNumberSize's range was
               recalibrated for this smaller role (see
-              lesson-completion-theme.ts). */}
+              lesson-completion-theme.ts). borderColor/background pick up
+              accuracyTierColor's tinted wash only for a stand-out result;
+              the ordinary case renders exactly as before (plain neutral
+              border, transparent background). */}
           <div
             dir="ltr"
-            style={{ borderColor: styles.border }}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
+            style={{
+              borderColor: accuracyTierColor
+                ? `color-mix(in srgb, ${accuracyTierColor} 35%, transparent)`
+                : styles.border,
+              backgroundColor: accuracyTierColor
+                ? `color-mix(in srgb, ${accuracyTierColor} 10%, transparent)`
+                : undefined,
+            }}
+            className="relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
           >
+            {/* The celebration's glow pulse — see showCelebration's own doc
+                comment. -z-10 so it always sits behind the number/label
+                text regardless of DOM/paint order (a positioned sibling
+                with z-index:auto still paints above in-flow text by
+                default). */}
+            {showCelebration && (
+              <span
+                aria-hidden="true"
+                className="animate-lc-pulse absolute -z-10 rounded-full"
+                style={{
+                  inset: "-10px",
+                  background: `radial-gradient(circle, color-mix(in srgb, ${celebrationGlowColor} 45%, transparent), transparent 70%)`,
+                }}
+              />
+            )}
             <span
-              style={{ fontSize: theme.heroNumberSize, color: styles.textPrimary }}
+              style={{
+                fontSize: theme.heroNumberSize,
+                color: accuracyTierColor ?? styles.textPrimary,
+              }}
               className="font-semibold tabular-nums"
             >
               {accuracyPercent}%
@@ -375,7 +549,8 @@ export function LessonCompletion({
         {vocabulary && vocabulary.length > 0 && (
           <motion.div
             variants={fadeInUp}
-            className="mx-auto flex w-full max-w-sm flex-col items-center gap-4"
+            style={{ gap: fluid(16, 8) }}
+            className="mx-auto flex w-full max-w-sm flex-col items-center"
           >
             <div className="w-full">
               <p
@@ -395,7 +570,7 @@ export function LessonCompletion({
                       borderRadius: Math.min(theme.chipRadius, 20),
                       borderColor: styles.vocabCardBorder,
                       backgroundColor: styles.vocabCardBg,
-                      padding: `${theme.cardPadding}px ${Math.round(theme.cardPadding * 0.6)}px`,
+                      padding: `${fluid(theme.cardPadding, 8)} ${Math.round(theme.cardPadding * 0.6)}px`,
                     }}
                     className="flex flex-1 flex-col items-center gap-1.5 border text-center"
                   >
@@ -411,7 +586,7 @@ export function LessonCompletion({
                     </span>
                     <span
                       dir="ltr"
-                      style={{ color: styles.textPrimary, fontSize: theme.statSize }}
+                      style={{ color: styles.textPrimary, fontSize: fluid(theme.statSize, 16) }}
                       className="font-extrabold"
                     >
                       {item.en}
@@ -436,6 +611,7 @@ export function LessonCompletion({
                 label={t.lesson.practiceWord}
                 onClick={onViewWords}
                 theme={theme}
+                reducedMotion={Boolean(reducedMotion)}
               />
             )}
           </motion.div>
@@ -453,7 +629,7 @@ export function LessonCompletion({
           style={{
             borderColor: styles.border,
             borderRadius: Math.min(theme.actionCardRadius, 16),
-            padding: theme.cardPadding,
+            padding: fluid(theme.cardPadding, 10),
           }}
           className="mx-auto flex w-full max-w-sm flex-col border"
         >
@@ -463,7 +639,7 @@ export function LessonCompletion({
                 key={cell.key}
                 label={cell.label}
                 value={cell.value}
-                valueColor={cell.accent ? theme.colorAccent : undefined}
+                valueColor={cell.accent ? (accuracyTierColor ?? theme.colorAccent) : undefined}
                 theme={theme}
                 styles={styles}
                 dividerColor={index > 0 ? styles.border : undefined}
@@ -480,7 +656,7 @@ export function LessonCompletion({
             </p>
           )}
 
-          <div style={{ marginTop: theme.cardPadding }}>
+          <div style={{ marginTop: fluid(theme.cardPadding, 8) }}>
             <XpProgressCard
               label={learnerLevelSupportLabel(learnerLevel.level.name, t)}
               fromPercent={xpBarFromPercent}
@@ -490,6 +666,7 @@ export function LessonCompletion({
               reducedMotion={Boolean(reducedMotion)}
               theme={theme}
               styles={styles}
+              tierColor={accuracyTierColor}
             />
           </div>
 
@@ -514,7 +691,7 @@ export function LessonCompletion({
             --------------------------------------------------------------- */}
         <motion.div
           variants={fadeInUp}
-          style={{ gap: theme.cardSpacing }}
+          style={{ gap: fluid(theme.cardSpacing, 8) }}
           className="flex flex-col items-center"
         >
           {primaryAction && (
@@ -524,12 +701,13 @@ export function LessonCompletion({
               href={primaryAction.href}
               onClick={primaryAction.onClick}
               theme={theme}
+              reducedMotion={Boolean(reducedMotion)}
             />
           )}
           {secondaryActions.length > 0 && (
             <div
               className="flex flex-wrap items-center justify-center"
-              style={{ gap: theme.cardSpacing }}
+              style={{ gap: fluid(theme.cardSpacing, 8) }}
             >
               {secondaryActions.map((action) => (
                 <SecondaryActionButton
@@ -540,6 +718,7 @@ export function LessonCompletion({
                   onClick={action.onClick}
                   theme={theme}
                   styles={styles}
+                  reducedMotion={Boolean(reducedMotion)}
                 />
               ))}
             </div>
@@ -577,7 +756,7 @@ function StatCell({
     >
       <span
         style={{
-          fontSize: theme.statSize,
+          fontSize: fluid(theme.statSize, 16),
           color: valueColor ?? styles.textPrimary,
           fontWeight: theme.headingWeight,
         }}
@@ -607,6 +786,16 @@ function StatCell({
  * on size/weight/position alone to say "primary", never color-as-severity.
  * Exported so FixYourMistakesSession's own completion state can reuse the
  * exact same admin-themed button rather than a second, drifting copy of it.
+ *
+ * Bypasses the shared <Button> (still used elsewhere in this file) for its
+ * own motion.create(Link)/motion.button instead — <Button> doesn't forward
+ * a ref, which framer-motion's gesture recognition needs on the actual DOM
+ * node, so wrapping it directly wasn't an option. buttonVariants({variant:
+ * "ghost"}) reproduces the exact classes <Button variant="ghost"> would
+ * have rendered, so this is a visual no-op beyond the hover/tap motion
+ * itself. The lift+glow reads as premium precisely because it's the ONLY
+ * motion moment on this button — everything else on this screen either
+ * animates once on entry (staggerChildren/fadeInUp) or not at all.
  */
 export function PrimaryActionButton({
   icon: Icon,
@@ -614,17 +803,20 @@ export function PrimaryActionButton({
   href,
   onClick,
   theme,
+  reducedMotion = false,
 }: {
   icon: typeof Wand2;
   label: string;
   href?: string;
   onClick?: () => void;
   theme: LessonCompletionTheme;
+  /** Drops the hover lift/tap spring, keeping only the (non-transform) glow — same "skip the transform, keep the color/shadow" split this screen's other reduced-motion checks use. Defaults to false so FixYourMistakesSession's own two call sites, which don't track this themselves, get the full animation. */
+  reducedMotion?: boolean;
 }) {
   const cardStyle: CSSProperties = {
     backgroundColor: theme.colorAccent,
     color: ON_ACCENT_TEXT,
-    height: Math.max(40, Math.round(theme.actionCardHeight * 0.46)),
+    height: fluid(Math.max(40, Math.round(theme.actionCardHeight * 0.46)), 36),
     borderRadius: Math.min(theme.actionCardRadius, 14),
     paddingInline: theme.cardPadding * 1.6,
   };
@@ -638,25 +830,55 @@ export function PrimaryActionButton({
     </>
   );
 
-  const className =
-    "flex w-full max-w-sm items-center justify-center gap-2 text-center hover:opacity-90 active:scale-[0.98] sm:w-auto";
+  const className = cn(
+    buttonVariants({ variant: "ghost" }),
+    "flex w-full max-w-sm items-center justify-center gap-2 text-center sm:w-auto",
+  );
+  const hoverAnimation = {
+    boxShadow: `0 16px 32px -12px color-mix(in srgb, ${theme.colorAccent} 60%, transparent)`,
+    ...(reducedMotion ? {} : { y: -3 }),
+  };
+  const tapAnimation = reducedMotion ? undefined : { scale: 0.96, y: 0 };
 
   if (href) {
     return (
-      <Button asChild variant="ghost" style={cardStyle} className={className}>
-        <Link href={href}>{content}</Link>
-      </Button>
+      <MotionLink
+        href={href}
+        data-slot="button"
+        style={cardStyle}
+        className={className}
+        whileHover={hoverAnimation}
+        whileTap={tapAnimation}
+        transition={BUTTON_SPRING}
+      >
+        {content}
+      </MotionLink>
     );
   }
 
   return (
-    <Button type="button" variant="ghost" onClick={onClick} style={cardStyle} className={className}>
+    <motion.button
+      type="button"
+      onClick={onClick}
+      data-slot="button"
+      style={cardStyle}
+      className={className}
+      whileHover={hoverAnimation}
+      whileTap={tapAnimation}
+      transition={BUTTON_SPRING}
+    >
       {content}
-    </Button>
+    </motion.button>
   );
 }
 
-/** A quiet, compact next-to-the-primary action — plain outlined text, no fill, no glow; exists to stay reachable without competing with PrimaryActionButton. */
+/**
+ * A quiet, compact next-to-the-primary action — plain outlined text, no
+ * fill, no glow at rest; exists to stay reachable without competing with
+ * PrimaryActionButton. Same motion.create(Link)/motion.button swap as
+ * PrimaryActionButton above, for the same reason (<Button> forwards no
+ * ref) — see that component's own doc comment.
+ */
 export function SecondaryActionButton({
   icon: Icon,
   label,
@@ -664,6 +886,7 @@ export function SecondaryActionButton({
   onClick,
   theme,
   styles,
+  reducedMotion = false,
 }: {
   icon: typeof Wand2;
   label: string;
@@ -671,11 +894,13 @@ export function SecondaryActionButton({
   onClick?: () => void;
   theme: LessonCompletionTheme;
   styles: LessonCompletionStyles;
+  /** See PrimaryActionButton's own doc comment on this prop. */
+  reducedMotion?: boolean;
 }) {
   const cardStyle: CSSProperties = {
     borderColor: styles.border,
     color: styles.textSecondary,
-    height: Math.max(32, Math.round(theme.actionCardHeight * 0.38)),
+    height: fluid(Math.max(32, Math.round(theme.actionCardHeight * 0.38)), 30),
     borderRadius: Math.min(theme.actionCardRadius, 12),
     paddingInline: theme.cardPadding * 1.1,
   };
@@ -689,20 +914,47 @@ export function SecondaryActionButton({
     </>
   );
 
-  const className = "flex items-center gap-2 border text-center hover:bg-white/5";
+  const className = cn(
+    buttonVariants({ variant: "ghost" }),
+    "flex items-center gap-2 border text-center",
+  );
+  const hoverAnimation = {
+    borderColor: theme.colorAccent,
+    backgroundColor: `color-mix(in srgb, ${theme.colorAccent} 12%, transparent)`,
+    color: theme.colorAccent,
+    ...(reducedMotion ? {} : { y: -2 }),
+  };
+  const tapAnimation = reducedMotion ? undefined : { scale: 0.96, y: 0 };
 
   if (href) {
     return (
-      <Button asChild variant="ghost" style={cardStyle} className={className}>
-        <Link href={href}>{content}</Link>
-      </Button>
+      <MotionLink
+        href={href}
+        data-slot="button"
+        style={cardStyle}
+        className={className}
+        whileHover={hoverAnimation}
+        whileTap={tapAnimation}
+        transition={BUTTON_SPRING}
+      >
+        {content}
+      </MotionLink>
     );
   }
 
   return (
-    <Button type="button" variant="ghost" onClick={onClick} style={cardStyle} className={className}>
+    <motion.button
+      type="button"
+      onClick={onClick}
+      data-slot="button"
+      style={cardStyle}
+      className={className}
+      whileHover={hoverAnimation}
+      whileTap={tapAnimation}
+      transition={BUTTON_SPRING}
+    >
       {content}
-    </Button>
+    </motion.button>
   );
 }
 
@@ -725,6 +977,7 @@ function XpProgressCard({
   reducedMotion,
   theme,
   styles,
+  tierColor,
 }: {
   label: string;
   fromPercent: number;
@@ -734,6 +987,8 @@ function XpProgressCard({
   reducedMotion: boolean;
   theme: LessonCompletionTheme;
   styles: LessonCompletionStyles;
+  /** Overrides the fill's usual theme.colorXp when this completion's accuracy earned a tier color (see accuracyTierColor at the call site) — null for the ordinary case, where the fill stays theme.colorXp exactly as before. */
+  tierColor: string | null;
 }) {
   const clampedFrom = Math.min(100, Math.max(0, fromPercent));
   const clampedTo = Math.min(100, Math.max(0, toPercent));
@@ -775,7 +1030,7 @@ function XpProgressCard({
               : { duration: theme.xpAnimationDuration / 1000, ease: easeOut }
           }
           style={{
-            backgroundColor: theme.colorXp,
+            backgroundColor: tierColor ?? theme.colorXp,
             borderRadius: theme.progressBarRadius,
           }}
           className="h-full"
