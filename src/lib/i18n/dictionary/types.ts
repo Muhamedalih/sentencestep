@@ -236,11 +236,27 @@ export interface Dictionary {
     cta: string;
     dismissAria: string;
   };
-  /** The optional, one-time "rate the app" prompt shown over the ordinary LessonCompletion screen — see RatingPrompt. */
+  /** The "rate the app" prompt shown over the ordinary LessonCompletion screen — see RatingPrompt/RatingModal. Flow: sentiment check first, then either the star ask or a private "what could we do better" note. */
   rateApp: {
+    /** Sentiment step's own heading/subtitle — shown before any star or feedback UI. */
     headline: string;
     subtitle: string;
+    sentimentPositive: string;
+    sentimentNegative: string;
+    /** Positive path: the star-picker step's own heading — tapping a star submits immediately. */
+    starsHeadline: string;
+    /** Shown right after a star tap, inviting an optional comment on top of the already-submitted rating. */
+    addCommentPrompt: string;
     commentPlaceholder: string;
+    sendComment: string;
+    /** Closes without adding a comment — the rating itself is already saved by this point. */
+    done: string;
+    /** RatingModal's "show my review on the homepage" checkbox — only ever offered for a signed-in learner's 4-5 star rating (see Testimonials). */
+    consentLabel: string;
+    /** Negative path: the private feedback-only step (no stars). */
+    negativeHeadline: string;
+    negativePlaceholder: string;
+    negativeThanksBody: string;
     skip: string;
     submit: string;
     thanksTitle: string;
@@ -817,6 +833,9 @@ export interface Dictionary {
     /** `free {mode}`, e.g. "free stories" — {mode} is substituted with the already-lowercased mode title. */
     freeModeCount: string;
     startLearningFree: string;
+    /** Testimonials section (src/components/marketing/testimonials.tsx) — rendered only once at least one learner-submitted testimonial has been approved (see Admin > Testimonials); never shown empty. */
+    testimonialsHeading: string;
+    testimonialsSubtitle: string;
     premiumHeading: string;
     /** `Premium unlocks everything SentenceStep offers, for {price}.` */
     premiumSubtitle: string;

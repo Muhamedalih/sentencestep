@@ -69,12 +69,18 @@ export function milestoneEmail({ origin, displayName, event }: MilestoneEmailInp
   const safeName = displayName ? escapeHtml(displayName) : "there";
   const learnUrl = `${origin}/learn`;
   const settingsUrl = `${origin}/learn/settings`;
+  // Opens RatingModal directly from Settings (see RateAppCard) — a genuine
+  // achievement moment is exactly when a rating ask reads as sincere rather
+  // than an interruption, so this rides the email a learner is already in a
+  // good mood reading, instead of adding another in-app popup.
+  const rateUrl = `${origin}/learn/settings?openRating=1`;
   const copy = milestoneCopy(event);
   const safeMessage = escapeHtml(copy.message);
 
   const bodyHtml = `
     <p style="margin:0 0 12px 0;">Hi ${safeName},</p>
     <p style="margin:0;">${safeMessage}</p>
+    <p style="margin:16px 0 0 0;font-size:13px;"><a href="${escapeHtml(rateUrl)}" style="color:#8a8aa3;">Got a second? Tell us how it's going</a></p>
   `;
 
   return {
@@ -87,6 +93,6 @@ export function milestoneEmail({ origin, displayName, event }: MilestoneEmailInp
       ctaUrl: learnUrl,
       unsubscribeUrl: settingsUrl,
     }),
-    text: `Hi ${displayName ?? "there"},\n\n${copy.message}\n\n${learnUrl}\n\nManage email preferences: ${settingsUrl}`,
+    text: `Hi ${displayName ?? "there"},\n\n${copy.message}\n\n${learnUrl}\n\nGot a second? Tell us how it's going: ${rateUrl}\n\nManage email preferences: ${settingsUrl}`,
   };
 }

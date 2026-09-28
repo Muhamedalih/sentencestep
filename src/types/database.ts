@@ -1150,6 +1150,33 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["problem_reports"]["Insert"]>;
         Relationships: [];
       };
+      /** A learner's consented, positive (4-5 star) app rating, pending admin review before it can show on the marketing homepage. See 20250309000000_app_testimonials.sql. */
+      app_testimonials: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          display_name: string | null;
+          rating: number;
+          comment: string;
+          locale: string | null;
+          status: "pending" | "published" | "dismissed";
+          created_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          display_name?: string | null;
+          rating: number;
+          comment: string;
+          locale?: string | null;
+          status?: "pending" | "published" | "dismissed";
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["app_testimonials"]["Insert"]>;
+        Relationships: [];
+      };
       /** Service-role-only sign-in attempt ledger backing signIn's lockout. See 20250216000000_login_attempt_lockout.sql. */
       login_attempts: {
         Row: {

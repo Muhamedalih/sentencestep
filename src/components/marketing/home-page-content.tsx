@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/marketing/how-it-works";
 import { ModeSection } from "@/components/marketing/mode-section";
 import { PremiumSection } from "@/components/marketing/premium-section";
 import { ProgressSection } from "@/components/marketing/progress-section";
+import { Testimonials } from "@/components/marketing/testimonials";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
@@ -40,6 +41,7 @@ export function HomePageContent({ locale }: { locale: SupportLocale | null }) {
         <ModeSection t={t} />
         <ProgressSection t={t} locale={locale} />
         <FreeExperience t={t} />
+        <Testimonials t={t} />
         <PremiumSection t={t} />
         <FreeCta isAuthenticated={false} t={t} />
       </main>
