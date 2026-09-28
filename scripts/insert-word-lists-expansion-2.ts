@@ -17,6 +17,16 @@
  * word below was checked by hand against all ~465 existing words and
  * against the other 5 new groups; none repeat.
  *
+ * order_index is fetched and computed at run time (see main()), not
+ * hardcoded — word_groups.order_index has its own `unique` constraint,
+ * separate from the `id` primary key, and `onConflict: "id"` only
+ * suppresses a conflict on `id`. A hardcoded 19-24 here previously
+ * collided with that constraint whenever the live table already had a
+ * group at one of those order_index values (e.g. one added by hand
+ * through /admin/word-lists/new, which this repo's migration history
+ * wouldn't reflect) — Postgres rejected the whole insert, and neither the
+ * groups nor the words below ever got saved.
+ *
  * Run with: npx tsx --env-file=.env.local scripts/insert-word-lists-expansion-2.ts
  */
 import { createClient } from "@supabase/supabase-js";
@@ -38,7 +48,6 @@ const supabase = createClient<Database>(url, serviceRoleKey, {
 interface GroupSeed {
   id: string;
   level: 1 | 2 | 3;
-  order: number;
   title: string;
   titleAr: string;
   description: string;
@@ -55,7 +64,6 @@ const GROUPS: GroupSeed[] = [
   {
     id: "body",
     level: 1,
-    order: 19,
     title: "Body",
     titleAr: "الجسم",
     description: "The body parts people actually talk about — from head to toe.",
@@ -64,7 +72,6 @@ const GROUPS: GroupSeed[] = [
   {
     id: "transportation",
     level: 1,
-    order: 20,
     title: "Transportation",
     titleAr: "المواصلات",
     description: "How people actually get around — cars, trains, and everything on the road.",
@@ -73,7 +80,6 @@ const GROUPS: GroupSeed[] = [
   {
     id: "sports",
     level: 2,
-    order: 21,
     title: "Sports",
     titleAr: "الرياضة",
     description: "The vocabulary of games, matches, and staying active.",
@@ -82,7 +88,6 @@ const GROUPS: GroupSeed[] = [
   {
     id: "emotions",
     level: 2,
-    order: 22,
     title: "Emotions",
     titleAr: "المشاعر",
     description: "The feelings people actually name when talking about their day.",
@@ -91,7 +96,6 @@ const GROUPS: GroupSeed[] = [
   {
     id: "law",
     level: 3,
-    order: 23,
     title: "Law",
     titleAr: "القانون",
     description: "The vocabulary of courts, contracts, and the legal system.",
@@ -100,7 +104,6 @@ const GROUPS: GroupSeed[] = [
   {
     id: "science",
     level: 3,
-    order: 24,
     title: "Science",
     titleAr: "العلوم",
     description:
@@ -611,10 +614,27 @@ const WORDS: Record<string, WordSeed[]> = {
 };
 
 async function main() {
-  const groupRows = GROUPS.map((g) => ({
+  // order_index has its own `unique` constraint on word_groups, separate
+  // from the `id` primary key that upsert's onConflict targets below — so
+  // a hardcoded order_index would silently fail the whole insert the
+  // moment it collided with any existing row (including one added by hand
+  // through the admin UI, which this script has no way to know about
+  // ahead of time). Reading the live table's current max first and
+  // building on top of it makes every assigned order_index guaranteed
+  // free, regardless of what's actually in the table.
+  const { data: maxRow, error: maxError } = await supabase
+    .from("word_groups")
+    .select("order_index")
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (maxError) throw maxError;
+  const startOrder = maxRow?.order_index ?? 0;
+
+  const groupRows = GROUPS.map((g, index) => ({
     id: g.id,
     level: g.level,
-    order_index: g.order,
+    order_index: startOrder + index + 1,
     title: g.title,
     title_ar: g.titleAr,
     description: g.description,

@@ -17,15 +17,35 @@
 -- word below was checked by hand against all ~465 existing words and
 -- against the other 5 new groups; none repeat. `on conflict (id) do
 -- nothing` makes this safe to run again without clobbering admin edits.
+--
+-- order_index is computed from the table's current max, not hardcoded —
+-- word_groups.order_index has its own `unique` constraint (see
+-- 20250119000000_word_lists.sql), separate from the `id` primary key, and
+-- `on conflict (id) do nothing` only suppresses a conflict on `id`. A
+-- hardcoded 19-24 here previously collided with that constraint whenever
+-- the live table already had a group at one of those order_index values
+-- (e.g. one added by hand through /admin/word-lists/new, which this
+-- repo's migration history wouldn't reflect) — Postgres raised a
+-- unique-violation error on the whole insert, the transaction rolled
+-- back, and neither the groups nor the words below it were ever saved.
 begin;
 
-insert into word_groups (id, level, order_index, title, title_ar, description, description_ar, is_free, status) values
-  ('body', 1, 19, 'Body', 'الجسم', 'The body parts people actually talk about — from head to toe.', 'أجزاء الجسم التي يتحدث عنها الناس فعلاً، من الرأس إلى القدم.', false, 'draft'),
-  ('transportation', 1, 20, 'Transportation', 'المواصلات', 'How people actually get around — cars, trains, and everything on the road.', 'كيف يتنقل الناس فعلاً — السيارات والقطارات وكل ما يتعلق بالطريق.', false, 'draft'),
-  ('sports', 2, 21, 'Sports', 'الرياضة', 'The vocabulary of games, matches, and staying active.', 'مفردات الألعاب والمباريات والنشاط البدني.', false, 'draft'),
-  ('emotions', 2, 22, 'Emotions', 'المشاعر', 'The feelings people actually name when talking about their day.', 'المشاعر التي يسميها الناس فعلاً عند الحديث عن يومهم.', false, 'draft'),
-  ('law', 3, 23, 'Law', 'القانون', 'The vocabulary of courts, contracts, and the legal system.', 'مفردات المحاكم والعقود والنظام القانوني.', false, 'draft'),
-  ('science', 3, 24, 'Science', 'العلوم', 'The language of experiments, theories, and how researchers actually talk about them.', 'لغة التجارب والنظريات وكيف يتحدث الباحثون عنها فعلاً.', false, 'draft')
+with base as (
+  select coalesce(max(order_index), 0) as start_order from word_groups
+),
+new_groups (ord, id, level, title, title_ar, description, description_ar) as (
+  values
+    (1, 'body', 1, 'Body', 'الجسم', 'The body parts people actually talk about — from head to toe.', 'أجزاء الجسم التي يتحدث عنها الناس فعلاً، من الرأس إلى القدم.'),
+    (2, 'transportation', 1, 'Transportation', 'المواصلات', 'How people actually get around — cars, trains, and everything on the road.', 'كيف يتنقل الناس فعلاً — السيارات والقطارات وكل ما يتعلق بالطريق.'),
+    (3, 'sports', 2, 'Sports', 'الرياضة', 'The vocabulary of games, matches, and staying active.', 'مفردات الألعاب والمباريات والنشاط البدني.'),
+    (4, 'emotions', 2, 'Emotions', 'المشاعر', 'The feelings people actually name when talking about their day.', 'المشاعر التي يسميها الناس فعلاً عند الحديث عن يومهم.'),
+    (5, 'law', 3, 'Law', 'القانون', 'The vocabulary of courts, contracts, and the legal system.', 'مفردات المحاكم والعقود والنظام القانوني.'),
+    (6, 'science', 3, 'Science', 'العلوم', 'The language of experiments, theories, and how researchers actually talk about them.', 'لغة التجارب والنظريات وكيف يتحدث الباحثون عنها فعلاً.')
+)
+insert into word_groups (id, level, order_index, title, title_ar, description, description_ar, is_free, status)
+select new_groups.id, new_groups.level, base.start_order + new_groups.ord, new_groups.title, new_groups.title_ar,
+       new_groups.description, new_groups.description_ar, false, 'draft'
+from new_groups, base
 on conflict (id) do nothing;
 
 insert into vocabulary_words (id, group_id, order_index, target_word, sentence, hint_ar) values
