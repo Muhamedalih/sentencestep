@@ -348,6 +348,7 @@ export const tr: Dictionary = {
     typeToRevealPlaceholder: "Görmek için kelimeyi yaz",
     nextLesson: "Sonraki ders",
     fixMistakes: "Hatalarını düzelt",
+    retryLesson: "Dersi tekrarla",
     youAreOn: "{unit} üzerindesiniz",
     readyToStart: "Başlamaya hazır",
     completeCount: "{completed} / {total} tamamlandı",

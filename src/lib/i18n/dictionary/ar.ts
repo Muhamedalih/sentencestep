@@ -333,6 +333,7 @@ export const ar: Dictionary = {
     typeToRevealPlaceholder: "اكتب الكلمة لتظهر",
     nextLesson: "الدرس القادم",
     fixMistakes: "تصحيح الأخطاء",
+    retryLesson: "إعادة الدرس",
     youAreOn: "أنت في {unit}",
     readyToStart: "جاهز للبدء",
     completeCount: "{completed} / {total} مكتمل",
