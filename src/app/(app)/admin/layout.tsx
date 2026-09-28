@@ -8,6 +8,7 @@ import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { isAdmin, isEditorOrAdmin } from "@/lib/admin/access";
 import { countNewProblemReports } from "@/lib/admin/reports-queries";
+import { countPendingTestimonials } from "@/lib/admin/testimonials-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signOut } from "@/lib/supabase/auth-actions";
 
@@ -32,6 +33,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   // ADMIN_ONLY_SEGMENTS), so the count would be noise to them anyway.
   const newReportsCount =
     fullAdmin && isSupabaseConfigured() ? await countNewProblemReports().catch(() => 0) : 0;
+  const pendingTestimonialsCount =
+    fullAdmin && isSupabaseConfigured() ? await countPendingTestimonials().catch(() => 0) : 0;
 
   if (!authorized) {
     return (
@@ -151,6 +154,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                   >
                     Reports
                     {newReportsCount > 0 && <Badge variant="secondary">{newReportsCount}</Badge>}
+                  </Link>
+                  <Link
+                    href="/admin/testimonials"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                  >
+                    Testimonials
+                    {pendingTestimonialsCount > 0 && (
+                      <Badge variant="secondary">{pendingTestimonialsCount}</Badge>
+                    )}
                   </Link>
                   <Link
                     href="/admin/audit-log"

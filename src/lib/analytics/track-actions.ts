@@ -93,3 +93,40 @@ export async function trackOnboardingCountryAction(countryCode: string): Promise
     user?.id ?? null,
   );
 }
+
+/**
+ * The three client-fired steps of the rating funnel that never reach
+ * submitAppRatingAction on their own (shown, sentiment picked, skipped) —
+ * RATING_STARS_SUBMITTED/RATING_NEGATIVE_FEEDBACK_SUBMITTED are tracked from
+ * inside submitAppRatingAction instead, since that's already the one place
+ * identity is resolved for a real submission. Narrow, strongly typed
+ * actions (one per funnel step) rather than a generic "track any rating
+ * event" endpoint, same reasoning as every other action in this file.
+ */
+export async function trackRatingPromptShownAction(trigger: "first" | "milestone"): Promise<void> {
+  const user = await getCurrentUser();
+  await track(
+    { name: "RATING_PROMPT_SHOWN", category: "ENGAGEMENT", properties: { trigger } },
+    user?.id ?? null,
+  );
+}
+
+export async function trackRatingSentimentSelectedAction(
+  sentiment: "positive" | "negative",
+): Promise<void> {
+  const user = await getCurrentUser();
+  await track(
+    { name: "RATING_SENTIMENT_SELECTED", category: "ENGAGEMENT", properties: { sentiment } },
+    user?.id ?? null,
+  );
+}
+
+export async function trackRatingPromptSkippedAction(
+  step: "sentiment" | "stars" | "negative",
+): Promise<void> {
+  const user = await getCurrentUser();
+  await track(
+    { name: "RATING_PROMPT_SKIPPED", category: "ENGAGEMENT", properties: { step } },
+    user?.id ?? null,
+  );
+}

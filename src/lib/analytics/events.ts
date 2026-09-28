@@ -62,6 +62,36 @@ export type AnalyticsEvent =
       category: "ENGAGEMENT";
       /** The "which country are you in?" onboarding step (CountryOnboarding) — an ISO 3166-1 alpha-2 code (see country-codes.ts), only ever fired when the guest actually picks one, never on skip. Aggregate signal only: no IP lookup, no geolocation API, self-reported. */
       properties: { countryCode: string };
+    }
+  | {
+      name: "RATING_PROMPT_SHOWN";
+      category: "ENGAGEMENT";
+      /** RatingPrompt became visible — "first" is the original second-lesson-ever ask, "milestone" a later bounded re-ask (see rating-storage.ts's MAX_PROMPT_SHOWS). The funnel denominator for RATING_SENTIMENT_SELECTED/RATING_STARS_SUBMITTED/etc below. */
+      properties: { trigger: "first" | "milestone" };
+    }
+  | {
+      name: "RATING_SENTIMENT_SELECTED";
+      category: "ENGAGEMENT";
+      /** RatingModal's first step — which reaction the learner picked, before seeing stars or the negative-feedback box. */
+      properties: { sentiment: "positive" | "negative" };
+    }
+  | {
+      name: "RATING_STARS_SUBMITTED";
+      category: "ENGAGEMENT";
+      /** A star tap on the positive path — fires the instant a star is tapped (see RatingModal), independent of whether a comment follows. */
+      properties: { rating: number; hasComment: boolean; source: "prompt" | "settings" };
+    }
+  | {
+      name: "RATING_NEGATIVE_FEEDBACK_SUBMITTED";
+      category: "ENGAGEMENT";
+      /** The negative-sentiment path's own "what could we do better" note was sent — never fires on a bare skip. */
+      properties: { source: "prompt" | "settings" };
+    }
+  | {
+      name: "RATING_PROMPT_SKIPPED";
+      category: "ENGAGEMENT";
+      /** The learner closed RatingModal without rating or sending feedback — which step they were on when they did. */
+      properties: { step: "sentiment" | "stars" | "negative" };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

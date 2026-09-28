@@ -24,6 +24,7 @@ import { usePronunciationSettings } from "@/components/providers/pronunciation-s
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { transitions } from "@/lib/motion";
 import { trackAudioPlayedAction, trackLessonViewAction } from "@/lib/analytics/track-actions";
+import { getLessonCountMilestone, getStreakMilestone } from "@/lib/email/milestones";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
@@ -151,18 +152,28 @@ export function LessonSession({
     retryMarkComplete,
     completions,
   } = useProgress();
-  // The one-time "rate the app" card's own eligibility check — never the
-  // opening lesson (OnboardingLessonComplete has its own dedicated pitch
-  // screen instead), never mid fix-your-mistakes, and only once `saveStatus`
-  // has actually settled to "saved": for a signed-in learner `completions`
-  // only updates once recordCompletionAction resolves (see useProgress's own
-  // doc comment), so reading `completions.length` any earlier would race a
-  // stale value. `completions` is deduped by lessonId (one entry per
+  // The "rate the app" card's own eligibility check — never the opening
+  // lesson (OnboardingLessonComplete has its own dedicated pitch screen
+  // instead), never mid fix-your-mistakes, and only once `saveStatus` has
+  // actually settled to "saved": for a signed-in learner `completions` only
+  // updates once recordCompletionAction resolves (see useProgress's own doc
+  // comment), so reading `completions.length`/`streak` any earlier would
+  // race a stale value. `completions` is deduped by lessonId (one entry per
   // distinct lesson ever completed, not per attempt), so `=== 2` fires
   // exactly once — the first non-opening lesson completed after the opening
-  // one — and never again for a replay of that same second lesson.
-  // RatingPrompt itself still gates on its own one-time localStorage flag on
-  // top of this, so this only ever needs to be "roughly right," not perfect.
+  // one. Beyond that first ask, a real lesson-count/streak milestone
+  // (reusing the exact thresholds LESSON_COUNT_MILESTONES/STREAK_MILESTONES
+  // already use for milestone emails, not a new set of magic numbers) is
+  // also eligible, so a learner who skipped the first ask gets a couple of
+  // later chances at genuinely good moments instead of never being asked
+  // again. RatingPrompt itself still gates on its own bounded-retry
+  // localStorage state on top of this (see rating-storage.ts's
+  // MAX_PROMPT_SHOWS), so this only ever needs to be "roughly right," not
+  // perfect, and ratingPromptTrigger is purely descriptive for analytics.
+  const isFirstRatingAsk = completions.length === 2;
+  const isRatingMilestone =
+    getLessonCountMilestone(completions.length) !== null ||
+    getStreakMilestone(streak.currentStreak) !== null;
   const eligibleForRatingPrompt =
     !previewMode &&
     isComplete &&
@@ -170,7 +181,8 @@ export function LessonSession({
     !isFixingMistakes &&
     !isViewingWords &&
     saveStatus === "saved" &&
-    completions.length === 2;
+    (isFirstRatingAsk || isRatingMilestone);
+  const ratingPromptTrigger: "first" | "milestone" = isFirstRatingAsk ? "first" : "milestone";
   const mistakes = useMistakes({ skipCountFetch: unit.mode === "stories" });
   const typingSoundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete, playLessonComplete } = useTypingSound({
@@ -542,7 +554,12 @@ export function LessonSession({
                   onRetrySave={previewMode ? undefined : retryMarkComplete}
                 />
               </div>
-              <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
+              <RatingPrompt
+                show={eligibleForRatingPrompt}
+                lessonId={unit.id}
+                mode={unit.mode}
+                triggerReason={ratingPromptTrigger}
+              />
             </div>
           ) : (
             // Illustration/transcript stays mounted for the whole session
