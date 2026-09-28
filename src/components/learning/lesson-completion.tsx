@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, RotateCcw, Wand2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonCompletionTheme } from "@/components/providers/lesson-completion-theme-provider";
 import { fadeInUp, staggerChildren, easeOut } from "@/lib/motion";
@@ -27,6 +28,12 @@ import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/conten
 
 /** Fixed, non-themed contrast color for text/icons sitting directly on the solid accent fill (PrimaryActionButton) — a contrast requirement, not a stylistic choice, so it isn't an admin field. theme.colorAccent defaults to a mid-brightness purple; white text on it reads poorly (~2:1 contrast), so this stays a near-black regardless of theme. */
 const ON_ACCENT_TEXT = "#12141c";
+
+/** next/link's Link forwards its ref to the underlying <a>, same as any DOM element framer-motion wraps — created once at module scope (never per-render) for PrimaryActionButton/SecondaryActionButton's href branch below. */
+const MotionLink = motion.create(Link);
+
+/** Shared spring for every action button's hover/tap feel on this screen — one consistent, snappy physics curve rather than each button picking its own. */
+const BUTTON_SPRING = { type: "spring", stiffness: 420, damping: 25, mass: 0.7 } as const;
 
 /**
  * Fixed feedback colors for this completion's accuracy tier — a stand-out
@@ -54,16 +61,18 @@ const CONFETTI_DOTS: { left: string; delay: string }[] = [
 /**
  * The viewport height (in dvh units) at which every fluid() value below
  * reaches its full admin-configured size — see fluid()'s own doc comment.
- * Chosen empirically (measured with a static reproduction of this exact
- * screen in a real browser, swept across common laptop resolutions) as the
- * lowest saturation point that still leaves every stat/button/heading at
- * its full configured size on a spacious display (a maximized window on a
- * 1440p+ monitor, or a tall external display) while comfortably eliminating
- * the internal scrollbar on a 13"-15" laptop's browser viewport (typically
- * 650-900px tall after browser chrome, once far shorter than the 1920x1080+
- * external-monitor viewports this screen was originally tuned against).
+ * A first pass at this constant used 1200: safe against a scrollbar down to
+ * a genuinely short 720p-class laptop, but that meant a perfectly ordinary
+ * ~900-1000px-tall browser window (most laptops, undocked) rendered
+ * noticeably smaller than this screen's real configured size — reported
+ * back as "everything shrank." 880 instead: full configured size from
+ * ~880px up (an ordinary laptop window, not just a large external
+ * monitor), tapering to roughly 90% of that by 768px and further below —
+ * still meaningfully more breathing room than the original static sizing
+ * ever had there, just no longer chasing a guarantee against the shortest,
+ * least common viewports at the cost of how this looks everywhere else.
  */
-const FLUID_SATURATION_DVH = 1200;
+const FLUID_SATURATION_DVH = 880;
 
 /**
  * A spacing/size value that equals `px` once the viewport is
@@ -602,6 +611,7 @@ export function LessonCompletion({
                 label={t.lesson.practiceWord}
                 onClick={onViewWords}
                 theme={theme}
+                reducedMotion={Boolean(reducedMotion)}
               />
             )}
           </motion.div>
@@ -691,6 +701,7 @@ export function LessonCompletion({
               href={primaryAction.href}
               onClick={primaryAction.onClick}
               theme={theme}
+              reducedMotion={Boolean(reducedMotion)}
             />
           )}
           {secondaryActions.length > 0 && (
@@ -707,6 +718,7 @@ export function LessonCompletion({
                   onClick={action.onClick}
                   theme={theme}
                   styles={styles}
+                  reducedMotion={Boolean(reducedMotion)}
                 />
               ))}
             </div>
@@ -774,6 +786,16 @@ function StatCell({
  * on size/weight/position alone to say "primary", never color-as-severity.
  * Exported so FixYourMistakesSession's own completion state can reuse the
  * exact same admin-themed button rather than a second, drifting copy of it.
+ *
+ * Bypasses the shared <Button> (still used elsewhere in this file) for its
+ * own motion.create(Link)/motion.button instead — <Button> doesn't forward
+ * a ref, which framer-motion's gesture recognition needs on the actual DOM
+ * node, so wrapping it directly wasn't an option. buttonVariants({variant:
+ * "ghost"}) reproduces the exact classes <Button variant="ghost"> would
+ * have rendered, so this is a visual no-op beyond the hover/tap motion
+ * itself. The lift+glow reads as premium precisely because it's the ONLY
+ * motion moment on this button — everything else on this screen either
+ * animates once on entry (staggerChildren/fadeInUp) or not at all.
  */
 export function PrimaryActionButton({
   icon: Icon,
@@ -781,12 +803,15 @@ export function PrimaryActionButton({
   href,
   onClick,
   theme,
+  reducedMotion = false,
 }: {
   icon: typeof Wand2;
   label: string;
   href?: string;
   onClick?: () => void;
   theme: LessonCompletionTheme;
+  /** Drops the hover lift/tap spring, keeping only the (non-transform) glow — same "skip the transform, keep the color/shadow" split this screen's other reduced-motion checks use. Defaults to false so FixYourMistakesSession's own two call sites, which don't track this themselves, get the full animation. */
+  reducedMotion?: boolean;
 }) {
   const cardStyle: CSSProperties = {
     backgroundColor: theme.colorAccent,
@@ -805,25 +830,55 @@ export function PrimaryActionButton({
     </>
   );
 
-  const className =
-    "flex w-full max-w-sm items-center justify-center gap-2 text-center hover:opacity-90 active:scale-[0.98] sm:w-auto";
+  const className = cn(
+    buttonVariants({ variant: "ghost" }),
+    "flex w-full max-w-sm items-center justify-center gap-2 text-center sm:w-auto",
+  );
+  const hoverAnimation = {
+    boxShadow: `0 16px 32px -12px color-mix(in srgb, ${theme.colorAccent} 60%, transparent)`,
+    ...(reducedMotion ? {} : { y: -3 }),
+  };
+  const tapAnimation = reducedMotion ? undefined : { scale: 0.96, y: 0 };
 
   if (href) {
     return (
-      <Button asChild variant="ghost" style={cardStyle} className={className}>
-        <Link href={href}>{content}</Link>
-      </Button>
+      <MotionLink
+        href={href}
+        data-slot="button"
+        style={cardStyle}
+        className={className}
+        whileHover={hoverAnimation}
+        whileTap={tapAnimation}
+        transition={BUTTON_SPRING}
+      >
+        {content}
+      </MotionLink>
     );
   }
 
   return (
-    <Button type="button" variant="ghost" onClick={onClick} style={cardStyle} className={className}>
+    <motion.button
+      type="button"
+      onClick={onClick}
+      data-slot="button"
+      style={cardStyle}
+      className={className}
+      whileHover={hoverAnimation}
+      whileTap={tapAnimation}
+      transition={BUTTON_SPRING}
+    >
       {content}
-    </Button>
+    </motion.button>
   );
 }
 
-/** A quiet, compact next-to-the-primary action — plain outlined text, no fill, no glow; exists to stay reachable without competing with PrimaryActionButton. */
+/**
+ * A quiet, compact next-to-the-primary action — plain outlined text, no
+ * fill, no glow at rest; exists to stay reachable without competing with
+ * PrimaryActionButton. Same motion.create(Link)/motion.button swap as
+ * PrimaryActionButton above, for the same reason (<Button> forwards no
+ * ref) — see that component's own doc comment.
+ */
 export function SecondaryActionButton({
   icon: Icon,
   label,
@@ -831,6 +886,7 @@ export function SecondaryActionButton({
   onClick,
   theme,
   styles,
+  reducedMotion = false,
 }: {
   icon: typeof Wand2;
   label: string;
@@ -838,6 +894,8 @@ export function SecondaryActionButton({
   onClick?: () => void;
   theme: LessonCompletionTheme;
   styles: LessonCompletionStyles;
+  /** See PrimaryActionButton's own doc comment on this prop. */
+  reducedMotion?: boolean;
 }) {
   const cardStyle: CSSProperties = {
     borderColor: styles.border,
@@ -856,20 +914,47 @@ export function SecondaryActionButton({
     </>
   );
 
-  const className = "flex items-center gap-2 border text-center hover:bg-white/5";
+  const className = cn(
+    buttonVariants({ variant: "ghost" }),
+    "flex items-center gap-2 border text-center",
+  );
+  const hoverAnimation = {
+    borderColor: theme.colorAccent,
+    backgroundColor: `color-mix(in srgb, ${theme.colorAccent} 12%, transparent)`,
+    color: theme.colorAccent,
+    ...(reducedMotion ? {} : { y: -2 }),
+  };
+  const tapAnimation = reducedMotion ? undefined : { scale: 0.96, y: 0 };
 
   if (href) {
     return (
-      <Button asChild variant="ghost" style={cardStyle} className={className}>
-        <Link href={href}>{content}</Link>
-      </Button>
+      <MotionLink
+        href={href}
+        data-slot="button"
+        style={cardStyle}
+        className={className}
+        whileHover={hoverAnimation}
+        whileTap={tapAnimation}
+        transition={BUTTON_SPRING}
+      >
+        {content}
+      </MotionLink>
     );
   }
 
   return (
-    <Button type="button" variant="ghost" onClick={onClick} style={cardStyle} className={className}>
+    <motion.button
+      type="button"
+      onClick={onClick}
+      data-slot="button"
+      style={cardStyle}
+      className={className}
+      whileHover={hoverAnimation}
+      whileTap={tapAnimation}
+      transition={BUTTON_SPRING}
+    >
       {content}
-    </Button>
+    </motion.button>
   );
 }
 

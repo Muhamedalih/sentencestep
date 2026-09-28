@@ -428,6 +428,7 @@ function FixYourMistakesComplete({
             label={t.lesson.nextLesson}
             href={`/learn/${nextLesson.mode}/${nextLesson.id}`}
             theme={theme}
+            reducedMotion={Boolean(reducedMotion)}
           />
         )}
         <SecondaryActionButton
@@ -436,6 +437,7 @@ function FixYourMistakesComplete({
           href="/learn"
           theme={theme}
           styles={styles}
+          reducedMotion={Boolean(reducedMotion)}
         />
       </motion.div>
     </motion.div>
