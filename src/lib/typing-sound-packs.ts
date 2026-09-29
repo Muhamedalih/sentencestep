@@ -12,6 +12,8 @@ import {
   LAYERED_SOUND_PACK_NAMES,
 } from "@/lib/typing-sound-layered-packs";
 import { BUTTON_SOUND_PACK_NAMES } from "@/lib/typing-sound-button-packs";
+import { SAMPLE_SOUND_PACKS, SAMPLE_SOUND_PACK_NAMES } from "@/lib/typing-sound-sample-packs";
+import type { SampleSoundPack } from "@/lib/typing-sound-sample-packs";
 import type { LayeredPack, LayeredSoundPack } from "@/lib/typing-sound-layered-packs";
 
 export type SoundVariant = "letter" | "error" | "complete";
@@ -29,7 +31,7 @@ export type ToneSoundPack =
   | "mechanical"
   | "crystal";
 
-export type SoundPack = ToneSoundPack | LayeredSoundPack;
+export type SoundPack = ToneSoundPack | LayeredSoundPack | SampleSoundPack;
 
 export interface ToneConfig {
   type: OscillatorType;
@@ -100,19 +102,24 @@ export const SOUND_PACKS: Record<ToneSoundPack, Record<SoundVariant, ToneConfig>
   },
 };
 
-export { LAYERED_SOUND_PACKS };
-export type { LayeredPack, LayeredSoundPack };
+export { LAYERED_SOUND_PACKS, SAMPLE_SOUND_PACKS };
+export type { LayeredPack, LayeredSoundPack, SampleSoundPack };
 
 const TONE_SOUND_PACK_NAMES = Object.keys(SOUND_PACKS) as ToneSoundPack[];
 
-/** Every selectable pack, original tone packs first, then the layered library. */
+/** Every selectable pack: original tone packs, then the synthesized layered library, then the recordings. */
 export const SOUND_PACK_NAMES: SoundPack[] = [
   ...TONE_SOUND_PACK_NAMES,
   ...LAYERED_SOUND_PACK_NAMES,
+  ...SAMPLE_SOUND_PACK_NAMES,
 ];
 
 export function isLayeredSoundPack(pack: SoundPack): pack is LayeredSoundPack {
   return pack in LAYERED_SOUND_PACKS;
+}
+
+export function isSampleSoundPack(pack: SoundPack): pack is SampleSoundPack {
+  return pack in SAMPLE_SOUND_PACKS;
 }
 
 export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
@@ -135,6 +142,11 @@ export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
   pearl: "Pearl",
   toggle: "Toggle",
   microSwitch: "Micro Switch",
+  classicOffice: "Classic Office",
+  tactileSwitch: "Tactile Switch",
+  softOffice: "Soft Office",
+  deepThock: "Deep Thock",
+  studioClick: "Studio Click",
   glass: "Glass",
   softTap: "Soft Tap",
   clean: "Clean",
@@ -178,6 +190,11 @@ export const SOUND_PACK_DESCRIPTIONS: Record<SoundPack, string> = {
   pearl: "A smooth, rounded press — the gentlest of the buttons.",
   toggle: "A solid lever toggle with a heavy, weighty click.",
   microSwitch: "A crisp, precise mouse-switch click.",
+  classicOffice: "Real recorded keystrokes on a classic office keyboard.",
+  tactileSwitch: "Real recorded tactile mechanical-switch keystrokes.",
+  softOffice: "The office-keyboard recordings, cushioned and muffled.",
+  deepThock: "The tactile recordings pitched down into a deep, creamy thock.",
+  studioClick: "A close-mic recorded button click with a real key-up.",
   glass: "Light, airy glass tinks with a hint of shimmer.",
   softTap: "A quiet finger-on-desk tap — cushioned and barely there.",
   clean: "A crisp, neutral UI tick that stays out of the way.",
@@ -201,18 +218,26 @@ export const SOUND_PACK_DESCRIPTIONS: Record<SoundPack, string> = {
 };
 
 export interface SoundPackCollection {
-  id: "premiumButtons" | "classic" | "soundLab";
+  id: "realRecordings" | "premiumButtons" | "classic" | "soundLab";
   label: string;
   description: string;
   packs: SoundPack[];
 }
 
 /**
- * How the admin picker groups the packs, in display order: the refined button
- * presses first, then the original single-tone packs, then the instrument-like
- * Sound Lab. Every pack belongs to exactly one collection.
+ * How the admin picker groups the packs, in display order: the real
+ * recordings first, then the synthesized button presses, then the original
+ * single-tone packs, then the instrument-like Sound Lab. Every pack belongs to
+ * exactly one collection.
  */
 export const SOUND_PACK_COLLECTIONS: SoundPackCollection[] = [
+  {
+    id: "realRecordings",
+    label: "Real Recordings",
+    description:
+      "Actual recorded key presses and button clicks — real hardware, not synthesized. Public-domain (CC0) recordings.",
+    packs: SAMPLE_SOUND_PACK_NAMES,
+  },
   {
     id: "premiumButtons",
     label: "Premium Buttons",
@@ -236,7 +261,9 @@ export const SOUND_PACK_COLLECTIONS: SoundPackCollection[] = [
 
 /** How many different sounds a correct keystroke rotates through in this pack (1 = every press identical). */
 export function getSoundPackVariationCount(pack: SoundPack): number {
-  return isLayeredSoundPack(pack) ? LAYERED_SOUND_PACKS[pack].letter.length : 1;
+  if (isLayeredSoundPack(pack)) return LAYERED_SOUND_PACKS[pack].letter.length;
+  if (isSampleSoundPack(pack)) return SAMPLE_SOUND_PACKS[pack].files.length;
+  return 1;
 }
 
 export const DEFAULT_SOUND_PACK: SoundPack = "soft";

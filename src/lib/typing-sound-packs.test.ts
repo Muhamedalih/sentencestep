@@ -4,6 +4,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { BUTTON_SOUND_PACK_NAMES, BUTTON_SOUND_PACKS } from "./typing-sound-button-packs";
+import { SAMPLE_SOUND_PACK_NAMES, SAMPLE_SOUND_PACKS } from "./typing-sound-sample-packs";
 import {
   LAB_SOUND_PACK_NAMES,
   LAYERED_SOUND_PACKS,
@@ -19,6 +20,7 @@ import {
   SOUND_PACK_NAMES,
   getSoundPackVariationCount,
   isLayeredSoundPack,
+  isSampleSoundPack,
 } from "./typing-sound-packs";
 import type { SoundVariant } from "./typing-sound-packs";
 import { detuneRatio, jitterRatio, pickTakeIndex, scheduleTake } from "./typing-sound-synth";
@@ -38,16 +40,17 @@ function seeded(seed: number): () => number {
 
 // --- The library as a whole ---
 
-test("the library has 39 packs: 10 original tones, 9 premium buttons and 20 sound-lab packs", () => {
+test("the library has 44 packs: 10 tones, 20 sound-lab, 9 premium buttons and 5 real recordings", () => {
   assert.equal(Object.keys(SOUND_PACKS).length, 10);
   assert.equal(BUTTON_SOUND_PACK_NAMES.length, 9);
   assert.equal(LAB_SOUND_PACK_NAMES.length, 20);
   assert.equal(LAYERED_SOUND_PACK_NAMES.length, 29);
-  assert.equal(SOUND_PACK_NAMES.length, 39);
-  assert.equal(new Set(SOUND_PACK_NAMES).size, 39, "pack names are unique");
+  assert.equal(SAMPLE_SOUND_PACK_NAMES.length, 5);
+  assert.equal(SOUND_PACK_NAMES.length, 44);
+  assert.equal(new Set(SOUND_PACK_NAMES).size, 44, "pack names are unique");
 });
 
-test("every pack belongs to exactly one collection, and the premium buttons come first", () => {
+test("every pack belongs to exactly one collection, and the real recordings come first", () => {
   const seen = new Map<string, string>();
   for (const collection of SOUND_PACK_COLLECTIONS) {
     assert.ok(collection.label.trim() && collection.description.trim(), collection.id);
@@ -62,8 +65,12 @@ test("every pack belongs to exactly one collection, and the premium buttons come
     }
   }
   assert.deepEqual([...seen.keys()].sort(), [...SOUND_PACK_NAMES].sort());
-  assert.equal(SOUND_PACK_COLLECTIONS[0]!.id, "premiumButtons");
-  assert.deepEqual(SOUND_PACK_COLLECTIONS[0]!.packs, BUTTON_SOUND_PACK_NAMES);
+  assert.equal(SOUND_PACK_COLLECTIONS[0]!.id, "realRecordings");
+  assert.deepEqual(SOUND_PACK_COLLECTIONS[0]!.packs, SAMPLE_SOUND_PACK_NAMES);
+  assert.deepEqual(
+    SOUND_PACK_COLLECTIONS.find((collection) => collection.id === "premiumButtons")!.packs,
+    BUTTON_SOUND_PACK_NAMES,
+  );
 });
 
 test("the default pack is still a real pack (persisted 'soft' selections keep working)", () => {
@@ -84,12 +91,18 @@ test("every pack has a distinct label and a short description", () => {
   }
 });
 
-test("isLayeredSoundPack splits the two families exactly", () => {
+test("isLayeredSoundPack / isSampleSoundPack split the three families exactly", () => {
   for (const pack of Object.keys(SOUND_PACKS)) {
     assert.equal(isLayeredSoundPack(pack as never), false, pack);
+    assert.equal(isSampleSoundPack(pack as never), false, pack);
   }
   for (const pack of LAYERED_SOUND_PACK_NAMES) {
     assert.equal(isLayeredSoundPack(pack), true, pack);
+    assert.equal(isSampleSoundPack(pack), false, pack);
+  }
+  for (const pack of SAMPLE_SOUND_PACK_NAMES) {
+    assert.equal(isLayeredSoundPack(pack), false, pack);
+    assert.equal(isSampleSoundPack(pack), true, pack);
   }
 });
 
@@ -247,6 +260,116 @@ test("premium button packs are three tunings of one button (a rotation, never a 
     assert.equal(BUTTON_SOUND_PACKS[pack].letter.length, 3, pack);
     assert.equal(BUTTON_SOUND_PACKS[pack].order, undefined, `${pack} rotates randomly`);
   }
+});
+
+// --- The Real Recordings collection: the audio files must exist, be valid, and be credited ---
+
+interface WavInfo {
+  channels: number;
+  sampleRate: number;
+  bitsPerSample: number;
+  durationMs: number;
+  peak: number;
+}
+
+/** Minimal RIFF/WAVE reader — enough to prove a shipped file is what the player expects (mono 16-bit PCM) and how loud it is. */
+function readWav(path: string): WavInfo {
+  const data = readFileSync(path);
+  assert.equal(data.toString("ascii", 0, 4), "RIFF", `${path} is a RIFF file`);
+  assert.equal(data.toString("ascii", 8, 12), "WAVE", `${path} is WAVE`);
+  let offset = 12;
+  let fmt: { channels: number; sampleRate: number; bits: number; format: number } | undefined;
+  while (offset + 8 <= data.length) {
+    const id = data.toString("ascii", offset, offset + 4);
+    const size = data.readUInt32LE(offset + 4);
+    const body = offset + 8;
+    if (id === "fmt ") {
+      fmt = {
+        format: data.readUInt16LE(body),
+        channels: data.readUInt16LE(body + 2),
+        sampleRate: data.readUInt32LE(body + 4),
+        bits: data.readUInt16LE(body + 14),
+      };
+    } else if (id === "data") {
+      assert.ok(fmt, `${path}: fmt chunk precedes data`);
+      assert.equal(fmt.format, 1, `${path} is PCM`);
+      const samples = size / 2;
+      let peak = 0;
+      for (let i = 0; i < samples; i += 1) {
+        peak = Math.max(peak, Math.abs(data.readInt16LE(body + i * 2)) / 32768);
+      }
+      return {
+        channels: fmt.channels,
+        sampleRate: fmt.sampleRate,
+        bitsPerSample: fmt.bits,
+        durationMs: (samples / fmt.channels / fmt.sampleRate) * 1000,
+        peak,
+      };
+    }
+    offset = body + size + (size % 2);
+  }
+  throw new Error(`${path}: no data chunk`);
+}
+
+const publicDir = join(process.cwd(), "public");
+const creditsText = readFileSync(
+  join(process.cwd(), "src", "lib", "TYPING_SOUND_CREDITS.md"),
+  "utf8",
+);
+
+test("every recorded pack's audio files exist and are short, mono, 16-bit, safely normalized WAVs", () => {
+  for (const pack of SAMPLE_SOUND_PACK_NAMES) {
+    const sample = SAMPLE_SOUND_PACKS[pack];
+    const urls = [...sample.files, ...(("release" in sample && sample.release?.files) || [])];
+    assert.ok(sample.files.length >= 3, `${pack}: enough recordings to rotate through`);
+    for (const url of urls) {
+      assert.ok(url.startsWith("/sounds/typing/"), `${pack}: ${url} is under /sounds/typing`);
+      const info = readWav(join(publicDir, url));
+      assert.equal(info.channels, 1, `${url} is mono`);
+      assert.equal(info.bitsPerSample, 16, `${url} is 16-bit`);
+      assert.ok(info.sampleRate >= 22050 && info.sampleRate <= 48000, `${url} sample rate`);
+      assert.ok(info.durationMs >= 30 && info.durationMs <= 300, `${url} is ${info.durationMs}ms`);
+      assert.ok(
+        info.peak > 0.3 && info.peak <= 0.95,
+        `${url} peak ${info.peak} is normalized and unclipped`,
+      );
+    }
+  }
+});
+
+test("recorded-pack settings are sane", () => {
+  for (const pack of SAMPLE_SOUND_PACK_NAMES) {
+    const sample = SAMPLE_SOUND_PACKS[pack];
+    assert.ok(sample.gain > 0 && sample.gain <= 0.3, `${pack}: gain trim`);
+    assert.ok(sample.detuneCents >= 0 && sample.detuneCents <= 40, `${pack}: detune`);
+    assert.ok(
+      sample.gainVariation >= 0 && sample.gainVariation <= 0.15,
+      `${pack}: level variation`,
+    );
+    if ("release" in sample && sample.release) {
+      assert.ok(
+        sample.release.delayMs > 20 && sample.release.delayMs < 150,
+        `${pack}: release delay`,
+      );
+      assert.ok(sample.release.gain > 0 && sample.release.gain <= 1, `${pack}: release level`);
+    }
+    assert.equal(getSoundPackVariationCount(pack), sample.files.length, pack);
+  }
+});
+
+test("every shipped recording is listed in TYPING_SOUND_CREDITS.md with its source", () => {
+  for (const pack of SAMPLE_SOUND_PACK_NAMES) {
+    const sample = SAMPLE_SOUND_PACKS[pack];
+    const urls = [...sample.files, ...(("release" in sample && sample.release?.files) || [])];
+    for (const url of urls) {
+      assert.ok(creditsText.includes(url), `${url} has no row in TYPING_SOUND_CREDITS.md`);
+    }
+  }
+  const onDisk = readdirSync(join(publicDir, "sounds", "typing"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  assert.deepEqual(onDisk, [...SAMPLE_SOUND_PACK_NAMES].sort(), "no orphan recording folders");
 });
 
 // --- Take rotation ---

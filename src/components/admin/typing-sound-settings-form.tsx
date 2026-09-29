@@ -134,6 +134,10 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
                         variant="ghost"
                         size="icon"
                         aria-label={`Preview ${SOUND_PACK_LABELS[pack]}`}
+                        // Recorded packs fetch their audio on demand — start as soon as the
+                        // admin reaches for Preview so the click itself plays instantly.
+                        onPointerEnter={() => preview.preload(pack)}
+                        onFocus={() => preview.preload(pack)}
                         onClick={(event) => {
                           event.stopPropagation();
                           preview.play("letter", pack);

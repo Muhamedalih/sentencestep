@@ -5,11 +5,15 @@ import { useCallback, useEffect, useRef } from "react";
 import {
   DEFAULT_SOUND_PACK,
   LAYERED_SOUND_PACKS,
+  SAMPLE_SOUND_PACKS,
   SOUND_PACKS,
   isLayeredSoundPack,
+  isSampleSoundPack,
 } from "@/lib/typing-sound-packs";
 import type { SoundPack, SoundVariant } from "@/lib/typing-sound-packs";
 import { detuneRatio, jitterRatio, pickTakeIndex, scheduleTake } from "@/lib/typing-sound-synth";
+import { loadSamplePack, loadedSamples, playSample } from "@/lib/typing-sound-samples";
+import type { SamplePack } from "@/lib/typing-sound-sample-packs";
 import {
   DEFAULT_SENTENCE_COMPLETE_SOUND,
   SENTENCE_COMPLETE_SOUNDS,
@@ -65,7 +69,21 @@ interface UseTypingSoundOptions {
 const GAIN_BOOST = 2.2;
 
 /**
- * Generates keystroke sounds with the Web Audio API instead of audio assets.
+ * How the recorded packs voice a mistake: the same recording played at a
+ * lower speed (about 8 semitones down) through a low-pass, so a wrong key is
+ * the pack's own keyboard "sagging" into a dull thud rather than a separate,
+ * unrelated alert sound.
+ */
+const SAMPLE_ERROR_RATE = 0.62;
+const SAMPLE_ERROR_LOWPASS = 1800;
+const SAMPLE_ERROR_LEVEL = 0.9;
+/** The unused-by-the-app "complete" variant: the recording a third higher, as a small rising cue. */
+const SAMPLE_COMPLETE_RATE = 1.26;
+
+/**
+ * Generates keystroke sounds with the Web Audio API — synthesized for most
+ * packs, or by playing the short recordings in public/sounds/typing for the
+ * "Real Recordings" packs (see src/lib/typing-sound-samples.ts).
  * `play(variant)` is the whole public surface; which pack plays, whether
  * sound is on, and how loud are read once per call from `options` (backed by
  * admin-configured global settings — see TypingSoundSettingsProvider) rather
@@ -96,18 +114,51 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
   useEffect(() => {
     return () => {
       void contextRef.current?.close();
+      // Forget it too: React StrictMode (dev) runs this cleanup and then the
+      // effects again on the same instance, and a closed context must never
+      // be handed back out by ensureContext below.
+      contextRef.current = undefined;
     };
   }, []);
 
-  const getContext = useCallback(() => {
-    if (!contextRef.current) {
+  /** The shared AudioContext, created on first use — without resuming it, so preloading recordings on mount never trips the browser's autoplay policy. */
+  const ensureContext = useCallback(() => {
+    if (!contextRef.current || contextRef.current.state === "closed") {
       contextRef.current = new AudioContext();
-    }
-    if (contextRef.current.state === "suspended") {
-      void contextRef.current.resume();
     }
     return contextRef.current;
   }, []);
+
+  const getContext = useCallback(() => {
+    const ctx = ensureContext();
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+    }
+    return ctx;
+  }, [ensureContext]);
+
+  /**
+   * Starts fetching and decoding a recorded pack (a no-op for synthesized
+   * packs) so the first keystroke plays instantly instead of waiting on the
+   * network. Called for the active pack on mount and, by the admin picker, when
+   * an admin points at a pack's Preview button.
+   */
+  const preload = useCallback(
+    (overridePack?: SoundPack) => {
+      const target = overridePack ?? pack;
+      if (!isSampleSoundPack(target)) return;
+      try {
+        void loadSamplePack(ensureContext(), SAMPLE_SOUND_PACKS[target]);
+      } catch {
+        // No Web Audio (or blocked): the pack just stays silent, like any missed cue.
+      }
+    },
+    [ensureContext, pack],
+  );
+
+  useEffect(() => {
+    if (enabled) preload();
+  }, [enabled, preload]);
 
   const play = useCallback(
     (variant: SoundVariant = "letter", overridePack?: SoundPack) => {
@@ -139,6 +190,51 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
             pitchRatio: varied ? detuneRatio(layered.detuneCents ?? 0) : 1,
             gainRatio: varied ? jitterRatio(layered.gainVariation ?? 0) : 1,
           });
+          return;
+        }
+
+        if (isSampleSoundPack(resolvedPack)) {
+          const sample: SamplePack = SAMPLE_SOUND_PACKS[resolvedPack];
+          const playRecording = () => {
+            const takes = loadedSamples(ctx, sample.files);
+            if (takes.length === 0) return;
+            const cursorKey = `${resolvedPack}:${variant}`;
+            const takeIndex = pickTakeIndex(takes.length, "random", lastTakeRef.current[cursorKey]);
+            lastTakeRef.current[cursorKey] = takeIndex;
+
+            const isLetter = variant === "letter";
+            const level =
+              gainScale *
+              sample.gain *
+              (isLetter ? jitterRatio(sample.gainVariation) : SAMPLE_ERROR_LEVEL);
+            const rate = isLetter
+              ? detuneRatio(sample.detuneCents)
+              : variant === "error"
+                ? SAMPLE_ERROR_RATE
+                : SAMPLE_COMPLETE_RATE;
+            const when = ctx.currentTime;
+
+            playSample(ctx, ctx.destination, takes[takeIndex]!, when, {
+              gain: level,
+              rate,
+              lowpass: variant === "error" ? SAMPLE_ERROR_LOWPASS : undefined,
+            });
+
+            const releases =
+              isLetter && sample.release ? loadedSamples(ctx, sample.release.files) : [];
+            if (sample.release && releases.length > 0) {
+              const release = releases[Math.floor(Math.random() * releases.length)]!;
+              playSample(ctx, ctx.destination, release, when + sample.release.delayMs / 1000, {
+                gain: level * sample.release.gain,
+                rate,
+              });
+            }
+          };
+
+          // Preloaded on mount, so this is the normal path; if a keystroke
+          // (or a first Preview click) beats the download, play once it lands.
+          if (loadedSamples(ctx, sample.files).length > 0) playRecording();
+          else void loadSamplePack(ctx, sample).then(playRecording);
           return;
         }
 
@@ -306,5 +402,5 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
     [getContext, lessonEndSound, lessonEndSoundEnabled, volume],
   );
 
-  return { play, playSentenceComplete, playLessonComplete };
+  return { play, preload, playSentenceComplete, playLessonComplete };
 }
