@@ -12,9 +12,9 @@ import type { TypingSoundSettings } from "@/lib/admin/typing-sound-settings";
 import { LEARNING_SECTION_LABELS, LEARNING_SECTION_NAMES } from "@/lib/admin/learning-sections";
 import type { LearningSection } from "@/lib/admin/learning-sections";
 import {
+  SOUND_PACK_COLLECTIONS,
   SOUND_PACK_DESCRIPTIONS,
   SOUND_PACK_LABELS,
-  SOUND_PACK_NAMES,
   getSoundPackVariationCount,
 } from "@/lib/typing-sound-packs";
 import type { SoundPack } from "@/lib/typing-sound-packs";
@@ -82,58 +82,72 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
             to hear them. Preview a pack before saving it.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-1.5 sm:grid-cols-2">
-          {SOUND_PACK_NAMES.map((pack) => {
-            const isSelected = soundPack === pack;
-            return (
-              <div
-                key={pack}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSoundPack(pack)}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  setSoundPack(pack);
-                }}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
-                  isSelected ? "bg-primary/10" : "hover:bg-muted",
-                )}
-              >
-                <div
-                  className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded-full border",
-                    isSelected ? "border-primary bg-primary" : "border-border",
-                  )}
-                  aria-hidden="true"
-                >
-                  {isSelected && <Check className="text-primary-foreground size-3.5" />}
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-sm font-medium">{SOUND_PACK_LABELS[pack]}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {SOUND_PACK_DESCRIPTIONS[pack]}
-                    {getSoundPackVariationCount(pack) > 1 &&
-                      ` · ${getSoundPackVariationCount(pack)} variations`}
-                  </span>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Preview ${SOUND_PACK_LABELS[pack]}`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    preview.play("letter", pack);
-                  }}
-                  className="shrink-0"
-                >
-                  <Play className="size-4" />
-                </Button>
+        <CardContent className="flex flex-col gap-6">
+          {SOUND_PACK_COLLECTIONS.map((collection) => (
+            <section
+              key={collection.id}
+              aria-label={collection.label}
+              className="flex flex-col gap-2"
+            >
+              <div className="px-3">
+                <h3 className="text-sm font-semibold">{collection.label}</h3>
+                <p className="text-muted-foreground text-xs">{collection.description}</p>
               </div>
-            );
-          })}
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {collection.packs.map((pack) => {
+                  const isSelected = soundPack === pack;
+                  return (
+                    <div
+                      key={pack}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSoundPack(pack)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        setSoundPack(pack);
+                      }}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+                        isSelected ? "bg-primary/10" : "hover:bg-muted",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex size-5 shrink-0 items-center justify-center rounded-full border",
+                          isSelected ? "border-primary bg-primary" : "border-border",
+                        )}
+                        aria-hidden="true"
+                      >
+                        {isSelected && <Check className="text-primary-foreground size-3.5" />}
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-sm font-medium">{SOUND_PACK_LABELS[pack]}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {SOUND_PACK_DESCRIPTIONS[pack]}
+                          {getSoundPackVariationCount(pack) > 1 &&
+                            ` · ${getSoundPackVariationCount(pack)} variations`}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Preview ${SOUND_PACK_LABELS[pack]}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          preview.play("letter", pack);
+                        }}
+                        className="shrink-0"
+                      >
+                        <Play className="size-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </CardContent>
       </Card>
 

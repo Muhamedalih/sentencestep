@@ -6,7 +6,12 @@
  * server module ever pulling in client-only code.
  */
 
-import { LAYERED_SOUND_PACKS, LAYERED_SOUND_PACK_NAMES } from "@/lib/typing-sound-layered-packs";
+import {
+  LAB_SOUND_PACK_NAMES,
+  LAYERED_SOUND_PACKS,
+  LAYERED_SOUND_PACK_NAMES,
+} from "@/lib/typing-sound-layered-packs";
+import { BUTTON_SOUND_PACK_NAMES } from "@/lib/typing-sound-button-packs";
 import type { LayeredPack, LayeredSoundPack } from "@/lib/typing-sound-layered-packs";
 
 export type SoundVariant = "letter" | "error" | "complete";
@@ -121,6 +126,15 @@ export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
   premium: "Premium",
   mechanical: "Mechanical",
   crystal: "Crystal",
+  ceramic: "Ceramic",
+  aluminum: "Aluminum",
+  softTouch: "Soft-Touch",
+  magnetic: "Magnetic Snap",
+  haptic: "Haptic",
+  glassButton: "Glass Button",
+  pearl: "Pearl",
+  toggle: "Toggle",
+  microSwitch: "Micro Switch",
   glass: "Glass",
   softTap: "Soft Tap",
   clean: "Clean",
@@ -155,6 +169,15 @@ export const SOUND_PACK_DESCRIPTIONS: Record<SoundPack, string> = {
   premium: "A clean, polished tone with a fuller decay.",
   mechanical: "A heavier, punchier keyboard clack.",
   crystal: "Bright, ringing tones with the most headroom.",
+  ceramic: "A dense, crisp ceramic click — clean and expensive.",
+  aluminum: "A warm, machined-metal click with a soft key-up.",
+  softTouch: "A muted, rubberized press — quiet and cushioned.",
+  magnetic: "A satisfying magnetic snap: click in, click out.",
+  haptic: "A deep, short phone-style haptic tap.",
+  glassButton: "A cool, precise glass button with a tuned ring.",
+  pearl: "A smooth, rounded press — the gentlest of the buttons.",
+  toggle: "A solid lever toggle with a heavy, weighty click.",
+  microSwitch: "A crisp, precise mouse-switch click.",
   glass: "Light, airy glass tinks with a hint of shimmer.",
   softTap: "A quiet finger-on-desk tap — cushioned and barely there.",
   clean: "A crisp, neutral UI tick that stays out of the way.",
@@ -176,6 +199,40 @@ export const SOUND_PACK_DESCRIPTIONS: Record<SoundPack, string> = {
   bamboo: "Hollow, breathy bamboo-tube notes.",
   feltPiano: "Mellow, short felt-hammer piano notes.",
 };
+
+export interface SoundPackCollection {
+  id: "premiumButtons" | "classic" | "soundLab";
+  label: string;
+  description: string;
+  packs: SoundPack[];
+}
+
+/**
+ * How the admin picker groups the packs, in display order: the refined button
+ * presses first, then the original single-tone packs, then the instrument-like
+ * Sound Lab. Every pack belongs to exactly one collection.
+ */
+export const SOUND_PACK_COLLECTIONS: SoundPackCollection[] = [
+  {
+    id: "premiumButtons",
+    label: "Premium Buttons",
+    description:
+      "Refined, tactile button presses — short, dry and satisfying, like touching something well made.",
+    packs: BUTTON_SOUND_PACK_NAMES,
+  },
+  {
+    id: "classic",
+    label: "Classic tones",
+    description: "The original simple tones.",
+    packs: TONE_SOUND_PACK_NAMES,
+  },
+  {
+    id: "soundLab",
+    label: "Sound Lab",
+    description: "Instrument-like and experimental keystroke sounds.",
+    packs: LAB_SOUND_PACK_NAMES,
+  },
+];
 
 /** How many different sounds a correct keystroke rotates through in this pack (1 = every press identical). */
 export function getSoundPackVariationCount(pack: SoundPack): number {
