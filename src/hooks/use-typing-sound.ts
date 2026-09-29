@@ -2,8 +2,14 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import { DEFAULT_SOUND_PACK, SOUND_PACKS } from "@/lib/typing-sound-packs";
+import {
+  DEFAULT_SOUND_PACK,
+  LAYERED_SOUND_PACKS,
+  SOUND_PACKS,
+  isLayeredSoundPack,
+} from "@/lib/typing-sound-packs";
 import type { SoundPack, SoundVariant } from "@/lib/typing-sound-packs";
+import { detuneRatio, jitterRatio, pickTakeIndex, scheduleTake } from "@/lib/typing-sound-synth";
 import {
   DEFAULT_SENTENCE_COMPLETE_SOUND,
   SENTENCE_COMPLETE_SOUNDS,
@@ -13,7 +19,13 @@ import { DEFAULT_LESSON_END_SOUND, LESSON_END_SOUNDS } from "@/lib/lesson-end-so
 import type { LessonEndSound } from "@/lib/lesson-end-sounds";
 
 export type { SoundPack, SoundVariant } from "@/lib/typing-sound-packs";
-export { DEFAULT_SOUND_PACK, SOUND_PACK_LABELS, SOUND_PACK_NAMES } from "@/lib/typing-sound-packs";
+export {
+  DEFAULT_SOUND_PACK,
+  SOUND_PACK_DESCRIPTIONS,
+  SOUND_PACK_LABELS,
+  SOUND_PACK_NAMES,
+  getSoundPackVariationCount,
+} from "@/lib/typing-sound-packs";
 export type { SentenceCompleteSound } from "@/lib/sentence-complete-sounds";
 export {
   DEFAULT_SENTENCE_COMPLETE_SOUND,
@@ -70,6 +82,12 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
     lessonEndSound = DEFAULT_LESSON_END_SOUND,
   } = options;
   const contextRef = useRef<AudioContext | undefined>(undefined);
+  // Index of the take each layered pack/variant played last, so a pack with
+  // several takes never plays the same one twice in a row. Per hook instance
+  // on purpose: the admin form's preview button owns its own instance, so
+  // previewing a pack can never shift which take a learner's next keystroke
+  // gets.
+  const lastTakeRef = useRef<Record<string, number>>({});
 
   // LessonSession/FixYourMistakesSession/WordReviewSession all remount per
   // lesson (route param change under /learn/[mode]/[lessonId]) — without
@@ -99,7 +117,32 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
       try {
         const ctx = getContext();
         const now = ctx.currentTime;
-        const { type, duration, frequency, peakGain } = SOUND_PACKS[overridePack ?? pack][variant];
+        const resolvedPack = overridePack ?? pack;
+
+        if (isLayeredSoundPack(resolvedPack)) {
+          const layered = LAYERED_SOUND_PACKS[resolvedPack];
+          const takes = layered[variant];
+          const cursorKey = `${resolvedPack}:${variant}`;
+          const takeIndex = pickTakeIndex(
+            takes.length,
+            layered.order,
+            lastTakeRef.current[cursorKey],
+          );
+          lastTakeRef.current[cursorKey] = takeIndex;
+
+          // Only correct keystrokes get the per-press random detune/level
+          // variation — an error or completion cue stays exactly as tuned,
+          // so it's always instantly recognizable.
+          const varied = variant === "letter";
+          scheduleTake(ctx, ctx.destination, takes[takeIndex]!, now, {
+            gainScale,
+            pitchRatio: varied ? detuneRatio(layered.detuneCents ?? 0) : 1,
+            gainRatio: varied ? jitterRatio(layered.gainVariation ?? 0) : 1,
+          });
+          return;
+        }
+
+        const { type, duration, frequency, peakGain } = SOUND_PACKS[resolvedPack][variant];
 
         const oscillator = ctx.createOscillator();
         const gain = ctx.createGain();

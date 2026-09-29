@@ -6,9 +6,13 @@
  * server module ever pulling in client-only code.
  */
 
+import { LAYERED_SOUND_PACKS, LAYERED_SOUND_PACK_NAMES } from "@/lib/typing-sound-layered-packs";
+import type { LayeredPack, LayeredSoundPack } from "@/lib/typing-sound-layered-packs";
+
 export type SoundVariant = "letter" | "error" | "complete";
 
-export type SoundPack =
+/** The original single-oscillator packs (see SOUND_PACKS). The richer layered packs live in typing-sound-layered-packs.ts. */
+export type ToneSoundPack =
   | "soft"
   | "gentle"
   | "minimal"
@@ -19,6 +23,8 @@ export type SoundPack =
   | "premium"
   | "mechanical"
   | "crystal";
+
+export type SoundPack = ToneSoundPack | LayeredSoundPack;
 
 export interface ToneConfig {
   type: OscillatorType;
@@ -34,7 +40,7 @@ export interface ToneConfig {
  * (letter/error/complete) so swapping packs never changes the calling
  * contract in lesson-session.tsx.
  */
-export const SOUND_PACKS: Record<SoundPack, Record<SoundVariant, ToneConfig>> = {
+export const SOUND_PACKS: Record<ToneSoundPack, Record<SoundVariant, ToneConfig>> = {
   soft: {
     letter: { type: "sine", duration: 0.12, frequency: 660, peakGain: 0.08 },
     error: { type: "sine", duration: 0.1, frequency: 220, peakGain: 0.05 },
@@ -89,7 +95,20 @@ export const SOUND_PACKS: Record<SoundPack, Record<SoundVariant, ToneConfig>> = 
   },
 };
 
-export const SOUND_PACK_NAMES = Object.keys(SOUND_PACKS) as SoundPack[];
+export { LAYERED_SOUND_PACKS };
+export type { LayeredPack, LayeredSoundPack };
+
+const TONE_SOUND_PACK_NAMES = Object.keys(SOUND_PACKS) as ToneSoundPack[];
+
+/** Every selectable pack, original tone packs first, then the layered library. */
+export const SOUND_PACK_NAMES: SoundPack[] = [
+  ...TONE_SOUND_PACK_NAMES,
+  ...LAYERED_SOUND_PACK_NAMES,
+];
+
+export function isLayeredSoundPack(pack: SoundPack): pack is LayeredSoundPack {
+  return pack in LAYERED_SOUND_PACKS;
+}
 
 export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
   soft: "Soft",
@@ -102,6 +121,65 @@ export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
   premium: "Premium",
   mechanical: "Mechanical",
   crystal: "Crystal",
+  glass: "Glass",
+  softTap: "Soft Tap",
+  clean: "Clean",
+  modern: "Modern",
+  digital: "Digital",
+  tactile: "Tactile",
+  calm: "Calm",
+  woodBlock: "Wood Block",
+  marimba: "Marimba",
+  kalimba: "Kalimba",
+  pluck: "Harp Pluck",
+  waterDrop: "Water Drop",
+  thock: "Thock",
+  clicky: "Clicky",
+  analog: "Analog",
+  handDrum: "Hand Drum",
+  whisper: "Whisper",
+  ticker: "Ticker",
+  bamboo: "Bamboo",
+  feltPiano: "Felt Piano",
 };
+
+/** One short line per pack, shown under its name in the admin sound picker. */
+export const SOUND_PACK_DESCRIPTIONS: Record<SoundPack, string> = {
+  soft: "A round, gentle tone. The default.",
+  gentle: "A touch lower and quieter than Soft.",
+  minimal: "The shortest, quietest beep — barely there.",
+  click: "A thin, snappy click.",
+  pop: "A short, rounded pop.",
+  bubble: "A long, mellow, bubbly tone.",
+  typewriter: "A sharp, high typewriter-style tick.",
+  premium: "A clean, polished tone with a fuller decay.",
+  mechanical: "A heavier, punchier keyboard clack.",
+  crystal: "Bright, ringing tones with the most headroom.",
+  glass: "Light, airy glass tinks with a hint of shimmer.",
+  softTap: "A quiet finger-on-desk tap — cushioned and barely there.",
+  clean: "A crisp, neutral UI tick that stays out of the way.",
+  modern: "A smooth, rounded haptic-style tap.",
+  digital: "Tiny retro two-note blips in a friendly scale.",
+  tactile: "A satisfying click-and-bump, like a tactile switch.",
+  calm: "Slow, soft notes from a gentle scale — every key a quiet chime.",
+  woodBlock: "Warm, hollow wooden knocks.",
+  marimba: "Rounded mallet notes, playful but soft.",
+  kalimba: "Bright thumb-piano plinks with a light metallic edge.",
+  pluck: "Soft harp-string plucks that ring for a moment.",
+  waterDrop: "Little rising drops, like water tapping a still pool.",
+  thock: "Deep, creamy keyboard thock with a muted bottom-out.",
+  clicky: "A crisp two-stage click-clack, like a clicky switch.",
+  analog: "Warm analog-synth blips with a soft filter sweep.",
+  handDrum: "Small hand-drum taps in three pitches.",
+  whisper: "Airy, brush-like whispers with no pitch at all.",
+  ticker: "A dry clock tick-tock that alternates with every key.",
+  bamboo: "Hollow, breathy bamboo-tube notes.",
+  feltPiano: "Mellow, short felt-hammer piano notes.",
+};
+
+/** How many different sounds a correct keystroke rotates through in this pack (1 = every press identical). */
+export function getSoundPackVariationCount(pack: SoundPack): number {
+  return isLayeredSoundPack(pack) ? LAYERED_SOUND_PACKS[pack].letter.length : 1;
+}
 
 export const DEFAULT_SOUND_PACK: SoundPack = "soft";

@@ -11,7 +11,12 @@ import { TYPING_SOUND_VOLUME_RANGE } from "@/lib/admin/typing-sound-settings";
 import type { TypingSoundSettings } from "@/lib/admin/typing-sound-settings";
 import { LEARNING_SECTION_LABELS, LEARNING_SECTION_NAMES } from "@/lib/admin/learning-sections";
 import type { LearningSection } from "@/lib/admin/learning-sections";
-import { SOUND_PACK_LABELS, SOUND_PACK_NAMES } from "@/lib/typing-sound-packs";
+import {
+  SOUND_PACK_DESCRIPTIONS,
+  SOUND_PACK_LABELS,
+  SOUND_PACK_NAMES,
+  getSoundPackVariationCount,
+} from "@/lib/typing-sound-packs";
 import type { SoundPack } from "@/lib/typing-sound-packs";
 import {
   SENTENCE_COMPLETE_SOUND_LABELS,
@@ -72,7 +77,9 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
         <CardHeader>
           <CardTitle className="text-lg">Sound pack</CardTitle>
           <CardDescription>
-            Plays on every correct keystroke during a lesson. Preview a pack before saving it.
+            Plays on every correct keystroke during a lesson. Packs with several variations rotate
+            through them so no two presses in a row sound identical — click Preview more than once
+            to hear them. Preview a pack before saving it.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-1.5 sm:grid-cols-2">
@@ -103,7 +110,14 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
                 >
                   {isSelected && <Check className="text-primary-foreground size-3.5" />}
                 </div>
-                <span className="flex-1 text-sm font-medium">{SOUND_PACK_LABELS[pack]}</span>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-sm font-medium">{SOUND_PACK_LABELS[pack]}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {SOUND_PACK_DESCRIPTIONS[pack]}
+                    {getSoundPackVariationCount(pack) > 1 &&
+                      ` · ${getSoundPackVariationCount(pack)} variations`}
+                  </span>
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
