@@ -3,11 +3,17 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { LAYERED_SOUND_PACKS, LAYERED_SOUND_PACK_NAMES } from "./typing-sound-layered-packs";
+import { BUTTON_SOUND_PACK_NAMES, BUTTON_SOUND_PACKS } from "./typing-sound-button-packs";
+import {
+  LAB_SOUND_PACK_NAMES,
+  LAYERED_SOUND_PACKS,
+  LAYERED_SOUND_PACK_NAMES,
+} from "./typing-sound-layered-packs";
 import type { SoundLayer, SoundTake } from "./typing-sound-layered-packs";
 import {
   DEFAULT_SOUND_PACK,
   SOUND_PACKS,
+  SOUND_PACK_COLLECTIONS,
   SOUND_PACK_DESCRIPTIONS,
   SOUND_PACK_LABELS,
   SOUND_PACK_NAMES,
@@ -32,11 +38,32 @@ function seeded(seed: number): () => number {
 
 // --- The library as a whole ---
 
-test("the library has thirty packs: the original ten plus twenty layered", () => {
+test("the library has 39 packs: 10 original tones, 9 premium buttons and 20 sound-lab packs", () => {
   assert.equal(Object.keys(SOUND_PACKS).length, 10);
-  assert.equal(LAYERED_SOUND_PACK_NAMES.length, 20);
-  assert.equal(SOUND_PACK_NAMES.length, 30);
-  assert.equal(new Set(SOUND_PACK_NAMES).size, 30, "pack names are unique");
+  assert.equal(BUTTON_SOUND_PACK_NAMES.length, 9);
+  assert.equal(LAB_SOUND_PACK_NAMES.length, 20);
+  assert.equal(LAYERED_SOUND_PACK_NAMES.length, 29);
+  assert.equal(SOUND_PACK_NAMES.length, 39);
+  assert.equal(new Set(SOUND_PACK_NAMES).size, 39, "pack names are unique");
+});
+
+test("every pack belongs to exactly one collection, and the premium buttons come first", () => {
+  const seen = new Map<string, string>();
+  for (const collection of SOUND_PACK_COLLECTIONS) {
+    assert.ok(collection.label.trim() && collection.description.trim(), collection.id);
+    assert.ok(collection.packs.length > 0, `${collection.id} is not empty`);
+    for (const pack of collection.packs) {
+      assert.equal(
+        seen.get(pack),
+        undefined,
+        `${pack} is in ${seen.get(pack)} and ${collection.id}`,
+      );
+      seen.set(pack, collection.id);
+    }
+  }
+  assert.deepEqual([...seen.keys()].sort(), [...SOUND_PACK_NAMES].sort());
+  assert.equal(SOUND_PACK_COLLECTIONS[0]!.id, "premiumButtons");
+  assert.deepEqual(SOUND_PACK_COLLECTIONS[0]!.packs, BUTTON_SOUND_PACK_NAMES);
 });
 
 test("the default pack is still a real pack (persisted 'soft' selections keep working)", () => {
@@ -190,6 +217,35 @@ test("packs advertised as having variations really have several distinct takes",
   assert.equal(withVariations, LAYERED_SOUND_PACK_NAMES.length, "every layered pack varies");
   for (const pack of Object.keys(SOUND_PACKS)) {
     assert.equal(getSoundPackVariationCount(pack as never), 1, `${pack} is a single sound`);
+  }
+});
+
+// --- The Premium Buttons collection must stay button presses, never beeps ---
+
+test("every premium button opens with a sharp noise transient and never sustains a tone", () => {
+  for (const pack of BUTTON_SOUND_PACK_NAMES) {
+    for (const take of BUTTON_SOUND_PACKS[pack].letter) {
+      const opening = take.filter((layer) => (layer.startOffset ?? 0) === 0);
+      const transients = opening.filter(
+        (layer) =>
+          layer.kind === "noise" && layer.duration <= 0.012 && (layer.attack ?? 0.004) <= 0.001,
+      );
+      assert.ok(transients.length >= 1, `${pack}: a press starts with a click transient`);
+
+      for (const layer of take) {
+        if (layer.kind !== "tone") continue;
+        assert.ok(layer.duration <= 0.075, `${pack}: a ring/thump this long reads as a note`);
+        assert.ok((layer.attack ?? 0.004) <= 0.002, `${pack}: tones start instantly, no swell`);
+      }
+      assert.ok(takeEnd(take) <= 0.13, `${pack}: a button press (with release) stays under 130ms`);
+    }
+  }
+});
+
+test("premium button packs are three tunings of one button (a rotation, never a repeat)", () => {
+  for (const pack of BUTTON_SOUND_PACK_NAMES) {
+    assert.equal(BUTTON_SOUND_PACKS[pack].letter.length, 3, pack);
+    assert.equal(BUTTON_SOUND_PACKS[pack].order, undefined, `${pack} rotates randomly`);
   }
 });
 

@@ -1,143 +1,21 @@
 /**
- * Layered keystroke sound packs — pure data, no "use client" directive, no Web
- * Audio calls — so server-safe modules can share the pack names through
- * src/lib/typing-sound-packs.ts exactly like the original ToneConfig packs.
- *
- * The original ten packs (see SOUND_PACKS) are a single oscillator per
- * variant. These packs are built from several simultaneous layers (pitched
- * partials, filtered-noise transients, pitch glides) and several alternative
- * "takes" per variant, which is what lets them sound like a marimba, a glass
- * tink or a keyboard thock instead of a beep — and what lets consecutive
- * keystrokes differ instead of repeating one identical sample.
- *
- * Everything is synthesized from these numbers at play time (see
- * src/lib/typing-sound-synth.ts), so like the original packs there are no
- * audio files to download, decode or cache, and every sound here is original
- * to this project (see TYPING_SOUND_CREDITS.md).
+ * The "Sound Lab" keystroke packs — instrument-like and experimental sounds
+ * (glass, marimba, kalimba, water drop, ...). Pure data; built from the
+ * shared layer types/builders in src/lib/typing-sound-layers.ts. The
+ * button-press collection lives in src/lib/typing-sound-button-packs.ts.
  */
 
-export interface ToneLayer {
-  kind: "tone";
-  type: OscillatorType;
-  frequency: number;
-  /** Exponentially glides from `frequency` to this over `sweepTime` — chirps, drops and thumps. */
-  frequencyEnd?: number;
-  /** Seconds the glide takes; defaults to the layer's whole duration. */
-  sweepTime?: number;
-  /** Seconds after the take starts that this layer begins — lets one take hold a click followed by a body. */
-  startOffset?: number;
-  /** Seconds to ramp from silence to peakGain; short is snappy, long is a soft swell. */
-  attack?: number;
-  /** Seconds until the layer has decayed to silence. */
-  duration: number;
-  peakGain: number;
-  /** Static lowpass on this layer — takes the raw edge off square/sawtooth waves. */
-  lowpass?: number;
-  /** If set, the lowpass sweeps down to this over the layer's duration (a plucked-string brightness decay). */
-  lowpassEnd?: number;
-}
+import { noise, pack, tone } from "@/lib/typing-sound-layers";
+import type { LayeredPack, SoundTake } from "@/lib/typing-sound-layers";
+import { BUTTON_SOUND_PACKS } from "@/lib/typing-sound-button-packs";
 
-/** Filtered white noise — what makes a sound read as a physical tap or breath rather than a note. */
-export interface NoiseLayer {
-  kind: "noise";
-  filter: "bandpass" | "lowpass" | "highpass";
-  filterFrom: number;
-  filterTo?: number;
-  /** Lower is broader/airier, higher is narrower/more "pitched" (a bamboo tube). */
-  filterQ: number;
-  startOffset?: number;
-  attack?: number;
-  duration: number;
-  peakGain: number;
-}
-
-export type SoundLayer = ToneLayer | NoiseLayer;
-
-/** One playable sound: every layer starts (or is offset) relative to the same keystroke. */
-export type SoundTake = SoundLayer[];
-
-export interface LayeredPack {
-  /** Alternative sounds for a correct keystroke — one is picked per press. */
-  letter: SoundTake[];
-  error: SoundTake[];
-  complete: SoundTake[];
-  /**
-   * "random" (default) picks a take at random but never the same one twice in
-   * a row; "sequence" cycles through the takes in order (a clock's tick,
-   * tock, tick, tock).
-   */
-  order?: "random" | "sequence";
-  /** ± cents of random detune applied to each correct keystroke on top of the take choice. */
-  detuneCents?: number;
-  /** ± fraction of random level variation applied to each correct keystroke. */
-  gainVariation?: number;
-}
-
-const tone = (layer: Omit<ToneLayer, "kind">): ToneLayer => ({ kind: "tone", ...layer });
-const noise = (layer: Omit<NoiseLayer, "kind">): NoiseLayer => ({ kind: "noise", ...layer });
-
-/** Shifts a take's pitch (and noise filter centers) by `ratio`, delays it and rescales its level. */
-function shifted(take: SoundTake, ratio: number, offset = 0, gain = 1): SoundTake {
-  return take.map((layer) =>
-    layer.kind === "tone"
-      ? {
-          ...layer,
-          frequency: layer.frequency * ratio,
-          frequencyEnd: layer.frequencyEnd === undefined ? undefined : layer.frequencyEnd * ratio,
-          lowpass: layer.lowpass === undefined ? undefined : layer.lowpass * ratio,
-          lowpassEnd: layer.lowpassEnd === undefined ? undefined : layer.lowpassEnd * ratio,
-          startOffset: (layer.startOffset ?? 0) + offset,
-          peakGain: layer.peakGain * gain,
-        }
-      : {
-          ...layer,
-          filterFrom: layer.filterFrom * ratio,
-          filterTo: layer.filterTo === undefined ? undefined : layer.filterTo * ratio,
-          startOffset: (layer.startOffset ?? 0) + offset,
-          peakGain: layer.peakGain * gain,
-        },
-  );
-}
-
-/**
- * The pack's own error sound: the pack's letter timbre dropped to roughly
- * half its pitch, slightly longer and with a downward glide on every pitched
- * layer — so a mistake always sounds like the same instrument "sagging",
- * clearly different from a correct key without being a harsh buzzer.
- */
-function errorFrom(take: SoundTake): SoundTake {
-  return shifted(take, 0.5, 0, 0.9).map((layer) =>
-    layer.kind === "tone"
-      ? {
-          ...layer,
-          frequencyEnd: layer.frequencyEnd ?? layer.frequency * 0.85,
-          duration: layer.duration * 1.25,
-        }
-      : { ...layer, duration: layer.duration * 1.25 },
-  );
-}
-
-/** The pack's "complete" variant: the letter timbre as a quick rising three-note flourish (root, major third, fifth). */
-function flourishFrom(take: SoundTake): SoundTake {
-  return [
-    ...shifted(take, 1, 0, 0.9),
-    ...shifted(take, 1.2599, 0.09, 0.9),
-    ...shifted(take, 1.4983, 0.18, 1),
-  ];
-}
-
-function pack(
-  letter: SoundTake[],
-  options: Pick<LayeredPack, "order" | "detuneCents" | "gainVariation"> = {},
-): LayeredPack {
-  const first = letter[0]!;
-  return {
-    letter,
-    error: [errorFrom(first)],
-    complete: [flourishFrom(first)],
-    ...options,
-  };
-}
+export type {
+  LayeredPack,
+  NoiseLayer,
+  SoundLayer,
+  SoundTake,
+  ToneLayer,
+} from "@/lib/typing-sound-layers";
 
 const glassTake = (f: number): SoundTake => [
   tone({ type: "sine", frequency: f, duration: 0.13, peakGain: 0.05, attack: 0.002 }),
@@ -469,7 +347,7 @@ const A_MINOR_PENTATONIC_LOW = [329.63, 392, 440, 523.25, 587.33];
 const C_MAJOR_PENTATONIC_MID = [523.25, 587.33, 659.25, 783.99, 880];
 const G_MAJOR_PENTATONIC_HIGH = [783.99, 880, 987.77, 1174.66, 1318.51];
 
-export const LAYERED_SOUND_PACKS = {
+export const LAB_SOUND_PACKS = {
   glass: pack([1318.51, 1479.98, 1174.66].map(glassTake), { detuneCents: 20, gainVariation: 0.08 }),
   softTap: pack([softTapTake(240, 1800), softTapTake(210, 1500), softTapTake(270, 2100)], {
     detuneCents: 25,
@@ -496,6 +374,13 @@ export const LAYERED_SOUND_PACKS = {
     gainVariation: 0.08,
   }),
 } satisfies Record<string, LayeredPack>;
+
+export type LabSoundPack = keyof typeof LAB_SOUND_PACKS;
+
+export const LAB_SOUND_PACK_NAMES = Object.keys(LAB_SOUND_PACKS) as LabSoundPack[];
+
+/** Every layered pack the player can render — the button collection first, then the Sound Lab. */
+export const LAYERED_SOUND_PACKS = { ...BUTTON_SOUND_PACKS, ...LAB_SOUND_PACKS };
 
 export type LayeredSoundPack = keyof typeof LAYERED_SOUND_PACKS;
 
