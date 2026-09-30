@@ -212,8 +212,23 @@ export function WordReviewSession({
   const { prefetchPronunciation } = usePronunciationSettings();
   const nextWord = queue.length > 1 ? words[queue[1]!] : undefined;
   useEffect(() => {
-    if (!defaultVoiceId || !nextWord) return;
-    prefetchPronunciation({ contentType: "word", contentId: nextWord.id, voiceId: defaultVoiceId });
+    if (!nextWord) return;
+    // A clip already resolved server-side just needs its bytes warmed in the
+    // browser cache so it starts instantly when the learner gets there.
+    if (nextWord.audioUrl) {
+      fetch(nextWord.audioUrl).catch(() => {});
+      return;
+    }
+    if (!defaultVoiceId) return;
+    // The word's OWN content reference (mistake / recall / card words aren't
+    // Word Lists entries, so their id is not a vocabulary_words id) — the
+    // same reference PronunciationButton resolves below, so the prefetch
+    // and the real play share one cache entry.
+    prefetchPronunciation({
+      contentType: nextWord.pronunciationContentType ?? "word",
+      contentId: nextWord.pronunciationContentId ?? nextWord.id,
+      voiceId: defaultVoiceId,
+    });
   }, [nextWord, defaultVoiceId, prefetchPronunciation]);
 
   function handleResult(correct: boolean) {
@@ -271,6 +286,10 @@ export function WordReviewSession({
                 kokoroVoiceId={defaultVoiceId}
                 contentType={word.pronunciationContentType ?? "word"}
                 contentId={word.pronunciationContentId ?? word.id}
+                // Today's session must only ever be heard in the Word Lists
+                // voice — a missing clip is silent (after a couple of silent
+                // retries), never the browser's own voice.
+                disableSpeechFallback={variant === "session"}
                 label={t.wordLists.replayAction}
                 variant="outline"
                 size="sm"

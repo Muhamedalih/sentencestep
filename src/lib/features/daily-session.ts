@@ -79,6 +79,24 @@ export function assembleSession<T extends { targetWord: string }>(
   );
 }
 
+/**
+ * Points every session word at the Word Lists voice's clip for it — and ONLY
+ * that voice. `audioUrl` is overwritten even when a word already carries one,
+ * because the clip a word arrives with belongs to whichever source produced
+ * it (a mistake word comes with a clip from the Normal lessons' narrator, see
+ * fetchAllMistakesAction); leaving it would play a different voice to the
+ * one Word Lists uses. A word the resolver couldn't produce a clip for gets
+ * `null` (never a stale foreign clip), which leaves it to the on-demand
+ * resolve in the review screen — still the Word Lists voice, never the
+ * browser's.
+ */
+export function applyWordListAudio<T extends { targetWord: string; audioUrl?: string | null }>(
+  words: readonly T[],
+  urlByWord: ReadonlyMap<string, string>,
+): T[] {
+  return words.map((word) => ({ ...word, audioUrl: urlByWord.get(word.targetWord) ?? null }));
+}
+
 /** Rough minutes for the session, shown on the Home card ("about 4 minutes"): ~20 seconds a word, never less than a minute. */
 export function estimateSessionMinutes(wordCount: number): number {
   return Math.max(1, Math.round((wordCount * 20) / 60));

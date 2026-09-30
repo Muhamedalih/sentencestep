@@ -86,6 +86,11 @@ already has history the day the feature goes On.
   (`WordReviewSession variant="session"`); each word is recorded on the ledger
   of the source it came from (`src/lib/features/session-completion.ts`), and
   the XP is paid once per day (`complete_daily_session`).
+  Every word is spoken in the Word Lists voice (`tts_settings.default_pronunciation_voice_id`),
+  whichever source it came from, and never in the browser's own voice: the
+  server resolves each word's clip while building the session
+  (`src/lib/voice/word-list-word-audio.ts` — cached Word Lists clip first,
+  otherwise synthesized once with the same voice and cached for everyone).
 - **Saving words** is offered only for words worth studying: pronouns,
   demonstratives, articles, numbers, names, be/have/do forms, modals,
   prepositions, conjunctions, common function adverbs and contractions get no

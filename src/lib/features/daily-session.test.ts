@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { assembleSession, estimateSessionMinutes } from "@/lib/features/daily-session";
+import {
+  applyWordListAudio,
+  assembleSession,
+  estimateSessionMinutes,
+} from "@/lib/features/daily-session";
 import type { SourceCandidates } from "@/lib/features/daily-session";
 
 const words = (...list: string[]) => list.map((targetWord) => ({ targetWord }));
@@ -60,4 +64,43 @@ test("estimateSessionMinutes: about 20s a word, at least a minute", () => {
   assert.equal(estimateSessionMinutes(1), 1);
   assert.equal(estimateSessionMinutes(12), 4);
   assert.equal(estimateSessionMinutes(30), 10);
+});
+
+test("applyWordListAudio: every word gets the Word Lists voice's clip, replacing any clip it arrived with", () => {
+  const session = [
+    // A mistake word arrives with a clip from the Normal lessons' narrator.
+    { targetWord: "went", audioUrl: "https://cdn.test/normal-voice/went.mp3", id: "mistake-went" },
+    { targetWord: "table", audioUrl: null, id: "recall-table" },
+    { targetWord: "apple", id: "word-apple" },
+  ];
+  const result = applyWordListAudio(
+    session,
+    new Map([
+      ["went", "https://cdn.test/emma/went.mp3"],
+      ["table", "https://cdn.test/emma/table.mp3"],
+      ["apple", "https://cdn.test/emma/apple.mp3"],
+    ]),
+  );
+  assert.deepEqual(
+    result.map((word) => [word.targetWord, word.audioUrl, word.id]),
+    [
+      ["went", "https://cdn.test/emma/went.mp3", "mistake-went"],
+      ["table", "https://cdn.test/emma/table.mp3", "recall-table"],
+      ["apple", "https://cdn.test/emma/apple.mp3", "word-apple"],
+    ],
+  );
+});
+
+test("applyWordListAudio: an unresolved word loses its foreign clip instead of keeping a different voice", () => {
+  const [word] = applyWordListAudio(
+    [{ targetWord: "went", audioUrl: "https://cdn.test/normal-voice/went.mp3" }],
+    new Map(),
+  );
+  assert.equal(word?.audioUrl, null);
+});
+
+test("applyWordListAudio: doesn't mutate its input", () => {
+  const input = [{ targetWord: "went", audioUrl: "https://cdn.test/old.mp3" }];
+  applyWordListAudio(input, new Map([["went", "https://cdn.test/new.mp3"]]));
+  assert.equal(input[0]?.audioUrl, "https://cdn.test/old.mp3");
 });

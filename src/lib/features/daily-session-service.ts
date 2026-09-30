@@ -1,7 +1,7 @@
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import { fetchCardReviewWordsAction } from "@/lib/cards/actions";
 import { fetchDueCardCount } from "@/lib/cards/queries";
-import { assembleSession } from "@/lib/features/daily-session";
+import { applyWordListAudio, assembleSession } from "@/lib/features/daily-session";
 import type { SourceCandidates } from "@/lib/features/daily-session";
 import type { EffectiveFeatures } from "@/lib/features/config";
 import { fetchAllMistakesAction } from "@/lib/mistakes/actions";
@@ -13,6 +13,7 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchVocabularyRecallWordsAction } from "@/lib/vocabulary-recall/actions";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
+import { resolveWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
 import { getWordGroupById } from "@/lib/word-lists";
 
 /**
@@ -160,7 +161,17 @@ export async function buildDailySessionWords(
   }
   if (sources.wordLists) groups.push(await wordListSource(userId, locale, size));
 
-  return assembleSession(groups, size);
+  const session = assembleSession(groups, size);
+  // Every word is spoken in the Word Lists voice, whichever source it came
+  // from — resolved here, server-side, in session order (see
+  // resolveWordListVoiceAudio). An unresolved word gets no clip rather than
+  // a different voice's; the review screen never falls back to the browser.
+  const urlByWord = await attempt(
+    "word-list voice audio",
+    () => resolveWordListVoiceAudio(session.map((word) => word.targetWord)),
+    new Map<string, string>(),
+  );
+  return applyWordListAudio(session, urlByWord);
 }
 
 /**
