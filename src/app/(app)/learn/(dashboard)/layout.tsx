@@ -37,20 +37,21 @@ import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentenc
  * wrapper's md:hidden, never AppHeader/LearnSidebar's own mobile markup.
  */
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
-  // isAdmin() runs unconditionally (matching every other isAdmin() call site
-  // in the app, e.g. the Home dashboard page.tsx) rather than being gated
-  // behind `user` — it has its own non-production dev-cookie override that
-  // works without a real session, and getCurrentUser() inside it is
-  // React cache()-memoized, so this never costs a second round trip.
-  const [user, isAdminUser] = await Promise.all([getCurrentUser(), isAdmin()]);
-  // Both depend only on user.id, not on each other — safe to run together
-  // instead of one after the other.
-  const [savedCount, initialProgress] = user
-    ? await Promise.all([
-        fetchMySavedSentencesCount(user.id),
-        fetchProgressCached(todayLocalISODate()),
-      ])
-    : [0, undefined];
+  // getCurrentUser() is React cache()-memoized (LearnLayout already resolved it
+  // for this request), so awaiting it here costs nothing — and it lets the
+  // three reads below all start together. isAdmin() runs unconditionally
+  // (matching every other isAdmin() call site in the app, e.g. the Home
+  // dashboard page.tsx) rather than being gated behind `user` — it has its own
+  // non-production dev-cookie override that works without a real session.
+  // None of the three depends on another (the saved-items count and the
+  // progress need only user.id), so they used to wait on isAdmin's role lookup
+  // for no reason, adding a full round trip to every dashboard page.
+  const user = await getCurrentUser();
+  const [isAdminUser, savedCount, initialProgress] = await Promise.all([
+    isAdmin(),
+    user ? fetchMySavedSentencesCount(user.id) : 0,
+    user ? fetchProgressCached(todayLocalISODate()) : undefined,
+  ]);
 
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
