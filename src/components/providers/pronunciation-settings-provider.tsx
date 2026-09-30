@@ -11,10 +11,13 @@ import {
   type ReactNode,
 } from "react";
 
+import { wordContentId } from "@/lib/voice/sentence-word-plan";
 import {
   resolvePronunciationAudioAction,
   type VoiceAudioContentType,
 } from "@/lib/voice/voice-audio";
+import { createBrowserWordAudioPreloader } from "@/lib/voice/word-audio-browser";
+import type { WordAudioPreloader, WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
 import { lookupWordTimings, type WordTiming } from "@/lib/voice/word-timing";
 
 /**
@@ -103,6 +106,31 @@ interface PronunciationSettingsValue {
     contentId: string;
     voiceId: string;
   }) => Promise<WordTiming[] | null>;
+  /**
+   * Tells the word-audio preloader which sentences the learner needs next —
+   * normally the current sentence ("now") and the one after it ("next"), see
+   * WordAudioPreloader. Their words' clips are fetched into memory in that
+   * order; sentences left out of a later call are dropped if their work hasn't
+   * started. Call it whenever the learner's position changes. A no-op outside
+   * this provider.
+   */
+  setWordWindow: (requests: readonly WordAudioWindowRequest[]) => void;
+  /**
+   * A playable URL for one word of a sentence, as fast as it can be had: the
+   * cache (a hit is instant, and already in memory if the preloader got there),
+   * else the sentence's in-flight preload joined and promoted to the front,
+   * else — only if the server never answered — the original per-word Server
+   * Action. null means no clip exists (the caller's own fallback applies).
+   * `key` is normalizeMistakeWord of the word, as everywhere else.
+   */
+  resolveSentenceWord: (input: {
+    sentenceId: string;
+    text: string;
+    voiceId: string;
+    key: string;
+  }) => Promise<string | null>;
+  /** Maps a clip URL to its in-memory copy once downloaded, else returns it unchanged. Always safe to play. */
+  getPlayableUrl: (url: string) => string;
 }
 
 const noop = () => {};
@@ -120,6 +148,9 @@ const DEFAULT_VALUE: PronunciationSettingsValue = {
   resolveAudio: () => Promise.resolve(null),
   resolveWordTimings: () => Promise.resolve(null),
   prefetchPronunciation: noop,
+  setWordWindow: noop,
+  resolveSentenceWord: () => Promise.resolve(null),
+  getPlayableUrl: (url) => url,
 };
 
 const PronunciationSettingsContext = createContext<PronunciationSettingsValue>(DEFAULT_VALUE);
@@ -284,6 +315,69 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
     [],
   );
 
+  // Word clips are loaded ahead of the learner by one preloader per provider
+  // (see WordAudioPreloader) — created on first use, never during render, and
+  // backed by the same resolvedAudioRef every other caller reads, so a URL it
+  // learns is immediately a synchronous cache hit everywhere.
+  const preloaderRef = useRef<WordAudioPreloader | null>(null);
+  const getPreloader = useCallback((): WordAudioPreloader => {
+    if (!preloaderRef.current) {
+      preloaderRef.current = createBrowserWordAudioPreloader({
+        onWordUrl: (contentId, url) => {
+          resolvedAudioRef.current.set(contentId, url);
+        },
+        getWordUrl: (contentId) => resolvedAudioRef.current.get(contentId),
+      });
+    }
+    return preloaderRef.current;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      preloaderRef.current?.dispose();
+    };
+  }, []);
+
+  const setWordWindow = useCallback(
+    (requests: readonly WordAudioWindowRequest[]) => {
+      getPreloader().setWindow(requests);
+    },
+    [getPreloader],
+  );
+
+  const getPlayableUrl = useCallback(
+    (url: string) => preloaderRef.current?.getPlayableUrl(url) ?? url,
+    [],
+  );
+
+  const resolveSentenceWord = useCallback(
+    async (input: {
+      sentenceId: string;
+      text: string;
+      voiceId: string;
+      key: string;
+    }): Promise<string | null> => {
+      const { sentenceId, text, voiceId, key } = input;
+      const contentId = wordContentId(sentenceId, key);
+      const preloader = getPreloader();
+
+      let url = resolvedAudioRef.current.get(contentId);
+      if (!url) {
+        const status = await preloader.ensureWord({ sentenceId, text, voiceId }, contentId);
+        url = resolvedAudioRef.current.get(contentId);
+        // Only when the server never answered — if it did, it already tried to
+        // make this clip, and asking the per-word action again would just wait
+        // out the same failure a second time.
+        if (!url && status === "unreachable") {
+          url =
+            (await resolveAudio({ contentType: "sentence_word", contentId, voiceId })) ?? undefined;
+        }
+      }
+      return url ? preloader.getPlayableUrl(url) : null;
+    },
+    [getPreloader, resolveAudio],
+  );
+
   // See MAX_CONCURRENT_PREFETCH_REQUESTS's own doc comment. Recurses into
   // itself from the `.finally()` below to pull the next queued item the
   // instant a slot frees — by the time that callback actually runs (a real
@@ -420,6 +514,9 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
       resolveAudio,
       prefetchPronunciation,
       resolveWordTimings,
+      setWordWindow,
+      resolveSentenceWord,
+      getPlayableUrl,
     }),
     [
       speedIndex,
@@ -432,6 +529,9 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
       resolveAudio,
       prefetchPronunciation,
       resolveWordTimings,
+      setWordWindow,
+      resolveSentenceWord,
+      getPlayableUrl,
     ],
   );
 

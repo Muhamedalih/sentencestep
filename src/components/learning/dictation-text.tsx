@@ -7,7 +7,6 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -43,8 +42,6 @@ interface DictationTextWords {
   hasAudio: (word: number) => boolean;
   label: (word: number) => string;
   onTap: (word: number) => void;
-  onHover: (word: number, event: ReactPointerEvent) => void;
-  onLeave: () => void;
   /** The word being spoken right now: its blanks light up. */
   litWord: number | null;
   /** Its clip is still being fetched: the lit blanks breathe. */
@@ -186,8 +183,6 @@ export function DictationText({
                     }
                   : undefined
               }
-              onPointerEnter={tappable ? (event) => words.onHover(first, event) : undefined}
-              onPointerLeave={tappable ? words.onLeave : undefined}
               className={cn(
                 "group/word relative isolate inline-block whitespace-nowrap",
                 tappable &&

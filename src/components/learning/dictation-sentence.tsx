@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { CheckCircle2, CornerDownLeft } from "lucide-react";
 
@@ -81,15 +74,14 @@ interface DictationSentenceProps {
 /** No human dictation answer is typed faster than this; anything above is a timing artifact. */
 const MAX_PLAUSIBLE_WPM = 200;
 
-/** How long the mouse rests on a blank before its word's clip is quietly fetched in the background (no sound: hovering only lights the blank up). */
-const HOVER_WARM_MS = 250;
-
 /**
  * If a word's real clip hasn't arrived this long after a tap, the browser's
- * own voice says the word right away instead of leaving the learner in
- * silence: resolving a clip that has never been generated takes seconds.
+ * own voice says the word instead of leaving the learner in silence. Long
+ * enough that a clip the preloader is still fetching (a batched request, well
+ * under this) arrives first and is the only voice heard; it only ever fires for
+ * a word that has never been generated, where synthesis takes seconds.
  */
-const WORD_FALLBACK_MS = 1000;
+const WORD_FALLBACK_MS = 2500;
 
 /** The sentence's size per mode — exactly what TypingSentence uses, so switching Dictation on never resizes the text. */
 const TEXT_SIZE: Record<LearningMode, string> = {
@@ -115,8 +107,10 @@ const TEXT_SIZE: Record<LearningMode, string> = {
  * would turn "retype what is on screen" into a way to erase a miss.
  *
  * Help while the sentence is hidden: tapping a word says it (Normal and
- * Stories, where words have their own audio); hovering one only lights it up
- * (and quietly prepares that word's audio).
+ * Stories, where words have their own audio) — from the same clips, loaded by
+ * the same rolling window (LessonSession's word-audio window), as a word click
+ * in the typing view, so a tap plays from memory here too; hovering one only
+ * lights it up.
  */
 export function DictationSentence({
   sentence,
@@ -210,10 +204,9 @@ export function DictationSentence({
     showWordBlanks && (mode === "normal" || mode === "stories") && Boolean(sentenceVoiceId);
   const wordClip = useAudioClip();
   const speech = useSpeech();
-  const { resolveAudio, getResolvedAudio, prefetchPronunciation, registerResolvedAudio } =
+  const { resolveSentenceWord, getResolvedAudio, getPlayableUrl, registerResolvedAudio } =
     usePronunciationSettings();
   const wordRequestRef = useRef(0);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [activeBlank, setActiveBlank] = useState<number | null>(null);
   const [resolvingWord, setResolvingWord] = useState(false);
 
@@ -224,26 +217,9 @@ export function DictationSentence({
     }
   }, [wordAudioUrls, registerResolvedAudio]);
 
-  useEffect(() => () => clearTimeout(hoverTimerRef.current), []);
-
   function wordContentId(blankIndex: number): string | null {
     const key = audioWords[blankIndex];
     return key ? `${sentence.id}::${key}` : null;
-  }
-
-  // Deliberately NOT a bulk prefetch of every word when the sentence appears:
-  // that fired a dozen server calls at once, each a possible speech synthesis
-  // (see resolvePronunciationAudioAction's rate limit), queued one behind the
-  // other with the learner's own tap stuck at the back. A word is prepared
-  // only when the mouse actually rests on it.
-  function handleBlankPointerEnter(blankIndex: number, event: ReactPointerEvent) {
-    if (event.pointerType === "touch" || !sentenceVoiceId) return;
-    const contentId = wordContentId(blankIndex);
-    if (!contentId || getResolvedAudio(contentId)) return;
-    clearTimeout(hoverTimerRef.current);
-    hoverTimerRef.current = setTimeout(() => {
-      prefetchPronunciation({ contentType: "sentence_word", contentId, voiceId: sentenceVoiceId });
-    }, HOVER_WARM_MS);
   }
 
   async function playWord(blankIndex: number) {
@@ -268,9 +244,14 @@ export function DictationSentence({
 
     const known = getResolvedAudio(contentId);
     const fallbackTimer = known ? undefined : setTimeout(speakFallback, WORD_FALLBACK_MS);
-    const url =
-      known ??
-      (await resolveAudio({ contentType: "sentence_word", contentId, voiceId: sentenceVoiceId }));
+    const url = known
+      ? getPlayableUrl(known)
+      : await resolveSentenceWord({
+          sentenceId: sentence.id,
+          text: sentence.en,
+          voiceId: sentenceVoiceId,
+          key,
+        });
     clearTimeout(fallbackTimer);
 
     // A newer tap took over while this one was resolving.
@@ -282,7 +263,6 @@ export function DictationSentence({
   }
 
   function handleBlankClick(blankIndex: number) {
-    clearTimeout(hoverTimerRef.current);
     void playWord(blankIndex);
     // Keep typing uninterrupted: the tap must not leave focus on the blank.
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -394,8 +374,6 @@ export function DictationSentence({
               hasAudio: (word) => audioWords[word] != null,
               label: (word) => t.dictation.hearWord.replace("{n}", String(word + 1)),
               onTap: handleBlankClick,
-              onHover: handleBlankPointerEnter,
-              onLeave: () => clearTimeout(hoverTimerRef.current),
               litWord: wordBusy ? activeBlank : null,
               litPulse: resolvingWord,
             }

@@ -78,9 +78,11 @@ already has history the day the feature goes On.
   letter appears in its slot, word by word, with nothing said about whether it
   is right until Enter. Punctuation and apostrophes stay printed between the
   blanks. While the sentence is hidden, hovering a word only lights its blanks
-  up (and quietly prepares that word's clip), tapping it says the word (Normal
-  and Stories, using the same word audio as the typing view; if the clip takes
-  more than a second the browser's own voice says it so a tap is never
+  up, and tapping it says the word (Normal and Stories, from the same clips,
+  loaded by the same rolling window, as the typing view — see
+  `docs/word-audio-loading.md` — so a tap plays from memory; if a never-generated
+  clip takes more than 2.5 seconds the browser's own voice says it so a tap is
+  never
   silent). Turning **Show word-length blanks** off leaves the area empty and
   only echoes what has been typed. From memory shares the correction screen,
   Enter handling and Try again.
