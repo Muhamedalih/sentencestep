@@ -761,4 +761,17 @@ export const es: Dictionary = {
     youTyped: "Escribiste",
     correctSentence: "Oración correcta",
   },
+  fromMemory: {
+    button: "Ponte a prueba de memoria",
+    title: "De memoria",
+    promptLabel: "Escríbela en inglés",
+    placeholder: "Escribe la oración en inglés…",
+    showFirstLetters: "Mostrar primeras letras",
+    revealWord: "Revelar una palabra",
+    backToResults: "Volver a los resultados",
+    finish: "Terminar",
+    summaryHeading: "¡Buen trabajo!",
+    summaryBody: "{clean} de {total} oraciones sin ayuda.",
+    mistakesSaved: "Las palabras que fallaste se añadieron a «Corrige tus errores».",
+  },
 };

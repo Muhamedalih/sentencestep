@@ -749,4 +749,17 @@ export const tr: Dictionary = {
     youTyped: "Yazdığın",
     correctSentence: "Doğru cümle",
   },
+  fromMemory: {
+    button: "Kendini ezberden sına",
+    title: "Ezberden",
+    promptLabel: "İngilizce yaz",
+    placeholder: "İngilizce cümleyi yaz…",
+    showFirstLetters: "İlk harfleri göster",
+    revealWord: "Bir kelimeyi göster",
+    backToResults: "Sonuçlara dön",
+    finish: "Bitir",
+    summaryHeading: "Aferin!",
+    summaryBody: "{total} cümlenin {clean} tanesi yardımsız.",
+    mistakesSaved: "Kaçırdığın kelimeler «Hatalarını düzelt» bölümüne eklendi.",
+  },
 };

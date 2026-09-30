@@ -864,4 +864,18 @@ export interface Dictionary {
     youTyped: string;
     correctSentence: string;
   };
+  /** From-memory mode (src/components/learning/from-memory-session.tsx) — an optional round after a lesson: read the meaning, type the English. */
+  fromMemory: {
+    button: string;
+    title: string;
+    promptLabel: string;
+    placeholder: string;
+    showFirstLetters: string;
+    revealWord: string;
+    backToResults: string;
+    finish: string;
+    summaryHeading: string;
+    summaryBody: string;
+    mistakesSaved: string;
+  };
 }

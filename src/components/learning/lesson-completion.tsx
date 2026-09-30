@@ -3,7 +3,16 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, RotateCcw, Wand2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  Brain,
+  Home,
+  Loader2,
+  RotateCcw,
+  Wand2,
+} from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -188,6 +197,7 @@ export function LessonCompletion({
   mistakeCount = 0,
   onFixMistakes,
   onViewWords,
+  onPracticeFromMemory,
   saveStatus = "saved",
   onRetrySave,
   onRetryLesson,
@@ -219,6 +229,8 @@ export function LessonCompletion({
   onFixMistakes?: () => void;
   /** Opens StoryWordsPanel in place of this screen (see LessonSession's isViewingWords branch) — Stories mode only; every other mode keeps the plain inline vocabulary chips below since they have no per-word practice flow yet. */
   onViewWords?: () => void;
+  /** Opens the optional From-memory round (see FromMemorySession) in place of this screen. Undefined when the admin feature is off for this section, or the lesson has no translated sentences to ask — the button is then simply not rendered. */
+  onPracticeFromMemory?: () => void;
   /**
    * Status of the signed-in save this completion triggered (see useProgress).
    * Defaults to "saved" so every other caller (and any test/story that
@@ -295,7 +307,7 @@ export function LessonCompletion({
   // accent, always — so "which action is primary" is communicated by
   // size/weight alone, never by a warning-colored border.
   type CompletionAction = {
-    id: "fix" | "next" | "retry" | "home";
+    id: "fix" | "next" | "memory" | "retry" | "home";
     icon: typeof Wand2;
     label: string;
     href?: string;
@@ -312,6 +324,16 @@ export function LessonCompletion({
             icon: ArrowRight,
             label: t.lesson.nextLesson,
             href: `/learn/${mode}/${nextLesson.id}`,
+          },
+        ]
+      : []),
+    ...(onPracticeFromMemory
+      ? [
+          {
+            id: "memory" as const,
+            icon: Brain,
+            label: t.fromMemory.button,
+            onClick: onPracticeFromMemory,
           },
         ]
       : []),

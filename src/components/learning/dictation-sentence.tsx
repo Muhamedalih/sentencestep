@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { SentenceDiff } from "@/components/learning/sentence-diff";
 import { TapToStartOverlay } from "@/components/learning/typing-sentence";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -51,17 +52,6 @@ interface DictationSentenceProps {
 
 /** No human dictation answer is typed faster than this; anything above is a timing artifact. */
 const MAX_PLAUSIBLE_WPM = 200;
-
-function wordTone(status: "correct" | "close" | "wrong" | "missing" | "extra"): string {
-  switch (status) {
-    case "correct":
-      return "text-success";
-    case "close":
-      return "text-accent";
-    default:
-      return "text-danger";
-  }
-}
 
 /**
  * The Dictation view of one sentence: the text is hidden, the learner
@@ -239,55 +229,7 @@ export function DictationSentence({
               {result.exact ? t.dictation.perfect : t.dictation.almost}
             </p>
 
-            {!result.exact && (
-              <>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
-                    {t.dictation.youTyped}
-                  </p>
-                  <p
-                    dir="ltr"
-                    className="flex flex-wrap gap-x-2 text-xl sm:text-2xl"
-                    style={textStyle}
-                  >
-                    {result.typedWords.map((word, index) => (
-                      <span
-                        key={index}
-                        className={cn(
-                          word.status === "correct" ? wordTone("correct") : wordTone("wrong"),
-                          word.status === "extra" && "line-through",
-                        )}
-                      >
-                        {word.text}
-                      </span>
-                    ))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
-                    {t.dictation.correctSentence}
-                  </p>
-                  <p
-                    dir="ltr"
-                    className="flex flex-wrap gap-x-2 text-xl sm:text-2xl"
-                    style={textStyle}
-                  >
-                    {result.words.map((word, index) => (
-                      <span
-                        key={index}
-                        className={cn(
-                          wordTone(word.status),
-                          word.status !== "correct" &&
-                            "font-semibold underline decoration-2 underline-offset-4",
-                        )}
-                      >
-                        {word.raw}
-                      </span>
-                    ))}
-                  </p>
-                </div>
-              </>
-            )}
+            <SentenceDiff result={result} textStyle={textStyle} />
             {result.exact && (
               <p dir="ltr" className="text-xl sm:text-2xl" style={textStyle}>
                 {sentence.en}

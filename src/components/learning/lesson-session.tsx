@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
 
 import { DictationSentence, type DictationOutcome } from "@/components/learning/dictation-sentence";
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
+import { FromMemorySession } from "@/components/learning/from-memory-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Logo } from "@/components/layout/logo";
@@ -36,6 +37,7 @@ import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { buildFromMemoryItems } from "@/lib/features/from-memory";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
@@ -206,7 +208,16 @@ export function LessonSession({
   const wpmSamplesRef = useRef<number[]>([]);
   const hasTrackedAudioRef = useRef(false);
   const { prefetchPronunciation } = usePronunciationSettings();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+
+  // From-memory (admin feature): an optional round offered on the completion
+  // screen, asking this lesson's sentences back in the learner's own language.
+  const [isPracticingFromMemory, setIsPracticingFromMemory] = useState(false);
+  const fromMemoryItems = useMemo(
+    () =>
+      features.fromMemory.sections[unit.mode] ? buildFromMemoryItems(unit.sentences, locale) : [],
+    [features.fromMemory.sections, unit.mode, unit.sentences, locale],
+  );
 
   useEffect(() => {
     if (!dictationAvailable) return;
@@ -470,6 +481,7 @@ export function LessonSession({
     errorCountRef.current = 0;
     wpmSamplesRef.current = [];
     dictationCountRef.current = 0;
+    setIsPracticingFromMemory(false);
     setIsComplete(false);
   }
 
@@ -579,6 +591,19 @@ export function LessonSession({
                 nextLesson={nextLesson}
               />
             </div>
+          ) : isComplete && isPracticingFromMemory && fromMemoryItems.length > 0 ? (
+            <div key="from-memory" className="flex flex-col lg:h-full lg:overflow-y-auto">
+              <FromMemorySession
+                items={fromMemoryItems}
+                mode={unit.mode}
+                resolvedVoiceId={resolvedVoiceId}
+                speakerVoiceMap={speakerVoiceMap}
+                allowReveal={features.fromMemory.allowReveal}
+                showFirstLetters={features.fromMemory.showFirstLetters}
+                onMistakes={previewMode ? undefined : handleSentenceMistakes}
+                onExit={() => setIsPracticingFromMemory(false)}
+              />
+            </div>
           ) : isComplete && isViewingWords && unit.vocabulary && unit.vocabulary.length > 0 ? (
             <div key="story-words" className="flex flex-col lg:h-full">
               <StoryWordsPanel
@@ -617,6 +642,9 @@ export function LessonSession({
                   mistakeCount={previewMode ? 0 : mistakes.count}
                   onFixMistakes={previewMode ? undefined : () => setIsFixingMistakes(true)}
                   onViewWords={unit.mode === "stories" ? () => setIsViewingWords(true) : undefined}
+                  onPracticeFromMemory={
+                    fromMemoryItems.length > 0 ? () => setIsPracticingFromMemory(true) : undefined
+                  }
                   saveStatus={previewMode ? "saved" : saveStatus}
                   onRetrySave={previewMode ? undefined : retryMarkComplete}
                   onRetryLesson={handleRetryLesson}

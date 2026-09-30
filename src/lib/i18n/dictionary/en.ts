@@ -741,4 +741,17 @@ export const en: Dictionary = {
     youTyped: "You typed",
     correctSentence: "Correct sentence",
   },
+  fromMemory: {
+    button: "Test yourself from memory",
+    title: "From memory",
+    promptLabel: "Type this in English",
+    placeholder: "Type the English sentence…",
+    showFirstLetters: "Show first letters",
+    revealWord: "Reveal a word",
+    backToResults: "Back to results",
+    finish: "Finish",
+    summaryHeading: "Nice work!",
+    summaryBody: "{clean} of {total} sentences with no help.",
+    mistakesSaved: "Words you missed were added to Fix Your Mistakes.",
+  },
 };

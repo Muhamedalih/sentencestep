@@ -721,4 +721,17 @@ export const ar: Dictionary = {
     youTyped: "ما كتبته",
     correctSentence: "الجملة الصحيحة",
   },
+  fromMemory: {
+    button: "اختبر نفسك من الذاكرة",
+    title: "من الذاكرة",
+    promptLabel: "اكتبها بالإنجليزية",
+    placeholder: "اكتب الجملة بالإنجليزية…",
+    showFirstLetters: "أظهر الحروف الأولى",
+    revealWord: "اكشف كلمة",
+    backToResults: "العودة إلى النتائج",
+    finish: "إنهاء",
+    summaryHeading: "أحسنت!",
+    summaryBody: "{clean} من {total} جمل دون أي مساعدة.",
+    mistakesSaved: "الكلمات التي أخطأت فيها أُضيفت إلى «تصحيح الأخطاء».",
+  },
 };
