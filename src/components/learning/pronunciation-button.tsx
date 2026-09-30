@@ -268,6 +268,18 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       }
     }
 
+    // Every switch to the browser's own voice says why, in the console: it is
+    // the one thing a learner hears as "the wrong voice", and without a reason
+    // on record there is no telling a missing clip from a failed one.
+    function warnBrowserVoiceFallback(reason: string) {
+      console.warn(`[pronunciation] using the browser voice for "${text}": ${reason}`, {
+        contentType: contentType ?? null,
+        contentId: contentId ?? null,
+        voiceId: kokoroVoiceId ?? null,
+        hadClipUrl: Boolean(audioUrl),
+      });
+    }
+
     async function playAuto() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
@@ -275,6 +287,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
+        warnBrowserVoiceFallback("no clip could be found or made for it");
         speech.speakSentence(text, speedMultiplier);
       }
       onPlay?.();
@@ -287,6 +300,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
+        warnBrowserVoiceFallback("no clip could be found or made for it");
         speech.replaySentence(text, speedMultiplier);
       }
       onPlay?.();
@@ -319,6 +333,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     // than substituting a different voice.
     useEffect(() => {
       if (clip.status === "error" && !disableSpeechFallback) {
+        warnBrowserVoiceFallback("its clip failed to play (see the [audio] line above)");
         speech.speakSentence(text);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the clip's own status changes
