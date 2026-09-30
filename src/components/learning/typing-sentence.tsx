@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -19,7 +19,9 @@ import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
   isMistakeWorthTracking,
   isTrackableWord,
+  isWordWorthSaving,
   normalizeMistakeWord,
+  savableWordIndices,
 } from "@/lib/mistakes/normalize";
 import { getCurrentWordIndex, locateWordAtCharIndex, tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
@@ -303,7 +305,7 @@ export function TypingSentence({
   // word (never a bare punctuation token), and only when the feature is open.
   const currentWordKey = currentWord ? normalizeMistakeWord(currentWord.en) : "";
   const currentWordSave =
-    wordCards && currentWord && isTrackableWord(currentWord.en)
+    wordCards && currentWord && isWordWorthSaving(currentWord.en)
       ? {
           saved: wordCards.isSaved(currentWordKey),
           label: wordCards.isSaved(currentWordKey) ? t.myCards.removeWord : t.myCards.saveWord,
@@ -342,6 +344,15 @@ export function TypingSentence({
       ? new Set(sentence.targetVocabularyIndices)
       : undefined;
 
+  // Personal word cards: only some words can be saved (see isWordWorthSaving),
+  // so in Normal lessons those words carry a dotted underline — the learner
+  // can see at a glance which words are worth a star instead of wondering
+  // about every one. Stories keeps its own vocabulary marks untouched.
+  const savableIndices = useMemo(
+    () => (wordCards && mode === "normal" ? savableWordIndices(sentence.en) : undefined),
+    [wordCards, mode, sentence.en],
+  );
+
   function renderText(sizeClass: string, enableWordClick = false) {
     return (
       <TypingText
@@ -356,6 +367,7 @@ export function TypingSentence({
         textStyle={textStyle}
         onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
         targetVocabularyIndices={targetVocabularyIndices}
+        savableWordIndices={savableIndices}
         autoFocus={hasStarted}
       />
     );

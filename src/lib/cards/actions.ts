@@ -14,7 +14,7 @@ import {
 import { awardEventBadge } from "@/lib/features/badge-service";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
-import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { isWordWorthSaving, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { createClient } from "@/lib/supabase/server";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 
@@ -80,7 +80,7 @@ export async function saveWordCardAction(input: SaveWordCardInput): Promise<{ ok
     const lessonTitle = cleanText(input.lessonTitle, 200);
     const sentenceEn = cleanText(input.sentenceEn, 500);
     const sentenceId = input.sentenceId === null ? null : cleanText(input.sentenceId, 120);
-    if (!word || !isTrackableWord(word) || !meaning || !lessonId || !lessonTitle || !sentenceEn) {
+    if (!word || !isWordWorthSaving(word) || !meaning || !lessonId || !lessonTitle || !sentenceEn) {
       return { ok: false };
     }
     if (!Number.isInteger(input.wordIndex) || input.wordIndex < 0 || input.wordIndex > 300) {

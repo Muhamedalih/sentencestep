@@ -74,6 +74,13 @@ interface TypingTextProps {
    */
   targetVocabularyIndices?: ReadonlySet<number>;
   /**
+   * Personal word cards: word indices (same indexing as targetVocabularyIndices)
+   * that are worth saving to the learner's deck — marked with a slightly
+   * stronger dotted underline than the Stories vocabulary cue so it is easy
+   * to see which words carry a save star. Passive, like targetVocabularyIndices.
+   */
+  savableWordIndices?: ReadonlySet<number>;
+  /**
    * Enables double-click-to-highlight (addition 3) for every word in this
    * sentence, independent of whether `wordTranslations` has data for any
    * given word — highlighting is a Book Reading feature, not a translation
@@ -157,6 +164,7 @@ export function TypingText({
   wordTranslations,
   translationDir = "ltr",
   targetVocabularyIndices,
+  savableWordIndices,
   enableWordHighlight = false,
   showTypingCursor = true,
   disabled = false,
@@ -257,6 +265,7 @@ export function TypingText({
           const isRevealed = wordTranslations !== undefined && revealedWordIndex === thisWordIndex;
           const isHighlighted = highlightedWordIndices.has(thisWordIndex);
           const isTargetVocabulary = targetVocabularyIndices?.has(thisWordIndex) ?? false;
+          const isSavable = savableWordIndices?.has(thisWordIndex) ?? false;
 
           // MouseEvent.detail is the native click-count (1 for a plain
           // click, 2+ for the second click of a double-click) — checking it
@@ -348,6 +357,9 @@ export function TypingText({
                 // onWordClick/onKeyDown exactly as before.
                 isTargetVocabulary &&
                   "decoration-primary/40 underline decoration-dotted underline-offset-[6px]",
+                isSavable &&
+                  !isTargetVocabulary &&
+                  "decoration-primary/70 underline decoration-dotted decoration-2 underline-offset-[7px]",
               )}
             >
               {isHighlighted && <HighlightMark reducedMotion={reducedMotion} />}

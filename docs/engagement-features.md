@@ -67,9 +67,12 @@ already has history the day the feature goes On.
   as a chip and its wrong letters underlined (typed and correct line), Enter or
   **Continue** moves on, and **Try again** lets the learner retype the same
   sentence as often as they like: only the first attempt is scored and
-  recorded. While the sentence is hidden, hovering over (or tapping) a blank
-  says that word (Normal and Stories, using the same word audio as the typing
-  view). From memory shares the correction screen, Enter handling and Try again.
+  recorded. While the sentence is hidden, every blank is a word-shaped pill:
+  hovering only lights it up (and quietly prepares that word's clip), tapping it
+  says the word (Normal and Stories, using the same word audio as the typing
+  view; if the clip takes more than a second the browser's own voice says it so
+  a tap is never silent). From memory shares the correction screen, Enter
+  handling and Try again.
 - **Streak freeze** sits on top of the existing free one-missed-day grace: each
   _extra_ consecutive missed day spends one freeze from the month's balance,
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).
@@ -83,6 +86,11 @@ already has history the day the feature goes On.
   (`WordReviewSession variant="session"`); each word is recorded on the ledger
   of the source it came from (`src/lib/features/session-completion.ts`), and
   the XP is paid once per day (`complete_daily_session`).
+- **Saving words** is offered only for words worth studying: pronouns,
+  demonstratives, articles, numbers, names, be/have/do forms, modals,
+  prepositions, conjunctions, common function adverbs and contractions get no
+  star (`isWordWorthSaving`, also enforced when saving). In Normal lessons the
+  words that can be saved carry a dotted underline.
 - **Personal cards** review on the same 1/3/7/16-day schedule as mistakes;
   **Export for Anki** downloads a tab-separated file with Anki import headers.
 

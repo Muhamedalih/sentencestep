@@ -762,7 +762,7 @@ export const es: Dictionary = {
     correctSentence: "Oración correcta",
     retry: "Intentar de nuevo",
     retryNote: "Intento de práctica: solo cuenta tu primer intento en la puntuación de la lección.",
-    blankHint: "Pasa el ratón por un hueco, o tócalo, para oír esa palabra",
+    blankHint: "Toca un hueco para oír esa palabra",
     hearWord: "Escuchar la palabra {n}",
   },
   fromMemory: {

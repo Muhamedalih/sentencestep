@@ -385,13 +385,16 @@ async function generateIsolatedWordAudio(
 
   const { data: existingRow } = await supabase
     .from("voice_audio_cache")
-    .select("id, status, attempts, updated_at")
+    .select("id, status, attempts, updated_at, audio_url")
     .eq("voice_id", voiceId)
     .eq("text_hash", key.textHash)
     .eq("generation_version", EDGE_TTS_GENERATION_VERSION)
     .maybeSingle();
 
   if (existingRow) {
+    // Already generated: hand it back instead of claiming the row and
+    // synthesizing (and uploading) the same word all over again.
+    if (existingRow.status === "ready" && existingRow.audio_url) return existingRow.audio_url;
     if (existingRow.status === "generating" && !isStaleGenerating(existingRow.updated_at)) {
       return null; // another request is already generating this exact word
     }
@@ -545,28 +548,27 @@ export async function resolvePronunciationAudioAction(input: {
 
   if (contentType !== "sentence_word" && contentType !== "book_sentence_word") return null;
 
-  if (await isSynthesisRateLimited()) return null;
+  // A word is spoken by the narrator's own voice only when that voice is
+  // Edge-TTS (free); a paid narrator (Cartesia/ElevenLabs) never pays for a
+  // single isolated word — a gender-matched free Edge-TTS voice stands in
+  // (see pickGenderMatchedEdgeTtsVoice) and the word's clip is stored under
+  // THAT voice's id. The lookup above only knows the narrator's id, so for a
+  // paid narrator it could never find a word generated before: every click
+  // looked like a miss, was counted against the synthesis rate limit, and
+  // then re-synthesized and re-uploaded a clip that already existed. Look
+  // under the voice the clip really lives under first, and only rate-limit
+  // and synthesize on a genuine miss.
+  const wordVoice =
+    voice.source === "edge-tts"
+      ? { id: voiceId, providerVoiceId: voice.providerVoiceId }
+      : await pickGenderMatchedEdgeTtsVoice(voice.gender);
+  if (!wordVoice) return null;
 
-  if (voice.source === "edge-tts") {
-    return generateIsolatedWordAudio(text, voiceId, voice.providerVoiceId);
+  if (wordVoice.id !== voiceId) {
+    const cachedWord = await lookupCachedAudioUrl(text, wordVoice.id);
+    if (cachedWord) return cachedWord;
   }
 
-  // A Story/Book sentence's narrator is a paid provider (ElevenLabs) — never
-  // spend a real synthesis call isolating just one word of content that's
-  // already fully narrated. Substitute a gender-matched free Edge-TTS voice
-  // instead (see pickGenderMatchedEdgeTtsVoice): the narrator's own voice —
-  // and its own already-generated sentence audio — is never touched, only
-  // this one isolated-word request is served by a different (free) voice.
-  //
-  // Books briefly special-cased "book_sentence_word" to return null here
-  // instead of reaching this substitute ("never a different voice, silence
-  // instead" — 2026-09-11) — which in practice meant a book's word clicks
-  // never made any sound at all, since nothing else ever populates a
-  // book_sentence_word cache row. Reverted the same day at the user's
-  // explicit request: Books now get the identical free Edge-TTS substitute
-  // Story/Normal words already use successfully (>99.8% resolve success
-  // measured in production) instead of permanent silence.
-  const substitute = await pickGenderMatchedEdgeTtsVoice(voice.gender);
-  if (!substitute) return null;
-  return generateIsolatedWordAudio(text, substitute.id, substitute.providerVoiceId);
+  if (await isSynthesisRateLimited()) return null;
+  return generateIsolatedWordAudio(text, wordVoice.id, wordVoice.providerVoiceId);
 }

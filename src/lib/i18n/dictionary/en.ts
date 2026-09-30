@@ -742,7 +742,7 @@ export const en: Dictionary = {
     correctSentence: "Correct sentence",
     retry: "Try again",
     retryNote: "Practice try: only your first attempt counts toward the lesson score.",
-    blankHint: "Hover over a blank, or tap it, to hear that word",
+    blankHint: "Tap a blank to hear that word",
     hearWord: "Hear word {n}",
   },
   fromMemory: {

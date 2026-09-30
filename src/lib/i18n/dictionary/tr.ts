@@ -750,7 +750,7 @@ export const tr: Dictionary = {
     correctSentence: "Doğru cümle",
     retry: "Tekrar dene",
     retryNote: "Alıştırma denemesi: derste yalnızca ilk denemen puana sayılır.",
-    blankHint: "O kelimeyi duymak için boşluğun üzerine gel veya dokun",
+    blankHint: "O kelimeyi duymak için bir boşluğa dokun",
     hearWord: "{n}. kelimeyi dinle",
   },
   fromMemory: {

@@ -861,25 +861,6 @@ export function LessonSession({
                   >
                     {unit.title}
                   </div>
-                  {dictationAvailable && (
-                    <div className="mb-2 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={handleToggleDictation}
-                        aria-pressed={dictationOn}
-                        title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
-                        className={cn(
-                          "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-                          dictationOn
-                            ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
-                            : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted",
-                        )}
-                      >
-                        <Headphones className="size-3.5" aria-hidden="true" />
-                        {t.dictation.toggleLabel}
-                      </button>
-                    </div>
-                  )}
                   <div className="mb-3 flex flex-col gap-1.5">
                     {unit.mode !== "stories" && (
                       <div className="flex items-center justify-end gap-1" dir="ltr">
@@ -922,6 +903,41 @@ export function LessonSession({
                       instead of duplicating it up here — this bar is all
                       that's left of the original counter row for that mode. */}
                     <Progress value={(sentenceIndex / total) * 100} className="h-1" />
+                    {dictationAvailable && (
+                      // Under the progress bar, big and labelled as a switch:
+                      // Dictation is a different way to play the lesson, so it
+                      // has to read as a clear on/off choice, not a tag.
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={dictationOn}
+                        onClick={handleToggleDictation}
+                        title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
+                        className={cn(
+                          "mt-2 flex h-11 w-fit items-center gap-3 self-center rounded-full border-2 pr-3 pl-4 text-sm font-semibold shadow-sm transition-all duration-200 active:scale-[0.97]",
+                          dictationOn
+                            ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-[var(--lesson-primary)]/20"
+                            : "border-border bg-card/70 text-foreground/80 hover:bg-muted hover:border-[var(--lesson-primary)]/60",
+                        )}
+                      >
+                        <Headphones className="size-5" aria-hidden="true" />
+                        <span>{t.dictation.toggleLabel}</span>
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
+                            dictationOn ? "bg-[var(--lesson-primary)]" : "bg-foreground/25",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "absolute top-0.5 size-5 rounded-full bg-white shadow transition-all duration-200",
+                              dictationOn ? "left-[22px]" : "left-0.5",
+                            )}
+                          />
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div
