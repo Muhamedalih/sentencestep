@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { createClient } from "@/lib/supabase/server";
-import { isLearnerVisibleStatus } from "@/lib/content-helpers";
+import { isLearnerVisibleStatus, tallySentenceStats } from "@/lib/content-helpers";
 import {
   getContentTranslations,
   resolveScalarField,
@@ -16,7 +16,7 @@ import {
 } from "@/lib/content/story-vocabulary";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { Database } from "@/types/database";
-import type { Lesson, LearningMode, PreviewSentence, Sentence } from "@/types/content";
+import type { Lesson, LearningMode, LessonUnit, PreviewSentence, Sentence } from "@/types/content";
 
 /**
  * Supabase-backed content reads, matching the shape of the local seed in
@@ -358,6 +358,138 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
 
     return unit;
   });
+}
+
+/**
+ * What the Home dashboard needs from a mode's lessons — title, level, order,
+ * illustration, free/premium — and NOTHING from their bodies: no sentences, no
+ * word translations, no per-sentence support translations, no vocabulary
+ * derivation. Home used to call fetchLessons (above) for all three modes just
+ * to show the "up next" cards and to count sentences/words, which meant
+ * downloading every sentence with its word_translations (over a thousand rows
+ * for Stories alone), running the vocabulary ranking over all of them, and
+ * then shipping every sentence body to the browser inside HomeHero's props.
+ *
+ * Reads only the `lessons`/`levels`/lesson-title translation rows, all of which
+ * are public for a published lesson (see fetchLessonNav's doc comment for the
+ * RLS reasoning), so this is safe to share-cache across every viewer exactly
+ * like fetchLessonNav — same invalidation tags, plus a short time-based expiry
+ * as a backstop for lesson-title translation edits, which have no tag of their
+ * own. A warm cache makes this cost nothing on Home.
+ */
+async function fetchLessonSummariesUncached(
+  mode: LearningMode,
+  locale?: SupportLocale,
+): Promise<LessonUnit[]> {
+  const supabase = createPublicClient();
+  const [{ data: lessonRows, error: lessonsError }, { data: levels, error: levelsError }] =
+    await Promise.all([
+      supabase
+        .from("lessons")
+        .select(
+          "id, mode, level_id, order_index, title, title_ar, description, description_ar, is_free, status, illustration_url",
+        )
+        .eq("mode", mode)
+        .eq("status", "published")
+        .order("order_index"),
+      supabase.from("levels").select("id, index").eq("mode", mode),
+    ]);
+  if (lessonsError) throw lessonsError;
+  if (levelsError) throw levelsError;
+
+  // Same defensive double-check as fetchLessons — see isLearnerVisibleStatus's doc comment.
+  const lessons = (lessonRows ?? []).filter((lesson) => isLearnerVisibleStatus(lesson.status));
+  if (lessons.length === 0) return [];
+
+  const levelIndexById = new Map((levels ?? []).map((level) => [level.id, level.index]));
+  const lessonTranslations = locale
+    ? await getContentTranslations(
+        "lesson",
+        lessons.map((lesson) => lesson.id),
+        locale,
+      )
+    : undefined;
+
+  return lessons.map((lesson) => {
+    const unit: LessonUnit = {
+      id: lesson.id,
+      mode: lesson.mode,
+      level: levelIndexById.get(lesson.level_id) ?? 1,
+      order: lesson.order_index,
+      title: lesson.title,
+      titleAr: lesson.title_ar,
+      isFree: lesson.is_free,
+      illustrationUrl: lesson.illustration_url ?? undefined,
+      description: lesson.description ?? undefined,
+      descriptionAr: lesson.description_ar ?? undefined,
+      sentences: [],
+    };
+    if (locale && lessonTranslations) {
+      const supportTitle = resolveScalarField(
+        lessonTranslations,
+        lesson.id,
+        "title",
+        lesson.title_ar,
+        locale,
+      );
+      if (supportTitle !== undefined) unit.supportTitle = supportTitle;
+      const supportDescription = resolveScalarField(
+        lessonTranslations,
+        lesson.id,
+        "description",
+        lesson.description_ar,
+        locale,
+      );
+      if (supportDescription !== undefined) unit.supportDescription = supportDescription;
+    }
+    return unit;
+  });
+}
+
+export const fetchLessonSummaries = unstable_cache(
+  fetchLessonSummariesUncached,
+  ["fetch-lesson-summaries"],
+  { tags: ["lesson-nav", "levels"], revalidate: 300 },
+);
+
+/** Ids per request — this reads two short columns, so it can take far more than fetchLessons' 40, while staying well inside URL length limits. */
+const SENTENCE_STATS_CHUNK_SIZE = 60;
+
+/**
+ * Sentence and word counts for the given lessons — everything the Home stats
+ * row needs from their bodies, fetched as just `lesson_id` + the English text
+ * (never word_translations, audio URLs or translations). Session-aware, for
+ * the same reason as fetchLessons: the sentences RLS policy is per-viewer, so a
+ * premium lesson the viewer can't open simply has no rows here, exactly as its
+ * `sentences` was empty before. A failure degrades to "no counts" rather than
+ * taking the whole dashboard down over a statistic.
+ */
+export async function fetchLessonSentenceStats(
+  lessonIds: string[],
+): Promise<Map<string, { sentences: number; words: number }>> {
+  const stats = new Map<string, { sentences: number; words: number }>();
+  if (lessonIds.length === 0) return stats;
+  try {
+    const supabase = await createClient();
+    const chunks: string[][] = [];
+    for (let i = 0; i < lessonIds.length; i += SENTENCE_STATS_CHUNK_SIZE) {
+      chunks.push(lessonIds.slice(i, i + SENTENCE_STATS_CHUNK_SIZE));
+    }
+    const results = await Promise.all(
+      chunks.map((chunk) =>
+        supabase.from("sentences").select("lesson_id, en").in("lesson_id", chunk),
+      ),
+    );
+    for (const { data, error } of results) {
+      if (error) throw error;
+      // A lesson id lives in exactly one chunk, so per-chunk tallies never overlap.
+      for (const [lessonId, counts] of tallySentenceStats(data ?? [])) stats.set(lessonId, counts);
+    }
+  } catch (error) {
+    console.error("[content] fetchLessonSentenceStats failed", error);
+    return new Map();
+  }
+  return stats;
 }
 
 /** The subset of a lesson findNextLesson actually needs to pick the next one and build its `/learn/{mode}/{id}` link — see fetchLessonNav's doc comment. */

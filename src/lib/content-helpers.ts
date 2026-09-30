@@ -187,3 +187,26 @@ export function resolveLevelSupportTitle(
   if (locale === "tr") return titleTr ?? title;
   return title;
 }
+
+/** Whitespace-separated words in an English sentence — the unit Home's "words" stat counts. */
+export function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Sentence and word totals per lesson from the two columns the Home stats row
+ * needs (see fetchLessonSentenceStats). A lesson with no rows simply has no
+ * entry — the caller decides what "none" means (Home shows zeros).
+ */
+export function tallySentenceStats(
+  rows: readonly { lesson_id: string; en: string }[],
+): Map<string, { sentences: number; words: number }> {
+  const stats = new Map<string, { sentences: number; words: number }>();
+  for (const row of rows) {
+    const entry = stats.get(row.lesson_id) ?? { sentences: 0, words: 0 };
+    entry.sentences += 1;
+    entry.words += countWords(row.en);
+    stats.set(row.lesson_id, entry);
+  }
+  return stats;
+}

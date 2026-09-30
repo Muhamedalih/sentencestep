@@ -16,17 +16,20 @@ export interface DealtQuestRow {
   xp: number;
 }
 
-export async function fetchDailyQuests(userId: string, dateISO: string): Promise<DailyQuest[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("daily_quests")
-    .select("slot, quest_type, target, xp, progress, completed_at")
-    .eq("user_id", userId)
-    .eq("quest_date", dateISO)
-    .order("slot", { ascending: true });
-  if (error) throw error;
+type DailyQuestRow = {
+  slot: number;
+  quest_type: string;
+  target: number;
+  xp: number;
+  progress: number;
+  completed_at: string | null;
+};
+
+const DAILY_QUEST_COLUMNS = "slot, quest_type, target, xp, progress, completed_at";
+
+function toDailyQuests(rows: DailyQuestRow[] | null): DailyQuest[] {
   const quests: DailyQuest[] = [];
-  for (const row of data ?? []) {
+  for (const row of rows ?? []) {
     if (!isQuestType(row.quest_type)) continue;
     quests.push({
       slot: row.slot,
@@ -40,26 +43,47 @@ export async function fetchDailyQuests(userId: string, dateISO: string): Promise
   return quests;
 }
 
-/** Inserts the dealt quests; a concurrent deal for the same learner and day is a harmless no-op (primary key conflict ignored). */
+export async function fetchDailyQuests(userId: string, dateISO: string): Promise<DailyQuest[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("daily_quests")
+    .select(DAILY_QUEST_COLUMNS)
+    .eq("user_id", userId)
+    .eq("quest_date", dateISO)
+    .order("slot", { ascending: true });
+  if (error) throw error;
+  return toDailyQuests(data);
+}
+
+/**
+ * Inserts the dealt quests and returns the rows THIS call actually inserted
+ * (a concurrent deal for the same learner and day is a harmless no-op:
+ * primary key conflicts are ignored and simply aren't returned). Returning
+ * them saves the caller a second read in the normal, uncontended case.
+ */
 export async function insertDailyQuests(
   userId: string,
   dateISO: string,
   rows: DealtQuestRow[],
-): Promise<void> {
-  if (rows.length === 0) return;
+): Promise<DailyQuest[]> {
+  if (rows.length === 0) return [];
   const supabase = await createClient();
-  const { error } = await supabase.from("daily_quests").upsert(
-    rows.map((row) => ({
-      user_id: userId,
-      quest_date: dateISO,
-      slot: row.slot,
-      quest_type: row.type,
-      target: row.target,
-      xp: row.xp,
-    })),
-    { onConflict: "user_id,quest_date,slot", ignoreDuplicates: true },
-  );
+  const { data, error } = await supabase
+    .from("daily_quests")
+    .upsert(
+      rows.map((row) => ({
+        user_id: userId,
+        quest_date: dateISO,
+        slot: row.slot,
+        quest_type: row.type,
+        target: row.target,
+        xp: row.xp,
+      })),
+      { onConflict: "user_id,quest_date,slot", ignoreDuplicates: true },
+    )
+    .select(DAILY_QUEST_COLUMNS);
   if (error) throw error;
+  return toDailyQuests(data).sort((a, b) => a.slot - b.slot);
 }
 
 export interface QuestProgressResult {

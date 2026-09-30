@@ -6,18 +6,17 @@ import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { HomeEngagementSkeleton } from "@/components/app/home-engagement";
 import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
-import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
+import { HomeHero } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessons } from "@/lib/content";
+import { getHomeLessons } from "@/lib/content";
 import { startHomeEngagement } from "@/lib/features/home-engagement";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { LEARNING_MODES } from "@/lib/learning-modes";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -55,6 +54,11 @@ export default async function LearnHomePage() {
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
+  // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
+  // sentence/word counts, never the sentence bodies themselves (see that
+  // function's doc comment: Home used to pull every sentence of every mode,
+  // with word translations, and ship them all to the browser).
+  //
   // Every fetch below is independent of every other (the only real
   // dependency in this whole page is book counts/progress needing to know
   // which book got recommended first — see further down), so they all fire
@@ -80,7 +84,7 @@ export default async function LearnHomePage() {
   // book yet (the common state until an admin marks one — see
   // fetchFirstPublishedBook's doc comment). Firing it in parallel instead
   // means it's hidden entirely under whichever other query in this batch
-  // takes longest (in practice one of the getLessons calls), at the cost of
+  // takes longest, at the cost of
   // one extra always-issued, cheap, indexed single-row query that goes
   // unused whenever a featured book already exists. That trade is worth it
   // here: the discarded query is a `select("*") ... limit(1)`, not a scan,
@@ -129,24 +133,20 @@ export default async function LearnHomePage() {
     weakWordCount: weakWordsPromise.then((words) => words.length).catch(() => 0),
   });
   const [
-    units,
+    { units, storiesUnits, lessonStats },
     hasPremium,
     isAdminUser,
     user,
-    storiesLessons,
-    conversationLessons,
     attemptCount,
     featuredBooks,
     fallbackBook,
     weakWords,
     initialProgress,
   ] = await Promise.all([
-    getLessons("normal", locale ?? undefined),
+    getHomeLessons(locale ?? undefined),
     hasPremiumAccess(),
     isAdmin(),
     userPromise,
-    getLessons("stories", locale ?? undefined),
-    getLessons("conversation", locale ?? undefined),
     attemptCountPromise,
     fetchFeaturedBooks(supabase, locale),
     fetchFirstPublishedBook(supabase, locale),
@@ -154,17 +154,6 @@ export default async function LearnHomePage() {
     progressPromise,
   ]);
 
-  const byMode = { normal: units, stories: storiesLessons, conversation: conversationLessons };
-  const lessonStats: LessonStatsMap = {};
-  for (const lessonMode of LEARNING_MODES) {
-    for (const lesson of byMode[lessonMode]) {
-      const words = lesson.sentences.reduce(
-        (sum, sentence) => sum + sentence.en.trim().split(/\s+/).filter(Boolean).length,
-        0,
-      );
-      lessonStats[`${lessonMode}:${lesson.id}`] = { sentences: lesson.sentences.length, words };
-    }
-  }
   // The Book recommendation card: the first featured, published book, or
   // the Library's first published book at all if none is explicitly marked
   // featured yet (see fetchFirstPublishedBook's doc comment for why that's
@@ -219,7 +208,7 @@ export default async function LearnHomePage() {
         </p>
         <HomeHero
           units={units}
-          storiesUnits={storiesLessons}
+          storiesUnits={storiesUnits}
           book={recommendedBook}
           bookSectionCount={bookSectionCount}
           bookSentenceCount={bookSentenceCount}
