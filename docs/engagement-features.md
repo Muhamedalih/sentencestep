@@ -68,11 +68,11 @@ already has history the day the feature goes On.
   **Continue** moves on, and **Try again** lets the learner retype the same
   sentence as often as they like: only the first attempt is scored and
   recorded. While the sentence is hidden, every blank is a word-shaped pill:
-  hovering only lights it up (and quietly prepares that word's clip), tapping it
-  says the word (Normal and Stories, using the same word audio as the typing
-  view; if the clip takes more than a second the browser's own voice says it so
-  a tap is never silent). From memory shares the correction screen, Enter
-  handling and Try again.
+  hovering only lights it up, tapping it says the word through the very same
+  individual-word audio the typing view uses (Normal and Stories). The lesson
+  page looks up every word clip that already exists for the whole lesson in one
+  cache query, so most taps play at once with no server call. From memory shares
+  the correction screen, Enter handling and Try again.
 - **Streak freeze** sits on top of the existing free one-missed-day grace: each
   _extra_ consecutive missed day spends one freeze from the month's balance,
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).

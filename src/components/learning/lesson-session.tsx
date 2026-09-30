@@ -45,6 +45,7 @@ import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize"
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import { tokenize } from "@/lib/typing";
+import { sentenceWordRefs } from "@/lib/voice/word-audio-keys";
 import { cn } from "@/lib/utils";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
@@ -80,7 +81,7 @@ export function LessonSession({
   defaultVoiceId,
   storyNarratorVoiceId,
   speakerVoiceMap,
-  firstSentenceWordAudio,
+  lessonWordAudio,
 }: {
   unit: Lesson;
   nextLesson?: NextLessonRef;
@@ -94,8 +95,8 @@ export function LessonSession({
   storyNarratorVoiceId?: string | null;
   /** Conversation-mode speaker -> voice_id overrides (empty for every other mode) — see TypingSentence's own resolution of resolvedVoiceId vs. a sentence's speaker-specific voice. */
   speakerVoiceMap?: Record<string, string>;
-  /** Server-side pre-resolved `{contentId: audioUrl}` for the FIRST sentence's trackable words only (see LessonPage's own lookupCachedWordAudioUrls call and its doc comment for the measured root cause this fixes) — passed straight through to the first TypingSentence instance, which registers these into the shared resolved-audio cache on mount so its word clicks skip the resolve round trip entirely, the same way a pre-resolved sentence.audioUrl already does for that sentence's own narration. undefined for every sentence after the first, and for Conversation mode, where word click doesn't exist. */
-  firstSentenceWordAudio?: Record<string, string>;
+  /** Server-side pre-resolved `{contentId: audioUrl}` for every word of the lesson's sentences whose clip already exists (see LessonPage's lookupLessonWordAudio). Registered into the shared resolved-audio cache on mount, so a word click — in the typing view and in Dictation — is an instant cache hit with no Server Action round trip; a word with no entry resolves on demand exactly as before. undefined for Conversation, where word click doesn't exist. */
+  lessonWordAudio?: Record<string, string>;
 }) {
   // Never true in previewMode: an admin previewing content has no
   // "get started" flow underway, so the real dashboard pitch would be a
@@ -218,7 +219,8 @@ export function LessonSession({
   const errorCountRef = useRef(0);
   const wpmSamplesRef = useRef<number[]>([]);
   const hasTrackedAudioRef = useRef(false);
-  const { prefetchPronunciation } = usePronunciationSettings();
+  const { prefetchPronunciation, registerResolvedAudio, getResolvedAudio } =
+    usePronunciationSettings();
   const { t, locale } = useLocale();
 
   // From-memory (admin feature): an optional round offered on the completion
@@ -352,6 +354,48 @@ export function LessonSession({
     speakerVoiceMap,
     prefetchPronunciation,
   ]);
+
+  // Word clips the server already found for this lesson (see lessonWordAudio):
+  // put them in the shared resolved-audio cache up front, so the first word
+  // click anywhere in the lesson is a synchronous hit.
+  useEffect(() => {
+    if (!lessonWordAudio) return;
+    for (const [contentId, url] of Object.entries(lessonWordAudio)) {
+      registerResolvedAudio(contentId, url);
+    }
+  }, [lessonWordAudio, registerResolvedAudio]);
+
+  // Knowing a clip's URL isn't the whole story: the first play of a file the
+  // browser has never fetched still waits on a cold Storage GET (~0.8s
+  // measured for sentences). So the current and next sentence's known word
+  // clips are downloaded quietly in the background — staggered so they never
+  // compete with the sentence's own narration — and a click then starts
+  // playing immediately. Typing view and Dictation both benefit.
+  const warmedWordUrlsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (unit.mode !== "normal" && unit.mode !== "stories") return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let order = 0;
+    for (const sentence of [unit.sentences[sentenceIndex], unit.sentences[sentenceIndex + 1]]) {
+      if (!sentence) continue;
+      for (const { contentId } of sentenceWordRefs(sentence)) {
+        const url = getResolvedAudio(contentId);
+        if (!url) continue;
+        timers.push(
+          setTimeout(
+            () => {
+              if (warmedWordUrlsRef.current.has(url)) return;
+              warmedWordUrlsRef.current.add(url);
+              fetch(url).catch(() => {});
+            },
+            500 + order * 80,
+          ),
+        );
+        order += 1;
+      }
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [sentenceIndex, unit.sentences, unit.mode, lessonWordAudio, getResolvedAudio]);
 
   useEffect(() => {
     if (previewMode) return;
@@ -973,7 +1017,7 @@ export function LessonSession({
                             resolvedVoiceId={resolvedVoiceId}
                             speakerVoiceMap={speakerVoiceMap}
                             showWordBlanks={features.dictation.showWordBlanks}
-                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
+                            wordAudioUrls={sentenceIndex === 0 ? lessonWordAudio : undefined}
                             hasStarted={hasStarted}
                             onStart={() => setTapped(true)}
                             onAudioPlay={handleAudioPlay}
@@ -990,7 +1034,7 @@ export function LessonSession({
                             mode={unit.mode}
                             resolvedVoiceId={resolvedVoiceId}
                             speakerVoiceMap={speakerVoiceMap}
-                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
+                            wordAudioUrls={sentenceIndex === 0 ? lessonWordAudio : undefined}
                             onComplete={handleSentenceComplete}
                             onCorrectLetter={() => {
                               correctCountRef.current += 1;

@@ -11,13 +11,12 @@ import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
-import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
-import { tokenize } from "@/lib/typing";
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { resolveVoiceId } from "@/lib/voice/resolution";
 import { resolveStoryNarratorVoice } from "@/lib/voice/story-voice-generation";
-import { lookupCachedAudioUrl, lookupCachedWordAudioUrls } from "@/lib/voice/voice-audio";
+import { lookupLessonWordAudio } from "@/lib/voice/lesson-word-audio";
+import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 import { getSpeakerVoiceMap } from "@/lib/voice/speaker-voices";
 import { cn } from "@/lib/utils";
 
@@ -176,26 +175,18 @@ export default async function LessonPage({
         ]
       : unit.sentences;
 
-  // Root-cause fix for "the first sentence's word clicks take 10-20+
-  // seconds, every lesson" — see lookupCachedWordAudioUrls' own doc comment
-  // for the measured evidence. Only the first sentence's own narration
-  // above ever got this server-side, cache-only pre-resolution; its
-  // individual words never did, so this mirrors that exact treatment for
-  // them. Word click only exists in Normal/Stories (see TypingSentence's
-  // own enableWordClick scope — Conversation never enables it), so this is
-  // skipped entirely for every other mode. Cache-only, same as the
-  // sentence-level lookup above: never generates, so a miss here just
-  // leaves that word to resolve on demand client-side exactly as before.
-  const firstSentenceWordAudio =
-    firstSentence && resolvedVoiceId && (mode === "normal" || mode === "stories")
-      ? await lookupCachedWordAudioUrls(
-          new Map(
-            Array.from(new Set(tokenize(firstSentence.en).filter(isTrackableWord))).map(
-              (word) => [word, `${firstSentence.id}::${normalizeMistakeWord(word)}`] as const,
-            ),
-          ),
-          resolvedVoiceId,
-        )
+  // Every word clip this lesson's sentences could ask for that already
+  // exists, looked up here once (cache-only, never generates) so a word click
+  // is an instant cache hit instead of a Server Action round trip. This began
+  // as a fix for "the first sentence's word clicks take 10-20+ seconds, every
+  // lesson" — see lookupCachedWordAudioUrls' own doc comment for the measured
+  // evidence — and now covers the whole lesson, for the typing view and
+  // Dictation alike (see lookupLessonWordAudio). Word click only exists in
+  // Normal/Stories (see TypingSentence's own enableWordClick scope —
+  // Conversation never enables it), so it is skipped for every other mode.
+  const lessonWordAudio =
+    resolvedVoiceId && (mode === "normal" || mode === "stories")
+      ? await lookupLessonWordAudio(unit.sentences, resolvedVoiceId)
       : undefined;
 
   return (
@@ -212,7 +203,7 @@ export default async function LessonPage({
         defaultVoiceId={defaultVoiceId}
         storyNarratorVoiceId={storyNarratorVoiceId}
         speakerVoiceMap={speakerVoiceMap}
-        firstSentenceWordAudio={firstSentenceWordAudio}
+        lessonWordAudio={lessonWordAudio}
       />
       {reportProblemButton}
     </div>
