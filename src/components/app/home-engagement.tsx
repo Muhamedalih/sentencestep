@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 import { DailySessionCard } from "@/components/app/daily-session-card";
 import { GuestFeatureTeaser } from "@/components/app/guest-feature-teaser";
@@ -13,82 +14,87 @@ import { todayLocalISODate } from "@/lib/progress/streak";
 import { cn } from "@/lib/utils";
 
 /**
- * Placeholder blocks — one per card that is switched on for this visitor —
- * shown while the engagement data is still loading. Shapes match the real
- * cards' heights so the page doesn't jump when they arrive. With every
- * feature off it renders nothing and takes no space.
+ * The shared column the engagement cards sit in — with every feature off (and
+ * nothing to teach a guest) it renders nothing and takes no space.
  */
-export function HomeEngagementSkeleton({ className }: { className?: string }) {
-  const { dailySession, quests, streakCalendar } = useFeatures();
+export function HomeEngagementFrame({
+  children,
+  className,
+}: {
+  children?: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={cn("flex flex-col gap-4 empty:hidden", className)} aria-hidden="true">
-      {dailySession.enabled && <div className="bg-muted/60 h-28 animate-pulse rounded-2xl" />}
-      {quests.enabled && <div className="bg-muted/60 h-40 animate-pulse rounded-2xl" />}
-      {streakCalendar.enabled && <div className="bg-muted/60 h-44 animate-pulse rounded-2xl" />}
+    <div className={cn("flex flex-col gap-4 empty:hidden", className)}>
+      <GuestFeatureTeaser />
+      {children}
     </div>
   );
 }
 
+const SKELETON_HEIGHT = {
+  dailySession: "h-28",
+  quests: "h-40",
+  streakCalendar: "h-44",
+} as const;
+
 /**
- * The block of optional engagement widgets on the Home dashboard — each one
- * decides for itself (from the data it's given, which is already empty for
- * anything the admin switches keep off) whether it renders, so this is just
- * their shared column. With every feature off it renders nothing and takes
- * no space.
- *
- * `initial` is what the server loaded together with the page (see
- * startHomeEngagement), so in the normal case there is no client fetch at all.
- * It is null on a learner's very first visit (the browser hasn't told the
- * server its time zone yet), and it is re-checked against the browser's own
- * date: if they differ (a traveller whose zone just changed) the browser
- * asks for the right day's data — one request for all three cards, not one
- * each.
+ * A placeholder shaped like one card, shown while that card's data loads —
+ * only if that feature is switched on for this visitor, so nothing reserves
+ * space for a card that will never appear.
  */
-export function HomeEngagement({
-  initial,
-  className,
-}: {
-  initial: HomeEngagementData | null;
-  className?: string;
-}) {
+export function CardSkeleton({ feature }: { feature: keyof typeof SKELETON_HEIGHT }) {
+  const features = useFeatures();
+  if (!features[feature].enabled) return null;
+  return (
+    <div
+      className={cn("bg-muted/60 animate-pulse rounded-2xl", SKELETON_HEIGHT[feature])}
+      aria-hidden="true"
+    />
+  );
+}
+
+/**
+ * The browser-side path, used only when the server couldn't render the cards
+ * with the page — a learner's very first visit, before the browser has told the
+ * server its time zone (see TimezoneCookie). It asks for all three cards in ONE
+ * request (fetchHomeEngagementAction) rather than one each. In the normal case
+ * the server renders them itself (see HomeEngagementSection) and this never runs.
+ */
+export function HomeEngagement({ className }: { className?: string }) {
   const { dailySession, quests, streakCalendar } = useFeatures();
   const anyEnabled = dailySession.enabled || quests.enabled || streakCalendar.enabled;
-  // Remembers which `initial` a fetched result belongs to, so a refreshed page
-  // (new `initial`) never shows an older client fetch over newer server data.
-  const [fetched, setFetched] = useState<{
-    source: HomeEngagementData | null;
-    data: HomeEngagementData | null;
-  } | null>(null);
+  // undefined = still loading; null = loaded but nothing to show.
+  const [data, setData] = useState<HomeEngagementData | null | undefined>(undefined);
 
   useEffect(() => {
     if (!anyEnabled) return;
-    const today = todayLocalISODate();
-    if (initial && initial.todayISO === today) return;
     let cancelled = false;
-    fetchHomeEngagementAction(today)
-      .then((data) => !cancelled && setFetched({ source: initial, data }))
-      .catch(() => !cancelled && setFetched({ source: initial, data: null }));
+    fetchHomeEngagementAction(todayLocalISODate())
+      .then((result) => !cancelled && setData(result))
+      .catch(() => !cancelled && setData(null));
     return () => {
       cancelled = true;
     };
-  }, [anyEnabled, initial]);
-
-  // undefined = still loading (first visit); null = loaded but nothing to show.
-  const data =
-    fetched && fetched.source === initial ? fetched.data : initial === null ? undefined : initial;
-
-  if (data === undefined && anyEnabled) return <HomeEngagementSkeleton className={className} />;
+  }, [anyEnabled]);
 
   return (
-    <div className={cn("flex flex-col gap-4 empty:hidden", className)}>
-      <GuestFeatureTeaser />
-      {data && (
+    <HomeEngagementFrame className={className}>
+      {anyEnabled && data === undefined ? (
         <>
-          <DailySessionCard summary={data.dailySession} />
-          <QuestsCard payload={data.quests} />
-          <StreakStrip key={data.todayISO} today={data.todayISO} strip={data.streak} />
+          <CardSkeleton feature="dailySession" />
+          <CardSkeleton feature="quests" />
+          <CardSkeleton feature="streakCalendar" />
         </>
+      ) : (
+        data && (
+          <>
+            <DailySessionCard summary={data.dailySession} />
+            <QuestsCard payload={data.quests} />
+            <StreakStrip today={data.todayISO} strip={data.streak} />
+          </>
+        )
       )}
-    </div>
+    </HomeEngagementFrame>
   );
 }

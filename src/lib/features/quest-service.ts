@@ -44,10 +44,12 @@ export async function dealDailyQuests(
   userId: string,
   dateISO: string,
   features: EffectiveFeatures,
+  /** Today's quests when the caller has ALREADY read them (Home starts that read early) — skips repeating it. */
+  alreadyRead?: DailyQuest[],
 ): Promise<DailyQuest[]> {
   if (!features.quests.enabled) return [];
 
-  const existing = await fetchDailyQuests(userId, dateISO);
+  const existing = alreadyRead ?? (await fetchDailyQuests(userId, dateISO));
   if (existing.length > 0) return existing;
 
   const eligible = eligibleQuestTypes(features.quests.types, {

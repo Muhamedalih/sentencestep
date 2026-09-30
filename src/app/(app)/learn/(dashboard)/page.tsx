@@ -1,9 +1,7 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
-import { HomeEngagementSkeleton } from "@/components/app/home-engagement";
 import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
@@ -120,12 +118,13 @@ export default async function LearnHomePage() {
   // Home feel slow the moment they were added. They are keyed by the learner's
   // LOCAL date, which the server derives from the time zone the browser left
   // in a cookie (see TimezoneCookie); without that cookie yet (first ever
-  // visit) the cards fall back to one browser request. They stream in through
-  // <Suspense> below, so a slow read there never holds back the rest of the
-  // page. weakWordsPromise is shared so the session count doesn't redo it.
+  // visit) the cards fall back to one browser request. Each card streams in
+  // through its own <Suspense> slot (see HomeEngagementSection), so a slow one
+  // never holds back the rest of the page or the other cards. weakWordsPromise
+  // is shared so the session count doesn't redo it.
   const learnerToday = localISODateInTimeZone((await cookies()).get(TIMEZONE_COOKIE)?.value);
   const weakWordsPromise = fetchWeakWordsAction();
-  const engagementPromise = startHomeEngagement({
+  const engagement = startHomeEngagement({
     todayISO: learnerToday,
     features: getEffectiveFeatures(),
     user: userPromise,
@@ -199,9 +198,7 @@ export default async function LearnHomePage() {
           className="mb-10"
         />
         <GuestProgressBanner isGuest={!user} className="mb-6" />
-        <Suspense fallback={<HomeEngagementSkeleton className="mb-6" />}>
-          <HomeEngagementSection data={engagementPromise} className="mb-6" />
-        </Suspense>
+        <HomeEngagementSection stream={engagement} className="mb-6" />
         <NeedsReviewWords words={weakWords} />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}

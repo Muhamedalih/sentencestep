@@ -1,14 +1,17 @@
 import type { CurrentUser } from "@/lib/supabase/auth";
 import { fetchActivityRange, fetchFreezeUsage } from "@/lib/features/activity-queries";
+import type { ActivityDay } from "@/lib/features/activity-queries";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
 import type { EffectiveFeatures } from "@/lib/features/config";
 import { estimateSessionMinutes } from "@/lib/features/daily-session";
 import type { DailySessionSummary } from "@/lib/features/daily-session-actions";
 import { fetchDailySessionDone } from "@/lib/features/daily-session-queries";
 import { countDailySessionCandidates } from "@/lib/features/daily-session-service";
+import { getFeatureConfig } from "@/lib/features/queries";
+import { fetchDailyQuests } from "@/lib/features/quest-queries";
 import { dealDailyQuests } from "@/lib/features/quest-service";
 import { allQuestsCompleted } from "@/lib/features/quests";
-import type { DailyQuestsPayload } from "@/lib/features/quests";
+import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { addDays, freezesRemaining, monthPeriod } from "@/lib/features/streak-freeze";
 
 /**
@@ -70,10 +73,12 @@ export async function loadDailyQuests(
   userId: string,
   todayISO: string,
   features: EffectiveFeatures,
+  /** Today's quests if the caller already read them (see startHomeEngagement); null/undefined = read them here. */
+  alreadyRead?: DailyQuest[] | null,
 ): Promise<DailyQuestsPayload | null> {
   if (!features.quests.enabled) return null;
   try {
-    const quests = await dealDailyQuests(userId, todayISO, features);
+    const quests = await dealDailyQuests(userId, todayISO, features, alreadyRead ?? undefined);
     if (quests.length === 0) return null;
     return { quests, allDone: allQuestsCompleted(quests) };
   } catch (error) {
@@ -82,19 +87,36 @@ export async function loadDailyQuests(
   }
 }
 
+/** The raw rows behind the streak strip — split from the feature gating so Home can start reading them before the gate is known. */
+export interface StreakRows {
+  days: ActivityDay[];
+  usage: { period: string; used: number } | null;
+}
+
+export async function readStreakRows(
+  userId: string,
+  fromISO: string,
+  toISO: string,
+): Promise<StreakRows> {
+  const [days, usage] = await Promise.all([
+    fetchActivityRange(userId, fromISO, toISO),
+    fetchFreezeUsage(userId),
+  ]);
+  return { days, usage };
+}
+
 export async function loadStreakCalendar(
   userId: string,
   fromISO: string,
   toISO: string,
   todayISO: string,
   features: EffectiveFeatures,
+  /** The rows if the caller already read them (see startHomeEngagement); null/undefined = read them here. */
+  alreadyRead?: StreakRows | null,
 ): Promise<StreakCalendarData | null> {
   if (!features.streakCalendar.enabled) return null;
   try {
-    const [days, usage] = await Promise.all([
-      fetchActivityRange(userId, fromISO, toISO),
-      fetchFreezeUsage(userId),
-    ]);
+    const { days, usage } = alreadyRead ?? (await readStreakRows(userId, fromISO, toISO));
     return {
       days,
       freezesRemaining: freezesRemaining(
@@ -131,25 +153,91 @@ export async function loadHomeEngagement(
 }
 
 /**
- * Called by the Home page BEFORE it awaits its own batch, so this runs
- * concurrently with it. `todayISO` is null when the browser hasn't yet told
- * the server its time zone (first ever visit) — resolves to null then, and
- * the client falls back to asking for the data itself. Never rejects.
+ * Home's three cards as INDEPENDENT promises, so each renders the moment its own
+ * data is ready instead of all of them waiting for the slowest (today's session
+ * counts a lot of things; the streak strip and quests are a single read each).
  */
-export async function startHomeEngagement(input: {
+interface EarlyReads {
+  quests: Promise<DailyQuest[] | null> | null;
+  streak: Promise<StreakRows | null> | null;
+}
+
+export interface HomeEngagementStream {
+  /** The learner's local date these were loaded for. */
+  todayISO: string;
+  dailySession: Promise<DailySessionSummary | null>;
+  quests: Promise<DailyQuestsPayload | null>;
+  streak: Promise<StreakCalendarData | null>;
+}
+
+/**
+ * Called by the Home page BEFORE it awaits its own batch, so this runs
+ * concurrently with it. `todayISO` is null when the browser hasn't yet told the
+ * server its time zone (first ever visit) — returns null then, and the client
+ * falls back to asking for the data itself. The promises never reject.
+ *
+ * Why the quests and streak strip read speculatively: whether a card is open to
+ * THIS visitor is only known after the feature switches resolve, and while a
+ * feature is in "Admin preview" that means an admin-role lookup first. Waiting
+ * for it before touching the database put a whole extra round trip in front of
+ * two single-query cards — the reason they trailed the rest of the page. So when
+ * the stored setting isn't Off, their (cheap, indexed, own-rows-only) reads start
+ * at once and the result is only used after the switch confirms the card is
+ * open; nothing reaches the browser otherwise. Nothing is WRITTEN speculatively:
+ * dealing a new day's quests still waits for that confirmation.
+ */
+export function startHomeEngagement(input: {
   todayISO: string | null;
   features: Promise<EffectiveFeatures>;
   user: Promise<CurrentUser | null>;
   weakWordCount: Promise<number>;
-}): Promise<HomeEngagementData | null> {
+}): HomeEngagementStream | null {
   const { todayISO } = input;
   if (!todayISO) return null;
-  try {
-    const [features, user] = await Promise.all([input.features, input.user]);
-    if (!user) return emptyHomeEngagement(todayISO);
-    return await loadHomeEngagement(user.id, todayISO, features, input.weakWordCount);
-  } catch (error) {
-    console.error("[home-engagement] startHomeEngagement failed", error);
-    return null;
-  }
+  const stripFrom = addDays(todayISO, -STRIP_LOOKBACK_DAYS);
+
+  const early: Promise<EarlyReads> = Promise.all([input.user, getFeatureConfig()])
+    .then(([user, config]) => ({
+      quests:
+        user && config.features.quests.state !== "off"
+          ? fetchDailyQuests(user.id, todayISO).catch(() => null)
+          : null,
+      streak:
+        user && config.features.streakCalendar.state !== "off"
+          ? readStreakRows(user.id, stripFrom, todayISO).catch(() => null)
+          : null,
+    }))
+    .catch(() => ({ quests: null, streak: null }));
+
+  const settled = Promise.all([input.user, input.features, early]);
+  const card = <T>(
+    label: string,
+    load: (userId: string, features: EffectiveFeatures, started: EarlyReads) => Promise<T | null>,
+  ): Promise<T | null> =>
+    settled
+      .then(([user, features, started]) => (user ? load(user.id, features, started) : null))
+      .catch((error: unknown) => {
+        console.error(`[home-engagement] ${label} failed`, error);
+        return null;
+      });
+
+  return {
+    todayISO,
+    dailySession: card("dailySession", (userId, features) =>
+      loadDailySessionSummary(userId, todayISO, features, input.weakWordCount),
+    ),
+    quests: card("quests", async (userId, features, started) =>
+      loadDailyQuests(userId, todayISO, features, started.quests ? await started.quests : null),
+    ),
+    streak: card("streak", async (userId, features, started) =>
+      loadStreakCalendar(
+        userId,
+        stripFrom,
+        todayISO,
+        todayISO,
+        features,
+        started.streak ? await started.streak : null,
+      ),
+    ),
+  };
 }
