@@ -13,6 +13,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
+import type { WordCardsApi } from "@/hooks/use-saved-cards";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
@@ -93,6 +94,8 @@ interface TypingSentenceProps {
   showTapToStart?: boolean;
   /** Fired once, the first time the learner taps the mobile-only "tap to start" overlay below — see `showTapToStart`'s own doc comment. */
   onStart?: () => void;
+  /** Personal word cards (admin feature): when present, the current-word label shows a save star. null/undefined = the feature is off here. */
+  wordCards?: WordCardsApi | null;
   /** Stories mode only — steps back one sentence (LessonSession owns the actual state change). Rendered as a small button beside the counter only when provided AND sentenceNumber > 1; every other mode gets its own copy of this button from LessonSession's separate counter row instead. */
   onGoBack?: () => void;
   /** Stories mode only — steps forward again, one sentence. LessonSession only ever passes this when sentenceNumber is still behind maxSentenceIndexReached (see its own doc comment) — undefined otherwise, which is what hides the button entirely rather than this component re-deriving that condition itself. */
@@ -119,6 +122,7 @@ export function TypingSentence({
   onStart,
   onGoBack,
   onGoForward,
+  wordCards,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -293,8 +297,28 @@ export function TypingSentence({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice actually changes, not on every render
   }, [sentence.id, sentenceVoiceId, mode]);
 
-  const currentWord =
-    sentence.supportWordTranslations?.[getCurrentWordIndex(sentence.en, engine.typed.length)];
+  const currentWordIndex = getCurrentWordIndex(sentence.en, engine.typed.length);
+  const currentWord = sentence.supportWordTranslations?.[currentWordIndex];
+  // The current word's save star (Personal word cards) — only for a real
+  // word (never a bare punctuation token), and only when the feature is open.
+  const currentWordKey = currentWord ? normalizeMistakeWord(currentWord.en) : "";
+  const currentWordSave =
+    wordCards && currentWord && isTrackableWord(currentWord.en)
+      ? {
+          saved: wordCards.isSaved(currentWordKey),
+          label: wordCards.isSaved(currentWordKey) ? t.myCards.removeWord : t.myCards.saveWord,
+          onToggle: () => {
+            wordCards.toggle({
+              word: currentWordKey,
+              meaning: currentWord.text,
+              wordIndex: currentWordIndex,
+              sentenceId: sentence.id,
+              sentenceEn: sentence.en,
+            });
+            engine.inputRef.current?.focus();
+          },
+        }
+      : undefined;
 
   // No enter/exit animation here (initial: false, no exit prop) —
   // animating this element on mount/unmount, combined with
@@ -513,7 +537,7 @@ export function TypingSentence({
             the header was split out. */}
         <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
           <div className="mb-1">
-            <CurrentWordLabel word={currentWord} dir={dir} />
+            <CurrentWordLabel word={currentWord} dir={dir} save={currentWordSave} />
           </div>
           {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
               renderText call): sized specifically for the narrow fixed-width
@@ -583,7 +607,7 @@ export function TypingSentence({
           tested against. */}
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
         <div className="mb-1">
-          <CurrentWordLabel word={currentWord} dir={dir} />
+          <CurrentWordLabel word={currentWord} dir={dir} save={currentWordSave} />
         </div>
         {/* A fixed, smaller size below sm: (the illustration panel above is
             hidden there too — see LessonSession — so this no longer needs to
@@ -627,7 +651,7 @@ export function TypingSentence({
  * blurred version — is deliberate too: the sentence should still read as
  * present and legible-ish behind the card, not obscured.
  */
-function TapToStartOverlay({
+export function TapToStartOverlay({
   heading,
   body,
   onStart,

@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Image as ImageIcon, List as ListIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Headphones,
+  Image as ImageIcon,
+  List as ListIcon,
+} from "lucide-react";
 
+import { DictationSentence, type DictationOutcome } from "@/components/learning/dictation-sentence";
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
+import { FromMemorySession } from "@/components/learning/from-memory-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Logo } from "@/components/layout/logo";
@@ -19,15 +27,19 @@ import { StoryWordsPanel } from "@/components/learning/story-words-panel";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { Progress } from "@/components/ui/progress";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { transitions } from "@/lib/motion";
 import { trackAudioPlayedAction, trackLessonViewAction } from "@/lib/analytics/track-actions";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { buildFromMemoryItems } from "@/lib/features/from-memory";
+import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
@@ -37,6 +49,9 @@ import { cn } from "@/lib/utils";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
 const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
+
+/** The learner's last Dictation on/off choice, remembered per browser so it survives lesson changes (a per-viewer convenience, so localStorage — never the source of truth for anything that matters). */
+const DICTATION_PREFERENCE_KEY = "sentencestep:dictation-on";
 
 /**
  * A single short, light haptic tick per keystroke (correct or error alike —
@@ -133,6 +148,24 @@ export function LessonSession({
   // sentence.
   const [tapped, setTapped] = useState(false);
   const isMobileViewport = useIsMobileViewport();
+  // Dictation (admin feature, see /admin/features): hides the sentence and
+  // grades a whole typed answer on Enter instead of per keystroke. Starts
+  // off on both server and client (the remembered preference is applied in
+  // an effect below, after hydration, for the same reason sentenceIndex
+  // above does).
+  const features = useFeatures();
+  const dictationAvailable = features.dictation.sections[unit.mode];
+  const [dictationOn, setDictationOn] = useState(false);
+  const dictationCountRef = useRef(0);
+  // Personal word cards (admin feature): the save star on the current-word
+  // label. Never in the admin preview — an admin previewing a lesson isn't
+  // building a real deck.
+  const wordCards = useSavedCards({
+    enabled: !previewMode && features.personalCards.saveSections[unit.mode],
+    mode: unit.mode,
+    lessonId: unit.id,
+    lessonTitle: unit.title,
+  });
   // The single value TypingSentence actually reads: true (no gate at all)
   // on desktop/tablet and in Conversation mode — neither shows the overlay,
   // and forcing it true here is what keeps the input's autoFocus and the
@@ -186,7 +219,38 @@ export function LessonSession({
   const wpmSamplesRef = useRef<number[]>([]);
   const hasTrackedAudioRef = useRef(false);
   const { prefetchPronunciation } = usePronunciationSettings();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+
+  // From-memory (admin feature): an optional round offered on the completion
+  // screen, asking this lesson's sentences back in the learner's own language.
+  const [isPracticingFromMemory, setIsPracticingFromMemory] = useState(false);
+  const fromMemoryItems = useMemo(
+    () =>
+      features.fromMemory.sections[unit.mode] ? buildFromMemoryItems(unit.sentences, locale) : [],
+    [features.fromMemory.sections, unit.mode, unit.sentences, locale],
+  );
+
+  useEffect(() => {
+    if (!dictationAvailable) return;
+    try {
+      if (window.localStorage.getItem(DICTATION_PREFERENCE_KEY) === "1") setDictationOn(true);
+    } catch {
+      // Storage can be blocked (private windows); the toggle just starts off.
+    }
+  }, [dictationAvailable]);
+
+  function handleToggleDictation() {
+    const next = !dictationOn;
+    setDictationOn(next);
+    // Pressing the toggle is itself the deliberate tap the mobile "tap to
+    // start" gate is waiting for.
+    setTapped(true);
+    try {
+      window.localStorage.setItem(DICTATION_PREFERENCE_KEY, next ? "1" : "0");
+    } catch {
+      // Preference is a convenience only.
+    }
+  }
 
   // Applies this lesson's real checkpoint (see src/lib/progress/lesson-resume.ts)
   // exactly once, right after mount — deliberately not read into sentenceIndex's
@@ -344,6 +408,21 @@ export function LessonSession({
     mistakes.recordSentenceMistakes(sentenceId, words);
   }
 
+  // A graded Dictation sentence folds into the lesson exactly like a typed
+  // one: its letter tallies join the keystroke counters (so lesson accuracy
+  // and the XP thresholds keep meaning the same thing), its wrong words go
+  // to Fix Your Mistakes, and the shared completion path advances/finishes
+  // the lesson.
+  function handleDictationComplete(outcome: DictationOutcome) {
+    correctCountRef.current += outcome.correctChars;
+    errorCountRef.current += outcome.errorChars;
+    dictationCountRef.current += 1;
+    if (sentence && !previewMode && outcome.mistakes.length > 0) {
+      mistakes.recordSentenceMistakes(sentence.id, outcome.mistakes);
+    }
+    handleSentenceComplete(outcome.wpm);
+  }
+
   function handleSentenceComplete(wpm: number) {
     if (wpm > 0) wpmSamplesRef.current.push(wpm);
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, unit.mode));
@@ -385,6 +464,14 @@ export function LessonSession({
       if (!previewMode) {
         markComplete(unit.mode, unit.id, accuracy, total, averageWpm);
         clearLessonResume(unit.mode, unit.id);
+        // Optional-feature practice this lesson included (Dictation), so
+        // daily quests can credit it. Fire-and-forget: nothing on this
+        // screen waits on it, and it never throws (see the action).
+        if (dictationCountRef.current > 0) {
+          void recordFeatureUsageAction({ dictationSentences: dictationCountRef.current }).catch(
+            (error: unknown) => console.error("[features] usage report failed", error),
+          );
+        }
       }
       setIsComplete(true);
       // Desktop/laptop only, by design — not a mobile-parity gap to fix,
@@ -412,6 +499,8 @@ export function LessonSession({
     correctCountRef.current = 0;
     errorCountRef.current = 0;
     wpmSamplesRef.current = [];
+    dictationCountRef.current = 0;
+    setIsPracticingFromMemory(false);
     setIsComplete(false);
   }
 
@@ -521,6 +610,29 @@ export function LessonSession({
                 nextLesson={nextLesson}
               />
             </div>
+          ) : isComplete && isPracticingFromMemory && fromMemoryItems.length > 0 ? (
+            <div key="from-memory" className="flex flex-col lg:h-full lg:overflow-y-auto">
+              <FromMemorySession
+                items={fromMemoryItems}
+                mode={unit.mode}
+                resolvedVoiceId={resolvedVoiceId}
+                speakerVoiceMap={speakerVoiceMap}
+                allowReveal={features.fromMemory.allowReveal}
+                showFirstLetters={features.fromMemory.showFirstLetters}
+                onMistakes={previewMode ? undefined : handleSentenceMistakes}
+                onFinished={
+                  previewMode
+                    ? undefined
+                    : () => {
+                        void recordFeatureUsageAction({ fromMemoryRounds: 1 }).catch(
+                          (error: unknown) =>
+                            console.error("[features] usage report failed", error),
+                        );
+                      }
+                }
+                onExit={() => setIsPracticingFromMemory(false)}
+              />
+            </div>
           ) : isComplete && isViewingWords && unit.vocabulary && unit.vocabulary.length > 0 ? (
             <div key="story-words" className="flex flex-col lg:h-full">
               <StoryWordsPanel
@@ -559,6 +671,9 @@ export function LessonSession({
                   mistakeCount={previewMode ? 0 : mistakes.count}
                   onFixMistakes={previewMode ? undefined : () => setIsFixingMistakes(true)}
                   onViewWords={unit.mode === "stories" ? () => setIsViewingWords(true) : undefined}
+                  onPracticeFromMemory={
+                    fromMemoryItems.length > 0 ? () => setIsPracticingFromMemory(true) : undefined
+                  }
                   saveStatus={previewMode ? "saved" : saveStatus}
                   onRetrySave={previewMode ? undefined : retryMarkComplete}
                   onRetryLesson={handleRetryLesson}
@@ -746,6 +861,25 @@ export function LessonSession({
                   >
                     {unit.title}
                   </div>
+                  {dictationAvailable && (
+                    <div className="mb-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={handleToggleDictation}
+                        aria-pressed={dictationOn}
+                        title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                          dictationOn
+                            ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+                            : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted",
+                        )}
+                      >
+                        <Headphones className="size-3.5" aria-hidden="true" />
+                        {t.dictation.toggleLabel}
+                      </button>
+                    </div>
+                  )}
                   <div className="mb-3 flex flex-col gap-1.5">
                     {unit.mode !== "stories" && (
                       <div className="flex items-center justify-end gap-1" dir="ltr">
@@ -814,42 +948,61 @@ export function LessonSession({
                 >
                   {sentence &&
                     (() => {
-                      const typingSentence = (
-                        <TypingSentence
-                          key={sentence.id}
-                          sentence={sentence}
-                          mode={unit.mode}
-                          resolvedVoiceId={resolvedVoiceId}
-                          speakerVoiceMap={speakerVoiceMap}
-                          wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
-                          onComplete={handleSentenceComplete}
-                          onCorrectLetter={() => {
-                            correctCountRef.current += 1;
-                            play("letter");
-                            vibrateLightly();
-                          }}
-                          onErrorLetter={() => {
-                            errorCountRef.current += 1;
-                            play("error");
-                            vibrateLightly();
-                          }}
-                          onAudioPlay={handleAudioPlay}
-                          onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
-                          storyTitle={unit.title}
-                          sentenceNumber={sentenceIndex + 1}
-                          totalSentences={total}
-                          storyTimeRemainingLabel={storyTimeRemainingLabel}
-                          hasStarted={hasStarted}
-                          showTapToStart={!tapped}
-                          onStart={() => setTapped(true)}
-                          onGoBack={handleGoBackSentence}
-                          onGoForward={
-                            sentenceIndex < maxSentenceIndexReached
-                              ? handleGoForwardSentence
-                              : undefined
-                          }
-                        />
-                      );
+                      const typingSentence =
+                        dictationAvailable && dictationOn ? (
+                          <DictationSentence
+                            key={`dictation-${sentence.id}`}
+                            sentence={sentence}
+                            mode={unit.mode}
+                            resolvedVoiceId={resolvedVoiceId}
+                            speakerVoiceMap={speakerVoiceMap}
+                            showWordBlanks={features.dictation.showWordBlanks}
+                            hasStarted={hasStarted}
+                            onStart={() => setTapped(true)}
+                            onAudioPlay={handleAudioPlay}
+                            onKeystroke={() => {
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onComplete={handleDictationComplete}
+                          />
+                        ) : (
+                          <TypingSentence
+                            key={sentence.id}
+                            sentence={sentence}
+                            mode={unit.mode}
+                            resolvedVoiceId={resolvedVoiceId}
+                            speakerVoiceMap={speakerVoiceMap}
+                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
+                            onComplete={handleSentenceComplete}
+                            onCorrectLetter={() => {
+                              correctCountRef.current += 1;
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onErrorLetter={() => {
+                              errorCountRef.current += 1;
+                              play("error");
+                              vibrateLightly();
+                            }}
+                            onAudioPlay={handleAudioPlay}
+                            onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
+                            storyTitle={unit.title}
+                            sentenceNumber={sentenceIndex + 1}
+                            totalSentences={total}
+                            storyTimeRemainingLabel={storyTimeRemainingLabel}
+                            hasStarted={hasStarted}
+                            showTapToStart={!tapped}
+                            onStart={() => setTapped(true)}
+                            wordCards={wordCards}
+                            onGoBack={handleGoBackSentence}
+                            onGoForward={
+                              sentenceIndex < maxSentenceIndexReached
+                                ? handleGoForwardSentence
+                                : undefined
+                            }
+                          />
+                        );
                       // Stories only: a plain mount-in transition (no
                       // AnimatePresence, no exit) so each new sentence visibly
                       // slides in from the right and settles at its normal

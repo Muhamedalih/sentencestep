@@ -1,6 +1,9 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { Star } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 /**
  * Shows only the single word the learner is currently typing, with its
@@ -37,8 +40,11 @@ import { motion, useReducedMotion } from "framer-motion";
 export function CurrentWordLabel({
   word,
   dir,
+  save,
 }: {
   word: { en: string; text: string } | undefined;
+  /** Personal word cards (admin feature): a star that saves this word to the learner's deck. Absent when the feature is off here — the label then renders exactly as it always has. */
+  save?: { saved: boolean; onToggle: () => void; label: string };
   /** The active support locale's writing direction — RTL for Arabic, LTR for Spanish (see useLocale's `dir`). Never hardcoded here: this label renders whichever language the learner actually chose. */
   dir: "rtl" | "ltr";
 }) {
@@ -64,6 +70,24 @@ export function CurrentWordLabel({
         >
           {word.text}
         </span>
+        {save && (
+          <button
+            type="button"
+            // Pointer-down would blur the typing input; keep focus where the
+            // learner is typing (the click itself still fires normally).
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={save.onToggle}
+            aria-pressed={save.saved}
+            aria-label={save.label}
+            title={save.label}
+            className="-my-1 self-center rounded-full p-1 text-[var(--lesson-subtitle)] transition-colors hover:text-[var(--lesson-title)]"
+          >
+            <Star
+              className={cn("size-5", save.saved && "fill-accent text-accent")}
+              aria-hidden="true"
+            />
+          </button>
+        )}
       </div>
       <span aria-hidden="true" className="h-px w-8 rounded-full bg-[var(--lesson-subtitle)]/35" />
     </motion.div>

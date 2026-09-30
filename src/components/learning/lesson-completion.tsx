@@ -3,7 +3,16 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, RotateCcw, Wand2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  Brain,
+  Home,
+  Loader2,
+  RotateCcw,
+  Wand2,
+} from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,6 +31,9 @@ import {
 } from "@/lib/progress/learner-level";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
+import { BadgeMedal } from "@/components/app/badge-medal";
+import { BADGE_DEFS } from "@/lib/features/catalog";
+import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
 import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/content";
@@ -137,6 +149,16 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
       return t.lesson.rewardDailyGoalReached;
     case "streakGraceDay":
       return t.lesson.streakGraceNote;
+    case "streakFreezeUsed":
+      return t.streakCalendar.freezeUsedNote.replace("{n}", String(reward.count));
+    case "questCompleted":
+      return t.quests.rewardCompleted
+        .replace("{quest}", questTitle(t, reward.questType))
+        .replace("{xp}", String(reward.xp));
+    case "badgeEarned":
+      return t.badges.rewardEarned.replace("{badge}", t.badges.items[reward.badgeId].name);
+    case "badgesBulk":
+      return t.badges.rewardBulk.replace("{n}", String(reward.count));
   }
 }
 
@@ -188,6 +210,7 @@ export function LessonCompletion({
   mistakeCount = 0,
   onFixMistakes,
   onViewWords,
+  onPracticeFromMemory,
   saveStatus = "saved",
   onRetrySave,
   onRetryLesson,
@@ -219,6 +242,8 @@ export function LessonCompletion({
   onFixMistakes?: () => void;
   /** Opens StoryWordsPanel in place of this screen (see LessonSession's isViewingWords branch) — Stories mode only; every other mode keeps the plain inline vocabulary chips below since they have no per-word practice flow yet. */
   onViewWords?: () => void;
+  /** Opens the optional From-memory round (see FromMemorySession) in place of this screen. Undefined when the admin feature is off for this section, or the lesson has no translated sentences to ask — the button is then simply not rendered. */
+  onPracticeFromMemory?: () => void;
   /**
    * Status of the signed-in save this completion triggered (see useProgress).
    * Defaults to "saved" so every other caller (and any test/story that
@@ -235,6 +260,8 @@ export function LessonCompletion({
   const { t, locale, dir } = useLocale();
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
+  // Read early: a new badge is one of the things that turns the celebration on.
+  const badgeRewards = rewards.filter((reward) => reward.type === "badgeEarned");
   const accuracyPercent = Math.round(accuracy * 100);
   // Non-null only for a stand-out result — the same >=95% cutoff the
   // accuracyExcellent/accuracyGood subtitle copy above already switches on,
@@ -271,7 +298,8 @@ export function LessonCompletion({
   // actually worth celebrating (a stand-out accuracy or a level crossed by
   // this completion), never every ordinary completion, and never at all
   // for a viewer who prefers reduced motion.
-  const showCelebration = !reducedMotion && (accuracyPercent >= 95 || leveledUp);
+  const showCelebration =
+    !reducedMotion && (accuracyPercent >= 95 || leveledUp || badgeRewards.length > 0);
   const celebrationGlowColor = accuracyTierColor ?? theme.colorAccent;
   // Real confetti isn't monochrome — alternates between the screen's brand
   // color and TIER_EXCELLENT (the same green a >=95% result already colors
@@ -295,7 +323,7 @@ export function LessonCompletion({
   // accent, always — so "which action is primary" is communicated by
   // size/weight alone, never by a warning-colored border.
   type CompletionAction = {
-    id: "fix" | "next" | "retry" | "home";
+    id: "fix" | "next" | "memory" | "retry" | "home";
     icon: typeof Wand2;
     label: string;
     href?: string;
@@ -312,6 +340,16 @@ export function LessonCompletion({
             icon: ArrowRight,
             label: t.lesson.nextLesson,
             href: `/learn/${mode}/${nextLesson.id}`,
+          },
+        ]
+      : []),
+    ...(onPracticeFromMemory
+      ? [
+          {
+            id: "memory" as const,
+            icon: Brain,
+            label: t.fromMemory.button,
+            onClick: onPracticeFromMemory,
           },
         ]
       : []),
@@ -335,7 +373,16 @@ export function LessonCompletion({
   // number just above it (see streakGraceNote's doc comment in the
   // dictionary types).
   const graceReward = rewards.find((reward) => reward.type === "streakGraceDay");
-  const celebratedRewards = rewards.filter((reward) => reward.type !== "streakGraceDay");
+  const freezeReward = rewards.find((reward) => reward.type === "streakFreezeUsed");
+  // Badges get their own medal cards below (or, for a flood of them, the one
+  // bulk summary line) rather than a place in the joined reward sentence.
+  const bulkBadgeReward = rewards.find((reward) => reward.type === "badgesBulk");
+  const celebratedRewards = rewards.filter(
+    (reward) =>
+      reward.type !== "streakGraceDay" &&
+      reward.type !== "streakFreezeUsed" &&
+      reward.type !== "badgeEarned",
+  );
 
   // Stat cells shown inside the stats/XP panel — accuracy has its own quiet
   // badge in the header, so it's never repeated here. Built as a filtered
@@ -655,6 +702,14 @@ export function LessonCompletion({
               {formatReward(graceReward, t)}
             </p>
           )}
+          {freezeReward && (
+            <p
+              style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+              className="mt-3 text-center"
+            >
+              {formatReward(freezeReward, t)}
+            </p>
+          )}
 
           <div style={{ marginTop: fluid(theme.cardPadding, 8) }}>
             <XpProgressCard
@@ -676,6 +731,41 @@ export function LessonCompletion({
               className="mt-3 text-center font-medium"
             >
               {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
+            </p>
+          )}
+          {badgeRewards.length > 0 && (
+            <ul className="mt-4 flex flex-wrap justify-center gap-3">
+              {badgeRewards.map((reward) => {
+                const group = BADGE_DEFS.find((badge) => badge.id === reward.badgeId)?.group;
+                return (
+                  <li
+                    key={reward.badgeId}
+                    style={{ borderColor: theme.colorBorder, color: styles.textPrimary }}
+                    className="flex items-center gap-3 rounded-2xl border px-4 py-2.5"
+                  >
+                    {group && <BadgeMedal group={group} earned className="size-11" />}
+                    <span className="text-start" dir={dir}>
+                      <span
+                        style={{ color: theme.colorAccent }}
+                        className="block text-xs font-semibold tracking-wide uppercase"
+                      >
+                        {t.badges.newTag}
+                      </span>
+                      <span className="block text-sm font-semibold">
+                        {t.badges.items[reward.badgeId].name}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {bulkBadgeReward && (
+            <p
+              style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
+              className="mt-3 text-center font-medium"
+            >
+              {formatReward(bulkBadgeReward, t)}
             </p>
           )}
         </motion.div>

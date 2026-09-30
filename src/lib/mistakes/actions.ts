@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import { getAllLessons } from "@/lib/content";
 import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
+import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
 import {
   getContentTranslations,
@@ -34,6 +36,18 @@ async function getAuthenticatedUserId(): Promise<string | null> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   return data?.claims.sub ?? null;
+}
+
+/**
+ * "Master N words" quest progress for one word cleanly corrected/reviewed —
+ * runs after the response is sent (like recordCompletionAction's side
+ * effects) so a learner's next word never waits on it, and swallows its own
+ * failures (recordQuestEvents is best-effort by contract).
+ */
+function creditWordMastery(userId: string): void {
+  after(async () => {
+    await recordQuestEventsAndBadges(userId, [{ type: "masterWords", amount: 1 }]);
+  });
 }
 
 /** The count LessonCompletion needs to decide whether "Fix Your Mistakes" is the primary action — cheap on purpose (two `count(*)` reads), never the full hydrated queue. Includes due reviews as well as outstanding mistakes, since Fix Your Mistakes is the only entry point into either. Guests (no persistent identity for this feature — see the final report) always get 0, matching "no outstanding mistakes" and leaving their completion screen exactly as it always was. */
@@ -99,6 +113,7 @@ export async function markMistakeCorrectedAction(word: string): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await markMistakeCorrected(userId, normalizeMistakeWord(word));
+  creditWordMastery(userId);
   // The Word Lists dashboard card and the review queue page are both
   // server-rendered reads of this same table (see fetchWeakWordsAction) —
   // without this, a learner who corrects a word from somewhere other than
@@ -123,6 +138,7 @@ export async function markReviewCompletedAction(word: string, hadErrors: boolean
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await recordMistakeReview(normalizeMistakeWord(word), hadErrors);
+  if (!hadErrors) creditWordMastery(userId);
   // Same reasoning as markMistakeCorrectedAction's identical pair of calls.
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");
@@ -140,6 +156,7 @@ export async function masterMistakeWordAction(word: string): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await masterMistakeWord(userId, normalizeMistakeWord(word));
+  creditWordMastery(userId);
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");
 }
@@ -200,7 +217,28 @@ export async function recordWordListMistakeAction(word: string): Promise<void> {
 export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueueItem[]> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return [];
+  return buildMistakeQueue(userId, { lessonId });
+}
 
+/**
+ * The same hydrated queue as fetchMistakesAction, but across EVERY lesson —
+ * outstanding mistakes first, then due reviews — capped at `limit`. What
+ * "today's session" draws its mistake words from: unlike a lesson's
+ * completion screen, the daily session isn't about one lesson. The cap
+ * matters because each item costs a cached-audio lookup below.
+ */
+export async function fetchAllMistakesAction(limit: number): Promise<MistakeQueueItem[]> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return [];
+  // A client-supplied number, so bounded: it can only ever ask for its own data, but each item costs a lookup.
+  const bounded = Math.min(100, Math.max(1, Math.floor(Number.isFinite(limit) ? limit : 20)));
+  return buildMistakeQueue(userId, { limit: bounded });
+}
+
+async function buildMistakeQueue(
+  userId: string,
+  { lessonId, limit }: { lessonId?: string; limit?: number },
+): Promise<MistakeQueueItem[]> {
   const [activeRows, dueReviewRows] = await Promise.all([
     fetchActiveMistakeRows(userId),
     fetchDueReviewRows(userId),
@@ -238,7 +276,7 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
     if (row.sentenceId === null) continue;
     const sentence = sentenceById.get(row.sentenceId);
     if (!sentence) continue;
-    if (sentence.lessonId !== lessonId) continue;
+    if (lessonId !== undefined && sentence.lessonId !== lessonId) continue;
     const lesson = lessonById.get(sentence.lessonId);
     if (!lesson) continue;
 
@@ -302,6 +340,8 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
       (orderIndex.get(b.word) ?? Number.POSITIVE_INFINITY)
     );
   });
+
+  if (limit !== undefined && items.length > limit) items.length = limit;
 
   // Cache-only pre-resolution for EVERY item, not just the first — mirrors
   // LessonPage's identical pre-resolution of a lesson's first sentence (see

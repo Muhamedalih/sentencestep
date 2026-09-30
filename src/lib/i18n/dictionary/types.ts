@@ -1,3 +1,5 @@
+import type { BadgeId } from "@/lib/features/catalog";
+
 /**
  * Shape of every UI-chrome string this app can show, keyed by section. The
  * English strings already live in the components as literals (this app's
@@ -846,5 +848,126 @@ export interface Dictionary {
     startFirstLesson: string;
     homeLinkAriaLabel: string;
     dashboardLinkAriaLabel: string;
+  };
+  /** Dictation mode (src/components/learning/dictation-sentence.tsx) — hide the sentence, listen, type the whole thing, check with Enter. */
+  dictation: {
+    toggleLabel: string;
+    toggleTitleOn: string;
+    toggleTitleOff: string;
+    listenAndType: string;
+    inputLabel: string;
+    placeholder: string;
+    pressEnter: string;
+    pressEnterContinue: string;
+    check: string;
+    continue: string;
+    perfect: string;
+    almost: string;
+    youTyped: string;
+    correctSentence: string;
+  };
+  /** From-memory mode (src/components/learning/from-memory-session.tsx) — an optional round after a lesson: read the meaning, type the English. */
+  fromMemory: {
+    button: string;
+    title: string;
+    promptLabel: string;
+    placeholder: string;
+    showFirstLetters: string;
+    revealWord: string;
+    backToResults: string;
+    finish: string;
+    summaryHeading: string;
+    summaryBody: string;
+    mistakesSaved: string;
+  };
+  /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
+  streakCalendar: {
+    heading: string;
+    freezesLeft: string;
+    freezesLeftOne: string;
+    noFreezes: string;
+    freezeUsedNote: string;
+    showMonth: string;
+    hideMonth: string;
+    previousMonth: string;
+    nextMonth: string;
+    legendActive: string;
+    legendGrace: string;
+    legendFrozen: string;
+    dayPracticed: string;
+    dayFrozen: string;
+    dayGrace: string;
+    dayMissed: string;
+    loadError: string;
+  };
+  /** Daily quests card on Home (src/components/app/quests-card.tsx) and the guest sign-in teaser for the account-only engagement features. */
+  quests: {
+    heading: string;
+    xpReward: string;
+    allDone: string;
+    loadError: string;
+    rewardCompleted: string;
+    typeSentences: string;
+    typeLessons: string;
+    typeAccuracy: string;
+    typeMasterWords: string;
+    typeDictation: string;
+    typeDailySession: string;
+    guestHeading: string;
+    guestBody: string;
+    guestCta: string;
+  };
+  /** Achievements page + badge celebration (src/app/(app)/learn/(dashboard)/achievements). */
+  badges: {
+    heading: string;
+    subtitle: string;
+    earnedCount: string;
+    earnedOn: string;
+    locked: string;
+    newTag: string;
+    progress: string;
+    rewardEarned: string;
+    rewardBulk: string;
+    navLabel: string;
+    signInHeading: string;
+    signInBody: string;
+    emptyState: string;
+    items: Record<BadgeId, { name: string; description: string }>;
+  };
+  /** Personal word cards: the save star in lessons, the /learn/cards page, its review session and the Anki export. */
+  myCards: {
+    title: string;
+    navLabel: string;
+    subtitle: string;
+    saveWord: string;
+    removeWord: string;
+    practiceDue: string;
+    practiceAll: string;
+    nothingDue: string;
+    exportAnki: string;
+    exportHint: string;
+    emptyHeading: string;
+    emptyBody: string;
+    cardCount: string;
+    dueTag: string;
+    masteredTag: string;
+    nextReview: string;
+    removeCard: string;
+    reviewCompleteHeading: string;
+    reviewCompleteSubtitle: string;
+    signInHeading: string;
+    signInBody: string;
+  };
+  /** Today's session: the Home card (src/components/app/daily-session-card.tsx) and the session's completion screen. */
+  dailySession: {
+    cardHeading: string;
+    cardBody: string;
+    cardBodyDone: string;
+    reward: string;
+    start: string;
+    completeHeading: string;
+    completeSubtitle: string;
+    xpEarned: string;
+    alreadyRewarded: string;
   };
 }

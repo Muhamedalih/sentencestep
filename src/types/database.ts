@@ -305,6 +305,155 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;
         Relationships: [];
       };
+      activity_days: {
+        Row: {
+          user_id: string;
+          day: string;
+          sentences: number;
+          xp: number;
+          /** 'active' = practiced; 'grace'/'frozen' = a missed day the streak was carried across (see src/lib/features/streak-freeze.ts). */
+          kind: "active" | "grace" | "frozen";
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          day: string;
+          sentences?: number;
+          xp?: number;
+          kind?: "active" | "grace" | "frozen";
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["activity_days"]["Insert"]>;
+        Relationships: [];
+      };
+      streak_freeze_usage: {
+        Row: {
+          user_id: string;
+          /** 'YYYY-MM' the `used` count applies to. */
+          period: string;
+          used: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          period: string;
+          used?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["streak_freeze_usage"]["Insert"]>;
+        Relationships: [];
+      };
+      daily_quests: {
+        Row: {
+          user_id: string;
+          quest_date: string;
+          slot: number;
+          quest_type: string;
+          target: number;
+          xp: number;
+          progress: number;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          quest_date: string;
+          slot: number;
+          quest_type: string;
+          target: number;
+          xp?: number;
+          progress?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["daily_quests"]["Insert"]>;
+        Relationships: [];
+      };
+      user_badges: {
+        Row: {
+          user_id: string;
+          badge_id: string;
+          earned_at: string;
+          seen_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+          earned_at?: string;
+          seen_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["user_badges"]["Insert"]>;
+        Relationships: [];
+      };
+      saved_words: {
+        Row: {
+          id: string;
+          user_id: string;
+          word: string;
+          meaning: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_id: string | null;
+          sentence_en: string;
+          word_index: number;
+          review_stage: number;
+          next_review_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          word: string;
+          meaning: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_id?: string | null;
+          sentence_en: string;
+          word_index: number;
+          review_stage?: number;
+          next_review_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["saved_words"]["Insert"]>;
+        Relationships: [];
+      };
+      daily_sessions: {
+        Row: {
+          user_id: string;
+          session_date: string;
+          completed_at: string;
+          xp: number;
+        };
+        Insert: {
+          user_id: string;
+          session_date: string;
+          completed_at?: string;
+          xp?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["daily_sessions"]["Insert"]>;
+        Relationships: [];
+      };
+      feature_settings: {
+        Row: {
+          id: number;
+          /** The whole feature-availability document — validated by sanitizeFeatureConfig (src/lib/features/config.ts), never trusted as-is. */
+          config: unknown;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          config?: unknown;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["feature_settings"]["Insert"]>;
+        Relationships: [];
+      };
       analytics_events: {
         Row: {
           id: string;
@@ -1198,6 +1347,57 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      add_quest_progress: {
+        Args: { p_type: string; p_amount: number; p_date?: string | null };
+        Returns: {
+          out_slot: number;
+          out_type: string;
+          out_xp: number;
+          out_progress: number;
+          out_target: number;
+          out_completed_now: boolean;
+        }[];
+      };
+      award_badges: {
+        Args: { p_ids: string[] };
+        Returns: { out_badge_id: string }[];
+      };
+      mark_badges_seen: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+      badge_metrics: {
+        Args: Record<string, never>;
+        Returns: {
+          out_longest_streak: number;
+          out_total_sentences: number;
+          out_lesson_count: number;
+          out_perfect_lessons: number;
+          out_max_wpm: number;
+          out_xp: number;
+          out_fixed_words: number;
+        }[];
+      };
+      record_card_review: {
+        Args: { p_word: string; p_had_errors: boolean };
+        Returns: undefined;
+      };
+      complete_daily_session: {
+        Args: { p_date: string; p_xp: number };
+        Returns: boolean;
+      };
+      record_activity_day: {
+        Args: { p_day: string; p_sentences: number; p_xp: number };
+        Returns: undefined;
+      };
+      record_streak_bridge_days: {
+        Args: { p_days: string[]; p_kinds: string[] };
+        Returns: undefined;
+      };
+      consume_streak_freezes: {
+        Args: { p_period: string; p_count: number; p_monthly: number };
+        Returns: number;
+      };
       record_mistake: {
         Args: { p_word: string; p_sentence_id: string | null; p_error_indexes?: number[] | null };
         Returns: undefined;
