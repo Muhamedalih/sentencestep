@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowLeft, CheckCircle2, Eye, Lightbulb } from "lucide-react";
 
+import { ContinueButton, RetryButton } from "@/components/learning/feedback-actions";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { SentenceDiff } from "@/components/learning/sentence-diff";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
   compareDictation,
@@ -73,14 +75,16 @@ export function FromMemorySession({
   const [lettersShown, setLettersShown] = useState(false);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [mistakesRecorded, setMistakesRecorded] = useState(false);
+  /** 0 for the first go at a sentence; a "Try again" makes it practice: only the first attempt is scored and recorded. */
+  const [attempt, setAttempt] = useState(0);
 
   const total = items.length;
   const item = items[index];
   const finished = index >= total;
 
   useEffect(() => {
-    if (!finished) inputRef.current?.focus();
-  }, [index, finished]);
+    if (!finished && !result) inputRef.current?.focus();
+  }, [index, finished, attempt, result]);
 
   const targetWords = useMemo(
     () => (item ? normalizeDictationWords(item.sentence.en) : []),
@@ -91,6 +95,7 @@ export function FromMemorySession({
     if (!item || result || value.trim().length === 0) return;
     const graded = compareDictation(item.sentence.en, value);
     setResult(graded);
+    if (attempt > 0) return;
     const wrong = dictationMistakes(graded).filter((mistake) =>
       isMistakeWorthTracking(mistake.word),
     );
@@ -112,17 +117,28 @@ export function FromMemorySession({
     setResult(null);
     setRevealed(0);
     setLettersShown(false);
+    setAttempt(0);
     if (nextIndex >= total) {
       const clean = answers.filter((answer) => answer.exact && !answer.helped).length;
       onFinished?.({ total, clean });
     }
   }
 
+  function retry() {
+    if (!result) return;
+    setValue("");
+    setResult(null);
+    setAttempt((count) => count + 1);
+  }
+
+  // Enter checks while typing (below); once the correction is on screen it
+  // continues, wherever focus is.
+  useEnterToContinue(result !== null && !finished, next);
+
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key !== "Enter") return;
     event.preventDefault();
-    if (result) next();
-    else check();
+    check();
   }
 
   if (finished) {
@@ -186,28 +202,26 @@ export function FromMemorySession({
         </p>
       </div>
 
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        readOnly={result !== null}
-        onChange={(event) => !result && setValue(event.target.value)}
-        onKeyDown={handleKeyDown}
-        onPaste={(event) => event.preventDefault()}
-        placeholder={t.fromMemory.placeholder}
-        aria-label={t.fromMemory.placeholder}
-        autoComplete="off"
-        autoCapitalize="none"
-        autoCorrect="off"
-        spellCheck={false}
-        enterKeyHint="done"
-        dir="ltr"
-        style={textStyle}
-        className={cn(
-          "border-border/70 bg-background/60 focus-visible:border-ring focus-visible:ring-ring/40 w-full rounded-xl border-2 px-4 py-3.5 text-2xl outline-none focus-visible:ring-4 sm:text-3xl",
-          result && "opacity-70",
-        )}
-      />
+      {!result && (
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={handleKeyDown}
+          onPaste={(event) => event.preventDefault()}
+          placeholder={t.fromMemory.placeholder}
+          aria-label={t.fromMemory.placeholder}
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="done"
+          dir="ltr"
+          style={textStyle}
+          className="border-border/70 bg-background/60 focus-visible:border-ring focus-visible:ring-ring/40 w-full rounded-xl border-2 px-4 py-3.5 text-2xl outline-none focus-visible:ring-4 sm:text-3xl"
+        />
+      )}
 
       {!result ? (
         <div className="flex flex-col gap-4">
@@ -246,23 +260,24 @@ export function FromMemorySession({
           <p
             dir={dir}
             className={cn(
-              "flex items-center gap-2 text-lg font-semibold",
+              "flex items-center gap-2 text-2xl font-bold",
               result.exact ? "text-success" : "text-accent",
             )}
           >
-            {result.exact && <CheckCircle2 className="size-5" aria-hidden="true" />}
+            {result.exact && <CheckCircle2 className="size-6" aria-hidden="true" />}
             {result.exact ? t.dictation.perfect : t.dictation.almost}
           </p>
-          <SentenceDiff result={result} textStyle={textStyle} />
-          {result.exact && (
-            <p dir="ltr" className="text-xl sm:text-2xl" style={textStyle}>
-              {item.sentence.en}
+          <SentenceDiff result={result} sentence={item.sentence.en} textStyle={textStyle} />
+          {attempt > 0 && (
+            <p className="text-muted-foreground text-sm" dir={dir}>
+              {t.dictation.retryNote}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-4">
-            <Button type="button" onClick={next}>
+          <div className="flex flex-wrap items-center gap-3">
+            <ContinueButton onClick={next}>
               {isLast ? t.fromMemory.finish : t.dictation.continue}
-            </Button>
+            </ContinueButton>
+            <RetryButton onClick={retry}>{t.dictation.retry}</RetryButton>
             <PronunciationButton
               text={item.sentence.en}
               audioUrl={item.sentence.audioUrl}

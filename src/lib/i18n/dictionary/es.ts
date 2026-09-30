@@ -760,6 +760,10 @@ export const es: Dictionary = {
     almost: "Casi — revisa las palabras resaltadas",
     youTyped: "Escribiste",
     correctSentence: "Oración correcta",
+    retry: "Intentar de nuevo",
+    retryNote: "Intento de práctica: solo cuenta tu primer intento en la puntuación de la lección.",
+    blankHint: "Pasa el ratón por un hueco, o tócalo, para oír esa palabra",
+    hearWord: "Escuchar la palabra {n}",
   },
   fromMemory: {
     button: "Ponte a prueba de memoria",

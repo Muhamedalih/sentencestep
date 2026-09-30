@@ -63,6 +63,13 @@ already has history the day the feature goes On.
   are "close", misses go to Fix Your Mistakes. They deliberately don't use the
   per-keystroke engine, which would let a learner guess letters of a hidden
   sentence.
+  The correction screen shows the correct sentence large with each missed word
+  as a chip and its wrong letters underlined (typed and correct line), Enter or
+  **Continue** moves on, and **Try again** lets the learner retype the same
+  sentence as often as they like: only the first attempt is scored and
+  recorded. While the sentence is hidden, hovering over (or tapping) a blank
+  says that word (Normal and Stories, using the same word audio as the typing
+  view). From memory shares the correction screen, Enter handling and Try again.
 - **Streak freeze** sits on top of the existing free one-missed-day grace: each
   _extra_ consecutive missed day spends one freeze from the month's balance,
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).

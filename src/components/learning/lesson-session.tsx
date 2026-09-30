@@ -957,6 +957,7 @@ export function LessonSession({
                             resolvedVoiceId={resolvedVoiceId}
                             speakerVoiceMap={speakerVoiceMap}
                             showWordBlanks={features.dictation.showWordBlanks}
+                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
                             hasStarted={hasStarted}
                             onStart={() => setTapped(true)}
                             onAudioPlay={handleAudioPlay}

@@ -748,6 +748,10 @@ export const tr: Dictionary = {
     almost: "Neredeyse — vurgulanan kelimelere göz at",
     youTyped: "Yazdığın",
     correctSentence: "Doğru cümle",
+    retry: "Tekrar dene",
+    retryNote: "Alıştırma denemesi: derste yalnızca ilk denemen puana sayılır.",
+    blankHint: "O kelimeyi duymak için boşluğun üzerine gel veya dokun",
+    hearWord: "{n}. kelimeyi dinle",
   },
   fromMemory: {
     button: "Kendini ezberden sına",

@@ -47,6 +47,8 @@ export interface PronunciationButtonHandle {
    * in Books. A no-op if nothing is currently playing.
    */
   stop: () => void;
+  /** Plays the sentence again from the top, exactly as a click on the button or the Shift shortcut would — Dictation's "Try again" uses it so the learner hears the audio afresh. */
+  replay: () => void;
 }
 
 interface PronunciationButtonProps {
@@ -322,7 +324,11 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the clip's own status changes
     }, [clip.status]);
 
-    useImperativeHandle(ref, () => ({ stop: () => clip.stop() }), [clip]);
+    useImperativeHandle(
+      ref,
+      () => ({ stop: () => clip.stop(), replay: () => void playReplayRef.current() }),
+      [clip],
+    );
 
     // Guards against React Strict Mode's dev-only double-invoke of effects
     // (mount → cleanup → mount again), which would otherwise call playAuto()
