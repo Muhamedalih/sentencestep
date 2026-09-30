@@ -17,6 +17,7 @@ import { useLessonFontSettings } from "@/components/providers/lesson-font-settin
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
+import { markCardReviewedAction } from "@/lib/cards/actions";
 import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { markVocabularyRecallCompletedAction } from "@/lib/vocabulary-recall/actions";
 import { popIn } from "@/lib/motion";
@@ -96,7 +97,7 @@ export function WordReviewSession({
    * instead of Word Lists' own catalog, and framed as "words you've met"
    * rather than "words you got wrong."
    */
-  variant?: "wordLists" | "recall";
+  variant?: "wordLists" | "recall" | "cards";
   /**
    * Overrides variant's default back link (a plain string, not a function —
    * safe to pass from a Server Component, unlike onWordCompleted used to be).
@@ -149,15 +150,30 @@ export function WordReviewSession({
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
 
-  const resolvedBackHref = backHref ?? (variant === "recall" ? "/learn" : "/learn/word-lists");
-  const backLabel = variant === "recall" ? t.mistakes.learningHome : t.wordLists.navLabel;
+  const resolvedBackHref =
+    backHref ??
+    (variant === "recall" ? "/learn" : variant === "cards" ? "/learn/cards" : "/learn/word-lists");
+  const backLabel =
+    variant === "recall"
+      ? t.mistakes.learningHome
+      : variant === "cards"
+        ? t.myCards.title
+        : t.wordLists.navLabel;
   const completeHeading =
-    variant === "recall" ? t.vocabularyRecall.completeHeading : t.mistakes.allCaughtUp;
+    variant === "recall"
+      ? t.vocabularyRecall.completeHeading
+      : variant === "cards"
+        ? t.myCards.reviewCompleteHeading
+        : t.mistakes.allCaughtUp;
   const completeSubtitle = (
-    variant === "recall" ? t.vocabularyRecall.completeSubtitle : t.mistakes.correctedCount
+    variant === "recall"
+      ? t.vocabularyRecall.completeSubtitle
+      : variant === "cards"
+        ? t.myCards.reviewCompleteSubtitle
+        : t.mistakes.correctedCount
   ).replace("{n}", String(correctedCount));
   const contextLabel =
-    variant === "recall" && word?.lessonTitle
+    (variant === "recall" || variant === "cards") && word?.lessonTitle
       ? t.vocabularyRecall.sourceLabel
           .replace("{title}", word.lessonTitle)
           .replace("{n}", String(word.daysAgo ?? 1))
@@ -186,7 +202,9 @@ export function WordReviewSession({
       const complete =
         variant === "recall"
           ? markVocabularyRecallCompletedAction(word.targetWord, hadErrors)
-          : masterMistakeWordAction(word.targetWord);
+          : variant === "cards"
+            ? markCardReviewedAction(word.targetWord, hadErrors)
+            : masterMistakeWordAction(word.targetWord);
       complete.catch((error: unknown) => {
         console.error("[word-review] completion action failed", error);
       });
@@ -255,7 +273,9 @@ export function WordReviewSession({
               </div>
               <Button asChild className="mt-2">
                 <Link href={resolvedBackHref}>
-                  {variant === "recall" ? backLabel : t.wordLists.backToWordLists}
+                  {variant === "recall" || variant === "cards"
+                    ? backLabel
+                    : t.wordLists.backToWordLists}
                 </Link>
               </Button>
             </motion.div>

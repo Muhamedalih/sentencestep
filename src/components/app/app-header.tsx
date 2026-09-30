@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Menu, Trophy, X } from "lucide-react";
+import { Bookmark, Flame, Layers, Menu, Trophy, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -85,6 +85,13 @@ export function AppHeader({
   const utilityCluster = user ? (
     <>
       <div className="flex items-center gap-1">
+        {features.personalCards.page && (
+          <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
+            <Link href="/learn/cards" aria-label={t.myCards.navLabel} title={t.myCards.navLabel}>
+              <Layers className="text-muted-foreground size-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
         {features.badges.enabled && (
           <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
             <Link

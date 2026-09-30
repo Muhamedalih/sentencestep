@@ -387,6 +387,42 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["user_badges"]["Insert"]>;
         Relationships: [];
       };
+      saved_words: {
+        Row: {
+          id: string;
+          user_id: string;
+          word: string;
+          meaning: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_id: string | null;
+          sentence_en: string;
+          word_index: number;
+          review_stage: number;
+          next_review_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          word: string;
+          meaning: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_id?: string | null;
+          sentence_en: string;
+          word_index: number;
+          review_stage?: number;
+          next_review_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["saved_words"]["Insert"]>;
+        Relationships: [];
+      };
       feature_settings: {
         Row: {
           id: number;
@@ -1325,6 +1361,10 @@ export interface Database {
           out_xp: number;
           out_fixed_words: number;
         }[];
+      };
+      record_card_review: {
+        Args: { p_word: string; p_had_errors: boolean };
+        Returns: undefined;
       };
       record_activity_day: {
         Args: { p_day: string; p_sentences: number; p_xp: number };

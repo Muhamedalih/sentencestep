@@ -34,6 +34,7 @@ import { useTypingSoundSettings } from "@/components/providers/typing-sound-sett
 import { transitions } from "@/lib/motion";
 import { trackAudioPlayedAction, trackLessonViewAction } from "@/lib/analytics/track-actions";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
@@ -156,6 +157,15 @@ export function LessonSession({
   const dictationAvailable = features.dictation.sections[unit.mode];
   const [dictationOn, setDictationOn] = useState(false);
   const dictationCountRef = useRef(0);
+  // Personal word cards (admin feature): the save star on the current-word
+  // label. Never in the admin preview — an admin previewing a lesson isn't
+  // building a real deck.
+  const wordCards = useSavedCards({
+    enabled: !previewMode && features.personalCards.saveSections[unit.mode],
+    mode: unit.mode,
+    lessonId: unit.id,
+    lessonTitle: unit.title,
+  });
   // The single value TypingSentence actually reads: true (no gate at all)
   // on desktop/tablet and in Conversation mode — neither shows the overlay,
   // and forcing it true here is what keeps the input's autoFocus and the
@@ -984,6 +994,7 @@ export function LessonSession({
                             hasStarted={hasStarted}
                             showTapToStart={!tapped}
                             onStart={() => setTapped(true)}
+                            wordCards={wordCards}
                             onGoBack={handleGoBackSentence}
                             onGoForward={
                               sentenceIndex < maxSentenceIndexReached

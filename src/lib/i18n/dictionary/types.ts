@@ -934,4 +934,28 @@ export interface Dictionary {
     emptyState: string;
     items: Record<BadgeId, { name: string; description: string }>;
   };
+  /** Personal word cards: the save star in lessons, the /learn/cards page, its review session and the Anki export. */
+  myCards: {
+    title: string;
+    navLabel: string;
+    subtitle: string;
+    saveWord: string;
+    removeWord: string;
+    practiceDue: string;
+    practiceAll: string;
+    nothingDue: string;
+    exportAnki: string;
+    exportHint: string;
+    emptyHeading: string;
+    emptyBody: string;
+    cardCount: string;
+    dueTag: string;
+    masteredTag: string;
+    nextReview: string;
+    removeCard: string;
+    reviewCompleteHeading: string;
+    reviewCompleteSubtitle: string;
+    signInHeading: string;
+    signInBody: string;
+  };
 }
