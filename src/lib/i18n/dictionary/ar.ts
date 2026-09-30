@@ -722,7 +722,7 @@ export const ar: Dictionary = {
     correctSentence: "الجملة الصحيحة",
     retry: "إعادة",
     retryNote: "محاولة تدريب: تُحسب محاولتك الأولى فقط في نتيجة الدرس.",
-    blankHint: "مرّر الماوس على أي فراغ أو اضغط عليه لتسمع كلمته",
+    blankHint: "اضغط على أي فراغ لتسمع كلمته",
     hearWord: "استمع للكلمة {n}",
   },
   fromMemory: {

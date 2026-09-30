@@ -45,16 +45,21 @@ export function SentenceDiff({
   result,
   sentence,
   textStyle,
+  bare = false,
 }: {
   result: DictationResult;
   /** The plain sentence, shown as-is for an exact answer. */
   sentence: string;
   textStyle?: CSSProperties;
+  /** Drop the panel's own border and fill, for a caller that already sits it inside a card. */
+  bare?: boolean;
 }) {
   const { t } = useLocale();
 
-  const panel =
-    "border-border/60 bg-muted/30 flex flex-col gap-5 rounded-2xl border p-4 sm:p-6 text-balance";
+  const panel = cn(
+    "flex flex-col gap-5 text-balance",
+    !bare && "border-border/60 bg-muted/30 rounded-2xl border p-4 sm:p-6",
+  );
   const label = "text-muted-foreground mb-2 text-sm font-semibold tracking-wide uppercase";
 
   if (result.exact) {
@@ -73,7 +78,7 @@ export function SentenceDiff({
         <p className={label}>{t.dictation.youTyped}</p>
         <p
           dir="ltr"
-          className="flex flex-wrap items-center gap-x-2.5 gap-y-2 text-2xl leading-snug sm:text-3xl"
+          className="flex flex-wrap items-center gap-x-2.5 gap-y-2 text-2xl leading-snug sm:text-3xl [@media(max-height:760px)]:sm:text-2xl"
           style={textStyle}
         >
           {result.typedWords.map((word, index) => (
@@ -99,11 +104,13 @@ export function SentenceDiff({
         </p>
       </div>
 
+      <div aria-hidden="true" className="bg-border/60 h-px" />
+
       <div>
         <p className={label}>{t.dictation.correctSentence}</p>
         <p
           dir="ltr"
-          className="flex flex-wrap items-center gap-x-2.5 gap-y-2 text-3xl leading-snug sm:text-4xl"
+          className="flex flex-wrap items-center gap-x-2.5 gap-y-2 text-3xl leading-snug sm:text-4xl [@media(max-height:760px)]:sm:text-3xl"
           style={textStyle}
         >
           {result.words.map((word, index) => (
