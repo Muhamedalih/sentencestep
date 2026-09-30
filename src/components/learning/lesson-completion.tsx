@@ -146,6 +146,8 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
       return t.lesson.rewardDailyGoalReached;
     case "streakGraceDay":
       return t.lesson.streakGraceNote;
+    case "streakFreezeUsed":
+      return t.streakCalendar.freezeUsedNote.replace("{n}", String(reward.count));
   }
 }
 
@@ -357,7 +359,10 @@ export function LessonCompletion({
   // number just above it (see streakGraceNote's doc comment in the
   // dictionary types).
   const graceReward = rewards.find((reward) => reward.type === "streakGraceDay");
-  const celebratedRewards = rewards.filter((reward) => reward.type !== "streakGraceDay");
+  const freezeReward = rewards.find((reward) => reward.type === "streakFreezeUsed");
+  const celebratedRewards = rewards.filter(
+    (reward) => reward.type !== "streakGraceDay" && reward.type !== "streakFreezeUsed",
+  );
 
   // Stat cells shown inside the stats/XP panel — accuracy has its own quiet
   // badge in the header, so it's never repeated here. Built as a filtered
@@ -675,6 +680,14 @@ export function LessonCompletion({
               className="mt-3 text-center"
             >
               {formatReward(graceReward, t)}
+            </p>
+          )}
+          {freezeReward && (
+            <p
+              style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+              className="mt-3 text-center"
+            >
+              {formatReward(freezeReward, t)}
             </p>
           )}
 

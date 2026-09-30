@@ -15,7 +15,9 @@ export type RewardEvent =
   | { type: "lessonCountMilestone"; count: number }
   | { type: "dailyGoalReached" }
   /** The streak survived a single missed day (see isGraceDay in streak.ts) — shown once, quietly, never as a celebratory reward. */
-  | { type: "streakGraceDay" };
+  | { type: "streakGraceDay" }
+  /** One or more streak freezes were spent to carry the streak across extra missed days (see src/lib/features/streak-freeze.ts) — like streakGraceDay, shown as a quiet note, not a celebration. */
+  | { type: "streakFreezeUsed"; count: number };
 
 export interface LessonCompletion {
   lessonId: string;

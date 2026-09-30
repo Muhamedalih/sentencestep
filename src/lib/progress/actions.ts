@@ -28,7 +28,7 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { isAdmin } from "@/lib/admin/access";
 import { isDailyGoalMet } from "@/lib/progress/daily-goal";
 import { getLearnerLevel } from "@/lib/progress/learner-level";
-import { isGraceDay, updateStreak } from "@/lib/progress/streak";
+import { isGraceDay } from "@/lib/progress/streak";
 import { calculateLessonXp } from "@/lib/progress/xp";
 import {
   computeMigrationDailyProgress,
@@ -37,10 +37,25 @@ import {
   selectCompletionsToMigrate,
 } from "@/lib/progress/guest-migration";
 import { emptyProgressState } from "@/lib/progress/types";
+import {
+  consumeStreakFreezes,
+  fetchFreezeUsage,
+  recordActivityDay,
+  recordStreakBridgeDays,
+} from "@/lib/features/activity-queries";
+import { disabledFeatures } from "@/lib/features/config";
+import { getEffectiveFeatures } from "@/lib/features/queries";
+import { freezesRemaining, monthPeriod, planStreakUpdate } from "@/lib/features/streak-freeze";
+import type { StreakPlan } from "@/lib/features/streak-freeze";
 import { setCountryAction, setStartingLevelAction } from "@/lib/supabase/profile-actions";
 import { recordVocabularyEncountersForLesson } from "@/lib/vocabulary-recall/record-encounters";
 import type { ValidatedGuestCompletion } from "@/lib/progress/guest-migration";
-import type { LessonCompletion, ProgressState, RewardEvent } from "@/lib/progress/types";
+import type {
+  LessonCompletion,
+  ProgressState,
+  RewardEvent,
+  StreakState,
+} from "@/lib/progress/types";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -65,6 +80,47 @@ function toCompletions(rows: Awaited<ReturnType<typeof fetchUserProgress>>): Les
       completedAt: row.completed_at as string,
       accuracy: row.accuracy ?? 1,
     }));
+}
+
+/**
+ * The streak update for this completion. With the admin "streak calendar &
+ * freeze" feature on, extra consecutive missed days (beyond the free
+ * one-day grace) are covered by spending freezes from the learner's monthly
+ * balance; otherwise it is exactly the original updateStreak behavior. Any
+ * failure reading or spending freezes (e.g. the migration isn't applied to
+ * this environment yet) degrades to the original behavior — a lesson
+ * completion must never fail over an optional protection feature.
+ */
+async function planStreakForCompletion(
+  userId: string,
+  beforeStreak: StreakState,
+  todayISO: string,
+  freezeConfig: { enabled: boolean; monthlyFreezes: number },
+): Promise<StreakPlan> {
+  if (!freezeConfig.enabled) return planStreakUpdate(beforeStreak, todayISO, 0);
+  try {
+    const period = monthPeriod(todayISO);
+    const usage = await fetchFreezeUsage(userId);
+    const available = freezesRemaining(usage, period, freezeConfig.monthlyFreezes);
+    const plan = planStreakUpdate(beforeStreak, todayISO, available);
+    if (plan.freezesUsed === 0) return plan;
+    const spent = await consumeStreakFreezes(period, plan.freezesUsed, freezeConfig.monthlyFreezes);
+    // Someone else (another tab) spent the balance first: let the streak
+    // fall back to the no-freeze outcome rather than granting a free save.
+    return spent >= plan.freezesUsed ? plan : planStreakUpdate(beforeStreak, todayISO, 0);
+  } catch (error) {
+    console.error("[progress] planStreakForCompletion: freeze handling failed", error);
+    return planStreakUpdate(beforeStreak, todayISO, 0);
+  }
+}
+
+/** Runs an optional, best-effort write on the completion path and swallows its failure — see planStreakForCompletion. */
+async function bestEffort(label: string, write: () => Promise<void>): Promise<void> {
+  try {
+    await write();
+  } catch (error) {
+    console.error(`[progress] ${label} failed`, error);
+  }
 }
 
 /**
@@ -167,17 +223,24 @@ export async function recordCompletionAction(
   // for milestone messaging only, not a correctness-critical write, so a
   // stale read in that same rare race window only means a milestone number
   // display is off by one, never a lost or duplicated reward.
-  const [beforeRows, beforeStreak, dailyGoal, completion] = await Promise.all([
+  const [beforeRows, beforeStreak, dailyGoal, completion, features] = await Promise.all([
     fetchUserProgress(userId),
     fetchStreak(userId).then((streak) => streak ?? emptyProgressState.streak),
     fetchProfileDailyGoal(userId),
     upsertLessonCompletion({ userId, lessonId, mode, accuracy: safeAccuracy }),
+    getEffectiveFeatures().catch(() => disabledFeatures(true)),
   ]);
 
   const { isFirstCompletion } = completion;
   const lessonCountBefore = beforeRows.filter((row) => row.completed_at).length;
 
-  const nextStreak = updateStreak(beforeStreak, todayISO);
+  const streakPlan = await planStreakForCompletion(
+    userId,
+    beforeStreak,
+    todayISO,
+    features.streakCalendar,
+  );
+  const nextStreak = streakPlan.streak;
   const streakJustMilestoned =
     nextStreak.currentStreak !== beforeStreak.currentStreak &&
     getStreakMilestone(nextStreak.currentStreak) !== null;
@@ -217,6 +280,9 @@ export async function recordCompletionAction(
     rewards.push({ type: "lessonCountMilestone", count: lessonCountAfter });
   if (dailyGoalJustMet) rewards.push({ type: "dailyGoalReached" });
   if (streakGraceDayUsed) rewards.push({ type: "streakGraceDay" });
+  if (streakPlan.freezesUsed > 0) {
+    rewards.push({ type: "streakFreezeUsed", count: streakPlan.freezesUsed });
+  }
 
   await Promise.all([
     upsertStreak(userId, {
@@ -225,6 +291,11 @@ export async function recordCompletionAction(
       lastActiveDate: nextStreak.lastActiveDate as string,
     }),
     insertLessonAttempt({ userId, lessonId, mode, accuracy: safeAccuracy, wpm: safeWpm }),
+    // The per-day activity log behind the streak calendar — always recorded
+    // (cheap, and it means history exists the day the feature is switched
+    // on), never at the cost of the completion itself.
+    bestEffort("recordActivityDay", () => recordActivityDay(todayISO, sentenceCount, xpEarned)),
+    bestEffort("recordStreakBridgeDays", () => recordStreakBridgeDays(streakPlan.bridges)),
   ]);
 
   const progress = await fetchProgressAction(todayISO);

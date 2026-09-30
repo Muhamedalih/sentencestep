@@ -305,6 +305,44 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;
         Relationships: [];
       };
+      activity_days: {
+        Row: {
+          user_id: string;
+          day: string;
+          sentences: number;
+          xp: number;
+          /** 'active' = practiced; 'grace'/'frozen' = a missed day the streak was carried across (see src/lib/features/streak-freeze.ts). */
+          kind: "active" | "grace" | "frozen";
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          day: string;
+          sentences?: number;
+          xp?: number;
+          kind?: "active" | "grace" | "frozen";
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["activity_days"]["Insert"]>;
+        Relationships: [];
+      };
+      streak_freeze_usage: {
+        Row: {
+          user_id: string;
+          /** 'YYYY-MM' the `used` count applies to. */
+          period: string;
+          used: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          period: string;
+          used?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["streak_freeze_usage"]["Insert"]>;
+        Relationships: [];
+      };
       feature_settings: {
         Row: {
           id: number;
@@ -1213,6 +1251,18 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      record_activity_day: {
+        Args: { p_day: string; p_sentences: number; p_xp: number };
+        Returns: undefined;
+      };
+      record_streak_bridge_days: {
+        Args: { p_days: string[]; p_kinds: string[] };
+        Returns: undefined;
+      };
+      consume_streak_freezes: {
+        Args: { p_period: string; p_count: number; p_monthly: number };
+        Returns: number;
+      };
       record_mistake: {
         Args: { p_word: string; p_sentence_id: string | null; p_error_indexes?: number[] | null };
         Returns: undefined;

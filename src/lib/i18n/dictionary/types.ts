@@ -878,4 +878,24 @@ export interface Dictionary {
     summaryBody: string;
     mistakesSaved: string;
   };
+  /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
+  streakCalendar: {
+    heading: string;
+    freezesLeft: string;
+    freezesLeftOne: string;
+    noFreezes: string;
+    freezeUsedNote: string;
+    showMonth: string;
+    hideMonth: string;
+    previousMonth: string;
+    nextMonth: string;
+    legendActive: string;
+    legendGrace: string;
+    legendFrozen: string;
+    dayPracticed: string;
+    dayFrozen: string;
+    dayGrace: string;
+    dayMissed: string;
+    loadError: string;
+  };
 }
