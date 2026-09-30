@@ -1,5 +1,6 @@
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { WORD_LIST_VOICE_ID } from "@/lib/voice/content-provider-map";
 
 export interface VoiceRow {
   id: string;
@@ -64,14 +65,14 @@ export async function getDefaultVoiceId(): Promise<string | null> {
  * Conversation's own setting) and from getDefaultNormalLessonVoiceId's
  * (Normal lessons' own setting). Must be an Edge-TTS voice (reassigned from
  * Cartesia 2026-09-10) — see content-provider-map.ts and
- * word-list-voice-generation.ts. Falls back to a fixed Edge-TTS voice id
+ * word-list-voice-generation.ts. Falls back to Emma (WORD_LIST_VOICE_ID)
  * when unset purely so a fresh deployment has *some* value to read before
  * an admin has picked one explicitly; word-list-voice-generation.ts still
  * rejects it (and reports an error) if it doesn't resolve to an actual
  * voice from the currently-assigned provider.
  */
 export async function getDefaultPronunciationVoiceId(): Promise<string> {
-  const FALLBACK_VOICE_ID = "edge-tts-en-us-aria";
+  const FALLBACK_VOICE_ID = WORD_LIST_VOICE_ID;
   if (!isSupabaseConfigured()) return FALLBACK_VOICE_ID;
 
   const supabase = createPublicClient();

@@ -54,7 +54,7 @@ const WORD_LIST_MODEL = "edge-tts";
  * touching or invalidating the existing Cartesia-voiced rows still sitting
  * in voice_audio_cache.
  */
-const WORD_LIST_GENERATION_VERSION = "word-list:v2";
+export const WORD_LIST_GENERATION_VERSION = "word-list:v2";
 
 const NEUTRAL_VOICE_SETTINGS = {
   stability: 0.5,

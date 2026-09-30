@@ -49,6 +49,17 @@ export const NORMAL_LESSON_PROVIDER = "cartesia";
 export const WORD_LIST_PROVIDER = "edge-tts";
 
 /**
+ * The one voice Word Lists are meant to be spoken in: the Edge-TTS "Emma"
+ * voice (en-US-EmmaNeural — see edge-tts-catalog.ts). Word Lists' voice is
+ * otherwise data, not code (tts_settings.default_pronunciation_voice_id,
+ * optionally overridden per group by word_groups.voice_id), so this is both
+ * the fallback getDefaultPronunciationVoiceId returns when that setting is
+ * unset and the value 20250322000000_word_lists_emma_voice.sql writes into
+ * the database — they must stay in sync.
+ */
+export const WORD_LIST_VOICE_ID = "edge-tts-en-us-emma";
+
+/**
  * Cartesia's own model id — never elevenlabs_settings.model. That column
  * holds an ElevenLabs model id (default "eleven_v3", see
  * 20250203000000_elevenlabs_voice_engine.sql) and is Stories/Books' own
