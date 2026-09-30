@@ -41,11 +41,10 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { buildFromMemoryItems } from "@/lib/features/from-memory";
 import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
-import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
-import { tokenize } from "@/lib/typing";
 import { cn } from "@/lib/utils";
+import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
 const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
@@ -218,7 +217,7 @@ export function LessonSession({
   const errorCountRef = useRef(0);
   const wpmSamplesRef = useRef<number[]>([]);
   const hasTrackedAudioRef = useRef(false);
-  const { prefetchPronunciation } = usePronunciationSettings();
+  const { prefetchPronunciation, setWordWindow } = usePronunciationSettings();
   const { t, locale } = useLocale();
 
   // From-memory (admin feature): an optional round offered on the completion
@@ -297,26 +296,8 @@ export function LessonSession({
   // skips the resolve round trip entirely, same as a same-sentence replay
   // already did. Deliberately only ONE sentence ahead, never the whole
   // lesson — see prefetchPronunciation's own doc comment for why bulk
-  // pre-resolving was avoided.
-  //
-  // Extended (root-cause fix for "word clicks are still noticeably
-  // delayed"): this gave the NEXT sentence's own narration a full
-  // typing-the-current-sentence head start, but never did the same for that
-  // next sentence's individual WORDS — those only ever started resolving
-  // once TypingSentence itself mounted for that sentence (see its own
-  // word-prefetch effect, staggered 600ms+ after mount). A learner who reads
-  // ahead and clicks a word within the first second or two of a new sentence
-  // was still hitting a cold resolve every time, sentence after sentence,
-  // which is what made the delay read as "nothing changed" even after the
-  // contention fix in TypingSentence. Prefetching this sentence's words too,
-  // right alongside its narration, gives them the exact same multi-second
-  // lead time — by the time the learner actually reaches this sentence, most
-  // clicks land on an already-cached clip instead of a fresh round trip.
-  // Only for Normal/Stories (mirrors TypingSentence's own enableWordClick
-  // scope — Conversation never enables word click at all), and staggered the
-  // same way TypingSentence's own effect is, so this sentence's words don't
-  // burst all at once and compete with the CURRENT sentence's own
-  // still-in-flight prefetches for the browser's connection limit.
+  // pre-resolving was avoided. (The sentence's individual WORDS are handled by
+  // the word-audio window below, not here.)
   useEffect(() => {
     const nextSentence = unit.sentences[sentenceIndex + 1];
     if (!nextSentence) return;
@@ -328,29 +309,52 @@ export function LessonSession({
       contentId: nextSentence.id,
       voiceId,
     });
+  }, [sentenceIndex, unit.sentences, resolvedVoiceId, speakerVoiceMap, prefetchPronunciation]);
 
+  // Word audio (the click-a-word pronunciations in the typing view and the
+  // blanks of Dictation), loaded ahead of the learner as a rolling window: the
+  // sentence they're on first, the next one right behind it while they type,
+  // and — when they get there — that one promoted and the one after it started.
+  // See WordAudioPreloader for how a sentence is loaded (one batched request,
+  // then the clips into memory) and why this replaced a Server Action per word:
+  // those ran one at a time and every word click queued behind them all, which
+  // is what made the first sentence's words arrive seconds late. Normal/Stories
+  // only — Conversation has no per-word audio at all.
+  const firstSentenceId = unit.sentences[0]?.id;
+  useEffect(() => {
     if (unit.mode !== "normal" && unit.mode !== "stories") return;
-    const words = Array.from(new Set(tokenize(nextSentence.en).filter(isTrackableWord)));
-    const timers = words.map((word, index) =>
-      setTimeout(
-        () => {
-          prefetchPronunciation({
-            contentType: "sentence_word",
-            contentId: `${nextSentence.id}::${normalizeMistakeWord(word)}`,
-            voiceId,
-          });
-        },
-        600 + index * 150,
-      ),
-    );
-    return () => timers.forEach(clearTimeout);
+    if (!resolvedVoiceId) return;
+    const requests: WordAudioWindowRequest[] = [];
+    const current = unit.sentences[sentenceIndex];
+    const next = unit.sentences[sentenceIndex + 1];
+    if (current) {
+      requests.push({
+        sentenceId: current.id,
+        text: current.en,
+        voiceId: resolvedVoiceId,
+        priority: "now",
+        // The page already looked the first sentence's clips up while
+        // rendering — no need to ask again for those.
+        knownUrls: current.id === firstSentenceId ? firstSentenceWordAudio : undefined,
+      });
+    }
+    if (next) {
+      requests.push({
+        sentenceId: next.id,
+        text: next.en,
+        voiceId: resolvedVoiceId,
+        priority: "next",
+      });
+    }
+    setWordWindow(requests);
   }, [
-    sentenceIndex,
-    unit.sentences,
     unit.mode,
+    unit.sentences,
+    sentenceIndex,
     resolvedVoiceId,
-    speakerVoiceMap,
-    prefetchPronunciation,
+    firstSentenceId,
+    firstSentenceWordAudio,
+    setWordWindow,
   ]);
 
   useEffect(() => {

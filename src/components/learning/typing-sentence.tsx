@@ -23,7 +23,7 @@ import {
   normalizeMistakeWord,
   savableWordIndices,
 } from "@/lib/mistakes/normalize";
-import { getCurrentWordIndex, locateWordAtCharIndex, tokenize } from "@/lib/typing";
+import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import type { LearningMode, Sentence } from "@/types/content";
 
@@ -205,7 +205,9 @@ export function TypingSentence({
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
   const wordClip = useAudioClip();
-  const { resolveAudio, prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
+  const { resolveSentenceWord, registerResolvedAudio } = usePronunciationSettings();
+  // Only the latest click plays: a slow earlier word must not start after a later, faster one.
+  const wordRequestRef = useRef(0);
 
   // Feeds LessonPage's server-side pre-resolution (see wordAudioUrls' own
   // doc comment) into the SAME shared cache resolveAudio itself checks
@@ -223,11 +225,14 @@ export function TypingSentence({
   /**
    * A word click's real voice, same rule as PronunciationButton's own
    * `kokoroVoiceId` prop (sentenceVoiceId, computed above) — never a
-   * different provider/voice than the sentence it's part of. A cache hit, or
-   * a free Edge-TTS on-demand synthesis when the sentence itself is
-   * Edge-TTS-sourced, plays the resolved clip directly; a paid-provider
-   * sentence voice (Cartesia for Normal lessons, ElevenLabs for Stories)
-   * instead gets a gender-matched free Edge-TTS substitute for just this one
+   * different provider/voice than the sentence it's part of. Normally a
+   * synchronous cache hit, already downloaded into memory: LessonSession's
+   * word-audio window loads this sentence's words the moment the lesson opens
+   * and the next sentence's while this one is being typed (see
+   * WordAudioPreloader). Only a click that beats that preload joins it — moved
+   * to the front of the queue — instead of starting its own request. A
+   * paid-provider sentence voice (Cartesia for Normal lessons, ElevenLabs for
+   * Stories) gets a gender-matched free Edge-TTS substitute for just this one
    * word (see resolvePronunciationAudioAction's own doc comment) — the
    * sentence's own paid voice is never touched, only this isolated word is
    * spoken by a different (free) voice.
@@ -238,66 +243,19 @@ export function TypingSentence({
    * testing (see git history on this function for that whole arc) — kept as
    * standalone, unused infrastructure (word-timing.ts, the
    * sentence_word_timings table) rather than deleted, in case it's revisited
-   * later, but this call site is back to exactly its pre-2026-09-11
-   * behavior: no resolveWordTimings call, no slice-play.
+   * later, but this call site never calls resolveWordTimings or slice-plays.
    */
   async function handleWordClick(word: string) {
     if (!sentenceVoiceId || !isTrackableWord(word)) return;
-    const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
-    const url = await resolveAudio({
-      contentType: "sentence_word",
-      contentId,
+    const request = ++wordRequestRef.current;
+    const url = await resolveSentenceWord({
+      sentenceId: sentence.id,
+      text: sentence.en,
       voiceId: sentenceVoiceId,
+      key: normalizeMistakeWord(word),
     });
-    if (url) wordClip.play(url);
+    if (url && request === wordRequestRef.current) wordClip.play(url);
   }
-
-  // Warms every trackable word's clip in the background the moment this
-  // sentence mounts, the same prefetchPronunciation mechanism/dedup
-  // PronunciationButton's own next-sentence prefetch uses — a first-time
-  // isolated-word synthesis measured ~3-4s (a real Edge-TTS round trip plus
-  // a Storage upload), which felt like a hang when it only started the
-  // instant a learner actually clicked. Firing it here instead means most
-  // clicks land well after the learner has started reading/typing the
-  // sentence, by which point the word is very likely already cached — a
-  // near-instant play instead of a multi-second wait. Only for
-  // Normal/Stories (enableWordClick's own scope — Conversation never
-  // enables word click at all), and only once real content/voice exist.
-  //
-  // Staggered and delayed (root-cause fix, matching
-  // BookSentenceReader's identical effect — see that component's own doc
-  // comment): firing every word's prefetch (a server action plus a
-  // follow-up warm fetch each) all at once, right as this sentence becomes
-  // active, competed for the browser's own per-origin connection limit with
-  // THIS SAME sentence's own narration-audio fetch (the autoPlay
-  // PronunciationButton above) — the measured cause of the reported "word
-  // click takes a long time to play" delay: an early click's own resolve/
-  // fetch queued behind every other word's prefetch instead of running
-  // promptly. Giving the narration a 600ms head start, then trickling word
-  // prefetches in one at a time, costs nothing (none of this is needed
-  // immediately — it only pays off on a later word click) and stops them
-  // from starving the audio that actually matters at this moment. Cleared on
-  // unmount/sentence change so a sentence the learner already left behind
-  // never keeps competing for bandwidth the newly-active sentence needs.
-  useEffect(() => {
-    if (mode !== "normal" && mode !== "stories") return;
-    if (!sentenceVoiceId) return;
-    const words = Array.from(new Set(tokenize(sentence.en).filter(isTrackableWord)));
-    const timers = words.map((word, index) =>
-      setTimeout(
-        () => {
-          prefetchPronunciation({
-            contentType: "sentence_word",
-            contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
-            voiceId: sentenceVoiceId,
-          });
-        },
-        600 + index * 150,
-      ),
-    );
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice actually changes, not on every render
-  }, [sentence.id, sentenceVoiceId, mode]);
 
   const currentWordIndex = getCurrentWordIndex(sentence.en, engine.typed.length);
   const currentWord = sentence.supportWordTranslations?.[currentWordIndex];
