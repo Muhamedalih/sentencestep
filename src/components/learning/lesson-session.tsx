@@ -610,6 +610,16 @@ export function LessonSession({
                 allowReveal={features.fromMemory.allowReveal}
                 showFirstLetters={features.fromMemory.showFirstLetters}
                 onMistakes={previewMode ? undefined : handleSentenceMistakes}
+                onFinished={
+                  previewMode
+                    ? undefined
+                    : () => {
+                        void recordFeatureUsageAction({ fromMemoryRounds: 1 }).catch(
+                          (error: unknown) =>
+                            console.error("[features] usage report failed", error),
+                        );
+                      }
+                }
                 onExit={() => setIsPracticingFromMemory(false)}
               />
             </div>

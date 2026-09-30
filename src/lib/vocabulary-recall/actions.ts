@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
-import { recordQuestEvents } from "@/lib/features/quest-service";
+import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import {
@@ -125,7 +125,7 @@ export async function markVocabularyRecallCompletedAction(
   await recordVocabularyReview(word, hadErrors);
   if (!hadErrors) {
     after(async () => {
-      await recordQuestEvents([{ type: "masterWords", amount: 1 }]);
+      await recordQuestEventsAndBadges(userId, [{ type: "masterWords", amount: 1 }]);
     });
   }
   revalidatePath("/learn");

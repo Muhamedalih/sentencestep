@@ -1,3 +1,4 @@
+import { awardQuestDayBadgeIfDone } from "@/lib/features/badge-service";
 import {
   addQuestProgress,
   fetchDailyQuests,
@@ -97,5 +98,21 @@ export async function recordQuestEvents(
   } catch (error) {
     console.error("[quests] recordQuestEvents failed", error);
   }
+  return completed;
+}
+
+/**
+ * recordQuestEvents plus the "all daily quests in one day" badge: for the
+ * places that credit quest progress outside a lesson completion (word
+ * reviews, feature-usage reports), where nothing else is watching for the
+ * day's last quest to finish. Both halves are best-effort.
+ */
+export async function recordQuestEventsAndBadges(
+  userId: string,
+  events: { type: QuestType; amount: number }[],
+  dateISO?: string,
+): Promise<CompletedQuest[]> {
+  const completed = await recordQuestEvents(events, dateISO);
+  if (completed.length > 0) await awardQuestDayBadgeIfDone(userId);
   return completed;
 }

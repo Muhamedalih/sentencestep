@@ -1,3 +1,5 @@
+import type { BadgeId } from "@/lib/features/catalog";
+
 /**
  * Shape of every UI-chrome string this app can show, keyed by section. The
  * English strings already live in the components as literals (this app's
@@ -914,5 +916,22 @@ export interface Dictionary {
     guestHeading: string;
     guestBody: string;
     guestCta: string;
+  };
+  /** Achievements page + badge celebration (src/app/(app)/learn/(dashboard)/achievements). */
+  badges: {
+    heading: string;
+    subtitle: string;
+    earnedCount: string;
+    earnedOn: string;
+    locked: string;
+    newTag: string;
+    progress: string;
+    rewardEarned: string;
+    rewardBulk: string;
+    navLabel: string;
+    signInHeading: string;
+    signInBody: string;
+    emptyState: string;
+    items: Record<BadgeId, { name: string; description: string }>;
   };
 }

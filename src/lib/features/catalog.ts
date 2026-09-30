@@ -97,7 +97,10 @@ export const BADGE_DEFS = [
   { id: "questDay", group: "quests", metric: "event", threshold: 1 },
 ] as const satisfies readonly BadgeDef[];
 
-export type BadgeId = (typeof BADGE_DEFS)[number]["id"];
+/** A catalog entry with its literal id type preserved (BadgeDef.id is just `string`), so `t.badges.items[badge.id]` type-checks. */
+export type BadgeDefinition = (typeof BADGE_DEFS)[number];
+
+export type BadgeId = BadgeDefinition["id"];
 
 export const BADGE_IDS: readonly BadgeId[] = BADGE_DEFS.map((badge) => badge.id);
 

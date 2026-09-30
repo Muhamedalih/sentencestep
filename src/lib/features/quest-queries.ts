@@ -97,3 +97,39 @@ export async function addQuestProgress(
   }
   return results;
 }
+
+/**
+ * The learner's most recent quest day within a day of UTC "today" (every real
+ * timezone falls inside that window), for checks that — like the quest
+ * function itself — don't know the learner's local date.
+ */
+export async function fetchLatestQuestDay(userId: string): Promise<DailyQuest[]> {
+  const supabase = await createClient();
+  const now = Date.now();
+  const from = new Date(now - 36 * 3600 * 1000).toISOString().slice(0, 10);
+  const to = new Date(now + 36 * 3600 * 1000).toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("daily_quests")
+    .select("quest_date, slot, quest_type, target, xp, progress, completed_at")
+    .eq("user_id", userId)
+    .gte("quest_date", from)
+    .lte("quest_date", to)
+    .order("quest_date", { ascending: false })
+    .order("slot", { ascending: true });
+  if (error) throw error;
+  const rows = data ?? [];
+  const latest = rows[0]?.quest_date;
+  const quests: DailyQuest[] = [];
+  for (const row of rows) {
+    if (row.quest_date !== latest || !isQuestType(row.quest_type)) continue;
+    quests.push({
+      slot: row.slot,
+      type: row.quest_type,
+      target: row.target,
+      progress: row.progress,
+      xp: row.xp,
+      completed: row.completed_at !== null,
+    });
+  }
+  return quests;
+}

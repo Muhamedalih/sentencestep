@@ -31,6 +31,8 @@ import {
 } from "@/lib/progress/learner-level";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
+import { BadgeMedal } from "@/components/app/badge-medal";
+import { BADGE_DEFS } from "@/lib/features/catalog";
 import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
@@ -153,6 +155,10 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
       return t.quests.rewardCompleted
         .replace("{quest}", questTitle(t, reward.questType))
         .replace("{xp}", String(reward.xp));
+    case "badgeEarned":
+      return t.badges.rewardEarned.replace("{badge}", t.badges.items[reward.badgeId].name);
+    case "badgesBulk":
+      return t.badges.rewardBulk.replace("{n}", String(reward.count));
   }
 }
 
@@ -254,6 +260,8 @@ export function LessonCompletion({
   const { t, locale, dir } = useLocale();
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
+  // Read early: a new badge is one of the things that turns the celebration on.
+  const badgeRewards = rewards.filter((reward) => reward.type === "badgeEarned");
   const accuracyPercent = Math.round(accuracy * 100);
   // Non-null only for a stand-out result — the same >=95% cutoff the
   // accuracyExcellent/accuracyGood subtitle copy above already switches on,
@@ -290,7 +298,8 @@ export function LessonCompletion({
   // actually worth celebrating (a stand-out accuracy or a level crossed by
   // this completion), never every ordinary completion, and never at all
   // for a viewer who prefers reduced motion.
-  const showCelebration = !reducedMotion && (accuracyPercent >= 95 || leveledUp);
+  const showCelebration =
+    !reducedMotion && (accuracyPercent >= 95 || leveledUp || badgeRewards.length > 0);
   const celebrationGlowColor = accuracyTierColor ?? theme.colorAccent;
   // Real confetti isn't monochrome — alternates between the screen's brand
   // color and TIER_EXCELLENT (the same green a >=95% result already colors
@@ -365,8 +374,14 @@ export function LessonCompletion({
   // dictionary types).
   const graceReward = rewards.find((reward) => reward.type === "streakGraceDay");
   const freezeReward = rewards.find((reward) => reward.type === "streakFreezeUsed");
+  // Badges get their own medal cards below (or, for a flood of them, the one
+  // bulk summary line) rather than a place in the joined reward sentence.
+  const bulkBadgeReward = rewards.find((reward) => reward.type === "badgesBulk");
   const celebratedRewards = rewards.filter(
-    (reward) => reward.type !== "streakGraceDay" && reward.type !== "streakFreezeUsed",
+    (reward) =>
+      reward.type !== "streakGraceDay" &&
+      reward.type !== "streakFreezeUsed" &&
+      reward.type !== "badgeEarned",
   );
 
   // Stat cells shown inside the stats/XP panel — accuracy has its own quiet
@@ -716,6 +731,41 @@ export function LessonCompletion({
               className="mt-3 text-center font-medium"
             >
               {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
+            </p>
+          )}
+          {badgeRewards.length > 0 && (
+            <ul className="mt-4 flex flex-wrap justify-center gap-3">
+              {badgeRewards.map((reward) => {
+                const group = BADGE_DEFS.find((badge) => badge.id === reward.badgeId)?.group;
+                return (
+                  <li
+                    key={reward.badgeId}
+                    style={{ borderColor: theme.colorBorder, color: styles.textPrimary }}
+                    className="flex items-center gap-3 rounded-2xl border px-4 py-2.5"
+                  >
+                    {group && <BadgeMedal group={group} earned className="size-11" />}
+                    <span className="text-start">
+                      <span
+                        style={{ color: theme.colorAccent }}
+                        className="block text-xs font-semibold tracking-wide uppercase"
+                      >
+                        {t.badges.newTag}
+                      </span>
+                      <span className="block text-sm font-semibold">
+                        {t.badges.items[reward.badgeId].name}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {bulkBadgeReward && (
+            <p
+              style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
+              className="mt-3 text-center font-medium"
+            >
+              {formatReward(bulkBadgeReward, t)}
             </p>
           )}
         </motion.div>

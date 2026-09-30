@@ -1,6 +1,7 @@
 "use server";
 
-import { recordQuestEvents } from "@/lib/features/quest-service";
+import { awardEventBadge } from "@/lib/features/badge-service";
+import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import type { CompletedQuest } from "@/lib/features/quest-service";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,6 +11,8 @@ const MAX_REPORTED_SENTENCES = 100;
 export interface FeatureUsage {
   /** Sentences graded through Dictation in the lesson that just finished. */
   dictationSentences?: number;
+  /** From-memory rounds finished (0 or 1 per report) — earns the "first from-memory round" badge. */
+  fromMemoryRounds?: number;
 }
 
 function clampCount(value: unknown): number {
@@ -30,13 +33,18 @@ export async function recordFeatureUsageAction(
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
-    if (!data?.claims.sub) return { completedQuests: [] };
+    const userId = data?.claims.sub;
+    if (!userId) return { completedQuests: [] };
 
     const dictationSentences = clampCount(usage.dictationSentences);
     const completedQuests =
       dictationSentences > 0
-        ? await recordQuestEvents([{ type: "dictation", amount: dictationSentences }])
+        ? await recordQuestEventsAndBadges(userId, [
+            { type: "dictation", amount: dictationSentences },
+          ])
         : [];
+    if (dictationSentences > 0) await awardEventBadge("firstDictation");
+    if (clampCount(usage.fromMemoryRounds) > 0) await awardEventBadge("firstFromMemory");
     return { completedQuests };
   } catch (error) {
     console.error("[features] recordFeatureUsageAction failed", error);

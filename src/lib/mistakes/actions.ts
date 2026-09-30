@@ -5,7 +5,7 @@ import { after } from "next/server";
 
 import { getAllLessons } from "@/lib/content";
 import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
-import { recordQuestEvents } from "@/lib/features/quest-service";
+import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
 import {
   getContentTranslations,
@@ -44,9 +44,9 @@ async function getAuthenticatedUserId(): Promise<string | null> {
  * effects) so a learner's next word never waits on it, and swallows its own
  * failures (recordQuestEvents is best-effort by contract).
  */
-function creditWordMastery(): void {
+function creditWordMastery(userId: string): void {
   after(async () => {
-    await recordQuestEvents([{ type: "masterWords", amount: 1 }]);
+    await recordQuestEventsAndBadges(userId, [{ type: "masterWords", amount: 1 }]);
   });
 }
 
@@ -113,7 +113,7 @@ export async function markMistakeCorrectedAction(word: string): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await markMistakeCorrected(userId, normalizeMistakeWord(word));
-  creditWordMastery();
+  creditWordMastery(userId);
   // The Word Lists dashboard card and the review queue page are both
   // server-rendered reads of this same table (see fetchWeakWordsAction) —
   // without this, a learner who corrects a word from somewhere other than
@@ -138,7 +138,7 @@ export async function markReviewCompletedAction(word: string, hadErrors: boolean
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await recordMistakeReview(normalizeMistakeWord(word), hadErrors);
-  if (!hadErrors) creditWordMastery();
+  if (!hadErrors) creditWordMastery(userId);
   // Same reasoning as markMistakeCorrectedAction's identical pair of calls.
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");
@@ -156,7 +156,7 @@ export async function masterMistakeWordAction(word: string): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await masterMistakeWord(userId, normalizeMistakeWord(word));
-  creditWordMastery();
+  creditWordMastery(userId);
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");
 }

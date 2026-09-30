@@ -371,6 +371,22 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["daily_quests"]["Insert"]>;
         Relationships: [];
       };
+      user_badges: {
+        Row: {
+          user_id: string;
+          badge_id: string;
+          earned_at: string;
+          seen_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+          earned_at?: string;
+          seen_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["user_badges"]["Insert"]>;
+        Relationships: [];
+      };
       feature_settings: {
         Row: {
           id: number;
@@ -1288,6 +1304,26 @@ export interface Database {
           out_progress: number;
           out_target: number;
           out_completed_now: boolean;
+        }[];
+      };
+      award_badges: {
+        Args: { p_ids: string[] };
+        Returns: { out_badge_id: string }[];
+      };
+      mark_badges_seen: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+      badge_metrics: {
+        Args: Record<string, never>;
+        Returns: {
+          out_longest_streak: number;
+          out_total_sentences: number;
+          out_lesson_count: number;
+          out_perfect_lessons: number;
+          out_max_wpm: number;
+          out_xp: number;
+          out_fixed_words: number;
         }[];
       };
       record_activity_day: {

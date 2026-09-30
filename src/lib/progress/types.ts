@@ -1,4 +1,4 @@
-import type { QuestType } from "@/lib/features/catalog";
+import type { BadgeId, QuestType } from "@/lib/features/catalog";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -20,7 +20,11 @@ export type RewardEvent =
   /** One or more streak freezes were spent to carry the streak across extra missed days (see src/lib/features/streak-freeze.ts) — like streakGraceDay, shown as a quiet note, not a celebration. */
   | { type: "streakFreezeUsed"; count: number }
   /** A daily quest this completion finished (its XP is already in xpEarned). */
-  | { type: "questCompleted"; questType: QuestType; xp: number };
+  | { type: "questCompleted"; questType: QuestType; xp: number }
+  /** A badge this completion earned (celebrated on the completion screen). */
+  | { type: "badgeEarned"; badgeId: BadgeId }
+  /** Many badges earned at once (e.g. the first evaluation after the feature turns on, for a learner with a long history) — one summary line instead of a card per badge. */
+  | { type: "badgesBulk"; count: number };
 
 export interface LessonCompletion {
   lessonId: string;

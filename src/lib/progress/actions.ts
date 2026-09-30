@@ -45,6 +45,8 @@ import {
 } from "@/lib/features/activity-queries";
 import { disabledFeatures } from "@/lib/features/config";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { awardQuestDayBadgeIfDone, evaluateAndAwardBadges } from "@/lib/features/badge-service";
+import { summarizeNewBadges } from "@/lib/features/badges";
 import { dealDailyQuests, recordQuestEvents } from "@/lib/features/quest-service";
 import { questEventsForLesson } from "@/lib/features/quests";
 import { freezesRemaining, monthPeriod, planStreakUpdate } from "@/lib/features/streak-freeze";
@@ -319,6 +321,18 @@ export async function recordCompletionAction(
     bestEffort("recordActivityDay", () => recordActivityDay(todayISO, sentenceCount, xpEarned)),
     bestEffort("recordStreakBridgeDays", () => recordStreakBridgeDays(streakPlan.bridges)),
   ]);
+
+  // Badges (admin feature): after everything above has landed — streak,
+  // activity day, XP, quest XP — so the stats they're measured against are
+  // current. Retroactive by construction (see evaluateAndAwardBadges), so
+  // many can arrive at once; those collapse into one summary line.
+  if (features.badges.enabled) {
+    const stat = await evaluateAndAwardBadges(userId, features);
+    const questDay = completedQuests.length > 0 ? await awardQuestDayBadgeIfDone(userId) : [];
+    const { individual, bulkCount } = summarizeNewBadges([...stat, ...questDay]);
+    for (const badgeId of individual) rewards.push({ type: "badgeEarned", badgeId });
+    if (bulkCount > 0) rewards.push({ type: "badgesBulk", count: bulkCount });
+  }
 
   const progress = await fetchProgressAction(todayISO);
   progress.rewards = rewards;

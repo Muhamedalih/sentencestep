@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Menu, X } from "lucide-react";
+import { Bookmark, Flame, Menu, Trophy, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,7 @@ export function AppHeader({
   initialProgress?: ProgressState;
 }) {
   const { t } = useLocale();
+  const features = useFeatures();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -83,6 +85,17 @@ export function AppHeader({
   const utilityCluster = user ? (
     <>
       <div className="flex items-center gap-1">
+        {features.badges.enabled && (
+          <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
+            <Link
+              href="/learn/achievements"
+              aria-label={t.badges.navLabel}
+              title={t.badges.navLabel}
+            >
+              <Trophy className="text-muted-foreground size-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
         <div className="relative">
           <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
             <Link href="/learn/saved" aria-label={t.nav.mySaves} title={t.nav.mySaves}>
