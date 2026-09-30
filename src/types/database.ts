@@ -305,6 +305,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;
         Relationships: [];
       };
+      feature_settings: {
+        Row: {
+          id: number;
+          /** The whole feature-availability document — validated by sanitizeFeatureConfig (src/lib/features/config.ts), never trusted as-is. */
+          config: unknown;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          config?: unknown;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["feature_settings"]["Insert"]>;
+        Relationships: [];
+      };
       analytics_events: {
         Row: {
           id: string;

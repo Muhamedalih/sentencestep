@@ -427,6 +427,7 @@ function isLibraryRoute(pathname: string): boolean {
  * never a bare substring match, for the same reason isAdminRoute isn't one.
  */
 const ADMIN_ONLY_SEGMENTS = [
+  "features",
   "color-settings",
   "voice",
   "typing-sound",

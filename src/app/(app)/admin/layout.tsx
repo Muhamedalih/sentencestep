@@ -116,6 +116,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                     Free access
                   </Link>
                   <Link
+                    href="/admin/features"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Features
+                  </Link>
+                  <Link
                     href="/admin/color-settings"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >

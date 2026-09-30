@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { AuthUserProvider } from "@/components/providers/auth-user-provider";
+import { FeatureProvider } from "@/components/providers/feature-provider";
 import { LessonCompletionThemeProvider } from "@/components/providers/lesson-completion-theme-provider";
 import { LessonFontSettingsProvider } from "@/components/providers/lesson-font-settings-provider";
 import { PronunciationSettingsProvider } from "@/components/providers/pronunciation-settings-provider";
@@ -11,6 +12,7 @@ import { getLessonColorSettings } from "@/lib/admin/lesson-color-settings-querie
 import { getLessonCompletionTheme } from "@/lib/admin/lesson-completion-theme-queries";
 import { getLessonFontSettings } from "@/lib/admin/lesson-font-queries";
 import { getTypingSoundSettings } from "@/lib/admin/typing-sound-queries";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -32,6 +34,7 @@ export default async function LearnLayout({ children }: { children: ReactNode })
     lessonCompletionTheme,
     lessonColorSettings,
     lessonFontSettings,
+    features,
   ] = await Promise.all([
     getCurrentUser(),
     getVoiceSettings(),
@@ -39,6 +42,7 @@ export default async function LearnLayout({ children }: { children: ReactNode })
     getLessonCompletionTheme(),
     getLessonColorSettings(),
     getLessonFontSettings(),
+    getEffectiveFeatures(),
   ]);
   const lessonColorCss = buildLessonColorCss(lessonColorSettings);
 
@@ -72,15 +76,17 @@ export default async function LearnLayout({ children }: { children: ReactNode })
           needed. */}
       {lessonColorCss && <style>{lessonColorCss}</style>}
       <AuthUserProvider userId={user?.id ?? null}>
-        <VoiceSettingsProvider settings={voiceSettings}>
-          <TypingSoundSettingsProvider settings={typingSoundSettings}>
-            <LessonFontSettingsProvider settings={lessonFontSettings}>
-              <LessonCompletionThemeProvider theme={lessonCompletionTheme}>
-                <PronunciationSettingsProvider>{children}</PronunciationSettingsProvider>
-              </LessonCompletionThemeProvider>
-            </LessonFontSettingsProvider>
-          </TypingSoundSettingsProvider>
-        </VoiceSettingsProvider>
+        <FeatureProvider features={features}>
+          <VoiceSettingsProvider settings={voiceSettings}>
+            <TypingSoundSettingsProvider settings={typingSoundSettings}>
+              <LessonFontSettingsProvider settings={lessonFontSettings}>
+                <LessonCompletionThemeProvider theme={lessonCompletionTheme}>
+                  <PronunciationSettingsProvider>{children}</PronunciationSettingsProvider>
+                </LessonCompletionThemeProvider>
+              </LessonFontSettingsProvider>
+            </TypingSoundSettingsProvider>
+          </VoiceSettingsProvider>
+        </FeatureProvider>
       </AuthUserProvider>
     </>
   );
