@@ -4,8 +4,8 @@ import test from "node:test";
 import {
   compareDictation,
   dictationAccuracy,
-  dictationBlanks,
   dictationMistakes,
+  dictationView,
   firstLetterHint,
   levenshtein,
   normalizeDictationWords,
@@ -100,8 +100,77 @@ test("normalizedIndexesToRaw: skips punctuation the normalization removed", () =
   assert.deepEqual(normalizedIndexesToRaw("don't", [0, 3]), [0, 4]);
 });
 
-test("dictationBlanks: one letter count per word, punctuation ignored", () => {
-  assert.deepEqual(dictationBlanks("I don't know."), [1, 4, 4]);
+/** Flattens a view into readable text: a typed letter, "_" for a blank slot, "+" for an extra letter, the mark itself, " " for a space. */
+function draw(view: ReturnType<typeof dictationView>): string {
+  return view.tokens
+    .map((token) =>
+      token.kind === "space"
+        ? " "
+        : token.cells
+            .map((cell) =>
+              cell.kind === "slot" ? (cell.typed ?? "_") : cell.kind === "extra" ? "+" : cell.char,
+            )
+            .join(""),
+    )
+    .join("");
+}
+
+test("dictationView: a blank per letter, punctuation and spaces kept where they are printed", () => {
+  const view = dictationView("I don't know.", "");
+  assert.equal(draw(view), "_ ___'_ ____.");
+  assert.deepEqual(view.extraWords, []);
+  assert.equal(view.typingWord, false);
+  assert.deepEqual(view.cursor, { word: 0, letter: 0 });
+});
+
+test("dictationView: typed letters fill the blanks of their word and the cursor follows", () => {
+  const view = dictationView("I don't know.", "I do");
+  assert.equal(draw(view), "I do_'_ ____.");
+  assert.deepEqual(view.cursor, { word: 1, letter: 2 });
+  assert.equal(view.typingWord, true);
+});
+
+test("dictationView: a finished word sends the cursor to the next word; a space does too", () => {
+  assert.deepEqual(dictationView("I don't know.", "I").cursor, { word: 1, letter: 0 });
+  assert.deepEqual(dictationView("I don't know.", "I ").cursor, { word: 1, letter: 0 });
+  assert.equal(dictationView("I don't know.", "I ").typingWord, false);
+});
+
+test("dictationView: typed punctuation is ignored and the printed punctuation stays put", () => {
+  assert.equal(draw(dictationView("I don't know.", "I dont")), "I don't ____.");
+  assert.equal(draw(dictationView("I don't know.", "I don't")), "I don't ____.");
+});
+
+test("dictationView: extra letters sit right after their word, extra words after the sentence", () => {
+  assert.equal(draw(dictationView("good day.", "gooood")), "gooo++ ___.");
+  const view = dictationView("good day", "good day again now");
+  assert.deepEqual(view.extraWords, ["again", "now"]);
+  assert.deepEqual(view.cursor, { word: 1, letter: 2 });
+});
+
+test("dictationView: a hyphenated compound is two words however the learner separates them", () => {
+  const target = "A well-known plan";
+  assert.equal(draw(dictationView(target, "a well known")), "a well-known ____");
+  assert.equal(draw(dictationView(target, "a well-known")), "a well-known ____");
+  assert.equal(draw(dictationView(target, "a well-kno")), "a well-kno__ ____");
+  const tokens = dictationView(target, "").tokens.filter((token) => token.kind === "word");
+  assert.deepEqual(
+    tokens.map((token) => (token.kind === "word" ? token.firstWord : null)),
+    [0, 1, 3],
+  );
+});
+
+test("dictationView: a sentence with no letters has no cursor and an empty target just echoes", () => {
+  assert.equal(dictationView("— ...", "").cursor, null);
+  const echo = dictationView("", "hello wor");
+  assert.deepEqual(echo.extraWords, ["hello", "wor"]);
+  assert.equal(echo.typingWord, true);
+  assert.deepEqual(echo.tokens, []);
+});
+
+test("dictationView: the cursor rests on the last slot once every word is complete", () => {
+  assert.deepEqual(dictationView("good day", "good day").cursor, { word: 1, letter: 2 });
+  assert.deepEqual(dictationView("good day", "good dayyy").cursor, { word: 1, letter: 2 });
 });
 
 test("firstLetterHint: first letter then a dot per remaining letter", () => {
@@ -128,10 +197,22 @@ test("wrongLetterPositions: marks the letters that differ in both directions", (
   assert.deepEqual(wrongLetterPositions("cat", "cat"), []);
 });
 
-test("dictationAudioWords: one entry per blank, hyphenated words share their compound's key", () => {
+/** How many graded words a sentence has, according to the view (its highest word index + 1). */
+function viewWordCount(sentence: string): number {
+  let count = 0;
+  for (const token of dictationView(sentence, "").tokens) {
+    if (token.kind !== "word") continue;
+    for (const cell of token.cells)
+      if (cell.kind === "slot") count = Math.max(count, cell.word + 1);
+  }
+  return count;
+}
+
+test("dictationAudioWords: one entry per graded word, hyphenated words share their compound's key", () => {
   const sentence = "Even during meetings, I kept a well-known - habit.";
   const keys = dictationAudioWords(sentence);
-  assert.equal(keys.length, dictationBlanks(sentence).length);
+  assert.equal(keys.length, viewWordCount(sentence));
+  assert.equal(keys.length, normalizeDictationWords(sentence).length);
   assert.deepEqual(keys, [
     "even",
     "during",
@@ -145,8 +226,8 @@ test("dictationAudioWords: one entry per blank, hyphenated words share their com
   ]);
 });
 
-test("dictationAudioWords: keeps apostrophes inside a word and stays aligned with the blanks", () => {
+test("dictationAudioWords: keeps apostrophes inside a word and stays aligned with the view's words", () => {
   const sentence = "Don't worry, it's fine.";
   assert.deepEqual(dictationAudioWords(sentence), ["don't", "worry", "it's", "fine"]);
-  assert.equal(dictationAudioWords(sentence).length, dictationBlanks(sentence).length);
+  assert.equal(dictationAudioWords(sentence).length, viewWordCount(sentence));
 });

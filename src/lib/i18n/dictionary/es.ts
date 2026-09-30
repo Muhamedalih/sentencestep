@@ -751,7 +751,6 @@ export const es: Dictionary = {
     toggleTitleOff: "Activa el dictado: oculta las oraciones y escribe lo que oyes",
     listenAndType: "Escucha y escribe la oración completa",
     inputLabel: "Escribe la oración que oyes",
-    placeholder: "Escribe lo que oyes…",
     pressEnter: "Pulsa Enter para comprobar",
     pressEnterContinue: "Pulsa Enter para continuar",
     check: "Comprobar",

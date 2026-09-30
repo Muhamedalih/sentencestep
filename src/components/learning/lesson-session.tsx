@@ -155,6 +155,10 @@ export function LessonSession({
   const features = useFeatures();
   const dictationAvailable = features.dictation.sections[unit.mode];
   const [dictationOn, setDictationOn] = useState(false);
+  // The sentence Dictation was just switched on for: only that one plays the
+  // "letters dissolve into blanks" intro. Every later sentence (and a page
+  // load with the remembered preference) starts hidden, never flashing its text.
+  const [dictationIntroFor, setDictationIntroFor] = useState<string | null>(null);
   const dictationCountRef = useRef(0);
   // Personal word cards (admin feature): the save star on the current-word
   // label. Never in the admin preview — an admin previewing a lesson isn't
@@ -241,6 +245,7 @@ export function LessonSession({
   function handleToggleDictation() {
     const next = !dictationOn;
     setDictationOn(next);
+    setDictationIntroFor(next ? (unit.sentences[sentenceIndex]?.id ?? null) : null);
     // Pressing the toggle is itself the deliberate tap the mobile "tap to
     // start" gate is waiting for.
     setTapped(true);
@@ -977,6 +982,7 @@ export function LessonSession({
                             resolvedVoiceId={resolvedVoiceId}
                             speakerVoiceMap={speakerVoiceMap}
                             showWordBlanks={features.dictation.showWordBlanks}
+                            playIntro={dictationIntroFor === sentence.id}
                             wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
                             hasStarted={hasStarted}
                             onStart={() => setTapped(true)}
@@ -986,6 +992,16 @@ export function LessonSession({
                               vibrateLightly();
                             }}
                             onComplete={handleDictationComplete}
+                            storyTitle={unit.title}
+                            sentenceNumber={sentenceIndex + 1}
+                            totalSentences={total}
+                            storyTimeRemainingLabel={storyTimeRemainingLabel}
+                            onGoBack={handleGoBackSentence}
+                            onGoForward={
+                              sentenceIndex < maxSentenceIndexReached
+                                ? handleGoForwardSentence
+                                : undefined
+                            }
                           />
                         ) : (
                           <TypingSentence

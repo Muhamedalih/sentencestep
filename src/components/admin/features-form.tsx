@@ -278,7 +278,7 @@ export function FeaturesForm({ initial }: { initial: FeatureConfig }) {
               {id === "dictation" && (
                 <SwitchRow
                   label="Show word-length blanks"
-                  hint="Displays ___ for each hidden word so the learner knows how many words and letters to expect."
+                  hint="Draws a blank under every hidden letter so the learner knows how many words and letters to expect, and lets them tap a word to hear it. Off, the learner only sees what they have typed."
                   checked={config.options.dictation.showWordBlanks}
                   onChange={(checked) =>
                     update((draft) => {

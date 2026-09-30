@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -24,7 +24,6 @@ import {
   savableWordIndices,
 } from "@/lib/mistakes/normalize";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
-import { cn } from "@/lib/utils";
 import type { LearningMode, Sentence } from "@/types/content";
 
 interface TypingSentenceProps {
@@ -332,62 +331,33 @@ export function TypingSentence({
   }
 
   if (mode === "conversation") {
-    const isReplier = sentence.speaker === "B";
     return (
-      <motion.div
-        {...enterExit}
-        className={cn("flex", isReplier ? "justify-end" : "justify-start")}
-      >
-        <div
-          className={cn(
-            "flex max-w-[92%] items-start gap-3 sm:max-w-[75%]",
-            isReplier && "flex-row-reverse",
-          )}
-        >
-          <div
-            aria-hidden="true"
-            className={cn(
-              "mt-1 flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-              isReplier
-                ? "text-primary-foreground bg-[var(--lesson-speaker)]"
-                : "bg-[var(--lesson-secondary)] text-[var(--lesson-speaker)]",
-            )}
-          >
-            {sentence.speaker}
+      <ConversationBubble speaker={sentence.speaker}>
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
           </div>
-          <div
-            className={cn(
-              "border-border min-w-0 rounded-2xl border p-5 sm:p-6",
-              isReplier ? "bg-primary/5 rounded-tr-sm" : "bg-card rounded-tl-sm",
-            )}
-          >
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <PronunciationSpeedControl inputRef={engine.inputRef} />
-                <PronunciationButton
-                  text={sentence.en}
-                  audioUrl={sentence.audioUrl}
-                  onPlay={onAudioPlay}
-                  autoPlay
-                  resetKey={sentence.id}
-                  inputRef={engine.inputRef}
-                  kokoroVoiceId={sentenceVoiceId}
-                  contentType="sentence"
-                  contentId={sentence.id}
-                  variant="outline"
-                  className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
-                />
-              </div>
-            </div>
-            <p className="mt-4 text-base text-[var(--lesson-subtitle)] select-none" dir={dir}>
-              {supportText}
-            </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <PronunciationSpeedControl inputRef={engine.inputRef} />
+            <PronunciationButton
+              text={sentence.en}
+              audioUrl={sentence.audioUrl}
+              onPlay={onAudioPlay}
+              autoPlay
+              resetKey={sentence.id}
+              inputRef={engine.inputRef}
+              kokoroVoiceId={sentenceVoiceId}
+              contentType="sentence"
+              contentId={sentence.id}
+              variant="outline"
+              className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
+            />
           </div>
         </div>
-      </motion.div>
+        <p className="mt-4 text-base text-[var(--lesson-subtitle)] select-none" dir={dir}>
+          {supportText}
+        </p>
+      </ConversationBubble>
     );
   }
 
@@ -419,53 +389,14 @@ export function TypingSentence({
             }}
           />
         )}
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <StoryProgressRing current={sentenceNumber} total={totalSentences} />
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--lesson-story-label)] uppercase">
-              {t.lesson.story}
-            </span>
-            {storyTitle && (
-              <span className="text-foreground/40 min-w-0 truncate text-xs" dir="ltr">
-                · {storyTitle}
-              </span>
-            )}
-          </div>
-          <div
-            className="text-muted-foreground hidden items-center gap-1 text-xs font-medium tabular-nums sm:flex"
-            dir="ltr"
-          >
-            {onGoBack && sentenceNumber != null && sentenceNumber > 1 && (
-              <button
-                type="button"
-                onClick={onGoBack}
-                aria-label={t.lesson.previousSentenceButton}
-                title={t.lesson.previousSentenceButton}
-                className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
-              >
-                <ChevronLeft className="size-3" aria-hidden="true" />
-              </button>
-            )}
-            {sentenceNumber != null && totalSentences != null && (
-              <span>
-                {sentenceNumber} / {totalSentences}
-              </span>
-            )}
-            {onGoForward && (
-              <button
-                type="button"
-                onClick={onGoForward}
-                aria-label={t.lesson.nextSentenceButton}
-                title={t.lesson.nextSentenceButton}
-                className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
-              >
-                <ChevronRight className="size-3" aria-hidden="true" />
-              </button>
-            )}
-            {storyTimeRemainingLabel && <span className="text-foreground/30">·</span>}
-            {storyTimeRemainingLabel && <span>{storyTimeRemainingLabel}</span>}
-          </div>
-        </div>
+        <StoryHeaderRow
+          storyTitle={storyTitle}
+          sentenceNumber={sentenceNumber}
+          totalSentences={totalSentences}
+          storyTimeRemainingLabel={storyTimeRemainingLabel}
+          onGoBack={onGoBack}
+          onGoForward={onGoForward}
+        />
         <div className="mb-4 flex items-center justify-end gap-2">
           <PronunciationSpeedControl inputRef={engine.inputRef} />
           {/* Mobile only (see hasStarted's own doc comment): a guest who
@@ -647,57 +578,5 @@ export function TapToStartOverlay({
         <span className="text-muted-foreground text-sm">{body}</span>
       </div>
     </div>
-  );
-}
-
-/**
- * Small book icon ringed by this story's overall completion (current
- * sentence / total), Stories mode's header only. Falls back to a plain
- * (un-ringed) icon when either number is missing rather than guessing a
- * percentage — callers that don't pass sentenceNumber/totalSentences get
- * exactly the old bare-icon look.
- */
-function StoryProgressRing({ current, total }: { current?: number; total?: number }) {
-  if (!current || !total) {
-    return <BookOpen className="size-3.5 text-[var(--lesson-story-label)]" aria-hidden="true" />;
-  }
-
-  const size = 20;
-  const strokeWidth = 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const percent = Math.min(1, current / total);
-  const offset = circumference * (1 - percent);
-
-  return (
-    <span
-      className="relative inline-flex shrink-0 items-center justify-center"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className="text-[var(--lesson-story-label)] opacity-20"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="text-[var(--lesson-story-label)] transition-[stroke-dashoffset] duration-500 ease-out"
-        />
-      </svg>
-      <BookOpen className="absolute size-2.5 text-[var(--lesson-story-label)]" aria-hidden="true" />
-    </span>
   );
 }
