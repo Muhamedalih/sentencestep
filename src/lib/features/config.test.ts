@@ -150,6 +150,23 @@ test("sanitizeFeatureConfig: is idempotent", () => {
   assert.deepEqual(sanitizeFeatureConfig(once), once);
 });
 
+test("resolveFeatures: activity is tracked whenever the streak feature isn't Off, even in admin preview for a normal learner", () => {
+  const config = defaultFeatureConfig();
+  assert.equal(resolveFeatures(config, learner).streakCalendar.trackActivity, false);
+  config.features.streakCalendar.state = "admin";
+  const asLearner = resolveFeatures(config, learner);
+  assert.equal(asLearner.streakCalendar.enabled, false);
+  assert.equal(asLearner.streakCalendar.trackActivity, true);
+  config.features.streakCalendar.state = "on";
+  assert.equal(resolveFeatures(config, learner).streakCalendar.trackActivity, true);
+});
+
+test("resolveFeatures: badges also need the activity log (sentence-count badges are measured from it)", () => {
+  const config = defaultFeatureConfig();
+  config.features.badges.state = "on";
+  assert.equal(resolveFeatures(config, learner).streakCalendar.trackActivity, true);
+});
+
 test("disabledFeatures: nothing on, regardless of sign-in", () => {
   assert.equal(disabledFeatures(true).quests.enabled, false);
   assert.equal(disabledFeatures(false).guestTeaser, false);

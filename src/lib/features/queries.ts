@@ -58,11 +58,23 @@ export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> =
     return disabledFeatures(false);
   }
   try {
-    const [config, user, admin, premium] = await Promise.all([
-      getFeatureConfig(),
+    const config = await getFeatureConfig();
+    const entries = Object.values(config.features);
+    // The shipped default is "everything off": answer straight away instead of
+    // making every /learn page pay for role and subscription lookups whose
+    // result nothing would read.
+    if (entries.every((entry) => entry.state === "off")) {
+      return disabledFeatures((await getCurrentUser()) !== null);
+    }
+    // Likewise only look up what the switches can actually depend on: the
+    // admin role for a preview (or the admin bypass of premium-only), the
+    // subscription for premium-only.
+    const needsPremium = entries.some((entry) => entry.state !== "off" && entry.premiumOnly);
+    const needsAdmin = needsPremium || entries.some((entry) => entry.state === "admin");
+    const [user, admin, premium] = await Promise.all([
       getCurrentUser(),
-      isAdmin(),
-      hasPremiumAccess(),
+      needsAdmin ? isAdmin() : false,
+      needsPremium ? hasPremiumAccess() : false,
     ]);
     return resolveFeatures(config, {
       signedIn: user !== null,

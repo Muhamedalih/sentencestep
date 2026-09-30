@@ -293,7 +293,12 @@ export interface EffectiveFeatures {
   dailySession: { enabled: boolean; size: number; xpReward: number; sources: DailySessionSources };
   quests: { enabled: boolean; types: Record<QuestType, QuestTypeConfig>; count: number };
   badges: { enabled: boolean; disabled: string[] };
-  streakCalendar: { enabled: boolean; monthlyFreezes: number };
+  streakCalendar: {
+    enabled: boolean;
+    monthlyFreezes: number;
+    /** Whether lesson completions should be written to the per-day activity log: true whenever the streak calendar OR badges (whose sentence-count badges are measured from that log) are anything but Off, for every learner — including during an admin-only preview, so the history already exists the day the feature opens to everyone. */
+    trackActivity: boolean;
+  };
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -366,6 +371,8 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
     streakCalendar: {
       enabled: openForAccount("streakCalendar"),
       monthlyFreezes: config.options.streakCalendar.monthlyFreezes,
+      trackActivity:
+        config.features.streakCalendar.state !== "off" || config.features.badges.state !== "off",
     },
     guestTeaser,
   };

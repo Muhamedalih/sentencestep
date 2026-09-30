@@ -83,10 +83,12 @@ export async function dealDailyQuests(
 export async function recordQuestEvents(
   events: { type: QuestType; amount: number }[],
   dateISO?: string,
+  /** Pass the caller's already-resolved features to skip a second lookup. */
+  knownFeatures?: EffectiveFeatures,
 ): Promise<CompletedQuest[]> {
   const completed: CompletedQuest[] = [];
   try {
-    const features = await getEffectiveFeatures();
+    const features = knownFeatures ?? (await getEffectiveFeatures());
     if (!features.quests.enabled) return completed;
     for (const event of events) {
       if (event.amount <= 0) continue;

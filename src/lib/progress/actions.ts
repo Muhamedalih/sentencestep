@@ -280,10 +280,13 @@ export async function recordCompletionAction(
       console.error("[progress] dealDailyQuests failed", error);
     });
   }
-  const completedQuests = await recordQuestEvents(
-    questEventsForLesson({ sentenceCount, accuracy: safeAccuracy }),
-    todayISO,
-  );
+  const completedQuests = features.quests.enabled
+    ? await recordQuestEvents(
+        questEventsForLesson({ sentenceCount, accuracy: safeAccuracy }),
+        todayISO,
+        features,
+      )
+    : [];
   const questXp = completedQuests.reduce((sum, quest) => sum + quest.xp, 0);
 
   const levelBefore = getLearnerLevel(beforeXp).level.name;
@@ -318,8 +321,14 @@ export async function recordCompletionAction(
     // The per-day activity log behind the streak calendar — always recorded
     // (cheap, and it means history exists the day the feature is switched
     // on), never at the cost of the completion itself.
-    bestEffort("recordActivityDay", () => recordActivityDay(todayISO, sentenceCount, xpEarned)),
-    bestEffort("recordStreakBridgeDays", () => recordStreakBridgeDays(streakPlan.bridges)),
+    ...(features.streakCalendar.trackActivity
+      ? [
+          bestEffort("recordActivityDay", () =>
+            recordActivityDay(todayISO, sentenceCount, xpEarned),
+          ),
+          bestEffort("recordStreakBridgeDays", () => recordStreakBridgeDays(streakPlan.bridges)),
+        ]
+      : []),
   ]);
 
   // Badges (admin feature): after everything above has landed — streak,
