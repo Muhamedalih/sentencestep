@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { describePlaybackFailure, isAutoplayBlockedError } from "@/lib/audio-errors";
+
 export type AudioClipStatus = "idle" | "loading" | "playing" | "error";
 
 export interface UseAudioClipOptions {
@@ -40,6 +42,11 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
   const retryDelayMs = options?.retryDelayMs ?? 300;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Removes the "play on the learner's first key press / click" listeners a
+  // browser-blocked autoplay registered (see `attempt`) — cleared by
+  // invalidate() the same way a pending retry timer is, so a sentence the
+  // learner has already moved past can never start playing later.
+  const gestureCleanupRef = useRef<(() => void) | undefined>(undefined);
   const [status, setStatus] = useState<AudioClipStatus>("idle");
   const onEndedRef = useRef(options?.onEnded);
   onEndedRef.current = options?.onEnded;
@@ -60,6 +67,8 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = undefined;
     }
+    gestureCleanupRef.current?.();
+    gestureCleanupRef.current = undefined;
     audioRef.current?.pause();
     audioRef.current = null;
   }
@@ -143,7 +152,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         // failure path run at most once no matter which path (or both) fires.
         let handled = false;
 
-        function handleFailure() {
+        function handleFailure(detail: string) {
           if (handled || !isCurrent()) return;
           handled = true;
           if (diagnostics) {
@@ -166,7 +175,35 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
             }, retryDelayMs);
             return;
           }
+          console.warn(`[audio] the clip could not be played (${detail}):`, url);
           setStatus("error");
+        }
+
+        // The browser's autoplay policy rejects play() until the learner has
+        // interacted with the page (most often on a fresh page load rather
+        // than a click-through). The clip itself is fine, so it must NOT be
+        // treated as a failure — that is what used to make the player swap in
+        // a different voice (or, where there's no fallback, stay silent).
+        // Wait for the first key press or click — the learner is about to
+        // type, so that is moments away — and play it then.
+        function playOnNextGesture() {
+          if (handled || !isCurrent()) return;
+          handled = true;
+          setStatus("idle");
+          console.info(
+            "[audio] autoplay was blocked by the browser; will play on the first key press or click.",
+          );
+          const events = ["pointerdown", "keydown"] as const;
+          const onGesture = () => {
+            cleanup();
+            if (isCurrent()) attempt(url, retriesLeft, resumeFromSeconds);
+          };
+          const cleanup = () => {
+            for (const name of events) window.removeEventListener(name, onGesture, true);
+            if (gestureCleanupRef.current === cleanup) gestureCleanupRef.current = undefined;
+          };
+          gestureCleanupRef.current = cleanup;
+          for (const name of events) window.addEventListener(name, onGesture, true);
         }
 
         if (resumeFromSeconds > 0) {
@@ -198,7 +235,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
           setStatus("idle");
           onEndedRef.current?.();
         });
-        audio.addEventListener("error", handleFailure);
+        audio.addEventListener("error", () => handleFailure(describePlaybackFailure(audio.error)));
 
         // Stops at the slice's own end instead of playing into whatever
         // comes after it in the underlying clip. Confirmed live to still
@@ -245,7 +282,10 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
           });
         }
 
-        audio.play().catch(handleFailure);
+        audio.play().catch((error: unknown) => {
+          if (isAutoplayBlockedError(error)) playOnNextGesture();
+          else handleFailure(describePlaybackFailure(error));
+        });
       }
 
       attempt(resolvedSrc, maxRetries, range?.start ?? 0);
