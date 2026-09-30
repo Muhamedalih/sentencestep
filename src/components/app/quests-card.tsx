@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { CheckCircle2, Target } from "lucide-react";
 
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
-import { fetchDailyQuestsAction } from "@/lib/features/quest-actions";
-import type { DailyQuestsPayload } from "@/lib/features/quest-actions";
 import { questTitle } from "@/lib/features/quest-labels";
 import { questProgressPercent } from "@/lib/features/quests";
-import type { DailyQuest } from "@/lib/features/quests";
-import { todayLocalISODate } from "@/lib/progress/streak";
+import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { cn } from "@/lib/utils";
 
 /**
@@ -85,33 +80,17 @@ export function QuestsCardView({
 
 /**
  * Home's daily quests card (admin feature "Daily quests"): today's three
- * quests with live progress. Renders nothing unless the feature is open to
- * this visitor, and quietly nothing if the quests can't be loaded.
+ * quests with live progress. They are loaded with the page (see
+ * loadHomeEngagement) — null when quests aren't open to this visitor or
+ * couldn't be loaded, in which case nothing renders.
  */
-export function QuestsCard({ className }: { className?: string }) {
-  const { quests } = useFeatures();
-  const [payload, setPayload] = useState<DailyQuestsPayload | null | undefined>(undefined);
-  const enabled = quests.enabled;
-
-  useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    fetchDailyQuestsAction(todayLocalISODate())
-      .then((data) => !cancelled && setPayload(data))
-      .catch(() => !cancelled && setPayload(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled]);
-
-  if (!enabled || payload === null) return null;
-  if (payload === undefined) {
-    return (
-      <div
-        className={cn("bg-muted/60 h-40 animate-pulse rounded-2xl", className)}
-        aria-hidden="true"
-      />
-    );
-  }
+export function QuestsCard({
+  payload,
+  className,
+}: {
+  payload: DailyQuestsPayload | null;
+  className?: string;
+}) {
+  if (!payload) return null;
   return <QuestsCardView quests={payload.quests} allDone={payload.allDone} className={className} />;
 }

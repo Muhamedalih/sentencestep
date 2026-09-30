@@ -44,10 +44,12 @@ export async function dealDailyQuests(
   userId: string,
   dateISO: string,
   features: EffectiveFeatures,
+  /** Today's quests when the caller has ALREADY read them (Home starts that read early) — skips repeating it. */
+  alreadyRead?: DailyQuest[],
 ): Promise<DailyQuest[]> {
   if (!features.quests.enabled) return [];
 
-  const existing = await fetchDailyQuests(userId, dateISO);
+  const existing = alreadyRead ?? (await fetchDailyQuests(userId, dateISO));
   if (existing.length > 0) return existing;
 
   const eligible = eligibleQuestTypes(features.quests.types, {
@@ -58,7 +60,7 @@ export async function dealDailyQuests(
   if (eligible.length === 0) return [];
 
   const picked = pickDailyQuestTypes(userId, dateISO, eligible, features.quests.count);
-  await insertDailyQuests(
+  const inserted = await insertDailyQuests(
     userId,
     dateISO,
     picked.map((type, slot) => ({
@@ -68,8 +70,10 @@ export async function dealDailyQuests(
       xp: features.quests.types[type].xp,
     })),
   );
-  // Re-read rather than trust the insert: a concurrent deal (two tabs) may
-  // have won the race, and the learner must see the rows that actually exist.
+  // Normally every row was ours and we already have exactly what exists. If
+  // fewer came back, a concurrent deal (two tabs) won some of the race: read
+  // back so the learner sees the rows that actually exist.
+  if (inserted.length === picked.length) return inserted;
   return fetchDailyQuests(userId, dateISO);
 }
 

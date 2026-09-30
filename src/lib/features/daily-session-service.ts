@@ -172,6 +172,8 @@ export async function buildDailySessionWords(
 export async function countDailySessionCandidates(
   userId: string,
   features: EffectiveFeatures,
+  /** A weak-word count the caller already has in flight (Home computes the list for its own card) — skips repeating that read. */
+  knownWeakWordCount?: Promise<number>,
 ): Promise<number> {
   const { sources, size } = features.dailySession;
   const counts = await Promise.all([
@@ -179,7 +181,11 @@ export async function countDailySessionCandidates(
       ? Promise.all([
           attempt("mistake count", () => fetchActiveMistakeCount(userId), 0),
           attempt("review count", () => fetchDueReviewCount(userId), 0),
-          attempt("weak count", async () => (await fetchWeakWordsAction()).length, 0),
+          attempt(
+            "weak count",
+            async () => knownWeakWordCount ?? (await fetchWeakWordsAction()).length,
+            0,
+          ),
         ]).then((values) => values.reduce((sum, value) => sum + value, 0))
       : 0,
     sources.vocabularyRecall

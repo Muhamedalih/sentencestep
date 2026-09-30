@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -144,9 +146,11 @@ export interface VocabularyWordFlatRow {
  * premium-only word simply never surfaces as a weak Word Lists item for
  * them. The whole catalog is small (a few hundred words across every
  * group) and doesn't grow per-user, so one unfiltered read here is cheaper
- * and simpler than a per-word lookup.
+ * and simpler than a per-word lookup. cache()'d per request: Home's weak-word
+ * card and its daily-session count both need this same catalog, and used to
+ * each scan the whole table. Callers must treat the rows as read-only.
  */
-export async function fetchAllVocabularyWordsFlat(): Promise<VocabularyWordFlatRow[]> {
+export const fetchAllVocabularyWordsFlat = cache(async (): Promise<VocabularyWordFlatRow[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vocabulary_words")
@@ -157,7 +161,7 @@ export async function fetchAllVocabularyWordsFlat(): Promise<VocabularyWordFlatR
     groupId: row.group_id,
     targetWord: row.target_word,
   }));
-}
+});
 
 export async function fetchWordGroupById(
   groupId: string,

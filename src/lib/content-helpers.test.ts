@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  countWords,
   isLearnerVisibleStatus,
   resolveLevelSupportTitle,
   resolveVocabularySupportText,
+  tallySentenceStats,
   withSupportTextFallback,
 } from "./content-helpers";
 import type { VocabularyItem } from "@/types/content";
@@ -134,4 +136,23 @@ test("resolveLevelSupportTitle: a genuinely unrecognized locale returns the Engl
 
 test("resolveLevelSupportTitle: null locale returns the English title", () => {
   assert.equal(resolveLevelSupportTitle(null, "Español", "عربي", "English"), "English");
+});
+
+test("countWords: counts whitespace-separated words, ignoring extra spaces and empty text", () => {
+  assert.equal(countWords("She opened the door."), 4);
+  assert.equal(countWords("  spaced   out  words "), 3);
+  assert.equal(countWords(""), 0);
+  assert.equal(countWords("   "), 0);
+});
+
+test("tallySentenceStats: totals sentences and words per lesson; lessons with no rows have no entry", () => {
+  const stats = tallySentenceStats([
+    { lesson_id: "a", en: "One two three" },
+    { lesson_id: "a", en: "Four five" },
+    { lesson_id: "b", en: "Single" },
+  ]);
+  assert.deepEqual(stats.get("a"), { sentences: 2, words: 5 });
+  assert.deepEqual(stats.get("b"), { sentences: 1, words: 1 });
+  assert.equal(stats.has("c"), false);
+  assert.equal(tallySentenceStats([]).size, 0);
 });

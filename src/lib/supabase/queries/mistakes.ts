@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import type { LearningMode } from "@/types/content";
 
@@ -79,8 +81,14 @@ export interface WeakCandidateMistakeRow {
  * set is small by construction — the same "tens of rows per learner" scale
  * fetchActiveMistakeRows already relies on — so filtering the rest in JS
  * costs nothing meaningful.
+ *
+ * cache()'d per request: Home reads this for its weak-words card and the daily
+ * quests read it (to know whether a "master N words" quest is achievable) when
+ * dealing a new day's quests — the second used to wait for the first round
+ * trip to finish and then repeat it. Both only read, and neither mutates the
+ * returned rows.
  */
-export async function fetchWeakCandidateMistakeRows(
+export const fetchWeakCandidateMistakeRows = cache(async function fetchWeakCandidateMistakeRows(
   userId: string,
 ): Promise<WeakCandidateMistakeRow[]> {
   const supabase = await createClient();
@@ -96,7 +104,7 @@ export async function fetchWeakCandidateMistakeRows(
     reviewStage: row.review_stage,
     nextReviewAt: row.next_review_at,
   }));
-}
+});
 
 export interface ActiveMistakeRow {
   word: string;

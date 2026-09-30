@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
@@ -34,6 +34,8 @@ export async function saveFeatureConfig(input: FeatureConfig): Promise<ActionRes
       Object.entries(config.features).map(([id, entry]) => [id, entry.state]),
     ),
   });
+  // The share-cached settings read (see readFeatureConfigRow) must not serve the old document.
+  revalidateTag("feature-settings");
   // "layout" so every /learn/* route's cached client payload picks up the new
   // availability immediately, same reasoning as setFreeForAll.
   revalidatePath("/learn", "layout");

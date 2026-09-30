@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Sparkles } from "lucide-react";
 
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
-import { fetchDailySessionSummaryAction } from "@/lib/features/daily-session-actions";
 import type { DailySessionSummary } from "@/lib/features/daily-session-actions";
-import { todayLocalISODate } from "@/lib/progress/streak";
 import { cn } from "@/lib/utils";
 
 /**
@@ -75,36 +71,19 @@ export function DailySessionCardView({
 
 /**
  * Home's "Today's session" card (admin feature "Daily session"): how much is
- * ready to review and a one-tap start, or a done-for-today state. Renders
- * nothing unless the feature is open to this visitor, when nothing is ready,
- * and quietly nothing if the summary can't be loaded.
+ * ready to review and a one-tap start, or a done-for-today state. The summary
+ * is loaded with the page (see loadHomeEngagement) — null when the feature
+ * isn't open to this visitor or it couldn't be loaded, in which case nothing
+ * renders, and likewise when nothing is ready and nothing was finished today.
  */
-export function DailySessionCard({ className }: { className?: string }) {
-  const { dailySession } = useFeatures();
-  const [summary, setSummary] = useState<DailySessionSummary | null | undefined>(undefined);
-  const enabled = dailySession.enabled;
-
-  useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    fetchDailySessionSummaryAction(todayLocalISODate())
-      .then((data) => !cancelled && setSummary(data))
-      .catch(() => !cancelled && setSummary(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled]);
-
-  if (!enabled || summary === null) return null;
-  if (summary === undefined) {
-    return (
-      <div
-        className={cn("bg-muted/60 h-28 animate-pulse rounded-2xl", className)}
-        aria-hidden="true"
-      />
-    );
-  }
+export function DailySessionCard({
+  summary,
+  className,
+}: {
+  summary: DailySessionSummary | null;
+  className?: string;
+}) {
   // Nothing to review and nothing finished today: no card, rather than an empty promise.
-  if (summary.ready === 0 && !summary.completedToday) return null;
+  if (!summary || (summary.ready === 0 && !summary.completedToday)) return null;
   return <DailySessionCardView summary={summary} className={className} />;
 }
