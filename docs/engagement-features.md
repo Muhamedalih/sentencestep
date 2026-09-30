@@ -86,11 +86,17 @@ already has history the day the feature goes On.
   (`WordReviewSession variant="session"`); each word is recorded on the ledger
   of the source it came from (`src/lib/features/session-completion.ts`), and
   the XP is paid once per day (`complete_daily_session`).
-  Every word is spoken in the Word Lists voice (`tts_settings.default_pronunciation_voice_id`),
-  whichever source it came from, and never in the browser's own voice: the
-  server resolves each word's clip while building the session
-  (`src/lib/voice/word-list-word-audio.ts` — cached Word Lists clip first,
-  otherwise synthesized once with the same voice and cached for everyone).
+  Every word is meant to be spoken in the Word Lists voice
+  (`tts_settings.default_pronunciation_voice_id`), whichever source it came
+  from. The page only does a cache-only lookup of each word's clip
+  (`lookupWordListVoiceAudio`); words without one are generated right after the
+  response is sent, and a background job
+  (`.github/workflows/session-word-audio.yml` → `/api/cron/session-word-audio`)
+  keeps a clip ready for every word learners have in their mistakes, recall and
+  saved-card queues. Speech is never synthesized while a learner waits (this
+  backend is too slow for that); a word that still has no clip falls back to
+  the browser voice rather than staying silent. Whether synthesis works on the
+  deployed site is visible in that workflow's run output.
 - **Saving words** is offered only for words worth studying: pronouns,
   demonstratives, articles, numbers, names, be/have/do forms, modals,
   prepositions, conjunctions, common function adverbs and contractions get no

@@ -13,7 +13,7 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchVocabularyRecallWordsAction } from "@/lib/vocabulary-recall/actions";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
-import { resolveWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
+import { lookupWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
 import { getWordGroupById } from "@/lib/word-lists";
 
 /**
@@ -162,13 +162,14 @@ export async function buildDailySessionWords(
   if (sources.wordLists) groups.push(await wordListSource(userId, locale, size));
 
   const session = assembleSession(groups, size);
-  // Every word is spoken in the Word Lists voice, whichever source it came
-  // from — resolved here, server-side, in session order (see
-  // resolveWordListVoiceAudio). An unresolved word gets no clip rather than
-  // a different voice's; the review screen never falls back to the browser.
+  // Every word is pointed at the Word Lists voice's clip, whichever source it
+  // came from — a cache-only read (see lookupWordListVoiceAudio), so it costs
+  // a couple of queries and never waits on speech synthesis. A word with no
+  // clip yet is left for fetchDailySessionWordsAction to generate after the
+  // page is sent; it never inherits a different voice's clip.
   const urlByWord = await attempt(
     "word-list voice audio",
-    () => resolveWordListVoiceAudio(session.map((word) => word.targetWord)),
+    () => lookupWordListVoiceAudio(session.map((word) => word.targetWord)),
     new Map<string, string>(),
   );
   return applyWordListAudio(session, urlByWord);

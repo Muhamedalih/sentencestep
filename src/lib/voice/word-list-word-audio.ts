@@ -30,32 +30,33 @@ type DbClient = SupabaseClient<Database>;
  * the words that happen to sit in a Word Lists group. Built for Today's
  * session, which mixes words from Word Lists with words from typing
  * mistakes, Vocabulary Recall and saved cards, and must sound like Word
- * Lists for every one of them (the learner-facing requirement was "the same
- * voice as the word lists, all of them, no exceptions").
+ * Lists for every one of them.
  *
- * Why this exists instead of reusing PronunciationButton's on-demand path:
- *  - the mistakes list pre-attaches clips recorded in the *Normal lessons*
- *    voice (see fetchAllMistakesAction), which is a different narrator;
- *  - on-demand synthesis (resolvePronunciationAudioAction's "sentence_word")
- *    needs a real sentence to re-derive the word from, which a personal card
- *    saved without one doesn't have, and it gives up silently (falling back to
- *    the browser's own voice) on a rate limit or a slow provider.
- * Here the server already knows the exact words (they came from the learner's
- * own data, never from a client-supplied string), so it can resolve every
- * one of them up front, under the one global Word Lists voice, in one pass.
+ * The clips are a INVENTORY, built ahead of time, never something a learner
+ * waits for. This project's production backend (a free-tier Supabase project
+ * behind Netlify functions, whose own scheduled sweeps already time out) is
+ * too slow and too bursty to synthesize speech inside a page request — an
+ * earlier version of Today's session did exactly that and left learners with
+ * a slower page and, whenever synthesis didn't finish, no sound at all. So:
+ *  - lookupWordListVoiceAudio is the ONLY thing a page load does: one cheap,
+ *    cache-only query (the exact lookup Word Lists itself uses);
+ *  - generateWordListVoiceAudio synthesizes the words that have no clip yet,
+ *    and runs OFF the request path (after the response is sent, and from a
+ *    scheduled background route — see findWordsMissingWordListVoice);
+ *  - a word still without a clip falls back the way it always did, so the
+ *    learner is never left silent.
  *
- * Reads exactly what Word Lists reads: voice_audio_cache rows under
- * `tts_settings.default_pronunciation_voice_id` (see lookupCachedAudioUrl —
- * any generation_version, freshest wins). A word nobody has spoken yet is
- * synthesized with the same provider, voice, neutral delivery,
- * generation_version and cache key generateWordGroupVoiceDraft uses, so the
- * clip is indistinguishable from one the Word Lists backfill made and is
- * picked up by Word Lists itself the day that word lands in a group.
+ * A synthesized clip is created exactly the way generateWordGroupVoiceDraft
+ * creates Word Lists' own: same provider, voice, neutral delivery,
+ * generation_version and cache key — indistinguishable from a backfilled
+ * clip, and picked up by Word Lists itself the day that word lands in a
+ * group.
  *
  * Deliberately NOT in a "use server" module: everything exported from one of
  * those is a public endpoint any client can call with arbitrary arguments,
  * which would turn this into an open text-to-speech service. It is imported
- * only by server code that builds the word list itself.
+ * only by server code that derives the words itself (from the learner's own
+ * data), never from a client-supplied string.
  */
 
 /** A single word/short phrase — never a sentence. Caps what this pipeline will ever synthesize. */
@@ -96,7 +97,7 @@ export function wordAudioCandidates(word: string): string[] {
  * STARTING new ones once `deadlineAt` (epoch ms) has passed. Resolves when
  * every started task has finished OR the deadline passes, whichever is
  * first — a task still running at that point isn't cancelled (its result is
- * simply not waited for), so a slow provider can never hold the page
+ * simply not waited for), so a slow provider can never hold a caller
  * hostage, yet whatever it does finish still lands in the cache for next
  * time. Results come back in `items` order; an item that was never started
  * (or didn't finish in time) is `undefined`.
@@ -137,6 +138,81 @@ export async function runWithinBudget<T, R>(
   return results.slice();
 }
 
+/** voice_audio_cache reads in batches this size — a PostgREST `in (...)` list rides in the URL, so it can't be unbounded. */
+const LOOKUP_BATCH = 60;
+
+function chunk<T>(items: readonly T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+interface VoiceContext {
+  supabase: DbClient;
+  voiceId: string;
+}
+
+/** The Word Lists voice and a service-role client, or null when the server isn't configured for either. */
+async function getVoiceContext(): Promise<VoiceContext | null> {
+  if (!isServiceRoleConfigured()) return null;
+  return { supabase: createServiceRoleClient(), voiceId: await getDefaultPronunciationVoiceId() };
+}
+
+/** Ready clips under the Word Lists voice for every spelling of every word: word -> url (keyed by the word exactly as passed in). */
+async function lookupReadyClips(
+  { supabase, voiceId }: VoiceContext,
+  words: readonly string[],
+): Promise<Map<string, string>> {
+  const resolved = new Map<string, string>();
+  for (const batch of chunk(words, LOOKUP_BATCH)) {
+    const hashesByWord = new Map(
+      batch.map((word) => [word, wordAudioCandidates(word).map((c) => hashText(c))]),
+    );
+    const { data, error } = await supabase
+      .from("voice_audio_cache")
+      .select("text_hash, audio_url")
+      .eq("voice_id", voiceId)
+      .in("text_hash", [...new Set([...hashesByWord.values()].flat())])
+      .eq("status", "ready")
+      .not("audio_url", "is", null)
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+
+    const urlByHash = new Map<string, string>();
+    for (const row of data ?? []) {
+      // Freshest row per hash wins — same rule as lookupCachedAudioUrl.
+      if (row.audio_url && !urlByHash.has(row.text_hash)) {
+        urlByHash.set(row.text_hash, row.audio_url);
+      }
+    }
+    for (const [word, hashes] of hashesByWord) {
+      const hit = hashes.map((hash) => urlByHash.get(hash)).find((url) => url !== undefined);
+      if (hit) resolved.set(word, hit);
+    }
+  }
+  return resolved;
+}
+
+/**
+ * Word -> Word Lists-voice clip URL for every word that ALREADY has one
+ * (keyed by the word exactly as passed in). Cache-only — it never
+ * synthesizes, so it is safe on a page's critical path: a couple of indexed
+ * reads. A word with no clip is simply absent. Never throws.
+ */
+export async function lookupWordListVoiceAudio(
+  words: readonly string[],
+): Promise<Map<string, string>> {
+  const unique = [...new Set(words)].filter((word) => wordAudioCandidates(word).length > 0);
+  if (unique.length === 0) return new Map();
+  try {
+    const context = await getVoiceContext();
+    return context ? await lookupReadyClips(context, unique) : new Map();
+  } catch (error) {
+    console.error("[word-list-word-audio] lookupWordListVoiceAudio failed", error);
+    return new Map();
+  }
+}
+
 interface ExistingRow {
   id: string;
   text_hash: string;
@@ -146,18 +222,24 @@ interface ExistingRow {
   audio_url: string | null;
 }
 
-/** Synthesizes one word under the Word Lists voice and records it in the cache; null on any failure (never throws). */
+type SynthesisOutcome = { url: string; reason?: undefined } | { url: null; reason: string };
+
+/** Synthesizes one word under the Word Lists voice and records it in the cache; never throws. */
 async function synthesizeWord(
   supabase: DbClient,
   provider: TTSProvider,
   word: string,
   voice: { id: string; providerVoiceId: string },
   existing: ExistingRow | undefined,
-): Promise<string | null> {
+): Promise<SynthesisOutcome> {
   if (existing) {
-    if (existing.status === "ready" && existing.audio_url) return existing.audio_url;
-    if (existing.status === "generating" && !isStaleGenerating(existing.updated_at)) return null; // another request is already on it
-    if (existing.status === "failed" && existing.attempts >= MAX_VOICE_RETRY_ATTEMPTS) return null; // retry budget spent; needs the backfill script / an admin
+    if (existing.status === "ready" && existing.audio_url) return { url: existing.audio_url };
+    if (existing.status === "generating" && !isStaleGenerating(existing.updated_at)) {
+      return { url: null, reason: "another request is already generating it" };
+    }
+    if (existing.status === "failed" && existing.attempts >= MAX_VOICE_RETRY_ATTEMPTS) {
+      return { url: null, reason: "retry budget spent" };
+    }
   }
 
   const key = cacheKeyParts(word, voice.id, WORD_LIST_GENERATION_VERSION);
@@ -173,7 +255,7 @@ async function synthesizeWord(
     existingByKey,
     provider.name,
   );
-  if (!claimed) return null; // lost the claim race to a concurrent identical request
+  if (!claimed) return { url: null, reason: "couldn't claim the cache row" };
 
   try {
     const { text, voiceSettings } = buildProviderSynthesisInput(
@@ -200,7 +282,7 @@ async function synthesizeWord(
         updated_at: new Date().toISOString(),
       })
       .eq("id", claimed.id);
-    return audioUrl;
+    return { url: audioUrl };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await supabase
@@ -211,62 +293,50 @@ async function synthesizeWord(
         updated_at: new Date().toISOString(),
       })
       .eq("id", claimed.id);
-    return null;
+    return { url: null, reason: message };
   }
 }
 
-/** Defaults sized for a page load: a 30-word session that has never been heard still finishes inside a few seconds, and a provider outage can't stall the page past the deadline. */
-const DEFAULT_CONCURRENCY = 5;
-const DEFAULT_DEADLINE_MS = 8_000;
+export interface WordListVoiceGeneration {
+  /** word (as passed in) -> clip URL, for the words that now have one. */
+  urls: Map<string, string>;
+  /** One short line per word that didn't — the reason, so a failing provider is visible in the logs instead of silent. */
+  errors: string[];
+}
+
+const DEFAULT_CONCURRENCY = 3;
+const DEFAULT_DEADLINE_MS = 20_000;
 
 /**
- * Word -> Word Lists-voice clip URL for every word it could resolve (keyed by
- * the word exactly as passed in). Cache hits cost one batched query; misses
- * are synthesized in the Word Lists voice (see this module's doc comment)
- * within `deadlineMs`, in the order given — so pass the words in the order
- * they'll be needed and the ones that run out of time are the last ones.
- * Anything unresolved is simply absent from the map (the caller decides what
- * to do; it must not fall back to a different voice). Never throws.
+ * Synthesizes the given words in the Word Lists voice (see this module's doc
+ * comment), in the order given and within `deadlineMs`, so pass them in the
+ * order they'll be needed and the ones that run out of time are the last
+ * ones. Words that already have a clip are handed straight back. Never
+ * throws; every failure is logged with its reason and returned in `errors`.
+ * Meant to run off the request path — `after()` or a cron route.
  */
-export async function resolveWordListVoiceAudio(
+export async function generateWordListVoiceAudio(
   words: readonly string[],
   options: { deadlineMs?: number; concurrency?: number } = {},
-): Promise<Map<string, string>> {
-  const resolved = new Map<string, string>();
-  const unique = [...new Set(words)].filter((word) => wordAudioCandidates(word).length > 0);
-  if (unique.length === 0 || !isServiceRoleConfigured()) return resolved;
+): Promise<WordListVoiceGeneration> {
+  const result: WordListVoiceGeneration = { urls: new Map(), errors: [] };
+  const unique = [...new Set(words)].filter((word) => isSynthesizableWord(word));
+  if (unique.length === 0) return result;
   const deadlineAt = Date.now() + (options.deadlineMs ?? DEFAULT_DEADLINE_MS);
 
   try {
-    const voiceId = await getDefaultPronunciationVoiceId();
-    const supabase = createServiceRoleClient();
-
-    // 1) Cache: one query for every candidate spelling of every word.
-    const hashesByWord = new Map(
-      unique.map((word) => [word, wordAudioCandidates(word).map((c) => hashText(c))]),
-    );
-    const { data: rows } = await supabase
-      .from("voice_audio_cache")
-      .select("text_hash, audio_url")
-      .eq("voice_id", voiceId)
-      .in("text_hash", [...new Set([...hashesByWord.values()].flat())])
-      .eq("status", "ready")
-      .not("audio_url", "is", null)
-      .order("updated_at", { ascending: false });
-    const urlByHash = new Map<string, string>();
-    for (const row of rows ?? []) {
-      // Freshest row per hash wins — same rule as lookupCachedAudioUrl.
-      if (row.audio_url && !urlByHash.has(row.text_hash))
-        urlByHash.set(row.text_hash, row.audio_url);
+    const context = await getVoiceContext();
+    if (!context) {
+      result.errors.push("the server has no Supabase service-role configuration");
+      return result;
     }
-    for (const [word, hashes] of hashesByWord) {
-      const hit = hashes.map((hash) => urlByHash.get(hash)).find((url) => url !== undefined);
-      if (hit) resolved.set(word, hit);
-    }
+    const { supabase, voiceId } = context;
 
-    // 2) Misses: speak them now, in the Word Lists voice.
-    const misses = unique.filter((word) => !resolved.has(word) && isSynthesizableWord(word));
-    if (misses.length === 0) return resolved;
+    // A clip that appeared since the caller last looked needs no synthesis.
+    const existingClips = await lookupReadyClips(context, unique);
+    for (const [word, url] of existingClips) result.urls.set(word, url);
+    const misses = unique.filter((word) => !result.urls.has(word));
+    if (misses.length === 0) return result;
 
     const { data: voiceRow } = await supabase
       .from("voices")
@@ -274,45 +344,135 @@ export async function resolveWordListVoiceAudio(
       .eq("id", voiceId)
       .maybeSingle();
     if (!voiceRow || voiceRow.source !== WORD_LIST_PROVIDER) {
-      console.error(
-        `[word-list-word-audio] the Word Lists voice (${voiceId}) is missing or isn't a ${WORD_LIST_PROVIDER} voice; serving cached clips only.`,
+      result.errors.push(
+        `the Word Lists voice (${voiceId}) is missing or isn't a ${WORD_LIST_PROVIDER} voice`,
       );
-      return resolved;
+      return result;
     }
     const voice = { id: voiceRow.id, providerVoiceId: voiceRow.provider_voice_id };
     const provider = createProviderForSource(WORD_LIST_PROVIDER);
 
-    const missHashes = misses.map((word) =>
-      cacheKeyParts(word, voice.id, WORD_LIST_GENERATION_VERSION),
-    );
-    const { data: existingRows } = await supabase
-      .from("voice_audio_cache")
-      .select("id, text_hash, status, attempts, updated_at, audio_url")
-      .eq("voice_id", voice.id)
-      .eq("generation_version", WORD_LIST_GENERATION_VERSION)
-      .in("text_hash", [...new Set(missHashes.map((key) => key.textHash))]);
-    const existingByHash = new Map<string, ExistingRow>(
-      (existingRows ?? []).map((row) => [row.text_hash, row as ExistingRow]),
-    );
+    const hashOf = (word: string) =>
+      cacheKeyParts(word, voice.id, WORD_LIST_GENERATION_VERSION).textHash;
+    const existingByHash = new Map<string, ExistingRow>();
+    for (const batch of chunk(misses, LOOKUP_BATCH)) {
+      const { data } = await supabase
+        .from("voice_audio_cache")
+        .select("id, text_hash, status, attempts, updated_at, audio_url")
+        .eq("voice_id", voice.id)
+        .eq("generation_version", WORD_LIST_GENERATION_VERSION)
+        .in("text_hash", [...new Set(batch.map(hashOf))]);
+      for (const row of data ?? []) existingByHash.set(row.text_hash, row as ExistingRow);
+    }
 
-    const urls = await runWithinBudget(
+    const outcomes = await runWithinBudget(
       misses,
-      (word) =>
-        synthesizeWord(
-          supabase,
-          provider,
-          word,
-          voice,
-          existingByHash.get(cacheKeyParts(word, voice.id, WORD_LIST_GENERATION_VERSION).textHash),
-        ),
+      (word) => synthesizeWord(supabase, provider, word, voice, existingByHash.get(hashOf(word))),
       { concurrency: options.concurrency ?? DEFAULT_CONCURRENCY, deadlineAt },
     );
     misses.forEach((word, index) => {
-      const url = urls[index];
-      if (url) resolved.set(word, url);
+      const outcome = outcomes[index];
+      if (outcome?.url) result.urls.set(word, outcome.url);
+      else result.errors.push(`${word}: ${outcome?.reason ?? "ran out of time"}`);
     });
   } catch (error) {
-    console.error("[word-list-word-audio] resolveWordListVoiceAudio failed", error);
+    result.errors.push(error instanceof Error ? error.message : String(error));
   }
-  return resolved;
+
+  if (result.errors.length > 0) {
+    console.error(
+      `[word-list-word-audio] ${result.errors.length} of ${unique.length} word(s) not generated:`,
+      result.errors.slice(0, 10),
+    );
+  }
+  return result;
+}
+
+/**
+ * Merges several newest-first word lists round-robin (so no single source
+ * monopolizes a run's small budget), dropping duplicates and anything that
+ * isn't a synthesizable word. Each word comes back whitespace-normalized.
+ */
+export function interleaveWordLists(lists: readonly (readonly string[])[]): string[] {
+  const normalized = lists.map((list) => list.map((word) => normalizeTextForVoice(word)));
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; normalized.some((list) => i < list.length); i++) {
+    for (const list of normalized) {
+      const word = list[i];
+      if (word && !seen.has(word) && isSynthesizableWord(word)) {
+        seen.add(word);
+        out.push(word);
+      }
+    }
+  }
+  return out;
+}
+
+/** How many of each table's newest rows the background sweep looks at per run — bounded so a run stays cheap however big the tables get. */
+const SWEEP_ROWS_PER_TABLE = 150;
+
+/**
+ * Words learners actually have in their queues (typing mistakes, Vocabulary
+ * Recall, saved cards — the sources Today's session draws from) that have no
+ * Word Lists-voice clip yet and are still worth attempting, newest first, at
+ * most `limit`. A word whose attempts are used up, or that another request is
+ * generating right now, is skipped so one stubborn word can never occupy the
+ * front of every run (the stuck-window failure voice-sweep's own notes
+ * describe). Read-only.
+ */
+export async function findWordsMissingWordListVoice(limit: number): Promise<string[]> {
+  const context = await getVoiceContext();
+  if (!context || limit <= 0) return [];
+  const { supabase, voiceId } = context;
+
+  const [mistakes, recall, cards] = await Promise.all([
+    supabase
+      .from("mistakes")
+      .select("word")
+      .order("updated_at", { ascending: false })
+      .limit(SWEEP_ROWS_PER_TABLE),
+    supabase
+      .from("vocabulary_encounters")
+      .select("word")
+      .order("created_at", { ascending: false })
+      .limit(SWEEP_ROWS_PER_TABLE),
+    supabase
+      .from("saved_words")
+      .select("word")
+      .order("created_at", { ascending: false })
+      .limit(SWEEP_ROWS_PER_TABLE),
+  ]);
+  for (const read of [mistakes, recall, cards]) if (read.error) throw read.error;
+
+  const candidates = interleaveWordLists(
+    [mistakes.data, recall.data, cards.data].map((rows) => (rows ?? []).map((row) => row.word)),
+  );
+
+  const missing: string[] = [];
+  for (const batch of chunk(candidates, LOOKUP_BATCH)) {
+    if (missing.length >= limit) break;
+    const hasClip = await lookupReadyClips(context, batch);
+    const { data: rows, error } = await supabase
+      .from("voice_audio_cache")
+      .select("text_hash, status, attempts, updated_at")
+      .eq("voice_id", voiceId)
+      .eq("generation_version", WORD_LIST_GENERATION_VERSION)
+      .in("text_hash", [...new Set(batch.map((word) => hashText(word)))]);
+    if (error) throw error;
+    const blocked = new Set(
+      (rows ?? [])
+        .filter(
+          (row) =>
+            (row.status === "failed" && row.attempts >= MAX_VOICE_RETRY_ATTEMPTS) ||
+            (row.status === "generating" && !isStaleGenerating(row.updated_at)),
+        )
+        .map((row) => row.text_hash),
+    );
+    for (const word of batch) {
+      if (missing.length >= limit) break;
+      if (!hasClip.has(word) && !blocked.has(hashText(word))) missing.push(word);
+    }
+  }
+  return missing;
 }

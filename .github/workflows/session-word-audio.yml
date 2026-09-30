@@ -1,0 +1,28 @@
+name: Session word audio
+
+# Builds Word Lists-voice clips for the words learners actually study
+# (typing mistakes, Vocabulary Recall, saved cards), a few per run, so Today's
+# session finds them ready instead of waiting for speech synthesis on a slow
+# backend — see src/lib/voice/word-list-word-audio.ts and the route's own doc
+# comment (src/app/api/cron/session-word-audio/route.ts).
+#
+# Its own workflow on purpose (not a job in cron.yml): cron.yml's
+# workflow_dispatch runs EVERY job there, including the learner reminder
+# emails, so it can't be used to run just this one by hand. Here a manual run
+# (Actions tab -> Run workflow) does only this, and the job's output — how many
+# words were found / generated / failed, and why any failed — is the place to
+# see whether speech synthesis is actually working on the deployed site.
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  session-word-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/session-word-audio
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/session-word-audio
