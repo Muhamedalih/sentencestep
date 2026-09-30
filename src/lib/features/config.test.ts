@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
   DEFAULT_FEATURE_CONFIG,
+  FEATURE_IDS,
   defaultFeatureConfig,
   disabledFeatures,
   isFeatureOpenTo,
@@ -170,4 +173,39 @@ test("resolveFeatures: badges also need the activity log (sentence-count badges 
 test("disabledFeatures: nothing on, regardless of sign-in", () => {
   assert.equal(disabledFeatures(true).quests.enabled, false);
   assert.equal(disabledFeatures(false).guestTeaser, false);
+});
+
+test("the admin-preview seed migration switches every feature to admin and nothing else", () => {
+  const sql = readFileSync(
+    join(process.cwd(), "supabase/migrations/20250321000000_feature_settings_admin_preview.sql"),
+    "utf8",
+  );
+  const body = /\$json\$([\s\S]*?)\$json\$/.exec(sql)?.[1];
+  assert.ok(body, "the seed document must be dollar-quoted as $json$ ... $json$");
+  const seed = JSON.parse(body) as { features: Record<string, { state: string }> };
+
+  assert.deepEqual(Object.keys(seed.features).sort(), [...FEATURE_IDS].sort());
+  for (const id of FEATURE_IDS) assert.equal(seed.features[id]?.state, "admin");
+
+  const config = sanitizeFeatureConfig(seed);
+  for (const id of FEATURE_IDS) {
+    assert.equal(config.features[id].state, "admin");
+    assert.equal(config.features[id].premiumOnly, false);
+  }
+  // Everyone but an admin sees nothing; an admin sees the features.
+  for (const viewer of [guest, learner, premium]) {
+    const effective = resolveFeatures(config, viewer);
+    assert.equal(effective.quests.enabled, false);
+    assert.equal(effective.badges.enabled, false);
+    assert.equal(effective.dailySession.enabled, false);
+    assert.equal(effective.streakCalendar.enabled, false);
+    assert.equal(effective.personalCards.page, false);
+    assert.equal(effective.dictation.sections.normal, false);
+    assert.equal(effective.fromMemory.sections.normal, false);
+  }
+  const asAdmin = resolveFeatures(config, admin);
+  assert.equal(asAdmin.quests.enabled, true);
+  assert.equal(asAdmin.dictation.sections.normal, true);
+  assert.equal(asAdmin.fromMemory.sections.conversation, true);
+  assert.equal(asAdmin.personalCards.page, true);
 });

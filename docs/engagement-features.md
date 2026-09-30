@@ -1,8 +1,11 @@
 # Engagement features
 
 Seven optional learning features, all controlled from **Admin → Features**
-(`/admin/features`, full admins only). Every feature ships **Off**; nothing
-changes for learners until an admin turns something on.
+(`/admin/features`, full admins only). The code default is **Off** for every
+feature (no settings row, or an unreadable one, means nothing shows). The last
+migration below moves the fresh settings row to **Admin preview** for all
+seven, so on the live site only admins see anything until a feature is set to
+**On**.
 
 | Feature                  | Where it appears                                                    | Sections (admin matrix)       | Guests         |
 | ------------------------ | ------------------------------------------------------------------- | ----------------------------- | -------------- |
@@ -39,10 +42,19 @@ These are new and **not applied automatically**:
 4. `20250318000000_badges.sql`
 5. `20250319000000_saved_words.sql`
 6. `20250320000000_daily_sessions.sql`
+7. `20250321000000_feature_settings_admin_preview.sql` (puts every feature in
+   Admin preview; only touches a settings row nobody has saved yet, so it never
+   overwrites a configuration an admin chose)
 
 Until a migration is applied, the feature that needs it degrades quietly (its
 card doesn't render, its event is skipped) — lesson completion is never
 blocked by an optional feature.
+
+While a feature is in Admin preview, learners who aren't admins see and get
+nothing from it. The one invisible side effect: once the streak calendar or
+badges are not Off, each lesson completion also writes that day's
+`activity_days` row for everyone (a single best-effort upsert), so the calendar
+already has history the day the feature goes On.
 
 ## How they fit together
 
