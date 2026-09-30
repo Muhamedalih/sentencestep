@@ -43,7 +43,7 @@ type DbClient = SupabaseClient<Database>;
  * every word gets the same flat, neutral delivery.
  */
 /** Edge-TTS ignores the model argument entirely (see providers/edge-tts.ts's doc comment) — "edge-tts" here only satisfies buildProviderSynthesisInput/synthesize's shared shape and is stored as voice_audio_cache.model, mirroring voice-audio.ts's identical `model: "edge-tts"` for isolated word clips. */
-const WORD_LIST_MODEL = "edge-tts";
+export const WORD_LIST_MODEL = "edge-tts";
 /**
  * generation_version is intentionally unchanged across the Cartesia ->
  * Edge-TTS reassignment (2026-09-10): provider identity was already dropped
@@ -54,9 +54,9 @@ const WORD_LIST_MODEL = "edge-tts";
  * touching or invalidating the existing Cartesia-voiced rows still sitting
  * in voice_audio_cache.
  */
-const WORD_LIST_GENERATION_VERSION = "word-list:v2";
+export const WORD_LIST_GENERATION_VERSION = "word-list:v2";
 
-const NEUTRAL_VOICE_SETTINGS = {
+export const NEUTRAL_VOICE_SETTINGS = {
   stability: 0.5,
   similarityBoost: 0.75,
   style: 0,
@@ -64,7 +64,7 @@ const NEUTRAL_VOICE_SETTINGS = {
   useSpeakerBoost: true,
 };
 
-const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
+export const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
   emotion: "neutral",
   energy: "medium",
   pace: "normal",
