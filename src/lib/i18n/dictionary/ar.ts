@@ -753,4 +753,21 @@ export const ar: Dictionary = {
     dayMissed: "بلا تدريب",
     loadError: "تعذّر تحميل التقويم الآن.",
   },
+  quests: {
+    heading: "مهام اليوم",
+    xpReward: "+{xp} XP",
+    allDone: "أنجزت كل المهام — نراك غداً!",
+    loadError: "تعذّر تحميل مهام اليوم.",
+    rewardCompleted: "أنجزت مهمة: {quest} (+{xp} نقطة خبرة)",
+    typeSentences: "اكتب جملاً",
+    typeLessons: "أكمل دروساً",
+    typeAccuracy: "أنهِ درساً بدقة 95% أو أكثر",
+    typeMasterWords: "أتقن كلمات في المراجعة",
+    typeDictation: "تدرّب على جمل الإملاء",
+    typeDailySession: "أنهِ جلسة اليوم",
+    guestHeading: "سجّل الدخول لتفعيل المهام اليومية",
+    guestBody:
+      "أنشئ حساباً مجانياً لتحصل على نقاط خبرة إضافية من المهام اليومية، وتجمع الأوسمة، وتحمي ستريكك بالتجميد.",
+    guestCta: "أنشئ حساباً مجانياً",
+  },
 };

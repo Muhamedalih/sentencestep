@@ -1,3 +1,4 @@
+import type { QuestType } from "@/lib/features/catalog";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -17,7 +18,9 @@ export type RewardEvent =
   /** The streak survived a single missed day (see isGraceDay in streak.ts) — shown once, quietly, never as a celebratory reward. */
   | { type: "streakGraceDay" }
   /** One or more streak freezes were spent to carry the streak across extra missed days (see src/lib/features/streak-freeze.ts) — like streakGraceDay, shown as a quiet note, not a celebration. */
-  | { type: "streakFreezeUsed"; count: number };
+  | { type: "streakFreezeUsed"; count: number }
+  /** A daily quest this completion finished (its XP is already in xpEarned). */
+  | { type: "questCompleted"; questType: QuestType; xp: number };
 
 export interface LessonCompletion {
   lessonId: string;

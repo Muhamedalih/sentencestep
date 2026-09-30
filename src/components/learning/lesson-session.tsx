@@ -38,6 +38,7 @@ import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { buildFromMemoryItems } from "@/lib/features/from-memory";
+import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
@@ -453,6 +454,14 @@ export function LessonSession({
       if (!previewMode) {
         markComplete(unit.mode, unit.id, accuracy, total, averageWpm);
         clearLessonResume(unit.mode, unit.id);
+        // Optional-feature practice this lesson included (Dictation), so
+        // daily quests can credit it. Fire-and-forget: nothing on this
+        // screen waits on it, and it never throws (see the action).
+        if (dictationCountRef.current > 0) {
+          void recordFeatureUsageAction({ dictationSentences: dictationCountRef.current }).catch(
+            (error: unknown) => console.error("[features] usage report failed", error),
+          );
+        }
       }
       setIsComplete(true);
       // Desktop/laptop only, by design — not a mobile-parity gap to fix,

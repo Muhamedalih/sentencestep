@@ -793,4 +793,21 @@ export const es: Dictionary = {
     dayMissed: "sin práctica",
     loadError: "No se pudo cargar tu calendario ahora.",
   },
+  quests: {
+    heading: "Misiones de hoy",
+    xpReward: "+{xp} XP",
+    allDone: "¡Todas las misiones completadas — hasta mañana!",
+    loadError: "No se pudieron cargar las misiones de hoy.",
+    rewardCompleted: "Misión completada: {quest} (+{xp} XP)",
+    typeSentences: "Escribe oraciones",
+    typeLessons: "Completa lecciones",
+    typeAccuracy: "Termina una lección con 95 % o más de precisión",
+    typeMasterWords: "Domina palabras en el repaso",
+    typeDictation: "Practica oraciones de dictado",
+    typeDailySession: "Termina la sesión de hoy",
+    guestHeading: "Inicia sesión para desbloquear las misiones diarias",
+    guestBody:
+      "Crea una cuenta gratis para ganar XP extra con las misiones diarias, coleccionar insignias y proteger tu racha con congelaciones.",
+    guestCta: "Crear una cuenta gratis",
+  },
 };

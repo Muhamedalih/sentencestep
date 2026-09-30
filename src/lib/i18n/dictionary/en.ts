@@ -773,4 +773,21 @@ export const en: Dictionary = {
     dayMissed: "no practice",
     loadError: "Couldn't load your calendar right now.",
   },
+  quests: {
+    heading: "Today's quests",
+    xpReward: "+{xp} XP",
+    allDone: "All quests complete — see you tomorrow!",
+    loadError: "Couldn't load today's quests.",
+    rewardCompleted: "Quest complete: {quest} (+{xp} XP)",
+    typeSentences: "Type sentences",
+    typeLessons: "Complete lessons",
+    typeAccuracy: "Finish a lesson with 95%+ accuracy",
+    typeMasterWords: "Master words in review",
+    typeDictation: "Practice dictation sentences",
+    typeDailySession: "Finish today's session",
+    guestHeading: "Sign in to unlock daily quests",
+    guestBody:
+      "Create a free account to earn bonus XP from daily quests, collect badges, and protect your streak with freezes.",
+    guestCta: "Create a free account",
+  },
 };

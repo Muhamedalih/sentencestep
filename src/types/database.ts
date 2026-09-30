@@ -343,6 +343,34 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["streak_freeze_usage"]["Insert"]>;
         Relationships: [];
       };
+      daily_quests: {
+        Row: {
+          user_id: string;
+          quest_date: string;
+          slot: number;
+          quest_type: string;
+          target: number;
+          xp: number;
+          progress: number;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          quest_date: string;
+          slot: number;
+          quest_type: string;
+          target: number;
+          xp?: number;
+          progress?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["daily_quests"]["Insert"]>;
+        Relationships: [];
+      };
       feature_settings: {
         Row: {
           id: number;
@@ -1251,6 +1279,17 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      add_quest_progress: {
+        Args: { p_type: string; p_amount: number; p_date?: string | null };
+        Returns: {
+          out_slot: number;
+          out_type: string;
+          out_xp: number;
+          out_progress: number;
+          out_target: number;
+          out_completed_now: boolean;
+        }[];
+      };
       record_activity_day: {
         Args: { p_day: string; p_sentences: number; p_xp: number };
         Returns: undefined;

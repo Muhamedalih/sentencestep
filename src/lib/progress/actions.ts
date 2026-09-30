@@ -45,6 +45,8 @@ import {
 } from "@/lib/features/activity-queries";
 import { disabledFeatures } from "@/lib/features/config";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { dealDailyQuests, recordQuestEvents } from "@/lib/features/quest-service";
+import { questEventsForLesson } from "@/lib/features/quests";
 import { freezesRemaining, monthPeriod, planStreakUpdate } from "@/lib/features/streak-freeze";
 import type { StreakPlan } from "@/lib/features/streak-freeze";
 import { setCountryAction, setStartingLevelAction } from "@/lib/supabase/profile-actions";
@@ -265,8 +267,25 @@ export async function recordCompletionAction(
     dailyGoalMet: dailyGoalJustMet,
   });
   const { previousXp: beforeXp, xp: nextXp } = await incrementXp(xpEarned);
+
+  // Daily quests (admin feature): make sure today's are dealt — a learner may
+  // go straight to a lesson without opening Home first — then feed this
+  // lesson's events in. Both are best-effort; quest XP is granted atomically
+  // in the database when a quest completes, so it is folded into the totals
+  // below rather than re-applied here.
+  if (features.quests.enabled) {
+    await dealDailyQuests(userId, todayISO, features).catch((error: unknown) => {
+      console.error("[progress] dealDailyQuests failed", error);
+    });
+  }
+  const completedQuests = await recordQuestEvents(
+    questEventsForLesson({ sentenceCount, accuracy: safeAccuracy }),
+    todayISO,
+  );
+  const questXp = completedQuests.reduce((sum, quest) => sum + quest.xp, 0);
+
   const levelBefore = getLearnerLevel(beforeXp).level.name;
-  const levelAfter = getLearnerLevel(nextXp).level.name;
+  const levelAfter = getLearnerLevel(nextXp + questXp).level.name;
 
   const lessonCountAfter = lessonCountBefore + (isFirstCompletion ? 1 : 0);
   const lessonCountJustMilestoned =
@@ -282,6 +301,9 @@ export async function recordCompletionAction(
   if (streakGraceDayUsed) rewards.push({ type: "streakGraceDay" });
   if (streakPlan.freezesUsed > 0) {
     rewards.push({ type: "streakFreezeUsed", count: streakPlan.freezesUsed });
+  }
+  for (const quest of completedQuests) {
+    rewards.push({ type: "questCompleted", questType: quest.type, xp: quest.xp });
   }
 
   await Promise.all([
@@ -300,7 +322,7 @@ export async function recordCompletionAction(
 
   const progress = await fetchProgressAction(todayISO);
   progress.rewards = rewards;
-  progress.xpEarned = xpEarned;
+  progress.xpEarned = xpEarned + questXp;
 
   // Milestone emails, analytics, and Vocabulary Recall scheduling are all
   // side effects that never change what this action returns — none of their

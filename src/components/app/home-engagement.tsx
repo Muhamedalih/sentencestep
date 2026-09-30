@@ -1,5 +1,7 @@
 "use client";
 
+import { GuestFeatureTeaser } from "@/components/app/guest-feature-teaser";
+import { QuestsCard } from "@/components/app/quests-card";
 import { StreakStrip } from "@/components/app/streak-strip";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +14,8 @@ import { cn } from "@/lib/utils";
 export function HomeEngagement({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col gap-4 empty:hidden", className)}>
+      <GuestFeatureTeaser />
+      <QuestsCard />
       <StreakStrip />
     </div>
   );

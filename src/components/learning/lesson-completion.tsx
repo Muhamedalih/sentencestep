@@ -31,6 +31,7 @@ import {
 } from "@/lib/progress/learner-level";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
+import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
 import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/content";
@@ -148,6 +149,10 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
       return t.lesson.streakGraceNote;
     case "streakFreezeUsed":
       return t.streakCalendar.freezeUsedNote.replace("{n}", String(reward.count));
+    case "questCompleted":
+      return t.quests.rewardCompleted
+        .replace("{quest}", questTitle(t, reward.questType))
+        .replace("{xp}", String(reward.xp));
   }
 }
 

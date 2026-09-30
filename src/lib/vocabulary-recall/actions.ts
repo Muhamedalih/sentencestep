@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
+import { recordQuestEvents } from "@/lib/features/quest-service";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import {
@@ -121,6 +123,11 @@ export async function markVocabularyRecallCompletedAction(
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await recordVocabularyReview(word, hadErrors);
+  if (!hadErrors) {
+    after(async () => {
+      await recordQuestEvents([{ type: "masterWords", amount: 1 }]);
+    });
+  }
   revalidatePath("/learn");
   revalidatePath("/learn/recall");
 }

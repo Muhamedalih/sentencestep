@@ -898,4 +898,21 @@ export interface Dictionary {
     dayMissed: string;
     loadError: string;
   };
+  /** Daily quests card on Home (src/components/app/quests-card.tsx) and the guest sign-in teaser for the account-only engagement features. */
+  quests: {
+    heading: string;
+    xpReward: string;
+    allDone: string;
+    loadError: string;
+    rewardCompleted: string;
+    typeSentences: string;
+    typeLessons: string;
+    typeAccuracy: string;
+    typeMasterWords: string;
+    typeDictation: string;
+    typeDailySession: string;
+    guestHeading: string;
+    guestBody: string;
+    guestCta: string;
+  };
 }

@@ -781,4 +781,21 @@ export const tr: Dictionary = {
     dayMissed: "çalışma yok",
     loadError: "Takvim şu anda yüklenemedi.",
   },
+  quests: {
+    heading: "Bugünün görevleri",
+    xpReward: "+{xp} XP",
+    allDone: "Tüm görevler tamam — yarın görüşürüz!",
+    loadError: "Bugünün görevleri yüklenemedi.",
+    rewardCompleted: "Görev tamamlandı: {quest} (+{xp} XP)",
+    typeSentences: "Cümle yaz",
+    typeLessons: "Ders tamamla",
+    typeAccuracy: "Bir dersi %95+ doğrulukla bitir",
+    typeMasterWords: "Tekrarda kelimelerde ustalaş",
+    typeDictation: "Dikte cümleleri çalış",
+    typeDailySession: "Bugünkü oturumu bitir",
+    guestHeading: "Günlük görevlerin kilidini açmak için giriş yap",
+    guestBody:
+      "Günlük görevlerden ekstra XP kazanmak, rozet toplamak ve serini dondurmayla korumak için ücretsiz hesap oluştur.",
+    guestCta: "Ücretsiz hesap oluştur",
+  },
 };
