@@ -1,3 +1,4 @@
+import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { isAutoSkipChar } from "@/lib/typing";
 
 /**
@@ -69,6 +70,8 @@ export interface DictationWord {
 export interface DictationTypedWord {
   text: string;
   status: "correct" | "wrong" | "extra";
+  /** The expected word (normalized) this typed word was matched against, when it was paired with one — lets the feedback mark exactly which letters of `text` were wrong. Absent for extra words and exact matches. */
+  against?: string;
 }
 
 export interface DictationResult {
@@ -135,6 +138,16 @@ function differingIndexes(target: string, typed: string | null): number[] {
     }
   }
   return wrong.sort((a, b) => a - b);
+}
+
+/**
+ * Positions in `word` that `against` doesn't produce — the letters of a typed
+ * word to mark as wrong ("replie" against "reply" marks the "i" and the "e"),
+ * or, called the other way round, the letters of the correct word the learner
+ * missed. Same optimal alignment the mistakes ledger uses.
+ */
+export function wrongLetterPositions(word: string, against: string): number[] {
+  return differingIndexes(word, against);
 }
 
 /** Longest-common-subsequence alignment of two word lists on exact equality; returns matched (targetIndex, typedIndex) pairs in order. */
@@ -209,7 +222,10 @@ export function compareDictation(target: string, typed: string): DictationResult
         entry.errorIndexes = normalizedIndexesToRaw(entry.raw, differingIndexes(expected, got));
       }
       const typedEntry = typedResults[typedIndex];
-      if (typedEntry) typedEntry.status = "wrong";
+      if (typedEntry) {
+        typedEntry.status = "wrong";
+        typedEntry.against = expected;
+      }
     }
     for (let k = paired; k < targetGap; k++) {
       const entry = words[targetCursor + k];
@@ -282,6 +298,24 @@ export function dictationMistakes(
  */
 export function dictationBlanks(target: string): number[] {
   return normalizeDictationWords(target).map((word) => word.length);
+}
+
+/**
+ * For each blank dictationBlanks(text) returns — same order, same length —
+ * the key of the lesson word that blank belongs to, or null when there is no
+ * pronunciation for it (a bare dash or symbol). The keys are exactly the ones
+ * the normal typing view uses for a word's audio (normalizeMistakeWord of the
+ * whitespace-separated token), so hovering a blank plays the same clip a word
+ * click does. A hyphenated word ("well-known") is one word for audio but two
+ * blanks here, so both blanks point at the whole compound.
+ */
+export function dictationAudioWords(text: string): (string | null)[] {
+  const keys: (string | null)[] = [];
+  for (const token of text.split(/\s+/).filter((part) => part.length > 0)) {
+    const key = isTrackableWord(token) ? normalizeMistakeWord(token) : null;
+    for (let piece = 0; piece < rawDictationTokens(token).length; piece++) keys.push(key);
+  }
+  return keys;
 }
 
 /** First letter of every word, for From-memory's "hint" (a single word, or all of them). */

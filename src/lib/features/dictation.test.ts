@@ -10,6 +10,8 @@ import {
   levenshtein,
   normalizeDictationWords,
   normalizedIndexesToRaw,
+  dictationAudioWords,
+  wrongLetterPositions,
 } from "@/lib/features/dictation";
 
 test("normalizeDictationWords: case, punctuation and apostrophes never matter", () => {
@@ -104,4 +106,47 @@ test("dictationBlanks: one letter count per word, punctuation ignored", () => {
 
 test("firstLetterHint: first letter then a dot per remaining letter", () => {
   assert.equal(firstLetterHint("Good morning"), "g··· m······");
+});
+
+test("compareDictation: a paired typed word remembers what it was matched against", () => {
+  const result = compareDictation("I had to reply to everything", "I had to replie to everything");
+  const replie = result.typedWords.find((word) => word.text === "replie");
+  assert.equal(replie?.status, "wrong");
+  assert.equal(replie?.against, "reply");
+  // Exact matches and extra words have nothing to be compared against.
+  assert.equal(result.typedWords[0]?.against, undefined);
+  const withExtra = compareDictation("good morning", "good very morning");
+  assert.equal(withExtra.typedWords.find((word) => word.text === "very")?.against, undefined);
+});
+
+test("wrongLetterPositions: marks the letters that differ in both directions", () => {
+  // "replie" typed for "reply": the typed "i" and "e" are wrong, the missed letter in "reply" is its "y".
+  assert.deepEqual(wrongLetterPositions("replie", "reply"), [4, 5]);
+  assert.deepEqual(wrongLetterPositions("reply", "replie"), [4]);
+  // One dropped letter marks that one letter, not everything after it.
+  assert.deepEqual(wrongLetterPositions("everything", "everthing"), [4]);
+  assert.deepEqual(wrongLetterPositions("cat", "cat"), []);
+});
+
+test("dictationAudioWords: one entry per blank, hyphenated words share their compound's key", () => {
+  const sentence = "Even during meetings, I kept a well-known - habit.";
+  const keys = dictationAudioWords(sentence);
+  assert.equal(keys.length, dictationBlanks(sentence).length);
+  assert.deepEqual(keys, [
+    "even",
+    "during",
+    "meetings",
+    "i",
+    "kept",
+    "a",
+    "well-known",
+    "well-known",
+    "habit",
+  ]);
+});
+
+test("dictationAudioWords: keeps apostrophes inside a word and stays aligned with the blanks", () => {
+  const sentence = "Don't worry, it's fine.";
+  assert.deepEqual(dictationAudioWords(sentence), ["don't", "worry", "it's", "fine"]);
+  assert.equal(dictationAudioWords(sentence).length, dictationBlanks(sentence).length);
 });

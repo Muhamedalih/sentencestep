@@ -720,6 +720,10 @@ export const ar: Dictionary = {
     almost: "اقتربت — راجع الكلمات المميّزة",
     youTyped: "ما كتبته",
     correctSentence: "الجملة الصحيحة",
+    retry: "إعادة",
+    retryNote: "محاولة تدريب: تُحسب محاولتك الأولى فقط في نتيجة الدرس.",
+    blankHint: "مرّر الماوس على أي فراغ أو اضغط عليه لتسمع كلمته",
+    hearWord: "استمع للكلمة {n}",
   },
   fromMemory: {
     button: "اختبر نفسك من الذاكرة",

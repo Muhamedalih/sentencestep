@@ -865,6 +865,10 @@ export interface Dictionary {
     almost: string;
     youTyped: string;
     correctSentence: string;
+    retry: string;
+    retryNote: string;
+    blankHint: string;
+    hearWord: string;
   };
   /** From-memory mode (src/components/learning/from-memory-session.tsx) — an optional round after a lesson: read the meaning, type the English. */
   fromMemory: {

@@ -740,6 +740,10 @@ export const en: Dictionary = {
     almost: "Almost there — check the highlighted words",
     youTyped: "You typed",
     correctSentence: "Correct sentence",
+    retry: "Try again",
+    retryNote: "Practice try: only your first attempt counts toward the lesson score.",
+    blankHint: "Hover over a blank, or tap it, to hear that word",
+    hearWord: "Hear word {n}",
   },
   fromMemory: {
     button: "Test yourself from memory",
