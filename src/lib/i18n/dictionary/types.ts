@@ -847,4 +847,21 @@ export interface Dictionary {
     homeLinkAriaLabel: string;
     dashboardLinkAriaLabel: string;
   };
+  /** Dictation mode (src/components/learning/dictation-sentence.tsx) — hide the sentence, listen, type the whole thing, check with Enter. */
+  dictation: {
+    toggleLabel: string;
+    toggleTitleOn: string;
+    toggleTitleOff: string;
+    listenAndType: string;
+    inputLabel: string;
+    placeholder: string;
+    pressEnter: string;
+    pressEnterContinue: string;
+    check: string;
+    continue: string;
+    perfect: string;
+    almost: string;
+    youTyped: string;
+    correctSentence: string;
+  };
 }

@@ -3,8 +3,15 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Image as ImageIcon, List as ListIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Headphones,
+  Image as ImageIcon,
+  List as ListIcon,
+} from "lucide-react";
 
+import { DictationSentence, type DictationOutcome } from "@/components/learning/dictation-sentence";
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
@@ -19,6 +26,7 @@ import { StoryWordsPanel } from "@/components/learning/story-words-panel";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { Progress } from "@/components/ui/progress";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
@@ -37,6 +45,9 @@ import { cn } from "@/lib/utils";
 import type { Lesson, NextLessonRef } from "@/types/content";
 
 const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
+
+/** The learner's last Dictation on/off choice, remembered per browser so it survives lesson changes (a per-viewer convenience, so localStorage — never the source of truth for anything that matters). */
+const DICTATION_PREFERENCE_KEY = "sentencestep:dictation-on";
 
 /**
  * A single short, light haptic tick per keystroke (correct or error alike —
@@ -133,6 +144,15 @@ export function LessonSession({
   // sentence.
   const [tapped, setTapped] = useState(false);
   const isMobileViewport = useIsMobileViewport();
+  // Dictation (admin feature, see /admin/features): hides the sentence and
+  // grades a whole typed answer on Enter instead of per keystroke. Starts
+  // off on both server and client (the remembered preference is applied in
+  // an effect below, after hydration, for the same reason sentenceIndex
+  // above does).
+  const features = useFeatures();
+  const dictationAvailable = features.dictation.sections[unit.mode];
+  const [dictationOn, setDictationOn] = useState(false);
+  const dictationCountRef = useRef(0);
   // The single value TypingSentence actually reads: true (no gate at all)
   // on desktop/tablet and in Conversation mode — neither shows the overlay,
   // and forcing it true here is what keeps the input's autoFocus and the
@@ -187,6 +207,28 @@ export function LessonSession({
   const hasTrackedAudioRef = useRef(false);
   const { prefetchPronunciation } = usePronunciationSettings();
   const { t } = useLocale();
+
+  useEffect(() => {
+    if (!dictationAvailable) return;
+    try {
+      if (window.localStorage.getItem(DICTATION_PREFERENCE_KEY) === "1") setDictationOn(true);
+    } catch {
+      // Storage can be blocked (private windows); the toggle just starts off.
+    }
+  }, [dictationAvailable]);
+
+  function handleToggleDictation() {
+    const next = !dictationOn;
+    setDictationOn(next);
+    // Pressing the toggle is itself the deliberate tap the mobile "tap to
+    // start" gate is waiting for.
+    setTapped(true);
+    try {
+      window.localStorage.setItem(DICTATION_PREFERENCE_KEY, next ? "1" : "0");
+    } catch {
+      // Preference is a convenience only.
+    }
+  }
 
   // Applies this lesson's real checkpoint (see src/lib/progress/lesson-resume.ts)
   // exactly once, right after mount — deliberately not read into sentenceIndex's
@@ -344,6 +386,21 @@ export function LessonSession({
     mistakes.recordSentenceMistakes(sentenceId, words);
   }
 
+  // A graded Dictation sentence folds into the lesson exactly like a typed
+  // one: its letter tallies join the keystroke counters (so lesson accuracy
+  // and the XP thresholds keep meaning the same thing), its wrong words go
+  // to Fix Your Mistakes, and the shared completion path advances/finishes
+  // the lesson.
+  function handleDictationComplete(outcome: DictationOutcome) {
+    correctCountRef.current += outcome.correctChars;
+    errorCountRef.current += outcome.errorChars;
+    dictationCountRef.current += 1;
+    if (sentence && !previewMode && outcome.mistakes.length > 0) {
+      mistakes.recordSentenceMistakes(sentence.id, outcome.mistakes);
+    }
+    handleSentenceComplete(outcome.wpm);
+  }
+
   function handleSentenceComplete(wpm: number) {
     if (wpm > 0) wpmSamplesRef.current.push(wpm);
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, unit.mode));
@@ -412,6 +469,7 @@ export function LessonSession({
     correctCountRef.current = 0;
     errorCountRef.current = 0;
     wpmSamplesRef.current = [];
+    dictationCountRef.current = 0;
     setIsComplete(false);
   }
 
@@ -746,6 +804,25 @@ export function LessonSession({
                   >
                     {unit.title}
                   </div>
+                  {dictationAvailable && (
+                    <div className="mb-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={handleToggleDictation}
+                        aria-pressed={dictationOn}
+                        title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                          dictationOn
+                            ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+                            : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted",
+                        )}
+                      >
+                        <Headphones className="size-3.5" aria-hidden="true" />
+                        {t.dictation.toggleLabel}
+                      </button>
+                    </div>
+                  )}
                   <div className="mb-3 flex flex-col gap-1.5">
                     {unit.mode !== "stories" && (
                       <div className="flex items-center justify-end gap-1" dir="ltr">
@@ -814,42 +891,60 @@ export function LessonSession({
                 >
                   {sentence &&
                     (() => {
-                      const typingSentence = (
-                        <TypingSentence
-                          key={sentence.id}
-                          sentence={sentence}
-                          mode={unit.mode}
-                          resolvedVoiceId={resolvedVoiceId}
-                          speakerVoiceMap={speakerVoiceMap}
-                          wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
-                          onComplete={handleSentenceComplete}
-                          onCorrectLetter={() => {
-                            correctCountRef.current += 1;
-                            play("letter");
-                            vibrateLightly();
-                          }}
-                          onErrorLetter={() => {
-                            errorCountRef.current += 1;
-                            play("error");
-                            vibrateLightly();
-                          }}
-                          onAudioPlay={handleAudioPlay}
-                          onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
-                          storyTitle={unit.title}
-                          sentenceNumber={sentenceIndex + 1}
-                          totalSentences={total}
-                          storyTimeRemainingLabel={storyTimeRemainingLabel}
-                          hasStarted={hasStarted}
-                          showTapToStart={!tapped}
-                          onStart={() => setTapped(true)}
-                          onGoBack={handleGoBackSentence}
-                          onGoForward={
-                            sentenceIndex < maxSentenceIndexReached
-                              ? handleGoForwardSentence
-                              : undefined
-                          }
-                        />
-                      );
+                      const typingSentence =
+                        dictationAvailable && dictationOn ? (
+                          <DictationSentence
+                            key={`dictation-${sentence.id}`}
+                            sentence={sentence}
+                            mode={unit.mode}
+                            resolvedVoiceId={resolvedVoiceId}
+                            speakerVoiceMap={speakerVoiceMap}
+                            showWordBlanks={features.dictation.showWordBlanks}
+                            hasStarted={hasStarted}
+                            onStart={() => setTapped(true)}
+                            onAudioPlay={handleAudioPlay}
+                            onKeystroke={() => {
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onComplete={handleDictationComplete}
+                          />
+                        ) : (
+                          <TypingSentence
+                            key={sentence.id}
+                            sentence={sentence}
+                            mode={unit.mode}
+                            resolvedVoiceId={resolvedVoiceId}
+                            speakerVoiceMap={speakerVoiceMap}
+                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
+                            onComplete={handleSentenceComplete}
+                            onCorrectLetter={() => {
+                              correctCountRef.current += 1;
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onErrorLetter={() => {
+                              errorCountRef.current += 1;
+                              play("error");
+                              vibrateLightly();
+                            }}
+                            onAudioPlay={handleAudioPlay}
+                            onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
+                            storyTitle={unit.title}
+                            sentenceNumber={sentenceIndex + 1}
+                            totalSentences={total}
+                            storyTimeRemainingLabel={storyTimeRemainingLabel}
+                            hasStarted={hasStarted}
+                            showTapToStart={!tapped}
+                            onStart={() => setTapped(true)}
+                            onGoBack={handleGoBackSentence}
+                            onGoForward={
+                              sentenceIndex < maxSentenceIndexReached
+                                ? handleGoForwardSentence
+                                : undefined
+                            }
+                          />
+                        );
                       // Stories only: a plain mount-in transition (no
                       // AnimatePresence, no exit) so each new sentence visibly
                       // slides in from the right and settles at its normal

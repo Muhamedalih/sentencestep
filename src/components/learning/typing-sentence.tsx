@@ -627,7 +627,7 @@ export function TypingSentence({
  * blurred version — is deliberate too: the sentence should still read as
  * present and legible-ish behind the card, not obscured.
  */
-function TapToStartOverlay({
+export function TapToStartOverlay({
   heading,
   body,
   onStart,

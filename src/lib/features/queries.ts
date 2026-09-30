@@ -43,7 +43,20 @@ export const getFeatureConfig = cache(async (): Promise<FeatureConfig> => {
  * is really open before doing work for it). cache()'d per request.
  */
 export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> => {
-  if (!isSupabaseConfigured()) return disabledFeatures(false);
+  if (!isSupabaseConfigured()) {
+    // Local development only: with no Supabase project linked there is no
+    // settings row to read, so this opt-in env var switches every feature on
+    // (as a guest — the account-only ones still need a real session) purely
+    // so the lesson-session features can be exercised offline. Hard-gated to
+    // non-production on every read, same convention as the dev-admin and
+    // dev-plan cookies.
+    if (process.env.NODE_ENV !== "production" && process.env.FEATURES_DEV_ALL_ON === "true") {
+      const config = defaultFeatureConfig();
+      for (const entry of Object.values(config.features)) entry.state = "on";
+      return resolveFeatures(config, { signedIn: false, isAdmin: false, isPremium: false });
+    }
+    return disabledFeatures(false);
+  }
   try {
     const [config, user, admin, premium] = await Promise.all([
       getFeatureConfig(),
