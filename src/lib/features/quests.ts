@@ -86,6 +86,12 @@ export interface DailyQuest {
   completed: boolean;
 }
 
+/** Today's quests as Home shows them (what the quests card renders). */
+export interface DailyQuestsPayload {
+  quests: DailyQuest[];
+  allDone: boolean;
+}
+
 /** What a lesson completion contributes to each quest type. */
 export function questEventsForLesson(input: {
   sentenceCount: number;

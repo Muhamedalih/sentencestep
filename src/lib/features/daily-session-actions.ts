@@ -4,12 +4,8 @@ import { after } from "next/server";
 
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import { awardEventBadge } from "@/lib/features/badge-service";
-import { completeDailySession, fetchDailySessionDone } from "@/lib/features/daily-session-queries";
-import { estimateSessionMinutes } from "@/lib/features/daily-session";
-import {
-  buildDailySessionWords,
-  countDailySessionCandidates,
-} from "@/lib/features/daily-session-service";
+import { completeDailySession } from "@/lib/features/daily-session-queries";
+import { buildDailySessionWords } from "@/lib/features/daily-session-service";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -29,39 +25,6 @@ export interface DailySessionSummary {
   minutes: number;
   xpReward: number;
   completedToday: boolean;
-}
-
-/**
- * What the Home card shows: how much is ready and whether today's session is
- * already done. `todayISO` is the learner's own local date (a Server Action
- * runs in the server's time zone). Null — rendering nothing — when the
- * feature isn't open to this visitor or anything fails: it is decoration on
- * Home and must never surface an error there.
- */
-export async function fetchDailySessionSummaryAction(
-  todayISO: string,
-): Promise<DailySessionSummary | null> {
-  if (!ISO_DATE.test(todayISO)) return null;
-  try {
-    const features = await getEffectiveFeatures();
-    if (!features.dailySession.enabled) return null;
-    const userId = await getSessionUserId();
-    if (!userId) return null;
-
-    const [completedToday, ready] = await Promise.all([
-      fetchDailySessionDone(userId, todayISO).catch(() => false),
-      countDailySessionCandidates(userId, features),
-    ]);
-    return {
-      ready,
-      minutes: estimateSessionMinutes(ready),
-      xpReward: features.dailySession.xpReward,
-      completedToday,
-    };
-  } catch (error) {
-    console.error("[daily-session] fetchDailySessionSummaryAction failed", error);
-    return null;
-  }
 }
 
 /** The session's words, for /learn/session. [] when the feature isn't open, nothing is due, or anything fails. */

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Flame, Snowflake } from "lucide-react";
 
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { fetchStreakCalendarAction } from "@/lib/features/calendar-actions";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
@@ -296,29 +295,24 @@ export function StreakStripView({
  * The Home page's 7-day streak strip (admin feature "Streak calendar &
  * freeze"): each of the last seven days as a dot — practiced, forgiven, or
  * covered by a freeze — with the month's remaining freezes underneath, and a
- * tap-to-expand month grid. Renders nothing at all unless the feature is
- * open to this visitor, and quietly nothing if the data can't be loaded.
+ * tap-to-expand month grid. The strip's own data is loaded with the page (see
+ * loadHomeEngagement) — null when the feature isn't open to this visitor or
+ * it couldn't be loaded, in which case nothing renders; only the month grid
+ * fetches, and only once the learner expands it.
  */
-export function StreakStrip({ className }: { className?: string }) {
-  const { streakCalendar } = useFeatures();
-  const [today] = useState(() => todayLocalISODate());
-  const [strip, setStrip] = useState<StreakCalendarData | null | undefined>(undefined);
+export function StreakStrip({
+  today,
+  strip,
+  className,
+}: {
+  /** The learner's local date the strip was loaded for. */
+  today: string;
+  strip: StreakCalendarData | null;
+  className?: string;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const [monthCursor, setMonthCursor] = useState(() => firstOfMonth(todayLocalISODate()));
+  const [monthCursor, setMonthCursor] = useState(() => firstOfMonth(today));
   const [month, setMonth] = useState<StreakCalendarData | null | undefined>(undefined);
-
-  const enabled = streakCalendar.enabled;
-
-  useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    fetchStreakCalendarAction(addDays(today, -6), today, today)
-      .then((data) => !cancelled && setStrip(data))
-      .catch(() => !cancelled && setStrip(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, today]);
 
   const loadMonth = useCallback(
     (cursor: string) => {
@@ -331,10 +325,10 @@ export function StreakStrip({ className }: { className?: string }) {
   );
 
   useEffect(() => {
-    if (enabled && expanded) loadMonth(monthCursor);
-  }, [enabled, expanded, monthCursor, loadMonth]);
+    if (expanded) loadMonth(monthCursor);
+  }, [expanded, monthCursor, loadMonth]);
 
-  if (!enabled) return null;
+  if (strip === null) return null;
 
   return (
     <StreakStripView

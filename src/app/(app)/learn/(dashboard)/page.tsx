@@ -1,7 +1,10 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
-import { HomeEngagement } from "@/components/app/home-engagement";
+import { HomeEngagementSkeleton } from "@/components/app/home-engagement";
+import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
@@ -9,6 +12,9 @@ import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessons } from "@/lib/content";
+import { startHomeEngagement } from "@/lib/features/home-engagement";
+import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { LEARNING_MODES } from "@/lib/learning-modes";
@@ -103,6 +109,25 @@ export default async function LearnHomePage() {
   const progressPromise = userPromise.then((user) =>
     user ? fetchProgressCached(todayISO) : undefined,
   );
+  // The engagement cards (today's session, quests, streak strip) load HERE,
+  // alongside everything above, instead of in the browser after hydration —
+  // there they were three separate Server Actions that Next queues one behind
+  // the other, each re-resolving features and the session, which is what made
+  // Home feel slow the moment they were added. They are keyed by the learner's
+  // LOCAL date, which the server derives from the time zone the browser left
+  // in a cookie (see TimezoneCookie); without that cookie yet (first ever
+  // visit) the cards fall back to one browser request. They stream in through
+  // <Suspense> below, so a slow read there never holds back the rest of the
+  // page. weakWordsPromise is shared so the session count doesn't redo it.
+  const learnerToday = localISODateInTimeZone((await cookies()).get(TIMEZONE_COOKIE)?.value);
+  const weakWordsPromise = fetchWeakWordsAction();
+  const engagementPromise = startHomeEngagement({
+    todayISO: learnerToday,
+    features: getEffectiveFeatures(),
+    user: userPromise,
+    // Swallowed here only for the count: the page's own await below still surfaces a real failure.
+    weakWordCount: weakWordsPromise.then((words) => words.length).catch(() => 0),
+  });
   const [
     units,
     hasPremium,
@@ -125,7 +150,7 @@ export default async function LearnHomePage() {
     attemptCountPromise,
     fetchFeaturedBooks(supabase, locale),
     fetchFirstPublishedBook(supabase, locale),
-    fetchWeakWordsAction(),
+    weakWordsPromise,
     progressPromise,
   ]);
 
@@ -185,7 +210,9 @@ export default async function LearnHomePage() {
           className="mb-10"
         />
         <GuestProgressBanner isGuest={!user} className="mb-6" />
-        <HomeEngagement className="mb-6" />
+        <Suspense fallback={<HomeEngagementSkeleton className="mb-6" />}>
+          <HomeEngagementSection data={engagementPromise} className="mb-6" />
+        </Suspense>
         <NeedsReviewWords words={weakWords} />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}

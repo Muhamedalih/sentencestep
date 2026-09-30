@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { TimezoneCookie } from "@/components/app/timezone-cookie";
 import { AuthUserProvider } from "@/components/providers/auth-user-provider";
 import { FeatureProvider } from "@/components/providers/feature-provider";
 import { LessonCompletionThemeProvider } from "@/components/providers/lesson-completion-theme-provider";
@@ -75,6 +76,8 @@ export default async function LearnLayout({ children }: { children: ReactNode })
           takes effect for every learner on next load — no rebuild/redeploy
           needed. */}
       {lessonColorCss && <style>{lessonColorCss}</style>}
+      {/* Tells the server the learner's time zone so Home can render its date-keyed cards up front — see TimezoneCookie. */}
+      <TimezoneCookie />
       <AuthUserProvider userId={user?.id ?? null}>
         <FeatureProvider features={features}>
           <VoiceSettingsProvider settings={voiceSettings}>
