@@ -731,7 +731,6 @@ export const en: Dictionary = {
     toggleTitleOff: "Turn dictation on: hide the sentences and type what you hear",
     listenAndType: "Listen, then type the whole sentence",
     inputLabel: "Type the sentence you hear",
-    placeholder: "Type what you hear…",
     pressEnter: "Press Enter to check",
     pressEnterContinue: "Press Enter to continue",
     check: "Check",

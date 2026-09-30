@@ -739,7 +739,6 @@ export const tr: Dictionary = {
     toggleTitleOff: "Diktenin aç: cümleleri gizle ve duyduğunu yaz",
     listenAndType: "Dinle, sonra cümlenin tamamını yaz",
     inputLabel: "Duyduğun cümleyi yaz",
-    placeholder: "Duyduğunu yaz…",
     pressEnter: "Kontrol etmek için Enter'a bas",
     pressEnterContinue: "Devam etmek için Enter'a bas",
     check: "Kontrol et",

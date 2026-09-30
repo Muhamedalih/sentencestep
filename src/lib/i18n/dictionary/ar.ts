@@ -711,7 +711,6 @@ export const ar: Dictionary = {
     toggleTitleOff: "فعّل الإملاء: أخفِ الجمل واكتب ما تسمعه",
     listenAndType: "استمع ثم اكتب الجملة كاملة",
     inputLabel: "اكتب الجملة التي تسمعها",
-    placeholder: "اكتب ما تسمعه…",
     pressEnter: "اضغط Enter للتحقق",
     pressEnterContinue: "اضغط Enter للمتابعة",
     check: "تحقق",

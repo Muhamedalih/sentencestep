@@ -856,7 +856,6 @@ export interface Dictionary {
     toggleTitleOff: string;
     listenAndType: string;
     inputLabel: string;
-    placeholder: string;
     pressEnter: string;
     pressEnterContinue: string;
     check: string;

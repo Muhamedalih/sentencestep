@@ -1,5 +1,5 @@
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
-import { isAutoSkipChar } from "@/lib/typing";
+import { isAutoSkipChar, tokenize } from "@/lib/typing";
 
 /**
  * Pure grading for Dictation and From-memory: the learner types a whole
@@ -290,24 +290,142 @@ export function dictationMistakes(
     .map((word) => ({ word: word.raw, errorIndexes: word.errorIndexes }));
 }
 
-/**
- * The blank placeholder shown while the text is hidden: one entry per word
- * with its letter count (punctuation isn't counted — it's never required),
- * so the learner sees how many words and letters to expect without seeing
- * any of them.
- */
-export function dictationBlanks(target: string): number[] {
-  return normalizeDictationWords(target).map((word) => word.length);
+/** One cell of the hidden sentence as it is drawn in place. */
+export type DictationCell =
+  /** A letter or digit the learner has to type. `char` is the real character (only ever used to size the slot and for the reveal animation), `typed` what they typed there so far, or null while it is still blank. */
+  | { kind: "slot"; word: number; letter: number; char: string; typed: string | null }
+  /** A letter typed past the end of its word. */
+  | { kind: "extra"; typed: string }
+  /** Punctuation, an apostrophe or a hyphen: shown as printed, never typed. */
+  | { kind: "mark"; char: string };
+
+export type DictationToken =
+  | { kind: "space" }
+  | {
+      kind: "word";
+      cells: DictationCell[];
+      /** Index (into normalizeDictationWords) of the first graded word in this token — a hyphenated compound holds several — or null for a token with no letters at all. Also the blank a tap speaks. */
+      firstWord: number | null;
+    };
+
+export interface DictationView {
+  tokens: DictationToken[];
+  /** Whole words typed past the last word of the sentence. */
+  extraWords: string[];
+  /** True while the learner is partway through a word (the text doesn't end in a space or hyphen). */
+  typingWord: boolean;
+  /** The next slot to fill, for the moving cursor; null when the sentence has no letters. Once every word is complete it rests on the last slot. */
+  cursor: { word: number; letter: number } | null;
+}
+
+/** The letters of what has been typed so far, grouped by graded word: same splitting as grading (whitespace and hyphens separate words, punctuation is dropped) but case as typed. */
+function typedLetterWords(typed: string): { words: string[]; open: boolean } {
+  const pieces = typed.split(WORD_SPLIT);
+  const words: string[] = [];
+  let open = false;
+  pieces.forEach((piece, index) => {
+    const letters = Array.from(piece)
+      .filter((char) => !isAutoSkipChar(char))
+      .join("");
+    if (letters.length > 0) words.push(letters);
+    if (index === pieces.length - 1) open = letters.length > 0;
+  });
+  return { words, open };
 }
 
 /**
- * For each blank dictationBlanks(text) returns — same order, same length —
- * the key of the lesson word that blank belongs to, or null when there is no
- * pronunciation for it (a bare dash or symbol). The keys are exactly the ones
- * the normal typing view uses for a word's audio (normalizeMistakeWord of the
- * whitespace-separated token), so hovering a blank plays the same clip a word
- * click does. A hyphenated word ("well-known") is one word for audio but two
- * blanks here, so both blanks point at the whole compound.
+ * The hidden sentence laid out the way the typing view lays out the real one
+ * (same tokens, same spaces), with a blank slot per letter and whatever the
+ * learner has typed so far dropped into the slots of the word it belongs to.
+ * Words are matched by position in the same way grading splits them, so the
+ * picture follows the learner's own spacing: typing a hyphenated compound with
+ * a space fills the same two blanks. Nothing here says whether a typed letter
+ * is right — that only happens when the learner presses Enter. Pass an empty
+ * `target` to get just an echo of what was typed (the admin option that hides
+ * the blanks).
+ */
+export function dictationView(target: string, typed: string): DictationView {
+  const { words: typedWords, open } = typedLetterWords(typed);
+  const typedChars = typedWords.map((word) => Array.from(word));
+  const slotCounts: number[] = [];
+  const tokens: DictationToken[] = [];
+  let word = 0;
+
+  for (const token of tokenize(target)) {
+    if (/^\s$/.test(token)) {
+      tokens.push({ kind: "space" });
+      continue;
+    }
+
+    const cells: DictationCell[] = [];
+    let firstWord: number | null = null;
+    let letters = 0;
+    let lastSlot = -1;
+
+    // Ends the current hyphen-separated piece: letters typed beyond its last
+    // slot are shown right after it (before any trailing punctuation).
+    const closePiece = () => {
+      if (letters === 0) return;
+      const overflow = (typedChars[word] ?? []).slice(letters);
+      if (overflow.length > 0) {
+        cells.splice(
+          lastSlot + 1,
+          0,
+          ...overflow.map((char): DictationCell => ({ kind: "extra", typed: char })),
+        );
+      }
+      slotCounts[word] = letters;
+      word += 1;
+      letters = 0;
+      lastSlot = -1;
+    };
+
+    for (const char of Array.from(token)) {
+      if (isAutoSkipChar(char)) {
+        cells.push({ kind: "mark", char });
+        if (/[-–—]/.test(char)) closePiece();
+        continue;
+      }
+      if (firstWord === null) firstWord = word;
+      cells.push({
+        kind: "slot",
+        word,
+        letter: letters,
+        char,
+        typed: typedChars[word]?.[letters] ?? null,
+      });
+      lastSlot = cells.length - 1;
+      letters += 1;
+    }
+    closePiece();
+    tokens.push({ kind: "word", cells, firstWord });
+  }
+
+  let cursor: DictationView["cursor"] = null;
+  if (word > 0) {
+    const last = { word: word - 1, letter: (slotCounts[word - 1] ?? 1) - 1 };
+    const cursorWord = open ? typedWords.length - 1 : typedWords.length;
+    if (cursorWord >= word) {
+      cursor = last;
+    } else {
+      const filled = typedChars[cursorWord]?.length ?? 0;
+      if (filled < (slotCounts[cursorWord] ?? 0)) cursor = { word: cursorWord, letter: filled };
+      else cursor = cursorWord + 1 < word ? { word: cursorWord + 1, letter: 0 } : last;
+    }
+  }
+
+  return { tokens, extraWords: typedWords.slice(word), typingWord: open, cursor };
+}
+
+/**
+ * For each graded word of the sentence — same order and count as the word
+ * indexes in dictationView — the key of the lesson word it belongs to, or null
+ * when there is no pronunciation for it (a bare dash or symbol). The keys are
+ * exactly the ones the normal typing view uses for a word's audio
+ * (normalizeMistakeWord of the whitespace-separated token), so tapping a blank
+ * plays the same clip a word click does. A hyphenated word ("well-known") is
+ * one word for audio but two graded words here, so both point at the whole
+ * compound.
  */
 export function dictationAudioWords(text: string): (string | null)[] {
   const keys: (string | null)[] = [];

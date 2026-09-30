@@ -134,7 +134,7 @@ interface TypingTextProps {
   highlightIndexes?: ReadonlySet<number> | null;
 }
 
-interface UnderlineRect {
+export interface UnderlineRect {
   x: number;
   y: number;
   width: number;
@@ -563,7 +563,7 @@ function WordTranslationPopover({ text, dir }: { text: string; dir: "rtl" | "ltr
  * indicators share this one measuring implementation so they can never
  * drift into different positioning logic.
  */
-function useUnderlinePosition(
+export function useUnderlinePosition(
   containerRef: RefObject<HTMLDivElement | null>,
   selector: string,
   yOffset: number,

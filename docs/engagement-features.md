@@ -67,12 +67,23 @@ already has history the day the feature goes On.
   as a chip and its wrong letters underlined (typed and correct line), Enter or
   **Continue** moves on, and **Try again** lets the learner retype the same
   sentence as often as they like: only the first attempt is scored and
-  recorded. While the sentence is hidden, every blank is a word-shaped pill:
-  hovering only lights it up (and quietly prepares that word's clip), tapping it
-  says the word (Normal and Stories, using the same word audio as the typing
-  view; if the clip takes more than a second the browser's own voice says it so
-  a tap is never silent). From memory shares the correction screen, Enter
-  handling and Try again.
+  recorded.
+  Dictation keeps the typing view's own frame (same text size, audio controls,
+  Stories header, Conversation bubble) instead of a card of its own: the
+  sentence is drawn in place with a blank under every letter, and there is no
+  answer box. When the switch is turned on, the letters dissolve into their
+  blanks one after another (only for the sentence on screen at that moment; a
+  new sentence just draws its blanks in, never flashing its text). The learner
+  types straight onto the blanks: a cursor bar glides along them and each typed
+  letter appears in its slot, word by word, with nothing said about whether it
+  is right until Enter. Punctuation and apostrophes stay printed between the
+  blanks. While the sentence is hidden, hovering a word only lights its blanks
+  up (and quietly prepares that word's clip), tapping it says the word (Normal
+  and Stories, using the same word audio as the typing view; if the clip takes
+  more than a second the browser's own voice says it so a tap is never
+  silent). Turning **Show word-length blanks** off leaves the area empty and
+  only echoes what has been typed. From memory shares the correction screen,
+  Enter handling and Try again.
 - **Streak freeze** sits on top of the existing free one-missed-day grace: each
   _extra_ consecutive missed day spends one freeze from the month's balance,
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).
