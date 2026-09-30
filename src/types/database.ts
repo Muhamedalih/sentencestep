@@ -423,6 +423,22 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["saved_words"]["Insert"]>;
         Relationships: [];
       };
+      daily_sessions: {
+        Row: {
+          user_id: string;
+          session_date: string;
+          completed_at: string;
+          xp: number;
+        };
+        Insert: {
+          user_id: string;
+          session_date: string;
+          completed_at?: string;
+          xp?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["daily_sessions"]["Insert"]>;
+        Relationships: [];
+      };
       feature_settings: {
         Row: {
           id: number;
@@ -1365,6 +1381,10 @@ export interface Database {
       record_card_review: {
         Args: { p_word: string; p_had_errors: boolean };
         Returns: undefined;
+      };
+      complete_daily_session: {
+        Args: { p_date: string; p_xp: number };
+        Returns: boolean;
       };
       record_activity_day: {
         Args: { p_day: string; p_sentences: number; p_xp: number };

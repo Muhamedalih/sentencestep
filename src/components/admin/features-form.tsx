@@ -137,23 +137,37 @@ function SwitchRow({
   hint,
   checked,
   onChange,
+  compact = false,
 }: {
   label: string;
   hint?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** Switch right beside its label (for a row of several short options) instead of pushed to the far edge — otherwise each switch reads as belonging to its neighbour's label. */
+  compact?: boolean;
 }) {
+  const control = (
+    <Switch
+      checked={checked}
+      onChange={(event) => onChange(event.target.checked)}
+      aria-label={label}
+    />
+  );
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3">
+        {control}
+        <p className="text-sm font-medium">{label}</p>
+      </div>
+    );
+  }
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
         <p className="text-sm font-medium">{label}</p>
         {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
       </div>
-      <Switch
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        aria-label={label}
-      />
+      {control}
     </div>
   );
 }
@@ -247,6 +261,7 @@ export function FeaturesForm({ initial }: { initial: FeatureConfig }) {
                     {sections.map((section) => (
                       <SwitchRow
                         key={section}
+                        compact
                         label={LEARNING_SECTION_LABELS[section]}
                         checked={entry.sections[section] !== false}
                         onChange={(checked) =>
@@ -421,6 +436,7 @@ export function FeaturesForm({ initial }: { initial: FeatureConfig }) {
                     {BADGE_DEFS.map((badge) => (
                       <SwitchRow
                         key={badge.id}
+                        compact
                         label={BADGE_LABELS[badge.id]}
                         checked={!config.options.badges.disabled.includes(badge.id)}
                         onChange={(checked) =>

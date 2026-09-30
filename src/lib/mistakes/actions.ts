@@ -217,7 +217,28 @@ export async function recordWordListMistakeAction(word: string): Promise<void> {
 export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueueItem[]> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return [];
+  return buildMistakeQueue(userId, { lessonId });
+}
 
+/**
+ * The same hydrated queue as fetchMistakesAction, but across EVERY lesson —
+ * outstanding mistakes first, then due reviews — capped at `limit`. What
+ * "today's session" draws its mistake words from: unlike a lesson's
+ * completion screen, the daily session isn't about one lesson. The cap
+ * matters because each item costs a cached-audio lookup below.
+ */
+export async function fetchAllMistakesAction(limit: number): Promise<MistakeQueueItem[]> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return [];
+  // A client-supplied number, so bounded: it can only ever ask for its own data, but each item costs a lookup.
+  const bounded = Math.min(100, Math.max(1, Math.floor(Number.isFinite(limit) ? limit : 20)));
+  return buildMistakeQueue(userId, { limit: bounded });
+}
+
+async function buildMistakeQueue(
+  userId: string,
+  { lessonId, limit }: { lessonId?: string; limit?: number },
+): Promise<MistakeQueueItem[]> {
   const [activeRows, dueReviewRows] = await Promise.all([
     fetchActiveMistakeRows(userId),
     fetchDueReviewRows(userId),
@@ -255,7 +276,7 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
     if (row.sentenceId === null) continue;
     const sentence = sentenceById.get(row.sentenceId);
     if (!sentence) continue;
-    if (sentence.lessonId !== lessonId) continue;
+    if (lessonId !== undefined && sentence.lessonId !== lessonId) continue;
     const lesson = lessonById.get(sentence.lessonId);
     if (!lesson) continue;
 
@@ -319,6 +340,8 @@ export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueu
       (orderIndex.get(b.word) ?? Number.POSITIVE_INFINITY)
     );
   });
+
+  if (limit !== undefined && items.length > limit) items.length = limit;
 
   // Cache-only pre-resolution for EVERY item, not just the first — mirrors
   // LessonPage's identical pre-resolution of a lesson's first sentence (see

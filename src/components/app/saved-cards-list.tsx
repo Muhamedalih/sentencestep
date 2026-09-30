@@ -72,7 +72,7 @@ export function SavedCardsList({ cards }: { cards: CardListItem[] }) {
           <p className="text-muted-foreground text-sm" dir="ltr">
             {blankOutWord(card.sentenceEn, card.wordIndex)}
           </p>
-          <p className={cn("text-muted-foreground/80 text-xs")}>
+          <p className={cn("text-muted-foreground/80 text-xs")} dir={dir}>
             {card.lessonTitle}
             {card.nextReviewAt && !card.isDue
               ? ` · ${t.myCards.nextReview.replace("{date}", dateFormat.format(new Date(card.nextReviewAt)))}`

@@ -958,4 +958,16 @@ export interface Dictionary {
     signInHeading: string;
     signInBody: string;
   };
+  /** Today's session: the Home card (src/components/app/daily-session-card.tsx) and the session's completion screen. */
+  dailySession: {
+    cardHeading: string;
+    cardBody: string;
+    cardBodyDone: string;
+    reward: string;
+    start: string;
+    completeHeading: string;
+    completeSubtitle: string;
+    xpEarned: string;
+    alreadyRewarded: string;
+  };
 }

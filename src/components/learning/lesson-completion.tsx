@@ -744,7 +744,7 @@ export function LessonCompletion({
                     className="flex items-center gap-3 rounded-2xl border px-4 py-2.5"
                   >
                     {group && <BadgeMedal group={group} earned className="size-11" />}
-                    <span className="text-start">
+                    <span className="text-start" dir={dir}>
                       <span
                         style={{ color: theme.colorAccent }}
                         className="block text-xs font-semibold tracking-wide uppercase"

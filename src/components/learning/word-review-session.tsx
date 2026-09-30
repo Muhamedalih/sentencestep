@@ -18,6 +18,10 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { markCardReviewedAction } from "@/lib/cards/actions";
+import { completeDailySessionAction } from "@/lib/features/daily-session-actions";
+import type { SessionSource } from "@/lib/features/daily-session";
+import { completeSessionWord } from "@/lib/features/session-completion";
+import { todayLocalISODate } from "@/lib/progress/streak";
 import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { markVocabularyRecallCompletedAction } from "@/lib/vocabulary-recall/actions";
 import { popIn } from "@/lib/motion";
@@ -46,6 +50,8 @@ export interface ReviewWord extends VocabularyWord {
   pronunciationContentType?: VoiceAudioContentType;
   /** Paired with pronunciationContentType — defaults to this word's own `id` (a real vocabulary_words id) when absent, exactly as before this field existed. */
   pronunciationContentId?: string;
+  /** Daily session only (variant="session") — which source this word came from, which decides the completion action (see completeSessionWord). */
+  sessionSource?: SessionSource;
 }
 
 /**
@@ -97,7 +103,7 @@ export function WordReviewSession({
    * instead of Word Lists' own catalog, and framed as "words you've met"
    * rather than "words you got wrong."
    */
-  variant?: "wordLists" | "recall" | "cards";
+  variant?: "wordLists" | "recall" | "cards" | "session";
   /**
    * Overrides variant's default back link (a plain string, not a function —
    * safe to pass from a Server Component, unlike onWordCompleted used to be).
@@ -152,9 +158,13 @@ export function WordReviewSession({
 
   const resolvedBackHref =
     backHref ??
-    (variant === "recall" ? "/learn" : variant === "cards" ? "/learn/cards" : "/learn/word-lists");
+    (variant === "recall" || variant === "session"
+      ? "/learn"
+      : variant === "cards"
+        ? "/learn/cards"
+        : "/learn/word-lists");
   const backLabel =
-    variant === "recall"
+    variant === "recall" || variant === "session"
       ? t.mistakes.learningHome
       : variant === "cards"
         ? t.myCards.title
@@ -164,16 +174,20 @@ export function WordReviewSession({
       ? t.vocabularyRecall.completeHeading
       : variant === "cards"
         ? t.myCards.reviewCompleteHeading
-        : t.mistakes.allCaughtUp;
+        : variant === "session"
+          ? t.dailySession.completeHeading
+          : t.mistakes.allCaughtUp;
   const completeSubtitle = (
     variant === "recall"
       ? t.vocabularyRecall.completeSubtitle
       : variant === "cards"
         ? t.myCards.reviewCompleteSubtitle
-        : t.mistakes.correctedCount
+        : variant === "session"
+          ? t.dailySession.completeSubtitle
+          : t.mistakes.correctedCount
   ).replace("{n}", String(correctedCount));
   const contextLabel =
-    (variant === "recall" || variant === "cards") && word?.lessonTitle
+    (variant === "recall" || variant === "cards" || variant === "session") && word?.lessonTitle
       ? t.vocabularyRecall.sourceLabel
           .replace("{title}", word.lessonTitle)
           .replace("{n}", String(word.daysAgo ?? 1))
@@ -182,6 +196,18 @@ export function WordReviewSession({
   useEffect(() => {
     if (queue.length === 0) setIsComplete(true);
   }, [queue]);
+
+  // Daily session only: once the queue empties, tell the server (which pays
+  // the once-a-day XP — see complete_daily_session) and show what came back.
+  const [sessionReward, setSessionReward] = useState<{ first: boolean; xp: number } | null>(null);
+  const sessionReportedRef = useRef(false);
+  useEffect(() => {
+    if (variant !== "session" || !isComplete || sessionReportedRef.current) return;
+    sessionReportedRef.current = true;
+    completeDailySessionAction(todayLocalISODate(), correctedCount)
+      .then(setSessionReward)
+      .catch((error: unknown) => console.error("[daily-session] completion report failed", error));
+  }, [variant, isComplete, correctedCount]);
 
   const { prefetchPronunciation } = usePronunciationSettings();
   const nextWord = queue.length > 1 ? words[queue[1]!] : undefined;
@@ -204,7 +230,9 @@ export function WordReviewSession({
           ? markVocabularyRecallCompletedAction(word.targetWord, hadErrors)
           : variant === "cards"
             ? markCardReviewedAction(word.targetWord, hadErrors)
-            : masterMistakeWordAction(word.targetWord);
+            : variant === "session"
+              ? completeSessionWord(word, hadErrors)
+              : masterMistakeWordAction(word.targetWord);
       complete.catch((error: unknown) => {
         console.error("[word-review] completion action failed", error);
       });
@@ -270,10 +298,23 @@ export function WordReviewSession({
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight">{completeHeading}</h2>
                 <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
+                {variant === "session" && sessionReward && (
+                  <p
+                    className={
+                      sessionReward.first
+                        ? "text-accent mt-3 font-semibold"
+                        : "text-muted-foreground mt-3 text-sm"
+                    }
+                  >
+                    {sessionReward.first
+                      ? t.dailySession.xpEarned.replace("{xp}", String(sessionReward.xp))
+                      : t.dailySession.alreadyRewarded}
+                  </p>
+                )}
               </div>
               <Button asChild className="mt-2">
                 <Link href={resolvedBackHref}>
-                  {variant === "recall" || variant === "cards"
+                  {variant === "recall" || variant === "cards" || variant === "session"
                     ? backLabel
                     : t.wordLists.backToWordLists}
                 </Link>

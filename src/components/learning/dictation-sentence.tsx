@@ -153,7 +153,7 @@ export function DictationSentence({
       </div>
 
       <div className="flex flex-col gap-5 lg:flex-1 lg:justify-center">
-        <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+        <p dir={dir} className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
           {mode === "conversation" && sentence.speaker
             ? `${sentence.speaker} · ${t.dictation.listenAndType}`
             : t.dictation.listenAndType}
@@ -215,11 +215,14 @@ export function DictationSentence({
             <Button type="button" onClick={check} disabled={value.trim().length === 0}>
               {t.dictation.check}
             </Button>
-            <span className="text-muted-foreground text-sm">{t.dictation.pressEnter}</span>
+            <span className="text-muted-foreground text-sm" dir={dir}>
+              {t.dictation.pressEnter}
+            </span>
           </div>
         ) : (
           <div className="flex flex-col gap-4" aria-live="polite">
             <p
+              dir={dir}
               className={cn(
                 "flex items-center gap-2 text-lg font-semibold",
                 result.exact ? "text-success" : "text-accent",
@@ -244,7 +247,7 @@ export function DictationSentence({
               <Button type="button" onClick={next}>
                 {t.dictation.continue}
               </Button>
-              <span className="text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm" dir={dir}>
                 {t.dictation.pressEnterContinue}
               </span>
             </div>

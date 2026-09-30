@@ -130,14 +130,18 @@ export function FromMemorySession({
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-5 px-6 py-16 text-center">
         <CheckCircle2 className="text-success size-12" aria-hidden="true" />
-        <h2 className="text-3xl font-semibold tracking-tight">{t.fromMemory.summaryHeading}</h2>
-        <p className="text-muted-foreground text-lg">
+        <h2 className="text-3xl font-semibold tracking-tight" dir={dir}>
+          {t.fromMemory.summaryHeading}
+        </h2>
+        <p className="text-muted-foreground text-lg" dir={dir}>
           {t.fromMemory.summaryBody
             .replace("{clean}", String(clean))
             .replace("{total}", String(total))}
         </p>
         {mistakesRecorded && (
-          <p className="text-muted-foreground text-sm">{t.fromMemory.mistakesSaved}</p>
+          <p className="text-muted-foreground text-sm" dir={dir}>
+            {t.fromMemory.mistakesSaved}
+          </p>
         )}
         <Button type="button" onClick={onExit}>
           {t.fromMemory.backToResults}
@@ -174,7 +178,7 @@ export function FromMemorySession({
       <Progress value={(index / total) * 100} className="h-1" />
 
       <div className="flex flex-col gap-2">
-        <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+        <p dir={dir} className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
           {t.fromMemory.title} · {t.fromMemory.promptLabel}
         </p>
         <p className="text-3xl leading-snug font-semibold text-balance sm:text-4xl" dir={dir}>
@@ -240,6 +244,7 @@ export function FromMemorySession({
       ) : (
         <div className="flex flex-col gap-4" aria-live="polite">
           <p
+            dir={dir}
             className={cn(
               "flex items-center gap-2 text-lg font-semibold",
               result.exact ? "text-success" : "text-accent",
@@ -269,7 +274,9 @@ export function FromMemorySession({
               variant="outline"
               className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
             />
-            <span className="text-muted-foreground text-sm">{t.dictation.pressEnterContinue}</span>
+            <span className="text-muted-foreground text-sm" dir={dir}>
+              {t.dictation.pressEnterContinue}
+            </span>
           </div>
         </div>
       )}

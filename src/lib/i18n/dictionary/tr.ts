@@ -866,4 +866,15 @@ export const tr: Dictionary = {
     signInHeading: "Kartlarım'ı kullanmak için giriş yap",
     signInBody: "Kaydedilen kelimeler hesabına bağlıdır.",
   },
+  dailySession: {
+    cardHeading: "Bugünün oturumu",
+    cardBody: "{n} kelime hazır · yaklaşık {m} dk",
+    cardBodyDone: "Bugünlük tamam — aferin!",
+    reward: "Bitirince +{xp} XP",
+    start: "Başla",
+    completeHeading: "Oturum tamamlandı!",
+    completeSubtitle: "Bugün {n} kelime tekrar ettin.",
+    xpEarned: "+{xp} XP kazandın",
+    alreadyRewarded: "Bugünün oturum XP'sini zaten kazandın — daha fazlası için yarın gel.",
+  },
 };

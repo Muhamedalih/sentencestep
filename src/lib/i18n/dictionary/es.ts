@@ -901,4 +901,15 @@ export const es: Dictionary = {
     signInHeading: "Inicia sesión para usar Mis tarjetas",
     signInBody: "Las palabras guardadas están vinculadas a tu cuenta.",
   },
+  dailySession: {
+    cardHeading: "Sesión de hoy",
+    cardBody: "{n} palabras listas · unos {m} min",
+    cardBodyDone: "¡Listo por hoy — buen trabajo!",
+    reward: "+{xp} XP al terminar",
+    start: "Empezar",
+    completeHeading: "¡Sesión completada!",
+    completeSubtitle: "Repasaste {n} palabra(s) hoy.",
+    xpEarned: "+{xp} XP ganados",
+    alreadyRewarded: "Ya ganaste el XP de la sesión de hoy — vuelve mañana para más.",
+  },
 };

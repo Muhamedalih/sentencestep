@@ -27,7 +27,7 @@ export function QuestsCardView({
   allDone: boolean;
   className?: string;
 }) {
-  const { t } = useLocale();
+  const { t, dir } = useLocale();
   return (
     <section
       aria-label={t.quests.heading}
@@ -35,7 +35,7 @@ export function QuestsCardView({
     >
       <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
         <Target className="text-accent size-4" aria-hidden="true" />
-        {t.quests.heading}
+        <span dir={dir}>{t.quests.heading}</span>
       </h2>
       <ul className="flex flex-col gap-3.5">
         {quests.map((quest) => (
@@ -52,6 +52,7 @@ export function QuestsCardView({
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-3">
                 <p
+                  dir={dir}
                   className={cn(
                     "truncate text-sm font-medium",
                     quest.completed && "text-muted-foreground line-through",
@@ -73,7 +74,11 @@ export function QuestsCardView({
           </li>
         ))}
       </ul>
-      {allDone && <p className="text-success mt-4 text-sm font-medium">{t.quests.allDone}</p>}
+      {allDone && (
+        <p className="text-success mt-4 text-sm font-medium" dir={dir}>
+          {t.quests.allDone}
+        </p>
+      )}
     </section>
   );
 }

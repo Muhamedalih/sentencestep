@@ -10,6 +10,7 @@ import { fetchSavedCards } from "@/lib/cards/queries";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { dirFor } from "@/lib/i18n/locales";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 // A learner's deck must never come from a stale cache.
@@ -28,6 +29,7 @@ export default async function CardsPage() {
     getEffectiveFeatures(),
   ]);
   const t = locale ? getDictionary(locale) : fallbackDictionary;
+  const dir = locale ? dirFor(locale) : "ltr";
 
   if (!user) {
     // Only a visitor the account features are switched on for gets the
@@ -66,8 +68,12 @@ export default async function CardsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-      <h1 className="text-3xl font-semibold tracking-tight">{t.myCards.title}</h1>
-      <p className="text-muted-foreground mt-2 max-w-2xl">{t.myCards.subtitle}</p>
+      <h1 className="text-3xl font-semibold tracking-tight" dir={dir}>
+        {t.myCards.title}
+      </h1>
+      <p className="text-muted-foreground mt-2 max-w-2xl" dir={dir}>
+        {t.myCards.subtitle}
+      </p>
 
       {items.length === 0 ? (
         <Card className="mt-8">
@@ -86,7 +92,9 @@ export default async function CardsPage() {
                 </Link>
               </Button>
             ) : (
-              <p className="text-muted-foreground text-sm">{t.myCards.nothingDue}</p>
+              <p className="text-muted-foreground text-sm" dir={dir}>
+                {t.myCards.nothingDue}
+              </p>
             )}
             <Button asChild variant="outline">
               <Link href="/learn/cards/review?scope=all">{t.myCards.practiceAll}</Link>
@@ -98,7 +106,7 @@ export default async function CardsPage() {
               </a>
             </Button>
           </div>
-          <p className="text-muted-foreground mt-6 mb-3 text-sm">
+          <p className="text-muted-foreground mt-6 mb-3 text-sm" dir={dir}>
             {t.myCards.cardCount.replace("{n}", String(items.length))}
           </p>
           <SavedCardsList cards={items} />

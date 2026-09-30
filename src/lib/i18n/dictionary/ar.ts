@@ -835,4 +835,15 @@ export const ar: Dictionary = {
     signInHeading: "سجّل الدخول لاستخدام بطاقاتي",
     signInBody: "الكلمات المحفوظة مرتبطة بحسابك.",
   },
+  dailySession: {
+    cardHeading: "جلسة اليوم",
+    cardBody: "{n} كلمات جاهزة · حوالي {m} دقيقة",
+    cardBodyDone: "أنهيت جلسة اليوم — أحسنت!",
+    reward: "+{xp} XP عند الإنهاء",
+    start: "ابدأ",
+    completeHeading: "اكتملت الجلسة!",
+    completeSubtitle: "راجعت {n} كلمة اليوم.",
+    xpEarned: "ربحت +{xp} XP",
+    alreadyRewarded: "حصلت مسبقاً على XP جلسة اليوم — عُد غداً للمزيد.",
+  },
 };

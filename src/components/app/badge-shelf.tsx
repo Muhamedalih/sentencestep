@@ -2,6 +2,7 @@ import { BadgeMedal } from "@/components/app/badge-medal";
 import { Progress } from "@/components/ui/progress";
 import type { BadgeShelfItem } from "@/lib/features/badge-display";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
+import { dirFor, isSupportLocale } from "@/lib/i18n/locales";
 
 /**
  * The grid of badges on the Achievements page: earned ones with their date,
@@ -17,6 +18,7 @@ export function BadgeShelf({
   t: Dictionary;
   locale: string | null;
 }) {
+  const dir = locale && isSupportLocale(locale) ? dirFor(locale) : "ltr";
   const dateFormat = new Intl.DateTimeFormat(locale ?? "en", {
     dateStyle: "medium",
     timeZone: "UTC",
@@ -32,7 +34,7 @@ export function BadgeShelf({
             className="border-border/60 bg-card/60 flex items-start gap-4 rounded-2xl border p-4"
           >
             <BadgeMedal group={item.badge.group} earned={item.earned} />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1" dir={dir}>
               <div className="flex items-center gap-2">
                 <h2
                   className={

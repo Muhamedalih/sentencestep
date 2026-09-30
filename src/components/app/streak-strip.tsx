@@ -94,7 +94,7 @@ export function StreakStripView({
   onMonthChange: (delta: number) => void;
   className?: string;
 }) {
-  const { t, locale } = useLocale();
+  const { t, locale, dir } = useLocale();
   const intlLocale = locale ?? "en";
 
   const dayLabel = useMemo(
@@ -165,7 +165,7 @@ export function StreakStripView({
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Flame className="text-accent size-4" aria-hidden="true" />
-          {t.streakCalendar.heading}
+          <span dir={dir}>{t.streakCalendar.heading}</span>
         </h2>
         <button
           type="button"
@@ -200,7 +200,7 @@ export function StreakStripView({
       {strip && (
         <p className="text-muted-foreground mt-3 flex items-center gap-1.5 text-xs">
           <Snowflake className="size-3.5 text-sky-500" aria-hidden="true" />
-          {freezeText}
+          <span dir={dir}>{freezeText}</span>
         </p>
       )}
 
@@ -227,7 +227,9 @@ export function StreakStripView({
             </button>
           </div>
           {month === null ? (
-            <p className="text-muted-foreground text-sm">{t.streakCalendar.loadError}</p>
+            <p className="text-muted-foreground text-sm" dir={dir}>
+              {t.streakCalendar.loadError}
+            </p>
           ) : (
             <div className="grid grid-cols-7 gap-y-2" dir="ltr">
               {weekHeader.map((label, index) => (
@@ -267,7 +269,10 @@ export function StreakStripView({
               })}
             </div>
           )}
-          <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <div
+            dir={dir}
+            className="text-muted-foreground mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+          >
             <span className="flex items-center gap-1.5">
               <span className="bg-primary size-2.5 rounded-full" />
               {t.streakCalendar.legendActive}

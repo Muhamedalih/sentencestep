@@ -856,4 +856,15 @@ export const en: Dictionary = {
     signInHeading: "Sign in to use My Cards",
     signInBody: "Saved words are tied to your account.",
   },
+  dailySession: {
+    cardHeading: "Today's session",
+    cardBody: "{n} words ready · about {m} min",
+    cardBodyDone: "Done for today — nice work!",
+    reward: "+{xp} XP for finishing",
+    start: "Start",
+    completeHeading: "Session complete!",
+    completeSubtitle: "You reviewed {n} word(s) today.",
+    xpEarned: "+{xp} XP earned",
+    alreadyRewarded: "You already earned today's session XP — come back tomorrow for more.",
+  },
 };

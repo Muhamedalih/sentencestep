@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
  */
 export function GuestFeatureTeaser({ className }: { className?: string }) {
   const { guestTeaser } = useFeatures();
-  const { t } = useLocale();
+  const { t, dir } = useLocale();
   if (!guestTeaser) return null;
   return (
     <section
@@ -28,7 +28,7 @@ export function GuestFeatureTeaser({ className }: { className?: string }) {
     >
       <div className="flex items-start gap-3">
         <Sparkles className="text-accent mt-0.5 size-5 shrink-0" aria-hidden="true" />
-        <div>
+        <div dir={dir}>
           <h2 className="text-sm font-semibold">{t.quests.guestHeading}</h2>
           <p className="text-muted-foreground mt-1 text-sm">{t.quests.guestBody}</p>
         </div>
