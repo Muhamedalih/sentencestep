@@ -27,7 +27,7 @@ import { markVocabularyRecallCompletedAction } from "@/lib/vocabulary-recall/act
 import { popIn } from "@/lib/motion";
 import type { WeakWordReason } from "@/lib/weak-words/types";
 import { splitWordHint } from "@/lib/word-lists-hint";
-import type { VoiceAudioContentType } from "@/lib/voice/voice-audio";
+import { lookupCachedAudioUrl, type VoiceAudioContentType } from "@/lib/voice/voice-audio";
 import type { VocabularyWord } from "@/types/word-lists";
 
 export interface ReviewWord extends VocabularyWord {
@@ -209,27 +209,34 @@ export function WordReviewSession({
       .catch((error: unknown) => console.error("[daily-session] completion report failed", error));
   }, [variant, isComplete, correctedCount]);
 
-  const { prefetchPronunciation } = usePronunciationSettings();
+  const { prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
   const nextWord = queue.length > 1 ? words[queue[1]!] : undefined;
   useEffect(() => {
-    if (!nextWord) return;
-    // A clip already resolved server-side just needs its bytes warmed in the
-    // browser cache so it starts instantly when the learner gets there.
-    if (nextWord.audioUrl) {
-      fetch(nextWord.audioUrl).catch(() => {});
+    if (!defaultVoiceId || !nextWord) return;
+    if (variant === "session") {
+      // Today's session words aren't all Word Lists entries, so the Word
+      // Lists prefetch below doesn't apply (their ids aren't vocabulary ids),
+      // and resolving one on demand would synthesize speech — slow, and it
+      // queues behind every other server action. Instead look up the
+      // already-made Word Lists-voice clip (cache-only, cheap; it may have
+      // been generated since the page loaded) and hand it to the shared
+      // resolved-audio cache under the id PronunciationButton will ask for.
+      const contentId = nextWord.pronunciationContentId ?? nextWord.id;
+      if (nextWord.audioUrl) {
+        fetch(nextWord.audioUrl).catch(() => {});
+        return;
+      }
+      lookupCachedAudioUrl(nextWord.targetWord, defaultVoiceId)
+        .then((url) => {
+          if (!url) return;
+          registerResolvedAudio(contentId, url);
+          fetch(url).catch(() => {});
+        })
+        .catch(() => {});
       return;
     }
-    if (!defaultVoiceId) return;
-    // The word's OWN content reference (mistake / recall / card words aren't
-    // Word Lists entries, so their id is not a vocabulary_words id) — the
-    // same reference PronunciationButton resolves below, so the prefetch
-    // and the real play share one cache entry.
-    prefetchPronunciation({
-      contentType: nextWord.pronunciationContentType ?? "word",
-      contentId: nextWord.pronunciationContentId ?? nextWord.id,
-      voiceId: defaultVoiceId,
-    });
-  }, [nextWord, defaultVoiceId, prefetchPronunciation]);
+    prefetchPronunciation({ contentType: "word", contentId: nextWord.id, voiceId: defaultVoiceId });
+  }, [nextWord, defaultVoiceId, variant, prefetchPronunciation, registerResolvedAudio]);
 
   function handleResult(correct: boolean) {
     if (!word || currentIndex === undefined) return;
@@ -286,10 +293,6 @@ export function WordReviewSession({
                 kokoroVoiceId={defaultVoiceId}
                 contentType={word.pronunciationContentType ?? "word"}
                 contentId={word.pronunciationContentId ?? word.id}
-                // Today's session must only ever be heard in the Word Lists
-                // voice — a missing clip is silent (after a couple of silent
-                // retries), never the browser's own voice.
-                disableSpeechFallback={variant === "session"}
                 label={t.wordLists.replayAction}
                 variant="outline"
                 size="sm"

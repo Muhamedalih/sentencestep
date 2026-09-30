@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  interleaveWordLists,
   isSynthesizableWord,
   runWithinBudget,
   wordAudioCandidates,
@@ -95,4 +96,25 @@ test("runWithinBudget: returns at the deadline even while a slow task is still r
   );
   assert.ok(Date.now() - startedAt < 1_000, "must not wait for the slow task");
   assert.deepEqual(results, ["fast", undefined]);
+});
+
+test("interleaveWordLists: round-robins the sources, newest first, without duplicates", () => {
+  // Round 1 takes cafe / went / lamp; round 2 skips the repeated "went" and takes river; round 3 takes table.
+  assert.deepEqual(interleaveWordLists([["cafe", "went", "table"], ["went", "river"], ["lamp"]]), [
+    "cafe",
+    "went",
+    "lamp",
+    "river",
+    "table",
+  ]);
+});
+
+test("interleaveWordLists: drops blanks and anything that isn't a synthesizable word", () => {
+  assert.deepEqual(
+    interleaveWordLists([
+      ["  ", "42", "well  known", "<b>"],
+      ["go2", "ok"],
+    ]),
+    ["ok", "well known"],
+  );
 });
