@@ -5,8 +5,7 @@ import type { ReactNode } from "react";
 
 import { DailySessionCard } from "@/components/app/daily-session-card";
 import { GuestFeatureTeaser } from "@/components/app/guest-feature-teaser";
-import { QuestsCard } from "@/components/app/quests-card";
-import { StreakStrip } from "@/components/app/streak-strip";
+import { EngagementStrip } from "@/components/app/engagement-strip";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { fetchHomeEngagementAction } from "@/lib/features/home-engagement-actions";
 import type { HomeEngagementData } from "@/lib/features/home-engagement";
@@ -34,8 +33,7 @@ export function HomeEngagementFrame({
 
 const SKELETON_HEIGHT = {
   dailySession: "h-28",
-  quests: "h-40",
-  streakCalendar: "h-44",
+  strip: "h-16",
 } as const;
 
 /**
@@ -45,7 +43,11 @@ const SKELETON_HEIGHT = {
  */
 export function CardSkeleton({ feature }: { feature: keyof typeof SKELETON_HEIGHT }) {
   const features = useFeatures();
-  if (!features[feature].enabled) return null;
+  const enabled =
+    feature === "strip"
+      ? features.quests.enabled || features.streakCalendar.enabled
+      : features[feature].enabled;
+  if (!enabled) return null;
   return (
     <div
       className={cn("bg-muted/60 animate-pulse rounded-2xl", SKELETON_HEIGHT[feature])}
@@ -83,15 +85,13 @@ export function HomeEngagement({ className }: { className?: string }) {
       {anyEnabled && data === undefined ? (
         <>
           <CardSkeleton feature="dailySession" />
-          <CardSkeleton feature="quests" />
-          <CardSkeleton feature="streakCalendar" />
+          <CardSkeleton feature="strip" />
         </>
       ) : (
         data && (
           <>
             <DailySessionCard summary={data.dailySession} />
-            <QuestsCard payload={data.quests} />
-            <StreakStrip today={data.todayISO} strip={data.streak} />
+            <EngagementStrip today={data.todayISO} quests={data.quests} streak={data.streak} />
           </>
         )
       )}
