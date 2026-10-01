@@ -6,26 +6,24 @@ import {
   HomeEngagement,
   HomeEngagementFrame,
 } from "@/components/app/home-engagement";
-import { QuestsCard } from "@/components/app/quests-card";
-import { StreakStrip } from "@/components/app/streak-strip";
+import { EngagementStrip } from "@/components/app/engagement-strip";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 
 async function DailySessionSlot({ data }: { data: HomeEngagementStream["dailySession"] }) {
   return <DailySessionCard summary={await data} />;
 }
 
-async function QuestsSlot({ data }: { data: HomeEngagementStream["quests"] }) {
-  return <QuestsCard payload={await data} />;
-}
-
-async function StreakSlot({
+async function EngagementStripSlot({
   today,
-  data,
+  quests,
+  streak,
 }: {
   today: string;
-  data: HomeEngagementStream["streak"];
+  quests: HomeEngagementStream["quests"];
+  streak: HomeEngagementStream["streak"];
 }) {
-  return <StreakStrip today={today} strip={await data} />;
+  const [questsPayload, streakData] = await Promise.all([quests, streak]);
+  return <EngagementStrip today={today} quests={questsPayload} streak={streakData} />;
 }
 
 /**
@@ -49,11 +47,8 @@ export function HomeEngagementSection({
       <Suspense fallback={<CardSkeleton feature="dailySession" />}>
         <DailySessionSlot data={stream.dailySession} />
       </Suspense>
-      <Suspense fallback={<CardSkeleton feature="quests" />}>
-        <QuestsSlot data={stream.quests} />
-      </Suspense>
-      <Suspense fallback={<CardSkeleton feature="streakCalendar" />}>
-        <StreakSlot today={stream.todayISO} data={stream.streak} />
+      <Suspense fallback={<CardSkeleton feature="strip" />}>
+        <EngagementStripSlot today={stream.todayISO} quests={stream.quests} streak={stream.streak} />
       </Suspense>
     </HomeEngagementFrame>
   );
