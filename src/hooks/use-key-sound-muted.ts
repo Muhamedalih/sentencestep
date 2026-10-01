@@ -49,8 +49,8 @@ function subscribe(listener: () => void): () => void {
 
 /**
  * Whether the learner has muted the keystroke sound, shared by every
- * component on the page — the toggle beside the audio controls
- * (KeySoundToggle) and useTypingSound, which skips play() while muted — so
+ * component on the page — the typing-sounds switch in the lesson settings
+ * panel (LessonSettings) and useTypingSound, which skips play() while muted — so
  * flipping it in one place takes effect on the very next keystroke
  * everywhere. Server-rendered as "not muted" and corrected right after
  * hydration, so it never causes a hydration mismatch.

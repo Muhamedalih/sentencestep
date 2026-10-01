@@ -58,7 +58,7 @@ interface UseTypingSoundOptions {
   /**
    * Silences play() — the per-keystroke sound only, never the sentence/lesson
    * completion cues. Left unset, it follows the learner's own "mute typing
-   * sound" switch (see useKeySoundMuted / KeySoundToggle); the admin preview
+   * sound" switch (see useKeySoundMuted / LessonSettings); the admin preview
    * passes false so a learner's mute never silences the admin's Preview buttons.
    */
   keystrokesMuted?: boolean;

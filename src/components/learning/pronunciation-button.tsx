@@ -51,7 +51,17 @@ export interface PronunciationButtonHandle {
   replay: () => void;
 }
 
-interface PronunciationButtonProps {
+/** What a `headless` PronunciationButton reports about itself — see `onStatusChange`. */
+export interface PronunciationStatus {
+  /** False when no audio source exists at all (no clip, no voice, no speech synthesis) — the same condition under which a visible button renders nothing. */
+  supported: boolean;
+  /** A clip is being resolved or is still loading. */
+  loading: boolean;
+  /** Audio (a clip or the browser voice) is playing right now. */
+  playing: boolean;
+}
+
+export interface PronunciationButtonProps {
   text: string;
   audioUrl?: string | null;
   /** Fired once per successful play press, regardless of source — lets a caller record a lightweight "pronunciation was used" signal without this component knowing about analytics. */
@@ -112,6 +122,16 @@ interface PronunciationButtonProps {
    * passes this) or for a caller with no audio source at all.
    */
   onEnded?: () => void;
+  /**
+   * Keeps all the playback behavior (auto-play, the Shift shortcut's replay,
+   * the imperative handle) but draws nothing — for a caller that offers
+   * replay from its own control (LessonSettings' panel) instead of this
+   * button. Pair it with `onStatusChange`, since the button's own
+   * loading/playing styling is gone.
+   */
+  headless?: boolean;
+  /** Called whenever `supported`/`loading`/`playing` change (and once on mount). Optional. */
+  onStatusChange?: (status: PronunciationStatus) => void;
 }
 
 export const PronunciationButton = forwardRef<PronunciationButtonHandle, PronunciationButtonProps>(
@@ -133,6 +153,8 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       disableSpeechFallback = false,
       onBeforePlay,
       onEnded,
+      headless = false,
+      onStatusChange,
     },
     ref,
   ) {
@@ -375,10 +397,22 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
 
     const hasAudioSource = Boolean(audioUrl) || Boolean(kokoroVoiceId);
     const isSupported = hasAudioSource || (!disableSpeechFallback && speech.isSupported);
-    if (!isSupported) return null;
-
     const isLoading = clip.status === "loading" || isResolvingKokoro;
     const isPlaying = clip.status === "playing" || speech.isSpeaking;
+
+    // Latest callback via a ref so a caller passing an inline function never
+    // re-runs the effect below on every render — only a real status change does.
+    const onStatusChangeRef = useRef(onStatusChange);
+    onStatusChangeRef.current = onStatusChange;
+    useEffect(() => {
+      onStatusChangeRef.current?.({
+        supported: isSupported,
+        loading: isLoading,
+        playing: isPlaying,
+      });
+    }, [isSupported, isLoading, isPlaying]);
+
+    if (!isSupported || headless) return null;
 
     function handleClick() {
       void playReplay();

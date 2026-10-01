@@ -28,14 +28,15 @@ const SUCCESS_AUTOCLOSE_MS = 1800;
  * Stories/Daily Lessons list pages, wrapped in `sm:hidden` so desktop keeps
  * only the floating pill.
  *
- * `size="compact"` (~30% smaller: tighter padding, `text-xs`, smaller icon
- * and status dot) is the one exception to `max-sm:hidden` — it's what the
+ * `size="compact"` is the one exception to `max-sm:hidden` — it's what the
  * lesson player (src/app/(app)/learn/[mode]/[lessonId]/page.tsx) renders,
  * on every viewport. That screen is full-viewport with no dashboard chrome
  * around it at all (see that route's own doc comment for why it sits
  * outside the (dashboard) layout that mounts the default-size pill), so
  * without this there'd be no way to reach Report a Problem from inside an
- * actual lesson — the smaller footprint is what makes it safe to keep on
+ * actual lesson. There it is just a small round icon button, no text — the
+ * label stays on it as its aria-label/title, so it is still announced and
+ * shows a tooltip — and that tiny footprint is what makes it safe to keep on
  * mobile there, unlike the default pill.
  */
 export function ReportProblemButton({
@@ -109,25 +110,21 @@ export function ReportProblemButton({
           className={cn(
             "border-border bg-card text-foreground fixed z-40 flex items-center rounded-full border font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40",
             size === "compact"
-              ? "bottom-3 left-3 gap-1.5 px-3 py-1.5 text-xs"
+              ? "bottom-3 left-3 size-9 justify-center"
               : "bottom-4 left-4 gap-2 px-4 py-2.5 text-sm max-sm:hidden",
           )}
           aria-haspopup="dialog"
+          aria-label={size === "compact" ? t.reportProblem.buttonLabel : undefined}
+          title={size === "compact" ? t.reportProblem.buttonLabel : undefined}
         >
-          <span className={cn("relative flex", size === "compact" ? "size-1.5" : "size-2")}>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/60 opacity-75" />
-            <span
-              className={cn(
-                "relative inline-flex rounded-full bg-amber-500",
-                size === "compact" ? "size-1.5" : "size-2",
-              )}
-            />
-          </span>
-          <TriangleAlert
-            className={cn("text-amber-500", size === "compact" ? "size-3.5" : "size-4")}
-            aria-hidden="true"
-          />
-          {t.reportProblem.buttonLabel}
+          {size !== "compact" && (
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/60 opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
+            </span>
+          )}
+          <TriangleAlert className="size-4 text-amber-500" aria-hidden="true" />
+          {size !== "compact" && t.reportProblem.buttonLabel}
         </motion.button>
       ) : (
         <Card>

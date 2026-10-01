@@ -35,8 +35,7 @@ type PanelView = "closed" | "menu" | "note" | "signin";
  * One combined trigger for every per-sentence Book Reading control — Save,
  * Note, and pronunciation Speed — replacing the three separate floating
  * icons/pill this used to be (Bookmark + NotebookPen buttons here, plus
- * BookSentenceReader rendering its own PronunciationSpeedControl alongside
- * them). Reading feedback was that three things floating directly above the
+ * BookSentenceReader rendering its own speed control alongside them). Reading feedback was that three things floating directly above the
  * sentence read as "editing toolbar," not "reading a book." A single
  * trigger keeps the page visually quiet by default (research on Apple
  * Books/Kindle/Chrome Reading Mode all converge on the same "one control
@@ -45,12 +44,11 @@ type PanelView = "closed" | "menu" | "note" | "signin";
  *
  * Bookmark + Note keep their original private-annotation behavior and data
  * flow entirely (see useBookSentenceMark) — only Speed is new here: it used
- * to be BookSentenceReader's own PronunciationSpeedControl (a persistent
- * floating control), folded into this menu as a row instead so cycling speed
- * doesn't need its own separate control. Every other caller of
- * PronunciationSpeedControl (normal lessons, stories, conversation, word
- * lists) is untouched — that component still exists and is rendered inline
- * beside each of those screens' own PronunciationButton there.
+ * to be BookSentenceReader's own speed control (a persistent floating
+ * control), folded into this menu as a row instead so cycling speed doesn't
+ * need its own separate control. The lesson screens (normal lessons, stories,
+ * conversation, word lists) do the same thing with LessonSettings, which also
+ * holds their replay and typing-sound options.
  */
 export function BookReadingTools({
   bookId,
@@ -175,7 +173,7 @@ export function BookReadingTools({
 
   // Prevents the browser's native "move focus to the clicked button" default
   // action before it happens (mousedown fires ahead of click) — same idiom
-  // already used by PronunciationSpeedControl for the same reason.
+  // already used by LessonSettings for the same reason.
   function handleMouseDown(event: ReactMouseEvent) {
     event.preventDefault();
   }

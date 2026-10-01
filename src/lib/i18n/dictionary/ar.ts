@@ -649,8 +649,18 @@ export const ar: Dictionary = {
   typing: {
     typeMissingWord: "اكتب الكلمة الناقصة",
     typeThisSentence: "اكتب هذه الجملة: {sentence}",
-    muteKeySounds: "كتم صوت الأزرار أثناء الكتابة",
-    unmuteKeySounds: "تشغيل صوت الأزرار أثناء الكتابة",
+  },
+  lessonSettings: {
+    buttonLabel: "الإعدادات",
+    title: "إعدادات الدرس",
+    speedTitle: "سرعة الصوت",
+    speedDescription: "تحكّم في سرعة قراءة الجملة. عند التغيير تُعاد الجملة بالسرعة الجديدة.",
+    replayTitle: "إعادة الصوت",
+    replayDescription: "استمع إلى الجملة مرة أخرى.",
+    replayDescriptionShift: "استمع إلى الجملة مرة أخرى، أو اضغط مفتاح Shift.",
+    replayAction: "تشغيل",
+    keySoundsTitle: "صوت أزرار الكيبورد",
+    keySoundsDescription: "شغّل أو أوقف صوت النقر الذي يُسمع مع كل حرف تكتبه.",
   },
   learnerLevels: {
     beginner: "مبتدئ",

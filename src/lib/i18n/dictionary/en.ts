@@ -664,8 +664,18 @@ export const en: Dictionary = {
   typing: {
     typeMissingWord: "Type the missing word",
     typeThisSentence: "Type this sentence: {sentence}",
-    muteKeySounds: "Mute typing sounds",
-    unmuteKeySounds: "Turn typing sounds back on",
+  },
+  lessonSettings: {
+    buttonLabel: "Lesson settings",
+    title: "Lesson settings",
+    speedTitle: "Voice speed",
+    speedDescription: "How fast the sentence is read aloud. Changing it plays the sentence again.",
+    replayTitle: "Replay the audio",
+    replayDescription: "Hear the sentence one more time.",
+    replayDescriptionShift: "Hear the sentence one more time. Shortcut: press Shift.",
+    replayAction: "Play",
+    keySoundsTitle: "Typing sounds",
+    keySoundsDescription: "Turn the click sound of every key you type on or off.",
   },
   learnerLevels: {
     beginner: "Beginner",

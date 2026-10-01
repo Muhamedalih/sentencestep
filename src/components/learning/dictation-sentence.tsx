@@ -6,10 +6,8 @@ import { CheckCircle2, CornerDownLeft } from "lucide-react";
 
 import { DictationText } from "@/components/learning/dictation-text";
 import { ContinueButton, RetryButton } from "@/components/learning/feedback-actions";
-import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
+import { LessonSettings } from "@/components/learning/lesson-settings";
 import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
 import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
 import { SentenceDiff } from "@/components/learning/sentence-diff";
 import { TapToStartOverlay } from "@/components/learning/typing-sentence";
@@ -353,24 +351,18 @@ export function DictationSentence({
   const canCheck = value.trim().length > 0;
 
   const audioControls = (
-    <>
-      <KeySoundToggle inputRef={inputRef} />
-      <PronunciationSpeedControl inputRef={inputRef} />
-      <PronunciationButton
-        ref={pronunciationRef}
-        text={sentence.en}
-        audioUrl={sentence.audioUrl}
-        onPlay={onAudioPlay}
-        autoPlay={hasStarted}
-        resetKey={sentence.id}
-        inputRef={inputRef}
-        kokoroVoiceId={sentenceVoiceId}
-        contentType="sentence"
-        contentId={sentence.id}
-        variant="outline"
-        className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
-      />
-    </>
+    <LessonSettings
+      ref={pronunciationRef}
+      text={sentence.en}
+      audioUrl={sentence.audioUrl}
+      onPlay={onAudioPlay}
+      autoPlay={hasStarted}
+      resetKey={sentence.id}
+      inputRef={inputRef}
+      kokoroVoiceId={sentenceVoiceId}
+      contentType="sentence"
+      contentId={sentence.id}
+    />
   );
 
   // The hidden sentence itself, where the typing view draws the real one.
