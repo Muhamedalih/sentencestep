@@ -34,6 +34,22 @@ import { cn } from "@/lib/utils";
  */
 export const dynamic = "force-dynamic";
 
+/**
+ * The most the page will wait for the first sentence's word clips. They are a
+ * head start, never a requirement — the client loads them itself right after
+ * the page arrives — so a slow database must cost the learner nothing here.
+ */
+const WORD_LOOKUP_BUDGET_MS = 1500;
+
+/** Resolves with `promise`'s value, or undefined once `ms` have passed (the lookup keeps running; its result is simply not waited for). */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<undefined>((resolve) => {
+    timer = setTimeout(() => resolve(undefined), ms);
+  });
+  return Promise.race([promise, expired]).finally(() => clearTimeout(timer));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -192,11 +208,14 @@ export default async function LessonPage({
         })
       : Promise.resolve(firstSentence?.audioUrl ?? null),
     firstSentence && resolvedVoiceId && wordAudioWanted
-      ? resolveWordAudioForText({
-          sentenceId: firstSentence.id,
-          text: firstSentence.en,
-          voiceId: resolvedVoiceId,
-        })
+      ? withTimeout(
+          resolveWordAudioForText({
+            sentenceId: firstSentence.id,
+            text: firstSentence.en,
+            voiceId: resolvedVoiceId,
+          }),
+          WORD_LOOKUP_BUDGET_MS,
+        )
           .then((result) => result?.urls)
           .catch((error: unknown) => {
             console.error("[lesson page] first-sentence word audio lookup failed", error);

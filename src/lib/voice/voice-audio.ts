@@ -6,12 +6,12 @@ import { hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import {
   generateIsolatedWordAudio,
+  generateSentenceWord,
   isSynthesisRateLimited,
   lookupCachedClipForTexts,
   lookupVoice,
   resolveWordVoice,
 } from "@/lib/voice/isolated-word-audio";
-import { wordTextCandidates } from "@/lib/voice/sentence-word-plan";
 
 /**
  * The on-demand, cached pronunciation-audio pipeline every lesson type
@@ -329,36 +329,31 @@ export async function resolvePronunciationAudioAction(input: {
 
   if (contentType !== "sentence_word" && contentType !== "book_sentence_word") return null;
 
-  // A word is spoken by the narrator's own voice only when that voice is
-  // Edge-TTS (free); a paid narrator (Cartesia/ElevenLabs) never pays for a
-  // single isolated word — a gender-matched free Edge-TTS voice stands in
-  // (see resolveWordVoice) and the word's clip is stored under THAT voice's
-  // id. The lookup above only knows the narrator's id, so for a paid narrator
-  // it could never find a word generated before: every click looked like a
-  // miss, was counted against the synthesis rate limit, and then
-  // re-synthesized and re-uploaded a clip that already existed. Look under
-  // the voice the clip really lives under first, and only rate-limit and
-  // synthesize on a genuine miss.
+  // A lesson word: look across the whole single-word inventory (every
+  // Edge-TTS voice, every spelling a clip may be stored under) and let the
+  // voice that speaks the rest of the sentence speak this word too; only a
+  // word with no clip anywhere is synthesized, once, on its own. Same code the
+  // batch route's POST runs, so a tap and a preload can never disagree.
+  if (contentType === "sentence_word") {
+    const [sentenceId, key] = contentId.split("::");
+    if (!sentenceId || !key) return null;
+    return (await generateSentenceWord({ sentenceId, voiceId, key })).url;
+  }
+
+  // Books' word (book_sentence_word): a word is spoken by the narrator's own
+  // voice only when that voice is Edge-TTS (free); a paid narrator
+  // (ElevenLabs) never pays for a single isolated word — a gender-matched free
+  // Edge-TTS voice stands in (see resolveWordVoice) and the word's clip is
+  // stored under THAT voice's id. Look under the voice the clip really lives
+  // under first, and only rate-limit and synthesize on a genuine miss. Books'
+  // own batched lookup keys on the raw token, so its words are generated under
+  // it.
   const wordVoice = await resolveWordVoice(voiceId);
   if (!wordVoice) return null;
 
-  // The clip may be cached under the word's raw spelling ("Hello,", what a
-  // click used to synthesize) or its normalized one ("hello", what the
-  // backfill script wrote) — a lookup by the raw text alone never found the
-  // backfilled clip of a capitalised or punctuated word. See
-  // wordTextCandidates. `sentence_word` only: Books' own batched lookup still
-  // keys on the raw token, so its words keep being generated under it.
-  const normalizedKey = contentId.split("::")[1] ?? "";
-  const candidates =
-    contentType === "sentence_word" ? wordTextCandidates(text, normalizedKey) : [text];
-  const cachedWord = await lookupCachedClipForTexts(candidates, wordVoice.id);
+  const cachedWord = await lookupCachedClipForTexts([text], wordVoice.id);
   if (cachedWord) return cachedWord;
 
   if (await isSynthesisRateLimited()) return null;
-  // New lesson-word clips are made under the canonical (normalized) spelling,
-  // so a word is synthesized once per voice however it is capitalised or
-  // punctuated in any sentence, and lands on the same cache row the backfill
-  // used.
-  const generationText = contentType === "sentence_word" && normalizedKey ? normalizedKey : text;
-  return generateIsolatedWordAudio(generationText, wordVoice.id, wordVoice.providerVoiceId);
+  return generateIsolatedWordAudio(text, wordVoice.id, wordVoice.providerVoiceId);
 }
