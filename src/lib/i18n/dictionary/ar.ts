@@ -649,6 +649,8 @@ export const ar: Dictionary = {
   typing: {
     typeMissingWord: "اكتب الكلمة الناقصة",
     typeThisSentence: "اكتب هذه الجملة: {sentence}",
+    muteKeySounds: "كتم صوت الأزرار أثناء الكتابة",
+    unmuteKeySounds: "تشغيل صوت الأزرار أثناء الكتابة",
   },
   learnerLevels: {
     beginner: "مبتدئ",

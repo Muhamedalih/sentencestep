@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, PartyPopper } from "lucide-react";
 
+import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
@@ -202,6 +203,7 @@ export function VocabularyPractice({
                   {doneInBlock.size} / {blockSize}
                 </span>
               )}
+              <KeySoundToggle inputRef={inputRef} />
               <PronunciationSpeedControl inputRef={inputRef} />
               <PronunciationButton
                 // Only the target word is pronounced — never the full

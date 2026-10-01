@@ -14,6 +14,7 @@ import {
   mistakeRevealDurationMs,
   MistakeWordPreview,
 } from "@/components/learning/mistake-word-preview";
+import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
@@ -263,6 +264,7 @@ function MistakeItemSession({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end gap-2">
+        <KeySoundToggle inputRef={inputRef} />
         <PronunciationSpeedControl inputRef={inputRef} />
         <PronunciationButton
           text={item.displayWord}

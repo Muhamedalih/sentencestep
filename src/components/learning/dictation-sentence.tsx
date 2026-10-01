@@ -6,6 +6,7 @@ import { CheckCircle2, CornerDownLeft } from "lucide-react";
 
 import { DictationText } from "@/components/learning/dictation-text";
 import { ContinueButton, RetryButton } from "@/components/learning/feedback-actions";
+import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
@@ -334,6 +335,7 @@ export function DictationSentence({
 
   const audioControls = (
     <>
+      <KeySoundToggle inputRef={inputRef} />
       <PronunciationSpeedControl inputRef={inputRef} />
       <PronunciationButton
         ref={pronunciationRef}
