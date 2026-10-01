@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
+import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
 import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
@@ -338,6 +339,7 @@ export function TypingSentence({
             {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <KeySoundToggle inputRef={engine.inputRef} />
             <PronunciationSpeedControl inputRef={engine.inputRef} />
             <PronunciationButton
               text={sentence.en}
@@ -398,6 +400,7 @@ export function TypingSentence({
           onGoForward={onGoForward}
         />
         <div className="mb-4 flex items-center justify-end gap-2">
+          <KeySoundToggle inputRef={engine.inputRef} />
           <PronunciationSpeedControl inputRef={engine.inputRef} />
           {/* Mobile only (see hasStarted's own doc comment): a guest who
               hasn't tapped the "tap to start" overlay yet shouldn't hear the
@@ -478,6 +481,7 @@ export function TypingSentence({
         />
       )}
       <div className="mb-4 flex items-center justify-end gap-2">
+        <KeySoundToggle inputRef={engine.inputRef} />
         <PronunciationSpeedControl inputRef={engine.inputRef} />
         {/* Mobile only — see the Stories branch's identical comment above. */}
         <PronunciationButton

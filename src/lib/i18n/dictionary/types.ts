@@ -787,6 +787,10 @@ export interface Dictionary {
     typeMissingWord: string;
     /** `Type this sentence: {sentence}` — the hidden typing input's aria-label when nothing is obscured. */
     typeThisSentence: string;
+    /** Label of the small button beside the audio controls while the keystroke sound is ON — pressing it mutes the typing sound. */
+    muteKeySounds: string;
+    /** Same button while the keystroke sound is muted — pressing it turns the typing sound back on. */
+    unmuteKeySounds: string;
   };
   /** The five XP-based learner levels (see src/lib/progress/learner-level.ts) — a separate progression from the lesson-difficulty tiers in src/lib/levels.ts, keyed by LearnerLevel.name so the underlying English name stays a stable identifier. */
   learnerLevels: {

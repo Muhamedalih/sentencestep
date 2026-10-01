@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
+import { useKeySoundMuted } from "@/hooks/use-key-sound-muted";
 import {
   DEFAULT_SOUND_PACK,
   LAYERED_SOUND_PACKS,
@@ -54,6 +55,13 @@ interface UseTypingSoundOptions {
   lessonEndSoundEnabled?: boolean;
   /** Which sound plays via playLessonComplete() — independent of `pack`/`sentenceCompleteSound` (see src/lib/lesson-end-sounds.ts). */
   lessonEndSound?: LessonEndSound;
+  /**
+   * Silences play() — the per-keystroke sound only, never the sentence/lesson
+   * completion cues. Left unset, it follows the learner's own "mute typing
+   * sound" switch (see useKeySoundMuted / KeySoundToggle); the admin preview
+   * passes false so a learner's mute never silences the admin's Preview buttons.
+   */
+  keystrokesMuted?: boolean;
 }
 
 /**
@@ -99,6 +107,8 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
     lessonEndSoundEnabled = true,
     lessonEndSound = DEFAULT_LESSON_END_SOUND,
   } = options;
+  const { muted: learnerMuted } = useKeySoundMuted();
+  const keystrokesMuted = options.keystrokesMuted ?? learnerMuted;
   const contextRef = useRef<AudioContext | undefined>(undefined);
   // Index of the take each layered pack/variant played last, so a pack with
   // several takes never plays the same one twice in a row. Per hook instance
@@ -163,7 +173,7 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
   const play = useCallback(
     (variant: SoundVariant = "letter", overridePack?: SoundPack) => {
       const gainScale = Math.min(1, Math.max(0, volume)) * GAIN_BOOST;
-      if (!enabled || gainScale <= 0) return;
+      if (!enabled || keystrokesMuted || gainScale <= 0) return;
 
       try {
         const ctx = getContext();
@@ -266,7 +276,7 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
         // missed sound cue isn't worth surfacing an error for.
       }
     },
-    [getContext, pack, enabled, volume],
+    [getContext, pack, enabled, keystrokesMuted, volume],
   );
 
   /**

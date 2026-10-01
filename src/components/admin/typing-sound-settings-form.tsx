@@ -49,7 +49,7 @@ export function TypingSoundSettingsForm({ initial }: { initial: TypingSoundSetti
   // needs to hear a pack to decide whether to enable it. No fixed `pack`
   // here: each row's preview button passes its own pack directly to
   // play(), independent of which pack is currently selected below.
-  const preview = useTypingSound({ enabled: true, volume });
+  const preview = useTypingSound({ enabled: true, volume, keystrokesMuted: false });
 
   function handleSave() {
     setMessage(null);

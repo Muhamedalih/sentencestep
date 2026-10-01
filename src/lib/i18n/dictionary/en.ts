@@ -664,6 +664,8 @@ export const en: Dictionary = {
   typing: {
     typeMissingWord: "Type the missing word",
     typeThisSentence: "Type this sentence: {sentence}",
+    muteKeySounds: "Mute typing sounds",
+    unmuteKeySounds: "Turn typing sounds back on",
   },
   learnerLevels: {
     beginner: "Beginner",

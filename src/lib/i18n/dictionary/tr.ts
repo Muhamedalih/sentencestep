@@ -673,6 +673,8 @@ export const tr: Dictionary = {
   typing: {
     typeMissingWord: "Eksik kelimeyi yazın",
     typeThisSentence: "Bu cümleyi yazın: {sentence}",
+    muteKeySounds: "Yazma seslerini kapat",
+    unmuteKeySounds: "Yazma seslerini aç",
   },
   learnerLevels: {
     beginner: "Başlangıç",

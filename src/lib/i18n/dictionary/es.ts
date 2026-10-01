@@ -683,6 +683,8 @@ export const es: Dictionary = {
   typing: {
     typeMissingWord: "Escribe la palabra faltante",
     typeThisSentence: "Escribe esta oración: {sentence}",
+    muteKeySounds: "Silenciar el sonido de las teclas",
+    unmuteKeySounds: "Activar el sonido de las teclas",
   },
   learnerLevels: {
     beginner: "Principiante",
