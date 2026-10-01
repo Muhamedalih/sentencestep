@@ -1,14 +1,17 @@
 import { headers } from "next/headers";
 
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { SentenceDirection } from "@/lib/voice/director-types";
 import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
 import type { TTSVoiceSettings } from "@/lib/voice/provider";
 import { cacheKeyParts, hashText } from "@/lib/voice/resolution";
 import {
-  pickWordClip,
+  pickSentenceClips,
+  rankWordVoices,
   sentenceWordEntries,
   wordTextCandidates,
+  type SentenceWordEntry,
 } from "@/lib/voice/sentence-word-plan";
 import { uploadVoiceClip } from "@/lib/voice/storage";
 import {
@@ -18,7 +21,6 @@ import {
   isStaleGenerating,
   MAX_VOICE_RETRY_ATTEMPTS,
 } from "@/lib/voice/story-voice-generation";
-import { runWithinBudget } from "@/lib/voice/word-list-word-audio";
 
 /**
  * Everything that finds or makes an ISOLATED word's clip — the part of
@@ -304,13 +306,79 @@ async function lookupReadyClips(
 
 /**
  * The clip for a word cached under ANY of `texts` (best spelling first) for one
- * voice, in a single query — or null. Cache-only.
+ * voice, in a single query — or null. Cache-only. Only Books' per-word path
+ * still uses this; lesson words go through resolveSentenceWords below.
  */
 export async function lookupCachedClipForTexts(
   texts: readonly string[],
   voiceId: string,
 ): Promise<string | null> {
-  return pickWordClip(texts, [voiceId], await lookupReadyClips(texts, [voiceId])) ?? null;
+  const clips = await lookupReadyClips(texts, [voiceId]);
+  for (const text of texts) {
+    const url = clips.get(`${voiceId}:${hashText(text)}`);
+    if (url) return url;
+  }
+  return null;
+}
+
+export interface EdgeVoice {
+  id: string;
+  providerVoiceId: string;
+  gender: "female" | "male";
+  accent: string | null;
+}
+
+const EDGE_VOICES_TTL_MS = 10 * 60_000;
+let edgeVoicesCache: { promise: Promise<EdgeVoice[]>; expiresAt: number } | null = null;
+
+/**
+ * Every registered Edge-TTS voice — the set the single-word inventory may live
+ * under. Memoized per server instance; a failed or empty read is not kept, so
+ * the next call asks again. Never throws: with no list the search simply covers
+ * the lesson's own word voice, as it always did.
+ */
+function listEdgeVoices(): Promise<EdgeVoice[]> {
+  const now = Date.now();
+  if (edgeVoicesCache && edgeVoicesCache.expiresAt > now) return edgeVoicesCache.promise;
+
+  const promise = (async (): Promise<EdgeVoice[]> => {
+    const { data, error } = await createServiceRoleClient()
+      .from("voices")
+      .select("id, provider_voice_id, gender, accent")
+      .eq("source", "edge-tts");
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      providerVoiceId: row.provider_voice_id,
+      gender: row.gender,
+      accent: row.accent,
+    }));
+  })().then(
+    (voices) => {
+      if (voices.length === 0) edgeVoicesCache = null;
+      return voices;
+    },
+    (error: unknown) => {
+      edgeVoicesCache = null;
+      console.error("[isolated-word-audio] could not list the Edge-TTS voices", error);
+      return [];
+    },
+  );
+  edgeVoicesCache = { promise, expiresAt: now + EDGE_VOICES_TTL_MS };
+  return promise;
+}
+
+let pronunciationVoiceCache: { promise: Promise<string | null>; expiresAt: number } | null = null;
+
+/** The Word Lists pronunciation voice id (admin setting), memoized like the voice list. */
+function getPronunciationVoiceId(): Promise<string | null> {
+  const now = Date.now();
+  if (pronunciationVoiceCache && pronunciationVoiceCache.expiresAt > now) {
+    return pronunciationVoiceCache.promise;
+  }
+  const promise = getDefaultPronunciationVoiceId().catch((): string | null => null);
+  pronunciationVoiceCache = { promise, expiresAt: now + EDGE_VOICES_TTL_MS };
+  return promise;
 }
 
 export interface SentenceWordAudio {
@@ -318,91 +386,148 @@ export interface SentenceWordAudio {
   urls: Record<string, string>;
   /** contentIds of the words that still have none. */
   missing: string[];
+  /** The voice most of the sentence's clips come from (null when none exist) — and how many words each voice covers — so where the inventory really lives is visible. */
+  primaryVoiceId: string | null;
+  coverage: Record<string, number>;
 }
 
-/** Longest a generating request may run — well inside a serverless function's own timeout, so a slow provider returns what it finished instead of a gateway error. */
-const GENERATE_DEADLINE_MS = 6_000;
-const GENERATE_CONCURRENCY = 3;
-/** A sentence never has this many distinct words in practice; the cap keeps one request's synthesis bounded whatever a caller asks. */
+/** A sentence never has this many distinct words in practice; the cap keeps one request bounded whatever a caller asks. */
 const MAX_WORDS_PER_SENTENCE = 40;
 
+interface SentenceResolution extends SentenceWordAudio {
+  entries: SentenceWordEntry[];
+  wordVoice: WordVoice;
+  voicesById: Map<string, EdgeVoice>;
+}
+
 /**
- * Every isolated-word clip of one lesson sentence, in a couple of Supabase round
- * trips instead of one Server Action per word. The caller hands over the
- * sentence's text, so it must be text the server itself read from a real
- * sentence row (the batch route goes through resolveSentenceWordAudio below,
- * which does that read) — never a client-supplied string.
- *
- * Cache-only by default. With `generate`, the words still missing are
- * synthesized (bounded: concurrency, deadline, the shared per-IP rate limit)
- * under the canonical normalized spelling — the same one the backfill script
- * wrote — so a word is generated once per voice whatever its position or
- * punctuation in any sentence. Returns null when the voice isn't real. Never
- * throws for a synthesis failure: a word that couldn't be made is just still in
- * `missing`.
+ * Looks a sentence's words up across the WHOLE single-word inventory — every
+ * Edge-TTS voice, the raw/normalized/Capitalized spellings — and lets the voice
+ * that covers most of them speak the sentence (see pickSentenceClips). Cache
+ * only. Null when the narrator voice isn't real.
+ */
+async function resolveSentence(
+  sentenceId: string,
+  text: string,
+  narratorVoiceId: string,
+): Promise<SentenceResolution | null> {
+  // Independent reads, started together: on a cold server instance this is the
+  // difference between two round trips and four.
+  const [wordVoice, edgeVoices, pronunciationVoiceId] = await Promise.all([
+    resolveWordVoice(narratorVoiceId),
+    listEdgeVoices(),
+    getPronunciationVoiceId(),
+  ]);
+  if (!wordVoice) return null;
+
+  const entries = sentenceWordEntries(sentenceId, text).slice(0, MAX_WORDS_PER_SENTENCE);
+  const voiceOrder = rankWordVoices({
+    wordVoiceId: wordVoice.id,
+    pronunciationVoiceId,
+    narratorVoiceId: narratorVoiceId,
+    voices: edgeVoices,
+  });
+  const words = entries.map((entry) => ({
+    contentId: entry.contentId,
+    candidates: wordTextCandidates(entry.raw, entry.key),
+  }));
+  const clips = await lookupReadyClips(
+    words.flatMap((word) => word.candidates),
+    voiceOrder,
+  );
+  const { urls, primaryVoiceId, coverage } = pickSentenceClips(words, voiceOrder, clips);
+
+  return {
+    entries,
+    wordVoice,
+    voicesById: new Map(edgeVoices.map((voice) => [voice.id, voice])),
+    urls,
+    missing: entries.map((entry) => entry.contentId).filter((contentId) => !(contentId in urls)),
+    primaryVoiceId,
+    coverage,
+  };
+}
+
+function publicResolution({ urls, missing, primaryVoiceId, coverage }: SentenceResolution) {
+  return { urls, missing, primaryVoiceId, coverage };
+}
+
+/**
+ * Every isolated-word clip that already exists for one lesson sentence, in a
+ * few Supabase reads instead of one Server Action per word. The caller hands
+ * over the sentence's text, so it must be text the server itself read from a
+ * real sentence row (the batch route goes through resolveSentenceWordAudio
+ * below, which does that read) — never a client-supplied string. Cache-only:
+ * it never synthesizes anything, so it is safe on a page's critical path.
  */
 export async function resolveWordAudioForText(input: {
   sentenceId: string;
   text: string;
   voiceId: string;
-  generate?: boolean;
 }): Promise<SentenceWordAudio | null> {
-  const { sentenceId, text, voiceId, generate = false } = input;
-  const wordVoice = await resolveWordVoice(voiceId);
-  if (!wordVoice) return null;
-
-  const entries = sentenceWordEntries(sentenceId, text).slice(0, MAX_WORDS_PER_SENTENCE);
-  if (entries.length === 0) return { urls: {}, missing: [] };
-
-  // The narrator's own id first: a one-word sentence ("Yes.") is a real
-  // narrator clip, which is what this lookup has always preferred. Otherwise
-  // the word voice — where every other isolated word actually lives.
-  const voiceIds = [...new Set([voiceId, wordVoice.id])];
-  const candidatesByEntry = entries.map((entry) => wordTextCandidates(entry.raw, entry.key));
-  const clips = await lookupReadyClips(candidatesByEntry.flat(), voiceIds);
-
-  const urls: Record<string, string> = {};
-  const missingEntries: typeof entries = [];
-  entries.forEach((entry, index) => {
-    const url = pickWordClip(candidatesByEntry[index] ?? [], voiceIds, clips);
-    if (url) urls[entry.contentId] = url;
-    else missingEntries.push(entry);
-  });
-
-  if (generate && missingEntries.length > 0) {
-    const generated = await runWithinBudget(
-      missingEntries,
-      async (entry) => {
-        if (await isSynthesisRateLimited()) return null;
-        return generateIsolatedWordAudio(entry.key, wordVoice.id, wordVoice.providerVoiceId);
-      },
-      { concurrency: GENERATE_CONCURRENCY, deadlineAt: Date.now() + GENERATE_DEADLINE_MS },
-    );
-    generated.forEach((url, index) => {
-      const entry = missingEntries[index];
-      if (url && entry) urls[entry.contentId] = url;
-    });
-  }
-
-  return {
-    urls,
-    missing: entries.map((entry) => entry.contentId).filter((contentId) => !(contentId in urls)),
-  };
+  const resolution = await resolveSentence(input.sentenceId, input.text, input.voiceId);
+  return resolution ? publicResolution(resolution) : null;
 }
 
-/** resolveWordAudioForText for a sentence named by id: the text is read from the real row (so the caller can only ask about SentenceStep's own content), in parallel with resolving the voice. Null when the sentence or voice isn't real. */
+async function readSentenceText(sentenceId: string): Promise<string | null> {
+  const { data } = await createServiceRoleClient()
+    .from("sentences")
+    .select("en")
+    .eq("id", sentenceId)
+    .maybeSingle();
+  return data?.en ?? null;
+}
+
+/** resolveWordAudioForText for a sentence named by id: the text is read from the real row, so the caller can only ask about SentenceStep's own content. Null when the sentence or voice isn't real. */
 export async function resolveSentenceWordAudio(input: {
   sentenceId: string;
   voiceId: string;
-  generate?: boolean;
 }): Promise<SentenceWordAudio | null> {
-  const { sentenceId, voiceId, generate } = input;
-  const supabase = createServiceRoleClient();
-  const [sentenceRow] = await Promise.all([
-    supabase.from("sentences").select("en").eq("id", sentenceId).maybeSingle(),
-    resolveWordVoice(voiceId), // warms the memo the call below reads
+  const { sentenceId, voiceId } = input;
+  const [text] = await Promise.all([
+    readSentenceText(sentenceId),
+    resolveWordVoice(voiceId), // warms the memo the lookup below reads
   ]);
-  const text = sentenceRow.data?.en;
   if (!text) return null;
-  return resolveWordAudioForText({ sentenceId, text, voiceId, generate });
+  return resolveWordAudioForText({ sentenceId, text, voiceId });
+}
+
+export type SentenceWordGeneration =
+  { url: string; reason?: undefined } | { url: null; reason: string };
+
+/**
+ * One word of a lesson sentence: its existing clip if the inventory has one
+ * (never synthesized twice), otherwise a single synthesis — the word alone, no
+ * deadline, under the voice that speaks the rest of the sentence so the
+ * sentence keeps one speaker. One word per call on purpose: production's slow
+ * free-tier backend doesn't reliably finish a burst of syntheses inside one
+ * request (the bulk version of this left learners with no sound at all), and a
+ * single word is what a tap is actually waiting for. `key` must be one of the
+ * sentence's own words, so this can't be used as a general text-to-speech
+ * endpoint. Never throws for a synthesis failure — the reason comes back.
+ */
+export async function generateSentenceWord(input: {
+  sentenceId: string;
+  voiceId: string;
+  key: string;
+}): Promise<SentenceWordGeneration> {
+  const { sentenceId, voiceId, key } = input;
+  const text = await readSentenceText(sentenceId);
+  if (!text) return { url: null, reason: "unknown sentence" };
+
+  const resolution = await resolveSentence(sentenceId, text, voiceId);
+  if (!resolution) return { url: null, reason: "unknown voice" };
+  const entry = resolution.entries.find((candidate) => candidate.key === key);
+  if (!entry) return { url: null, reason: "not a word of this sentence" };
+
+  const existing = resolution.urls[entry.contentId];
+  if (existing) return { url: existing };
+
+  if (await isSynthesisRateLimited()) return { url: null, reason: "rate limited" };
+  const voice =
+    (resolution.primaryVoiceId
+      ? resolution.voicesById.get(resolution.primaryVoiceId)
+      : undefined) ?? resolution.wordVoice;
+  const url = await generateIsolatedWordAudio(entry.key, voice.id, voice.providerVoiceId);
+  return url ? { url } : { url: null, reason: "synthesis did not finish" };
 }

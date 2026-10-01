@@ -29,6 +29,7 @@ import {
 } from "@/lib/features/dictation";
 import type { DictationResult } from "@/lib/features/dictation";
 import { calculateWpm } from "@/lib/typing";
+import { WORD_FALLBACK_MS } from "@/lib/voice/sentence-word-plan";
 import { isMistakeWorthTracking } from "@/lib/mistakes/normalize";
 import { cn } from "@/lib/utils";
 import type { LearningMode, Sentence } from "@/types/content";
@@ -73,15 +74,6 @@ interface DictationSentenceProps {
 
 /** No human dictation answer is typed faster than this; anything above is a timing artifact. */
 const MAX_PLAUSIBLE_WPM = 200;
-
-/**
- * If a word's real clip hasn't arrived this long after a tap, the browser's
- * own voice says the word instead of leaving the learner in silence. Long
- * enough that a clip the preloader is still fetching (a batched request, well
- * under this) arrives first and is the only voice heard; it only ever fires for
- * a word that has never been generated, where synthesis takes seconds.
- */
-const WORD_FALLBACK_MS = 2500;
 
 /** The sentence's size per mode — exactly what TypingSentence uses, so switching Dictation on never resizes the text. */
 const TEXT_SIZE: Record<LearningMode, string> = {

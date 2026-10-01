@@ -13,6 +13,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
+import { useSpeech } from "@/hooks/use-speech";
 import type { WordCardsApi } from "@/hooks/use-saved-cards";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
@@ -24,6 +25,7 @@ import {
   savableWordIndices,
 } from "@/lib/mistakes/normalize";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
+import { WORD_FALLBACK_MS } from "@/lib/voice/sentence-word-plan";
 import type { LearningMode, Sentence } from "@/types/content";
 
 interface TypingSentenceProps {
@@ -204,7 +206,9 @@ export function TypingSentence({
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
   const wordClip = useAudioClip();
-  const { resolveSentenceWord, registerResolvedAudio } = usePronunciationSettings();
+  const speech = useSpeech();
+  const { resolveSentenceWord, getResolvedAudio, getPlayableUrl, registerResolvedAudio } =
+    usePronunciationSettings();
   // Only the latest click plays: a slow earlier word must not start after a later, faster one.
   const wordRequestRef = useRef(0);
 
@@ -246,14 +250,35 @@ export function TypingSentence({
    */
   async function handleWordClick(word: string) {
     if (!sentenceVoiceId || !isTrackableWord(word)) return;
+    const key = normalizeMistakeWord(word);
     const request = ++wordRequestRef.current;
-    const url = await resolveSentenceWord({
-      sentenceId: sentence.id,
-      text: sentence.en,
-      voiceId: sentenceVoiceId,
-      key: normalizeMistakeWord(word),
-    });
-    if (url && request === wordRequestRef.current) wordClip.play(url);
+
+    // A tap is never silent: if the word's real clip hasn't arrived by
+    // WORD_FALLBACK_MS (only ever a word nobody has made a clip for yet), the
+    // browser's own voice says it, and the real clip — still being made — is
+    // cached for the next tap.
+    let spokeFallback = false;
+    const speakFallback = () => {
+      if (request !== wordRequestRef.current || spokeFallback) return;
+      spokeFallback = true;
+      speech.speakWord(key);
+    };
+
+    const known = getResolvedAudio(`${sentence.id}::${key}`);
+    const fallbackTimer = known ? undefined : setTimeout(speakFallback, WORD_FALLBACK_MS);
+    const url = known
+      ? getPlayableUrl(known)
+      : await resolveSentenceWord({
+          sentenceId: sentence.id,
+          text: sentence.en,
+          voiceId: sentenceVoiceId,
+          key,
+        });
+    clearTimeout(fallbackTimer);
+
+    if (request !== wordRequestRef.current || spokeFallback) return;
+    if (url) wordClip.play(url);
+    else speakFallback();
   }
 
   const currentWordIndex = getCurrentWordIndex(sentence.en, engine.typed.length);
