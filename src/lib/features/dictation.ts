@@ -417,6 +417,78 @@ export function dictationView(target: string, typed: string): DictationView {
   return { tokens, extraWords: typedWords.slice(word), typingWord: open, cursor };
 }
 
+/** How many letters (or digits) each graded word of the sentence takes to type — same order and count as the word indexes in dictationView. */
+export function dictationWordLengths(target: string): number[] {
+  return rawDictationTokens(target).map(
+    (token) => Array.from(token).filter((char) => !isAutoSkipChar(char)).length,
+  );
+}
+
+const SEPARATOR = /[\s\-–—]/;
+
+/** Adds one typed character to what is already there, enforcing the word boundaries the sentence dictates. */
+function appendDictationChar(lengths: number[], value: string, char: string): string {
+  if (SEPARATOR.test(char)) {
+    // Moves on to the next word early; a separator with nothing before it does nothing.
+    return value === "" || value.endsWith(" ") ? value : `${value} `;
+  }
+  if (isAutoSkipChar(char)) return value; // punctuation is never typed
+  if (lengths.length === 0) return value + char; // nothing to count against
+
+  const { words, open } = typedLetterWords(value);
+  let word = open ? words.length - 1 : words.length;
+  let typedLength = open ? Array.from(words[word] ?? "").length : 0;
+  let next = value;
+  if (word < lengths.length && typedLength >= (lengths[word] ?? 0)) {
+    // The word is already full (the learner backspaced into it): this letter starts the next one.
+    word += 1;
+    typedLength = 0;
+    next = `${value} `;
+  }
+  if (word >= lengths.length) return value; // the whole sentence is already typed
+  next += char;
+  typedLength += 1;
+  // A full word moves on by itself, right or wrong — the learner never types the space.
+  if (typedLength >= (lengths[word] ?? 0) && word + 1 < lengths.length) next += " ";
+  return next;
+}
+
+/**
+ * What the Dictation answer becomes when the learner's input changes from
+ * `previous` to `next` — the system, not the learner, decides where words end:
+ * a word that has received all its letters hands over to the next word at
+ * once (even if a letter is wrong), so the learner never types the space and
+ * can't type more letters than a word has; letters past the end of the
+ * sentence are ignored; punctuation is dropped; a hyphen or space typed
+ * early moves on to the next word. Only adding at the end and deleting from
+ * the end are accepted (any other edit is ignored), and Backspace over the
+ * automatic hand-over also takes the last letter of the word, so it never
+ * needs a press that changes nothing. Pass an empty `target` to accept
+ * everything (the admin option that hides the blanks).
+ */
+export function applyDictationInput(target: string, previous: string, next: string): string {
+  if (next === previous) return previous;
+  const lengths = dictationWordLengths(target);
+
+  if (next.length < previous.length) {
+    if (!previous.startsWith(next)) return previous;
+    const { words, open } = typedLetterWords(next);
+    const word = words.length - 1;
+    const full =
+      open &&
+      word + 1 < lengths.length &&
+      Array.from(words[word] ?? "").length >= (lengths[word] ?? 0);
+    return full ? next.slice(0, -1) : next;
+  }
+
+  if (!next.startsWith(previous)) return previous;
+  let value = previous;
+  for (const char of Array.from(next.slice(previous.length))) {
+    value = appendDictationChar(lengths, value, char);
+  }
+  return value;
+}
+
 /**
  * For each graded word of the sentence — same order and count as the word
  * indexes in dictationView — the key of the lesson word it belongs to, or null

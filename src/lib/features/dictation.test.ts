@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  applyDictationInput,
   compareDictation,
   dictationAccuracy,
   dictationMistakes,
   dictationView,
+  dictationWordLengths,
   firstLetterHint,
   levenshtein,
   normalizeDictationWords,
@@ -230,4 +232,72 @@ test("dictationAudioWords: keeps apostrophes inside a word and stays aligned wit
   const sentence = "Don't worry, it's fine.";
   assert.deepEqual(dictationAudioWords(sentence), ["don't", "worry", "it's", "fine"]);
   assert.equal(dictationAudioWords(sentence).length, viewWordCount(sentence));
+});
+
+test("dictationWordLengths: letters per graded word, punctuation and hyphens not counted", () => {
+  assert.deepEqual(dictationWordLengths("I don't know."), [1, 4, 4]);
+  assert.deepEqual(dictationWordLengths("A well-known — plan"), [1, 4, 5, 4]);
+});
+
+/** Types `keys` one at a time the way a keyboard would, starting from nothing. */
+function typeAll(target: string, keys: string, from = ""): string {
+  let value = from;
+  for (const key of Array.from(keys)) value = applyDictationInput(target, value, value + key);
+  return value;
+}
+
+test("applyDictationInput: a full word hands over to the next one by itself, right or wrong", () => {
+  assert.equal(typeAll("I had to go", "I"), "I ");
+  assert.equal(typeAll("I had to go", "Ihad"), "I had ");
+  // A wrong letter still counts toward the word's length.
+  assert.equal(typeAll("I had to go", "Ihxd"), "I hxd ");
+  assert.equal(typeAll("I had to go", "Ihadtogo"), "I had to go");
+});
+
+test("applyDictationInput: nothing can be typed past the end of the sentence", () => {
+  assert.equal(typeAll("I had to go", "Ihadtogoxyz"), "I had to go");
+  // The last word gets no trailing space.
+  assert.equal(typeAll("I had to go", "Ihadto"), "I had to ");
+});
+
+test("applyDictationInput: punctuation is dropped and the learner's own spaces are optional", () => {
+  assert.equal(typeAll("I don't know.", "Idon't"), "I dont ");
+  assert.equal(typeAll("I don't know.", "I don't know."), "I dont know");
+  assert.equal(typeAll("I don't know.", "I  "), "I ");
+});
+
+test("applyDictationInput: a space or hyphen typed early moves on, but never from an empty word", () => {
+  assert.equal(typeAll("good morning", "go "), "go ");
+  assert.equal(typeAll("good morning", "go-m"), "go m");
+  assert.equal(typeAll("good morning", " "), "");
+  assert.equal(typeAll("good morning", "go  "), "go ");
+});
+
+test("applyDictationInput: a hyphenated compound is two words for the hand-over", () => {
+  assert.equal(typeAll("A well-known plan", "Awellknown"), "A well known ");
+  assert.equal(typeAll("A well-known plan", "Awell-known"), "A well known ");
+});
+
+test("applyDictationInput: Backspace over the automatic hand-over also removes the last letter", () => {
+  assert.equal(applyDictationInput("I had to go", "I ", "I"), "");
+  assert.equal(applyDictationInput("I had to go", "I had ", "I had"), "I ha");
+  // An early manual space: only the space goes.
+  assert.equal(applyDictationInput("good morning", "go ", "go"), "go");
+  // Plain deletion inside a word, and over the last word (no hand-over to undo).
+  assert.equal(applyDictationInput("I had to go", "I ha", "I h"), "I h");
+  assert.equal(applyDictationInput("I had to go", "I had to go", "I had to g"), "I had to g");
+});
+
+test("applyDictationInput: a letter typed after backspacing into a full word starts the next word", () => {
+  assert.equal(applyDictationInput("I had to go", "I had", "I hadx"), "I had x");
+});
+
+test("applyDictationInput: edits that aren't adding or deleting at the end are ignored", () => {
+  assert.equal(applyDictationInput("I had to go", "I had ", "I xhad "), "I had ");
+  assert.equal(applyDictationInput("I had to go", "I had ", "x"), "I had ");
+  assert.equal(applyDictationInput("I had to go", "I had ", ""), "");
+});
+
+test("applyDictationInput: with no target everything is accepted as typed", () => {
+  assert.equal(applyDictationInput("", "hel", "hello wor"), "hello wor");
 });

@@ -429,12 +429,18 @@ export function LessonSession({
     if (sentence && !previewMode && outcome.mistakes.length > 0) {
       mistakes.recordSentenceMistakes(sentence.id, outcome.mistakes);
     }
-    handleSentenceComplete(outcome.wpm);
+    // An exact answer already played the sentence-complete sound when it was
+    // checked (see playSentenceCompleteSound below); don't play it twice.
+    handleSentenceComplete(outcome.wpm, outcome.celebrated);
   }
 
-  function handleSentenceComplete(wpm: number) {
-    if (wpm > 0) wpmSamplesRef.current.push(wpm);
+  function playSentenceCompleteSound() {
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, unit.mode));
+  }
+
+  function handleSentenceComplete(wpm: number, silent = false) {
+    if (wpm > 0) wpmSamplesRef.current.push(wpm);
+    if (!silent) playSentenceCompleteSound();
 
     if ((unit.mode === "stories" || unit.mode === "normal") && sentence) {
       setPreviousSentences((prev) => [
@@ -991,6 +997,7 @@ export function LessonSession({
                               play("letter");
                               vibrateLightly();
                             }}
+                            onExact={playSentenceCompleteSound}
                             onComplete={handleDictationComplete}
                             storyTitle={unit.title}
                             sentenceNumber={sentenceIndex + 1}

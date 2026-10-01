@@ -20,20 +20,22 @@ const NBSP = " ";
 
 /**
  * How a slot's letter leaves and its blank arrives when Dictation is switched
- * on: the letters dissolve left to right (each lifting and blurring away) and
- * every blank draws itself in right behind its letter.
+ * on: a quick wave runs left to right in which every letter drops onto its
+ * line (shrinking and blurring as it lands) while the blank draws itself out
+ * from the middle just as it arrives. The whole sentence takes about half a
+ * second. A typed letter does the same in reverse: it rises off the line.
  */
-const INTRO_STEP = 0.02;
-const INTRO_MAX_DELAY = 0.9;
-const INTRO_TICK_LAG = 0.16;
-const INTRO_TOTAL_MS = (INTRO_MAX_DELAY + INTRO_TICK_LAG + 0.45) * 1000 + 100;
-/** A fresh sentence (no intro): its blanks just draw in, quickly. */
-const ENTER_STEP = 0.012;
-const ENTER_MAX_DELAY = 0.45;
-const ENTER_TOTAL_MS = (ENTER_MAX_DELAY + 0.4) * 1000 + 100;
+const INTRO_STEP = 0.006;
+const INTRO_MAX_DELAY = 0.28;
+const INTRO_TICK_LAG = 0.05;
+const INTRO_TOTAL_MS = (INTRO_MAX_DELAY + INTRO_TICK_LAG + 0.22) * 1000 + 80;
+/** A fresh sentence (no intro): its blanks just draw in, even quicker. */
+const ENTER_STEP = 0.004;
+const ENTER_MAX_DELAY = 0.18;
+const ENTER_TOTAL_MS = (ENTER_MAX_DELAY + 0.2) * 1000 + 80;
 
 const GLYPH_SHOWN = { opacity: 1, scale: 1, y: "0em", filter: "blur(0px)" };
-const GLYPH_HIDDEN = { opacity: 0, scale: 0.55, y: "-0.14em", filter: "blur(6px)" };
+const GLYPH_HIDDEN = { opacity: 0, scale: 0.6, y: "0.18em", filter: "blur(3px)" };
 
 type Phase = "intro" | "enter" | "idle";
 
@@ -244,9 +246,19 @@ export function DictationText({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+          // The answer only grows and shrinks at its end: the caret can't be
+          // seen, so moving it into the middle would only cause confusion.
+          if (["ArrowLeft", "ArrowUp", "Home"].includes(event.key)) event.preventDefault();
           if (event.key !== "Enter") return;
           event.preventDefault();
           onEnter();
+        }}
+        onSelect={(event) => {
+          const input = event.currentTarget;
+          const end = input.value.length;
+          if (input.selectionStart !== end || input.selectionEnd !== end) {
+            input.setSelectionRange(end, end);
+          }
         }}
         // Same rule as the keystroke engine: this exercise is typed, not pasted.
         onPaste={(event) => event.preventDefault()}
@@ -339,7 +351,7 @@ function Slot({
         transition={
           reducedMotion
             ? { duration: 0 }
-            : { duration: filled ? 0.22 : 0.45, delay: glyphDelay, ease: easeOut }
+            : { duration: filled ? 0.18 : 0.22, delay: glyphDelay, ease: easeOut }
         }
         className={cn(
           "inline-block transition-colors duration-150 before:content-[attr(data-ch)]",
@@ -354,7 +366,7 @@ function Slot({
             transition={
               reducedMotion
                 ? { duration: 0 }
-                : { duration: filled ? 0.15 : 0.4, delay: tickDelay, ease: easeOut }
+                : { duration: filled ? 0.12 : 0.2, delay: tickDelay, ease: easeOut }
             }
             className={cn(
               "block h-full w-[max(calc(100%-0.16em),0.3em)] rounded-full bg-[var(--lesson-letter-pending)] transition-colors duration-200 group-hover/word:bg-[var(--lesson-primary)]",

@@ -22,6 +22,7 @@ import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { useSpeech } from "@/hooks/use-speech";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
+  applyDictationInput,
   compareDictation,
   dictationAccuracy,
   dictationAudioWords,
@@ -43,6 +44,8 @@ export interface DictationOutcome {
   /** Words (raw tokens) to record in Fix Your Mistakes — already filtered to ones worth tracking. */
   mistakes: { word: string; errorIndexes: number[] }[];
   exact: boolean;
+  /** The celebration sound already played for an exact answer (on this sentence's first try or a retry), so the lesson must not play the sentence-complete sound again on Continue. */
+  celebrated: boolean;
 }
 
 interface DictationSentenceProps {
@@ -62,6 +65,8 @@ interface DictationSentenceProps {
   onAudioPlay?: () => void;
   /** Fired per keystroke so the lesson's typing sound / haptics behave like the normal engine. */
   onKeystroke?: () => void;
+  /** Fired each time an answer is checked and every word is right: the lesson plays its sentence-complete sound, as when a sentence is finished by typing. */
+  onExact?: () => void;
   onComplete: (outcome: DictationOutcome) => void;
   /** Stories mode only — the same header row TypingSentence draws (title, counter, step buttons, time left). */
   storyTitle?: string;
@@ -125,6 +130,7 @@ export function DictationSentence({
   onStart,
   onAudioPlay,
   onKeystroke,
+  onExact,
   onComplete,
   storyTitle,
   sentenceNumber,
@@ -143,6 +149,7 @@ export function DictationSentence({
   const startedAtRef = useRef<number | null>(null);
   /** The graded first attempt at this sentence — what onComplete reports, whatever happens on retries. */
   const firstAttemptRef = useRef<{ graded: DictationResult; wpm: number } | null>(null);
+  const celebratedRef = useRef(false);
   const [value, setValue] = useState("");
   const [result, setResult] = useState<DictationResult | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -283,6 +290,10 @@ export function DictationSentence({
         wpm: Math.min(MAX_PLAUSIBLE_WPM, calculateWpm(graded.correctChars, elapsed)),
       };
     }
+    if (graded.exact) {
+      celebratedRef.current = true;
+      onExact?.();
+    }
     setResult(graded);
   }
 
@@ -298,6 +309,7 @@ export function DictationSentence({
         isMistakeWorthTracking(mistake.word),
       ),
       exact: first.graded.exact,
+      celebrated: celebratedRef.current,
     });
   }
 
@@ -315,9 +327,16 @@ export function DictationSentence({
   // correction is on screen it continues, wherever focus is.
   useEnterToContinue(result !== null, next);
 
+  // The system, not the learner, decides where each word ends (see
+  // applyDictationInput): a word that has all its letters hands over to the
+  // next one by itself. An input that changes nothing is dropped, which snaps
+  // the field back to the accepted answer, like a rejected keystroke in the
+  // typing view.
   function handleChange(nextValue: string) {
-    if (startedAtRef.current === null && nextValue.length > 0) startedAtRef.current = Date.now();
-    setValue(nextValue);
+    const accepted = applyDictationInput(showWordBlanks ? sentence.en : "", value, nextValue);
+    if (accepted === value) return;
+    if (startedAtRef.current === null && accepted.length > 0) startedAtRef.current = Date.now();
+    setValue(accepted);
     onKeystroke?.();
   }
 
