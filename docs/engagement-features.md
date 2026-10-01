@@ -71,21 +71,29 @@ already has history the day the feature goes On.
   Dictation keeps the typing view's own frame (same text size, audio controls,
   Stories header, Conversation bubble) instead of a card of its own: the
   sentence is drawn in place with a blank under every letter, and there is no
-  answer box. When the switch is turned on, the letters dissolve into their
-  blanks one after another (only for the sentence on screen at that moment; a
-  new sentence just draws its blanks in, never flashing its text). The learner
-  types straight onto the blanks: a cursor bar glides along them and each typed
-  letter appears in its slot, word by word, with nothing said about whether it
-  is right until Enter. Punctuation and apostrophes stay printed between the
+  answer box. When the switch is turned on, a quick wave (about half a second)
+  drops every letter onto its line while the blank draws itself out (only for
+  the sentence on screen at that moment; a new sentence just draws its blanks
+  in, never flashing its text). The learner types straight onto the blanks: a
+  cursor bar glides along them and each typed letter appears in its slot, word
+  by word, with nothing said about whether it is right until Enter. The system
+  decides where words end (`applyDictationInput`): a word that has received all
+  its letters hands over to the next one by itself, right or wrong, so the
+  learner never types the space and can't type more letters than a word has
+  (a space or hyphen typed early just moves on; punctuation is ignored; edits
+  anywhere but the end of the answer are ignored; Backspace over the automatic
+  hand-over also takes the word's last letter). With Show word-length blanks
+  off nothing is enforced. Punctuation and apostrophes stay printed between the
   blanks. While the sentence is hidden, hovering a word only lights its blanks
   up, and tapping it says the word (Normal and Stories, from the same clips,
   loaded by the same rolling window, as the typing view — see
   `docs/word-audio-loading.md` — so a tap plays from memory; if a never-generated
   clip takes more than 2.5 seconds the browser's own voice says it so a tap is
-  never
-  silent). Turning **Show word-length blanks** off leaves the area empty and
-  only echoes what has been typed. From memory shares the correction screen,
-  Enter handling and Try again.
+  never silent). Turning **Show word-length blanks** off leaves the area empty and
+  only echoes what has been typed. Checking an answer where every word is right
+  plays the same sentence-complete sound as finishing a sentence by typing (and
+  Continue then stays silent instead of playing it again). From memory shares
+  the correction screen, Enter handling and Try again.
 - **Streak freeze** sits on top of the existing free one-missed-day grace: each
   _extra_ consecutive missed day spends one freeze from the month's balance,
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).
