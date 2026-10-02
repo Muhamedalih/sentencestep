@@ -100,6 +100,10 @@ interface TypingSentenceProps {
   onGoBack?: () => void;
   /** Stories mode only — steps forward again, one sentence. LessonSession only ever passes this when sentenceNumber is still behind maxSentenceIndexReached (see its own doc comment) — undefined otherwise, which is what hides the button entirely rather than this component re-deriving that condition itself. */
   onGoForward?: () => void;
+  /** Dictation handing a half-typed sentence back (the learner gave up, or switched Dictation off): the part already typed correctly, as the keystroke engine's own buffer. Read once, when this sentence mounts. */
+  initialTyped?: string;
+  /** The words that already had wrong letters in that dictation attempt, folded into this sentence's own mistakes so Fix Your Mistakes hears about them once, when the sentence is finished. Read once, on mount. */
+  initialMistakes?: { word: string; errorIndexes: number[] }[];
 }
 
 export function TypingSentence({
@@ -123,6 +127,8 @@ export function TypingSentence({
   onGoBack,
   onGoForward,
   wordCards,
+  initialTyped,
+  initialMistakes,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -160,6 +166,17 @@ export function TypingSentence({
   // attempt (a Set, since retyping the same wrong position twice — e.g.
   // after a shake-and-retry — must still only count once).
   const mistakeWordsRef = useRef<Map<string, Set<number>>>(new Map());
+  useEffect(() => {
+    // Mount-only: mistakes a dictation attempt at this same sentence already
+    // made. (An effect, not the ref's initial value, so Strict Mode's second
+    // run merges into the same sets instead of doubling anything.)
+    for (const { word, errorIndexes } of initialMistakes ?? []) {
+      const positions = mistakeWordsRef.current.get(word) ?? new Set<number>();
+      for (const index of errorIndexes) positions.add(index);
+      mistakeWordsRef.current.set(word, positions);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleComplete(wpm: number) {
     if (mistakeWordsRef.current.size > 0) {
@@ -186,6 +203,7 @@ export function TypingSentence({
     // (which only ever covered TypingText's OWN mount-time focus call) —
     // both need to read the same gate.
     autoFocus: hasStarted,
+    initialTyped,
   });
 
   // Fires once per genuinely new wrong keystroke (errorIndex transitions

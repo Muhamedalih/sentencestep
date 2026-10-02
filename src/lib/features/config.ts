@@ -92,7 +92,7 @@ export interface DailySessionSources {
 }
 
 export interface FeatureOptions {
-  dictation: { showWordBlanks: boolean };
+  dictation: { showWordBlanks: boolean; letterByLetter: boolean };
   fromMemory: { allowReveal: boolean; showFirstLetters: boolean };
   dailySession: { size: number; xpReward: number; sources: DailySessionSources };
   quests: { types: Record<QuestType, QuestTypeConfig> };
@@ -128,7 +128,7 @@ export function defaultFeatureConfig(): FeatureConfig {
   return {
     features,
     options: {
-      dictation: { showWordBlanks: true },
+      dictation: { showWordBlanks: true, letterByLetter: true },
       fromMemory: { allowReveal: true, showFirstLetters: true },
       dailySession: {
         size: 12,
@@ -194,6 +194,10 @@ export function sanitizeFeatureConfig(raw: unknown): FeatureConfig {
   base.options.dictation.showWordBlanks = bool(
     dictation.showWordBlanks,
     base.options.dictation.showWordBlanks,
+  );
+  base.options.dictation.letterByLetter = bool(
+    dictation.letterByLetter,
+    base.options.dictation.letterByLetter,
   );
 
   const fromMemory = isRecord(rawOptions.fromMemory) ? rawOptions.fromMemory : {};
@@ -287,7 +291,7 @@ export type SectionFlags = Record<LearningMode, boolean>;
  */
 export interface EffectiveFeatures {
   signedIn: boolean;
-  dictation: { sections: SectionFlags; showWordBlanks: boolean };
+  dictation: { sections: SectionFlags; showWordBlanks: boolean; letterByLetter: boolean };
   fromMemory: { sections: SectionFlags; allowReveal: boolean; showFirstLetters: boolean };
   personalCards: { page: boolean; saveSections: SectionFlags };
   dailySession: { enabled: boolean; size: number; xpReward: number; sources: DailySessionSources };
@@ -338,6 +342,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
     dictation: {
       sections: sectionFlags(config.features.dictation, "dictation", dictationOpen, ALL_MODES),
       showWordBlanks: config.options.dictation.showWordBlanks,
+      letterByLetter: config.options.dictation.letterByLetter,
     },
     fromMemory: {
       sections: sectionFlags(config.features.fromMemory, "fromMemory", fromMemoryOpen, ALL_MODES),

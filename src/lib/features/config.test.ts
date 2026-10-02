@@ -72,6 +72,19 @@ test("resolveFeatures: dictation honors the per-section matrix and works for gue
   });
 });
 
+test("dictation checks letter by letter unless an admin turns it off, and a saved config without the option keeps the default", () => {
+  assert.equal(defaultFeatureConfig().options.dictation.letterByLetter, true);
+  // A settings row saved before the option existed.
+  const legacy = sanitizeFeatureConfig({ options: { dictation: { showWordBlanks: false } } });
+  assert.equal(legacy.options.dictation.letterByLetter, true);
+  assert.equal(legacy.options.dictation.showWordBlanks, false);
+
+  const exam = sanitizeFeatureConfig({ options: { dictation: { letterByLetter: false } } });
+  assert.equal(exam.options.dictation.letterByLetter, false);
+  assert.equal(resolveFeatures(exam, guest).dictation.letterByLetter, false);
+  assert.equal(resolveFeatures(defaultFeatureConfig(), guest).dictation.letterByLetter, true);
+});
+
 test("resolveFeatures: account features need a signed-in learner and produce a guest teaser instead", () => {
   const config = defaultFeatureConfig();
   config.features.quests.state = "on";
