@@ -197,14 +197,17 @@ export const es: Dictionary = {
     dismissAria: "Descartar",
   },
   rateApp: {
-    headline: "¿Cómo ha sido tu experiencia con SentenceStep hasta ahora?",
+    headline:
+      "¡Tu opinión es muy importante! ¿Cómo ha sido tu experiencia con SentenceStep hasta ahora?",
     subtitle:
-      "Tu calificación es totalmente opcional y nos ayuda a mejorar SentenceStep — no volverás a ver este mensaje.",
-    commentPlaceholder: "¿Algún comentario o sugerencia? (opcional)",
-    skip: "Omitir",
-    submit: "Enviar",
-    thanksTitle: "¡Gracias!",
-    thanksBody: "Recibimos tu calificación — lo apreciamos.",
+      "Tu calificación es opcional, pero marca una diferencia real: cada estrella y cada palabra que escribas nos ayuda a mejorar SentenceStep para ti y para todos los estudiantes. No volverás a ver este mensaje.",
+    commentPlaceholder:
+      "Comparte tus comentarios o sugerencias — tus ideas nos importan (opcional)",
+    skip: "Ahora no",
+    submit: "Enviar opinión",
+    thanksTitle: "¡Muchas gracias!",
+    thanksBody:
+      "Recibimos tu calificación y valoramos mucho tu tiempo — tu opinión nos ayuda a ofrecerte una mejor experiencia.",
     starLabelSingular: "{n} estrella",
     starLabelPlural: "{n} estrellas",
   },
@@ -464,10 +467,10 @@ export const es: Dictionary = {
     startingLevelNotChosen: "Sin definir — las lecciones comienzan en nivel principiante.",
     startingLevelSaved: "Nivel de inicio actualizado.",
     startingLevelError: "No se pudo actualizar tu nivel de inicio. Inténtalo de nuevo.",
-    rateAppHeading: "Califica SentenceStep",
+    rateAppHeading: "Tu opinión importa — califica SentenceStep",
     rateAppSubtitle:
-      "¿Te está gustando la app? Déjanos tu calificación cuando quieras — es totalmente opcional.",
-    rateAppButton: "Calificar la app",
+      "¿Te está gustando la app? Comparte tu calificación cuando quieras; tu opinión marca una diferencia real en la mejora de la app y es totalmente opcional.",
+    rateAppButton: "Calificar la app ahora",
     avatarHeading: "Avatar",
     avatarSubtitle: "Elige el ícono que se muestra en tu cuenta.",
     accountHeading: "Cuenta",
