@@ -66,7 +66,7 @@ already has history the day the feature goes On.
     a wrong letter (case never matters) is turned away and the answer only
     ever holds correct letters. Guessing is not blocked but it is never free:
     each turned-away letter is counted (as an error in the lesson's accuracy,
-    and against the sentence's stars), shows in red on its blank, plays the
+    and every third one costs a star), shows in red on its blank, plays the
     typing view's error sound, and **plays the word again** (Normal and
     Stories, from the same word clips as a tap on a blank), so a guess costs a
     listen. A space or hyphen typed in the middle of a word counts as a wrong
@@ -80,7 +80,27 @@ already has history the day the feature goes On.
     `dictation-text.tsx`), or sooner when its next correct letter is typed; it
     is said as well, and the button is off while the word is up so one peek
     costs one peek. It needs the blanks (it is not offered with Show word-length blanks
-    off). Give up hands this one sentence to the normal typing view, which
+    off).
+
+    **What Show the word costs is shown in three beats.** The sentence's stars
+    sit in the bar beside the button, and the button wears a price tag (−★).
+    With the pointer or keyboard focus on it, the star it would take turns into
+    a dashed ghost. On press that star lifts off, arcs into the bulb and dies in
+    a burst of sparks; the bulb flares and the word rises by its light (the peek
+    starts as the star lands, `STAR_FLIGHT_MS`), the empty slot pops and "−1"
+    floats away. Leaving mid-flight (the learner typed the letter) cancels it
+    and nothing is counted. Stars are `3 − helps − ⌊wrong letters ÷ 3⌋`, never
+    below one (`dictationStars`); at one star there is nothing left to take, so
+    the tag reads "Recorded", no star flies, and the help still shows as a bulb
+    mark in the recap.
+
+    **The streak chip** (`DictationStreak`, beside the audio controls) counts
+    sentences in a row finished without Show the word. It appears from two and
+    goes up as a sentence is finished; with the pointer on Show the word it
+    warns "You'll break the streak", and pressing it makes the chip shake, go
+    grey and count down to zero before it leaves. Giving up, switching Dictation
+    off and retrying the lesson end it too. LessonSession keeps the count
+    (`helpFreeStreak`), fed by the outcome's `helps`. Give up hands this one sentence to the normal typing view, which
     carries on from what was typed (`dictationTypedPrefix` →
     `useTypingEngine`'s `initialTyped`), keeps the words already missed for Fix
     Your Mistakes, and does not count as a dictated sentence for quests; the
@@ -90,10 +110,17 @@ already has history the day the feature goes On.
     `onErrorLetter`, like the typing view), so the outcome tells the lesson
     not to add them again (`lettersReported`). A finished sentence stays in
     place filled in, with a "Perfect!" (no wrong letter, no peek) or "Well
-    done!", one to three stars (`dictationStars`: a wrong letter costs 1, a
-    peek 2; 0 is three stars, up to 2 is two), the number of wrong letters, the
-    translation and **Continue**. A clean run plays the sentence-complete sound
-    straight away; otherwise Continue plays it.
+    done!", one to three stars, the number of wrong letters, a bulb mark when
+    the word was shown ("Help × 2"), the translation, **Continue** and a small
+    **Retry sentence** button. Retry types the same sentence again as practice
+    (fresh blanks, the audio again): nothing is at stake, so there are no stars,
+    price or streak chip, the letters sound as usual but are not added to the
+    lesson's tallies, and Give up simply moves on. Only the first try is ever
+    reported (`finishWithFirstTry`) and the panel keeps showing it; a clean
+    practice try plays the celebration sound once, as in the exam. A clean run
+    plays the sentence-complete sound straight away; otherwise Continue plays
+    it.
+
   - _Whole sentence_ (the option off): the learner types the sentence and
     checks it with Enter (`src/lib/features/dictation.ts`): case- and
     punctuation-insensitive, typos are "close", misses go to Fix Your Mistakes.

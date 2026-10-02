@@ -784,6 +784,16 @@ export const es: Dictionary = {
     mistakeCount: "Letras erróneas: {n}",
     starsLabel: "{n} de 3 estrellas",
     wrongLetter: "Esa letra no es. Escucha otra vez e inténtalo de nuevo.",
+    retrySentence: "Repetir la oración",
+    retrySentenceTitle:
+      "Escribe esta oración otra vez como práctica. Solo cuenta tu primer intento.",
+    helpCount: "Ayuda × {n}",
+    costLabel: "Cuesta una estrella",
+    costRecorded: "Se anota",
+    streakLabel: "oraciones sin ayuda",
+    streakRisk: "Romperás la racha",
+    streakBroken: "Racha rota",
+    streakAria: "{n} oraciones seguidas sin ayuda",
   },
   fromMemory: {
     button: "Ponte a prueba de memoria",

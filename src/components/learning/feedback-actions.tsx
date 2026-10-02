@@ -11,6 +11,8 @@ interface ActionButtonProps {
   onClick: () => void;
   children: ReactNode;
   className?: string;
+  /** Native tooltip, for buttons whose label is short. */
+  title?: string;
 }
 
 /**
@@ -87,6 +89,42 @@ export function RetryButton({ onClick, children, className }: ActionButtonProps)
         variants={{ hover: { rotate: -360, transition: { duration: 0.5, ease: "easeInOut" } } }}
       >
         <RotateCcw className="size-5" />
+      </motion.span>
+      {children}
+    </motion.button>
+  );
+}
+
+/**
+ * A compact "again" button for beside Continue: the same entrance and press feel
+ * as the other two, but small and quiet (an outline that only lights up on
+ * hover) so it never competes with Continue for the learner's next move. The
+ * icon spins back once on hover.
+ */
+export function SmallRetryButton({ onClick, children, className, title }: ActionButtonProps) {
+  const reduced = useReducedMotion() ?? false;
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      title={title}
+      initial={reduced ? false : { opacity: 0, y: 12, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.12 }}
+      whileHover={reduced ? undefined : "hover"}
+      whileTap={reduced ? undefined : { scale: 0.94 }}
+      className={cn(
+        "border-border/70 text-muted-foreground hover:border-primary/50 hover:bg-muted hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+        className,
+      )}
+    >
+      <motion.span
+        aria-hidden="true"
+        className="inline-flex"
+        variants={{ hover: { rotate: -360, transition: { duration: 0.5, ease: "easeInOut" } } }}
+      >
+        <RotateCcw className="size-4" />
       </motion.span>
       {children}
     </motion.button>

@@ -895,6 +895,19 @@ export interface Dictionary {
     mistakeCount: string;
     starsLabel: string;
     wrongLetter: string;
+    /** After a letter-by-letter sentence: a small "again" button beside Continue (practice, only the first try counts). */
+    retrySentence: string;
+    retrySentenceTitle: string;
+    /** The help mark in the end-of-sentence recap ("Help × 2"). */
+    helpCount: string;
+    /** On the Show the word button: what pressing it costs. */
+    costLabel: string;
+    costRecorded: string;
+    /** The chip counting sentences in a row finished without Show the word. */
+    streakLabel: string;
+    streakRisk: string;
+    streakBroken: string;
+    streakAria: string;
   };
   /** From-memory mode (src/components/learning/from-memory-session.tsx) — an optional round after a lesson: read the meaning, type the English. */
   fromMemory: {
