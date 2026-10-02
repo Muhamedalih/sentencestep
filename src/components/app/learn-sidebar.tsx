@@ -1,11 +1,14 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Library, ListChecks, NotebookText } from "lucide-react";
 
+import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
+import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { cn } from "@/lib/utils";
 
 /**
@@ -100,13 +103,20 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
   // whatever the current page itself needs to load. See
   // useDeferredPrefetch's own doc comment for why router.prefetch() (not a
   // <link> tag) is the right mechanism here.
+  //
+  // The sub-nav routes go first and don't wait out the usual startup delay:
+  // the only thing a learner does next from Daily Lessons is tap General
+  // Stories (or back), and queued behind the four primary routes that tap
+  // landed on a cold route for about a second after every arrival — the
+  // intermittent "button didn't respond" lag.
   const subNavHrefs =
     active === "stories"
       ? ["/learn/stories", "/learn/normal"]
       : active === "library" && isAdminUser
         ? ["/learn/library", "/learn/library/novels"]
         : [];
-  useDeferredPrefetch([...NAV_ITEMS.map((item) => item.href), ...subNavHrefs]);
+  useDeferredPrefetch(subNavHrefs, 0);
+  useDeferredPrefetch(NAV_ITEMS.map((item) => item.href));
 
   return (
     <nav
@@ -127,22 +137,22 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
           const Icon = item.icon;
           const isActive = active === item.key;
           const navLink = (
-            <Link
+            <SidebarLink
               key={item.key}
               href={item.href}
-              prefetch={false}
-              aria-current={isActive ? "page" : undefined}
+              isActive={isActive}
               className={cn(
-                "focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] font-medium",
                 "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap",
                 isActive
                   ? "text-primary md:bg-brand-muted"
                   : "text-muted-foreground hover:text-foreground md:hover:bg-secondary",
+                "has-[[data-pending]]:text-primary md:has-[[data-pending]]:bg-brand-muted",
               )}
             >
               <Icon className="size-5 shrink-0 md:size-4" aria-hidden="true" />
               <span dir={dir}>{item.label}</span>
-            </Link>
+            </SidebarLink>
           );
 
           // The Stories/Ordinary Lessons and Library/Novels sub-navs (see
@@ -191,25 +201,62 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
               className="hidden md:flex md:flex-col md:gap-0.5 md:ps-9 md:pe-3"
             >
               {subItems.map((subItem) => (
-                <Link
+                <SidebarLink
                   key={subItem.key}
                   href={subItem.href}
-                  prefetch={false}
-                  aria-current={subItem.isSubActive ? "page" : undefined}
+                  isActive={subItem.isSubActive}
                   className={cn(
-                    "focus-visible:ring-ring focus-visible:ring-offset-background rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                    "rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap",
                     subItem.isSubActive
                       ? "text-primary bg-brand-muted"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                    "has-[[data-pending]]:text-primary has-[[data-pending]]:bg-brand-muted",
                   )}
                 >
                   <span dir={dir}>{subItem.label}</span>
-                </Link>
+                </SidebarLink>
               ))}
             </div>,
           ];
         })}
       </div>
     </nav>
+  );
+}
+
+/**
+ * One sidebar Link. `prefetch={false}` stays (see LearnSidebar's own
+ * useDeferredPrefetch comment), which also turns off Next's hover/touch
+ * prefetch — so warm the route on intent here instead — and the link lights up
+ * the instant it is pressed (see LinkPendingMarker) rather than sitting
+ * unchanged until the next page arrives.
+ */
+function SidebarLink({
+  href,
+  isActive,
+  className,
+  children,
+}: {
+  href: string;
+  isActive: boolean;
+  className: string;
+  children: ReactNode;
+}) {
+  const intent = useIntentPrefetch(href);
+
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      aria-current={isActive ? "page" : undefined}
+      {...intent}
+      className={cn(
+        "focus-visible:ring-ring focus-visible:ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 has-[[data-pending]]:animate-pulse",
+        className,
+      )}
+    >
+      {children}
+      <LinkPendingMarker />
+    </Link>
   );
 }
