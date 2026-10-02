@@ -546,6 +546,10 @@ export const en: Dictionary = {
     nextBlockHint: "Up next: words {from} to {to}",
     finishBlock: "Finish",
     finishBlockHint: "That was the last group of words.",
+    practiceWord: "Practice",
+    practiceWordAria: "Practice the word {word}",
+    drillBack: "Back to the summary",
+    drillNote: "Free practice: it does not change your progress or your review schedule.",
     smart: {
       helpPrompt: "Need a hand?",
       hint: "Hint",
@@ -555,6 +559,9 @@ export const en: Dictionary = {
       starsLabel: "{n} of 3 stars for this word",
       costLabel: "Costs a star",
       costRecorded: "Recorded",
+      noStars: "No stars",
+      noStarsTitle:
+        "This word is out of stars. Type it, or press “I don’t know” and it will come back later.",
       alsoCorrect: "Also correct ✓ — the word used here: {word}",
       continueEnter: "Continue",
       firstTry: "{n} of {total} first try",

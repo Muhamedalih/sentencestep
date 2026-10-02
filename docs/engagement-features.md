@@ -270,21 +270,36 @@ already has history the day the feature goes On.
     go red, shudder and crumble away (the last typed first) as the star flies
     off, then the right letter is restored in its place with a flare of the
     accent colour (`StageLetter`) and the word glides to its new centre. Keys
-    pressed meanwhile are kept and added afterwards; Enter waits. As many hints
-    as wanted, one at a time. Stars are live and are the same steps that decide
-    the schedule: **3** for a clean answer, **2** after one hint (the word holds
-    its step), **1** after a wrong answer, "I don't know" or a **second hint**
-    (the word counts as missed and goes back to 0 — it was not recalled), and
-    from then on hints only show as "recorded". The summary shows each word's
-    stars and how many were right first time.
+    pressed meanwhile are kept and added afterwards; Enter waits. One at a
+    time, and every hint costs a star. Stars are live and are the same steps that
+    decide the schedule: **3** for a clean answer, **2** after one hint (the word
+    holds its step), **1** after a wrong answer, "I don't know" or a **second
+    hint** (the word counts as missed and goes back to 0 — it was not recalled).
+    The hint taken at that last star **spends it** (`WordAttempt.noStars`,
+    `withHint`): the star flies, the three stars are wiped away, "No stars"
+    replaces them and the Hint button is closed for that word for the rest of the
+    visit (`canTakeHint`) — it has to be typed, or given up on, and a wrong answer
+    or "I don't know" brings it back later in the block as always. The word is
+    exactly as missed as before; only the help is gone. The summary shows each
+    word's stars (never fewer than one) and how many were right first time.
+  - _Block summary_: after every five words, a one-screen list (compact header,
+    tight rows, button in the flow — no scrolling on a normal window). Each row
+    has a **Practice** button that opens a free practice of just that word
+    (`VocabularyWordDrill`): same screen, no stars or hints, nothing written to
+    progress, the weak list or the schedule; a wrong answer shows the spelling and
+    lets the learner try again, a right one (or Back) returns to the summary.
   - _Audio and meaning_: as in the original screen — the word is spoken when it
     appears (Shift says it again) and its meaning is shown at once. (A
     Recall / Listen & type switch was tried and removed: the two exercises
     felt the same.)
   - _Continue_ (`selectContinueWords`): a group's **Continue** no longer starts
     at word 1. It asks the words that are due (weakest first), then the words
-    the learner has not met in the group's own order, at most 20 per visit;
-    words scheduled for a later day are skipped. A group with nothing due shows
+    the learner has not met in the group's own order — **all of them, no cap**
+    (groups are 20–30 words and the practice already stops after every five); words
+    scheduled for a later day are skipped. A cap of 20 used to end a 25- or
+    30-word group early with a "finished" screen and open again with five words
+    left; the finish screen also reports the whole group's progress now
+    (`groupWordIds`), not just the visit's. A group with nothing due shows
     a short "all caught up" screen (it says when the next word falls due) with
     **Practice all** (`?scope=all`), which still records misses but leaves the
     schedule alone for words that are not due. The expanded group card also

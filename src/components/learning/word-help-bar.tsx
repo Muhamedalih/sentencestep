@@ -13,9 +13,10 @@ import type { WordAttempt } from "@/lib/word-mastery/schedule";
  * The stars are the stakes of THIS word, and they are the same three steps that
  * decide what happens to its schedule (see wordStars): three for a clean answer
  * (the word climbs a step), two after one hint (it holds), one after a miss or a
- * second hint (it goes back). A hint can be taken as often as the learner likes,
- * one at a time: each gives the next right letter, mending anything wrong before
- * it, and costs a star until only one is left, after which it is only recorded.
+ * second hint (it goes back). A hint gives the next right letter, mending
+ * anything wrong before it, and always costs a star, one at a time. The hint taken
+ * at the last star spends it: the stars are wiped away and hints are closed for
+ * this word, so it has to be typed (or given up on, and it comes back later).
  *
  * Quiet and always there: a calm row under the sentence, not a card that pops
  * up — the stars and the two buttons, centred, and nothing that moves when the
@@ -56,6 +57,9 @@ export function WordHelpBar({
       stars={wordStars(attempt)}
       showStakes
       starsLabel={copy.starsLabel}
+      lastStarCosts
+      noStarsLabel={copy.noStars}
+      noStarsTitle={copy.noStarsTitle}
       onShowWord={onHint}
       showWordLabel={copy.hint}
       showWordTitle={copy.hintTitle}

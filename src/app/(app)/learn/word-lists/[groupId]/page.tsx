@@ -150,6 +150,7 @@ export default async function WordGroupPracticePage({
       group={{ ...group, words }}
       defaultVoiceId={defaultVoiceId}
       smart={smart}
+      groupWordIds={group.words.map((word) => word.id)}
     />
   );
 }

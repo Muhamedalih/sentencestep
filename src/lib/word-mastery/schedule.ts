@@ -34,9 +34,6 @@ export const REVIEW_INTERVAL_DAYS = [1, 3, 7, 16, 30] as const;
 /** Strength 4 and above (the 16-day step and beyond) counts as "strong" in the library. */
 export const STRONG_STRENGTH = 4;
 
-/** One continue / review visit never asks for more than this many words — bite-sized on purpose. */
-export const SESSION_MAX_WORDS = 20;
-
 /** How many due words one "Review" visit takes at a time. */
 export const REVIEW_SESSION_WORDS = 12;
 
@@ -139,6 +136,8 @@ export interface WordAttempt {
   missed: boolean;
   /** How many hints were taken. */
   hints: number;
+  /** The last star has been spent on a hint: this word has no stars left and no more hints this visit — it has to be typed, or given up on and asked again. */
+  noStars?: boolean;
 }
 
 /**
@@ -160,24 +159,39 @@ export function outcomeFor(attempt: WordAttempt): WordOutcome {
 }
 
 /**
- * The 1–3 stars a word is worth right now, simple enough to show live: three
+ * The 0–3 stars a word is worth right now, simple enough to show live: three
  * for a clean answer, two once a hint has been taken, one after a miss (or a
- * second hint). The same three steps decide what happens to the schedule (up,
- * hold, back), so the stars the learner sees are the stakes they are playing for.
+ * second hint), and none once that last star has gone on a hint too. The first
+ * three steps decide what happens to the schedule (up, hold, back), so the stars
+ * the learner sees are the stakes they are playing for; the last one only closes
+ * the hints (see canTakeHint) — the word is already as missed as it gets.
  */
-export function wordStars(attempt: WordAttempt): 1 | 2 | 3 {
+export function wordStars(attempt: WordAttempt): 0 | 1 | 2 | 3 {
+  if (attempt.noStars) return 0;
   if (countsAsMissed(attempt)) return 1;
   return attempt.hints > 0 ? 2 : 3;
 }
 
+/** Hints are open until the last star has been spent on one. */
+export function canTakeHint(attempt: WordAttempt): boolean {
+  return !attempt.noStars;
+}
+
 /**
- * Takes one more hint. `lapsed` is true for the hint that tips the word into
+ * Takes one more hint, and it always costs a star: 3 -> 2 -> 1 -> none. The hint
+ * taken at one star spends the last one (`noStars`), after which no more hints
+ * are given for this word. `lapsed` is true for the hint that tips the word into
  * counting as a miss, so the screen reports that miss to the schedule exactly
  * once, at the moment it happens (like a wrong answer).
  */
 export function withHint(attempt: WordAttempt): { attempt: WordAttempt; lapsed: boolean } {
+  if (!canTakeHint(attempt)) return { attempt, lapsed: false };
+  if (countsAsMissed(attempt)) {
+    // Already on the last star (a miss, or the second hint): this hint takes it.
+    return { attempt: { ...attempt, hints: attempt.hints + 1, noStars: true }, lapsed: false };
+  }
   const next: WordAttempt = { missed: attempt.missed, hints: attempt.hints + 1 };
-  const lapsed = !countsAsMissed(attempt) && countsAsMissed(next);
+  const lapsed = countsAsMissed(next);
   return { attempt: lapsed ? { ...next, missed: true } : next, lapsed };
 }
 
@@ -202,14 +216,19 @@ export interface ContinuePick<T> {
  * learner left off — the words that are due for a review (weakest first, so the
  * shaky ones are asked while attention is fresh) followed by the words they have
  * not met yet, in the order the group teaches them. Words scheduled for a later
- * day are skipped; they are not ready to be asked again. Capped so one visit
- * stays short.
+ * day are skipped; they are not ready to be asked again.
+ *
+ * Not capped by default: a group is 20–30 words and the practice already stops
+ * after every block of five, so a visit is the whole group (every word that is
+ * due or new), and the learner can leave at any block. A cap here is what made a
+ * 25-word group "finish" after 20 words, congratulate the learner, and then open
+ * again with five words left — a finished screen that was not the end.
  */
 export function selectContinueWords<T extends { id: string }>(
   words: readonly T[],
   states: ReadonlyMap<string, MasteryState>,
   todayISO: string,
-  max: number = SESSION_MAX_WORDS,
+  max?: number,
 ): ContinuePick<T> {
   const due: { word: T; index: number; state: MasteryState }[] = [];
   const fresh: T[] = [];
@@ -237,7 +256,8 @@ export function selectContinueWords<T extends { id: string }>(
       a.index - b.index,
   );
 
-  const ordered = [...due.map((entry) => entry.word), ...fresh].slice(0, Math.max(0, max));
+  const everything = [...due.map((entry) => entry.word), ...fresh];
+  const ordered = max === undefined ? everything : everything.slice(0, Math.max(0, max));
   const taken = new Set(ordered.map((word) => word.id));
   return {
     words: ordered,

@@ -10,6 +10,7 @@ import { VocabularyBlockSummary } from "@/components/learning/vocabulary-block-s
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import type { WordSentenceControls } from "@/components/learning/vocabulary-sentence";
+import { VocabularyWordDrill } from "@/components/learning/vocabulary-word-drill";
 import { WordGroupCaughtUp } from "@/components/learning/word-group-caught-up";
 import { WordHelpBar } from "@/components/learning/word-help-bar";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
@@ -28,7 +29,7 @@ import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-se
 import { popIn } from "@/lib/motion";
 import { splitWordHint } from "@/lib/word-lists-hint";
 import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
-import { outcomeFor } from "@/lib/word-mastery/schedule";
+import { canTakeHint, outcomeFor } from "@/lib/word-mastery/schedule";
 import type { WordOutcome } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import type { ReportedOutcome } from "@/lib/word-mastery/types";
@@ -76,6 +77,7 @@ export function VocabularyPractice({
   defaultVoiceId,
   smart,
   caughtUp,
+  groupWordIds,
 }: {
   group: WordGroup;
   previewMode?: boolean;
@@ -85,8 +87,15 @@ export function VocabularyPractice({
   smart?: SmartPracticeConfig | null;
   /** Set (with `group.words` empty) when Continue found nothing due: the visit is the short "all caught up" screen, and when the next word falls due. Decided here and not by the page, so a later render of the page cannot swap a running practice for it. */
   caughtUp?: { nextDueISO: string | null } | null;
+  /** Every word of the group, when the visit asks only some of them (Continue skips the words scheduled for later): the finish screen reports the whole group's progress, not just the visit's. Defaults to the visit's own words. */
+  groupWordIds?: readonly string[];
 }) {
-  const [visit] = useState(() => ({ group, smart: smart ?? null, caughtUp: caughtUp ?? null }));
+  const [visit] = useState(() => ({
+    group,
+    smart: smart ?? null,
+    caughtUp: caughtUp ?? null,
+    groupWordIds: groupWordIds ?? group.words.map((word) => word.id),
+  }));
 
   if (visit.group.words.length === 0) {
     return (
@@ -106,6 +115,7 @@ export function VocabularyPractice({
       previewMode={previewMode}
       defaultVoiceId={defaultVoiceId}
       smart={visit.smart}
+      groupWordIds={visit.groupWordIds}
     />
   );
 }
@@ -116,11 +126,13 @@ function VocabularyPracticeSession({
   previewMode,
   defaultVoiceId,
   smart,
+  groupWordIds,
 }: {
   group: WordGroup;
   previewMode: boolean;
   defaultVoiceId?: string | null;
   smart: SmartPracticeConfig | null;
+  groupWordIds: readonly string[];
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;
@@ -151,6 +163,9 @@ function VocabularyPracticeSession({
   // summary of the five words they just did — see VocabularyBlockSummary.
   const [showSummary, setShowSummary] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  // A word of the summary being practiced on its own (see VocabularyWordDrill): a
+  // side trip that changes nothing about the visit, and ends back on the summary.
+  const [drillWord, setDrillWord] = useState<VocabularyWord | null>(null);
   const { isWordCompleted, completedCountIn, markWordComplete } = useWordProgress();
   // A word already awarded progress this session (via markWordComplete)
   // never needs to be awarded it again if a later block somehow reintroduces
@@ -219,9 +234,12 @@ function VocabularyPracticeSession({
     sentenceCompleteSound: typingSoundSettings.sentenceCompleteSound,
   });
 
-  const total = group.words.length;
+  // The finish screen speaks for the whole group, not just the words this visit asked.
+  const total = groupWordIds.length;
   const word = currentSlot !== undefined ? currentBlock[currentSlot] : undefined;
-  const completedCount = completedCountIn(group.words.map((w) => w.id));
+  const completedCount = completedCountIn(groupWordIds);
+  // The word whose pronunciation the header's audio settings play: the one in the drill, else the one being asked.
+  const audioWord = drillWord ?? word;
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
@@ -364,9 +382,14 @@ function VocabularyPracticeSession({
     if (lapsed && !previewMode && smart?.spaced) reportOutcome(word, "missed");
   }
 
+  function handleDrillSolved() {
+    playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
+    setDrillWord(null);
+  }
+
   return (
     <div className="flex h-svh w-full flex-col">
-      {!isComplete && !showSummary && <ShiftReplayHint />}
+      {!isComplete && (!showSummary || drillWord) && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -376,9 +399,9 @@ function VocabularyPracticeSession({
             <ArrowLeft className="size-4" aria-hidden="true" />
             <span dir="ltr">{group.title}</span>
           </Link>
-          {!isComplete && word && (
+          {!isComplete && audioWord && (
             <div className="flex shrink-0 items-center gap-3">
-              {blockSize > 0 && (
+              {!drillWord && blockSize > 0 && (
                 <span className="text-muted-foreground text-sm font-medium" dir="ltr">
                   {doneInBlock.size} / {blockSize}
                 </span>
@@ -387,14 +410,14 @@ function VocabularyPracticeSession({
                 // Only the target word is pronounced — never the full
                 // sentence. This is the one rule this whole screen is
                 // built around; see the component doc comment above.
-                text={word.targetWord}
-                audioUrl={word.audioUrl}
+                text={audioWord.targetWord}
+                audioUrl={audioWord.audioUrl}
                 autoPlay
-                resetKey={word.id}
+                resetKey={drillWord ? `drill:${audioWord.id}` : audioWord.id}
                 inputRef={inputRef}
                 kokoroVoiceId={defaultVoiceId}
                 contentType="word"
-                contentId={word.id}
+                contentId={audioWord.id}
               />
             </div>
           )}
@@ -460,6 +483,17 @@ function VocabularyPracticeSession({
               </div>
             </motion.div>
           </motion.div>
+        ) : drillWord ? (
+          <motion.div key={`drill-${drillWord.id}`} initial={false} className="flex flex-1">
+            <VocabularyWordDrill
+              word={drillWord}
+              inputRef={inputRef}
+              fontFamily={sectionFontFamily}
+              onSolved={handleDrillSolved}
+              onWrong={() => play("error")}
+              onBack={() => setDrillWord(null)}
+            />
+          </motion.div>
         ) : showSummary ? (
           <VocabularyBlockSummary
             key={`summary-${blockIndex}`}
@@ -471,6 +505,7 @@ function VocabularyPracticeSession({
             onContinue={continueFromSummary}
             defaultVoiceId={defaultVoiceId}
             results={isSmart ? blockResults : undefined}
+            onPracticeWord={setDrillWord}
           />
         ) : (
           word && (
@@ -535,7 +570,12 @@ function VocabularyPracticeSession({
                     attempt={attempt}
                     settled={wordStatus !== "pending"}
                     busy={hintBusy}
-                    onHint={() => controlsRef.current?.hint() ?? false}
+                    onHint={() =>
+                      // Closed once the last star has gone on a hint.
+                      word && canTakeHint(attempts.get(word.id))
+                        ? (controlsRef.current?.hint() ?? false)
+                        : false
+                    }
                     onGiveUp={() => controlsRef.current?.giveUp()}
                   />
                 )}

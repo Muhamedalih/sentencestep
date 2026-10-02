@@ -7,7 +7,6 @@ import {
   HINTS_BEFORE_MISS,
   MAX_STRENGTH,
   REVIEW_INTERVAL_DAYS,
-  SESSION_MAX_WORDS,
   addDaysISO,
   applyOutcome,
   classifyWord,
@@ -23,10 +22,11 @@ import {
   practiceVisitKey,
   selectContinueWords,
   summarizeGroupMastery,
+  canTakeHint,
   withHint,
   wordStars,
 } from "@/lib/word-mastery/schedule";
-import type { MasteryState, WordOutcome } from "@/lib/word-mastery/schedule";
+import type { MasteryState, WordAttempt, WordOutcome } from "@/lib/word-mastery/schedule";
 
 const TODAY = "2025-06-10";
 
@@ -164,29 +164,42 @@ test("the second hint counts as a miss: one star, back to the start", () => {
   assert.equal(countsAsMissed({ missed: false, hints: 1 }), false);
 });
 
-test("withHint: each hint costs a star down to one, and exactly one hint tips the word into a miss", () => {
-  let attempt = { missed: false, hints: 0 };
+test("withHint: every hint costs a star, the third spends the last one, and then there are no more hints", () => {
+  let attempt: WordAttempt = { missed: false, hints: 0 };
   const stars: number[] = [wordStars(attempt)];
   const lapses: boolean[] = [];
+  const open: boolean[] = [canTakeHint(attempt)];
   for (let index = 0; index < 4; index++) {
     const step = withHint(attempt);
     attempt = step.attempt;
     lapses.push(step.lapsed);
     stars.push(wordStars(attempt));
+    open.push(canTakeHint(attempt));
   }
-  // 3 stars, then 2 after the first hint, then 1 from the second on (never lower).
-  assert.deepEqual(stars, [3, 2, 1, 1, 1]);
+  // 3 stars, 2 after the first hint, 1 after the second, none after the third; a fourth changes nothing.
+  assert.deepEqual(stars, [3, 2, 1, 0, 0]);
+  assert.deepEqual(open, [true, true, true, false, false]);
   // Only the second hint is "the one that makes it a miss" (reported once, to the schedule).
   assert.deepEqual(lapses, [false, true, false, false]);
   assert.equal(attempt.missed, true);
-  assert.equal(attempt.hints, 4);
+  assert.equal(attempt.hints, 3);
+  assert.equal(attempt.noStars, true);
+  // The word is exactly as missed as it was one star earlier.
+  assert.equal(outcomeFor(attempt), "missed");
 });
 
-test("withHint: a word that was already missed is not reported as missed again by its hints", () => {
+test("withHint: a word that was already missed is not reported as missed again, and its next hint spends the last star", () => {
   const first = withHint({ missed: true, hints: 0 });
   assert.equal(first.lapsed, false);
-  assert.deepEqual(first.attempt, { missed: true, hints: 1 });
+  assert.deepEqual(first.attempt, { missed: true, hints: 1, noStars: true });
+  assert.equal(wordStars(first.attempt), 0);
   assert.equal(withHint(first.attempt).lapsed, false);
+});
+
+test("a word with no stars left takes no more hints and is not changed by asking", () => {
+  const spent: WordAttempt = { missed: true, hints: 3, noStars: true };
+  assert.equal(canTakeHint(spent), false);
+  assert.equal(withHint(spent).attempt, spent);
 });
 
 test("withHint never mutates what it is given", () => {
@@ -253,20 +266,23 @@ test("Continue asks due words first (weakest first), then new words in the group
   assert.equal(pick.scheduledCount, 1);
 });
 
-test("Continue is capped so one visit stays short, keeping the due words ahead of the new ones", () => {
-  const many = Array.from({ length: 40 }, (_, index) => ({ id: `w${index}`, order: index }));
+test("Continue asks every due and new word of the group, due ones first — no cap cuts a group short", () => {
+  // A 30-word group: all of it is one visit (the practice stops after every five
+  // words anyway). A cap of 20 used to end a visit with ten words never asked.
+  const many = Array.from({ length: 30 }, (_, index) => ({ id: `w${index}`, order: index }));
   const dueMap = new Map<string, MasteryState>([
-    ["w30", { strength: 2, dueOn: "2025-06-01" }],
-    ["w31", { strength: 2, dueOn: "2025-06-02" }],
+    ["w28", { strength: 2, dueOn: "2025-06-01" }],
+    ["w29", { strength: 2, dueOn: "2025-06-02" }],
   ]);
   const pick = selectContinueWords(many, dueMap, TODAY);
-  assert.equal(pick.words.length, SESSION_MAX_WORDS);
+  assert.equal(pick.words.length, 30);
   assert.deepEqual(
     pick.words.slice(0, 3).map((word) => word.id),
-    ["w30", "w31", "w0"],
+    ["w28", "w29", "w0"],
   );
   assert.equal(pick.dueCount, 2);
-  assert.equal(pick.newCount, SESSION_MAX_WORDS - 2);
+  assert.equal(pick.newCount, 28);
+  // A caller that does want a short visit can still ask for one.
   assert.equal(selectContinueWords(many, dueMap, TODAY, 5).words.length, 5);
   assert.equal(selectContinueWords(many, dueMap, TODAY, 0).words.length, 0);
 });
