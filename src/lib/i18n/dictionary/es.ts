@@ -683,8 +683,18 @@ export const es: Dictionary = {
   typing: {
     typeMissingWord: "Escribe la palabra faltante",
     typeThisSentence: "Escribe esta oración: {sentence}",
-    muteKeySounds: "Silenciar el sonido de las teclas",
-    unmuteKeySounds: "Activar el sonido de las teclas",
+  },
+  lessonSettings: {
+    buttonLabel: "Ajustes de la lección",
+    title: "Ajustes de la lección",
+    speedTitle: "Velocidad de la voz",
+    speedDescription: "Qué tan rápido se lee la oración. Al cambiarla, la oración se repite.",
+    replayTitle: "Repetir el audio",
+    replayDescription: "Escucha la oración una vez más.",
+    replayDescriptionShift: "Escucha la oración una vez más. Atajo: pulsa Shift.",
+    replayAction: "Reproducir",
+    keySoundsTitle: "Sonido de las teclas",
+    keySoundsDescription: "Activa o desactiva el clic que suena con cada tecla que pulsas.",
   },
   learnerLevels: {
     beginner: "Principiante",

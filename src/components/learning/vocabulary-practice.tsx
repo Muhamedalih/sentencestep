@@ -5,9 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, PartyPopper } from "lucide-react";
 
-import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
@@ -203,9 +201,7 @@ export function VocabularyPractice({
                   {doneInBlock.size} / {blockSize}
                 </span>
               )}
-              <KeySoundToggle inputRef={inputRef} />
-              <PronunciationSpeedControl inputRef={inputRef} />
-              <PronunciationButton
+              <LessonSettings
                 // Only the target word is pronounced — never the full
                 // sentence. This is the one rule this whole screen is
                 // built around; see the component doc comment above.
@@ -217,9 +213,6 @@ export function VocabularyPractice({
                 kokoroVoiceId={defaultVoiceId}
                 contentType="word"
                 contentId={word.id}
-                label={t.wordLists.replayAction}
-                variant="outline"
-                size="sm"
               />
             </div>
           )}

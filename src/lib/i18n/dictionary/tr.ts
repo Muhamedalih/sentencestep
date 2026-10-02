@@ -673,8 +673,18 @@ export const tr: Dictionary = {
   typing: {
     typeMissingWord: "Eksik kelimeyi yazın",
     typeThisSentence: "Bu cümleyi yazın: {sentence}",
-    muteKeySounds: "Yazma seslerini kapat",
-    unmuteKeySounds: "Yazma seslerini aç",
+  },
+  lessonSettings: {
+    buttonLabel: "Ders ayarları",
+    title: "Ders ayarları",
+    speedTitle: "Ses hızı",
+    speedDescription: "Cümlenin ne kadar hızlı okunacağı. Değiştirdiğinizde cümle yeniden çalınır.",
+    replayTitle: "Sesi tekrar çal",
+    replayDescription: "Cümleyi bir kez daha dinleyin.",
+    replayDescriptionShift: "Cümleyi bir kez daha dinleyin. Kısayol: Shift tuşuna basın.",
+    replayAction: "Çal",
+    keySoundsTitle: "Yazma sesleri",
+    keySoundsDescription: "Yazdığınız her tuşun tık sesini açın veya kapatın.",
   },
   learnerLevels: {
     beginner: "Başlangıç",

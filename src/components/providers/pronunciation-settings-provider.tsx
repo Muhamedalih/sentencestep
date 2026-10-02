@@ -22,7 +22,7 @@ import { lookupWordTimings, type WordTiming } from "@/lib/voice/word-timing";
 
 /**
  * The three playback-speed states a learner can cycle through for spoken
- * pronunciation (see PronunciationSpeedControl). Multiplier is applied on
+ * pronunciation (see LessonSettings). Multiplier is applied on
  * top of whatever "normal" already means for a given playback source —
  * HTMLAudioElement.playbackRate for a recorded/Kokoro clip (native pace is
  * 1), or the admin-configured browser-TTS rate (see DEFAULT_VOICE_SETTINGS)
@@ -45,6 +45,8 @@ interface PronunciationSettingsValue {
   speedIndex: number;
   speedMultiplier: number;
   cycleSpeed: () => void;
+  /** Jumps straight to one of PRONUNCIATION_SPEED_STEPS (out-of-range indices are ignored) — what LessonSettings' speed picker calls; like cycleSpeed, a change replays the current sentence/word at the new speed. */
+  setSpeed: (index: number) => void;
   /** Called by the currently-mounted PronunciationButton so the global Shift shortcut always replays whichever sentence/word is actually on screen. */
   registerReplay: (replay: (() => void) | null) => void;
   replayCurrent: () => void;
@@ -140,6 +142,7 @@ const DEFAULT_VALUE: PronunciationSettingsValue = {
   speedIndex: 0,
   speedMultiplier: PRONUNCIATION_SPEED_STEPS[0].multiplier,
   cycleSpeed: noop,
+  setSpeed: noop,
   registerReplay: noop,
   replayCurrent: noop,
   shiftPulse: 0,
@@ -426,6 +429,11 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
     setSpeedIndex((index) => (index + 1) % PRONUNCIATION_SPEED_STEPS.length);
   }, []);
 
+  const setSpeed = useCallback((index: number) => {
+    if (index < 0 || index >= PRONUNCIATION_SPEED_STEPS.length) return;
+    setSpeedIndex(index);
+  }, []);
+
   const registerReplay = useCallback((replay: (() => void) | null) => {
     replayRef.current = replay;
   }, []);
@@ -506,6 +514,7 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
       speedMultiplier: (PRONUNCIATION_SPEED_STEPS[speedIndex] ?? PRONUNCIATION_SPEED_STEPS[0])
         .multiplier,
       cycleSpeed,
+      setSpeed,
       registerReplay,
       replayCurrent,
       shiftPulse,
@@ -521,6 +530,7 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
     [
       speedIndex,
       cycleSpeed,
+      setSpeed,
       registerReplay,
       replayCurrent,
       shiftPulse,

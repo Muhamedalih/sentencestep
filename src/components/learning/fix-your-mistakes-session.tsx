@@ -14,9 +14,7 @@ import {
   mistakeRevealDurationMs,
   MistakeWordPreview,
 } from "@/components/learning/mistake-word-preview";
-import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -264,9 +262,7 @@ function MistakeItemSession({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end gap-2">
-        <KeySoundToggle inputRef={inputRef} />
-        <PronunciationSpeedControl inputRef={inputRef} />
-        <PronunciationButton
+        <LessonSettings
           text={item.displayWord}
           audioUrl={item.audioUrl}
           autoPlay
@@ -275,8 +271,6 @@ function MistakeItemSession({
           kokoroVoiceId={defaultVoiceId}
           contentType="sentence_word"
           contentId={`${item.sentenceId}::${item.word}`}
-          variant="outline"
-          className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           // Never the browser's own speech synthesis for this single word —
           // same rule already shipped for Books' and Stories'/Normal's
           // in-sentence word clicks (see typing-sentence.tsx's

@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
-import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
@@ -339,9 +337,7 @@ export function TypingSentence({
             {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <KeySoundToggle inputRef={engine.inputRef} />
-            <PronunciationSpeedControl inputRef={engine.inputRef} />
-            <PronunciationButton
+            <LessonSettings
               text={sentence.en}
               audioUrl={sentence.audioUrl}
               onPlay={onAudioPlay}
@@ -351,8 +347,6 @@ export function TypingSentence({
               kokoroVoiceId={sentenceVoiceId}
               contentType="sentence"
               contentId={sentence.id}
-              variant="outline"
-              className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
             />
           </div>
         </div>
@@ -400,14 +394,13 @@ export function TypingSentence({
           onGoForward={onGoForward}
         />
         <div className="mb-4 flex items-center justify-end gap-2">
-          <KeySoundToggle inputRef={engine.inputRef} />
-          <PronunciationSpeedControl inputRef={engine.inputRef} />
-          {/* Mobile only (see hasStarted's own doc comment): a guest who
-              hasn't tapped the "tap to start" overlay yet shouldn't hear the
-              first sentence narrate itself before they've even engaged with
-              the lesson. Every sentence after the first, and every desktop/
-              tablet session, keeps the original always-autoPlay behavior. */}
-          <PronunciationButton
+          {/* autoPlay is gated on hasStarted — mobile only (see its own doc
+              comment): a guest who hasn't tapped the "tap to start" overlay
+              yet shouldn't hear the first sentence narrate itself before
+              they've even engaged with the lesson. Every sentence after the
+              first, and every desktop/tablet session, keeps the original
+              always-autoPlay behavior. */}
+          <LessonSettings
             text={sentence.en}
             audioUrl={sentence.audioUrl}
             onPlay={onAudioPlay}
@@ -417,8 +410,6 @@ export function TypingSentence({
             kokoroVoiceId={sentenceVoiceId}
             contentType="sentence"
             contentId={sentence.id}
-            variant="outline"
-            className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           />
         </div>
         {/* Centers this group (word label through stats) within whatever
@@ -481,10 +472,8 @@ export function TypingSentence({
         />
       )}
       <div className="mb-4 flex items-center justify-end gap-2">
-        <KeySoundToggle inputRef={engine.inputRef} />
-        <PronunciationSpeedControl inputRef={engine.inputRef} />
-        {/* Mobile only — see the Stories branch's identical comment above. */}
-        <PronunciationButton
+        {/* autoPlay gated on hasStarted — see the Stories branch's identical comment above. */}
+        <LessonSettings
           text={sentence.en}
           audioUrl={sentence.audioUrl}
           onPlay={onAudioPlay}
@@ -494,8 +483,6 @@ export function TypingSentence({
           kokoroVoiceId={sentenceVoiceId}
           contentType="sentence"
           contentId={sentence.id}
-          variant="outline"
-          className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
         />
       </div>
       {/* The current-word translation now lives INSIDE this centered group,

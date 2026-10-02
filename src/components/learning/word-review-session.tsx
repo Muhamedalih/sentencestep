@@ -5,9 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
-import { KeySoundToggle } from "@/components/learning/key-sound-toggle";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
@@ -284,9 +282,7 @@ export function WordReviewSession({
               <span className="text-muted-foreground text-sm font-medium" dir="ltr">
                 {correctedCount + 1} / {total}
               </span>
-              <KeySoundToggle inputRef={inputRef} />
-              <PronunciationSpeedControl inputRef={inputRef} />
-              <PronunciationButton
+              <LessonSettings
                 text={word.targetWord}
                 audioUrl={word.audioUrl}
                 autoPlay
@@ -295,9 +291,6 @@ export function WordReviewSession({
                 kokoroVoiceId={defaultVoiceId}
                 contentType={word.pronunciationContentType ?? "word"}
                 contentId={word.pronunciationContentId ?? word.id}
-                label={t.wordLists.replayAction}
-                variant="outline"
-                size="sm"
               />
             </div>
           )}

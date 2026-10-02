@@ -717,8 +717,10 @@ export function LessonSession({
             // list has real entries and needs a bit more room), keyed off the
             // same `previousSentences` state StoryPreviousSentences itself
             // reads, so the two always agree on which width applies — or
-            // shrinks to a 60px rail once the learner collapses the box via
-            // its own toggle button (storyPanelCollapsed above). The width
+            // shrinks to a 52px strip once the learner hides the box via its
+            // own toggle button (storyPanelCollapsed above): the box itself is
+            // gone then, and the strip only holds the small round handle that
+            // brings it back. The width
             // itself is a CSS custom property rather than a plain arbitrary
             // class so the lg:transition-[grid-template-columns] below can
             // actually animate it — a class swap alone would jump instantly.
@@ -736,7 +738,7 @@ export function LessonSession({
                         previousSentences.length === 0
                           ? "210px"
                           : storyPanelCollapsed
-                            ? "60px"
+                            ? "52px"
                             : "300px",
                     } as CSSProperties)
                   : undefined
