@@ -3,6 +3,7 @@
 import {
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,6 +13,8 @@ import {
 import { motion, useReducedMotion } from "framer-motion";
 import { CornerDownLeft } from "lucide-react";
 
+import { StageLetter } from "@/components/learning/stage-letter";
+import type { StageLetterState } from "@/components/learning/stage-letter";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordTypingEngine } from "@/hooks/use-word-typing-engine";
 import type { WordAttemptStatus, WordResultDetail } from "@/hooks/use-word-typing-engine";
@@ -67,8 +70,8 @@ function stageFontSize(word: string): string {
 
 /** What the screen can ask of a sentence from outside (the help bar's two buttons). */
 export interface WordSentenceControls {
-  /** The first-letter hint, once per word. */
-  hint: () => void;
+  /** A hint: the next right letter, mending anything wrong before it. As often as the learner likes, one at a time. False when there was nothing to give. */
+  hint: () => boolean;
   /** "I don't know": counts as a miss and shows the right spelling. */
   giveUp: () => void;
 }
@@ -87,10 +90,10 @@ export interface SmartSentenceOptions {
   controlsRef?: RefObject<WordSentenceControls | null>;
   /** The word's state as it changes: pending, correct or incorrect. */
   onStatusChange?: (status: WordAttemptStatus) => void;
-  /** correct: a right answer has just settled. reveal: the right spelling has started to show after a miss. The screen speaks the word on these. */
-  onPhase?: (phase: "correct" | "reveal") => void;
-  /** The first-letter hint was taken. */
+  /** A hint has taken effect (the right letter is going in): the screen counts its cost, a star, here. */
   onHint?: () => void;
+  /** A hint is being drawn (true) or has finished (false): the help bar waits for it before offering the next one. */
+  onHintBusyChange?: (busy: boolean) => void;
   /** The pauses; defaults to SMART_TIMING. */
   timing?: SmartTiming;
 }
@@ -112,10 +115,11 @@ export interface SmartSentenceOptions {
  *
  * With `smart` the same screen also: keeps the letters typed while a word
  * settles (no dead zone), lets Enter skip the missed-word screen once the right
- * spelling has been shown, accepts alternates and says "also correct", takes a
- * first-letter hint and "I don't know" from the help bar, and never shifts the
- * layout when the first letter is typed (the stage holds its place as faint
- * slots, one per letter).
+ * spelling has been shown, accepts alternates and says "also correct", takes
+ * hints (the next right letter, with anything wrong before it crumbling away and
+ * the right one restored in its place) and "I don't know" from the help bar, and
+ * never shifts the layout when the first letter is typed (the stage holds its
+ * place as faint slots, one per letter).
  */
 export function VocabularySentence({
   sentence,
@@ -152,6 +156,8 @@ export function VocabularySentence({
   const holdMs = timing ? timing.revealHoldMs : REVEAL_HOLD_MS;
   const tailMs = timing ? timing.revealTailMs : REVEAL_TAIL_MS;
   const correctDelayMs = timing ? timing.correctDelayMs : CORRECT_DELAY_MS;
+  // The pop of a right answer: the upgraded screen lets it breathe.
+  const popS = timing ? timing.correctPopMs / 1000 : 0.2;
 
   // Same rise-in / dissolve-out Dictation's Show the word uses (see
   // peek-glyph.ts), so a missed word is shown the same way everywhere. Reduced
@@ -169,6 +175,13 @@ export function VocabularySentence({
 
   const smartRef = useRef(smart);
   smartRef.current = smart;
+  // Reduced motion skips the animation of a hint's repair: the letter just changes.
+  const hintTiming =
+    timing === null
+      ? null
+      : reducedMotion
+        ? { crumbleMs: 0, restoreMs: 0 }
+        : { crumbleMs: timing.hintCrumbleMs, restoreMs: timing.hintRestoreMs };
 
   const engine = useWordTypingEngine({
     target: targetWord,
@@ -182,6 +195,8 @@ export function VocabularySentence({
     alternates: smart?.alternates,
     alternateDelayMs: timing?.alternateDelayMs,
     typeAhead: smart?.typeAhead,
+    hintTiming: hintTiming ?? undefined,
+    onHint: () => smartRef.current?.onHint?.(),
   });
 
   // Drives the diff -> reveal handoff: as soon as a wrong attempt settles,
@@ -210,24 +225,22 @@ export function VocabularySentence({
   const isRevealPhase = engine.status === "incorrect" && (engine.gaveUp || reveal !== "hidden");
   const isDiffPhase = engine.status === "incorrect" && !isRevealPhase;
 
-  // Tell the screen what is happening, for the things only it can do: speak the
-  // word once it has been answered, and keep its help bar in step.
+  // Tell the screen what is happening, to keep its help bar in step: the word's
+  // state as it changes, and whether a hint is being drawn.
   useEffect(() => {
     smartRef.current?.onStatusChange?.(engine.status);
-    if (engine.status === "correct") smartRef.current?.onPhase?.("correct");
   }, [engine.status]);
+  const hintBusy = engine.repair !== null;
   useEffect(() => {
-    if (isRevealPhase) smartRef.current?.onPhase?.("reveal");
-  }, [isRevealPhase]);
+    smartRef.current?.onHintBusyChange?.(hintBusy);
+  }, [hintBusy]);
 
   // The help bar's buttons reach the engine from outside.
   const { hint: takeHint, giveUp: giveUpWord } = engine;
   useImperativeHandle(
     smart?.controlsRef,
     () => ({
-      hint: () => {
-        if (takeHint()) smartRef.current?.onHint?.();
-      },
+      hint: () => takeHint(),
       giveUp: () => {
         giveUpWord();
       },
@@ -264,7 +277,53 @@ export function VocabularySentence({
   // The upgraded stage is always on screen (faint slots, one per letter, until
   // the first letter is typed) so nothing above or below it jumps.
   const showStage = smart ? true : engine.typed.length > 0 || isRevealPhase;
-  const hintedLength = engine.hintedPrefix.length;
+
+  // While a hint mends the answer the word loses letters and is centred again:
+  // remember how wide it was while the wrong ones still stood, and once they are
+  // gone glide from where the centred word was to where it is now, instead of
+  // letting it jump by half the width of what crumbled.
+  const stageWordRef = useRef<HTMLSpanElement>(null);
+  const widthBeforeRepairRef = useRef(0);
+  useLayoutEffect(() => {
+    if (engine.repair?.phase === "crumble" && stageWordRef.current) {
+      widthBeforeRepairRef.current = stageWordRef.current.offsetWidth;
+    }
+  });
+  useLayoutEffect(() => {
+    const word = stageWordRef.current;
+    if (engine.repair?.phase !== "restore" || !word || reducedMotion) return;
+    const shift = (widthBeforeRepairRef.current - word.offsetWidth) / 2;
+    if (Math.abs(shift) < 1) return;
+    word.animate([{ transform: `translateX(${-shift}px)` }, { transform: "translateX(0)" }], {
+      duration: 300,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    });
+  }, [engine.repair?.phase, reducedMotion]);
+  // The typed letters of the upgraded stage, one by one, so a hint can mend
+  // them: every letter after the last right one crumbles (the last typed goes
+  // first), and the right letter is restored where the first of them stood.
+  const typedChars = useMemo(() => Array.from(engine.typed), [engine.typed]);
+  const repair = engine.repair;
+  const crumbleCount =
+    repair?.phase === "crumble" ? Math.max(0, typedChars.length - repair.keep) : 0;
+  const stageLetters = typedChars.map((char, index) => {
+    let letterState: StageLetterState = "rest";
+    if (repair?.phase === "crumble" && index >= repair.keep) letterState = "crumble";
+    else if (repair?.phase === "restore" && index === repair.keep && engine.given.includes(index))
+      letterState = "restore";
+    return (
+      <StageLetter
+        key={index}
+        char={char}
+        state={letterState}
+        given={engine.status === "pending" && engine.given.includes(index)}
+        crumbleOrder={typedChars.length - 1 - index}
+        crumbleCount={crumbleCount}
+        crumbleMs={timing?.hintCrumbleMs ?? 0}
+        restoreMs={timing?.hintRestoreMs ?? 0}
+      />
+    );
+  });
 
   return (
     <div dir="ltr" className="flex flex-col items-center gap-5">
@@ -276,7 +335,7 @@ export function VocabularySentence({
               ? { x: [0, -4, 4, -3, 3, 0] }
               : { x: 0, scale: engine.status === "correct" && !reducedMotion ? [0.96, 1] : 1 }
           }
-          transition={{ duration: isDiffPhase ? 0.35 : 0.2 }}
+          transition={{ duration: isDiffPhase ? 0.35 : popS }}
           style={{
             fontSize: stageFontSize(targetWord),
             ...(fontFamily ? { fontFamily } : undefined),
@@ -315,15 +374,16 @@ export function VocabularySentence({
               {"_".repeat(targetWord.length)}
             </span>
           ) : (
-            <span className={engine.status === "correct" ? "text-success" : "text-foreground"}>
-              {hintedLength > 0 ? (
-                <>
-                  <span className="text-accent">{engine.typed.slice(0, hintedLength)}</span>
-                  {engine.typed.slice(hintedLength)}
-                </>
-              ) : (
-                engine.typed
+            <span
+              ref={stageWordRef}
+              // Only the upgraded stage needs a box (its letters move on their own);
+              // the original one stays plain inline text, as it always was.
+              className={cn(
+                smart && "inline-block",
+                engine.status === "correct" ? "text-success" : "text-foreground",
               )}
+            >
+              {smart ? stageLetters : engine.typed}
             </span>
           )}
         </motion.div>
@@ -347,6 +407,7 @@ export function VocabularySentence({
             length={targetWord.length}
             active={isFocused && engine.status === "pending"}
             revealedWord={engine.status === "correct" ? (engine.alternate ?? targetWord) : null}
+            popS={popS}
           />
           <input
             ref={engine.inputRef}
@@ -443,17 +504,20 @@ function BlankBox({
   length,
   active,
   revealedWord,
+  popS,
 }: {
   length: number;
   active: boolean;
   revealedWord?: string | null;
+  /** How long the word takes to pop into the sentence once it is right, in seconds. */
+  popS: number;
 }) {
   if (revealedWord) {
     return (
       <motion.span
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2, ease: easeOut }}
+        transition={{ duration: popS, ease: easeOut }}
         className="text-success mx-1 inline-block align-baseline"
       >
         {revealedWord}

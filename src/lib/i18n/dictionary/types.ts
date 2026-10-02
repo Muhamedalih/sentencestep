@@ -634,21 +634,13 @@ export interface Dictionary {
     finishBlock: string;
     /** Under the Finish button. */
     finishBlockHint: string;
-    /** Smart word practice (admin-controlled; see FEATURE_IDS in src/lib/features/config.ts): the help bar, the Recall/Listen switch, the "also correct" note, the group card's Continue and mastery figures, and the review hero. */
+    /** Smart word practice (admin-controlled; see FEATURE_IDS in src/lib/features/config.ts): the help bar, the "also correct" note, the group card's Continue and mastery figures, and the review hero. */
     smart: {
-      /** Accessible label of the Recall / Listen switch in the practice header. */
-      modeAria: string;
-      /** Recall mode: the word stays silent until you have answered. */
-      modeRecall: string;
-      /** Listen mode: the word is spoken first and you type what you hear. */
-      modeListen: string;
-      /** Shown instead of the meaning in listen mode until the answer is in. */
-      listenPrompt: string;
-      /** Names the help bar under the sentence (for screen readers too). */
+      /** The help bar's accessible name (for screen readers; not shown on screen). */
       helpPrompt: string;
-      /** The first-letter hint button. */
+      /** The hint button: the next right letter, mending anything wrong before it. */
       hint: string;
-      /** Tooltip of the hint button — says what it shows and what it costs. */
+      /** Tooltip of the hint button — says what it does and what it costs. */
       hintTitle: string;
       /** The give-up button: counts as a miss and shows the right spelling. */
       dontKnow: string;
@@ -672,8 +664,6 @@ export interface Dictionary {
       continueAction: string;
       /** Practice every word of the group, not just the ones that are new or due. */
       practiceAllAction: string;
-      /** Opens the group in listen-and-type mode. */
-      listenAction: string;
       /** The group card's mastery figure — {n} is 0-100. */
       masteryPercent: string;
       /** Words in the group due for review today — {n}. */

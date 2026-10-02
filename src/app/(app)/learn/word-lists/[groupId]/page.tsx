@@ -13,7 +13,6 @@ import { getWordGroupById } from "@/lib/word-lists";
 import { getLearnerToday, getSmartWordsAccess } from "@/lib/word-mastery/access";
 import { readMasteryStates } from "@/lib/word-mastery/queue";
 import { selectContinueWords } from "@/lib/word-mastery/schedule";
-import { parsePracticeMode } from "@/lib/word-mastery/smart";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 
@@ -37,21 +36,20 @@ export async function generateMetadata({
 }
 
 /**
- * `?mode=listen` opens the group in listen-and-type; `?scope=all` practices
- * every word of the group instead of only the ones that are new or due. Both
- * only matter while "Smart word practice" is open to the visitor (an admin
- * preview, or On for everyone) — otherwise they are ignored and the page is the
- * practice it always was.
+ * `?scope=all` practices every word of the group instead of only the ones that
+ * are new or due. It only matters while "Smart word practice" is open to the
+ * visitor (an admin preview, or On for everyone) — otherwise it is ignored and
+ * the page is the practice it always was.
  */
 export default async function WordGroupPracticePage({
   params,
   searchParams,
 }: {
   params: Promise<{ groupId: string }>;
-  searchParams: Promise<{ mode?: string; scope?: string }>;
+  searchParams: Promise<{ scope?: string }>;
 }) {
   const { groupId } = await params;
-  const { mode, scope } = await searchParams;
+  const { scope } = await searchParams;
   const locale = await getLocale();
   const group = await getWordGroupById(groupId, locale ?? undefined);
   if (!group) notFound();
@@ -87,7 +85,7 @@ export default async function WordGroupPracticePage({
   let practiceWords = group.words;
   let smart: SmartPracticeConfig | null = null;
   if (access.enabled) {
-    smart = { spaced: access.spaced, mode: parsePracticeMode(mode) };
+    smart = { spaced: access.spaced };
     if (access.spaced && access.userId && scope !== "all") {
       const [states, today] = await Promise.all([
         readMasteryStates(access.userId),

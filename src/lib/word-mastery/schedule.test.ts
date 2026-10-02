@@ -4,12 +4,14 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
+  HINTS_BEFORE_MISS,
   MAX_STRENGTH,
   REVIEW_INTERVAL_DAYS,
   SESSION_MAX_WORDS,
   addDaysISO,
   applyOutcome,
   classifyWord,
+  countsAsMissed,
   dueWordIds,
   intervalDays,
   isDue,
@@ -18,6 +20,7 @@ import {
   outcomeFor,
   selectContinueWords,
   summarizeGroupMastery,
+  withHint,
   wordStars,
 } from "@/lib/word-mastery/schedule";
 import type { MasteryState, WordOutcome } from "@/lib/word-mastery/schedule";
@@ -135,16 +138,58 @@ test("repeating a group over and over in one day cannot walk a word up the ladde
   assert.deepEqual(state, { strength: 1, dueOn: "2025-06-11" });
 });
 
-test("outcomes and stars follow the same three steps: clean, hint, miss", () => {
-  assert.equal(outcomeFor({ missed: false, hinted: false }), "clean");
-  assert.equal(outcomeFor({ missed: false, hinted: true }), "assisted");
-  assert.equal(outcomeFor({ missed: true, hinted: false }), "missed");
-  assert.equal(outcomeFor({ missed: true, hinted: true }), "missed");
+test("outcomes and stars follow the same three steps: clean, one hint, miss", () => {
+  assert.equal(outcomeFor({ missed: false, hints: 0 }), "clean");
+  assert.equal(outcomeFor({ missed: false, hints: 1 }), "assisted");
+  assert.equal(outcomeFor({ missed: true, hints: 0 }), "missed");
+  assert.equal(outcomeFor({ missed: true, hints: 1 }), "missed");
 
-  assert.equal(wordStars({ missed: false, hinted: false }), 3);
-  assert.equal(wordStars({ missed: false, hinted: true }), 2);
-  assert.equal(wordStars({ missed: true, hinted: false }), 1);
-  assert.equal(wordStars({ missed: true, hinted: true }), 1);
+  assert.equal(wordStars({ missed: false, hints: 0 }), 3);
+  assert.equal(wordStars({ missed: false, hints: 1 }), 2);
+  assert.equal(wordStars({ missed: true, hints: 0 }), 1);
+  assert.equal(wordStars({ missed: true, hints: 1 }), 1);
+});
+
+test("the second hint counts as a miss: one star, back to the start", () => {
+  assert.equal(HINTS_BEFORE_MISS, 2);
+  for (const hints of [2, 3, 7]) {
+    const attempt = { missed: false, hints };
+    assert.equal(countsAsMissed(attempt), true);
+    assert.equal(outcomeFor(attempt), "missed");
+    assert.equal(wordStars(attempt), 1);
+  }
+  assert.equal(countsAsMissed({ missed: false, hints: 1 }), false);
+});
+
+test("withHint: each hint costs a star down to one, and exactly one hint tips the word into a miss", () => {
+  let attempt = { missed: false, hints: 0 };
+  const stars: number[] = [wordStars(attempt)];
+  const lapses: boolean[] = [];
+  for (let index = 0; index < 4; index++) {
+    const step = withHint(attempt);
+    attempt = step.attempt;
+    lapses.push(step.lapsed);
+    stars.push(wordStars(attempt));
+  }
+  // 3 stars, then 2 after the first hint, then 1 from the second on (never lower).
+  assert.deepEqual(stars, [3, 2, 1, 1, 1]);
+  // Only the second hint is "the one that makes it a miss" (reported once, to the schedule).
+  assert.deepEqual(lapses, [false, true, false, false]);
+  assert.equal(attempt.missed, true);
+  assert.equal(attempt.hints, 4);
+});
+
+test("withHint: a word that was already missed is not reported as missed again by its hints", () => {
+  const first = withHint({ missed: true, hints: 0 });
+  assert.equal(first.lapsed, false);
+  assert.deepEqual(first.attempt, { missed: true, hints: 1 });
+  assert.equal(withHint(first.attempt).lapsed, false);
+});
+
+test("withHint never mutates what it is given", () => {
+  const before = { missed: false, hints: 1 };
+  withHint(before);
+  assert.deepEqual(before, { missed: false, hints: 1 });
 });
 
 test("isWordOutcome only accepts the three outcomes", () => {

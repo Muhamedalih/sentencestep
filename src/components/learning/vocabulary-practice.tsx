@@ -3,11 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Ear, PartyPopper } from "lucide-react";
+import { ArrowLeft, PartyPopper } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
-import { PracticeModeToggle } from "@/components/learning/practice-mode-toggle";
-import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
 import { VocabularyBlockSummary } from "@/components/learning/vocabulary-block-summary";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
@@ -31,7 +29,7 @@ import { splitWordHint } from "@/lib/word-lists-hint";
 import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
 import { outcomeFor } from "@/lib/word-mastery/schedule";
 import type { WordOutcome } from "@/lib/word-mastery/schedule";
-import type { PracticeMode, SmartPracticeConfig } from "@/lib/word-mastery/smart";
+import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import type { ReportedOutcome } from "@/lib/word-mastery/types";
 import { createTypeAheadBuffer } from "@/lib/word-typing";
 import type { VocabularyWord, WordGroup } from "@/types/word-lists";
@@ -49,13 +47,13 @@ const BLOCK_SIZE = 5;
  * the sentence, the blank, and the hint are the whole screen.
  *
  * With `smart` (the admin-controlled "Smart word practice", see
- * src/lib/word-mastery) the same session also: stays silent until the learner
- * has answered (recall) or speaks the word first (listen-and-type), keeps the
- * letters typed while a word settles, offers a first-letter hint and "I don't
- * know" that cost stars, accepts a word's alternates, shows each word's stars in
- * the block summary, and reports every word's outcome to the learner's spaced
- * schedule instead of wiping a word from the weak list the moment it is typed
- * right. Without it, nothing here behaves any differently.
+ * src/lib/word-mastery) the same session also: keeps the letters typed while a
+ * word settles, offers hints (the next right letter, mending anything wrong
+ * before it) and "I don't know" that cost stars, accepts a word's alternates,
+ * shows each word's stars in the block summary, and reports every word's outcome
+ * to the learner's spaced schedule instead of wiping a word from the weak list
+ * the moment it is typed right. The word is spoken when it appears and its
+ * meaning is shown, exactly as without it.
  */
 export function VocabularyPractice({
   group,
@@ -72,9 +70,6 @@ export function VocabularyPractice({
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;
-  // Recall keeps the word silent until the answer is in; listen speaks it first.
-  const [practiceMode, setPracticeMode] = useState<PracticeMode>(smart?.mode ?? "recall");
-  const listen = isSmart && practiceMode === "listen";
   // Words are practiced in fixed-size blocks (see BLOCK_SIZE), not straight
   // through the whole group: a wrong word doesn't get corrected on the spot
   // (that would just be per-keystroke rejection wearing a different hat) —
@@ -109,15 +104,16 @@ export function VocabularyPractice({
   const markedWordIdsRef = useRef<Set<string>>(new Set());
 
   // Smart practice only: what the learner has done with each word this visit
-  // (missed, hinted), how each word of the block ended (for the summary's
-  // stars), the state of the word on screen, and the keys typed ahead.
+  // (missed, hints taken), how each word of the block ended (for the summary's
+  // stars), the state of the word on screen, whether a hint is being drawn, and
+  // the keys typed ahead.
   const attempts = useWordAttempts();
   const [blockResults, setBlockResults] = useState<ReadonlyMap<string, WordOutcome>>(
     () => new Map(),
   );
   const [wordStatus, setWordStatus] = useState<WordAttemptStatus>("pending");
+  const [hintBusy, setHintBusy] = useState(false);
   const [typeAhead] = useState(() => createTypeAheadBuffer());
-  const audioRef = useRef<PronunciationButtonHandle>(null);
   const controlsRef = useRef<WordSentenceControls>(null);
 
   const currentBlock = blocks[blockIndex] ?? [];
@@ -175,7 +171,7 @@ export function VocabularyPractice({
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
-  const attempt = word ? attempts.get(word.id) : { missed: false, hinted: false };
+  const attempt = word ? attempts.get(word.id) : { missed: false, hints: 0 };
 
   // Same fix as LessonSession's identical effect: while the learner types
   // the current word, resolve the NEXT word's pronunciation in the
@@ -303,9 +299,15 @@ export function VocabularyPractice({
     if (!previewMode && smart.spaced) reportOutcome(word, "missed");
   }
 
-  /** Recall speaks the word once it has been answered (the answer was never given away first); listen already spoke it, so only a missed word's right spelling is said again. */
-  function handlePhase(phase: "correct" | "reveal") {
-    if (phase === "reveal" || !listen) audioRef.current?.replay();
+  /**
+   * A hint has taken effect (the right letter is going in): it costs a star, and
+   * the second one counts as a miss, which the schedule hears about at once, like
+   * a wrong answer. The final right answer then only corrects the word.
+   */
+  function handleHint() {
+    if (!word) return;
+    const lapsed = attempts.addHint(word.id);
+    if (lapsed && !previewMode && smart?.spaced) reportOutcome(word, "missed");
   }
 
   return (
@@ -322,23 +324,18 @@ export function VocabularyPractice({
           </Link>
           {!isComplete && word && (
             <div className="flex shrink-0 items-center gap-3">
-              {isSmart && <PracticeModeToggle mode={practiceMode} onChange={setPracticeMode} />}
               {blockSize > 0 && (
                 <span className="text-muted-foreground text-sm font-medium" dir="ltr">
                   {doneInBlock.size} / {blockSize}
                 </span>
               )}
               <LessonSettings
-                ref={audioRef}
                 // Only the target word is pronounced — never the full
                 // sentence. This is the one rule this whole screen is
                 // built around; see the component doc comment above.
                 text={word.targetWord}
                 audioUrl={word.audioUrl}
-                // The word is spoken first only in listen mode; in recall it
-                // is spoken after the answer (see handlePhase) so the answer
-                // is never given away.
-                autoPlay={isSmart ? listen : true}
+                autoPlay
                 resetKey={word.id}
                 inputRef={inputRef}
                 kokoroVoiceId={defaultVoiceId}
@@ -439,32 +436,21 @@ export function VocabularyPractice({
                   English hint field to fall back to either (see
                   types/word-lists.ts's hintAr doc comment), so a genuinely
                   missing translation renders nothing here rather than a
-                  semantically wrong stand-in. In listen mode the meaning waits
-                  until the word has been answered: the learner is typing what
-                  they hear, and the translation would give it away. */}
-              {listen && wordStatus === "pending" ? (
+                  semantically wrong stand-in. */}
+              {hint.term && (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                  <Ear className="text-primary size-8" aria-hidden="true" />
-                  <p className="text-foreground/85 text-xl font-semibold text-balance" dir={dir}>
-                    {t.wordLists.smart.listenPrompt}
+                  <p
+                    className="text-foreground/85 text-2xl font-bold text-balance sm:text-[1.8rem]"
+                    dir={dir}
+                  >
+                    {hint.term}
                   </p>
-                </div>
-              ) : (
-                hint.term && (
-                  <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                    <p
-                      className="text-foreground/85 text-2xl font-bold text-balance sm:text-[1.8rem]"
-                      dir={dir}
-                    >
-                      {hint.term}
+                  {hint.definition && (
+                    <p className="text-muted-foreground text-base font-medium" dir={dir}>
+                      {hint.definition}
                     </p>
-                    {hint.definition && (
-                      <p className="text-muted-foreground text-base font-medium" dir={dir}>
-                        {hint.definition}
-                      </p>
-                    )}
-                  </div>
-                )
+                  )}
+                </div>
               )}
 
               <div className="bg-border h-10 w-px" aria-hidden="true" />
@@ -483,8 +469,8 @@ export function VocabularyPractice({
                           typeAhead,
                           controlsRef,
                           onStatusChange: handleStatusChange,
-                          onPhase: handlePhase,
-                          onHint: () => attempts.update(word.id, { hinted: true }),
+                          onHint: handleHint,
+                          onHintBusyChange: setHintBusy,
                         }
                       : undefined
                   }
@@ -493,7 +479,8 @@ export function VocabularyPractice({
                   <WordHelpBar
                     attempt={attempt}
                     settled={wordStatus !== "pending"}
-                    onHint={() => controlsRef.current?.hint()}
+                    busy={hintBusy}
+                    onHint={() => controlsRef.current?.hint() ?? false}
                     onGiveUp={() => controlsRef.current?.giveUp()}
                   />
                 )}

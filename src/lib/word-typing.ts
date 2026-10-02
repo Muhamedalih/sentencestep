@@ -15,16 +15,6 @@ export function appendedChars(previous: string, next: string): string {
     : "";
 }
 
-/**
- * Keeps a hinted first letter where it was put: whatever the learner does, the
- * answer still starts with `prefix`. (Comparison ignores case; the learner's own
- * casing is kept when it already starts with it.)
- */
-export function keepPrefix(value: string, prefix: string): string {
-  if (!prefix) return value;
-  return value.toLowerCase().startsWith(prefix.toLowerCase()) ? value : prefix;
-}
-
 /** The most letters one carry-over keeps — a hand resting on the keyboard must not fill the next word. */
 export const MAX_TYPE_AHEAD = 24;
 

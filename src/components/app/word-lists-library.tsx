@@ -52,14 +52,11 @@ export function WordListsLibrary({
   groups,
   isPremiumUser,
   weakWords,
-  smart = false,
   mastery = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
   weakWords: WeakWordItem[];
-  /** Smart word practice is open to this visitor (an admin preview, or On for everyone). */
-  smart?: boolean;
   /** Smart word practice for a signed-in learner: each group's mastery and how many words wait for review. Null for a guest or when the schedule could not be read — the library is then exactly what it always was. */
   mastery?: LibraryMastery | null;
 }) {
@@ -77,7 +74,7 @@ export function WordListsLibrary({
         </p>
       </div>
 
-      <NeedsReviewWords words={weakWords} count={mastery?.reviewCount} smart={smart && !!mastery} />
+      <NeedsReviewWords words={weakWords} count={mastery?.reviewCount} smart={!!mastery} />
 
       {groups.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -134,7 +131,6 @@ export function WordListsLibrary({
                         completedCount={completedCountIn(group.wordIds)}
                         isLoaded={isLoaded}
                         isPremiumUser={isPremiumUser}
-                        smart={smart}
                         mastery={mastery?.byGroup[group.id] ?? null}
                       />
                     ))}

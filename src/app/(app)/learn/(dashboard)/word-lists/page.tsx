@@ -51,7 +51,6 @@ export default async function WordListsPage() {
         groups={groups}
         isPremiumUser={hasPremium || isAdminUser}
         weakWords={weakWords}
-        smart={access.enabled}
         mastery={mastery}
       />
     </div>

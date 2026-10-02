@@ -361,11 +361,11 @@ function SummaryRow({
 
 /**
  * A word's result as 1-3 small stars: three for right on the first try, two
- * when the hint was used, one after a miss — the same three steps that decide
- * what happens to the word's schedule (see wordStars).
+ * after one hint, one after a miss (or a second hint) — the same three steps
+ * that decide what happens to the word's schedule (see wordStars).
  */
 function WordStars({ outcome, label }: { outcome: WordOutcome; label: string }) {
-  const lit = wordStars({ missed: outcome === "missed", hinted: outcome === "assisted" });
+  const lit = wordStars({ missed: outcome === "missed", hints: outcome === "assisted" ? 1 : 0 });
   return (
     <span
       role="img"

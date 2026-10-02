@@ -135,26 +135,50 @@ export function applyOutcome(
 
 /** What a learner has done with a word this visit, as the practice screen tracks it. */
 export interface WordAttempt {
-  /** At least one wrong answer (or "I don't know") on this word. */
+  /** At least one wrong answer (or "I don't know") on this word, or enough hints to count as one (see HINTS_BEFORE_MISS). */
   missed: boolean;
-  /** The first-letter hint was used. */
-  hinted: boolean;
+  /** How many hints were taken. */
+  hints: number;
+}
+
+/**
+ * Each hint costs a star, and the second one is where help stops being a nudge:
+ * needing two letters means the word was not recalled, so from then on it counts
+ * as a miss — one star, back to strength 0 — even when it is finally typed right.
+ * A single hint only holds the word where it is.
+ */
+export const HINTS_BEFORE_MISS = 2;
+
+/** The word counts as missed: a wrong answer, "I don't know", or too many hints. */
+export function countsAsMissed(attempt: WordAttempt): boolean {
+  return attempt.missed || attempt.hints >= HINTS_BEFORE_MISS;
 }
 
 export function outcomeFor(attempt: WordAttempt): WordOutcome {
-  if (attempt.missed) return "missed";
-  return attempt.hinted ? "assisted" : "clean";
+  if (countsAsMissed(attempt)) return "missed";
+  return attempt.hints > 0 ? "assisted" : "clean";
 }
 
 /**
  * The 1–3 stars a word is worth right now, simple enough to show live: three
- * for a clean answer, two once the hint has been taken, one after a miss. The
- * same three steps decide what happens to the schedule (up, hold, back), so the
- * stars the learner sees are the stakes they are playing for.
+ * for a clean answer, two once a hint has been taken, one after a miss (or a
+ * second hint). The same three steps decide what happens to the schedule (up,
+ * hold, back), so the stars the learner sees are the stakes they are playing for.
  */
 export function wordStars(attempt: WordAttempt): 1 | 2 | 3 {
-  if (attempt.missed) return 1;
-  return attempt.hinted ? 2 : 3;
+  if (countsAsMissed(attempt)) return 1;
+  return attempt.hints > 0 ? 2 : 3;
+}
+
+/**
+ * Takes one more hint. `lapsed` is true for the hint that tips the word into
+ * counting as a miss, so the screen reports that miss to the schedule exactly
+ * once, at the moment it happens (like a wrong answer).
+ */
+export function withHint(attempt: WordAttempt): { attempt: WordAttempt; lapsed: boolean } {
+  const next: WordAttempt = { missed: attempt.missed, hints: attempt.hints + 1 };
+  const lapsed = !countsAsMissed(attempt) && countsAsMissed(next);
+  return { attempt: lapsed ? { ...next, missed: true } : next, lapsed };
 }
 
 export type WordStatus = "new" | "due" | "scheduled";

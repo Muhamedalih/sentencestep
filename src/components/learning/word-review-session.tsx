@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
-import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import type { WordSentenceControls } from "@/components/learning/vocabulary-sentence";
@@ -125,9 +124,9 @@ export function WordReviewSession({
   backHref?: string;
   /**
    * Smart word practice for the Word Lists review only (variant "wordLists"):
-   * the practice upgrades (typed-ahead letters, hint, "I don't know", alternates,
-   * the word spoken after the answer) and the learner's spaced schedule. Absent,
-   * or for any other variant, the review is exactly what it always was.
+   * the practice upgrades (typed-ahead letters, hints, "I don't know",
+   * alternates) and the learner's spaced schedule. Absent, or for any other
+   * variant, the review is exactly what it always was.
    */
   smart?: SmartPracticeConfig | null;
   /** Smart review only: how many due words did not fit in this visit and are still waiting (the finish screen offers another round). */
@@ -171,16 +170,17 @@ export function WordReviewSession({
   });
 
   // Smart review only: what has been done with each word this visit, the state
-  // of the word on screen, the keys typed ahead and the handles to the help bar.
+  // of the word on screen, whether a hint is being drawn, the keys typed ahead
+  // and the handles to the help bar.
   const attempts = useWordAttempts();
   const [wordStatus, setWordStatus] = useState<WordAttemptStatus>("pending");
+  const [hintBusy, setHintBusy] = useState(false);
   const [typeAhead] = useState(() => createTypeAheadBuffer());
-  const audioRef = useRef<PronunciationButtonHandle>(null);
   const controlsRef = useRef<WordSentenceControls>(null);
 
   const currentIndex: number | undefined = queue[0];
   const word = currentIndex !== undefined ? words[currentIndex] : undefined;
-  const attempt = word ? attempts.get(word.id) : { missed: false, hinted: false };
+  const attempt = word ? attempts.get(word.id) : { missed: false, hints: 0 };
   const total = words.length;
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
@@ -310,9 +310,11 @@ export function WordReviewSession({
     if (smartConfig.spaced) reportOutcome(word, "missed");
   }
 
-  /** The word is said once it has been answered (it is never given away first), and again beside a missed word's right spelling. */
-  function handlePhase() {
-    audioRef.current?.replay();
+  /** A hint has taken effect: it costs a star, and the second one counts as a miss, which the schedule hears about at once (like a wrong answer). */
+  function handleHint() {
+    if (!word) return;
+    const lapsed = attempts.addHint(word.id);
+    if (lapsed && smartConfig?.spaced) reportOutcome(word, "missed");
   }
 
   function handleResult(correct: boolean) {
@@ -365,11 +367,9 @@ export function WordReviewSession({
                 {correctedCount + 1} / {total}
               </span>
               <LessonSettings
-                ref={audioRef}
                 text={word.targetWord}
                 audioUrl={word.audioUrl}
-                // Smart review stays silent until the answer is in (see handlePhase).
-                autoPlay={!smartConfig}
+                autoPlay
                 resetKey={word.id}
                 inputRef={inputRef}
                 kokoroVoiceId={defaultVoiceId}
@@ -479,8 +479,8 @@ export function WordReviewSession({
                           typeAhead,
                           controlsRef,
                           onStatusChange: handleStatusChange,
-                          onPhase: handlePhase,
-                          onHint: () => attempts.update(word.id, { hinted: true }),
+                          onHint: handleHint,
+                          onHintBusyChange: setHintBusy,
                         }
                       : undefined
                   }
@@ -490,7 +490,8 @@ export function WordReviewSession({
                     <WordHelpBar
                       attempt={attempt}
                       settled={wordStatus !== "pending"}
-                      onHint={() => controlsRef.current?.hint()}
+                      busy={hintBusy}
+                      onHint={() => controlsRef.current?.hint() ?? false}
                       onGiveUp={() => controlsRef.current?.giveUp()}
                     />
                   </div>
