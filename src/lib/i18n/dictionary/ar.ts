@@ -176,10 +176,10 @@ export const ar: Dictionary = {
     ctaGuestContinue: "لا، خليني أكمل كضيف",
   },
   guestBanner: {
-    titleSingular: "عندك يوم واحد متتالي",
-    titlePlural: "عندك {n} أيام متتالية",
+    titleSingular: "لديك يوم واحد متتالٍ",
+    titlePlural: "لديك {n} أيام متتالية",
     titleFallback: "تتعلم حاليًا كضيف",
-    subtitle: "تقدمك محفوظ بهالمتصفح بس. سجّل مجانًا تضمنه.",
+    subtitle: "تقدّمك محفوظ في هذا المتصفح فقط. سجّل مجانًا لتضمن بقاءه وتواصل رحلتك.",
     cta: "سجّل الآن",
     dismissAria: "تجاهل",
   },
