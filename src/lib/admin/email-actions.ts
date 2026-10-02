@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { isPlausibleEmail, validateAdminEmailInput } from "@/lib/admin/email-validation";
 import { findUserByEmail } from "@/lib/admin/users-lookup";
+import { describeProviderError } from "@/lib/email/provider-error";
 import { sendTemplateEmail } from "@/lib/email/send";
 import { adminMessageEmail } from "@/lib/email/templates/admin-message";
 import { getSiteUrl } from "@/lib/site-url";
@@ -40,7 +41,7 @@ async function deliver(
     return { messageId: result.providerMessageId };
   } catch (error) {
     console.error("[admin-email] send failed", error);
-    return { error: "The email provider rejected the message. Please try again." };
+    return { error: describeProviderError(error) };
   }
 }
 
