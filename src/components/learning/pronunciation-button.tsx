@@ -204,8 +204,19 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       };
     }, []);
 
+    // The word/sentence this button is on right now, readable from a play that
+    // started for an earlier one. A button that stays mounted across words
+    // (Word Lists keeps one in the page header) can have a resolve still in
+    // flight when the learner moves on — Server Actions run one at a time, so a
+    // clip can be seconds late — and without this check that clip would play
+    // when it finally arrived, saying a word that is no longer on screen (and
+    // stopping the right one), and would be remembered as the new word's clip.
+    const currentKeyRef = useRef(resetKey);
+    currentKeyRef.current = resetKey;
+
     useEffect(() => {
       setKokoroUrl(null);
+      setIsResolvingKokoro(false);
       resolvedForKeyRef.current = undefined;
     }, [resetKey]);
 
@@ -283,10 +294,11 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
             );
           }
         }
-        if (url && mountedRef.current) setKokoroUrl(url);
+        // Only the word still on screen keeps what it found (see currentKeyRef).
+        if (url && mountedRef.current && currentKeyRef.current === resetKey) setKokoroUrl(url);
         return url;
       } finally {
-        if (mountedRef.current) setIsResolvingKokoro(false);
+        if (mountedRef.current && currentKeyRef.current === resetKey) setIsResolvingKokoro(false);
       }
     }
 
@@ -305,7 +317,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     async function playAuto() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
@@ -318,7 +330,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     async function playReplay() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {

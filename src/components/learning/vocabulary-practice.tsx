@@ -10,6 +10,7 @@ import { VocabularyBlockSummary } from "@/components/learning/vocabulary-block-s
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import type { WordSentenceControls } from "@/components/learning/vocabulary-sentence";
+import { WordGroupCaughtUp } from "@/components/learning/word-group-caught-up";
 import { WordHelpBar } from "@/components/learning/word-help-bar";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
@@ -54,12 +55,27 @@ const BLOCK_SIZE = 5;
  * to the learner's spaced schedule instead of wiping a word from the weak list
  * the moment it is typed right. The word is spoken when it appears and its
  * meaning is shown, exactly as without it.
+ *
+ * A visit is decided once, when it opens, and then left alone: the words it
+ * asks, whether it is the upgraded practice, and whether there is anything to
+ * ask at all. It has to be, because the page that renders this is sent again
+ * after every answer — each answer is reported with a Server Action that
+ * revalidates, and Next answers a revalidating Server Action with a fresh render
+ * of the page it was called from. For a Continue visit that render recomputes the
+ * word list from the schedule the answer has just changed, so the list shrinks
+ * under a running visit. Read live, it moved the screen to another word while
+ * the learner was typing (and spoke that word), and never asked the words it
+ * jumped over. So the props that describe the visit are copied once here and
+ * later ones are ignored; the page starts a different visit (another group, or
+ * Practice all) by giving this element a new `key`, never by changing the props
+ * of a running one.
  */
 export function VocabularyPractice({
   group,
   previewMode = false,
   defaultVoiceId,
   smart,
+  caughtUp,
 }: {
   group: WordGroup;
   previewMode?: boolean;
@@ -67,6 +83,44 @@ export function VocabularyPractice({
   defaultVoiceId?: string | null;
   /** Smart word practice for this visitor, or null/absent for the practice exactly as it always was. */
   smart?: SmartPracticeConfig | null;
+  /** Set (with `group.words` empty) when Continue found nothing due: the visit is the short "all caught up" screen, and when the next word falls due. Decided here and not by the page, so a later render of the page cannot swap a running practice for it. */
+  caughtUp?: { nextDueISO: string | null } | null;
+}) {
+  const [visit] = useState(() => ({ group, smart: smart ?? null, caughtUp: caughtUp ?? null }));
+
+  if (visit.group.words.length === 0) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+        <WordGroupCaughtUp
+          groupId={visit.group.id}
+          title={visit.group.title}
+          nextDueISO={visit.caughtUp?.nextDueISO ?? null}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <VocabularyPracticeSession
+      group={visit.group}
+      previewMode={previewMode}
+      defaultVoiceId={defaultVoiceId}
+      smart={visit.smart}
+    />
+  );
+}
+
+/** The running visit: everything it is made of arrives as props that never change (see VocabularyPractice). */
+function VocabularyPracticeSession({
+  group,
+  previewMode,
+  defaultVoiceId,
+  smart,
+}: {
+  group: WordGroup;
+  previewMode: boolean;
+  defaultVoiceId?: string | null;
+  smart: SmartPracticeConfig | null;
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { VocabularyPractice } from "@/components/learning/vocabulary-practice";
-import { WordGroupCaughtUp } from "@/components/learning/word-group-caught-up";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
 import { isAdmin } from "@/lib/admin/access";
@@ -12,7 +11,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
 import { getLearnerToday, getSmartWordsAccess } from "@/lib/word-mastery/access";
 import { readMasteryStates } from "@/lib/word-mastery/queue";
-import { selectContinueWords } from "@/lib/word-mastery/schedule";
+import { practiceScope, practiceVisitKey, selectContinueWords } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 
@@ -40,6 +39,14 @@ export async function generateMetadata({
  * are new or due. It only matters while "Smart word practice" is open to the
  * visitor (an admin preview, or On for everyone) — otherwise it is ignored and
  * the page is the practice it always was.
+ *
+ * This page is rendered again after every answer (each answer is reported with a
+ * Server Action that revalidates, and Next answers such an action with a fresh
+ * render of the page it was called from), and a Continue visit's word list is
+ * worked out from the schedule those answers change. So the practice must not
+ * follow what this page returns while it runs: VocabularyPractice keeps the
+ * words, the mode and the "all caught up" outcome of the visit it opened with,
+ * and the `key` below says which visit that is.
  */
 export default async function WordGroupPracticePage({
   params,
@@ -49,7 +56,8 @@ export default async function WordGroupPracticePage({
   searchParams: Promise<{ scope?: string }>;
 }) {
   const { groupId } = await params;
-  const { scope } = await searchParams;
+  const { scope: rawScope } = await searchParams;
+  const scope = practiceScope(rawScope);
   const locale = await getLocale();
   const group = await getWordGroupById(groupId, locale ?? undefined);
   if (!group) notFound();
@@ -82,11 +90,15 @@ export default async function WordGroupPracticePage({
   // asks only the words that are due or not met yet — the first ones that are
   // not locked in, instead of word 1 every time.
   const access = await getSmartWordsAccess();
+  // Which visit this is: another group, or Practice all instead of Continue, is
+  // a different visit and starts fresh. Being rendered again after an answer is
+  // the same visit and must not (see above).
+  const visitKey = practiceVisitKey(group.id, scope);
   let practiceWords = group.words;
   let smart: SmartPracticeConfig | null = null;
   if (access.enabled) {
     smart = { spaced: access.spaced };
-    if (access.spaced && access.userId && scope !== "all") {
+    if (access.spaced && access.userId && scope === "continue") {
       const [states, today] = await Promise.all([
         readMasteryStates(access.userId),
         getLearnerToday(),
@@ -97,14 +109,15 @@ export default async function WordGroupPracticePage({
           .map((word) => states.get(word.id)?.dueOn)
           .filter((dueOn): dueOn is string => dueOn !== undefined)
           .sort();
+        // Shown by the practice itself, not returned from here: a render of this
+        // page that finds everything done after the learner's own last answer
+        // must not replace the practice they are looking at.
         return (
-          <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-            <WordGroupCaughtUp
-              groupId={group.id}
-              title={group.title}
-              nextDueISO={dueDates[0] ?? null}
-            />
-          </div>
+          <VocabularyPractice
+            key={visitKey}
+            group={{ ...group, words: [] }}
+            caughtUp={{ nextDueISO: dueDates[0] ?? null }}
+          />
         );
       }
       practiceWords = pick.words;
@@ -132,6 +145,11 @@ export default async function WordGroupPracticePage({
       : practiceWords;
 
   return (
-    <VocabularyPractice group={{ ...group, words }} defaultVoiceId={defaultVoiceId} smart={smart} />
+    <VocabularyPractice
+      key={visitKey}
+      group={{ ...group, words }}
+      defaultVoiceId={defaultVoiceId}
+      smart={smart}
+    />
   );
 }
