@@ -54,3 +54,13 @@ test("renderEmailLayout: omits the call-to-action button when no ctaLabel/ctaUrl
   assert.ok(!html.includes("text-decoration:none;font-weight:600"), "no CTA anchor expected");
   assert.ok(html.includes("<p>body</p>"));
 });
+
+test("renderEmailLayout: omits the preferences link when no unsubscribeUrl is given", () => {
+  const html = renderEmailLayout({
+    previewText: "preview",
+    heading: "heading",
+    bodyHtml: "<p>body</p>",
+  });
+  assert.ok(!html.includes("Manage email preferences"));
+  assert.ok(html.includes("you're a SentenceStep admin"));
+});

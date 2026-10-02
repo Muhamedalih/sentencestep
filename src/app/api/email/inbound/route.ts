@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { fetchReceivedEmail } from "@/lib/email/inbound/fetch";
-import { buildInboundEmailRow, parseInboundWebhook } from "@/lib/email/inbound/parse";
+import { notifyAdminsOfInboundEmail } from "@/lib/email/inbound/notify";
+import {
+  buildInboundEmailRow,
+  isAutomatedMessage,
+  parseInboundWebhook,
+} from "@/lib/email/inbound/parse";
 import { verifyWebhookSignature } from "@/lib/email/inbound/signature";
 import { inboundEmailExists, storeInboundEmail } from "@/lib/email/inbound/store";
 import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
@@ -16,7 +21,9 @@ import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
  * parsed, and idempotent — a redelivery is acknowledged without storing a
  * second copy. Non-`email.received` events and unusable senders get a 200 so
  * the provider doesn't retry something that can never succeed; a failure to
- * fetch the body or write the row returns 5xx so it does retry.
+ * fetch the body or write the row returns 5xx so it does retry. After a new
+ * message is stored, admins are alerted by email (and push where enabled) —
+ * see notify.ts.
  */
 export async function POST(request: Request) {
   const secret = process.env.EMAIL_WEBHOOK_SECRET;
@@ -52,6 +59,13 @@ export async function POST(request: Request) {
     if (!row) return NextResponse.json({ received: true, ignored: true });
 
     const result = await storeInboundEmail(row);
+
+    // Alert only for a message stored just now (a duplicate was alerted the
+    // first time) and only for mail a person wrote — an out-of-office reply
+    // or bounce is stored but never announced.
+    if (result === "stored" && !isAutomatedMessage(event.from, content.headers)) {
+      await notifyAdminsOfInboundEmail(row);
+    }
     return NextResponse.json({ received: true, duplicate: result === "duplicate" });
   } catch (error) {
     console.error("[inbound-email] failed to process webhook", error);

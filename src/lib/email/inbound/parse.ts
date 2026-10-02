@@ -89,7 +89,12 @@ export function htmlToText(html: string): string {
     .trim();
 }
 
+/** Header shapes seen from providers: a name→value object, or a list of {name, value}. */
+export type ReceivedEmailHeaders =
+  Record<string, string | string[]> | { name: string; value: string }[] | null | undefined;
+
 export interface ReceivedEmailContent {
+  headers?: ReceivedEmailHeaders;
   text?: string | null;
   html?: string | null;
   subject?: string | null;
@@ -144,4 +149,37 @@ export function buildInboundEmailRow(
     received_at:
       received && !Number.isNaN(received.getTime()) ? received.toISOString() : fallbackReceivedAt,
   };
+}
+
+function normalizeHeaders(headers: ReceivedEmailHeaders): Map<string, string> {
+  const map = new Map<string, string>();
+  if (!headers) return map;
+  const entries: [string, unknown][] = Array.isArray(headers)
+    ? headers.map((header): [string, unknown] => [header.name, header.value])
+    : Object.entries(headers);
+  for (const [name, value] of entries) {
+    const text = Array.isArray(value) ? value.join(",") : value;
+    if (typeof name === "string" && typeof text === "string") map.set(name.toLowerCase(), text);
+  }
+  return map;
+}
+
+/**
+ * True for mail a machine sent — out-of-office replies, bounces, mailing-list
+ * traffic (RFC 3834 `Auto-Submitted`, `Precedence`, or a mailer-daemon /
+ * postmaster sender). These are still stored (a bounce is a useful signal that
+ * an address is dead) but must never trigger an admin alert: an
+ * auto-responder answering an alert is exactly how mail loops start.
+ */
+export function isAutomatedMessage(from: string, headers: ReceivedEmailHeaders): boolean {
+  const map = normalizeHeaders(headers);
+
+  const autoSubmitted = map.get("auto-submitted")?.trim().toLowerCase();
+  if (autoSubmitted && autoSubmitted !== "no") return true;
+
+  const precedence = map.get("precedence")?.trim().toLowerCase();
+  if (precedence && ["bulk", "junk", "list", "auto_reply"].includes(precedence)) return true;
+
+  const localPart = parseAddress(from)?.email.split("@")[0] ?? "";
+  return localPart === "mailer-daemon" || localPart === "postmaster";
 }

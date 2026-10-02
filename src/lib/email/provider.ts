@@ -12,6 +12,13 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text: string;
+  /**
+   * Overrides the provider's default Reply-To for this one message: a string
+   * replaces it, `null` sends with none, `undefined` keeps the default.
+   * Automated notices to admins use `null` so that replying to (or an
+   * auto-responder answering) a notice can't loop back into the Inbox.
+   */
+  replyTo?: string | null;
 }
 
 export interface SendEmailResult {
