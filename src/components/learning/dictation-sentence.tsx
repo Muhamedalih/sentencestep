@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, CornerDownLeft, Flag, Lightbulb, Star } from "lucide-react";
+import { CheckCircle2, CornerDownLeft, Star } from "lucide-react";
 
+import { DictationHelp } from "@/components/learning/dictation-help";
 import { DictationText } from "@/components/learning/dictation-text";
 import { ContinueButton, RetryButton } from "@/components/learning/feedback-actions";
 import { LessonSettings } from "@/components/learning/lesson-settings";
@@ -117,8 +118,13 @@ const WORD_FALLBACK_MS = 2500;
 
 /** Letter-by-letter mode: this many wrong letters in a row at the same blank bring up Show the word / Give up. */
 const HELP_AFTER_MISSES = 2;
-/** How long Show the word keeps a word on screen (it ends sooner when the learner types its next letter). */
-const PEEK_MS = 3000;
+/**
+ * How long Show the word keeps a word up before it starts to fade (it ends
+ * sooner when the learner types its next letter). The letters rise in over
+ * about half a second and dissolve over about half a second more, so the whole
+ * peek is two seconds with the word fully on screen for roughly one of them.
+ */
+const PEEK_MS = 1500;
 /** How long a turned-away letter stays on its blank, shaking, before it clears. */
 const REJECTION_MS = 350;
 
@@ -669,7 +675,7 @@ export function DictationSentence({
   const helpStrip = letterMode && (
     <div
       className={cn(
-        "flex min-h-12 flex-wrap items-center gap-3",
+        "flex min-h-[6.5rem] items-center sm:min-h-14",
         mode === "conversation" ? "mt-3" : "mt-5 justify-center",
       )}
     >
@@ -677,40 +683,17 @@ export function DictationSentence({
         {rejection ? t.dictation.wrongLetter : ""}
       </span>
       {stuck && (
-        <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="flex flex-wrap items-center gap-3"
-        >
-          <span className="text-muted-foreground text-sm" dir={dir}>
-            {t.dictation.stuckPrompt}
-          </span>
-          {showWordBlanks && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleShowWord}
-              title={t.dictation.helpTitle}
-            >
-              <Lightbulb aria-hidden="true" />
-              {t.dictation.help}
-            </Button>
-          )}
-          {onGiveUp && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleGiveUp}
-              title={t.dictation.giveUpTitle}
-            >
-              <Flag aria-hidden="true" />
-              {t.dictation.giveUp}
-            </Button>
-          )}
-        </motion.div>
+        <DictationHelp
+          dir={dir}
+          prompt={t.dictation.stuckPrompt}
+          onShowWord={showWordBlanks ? handleShowWord : undefined}
+          showWordLabel={t.dictation.help}
+          showWordTitle={t.dictation.helpTitle}
+          showingWord={peekWord !== null}
+          onGiveUp={onGiveUp ? handleGiveUp : undefined}
+          giveUpLabel={t.dictation.giveUp}
+          giveUpTitle={t.dictation.giveUpTitle}
+        />
       )}
     </div>
   );
