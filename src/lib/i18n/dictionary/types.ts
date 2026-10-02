@@ -634,6 +634,14 @@ export interface Dictionary {
     finishBlock: string;
     /** Under the Finish button. */
     finishBlockHint: string;
+    /** Block summary: the button on each word that opens a free practice of just that word. */
+    practiceWord: string;
+    /** Its accessible name — {word} is the word. */
+    practiceWordAria: string;
+    /** On that free practice: back to the block summary. */
+    drillBack: string;
+    /** On that free practice: it records nothing. */
+    drillNote: string;
     /** Smart word practice (admin-controlled; see FEATURE_IDS in src/lib/features/config.ts): the help bar, the "also correct" note, the group card's Continue and mastery figures, and the review hero. */
     smart: {
       /** The help bar's accessible name (for screen readers; not shown on screen). */
@@ -652,6 +660,10 @@ export interface Dictionary {
       costLabel: string;
       /** The price tag at one star: nothing left to take, the help is only recorded. */
       costRecorded: string;
+      /** Said in place of the stars once the hint has taken the last one. */
+      noStars: string;
+      /** Tooltip of the closed hint button: what to do instead. */
+      noStarsTitle: string;
       /** Under the sentence after an accepted alternate (British spelling, synonym) — {word} is the stored word. */
       alsoCorrect: string;
       /** The button that skips the missed-word screen (Enter does the same). */

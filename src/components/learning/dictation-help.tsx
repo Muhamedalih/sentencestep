@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CircleHelp, Flag, Lightbulb, Star } from "lucide-react";
+import { Ban, CircleHelp, Flag, Lightbulb, Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -49,6 +49,14 @@ interface DictationHelpProps {
   giveUpDisabled?: boolean;
   /** Keeps the price tag as wide for "−★" as for "Recorded", so the bar never changes size (and shifts) when the stars run out. */
   stablePrice?: boolean;
+  /**
+   * The hint taken at the last star spends it, instead of only being "recorded": the star flies like any other, then the stars of this word are wiped away (an animation, and `noStarsLabel` takes their place) and the hint is closed — `stars` is then 0. Without it (Dictation) the last star is never taken.
+   */
+  lastStarCosts?: boolean;
+  /** Said in place of the stars once they are all gone (needs `lastStarCosts`). */
+  noStarsLabel?: string;
+  /** Why the hint is closed: what the learner can do instead (needs `lastStarCosts`). */
+  noStarsTitle?: string;
 }
 
 /**
@@ -91,6 +99,9 @@ export function DictationHelp({
   keepFocus = false,
   giveUpDisabled = false,
   stablePrice = false,
+  lastStarCosts = false,
+  noStarsLabel,
+  noStarsTitle,
 }: DictationHelpProps) {
   const reduced = useReducedMotion() ?? false;
   const starsRef = useRef<HTMLSpanElement>(null);
@@ -129,8 +140,13 @@ export function DictationHelp({
     };
   }, []);
 
+  // The star the hint can still take: the last one too when it costs, else it stays at one.
+  const floor = lastStarCosts ? 0 : 1;
+  /** Every star is gone and the hint is closed. */
+  const outOfStars = lastStarCosts && showStakes && stars <= 0;
+
   function setRisk(on: boolean) {
-    setGhost(on && showStakes && stars > 1);
+    setGhost(on && showStakes && stars > floor);
     riskRef.current?.(on && showStakes);
   }
 
@@ -234,7 +250,7 @@ export function DictationHelp({
   function showWord() {
     if (flying || showingWord || !onShowWord) return;
     setRisk(false);
-    if (!showStakes || stars <= 1 || reduced) {
+    if (!showStakes || stars <= floor || reduced) {
       if (onShowWord() === false) return;
       light(showStakes);
       return;
@@ -255,35 +271,41 @@ export function DictationHelp({
       <Star className="size-3 fill-current" aria-hidden="true" />
     </>
   );
+  const costs = stars > floor;
+  // Once the hint is closed the tag stays (invisible) so the bar keeps its width.
   const price = showStakes && (
     <span
-      aria-label={stars > 1 ? costLabel : costRecorded}
-      dir={stars > 1 ? "ltr" : dir}
-      className="bg-accent/20 text-accent group-hover/help:bg-accent group-hover/help:text-accent-foreground group-focus-visible/help:bg-accent group-focus-visible/help:text-accent-foreground ms-0.5 inline-flex items-center gap-0.5 rounded-full px-2 py-px text-xs font-bold transition-colors"
+      aria-hidden={outOfStars || undefined}
+      aria-label={costs ? costLabel : costRecorded}
+      dir={costs ? "ltr" : dir}
+      className={cn(
+        outOfStars && "invisible",
+        "bg-accent/20 text-accent group-hover/help:bg-accent group-hover/help:text-accent-foreground group-focus-visible/help:bg-accent group-focus-visible/help:text-accent-foreground ms-0.5 inline-flex items-center gap-0.5 rounded-full px-2 py-px text-xs font-bold transition-colors",
+      )}
     >
       {stablePrice ? (
         // Both labels share one cell, so the tag is always as wide as the wider one.
         <span className="inline-grid">
           <span
-            aria-hidden={stars <= 1}
+            aria-hidden={!costs}
             className={cn(
               "col-start-1 row-start-1 inline-flex items-center justify-center gap-0.5",
-              stars <= 1 && "invisible",
+              !costs && "invisible",
             )}
           >
             {costStar}
           </span>
           <span
-            aria-hidden={stars > 1}
+            aria-hidden={costs}
             className={cn(
               "col-start-1 row-start-1 inline-flex items-center justify-center",
-              stars > 1 && "invisible",
+              costs && "invisible",
             )}
           >
             {costRecorded}
           </span>
         </span>
-      ) : stars > 1 ? (
+      ) : costs ? (
         costStar
       ) : (
         costRecorded
@@ -326,16 +348,45 @@ export function DictationHelp({
                 ref={starsRef}
                 role="img"
                 aria-label={starsLabel.replace("{n}", String(stars))}
-                className="relative flex items-center gap-1"
+                className="relative inline-grid items-center"
               >
-                {[0, 1, 2].map((index) => (
-                  <StarPip
-                    key={index}
-                    on={index < stars}
-                    ghost={ghost && index === stars - 1}
-                    hidden={flying && index === flyingIndex}
-                  />
-                ))}
+                {/* The stars and, once they are all spent, the note that replaces them
+                    share one cell, so the bar is as wide for either and never shifts. */}
+                <span className="col-start-1 row-start-1 flex items-center gap-1">
+                  {[0, 1, 2].map((index) => (
+                    <StarPip
+                      key={index}
+                      index={index}
+                      on={index < stars}
+                      ghost={ghost && index === stars - 1}
+                      hidden={flying && index === flyingIndex}
+                      wiped={outOfStars}
+                      reduced={reduced}
+                    />
+                  ))}
+                </span>
+                {lastStarCosts && noStarsLabel && (
+                  <motion.span
+                    aria-hidden="true"
+                    title={noStarsTitle}
+                    initial={false}
+                    animate={
+                      outOfStars
+                        ? reduced
+                          ? { opacity: 1, scale: 1 }
+                          : { opacity: 1, scale: [1.5, 1], x: [0, -4, 4, -3, 3, 0] }
+                        : { opacity: 0, scale: 0.8 }
+                    }
+                    transition={{
+                      duration: outOfStars && !reduced ? 0.5 : 0.2,
+                      delay: outOfStars ? 0.3 : 0,
+                    }}
+                    className="bg-danger/10 text-danger pointer-events-none col-start-1 row-start-1 inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+                  >
+                    <Ban className="size-3" aria-hidden="true" />
+                    {noStarsLabel}
+                  </motion.span>
+                )}
                 {lostKey > 0 && (
                   <motion.span
                     key={lostKey}
@@ -356,8 +407,10 @@ export function DictationHelp({
       {onShowWord && (
         <HelpAction
           onClick={showWord}
-          title={showStakes ? showWordTitle : undefined}
-          disabled={flying || showingWord}
+          title={
+            showStakes ? (outOfStars && noStarsTitle ? noStarsTitle : showWordTitle) : undefined
+          }
+          disabled={flying || showingWord || outOfStars}
           keepFocus={keepFocus}
           tone="helpful"
           onRisk={setRisk}
@@ -394,8 +447,22 @@ export function DictationHelp({
   );
 }
 
-/** One of the sentence's three stars: lit, off, or (with the pointer on Show the word) the dashed ghost of the one about to go. A star that goes out pops. */
-function StarPip({ on, ghost, hidden }: { on: boolean; ghost: boolean; hidden: boolean }) {
+/** One of the sentence's three stars: lit, off, or (with the pointer on Show the word) the dashed ghost of the one about to go. A star that goes out pops. When every star is spent the three are wiped away, one after the other. */
+function StarPip({
+  index,
+  on,
+  ghost,
+  hidden,
+  wiped,
+  reduced,
+}: {
+  index: number;
+  on: boolean;
+  ghost: boolean;
+  hidden: boolean;
+  wiped: boolean;
+  reduced: boolean;
+}) {
   const was = useRef(on);
   const [pop, setPop] = useState(0);
   useEffect(() => {
@@ -408,8 +475,20 @@ function StarPip({ on, ghost, hidden }: { on: boolean; ghost: boolean; hidden: b
       key={pop}
       data-pip=""
       initial={pop > 0 ? { scale: 1.5, rotate: -16 } : false}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ type: "spring", stiffness: 360, damping: 13 }}
+      animate={
+        wiped
+          ? { scale: reduced ? 1 : 0, rotate: reduced ? 0 : 140, opacity: 0 }
+          : { scale: 1, rotate: 0, opacity: 1 }
+      }
+      transition={
+        wiped
+          ? {
+              duration: reduced ? 0 : 0.35,
+              delay: reduced ? 0 : 0.12 + index * 0.1,
+              ease: "easeIn",
+            }
+          : { type: "spring", stiffness: 360, damping: 13 }
+      }
       className={cn("inline-flex", hidden && "opacity-0")}
     >
       <Star

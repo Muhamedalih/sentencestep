@@ -564,6 +564,10 @@ export const es: Dictionary = {
     nextBlockHint: "A continuación: palabras {from} a {to}",
     finishBlock: "Terminar",
     finishBlockHint: "Ese fue el último grupo de palabras.",
+    practiceWord: "Practicar",
+    practiceWordAria: "Practicar la palabra {word}",
+    drillBack: "Volver al resumen",
+    drillNote: "Práctica libre: no cambia tu progreso ni tu calendario de repaso.",
     smart: {
       helpPrompt: "¿Necesitas ayuda?",
       hint: "Pista",
@@ -573,6 +577,9 @@ export const es: Dictionary = {
       starsLabel: "{n} de 3 estrellas para esta palabra",
       costLabel: "Cuesta una estrella",
       costRecorded: "Registrado",
+      noStars: "Sin estrellas",
+      noStarsTitle:
+        "Esta palabra se quedó sin estrellas. Escríbela, o pulsa «No sé» y volverá más tarde.",
       alsoCorrect: "También es correcto ✓ — la palabra usada aquí: {word}",
       continueEnter: "Continuar",
       firstTry: "{n} de {total} al primer intento",

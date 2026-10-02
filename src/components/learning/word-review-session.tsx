@@ -29,7 +29,7 @@ import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { markVocabularyRecallCompletedAction } from "@/lib/vocabulary-recall/actions";
 import { popIn } from "@/lib/motion";
 import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
-import { outcomeFor } from "@/lib/word-mastery/schedule";
+import { canTakeHint, outcomeFor } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import type { ReportedOutcome } from "@/lib/word-mastery/types";
 import { createTypeAheadBuffer } from "@/lib/word-typing";
@@ -492,7 +492,12 @@ export function WordReviewSession({
                       attempt={attempt}
                       settled={wordStatus !== "pending"}
                       busy={hintBusy}
-                      onHint={() => controlsRef.current?.hint() ?? false}
+                      onHint={() =>
+                        // Closed once the last star has gone on a hint.
+                        word && canTakeHint(attempts.get(word.id))
+                          ? (controlsRef.current?.hint() ?? false)
+                          : false
+                      }
                       onGiveUp={() => controlsRef.current?.giveUp()}
                     />
                   </div>

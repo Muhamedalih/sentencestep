@@ -555,6 +555,10 @@ export const tr: Dictionary = {
     nextBlockHint: "Sırada: {from} - {to}. kelimeler",
     finishBlock: "Bitir",
     finishBlockHint: "Bu, son kelime grubuydu.",
+    practiceWord: "Alıştır",
+    practiceWordAria: "{word} kelimesini alıştır",
+    drillBack: "Özete dön",
+    drillNote: "Serbest alıştırma: ilerlemeni ve tekrar programını değiştirmez.",
     smart: {
       helpPrompt: "Yardım lazım mı?",
       hint: "İpucu",
@@ -564,6 +568,9 @@ export const tr: Dictionary = {
       starsLabel: "Bu kelime için 3 yıldızdan {n}",
       costLabel: "Bir yıldıza mal olur",
       costRecorded: "Kaydedilir",
+      noStars: "Yıldız yok",
+      noStarsTitle:
+        "Bu kelimenin yıldızı kalmadı. Yaz, ya da «Bilmiyorum»a bas; sonra tekrar karşına çıkar.",
       alsoCorrect: "Bu da doğru ✓ — burada kullanılan kelime: {word}",
       continueEnter: "Devam",
       firstTry: "{total} kelimeden {n} ilk denemede",
