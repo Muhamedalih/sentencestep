@@ -223,7 +223,8 @@ already has history the day the feature goes On.
     "tomorrow" is tomorrow morning where they are; UTC until the cookie
     exists). A clean answer on a due word climbs one step and pushes the next
     review out **1 / 3 / 7 / 16 / 30 days**; a miss sends it back to 0, due
-    tomorrow; a word that needed the hint holds its step. Practising a word
+    tomorrow; a word that needed one hint holds its step (a second hint counts
+    as a miss, see below). Practising a word
     that is not due yet leaves its schedule untouched (repeating a group five
     times in an afternoon cannot walk it to "mastered"), except a miss, which is
     always recorded. Strength 5 means the 30-day review has been passed.
@@ -235,7 +236,8 @@ already has history the day the feature goes On.
     again tomorrow), and it leaves the list the way every other mistake does,
     by passing its reviews. The client reports each word once, through
     `recordWordOutcomeAction` (`clean`, `assisted`, `missed` the moment it
-    happens, `recovered` after a miss). The action re-checks the gate on the
+    happens — a wrong answer, "I don't know" or the second hint — and
+    `recovered` after a miss). The action re-checks the gate on the
     server, never trusts the client for the account, and does nothing (returns
     `null`) for a guest, with the feature off, or before the migrations are
     applied.
@@ -243,27 +245,42 @@ already has history the day the feature goes On.
     the review session): **letters typed while a right answer is settling are
     kept for the next word** (and end the wait early), so there is no dead zone
     between words; **Enter skips the missed-word screen** once the right
-    spelling has shown, and every pause is shorter (`SMART_TIMING`: 350 ms
-    after a right answer, 1.2 s for the right spelling), since nothing typed
-    in the meantime is lost any more. Matching ignores case and accents.
+    spelling has shown, and the missed-word pauses are shorter (`SMART_TIMING`:
+    1.2 s for the right spelling), since nothing typed in the meantime is lost
+    any more. A right answer is the opposite: its pause is the celebration, so
+    it lasts 700 ms (and its pop 0.4 s) instead of 350 ms, and a learner who is
+    already typing the next word still ends it at once. Matching ignores case
+    and accents.
     **Also-correct answers**: a word can list extra accepted answers (British
     spellings, synonyms that fit the sentence), typing one counts exactly like
     the stored word and says "also correct: …" (`word-lists-answer.ts`). The
     word does not settle while the learner may still be typing a longer
     accepted answer ("colo" on the way to "colour").
-  - _Help that costs something, like Dictation_ (`WordHelpBar`): **First
-    letter** locks in the word's first letter (once per word) and **I don't
-    know** shows the answer straight away. Stars are live and simple, the same
-    steps that decide the schedule: **3** for a clean answer, **2** once the
-    hint is used (the word holds its step), **1** after a miss or "I don't
-    know" (the word goes back to 0). The summary shows each word's stars and how
-    many were right first time.
-  - _Audio_: by default the word is **not spoken before the attempt** (the
-    sentence is the question; the sound would be the answer), it plays once
-    the word is answered. A **Recall / Listen & type** toggle (`?mode=listen`)
-    switches to the other exercise: the word is spoken first, the Arabic
-    meaning stays hidden until it is answered, and the learner types what they
-    hear.
+  - _Help that costs something, like Dictation_ (`WordHelpBar`, the
+    `DictationHelp` bar without its label): the stars, **Hint** and **I don't
+    know**, centred under the sentence, nothing moving when the word settles
+    (the buttons dim instead of leaving), and pressing a button never takes the
+    typing focus. **A hint is the next right letter, wherever the learner has got
+    to** (`planHint`, pure and tested): the letters that are right stay, anything
+    typed after the first wrong one is taken away, and the right letter goes in
+    — two right letters → the third; three right, then wrong ones → the wrong
+    ones go and the fourth takes their place; nothing typed → the first letter.
+    While a learner types an accepted alternate ("gre"), the hint follows that
+    alternate ("grey"). It is drawn as a repair of one second: the wrong letters
+    go red, shudder and crumble away (the last typed first) as the star flies
+    off, then the right letter is restored in its place with a flare of the
+    accent colour (`StageLetter`) and the word glides to its new centre. Keys
+    pressed meanwhile are kept and added afterwards; Enter waits. As many hints
+    as wanted, one at a time. Stars are live and are the same steps that decide
+    the schedule: **3** for a clean answer, **2** after one hint (the word holds
+    its step), **1** after a wrong answer, "I don't know" or a **second hint**
+    (the word counts as missed and goes back to 0 — it was not recalled), and
+    from then on hints only show as "recorded". The summary shows each word's
+    stars and how many were right first time.
+  - _Audio and meaning_: as in the original screen — the word is spoken when it
+    appears (Shift says it again) and its meaning is shown at once. (A
+    Recall / Listen & type switch was tried and removed: the two exercises
+    felt the same.)
   - _Continue_ (`selectContinueWords`): a group's **Continue** no longer starts
     at word 1. It asks the words that are due (weakest first), then the words
     the learner has not met in the group's own order, at most 20 per visit;
@@ -271,7 +288,7 @@ already has history the day the feature goes On.
     a short "all caught up" screen (it says when the next word falls due) with
     **Practice all** (`?scope=all`), which still records misses but leaves the
     schedule alone for words that are not due. The expanded group card also
-    offers small **Listen & type** and **Practice all** links next to Continue.
+    offers a small **Practice all** link next to Continue.
   - _Library and review_: each group card shows a **mastery bar** (the share of
     full strength across the group's words) and a due / new badge; the review
     hero's number is the words due plus the weak words, each once. "Review All
@@ -295,8 +312,8 @@ With no Supabase project linked there is no settings row. Set
 a guest, which is enough to exercise Dictation and From memory offline. The
 account-only features need a real signed-in session.
 
-Smart word practice's upgrades (type-ahead, the first-letter hint, "I don't
-know", also-correct answers, Listen & type) work as a guest with that switch,
+Smart word practice's upgrades (type-ahead, hints, "I don't know",
+also-correct answers) work as a guest with that switch,
 but its schedule, Continue and the due queue need a real signed-in session and
 the three migrations above. The schedule's rules are covered without a database
 by `npm run test:word-mastery`; the SQL function is a mirror of them (see the

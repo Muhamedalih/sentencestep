@@ -20,8 +20,8 @@ interface DictationHelpProps {
   /** False in a practice try, where nothing is at stake: no stars, no price. */
   showStakes: boolean;
   starsLabel: string;
-  /** Show the word. Absent where the word cannot be shown (blanks off), which leaves Give up alone. */
-  onShowWord?: () => void;
+  /** Show the word. Absent where the word cannot be shown (blanks off), which leaves Give up alone. Returning false (with `actOnPress`) means there was nothing to give: no star flies. */
+  onShowWord?: () => void | boolean;
   showWordLabel: string;
   showWordTitle: string;
   /** A word is on screen right now: showing it again would only cost another star. */
@@ -39,6 +39,16 @@ interface DictationHelpProps {
   quiet?: boolean;
   /** False for no entrance animation — a bar that is mounted again for every word must not pop in each time. Defaults to true. */
   animateIn?: boolean;
+  /** False hides the visible "need help?" label and the divider after it; the prompt stays as the group's accessible name. Defaults to true. */
+  showPrompt?: boolean;
+  /** Calls onShowWord the moment the button is pressed instead of when the star lands, for a screen whose own animation runs alongside the star's flight (Word Lists' repair). The star still flies. Defaults to false. */
+  actOnPress?: boolean;
+  /** Stops the buttons taking focus from the pointer, so the answer field keeps it and typing carries on at once. Defaults to false. */
+  keepFocus?: boolean;
+  /** Give up stays on screen but cannot be pressed (the word is already settled): nothing around it moves. */
+  giveUpDisabled?: boolean;
+  /** Keeps the price tag as wide for "−★" as for "Recorded", so the bar never changes size (and shifts) when the stars run out. */
+  stablePrice?: boolean;
 }
 
 /**
@@ -76,12 +86,19 @@ export function DictationHelp({
   dir,
   quiet = false,
   animateIn = true,
+  showPrompt = true,
+  actOnPress = false,
+  keepFocus = false,
+  giveUpDisabled = false,
+  stablePrice = false,
 }: DictationHelpProps) {
   const reduced = useReducedMotion() ?? false;
   const starsRef = useRef<HTMLSpanElement>(null);
   const bulbRef = useRef<HTMLSpanElement>(null);
   const [ghost, setGhost] = useState(false);
   const [flying, setFlying] = useState(false);
+  // Which pip is in the air: the star count may change while it flies (a screen that acts on press), so the pip is not read off it.
+  const [flyingIndex, setFlyingIndex] = useState(-1);
   const [litKey, setLitKey] = useState(0);
   const [glow, setGlow] = useState(false);
   const [lostKey, setLostKey] = useState(0);
@@ -218,29 +235,56 @@ export function DictationHelp({
     if (flying || showingWord || !onShowWord) return;
     setRisk(false);
     if (!showStakes || stars <= 1 || reduced) {
+      if (onShowWord() === false) return;
       light(showStakes);
-      onShowWord();
       return;
     }
+    if (actOnPress && onShowWord() === false) return;
+    setFlyingIndex(stars - 1);
     setFlying(true);
     flyStar(() => {
       setFlying(false);
       light(true);
-      onShowWord();
+      if (!actOnPress) onShowWord();
     });
   }
 
+  const costStar = (
+    <>
+      <span aria-hidden="true">−</span>
+      <Star className="size-3 fill-current" aria-hidden="true" />
+    </>
+  );
   const price = showStakes && (
     <span
       aria-label={stars > 1 ? costLabel : costRecorded}
       dir={stars > 1 ? "ltr" : dir}
       className="bg-accent/20 text-accent group-hover/help:bg-accent group-hover/help:text-accent-foreground group-focus-visible/help:bg-accent group-focus-visible/help:text-accent-foreground ms-0.5 inline-flex items-center gap-0.5 rounded-full px-2 py-px text-xs font-bold transition-colors"
     >
-      {stars > 1 ? (
-        <>
-          <span aria-hidden="true">−</span>
-          <Star className="size-3 fill-current" aria-hidden="true" />
-        </>
+      {stablePrice ? (
+        // Both labels share one cell, so the tag is always as wide as the wider one.
+        <span className="inline-grid">
+          <span
+            aria-hidden={stars <= 1}
+            className={cn(
+              "col-start-1 row-start-1 inline-flex items-center justify-center gap-0.5",
+              stars <= 1 && "invisible",
+            )}
+          >
+            {costStar}
+          </span>
+          <span
+            aria-hidden={stars > 1}
+            className={cn(
+              "col-start-1 row-start-1 inline-flex items-center justify-center",
+              stars > 1 && "invisible",
+            )}
+          >
+            {costRecorded}
+          </span>
+        </span>
+      ) : stars > 1 ? (
+        costStar
       ) : (
         costRecorded
       )}
@@ -262,49 +306,59 @@ export function DictationHelp({
           : "border-border/70 bg-card/90 shadow-lg shadow-black/10 backdrop-blur-sm",
       )}
     >
-      <div className="flex w-full items-center justify-center gap-3 px-2 py-1 sm:w-auto sm:justify-start sm:py-0">
-        <span className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
-          <CircleHelp className="size-4 shrink-0 text-[var(--lesson-icon)]" aria-hidden="true" />
-          {prompt}
-        </span>
-        {showStakes && (
-          <>
-            <span aria-hidden="true" className="bg-border hidden h-6 w-px sm:block" />
-            <span
-              ref={starsRef}
-              role="img"
-              aria-label={starsLabel.replace("{n}", String(stars))}
-              className="relative flex items-center gap-1"
-            >
-              {[0, 1, 2].map((index) => (
-                <StarPip
-                  key={index}
-                  on={index < stars}
-                  ghost={ghost && index === stars - 1}
-                  hidden={flying && index === stars - 1}
-                />
-              ))}
-              {lostKey > 0 && (
-                <motion.span
-                  key={lostKey}
-                  aria-hidden="true"
-                  initial={{ opacity: 1, y: 0 }}
-                  animate={{ opacity: 0, y: -22 }}
-                  transition={{ duration: 1.1, ease: "easeOut" }}
-                  className="text-accent pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 text-sm font-bold"
-                >
-                  −1
-                </motion.span>
-              )}
+      {(showPrompt || showStakes) && (
+        <div className="flex w-full items-center justify-center gap-3 px-2 py-1 sm:w-auto sm:justify-start sm:py-0">
+          {showPrompt && (
+            <span className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+              <CircleHelp
+                className="size-4 shrink-0 text-[var(--lesson-icon)]"
+                aria-hidden="true"
+              />
+              {prompt}
             </span>
-          </>
-        )}
-      </div>
+          )}
+          {showStakes && (
+            <>
+              {showPrompt && (
+                <span aria-hidden="true" className="bg-border hidden h-6 w-px sm:block" />
+              )}
+              <span
+                ref={starsRef}
+                role="img"
+                aria-label={starsLabel.replace("{n}", String(stars))}
+                className="relative flex items-center gap-1"
+              >
+                {[0, 1, 2].map((index) => (
+                  <StarPip
+                    key={index}
+                    on={index < stars}
+                    ghost={ghost && index === stars - 1}
+                    hidden={flying && index === flyingIndex}
+                  />
+                ))}
+                {lostKey > 0 && (
+                  <motion.span
+                    key={lostKey}
+                    aria-hidden="true"
+                    initial={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 0, y: -22 }}
+                    transition={{ duration: 1.1, ease: "easeOut" }}
+                    className="text-accent pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 text-sm font-bold"
+                  >
+                    −1
+                  </motion.span>
+                )}
+              </span>
+            </>
+          )}
+        </div>
+      )}
       {onShowWord && (
         <HelpAction
           onClick={showWord}
           title={showStakes ? showWordTitle : undefined}
           disabled={flying || showingWord}
+          keepFocus={keepFocus}
           tone="helpful"
           onRisk={setRisk}
           icon={
@@ -328,6 +382,8 @@ export function DictationHelp({
         <HelpAction
           onClick={onGiveUp}
           title={giveUpTitle}
+          disabled={giveUpDisabled}
+          keepFocus={keepFocus}
           tone="quiet"
           icon={<Flag className="size-4" aria-hidden="true" />}
         >
@@ -373,6 +429,7 @@ function HelpAction({
   onClick,
   title,
   disabled = false,
+  keepFocus = false,
   tone,
   icon,
   ripple = 0,
@@ -382,6 +439,8 @@ function HelpAction({
   onClick: () => void;
   title?: string;
   disabled?: boolean;
+  /** Pressing it with the pointer does not move focus onto the button. */
+  keepFocus?: boolean;
   tone: "helpful" | "quiet";
   icon: ReactNode;
   /** Changes each time the bulb is lit: a ring ripples out of the button. */
@@ -394,6 +453,7 @@ function HelpAction({
     <motion.button
       type="button"
       onClick={onClick}
+      onMouseDown={keepFocus ? (event) => event.preventDefault() : undefined}
       title={title}
       disabled={disabled}
       onPointerEnter={onRisk ? () => onRisk(true) : undefined}

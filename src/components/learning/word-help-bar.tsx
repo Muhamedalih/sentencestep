@@ -7,28 +7,34 @@ import type { WordAttempt } from "@/lib/word-mastery/schedule";
 
 /**
  * What the upgraded Word Lists practice offers a learner who is stuck on a
- * word: the first-letter hint and "I don't know", in the same bar (and the same
- * star price) Dictation uses, so help costs the same thing everywhere.
+ * word: the hint and "I don't know", in the same bar (and the same star price)
+ * Dictation uses, so help costs the same thing everywhere.
  *
  * The stars are the stakes of THIS word, and they are the same three steps that
  * decide what happens to its schedule (see wordStars): three for a clean answer
- * (the word climbs a step), two once the hint has been taken (it holds), one
- * after a miss (it goes back). On a word that has already been missed this visit
- * nothing is at stake any more — the miss is on record — so the bar drops the
- * stars and the price and simply offers its help for free.
+ * (the word climbs a step), two after one hint (it holds), one after a miss or a
+ * second hint (it goes back). A hint can be taken as often as the learner likes,
+ * one at a time: each gives the next right letter, mending anything wrong before
+ * it, and costs a star until only one is left, after which it is only recorded.
  *
- * Quiet and always there: a calm row under the sentence, not a card that pops up.
+ * Quiet and always there: a calm row under the sentence, not a card that pops
+ * up — the stars and the two buttons, centred, and nothing that moves when the
+ * word settles (the buttons dim instead of leaving).
  */
 export function WordHelpBar({
   attempt,
   settled,
+  busy,
   onHint,
   onGiveUp,
 }: {
   attempt: WordAttempt;
   /** The word has been answered (or given up on): both buttons are done. */
   settled: boolean;
-  onHint: () => void;
+  /** A hint is being drawn right now: the next one has to wait for it to finish. */
+  busy: boolean;
+  /** Takes a hint; false when there was nothing to give (no star is spent or shown flying). */
+  onHint: () => boolean;
   onGiveUp: () => void;
 }) {
   const { t, dir } = useLocale();
@@ -38,19 +44,26 @@ export function WordHelpBar({
     <DictationHelp
       quiet
       animateIn={false}
+      // No visible "need help?" label: the group keeps it as its accessible name.
+      showPrompt={false}
+      // The repair of the answer starts as the star leaves, and the letter is
+      // restored as it lands; pressing a button never takes the typing focus.
+      actOnPress
+      keepFocus
+      stablePrice
       dir={dir}
       prompt={copy.helpPrompt}
       stars={wordStars(attempt)}
-      showStakes={!attempt.missed}
+      showStakes
       starsLabel={copy.starsLabel}
       onShowWord={onHint}
       showWordLabel={copy.hint}
       showWordTitle={copy.hintTitle}
-      // The hint is once per word, and pointless once the word is done.
-      showingWord={attempt.hinted || settled}
+      showingWord={settled || busy}
       costLabel={copy.costLabel}
       costRecorded={copy.costRecorded}
-      onGiveUp={settled ? undefined : onGiveUp}
+      onGiveUp={onGiveUp}
+      giveUpDisabled={settled}
       giveUpLabel={copy.dontKnow}
       giveUpTitle={copy.dontKnowTitle}
     />

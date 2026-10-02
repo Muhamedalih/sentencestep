@@ -11,15 +11,36 @@ import {
   type RefObject,
 } from "react";
 
+import { applyHint, planHint } from "@/lib/word-hint";
 import {
   longestAnswerLength,
   matchAnswer,
   mayStillBeTypingLonger,
   type AnswerMatch,
 } from "@/lib/word-lists-answer";
-import { appendedChars, keepPrefix, type TypeAheadBuffer } from "@/lib/word-typing";
+import { MAX_TYPE_AHEAD, appendedChars, type TypeAheadBuffer } from "@/lib/word-typing";
 
 export type WordAttemptStatus = "pending" | "correct" | "incorrect";
+
+/**
+ * What a hint is doing to the answer right now, for the stage to draw (see
+ * StageLetter). A hint is a repair in two beats: the letters that are wrong
+ * crumble away, then the right letter is restored in their place.
+ */
+export interface HintRepair {
+  /** How many of the typed letters are right and stay where they are. */
+  keep: number;
+  /** crumble: every typed letter from `keep` on is wrong and is going. restore: they are gone and the right letter is coming back in. */
+  phase: "crumble" | "restore";
+}
+
+/** How long the two beats of a hint's repair take. Both 0 skips the animation (reduced motion). */
+export interface HintTiming {
+  crumbleMs: number;
+  restoreMs: number;
+}
+
+const DEFAULT_HINT_TIMING: HintTiming = { crumbleMs: 500, restoreMs: 500 };
 
 /** Extra characters allowed past the target's own length — generous enough for any realistic wrong guess, just a sanity cap on the native input. */
 const MAX_EXTRA_CHARS = 8;
@@ -83,6 +104,10 @@ interface UseWordTypingEngineOptions {
    * next word is plainly ready for it.
    */
   typeAhead?: TypeAheadBuffer;
+  /** How long the two beats of a hint's repair take. */
+  hintTiming?: HintTiming;
+  /** A hint has taken effect: the right letter is going in. The screen counts the cost (a star) here, not when the button is pressed. */
+  onHint?: () => void;
 }
 
 const noop = () => {};
@@ -97,9 +122,10 @@ const noop = () => {};
  * automatically (an exact match) or on Enter (anything else), never per
  * keystroke.
  *
- * With `smart` on it also lets the learner ask for the first letter (`hint`),
- * say "I don't know" (`giveUp`), end a settled word's wait early (`skip`), and
- * keeps what they type while a right answer settles.
+ * With `smart` on it also lets the learner ask for a hint (`hint`: the next
+ * right letter, mending anything wrong before it — see planHint), say "I don't
+ * know" (`giveUp`), end a settled word's wait early (`skip`), and keeps what they
+ * type while a right answer settles (or while a hint is being drawn).
  */
 export function useWordTypingEngine({
   target,
@@ -113,13 +139,17 @@ export function useWordTypingEngine({
   alternateDelayMs = 1600,
   giveUpDelayMs,
   typeAhead,
+  hintTiming = DEFAULT_HINT_TIMING,
+  onHint,
 }: UseWordTypingEngineOptions) {
   const [typed, setTyped] = useState("");
   const [status, setStatus] = useState<WordAttemptStatus>("pending");
   /** What the learner typed when it matched an alternate, for the "also correct" note. */
   const [alternate, setAlternate] = useState<string | null>(null);
-  /** The first letter, once the hint has been taken. It stays put whatever the learner types. */
-  const [hintedPrefix, setHintedPrefix] = useState("");
+  /** Which letters of the answer a hint put there (positions), so the stage can show them as given. */
+  const [given, setGiven] = useState<readonly number[]>([]);
+  /** A hint is being drawn (null otherwise). */
+  const [repair, setRepair] = useState<HintRepair | null>(null);
   const [gaveUp, setGaveUp] = useState(false);
 
   const internalInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +169,12 @@ export function useWordTypingEngine({
   onResultRef.current = onResult;
   // The carry-over is taken once per word, even if React runs the reset effect twice (Strict Mode in development).
   const carriedRef = useRef<{ key: string; value: string } | null>(null);
+  // A hint is being drawn: typing is held back (not lost) until it is done.
+  const repairingRef = useRef(false);
+  const repairTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const heldWhileRepairingRef = useRef("");
+  const onHintRef = useRef(onHint);
+  onHintRef.current = onHint;
 
   const maxLength =
     (smart ? longestAnswerLength(target, alternates) : target.length) + MAX_EXTRA_CHARS;
@@ -146,6 +182,15 @@ export function useWordTypingEngine({
   const setTypedValue = useCallback((value: string) => {
     typedRef.current = value;
     setTyped(value);
+  }, []);
+
+  /** Stops a hint that is being drawn and forgets what was held back for it. */
+  const clearRepair = useCallback(() => {
+    repairTimersRef.current.forEach(clearTimeout);
+    repairTimersRef.current = [];
+    repairingRef.current = false;
+    heldWhileRepairingRef.current = "";
+    setRepair(null);
   }, []);
 
   const matchTyped = useCallback(
@@ -203,7 +248,7 @@ export function useWordTypingEngine({
         setStatus("pending");
         setGaveUp(false);
         setAlternate(null);
-        setHintedPrefix("");
+        setGiven([]);
         settledRef.current = false;
         settledAsRef.current = null;
       };
@@ -224,7 +269,8 @@ export function useWordTypingEngine({
     setStatus("pending");
     setAlternate(null);
     setGaveUp(false);
-    setHintedPrefix("");
+    setGiven([]);
+    clearRepair();
 
     // Letters typed while the previous word settled arrive here. Taken once
     // per word: Strict Mode runs this effect twice in development, and the
@@ -249,7 +295,10 @@ export function useWordTypingEngine({
   }, [resetKey, inputRef]);
 
   useEffect(() => {
-    return () => clearTimeout(resultTimeoutRef.current);
+    return () => {
+      clearTimeout(resultTimeoutRef.current);
+      repairTimersRef.current.forEach(clearTimeout);
+    };
   }, []);
 
   const handleChange = useCallback(
@@ -267,30 +316,37 @@ export function useWordTypingEngine({
         }
         return;
       }
-      let value = incoming.slice(0, maxLength);
-      if (smart && hintedPrefix) value = keepPrefix(value, hintedPrefix);
+      if (repairingRef.current) {
+        // A hint is mending the answer: what the learner types meanwhile is
+        // kept and goes in after it, never lost.
+        const extra = appendedChars(typedRef.current, incoming);
+        if (extra) {
+          heldWhileRepairingRef.current = (heldWhileRepairingRef.current + extra).slice(
+            0,
+            MAX_TYPE_AHEAD,
+          );
+        }
+        return;
+      }
+      const value = incoming.slice(0, maxLength);
       setTypedValue(value);
+      // Letters a hint put in are only "given" while they are still there.
+      setGiven((previous) =>
+        previous.some((index) => index >= value.length)
+          ? previous.filter((index) => index < value.length)
+          : previous,
+      );
 
       const match = matchTyped(value);
       if (match && !(smart && mayStillBeTypingLonger(value, target, alternates))) {
         settleCorrect(match, value);
       }
     },
-    [
-      smart,
-      typeAhead,
-      maxLength,
-      hintedPrefix,
-      matchTyped,
-      target,
-      alternates,
-      setTypedValue,
-      settleCorrect,
-    ],
+    [smart, typeAhead, maxLength, matchTyped, target, alternates, setTypedValue, settleCorrect],
   );
 
   const submit = useCallback(() => {
-    if (settledRef.current || typedRef.current.length === 0) return;
+    if (settledRef.current || repairingRef.current || typedRef.current.length === 0) return;
     const value = typedRef.current;
     // An exact match is normally settled by handleChange the instant it happens.
     // It can only get here when a longer accepted answer was still possible
@@ -322,26 +378,85 @@ export function useWordTypingEngine({
   }, [inputRef]);
 
   /**
-   * The first-letter hint: puts the word's first letter in the answer and keeps
-   * it there. Once per word. Returns whether it was taken (false when the word
-   * has already settled or the hint was already used).
+   * A hint: the NEXT right letter, however far the learner has got. Right
+   * letters stay, anything typed after the first wrong one is taken away, and the
+   * right letter goes in (see planHint) — drawn as a repair in two beats, about a
+   * second in all (HintTiming): the wrong letters crumble, the right one is
+   * restored. What the learner types meanwhile is held and added afterwards. As
+   * often as they like; the screen counts the cost through `onHint`. Returns
+   * whether a hint was started (false when the word has settled, a hint is
+   * already being drawn, or there is nothing left to give).
    */
   const hint = useCallback((): boolean => {
-    if (!smart || settledRef.current || hintedPrefix) return false;
-    const first = target.charAt(0);
-    if (!first) return false;
-    setHintedPrefix(first);
-    if (!typedRef.current.toLowerCase().startsWith(first.toLowerCase())) setTypedValue(first);
+    if (!smart || settledRef.current || repairingRef.current) return false;
+    const plan = planHint(typedRef.current, target, alternates);
+    if (!plan) return false;
+    const result = applyHint(typedRef.current, plan);
+
+    const apply = () => {
+      setTypedValue(result);
+      setGiven((previous) => [
+        ...previous.filter((index) => index < plan.keep),
+        ...(plan.add ? [plan.keep] : []),
+      ]);
+      onHintRef.current?.();
+    };
+    const finish = () => {
+      repairTimersRef.current = [];
+      repairingRef.current = false;
+      setRepair(null);
+      let value = typedRef.current;
+      const held = heldWhileRepairingRef.current;
+      heldWhileRepairingRef.current = "";
+      if (held) {
+        value = (value + held).slice(0, maxLength);
+        setTypedValue(value);
+      }
+      inputRef.current?.focus();
+      // The letter that went in (or what was typed meanwhile) may complete the word.
+      const match = matchTyped(value);
+      if (match && !mayStillBeTypingLonger(value, target, alternates)) settleCorrect(match, value);
+    };
+
+    repairingRef.current = true;
+    heldWhileRepairingRef.current = "";
     inputRef.current?.focus();
+    if (hintTiming.crumbleMs <= 0 && hintTiming.restoreMs <= 0) {
+      apply();
+      finish();
+      return true;
+    }
+    setRepair({ keep: plan.keep, phase: "crumble" });
+    repairTimersRef.current = [
+      setTimeout(() => {
+        setRepair({ keep: plan.keep, phase: "restore" });
+        apply();
+      }, hintTiming.crumbleMs),
+      setTimeout(finish, hintTiming.crumbleMs + hintTiming.restoreMs),
+    ];
     return true;
-  }, [smart, hintedPrefix, target, inputRef, setTypedValue]);
+  }, [
+    smart,
+    target,
+    alternates,
+    hintTiming.crumbleMs,
+    hintTiming.restoreMs,
+    maxLength,
+    inputRef,
+    matchTyped,
+    settleCorrect,
+    setTypedValue,
+  ]);
 
   /** "I don't know": the word is treated as missed and its right spelling is shown. Returns whether it took effect. */
   const giveUp = useCallback((): boolean => {
     if (!smart || settledRef.current) return false;
+    clearRepair();
     settleIncorrect(true);
+    // Enter (to move on once the right spelling has shown) must reach the answer field, not the button.
+    inputRef.current?.focus();
     return true;
-  }, [smart, settleIncorrect]);
+  }, [smart, clearRepair, settleIncorrect, inputRef]);
 
   /** Ends the current wait now — the missed-word screen once the right spelling has been shown, or a right answer's "also correct" note. */
   const skip = useCallback(() => {
@@ -353,7 +468,8 @@ export function useWordTypingEngine({
     typed,
     status,
     alternate,
-    hintedPrefix,
+    given,
+    repair,
     gaveUp,
     inputRef,
     handleChange,

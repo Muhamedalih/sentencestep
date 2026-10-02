@@ -96,7 +96,7 @@ export default async function WordListsReviewPage() {
     <WordReviewSession
       words={hydratedWords}
       defaultVoiceId={defaultVoiceId}
-      smart={smartReview ? { spaced: true, mode: "recall" } : null}
+      smart={smartReview ? { spaced: true } : null}
       moreWaiting={moreWaiting}
     />
   );

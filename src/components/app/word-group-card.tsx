@@ -9,7 +9,6 @@ import {
   ChevronDown,
   CloudSun,
   Cpu,
-  Ear,
   GraduationCap,
   HeartHandshake,
   HeartPulse,
@@ -98,15 +97,12 @@ export function WordGroupCard({
   completedCount,
   isLoaded,
   isPremiumUser,
-  smart = false,
   mastery = null,
 }: {
   group: WordGroupSummary;
   completedCount: number;
   isLoaded: boolean;
   isPremiumUser: boolean;
-  /** Smart word practice is open to this visitor: the expanded card also offers listen-and-type. */
-  smart?: boolean;
   /** Smart word practice for a signed-in learner: this group's mastery. The bar shows how strong the words are (not just how many were ever typed), the counts say what is due and new, and the primary action becomes Continue. */
   mastery?: GroupMastery | null;
 }) {
@@ -268,7 +264,7 @@ export function WordGroupCard({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
-              <div className={cn("flex items-center gap-2 px-4 pt-1", smart ? "pb-3" : "pb-4")}>
+              <div className={cn("flex items-center gap-2 px-4 pt-1", mastery ? "pb-3" : "pb-4")}>
                 <Button asChild variant="outline" className="flex-1 gap-1.5">
                   <Link href={`/learn/word-lists/${group.id}/learn`}>
                     <GraduationCap className="size-4" aria-hidden="true" />
@@ -282,23 +278,14 @@ export function WordGroupCard({
                   </Link>
                 </Button>
               </div>
-              {smart && (
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 pb-4 text-xs">
+              {mastery && (
+                <div className="flex items-center justify-center px-4 pb-4 text-xs">
                   <Link
-                    href={`/learn/word-lists/${group.id}?mode=listen`}
-                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-medium transition-colors"
+                    href={`/learn/word-lists/${group.id}?scope=all`}
+                    className="text-muted-foreground hover:text-foreground font-medium transition-colors"
                   >
-                    <Ear className="size-3.5" aria-hidden="true" />
-                    {t.wordLists.smart.listenAction}
+                    {t.wordLists.smart.practiceAllAction}
                   </Link>
-                  {mastery && (
-                    <Link
-                      href={`/learn/word-lists/${group.id}?scope=all`}
-                      className="text-muted-foreground hover:text-foreground font-medium transition-colors"
-                    >
-                      {t.wordLists.smart.practiceAllAction}
-                    </Link>
-                  )}
                 </div>
               )}
             </motion.div>

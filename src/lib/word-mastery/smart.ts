@@ -5,30 +5,25 @@
  * `null`/absent means the screen behaves exactly as it always has.
  */
 
-/** recall: the word stays silent until the attempt (the answer is not given away). listen: the word is spoken first and the learner types what they hear. */
-export const PRACTICE_MODES = ["recall", "listen"] as const;
-export type PracticeMode = (typeof PRACTICE_MODES)[number];
-
-export function parsePracticeMode(value: unknown): PracticeMode {
-  return value === "listen" ? "listen" : "recall";
-}
-
 export interface SmartPracticeConfig {
   /** The learner has an account, so the schedule (strength, due words) is stored and reported. False for a guest, who still gets every practice upgrade. */
   spaced: boolean;
-  mode: PracticeMode;
 }
 
 /**
  * The pauses of the upgraded answer screens, in milliseconds. Shorter than the
- * original ones on purpose: nothing is lost by moving on sooner any more —
- * letters typed while a word settles are kept for the next one, and the
- * missed-word screen can be skipped with Enter once the right spelling has been
- * shown — so a pause is only there to be read, not to be waited out.
+ * original ones where they were only something to wait out (the missed-word
+ * screen): letters typed while a word settles are kept for the next one, and
+ * that screen can be skipped with Enter once the right spelling has been shown.
+ * A right answer is the opposite: its pause is the celebration, so it is longer
+ * than it was, and a learner who is already typing the next word still ends it
+ * at once.
  */
 export const SMART_TIMING = {
-  /** The green flash of a right answer before the next word. */
-  correctDelayMs: 350,
+  /** A right answer's celebration (the word turning green and settling into the sentence) before the next word. */
+  correctDelayMs: 700,
+  /** How long the pop of that celebration takes. */
+  correctPopMs: 400,
   /** A right answer typed with an accepted alternate stays long enough to read "also correct". */
   alternateDelayMs: 1600,
   /** The wrong attempt's green/red diff, before the right spelling rises in. */
@@ -37,6 +32,10 @@ export const SMART_TIMING = {
   revealHoldMs: 1200,
   /** After it has dissolved, before the next word. */
   revealTailMs: 150,
+  /** A hint's repair, part one: the letters that are wrong crumble away (with nothing wrong to remove it is the same wait, as the star flies to the bulb). */
+  hintCrumbleMs: 500,
+  /** A hint's repair, part two: the right letter is restored in their place. The two parts take one second. */
+  hintRestoreMs: 500,
 } as const;
 
 export type SmartTiming = typeof SMART_TIMING;
