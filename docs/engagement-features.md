@@ -76,7 +76,9 @@ already has history the day the feature goes On.
   the sentence on screen at that moment; a new sentence just draws its blanks
   in, never flashing its text). The learner types straight onto the blanks: a
   cursor bar glides along them and each typed letter appears in its slot, word
-  by word, with nothing said about whether it is right until Enter. The system
+  by word, with nothing said about whether it is right until Enter. The real
+  letter is only ever painted by that opening wave: an erased letter fades out
+  as the learner's own (wrong) letter, never as the correct one. The system
   decides where words end (`applyDictationInput`): a word that has received all
   its letters hands over to the next one by itself, right or wrong, so the
   learner never types the space and can't type more letters than a word has

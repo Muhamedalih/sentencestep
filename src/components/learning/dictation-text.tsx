@@ -300,6 +300,42 @@ function TypedLetter({ char }: { char: string }) {
   );
 }
 
+/**
+ * What a slot's glyph paints, and the one rule that keeps the answer secret:
+ * the slot's real letter is only ever painted while the intro dissolves the
+ * sentence into its blanks, and only in a slot nobody has typed in. Everywhere
+ * else the glyph paints the learner's own letter, or nothing.
+ *
+ * The glyph is both the slot's width (it holds a letter) and a letter that
+ * fades in and out, and erasing a letter empties the slot in the very render
+ * that starts the fade. Reading the letter straight from the slot would
+ * therefore swap the learner's wrong letter for the real one while it is still
+ * fully visible: after every erased mistake the correct letter flashed for a
+ * moment. So an erased letter is remembered and keeps being painted until its
+ * fade has ended (`settle`); only then does the slot go back to being sized by
+ * the real letter, and from that point on it is `concealed` outright (not just
+ * transparent, which would depend on the animation having been applied to the
+ * page by the time the letter is swapped).
+ */
+function useSlotGlyph(typed: string | null, real: string, intro: boolean) {
+  const [memory, setMemory] = useState<{ letter: string; gone: boolean } | null>(null);
+  if (typed !== null && (memory === null || memory.gone || memory.letter !== typed)) {
+    setMemory({ letter: typed, gone: false });
+  }
+  const leaving = typed === null && memory !== null && !memory.gone ? memory.letter : null;
+  const showsReal = typed === null && leaving === null;
+  const revealsReal = intro && memory === null;
+
+  return {
+    char: typed ?? leaving ?? real,
+    revealsReal,
+    concealed: showsReal && !revealsReal,
+    /** The erased letter has faded out. */
+    settle: () =>
+      setMemory((current) => (current && !current.gone ? { ...current, gone: true } : current)),
+  };
+}
+
 function Slot({
   cell,
   order,
@@ -321,8 +357,10 @@ function Slot({
   reducedMotion: boolean;
 }) {
   const filled = cell.typed !== null;
+  const glyph = useSlotGlyph(cell.typed, cell.char, phase === "intro");
+
   const introDelay = Math.min(order * INTRO_STEP, INTRO_MAX_DELAY);
-  const glyphDelay = phase === "intro" && !filled ? introDelay : 0;
+  const glyphDelay = glyph.revealsReal ? introDelay : 0;
   const tickDelay =
     filled || reducedMotion
       ? 0
@@ -339,15 +377,19 @@ function Slot({
         only there to give the slot its natural width (so nothing moves when a
         blank is filled, or when the sentence first dissolves), and that way it
         can't be found with Ctrl+F or read out. What is shown in a filled slot
-        is the learner's own letter.
+        is the learner's own letter; see useSlotGlyph for when the real one may
+        be painted (only ever while the intro dissolves it).
       */}
       <motion.span
         aria-hidden="true"
-        data-ch={cell.typed ?? cell.char}
+        data-ch={glyph.char}
         // The first frame of the intro is the real sentence; every other
         // slot starts hidden so a new sentence never flashes its text.
         initial={reducedMotion ? false : phase === "intro" || filled ? GLYPH_SHOWN : GLYPH_HIDDEN}
         animate={filled ? GLYPH_SHOWN : GLYPH_HIDDEN}
+        onAnimationComplete={() => {
+          if (!filled) glyph.settle();
+        }}
         transition={
           reducedMotion
             ? { duration: 0 }
@@ -356,6 +398,7 @@ function Slot({
         className={cn(
           "inline-block transition-colors duration-150 before:content-[attr(data-ch)]",
           filled ? "text-[var(--lesson-letter-correct)]" : "text-[var(--lesson-letter-pending)]",
+          glyph.concealed && "invisible",
         )}
       />
       {showBlank && (
