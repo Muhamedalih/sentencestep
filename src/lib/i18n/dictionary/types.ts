@@ -634,6 +634,65 @@ export interface Dictionary {
     finishBlock: string;
     /** Under the Finish button. */
     finishBlockHint: string;
+    /** Smart word practice (admin-controlled; see FEATURE_IDS in src/lib/features/config.ts): the help bar, the Recall/Listen switch, the "also correct" note, the group card's Continue and mastery figures, and the review hero. */
+    smart: {
+      /** Accessible label of the Recall / Listen switch in the practice header. */
+      modeAria: string;
+      /** Recall mode: the word stays silent until you have answered. */
+      modeRecall: string;
+      /** Listen mode: the word is spoken first and you type what you hear. */
+      modeListen: string;
+      /** Shown instead of the meaning in listen mode until the answer is in. */
+      listenPrompt: string;
+      /** Names the help bar under the sentence (for screen readers too). */
+      helpPrompt: string;
+      /** The first-letter hint button. */
+      hint: string;
+      /** Tooltip of the hint button — says what it shows and what it costs. */
+      hintTitle: string;
+      /** The give-up button: counts as a miss and shows the right spelling. */
+      dontKnow: string;
+      /** Tooltip of the give-up button. */
+      dontKnowTitle: string;
+      /** Accessible label of the three stars — {n} is how many are lit. */
+      starsLabel: string;
+      /** The price tag on the hint button while a star can still be taken. */
+      costLabel: string;
+      /** The price tag at one star: nothing left to take, the help is only recorded. */
+      costRecorded: string;
+      /** Under the sentence after an accepted alternate (British spelling, synonym) — {word} is the stored word. */
+      alsoCorrect: string;
+      /** The button that skips the missed-word screen (Enter does the same). */
+      continueEnter: string;
+      /** Block summary line: how many of the block's words were right on the first try — {n} of {total}. */
+      firstTry: string;
+      /** Accessible label of a word's stars in the block summary. */
+      starsAria: string;
+      /** The group card's primary action: pick up where you left off. */
+      continueAction: string;
+      /** Practice every word of the group, not just the ones that are new or due. */
+      practiceAllAction: string;
+      /** Opens the group in listen-and-type mode. */
+      listenAction: string;
+      /** The group card's mastery figure — {n} is 0-100. */
+      masteryPercent: string;
+      /** Words in the group due for review today — {n}. */
+      dueBadge: string;
+      /** Words in the group not met yet — {n}. */
+      newBadge: string;
+      /** Subtitle of the review hero when words are due. */
+      reviewDueSubtitle: string;
+      /** Shown instead of a practice session when no word in the group is new or due. */
+      caughtUpHeading: string;
+      /** Under the caught-up heading — {date} is the next day a word of this group falls due (already formatted). */
+      caughtUpBody: string;
+      /** Caught-up body when no due date is known. */
+      caughtUpBodyNoDate: string;
+      /** On the review finish screen when the visit was capped — {n} words are still waiting. */
+      moreWaiting: string;
+      /** The button on that screen that starts another review round. */
+      reviewMore: string;
+    };
   };
   /**
    * Vocabulary Recall (src/lib/vocabulary-recall) — a curiosity-framed, opt-in

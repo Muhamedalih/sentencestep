@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, PartyPopper } from "lucide-react";
+import { ArrowLeft, Ear, PartyPopper } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
+import { PracticeModeToggle } from "@/components/learning/practice-mode-toggle";
+import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
 import { VocabularyBlockSummary } from "@/components/learning/vocabulary-block-summary";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
+import type { WordSentenceControls } from "@/components/learning/vocabulary-sentence";
+import { WordHelpBar } from "@/components/learning/word-help-bar";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
@@ -17,11 +21,19 @@ import { useTypingSoundSettings } from "@/components/providers/typing-sound-sett
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { useWordAttempts } from "@/hooks/use-word-attempts";
+import type { WordAttemptStatus } from "@/hooks/use-word-typing-engine";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { masterMistakeWordAction, recordWordListMistakeAction } from "@/lib/mistakes/actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
 import { splitWordHint } from "@/lib/word-lists-hint";
+import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
+import { outcomeFor } from "@/lib/word-mastery/schedule";
+import type { WordOutcome } from "@/lib/word-mastery/schedule";
+import type { PracticeMode, SmartPracticeConfig } from "@/lib/word-mastery/smart";
+import type { ReportedOutcome } from "@/lib/word-mastery/types";
+import { createTypeAheadBuffer } from "@/lib/word-typing";
 import type { VocabularyWord, WordGroup } from "@/types/word-lists";
 
 /** Words per practice block — see the queue/block state in VocabularyPractice. Groups no longer all share one fixed word count (20-30, see the word-lists content expansion); this just chunks whatever length a group actually has, with a shorter final block when it doesn't divide evenly. */
@@ -35,18 +47,34 @@ const BLOCK_SIZE = 5;
  * Arabic hint explains the word's meaning rather than translating the
  * sentence, and there's no illustration panel competing for attention —
  * the sentence, the blank, and the hint are the whole screen.
+ *
+ * With `smart` (the admin-controlled "Smart word practice", see
+ * src/lib/word-mastery) the same session also: stays silent until the learner
+ * has answered (recall) or speaks the word first (listen-and-type), keeps the
+ * letters typed while a word settles, offers a first-letter hint and "I don't
+ * know" that cost stars, accepts a word's alternates, shows each word's stars in
+ * the block summary, and reports every word's outcome to the learner's spaced
+ * schedule instead of wiping a word from the weak list the moment it is typed
+ * right. Without it, nothing here behaves any differently.
  */
 export function VocabularyPractice({
   group,
   previewMode = false,
   defaultVoiceId,
+  smart,
 }: {
   group: WordGroup;
   previewMode?: boolean;
   /** Word Lists always uses the global default voice — there's no per-word-group override (word groups have no admin editor to set one from yet; see resolveVoiceId's callers for the lesson-level equivalent). */
   defaultVoiceId?: string | null;
+  /** Smart word practice for this visitor, or null/absent for the practice exactly as it always was. */
+  smart?: SmartPracticeConfig | null;
 }) {
   const { t, dir } = useLocale();
+  const isSmart = smart != null;
+  // Recall keeps the word silent until the answer is in; listen speaks it first.
+  const [practiceMode, setPracticeMode] = useState<PracticeMode>(smart?.mode ?? "recall");
+  const listen = isSmart && practiceMode === "listen";
   // Words are practiced in fixed-size blocks (see BLOCK_SIZE), not straight
   // through the whole group: a wrong word doesn't get corrected on the spot
   // (that would just be per-keystroke rejection wearing a different hat) —
@@ -80,6 +108,18 @@ export function VocabularyPractice({
   // it — resets alongside everything else on "Practice again".
   const markedWordIdsRef = useRef<Set<string>>(new Set());
 
+  // Smart practice only: what the learner has done with each word this visit
+  // (missed, hinted), how each word of the block ended (for the summary's
+  // stars), the state of the word on screen, and the keys typed ahead.
+  const attempts = useWordAttempts();
+  const [blockResults, setBlockResults] = useState<ReadonlyMap<string, WordOutcome>>(
+    () => new Map(),
+  );
+  const [wordStatus, setWordStatus] = useState<WordAttemptStatus>("pending");
+  const [typeAhead] = useState(() => createTypeAheadBuffer());
+  const audioRef = useRef<PronunciationButtonHandle>(null);
+  const controlsRef = useRef<WordSentenceControls>(null);
+
   const currentBlock = blocks[blockIndex] ?? [];
   const currentSlot: number | undefined = queue[0];
   const blockSize = currentBlock.length;
@@ -92,6 +132,8 @@ export function VocabularyPractice({
   // continueFromSummary's job.
   useEffect(() => {
     if (queue.length > 0 || currentBlock.length === 0) return;
+    // Letters typed ahead after the block's last word belong to no word.
+    typeAhead.clear();
     setShowSummary(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the queue/block actually change
   }, [queue, blockIndex]);
@@ -100,6 +142,8 @@ export function VocabularyPractice({
   // block — hand over to the group-complete screen.
   function continueFromSummary() {
     setShowSummary(false);
+    typeAhead.clear();
+    setBlockResults(new Map());
     if (blockIndex + 1 < blocks.length) {
       const nextIndex = blockIndex + 1;
       setBlockIndex(nextIndex);
@@ -131,6 +175,7 @@ export function VocabularyPractice({
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
+  const attempt = word ? attempts.get(word.id) : { missed: false, hinted: false };
 
   // Same fix as LessonSession's identical effect: while the learner types
   // the current word, resolve the NEXT word's pronunciation in the
@@ -150,6 +195,15 @@ export function VocabularyPractice({
     });
   }, [nextWord, defaultVoiceId, prefetchPronunciation]);
 
+  /** One call per word outcome, to the learner's schedule and weak-word ledger (see recordWordOutcomeAction). Never blocks the learner; a failure is only logged. */
+  function reportOutcome(target: VocabularyWord, outcome: ReportedOutcome) {
+    recordWordOutcomeAction({ wordId: target.id, word: target.targetWord, outcome }).catch(
+      (error: unknown) => {
+        console.error("[word-lists] recordWordOutcomeAction failed", error);
+      },
+    );
+  }
+
   // Grades one attempt at the current word (see VocabularySentence.onResult):
   // right answers retire their slot and count toward this block's progress;
   // wrong ones go back to the end of the SAME block's queue, so the learner
@@ -158,6 +212,10 @@ export function VocabularyPractice({
   // block-advance effect above for what happens once the queue drains).
   function handleWordResult(correct: boolean) {
     if (!word || currentSlot === undefined) return;
+    if (smart) {
+      handleSmartResult(smart, word, correct);
+      return;
+    }
     if (correct) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       if (!previewMode && !markedWordIdsRef.current.has(word.id)) {
@@ -195,6 +253,61 @@ export function VocabularyPractice({
     }
   }
 
+  // The smart counterpart. The difference that matters: a word missed during
+  // this visit is NOT wiped from the weak list when it is finally typed right —
+  // the miss goes to the schedule the moment it happens (see
+  // handleStatusChange), and the final right answer only moves the weak-word
+  // ledger on ("recovered"), so the word is re-checked tomorrow instead of being
+  // declared learned a minute after it was forgotten. Guests (no account to store
+  // a schedule in) skip every server call.
+  function handleSmartResult(
+    config: SmartPracticeConfig,
+    target: VocabularyWord,
+    correct: boolean,
+  ) {
+    const slot = currentSlot!;
+    if (correct) {
+      const tried = attempts.get(target.id);
+      playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
+      const outcome = outcomeFor(tried);
+      if (!previewMode) {
+        if (!markedWordIdsRef.current.has(target.id)) {
+          markedWordIdsRef.current.add(target.id);
+          markWordComplete(group.id, target.id);
+        }
+        if (config.spaced) reportOutcome(target, tried.missed ? "recovered" : outcome);
+      }
+      setBlockResults((prev) => new Map(prev).set(target.id, outcome));
+      setDoneInBlock((prev) => new Set(prev).add(slot));
+      setQueue((prev) => prev.slice(1));
+    } else {
+      // Already recorded as a miss when the wrong answer landed: only the requeue is left.
+      setQueue((prev) => [...prev.slice(1), prev[0]!]);
+    }
+  }
+
+  /**
+   * Smart practice hears about every change of the word on screen. A WRONG
+   * answer (or "I don't know") is a miss from the moment it lands, not from the
+   * end of the answer screen: the stars and the help bar change at once, the
+   * error sound plays at once, and the schedule hears about it even if the
+   * learner leaves while the right spelling is still up. Only the first miss of
+   * a word in a visit is reported (it is one lapse, however many wrong tries).
+   */
+  function handleStatusChange(status: WordAttemptStatus) {
+    setWordStatus(status);
+    if (status !== "incorrect" || !smart || !word) return;
+    play("error");
+    if (attempts.get(word.id).missed) return;
+    attempts.update(word.id, { missed: true });
+    if (!previewMode && smart.spaced) reportOutcome(word, "missed");
+  }
+
+  /** Recall speaks the word once it has been answered (the answer was never given away first); listen already spoke it, so only a missed word's right spelling is said again. */
+  function handlePhase(phase: "correct" | "reveal") {
+    if (phase === "reveal" || !listen) audioRef.current?.replay();
+  }
+
   return (
     <div className="flex h-svh w-full flex-col">
       {!isComplete && !showSummary && <ShiftReplayHint />}
@@ -209,18 +322,23 @@ export function VocabularyPractice({
           </Link>
           {!isComplete && word && (
             <div className="flex shrink-0 items-center gap-3">
+              {isSmart && <PracticeModeToggle mode={practiceMode} onChange={setPracticeMode} />}
               {blockSize > 0 && (
                 <span className="text-muted-foreground text-sm font-medium" dir="ltr">
                   {doneInBlock.size} / {blockSize}
                 </span>
               )}
               <LessonSettings
+                ref={audioRef}
                 // Only the target word is pronounced — never the full
                 // sentence. This is the one rule this whole screen is
                 // built around; see the component doc comment above.
                 text={word.targetWord}
                 audioUrl={word.audioUrl}
-                autoPlay
+                // The word is spoken first only in listen mode; in recall it
+                // is spoken after the answer (see handlePhase) so the answer
+                // is never given away.
+                autoPlay={isSmart ? listen : true}
                 resetKey={word.id}
                 inputRef={inputRef}
                 kokoroVoiceId={defaultVoiceId}
@@ -279,6 +397,9 @@ export function VocabularyPractice({
                     setQueue(blocks[0]?.map((_, i) => i) ?? []);
                     setDoneInBlock(new Set());
                     markedWordIdsRef.current = new Set();
+                    attempts.reset();
+                    setBlockResults(new Map());
+                    typeAhead.clear();
                     setShowSummary(false);
                     setIsComplete(false);
                   }}
@@ -298,6 +419,7 @@ export function VocabularyPractice({
             totalWords={total}
             onContinue={continueFromSummary}
             defaultVoiceId={defaultVoiceId}
+            results={isSmart ? blockResults : undefined}
           />
         ) : (
           word && (
@@ -317,33 +439,64 @@ export function VocabularyPractice({
                   English hint field to fall back to either (see
                   types/word-lists.ts's hintAr doc comment), so a genuinely
                   missing translation renders nothing here rather than a
-                  semantically wrong stand-in. */}
-              {hint.term && (
+                  semantically wrong stand-in. In listen mode the meaning waits
+                  until the word has been answered: the learner is typing what
+                  they hear, and the translation would give it away. */}
+              {listen && wordStatus === "pending" ? (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                  <p
-                    className="text-foreground/85 text-2xl font-bold text-balance sm:text-[1.8rem]"
-                    dir={dir}
-                  >
-                    {hint.term}
+                  <Ear className="text-primary size-8" aria-hidden="true" />
+                  <p className="text-foreground/85 text-xl font-semibold text-balance" dir={dir}>
+                    {t.wordLists.smart.listenPrompt}
                   </p>
-                  {hint.definition && (
-                    <p className="text-muted-foreground text-base font-medium" dir={dir}>
-                      {hint.definition}
-                    </p>
-                  )}
                 </div>
+              ) : (
+                hint.term && (
+                  <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
+                    <p
+                      className="text-foreground/85 text-2xl font-bold text-balance sm:text-[1.8rem]"
+                      dir={dir}
+                    >
+                      {hint.term}
+                    </p>
+                    {hint.definition && (
+                      <p className="text-muted-foreground text-base font-medium" dir={dir}>
+                        {hint.definition}
+                      </p>
+                    )}
+                  </div>
+                )
               )}
 
               <div className="bg-border h-10 w-px" aria-hidden="true" />
 
-              <div className="w-full max-w-2xl">
+              <div className="flex w-full max-w-2xl flex-col items-center gap-3">
                 <VocabularySentence
                   sentence={word.sentence}
                   targetWord={word.targetWord}
                   onResult={handleWordResult}
                   inputRef={inputRef}
                   fontFamily={sectionFontFamily}
+                  smart={
+                    isSmart
+                      ? {
+                          alternates: word.alternates,
+                          typeAhead,
+                          controlsRef,
+                          onStatusChange: handleStatusChange,
+                          onPhase: handlePhase,
+                          onHint: () => attempts.update(word.id, { hinted: true }),
+                        }
+                      : undefined
+                  }
                 />
+                {isSmart && (
+                  <WordHelpBar
+                    attempt={attempt}
+                    settled={wordStatus !== "pending"}
+                    onHint={() => controlsRef.current?.hint()}
+                    onGiveUp={() => controlsRef.current?.giveUp()}
+                  />
+                )}
               </div>
 
               {isWordCompleted(word.id) && (

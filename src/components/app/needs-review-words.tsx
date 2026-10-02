@@ -22,9 +22,20 @@ import type { WeakWordItem } from "@/lib/weak-words/types";
  * markReviewCompletedAction "Fix Your Mistakes" already uses, just reached
  * from Word Lists instead of a lesson completion screen.
  */
-export function NeedsReviewWords({ words }: { words: WeakWordItem[] }) {
+export function NeedsReviewWords({
+  words,
+  count,
+  smart = false,
+}: {
+  words: WeakWordItem[];
+  /** Smart word practice: everything waiting for review (due on the learner's schedule, or weak), each word once — shown instead of the weak-word count alone. */
+  count?: number;
+  /** Smart word practice is on: the hero says the review time has come, since the queue is now the schedule's due words as well as the weak ones. */
+  smart?: boolean;
+}) {
   const { t, dir } = useLocale();
-  if (words.length === 0) return null;
+  const total = count ?? words.length;
+  if (total === 0) return null;
 
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
 
@@ -44,7 +55,7 @@ export function NeedsReviewWords({ words }: { words: WeakWordItem[] }) {
         dir="ltr"
         className="flex shrink-0 -rotate-2 flex-col items-center justify-center self-start rounded-2xl bg-[oklch(0.96_0.015_85)] px-6 py-4 text-[oklch(0.32_0.03_60)] shadow-[0_3px_0_0_oklch(0.85_0.03_80),0_10px_20px_-8px_rgba(0,0,0,0.45)] transition-transform duration-200 group-hover:rotate-0 sm:self-center sm:px-8 sm:py-6"
       >
-        <span className="text-4xl font-extrabold tracking-tight sm:text-5xl">{words.length}</span>
+        <span className="text-4xl font-extrabold tracking-tight sm:text-5xl">{total}</span>
         <span className="text-xs font-semibold tracking-wide uppercase opacity-70">
           {t.wordLists.wordsUnit}
         </span>
@@ -54,7 +65,7 @@ export function NeedsReviewWords({ words }: { words: WeakWordItem[] }) {
           {t.wordLists.needsReviewHeading}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-          {t.wordLists.needsReviewSubtitle}
+          {smart ? t.wordLists.smart.reviewDueSubtitle : t.wordLists.needsReviewSubtitle}
         </p>
       </div>
       <Chevron

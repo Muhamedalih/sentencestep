@@ -75,10 +75,14 @@ export interface AdminVocabularyWord {
   ipa: string | null;
   /** The generated fallback for this word's target word (src/data/word-lists/ipa.ts), shown as the field's placeholder; null when there is none. */
   suggestedIpa: string | null;
+  /** Extra answers this word accepts (British spellings, synonyms). null when the database has no accepted_answers column yet — the editor then does not offer the field. */
+  alternates: string[] | null;
 }
 
 export interface AdminWordGroupDetail extends AdminWordGroup {
   words: AdminVocabularyWord[];
+  /** The database has the accepted_answers column (20250324000000_word_accepted_answers.sql is applied), so the words editor can offer and save it. */
+  alternatesSupported: boolean;
 }
 
 export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupDetail | null> {
@@ -98,6 +102,19 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
     .order("order_index", { ascending: true });
   if (wordsError) throw wordsError;
 
+  // A group that already has words answers the question by its own rows; an
+  // empty one has to ask the table.
+  let alternatesSupported: boolean;
+  if ((words ?? []).length > 0) {
+    alternatesSupported = (words ?? []).every((w) => Array.isArray(w.accepted_answers));
+  } else {
+    const { error: probeError } = await supabase
+      .from("vocabulary_words")
+      .select("accepted_answers")
+      .limit(1);
+    alternatesSupported = !probeError;
+  }
+
   return {
     id: group.id,
     level: group.level,
@@ -110,6 +127,7 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
     status: group.status as WordGroupStatus,
     voiceId: group.voice_id,
     wordCount: words?.length ?? 0,
+    alternatesSupported,
     words: (words ?? []).map((w) => ({
       id: w.id,
       groupId: w.group_id,
@@ -119,6 +137,7 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
       hintAr: w.hint_ar,
       ipa: w.ipa,
       suggestedIpa: WORD_IPA[w.target_word.toLowerCase()] ?? null,
+      alternates: Array.isArray(w.accepted_answers) ? w.accepted_answers : null,
     })),
   };
 }

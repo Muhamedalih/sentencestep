@@ -40,6 +40,8 @@ export interface VocabularyWord {
   supportHint?: string;
   /** How the word is pronounced, as bare IPA without the slashes ("ænt") — the word's own `ipa` column when an admin set one, else the generated fallback in src/data/word-lists/ipa.ts (see src/lib/word-lists.ts). Absent for a word with neither; the block summary then simply shows no pronunciation line. Display it through formatIpa (src/lib/word-lists-ipa.ts). */
   ipa?: string | null;
+  /** Extra answers this word accepts besides targetWord — British spellings and synonyms that fit the sentence and the hint (vocabulary_words.accepted_answers), lower-case. Only the "Smart word practice" screens read it; absent or empty means targetWord alone. See src/lib/word-lists-answer.ts. */
+  alternates?: string[];
   /** Pre-resolved Kokoro pronunciation URL for this word, when already cached — set server-side only for the group's first word (see WordGroupPracticePage), the same "skip the on-demand round trip when we already know the answer" fix as Sentence.audioUrl. Absent/null is normal; PronunciationButton falls back to its existing on-demand resolve. */
   audioUrl?: string | null;
 }
