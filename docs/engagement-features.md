@@ -22,7 +22,8 @@ seven, so on the live site only admins see anything until a feature is set to
 Per feature: **Off / Admin preview / On** (admin preview = only admins see it on
 the live site), a **Premium only** switch (automatically open to everyone while
 _Free access_ is on), and — where it makes sense — a per-section on/off matrix.
-Plus feature options: dictation word-length blanks, from-memory helpers, daily
+Plus feature options: dictation letter-by-letter checking and word-length
+blanks, from-memory helpers, daily
 session size / XP / which sources feed it (mistakes + weak words by default;
 Vocabulary Recall, Word Lists and personal cards are opt-in), the quest pool
 (each type on/off, target, XP), each badge on/off, and the monthly free streak
@@ -58,14 +59,46 @@ already has history the day the feature goes On.
 
 ## How they fit together
 
-- **Dictation / From memory** grade a whole typed sentence on Enter
-  (`src/lib/features/dictation.ts`): case- and punctuation-insensitive, typos
-  are "close", misses go to Fix Your Mistakes. They deliberately don't use the
-  per-keystroke engine, which would let a learner guess letters of a hidden
-  sentence.
-  The correction screen shows the correct sentence large with each missed word
-  as a chip and its wrong letters underlined (typed and correct line), Enter or
-  **Continue** moves on, and **Try again** lets the learner retype the same
+- **Dictation** has two ways to be checked, an admin option (**Check letter by
+  letter**, on by default); **From memory** always grades a whole sentence.
+  - _Letter by letter_ (`applyStrictDictationInput`): every letter is checked as
+    it is typed, the way the keystroke engine checks the visible sentence, so
+    a wrong letter (case never matters) is turned away and the answer only
+    ever holds correct letters. Guessing is not blocked but it is never free:
+    each turned-away letter is counted (as an error in the lesson's accuracy,
+    and against the sentence's stars), shows in red on its blank, plays the
+    typing view's error sound, and **plays the word again** (Normal and
+    Stories, from the same word clips as a tap on a blank), so a guess costs a
+    listen. A space or hyphen typed in the middle of a word counts as a wrong
+    letter; the habitual space after a finished word does nothing. After **two
+    wrong letters in a row at the same blank**, **Show the word** and **Give
+    up** appear (the strip has a fixed height, so the sentence never jumps).
+    Show the word paints the real letters of the word the learner is on, in
+    place, for 3 seconds or until its next correct letter is typed, and says
+    it; it needs the blanks (it is not offered with Show word-length blanks
+    off). Give up hands this one sentence to the normal typing view, which
+    carries on from what was typed (`dictationTypedPrefix` →
+    `useTypingEngine`'s `initialTyped`), keeps the words already missed for Fix
+    Your Mistakes, and does not count as a dictated sentence for quests; the
+    next sentence is Dictation again. Switching the Dictation switch off in the
+    middle of a sentence carries it over the same way instead of losing it.
+    Letters are reported to the lesson as they are typed (`onCorrectLetter` /
+    `onErrorLetter`, like the typing view), so the outcome tells the lesson
+    not to add them again (`lettersReported`). A finished sentence stays in
+    place filled in, with a "Perfect!" (no wrong letter, no peek) or "Well
+    done!", one to three stars (`dictationStars`: a wrong letter costs 1, a
+    peek 2; 0 is three stars, up to 2 is two), the number of wrong letters, the
+    translation and **Continue**. A clean run plays the sentence-complete sound
+    straight away; otherwise Continue plays it.
+  - _Whole sentence_ (the option off): the learner types the sentence and
+    checks it with Enter (`src/lib/features/dictation.ts`): case- and
+    punctuation-insensitive, typos are "close", misses go to Fix Your Mistakes.
+    This deliberately doesn't use the per-keystroke engine, which would let a
+    learner guess letters of a hidden sentence — it is the exam.
+
+  The correction screen (whole-sentence Dictation and From memory) shows the
+  correct sentence large with each missed word as a chip and its wrong letters
+  underlined (typed and correct line), Enter or **Continue** moves on, and **Try again** lets the learner retype the same
   sentence as often as they like: only the first attempt is scored and
   recorded.
   Dictation keeps the typing view's own frame (same text size, audio controls,
@@ -76,9 +109,10 @@ already has history the day the feature goes On.
   the sentence on screen at that moment; a new sentence just draws its blanks
   in, never flashing its text). The learner types straight onto the blanks: a
   cursor bar glides along them and each typed letter appears in its slot, word
-  by word, with nothing said about whether it is right until Enter. The real
-  letter is only ever painted by that opening wave: an erased letter fades out
-  as the learner's own (wrong) letter, never as the correct one. The system
+  by word, and (whole sentence) nothing is said about whether it is right until
+  Enter. The real letter is only ever painted by that opening wave and by Show
+  the word: an erased letter fades out as the learner's own (wrong) letter,
+  never as the correct one. The system
   decides where words end (`applyDictationInput`): a word that has received all
   its letters hands over to the next one by itself, right or wrong, so the
   learner never types the space and can't type more letters than a word has
@@ -96,6 +130,7 @@ already has history the day the feature goes On.
   plays the same sentence-complete sound as finishing a sentence by typing (and
   Continue then stays silent instead of playing it again). From memory shares
   the correction screen, Enter handling and Try again.
+
 - **Streak freeze** sits on top of the existing free one-missed-day grace: each
   _extra_ consecutive missed day spends one freeze from the month's balance,
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).

@@ -276,16 +276,28 @@ export function FeaturesForm({ initial }: { initial: FeatureConfig }) {
               )}
 
               {id === "dictation" && (
-                <SwitchRow
-                  label="Show word-length blanks"
-                  hint="Draws a blank under every hidden letter so the learner knows how many words and letters to expect, and lets them tap a word to hear it. Off, the learner only sees what they have typed."
-                  checked={config.options.dictation.showWordBlanks}
-                  onChange={(checked) =>
-                    update((draft) => {
-                      draft.options.dictation.showWordBlanks = checked;
-                    })
-                  }
-                />
+                <div className="flex flex-col gap-3">
+                  <SwitchRow
+                    label="Check letter by letter"
+                    hint="Every letter is checked the moment it is typed: a wrong letter is turned away (and counted), the word's audio plays again, and after two misses in a row the learner can peek at the word or give up and finish the sentence in the normal view. Off, the learner types the whole sentence and checks it with Enter, as an exam."
+                    checked={config.options.dictation.letterByLetter}
+                    onChange={(checked) =>
+                      update((draft) => {
+                        draft.options.dictation.letterByLetter = checked;
+                      })
+                    }
+                  />
+                  <SwitchRow
+                    label="Show word-length blanks"
+                    hint="Draws a blank under every hidden letter so the learner knows how many words and letters to expect, and lets them tap a word to hear it (and peek at it in letter-by-letter mode). Off, the learner only sees what they have typed."
+                    checked={config.options.dictation.showWordBlanks}
+                    onChange={(checked) =>
+                      update((draft) => {
+                        draft.options.dictation.showWordBlanks = checked;
+                      })
+                    }
+                  />
+                </div>
               )}
 
               {id === "fromMemory" && (

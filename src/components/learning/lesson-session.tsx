@@ -11,7 +11,11 @@ import {
   List as ListIcon,
 } from "lucide-react";
 
-import { DictationSentence, type DictationOutcome } from "@/components/learning/dictation-sentence";
+import {
+  DictationSentence,
+  type DictationOutcome,
+  type DictationProgress,
+} from "@/components/learning/dictation-sentence";
 import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
 import { FromMemorySession } from "@/components/learning/from-memory-session";
 import { LessonCompletion } from "@/components/learning/lesson-completion";
@@ -160,6 +164,15 @@ export function LessonSession({
   // load with the remembered preference) starts hidden, never flashing its text.
   const [dictationIntroFor, setDictationIntroFor] = useState<string | null>(null);
   const dictationCountRef = useRef(0);
+  // Letter-by-letter Dictation hands a sentence over to the normal typing view
+  // in two cases — the learner gives up on it, or switches Dictation off in the
+  // middle of it — and the typing view then carries on from what was typed.
+  // `dictationProgressRef` is the latest answer the dictation view reported (a
+  // ref: it changes every keystroke and nothing renders from it);
+  // `carryOver` is the sentence handed over, read once when its typing view
+  // mounts. Both only ever describe correct letters.
+  const dictationProgressRef = useRef<DictationProgress | null>(null);
+  const [carryOver, setCarryOver] = useState<DictationProgress | null>(null);
   // Personal word cards (admin feature): the save star on the current-word
   // label. Never in the admin preview — an admin previewing a lesson isn't
   // building a real deck.
@@ -244,6 +257,15 @@ export function LessonSession({
 
   function handleToggleDictation() {
     const next = !dictationOn;
+    // Switching off in the middle of a letter-by-letter sentence keeps what was
+    // typed; switching on always starts the sentence's dictation afresh.
+    const progress = dictationProgressRef.current;
+    dictationProgressRef.current = null;
+    if (!next && progress && progress.sentenceId === unit.sentences[sentenceIndex]?.id) {
+      setCarryOver(progress);
+    } else if (next) {
+      setCarryOver(null);
+    }
     setDictationOn(next);
     setDictationIntroFor(next ? (unit.sentences[sentenceIndex]?.id ?? null) : null);
     // Pressing the toggle is itself the deliberate tap the mobile "tap to
@@ -423,8 +445,11 @@ export function LessonSession({
   // to Fix Your Mistakes, and the shared completion path advances/finishes
   // the lesson.
   function handleDictationComplete(outcome: DictationOutcome) {
-    correctCountRef.current += outcome.correctChars;
-    errorCountRef.current += outcome.errorChars;
+    // Letter-by-letter answers were already counted letter by letter.
+    if (!outcome.lettersReported) {
+      correctCountRef.current += outcome.correctChars;
+      errorCountRef.current += outcome.errorChars;
+    }
     dictationCountRef.current += 1;
     if (sentence && !previewMode && outcome.mistakes.length > 0) {
       mistakes.recordSentenceMistakes(sentence.id, outcome.mistakes);
@@ -438,7 +463,17 @@ export function LessonSession({
     playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, unit.mode));
   }
 
+  // The learner gave up on a letter-by-letter sentence: the typing view takes
+  // it over from what was typed (this sentence only — the next one is dictation
+  // again).
+  function handleDictationGiveUp(progress: DictationProgress) {
+    dictationProgressRef.current = null;
+    setCarryOver(progress);
+  }
+
   function handleSentenceComplete(wpm: number, silent = false) {
+    setCarryOver(null);
+    dictationProgressRef.current = null;
     if (wpm > 0) wpmSamplesRef.current.push(wpm);
     if (!silent) playSentenceCompleteSound();
 
@@ -515,6 +550,8 @@ export function LessonSession({
     errorCountRef.current = 0;
     wpmSamplesRef.current = [];
     dictationCountRef.current = 0;
+    dictationProgressRef.current = null;
+    setCarryOver(null);
     setIsPracticingFromMemory(false);
     setIsComplete(false);
   }
@@ -526,6 +563,8 @@ export function LessonSession({
   // called at sentenceIndex 0 (the button that triggers this isn't rendered
   // there), so no clamping needed.
   function handleGoBackSentence() {
+    setCarryOver(null);
+    dictationProgressRef.current = null;
     setPreviousSentences((prev) => prev.slice(0, -1));
     setSentenceIndex((index) => index - 1);
   }
@@ -539,6 +578,8 @@ export function LessonSession({
   // handleSentenceComplete's own ordinary completion path above — the same
   // one every sentence normally goes through.
   function handleGoForwardSentence() {
+    setCarryOver(null);
+    dictationProgressRef.current = null;
     setSentenceIndex((index) => index + 1);
   }
 
@@ -981,8 +1022,9 @@ export function LessonSession({
                 >
                   {sentence &&
                     (() => {
+                      const handedOver = carryOver?.sentenceId === sentence.id ? carryOver : null;
                       const typingSentence =
-                        dictationAvailable && dictationOn ? (
+                        dictationAvailable && dictationOn && !handedOver ? (
                           <DictationSentence
                             key={`dictation-${sentence.id}`}
                             sentence={sentence}
@@ -1001,6 +1043,21 @@ export function LessonSession({
                             }}
                             onExact={playSentenceCompleteSound}
                             onComplete={handleDictationComplete}
+                            letterByLetter={features.dictation.letterByLetter}
+                            onCorrectLetter={() => {
+                              correctCountRef.current += 1;
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onErrorLetter={() => {
+                              errorCountRef.current += 1;
+                              play("error");
+                              vibrateLightly();
+                            }}
+                            onGiveUp={handleDictationGiveUp}
+                            onProgress={(progress) => {
+                              dictationProgressRef.current = progress;
+                            }}
                             storyTitle={unit.title}
                             sentenceNumber={sentenceIndex + 1}
                             totalSentences={total}
@@ -1041,6 +1098,8 @@ export function LessonSession({
                             showTapToStart={!tapped}
                             onStart={() => setTapped(true)}
                             wordCards={wordCards}
+                            initialTyped={handedOver?.typed}
+                            initialMistakes={handedOver?.mistakes}
                             onGoBack={handleGoBackSentence}
                             onGoForward={
                               sentenceIndex < maxSentenceIndexReached

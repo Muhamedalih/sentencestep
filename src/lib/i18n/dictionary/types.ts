@@ -866,7 +866,7 @@ export interface Dictionary {
     homeLinkAriaLabel: string;
     dashboardLinkAriaLabel: string;
   };
-  /** Dictation mode (src/components/learning/dictation-sentence.tsx) — hide the sentence, listen, type the whole thing, check with Enter. */
+  /** Dictation mode (src/components/learning/dictation-sentence.tsx) — hide the sentence, listen, and type it: checked letter by letter, or all at once with Enter (an admin option). */
   dictation: {
     toggleLabel: string;
     toggleTitleOn: string;
@@ -885,6 +885,16 @@ export interface Dictionary {
     retryNote: string;
     blankHint: string;
     hearWord: string;
+    /** Letter-by-letter mode: the help that appears after two misses in a row, and the end-of-sentence summary. */
+    help: string;
+    helpTitle: string;
+    giveUp: string;
+    giveUpTitle: string;
+    stuckPrompt: string;
+    done: string;
+    mistakeCount: string;
+    starsLabel: string;
+    wrongLetter: string;
   };
   /** From-memory mode (src/components/learning/from-memory-session.tsx) — an optional round after a lesson: read the meaning, type the English. */
   fromMemory: {

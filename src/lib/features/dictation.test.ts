@@ -3,12 +3,17 @@ import test from "node:test";
 
 import {
   applyDictationInput,
+  applyStrictDictationInput,
   compareDictation,
   dictationAccuracy,
+  dictationLetterCount,
   dictationMistakes,
+  dictationStars,
+  dictationTypedPrefix,
   dictationView,
   dictationWordLengths,
   firstLetterHint,
+  isDictationComplete,
   levenshtein,
   normalizeDictationWords,
   normalizedIndexesToRaw,
@@ -300,4 +305,147 @@ test("applyDictationInput: edits that aren't adding or deleting at the end are i
 
 test("applyDictationInput: with no target everything is accepted as typed", () => {
   assert.equal(applyDictationInput("", "hel", "hello wor"), "hello wor");
+});
+
+/** Types `keys` one character at a time through the letter-by-letter rules; returns the answer and every rejected key with where it was aimed. */
+function typeStrict(target: string, keys: string) {
+  let value = "";
+  const rejected: { char: string; word: number; letter: number }[] = [];
+  for (const key of Array.from(keys)) {
+    const step = applyStrictDictationInput(target, value, value + key);
+    value = step.value;
+    if (step.rejected !== null && step.at !== null) {
+      rejected.push({ char: step.rejected, ...step.at });
+    }
+  }
+  return { value, rejected };
+}
+
+test("applyStrictDictationInput: correct letters are accepted, case never matters, words hand over by themselves", () => {
+  assert.equal(typeStrict("I had to go", "I").value, "I ");
+  assert.equal(typeStrict("I had to go", "ihad").value, "i had ");
+  assert.equal(typeStrict("I had to go", "IHADTOGO").value, "I HAD TO GO");
+  assert.deepEqual(typeStrict("I had to go", "ihadtogo").rejected, []);
+});
+
+test("applyStrictDictationInput: a wrong letter is turned away, says where it was aimed, and the answer stays as it was", () => {
+  const { value, rejected } = typeStrict("I had to go", "Iha" + "x");
+  assert.equal(value, "I ha");
+  assert.deepEqual(rejected, [{ char: "x", word: 1, letter: 2 }]);
+  // The learner can simply try again.
+  assert.equal(typeStrict("I had to go", "Ihaxd").value, "I had ");
+  assert.equal(typeStrict("I had to go", "Ihaxd").rejected.length, 1);
+});
+
+test("applyStrictDictationInput: guessing never gets ahead — every wrong letter is reported, in order", () => {
+  const { value, rejected } = typeStrict("cat", "xyzc" + "qat");
+  assert.equal(value, "cat");
+  assert.deepEqual(
+    rejected.map((entry) => entry.char),
+    ["x", "y", "z", "q"],
+  );
+  assert.ok(rejected.every((entry) => entry.word === 0));
+  assert.deepEqual(
+    rejected.map((entry) => entry.letter),
+    [0, 0, 0, 1],
+  );
+});
+
+test("applyStrictDictationInput: punctuation is never typed and the habitual space after a word does nothing", () => {
+  assert.equal(typeStrict("I don't know.", "Idon't").value, "I dont ");
+  assert.equal(typeStrict("I don't know.", "Idon't").rejected.length, 0);
+  assert.equal(typeStrict("I don't know.", "I k").rejected.length, 1);
+  assert.equal(typeStrict("good morning", "good morning").rejected.length, 0);
+  assert.equal(typeStrict("good morning", "good morning").value, "good morning");
+  // A leading space is nothing.
+  assert.equal(typeStrict("good morning", " g").value, "g");
+});
+
+test("applyStrictDictationInput: a space or hyphen in the middle of a word skips ahead, which is a wrong letter", () => {
+  const spaced = typeStrict("good morning", "go ");
+  assert.equal(spaced.value, "go");
+  assert.deepEqual(spaced.rejected, [{ char: " ", word: 0, letter: 2 }]);
+  assert.equal(typeStrict("good morning", "go-").rejected.length, 1);
+});
+
+test("applyStrictDictationInput: a hyphenated compound is two words and the hyphen between them needs no key", () => {
+  assert.equal(typeStrict("A well-known plan", "Awellknown").value, "A well known ");
+  assert.equal(typeStrict("A well-known plan", "Awell-known").rejected.length, 0);
+});
+
+test("applyStrictDictationInput: nothing can be typed past the end of the sentence", () => {
+  assert.equal(typeStrict("I had to go", "Ihadtogoxyz").value, "I had to go");
+  assert.equal(typeStrict("I had to go", "Ihadtogoxyz").rejected.length, 0);
+});
+
+test("applyStrictDictationInput: several characters arriving at once stop at the first wrong one", () => {
+  const step = applyStrictDictationInput("good morning", "", "gox");
+  assert.equal(step.value, "go");
+  assert.equal(step.rejected, "x");
+  assert.deepEqual(step.at, { word: 0, letter: 2 });
+});
+
+test("applyStrictDictationInput: Backspace and edits behave as they do in the exam", () => {
+  assert.equal(applyStrictDictationInput("I had to go", "I ", "I").value, "");
+  assert.equal(applyStrictDictationInput("I had to go", "I ha", "I h").value, "I h");
+  assert.equal(applyStrictDictationInput("I had to go", "I had ", "I xhad ").value, "I had ");
+  assert.equal(applyStrictDictationInput("I had to go", "I had ", "I had ").rejected, null);
+});
+
+test("isDictationComplete: only once the last letter of the last word is in", () => {
+  assert.equal(isDictationComplete("I had to go.", "I had to g"), false);
+  assert.equal(isDictationComplete("I had to go.", "I had to go"), true);
+  assert.equal(isDictationComplete("I had to go.", ""), false);
+  // Nothing to type means nothing to complete.
+  assert.equal(isDictationComplete("...", ""), false);
+});
+
+test("dictationLetterCount: letters only, however the answer is spaced", () => {
+  assert.equal(dictationLetterCount(""), 0);
+  assert.equal(dictationLetterCount("I had "), 4);
+  assert.equal(dictationLetterCount("I dont know"), 9);
+});
+
+test("dictationTypedPrefix: carries a finished-word answer over to the normal typing view's buffer", () => {
+  assert.equal(dictationTypedPrefix("I don't know.", ""), "");
+  assert.equal(dictationTypedPrefix("I don't know.", "I "), "I ");
+  assert.equal(dictationTypedPrefix("I don't know.", "I do"), "I do");
+  // The apostrophe is skipped over by the engine, the space after the finished word is typed.
+  assert.equal(dictationTypedPrefix("I don't know.", "I dont "), "I don't ");
+  assert.equal(dictationTypedPrefix("I don't know.", "I dont k"), "I don't k");
+});
+
+test("dictationTypedPrefix: punctuation after a finished word is passed over together with the space", () => {
+  // The engine passes over an opening quote as soon as the space before it is typed.
+  assert.equal(dictationTypedPrefix('He said, "Hello" to me.', "He said "), 'He said, "');
+  // Punctuation right after the last typed letter is passed over at once, as the engine does.
+  assert.equal(
+    dictationTypedPrefix('He said, "Hello" to me.', "He said hello"),
+    'He said, "Hello"',
+  );
+  assert.equal(dictationTypedPrefix("A well-known plan", "A well "), "A well-");
+  assert.equal(dictationTypedPrefix("A well-known plan", "A well k"), "A well-k");
+});
+
+test("dictationTypedPrefix: always a genuine prefix the typing engine accepts, for every point of a letter-by-letter answer", () => {
+  const target = "She said, \"Don't go — it's well-known!\"";
+  let value = "";
+  for (const key of Array.from("shesaiddontgoitswellknown")) {
+    value = applyStrictDictationInput(target, value, value + key).value;
+    const prefix = dictationTypedPrefix(target, value);
+    assert.ok(
+      target.toLowerCase().startsWith(prefix.toLowerCase()),
+      `"${prefix}" is not a prefix of the target after "${value}"`,
+    );
+  }
+});
+
+test("dictationStars: a clean run is three stars, help costs more than a slip", () => {
+  assert.equal(dictationStars(0, 0), 3);
+  assert.equal(dictationStars(1, 0), 2);
+  assert.equal(dictationStars(2, 0), 2);
+  assert.equal(dictationStars(0, 1), 2);
+  assert.equal(dictationStars(1, 1), 1);
+  assert.equal(dictationStars(3, 0), 1);
+  assert.equal(dictationStars(0, 2), 1);
 });

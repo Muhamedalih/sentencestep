@@ -1,5 +1,5 @@
 import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
-import { isAutoSkipChar, tokenize } from "@/lib/typing";
+import { advanceAutoSkip, isAutoSkipChar, tokenize } from "@/lib/typing";
 
 /**
  * Pure grading for Dictation and From-memory: the learner types a whole
@@ -487,6 +487,133 @@ export function applyDictationInput(target: string, previous: string, next: stri
     value = appendDictationChar(lengths, value, char);
   }
   return value;
+}
+
+/** The letters (and digits) of every graded word, as printed — what a letter-by-letter answer is checked against. */
+function dictationWordLetters(target: string): string[][] {
+  return rawDictationTokens(target).map((token) =>
+    Array.from(token).filter((char) => !isAutoSkipChar(char)),
+  );
+}
+
+/** The blank the next letter belongs to, or null once every word is complete. */
+function nextBlank(letters: string[][], value: string): { word: number; letter: number } | null {
+  const { words, open } = typedLetterWords(value);
+  let word = open ? words.length - 1 : words.length;
+  let letter = open ? Array.from(words[word] ?? "").length : 0;
+  if (word < letters.length && letter >= (letters[word]?.length ?? 0)) {
+    word += 1;
+    letter = 0;
+  }
+  return word < letters.length ? { word, letter } : null;
+}
+
+/** True once every letter of the sentence has been typed (a sentence with no letters is never complete: there is nothing to type). */
+export function isDictationComplete(target: string, value: string): boolean {
+  const letters = dictationWordLetters(target);
+  return letters.length > 0 && nextBlank(letters, value) === null;
+}
+
+/** How many letters (or digits) an answer holds. */
+export function dictationLetterCount(value: string): number {
+  return typedLetterWords(value).words.reduce((sum, word) => sum + Array.from(word).length, 0);
+}
+
+export interface StrictDictationInput {
+  /** The answer after this input: the accepted letters, or unchanged when the keystroke was turned away. */
+  value: string;
+  /** The wrong character that was rejected (the first one, if several arrived at once), or null. */
+  rejected: string | null;
+  /** The blank the rejected character was aimed at: which graded word, and which letter of it. Null when nothing was rejected. */
+  at: { word: number; letter: number } | null;
+}
+
+/**
+ * What a letter-by-letter Dictation answer becomes when the learner's input
+ * changes from `previous` to `next`. The same word-boundary rules as
+ * applyDictationInput — a finished word hands over to the next one by itself,
+ * punctuation is never typed, only the end of the answer can change — but every
+ * letter is checked the moment it is typed, like the keystroke engine does for
+ * the visible sentence: a wrong letter (case never matters) is turned away and
+ * the answer stays as it was, so an answer only ever holds correct letters.
+ * A space or hyphen typed in the middle of a word counts as a wrong letter
+ * (the learner skipped ahead); one typed between words is the habitual space
+ * the hand-over already supplied, and does nothing.
+ */
+export function applyStrictDictationInput(
+  target: string,
+  previous: string,
+  next: string,
+): StrictDictationInput {
+  const unchanged: StrictDictationInput = { value: previous, rejected: null, at: null };
+  if (next === previous) return unchanged;
+  if (next.length < previous.length) {
+    return { value: applyDictationInput(target, previous, next), rejected: null, at: null };
+  }
+  if (!next.startsWith(previous)) return unchanged;
+
+  const letters = dictationWordLetters(target);
+  const lengths = letters.map((word) => word.length);
+  let value = previous;
+  for (const char of Array.from(next.slice(previous.length))) {
+    if (!SEPARATOR.test(char) && isAutoSkipChar(char)) continue; // punctuation is never typed
+    const blank = nextBlank(letters, value);
+    if (blank === null) break; // the whole sentence is already typed
+    if (SEPARATOR.test(char)) {
+      if (value === "" || value.endsWith(" ")) continue; // the hand-over already moved on
+      return { value, rejected: char, at: blank };
+    }
+    const expected = letters[blank.word]?.[blank.letter] ?? "";
+    if (char.toLowerCase() !== expected.toLowerCase()) {
+      return { value, rejected: char, at: blank };
+    }
+    value = appendDictationChar(lengths, value, char);
+  }
+  return { value, rejected: null, at: null };
+}
+
+/**
+ * The part of `target` an answer has covered, written the way the keystroke
+ * engine's own buffer is (spaces and punctuation included, the space after a
+ * finished word too) — what the normal typing view needs to carry on from
+ * where a letter-by-letter answer stopped. Only meaningful for an answer made
+ * of correct letters, which is all a letter-by-letter answer can hold.
+ */
+export function dictationTypedPrefix(target: string, value: string): string {
+  let remaining = dictationLetterCount(value);
+  if (remaining === 0) return advanceAutoSkip(target, "");
+  let end = 0;
+  for (let index = 0; index < target.length; index++) {
+    const char = target.charAt(index);
+    if (isAutoSkipChar(char) || /\s/.test(char)) continue;
+    remaining -= 1;
+    if (remaining === 0) {
+      end = index + 1;
+      break;
+    }
+  }
+  if (remaining > 0) return target; // more letters than the sentence has: it is complete
+  let prefix = advanceAutoSkip(target, target.slice(0, end));
+  // A finished word has already handed over to the next one: the space after it
+  // (and the punctuation that follows the space) is typed too.
+  if (value.endsWith(" ")) {
+    while (prefix.length < target.length && /\s/.test(target.charAt(prefix.length))) {
+      prefix += target.charAt(prefix.length);
+    }
+    prefix = advanceAutoSkip(target, prefix);
+  }
+  return prefix;
+}
+
+/**
+ * 1–3 stars for one letter-by-letter sentence. A clean run is 3; a slip or two,
+ * or a single peek at a word, is 2; anything more is 1. Asking for help costs
+ * more than a slip, because a slip is still the learner's own try.
+ */
+export function dictationStars(slips: number, helps: number): 1 | 2 | 3 {
+  const cost = slips + helps * 2;
+  if (cost === 0) return 3;
+  return cost <= 2 ? 2 : 1;
 }
 
 /**

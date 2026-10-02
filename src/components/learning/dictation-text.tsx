@@ -67,6 +67,17 @@ interface DictationTextProps {
   textStyle?: CSSProperties;
   /** Tapping a blank says its word. Absent where words have no audio of their own. */
   words?: DictationTextWords;
+  /**
+   * Letter-by-letter mode: the wrong letter that was just turned away and the
+   * blank it was aimed at. It shows there in red, shaking, until the parent
+   * clears it a moment later; `nonce` makes the same wrong letter, typed again,
+   * play again.
+   */
+  rejection?: { word: number; letter: number; char: string; nonce: number } | null;
+  /** Letter-by-letter mode: the graded word whose letters are shown for a moment because the learner asked for help. */
+  peekWord?: number | null;
+  /** Every letter is in: the cursor bar has nothing left to point at. */
+  finished?: boolean;
 }
 
 /**
@@ -90,6 +101,9 @@ export function DictationText({
   textClassName,
   textStyle,
   words,
+  rejection = null,
+  peekWord = null,
+  finished = false,
 }: DictationTextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -153,6 +167,12 @@ export function DictationText({
                   pulse={lit && Boolean(words?.litPulse)}
                   phase={phase}
                   reducedMotion={reducedMotion}
+                  peeking={peekWord === cell.word}
+                  rejection={
+                    rejection && rejection.word === cell.word && rejection.letter === cell.letter
+                      ? rejection
+                      : null
+                  }
                 />
               );
             }
@@ -222,6 +242,13 @@ export function DictationText({
             <span className="relative inline-block" aria-hidden="true">
               <span className="invisible">{NBSP}</span>
               <TickTrack current />
+              {rejection && (
+                <RejectedLetter
+                  key={rejection.nonce}
+                  char={rejection.char}
+                  reducedMotion={reducedMotion}
+                />
+              )}
             </span>
           </>
         )}
@@ -229,10 +256,13 @@ export function DictationText({
 
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute top-0 left-0 h-[5px] rounded-full bg-[var(--lesson-underline)]"
+        className={cn(
+          "pointer-events-none absolute top-0 left-0 h-[5px] rounded-full transition-colors duration-150",
+          rejection ? "bg-[var(--lesson-letter-wrong)]" : "bg-[var(--lesson-underline)]",
+        )}
         initial={false}
         animate={
-          barRect
+          barRect && !finished
             ? { x: barRect.x, y: barRect.y, width: barRect.width, opacity: 1 }
             : { opacity: 0 }
         }
@@ -292,6 +322,31 @@ function TickTrack({ current = false, children }: { current?: boolean; children?
   );
 }
 
+/**
+ * The wrong letter the learner just typed, drawn in red over the blank it was
+ * aimed at and shaking, exactly what the normal typing view does for a wrong
+ * key. It shows what was TYPED, never the real letter. A space or other
+ * blank-looking key draws nothing (the red cursor bar carries the message).
+ */
+function RejectedLetter({ char, reducedMotion }: { char: string; reducedMotion: boolean }) {
+  if (char.trim() === "") return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 flex items-center justify-center"
+    >
+      <motion.span
+        initial={{ x: 0 }}
+        animate={reducedMotion ? { x: 0 } : { x: [0, -5, 5, -3, 3, 0] }}
+        transition={{ duration: 0.3, ease: easeOut }}
+        className="text-[var(--lesson-letter-wrong)]"
+      >
+        {char}
+      </motion.span>
+    </span>
+  );
+}
+
 function TypedLetter({ char }: { char: string }) {
   return (
     <span aria-hidden="true" className="inline-block text-[var(--lesson-letter-correct)]">
@@ -306,6 +361,10 @@ function TypedLetter({ char }: { char: string }) {
  * sentence into its blanks, and only in a slot nobody has typed in. Everywhere
  * else the glyph paints the learner's own letter, or nothing.
  *
+ * The one deliberate exception is a peek: in letter-by-letter mode the learner
+ * can ask for help and see the word they are on for a few seconds (`reveal`
+ * below), which paints the real letters of the slots nobody has typed in yet.
+ *
  * The glyph is both the slot's width (it holds a letter) and a letter that
  * fades in and out, and erasing a letter empties the slot in the very render
  * that starts the fade. Reading the letter straight from the slot would
@@ -317,14 +376,14 @@ function TypedLetter({ char }: { char: string }) {
  * transparent, which would depend on the animation having been applied to the
  * page by the time the letter is swapped).
  */
-function useSlotGlyph(typed: string | null, real: string, intro: boolean) {
+function useSlotGlyph(typed: string | null, real: string, reveal: boolean) {
   const [memory, setMemory] = useState<{ letter: string; gone: boolean } | null>(null);
   if (typed !== null && (memory === null || memory.gone || memory.letter !== typed)) {
     setMemory({ letter: typed, gone: false });
   }
   const leaving = typed === null && memory !== null && !memory.gone ? memory.letter : null;
   const showsReal = typed === null && leaving === null;
-  const revealsReal = intro && memory === null;
+  const revealsReal = reveal && memory === null;
 
   return {
     char: typed ?? leaving ?? real,
@@ -345,6 +404,8 @@ function Slot({
   pulse,
   phase,
   reducedMotion,
+  peeking,
+  rejection,
 }: {
   cell: Extract<DictationCell, { kind: "slot" }>;
   /** Position of this slot among all the slots of the sentence, for the stagger. */
@@ -355,12 +416,16 @@ function Slot({
   pulse: boolean;
   phase: Phase;
   reducedMotion: boolean;
+  /** The learner asked for help on this slot's word: show its real letter (unless they have typed here). */
+  peeking: boolean;
+  /** A wrong letter was just turned away at this very slot. */
+  rejection: { char: string; nonce: number } | null;
 }) {
   const filled = cell.typed !== null;
-  const glyph = useSlotGlyph(cell.typed, cell.char, phase === "intro");
+  const glyph = useSlotGlyph(cell.typed, cell.char, phase === "intro" || peeking);
 
   const introDelay = Math.min(order * INTRO_STEP, INTRO_MAX_DELAY);
-  const glyphDelay = glyph.revealsReal ? introDelay : 0;
+  const glyphDelay = glyph.revealsReal && phase === "intro" ? introDelay : 0;
   const tickDelay =
     filled || reducedMotion
       ? 0
@@ -378,7 +443,7 @@ function Slot({
         blank is filled, or when the sentence first dissolves), and that way it
         can't be found with Ctrl+F or read out. What is shown in a filled slot
         is the learner's own letter; see useSlotGlyph for when the real one may
-        be painted (only ever while the intro dissolves it).
+        be painted (only ever while the intro dissolves it, or a peek).
       */}
       <motion.span
         aria-hidden="true"
@@ -386,7 +451,7 @@ function Slot({
         // The first frame of the intro is the real sentence; every other
         // slot starts hidden so a new sentence never flashes its text.
         initial={reducedMotion ? false : phase === "intro" || filled ? GLYPH_SHOWN : GLYPH_HIDDEN}
-        animate={filled ? GLYPH_SHOWN : GLYPH_HIDDEN}
+        animate={filled || peeking ? GLYPH_SHOWN : GLYPH_HIDDEN}
         onAnimationComplete={() => {
           if (!filled) glyph.settle();
         }}
@@ -397,10 +462,17 @@ function Slot({
         }
         className={cn(
           "inline-block transition-colors duration-150 before:content-[attr(data-ch)]",
-          filled ? "text-[var(--lesson-letter-correct)]" : "text-[var(--lesson-letter-pending)]",
+          filled
+            ? "text-[var(--lesson-letter-correct)]"
+            : peeking
+              ? "text-[var(--lesson-primary)]"
+              : "text-[var(--lesson-letter-pending)]",
           glyph.concealed && "invisible",
         )}
       />
+      {rejection && (
+        <RejectedLetter key={rejection.nonce} char={rejection.char} reducedMotion={reducedMotion} />
+      )}
       {showBlank && (
         <TickTrack current={current}>
           <motion.span
