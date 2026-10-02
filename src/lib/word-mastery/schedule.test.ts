@@ -18,6 +18,8 @@ import {
   isISODate,
   isWordOutcome,
   outcomeFor,
+  practiceScope,
+  practiceVisitKey,
   selectContinueWords,
   summarizeGroupMastery,
   withHint,
@@ -279,6 +281,45 @@ test("Continue has nothing to ask when every word is scheduled for a later day",
   );
   assert.deepEqual(pick.words, []);
   assert.equal(pick.scheduledCount, 2);
+});
+
+test("a Continue list shrinks with every answer, so a running visit cannot follow it", () => {
+  // The practice page is rendered again after every answer and works Continue out
+  // afresh. Answering a word schedules it for a later day, which takes it out of
+  // the list: positions in the new list are not positions in the one the visit
+  // opened with. A screen that read them off the new list asked "c" where it
+  // should have asked "b", and never asked the words it jumped over — which is
+  // why the practice keeps the list it opened with (see practiceVisitKey).
+  const opened = selectContinueWords(group, new Map(), TODAY).words.map((word) => word.id);
+  assert.deepEqual(opened, ["a", "b", "c", "d", "e", "f", "g", "h"]);
+
+  const schedule = new Map<string, MasteryState>();
+  const asked: string[] = [];
+  for (const [position, id] of opened.entries()) {
+    const fresh = selectContinueWords(group, schedule, TODAY).words.map((word) => word.id);
+    // One word fewer than the visit started with for every answer given so far.
+    assert.equal(fresh.length, opened.length - position);
+    if (position > 0) assert.notEqual(fresh[position], opened[position]);
+    asked.push(id);
+    schedule.set(id, applyOutcome(schedule.get(id), "clean", TODAY).state);
+  }
+  assert.deepEqual(asked, opened);
+  // Everything answered: the page's next render finds nothing left to ask.
+  assert.deepEqual(selectContinueWords(group, schedule, TODAY).words, []);
+});
+
+test("a practice visit is Continue unless the URL asks for scope=all, and its key tells visits apart", () => {
+  assert.equal(practiceScope("all"), "all");
+  for (const raw of [undefined, null, "", "continue", "ALL", "everything"]) {
+    assert.equal(practiceScope(raw), "continue");
+  }
+
+  // The same visit keeps its key across the page being rendered again…
+  assert.equal(practiceVisitKey("family", "continue"), practiceVisitKey("family", "continue"));
+  // …and another scope or another group is a different visit that starts fresh.
+  assert.notEqual(practiceVisitKey("family", "continue"), practiceVisitKey("family", "all"));
+  assert.notEqual(practiceVisitKey("family", "continue"), practiceVisitKey("travel", "continue"));
+  assert.notEqual(practiceVisitKey("family", "all"), practiceVisitKey("travel", "all"));
 });
 
 test("summarizeGroupMastery counts new, due and strong words and a percent that moves with every step", () => {

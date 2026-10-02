@@ -247,6 +247,28 @@ export function selectContinueWords<T extends { id: string }>(
   };
 }
 
+/** Which words a group's practice asks: Continue (what is due or new — the default) or Practice all (`?scope=all`). */
+export type PracticeScope = "continue" | "all";
+
+/** Reads the `scope` of the practice URL: only `all` is Practice all, anything else is Continue. */
+export function practiceScope(raw: string | null | undefined): PracticeScope {
+  return raw === "all" ? "all" : "continue";
+}
+
+/**
+ * Names one visit to a group's practice, for the React `key` of the practice
+ * screen. A running visit keeps the words it opened with: the page that renders
+ * it is sent again after every answer, and a Continue list changes with every
+ * answer (selectContinueWords skips what has just been scheduled), so following
+ * it would move the screen to another word mid-typing. A different group, or
+ * Practice all instead of Continue, is a different visit and has to start fresh —
+ * which is exactly what a new key does, and a re-render of the same visit must
+ * not.
+ */
+export function practiceVisitKey(groupId: string, scope: PracticeScope): string {
+  return `${groupId}:${scope}`;
+}
+
 export interface GroupMastery {
   total: number;
   /** Words the learner has never practiced. */

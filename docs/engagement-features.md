@@ -289,6 +289,27 @@ already has history the day the feature goes On.
     **Practice all** (`?scope=all`), which still records misses but leaves the
     schedule alone for words that are not due. The expanded group card also
     offers a small **Practice all** link next to Continue.
+  - _A visit keeps the words it opened with_ (`VocabularyPractice`,
+    `practiceVisitKey`). The practice page is rendered again after every answer:
+    each answer is reported with a Server Action that calls `revalidatePath`, and
+    Next answers a revalidating Server Action with a fresh render of the page it
+    was called from (whatever path was revalidated). A Continue list is worked
+    out from the schedule those answers change, so the list shrinks under a
+    running visit. A screen that followed it moved to another word while the
+    learner was typing, spoke that word, and never asked the words it jumped over
+    (driving a 20-word group in a browser: four jumps and five words never asked).
+    So the practice copies the page's props once — the words, whether it is the
+    upgraded practice, and the "all caught up" outcome — and ignores later ones;
+    the page gives it `key={practiceVisitKey(group, scope)}`, so another group or
+    **Practice all** starts a fresh visit and a re-render of the same one does
+    not. Because "all caught up" is decided by that same copy, the page's last
+    render after the final answer cannot replace the finish screen with it.
+  - _Audio follows the word on screen_ (`PronunciationButton`): the practice keeps
+    one button in its header for every word, and Server Actions run one at a time
+    in the browser, so a clip that was still being fetched or made when the
+    learner moved on can arrive seconds late. It is dropped when it does (and not
+    remembered as the new word's clip), instead of saying a word that is no
+    longer there.
   - _Library and review_: each group card shows a **mastery bar** (the share of
     full strength across the group's words) and a due / new badge; the review
     hero's number is the words due plus the weak words, each once. "Review All
