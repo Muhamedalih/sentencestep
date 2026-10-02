@@ -145,3 +145,16 @@ test("validateWordGroupWords: collects a per-word error alongside a duplicate er
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((e) => e.includes("Target word is required")));
 });
+
+test("validateVocabularyWordInput: IPA is optional, and slashes around it are fine", () => {
+  assert.deepEqual(validateVocabularyWordInput(wordInput()), []);
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ ipa: "" })), []);
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ ipa: "/ænt/" })), []);
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ ipa: "ˈʌŋkəl" })), []);
+});
+
+test("validateVocabularyWordInput: rejects an IPA that is Arabic, has digits or is too long", () => {
+  assert.equal(validateVocabularyWordInput(wordInput({ ipa: "آنت" })).length, 1);
+  assert.equal(validateVocabularyWordInput(wordInput({ ipa: "ae2nt" })).length, 1);
+  assert.equal(validateVocabularyWordInput(wordInput({ ipa: "æ".repeat(81) })).length, 1);
+});

@@ -860,6 +860,8 @@ export interface Database {
           /** English context sentence containing a literal "___" in place of target_word — see BLANK_TOKEN in src/types/word-lists.ts. */
           sentence: string;
           hint_ar: string;
+          /** Bare IPA pronunciation without slashes ("ænt"), set from Admin -> Word Lists. Null means "use the generated fallback in src/data/word-lists/ipa.ts". */
+          ipa: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -870,6 +872,7 @@ export interface Database {
           target_word: string;
           sentence: string;
           hint_ar: string;
+          ipa?: string | null;
           created_at?: string;
           updated_at?: string;
         };

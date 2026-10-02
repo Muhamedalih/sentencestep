@@ -1,20 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordTypingEngine } from "@/hooks/use-word-typing-engine";
 import { easeOut } from "@/lib/motion";
+import {
+  GLYPH_HIDDEN,
+  GLYPH_PEEK_OUT,
+  GLYPH_SHOWN,
+  PEEK_LIT_CLASS,
+  peekInTotalMs,
+  peekInTransition,
+  peekOutTotalMs,
+  peekOutTransition,
+} from "@/lib/peek-glyph";
 import { cn } from "@/lib/utils";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
 /** How long the wrong attempt's green/red diff stays on screen before it clears and the correct spelling reveals itself. */
 const DIFF_VISIBLE_MS = 900;
-/** Stagger between each letter of the correct-answer reveal — fast enough to read as one quick flourish, not a slow typewriter. */
-const REVEAL_LETTER_MS = 65;
-/** Pause after the correct word finishes revealing, before advancing to the next word. */
-const REVEAL_TAIL_MS = 450;
+/** How long the correct spelling stays fully on screen once its letters have risen in — long enough to actually read it and say it, before it floats away. */
+const REVEAL_HOLD_MS = 2000;
+/** Pause after the correct word has dissolved, before advancing to the next word. */
+const REVEAL_TAIL_MS = 250;
 /** Settle time for a correct (auto-matched) attempt — just long enough for the green flash to register before advancing. */
 const CORRECT_DELAY_MS = 550;
 
@@ -76,19 +86,25 @@ export function VocabularySentence({
   const { t } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
   const [isFocused, setIsFocused] = useState(false);
-  // How many letters of the CORRECT word have been auto-revealed so far,
-  // once a wrong attempt's diff has had its moment on screen — see the
-  // effect below. Both reset for free on the next word (this component
-  // remounts per word — see VocabularyPractice's key={word.id}).
-  const [revealCount, setRevealCount] = useState(0);
-  const revealIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  // Where the correct-answer reveal is, once a wrong attempt's diff has had its
+  // moment on screen — see the effect below. "hidden" covers the diff itself
+  // and every word that wasn't missed. Resets for free on the next word (this
+  // component remounts per word — see VocabularyPractice's key={word.id}).
+  const [reveal, setReveal] = useState<"hidden" | "in" | "out">("hidden");
 
-  // A wrong submission needs enough time on screen for BOTH the diff (see
-  // DIFF_VISIBLE_MS) and the letter-by-letter correct-answer reveal that
-  // follows it (see the effect below) before this word is done and the
-  // session moves on — a plain fixed delay would either cut the reveal off
-  // mid-animation or, for a short word, sit around doing nothing.
-  const incorrectDelayMs = DIFF_VISIBLE_MS + targetWord.length * REVEAL_LETTER_MS + REVEAL_TAIL_MS;
+  // Same rise-in / dissolve-out Dictation's Show the word uses (see
+  // peek-glyph.ts), so a missed word is shown the same way everywhere. Reduced
+  // motion drops the movement but keeps the hold: that part is reading time.
+  const revealInMs = reducedMotion ? 0 : peekInTotalMs(targetWord.length);
+  const revealOutMs = reducedMotion ? 0 : peekOutTotalMs(targetWord.length);
+
+  // A wrong submission needs enough time on screen for the diff, the letters
+  // rising in, the word holding still for REVEAL_HOLD_MS and the letters
+  // dissolving again before this word is done and the session moves on — a
+  // plain fixed delay would either cut the reveal off mid-animation or, for a
+  // short word, sit around doing nothing.
+  const incorrectDelayMs =
+    DIFF_VISIBLE_MS + revealInMs + REVEAL_HOLD_MS + revealOutMs + REVEAL_TAIL_MS;
 
   const engine = useWordTypingEngine({
     target: targetWord,
@@ -100,31 +116,27 @@ export function VocabularySentence({
   });
 
   // Drives the diff -> reveal handoff: as soon as a wrong attempt settles,
-  // let its green/red diff sit for DIFF_VISIBLE_MS, then start ticking
-  // revealCount up once per REVEAL_LETTER_MS so the correct spelling types
-  // itself out. `engine.status` only ever transitions into "incorrect" once
-  // per word (useWordTypingEngine's settledRef locks it), so this never
-  // double-fires or restarts mid-reveal.
+  // let its green/red diff sit for DIFF_VISIBLE_MS, then raise the correct
+  // spelling, hold it, and let it float away. `engine.status` only ever
+  // transitions into "incorrect" once per word (useWordTypingEngine's
+  // settledRef locks it), so this never double-fires or restarts mid-reveal.
   useEffect(() => {
     if (engine.status !== "incorrect") {
-      setRevealCount(0);
+      setReveal("hidden");
       return;
     }
-    const startReveal = setTimeout(() => {
-      let count = 0;
-      revealIntervalRef.current = setInterval(() => {
-        count += 1;
-        setRevealCount(count);
-        if (count >= targetWord.length) clearInterval(revealIntervalRef.current);
-      }, REVEAL_LETTER_MS);
-    }, DIFF_VISIBLE_MS);
+    const raise = setTimeout(() => setReveal("in"), DIFF_VISIBLE_MS);
+    const dissolve = setTimeout(
+      () => setReveal("out"),
+      DIFF_VISIBLE_MS + revealInMs + REVEAL_HOLD_MS,
+    );
     return () => {
-      clearTimeout(startReveal);
-      clearInterval(revealIntervalRef.current);
+      clearTimeout(raise);
+      clearTimeout(dissolve);
     };
-  }, [engine.status, targetWord]);
+  }, [engine.status, revealInMs]);
 
-  const isRevealPhase = engine.status === "incorrect" && revealCount > 0;
+  const isRevealPhase = engine.status === "incorrect" && reveal !== "hidden";
   const isDiffPhase = engine.status === "incorrect" && !isRevealPhase;
 
   const [prefix, suffix] = useMemo(() => {
@@ -185,14 +197,16 @@ export function VocabularySentence({
             targetWord.split("").map((char, index) => (
               <motion.span
                 key={index}
-                initial={false}
-                animate={
+                initial={reducedMotion ? false : GLYPH_HIDDEN}
+                animate={reveal === "out" ? GLYPH_PEEK_OUT : GLYPH_SHOWN}
+                transition={
                   reducedMotion
-                    ? { opacity: index < revealCount ? 1 : 0 }
-                    : { opacity: index < revealCount ? 1 : 0, scale: index < revealCount ? 1 : 0.5 }
+                    ? { duration: 0 }
+                    : reveal === "out"
+                      ? peekOutTransition(index)
+                      : peekInTransition(index)
                 }
-                transition={{ duration: 0.15, ease: easeOut }}
-                className="text-success inline-block"
+                className={cn("inline-block whitespace-pre", PEEK_LIT_CLASS)}
               >
                 {char}
               </motion.span>

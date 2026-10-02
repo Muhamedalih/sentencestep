@@ -14,6 +14,14 @@ import {
 
 import type { DictationCell, DictationView } from "@/lib/features/dictation";
 import { easeOut } from "@/lib/motion";
+import {
+  GLYPH_HIDDEN,
+  GLYPH_PEEK_OUT,
+  GLYPH_SHOWN,
+  PEEK_LIT_CLASS,
+  peekInTransition,
+  peekOutTransition,
+} from "@/lib/peek-glyph";
 import { cn } from "@/lib/utils";
 
 const NBSP = " ";
@@ -33,21 +41,6 @@ const INTRO_TOTAL_MS = (INTRO_MAX_DELAY + INTRO_TICK_LAG + 0.22) * 1000 + 80;
 const ENTER_STEP = 0.004;
 const ENTER_MAX_DELAY = 0.18;
 const ENTER_TOTAL_MS = (ENTER_MAX_DELAY + 0.2) * 1000 + 80;
-
-const GLYPH_SHOWN = { opacity: 1, scale: 1, y: "0em", filter: "blur(0px)" };
-const GLYPH_HIDDEN = { opacity: 0, scale: 0.6, y: "0.18em", filter: "blur(3px)" };
-
-/**
- * Show the word: each real letter rises onto its line and comes into focus,
- * one after another (a springy overshoot as it lands), and when the peek ends
- * they float up and dissolve in the same order. The stagger is measured from
- * the word's first letter, so a long word still takes well under half a second.
- */
-const GLYPH_PEEK_OUT = { opacity: 0, scale: 0.9, y: "-0.14em", filter: "blur(6px)" };
-const PEEK_STAGGER_IN = 0.035;
-const PEEK_STAGGER_OUT = 0.03;
-const PEEK_MAX_STAGGER_IN = 0.24;
-const PEEK_MAX_STAGGER_OUT = 0.18;
 
 type Phase = "intro" | "enter" | "idle";
 
@@ -656,33 +649,11 @@ function Slot({
           reducedMotion
             ? { duration: 0 }
             : peekingIn
-              ? {
-                  // A springy rise with a little overshoot, each letter a beat
-                  // after the one before; opacity and focus settle on their own
-                  // (a spring would overshoot them into nonsense).
-                  default: {
-                    type: "spring",
-                    stiffness: 420,
-                    damping: 21,
-                    mass: 0.7,
-                    delay: Math.min(cell.letter * PEEK_STAGGER_IN, PEEK_MAX_STAGGER_IN),
-                  },
-                  opacity: {
-                    duration: 0.2,
-                    delay: Math.min(cell.letter * PEEK_STAGGER_IN, PEEK_MAX_STAGGER_IN),
-                  },
-                  filter: {
-                    duration: 0.32,
-                    ease: easeOut,
-                    delay: Math.min(cell.letter * PEEK_STAGGER_IN, PEEK_MAX_STAGGER_IN),
-                  },
-                }
+              ? // Show the word (see peek-glyph.ts): a springy rise, each letter a
+                // beat after the one before.
+                peekInTransition(cell.letter)
               : peekingOut
-                ? {
-                    duration: 0.34,
-                    ease: [0.4, 0, 0.7, 1],
-                    delay: Math.min(cell.letter * PEEK_STAGGER_OUT, PEEK_MAX_STAGGER_OUT),
-                  }
+                ? peekOutTransition(cell.letter)
                 : { duration: filled ? 0.18 : 0.22, delay: glyphDelay, ease: easeOut }
         }
         className={cn(
@@ -690,8 +661,7 @@ function Slot({
           filled
             ? "text-[var(--lesson-letter-correct)]"
             : peekingIn || peekingOut
-              ? // Lit: the primary colour with a soft halo that comes and goes with the letter.
-                "text-[var(--lesson-primary)] [text-shadow:0_0_0.45em_color-mix(in_oklch,var(--lesson-primary)_50%,transparent)]"
+              ? PEEK_LIT_CLASS
               : "text-[var(--lesson-letter-pending)]",
           glyph.concealed && "invisible",
         )}

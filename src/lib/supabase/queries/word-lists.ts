@@ -211,6 +211,7 @@ export async function fetchWordGroupById(
         targetWord: w.target_word,
         sentence: w.sentence,
         hintAr: w.hint_ar,
+        ipa: w.ipa,
       };
 
       if (locale && wordTranslations) {

@@ -38,6 +38,8 @@ export interface VocabularyWord {
   hintAr: string;
   /** Same locale-resolution rules as Sentence.supportText in src/types/content.ts — the word's hint in the request's active support locale, only populated when the fetch layer was given a locale. */
   supportHint?: string;
+  /** How the word is pronounced, as bare IPA without the slashes ("ænt") — the word's own `ipa` column when an admin set one, else the generated fallback in src/data/word-lists/ipa.ts (see src/lib/word-lists.ts). Absent for a word with neither; the block summary then simply shows no pronunciation line. Display it through formatIpa (src/lib/word-lists-ipa.ts). */
+  ipa?: string | null;
   /** Pre-resolved Kokoro pronunciation URL for this word, when already cached — set server-side only for the group's first word (see WordGroupPracticePage), the same "skip the on-demand round trip when we already know the answer" fix as Sentence.audioUrl. Absent/null is normal; PronunciationButton falls back to its existing on-demand resolve. */
   audioUrl?: string | null;
 }

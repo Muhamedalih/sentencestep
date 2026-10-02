@@ -614,6 +614,26 @@ export interface Dictionary {
     prevWordAria: string;
     /** Aria-label for the Learn view's "next word" arrow control. */
     nextWordAria: string;
+    /** The block summary's heading (VocabularyBlockSummary), shown after every block of five words. Deliberately has no count: the last block of a group can be shorter and the range line below it already says how many. */
+    blockDoneTitle: string;
+    /** Hint under the block summary heading: the rows open on tap. */
+    blockDoneHint: string;
+    /** Which words of the group the summary covers — {from}, {to} and {total} are 1-based positions and the group's word count. */
+    blockRange: string;
+    /** Accessible label of the block progress segments under the summary heading — {current} of {total} blocks. */
+    blockProgressAria: string;
+    /** Opens every row of the block summary. */
+    expandAll: string;
+    /** Closes every row of the block summary. */
+    collapseAll: string;
+    /** The block summary's button that opens the next five words. */
+    nextBlock: string;
+    /** Under the Next button: which words it opens — {from} and {to} are 1-based positions in the group. */
+    nextBlockHint: string;
+    /** The block summary's button on a group's last block: it leads to the group-complete screen instead of more words. */
+    finishBlock: string;
+    /** Under the Finish button. */
+    finishBlockHint: string;
   };
   /**
    * Vocabulary Recall (src/lib/vocabulary-recall) — a curiosity-framed, opt-in

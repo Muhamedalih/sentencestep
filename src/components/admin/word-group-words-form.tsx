@@ -16,10 +16,14 @@ interface WordRow {
   targetWord: string;
   sentence: string;
   hintAr: string;
+  /** The IPA override as typed; empty means "use the generated fallback". */
+  ipa: string;
+  /** The generated fallback for this word, shown as the IPA field's placeholder. Not saved. */
+  suggestedIpa: string;
 }
 
 function emptyWord(): WordRow {
-  return { targetWord: "", sentence: "", hintAr: "" };
+  return { targetWord: "", sentence: "", hintAr: "", ipa: "", suggestedIpa: "" };
 }
 
 /**
@@ -44,6 +48,8 @@ export function WordGroupWordsForm({
           targetWord: w.targetWord,
           sentence: w.sentence,
           hintAr: w.hintAr,
+          ipa: w.ipa ?? "",
+          suggestedIpa: w.suggestedIpa ?? "",
         }))
       : [emptyWord()],
   );
@@ -194,6 +200,22 @@ export function WordGroupWordsForm({
                 dir="rtl"
                 required
               />
+            </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label htmlFor={`ipa-${index}`} className="text-xs font-medium">
+                IPA pronunciation (optional)
+              </label>
+              <Input
+                id={`ipa-${index}`}
+                value={word.ipa}
+                onChange={(e) => updateWord(index, { ipa: e.target.value })}
+                placeholder={word.suggestedIpa ? `${word.suggestedIpa} (automatic)` : "e.g. ænt"}
+                dir="ltr"
+              />
+              <p className="text-muted-foreground text-xs">
+                Shown on the summary after each block of five words. Leave empty to use the
+                automatic one; the slashes are added for you.
+              </p>
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <label htmlFor={`sentence-${index}`} className="text-xs font-medium">

@@ -1,9 +1,11 @@
 import { cache } from "react";
 
 import { wordGroups as localWordGroups } from "@/data/word-lists";
+import { WORD_IPA } from "@/data/word-lists/ipa";
 import { fetchWordGroupById, fetchWordGroupSummaries } from "@/lib/supabase/queries/word-lists";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { SupportLocale } from "@/lib/i18n/locales";
+import { normalizeIpa } from "@/lib/word-lists-ipa";
 import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
 
 /**
@@ -23,6 +25,23 @@ function toSummary(group: WordGroup): WordGroupSummary {
   return { ...rest, wordCount: words.length, wordIds: words.map((word) => word.id) };
 }
 
+/**
+ * Fills in every word's pronunciation: the word's own IPA (set by an admin,
+ * or in the local seed) wins, and the generated fallback keyed by its target
+ * word covers the rest. A word with neither keeps no `ipa` and simply shows
+ * no pronunciation line. Done here, once, so the ~600-entry fallback map
+ * stays on the server — see src/lib/word-lists-ipa.ts.
+ */
+function withIpa(group: WordGroup): WordGroup {
+  return {
+    ...group,
+    words: group.words.map((word) => ({
+      ...word,
+      ipa: normalizeIpa(word.ipa) ?? WORD_IPA[word.targetWord.toLowerCase()] ?? null,
+    })),
+  };
+}
+
 export async function getWordGroupSummaries(locale?: SupportLocale): Promise<WordGroupSummary[]> {
   if (isSupabaseConfigured()) return fetchWordGroupSummaries(locale);
   return localWordGroups.map(toSummary);
@@ -39,6 +58,8 @@ export const getWordGroupById = cache(async function getWordGroupById(
   groupId: string,
   locale?: SupportLocale,
 ): Promise<WordGroup | undefined> {
-  if (isSupabaseConfigured()) return fetchWordGroupById(groupId, locale);
-  return localWordGroups.find((group) => group.id === groupId);
+  const group = isSupabaseConfigured()
+    ? await fetchWordGroupById(groupId, locale)
+    : localWordGroups.find((candidate) => candidate.id === groupId);
+  return group ? withIpa(group) : undefined;
 });
