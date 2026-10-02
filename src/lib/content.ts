@@ -69,6 +69,27 @@ export async function getLessons(mode: LearningMode, locale?: SupportLocale): Pr
   return lessonsByMode[mode].map(withLessonVocabulary);
 }
 
+/**
+ * A mode's lessons as catalog cards: title, level, order, illustration,
+ * free/premium and the support-language title/description — and NO sentence
+ * bodies. The Stories and Daily Lessons list pages only ever render cards, but
+ * they used to call getLessons, which downloads every sentence of every lesson
+ * (plus word and sentence translations), runs the vocabulary ranking over all
+ * of it, and ships every sentence into the browser inside the page payload.
+ * That made each visit to those two pages one of the heaviest requests in the
+ * app, and switching between them on a phone felt like the tap had been
+ * ignored. See fetchLessonSummaries for why this read is safe to share-cache
+ * across viewers. A page that shows something from the bodies (Conversation's
+ * line count) still needs getLessons.
+ */
+export async function getLessonSummaries(
+  mode: LearningMode,
+  locale?: SupportLocale,
+): Promise<LessonUnit[]> {
+  if (isSupabaseConfigured()) return fetchLessonSummaries(mode, locale);
+  return lessonsByMode[mode].map((lesson) => ({ ...lesson, sentences: [] }));
+}
+
 /** Sentence and word counts of one lesson — see HomeLessons.lessonStats. */
 export type LessonCounts = { sentences: number; words: number };
 

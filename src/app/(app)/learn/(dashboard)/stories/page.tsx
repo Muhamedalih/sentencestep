@@ -5,7 +5,7 @@ import { StoriesLibrary } from "@/components/app/stories-library";
 import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessons } from "@/lib/content";
+import { getLessonSummaries } from "@/lib/content";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
@@ -19,8 +19,10 @@ export const metadata: Metadata = { title: "Stories" };
 
 export default async function StoriesLibraryPage() {
   const locale = await getLocale();
+  // Cards only — the story grid never reads a sentence, so don't load them
+  // (see getLessonSummaries). The lesson page fetches the real body on open.
   const [lessons, hasPremium, isAdminUser, recallCount, user] = await Promise.all([
-    getLessons("stories", locale ?? undefined),
+    getLessonSummaries("stories", locale ?? undefined),
     hasPremiumAccess(),
     isAdmin(),
     fetchVocabularyRecallCountAction("stories"),
