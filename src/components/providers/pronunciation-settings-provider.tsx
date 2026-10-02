@@ -47,8 +47,10 @@ interface PronunciationSettingsValue {
   cycleSpeed: () => void;
   /** Jumps straight to one of PRONUNCIATION_SPEED_STEPS (out-of-range indices are ignored) — what LessonSettings' speed picker calls; like cycleSpeed, a change replays the current sentence/word at the new speed. */
   setSpeed: (index: number) => void;
-  /** Called by the currently-mounted PronunciationButton so the global Shift shortcut always replays whichever sentence/word is actually on screen. */
-  registerReplay: (replay: (() => void) | null) => void;
+  /**
+   * Called by the currently-mounted PronunciationButton so the global Shift shortcut always replays whichever sentence/word is actually on screen. Returns the way to take that registration back, which only clears the shortcut while it is still THIS replay: two buttons can be mounted at once (Word Lists' header button and the block summary's per-word buttons overlap while the summary animates out), and the one leaving last must not wipe out the one that registered after it.
+   */
+  registerReplay: (replay: () => void) => () => void;
   replayCurrent: () => void;
   /** Increments every time a real standalone Shift press triggers a replay — purely a UI signal so ShiftReplayHint can play its brief "key pressed" animation; carries no data of its own. */
   shiftPulse: number;
@@ -143,7 +145,7 @@ const DEFAULT_VALUE: PronunciationSettingsValue = {
   speedMultiplier: PRONUNCIATION_SPEED_STEPS[0].multiplier,
   cycleSpeed: noop,
   setSpeed: noop,
-  registerReplay: noop,
+  registerReplay: () => noop,
   replayCurrent: noop,
   shiftPulse: 0,
   getResolvedAudio: () => undefined,
@@ -434,8 +436,11 @@ export function PronunciationSettingsProvider({ children }: { children: ReactNod
     setSpeedIndex(index);
   }, []);
 
-  const registerReplay = useCallback((replay: (() => void) | null) => {
+  const registerReplay = useCallback((replay: () => void) => {
     replayRef.current = replay;
+    return () => {
+      if (replayRef.current === replay) replayRef.current = null;
+    };
   }, []);
 
   const replayCurrent = useCallback(() => {

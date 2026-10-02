@@ -5,7 +5,7 @@ import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
 import { fetchAllVocabularyWordsFlat } from "@/lib/supabase/queries/word-lists";
-import { isWeakWord } from "@/lib/weak-words/types";
+import { isWeakWord, isWeakWordDue } from "@/lib/weak-words/types";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 
 async function getAuthenticatedUserId(): Promise<string | null> {
@@ -55,6 +55,7 @@ export async function fetchWeakWordsAction(): Promise<WeakWordItem[]> {
     vocabulary.map((word) => [normalizeMistakeWord(word.targetWord), word]),
   );
 
+  const now = new Date();
   const items: WeakWordItem[] = [];
   for (const candidate of candidates) {
     if (!isWeakWord(candidate)) continue;
@@ -65,6 +66,7 @@ export async function fetchWeakWordsAction(): Promise<WeakWordItem[]> {
       groupId: match.groupId,
       targetWord: match.targetWord,
       reason: candidate.status === "active" ? "active" : "review",
+      dueNow: isWeakWordDue(candidate, now),
     });
   }
   return items;

@@ -47,6 +47,8 @@ const CORRECT_DELAY_MS = 550;
 /** The typing stage's natural size range — unchanged from before the word-length cap was added below. */
 const STAGE_MIN_REM = 3.5;
 const STAGE_MAX_REM = 8.4;
+/** Word Lists' practice screens show the stage, the sentence and the meaning 20% larger than this component's own default (see `enlarged`). */
+const ENLARGE = 1.2;
 /** Rough average glyph width, in ems, for this stage's bold/extrabold weight — used only to keep a long word from overflowing its line (see stageFontSize). */
 const STAGE_AVG_CHAR_EM = 0.62;
 /** The stage's available width, in rem, once it's inside VocabularySentence's max-w-2xl container. */
@@ -62,10 +64,14 @@ const STAGE_CONTAINER_REM = 40;
  * fit — never below STAGE_MIN_REM, and never above STAGE_MAX_REM for
  * everything short enough not to need it.
  */
-function stageFontSize(word: string): string {
+function stageFontSize(word: string, enlarged: boolean): string {
   const lengthCapRem = STAGE_CONTAINER_REM / (word.length * STAGE_AVG_CHAR_EM);
-  const maxRem = Math.max(Math.min(STAGE_MAX_REM, lengthCapRem), STAGE_MIN_REM);
-  return `clamp(${STAGE_MIN_REM}rem, 1.68rem + 7vw, ${maxRem}rem)`;
+  const scale = enlarged ? ENLARGE : 1;
+  // The length cap is a hard limit of the container, so it is never scaled: a long
+  // word still fits its line, only the words that had room to grow do.
+  const maxRem = Math.max(Math.min(STAGE_MAX_REM * scale, lengthCapRem), STAGE_MIN_REM);
+  const minRem = Math.min(STAGE_MIN_REM * scale, maxRem);
+  return `clamp(${minRem}rem, ${1.68 * scale}rem + ${7 * scale}vw, ${maxRem}rem)`;
 }
 
 /** What the screen can ask of a sentence from outside (the help bar's two buttons). */
@@ -119,7 +125,7 @@ export interface SmartSentenceOptions {
  * hints (the next right letter, with anything wrong before it crumbling away and
  * the right one restored in its place) and "I don't know" from the help bar, and
  * never shifts the layout when the first letter is typed (the stage holds its
- * place as faint slots, one per letter).
+ * place as an empty line: no slots or dashes are drawn, the letters simply appear).
  */
 export function VocabularySentence({
   sentence,
@@ -128,6 +134,7 @@ export function VocabularySentence({
   inputRef,
   fontFamily,
   smart,
+  enlarged = false,
 }: {
   sentence: string;
   targetWord: string;
@@ -138,6 +145,8 @@ export function VocabularySentence({
   /** Admin -> Fonts' Word Lists override (see resolveSectionFontFamily) — applied only to the big typing stage above, never the context sentence, which stays legible in the app's own default font. */
   fontFamily?: string;
   smart?: SmartSentenceOptions;
+  /** Word Lists' practice screens: the typing stage and the sentence 20% larger. Everything else (the help bar's stars and buttons) keeps its size. */
+  enlarged?: boolean;
 }) {
   const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
@@ -274,8 +283,8 @@ export function VocabularySentence({
     });
   }, [isDiffPhase, engine.typed, targetWord]);
 
-  // The upgraded stage is always on screen (faint slots, one per letter, until
-  // the first letter is typed) so nothing above or below it jumps.
+  // The upgraded stage is always on screen (an empty line until the first letter
+  // is typed) so nothing above or below it jumps.
   const showStage = smart ? true : engine.typed.length > 0 || isRevealPhase;
 
   // While a hint mends the answer the word loses letters and is centred again:
@@ -337,7 +346,7 @@ export function VocabularySentence({
           }
           transition={{ duration: isDiffPhase ? 0.35 : popS }}
           style={{
-            fontSize: stageFontSize(targetWord),
+            fontSize: stageFontSize(targetWord, enlarged),
             ...(fontFamily ? { fontFamily } : undefined),
           }}
           className={cn(
@@ -370,8 +379,11 @@ export function VocabularySentence({
               </motion.span>
             ))
           ) : smart && engine.typed.length === 0 ? (
-            <span aria-hidden="true" className="text-muted-foreground/25 tracking-[0.2em]">
-              {"_".repeat(targetWord.length)}
+            // Nothing is drawn until the first letter is typed (no slots, no dashes),
+            // but the stage keeps its line height so the sentence below never jumps
+            // when that letter arrives.
+            <span aria-hidden="true" className="invisible">
+              {"\u00A0"}
             </span>
           ) : (
             <span
@@ -399,7 +411,12 @@ export function VocabularySentence({
           below the entire sentence, nowhere near the word it belongs after. */}
       <p
         onClick={engine.focus}
-        className="text-muted-foreground w-full text-center text-[clamp(1.4rem,1rem+1.8vw,2.25rem)] leading-tight font-semibold text-balance"
+        className={cn(
+          "text-muted-foreground w-full text-center leading-tight font-semibold text-balance",
+          enlarged
+            ? "text-[clamp(1.68rem,1.2rem+2.16vw,2.7rem)]"
+            : "text-[clamp(1.4rem,1rem+1.8vw,2.25rem)]",
+        )}
       >
         {prefix && <span>{prefix} </span>}
         <span className="relative inline-block cursor-text align-baseline">

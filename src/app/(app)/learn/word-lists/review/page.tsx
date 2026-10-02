@@ -50,11 +50,14 @@ export default async function WordListsReviewPage() {
     words = queue.words;
     moreWaiting = Math.max(0, queue.total - queue.words.length);
   } else {
-    if (weakWords.length === 0) redirect("/learn/word-lists");
+    // Only the weak words that are up for review now (an unfixed mistake, or a
+    // corrected one whose day has come) — the same ones the hero counts.
+    const waiting = weakWords.filter((weak) => weak.dueNow);
+    if (waiting.length === 0) redirect("/learn/word-lists");
 
     // One fetch per distinct group, not per word — a learner's weak words
     // routinely cluster into a handful of groups.
-    const groupIds = [...new Set(weakWords.map((weak) => weak.groupId))];
+    const groupIds = [...new Set(waiting.map((weak) => weak.groupId))];
     const groups = await Promise.all(
       groupIds.map((id) => getWordGroupById(id, locale ?? undefined)),
     );
@@ -63,7 +66,7 @@ export default async function WordListsReviewPage() {
     );
 
     words = [];
-    for (const weak of weakWords) {
+    for (const weak of waiting) {
       const group = groupById.get(weak.groupId);
       const match = group?.words.find((word) => word.id === weak.wordId);
       // A weak word whose group/word no longer resolves (RLS made it

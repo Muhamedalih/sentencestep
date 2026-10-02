@@ -569,7 +569,7 @@ export const tr: Dictionary = {
       firstTry: "{total} kelimeden {n} ilk denemede",
       starsAria: "3 yıldızdan {n}",
       continueAction: "Devam et",
-      practiceAllAction: "Hepsini çalış",
+      practiceAllAction: "Tüm listeyi tekrar et",
       masteryPercent: "%{n} pekişti",
       dueBadge: "{n} tekrar",
       newBadge: "{n} yeni",

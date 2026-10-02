@@ -544,7 +544,7 @@ export const ar: Dictionary = {
       firstTry: "من أول محاولة: {n} من {total}",
       starsAria: "{n} من 3 نجوم",
       continueAction: "كمّل",
-      practiceAllAction: "تدرّب على الكل",
+      practiceAllAction: "راجع كل كلمات القائمة",
       masteryPercent: "{n}% إتقان",
       dueBadge: "{n} للمراجعة",
       newBadge: "{n} جديدة",

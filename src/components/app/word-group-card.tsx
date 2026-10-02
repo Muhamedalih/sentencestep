@@ -14,6 +14,7 @@ import {
   HeartPulse,
   Home,
   Landmark,
+  Layers,
   Leaf,
   Lock,
   Newspaper,
@@ -103,7 +104,7 @@ export function WordGroupCard({
   completedCount: number;
   isLoaded: boolean;
   isPremiumUser: boolean;
-  /** Smart word practice for a signed-in learner: this group's mastery. The bar shows how strong the words are (not just how many were ever typed), the counts say what is due and new, and the primary action becomes Continue. */
+  /** Smart word practice for a signed-in learner: this group's mastery. The bar and the percent show how many of the group's words the learner has finished (10 of 20 reads 50%), the counts say what is due and new, and the primary action becomes Continue. */
   mastery?: GroupMastery | null;
 }) {
   const locked = !group.isFree && !isPremiumUser;
@@ -279,11 +280,15 @@ export function WordGroupCard({
                 </Button>
               </div>
               {mastery && (
-                <div className="flex items-center justify-center px-4 pb-4 text-xs">
+                // The whole list again, whatever is due: a quiet but real button (tinted
+                // surface, icon, hover lift) rather than a grey text link, so it reads as
+                // a deliberate second path next to Learn and Continue.
+                <div className="px-4 pb-4">
                   <Link
                     href={`/learn/word-lists/${group.id}?scope=all`}
-                    className="text-muted-foreground hover:text-foreground font-medium transition-colors"
+                    className="border-primary/25 from-primary/15 to-primary/5 text-primary hover:border-primary/50 hover:from-primary/25 hover:to-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-center gap-2 rounded-xl border bg-gradient-to-b px-4 py-2.5 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2"
                   >
+                    <Layers className="size-4" aria-hidden="true" />
                     {t.wordLists.smart.practiceAllAction}
                   </Link>
                 </div>

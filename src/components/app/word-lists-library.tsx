@@ -74,7 +74,11 @@ export function WordListsLibrary({
         </p>
       </div>
 
-      <NeedsReviewWords words={weakWords} count={mastery?.reviewCount} smart={!!mastery} />
+      <NeedsReviewWords
+        words={weakWords.filter((word) => word.dueNow)}
+        count={mastery?.reviewCount}
+        smart={!!mastery}
+      />
 
       {groups.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">

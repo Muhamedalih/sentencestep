@@ -14,6 +14,8 @@ export interface WeakWordItem {
   groupId: string;
   targetWord: string;
   reason: WeakWordReason;
+  /** Waiting for review right now: an unfixed mistake, or a corrected word whose scheduled review has come. A corrected word still waiting out its interval is weak but NOT due — it is not counted or asked until its day arrives. */
+  dueNow: boolean;
 }
 
 /**
@@ -46,4 +48,21 @@ export function isWeakWord(mistake: {
 }): boolean {
   if (mistake.status === "active") return true;
   return mistake.nextReviewAt !== null && mistake.reviewStage <= WEAK_WORD_REVIEW_STAGE_THRESHOLD;
+}
+
+/**
+ * Whether a weak word is up for review now, as opposed to merely being on the
+ * weak list. An unfixed mistake always is; a corrected word is once its next
+ * scheduled review time has passed. Counting every weak word as "needs review"
+ * is what made the review hero shout a number (33, 38...) that had mostly
+ * already been reviewed and was simply waiting for its next day.
+ */
+export function isWeakWordDue(
+  mistake: { status: "active" | "corrected"; nextReviewAt: string | null },
+  now: Date,
+): boolean {
+  if (mistake.status === "active") return true;
+  if (mistake.nextReviewAt === null) return false;
+  const dueAt = Date.parse(mistake.nextReviewAt);
+  return Number.isFinite(dueAt) && dueAt <= now.getTime();
 }

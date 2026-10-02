@@ -560,7 +560,7 @@ export const en: Dictionary = {
       firstTry: "{n} of {total} first try",
       starsAria: "{n} of 3 stars",
       continueAction: "Continue",
-      practiceAllAction: "Practice all",
+      practiceAllAction: "Review the whole list",
       masteryPercent: "{n}% mastered",
       dueBadge: "{n} due",
       newBadge: "{n} new",

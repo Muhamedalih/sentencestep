@@ -288,7 +288,8 @@ already has history the day the feature goes On.
     a short "all caught up" screen (it says when the next word falls due) with
     **Practice all** (`?scope=all`), which still records misses but leaves the
     schedule alone for words that are not due. The expanded group card also
-    offers a small **Practice all** link next to Continue.
+    offers it as a button under Learn / Continue, labelled "Review the whole
+    list" (not "Review all words", which is the global hero).
   - _A visit keeps the words it opened with_ (`VocabularyPractice`,
     `practiceVisitKey`). The practice page is rendered again after every answer:
     each answer is reported with a Server Action that calls `revalidatePath`, and
@@ -310,11 +311,20 @@ already has history the day the feature goes On.
     learner moved on can arrive seconds late. It is dropped when it does (and not
     remembered as the new word's clip), instead of saying a word that is no
     longer there.
-  - _Library and review_: each group card shows a **mastery bar** (the share of
-    full strength across the group's words) and a due / new badge; the review
-    hero's number is the words due plus the weak words, each once. "Review All
-    Words" asks the due words and the weak words together, 12 at a time, weakest
-    first (`buildSmartReviewQueue`), and says how many more are waiting.
+  - _Library and review_: each group card shows a **progress bar** (the share of
+    the group's words the learner has finished at least once: 10 of 20 reads
+    50%; how strong they are shows in the due / new badges, not in the bar). The
+    review hero's number — on Home and in Word Lists alike, both through
+    `reviewWaitingIds` — is the words due on the schedule plus the weak words
+    that are up for review _now_ (an unfixed mistake, or a corrected one whose
+    day has come), each once. A corrected weak word still waiting out its
+    interval is not counted or asked until its day (`WeakWordItem.dueNow`).
+    "Review All Words" asks that same set, 12 at a time, weakest first
+    (`buildSmartReviewQueue`), and says how many more are waiting.
+  - _Shift replays the word_: `registerReplay` hands back its own un-register,
+    which only clears the shortcut while it is still that button's replay. The
+    block summary mounts a button per word while the header's is registered;
+    the summary leaving last used to wipe the shortcut for the whole next block.
   - _Admin_: Admin → Word Lists → a group's words have an **Also accepted
     answers** field per word (comma- or line-separated, up to 8, plain words
     only; `validateAlternates` names anything it rejects). The field appears only

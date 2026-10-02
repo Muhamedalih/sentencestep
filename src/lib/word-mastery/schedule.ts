@@ -277,7 +277,9 @@ export interface GroupMastery {
   dueCount: number;
   /** Words at strength STRONG_STRENGTH or more. */
   strongCount: number;
-  /** 0–100: how far the group is from every word at full strength. Moves a little with every word that climbs. */
+  /** Words the learner has finished at least once (everything that is not new) — the number the bar is about. */
+  doneCount: number;
+  /** 0–100: the share of the group's words the learner has finished, so 10 of 20 words reads 50% and the bar and the number say what the learner remembers doing. A word coming back for review stays counted; how strong it is shows in strongCount, not in the bar. */
   percent: number;
 }
 
@@ -289,20 +291,19 @@ export function summarizeGroupMastery(
   let newCount = 0;
   let dueCount = 0;
   let strongCount = 0;
-  let strengthSum = 0;
   for (const id of wordIds) {
     const state = states.get(id);
     if (!state) {
       newCount += 1;
       continue;
     }
-    strengthSum += state.strength;
     if (state.strength >= STRONG_STRENGTH) strongCount += 1;
     if (state.dueOn <= todayISO) dueCount += 1;
   }
   const total = wordIds.length;
-  const percent = total === 0 ? 0 : Math.round((strengthSum / (MAX_STRENGTH * total)) * 100);
-  return { total, newCount, dueCount, strongCount, percent };
+  const doneCount = total - newCount;
+  const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+  return { total, newCount, dueCount, strongCount, doneCount, percent };
 }
 
 /** The word ids due today, weakest first (then longest overdue) — the order a review visit asks them in. */
@@ -314,4 +315,28 @@ export function dueWordIds(states: ReadonlyMap<string, MasteryState>, todayISO: 
         a.strength - b.strength || (a.dueOn < b.dueOn ? -1 : a.dueOn > b.dueOn ? 1 : 0),
     )
     .map(([id]) => id);
+}
+
+/**
+ * The words "waiting for review" today — the one number behind the review hero
+ * on Home and in Word Lists, and the queue the review screen asks: every word
+ * due on the learner's schedule, plus every weak word that is up for review now
+ * (an unfixed mistake, or a corrected one whose day has come), each once, and
+ * only words the learner can open (`visibleIds`).
+ *
+ * A weak word that is merely still on the weak list — corrected, its next review
+ * days away — is deliberately NOT here: it was already reviewed, and counting it
+ * is what made the hero announce a pile (30+ words) of which most were not due.
+ */
+export function reviewWaitingIds(
+  states: ReadonlyMap<string, MasteryState>,
+  visibleIds: ReadonlySet<string>,
+  weak: Iterable<{ wordId: string; dueNow: boolean }>,
+  todayISO: string,
+): Set<string> {
+  const waiting = new Set(dueWordIds(states, todayISO).filter((id) => visibleIds.has(id)));
+  for (const item of weak) {
+    if (item.dueNow && visibleIds.has(item.wordId)) waiting.add(item.wordId);
+  }
+  return waiting;
 }

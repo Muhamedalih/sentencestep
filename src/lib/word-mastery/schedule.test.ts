@@ -13,6 +13,7 @@ import {
   classifyWord,
   countsAsMissed,
   dueWordIds,
+  reviewWaitingIds,
   intervalDays,
   isDue,
   isISODate,
@@ -322,13 +323,14 @@ test("a practice visit is Continue unless the URL asks for scope=all, and its ke
   assert.notEqual(practiceVisitKey("family", "all"), practiceVisitKey("travel", "all"));
 });
 
-test("summarizeGroupMastery counts new, due and strong words and a percent that moves with every step", () => {
+test("summarizeGroupMastery counts new, due and strong words, and the percent is the share of words finished", () => {
   const ids = ["a", "b", "c", "d"];
   assert.deepEqual(summarizeGroupMastery(ids, new Map(), TODAY), {
     total: 4,
     newCount: 4,
     dueCount: 0,
     strongCount: 0,
+    doneCount: 0,
     percent: 0,
   });
 
@@ -344,8 +346,19 @@ test("summarizeGroupMastery counts new, due and strong words and a percent that 
   assert.equal(summary.newCount, 1);
   assert.equal(summary.dueCount, 1);
   assert.equal(summary.strongCount, 2);
-  // (5 + 4 + 1 + 0) of a possible 20.
-  assert.equal(summary.percent, 50);
+  // Three of the four words have been finished at least once, however strong they are.
+  assert.equal(summary.doneCount, 3);
+  assert.equal(summary.percent, 75);
+
+  // 10 of 20 words finished reads 50%, not a strength average.
+  const twenty = Array.from({ length: 20 }, (_, index) => `w${index}`);
+  const half = summarizeGroupMastery(
+    twenty,
+    new Map(twenty.slice(0, 10).map((id) => [id, { strength: 0, dueOn: "2025-06-11" }] as const)),
+    TODAY,
+  );
+  assert.equal(half.percent, 50);
+  assert.equal(half.newCount, 10);
 
   assert.equal(summarizeGroupMastery([], new Map(), TODAY).percent, 0);
   const full = summarizeGroupMastery(
@@ -371,6 +384,28 @@ test("dueWordIds lists what is due today, weakest then longest overdue first", (
     ["b", "c", "d", "a"],
   );
   assert.deepEqual(dueWordIds(new Map(), TODAY), []);
+});
+
+test("reviewWaitingIds counts scheduled-due words and weak words that are due now, each once, and ignores weak words still waiting out their interval", () => {
+  const visible = new Set(["a", "b", "c", "d", "e", "x"]);
+  const waiting = reviewWaitingIds(
+    states({
+      a: { strength: 1, dueOn: "2025-06-10" }, // due today
+      b: { strength: 3, dueOn: "2025-06-15" }, // not due yet
+      c: { strength: 2, dueOn: "2025-06-09" }, // due, and also weak and due
+      hidden: { strength: 0, dueOn: "2025-06-01" }, // due, but in a locked group
+    }),
+    visible,
+    [
+      { wordId: "b", dueNow: false }, // weak, corrected, next review days away: not counted
+      { wordId: "c", dueNow: true }, // already counted through the schedule
+      { wordId: "d", dueNow: true }, // an unfixed mistake with no schedule row
+      { wordId: "e", dueNow: false },
+      { wordId: "gone", dueNow: true }, // not a word this learner can open
+    ],
+    TODAY,
+  );
+  assert.deepEqual([...waiting].sort(), ["a", "c", "d"]);
 });
 
 /**
