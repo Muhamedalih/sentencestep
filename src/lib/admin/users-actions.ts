@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
+import { findUserByEmail } from "@/lib/admin/users-lookup";
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import type { AdminRole } from "@/lib/admin/users-queries";
 
@@ -11,9 +12,6 @@ export interface UserRoleActionResult {
   error?: string;
   success?: string;
 }
-
-const USER_SEARCH_PAGE_SIZE = 1000;
-const USER_SEARCH_MAX_PAGES = 10;
 
 /**
  * profiles.role can only ever be written by the service-role connection —
@@ -37,21 +35,13 @@ export async function setUserRoleByEmail(
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) return { error: "Enter an email address." };
 
+  const found = await findUserByEmail(normalizedEmail);
+  if (found.status === "error")
+    return { error: "Couldn't search for that user. Please try again." };
+  if (found.status === "not_found") return { error: "No account found with that email." };
+  const targetUserId = found.id;
+
   const serviceRole = createServiceRoleClient();
-
-  let targetUserId: string | null = null;
-  for (let page = 1; page <= USER_SEARCH_MAX_PAGES && !targetUserId; page++) {
-    const { data, error } = await serviceRole.auth.admin.listUsers({
-      page,
-      perPage: USER_SEARCH_PAGE_SIZE,
-    });
-    if (error) return { error: "Couldn't search for that user. Please try again." };
-    const match = data.users.find((u) => u.email?.toLowerCase() === normalizedEmail);
-    if (match) targetUserId = match.id;
-    if (data.users.length < USER_SEARCH_PAGE_SIZE) break;
-  }
-  if (!targetUserId) return { error: "No account found with that email." };
-
   const { error } = await serviceRole
     .from("profiles")
     .update({ role, updated_at: new Date().toISOString() })

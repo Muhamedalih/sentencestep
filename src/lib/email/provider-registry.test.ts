@@ -41,3 +41,16 @@ test("getEmailProvider: returns a Resend-backed provider once both are set", () 
     assert.equal(provider?.name, "resend");
   });
 });
+
+test("getEmailProvider: an empty EMAIL_REPLY_TO_ADDRESS is treated as unset", () => {
+  withEnv(
+    {
+      EMAIL_PROVIDER_API_KEY: "key",
+      EMAIL_FROM_ADDRESS: "noreply@example.com",
+      EMAIL_REPLY_TO_ADDRESS: "",
+    },
+    () => {
+      assert.equal(getEmailProvider()?.name, "resend");
+    },
+  );
+});

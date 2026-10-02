@@ -11,14 +11,20 @@ interface ResendSuccessBody {
  * Resend's REST API directly via fetch rather than pulling in the `resend`
  * SDK — the API surface used here (one POST, one JSON body) doesn't warrant
  * a new dependency. Registered from provider-registry.ts, gated on
- * EMAIL_PROVIDER_API_KEY + EMAIL_FROM_ADDRESS being set.
+ * EMAIL_PROVIDER_API_KEY + EMAIL_FROM_ADDRESS being set. `replyTo` (from the
+ * optional EMAIL_REPLY_TO_ADDRESS) is where a learner's reply lands when the
+ * `from` address is a no-reply one.
  *
  * Throws on any non-2xx response or network failure — it never returns a
  * fabricated "sent" result. Callers (see send.ts) are expected to let that
  * propagate to their own error handling rather than this layer inventing a
  * fallback status.
  */
-export function createResendProvider(apiKey: string, from: string): EmailProvider {
+export function createResendProvider(
+  apiKey: string,
+  from: string,
+  replyTo?: string,
+): EmailProvider {
   return {
     name: "resend",
     async sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
@@ -34,6 +40,8 @@ export function createResendProvider(apiKey: string, from: string): EmailProvide
           subject: input.subject,
           html: input.html,
           text: input.text,
+          // Only sent when configured, so replies otherwise go to `from`.
+          ...(replyTo ? { reply_to: replyTo } : {}),
         }),
       });
 

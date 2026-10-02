@@ -43,3 +43,14 @@ test("renderEmailLayout: a malicious unsubscribeUrl cannot break out of the href
   );
   assert.ok(html.includes("&quot;"), "the quote in the malicious payload must be escaped");
 });
+
+test("renderEmailLayout: omits the call-to-action button when no ctaLabel/ctaUrl is given", () => {
+  const html = renderEmailLayout({
+    previewText: "preview",
+    heading: "heading",
+    bodyHtml: "<p>body</p>",
+    unsubscribeUrl: "https://sentencestep.example/learn/settings",
+  });
+  assert.ok(!html.includes("text-decoration:none;font-weight:600"), "no CTA anchor expected");
+  assert.ok(html.includes("<p>body</p>"));
+});
