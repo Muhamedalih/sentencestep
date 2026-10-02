@@ -1,3 +1,4 @@
+import { MAX_IPA_LENGTH, normalizeIpa } from "@/lib/word-lists-ipa";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
 // Pure, no I/O — safe to unit test and safe to reuse for client-side UX
@@ -62,6 +63,8 @@ export interface VocabularyWordInput {
   targetWord: string;
   sentence: string;
   hintAr: string;
+  /** Optional IPA override, with or without surrounding slashes. Empty means "use the generated fallback". */
+  ipa?: string | null;
 }
 
 const ARABIC_CHAR_RE = /[؀-ۿ]/;
@@ -117,6 +120,19 @@ export function validateVocabularyWordInput(input: VocabularyWordInput): string[
     errors.push(
       `"${targetWord || "word"}": Arabic hint must be ${MAX_HINT_LENGTH} characters or fewer.`,
     );
+  }
+
+  const ipa = normalizeIpa(input.ipa);
+  if (ipa) {
+    if (ipa.length > MAX_IPA_LENGTH) {
+      errors.push(`"${targetWord || "word"}": IPA must be ${MAX_IPA_LENGTH} characters or fewer.`);
+    }
+    // Plain letters are fine ('red' is valid IPA); Arabic, digits and markup never are.
+    if (ARABIC_CHAR_RE.test(ipa) || /[0-9<>"]/.test(ipa)) {
+      errors.push(
+        `"${targetWord || "word"}": IPA must use phonetic symbols, not Arabic or digits.`,
+      );
+    }
   }
 
   return errors;

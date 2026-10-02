@@ -1,3 +1,4 @@
+import { WORD_IPA } from "@/data/word-lists/ipa";
 import { createClient } from "@/lib/supabase/server";
 import type { WordGroupStatus } from "@/lib/admin/word-lists-validation";
 
@@ -70,6 +71,10 @@ export interface AdminVocabularyWord {
   targetWord: string;
   sentence: string;
   hintAr: string;
+  /** The IPA an admin set for this word, bare without slashes; null when none (the generated fallback applies). */
+  ipa: string | null;
+  /** The generated fallback for this word's target word (src/data/word-lists/ipa.ts), shown as the field's placeholder; null when there is none. */
+  suggestedIpa: string | null;
 }
 
 export interface AdminWordGroupDetail extends AdminWordGroup {
@@ -112,6 +117,8 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
       targetWord: w.target_word,
       sentence: w.sentence,
       hintAr: w.hint_ar,
+      ipa: w.ipa,
+      suggestedIpa: WORD_IPA[w.target_word.toLowerCase()] ?? null,
     })),
   };
 }

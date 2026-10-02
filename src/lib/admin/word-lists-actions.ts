@@ -8,6 +8,7 @@ import { logAdminAction } from "@/lib/admin/audit-log";
 import { validateWordGroupInput, validateWordGroupWords } from "@/lib/admin/word-lists-validation";
 import type { VocabularyWordInput, WordGroupInput } from "@/lib/admin/word-lists-validation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeIpa } from "@/lib/word-lists-ipa";
 import { triggerAutomaticWordGroupVoiceGeneration } from "@/lib/voice/auto-trigger";
 
 export interface ActionResult {
@@ -241,6 +242,7 @@ export async function saveWordGroupWords(
       target_word: word.targetWord.trim().toLowerCase(),
       sentence: word.sentence.trim(),
       hint_ar: word.hintAr.trim(),
+      ipa: normalizeIpa(word.ipa),
       updated_at: nowIso,
     }));
     const { error } = await supabase
@@ -258,6 +260,7 @@ export async function saveWordGroupWords(
     target_word: word.targetWord.trim().toLowerCase(),
     sentence: word.sentence.trim(),
     hint_ar: word.hintAr.trim(),
+    ipa: normalizeIpa(word.ipa),
     updated_at: nowIso,
   }));
   const { error: finalError } = await supabase

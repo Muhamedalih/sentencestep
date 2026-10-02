@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, PartyPopper } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
+import { VocabularyBlockSummary } from "@/components/learning/vocabulary-block-summary";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
@@ -68,6 +69,10 @@ export function VocabularyPractice({
   // right answer (a retry that finally lands doesn't double-count), purely
   // to drive the "n / blockSize" counter below.
   const [doneInBlock, setDoneInBlock] = useState<Set<number>>(() => new Set());
+  // True from the moment the current block's last word is answered correctly
+  // until the learner presses Next (or Finish, on the last block) on the
+  // summary of the five words they just did — see VocabularyBlockSummary.
+  const [showSummary, setShowSummary] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { isWordCompleted, completedCountIn, markWordComplete } = useWordProgress();
   // A word already awarded progress this session (via markWordComplete)
@@ -80,12 +85,21 @@ export function VocabularyPractice({
   const blockSize = currentBlock.length;
 
   // Once every slot in the current block has been resolved correctly (the
-  // queue drains to empty), advance to the next block or finish the lesson.
-  // Runs as an effect (not inline in handleWordResult) because a slot can
-  // resolve correctly via either branch below and either one needs the same
-  // "is the block now done" check afterward.
+  // queue drains to empty), show the summary of the block's words. Runs as an
+  // effect (not inline in handleWordResult) because a slot can resolve
+  // correctly via either branch below and either one needs the same "is the
+  // block now done" check afterward. Moving on from the summary is
+  // continueFromSummary's job.
   useEffect(() => {
     if (queue.length > 0 || currentBlock.length === 0) return;
+    setShowSummary(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the queue/block actually change
+  }, [queue, blockIndex]);
+
+  // Next on the summary: open the next block's words, or — after the last
+  // block — hand over to the group-complete screen.
+  function continueFromSummary() {
+    setShowSummary(false);
     if (blockIndex + 1 < blocks.length) {
       const nextIndex = blockIndex + 1;
       setBlockIndex(nextIndex);
@@ -94,8 +108,7 @@ export function VocabularyPractice({
     } else {
       setIsComplete(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the queue/block actually change
-  }, [queue, blockIndex]);
+  }
   // Owned here, not inside VocabularySentence (which remounts every word) —
   // this is what lets PronunciationButton's own built-in refocus-after-click
   // (see its inputRef prop) find the currently-mounted input no matter which
@@ -184,7 +197,7 @@ export function VocabularyPractice({
 
   return (
     <div className="flex h-svh w-full flex-col">
-      {!isComplete && <ShiftReplayHint />}
+      {!isComplete && !showSummary && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -266,6 +279,7 @@ export function VocabularyPractice({
                     setQueue(blocks[0]?.map((_, i) => i) ?? []);
                     setDoneInBlock(new Set());
                     markedWordIdsRef.current = new Set();
+                    setShowSummary(false);
                     setIsComplete(false);
                   }}
                 >
@@ -274,6 +288,17 @@ export function VocabularyPractice({
               </div>
             </motion.div>
           </motion.div>
+        ) : showSummary ? (
+          <VocabularyBlockSummary
+            key={`summary-${blockIndex}`}
+            words={currentBlock}
+            blockNumber={blockIndex + 1}
+            blockCount={blocks.length}
+            firstWordNumber={blockIndex * BLOCK_SIZE + 1}
+            totalWords={total}
+            onContinue={continueFromSummary}
+            defaultVoiceId={defaultVoiceId}
+          />
         ) : (
           word && (
             <motion.div
