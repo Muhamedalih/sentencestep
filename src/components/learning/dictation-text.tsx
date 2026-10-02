@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -11,7 +12,6 @@ import {
   type RefObject,
 } from "react";
 
-import { useUnderlinePosition } from "@/components/learning/typing-text";
 import type { DictationCell, DictationView } from "@/lib/features/dictation";
 import { easeOut } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,18 @@ const ENTER_TOTAL_MS = (ENTER_MAX_DELAY + 0.2) * 1000 + 80;
 
 const GLYPH_SHOWN = { opacity: 1, scale: 1, y: "0em", filter: "blur(0px)" };
 const GLYPH_HIDDEN = { opacity: 0, scale: 0.6, y: "0.18em", filter: "blur(3px)" };
+
+/**
+ * Show the word: each real letter rises onto its line and comes into focus,
+ * one after another (a springy overshoot as it lands), and when the peek ends
+ * they float up and dissolve in the same order. The stagger is measured from
+ * the word's first letter, so a long word still takes well under half a second.
+ */
+const GLYPH_PEEK_OUT = { opacity: 0, scale: 0.9, y: "-0.14em", filter: "blur(6px)" };
+const PEEK_STAGGER_IN = 0.035;
+const PEEK_STAGGER_OUT = 0.03;
+const PEEK_MAX_STAGGER_IN = 0.24;
+const PEEK_MAX_STAGGER_OUT = 0.18;
 
 type Phase = "intro" | "enter" | "idle";
 
@@ -80,6 +92,151 @@ interface DictationTextProps {
   finished?: boolean;
 }
 
+interface CursorBarRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * The uniform scale an element is drawn at: its `scale` property (Tailwind's
+ * `scale-*` utilities set that, not `transform`) times whatever its `transform`
+ * matrix scales by. 1 when it has neither.
+ */
+function scaleOf(style: CSSStyleDeclaration): number {
+  let scale = 1;
+  const individual = parseFloat(style.scale);
+  if (Number.isFinite(individual) && individual > 0) scale *= individual;
+  if (style.transform && style.transform !== "none") {
+    try {
+      scale *= new DOMMatrixReadOnly(style.transform).a || 1;
+    } catch {
+      // An unparsable transform is treated as none.
+    }
+  }
+  return scale;
+}
+
+/** The transitioned properties that move or resize a blank line (a word that grows on hover). */
+const GEOMETRY_PROPERTIES = new Set(["transform", "scale", "translate", "rotate"]);
+
+/** A running scale transition is never trusted for longer than this: a transition removed with its element would otherwise keep the tracking loop alive. */
+const FOLLOW_LIMIT_MS = 1200;
+
+/**
+ * Where the cursor bar goes: exactly onto the line of the blank the learner is
+ * on — same left and right ends, same thickness, same height — so the bar and
+ * the blank read as one line that turns blue, never as two lines.
+ *
+ * The line is measured, not guessed, in screen space. A word the pointer is
+ * over (or that is being spoken) grows by 4.5% and its blank line moves and
+ * widens with it, so the measurement is repeated on every frame while any
+ * transform or scale transition is running (and once more when it ends); `following`
+ * is true meanwhile, and the bar then jumps to each new measurement instead of
+ * gliding after it. Without this the bar stayed where the line had been
+ * before the word grew, a double line for as long as the word was hovered and
+ * after it.
+ *
+ * The drawn line is the blank's track minus 0.08em each side (at least 0.3em
+ * wide), see Slot; the freeform caret (blanks off) has no drawn line and uses
+ * the whole track.
+ */
+function useCursorBar(containerRef: RefObject<HTMLDivElement | null>, deps: readonly unknown[]) {
+  const [bar, setBar] = useState<{ rect: CursorBarRect | null; following: boolean }>({
+    rect: null,
+    following: false,
+  });
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let frame = 0;
+    let running = 0;
+    let followingSince = 0;
+
+    function measure() {
+      const containerEl = containerRef.current;
+      const track = containerEl?.querySelector<HTMLElement>('[data-current-tick="true"]');
+      const following = running > 0;
+      if (!containerEl || !track) {
+        setBar((previous) =>
+          previous.rect === null && previous.following === following
+            ? previous
+            : { rect: null, following },
+        );
+        return;
+      }
+      const box = containerEl.getBoundingClientRect();
+      const trackBox = track.getBoundingClientRect();
+      const word = track.closest<HTMLElement>("[data-dictation-word]");
+      const scale = word ? scaleOf(getComputedStyle(word)) : 1;
+      const em = (parseFloat(getComputedStyle(track).fontSize) || 0) * scale;
+      const drawn = track.childElementCount > 0;
+      const width = drawn
+        ? Math.min(trackBox.width, Math.max(trackBox.width - 0.16 * em, 0.3 * em))
+        : trackBox.width;
+      const rect: CursorBarRect = {
+        x: trackBox.left - box.left + (trackBox.width - width) / 2,
+        y: trackBox.top - box.top,
+        width,
+        height: trackBox.height,
+      };
+      setBar((previous) => {
+        const before = previous.rect;
+        const same =
+          before !== null &&
+          previous.following === following &&
+          Math.abs(before.x - rect.x) < 0.01 &&
+          Math.abs(before.y - rect.y) < 0.01 &&
+          Math.abs(before.width - rect.width) < 0.01 &&
+          Math.abs(before.height - rect.height) < 0.01;
+        return same ? previous : { rect, following };
+      });
+    }
+
+    function loop() {
+      if (running > 0 && performance.now() - followingSince > FOLLOW_LIMIT_MS) running = 0;
+      measure();
+      frame = running > 0 ? requestAnimationFrame(loop) : 0;
+    }
+
+    function transformStarted(event: Event) {
+      if (!GEOMETRY_PROPERTIES.has((event as TransitionEvent).propertyName)) return;
+      if (running === 0) followingSince = performance.now();
+      running += 1;
+      if (!frame) frame = requestAnimationFrame(loop);
+    }
+
+    function transformEnded(event: Event) {
+      if (!GEOMETRY_PROPERTIES.has((event as TransitionEvent).propertyName)) return;
+      running = Math.max(0, running - 1);
+      measure();
+    }
+
+    measure();
+    container.addEventListener("transitionrun", transformStarted);
+    container.addEventListener("transitionend", transformEnded);
+    container.addEventListener("transitioncancel", transformEnded);
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(container);
+    window.addEventListener("resize", measure);
+    document.fonts?.ready?.then(measure).catch(() => {});
+
+    return () => {
+      cancelAnimationFrame(frame);
+      container.removeEventListener("transitionrun", transformStarted);
+      container.removeEventListener("transitionend", transformEnded);
+      container.removeEventListener("transitioncancel", transformEnded);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return bar;
+}
+
 /**
  * The Dictation view of the sentence: the very same text layout the typing
  * view draws (same words, spaces, size and wrapping), but every letter is
@@ -119,11 +276,12 @@ export function DictationText({
     return () => clearTimeout(timer);
   }, [phase]);
 
-  const barRect = useUnderlinePosition(containerRef, '[data-current-tick="true"]', -4, [
+  const bar = useCursorBar(containerRef, [
     view.cursor?.word,
     view.cursor?.letter,
     value,
     showBlanks,
+    finished,
   ]);
 
   let order = 0;
@@ -161,7 +319,11 @@ export function DictationText({
                   key={cellIndex}
                   cell={cell}
                   order={slotOrder}
-                  current={view.cursor?.word === cell.word && view.cursor.letter === cell.letter}
+                  current={
+                    !finished &&
+                    view.cursor?.word === cell.word &&
+                    view.cursor.letter === cell.letter
+                  }
                   showBlank={showBlanks}
                   lit={lit}
                   pulse={lit && Boolean(words?.litPulse)}
@@ -191,6 +353,7 @@ export function DictationText({
           return (
             <span
               key={tokenIndex}
+              data-dictation-word=""
               role={tappable ? "button" : undefined}
               // Tapped with the mouse or a finger only: keyboard users stay in
               // the answer (Shift already replays the whole sentence).
@@ -241,7 +404,7 @@ export function DictationText({
             )}
             <span className="relative inline-block" aria-hidden="true">
               <span className="invisible">{NBSP}</span>
-              <TickTrack current />
+              <TickTrack current={!finished} />
               {rejection && (
                 <RejectedLetter
                   key={rejection.nonce}
@@ -254,20 +417,31 @@ export function DictationText({
         )}
       </div>
 
+      {/* The cursor: the current blank's own line, turned on. Same ends, same
+          thickness and height as the line it sits on (see useCursorBar), which
+          is hidden meanwhile (Slot), so there is only ever one line there. */}
       <motion.div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute top-0 left-0 h-[5px] rounded-full transition-colors duration-150",
+          "pointer-events-none absolute top-0 left-0 rounded-full transition-colors duration-150",
           rejection ? "bg-[var(--lesson-letter-wrong)]" : "bg-[var(--lesson-underline)]",
         )}
         initial={false}
         animate={
-          barRect && !finished
-            ? { x: barRect.x, y: barRect.y, width: barRect.width, opacity: 1 }
+          bar.rect && !finished
+            ? {
+                x: bar.rect.x,
+                y: bar.rect.y,
+                width: bar.rect.width,
+                height: bar.rect.height,
+                opacity: 1,
+              }
             : { opacity: 0 }
         }
         transition={
-          reducedMotion ? { duration: 0 } : { type: "tween", duration: 0.16, ease: "easeOut" }
+          reducedMotion || bar.following
+            ? { duration: 0 }
+            : { type: "tween", duration: 0.16, ease: "easeOut" }
         }
       />
 
@@ -376,22 +550,39 @@ function TypedLetter({ char }: { char: string }) {
  * transparent, which would depend on the animation having been applied to the
  * page by the time the letter is swapped).
  */
-function useSlotGlyph(typed: string | null, real: string, reveal: boolean) {
+function useSlotGlyph(typed: string | null, real: string, intro: boolean, peek: boolean) {
   const [memory, setMemory] = useState<{ letter: string; gone: boolean } | null>(null);
   if (typed !== null && (memory === null || memory.gone || memory.letter !== typed)) {
     setMemory({ letter: typed, gone: false });
   }
+  // A peek that ends has to fade out before the real letter may be hidden, so
+  // for that moment (`peekFading`) it is still painted. Only an untyped slot
+  // can be peeking or fading: the learner's own letter takes over at once.
+  const peekWanted = peek && typed === null;
+  const [peekShown, setPeekShown] = useState(false);
+  const [peekFading, setPeekFading] = useState(false);
+  if (peekWanted !== peekShown) {
+    setPeekShown(peekWanted);
+    setPeekFading(!peekWanted && peekShown && typed === null);
+  } else if (typed !== null && peekFading) {
+    setPeekFading(false);
+  }
   const leaving = typed === null && memory !== null && !memory.gone ? memory.letter : null;
   const showsReal = typed === null && leaving === null;
-  const revealsReal = reveal && memory === null;
+  const revealsReal =
+    (intro && memory === null) || ((peekWanted || peekFading) && (memory === null || memory.gone));
 
   return {
     char: typed ?? leaving ?? real,
     revealsReal,
     concealed: showsReal && !revealsReal,
+    /** The peek has ended and this slot's letter is fading out. */
+    peekFading,
     /** The erased letter has faded out. */
     settle: () =>
       setMemory((current) => (current && !current.gone ? { ...current, gone: true } : current)),
+    /** The ended peek's letter has faded out. */
+    endPeekFade: () => setPeekFading(false),
   };
 }
 
@@ -422,7 +613,11 @@ function Slot({
   rejection: { char: string; nonce: number } | null;
 }) {
   const filled = cell.typed !== null;
-  const glyph = useSlotGlyph(cell.typed, cell.char, phase === "intro" || peeking);
+  const glyph = useSlotGlyph(cell.typed, cell.char, phase === "intro", peeking);
+  // Show the word: this slot's letter comes in (peekingIn) and, once the peek
+  // is over, floats away (peekingOut) instead of vanishing at once.
+  const peekingIn = peeking && !filled;
+  const peekingOut = !peeking && glyph.peekFading && !filled;
 
   const introDelay = Math.min(order * INTRO_STEP, INTRO_MAX_DELAY);
   const glyphDelay = glyph.revealsReal && phase === "intro" ? introDelay : 0;
@@ -451,21 +646,52 @@ function Slot({
         // The first frame of the intro is the real sentence; every other
         // slot starts hidden so a new sentence never flashes its text.
         initial={reducedMotion ? false : phase === "intro" || filled ? GLYPH_SHOWN : GLYPH_HIDDEN}
-        animate={filled || peeking ? GLYPH_SHOWN : GLYPH_HIDDEN}
+        animate={filled || peekingIn ? GLYPH_SHOWN : peekingOut ? GLYPH_PEEK_OUT : GLYPH_HIDDEN}
         onAnimationComplete={() => {
-          if (!filled) glyph.settle();
+          if (filled) return;
+          glyph.settle();
+          if (!peeking) glyph.endPeekFade();
         }}
         transition={
           reducedMotion
             ? { duration: 0 }
-            : { duration: filled ? 0.18 : 0.22, delay: glyphDelay, ease: easeOut }
+            : peekingIn
+              ? {
+                  // A springy rise with a little overshoot, each letter a beat
+                  // after the one before; opacity and focus settle on their own
+                  // (a spring would overshoot them into nonsense).
+                  default: {
+                    type: "spring",
+                    stiffness: 420,
+                    damping: 21,
+                    mass: 0.7,
+                    delay: Math.min(cell.letter * PEEK_STAGGER_IN, PEEK_MAX_STAGGER_IN),
+                  },
+                  opacity: {
+                    duration: 0.2,
+                    delay: Math.min(cell.letter * PEEK_STAGGER_IN, PEEK_MAX_STAGGER_IN),
+                  },
+                  filter: {
+                    duration: 0.32,
+                    ease: easeOut,
+                    delay: Math.min(cell.letter * PEEK_STAGGER_IN, PEEK_MAX_STAGGER_IN),
+                  },
+                }
+              : peekingOut
+                ? {
+                    duration: 0.34,
+                    ease: [0.4, 0, 0.7, 1],
+                    delay: Math.min(cell.letter * PEEK_STAGGER_OUT, PEEK_MAX_STAGGER_OUT),
+                  }
+                : { duration: filled ? 0.18 : 0.22, delay: glyphDelay, ease: easeOut }
         }
         className={cn(
           "inline-block transition-colors duration-150 before:content-[attr(data-ch)]",
           filled
             ? "text-[var(--lesson-letter-correct)]"
-            : peeking
-              ? "text-[var(--lesson-primary)]"
+            : peekingIn || peekingOut
+              ? // Lit: the primary colour with a soft halo that comes and goes with the letter.
+                "text-[var(--lesson-primary)] [text-shadow:0_0_0.45em_color-mix(in_oklch,var(--lesson-primary)_50%,transparent)]"
               : "text-[var(--lesson-letter-pending)]",
           glyph.concealed && "invisible",
         )}
@@ -477,16 +703,28 @@ function Slot({
         <TickTrack current={current}>
           <motion.span
             initial={reducedMotion ? false : { scaleX: 0, opacity: 0 }}
-            animate={filled ? { scaleX: 0.4, opacity: 0 } : { scaleX: 1, opacity: 1 }}
+            animate={
+              filled
+                ? { scaleX: 0.4, opacity: 0 }
+                : current
+                  ? // The cursor bar is drawn exactly over this line (useCursorBar):
+                    // the line steps aside so that is the only line here.
+                    { scaleX: 1, opacity: 0 }
+                  : { scaleX: 1, opacity: 1 }
+            }
             transition={
               reducedMotion
                 ? { duration: 0 }
-                : { duration: filled ? 0.12 : 0.2, delay: tickDelay, ease: easeOut }
+                : { duration: filled || current ? 0.12 : 0.2, delay: tickDelay, ease: easeOut }
             }
             className={cn(
               "block h-full w-[max(calc(100%-0.16em),0.3em)] rounded-full bg-[var(--lesson-letter-pending)] transition-colors duration-200 group-hover/word:bg-[var(--lesson-primary)]",
-              lit && "bg-[var(--lesson-primary)]",
-              pulse && "animate-pulse",
+              (lit || peekingIn || peekingOut) && "bg-[var(--lesson-primary)]",
+              // A CSS animation outranks the inline opacity framer-motion sets, so
+              // a pulsing word would bring back the lines that are meant to be
+              // hidden: those under typed letters, and the current blank's own,
+              // which the cursor bar stands in for.
+              pulse && !filled && !current && "animate-pulse",
             )}
           />
         </TickTrack>

@@ -72,10 +72,14 @@ already has history the day the feature goes On.
     listen. A space or hyphen typed in the middle of a word counts as a wrong
     letter; the habitual space after a finished word does nothing. After **two
     wrong letters in a row at the same blank**, **Show the word** and **Give
-    up** appear (the strip has a fixed height, so the sentence never jumps).
-    Show the word paints the real letters of the word the learner is on, in
-    place, for 3 seconds or until its next correct letter is typed, and says
-    it; it needs the blanks (it is not offered with Show word-length blanks
+    up** appear together in one bar under the sentence (`DictationHelp`; the
+    strip it sits in has a fixed height, so the sentence never jumps). Show
+    the word paints the real letters of the word the learner is on, in place:
+    they rise onto their lines one after another, stay for about a second and
+    dissolve again, two seconds in all (`PEEK_MS` and the stagger constants in
+    `dictation-text.tsx`), or sooner when its next correct letter is typed; it
+    is said as well, and the button is off while the word is up so one peek
+    costs one peek. It needs the blanks (it is not offered with Show word-length blanks
     off). Give up hands this one sentence to the normal typing view, which
     carries on from what was typed (`dictationTypedPrefix` →
     `useTypingEngine`'s `initialTyped`), keeps the words already missed for Fix
@@ -108,7 +112,10 @@ already has history the day the feature goes On.
   drops every letter onto its line while the blank draws itself out (only for
   the sentence on screen at that moment; a new sentence just draws its blanks
   in, never flashing its text). The learner types straight onto the blanks: a
-  cursor bar glides along them and each typed letter appears in its slot, word
+  cursor bar glides along them (it is the current blank's own line turned on:
+  same ends, thickness and height as the line it sits on, measured every frame
+  while a word grows under the pointer or while it is spoken, with that one
+  line hidden underneath, see `useCursorBar`) and each typed letter appears in its slot, word
   by word, and (whole sentence) nothing is said about whether it is right until
   Enter. The real letter is only ever painted by that opening wave and by Show
   the word: an erased letter fades out as the learner's own (wrong) letter,
