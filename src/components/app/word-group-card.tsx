@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CloudSun,
   Cpu,
+  Ear,
   GraduationCap,
   HeartHandshake,
   HeartPulse,
@@ -36,6 +37,7 @@ import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
 import { TIER_BADGE_CLASS, TIER_ICON_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
+import type { GroupMastery } from "@/lib/word-mastery/schedule";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 /**
@@ -96,11 +98,17 @@ export function WordGroupCard({
   completedCount,
   isLoaded,
   isPremiumUser,
+  smart = false,
+  mastery = null,
 }: {
   group: WordGroupSummary;
   completedCount: number;
   isLoaded: boolean;
   isPremiumUser: boolean;
+  /** Smart word practice is open to this visitor: the expanded card also offers listen-and-type. */
+  smart?: boolean;
+  /** Smart word practice for a signed-in learner: this group's mastery. The bar shows how strong the words are (not just how many were ever typed), the counts say what is due and new, and the primary action becomes Continue. */
+  mastery?: GroupMastery | null;
 }) {
   const locked = !group.isFree && !isPremiumUser;
   const percent = group.wordCount === 0 ? 0 : Math.round((completedCount / group.wordCount) * 100);
@@ -205,7 +213,31 @@ export function WordGroupCard({
           </div>
 
           <div className="mt-1 flex w-full flex-col items-center gap-1">
-            {isLoaded ? (
+            {mastery ? (
+              <>
+                <Progress value={mastery.percent} className="h-1.5 w-full" />
+                <span className="text-muted-foreground text-xs font-medium tabular-nums" dir={dir}>
+                  {t.wordLists.smart.masteryPercent.replace("{n}", String(mastery.percent))}
+                </span>
+                {(mastery.dueCount > 0 || mastery.newCount > 0) && (
+                  <span
+                    className="flex flex-wrap items-center justify-center gap-x-2 text-xs font-semibold tabular-nums"
+                    dir={dir}
+                  >
+                    {mastery.dueCount > 0 && (
+                      <span className="text-accent">
+                        {t.wordLists.smart.dueBadge.replace("{n}", String(mastery.dueCount))}
+                      </span>
+                    )}
+                    {mastery.newCount > 0 && (
+                      <span className="text-muted-foreground">
+                        {t.wordLists.smart.newBadge.replace("{n}", String(mastery.newCount))}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </>
+            ) : isLoaded ? (
               <>
                 <Progress value={percent} className="h-1.5 w-full" />
                 <span className="text-muted-foreground text-xs font-medium tabular-nums" dir="ltr">
@@ -236,7 +268,7 @@ export function WordGroupCard({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
-              <div className="flex items-center gap-2 px-4 pt-1 pb-4">
+              <div className={cn("flex items-center gap-2 px-4 pt-1", smart ? "pb-3" : "pb-4")}>
                 <Button asChild variant="outline" className="flex-1 gap-1.5">
                   <Link href={`/learn/word-lists/${group.id}/learn`}>
                     <GraduationCap className="size-4" aria-hidden="true" />
@@ -246,10 +278,29 @@ export function WordGroupCard({
                 <Button asChild className="flex-1 gap-1.5">
                   <Link href={`/learn/word-lists/${group.id}`}>
                     <PencilLine className="size-4" aria-hidden="true" />
-                    {t.wordLists.practiceAction}
+                    {mastery ? t.wordLists.smart.continueAction : t.wordLists.practiceAction}
                   </Link>
                 </Button>
               </div>
+              {smart && (
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 pb-4 text-xs">
+                  <Link
+                    href={`/learn/word-lists/${group.id}?mode=listen`}
+                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-medium transition-colors"
+                  >
+                    <Ear className="size-3.5" aria-hidden="true" />
+                    {t.wordLists.smart.listenAction}
+                  </Link>
+                  {mastery && (
+                    <Link
+                      href={`/learn/word-lists/${group.id}?scope=all`}
+                      className="text-muted-foreground hover:text-foreground font-medium transition-colors"
+                    >
+                      {t.wordLists.smart.practiceAllAction}
+                    </Link>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

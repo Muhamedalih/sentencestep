@@ -1,10 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type RefObject } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { CornerDownLeft } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordTypingEngine } from "@/hooks/use-word-typing-engine";
+import type { WordAttemptStatus, WordResultDetail } from "@/hooks/use-word-typing-engine";
 import { easeOut } from "@/lib/motion";
 import {
   GLYPH_HIDDEN,
@@ -17,6 +27,9 @@ import {
   peekOutTransition,
 } from "@/lib/peek-glyph";
 import { cn } from "@/lib/utils";
+import { SMART_TIMING } from "@/lib/word-mastery/smart";
+import type { SmartTiming } from "@/lib/word-mastery/smart";
+import type { TypeAheadBuffer } from "@/lib/word-typing";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
 /** How long the wrong attempt's green/red diff stays on screen before it clears and the correct spelling reveals itself. */
@@ -52,6 +65,36 @@ function stageFontSize(word: string): string {
   return `clamp(${STAGE_MIN_REM}rem, 1.68rem + 7vw, ${maxRem}rem)`;
 }
 
+/** What the screen can ask of a sentence from outside (the help bar's two buttons). */
+export interface WordSentenceControls {
+  /** The first-letter hint, once per word. */
+  hint: () => void;
+  /** "I don't know": counts as a miss and shows the right spelling. */
+  giveUp: () => void;
+}
+
+/**
+ * The upgrades of "Smart word practice" (see src/lib/word-mastery/smart.ts).
+ * Passing this object switches them all on; leaving it out gives the sentence
+ * exactly as it always was.
+ */
+export interface SmartSentenceOptions {
+  /** Other answers that are also right (British spellings, synonyms). */
+  alternates?: readonly string[];
+  /** Where letters typed while a right answer settles are kept for the next word. */
+  typeAhead?: TypeAheadBuffer;
+  /** The screen's help bar drives the hint and "I don't know" through this. */
+  controlsRef?: RefObject<WordSentenceControls | null>;
+  /** The word's state as it changes: pending, correct or incorrect. */
+  onStatusChange?: (status: WordAttemptStatus) => void;
+  /** correct: a right answer has just settled. reveal: the right spelling has started to show after a miss. The screen speaks the word on these. */
+  onPhase?: (phase: "correct" | "reveal") => void;
+  /** The first-letter hint was taken. */
+  onHint?: () => void;
+  /** The pauses; defaults to SMART_TIMING. */
+  timing?: SmartTiming;
+}
+
 /**
  * The core Word Lists interaction: a context sentence with exactly one
  * blank, rendered as a plain empty box (never the letters themselves —
@@ -66,6 +109,13 @@ function stageFontSize(word: string): string {
  * A wrong attempt then clears and the correct spelling types itself out
  * letter by letter, so the learner always leaves a mistake having actually
  * seen the right answer, not just a red flash.
+ *
+ * With `smart` the same screen also: keeps the letters typed while a word
+ * settles (no dead zone), lets Enter skip the missed-word screen once the right
+ * spelling has been shown, accepts alternates and says "also correct", takes a
+ * first-letter hint and "I don't know" from the help bar, and never shifts the
+ * layout when the first letter is typed (the stage holds its place as faint
+ * slots, one per letter).
  */
 export function VocabularySentence({
   sentence,
@@ -73,17 +123,19 @@ export function VocabularySentence({
   onResult,
   inputRef,
   fontFamily,
+  smart,
 }: {
   sentence: string;
   targetWord: string;
   /** Fires once this word's attempt settles — see useWordTypingEngine.onResult. */
-  onResult: (correct: boolean) => void;
+  onResult: (correct: boolean, detail?: WordResultDetail) => void;
   /** Owned by the parent (VocabularyPractice) — see useWordTypingEngine's inputRef option for why. */
   inputRef?: RefObject<HTMLInputElement | null>;
   /** Admin -> Fonts' Word Lists override (see resolveSectionFontFamily) — applied only to the big typing stage above, never the context sentence, which stays legible in the app's own default font. */
   fontFamily?: string;
+  smart?: SmartSentenceOptions;
 }) {
-  const { t } = useLocale();
+  const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
   const [isFocused, setIsFocused] = useState(false);
   // Where the correct-answer reveal is, once a wrong attempt's diff has had its
@@ -91,6 +143,15 @@ export function VocabularySentence({
   // and every word that wasn't missed. Resets for free on the next word (this
   // component remounts per word — see VocabularyPractice's key={word.id}).
   const [reveal, setReveal] = useState<"hidden" | "in" | "out">("hidden");
+  // True once the right spelling has been fully shown after a miss: from then
+  // on Enter (or the Continue button) may skip the rest of the wait.
+  const [skipReady, setSkipReady] = useState(false);
+
+  const timing = smart ? (smart.timing ?? SMART_TIMING) : null;
+  const diffMs = timing ? timing.diffVisibleMs : DIFF_VISIBLE_MS;
+  const holdMs = timing ? timing.revealHoldMs : REVEAL_HOLD_MS;
+  const tailMs = timing ? timing.revealTailMs : REVEAL_TAIL_MS;
+  const correctDelayMs = timing ? timing.correctDelayMs : CORRECT_DELAY_MS;
 
   // Same rise-in / dissolve-out Dictation's Show the word uses (see
   // peek-glyph.ts), so a missed word is shown the same way everywhere. Reduced
@@ -99,45 +160,80 @@ export function VocabularySentence({
   const revealOutMs = reducedMotion ? 0 : peekOutTotalMs(targetWord.length);
 
   // A wrong submission needs enough time on screen for the diff, the letters
-  // rising in, the word holding still for REVEAL_HOLD_MS and the letters
+  // rising in, the word holding still for the hold time and the letters
   // dissolving again before this word is done and the session moves on — a
   // plain fixed delay would either cut the reveal off mid-animation or, for a
-  // short word, sit around doing nothing.
-  const incorrectDelayMs =
-    DIFF_VISIBLE_MS + revealInMs + REVEAL_HOLD_MS + revealOutMs + REVEAL_TAIL_MS;
+  // short word, sit around doing nothing. "I don't know" has no diff to show.
+  const revealTailTotalMs = revealInMs + holdMs + revealOutMs + tailMs;
+  const incorrectDelayMs = diffMs + revealTailTotalMs;
+
+  const smartRef = useRef(smart);
+  smartRef.current = smart;
 
   const engine = useWordTypingEngine({
     target: targetWord,
     resetKey: targetWord,
     onResult,
-    correctDelayMs: CORRECT_DELAY_MS,
+    correctDelayMs,
     incorrectDelayMs,
+    giveUpDelayMs: revealTailTotalMs,
     inputRef,
+    smart: smart !== undefined,
+    alternates: smart?.alternates,
+    alternateDelayMs: timing?.alternateDelayMs,
+    typeAhead: smart?.typeAhead,
   });
 
   // Drives the diff -> reveal handoff: as soon as a wrong attempt settles,
-  // let its green/red diff sit for DIFF_VISIBLE_MS, then raise the correct
+  // let its green/red diff sit for the diff time, then raise the correct
   // spelling, hold it, and let it float away. `engine.status` only ever
   // transitions into "incorrect" once per word (useWordTypingEngine's
   // settledRef locks it), so this never double-fires or restarts mid-reveal.
+  // "I don't know" has no diff: the spelling rises at once.
   useEffect(() => {
     if (engine.status !== "incorrect") {
       setReveal("hidden");
+      setSkipReady(false);
       return;
     }
-    const raise = setTimeout(() => setReveal("in"), DIFF_VISIBLE_MS);
-    const dissolve = setTimeout(
-      () => setReveal("out"),
-      DIFF_VISIBLE_MS + revealInMs + REVEAL_HOLD_MS,
-    );
+    const lead = engine.gaveUp ? 0 : diffMs;
+    const raise = setTimeout(() => setReveal("in"), lead);
+    const ready = setTimeout(() => setSkipReady(true), lead + revealInMs);
+    const dissolve = setTimeout(() => setReveal("out"), lead + revealInMs + holdMs);
     return () => {
       clearTimeout(raise);
+      clearTimeout(ready);
       clearTimeout(dissolve);
     };
-  }, [engine.status, revealInMs]);
+  }, [engine.status, engine.gaveUp, revealInMs, diffMs, holdMs]);
 
-  const isRevealPhase = engine.status === "incorrect" && reveal !== "hidden";
+  const isRevealPhase = engine.status === "incorrect" && (engine.gaveUp || reveal !== "hidden");
   const isDiffPhase = engine.status === "incorrect" && !isRevealPhase;
+
+  // Tell the screen what is happening, for the things only it can do: speak the
+  // word once it has been answered, and keep its help bar in step.
+  useEffect(() => {
+    smartRef.current?.onStatusChange?.(engine.status);
+    if (engine.status === "correct") smartRef.current?.onPhase?.("correct");
+  }, [engine.status]);
+  useEffect(() => {
+    if (isRevealPhase) smartRef.current?.onPhase?.("reveal");
+  }, [isRevealPhase]);
+
+  // The help bar's buttons reach the engine from outside.
+  const { hint: takeHint, giveUp: giveUpWord } = engine;
+  useImperativeHandle(
+    smart?.controlsRef,
+    () => ({
+      hint: () => {
+        if (takeHint()) smartRef.current?.onHint?.();
+      },
+      giveUp: () => {
+        giveUpWord();
+      },
+    }),
+    [takeHint, giveUpWord],
+  );
 
   const [prefix, suffix] = useMemo(() => {
     const parts = sentence.split(BLANK_TOKEN);
@@ -165,7 +261,10 @@ export function VocabularySentence({
     });
   }, [isDiffPhase, engine.typed, targetWord]);
 
-  const showStage = engine.typed.length > 0 || isRevealPhase;
+  // The upgraded stage is always on screen (faint slots, one per letter, until
+  // the first letter is typed) so nothing above or below it jumps.
+  const showStage = smart ? true : engine.typed.length > 0 || isRevealPhase;
+  const hintedLength = engine.hintedPrefix.length;
 
   return (
     <div dir="ltr" className="flex flex-col items-center gap-5">
@@ -211,9 +310,20 @@ export function VocabularySentence({
                 {char}
               </motion.span>
             ))
+          ) : smart && engine.typed.length === 0 ? (
+            <span aria-hidden="true" className="text-muted-foreground/25 tracking-[0.2em]">
+              {"_".repeat(targetWord.length)}
+            </span>
           ) : (
             <span className={engine.status === "correct" ? "text-success" : "text-foreground"}>
-              {engine.typed}
+              {hintedLength > 0 ? (
+                <>
+                  <span className="text-accent">{engine.typed.slice(0, hintedLength)}</span>
+                  {engine.typed.slice(hintedLength)}
+                </>
+              ) : (
+                engine.typed
+              )}
             </span>
           )}
         </motion.div>
@@ -236,13 +346,24 @@ export function VocabularySentence({
           <BlankBox
             length={targetWord.length}
             active={isFocused && engine.status === "pending"}
-            revealedWord={engine.status === "correct" ? targetWord : null}
+            revealedWord={engine.status === "correct" ? (engine.alternate ?? targetWord) : null}
           />
           <input
             ref={engine.inputRef}
             value={engine.typed}
             onChange={engine.handleChange}
-            onKeyDown={engine.handleKeyDown}
+            onKeyDown={(event) => {
+              // Once the word has settled Enter means "next": it ends a right
+              // answer's wait at once, and skips a missed word's screen — but only
+              // after the right spelling has been shown, so a double-tap on Enter
+              // can never skip a word the learner has not even seen.
+              if (smart && engine.status !== "pending" && event.key === "Enter") {
+                event.preventDefault();
+                if (engine.status === "correct" || skipReady) engine.skip();
+                return;
+              }
+              engine.handleKeyDown(event);
+            }}
             onPaste={engine.handlePaste}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -259,8 +380,42 @@ export function VocabularySentence({
         {suffix && <span> {suffix}</span>}
       </p>
 
-      {engine.status === "pending" && engine.typed.length > 0 && (
-        <p className="text-muted-foreground text-xs font-medium">{t.wordLists.pressEnterToCheck}</p>
+      {smart ? (
+        // One line for every note, with a fixed height: the Enter hint, the
+        // "also correct" message and the Continue button take turns here, so the
+        // rows below (the help bar) never move.
+        <div className="flex min-h-9 items-center justify-center" dir={dir}>
+          {engine.status === "correct" && engine.alternate ? (
+            <p role="status" className="text-success text-sm font-semibold">
+              {t.wordLists.smart.alsoCorrect.replace("{word}", targetWord)}
+            </p>
+          ) : engine.status === "incorrect" && skipReady ? (
+            <motion.button
+              type="button"
+              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, ease: easeOut }}
+              // The input keeps focus, so Enter (the other way to continue) still works.
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={engine.skip}
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold outline-none focus-visible:ring-2"
+            >
+              {t.wordLists.smart.continueEnter}
+              <CornerDownLeft className="size-4" aria-hidden="true" />
+            </motion.button>
+          ) : engine.status === "pending" && engine.typed.length > 0 ? (
+            <p className="text-muted-foreground text-xs font-medium">
+              {t.wordLists.pressEnterToCheck}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        engine.status === "pending" &&
+        engine.typed.length > 0 && (
+          <p className="text-muted-foreground text-xs font-medium">
+            {t.wordLists.pressEnterToCheck}
+          </p>
+        )
       )}
     </div>
   );

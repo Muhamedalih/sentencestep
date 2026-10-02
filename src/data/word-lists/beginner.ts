@@ -276,6 +276,8 @@ export const beginnerWordGroups: WordGroup[] = [
         targetWord: "gray",
         sentence: "The clouds looked ___ all morning before the rain",
         hintAr: "لون رمادي.",
+        // The British spelling is also right (see accepted_answers in the database).
+        alternates: ["grey"],
       },
       {
         id: "colors-gold",

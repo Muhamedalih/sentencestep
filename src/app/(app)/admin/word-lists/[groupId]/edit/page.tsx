@@ -61,7 +61,11 @@ export default async function EditWordGroupPage({
           <CardDescription>Order here is exactly the order learners see.</CardDescription>
         </CardHeader>
         <CardContent>
-          <WordGroupWordsForm groupId={group.id} initial={group.words} />
+          <WordGroupWordsForm
+            groupId={group.id}
+            initial={group.words}
+            alternatesSupported={group.alternatesSupported}
+          />
         </CardContent>
       </Card>
     </div>

@@ -1,11 +1,11 @@
 # Engagement features
 
-Seven optional learning features, all controlled from **Admin → Features**
+Eight optional learning features, all controlled from **Admin → Features**
 (`/admin/features`, full admins only). The code default is **Off** for every
-feature (no settings row, or an unreadable one, means nothing shows). The last
-migration below moves the fresh settings row to **Admin preview** for all
-seven, so on the live site only admins see anything until a feature is set to
-**On**.
+feature (no settings row, or an unreadable one, means nothing shows). The seed
+migrations below move the settings row to **Admin preview** (the first seven in
+`20250321…`, Smart word practice in `20250325…`), so on the live site only
+admins see anything until a feature is set to **On**.
 
 | Feature                  | Where it appears                                                    | Sections (admin matrix)       | Guests         |
 | ------------------------ | ------------------------------------------------------------------- | ----------------------------- | -------------- |
@@ -16,6 +16,7 @@ seven, so on the live site only admins see anything until a feature is set to
 | Daily quests             | Card on Home, quest lines on the completion screen                  | global                        | sign-in prompt |
 | Badges                   | Completion-screen celebration, `/learn/achievements`, header trophy | global                        | sign-in prompt |
 | Streak calendar & freeze | 7-day strip on Home (tap for the month)                             | global                        | sign-in prompt |
+| Smart word practice      | Word Lists: practice, library cards, "Review All Words"             | global                        | upgrades work  |
 
 ## Admin controls
 
@@ -46,6 +47,14 @@ These are new and **not applied automatically**:
 7. `20250321000000_feature_settings_admin_preview.sql` (puts every feature in
    Admin preview; only touches a settings row nobody has saved yet, so it never
    overwrites a configuration an admin chose)
+8. `20250323000000_word_mastery.sql` (Smart word practice: the per-learner
+   `word_mastery` table and the `record_word_review` function)
+9. `20250324000000_word_accepted_answers.sql` (Smart word practice:
+   `vocabulary_words.accepted_answers`, seeded with the common British
+   spellings and synonyms; admins edit it per word in Admin → Word Lists)
+10. `20250325000000_feature_settings_smart_words.sql` (puts Smart word
+    practice in Admin preview; only runs while the settings document says
+    nothing about it, so a choice an admin saved is never overwritten)
 
 Until a migration is applied, the feature that needs it degrades quietly (its
 card doesn't render, its event is skipped) — lesson completion is never
@@ -197,9 +206,98 @@ already has history the day the feature goes On.
 - **Personal cards** review on the same 1/3/7/16-day schedule as mistakes;
   **Export for Anki** downloads a tab-separated file with Anki import headers.
 
+- **Smart word practice** upgrades the Word Lists screens (the practice screen,
+  the library and "Review All Words"). It is one switch,
+  `FEATURE_IDS.smartWords`, resolved to two flags (`resolveFeatures`): `enabled`
+  (the practice upgrades below, which also work for a guest) and `spaced` (the
+  part that stores something per learner, which needs an account). With the
+  feature Off for a visitor every screen is exactly what it was before.
+  **Rolling it out is one click: Admin → Features → Smart word practice → On**
+  (or leave it in Admin preview while it is tried; _Premium only_ works as for
+  the others). Nothing else needs changing: every check reads the same resolved
+  flags (`getSmartWordsAccess`).
+
+  - _The schedule_ (`src/lib/word-mastery/schedule.ts`, mirrored statement for
+    statement by `record_word_review` in SQL): every word gets a **strength
+    0-5** and a due day, the learner's own calendar day (the `ss_tz` cookie, so
+    "tomorrow" is tomorrow morning where they are; UTC until the cookie
+    exists). A clean answer on a due word climbs one step and pushes the next
+    review out **1 / 3 / 7 / 16 / 30 days**; a miss sends it back to 0, due
+    tomorrow; a word that needed the hint holds its step. Practising a word
+    that is not due yet leaves its schedule untouched (repeating a group five
+    times in an afternoon cannot walk it to "mastered"), except a miss, which is
+    always recorded. Strength 5 means the 30-day review has been passed.
+  - _Two ledgers move together_ (`planOutcome`, pure and tested): the schedule
+    above, and the weak-word ledger (`mistakes`) that Review All Words, Fix Your
+    Mistakes, Home and the daily session still read. **A word missed during a
+    visit is no longer wiped by typing it right 20 seconds later**: a miss puts
+    it in the weak list, typing it right afterwards only _corrects_ it (due
+    again tomorrow), and it leaves the list the way every other mistake does,
+    by passing its reviews. The client reports each word once, through
+    `recordWordOutcomeAction` (`clean`, `assisted`, `missed` the moment it
+    happens, `recovered` after a miss). The action re-checks the gate on the
+    server, never trusts the client for the account, and does nothing (returns
+    `null`) for a guest, with the feature off, or before the migrations are
+    applied.
+  - _Typing engine_ (`useWordTypingEngine`, shared by the practice screen and
+    the review session): **letters typed while a right answer is settling are
+    kept for the next word** (and end the wait early), so there is no dead zone
+    between words; **Enter skips the missed-word screen** once the right
+    spelling has shown, and every pause is shorter (`SMART_TIMING`: 350 ms
+    after a right answer, 1.2 s for the right spelling), since nothing typed
+    in the meantime is lost any more. Matching ignores case and accents.
+    **Also-correct answers**: a word can list extra accepted answers (British
+    spellings, synonyms that fit the sentence), typing one counts exactly like
+    the stored word and says "also correct: …" (`word-lists-answer.ts`). The
+    word does not settle while the learner may still be typing a longer
+    accepted answer ("colo" on the way to "colour").
+  - _Help that costs something, like Dictation_ (`WordHelpBar`): **First
+    letter** locks in the word's first letter (once per word) and **I don't
+    know** shows the answer straight away. Stars are live and simple, the same
+    steps that decide the schedule: **3** for a clean answer, **2** once the
+    hint is used (the word holds its step), **1** after a miss or "I don't
+    know" (the word goes back to 0). The summary shows each word's stars and how
+    many were right first time.
+  - _Audio_: by default the word is **not spoken before the attempt** (the
+    sentence is the question; the sound would be the answer), it plays once
+    the word is answered. A **Recall / Listen & type** toggle (`?mode=listen`)
+    switches to the other exercise: the word is spoken first, the Arabic
+    meaning stays hidden until it is answered, and the learner types what they
+    hear.
+  - _Continue_ (`selectContinueWords`): a group's **Continue** no longer starts
+    at word 1. It asks the words that are due (weakest first), then the words
+    the learner has not met in the group's own order, at most 20 per visit;
+    words scheduled for a later day are skipped. A group with nothing due shows
+    a short "all caught up" screen (it says when the next word falls due) with
+    **Practice all** (`?scope=all`), which still records misses but leaves the
+    schedule alone for words that are not due. The expanded group card also
+    offers small **Listen & type** and **Practice all** links next to Continue.
+  - _Library and review_: each group card shows a **mastery bar** (the share of
+    full strength across the group's words) and a due / new badge; the review
+    hero's number is the words due plus the weak words, each once. "Review All
+    Words" asks the due words and the weak words together, 12 at a time, weakest
+    first (`buildSmartReviewQueue`), and says how many more are waiting.
+  - _Admin_: Admin → Word Lists → a group's words have an **Also accepted
+    answers** field per word (comma- or line-separated, up to 8, plain words
+    only; `validateAlternates` names anything it rejects). The field appears only
+    once migration 9 is applied; before that the editor is exactly as it was.
+  - _What it deliberately does not do yet_: Home and the daily session still
+    pick words from their own sources (the due queue is not wired into them).
+    Word Lists practice has never paid XP or counted toward the streak, and the
+    schedule does not change that. The one thing credited is the "Master N
+    words" quest, and only when a word actually climbs a step, so it cannot be
+    finished by retyping easy words.
+
 ## Local development
 
 With no Supabase project linked there is no settings row. Set
 `FEATURES_DEV_ALL_ON=true` (non-production only) to switch every feature on as
 a guest, which is enough to exercise Dictation and From memory offline. The
 account-only features need a real signed-in session.
+
+Smart word practice's upgrades (type-ahead, the first-letter hint, "I don't
+know", also-correct answers, Listen & type) work as a guest with that switch,
+but its schedule, Continue and the due queue need a real signed-in session and
+the three migrations above. The schedule's rules are covered without a database
+by `npm run test:word-mastery`; the SQL function is a mirror of them (see the
+header of `schedule.ts`).

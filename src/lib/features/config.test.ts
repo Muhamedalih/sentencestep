@@ -5,7 +5,6 @@ import test from "node:test";
 
 import {
   DEFAULT_FEATURE_CONFIG,
-  FEATURE_IDS,
   defaultFeatureConfig,
   disabledFeatures,
   isFeatureOpenTo,
@@ -188,7 +187,18 @@ test("disabledFeatures: nothing on, regardless of sign-in", () => {
   assert.equal(disabledFeatures(false).guestTeaser, false);
 });
 
-test("the admin-preview seed migration switches every feature to admin and nothing else", () => {
+/** The seven features that existed when 20250321000000_feature_settings_admin_preview.sql was written. Later features get their own migration (see the smartWords one below). */
+const FIRST_ROLLOUT_FEATURE_IDS = [
+  "dictation",
+  "fromMemory",
+  "personalCards",
+  "dailySession",
+  "quests",
+  "badges",
+  "streakCalendar",
+] as const;
+
+test("the admin-preview seed migration switches every first-rollout feature to admin and nothing else", () => {
   const sql = readFileSync(
     join(process.cwd(), "supabase/migrations/20250321000000_feature_settings_admin_preview.sql"),
     "utf8",
@@ -197,14 +207,16 @@ test("the admin-preview seed migration switches every feature to admin and nothi
   assert.ok(body, "the seed document must be dollar-quoted as $json$ ... $json$");
   const seed = JSON.parse(body) as { features: Record<string, { state: string }> };
 
-  assert.deepEqual(Object.keys(seed.features).sort(), [...FEATURE_IDS].sort());
-  for (const id of FEATURE_IDS) assert.equal(seed.features[id]?.state, "admin");
+  assert.deepEqual(Object.keys(seed.features).sort(), [...FIRST_ROLLOUT_FEATURE_IDS].sort());
+  for (const id of FIRST_ROLLOUT_FEATURE_IDS) assert.equal(seed.features[id]?.state, "admin");
 
   const config = sanitizeFeatureConfig(seed);
-  for (const id of FEATURE_IDS) {
+  for (const id of FIRST_ROLLOUT_FEATURE_IDS) {
     assert.equal(config.features[id].state, "admin");
     assert.equal(config.features[id].premiumOnly, false);
   }
+  // A feature added later is not in this seed, so it keeps the shipped default (off).
+  assert.equal(config.features.smartWords.state, "off");
   // Everyone but an admin sees nothing; an admin sees the features.
   for (const viewer of [guest, learner, premium]) {
     const effective = resolveFeatures(config, viewer);
@@ -221,4 +233,59 @@ test("the admin-preview seed migration switches every feature to admin and nothi
   assert.equal(asAdmin.dictation.sections.normal, true);
   assert.equal(asAdmin.fromMemory.sections.conversation, true);
   assert.equal(asAdmin.personalCards.page, true);
+});
+
+test("smartWords: off for everyone by default, admin preview shows it to admins only, On to everyone", () => {
+  const config = defaultFeatureConfig();
+  assert.equal(config.features.smartWords.state, "off");
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).smartWords, { enabled: false, spaced: false });
+  }
+
+  config.features.smartWords.state = "admin";
+  assert.deepEqual(resolveFeatures(config, guest).smartWords, { enabled: false, spaced: false });
+  assert.deepEqual(resolveFeatures(config, learner).smartWords, { enabled: false, spaced: false });
+  assert.deepEqual(resolveFeatures(config, premium).smartWords, { enabled: false, spaced: false });
+  assert.deepEqual(resolveFeatures(config, admin).smartWords, { enabled: true, spaced: true });
+
+  config.features.smartWords.state = "on";
+  assert.deepEqual(resolveFeatures(config, learner).smartWords, { enabled: true, spaced: true });
+});
+
+test("smartWords: a guest gets the practice upgrades but not the schedule, which needs an account", () => {
+  const config = defaultFeatureConfig();
+  config.features.smartWords.state = "on";
+  assert.deepEqual(resolveFeatures(config, guest).smartWords, { enabled: true, spaced: false });
+  // It is not an account feature, so it never produces a "sign in to unlock" teaser.
+  assert.equal(resolveFeatures(config, guest).guestTeaser, false);
+});
+
+test("smartWords: premium-only holds it back from free learners and still lets admins through", () => {
+  const config = defaultFeatureConfig();
+  config.features.smartWords.state = "on";
+  config.features.smartWords.premiumOnly = true;
+  assert.equal(resolveFeatures(config, learner).smartWords.enabled, false);
+  assert.equal(resolveFeatures(config, premium).smartWords.enabled, true);
+  assert.equal(resolveFeatures(config, admin).smartWords.enabled, true);
+});
+
+test("smartWords: a settings document saved before the feature existed keeps it off", () => {
+  const legacy = sanitizeFeatureConfig({ features: { dictation: { state: "on" } } });
+  assert.equal(legacy.features.smartWords.state, "off");
+  assert.equal(resolveFeatures(legacy, admin).smartWords.enabled, false);
+});
+
+test("the smartWords seed migration puts only that feature in admin preview and never overwrites a saved choice", () => {
+  const sql = readFileSync(
+    join(process.cwd(), "supabase/migrations/20250325000000_feature_settings_smart_words.sql"),
+    "utf8",
+  );
+  const body = /\$json\$([\s\S]*?)\$json\$/.exec(sql)?.[1];
+  assert.ok(body, "the seed entry must be dollar-quoted as $json$ ... $json$");
+  const entry = JSON.parse(body) as { state: string };
+  assert.equal(entry.state, "admin");
+  // Only touches a document that does not already say anything about this feature.
+  assert.match(sql, /not \(coalesce\(config -> 'features', '\{\}'::jsonb\) \? 'smartWords'\)/);
+  // Everything else in the document is left alone: it only sets this one path.
+  assert.match(sql, /jsonb_set\(/);
 });

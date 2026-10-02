@@ -56,6 +56,11 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
     description:
       "A 7-day strip on Home (tap for the month) and a monthly balance of streak freezes that automatically protect extra missed days. The existing one-day grace stays. Signed-in learners only.",
   },
+  smartWords: {
+    title: "Smart word practice (Word Lists)",
+    description:
+      "The upgraded Word Lists practice: every word gets a strength from 0 to 5 and comes back on a 1/3/7/16/30-day schedule (a miss sends it back), a word you missed is never wiped from the weak list, Continue starts at the first words that aren't locked in, a due-today card, keystrokes typed while a word settles are kept, Enter skips the answer screen, a first-letter hint and “I don't know” that cost stars, British spellings and synonyms accepted, the word is spoken after the attempt, and a separate listen-and-type mode. Everything else works for guests too; the schedule needs a signed-in account. Admin preview shows all of it to admins only; turn it On to roll it out to everyone.",
+  },
 };
 
 const STATE_OPTIONS: { value: FeatureState; label: string; hint: string }[] = [

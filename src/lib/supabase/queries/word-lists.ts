@@ -212,6 +212,8 @@ export async function fetchWordGroupById(
         sentence: w.sentence,
         hintAr: w.hint_ar,
         ipa: w.ipa,
+        // Absent until 20250324000000_word_accepted_answers.sql is applied.
+        alternates: w.accepted_answers ?? [],
       };
 
       if (locale && wordTranslations) {

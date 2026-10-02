@@ -11,7 +11,7 @@ import type { LearningMode } from "@/types/content";
 /**
  * Admin-controlled availability of the engagement features (dictation,
  * from-memory, personal cards, daily session, quests, badges, streak
- * calendar). One JSON document, stored in the single-row `feature_settings`
+ * calendar, smart word practice). One JSON document, stored in the single-row `feature_settings`
  * table (see 20250315000000_feature_settings.sql) and edited from
  * /admin/features. Pure and dependency-free of Supabase so both the
  * server-only queries/actions and the admin form can share the exact same
@@ -31,6 +31,7 @@ export const FEATURE_IDS = [
   "quests",
   "badges",
   "streakCalendar",
+  "smartWords",
 ] as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[number];
@@ -55,6 +56,7 @@ export const FEATURE_SECTIONS: Record<FeatureId, readonly LearningSection[]> = {
   quests: [],
   badges: [],
   streakCalendar: [],
+  smartWords: [],
 };
 
 /** Features that need an account to store anything — guests see a sign-in teaser instead of the feature itself. Dictation and from-memory work for everyone. */
@@ -303,6 +305,14 @@ export interface EffectiveFeatures {
     /** Whether lesson completions should be written to the per-day activity log: true whenever the streak calendar OR badges (whose sentence-count badges are measured from that log) are anything but Off, for every learner — including during an admin-only preview, so the history already exists the day the feature opens to everyone. */
     trackActivity: boolean;
   };
+  /**
+   * The upgraded Word Lists practice (type-ahead, Enter to skip, first-letter
+   * hint and "I don't know" with a star cost, accepted alternates, audio after
+   * the attempt, listen-and-type). `enabled` is open to every visitor the
+   * switch reaches; `spaced` is the part that stores something per learner
+   * (word strength, due reviews, Continue) and so needs a signed-in account.
+   */
+  smartWords: { enabled: boolean; spaced: boolean };
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -379,6 +389,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
       trackActivity:
         config.features.streakCalendar.state !== "off" || config.features.badges.state !== "off",
     },
+    smartWords: { enabled: open("smartWords"), spaced: openForAccount("smartWords") },
     guestTeaser,
   };
 }

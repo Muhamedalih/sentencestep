@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Star } from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { easeOut, popIn } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { formatIpa } from "@/lib/word-lists-ipa";
+import { wordStars } from "@/lib/word-mastery/schedule";
+import type { WordOutcome } from "@/lib/word-mastery/schedule";
 import { splitWordHint } from "@/lib/word-lists-hint";
 import { BLANK_TOKEN } from "@/types/word-lists";
 import type { VocabularyWord } from "@/types/word-lists";
@@ -38,6 +40,7 @@ export function VocabularyBlockSummary({
   totalWords,
   onContinue,
   defaultVoiceId,
+  results,
 }: {
   /** The block's words, in practice order. */
   words: VocabularyWord[];
@@ -49,6 +52,8 @@ export function VocabularyBlockSummary({
   totalWords: number;
   onContinue: () => void;
   defaultVoiceId?: string | null;
+  /** Smart word practice only: how each word of the block ended (clean, hint, miss), shown as its 1–3 stars and as a "right on the first try" count. Absent, the summary is exactly what it always was. */
+  results?: ReadonlyMap<string, WordOutcome>;
 }) {
   const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
@@ -57,6 +62,7 @@ export function VocabularyBlockSummary({
   );
   const continueRef = useRef<HTMLButtonElement>(null);
 
+  const cleanCount = results ? words.filter((word) => results.get(word.id) === "clean").length : 0;
   const isLastBlock = blockNumber >= blockCount;
   const lastWordNumber = firstWordNumber + words.length - 1;
   const allOpen = words.length > 0 && words.every((word) => open.has(word.id));
@@ -138,6 +144,13 @@ export function VocabularyBlockSummary({
               .replace("{to}", String(lastWordNumber))
               .replace("{total}", String(totalWords))}
           </p>
+          {results && (
+            <p className="text-success text-xs font-semibold tabular-nums" dir={dir}>
+              {t.wordLists.smart.firstTry
+                .replace("{n}", String(cleanCount))
+                .replace("{total}", String(words.length))}
+            </p>
+          )}
         </motion.header>
 
         <div className="flex justify-end">
@@ -161,6 +174,7 @@ export function VocabularyBlockSummary({
               onToggle={() => toggle(word.id)}
               defaultVoiceId={defaultVoiceId}
               reducedMotion={reducedMotion}
+              outcome={results?.get(word.id)}
             />
           ))}
         </ul>
@@ -208,6 +222,7 @@ function SummaryRow({
   onToggle,
   defaultVoiceId,
   reducedMotion,
+  outcome,
 }: {
   word: VocabularyWord;
   position: number;
@@ -216,8 +231,10 @@ function SummaryRow({
   onToggle: () => void;
   defaultVoiceId?: string | null;
   reducedMotion: boolean;
+  /** Smart word practice only — see VocabularyBlockSummary's `results`. */
+  outcome?: WordOutcome;
 }) {
-  const { dir } = useLocale();
+  const { t, dir } = useLocale();
   // The support-language meaning only — never a fall back to the Arabic hint
   // for another locale, same rule as VocabularyPractice.
   const hint = word.supportHint ? splitWordHint(word.supportHint) : null;
@@ -274,9 +291,11 @@ function SummaryRow({
               {hint.term}
             </span>
           )}
+          {outcome && <WordStars outcome={outcome} label={t.wordLists.smart.starsAria} />}
           <ChevronDown
             className={cn(
-              "text-muted-foreground ms-auto size-4.5 shrink-0 transition-transform duration-200",
+              "text-muted-foreground size-4.5 shrink-0 transition-transform duration-200",
+              outcome ? "ms-1" : "ms-auto",
               open && "rotate-180",
             )}
             aria-hidden="true"
@@ -337,5 +356,32 @@ function SummaryRow({
         )}
       </AnimatePresence>
     </motion.li>
+  );
+}
+
+/**
+ * A word's result as 1-3 small stars: three for right on the first try, two
+ * when the hint was used, one after a miss — the same three steps that decide
+ * what happens to the word's schedule (see wordStars).
+ */
+function WordStars({ outcome, label }: { outcome: WordOutcome; label: string }) {
+  const lit = wordStars({ missed: outcome === "missed", hinted: outcome === "assisted" });
+  return (
+    <span
+      role="img"
+      aria-label={label.replace("{n}", String(lit))}
+      className="ms-auto flex shrink-0 items-center gap-0.5"
+    >
+      {[1, 2, 3].map((n) => (
+        <Star
+          key={n}
+          aria-hidden="true"
+          className={cn(
+            "size-3.5",
+            n <= lit ? "fill-accent text-accent" : "text-muted-foreground/40 fill-transparent",
+          )}
+        />
+      ))}
+    </span>
   );
 }

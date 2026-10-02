@@ -35,6 +35,10 @@ interface DictationHelpProps {
   giveUpLabel: string;
   giveUpTitle: string;
   dir: "ltr" | "rtl";
+  /** Draws the bar without its card fill and shadow: for a calm screen where it sits on screen all the time (Word Lists), rather than one where it appears once the learner is stuck (Dictation). */
+  quiet?: boolean;
+  /** False for no entrance animation — a bar that is mounted again for every word must not pop in each time. Defaults to true. */
+  animateIn?: boolean;
 }
 
 /**
@@ -70,6 +74,8 @@ export function DictationHelp({
   giveUpLabel,
   giveUpTitle,
   dir,
+  quiet = false,
+  animateIn = true,
 }: DictationHelpProps) {
   const reduced = useReducedMotion() ?? false;
   const starsRef = useRef<HTMLSpanElement>(null);
@@ -246,10 +252,15 @@ export function DictationHelp({
       role="group"
       aria-label={prompt}
       dir={dir}
-      initial={reduced ? false : { opacity: 0, y: 16, scale: 0.94 }}
+      initial={reduced || !animateIn ? false : { opacity: 0, y: 16, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
-      className="border-border/70 bg-card/90 inline-flex w-full max-w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl border p-1.5 shadow-lg shadow-black/10 backdrop-blur-sm sm:w-auto sm:flex-nowrap"
+      className={cn(
+        "inline-flex w-full max-w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl border p-1.5 sm:w-auto sm:flex-nowrap",
+        quiet
+          ? "border-border/50 bg-transparent"
+          : "border-border/70 bg-card/90 shadow-lg shadow-black/10 backdrop-blur-sm",
+      )}
     >
       <div className="flex w-full items-center justify-center gap-3 px-2 py-1 sm:w-auto sm:justify-start sm:py-0">
         <span className="text-muted-foreground flex items-center gap-2 text-sm font-medium">

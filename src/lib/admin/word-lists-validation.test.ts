@@ -158,3 +158,33 @@ test("validateVocabularyWordInput: rejects an IPA that is Arabic, has digits or 
   assert.equal(validateVocabularyWordInput(wordInput({ ipa: "ae2nt" })).length, 1);
   assert.equal(validateVocabularyWordInput(wordInput({ ipa: "æ".repeat(81) })).length, 1);
 });
+
+test("validateVocabularyWordInput: accepted answers may be empty, or a list of plain words", () => {
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ alternates: "" })), []);
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ alternates: null })), []);
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ alternates: undefined })), []);
+  assert.deepEqual(validateVocabularyWordInput(wordInput({ alternates: "auntie, aunty" })), []);
+  assert.deepEqual(
+    validateVocabularyWordInput(wordInput({ alternates: "heat wave; back-end\no'clock" })),
+    [],
+  );
+});
+
+test("validateVocabularyWordInput: an accepted answer that is not a word is rejected, naming it", () => {
+  const errors = validateVocabularyWordInput(wordInput({ alternates: "auntie, 4ever, <b>" }));
+  assert.equal(errors.length, 2);
+  assert.ok(errors.some((error) => error.includes('"4ever"')));
+  assert.ok(errors.some((error) => error.includes('"<b>"')));
+});
+
+test("validateVocabularyWordInput: an accepted answer that is too long, or too many of them, are rejected", () => {
+  assert.equal(validateVocabularyWordInput(wordInput({ alternates: "a".repeat(41) })).length, 1);
+  const tooMany = Array.from(
+    { length: 12 },
+    (_, index) => `word${String.fromCharCode(97 + index)}`,
+  );
+  assert.equal(
+    validateVocabularyWordInput(wordInput({ alternates: tooMany.join(", ") })).length,
+    1,
+  );
+});
