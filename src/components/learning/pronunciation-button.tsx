@@ -349,12 +349,13 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     // `key={sentence.id}` / `key={word.id}` on their parents).
     const playReplayRef = useRef(playReplay);
     playReplayRef.current = playReplay;
-    useEffect(() => {
-      registerReplay(() => {
-        void playReplayRef.current();
-      });
-      return () => registerReplay(null);
-    }, [registerReplay]);
+    useEffect(
+      () =>
+        registerReplay(() => {
+          void playReplayRef.current();
+        }),
+      [registerReplay],
+    );
 
     // If the recorded/resolved clip fails, fall back to speech synthesis. Every click
     // starts a fresh Audio element (see useAudioClip), so status always

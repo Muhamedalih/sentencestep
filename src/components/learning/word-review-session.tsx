@@ -447,14 +447,14 @@ export function WordReviewSession({
               {hint.term && (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
                   <p
-                    className="text-foreground text-[clamp(1.75rem,1.4rem+1.6vw,2.25rem)] leading-tight font-bold text-balance"
+                    className="text-foreground text-[clamp(2.1rem,1.68rem+1.92vw,2.7rem)] leading-tight font-bold text-balance"
                     dir={dir}
                   >
                     {hint.term}
                   </p>
                   {hint.definition && (
                     <p
-                      className="text-muted-foreground text-[clamp(0.85rem,0.8rem+0.3vw,1rem)] font-medium"
+                      className="text-muted-foreground text-[clamp(1.02rem,0.96rem+0.36vw,1.2rem)] font-medium"
                       dir={dir}
                     >
                       {hint.definition}
@@ -472,6 +472,7 @@ export function WordReviewSession({
                   onResult={handleResult}
                   inputRef={inputRef}
                   fontFamily={sectionFontFamily}
+                  enlarged
                   smart={
                     smartConfig
                       ? {

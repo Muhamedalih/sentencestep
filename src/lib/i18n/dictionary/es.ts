@@ -578,7 +578,7 @@ export const es: Dictionary = {
       firstTry: "{n} de {total} al primer intento",
       starsAria: "{n} de 3 estrellas",
       continueAction: "Continuar",
-      practiceAllAction: "Practicar todas",
+      practiceAllAction: "Repasar toda la lista",
       masteryPercent: "{n}% dominado",
       dueBadge: "{n} por repasar",
       newBadge: "{n} nuevas",

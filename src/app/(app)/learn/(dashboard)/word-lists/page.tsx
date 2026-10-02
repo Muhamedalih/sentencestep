@@ -37,12 +37,7 @@ export default async function WordListsPage() {
       readMasteryStates(access.userId),
       getLearnerToday(),
     ]);
-    mastery = summarizeLibraryMastery(
-      groups,
-      states,
-      today,
-      weakWords.map((weak) => weak.wordId),
-    );
+    mastery = summarizeLibraryMastery(groups, states, today, weakWords);
   }
 
   return (

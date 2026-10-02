@@ -23,6 +23,7 @@ import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/quer
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
+import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Book } from "@/types/library";
@@ -124,6 +125,9 @@ export default async function LearnHomePage() {
   // is shared so the session count doesn't redo it.
   const learnerToday = localISODateInTimeZone((await cookies()).get(TIMEZONE_COOKIE)?.value);
   const weakWordsPromise = fetchWeakWordsAction();
+  // The same number the Word Lists hero shows (see countWordsWaitingForReview) —
+  // only what is actually up for review, not every word that was ever weak.
+  const reviewWaitingPromise = weakWordsPromise.then(countWordsWaitingForReview);
   const engagement = startHomeEngagement({
     todayISO: learnerToday,
     features: getEffectiveFeatures(),
@@ -140,6 +144,7 @@ export default async function LearnHomePage() {
     featuredBooks,
     fallbackBook,
     weakWords,
+    reviewWaiting,
     initialProgress,
   ] = await Promise.all([
     getHomeLessons(locale ?? undefined),
@@ -150,6 +155,7 @@ export default async function LearnHomePage() {
     fetchFeaturedBooks(supabase, locale),
     fetchFirstPublishedBook(supabase, locale),
     weakWordsPromise,
+    reviewWaitingPromise,
     progressPromise,
   ]);
 
@@ -199,7 +205,11 @@ export default async function LearnHomePage() {
         />
         <GuestProgressBanner isGuest={!user} className="mb-6" />
         <HomeEngagementSection stream={engagement} className="mb-6" />
-        <NeedsReviewWords words={weakWords} />
+        <NeedsReviewWords
+          words={weakWords.filter((word) => word.dueNow)}
+          count={reviewWaiting.count}
+          smart={reviewWaiting.smart}
+        />
         <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
           {t.progress.upNextLabel}
         </p>
@@ -211,7 +221,7 @@ export default async function LearnHomePage() {
           bookSentenceCount={bookSentenceCount}
           bookProgressPercent={bookProgressPercent}
           isPremiumUser={isPremiumUser}
-          hasWeakWords={weakWords.length > 0}
+          hasWeakWords={reviewWaiting.count > 0}
           isAdminUser={isAdminUser}
         />
       </div>

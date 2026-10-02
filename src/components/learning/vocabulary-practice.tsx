@@ -494,13 +494,13 @@ function VocabularyPracticeSession({
               {hint.term && (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
                   <p
-                    className="text-foreground/85 text-2xl font-bold text-balance sm:text-[1.8rem]"
+                    className="text-foreground/85 text-[1.8rem] font-bold text-balance sm:text-[2.16rem]"
                     dir={dir}
                   >
                     {hint.term}
                   </p>
                   {hint.definition && (
-                    <p className="text-muted-foreground text-base font-medium" dir={dir}>
+                    <p className="text-muted-foreground text-[1.2rem] font-medium" dir={dir}>
                       {hint.definition}
                     </p>
                   )}
@@ -516,6 +516,7 @@ function VocabularyPracticeSession({
                   onResult={handleWordResult}
                   inputRef={inputRef}
                   fontFamily={sectionFontFamily}
+                  enlarged
                   smart={
                     isSmart
                       ? {

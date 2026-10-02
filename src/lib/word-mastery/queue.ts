@@ -4,9 +4,11 @@ import { fetchMasteryStates } from "@/lib/supabase/queries/word-mastery";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { WeakWordItem, WeakWordReason } from "@/lib/weak-words/types";
 import { getWordGroupById } from "@/lib/word-lists";
+import { getLearnerToday, getSmartWordsAccess } from "@/lib/word-mastery/access";
 import {
   REVIEW_SESSION_WORDS,
   dueWordIds,
+  reviewWaitingIds,
   summarizeGroupMastery,
 } from "@/lib/word-mastery/schedule";
 import type { MasteryState } from "@/lib/word-mastery/schedule";
@@ -34,15 +36,15 @@ export async function readMasteryStates(userId: string): Promise<Map<string, Mas
 
 /**
  * What the Word Lists library shows on each card, and the number behind its
- * review hero: every word due on the schedule plus every weak word, each once.
- * Only words in groups this learner can open are counted (a locked group's ids
- * are not visible to them).
+ * review hero: see reviewWaitingIds (words due on the schedule plus weak words
+ * that are up for review now, each once). Only words in groups this learner can
+ * open are counted (a locked group's ids are not visible to them).
  */
 export function summarizeLibraryMastery(
   groups: readonly WordGroupSummary[],
   states: ReadonlyMap<string, MasteryState>,
   todayISO: string,
-  weakWordIds: Iterable<string>,
+  weak: Iterable<{ wordId: string; dueNow: boolean }>,
 ): LibraryMastery {
   const byGroup: Record<string, GroupMastery> = {};
   const visible = new Set<string>();
@@ -50,9 +52,33 @@ export function summarizeLibraryMastery(
     byGroup[group.id] = summarizeGroupMastery(group.wordIds, states, todayISO);
     for (const id of group.wordIds) visible.add(id);
   }
-  const waiting = new Set(dueWordIds(states, todayISO).filter((id) => visible.has(id)));
-  for (const id of weakWordIds) waiting.add(id);
-  return { byGroup, reviewCount: waiting.size };
+  return { byGroup, reviewCount: reviewWaitingIds(states, visible, weak, todayISO).size };
+}
+
+/**
+ * How many words wait for review, for a page that does not load the whole
+ * library (Home). The same number Word Lists' hero shows, because both count
+ * with reviewWaitingIds. `smart` says whether it came from the learner's
+ * schedule (the hero's wording follows it); without a schedule it is the weak
+ * words up for review now.
+ */
+export async function countWordsWaitingForReview(
+  weak: readonly WeakWordItem[],
+): Promise<{ count: number; smart: boolean }> {
+  const access = await getSmartWordsAccess();
+  if (!access.spaced || !access.userId) {
+    return { count: weak.filter((item) => item.dueNow).length, smart: false };
+  }
+  const [states, flat, today] = await Promise.all([
+    readMasteryStates(access.userId),
+    fetchAllVocabularyWordsFlat().catch((error: unknown) => {
+      console.error("[word-mastery] fetchAllVocabularyWordsFlat failed", error);
+      return [];
+    }),
+    getLearnerToday(),
+  ]);
+  const visible = new Set(flat.map((word) => word.id));
+  return { count: reviewWaitingIds(states, visible, weak, today).size, smart: true };
 }
 
 export interface SmartReviewQueue {
@@ -65,7 +91,7 @@ export interface SmartReviewQueue {
 interface Candidate {
   wordId: string;
   groupId: string;
-  /** Lower asks first: 0 = due and still an unfixed mistake, 1 = due, 2 = weak but not due. */
+  /** Lower asks first: 0 = due and still an unfixed mistake, 1 = due on the schedule, 2 = an unfixed mistake the schedule has no due date for. */
   rank: 0 | 1 | 2;
   strength: number;
   dueOn: string;
@@ -74,8 +100,8 @@ interface Candidate {
 
 /**
  * The review queue for "Review All Words" when Smart word practice is on: the
- * words due on the learner's schedule plus the weak words from the mistakes
- * ledger, each word once, weakest and longest-overdue first, capped so a visit
+ * words due on the learner's schedule plus the weak words that are up for review
+ * now (see reviewWaitingIds), each word once, weakest and longest-overdue first, capped so a visit
  * stays bite-sized (the rest wait for the next one). A word the learner cannot
  * open any more (a locked group, content removed) is quietly dropped, like every
  * other review queue.
@@ -115,6 +141,8 @@ export async function buildSmartReviewQueue({
     });
   }
   for (const item of weak) {
+    // Still on the weak list but not due for days: already reviewed, so not asked now.
+    if (!item.dueNow) continue;
     const existing = candidates.get(item.wordId);
     if (existing) {
       existing.reason = item.reason;
