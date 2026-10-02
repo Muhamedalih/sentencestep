@@ -192,14 +192,16 @@ export const tr: Dictionary = {
     dismissAria: "Kapat",
   },
   rateApp: {
-    headline: "SentenceStep deneyimin şimdiye kadar nasıldı?",
+    headline: "Fikrin bizim için çok değerli! SentenceStep deneyimin şimdiye kadar nasıldı?",
     subtitle:
-      "Değerlendirmen tamamen isteğe bağlıdır ve SentenceStep'i geliştirmemize yardımcı olur — bu mesajı bir daha görmeyeceksin.",
-    commentPlaceholder: "Herhangi bir geri bildirim veya öneri? (isteğe bağlı)",
-    skip: "Atla",
-    submit: "Gönder",
-    thanksTitle: "Teşekkürler!",
-    thanksBody: "Değerlendirmen bize ulaştı — teşekkür ederiz.",
+      "Değerlendirme isteğe bağlıdır ama gerçek bir fark yaratır; verdiğin her yıldız ve yazdığın her söz SentenceStep'i senin ve tüm öğrenenler için daha iyi hale getirmemize yardımcı olur. Bu mesajı bir daha görmeyeceksin.",
+    commentPlaceholder:
+      "Geri bildirimini veya önerini bizimle paylaş — fikirlerin bizim için önemli (isteğe bağlı)",
+    skip: "Şimdi değil",
+    submit: "Puanımı gönder",
+    thanksTitle: "Çok teşekkürler!",
+    thanksBody:
+      "Değerlendirmen bize ulaştı, zamanın için çok teşekkür ederiz — geri bildirimin sana daha iyi bir deneyim sunmamıza yardımcı olur.",
     starLabelSingular: "{n} yıldız",
     starLabelPlural: "{n} yıldız",
   },
@@ -455,10 +457,10 @@ export const tr: Dictionary = {
     startingLevelNotChosen: "Henüz ayarlanmadı — dersler başlangıç seviyesinden başlar.",
     startingLevelSaved: "Başlangıç seviyesi güncellendi.",
     startingLevelError: "Başlangıç seviyeniz güncellenemedi. Lütfen tekrar deneyin.",
-    rateAppHeading: "SentenceStep'i değerlendir",
+    rateAppHeading: "Fikrin önemli — SentenceStep'i değerlendir",
     rateAppSubtitle:
-      "Uygulamayı beğendin mi? İstediğin zaman bize puan verebilirsin — tamamen isteğe bağlı.",
-    rateAppButton: "Uygulamayı değerlendir",
+      "Uygulamayı beğendin mi? Değerlendirmeni istediğin zaman paylaşabilirsin; fikrin uygulamayı geliştirmemizde gerçek bir fark yaratır ve tamamen isteğe bağlıdır.",
+    rateAppButton: "Uygulamayı şimdi değerlendir",
     avatarHeading: "Avatar",
     avatarSubtitle: "Hesabınızda gösterilen simgeyi seçin.",
     accountHeading: "Hesap",

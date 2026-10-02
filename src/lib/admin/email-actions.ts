@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { isPlausibleEmail, validateAdminEmailInput } from "@/lib/admin/email-validation";
@@ -114,4 +116,53 @@ export async function replyToProblemReport(
     providerMessageId: sent.messageId,
   });
   return { success: `Reply sent to ${report.user_email}.` };
+}
+
+/**
+ * Replies by email to a message in Admin > Inbox. The recipient is the
+ * message's own sender, read from the row on the server — never taken from
+ * the client. A successful reply marks the message "replied" (best-effort:
+ * the email already went out, so a failed status write is not reported as a
+ * failed send).
+ */
+export async function replyToInboundEmail(
+  inboundEmailId: string,
+  subject: string,
+  message: string,
+): Promise<AdminEmailActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const validation = validateAdminEmailInput({ subject, message });
+  if (!validation.ok) return { error: validation.error };
+
+  const supabase = await createClient();
+  const { data: inbound, error } = await supabase
+    .from("inbound_emails")
+    .select("from_email")
+    .eq("id", inboundEmailId)
+    .maybeSingle();
+  if (error) return { error: "Couldn't load this message. Please try again." };
+  if (!inbound) return { error: "This message no longer exists." };
+
+  const sent = await deliver(
+    inbound.from_email,
+    validation.value.subject,
+    validation.value.message,
+  );
+  if ("error" in sent) return { error: sent.error };
+
+  const { error: statusError } = await supabase
+    .from("inbound_emails")
+    .update({ status: "replied", updated_at: new Date().toISOString() })
+    .eq("id", inboundEmailId);
+  if (statusError) console.error("[admin-email] couldn't mark inbound email replied", statusError);
+
+  void logAdminAction("inbox.replied", "inbound_email", inboundEmailId, {
+    recipient: inbound.from_email,
+    subject: validation.value.subject,
+    providerMessageId: sent.messageId,
+  });
+  revalidatePath("/admin/inbox");
+  return { success: `Reply sent to ${inbound.from_email}.` };
 }
