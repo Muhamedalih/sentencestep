@@ -44,7 +44,8 @@ export default async function AdminUsersPage() {
           <CardTitle className="text-lg">Send an email</CardTitle>
           <CardDescription>
             Email any registered user from the site&apos;s official address. Replies go to
-            EMAIL_REPLY_TO_ADDRESS when it&apos;s set, otherwise to EMAIL_FROM_ADDRESS.
+            EMAIL_REPLY_TO_ADDRESS when it&apos;s set (and show up in Inbox once inbound email is
+            set up), otherwise to EMAIL_FROM_ADDRESS.
           </CardDescription>
         </CardHeader>
         <CardContent>

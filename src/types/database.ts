@@ -1340,6 +1340,41 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["problem_reports"]["Insert"]>;
         Relationships: [];
       };
+      /** A reply a learner emailed to our support address, surfaced in Admin > Inbox. See 20250326000000_inbound_emails.sql. */
+      inbound_emails: {
+        Row: {
+          id: string;
+          provider_email_id: string;
+          message_id: string | null;
+          from_email: string;
+          from_name: string | null;
+          to_email: string;
+          subject: string;
+          body_text: string;
+          attachment_names: string[];
+          status: "new" | "read" | "replied" | "archived";
+          received_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider_email_id: string;
+          message_id?: string | null;
+          from_email: string;
+          from_name?: string | null;
+          to_email: string;
+          subject?: string;
+          body_text?: string;
+          attachment_names?: string[];
+          status?: "new" | "read" | "replied" | "archived";
+          received_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["inbound_emails"]["Insert"]>;
+        Relationships: [];
+      };
       /** Service-role-only sign-in attempt ledger backing signIn's lockout. See 20250216000000_login_attempt_lockout.sql. */
       login_attempts: {
         Row: {
