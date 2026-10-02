@@ -173,6 +173,10 @@ export function LessonSession({
   // mounts. Both only ever describe correct letters.
   const dictationProgressRef = useRef<DictationProgress | null>(null);
   const [carryOver, setCarryOver] = useState<DictationProgress | null>(null);
+  // Letter-by-letter Dictation: sentences in a row finished without Show the
+  // word. Shown as a chip from two; ended by showing the word, giving up, or
+  // leaving Dictation.
+  const [helpFreeStreak, setHelpFreeStreak] = useState(0);
   // Personal word cards (admin feature): the save star on the current-word
   // label. Never in the admin preview — an admin previewing a lesson isn't
   // building a real deck.
@@ -266,6 +270,7 @@ export function LessonSession({
     } else if (next) {
       setCarryOver(null);
     }
+    if (!next) setHelpFreeStreak(0);
     setDictationOn(next);
     setDictationIntroFor(next ? (unit.sentences[sentenceIndex]?.id ?? null) : null);
     // Pressing the toggle is itself the deliberate tap the mobile "tap to
@@ -449,6 +454,8 @@ export function LessonSession({
     if (!outcome.lettersReported) {
       correctCountRef.current += outcome.correctChars;
       errorCountRef.current += outcome.errorChars;
+    } else {
+      setHelpFreeStreak((streak) => (outcome.helps === 0 ? streak + 1 : 0));
     }
     dictationCountRef.current += 1;
     if (sentence && !previewMode && outcome.mistakes.length > 0) {
@@ -468,6 +475,7 @@ export function LessonSession({
   // again).
   function handleDictationGiveUp(progress: DictationProgress) {
     dictationProgressRef.current = null;
+    setHelpFreeStreak(0);
     setCarryOver(progress);
   }
 
@@ -552,6 +560,7 @@ export function LessonSession({
     dictationCountRef.current = 0;
     dictationProgressRef.current = null;
     setCarryOver(null);
+    setHelpFreeStreak(0);
     setIsPracticingFromMemory(false);
     setIsComplete(false);
   }
@@ -1044,16 +1053,19 @@ export function LessonSession({
                             onExact={playSentenceCompleteSound}
                             onComplete={handleDictationComplete}
                             letterByLetter={features.dictation.letterByLetter}
-                            onCorrectLetter={() => {
-                              correctCountRef.current += 1;
+                            // A practice try (the retry button) sounds like any other but
+                            // only the first try goes into the lesson's tallies.
+                            onCorrectLetter={(counted) => {
+                              if (counted) correctCountRef.current += 1;
                               play("letter");
                               vibrateLightly();
                             }}
-                            onErrorLetter={() => {
-                              errorCountRef.current += 1;
+                            onErrorLetter={(counted) => {
+                              if (counted) errorCountRef.current += 1;
                               play("error");
                               vibrateLightly();
                             }}
+                            helpFreeStreak={helpFreeStreak}
                             onGiveUp={handleDictationGiveUp}
                             onProgress={(progress) => {
                               dictationProgressRef.current = progress;

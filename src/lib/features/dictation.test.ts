@@ -440,12 +440,17 @@ test("dictationTypedPrefix: always a genuine prefix the typing engine accepts, f
   }
 });
 
-test("dictationStars: a clean run is three stars, help costs more than a slip", () => {
+test("dictationStars: each help costs a star, each third wrong letter costs a star, never below one", () => {
   assert.equal(dictationStars(0, 0), 3);
-  assert.equal(dictationStars(1, 0), 2);
-  assert.equal(dictationStars(2, 0), 2);
+  // A slip or two is not a loss.
+  assert.equal(dictationStars(1, 0), 3);
+  assert.equal(dictationStars(2, 0), 3);
+  assert.equal(dictationStars(3, 0), 2);
+  assert.equal(dictationStars(5, 0), 2);
+  assert.equal(dictationStars(6, 0), 1);
   assert.equal(dictationStars(0, 1), 2);
-  assert.equal(dictationStars(1, 1), 1);
-  assert.equal(dictationStars(3, 0), 1);
+  assert.equal(dictationStars(2, 1), 2);
+  assert.equal(dictationStars(3, 1), 1);
   assert.equal(dictationStars(0, 2), 1);
+  assert.equal(dictationStars(40, 9), 1);
 });

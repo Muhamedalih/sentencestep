@@ -606,14 +606,15 @@ export function dictationTypedPrefix(target: string, value: string): string {
 }
 
 /**
- * 1–3 stars for one letter-by-letter sentence. A clean run is 3; a slip or two,
- * or a single peek at a word, is 2; anything more is 1. Asking for help costs
- * more than a slip, because a slip is still the learner's own try.
+ * 1–3 stars for one letter-by-letter sentence, simple enough to show live: it
+ * starts at three, every time the word is shown costs one, and every third
+ * wrong letter costs one. Never below one. A slip or two is not a loss (they
+ * show in the count of wrong letters, and keep the sentence from being
+ * "Perfect"), so the stars in front of the learner never drop on a first typo.
  */
 export function dictationStars(slips: number, helps: number): 1 | 2 | 3 {
-  const cost = slips + helps * 2;
-  if (cost === 0) return 3;
-  return cost <= 2 ? 2 : 1;
+  const lost = helps + Math.floor(slips / 3);
+  return Math.max(1, 3 - lost) as 1 | 2 | 3;
 }
 
 /**

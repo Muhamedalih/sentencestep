@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, CornerDownLeft, Star } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CheckCircle2, CornerDownLeft, Lightbulb, Star } from "lucide-react";
 
 import { DictationHelp } from "@/components/learning/dictation-help";
+import { DictationStreak, type StreakMode } from "@/components/learning/dictation-streak";
 import { DictationText } from "@/components/learning/dictation-text";
-import { ContinueButton, RetryButton } from "@/components/learning/feedback-actions";
+import {
+  ContinueButton,
+  RetryButton,
+  SmallRetryButton,
+} from "@/components/learning/feedback-actions";
 import { LessonSettings } from "@/components/learning/lesson-settings";
 import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
 import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
@@ -55,6 +60,8 @@ export interface DictationOutcome {
   celebrated: boolean;
   /** Letter-by-letter mode: every letter was already reported as it was typed (onCorrectLetter / onErrorLetter), so the lesson must not add correctChars / errorChars to its tallies a second time. */
   lettersReported: boolean;
+  /** Letter-by-letter mode: how many times the word was shown on the first try (0 in the exam). A sentence with none keeps the lesson's help-free streak going. */
+  helps: number;
 }
 
 /** Where a letter-by-letter answer stands, handed to the lesson so a sentence can carry on in the normal typing view (the learner gave up, or switched Dictation off) without losing what was typed. */
@@ -88,9 +95,11 @@ interface DictationSentenceProps {
   onComplete: (outcome: DictationOutcome) => void;
   /** Check every letter the moment it is typed (the admin's letter-by-letter option) instead of grading the whole sentence on Enter. */
   letterByLetter?: boolean;
-  /** Letter-by-letter mode: fired for each letter that is right / turned away, so the lesson counts, sounds and vibrates exactly as it does for the typing view. */
-  onCorrectLetter?: () => void;
-  onErrorLetter?: () => void;
+  /** Letter-by-letter mode: fired for each letter that is right / turned away, so the lesson counts, sounds and vibrates exactly as it does for the typing view. `counted` is false in a practice try (the retry button): it still sounds, but only the first try goes into the lesson's tallies. */
+  onCorrectLetter?: (counted: boolean) => void;
+  onErrorLetter?: (counted: boolean) => void;
+  /** Letter-by-letter mode: sentences in a row the learner has finished without Show the word, before this one (shown as a chip from two). */
+  helpFreeStreak?: number;
   /** Letter-by-letter mode: the learner gave up on this sentence — carry on in the normal view from what they typed. */
   onGiveUp?: (progress: DictationProgress) => void;
   /** Letter-by-letter mode: the answer after every change (null once the sentence is finished), so switching Dictation off mid-sentence can keep it too. */
@@ -185,6 +194,7 @@ export function DictationSentence({
   letterByLetter = false,
   onCorrectLetter,
   onErrorLetter,
+  helpFreeStreak = 0,
   onGiveUp,
   onProgress,
   storyTitle,
@@ -216,6 +226,8 @@ export function DictationSentence({
     [letterByLetter, sentence.en],
   );
   const finished = letterMode && isDictationComplete(sentence.en, value);
+  /** A retry of a finished sentence: nothing is at stake, so no stars, no price, no streak, and nothing goes into the lesson's tallies. */
+  const practice = letterMode && attempt > 0;
   /** Wrong letters turned away so far / times a word was shown. */
   const [misses, setMisses] = useState(0);
   const [helps, setHelps] = useState(0);
@@ -230,6 +242,18 @@ export function DictationSentence({
     nonce: number;
   } | null>(null);
   const [peekWord, setPeekWord] = useState<number | null>(null);
+  /** The first try at this sentence, once it is finished: the only one the lesson hears about, whatever the practice tries after it do. */
+  const [first, setFirst] = useState<{
+    misses: number;
+    helps: number;
+    wpm: number;
+    correct: number;
+    mistakes: { word: string; errorIndexes: number[] }[];
+  } | null>(null);
+  /** The pointer is on Show the word (which would end the streak), and the streak chip has said its piece. */
+  const [atRisk, setAtRisk] = useState(false);
+  const [streakGone, setStreakGone] = useState(false);
+  const streakGoneTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   /** Per graded word, the letter positions (within the word) that went wrong or needed help — what Fix Your Mistakes is told. */
   const missedLettersRef = useRef<Map<number, Set<number>>>(new Map());
   const correctLettersRef = useRef(0);
@@ -244,6 +268,7 @@ export function DictationSentence({
     () => () => {
       clearTimeout(rejectionTimerRef.current);
       clearTimeout(peekTimerRef.current);
+      clearTimeout(streakGoneTimerRef.current);
     },
     [],
   );
@@ -431,7 +456,7 @@ export function DictationSentence({
         setStreak(null);
         clearPeek();
         correctLettersRef.current += gained;
-        for (let letter = 0; letter < gained; letter++) onCorrectLetter?.();
+        for (let letter = 0; letter < gained; letter++) onCorrectLetter?.(!practice);
       } else if (step.value.length < value.length) {
         setStreak(null);
       }
@@ -450,7 +475,7 @@ export function DictationSentence({
       setRejection({ word, letter, char: step.rejected, nonce: rejectionNonceRef.current });
       clearTimeout(rejectionTimerRef.current);
       rejectionTimerRef.current = setTimeout(() => setRejection(null), REJECTION_MS);
-      onErrorLetter?.();
+      onErrorLetter?.(!practice);
       // A guess costs a listen: the word is said again.
       void playWord(word);
     }
@@ -465,6 +490,15 @@ export function DictationSentence({
       clearPeek();
       setStreak(null);
       setRejection(null);
+      if (!practice) {
+        setFirst({
+          misses,
+          helps,
+          wpm: finishedWpmRef.current,
+          correct: correctLettersRef.current,
+          mistakes: collectMistakes(),
+        });
+      }
       if (misses === 0 && helps === 0) {
         celebratedRef.current = true;
         onExact?.();
@@ -472,39 +506,72 @@ export function DictationSentence({
       onProgress?.(null);
       return;
     }
-    onProgress?.(progressAt(step.value));
+    // A practice try is never handed over to the typing view: the first try's
+    // results are already settled and would be lost with it.
+    onProgress?.(practice ? null : progressAt(step.value));
   }
 
   function handleShowWord() {
     const word = view.cursor?.word;
     if (word === undefined || finished) return;
+    // The first help of a first try ends the streak: its chip shows that for a
+    // moment and then leaves.
+    if (!practice && helps === 0) {
+      clearTimeout(streakGoneTimerRef.current);
+      streakGoneTimerRef.current = setTimeout(() => setStreakGone(true), 2600);
+    }
     setHelps((count) => count + 1);
     noteMissedLetter(word, view.cursor?.letter ?? 0);
     startPeek(word);
     // Said as well as shown.
     void playWord(word);
-    onProgress?.(progressAt(value));
+    onProgress?.(practice ? null : progressAt(value));
     inputRef.current?.focus();
+  }
+
+  /** Reports the first try to the lesson — whichever way the learner leaves the sentence, and however many practice tries came after it. */
+  function finishWithFirstTry() {
+    if (!first) return;
+    onComplete({
+      wpm: first.wpm,
+      correctChars: first.correct,
+      errorChars: first.misses,
+      accuracy:
+        first.correct + first.misses === 0 ? 1 : first.correct / (first.correct + first.misses),
+      mistakes: first.mistakes,
+      exact: first.misses === 0 && first.helps === 0,
+      celebrated: celebratedRef.current,
+      lettersReported: true,
+      helps: first.helps,
+    });
   }
 
   function handleGiveUp() {
     clearPeek();
-    onGiveUp?.(progressAt(value));
+    // In a practice try there is nothing to hand over: leaving it is just moving on.
+    if (practice) finishWithFirstTry();
+    else onGiveUp?.(progressAt(value));
   }
 
   function nextAfterLetters() {
-    if (!finished) return;
-    const correct = correctLettersRef.current;
-    onComplete({
-      wpm: finishedWpmRef.current,
-      correctChars: correct,
-      errorChars: misses,
-      accuracy: correct + misses === 0 ? 1 : correct / (correct + misses),
-      mistakes: collectMistakes(),
-      exact: misses === 0 && helps === 0,
-      celebrated: celebratedRef.current,
-      lettersReported: true,
-    });
+    if (finished) finishWithFirstTry();
+  }
+
+  /** Type the finished sentence again as practice: fresh blanks, the audio again, nothing at stake. */
+  function retrySentence() {
+    clearTimeout(rejectionTimerRef.current);
+    clearPeek();
+    startedAtRef.current = null;
+    finishedAtRef.current = 0;
+    correctLettersRef.current = 0;
+    missedLettersRef.current = new Map();
+    setValue("");
+    setMisses(0);
+    setHelps(0);
+    setStreak(null);
+    setRejection(null);
+    setAttempt((count) => count + 1);
+    pronunciationRef.current?.replay();
   }
 
   // Enter in the answer: checks the exam; in letter mode only continues, and
@@ -553,6 +620,7 @@ export function DictationSentence({
       exact: first.graded.exact,
       celebrated: celebratedRef.current,
       lettersReported: false,
+      helps: 0,
     });
   }
 
@@ -665,6 +733,11 @@ export function DictationSentence({
           {t.dictation.blankHint}
         </p>
       )}
+      {practice && (
+        <p className="text-muted-foreground mt-1.5 text-sm select-none" dir={dir}>
+          {t.dictation.retryNote}
+        </p>
+      )}
     </>
   );
 
@@ -672,6 +745,7 @@ export function DictationSentence({
   // blank. The strip keeps its height while empty so the sentence never jumps
   // when it appears.
   const stuck = letterMode && !finished && (streak?.count ?? 0) >= HELP_AFTER_MISSES;
+  const liveStars = dictationStars(misses, helps);
   const helpStrip = letterMode && (
     <div
       className={cn(
@@ -686,11 +760,17 @@ export function DictationSentence({
         <DictationHelp
           dir={dir}
           prompt={t.dictation.stuckPrompt}
+          stars={liveStars}
+          showStakes={!practice}
+          starsLabel={t.dictation.starsLabel}
           onShowWord={showWordBlanks ? handleShowWord : undefined}
           showWordLabel={t.dictation.help}
           showWordTitle={t.dictation.helpTitle}
           showingWord={peekWord !== null}
-          onGiveUp={onGiveUp ? handleGiveUp : undefined}
+          costLabel={t.dictation.costLabel}
+          costRecorded={t.dictation.costRecorded}
+          onRiskChange={setAtRisk}
+          onGiveUp={practice || onGiveUp ? handleGiveUp : undefined}
           giveUpLabel={t.dictation.giveUp}
           giveUpTitle={t.dictation.giveUpTitle}
         />
@@ -701,8 +781,11 @@ export function DictationSentence({
   // Letter by letter, the end of a sentence: how it went, what it means (the
   // translation was hidden while it would have given the answer away), and the
   // way on. The sentence itself stays where it was, filled in.
-  const clean = misses === 0 && helps === 0;
-  const stars = dictationStars(misses, helps);
+  // What the panel shows is always the first try, the one that counts, even
+  // after practice tries.
+  const counted = first ?? { misses, helps };
+  const clean = counted.misses === 0 && counted.helps === 0;
+  const stars = dictationStars(counted.misses, counted.helps);
   const finishedPanel = finished && (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0, y: 12 }}
@@ -740,9 +823,21 @@ export function DictationSentence({
             />
           ))}
         </div>
-        {misses > 0 && (
-          <span className="text-muted-foreground text-sm" dir={dir}>
-            {t.dictation.mistakeCount.replace("{n}", String(misses))}
+        {counted.misses > 0 && (
+          <span
+            className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-3 py-0.5 text-sm"
+            dir={dir}
+          >
+            {t.dictation.mistakeCount.replace("{n}", String(counted.misses))}
+          </span>
+        )}
+        {counted.helps > 0 && (
+          <span
+            className="bg-accent/15 text-accent inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-sm font-medium"
+            dir={dir}
+          >
+            <Lightbulb className="size-3.5" aria-hidden="true" />
+            {t.dictation.helpCount.replace("{n}", String(counted.helps))}
           </span>
         )}
       </div>
@@ -754,8 +849,17 @@ export function DictationSentence({
         {supportText}
       </p>
 
+      {attempt > 0 && (
+        <p className="text-muted-foreground -mt-2 text-sm" dir={dir}>
+          {t.dictation.retryNote}
+        </p>
+      )}
+
       <div ref={actionsRef} className="flex flex-wrap items-center gap-3">
         <ContinueButton onClick={nextAfterLetters}>{t.dictation.continue}</ContinueButton>
+        <SmallRetryButton onClick={retrySentence} title={t.dictation.retrySentenceTitle}>
+          {t.dictation.retrySentence}
+        </SmallRetryButton>
         <span className="text-muted-foreground flex items-center gap-1.5 text-sm" dir={dir}>
           <CornerDownLeft className="size-3.5" aria-hidden="true" />
           {t.dictation.pressEnterContinue}
@@ -829,6 +933,33 @@ export function DictationSentence({
     </motion.div>
   );
 
+  // The streak chip, in the lesson's top corner beside the audio controls: it
+  // shows from the second help-free sentence, is the one the learner's pointer
+  // warns when it reaches Show the word, and ends when the word is shown.
+  const helpedFirstTry = first ? first.helps > 0 : attempt === 0 && helps > 0;
+  const streakCount = helpedFirstTry ? helpFreeStreak : helpFreeStreak + (first ? 1 : 0);
+  const streakMode: StreakMode = helpedFirstTry
+    ? "broke"
+    : atRisk && !finished && !practice
+      ? "risk"
+      : "steady";
+  const streakChip = (
+    <AnimatePresence>
+      {letterMode && !streakGone && streakCount >= 2 && (
+        <DictationStreak
+          key="streak"
+          count={streakCount}
+          mode={streakMode}
+          compact={mode === "conversation"}
+          label={t.dictation.streakLabel}
+          riskLabel={t.dictation.streakRisk}
+          brokenLabel={t.dictation.streakBroken}
+          ariaLabel={t.dictation.streakAria.replace("{n}", String(streakCount))}
+        />
+      )}
+    </AnimatePresence>
+  );
+
   const tapToStart = !hasStarted && (
     <TapToStartOverlay
       heading={t.lesson.tapToStartHeading}
@@ -851,7 +982,10 @@ export function DictationSentence({
         <ConversationBubble speaker={sentence.speaker}>
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">{result ? correction : text}</div>
-            <div className="flex shrink-0 items-center gap-2">{audioControls}</div>
+            <div className="flex shrink-0 items-center gap-2">
+              {streakChip}
+              {audioControls}
+            </div>
           </div>
           {letterMode ? (
             finished ? (
@@ -908,7 +1042,10 @@ export function DictationSentence({
           onGoForward={onGoForward}
         />
       )}
-      <div className="mb-4 flex items-center justify-end gap-2">{audioControls}</div>
+      <div className="mb-4 flex items-center justify-end gap-2">
+        {streakChip}
+        {audioControls}
+      </div>
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">{body}</div>
     </div>
   );
