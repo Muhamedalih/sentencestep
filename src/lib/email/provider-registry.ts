@@ -17,8 +17,9 @@ import { createResendProvider } from "@/lib/email/providers/resend";
 export function getEmailProvider(): EmailProvider | null {
   const apiKey = process.env.EMAIL_PROVIDER_API_KEY;
   const from = process.env.EMAIL_FROM_ADDRESS;
+  const replyTo = process.env.EMAIL_REPLY_TO_ADDRESS || undefined;
 
   if (!apiKey || !from) return null;
 
-  return createResendProvider(apiKey, from);
+  return createResendProvider(apiKey, from, replyTo);
 }
