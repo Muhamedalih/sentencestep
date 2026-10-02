@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
+import { ReportReplyForm } from "@/components/admin/report-reply-form";
 import { ReportStatusControl } from "@/components/admin/report-status-control";
 import { listProblemReports, type ProblemReportStatus } from "@/lib/admin/reports-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -65,6 +66,9 @@ export default async function AdminReportsPage() {
                 <ReportStatusControl id={report.id} status={report.status} />
               </div>
               <p className="mt-3 text-sm whitespace-pre-wrap">{report.message}</p>
+              <div className="mt-3">
+                <ReportReplyForm reportId={report.id} userEmail={report.userEmail} />
+              </div>
             </div>
           ))}
         </div>

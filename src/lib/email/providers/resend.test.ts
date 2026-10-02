@@ -81,3 +81,26 @@ test("sendEmail: a success response missing a message id throws instead of claim
     restore();
   }
 });
+
+test("sendEmail: includes reply_to only when a reply-to address is configured", async () => {
+  const bodies: Record<string, unknown>[] = [];
+  const restore = stubFetch(async (_url, init) => {
+    bodies.push(JSON.parse(init?.body as string));
+    return new Response(JSON.stringify({ id: "msg_1" }), { status: 200 });
+  });
+
+  try {
+    const input = { to: "a@example.com", subject: "s", html: "h", text: "t" };
+    await createResendProvider("key", "noreply@example.com").sendEmail(input);
+    await createResendProvider("key", "noreply@example.com", "support@example.com").sendEmail(
+      input,
+    );
+
+    const [withoutReplyTo, withReplyTo] = bodies;
+    assert.ok(withoutReplyTo && withReplyTo, "both requests should have been captured");
+    assert.ok(!("reply_to" in withoutReplyTo), "no reply_to key when unset");
+    assert.equal(withReplyTo.reply_to, "support@example.com");
+  } finally {
+    restore();
+  }
+});
