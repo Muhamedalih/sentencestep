@@ -28,6 +28,8 @@ export function createResendProvider(
   return {
     name: "resend",
     async sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
+      const effectiveReplyTo = input.replyTo === undefined ? replyTo : (input.replyTo ?? undefined);
+
       const response = await fetch(RESEND_API_URL, {
         method: "POST",
         headers: {
@@ -41,7 +43,7 @@ export function createResendProvider(
           html: input.html,
           text: input.text,
           // Only sent when configured, so replies otherwise go to `from`.
-          ...(replyTo ? { reply_to: replyTo } : {}),
+          ...(effectiveReplyTo ? { reply_to: effectiveReplyTo } : {}),
         }),
       });
 

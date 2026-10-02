@@ -22,6 +22,7 @@ function redactEmail(email: string): string {
 export async function sendTemplateEmail(
   to: string,
   content: EmailContent,
+  options: { replyTo?: string | null } = {},
 ): Promise<SendTemplateEmailResult> {
   const provider = getEmailProvider();
 
@@ -40,6 +41,7 @@ export async function sendTemplateEmail(
     subject: content.subject,
     html: content.html,
     text: content.text,
+    replyTo: options.replyTo,
   });
 
   return { status: "sent", providerMessageId: result.providerMessageId };

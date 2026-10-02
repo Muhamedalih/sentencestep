@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import {
   buildInboundEmailRow,
   htmlToText,
+  isAutomatedMessage,
   MAX_BODY_LENGTH,
   parseAddress,
   parseInboundWebhook,
@@ -130,4 +131,26 @@ test("buildInboundEmailRow: caps an oversized body and rejects an unusable sende
     ),
     null,
   );
+});
+
+test("isAutomatedMessage: flags Auto-Submitted, bulk Precedence and mailer-daemon senders", () => {
+  assert.equal(isAutomatedMessage("a@b.co", { "Auto-Submitted": "auto-replied" }), true);
+  assert.equal(isAutomatedMessage("a@b.co", { precedence: "bulk" }), true);
+  assert.equal(isAutomatedMessage("MAILER-DAEMON@mail.example.com", {}), true);
+  assert.equal(isAutomatedMessage("Postmaster <postmaster@x.com>", null), true);
+});
+
+test("isAutomatedMessage: reads headers given as a list, case-insensitively", () => {
+  assert.equal(
+    isAutomatedMessage("a@b.co", [{ name: "AUTO-SUBMITTED", value: "auto-generated" }]),
+    true,
+  );
+  assert.equal(isAutomatedMessage("a@b.co", { "auto-submitted": ["auto-replied"] }), true);
+});
+
+test("isAutomatedMessage: an ordinary person's reply is not automated", () => {
+  assert.equal(isAutomatedMessage("sara@example.com", undefined), false);
+  assert.equal(isAutomatedMessage("sara@example.com", { "Auto-Submitted": "no" }), false);
+  assert.equal(isAutomatedMessage("sara@example.com", { precedence: "first-class" }), false);
+  assert.equal(isAutomatedMessage("sara@example.com", { "message-id": "<1@x>" }), false);
 });

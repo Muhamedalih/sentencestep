@@ -12,8 +12,8 @@ export interface EmailLayoutInput {
   /** Both or neither — a plain message (e.g. a support reply) has no call to action. */
   ctaLabel?: string;
   ctaUrl?: string;
-  /** Always the app-side preferences page — see src/app/learn/settings/page.tsx and the Milestone 9 report for what a provider-side unsubscribe link would add later. */
-  unsubscribeUrl: string;
+  /** The app-side preferences page — see src/app/learn/settings/page.tsx and the Milestone 9 report for what a provider-side unsubscribe link would add later. Omit for staff notices (e.g. an admin's new-reply alert), which have no preference to manage. */
+  unsubscribeUrl?: string;
 }
 
 export function escapeHtml(value: string): string {
@@ -46,6 +46,11 @@ export function renderEmailLayout({
   ctaUrl,
   unsubscribeUrl,
 }: EmailLayoutInput): string {
+  const footerHtml = unsubscribeUrl
+    ? `You're receiving this because of your SentenceStep account.
+            <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">Manage email preferences</a>.`
+    : "You're receiving this because you're a SentenceStep admin.";
+
   const ctaRow =
     ctaLabel && ctaUrl
       ? `
@@ -83,8 +88,7 @@ export function renderEmailLayout({
             </tr>
           </table>
           <p style="max-width:480px;color:${FAINT_INK};font-size:12px;line-height:1.6;margin-top:16px;padding:0 8px;">
-            You're receiving this because of your SentenceStep account.
-            <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">Manage email preferences</a>.
+            ${footerHtml}
           </p>
         </td>
       </tr>
