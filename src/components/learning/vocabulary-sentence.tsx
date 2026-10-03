@@ -482,6 +482,7 @@ export function VocabularySentence({
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
+            enterKeyHint="done"
             aria-label={t.typing.typeMissingWord}
           />
         </motion.span>
@@ -512,17 +513,21 @@ export function VocabularySentence({
               <CornerDownLeft className="size-4" aria-hidden="true" />
             </motion.button>
           ) : engine.status === "pending" && engine.typed.length > 0 ? (
-            <p className="text-muted-foreground text-xs font-medium">
-              {t.wordLists.pressEnterToCheck}
-            </p>
+            <CheckHint
+              hint={t.wordLists.pressEnterToCheck}
+              label={t.wordLists.checkAnswer}
+              onCheck={engine.submit}
+            />
           ) : null}
         </div>
       ) : (
         engine.status === "pending" &&
         engine.typed.length > 0 && (
-          <p className="text-muted-foreground text-xs font-medium">
-            {t.wordLists.pressEnterToCheck}
-          </p>
+          <CheckHint
+            hint={t.wordLists.pressEnterToCheck}
+            label={t.wordLists.checkAnswer}
+            onCheck={engine.submit}
+          />
         )
       )}
     </div>
@@ -547,6 +552,23 @@ export function VocabularySentence({
  * completed sentence reads whole afterward instead of leaving a permanent
  * gap where a word obviously used to be missing.
  */
+/** "Press Enter to check" on a keyboard; on a touch screen, which has no Enter key to speak of, a Check button. */
+function CheckHint({ hint, label, onCheck }: { hint: string; label: string; onCheck: () => void }) {
+  return (
+    <>
+      <p className="text-muted-foreground text-xs font-medium pointer-coarse:hidden">{hint}</p>
+      <button
+        type="button"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={onCheck}
+        className="hidden h-12 items-center justify-center rounded-xl bg-[var(--lesson-secondary)] px-8 text-base font-semibold text-[var(--lesson-icon)] transition-transform outline-none active:scale-95 pointer-coarse:inline-flex"
+      >
+        {label}
+      </button>
+    </>
+  );
+}
+
 function BlankBox({
   length,
   active,

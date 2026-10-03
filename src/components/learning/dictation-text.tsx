@@ -364,7 +364,7 @@ export function DictationText({
               className={cn(
                 "group/word relative isolate inline-block whitespace-nowrap",
                 tappable &&
-                  "cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.045] active:scale-95",
+                  "cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.045] active:scale-95 pointer-coarse:before:absolute pointer-coarse:before:-inset-x-2 pointer-coarse:before:-inset-y-1 pointer-coarse:before:content-['']",
                 lit && "scale-[1.045]",
               )}
             >

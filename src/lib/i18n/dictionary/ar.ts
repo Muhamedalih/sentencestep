@@ -507,6 +507,7 @@ export const ar: Dictionary = {
     wordListBadge: "قائمة كلمات",
     completedBefore: "لقد أكملت هذه الكلمة من قبل — كتابتها مرة أخرى تحافظ عليها طازجة في ذاكرتك.",
     pressEnterToCheck: "اضغط Enter للتحقق",
+    checkAnswer: "تحقق",
     unavailableBody:
       "قائمة الكلمات هذه غير متاحة حاليًا. لم يُفقد شيء — يرجى المحاولة مرة أخرى بعد قليل، أو اختيار قائمة أخرى.",
     lockedBadge: "قائمة كلمات مميزة",

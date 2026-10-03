@@ -350,6 +350,16 @@ export function TypingSentence({
   if (mode === "conversation") {
     return (
       <ConversationBubble speaker={sentence.speaker}>
+        {showTapToStart && (
+          <TapToStartOverlay
+            heading={t.lesson.tapToStartHeading}
+            body={t.lesson.tapToStartBody}
+            onStart={() => {
+              engine.inputRef.current?.focus();
+              onStart?.();
+            }}
+          />
+        )}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
           <div className="min-w-0 flex-1">
             {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
@@ -359,7 +369,7 @@ export function TypingSentence({
               text={sentence.en}
               audioUrl={sentence.audioUrl}
               onPlay={onAudioPlay}
-              autoPlay
+              autoPlay={hasStarted}
               resetKey={sentence.id}
               inputRef={engine.inputRef}
               kokoroVoiceId={sentenceVoiceId}

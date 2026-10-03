@@ -541,6 +541,7 @@ export const es: Dictionary = {
     completedBefore:
       "Ya completaste esta palabra antes: escribirla de nuevo la mantiene fresca en tu memoria.",
     pressEnterToCheck: "Presiona Enter para comprobar",
+    checkAnswer: "Comprobar",
     unavailableBody:
       "Esta lista de palabras no está disponible en este momento. No se perdió nada: inténtalo de nuevo en un momento o elige otra lista.",
     lockedBadge: "Lista de palabras premium",

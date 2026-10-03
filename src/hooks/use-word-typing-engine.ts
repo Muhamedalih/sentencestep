@@ -474,6 +474,7 @@ export function useWordTypingEngine({
     inputRef,
     handleChange,
     handleKeyDown,
+    submit,
     handlePaste,
     focus,
     hint,

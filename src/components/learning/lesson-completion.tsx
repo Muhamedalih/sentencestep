@@ -495,7 +495,7 @@ export function LessonCompletion({
               {theme.headingText || t.lesson.completeHeading}
             </h2>
             <p
-              dir={dir}
+              dir="auto"
               style={{ fontSize: theme.bodySize, color: styles.textSecondary }}
               className="mt-1.5"
             >
@@ -700,7 +700,7 @@ export function LessonCompletion({
 
           {graceReward && (
             <p
-              dir={dir}
+              dir="auto"
               style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
@@ -709,7 +709,7 @@ export function LessonCompletion({
           )}
           {freezeReward && (
             <p
-              dir={dir}
+              dir="auto"
               style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
@@ -733,7 +733,7 @@ export function LessonCompletion({
 
           {celebratedRewards.length > 0 && (
             <p
-              dir={dir}
+              dir="auto"
               style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
               className="mt-3 text-center font-medium"
             >
@@ -769,7 +769,7 @@ export function LessonCompletion({
           )}
           {bulkBadgeReward && (
             <p
-              dir={dir}
+              dir="auto"
               style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
               className="mt-3 text-center font-medium"
             >
