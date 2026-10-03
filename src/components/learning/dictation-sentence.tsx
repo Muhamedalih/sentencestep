@@ -150,9 +150,10 @@ const REJECTION_MS = 350;
 
 /** The sentence's size per mode — exactly what TypingSentence uses, so switching Dictation on never resizes the text. */
 const TEXT_SIZE: Record<LearningMode, string> = {
-  normal: "text-3xl sm:text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]",
-  stories: "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
-  conversation: "text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]",
+  normal: "text-3xl sm:text-[clamp(2.75rem,1.5rem+3.7vw,6rem)] lesson-sentence",
+  stories:
+    "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px] lesson-sentence",
+  conversation: "text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)] lesson-sentence",
 };
 
 /**

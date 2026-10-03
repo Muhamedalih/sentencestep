@@ -648,7 +648,10 @@ function VocabularyPracticeSession({
                     {hint.term}
                   </p>
                   {hint.definition && (
-                    <p className="text-muted-foreground text-[1.2rem] font-medium" dir={dir}>
+                    <p
+                      className="land-kb-hide text-muted-foreground text-[1.2rem] font-medium"
+                      dir={dir}
+                    >
                       {hint.definition}
                     </p>
                   )}

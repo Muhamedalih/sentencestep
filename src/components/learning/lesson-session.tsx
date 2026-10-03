@@ -37,7 +37,7 @@ import { usePronunciationSettings } from "@/components/providers/pronunciation-s
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { transitions } from "@/lib/motion";
 import { trackAudioPlayedAction, trackLessonViewAction } from "@/lib/analytics/track-actions";
-import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { MOBILE_MEDIA_QUERY, useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
@@ -68,7 +68,7 @@ const DICTATION_PREFERENCE_KEY = "sentencestep:dictation-on";
  * silently does nothing, exactly as if this call were never made.
  */
 function vibrateLightly(): void {
-  if (typeof window === "undefined" || !window.matchMedia("(max-width: 639px)").matches) return;
+  if (typeof window === "undefined" || !window.matchMedia(MOBILE_MEDIA_QUERY).matches) return;
   try {
     navigator.vibrate?.(8);
   } catch {
@@ -664,7 +664,7 @@ export function LessonSession({
       <Link
         href="/learn"
         aria-label={t.marketing.dashboardLinkAriaLabel}
-        className="flex shrink-0 items-center px-3 pt-2.5 pb-2"
+        className="land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2"
       >
         <Logo size="sm" />
       </Link>
@@ -947,7 +947,7 @@ export function LessonSession({
                   >
                     {unit.title}
                   </div>
-                  <div className="mb-3 flex flex-col gap-1.5">
+                  <div className="land-kb-hide mb-3 flex flex-col gap-1.5">
                     {unit.mode !== "stories" && (
                       <div className="flex items-center justify-end gap-1" dir="ltr">
                         {sentenceIndex > 0 && (

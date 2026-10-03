@@ -399,3 +399,31 @@ html[data-keyboard] .compact-hide {
     display: none;
   }
 }
+
+/*
+ * A phone held sideways is wider than the 640px "tablet" cutoff but only
+ * ~375px tall, so height + touch decide these, not width.
+ *  - .tap-gate: the "tap to start" card is for touch screens only.
+ *  - .lesson-sentence: the typed sentence takes a phone-sized size instead of
+ *    the desktop one, which left almost no room above the keyboard.
+ *  - .land-kb-hide: counter/progress/definition step aside while the keyboard
+ *    is open on such a screen.
+ */
+@media (min-width: 640px) {
+  .tap-gate {
+    display: none;
+  }
+}
+@media (min-width: 640px) and (pointer: coarse) and (max-height: 500px) {
+  .tap-gate {
+    display: flex;
+  }
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .lesson-shell .lesson-sentence {
+    font-size: 1.75rem;
+  }
+  html[data-keyboard] .land-kb-hide {
+    display: none;
+  }
+}

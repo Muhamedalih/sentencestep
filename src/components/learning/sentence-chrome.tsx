@@ -37,7 +37,7 @@ export function StoryHeaderRow({
   const { t } = useLocale();
 
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="land-kb-hide mb-3 flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <StoryProgressRing current={sentenceNumber} total={totalSentences} />
         <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--lesson-story-label)] uppercase">
