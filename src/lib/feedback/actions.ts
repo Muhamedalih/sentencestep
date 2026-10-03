@@ -38,12 +38,16 @@ export async function submitAppRatingAction(input: {
   }
 
   const rating = Math.round(input.rating);
-  if (!(rating >= 1 && rating <= 5)) return;
+  if (!(rating >= 1 && rating <= 5)) {
+    console.warn("[app-rating] rejected out-of-range rating", { received: input.rating });
+    return;
+  }
 
   const user = await getCurrentUser();
+  const userType = user ? "member" : "guest";
 
   try {
-    await fetch(webhookUrl, {
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -53,9 +57,23 @@ export async function submitAppRatingAction(input: {
         lessonId: input.lessonId,
         mode: input.mode,
         locale: input.locale ?? "en",
-        userType: user ? "member" : "guest",
+        userType,
         anonId: input.anonId,
       }),
+    });
+    // The raw rating as it arrived from the browser, next to what the sheet
+    // endpoint answered — so a rating that looks wrong in the sheet can be
+    // traced to this side (the value sent) or the Apps Script side (what it
+    // stored). Never the comment or anonId: those are the learner's own words
+    // and identifier. The endpoint's reply is its own text, not learner data.
+    const reply = (await response.text().catch(() => "")).slice(0, 200);
+    console.info("[app-rating] sent", {
+      received: input.rating,
+      sent: rating,
+      mode: input.mode,
+      userType,
+      status: response.status,
+      reply,
     });
   } catch (err) {
     console.error("[app-rating] submit failed", err);
