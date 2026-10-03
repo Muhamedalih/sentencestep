@@ -20,6 +20,7 @@ import {
   outcomeFor,
   practiceScope,
   practiceVisitKey,
+  resumePoint,
   selectContinueWords,
   summarizeGroupMastery,
   canTakeHint,
@@ -446,4 +447,44 @@ test("record_word_review (SQL) uses the same schedule and rules as this module",
   assert.match(sql, /v_prev_due <= p_today/);
   const outcomes: WordOutcome[] = ["clean", "assisted", "missed"];
   for (const outcome of outcomes) assert.ok(sql.includes(`'${outcome}'`));
+});
+
+test("Continue opens at the first unfinished word's block and skips what is already finished there", () => {
+  const ids = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
+  // Nothing finished: the very start.
+  assert.deepEqual(resumePoint(ids, new Set(), 5), {
+    blockIndex: 0,
+    open: [0, 1, 2, 3, 4],
+    done: [],
+  });
+  // A whole block finished: the next block, every word still to ask.
+  assert.deepEqual(resumePoint(ids, new Set(["a", "b", "c", "d", "e"]), 5), {
+    blockIndex: 1,
+    open: [0, 1, 2, 3, 4],
+    done: [],
+  });
+  // Part of a block finished: that block, and only the unfinished words are asked.
+  assert.deepEqual(resumePoint(ids, new Set(["a", "b", "c", "d", "e", "f", "g"]), 5), {
+    blockIndex: 1,
+    open: [2, 3, 4],
+    done: [0, 1],
+  });
+  // A finished word further on does not move the start; the first gap decides.
+  assert.deepEqual(resumePoint(ids, new Set(["a", "b", "c", "h"]), 5), {
+    blockIndex: 0,
+    open: [3, 4],
+    done: [0, 1, 2],
+  });
+  // The short last block works too.
+  assert.deepEqual(resumePoint(ids, new Set(ids.slice(0, 10)), 5), {
+    blockIndex: 2,
+    open: [0, 1],
+    done: [],
+  });
+  // Everything finished: start over from the first block.
+  assert.deepEqual(resumePoint(ids, new Set(ids), 5), {
+    blockIndex: 0,
+    open: [0, 1, 2, 3, 4],
+    done: [],
+  });
 });
