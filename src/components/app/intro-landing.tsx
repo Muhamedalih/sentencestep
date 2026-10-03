@@ -151,9 +151,9 @@ export function IntroLanding() {
       aria-label={`${t.hero.headingPrefix} ${t.hero.headingEmphasis}`}
     >
       <LockBodyScroll />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <Logo />
-        <span className="text-muted-foreground text-sm font-medium">
+        <span className="text-muted-foreground min-w-0 text-end text-sm font-medium">
           {t.introLanding.noAccountNote}
         </span>
       </div>
