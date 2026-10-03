@@ -180,7 +180,7 @@ export function VocabularyLearn({
             <div className="flex items-center gap-3">
               <Link
                 href="/learn/word-lists"
-                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
+                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
                 <span dir="ltr">{group.title}</span>
@@ -189,7 +189,7 @@ export function VocabularyLearn({
                 type="button"
                 onClick={() => setSidebarOpen(true)}
                 aria-label={t.wordLists.wordListPanelAria}
-                className="text-muted-foreground hover:text-foreground rounded-md p-1.5 lg:hidden"
+                className="text-muted-foreground hover:text-foreground rounded-md p-1.5 lg:hidden pointer-coarse:p-3.5"
               >
                 <List className="size-4" aria-hidden="true" />
               </button>
@@ -263,7 +263,7 @@ export function VocabularyLearn({
                 onClick={() => goTo(index - 1, -1)}
                 disabled={index === 0}
                 aria-label={t.wordLists.prevWordAria}
-                className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-8 items-center justify-center rounded-full border transition-colors disabled:opacity-30"
+                className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-8 items-center justify-center rounded-full border transition-colors disabled:opacity-30 pointer-coarse:size-11"
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
               </button>
@@ -275,7 +275,7 @@ export function VocabularyLearn({
                 onClick={() => goTo(index + 1, 1)}
                 disabled={index === total - 1}
                 aria-label={t.wordLists.nextWordAria}
-                className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-8 items-center justify-center rounded-full border transition-colors disabled:opacity-30"
+                className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-8 items-center justify-center rounded-full border transition-colors disabled:opacity-30 pointer-coarse:size-11"
               >
                 <ArrowRight className="size-4" aria-hidden="true" />
               </button>

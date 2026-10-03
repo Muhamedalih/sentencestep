@@ -427,3 +427,15 @@ html[data-keyboard] .compact-hide {
     display: none;
   }
 }
+
+/*
+ * The not-yet-typed letters sat at ~1.8:1 against the page (40% of the muted
+ * text colour), which is hard to read on a phone in daylight. Touch screens get
+ * a stronger default (~3:1); an admin colour override still wins, as it is
+ * declared after this stylesheet.
+ */
+@media (pointer: coarse) {
+  .lesson-shell {
+    --lesson-letter-pending: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
+  }
+}

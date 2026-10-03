@@ -42,7 +42,7 @@ export function NeedsReviewWords({
   return (
     <Link
       href="/learn/word-lists/review"
-      className="border-border from-primary/10 hover:border-primary/40 focus-visible:ring-ring focus-visible:ring-offset-background group relative mb-10 flex flex-col gap-5 overflow-hidden rounded-2xl border bg-gradient-to-br via-transparent to-transparent p-6 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-8 sm:p-8"
+      className="border-border from-primary/10 hover:border-primary/40 focus-visible:ring-ring focus-visible:ring-offset-background group relative mb-6 flex flex-row items-center gap-4 overflow-hidden rounded-2xl border bg-gradient-to-br via-transparent to-transparent p-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:mb-10 sm:gap-8 sm:p-8"
     >
       {/* Off-white "sticker" chip, deliberately not themed to the page's own
           dark palette — a chunky bottom-edge shadow (the flat colored line
@@ -53,9 +53,9 @@ export function NeedsReviewWords({
           light and dark site themes. */}
       <div
         dir="ltr"
-        className="flex shrink-0 -rotate-2 flex-col items-center justify-center self-start rounded-2xl bg-[oklch(0.96_0.015_85)] px-6 py-4 text-[oklch(0.32_0.03_60)] shadow-[0_3px_0_0_oklch(0.85_0.03_80),0_10px_20px_-8px_rgba(0,0,0,0.45)] transition-transform duration-200 group-hover:rotate-0 sm:self-center sm:px-8 sm:py-6"
+        className="flex shrink-0 -rotate-2 flex-col items-center justify-center self-center rounded-2xl bg-[oklch(0.96_0.015_85)] px-4 py-2 text-[oklch(0.32_0.03_60)] shadow-[0_3px_0_0_oklch(0.85_0.03_80),0_10px_20px_-8px_rgba(0,0,0,0.45)] transition-transform duration-200 group-hover:rotate-0 sm:px-8 sm:py-6"
       >
-        <span className="text-4xl font-extrabold tracking-tight sm:text-5xl">{total}</span>
+        <span className="text-3xl font-extrabold tracking-tight sm:text-5xl">{total}</span>
         <span className="text-xs font-semibold tracking-wide uppercase opacity-70">
           {t.wordLists.wordsUnit}
         </span>
@@ -70,7 +70,7 @@ export function NeedsReviewWords({
       </div>
       <Chevron
         aria-hidden="true"
-        className="text-muted-foreground group-hover:text-foreground size-5 shrink-0 self-end transition-colors sm:self-center"
+        className="text-muted-foreground group-hover:text-foreground size-5 shrink-0 self-center transition-colors"
       />
     </Link>
   );

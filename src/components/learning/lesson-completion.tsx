@@ -494,7 +494,11 @@ export function LessonCompletion({
             >
               {theme.headingText || t.lesson.completeHeading}
             </h2>
-            <p style={{ fontSize: theme.bodySize, color: styles.textSecondary }} className="mt-1.5">
+            <p
+              dir={dir}
+              style={{ fontSize: theme.bodySize, color: styles.textSecondary }}
+              className="mt-1.5"
+            >
               {(accuracyPercent >= 95 ? t.lesson.accuracyExcellent : t.lesson.accuracyGood).replace(
                 "{n}",
                 String(accuracyPercent),
@@ -696,6 +700,7 @@ export function LessonCompletion({
 
           {graceReward && (
             <p
+              dir={dir}
               style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
@@ -704,6 +709,7 @@ export function LessonCompletion({
           )}
           {freezeReward && (
             <p
+              dir={dir}
               style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
@@ -727,6 +733,7 @@ export function LessonCompletion({
 
           {celebratedRewards.length > 0 && (
             <p
+              dir={dir}
               style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
               className="mt-3 text-center font-medium"
             >
@@ -762,6 +769,7 @@ export function LessonCompletion({
           )}
           {bulkBadgeReward && (
             <p
+              dir={dir}
               style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
               className="mt-3 text-center font-medium"
             >
@@ -922,7 +930,7 @@ export function PrimaryActionButton({
 
   const className = cn(
     buttonVariants({ variant: "ghost" }),
-    "flex w-full max-w-sm items-center justify-center gap-2 text-center sm:w-auto",
+    "flex w-full max-w-sm items-center justify-center gap-2 text-center pointer-coarse:min-h-12 sm:w-auto",
   );
   const hoverAnimation = {
     boxShadow: `0 16px 32px -12px color-mix(in srgb, ${theme.colorAccent} 60%, transparent)`,
@@ -1006,7 +1014,7 @@ export function SecondaryActionButton({
 
   const className = cn(
     buttonVariants({ variant: "ghost" }),
-    "flex items-center gap-2 border text-center",
+    "flex items-center gap-2 border text-center pointer-coarse:min-h-11",
   );
   const hoverAnimation = {
     borderColor: theme.colorAccent,

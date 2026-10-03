@@ -368,7 +368,7 @@ export function TypingSentence({
             />
           </div>
         </div>
-        <p className="mt-4 text-base text-[var(--lesson-subtitle)] select-none" dir={dir}>
+        <p className="mt-4 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
       </ConversationBubble>

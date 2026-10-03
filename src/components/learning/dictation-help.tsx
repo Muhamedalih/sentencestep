@@ -554,7 +554,7 @@ function HelpAction({
       whileHover={reduced || disabled ? undefined : { scale: 1.04 }}
       whileTap={reduced || disabled ? undefined : { scale: 0.95 }}
       className={cn(
-        "group/help focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:flex-none [&_svg]:shrink-0",
+        "group/help focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:flex-none pointer-coarse:h-12 [&_svg]:shrink-0",
         // transition-colors only: the base `transition-all` would smooth (and
         // lag) framer-motion's per-frame scale on hover and press.
         "transition-colors duration-200",

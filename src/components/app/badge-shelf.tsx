@@ -46,7 +46,7 @@ export function BadgeShelf({
                   {text.name}
                 </h2>
                 {item.isNew && (
-                  <span className="bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
+                  <span className="bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs font-bold tracking-wide uppercase sm:text-[10px]">
                     {t.badges.newTag}
                   </span>
                 )}

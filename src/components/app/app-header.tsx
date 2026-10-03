@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Layers, Menu, Trophy, X } from "lucide-react";
+import { Bookmark, Flame, Layers, Menu, Trophy, UserRound, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -22,7 +22,7 @@ function ProgressHud({ initialProgress }: { initialProgress?: ProgressState }) {
   if (!isLoaded) return null;
 
   return (
-    <div className="text-muted-foreground hidden items-center gap-4 text-sm font-semibold sm:flex">
+    <div className="text-muted-foreground flex items-center gap-4 text-sm font-semibold">
       <span className="inline-flex items-center gap-1.5 text-base sm:gap-2 sm:text-lg">
         <Flame
           className={cn(
@@ -157,7 +157,7 @@ export function AppHeader({
         <Link
           href="/learn"
           aria-label={t.marketing.dashboardLinkAriaLabel}
-          className="justify-self-start"
+          className="inline-flex min-h-11 items-center justify-self-start"
         >
           <Logo />
         </Link>
@@ -173,6 +173,17 @@ export function AppHeader({
               (see locales.ts's dirFor), the far edge here is the physical
               right side of the screen either way. */}
           <div className="hidden items-center gap-2 sm:flex sm:gap-3">{utilityCluster}</div>
+          {user && (
+            <Button asChild variant="ghost" size="icon-sm" className="sm:hidden">
+              <Link
+                href="/learn/settings"
+                aria-label={t.account.manageAccountLabel}
+                title={t.account.manageAccountLabel}
+              >
+                <UserRound aria-hidden="true" />
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon-sm"
@@ -194,7 +205,7 @@ export function AppHeader({
       {menuOpen && (
         <div
           id="app-header-menu"
-          className="border-border/60 bg-background flex items-center gap-3 border-t px-3 py-3 sm:hidden"
+          className="border-border/60 bg-background flex flex-wrap items-center gap-3 border-t px-3 py-3 sm:hidden"
         >
           {utilityCluster}
         </div>

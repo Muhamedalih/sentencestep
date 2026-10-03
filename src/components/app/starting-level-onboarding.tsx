@@ -104,7 +104,7 @@ export function StartingLevelOnboarding() {
         type="button"
         dir={dir}
         onClick={() => setForceLanguageStep(true)}
-        className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors"
+        className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors pointer-coarse:min-h-11"
       >
         <BackIcon aria-hidden="true" className="size-4" />
         {t.onboarding.back}

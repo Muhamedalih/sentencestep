@@ -621,6 +621,14 @@ export function LessonSession({
      lg:h-full something concrete to fill there. Below lg:, no height is
      imposed at all (unchanged from before): mobile keeps its natural,
      content-driven scroll instead of being forced into a fixed box. */
+  // The plain completion screen is a black one even in the light theme; its logo bar should not be a light strip above it.
+  const showsPlainCompletion =
+    isComplete &&
+    !isOpeningLesson &&
+    !isFixingMistakes &&
+    !(isPracticingFromMemory && fromMemoryItems.length > 0) &&
+    !(isViewingWords && Boolean(unit.vocabulary?.length));
+
   const sessionLabel = (
     <>
       {/* No visible back/exit link here by design — the browser's own Back
@@ -664,7 +672,10 @@ export function LessonSession({
       <Link
         href="/learn"
         aria-label={t.marketing.dashboardLinkAriaLabel}
-        className="land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2"
+        className={cn(
+          "land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2",
+          showsPlainCompletion && "bg-black text-white",
+        )}
       >
         <Logo size="sm" />
       </Link>

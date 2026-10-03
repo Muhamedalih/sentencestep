@@ -356,7 +356,7 @@ export function WordReviewSession({
         <div className="flex items-center justify-between gap-4">
           <Link
             href={resolvedBackHref}
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             {backLabel}

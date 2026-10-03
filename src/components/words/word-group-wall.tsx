@@ -333,7 +333,7 @@ function WordTile({
           {word.targetWord}
         </span>
         {due && (
-          <span className="bg-accent/20 text-accent-foreground shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+          <span className="bg-accent/20 text-accent-foreground shrink-0 rounded-full px-1.5 py-0.5 text-xs font-bold sm:text-[10px]">
             {copy.dueTag}
           </span>
         )}
@@ -352,11 +352,11 @@ function WordTile({
         {scheduled ? (
           <StrengthPips strength={strengthPips(state)} barClassName={BAND_BAR_CLASS[band]} />
         ) : (
-          <span className="text-muted-foreground text-[11px] font-medium" dir={dir}>
+          <span className="text-muted-foreground text-xs font-medium sm:text-[11px]" dir={dir}>
             {band === "new" ? copy.notMetYet : copy.bandLearning}
           </span>
         )}
-        <WordPosBadge pos={word.pos} className="px-2 py-0 text-[10px]" />
+        <WordPosBadge pos={word.pos} className="px-2 py-0 text-xs sm:text-[10px]" />
       </div>
     </li>
   );

@@ -142,7 +142,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
               href={item.href}
               isActive={isActive}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] font-medium",
+                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium",
                 "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap",
                 isActive
                   ? "text-primary md:bg-brand-muted"

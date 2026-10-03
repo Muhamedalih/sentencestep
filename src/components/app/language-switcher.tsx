@@ -50,7 +50,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={meta.nativeLabel}
             onClick={() => setLocale(option)}
             className={cn(
-              "focus-visible:ring-ring focus-visible:ring-offset-background relative flex h-7 w-8 items-center justify-center rounded-full outline-none sm:h-9 sm:w-11",
+              "focus-visible:ring-ring focus-visible:ring-offset-background relative flex h-7 w-8 items-center justify-center rounded-full outline-none sm:h-9 sm:w-11 pointer-coarse:h-11 pointer-coarse:w-11",
               "motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out",
               "motion-safe:hover:-translate-y-px motion-safe:hover:scale-110 motion-safe:active:translate-y-0 motion-safe:active:scale-95",
               "focus-visible:ring-2 focus-visible:ring-offset-2",

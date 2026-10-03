@@ -38,16 +38,16 @@ function MainLessonCardBody({
 }) {
   return (
     <>
-      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden">
+      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden max-sm:aspect-[12/5]">
         <LessonIllustration
           mode="normal"
           lessonId={lesson.id}
           title={lesson.title}
           illustrationUrl={lesson.illustrationUrl}
-          className="aspect-[16/10] w-full"
+          className="aspect-[16/10] w-full max-sm:aspect-[12/5]"
         />
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-2 p-6 sm:p-8">
+      <div className="flex flex-1 flex-col justify-center gap-2 p-4 sm:p-8">
         <p className="text-muted-foreground text-sm font-medium" dir={dir}>
           {eyebrow}
         </p>

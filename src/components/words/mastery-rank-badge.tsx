@@ -53,7 +53,7 @@ export function MasteryRankBadge({
       title={`${t.wordLists.redesign.rankTitle}: ${names[rank]}`}
       className={cn(
         "inline-flex items-center gap-1 rounded-full font-semibold ring-1 ring-inset",
-        size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-3 py-1 text-sm",
+        size === "sm" ? "px-2 py-0.5 text-xs sm:text-[11px]" : "px-3 py-1 text-sm",
         RANK_CLASS[rank],
         className,
       )}

@@ -133,7 +133,7 @@ export function WordGroupCard({
           <div className="border-border/60 bg-card relative flex w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-4 opacity-90 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span
               className={cn(
-                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm sm:text-[10px]",
                 TIER_BADGE_CLASS[difficulty],
               )}
             >
@@ -180,7 +180,7 @@ export function WordGroupCard({
         >
           <span
             className={cn(
-              "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+              "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm sm:text-[10px]",
               TIER_BADGE_CLASS[difficulty],
             )}
           >

@@ -63,7 +63,7 @@ export function SavedCardsList({ cards }: { cards: CardListItem[] }) {
                 onClick={() => remove(card.word)}
                 aria-label={`${t.myCards.removeCard}: ${card.word}`}
                 title={t.myCards.removeCard}
-                className="text-muted-foreground hover:text-danger hover:bg-muted rounded-full p-1.5 transition-colors"
+                className="text-muted-foreground hover:text-danger hover:bg-muted rounded-full p-1.5 transition-colors pointer-coarse:-m-2 pointer-coarse:p-3.5"
               >
                 <Trash2 className="size-4" aria-hidden="true" />
               </button>

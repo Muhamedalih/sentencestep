@@ -117,7 +117,11 @@ export function SiteHeaderClient({
   return (
     <header className="border-border/60 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
-        <Link href="/" aria-label={t.marketing.homeLinkAriaLabel} className="shrink-0">
+        <Link
+          href="/"
+          aria-label={t.marketing.homeLinkAriaLabel}
+          className="inline-flex min-h-11 shrink-0 items-center"
+        >
           <Logo />
         </Link>
 
