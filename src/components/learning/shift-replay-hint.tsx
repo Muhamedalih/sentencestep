@@ -51,7 +51,7 @@ export function ShiftReplayHint({ className }: { className?: string } = {}) {
     <div
       aria-hidden="true"
       className={cn(
-        "border-border/50 bg-background/80 pointer-events-none fixed right-4 bottom-4 z-30 flex items-center gap-2.5 rounded-2xl border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md select-none max-sm:pr-1.5 sm:right-6 sm:bottom-6",
+        "border-border/50 bg-background/80 pointer-events-none fixed right-4 bottom-4 z-30 flex items-center gap-2.5 rounded-2xl border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md select-none max-sm:pr-1.5 sm:right-6 sm:bottom-6 pointer-coarse:hidden",
         className,
       )}
     >
