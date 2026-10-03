@@ -61,12 +61,12 @@ export function CurrentWordLabel({
       className="inline-flex flex-col gap-2"
     >
       <div className="flex items-baseline gap-3">
-        <span className="text-[27px] font-bold tracking-[0.09em] text-[var(--lesson-title)]/75">
+        <span className="text-xl font-bold tracking-[0.09em] text-[var(--lesson-title)]/75 sm:text-[27px]">
           {word.en}
         </span>
         <span
           dir={dir}
-          className="text-[27px] font-semibold tracking-wide text-[var(--lesson-subtitle)]"
+          className="text-xl font-semibold tracking-wide text-[var(--lesson-subtitle)] sm:text-[27px]"
         >
           {word.text}
         </span>
@@ -80,7 +80,7 @@ export function CurrentWordLabel({
             aria-pressed={save.saved}
             aria-label={save.label}
             title={save.label}
-            className="-my-1 self-center rounded-full p-1 text-[var(--lesson-subtitle)] transition-colors hover:text-[var(--lesson-title)]"
+            className="-my-1 self-center rounded-full p-1 text-[var(--lesson-subtitle)] transition-colors hover:text-[var(--lesson-title)] pointer-coarse:-my-3 pointer-coarse:p-3"
           >
             <Star
               className={cn("size-5", save.saved && "fill-accent text-accent")}

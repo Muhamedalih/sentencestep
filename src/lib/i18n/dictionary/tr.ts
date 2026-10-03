@@ -532,6 +532,7 @@ export const tr: Dictionary = {
     completedBefore:
       "Bu kelimeyi daha önce tamamladınız: tekrar yazmak onu hafızanızda taze tutar.",
     pressEnterToCheck: "Kontrol etmek için Enter'a basın",
+    checkAnswer: "Kontrol et",
     unavailableBody:
       "Bu kelime listesi şu anda kullanılamıyor. Hiçbir şey kaybolmadı: birazdan tekrar deneyin veya başka bir liste seçin.",
     lockedBadge: "Premium kelime listesi",

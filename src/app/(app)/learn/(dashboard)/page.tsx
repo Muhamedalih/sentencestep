@@ -196,34 +196,38 @@ export default async function LearnHomePage() {
 
   return (
     <ProgressProvider initialProgress={initialProgress}>
-      <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
+      <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
         <HomeHeaderBar
           user={user}
           lessonStats={lessonStats}
           sessionCount={attemptCount}
-          className="mb-10"
+          className="mb-10 max-sm:order-1 max-sm:mb-6"
         />
-        <GuestProgressBanner isGuest={!user} className="mb-6" />
-        <HomeEngagementSection stream={engagement} className="mb-6" />
-        <NeedsReviewWords
-          words={weakWords.filter((word) => word.dueNow)}
-          count={reviewWaiting.count}
-          smart={reviewWaiting.smart}
-        />
-        <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-          {t.progress.upNextLabel}
-        </p>
-        <HomeHero
-          units={units}
-          storiesUnits={storiesUnits}
-          book={recommendedBook}
-          bookSectionCount={bookSectionCount}
-          bookSentenceCount={bookSentenceCount}
-          bookProgressPercent={bookProgressPercent}
-          isPremiumUser={isPremiumUser}
-          hasWeakWords={reviewWaiting.count > 0}
-          isAdminUser={isAdminUser}
-        />
+        <div className="max-sm:order-3">
+          <GuestProgressBanner isGuest={!user} className="mb-6" />
+          <HomeEngagementSection stream={engagement} className="mb-6" />
+          <NeedsReviewWords
+            words={weakWords.filter((word) => word.dueNow)}
+            count={reviewWaiting.count}
+            smart={reviewWaiting.smart}
+          />
+        </div>
+        <div className="max-sm:order-2">
+          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+            {t.progress.upNextLabel}
+          </p>
+          <HomeHero
+            units={units}
+            storiesUnits={storiesUnits}
+            book={recommendedBook}
+            bookSectionCount={bookSectionCount}
+            bookSentenceCount={bookSentenceCount}
+            bookProgressPercent={bookProgressPercent}
+            isPremiumUser={isPremiumUser}
+            hasWeakWords={reviewWaiting.count > 0}
+            isAdminUser={isAdminUser}
+          />
+        </div>
       </div>
     </ProgressProvider>
   );

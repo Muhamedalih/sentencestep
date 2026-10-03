@@ -59,7 +59,7 @@ export function SavedSentenceCard({ item }: { item: SavedSentenceItem }) {
           </button>
 
           <p
-            className="text-muted-foreground pe-8 text-[11px] font-semibold tracking-wide uppercase"
+            className="text-muted-foreground pe-8 text-xs font-semibold tracking-wide uppercase sm:text-[11px]"
             dir="ltr"
           >
             {item.bookTitle} · {item.sectionTitle}

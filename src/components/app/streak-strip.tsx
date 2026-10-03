@@ -170,7 +170,7 @@ export function StreakStripView({
           type="button"
           onClick={onToggleExpanded}
           aria-expanded={expanded}
-          className="text-muted-foreground hover:text-foreground text-xs font-medium transition-colors"
+          className="text-muted-foreground hover:text-foreground text-xs font-medium transition-colors pointer-coarse:-my-3 pointer-coarse:px-1 pointer-coarse:py-3"
         >
           {expanded ? t.streakCalendar.hideMonth : t.streakCalendar.showMonth}
         </button>
@@ -183,7 +183,7 @@ export function StreakStripView({
           const date = new Date(year ?? 1970, (monthNumber ?? 1) - 1, dayNumber ?? 1);
           return (
             <div key={iso} className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="text-muted-foreground text-[11px] font-medium">
+              <span className="text-muted-foreground text-xs font-medium sm:text-[11px]">
                 {weekdayNarrow.format(date)}
               </span>
               {strip === undefined ? (
@@ -210,7 +210,7 @@ export function StreakStripView({
               type="button"
               onClick={() => onMonthChange(-1)}
               aria-label={t.streakCalendar.previousMonth}
-              className="hover:bg-muted flex size-8 items-center justify-center rounded-full"
+              className="hover:bg-muted flex size-8 items-center justify-center rounded-full pointer-coarse:size-11"
             >
               <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
             </button>
@@ -220,7 +220,7 @@ export function StreakStripView({
               onClick={() => onMonthChange(1)}
               disabled={isCurrentMonth}
               aria-label={t.streakCalendar.nextMonth}
-              className="hover:bg-muted flex size-8 items-center justify-center rounded-full disabled:opacity-30"
+              className="hover:bg-muted flex size-8 items-center justify-center rounded-full disabled:opacity-30 pointer-coarse:size-11"
             >
               <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
             </button>
@@ -234,7 +234,7 @@ export function StreakStripView({
               {weekHeader.map((label, index) => (
                 <span
                   key={index}
-                  className="text-muted-foreground text-center text-[11px] font-medium"
+                  className="text-muted-foreground text-center text-xs font-medium sm:text-[11px]"
                 >
                   {label}
                 </span>

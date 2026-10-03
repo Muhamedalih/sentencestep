@@ -69,7 +69,7 @@ export function StoryCard({
 
             <span
               className={cn(
-                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm sm:text-[10px]",
                 TIER_BADGE_CLASS[difficulty],
               )}
             >

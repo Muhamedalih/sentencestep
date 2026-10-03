@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -11,23 +12,13 @@ import {
   List as ListIcon,
 } from "lucide-react";
 
-import {
-  DictationSentence,
-  type DictationOutcome,
-  type DictationProgress,
-} from "@/components/learning/dictation-sentence";
-import { FixYourMistakesSession } from "@/components/learning/fix-your-mistakes-session";
-import { FromMemorySession } from "@/components/learning/from-memory-session";
-import { LessonCompletion } from "@/components/learning/lesson-completion";
+import type { DictationOutcome, DictationProgress } from "@/components/learning/dictation-sentence";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Logo } from "@/components/layout/logo";
-import { OnboardingLessonComplete } from "@/components/learning/onboarding-lesson-complete";
-import { RatingPrompt } from "@/components/learning/rating-prompt";
 import {
   StoryPreviousSentences,
   type CompletedStorySentence,
 } from "@/components/learning/story-previous-sentences";
-import { StoryWordsPanel } from "@/components/learning/story-words-panel";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { Progress } from "@/components/ui/progress";
@@ -55,6 +46,33 @@ import type { Lesson, NextLessonRef } from "@/types/content";
 const OPENING_LESSON_IDS = new Set(Object.values(OPENING_LESSON_ID));
 
 /** The learner's last Dictation on/off choice, remembered per browser so it survives lesson changes (a per-viewer convenience, so localStorage — never the source of truth for anything that matters). */
+// Screens that only appear after the typing (or on request) load on demand: together they were a large share of the
+// lesson page's first download. They are fetched in the background shortly after the lesson opens (see below), so
+// they still show up instantly when needed.
+const DictationSentence = dynamic(() =>
+  import("@/components/learning/dictation-sentence").then((m) => m.DictationSentence),
+);
+const FixYourMistakesSession = dynamic(() =>
+  import("@/components/learning/fix-your-mistakes-session").then((m) => m.FixYourMistakesSession),
+);
+const FromMemorySession = dynamic(() =>
+  import("@/components/learning/from-memory-session").then((m) => m.FromMemorySession),
+);
+const LessonCompletion = dynamic(() =>
+  import("@/components/learning/lesson-completion").then((m) => m.LessonCompletion),
+);
+const OnboardingLessonComplete = dynamic(() =>
+  import("@/components/learning/onboarding-lesson-complete").then(
+    (m) => m.OnboardingLessonComplete,
+  ),
+);
+const RatingPrompt = dynamic(() =>
+  import("@/components/learning/rating-prompt").then((m) => m.RatingPrompt),
+);
+const StoryWordsPanel = dynamic(() =>
+  import("@/components/learning/story-words-panel").then((m) => m.StoryWordsPanel),
+);
+
 const DICTATION_PREFERENCE_KEY = "sentencestep:dictation-on";
 
 /**
@@ -195,12 +213,12 @@ export function LessonSession({
     lessonTitle: unit.title,
   });
   // The single value TypingSentence actually reads: true (no gate at all)
-  // on desktop/tablet and in Conversation mode — neither shows the overlay,
-  // and forcing it true here is what keeps the input's autoFocus and the
-  // narration's autoPlay firing immediately for them, exactly as before this
-  // feature existed. Only a mobile Normal/Stories session starts this false,
+  // on desktop/tablet — they never show the overlay, and forcing it true here
+  // is what keeps the input's autoFocus and the narration's autoPlay firing
+  // immediately for them, exactly as before this feature existed. Every
+  // mobile session (Normal, Stories and Conversation) starts this false,
   // gated on `tapped`.
-  const hasStarted = !isMobileViewport || unit.mode === "conversation" || tapped;
+  const hasStarted = !isMobileViewport || tapped;
   const {
     markComplete,
     streak,
@@ -257,6 +275,20 @@ export function LessonSession({
       features.fromMemory.sections[unit.mode] ? buildFromMemoryItems(unit.sentences, locale) : [],
     [features.fromMemory.sections, unit.mode, unit.sentences, locale],
   );
+
+  // Warms the on-demand screens above once the lesson is up, off the critical path.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void import("@/components/learning/lesson-completion");
+      void import("@/components/learning/rating-prompt");
+      void import("@/components/learning/onboarding-lesson-complete");
+      void import("@/components/learning/fix-your-mistakes-session");
+      void import("@/components/learning/from-memory-session");
+      void import("@/components/learning/story-words-panel");
+      void import("@/components/learning/dictation-sentence");
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!dictationAvailable) return;
@@ -621,6 +653,14 @@ export function LessonSession({
      lg:h-full something concrete to fill there. Below lg:, no height is
      imposed at all (unchanged from before): mobile keeps its natural,
      content-driven scroll instead of being forced into a fixed box. */
+  // The plain completion screen is a black one even in the light theme; its logo bar should not be a light strip above it.
+  const showsPlainCompletion =
+    isComplete &&
+    !isOpeningLesson &&
+    !isFixingMistakes &&
+    !(isPracticingFromMemory && fromMemoryItems.length > 0) &&
+    !(isViewingWords && Boolean(unit.vocabulary?.length));
+
   const sessionLabel = (
     <>
       {/* No visible back/exit link here by design — the browser's own Back
@@ -664,7 +704,10 @@ export function LessonSession({
       <Link
         href="/learn"
         aria-label={t.marketing.dashboardLinkAriaLabel}
-        className="land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2"
+        className={cn(
+          "land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2",
+          showsPlainCompletion && "bg-black text-white",
+        )}
       >
         <Logo size="sm" />
       </Link>

@@ -159,7 +159,7 @@ export function VocabularyLearnBatches({
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-4">
           <Link
             href={`/learn/word-lists/${group.id}/words`}
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             <span dir="ltr">{group.title}</span>
@@ -444,7 +444,7 @@ function LearnCard({
             onClick={onPrev}
             disabled={position === 0}
             aria-label={t.wordLists.prevWordAria}
-            className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-9 items-center justify-center rounded-full border transition-colors disabled:opacity-30"
+            className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-9 items-center justify-center rounded-full border transition-colors disabled:opacity-30 pointer-coarse:size-11"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
@@ -463,7 +463,7 @@ function LearnCard({
             type="button"
             onClick={onNext}
             aria-label={t.wordLists.nextWordAria}
-            className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-9 items-center justify-center rounded-full border transition-colors"
+            className="text-muted-foreground hover:text-foreground hover:border-primary/40 border-border flex size-9 items-center justify-center rounded-full border transition-colors pointer-coarse:size-11"
           >
             <ArrowRight className="size-4" aria-hidden="true" />
           </button>

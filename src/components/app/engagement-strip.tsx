@@ -73,7 +73,7 @@ export function EngagementStrip({
           <div className="flex items-center gap-3">
             <Flame className="text-accent size-5 shrink-0" aria-hidden="true" />
             <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-[11px] leading-none" dir={dir}>
+              <span className="text-muted-foreground text-xs sm:text-[11px] leading-none" dir={dir}>
                 {t.streakCalendar.heading}
               </span>
               <WeekDots today={today} strip={streak} />
@@ -110,7 +110,7 @@ export function EngagementStrip({
               </span>
             </span>
             <div className="min-w-0">
-              <p className="text-muted-foreground text-[11px] leading-none" dir={dir}>
+              <p className="text-muted-foreground text-xs sm:text-[11px] leading-none" dir={dir}>
                 {t.quests.heading}
               </p>
               <p className="mt-1 truncate text-sm font-medium" dir={dir}>

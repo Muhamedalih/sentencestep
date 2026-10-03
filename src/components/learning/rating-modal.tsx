@@ -130,7 +130,7 @@ export function RatingModal({
                   value={comment}
                   onChange={(event) => setComment(event.target.value.slice(0, MAX_COMMENT_LENGTH))}
                   placeholder={t.rateApp.commentPlaceholder}
-                  className="focus:border-primary min-h-16 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white placeholder:text-white/35 focus:outline-none"
+                  className="focus:border-primary min-h-16 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-base text-white placeholder:text-white/35 focus:outline-none md:text-sm"
                 />
                 <div className="flex gap-2.5">
                   <Button

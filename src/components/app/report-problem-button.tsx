@@ -110,7 +110,7 @@ export function ReportProblemButton({
           className={cn(
             "border-border bg-card text-foreground fixed z-40 flex items-center rounded-full border font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40",
             size === "compact"
-              ? "bottom-3 left-3 size-9 justify-center"
+              ? "bottom-3 left-3 size-9 justify-center pointer-coarse:size-11"
               : "bottom-4 left-4 gap-2 px-4 py-2.5 text-sm max-sm:hidden",
           )}
           aria-haspopup="dialog"
@@ -221,7 +221,7 @@ export function ReportProblemButton({
                         placeholder={t.reportProblem.placeholder}
                         rows={4}
                         disabled={isPending}
-                        className="border-border bg-background focus-visible:ring-ring w-full resize-none rounded-xl border p-3 text-sm outline-none focus-visible:ring-2"
+                        className="border-border bg-background focus-visible:ring-ring w-full resize-none rounded-xl border p-3 text-base outline-none focus-visible:ring-2 md:text-sm"
                       />
                       <div className="mt-1 flex items-center justify-between">
                         <span className="text-muted-foreground text-xs">

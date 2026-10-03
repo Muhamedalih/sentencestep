@@ -596,6 +596,7 @@ export interface Dictionary {
     completedBefore: string;
     /** Hint shown under the fill-in-the-blank word once the learner has typed something wrong-length-or-content and needs to submit it for grading — see VocabularySentence's Enter-to-check flow. */
     pressEnterToCheck: string;
+    checkAnswer: string;
     unavailableBody: string;
     lockedBadge: string;
     lockedBody: string;

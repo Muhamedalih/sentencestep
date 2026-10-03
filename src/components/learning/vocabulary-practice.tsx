@@ -466,7 +466,7 @@ function VocabularyPracticeSession({
         <div className="flex items-center justify-between gap-4">
           <Link
             href="/learn/word-lists"
-            className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium"
+            className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
           >
             <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
             <span dir="ltr" className="truncate">
