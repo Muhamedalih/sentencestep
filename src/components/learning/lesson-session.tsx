@@ -42,6 +42,7 @@ import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { advanceDictationGift, type DictationGiftState } from "@/lib/features/dictation";
 import { buildFromMemoryItems } from "@/lib/features/from-memory";
 import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
@@ -177,6 +178,10 @@ export function LessonSession({
   // word. Shown as a chip from two; ended by showing the word, giving up, or
   // leaving Dictation.
   const [helpFreeStreak, setHelpFreeStreak] = useState(0);
+  // Gift stars: every three sentences in a row finished without using a star
+  // earn one more star for every sentence of this lesson (up to five in all).
+  // They belong to the lesson, so only retrying the lesson clears them.
+  const [giftState, setGiftState] = useState<DictationGiftState>({ gifts: 0, run: 0 });
   // Personal word cards (admin feature): the save star on the current-word
   // label. Never in the admin preview — an admin previewing a lesson isn't
   // building a real deck.
@@ -270,7 +275,10 @@ export function LessonSession({
     } else if (next) {
       setCarryOver(null);
     }
-    if (!next) setHelpFreeStreak(0);
+    if (!next) {
+      setHelpFreeStreak(0);
+      setGiftState((state) => ({ ...state, run: 0 }));
+    }
     setDictationOn(next);
     setDictationIntroFor(next ? (unit.sentences[sentenceIndex]?.id ?? null) : null);
     // Pressing the toggle is itself the deliberate tap the mobile "tap to
@@ -456,6 +464,10 @@ export function LessonSession({
       errorCountRef.current += outcome.errorChars;
     } else {
       setHelpFreeStreak((streak) => (outcome.helps === 0 ? streak + 1 : 0));
+      setGiftState((state) => {
+        const { gifts, run } = advanceDictationGift(state, outcome.usedStar);
+        return { gifts, run };
+      });
     }
     dictationCountRef.current += 1;
     if (sentence && !previewMode && outcome.mistakes.length > 0) {
@@ -476,6 +488,7 @@ export function LessonSession({
   function handleDictationGiveUp(progress: DictationProgress) {
     dictationProgressRef.current = null;
     setHelpFreeStreak(0);
+    setGiftState((state) => ({ ...state, run: 0 }));
     setCarryOver(progress);
   }
 
@@ -561,6 +574,7 @@ export function LessonSession({
     dictationProgressRef.current = null;
     setCarryOver(null);
     setHelpFreeStreak(0);
+    setGiftState({ gifts: 0, run: 0 });
     setIsPracticingFromMemory(false);
     setIsComplete(false);
   }
@@ -1066,6 +1080,8 @@ export function LessonSession({
                               vibrateLightly();
                             }}
                             helpFreeStreak={helpFreeStreak}
+                            giftStars={giftState.gifts}
+                            giftRun={giftState.run}
                             onGiveUp={handleDictationGiveUp}
                             onProgress={(progress) => {
                               dictationProgressRef.current = progress;

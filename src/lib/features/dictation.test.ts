@@ -8,6 +8,9 @@ import {
   dictationAccuracy,
   dictationLetterCount,
   dictationMistakes,
+  advanceDictationGift,
+  dictationMissStarsLost,
+  dictationStarCapacity,
   dictationStars,
   dictationTypedPrefix,
   dictationView,
@@ -440,17 +443,67 @@ test("dictationTypedPrefix: always a genuine prefix the typing engine accepts, f
   }
 });
 
-test("dictationStars: each help costs a star, each third wrong letter costs a star, never below one", () => {
-  assert.equal(dictationStars(0, 0), 3);
-  // A slip or two is not a loss.
-  assert.equal(dictationStars(1, 0), 3);
-  assert.equal(dictationStars(2, 0), 3);
-  assert.equal(dictationStars(3, 0), 2);
-  assert.equal(dictationStars(5, 0), 2);
-  assert.equal(dictationStars(6, 0), 1);
-  assert.equal(dictationStars(0, 1), 2);
-  assert.equal(dictationStars(2, 1), 2);
-  assert.equal(dictationStars(3, 1), 1);
-  assert.equal(dictationStars(0, 2), 1);
-  assert.equal(dictationStars(40, 9), 1);
+test("dictationMissStarsLost: every third wrong try at the same blank costs a star", () => {
+  assert.equal(dictationMissStarsLost([]), 0);
+  // Two slips at a letter are free, even when several letters slip.
+  assert.equal(dictationMissStarsLost([2]), 0);
+  assert.equal(dictationMissStarsLost([2, 2, 1]), 0);
+  assert.equal(dictationMissStarsLost([3]), 1);
+  assert.equal(dictationMissStarsLost([5]), 1);
+  assert.equal(dictationMissStarsLost([6]), 2);
+  assert.equal(dictationMissStarsLost([3, 2, 3]), 2);
+});
+
+test("dictationStarCapacity: three stars, plus gifts, never past five", () => {
+  assert.equal(dictationStarCapacity(0), 3);
+  assert.equal(dictationStarCapacity(1), 4);
+  assert.equal(dictationStarCapacity(2), 5);
+  assert.equal(dictationStarCapacity(9), 5);
+  assert.equal(dictationStarCapacity(-1), 3);
+});
+
+test("dictationStars: losses take stars, wrong letters never the last one, the word shown at the last star spends it", () => {
+  assert.equal(dictationStars(3, 0), 3);
+  assert.equal(dictationStars(3, 1), 2);
+  assert.equal(dictationStars(3, 2), 1);
+  // Wrong letters alone stop at one star.
+  assert.equal(dictationStars(3, 5), 1);
+  assert.equal(dictationStars(3, 40), 1);
+  // The last star is spent by the word shown, once — then there are none.
+  assert.equal(dictationStars(3, 3, true), 0);
+  assert.equal(dictationStars(3, 9, true), 0);
+  // Gift stars raise the capacity.
+  assert.equal(dictationStars(5, 0), 5);
+  assert.equal(dictationStars(5, 3), 2);
+  assert.equal(dictationStars(5, 4), 1);
+});
+
+test("advanceDictationGift: three sentences without using a star earn a gift, up to five stars in all", () => {
+  let state = { gifts: 0, run: 0 };
+  const play = (usedStar: boolean) => {
+    const next = advanceDictationGift(state, usedStar);
+    state = { gifts: next.gifts, run: next.run };
+    return next.earned;
+  };
+  assert.equal(play(false), false);
+  assert.equal(play(false), false);
+  assert.equal(play(false), true);
+  assert.deepEqual(state, { gifts: 1, run: 0 });
+  // A sentence that used a star starts the run over.
+  assert.equal(play(false), false);
+  assert.equal(play(false), false);
+  assert.equal(play(true), false);
+  assert.deepEqual(state, { gifts: 1, run: 0 });
+  assert.equal(play(false), false);
+  assert.equal(play(false), false);
+  assert.equal(play(false), true);
+  assert.deepEqual(state, { gifts: 2, run: 0 });
+  // Five stars is the ceiling: nothing more is earned, and nothing is taken back.
+  assert.equal(play(false), false);
+  assert.equal(play(false), false);
+  assert.equal(play(false), false);
+  assert.equal(play(false), false);
+  assert.deepEqual(state, { gifts: 2, run: 0 });
+  play(true);
+  assert.deepEqual(state, { gifts: 2, run: 0 });
 });

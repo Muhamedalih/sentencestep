@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, CornerDownLeft, Lightbulb, Star } from "lucide-react";
+import { CheckCircle2, CornerDownLeft, Gift, Lightbulb, Star } from "lucide-react";
 
 import { DictationHelp } from "@/components/learning/dictation-help";
 import { DictationStreak, type StreakMode } from "@/components/learning/dictation-streak";
@@ -26,17 +26,22 @@ import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { useSpeech } from "@/hooks/use-speech";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
+  advanceDictationGift,
   applyDictationInput,
   applyStrictDictationInput,
   compareDictation,
   dictationAccuracy,
   dictationAudioWords,
   dictationLetterCount,
+  dictationMissStarsLost,
   dictationMistakes,
+  dictationStarCapacity,
   dictationStars,
   dictationTypedPrefix,
   dictationView,
   dictationWordLengths,
+  DICTATION_GIFT_EVERY,
+  DICTATION_MAX_GIFTS,
   isDictationComplete,
   normalizedIndexesToRaw,
   rawDictationTokens,
@@ -62,6 +67,8 @@ export interface DictationOutcome {
   lettersReported: boolean;
   /** Letter-by-letter mode: how many times the word was shown on the first try (0 in the exam). A sentence with none keeps the lesson's help-free streak going. */
   helps: number;
+  /** Letter-by-letter mode: the sentence cost a star on the first try (the word shown, or a letter wrong three times at one blank). A sentence that used none counts towards the lesson's gift star. */
+  usedStar: boolean;
 }
 
 /** Where a letter-by-letter answer stands, handed to the lesson so a sentence can carry on in the normal typing view (the learner gave up, or switched Dictation off) without losing what was typed. */
@@ -100,6 +107,10 @@ interface DictationSentenceProps {
   onErrorLetter?: (counted: boolean) => void;
   /** Letter-by-letter mode: sentences in a row the learner has finished without Show the word, before this one (shown as a chip from two). */
   helpFreeStreak?: number;
+  /** Letter-by-letter mode: gift stars this lesson has earned (0–2): every sentence starts with that many stars on top of its three. */
+  giftStars?: number;
+  /** Letter-by-letter mode: sentences in a row finished without using a star, before this one — the run towards the next gift star. */
+  giftRun?: number;
   /** Letter-by-letter mode: the learner gave up on this sentence — carry on in the normal view from what they typed. */
   onGiveUp?: (progress: DictationProgress) => void;
   /** Letter-by-letter mode: the answer after every change (null once the sentence is finished), so switching Dictation off mid-sentence can keep it too. */
@@ -167,7 +178,10 @@ const TEXT_SIZE: Record<LearningMode, string> = {
  * (it lowers the sentence's stars and the lesson's accuracy), shows in red on
  * its blank, and plays the word again, so a guess costs a listen. After two
  * wrong letters in a row at the same blank, Show the word (peek at the word for
- * three seconds, or until its next letter is typed) and Give up appear. Giving
+ * a moment, or until its next letter is typed) and Give up appear. A letter wrong
+ * three times at one blank costs a star; the word shown at the last star spends
+ * it; three sentences in a row without using a star earn a gift star for the
+ * rest of the lesson (up to five). Giving
  * up hands the sentence to the normal typing view, which carries on from what
  * was typed.
  *
@@ -195,6 +209,8 @@ export function DictationSentence({
   onCorrectLetter,
   onErrorLetter,
   helpFreeStreak = 0,
+  giftStars = 0,
+  giftRun = 0,
   onGiveUp,
   onProgress,
   storyTitle,
@@ -231,6 +247,15 @@ export function DictationSentence({
   /** Wrong letters turned away so far / times a word was shown. */
   const [misses, setMisses] = useState(0);
   const [helps, setHelps] = useState(0);
+  /** Wrong tries per blank, and the stars they have cost: every third wrong try at the same blank takes one. */
+  const missesByBlankRef = useRef<Map<string, number>>(new Map());
+  const [missStarsLost, setMissStarsLost] = useState(0);
+  /** The word was shown at the last star, which spent it: the sentence has no stars left. */
+  const [spent, setSpent] = useState(false);
+  // What the lesson had earned when this sentence began: its stars and the run
+  // towards the next gift star are settled here, whatever Continue does to them.
+  const [capacity] = useState(() => dictationStarCapacity(giftStars));
+  const [giftAtStart] = useState(() => ({ gifts: giftStars, run: giftRun }));
   /** Wrong letters in a row at the same blank — what brings up the help. */
   const [streak, setStreak] = useState<{ word: number; letter: number; count: number } | null>(
     null,
@@ -246,6 +271,8 @@ export function DictationSentence({
   const [first, setFirst] = useState<{
     misses: number;
     helps: number;
+    missStarsLost: number;
+    spent: boolean;
     wpm: number;
     correct: number;
     mistakes: { word: string; errorIndexes: number[] }[];
@@ -466,6 +493,9 @@ export function DictationSentence({
       const { word, letter } = step.at;
       noteMissedLetter(word, letter);
       setMisses((count) => count + 1);
+      const blank = `${word}:${letter}`;
+      missesByBlankRef.current.set(blank, (missesByBlankRef.current.get(blank) ?? 0) + 1);
+      setMissStarsLost(dictationMissStarsLost(missesByBlankRef.current.values()));
       setStreak((current) =>
         current && current.word === word && current.letter === letter
           ? { ...current, count: current.count + 1 }
@@ -494,6 +524,8 @@ export function DictationSentence({
         setFirst({
           misses,
           helps,
+          missStarsLost,
+          spent,
           wpm: finishedWpmRef.current,
           correct: correctLettersRef.current,
           mistakes: collectMistakes(),
@@ -521,6 +553,8 @@ export function DictationSentence({
       streakGoneTimerRef.current = setTimeout(() => setStreakGone(true), 2600);
     }
     setHelps((count) => count + 1);
+    // The word shown at the last star spends it: the sentence's stars are gone.
+    if (!practice && liveStars <= 1) setSpent(true);
     noteMissedLetter(word, view.cursor?.letter ?? 0);
     startPeek(word);
     // Said as well as shown.
@@ -543,6 +577,7 @@ export function DictationSentence({
       celebrated: celebratedRef.current,
       lettersReported: true,
       helps: first.helps,
+      usedStar: first.missStarsLost + first.helps > 0,
     });
   }
 
@@ -565,9 +600,12 @@ export function DictationSentence({
     finishedAtRef.current = 0;
     correctLettersRef.current = 0;
     missedLettersRef.current = new Map();
+    missesByBlankRef.current = new Map();
     setValue("");
     setMisses(0);
     setHelps(0);
+    setMissStarsLost(0);
+    setSpent(false);
     setStreak(null);
     setRejection(null);
     setAttempt((count) => count + 1);
@@ -621,6 +659,7 @@ export function DictationSentence({
       celebrated: celebratedRef.current,
       lettersReported: false,
       helps: 0,
+      usedStar: false,
     });
   }
 
@@ -745,7 +784,7 @@ export function DictationSentence({
   // blank. The strip keeps its height while empty so the sentence never jumps
   // when it appears.
   const stuck = letterMode && !finished && (streak?.count ?? 0) >= HELP_AFTER_MISSES;
-  const liveStars = dictationStars(misses, helps);
+  const liveStars = dictationStars(capacity, missStarsLost + helps, spent);
   const helpStrip = letterMode && (
     <div
       className={cn(
@@ -761,8 +800,13 @@ export function DictationSentence({
           dir={dir}
           prompt={t.dictation.stuckPrompt}
           stars={liveStars}
+          maxStars={capacity}
           showStakes={!practice}
           starsLabel={t.dictation.starsLabel}
+          lastStarCosts
+          hintStaysOpen
+          stablePrice
+          noStarsLabel={t.dictation.noStars}
           onShowWord={showWordBlanks ? handleShowWord : undefined}
           showWordLabel={t.dictation.help}
           showWordTitle={t.dictation.helpTitle}
@@ -783,9 +827,10 @@ export function DictationSentence({
   // way on. The sentence itself stays where it was, filled in.
   // What the panel shows is always the first try, the one that counts, even
   // after practice tries.
-  const counted = first ?? { misses, helps };
+  const counted = first ?? { misses, helps, missStarsLost, spent };
   const clean = counted.misses === 0 && counted.helps === 0;
-  const stars = dictationStars(counted.misses, counted.helps);
+  const stars = dictationStars(capacity, counted.missStarsLost + counted.helps, counted.spent);
+  const gift = advanceDictationGift(giftAtStart, counted.missStarsLost + counted.helps > 0);
   const finishedPanel = finished && (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0, y: 12 }}
@@ -809,10 +854,12 @@ export function DictationSentence({
         </p>
         <div
           role="img"
-          aria-label={t.dictation.starsLabel.replace("{n}", String(stars))}
+          aria-label={t.dictation.starsLabel
+            .replace("{n}", String(stars))
+            .replace("{max}", String(capacity))}
           className="flex items-center gap-1"
         >
-          {[1, 2, 3].map((star) => (
+          {Array.from({ length: capacity }, (_unused, index) => index + 1).map((star) => (
             <Star
               key={star}
               aria-hidden="true"
@@ -823,6 +870,14 @@ export function DictationSentence({
             />
           ))}
         </div>
+        {stars === 0 && (
+          <span
+            className="bg-danger/10 text-danger inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium"
+            dir={dir}
+          >
+            {t.dictation.noStars}
+          </span>
+        )}
         {counted.misses > 0 && (
           <span
             className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-3 py-0.5 text-sm"
@@ -839,6 +894,31 @@ export function DictationSentence({
             <Lightbulb className="size-3.5" aria-hidden="true" />
             {t.dictation.helpCount.replace("{n}", String(counted.helps))}
           </span>
+        )}
+        {gift.earned ? (
+          <motion.span
+            initial={reducedMotion ? false : { opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 360, damping: 14, delay: 0.25 }}
+            className="bg-success/15 text-success ring-success/30 inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-sm font-semibold ring-1"
+            dir={dir}
+          >
+            <Gift className="size-3.5" aria-hidden="true" />
+            {t.dictation.giftEarned.replace("{n}", String(dictationStarCapacity(gift.gifts)))}
+          </motion.span>
+        ) : (
+          giftAtStart.gifts < DICTATION_MAX_GIFTS &&
+          counted.missStarsLost + counted.helps === 0 && (
+            <span
+              className="bg-muted text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-sm"
+              dir={dir}
+            >
+              <Gift className="size-3.5" aria-hidden="true" />
+              {t.dictation.giftProgress
+                .replace("{n}", String(gift.run))
+                .replace("{total}", String(DICTATION_GIFT_EVERY))}
+            </span>
+          )
         )}
       </div>
 

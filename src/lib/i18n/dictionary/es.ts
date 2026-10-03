@@ -885,7 +885,10 @@ export const es: Dictionary = {
     stuckPrompt: "¿Atascado en esta letra?",
     done: "¡Bien hecho!",
     mistakeCount: "Letras erróneas: {n}",
-    starsLabel: "{n} de 3 estrellas",
+    starsLabel: "{n} de {max} estrellas",
+    noStars: "Sin estrellas",
+    giftEarned: "¡Estrella de regalo! Cada frase de esta lección empieza ahora con {n} estrellas.",
+    giftProgress: "Sin gastar estrellas: {n} de {total} para una estrella de regalo",
     wrongLetter: "Esa letra no es. Escucha otra vez e inténtalo de nuevo.",
     retrySentence: "Repetir la oración",
     retrySentenceTitle:

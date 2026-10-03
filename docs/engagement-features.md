@@ -74,8 +74,9 @@ already has history the day the feature goes On.
     it is typed, the way the keystroke engine checks the visible sentence, so
     a wrong letter (case never matters) is turned away and the answer only
     ever holds correct letters. Guessing is not blocked but it is never free:
-    each turned-away letter is counted (as an error in the lesson's accuracy,
-    and every third one costs a star), shows in red on its blank, plays the
+    each turned-away letter is counted (as an error in the lesson's accuracy;
+    **a letter wrong three times at the same blank costs a star** — two slips
+    at a letter are free, `dictationMissStarsLost`), shows in red on its blank, plays the
     typing view's error sound, and **plays the word again** (Normal and
     Stories, from the same word clips as a tap on a blank), so a guess costs a
     listen. A space or hyphen typed in the middle of a word counts as a wrong
@@ -98,10 +99,25 @@ already has history the day the feature goes On.
     a burst of sparks; the bulb flares and the word rises by its light (the peek
     starts as the star lands, `STAR_FLIGHT_MS`), the empty slot pops and "−1"
     floats away. Leaving mid-flight (the learner typed the letter) cancels it
-    and nothing is counted. Stars are `3 − helps − ⌊wrong letters ÷ 3⌋`, never
-    below one (`dictationStars`); at one star there is nothing left to take, so
-    the tag reads "Recorded", no star flies, and the help still shows as a bulb
-    mark in the recap.
+    and nothing is counted. Stars are `capacity − helps − stars lost to wrong
+letters` (`dictationStars`). Wrong letters alone never take the last star;
+    **the word shown at the last star spends it, once** (`spent`): the star
+    flies, the stars are wiped away and "No stars" replaces them for the rest of
+    that sentence. Show the word stays pressable after that (the tag reads
+    "Recorded", `hintStaysOpen`) — a learner stuck at a blank has no other way
+    past it than Give up — and still shows as a bulb mark in the recap.
+
+    **Gift stars.** A sentence starts with 3 stars (`capacity`). Every three
+    sentences in a row finished (first try) without using any star — no word
+    shown, no letter wrong three times at one blank — earn one **gift star**
+    (`advanceDictationGift`): from then on every sentence of **this lesson**
+    starts with 4, and three more such sentences make it 5. Five is the ceiling
+    (`DICTATION_MAX_STARS`); gift stars are never taken back, belong to the
+    lesson only (LessonSession's `giftState`; retrying the lesson clears them,
+    and the next lesson starts at 3), and a sentence that used a star, a give-up
+    or switching Dictation off starts the run over. The recap shows a bonus
+    chip: the run so far ("No stars used: 2 of 3 for a bonus star") or the gift
+    just earned.
 
     **The streak chip** (`DictationStreak`, beside the audio controls) counts
     sentences in a row finished without Show the word. It appears from two and
@@ -119,7 +135,7 @@ already has history the day the feature goes On.
     `onErrorLetter`, like the typing view), so the outcome tells the lesson
     not to add them again (`lettersReported`). A finished sentence stays in
     place filled in, with a "Perfect!" (no wrong letter, no peek) or "Well
-    done!", one to three stars, the number of wrong letters, a bulb mark when
+    done!", its stars (three to five, or none), the number of wrong letters, a bulb mark when
     the word was shown ("Help × 2"), the translation, **Continue** and a small
     **Retry sentence** button. Retry types the same sentence again as practice
     (fresh blanks, the audio again): nothing is at stake, so there are no stars,

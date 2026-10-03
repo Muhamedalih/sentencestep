@@ -1089,7 +1089,14 @@ export interface Dictionary {
     stuckPrompt: string;
     done: string;
     mistakeCount: string;
+    /** Accessible label of the sentence's stars — {n} are lit, {max} is how many it started with (3, plus gift stars). */
     starsLabel: string;
+    /** Said in place of the stars once the word shown at the last star has spent it. */
+    noStars: string;
+    /** The recap chip when this sentence earned a gift star — {n} is how many stars every sentence in the lesson now starts with. */
+    giftEarned: string;
+    /** The recap chip on a sentence that used no star — {n} sentences so far of {total} for the next gift star. */
+    giftProgress: string;
     wrongLetter: string;
     /** After a letter-by-letter sentence: a small "again" button beside Continue (practice, only the first try counts). */
     retrySentence: string;

@@ -15,8 +15,10 @@ const STAR_FLIGHT_MS = 560;
 interface DictationHelpProps {
   /** "Stuck on this letter?" — names the group for screen readers too. */
   prompt: string;
-  /** The sentence's stars right now (1–3). */
+  /** The sentence's stars right now (0 once they are all spent). */
   stars: number;
+  /** How many stars the sentence started with — three, plus any gift stars. Defaults to 3. */
+  maxStars?: number;
   /** False in a practice try, where nothing is at stake: no stars, no price. */
   showStakes: boolean;
   starsLabel: string;
@@ -50,9 +52,11 @@ interface DictationHelpProps {
   /** Keeps the price tag as wide for "−★" as for "Recorded", so the bar never changes size (and shifts) when the stars run out. */
   stablePrice?: boolean;
   /**
-   * The hint taken at the last star spends it, instead of only being "recorded": the star flies like any other, then the stars of this word are wiped away (an animation, and `noStarsLabel` takes their place) and the hint is closed — `stars` is then 0. Without it (Dictation) the last star is never taken.
+   * The hint taken at the last star spends it, instead of only being "recorded": the star flies like any other, then the stars of this word are wiped away (an animation, and `noStarsLabel` takes their place) and — unless `hintStaysOpen` — the hint is closed. `stars` is then 0. Without it the last star is never taken.
    */
   lastStarCosts?: boolean;
+  /** Keeps Show the word pressable once the stars are gone (it is then only "recorded"): for a screen where the learner has no other way past a blank. Defaults to false, where the closed hint hands the word back to the learner. */
+  hintStaysOpen?: boolean;
   /** Said in place of the stars once they are all gone (needs `lastStarCosts`). */
   noStarsLabel?: string;
   /** Why the hint is closed: what the learner can do instead (needs `lastStarCosts`). */
@@ -72,13 +76,16 @@ interface DictationHelpProps {
  *    (the parent starts the peek when `onShowWord` fires, as the star lands).
  *  - After: the empty slot pops, and a "−1" floats up and away.
  *
- * At one star there is nothing left to take, so the tag reads "Recorded" and no
- * star flies: the help is still counted (the recap shows a bulb mark for it).
- * In a practice try there are no stars and no tag at all.
+ * Without `lastStarCosts`, at one star there is nothing left to take, so the tag
+ * reads "Recorded" and no star flies: the help is still counted (the recap shows
+ * a bulb mark for it). With it (Word Lists, Dictation) the help at the last star
+ * takes that one too and the stars are wiped away. In a practice try there are
+ * no stars and no tag at all.
  */
 export function DictationHelp({
   prompt,
   stars,
+  maxStars = 3,
   showStakes,
   starsLabel,
   onShowWord,
@@ -100,6 +107,7 @@ export function DictationHelp({
   giveUpDisabled = false,
   stablePrice = false,
   lastStarCosts = false,
+  hintStaysOpen = false,
   noStarsLabel,
   noStarsTitle,
 }: DictationHelpProps) {
@@ -144,6 +152,8 @@ export function DictationHelp({
   const floor = lastStarCosts ? 0 : 1;
   /** Every star is gone and the hint is closed. */
   const outOfStars = lastStarCosts && showStakes && stars <= 0;
+  /** The hint cannot be pressed any more (the stars are gone and the screen closes it). */
+  const hintClosed = outOfStars && !hintStaysOpen;
 
   function setRisk(on: boolean) {
     setGhost(on && showStakes && stars > floor);
@@ -275,11 +285,11 @@ export function DictationHelp({
   // Once the hint is closed the tag stays (invisible) so the bar keeps its width.
   const price = showStakes && (
     <span
-      aria-hidden={outOfStars || undefined}
+      aria-hidden={hintClosed || undefined}
       aria-label={costs ? costLabel : costRecorded}
       dir={costs ? "ltr" : dir}
       className={cn(
-        outOfStars && "invisible",
+        hintClosed && "invisible",
         "bg-accent/20 text-accent group-hover/help:bg-accent group-hover/help:text-accent-foreground group-focus-visible/help:bg-accent group-focus-visible/help:text-accent-foreground ms-0.5 inline-flex items-center gap-0.5 rounded-full px-2 py-px text-xs font-bold transition-colors",
       )}
     >
@@ -347,13 +357,15 @@ export function DictationHelp({
               <span
                 ref={starsRef}
                 role="img"
-                aria-label={starsLabel.replace("{n}", String(stars))}
+                aria-label={starsLabel
+                  .replace("{n}", String(stars))
+                  .replace("{max}", String(maxStars))}
                 className="relative inline-grid items-center"
               >
                 {/* The stars and, once they are all spent, the note that replaces them
                     share one cell, so the bar is as wide for either and never shifts. */}
                 <span className="col-start-1 row-start-1 flex items-center gap-1">
-                  {[0, 1, 2].map((index) => (
+                  {Array.from({ length: maxStars }, (_unused, index) => (
                     <StarPip
                       key={index}
                       index={index}
@@ -408,9 +420,9 @@ export function DictationHelp({
         <HelpAction
           onClick={showWord}
           title={
-            showStakes ? (outOfStars && noStarsTitle ? noStarsTitle : showWordTitle) : undefined
+            showStakes ? (hintClosed && noStarsTitle ? noStarsTitle : showWordTitle) : undefined
           }
-          disabled={flying || showingWord || outOfStars}
+          disabled={flying || showingWord || hintClosed}
           keepFocus={keepFocus}
           tone="helpful"
           onRisk={setRisk}
