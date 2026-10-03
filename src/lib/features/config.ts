@@ -11,7 +11,7 @@ import type { LearningMode } from "@/types/content";
 /**
  * Admin-controlled availability of the engagement features (dictation,
  * from-memory, personal cards, daily session, quests, badges, streak
- * calendar, smart word practice). One JSON document, stored in the single-row `feature_settings`
+ * calendar, smart word practice, the Word Lists redesign). One JSON document, stored in the single-row `feature_settings`
  * table (see 20250315000000_feature_settings.sql) and edited from
  * /admin/features. Pure and dependency-free of Supabase so both the
  * server-only queries/actions and the admin form can share the exact same
@@ -32,6 +32,7 @@ export const FEATURE_IDS = [
   "badges",
   "streakCalendar",
   "smartWords",
+  "wordsRedesign",
 ] as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[number];
@@ -57,6 +58,7 @@ export const FEATURE_SECTIONS: Record<FeatureId, readonly LearningSection[]> = {
   badges: [],
   streakCalendar: [],
   smartWords: [],
+  wordsRedesign: [],
 };
 
 /** Features that need an account to store anything — guests see a sign-in teaser instead of the feature itself. Dictation and from-memory work for everyone. */
@@ -313,6 +315,13 @@ export interface EffectiveFeatures {
    * (word strength, due reviews, Continue) and so needs a signed-in account.
    */
   smartWords: { enabled: boolean; spaced: boolean };
+  /**
+   * The redesigned Word Lists screens (mastery-ring dashboard, the group's word
+   * wall, in-the-blank typing with batch progress, five-card Learn batches).
+   * Purely visual and independent of smartWords: it reads the schedule only when
+   * smartWords provides one, and falls back to local progress otherwise.
+   */
+  wordsRedesign: { enabled: boolean };
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -390,6 +399,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
         config.features.streakCalendar.state !== "off" || config.features.badges.state !== "off",
     },
     smartWords: { enabled: open("smartWords"), spaced: openForAccount("smartWords") },
+    wordsRedesign: { enabled: open("wordsRedesign") },
     guestTeaser,
   };
 }

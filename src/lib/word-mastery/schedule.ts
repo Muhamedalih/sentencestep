@@ -267,12 +267,12 @@ export function selectContinueWords<T extends { id: string }>(
   };
 }
 
-/** Which words a group's practice asks: Continue (what is due or new — the default) or Practice all (`?scope=all`). */
-export type PracticeScope = "continue" | "all";
+/** Which words a group's practice asks: Continue (what is due or new — the default), Practice all (`?scope=all`), or only the weak ones (`?scope=weak`, the redesigned word wall's button). */
+export type PracticeScope = "continue" | "all" | "weak";
 
-/** Reads the `scope` of the practice URL: only `all` is Practice all, anything else is Continue. */
+/** Reads the `scope` of the practice URL: `all` is Practice all, `weak` is the weak words only, anything else is Continue. */
 export function practiceScope(raw: string | null | undefined): PracticeScope {
-  return raw === "all" ? "all" : "continue";
+  return raw === "all" || raw === "weak" ? raw : "continue";
 }
 
 /**

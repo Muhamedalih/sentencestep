@@ -13,6 +13,9 @@ import type { WordSentenceControls } from "@/components/learning/vocabulary-sent
 import { VocabularyWordDrill } from "@/components/learning/vocabulary-word-drill";
 import { WordGroupCaughtUp } from "@/components/learning/word-group-caught-up";
 import { WordHelpBar } from "@/components/learning/word-help-bar";
+import { CountUp } from "@/components/words/count-up";
+import { MasteryRing } from "@/components/words/mastery-ring";
+import { WordPosBadge } from "@/components/words/word-pos-badge";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
@@ -27,6 +30,8 @@ import { useWordProgress } from "@/hooks/use-word-progress";
 import { masterMistakeWordAction, recordWordListMistakeAction } from "@/lib/mistakes/actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
+import { cn } from "@/lib/utils";
+import { bandsFromCompleted } from "@/lib/word-mastery/dashboard";
 import { splitWordHint } from "@/lib/word-lists-hint";
 import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
 import { canTakeHint, outcomeFor } from "@/lib/word-mastery/schedule";
@@ -57,6 +62,12 @@ const BLOCK_SIZE = 5;
  * the moment it is typed right. The word is spoken when it appears and its
  * meaning is shown, exactly as without it.
  *
+ * With `redesign` (the admin-controlled "Word Lists redesign") the same session
+ * is drawn differently and graded identically: the learner types inside the blank
+ * of the sentence, a segmented bar shows the batch of five they are on, a badge
+ * says what kind of word the blank wants, and finishing shows a progress ring and
+ * a counted number instead of a celebration icon.
+ *
  * A visit is decided once, when it opens, and then left alone: the words it
  * asks, whether it is the upgraded practice, and whether there is anything to
  * ask at all. It has to be, because the page that renders this is sent again
@@ -78,6 +89,7 @@ export function VocabularyPractice({
   smart,
   caughtUp,
   groupWordIds,
+  redesign = false,
 }: {
   group: WordGroup;
   previewMode?: boolean;
@@ -89,12 +101,15 @@ export function VocabularyPractice({
   caughtUp?: { nextDueISO: string | null } | null;
   /** Every word of the group, when the visit asks only some of them (Continue skips the words scheduled for later): the finish screen reports the whole group's progress, not just the visit's. Defaults to the visit's own words. */
   groupWordIds?: readonly string[];
+  /** The redesigned screen (see the component comment). Decided once with the rest of the visit. */
+  redesign?: boolean;
 }) {
   const [visit] = useState(() => ({
     group,
     smart: smart ?? null,
     caughtUp: caughtUp ?? null,
     groupWordIds: groupWordIds ?? group.words.map((word) => word.id),
+    redesign,
   }));
 
   if (visit.group.words.length === 0) {
@@ -116,6 +131,7 @@ export function VocabularyPractice({
       defaultVoiceId={defaultVoiceId}
       smart={visit.smart}
       groupWordIds={visit.groupWordIds}
+      redesign={visit.redesign}
     />
   );
 }
@@ -127,12 +143,14 @@ function VocabularyPracticeSession({
   defaultVoiceId,
   smart,
   groupWordIds,
+  redesign,
 }: {
   group: WordGroup;
   previewMode: boolean;
   defaultVoiceId?: string | null;
   smart: SmartPracticeConfig | null;
   groupWordIds: readonly string[];
+  redesign: boolean;
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;
@@ -427,6 +445,14 @@ function VocabularyPracticeSession({
             {t.wordLists.previewModeNotice}
           </div>
         )}
+        {redesign && !isComplete && !showSummary && !drillWord && blockSize > 0 && (
+          <BatchProgress
+            batchIndex={blockIndex}
+            batchCount={blocks.length}
+            done={doneInBlock.size}
+            size={blockSize}
+          />
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -441,16 +467,38 @@ function VocabularyPracticeSession({
               animate="visible"
               className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
             >
-              <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-                <PartyPopper className="size-7" aria-hidden="true" />
-              </div>
+              {redesign ? (
+                // A progress ring and a counted number say how far the learner got; no icon of celebration.
+                <MasteryRing
+                  bands={bandsFromCompleted(total, completedCount)}
+                  size={112}
+                  stroke={10}
+                  label={t.wordLists.redesign.ringAriaNoSchedule
+                    .replace("{done}", String(completedCount))
+                    .replace("{total}", String(total))}
+                >
+                  <span className="text-3xl font-bold tabular-nums" dir="ltr">
+                    <CountUp value={completedCount} />
+                    <span className="text-muted-foreground text-base font-semibold">
+                      {" "}
+                      / {total}
+                    </span>
+                  </span>
+                </MasteryRing>
+              ) : (
+                <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
+                  <PartyPopper className="size-7" aria-hidden="true" />
+                </div>
+              )}
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight">{t.wordLists.complete}</h2>
+                <h2 className="text-2xl font-semibold tracking-tight">
+                  {redesign ? t.wordLists.redesign.completeHeading : t.wordLists.complete}
+                </h2>
                 <p className="text-muted-foreground mt-1" dir="ltr">
                   {group.title}
                 </p>
               </div>
-              <div className="w-full max-w-xs text-left">
+              <div className={cn("w-full max-w-xs text-left", redesign && "hidden")}>
                 <div className="mb-1.5 flex items-center justify-between text-xs">
                   <span className="text-muted-foreground font-medium">
                     {t.wordLists.progressLabel}
@@ -465,6 +513,14 @@ function VocabularyPracticeSession({
                 <Button variant="outline" asChild>
                   <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
                 </Button>
+                {redesign && (
+                  // The topic's wall is where the new strengths, the mastery ring and the rank are.
+                  <Button variant="outline" asChild>
+                    <Link href={`/learn/word-lists/${group.id}/words`}>
+                      {t.wordLists.redesign.viewWall}
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   onClick={() => {
                     setBlockIndex(0);
@@ -528,6 +584,7 @@ function VocabularyPracticeSession({
                   semantically wrong stand-in. */}
               {hint.term && (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
+                  {redesign && <WordPosBadge pos={word.pos} />}
                   <p
                     className="text-foreground/85 text-[1.8rem] font-bold text-balance sm:text-[2.16rem]"
                     dir={dir}
@@ -552,6 +609,7 @@ function VocabularyPracticeSession({
                   inputRef={inputRef}
                   fontFamily={sectionFontFamily}
                   enlarged
+                  inline={redesign}
                   smart={
                     isSmart
                       ? {
@@ -590,6 +648,68 @@ function VocabularyPracticeSession({
           )
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * The redesigned practice's batch progress: one segment per batch of five words
+ * (finished batches full, the current one filling as its words are answered,
+ * later ones empty), with "Batch 2 of 5" and the word count of the current batch.
+ */
+function BatchProgress({
+  batchIndex,
+  batchCount,
+  done,
+  size,
+}: {
+  batchIndex: number;
+  batchCount: number;
+  done: number;
+  size: number;
+}) {
+  const { t, dir } = useLocale();
+  const copy = t.wordLists.redesign;
+  return (
+    <div className="mt-3" dir={dir}>
+      <div className="text-muted-foreground mb-1.5 flex items-center justify-between text-xs font-semibold">
+        <span>
+          {copy.batchProgress
+            .replace("{current}", String(batchIndex + 1))
+            .replace("{total}", String(batchCount))}
+        </span>
+        <span className="tabular-nums" dir="ltr">
+          {done} / {size}
+        </span>
+      </div>
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={size}
+        aria-valuenow={done}
+        aria-label={copy.batchProgressAria
+          .replace("{current}", String(batchIndex + 1))
+          .replace("{total}", String(batchCount))
+          .replace("{done}", String(done))
+          .replace("{size}", String(size))}
+        className="flex gap-1"
+        dir="ltr"
+      >
+        {Array.from({ length: batchCount }, (_, index) => {
+          const fill = index < batchIndex ? 100 : index === batchIndex ? (done / size) * 100 : 0;
+          return (
+            <span
+              key={index}
+              className="bg-muted-foreground/20 h-1.5 flex-1 overflow-hidden rounded-full"
+            >
+              <span
+                className="bg-primary block h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                style={{ width: `${fill}%` }}
+              />
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

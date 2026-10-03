@@ -695,6 +695,121 @@ export interface Dictionary {
       /** The button on that screen that starts another review round. */
       reviewMore: string;
     };
+    /** The redesigned Word Lists screens (admin-controlled; see the wordsRedesign feature in src/lib/features/config.ts): the mastery dashboard, the word wall, in-the-blank practice and five-card Learn batches. */
+    redesign: {
+      /** Dashboard heading: the learner's whole vocabulary at a glance. */
+      overviewTitle: string;
+      /** Band label: words at strength 4 or more (the 16-day review passed). */
+      bandMastered: string;
+      /** Band label: words met but not strong yet. */
+      bandLearning: string;
+      /** Band label: words never met. */
+      bandNew: string;
+      /** Dashboard figure label: words due for review today. */
+      overviewDue: string;
+      /** Accessible label of a mastery ring — {mastered} of {total} words. */
+      ringAria: string;
+      /** Accessible label of a ring when there is no schedule — {done} of {total}. */
+      ringAriaNoSchedule: string;
+      /** The dashboard's review button — {n} words. */
+      reviewNow: string;
+      /** Under the review button. */
+      reviewNowHint: string;
+      /** Placeholder of the topic search box. */
+      searchPlaceholder: string;
+      /** Accessible name of the topic search box. */
+      searchAria: string;
+      /** Accessible name of the button that clears the search box. */
+      searchClear: string;
+      /** Shown when the search matches no topic. */
+      noResultsHeading: string;
+      /** Under that heading. */
+      noResultsBody: string;
+      /** A topic card's line — {done} of {total} words met. */
+      topicMet: string;
+      /** A topic card's due count — {n}. */
+      topicDue: string;
+      /** A locked topic card's line. */
+      lockedTopic: string;
+      /** Heading of a mastery rank. */
+      rankTitle: string;
+      /** No rank earned yet. */
+      rankNone: string;
+      /** Rank name. */
+      rankBronze: string;
+      /** Rank name. */
+      rankSilver: string;
+      /** Rank name. */
+      rankGold: string;
+      /** How far the next rank is — {n} more mastered words, {rank} is the rank's name. */
+      rankNext: string;
+      /** Shown at the top rank. */
+      rankTop: string;
+      /** The group page's heading for the word wall. */
+      wallHeading: string;
+      /** Under the word wall heading. */
+      wallSubtitle: string;
+      /** Back link from the word wall. */
+      backToTopics: string;
+      /** The word wall's filter that shows every word. */
+      filterAll: string;
+      /** Accessible name of the word wall's filter. */
+      filterAria: string;
+      /** Shown when the filter matches no word. */
+      wallEmpty: string;
+      /** A word's strength — {n} of 5. */
+      strengthAria: string;
+      /** Tag on a word that is due for review. */
+      dueTag: string;
+      /** Tag on a word never met. */
+      notMetYet: string;
+      /** The wall's button: practice only the weak words. */
+      practiceWeak: string;
+      /** Under that button — {n} weak words. */
+      practiceWeakCount: string;
+      /** Under that button when no word is weak. */
+      practiceWeakNone: string;
+      /** Practice header — which batch of five this is. */
+      batchProgress: string;
+      /** Accessible label of the batch progress bar. */
+      batchProgressAria: string;
+      /** Word type badge. */
+      posNoun: string;
+      /** Word type badge. */
+      posVerb: string;
+      /** Word type badge. */
+      posAdjective: string;
+      /** Word type badge. */
+      posAdverb: string;
+      /** Finish screen heading of a practice visit. */
+      completeHeading: string;
+      /** Finish screen: the button to the topic's word wall, where the new strengths and the rank are. */
+      viewWall: string;
+      /** Learn header — which batch of five. */
+      learnBatchTitle: string;
+      /** Learn: the card position inside its batch — {current} of {total}. */
+      learnCounter: string;
+      /** Learn: under the card. */
+      learnSwipeHint: string;
+      /** Learn: the button for a word the learner already knows. */
+      learnKnown: string;
+      /** Learn: the button for a word the learner is still learning. */
+      learnStill: string;
+      /** Learn: heading after the last card of a batch. */
+      learnBatchDone: string;
+      /** Learn: summary after a batch — {known} known, {total} words, {learning} to come back. */
+      learnBatchSummary: string;
+      /** Learn: summary note — {n} cards were not answered. */
+      learnUnanswered: string;
+      /** Learn: the button that opens the next batch. */
+      learnNextBatch: string;
+      /** Learn: the button that goes through the batch again. */
+      learnRepeatBatch: string;
+      /** Learn: the last batch's button that hands over to practice. */
+      learnStartPractice: string;
+      /** Learn: shown once, under the buttons, to a learner whose answers are stored. */
+      learnSavedNote: string;
+    };
   };
   /**
    * Vocabulary Recall (src/lib/vocabulary-recall) — a curiosity-framed, opt-in

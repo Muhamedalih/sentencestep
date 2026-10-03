@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
   type RefObject,
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -135,6 +136,7 @@ export function VocabularySentence({
   fontFamily,
   smart,
   enlarged = false,
+  inline = false,
 }: {
   sentence: string;
   targetWord: string;
@@ -147,6 +149,8 @@ export function VocabularySentence({
   smart?: SmartSentenceOptions;
   /** Word Lists' practice screens: the typing stage and the sentence 20% larger. Everything else (the help bar's stars and buttons) keeps its size. */
   enlarged?: boolean;
+  /** The redesigned screen: the learner types INTO the blank of the sentence (letters, the wrong attempt's diff and the right spelling all appear inside it) instead of on a big stage above it. Everything else — grading, hints, timing — is unchanged. */
+  inline?: boolean;
 }) {
   const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
@@ -285,7 +289,7 @@ export function VocabularySentence({
 
   // The upgraded stage is always on screen (an empty line until the first letter
   // is typed) so nothing above or below it jumps.
-  const showStage = smart ? true : engine.typed.length > 0 || isRevealPhase;
+  const showStage = inline ? false : smart ? true : engine.typed.length > 0 || isRevealPhase;
 
   // While a hint mends the answer the word loses letters and is centred again:
   // remember how wide it was while the wrong ones still stood, and once they are
@@ -334,6 +338,55 @@ export function VocabularySentence({
     );
   });
 
+  // What the learner is producing, drawn by whichever surface shows it: the big stage above the
+  // sentence, or (inline) the blank inside it. A wrong attempt's diff, the right spelling rising in
+  // after a miss, and the typed letters (which a hint can mend) are the same in both.
+  const stageContent =
+    isDiffPhase && diff ? (
+      diff.map((letter, index) => (
+        <span key={index} className={letter.correct ? "text-success" : "text-danger"}>
+          {letter.char}
+        </span>
+      ))
+    ) : isRevealPhase ? (
+      targetWord.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          initial={reducedMotion ? false : GLYPH_HIDDEN}
+          animate={reveal === "out" ? GLYPH_PEEK_OUT : GLYPH_SHOWN}
+          transition={
+            reducedMotion
+              ? { duration: 0 }
+              : reveal === "out"
+                ? peekOutTransition(index)
+                : peekInTransition(index)
+          }
+          className={cn("inline-block whitespace-pre", PEEK_LIT_CLASS)}
+        >
+          {char}
+        </motion.span>
+      ))
+    ) : smart && engine.typed.length === 0 ? (
+      // Nothing is drawn until the first letter is typed (no slots, no dashes),
+      // but the stage keeps its line height so the sentence below never jumps
+      // when that letter arrives.
+      <span aria-hidden="true" className="invisible">
+        {"\u00A0"}
+      </span>
+    ) : (
+      <span
+        ref={stageWordRef}
+        // Only the upgraded stage needs a box (its letters move on their own);
+        // the original one stays plain inline text, as it always was.
+        className={cn(
+          smart && "inline-block",
+          engine.status === "correct" ? "text-success" : "text-foreground",
+        )}
+      >
+        {smart ? stageLetters : engine.typed}
+      </span>
+    );
+
   return (
     <div dir="ltr" className="flex flex-col items-center gap-5">
       {showStage && (
@@ -354,50 +407,7 @@ export function VocabularySentence({
             isDiffPhase && "decoration-danger line-through decoration-[0.07em]",
           )}
         >
-          {isDiffPhase && diff ? (
-            diff.map((letter, index) => (
-              <span key={index} className={letter.correct ? "text-success" : "text-danger"}>
-                {letter.char}
-              </span>
-            ))
-          ) : isRevealPhase ? (
-            targetWord.split("").map((char, index) => (
-              <motion.span
-                key={index}
-                initial={reducedMotion ? false : GLYPH_HIDDEN}
-                animate={reveal === "out" ? GLYPH_PEEK_OUT : GLYPH_SHOWN}
-                transition={
-                  reducedMotion
-                    ? { duration: 0 }
-                    : reveal === "out"
-                      ? peekOutTransition(index)
-                      : peekInTransition(index)
-                }
-                className={cn("inline-block whitespace-pre", PEEK_LIT_CLASS)}
-              >
-                {char}
-              </motion.span>
-            ))
-          ) : smart && engine.typed.length === 0 ? (
-            // Nothing is drawn until the first letter is typed (no slots, no dashes),
-            // but the stage keeps its line height so the sentence below never jumps
-            // when that letter arrives.
-            <span aria-hidden="true" className="invisible">
-              {"\u00A0"}
-            </span>
-          ) : (
-            <span
-              ref={stageWordRef}
-              // Only the upgraded stage needs a box (its letters move on their own);
-              // the original one stays plain inline text, as it always was.
-              className={cn(
-                smart && "inline-block",
-                engine.status === "correct" ? "text-success" : "text-foreground",
-              )}
-            >
-              {smart ? stageLetters : engine.typed}
-            </span>
-          )}
+          {stageContent}
         </motion.div>
       )}
 
@@ -419,13 +429,33 @@ export function VocabularySentence({
         )}
       >
         {prefix && <span>{prefix} </span>}
-        <span className="relative inline-block cursor-text align-baseline">
+        <motion.span
+          className="relative inline-block cursor-text align-baseline"
+          // The wrong attempt's shake, which the big stage does for itself, happens to the blank.
+          animate={inline && !reducedMotion && isDiffPhase ? { x: [0, -4, 4, -3, 3, 0] } : { x: 0 }}
+          transition={{ duration: 0.35 }}
+        >
           <BlankBox
-            length={targetWord.length}
+            length={inline ? Math.max(targetWord.length, engine.typed.length) : targetWord.length}
             active={isFocused && engine.status === "pending"}
             revealedWord={engine.status === "correct" ? (engine.alternate ?? targetWord) : null}
             popS={popS}
-          />
+            tone={inline ? (isDiffPhase ? "diff" : isRevealPhase ? "reveal" : "typing") : undefined}
+          >
+            {inline &&
+            engine.status !== "correct" &&
+            (isDiffPhase || isRevealPhase || engine.typed.length > 0) ? (
+              <span
+                style={fontFamily ? { fontFamily } : undefined}
+                className={cn(
+                  "pointer-events-none absolute inset-0 flex items-center justify-center leading-none font-extrabold tracking-tight whitespace-nowrap",
+                  isDiffPhase && "decoration-danger line-through decoration-[0.07em]",
+                )}
+              >
+                {stageContent}
+              </span>
+            ) : null}
+          </BlankBox>
           <input
             ref={engine.inputRef}
             value={engine.typed}
@@ -454,7 +484,7 @@ export function VocabularySentence({
             spellCheck={false}
             aria-label={t.typing.typeMissingWord}
           />
-        </span>
+        </motion.span>
         {suffix && <span> {suffix}</span>}
       </p>
 
@@ -522,12 +552,18 @@ function BlankBox({
   active,
   revealedWord,
   popS,
+  tone,
+  children,
 }: {
   length: number;
   active: boolean;
   revealedWord?: string | null;
   /** How long the word takes to pop into the sentence once it is right, in seconds. */
   popS: number;
+  /** Inline typing only: what the letters inside the box are showing — the learner's own typing, a wrong attempt's diff, or the right spelling after a miss. Colors the box's border to match. */
+  tone?: "typing" | "diff" | "reveal";
+  /** Inline typing only: what is drawn inside the box. */
+  children?: ReactNode;
 }) {
   if (revealedWord) {
     return (
@@ -561,7 +597,16 @@ function BlankBox({
         "bg-muted/60 border-muted-foreground/25 relative mx-1.5 inline-block translate-y-[0.32em] rounded-xl border-2 border-dashed align-baseline transition-all duration-200",
         active &&
           "border-solid border-[var(--lesson-underline)] bg-[var(--lesson-underline)]/[0.06] shadow-[0_0_0_5px_var(--lesson-underline-glow,transparent)]",
+        // Letters inside the box: it is a filled box from the first one, and a wrong attempt
+        // or the right spelling after a miss colors it.
+        tone === "typing" &&
+          children &&
+          "border-solid border-[var(--lesson-underline)] bg-[var(--lesson-underline)]/[0.06]",
+        tone === "diff" && "border-danger/50 bg-danger/[0.06] border-solid",
+        tone === "reveal" && "border-success/50 bg-success/[0.08] border-solid",
       )}
-    />
+    >
+      {children}
+    </span>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { VocabularyLearn } from "@/components/learning/vocabulary-learn";
+import { VocabularyLearnBatches } from "@/components/words/vocabulary-learn-batches";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
 import { isAdmin } from "@/lib/admin/access";
@@ -9,6 +10,7 @@ import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
+import { getSmartWordsAccess, getWordsRedesignEnabled } from "@/lib/word-mastery/access";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 
 /**
@@ -77,6 +79,19 @@ export default async function WordGroupLearnPage({
           ...group.words.slice(1),
         ]
       : group.words;
+
+  // The redesigned Learn (batches of five, swipe, "I know it / still learning") is
+  // admin-controlled; everyone else keeps the flashcard walk they know.
+  if (await getWordsRedesignEnabled()) {
+    const access = await getSmartWordsAccess();
+    return (
+      <VocabularyLearnBatches
+        group={{ ...group, words }}
+        defaultVoiceId={defaultVoiceId}
+        spaced={access.spaced}
+      />
+    );
+  }
 
   return <VocabularyLearn group={{ ...group, words }} defaultVoiceId={defaultVoiceId} />;
 }

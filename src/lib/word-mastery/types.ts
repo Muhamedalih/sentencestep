@@ -20,6 +20,31 @@ export function isReportedOutcome(value: unknown): value is ReportedOutcome {
   return typeof value === "string" && (REPORTED_OUTCOMES as readonly string[]).includes(value);
 }
 
+/** What a learner says about a word on the redesigned Learn screen: they already know it, or they are still learning it. */
+export const LEARN_CHOICES = ["known", "learning"] as const;
+export type LearnChoice = (typeof LEARN_CHOICES)[number];
+
+export function isLearnChoice(value: unknown): value is LearnChoice {
+  return typeof value === "string" && (LEARN_CHOICES as readonly string[]).includes(value);
+}
+
+export interface LearnChoiceInput {
+  /** The vocabulary word's id (vocabulary_words.id). */
+  wordId: string;
+  choice: LearnChoice;
+}
+
+export function isLearnChoiceInput(value: unknown): value is LearnChoiceInput {
+  if (typeof value !== "object" || value === null) return false;
+  const input = value as Record<string, unknown>;
+  return (
+    typeof input.wordId === "string" &&
+    input.wordId.length > 0 &&
+    input.wordId.length <= MAX_OUTCOME_FIELD_LENGTH &&
+    isLearnChoice(input.choice)
+  );
+}
+
 export interface WordOutcomeInput {
   /** The vocabulary word's id (vocabulary_words.id). */
   wordId: string;
