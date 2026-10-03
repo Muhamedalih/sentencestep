@@ -787,10 +787,14 @@ export function LessonCompletion({
         {/* ---------------------------------------------------------------
             NEXT ACTION — one clear primary CTA, everything else quieter.
             --------------------------------------------------------------- */}
+        {/* Below lg the page scrolls, so on a short phone the CTA used to sit
+            under the fold after the stats/vocabulary panels — pinned to the
+            bottom edge instead (solid theme background so the content
+            scrolling beneath never shows through). */}
         <motion.div
           variants={fadeInUp}
-          style={{ gap: fluid(theme.cardSpacing, 8) }}
-          className="flex flex-col items-center"
+          style={{ gap: fluid(theme.cardSpacing, 8), backgroundColor: styles.bg }}
+          className="flex flex-col items-center max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:pt-2 max-lg:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         >
           {primaryAction && (
             <PrimaryActionButton

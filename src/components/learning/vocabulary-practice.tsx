@@ -1,5 +1,6 @@
 "use client";
 
+import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import Link from "next/link";
@@ -460,173 +461,175 @@ function VocabularyPracticeSession({
   }
 
   return (
-    <div className="h-app flex w-full flex-col">
-      {!isComplete && (!showSummary || drillWord) && <ShiftReplayHint />}
-      <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
-        <div className="flex items-center justify-between gap-4">
-          <Link
-            href="/learn/word-lists"
-            className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
-          >
-            <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
-            <span dir="ltr" className="truncate">
-              {group.title}
-            </span>
-          </Link>
-          {!isComplete && audioWord && (
-            <div className="flex shrink-0 items-center gap-3">
-              {!drillWord && blockSize > 0 && (
-                <span className="text-muted-foreground text-sm font-medium" dir="ltr">
-                  {doneInBlock.size} / {blockSize}
-                </span>
-              )}
-              <LessonSettings
-                // Only the target word is pronounced — never the full
-                // sentence. This is the one rule this whole screen is
-                // built around; see the component doc comment above.
-                text={audioWord.targetWord}
-                audioUrl={audioWord.audioUrl}
-                autoPlay
-                resetKey={drillWord ? `drill:${audioWord.id}` : audioWord.id}
-                inputRef={inputRef}
-                kokoroVoiceId={defaultVoiceId}
-                contentType="word"
-                contentId={audioWord.id}
-              />
+    <SharedInputProvider>
+      <div className="h-app relative flex w-full flex-col">
+        <SharedInputHost />
+        {!isComplete && (!showSummary || drillWord) && <ShiftReplayHint />}
+        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href="/learn/word-lists"
+              className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
+            >
+              <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+              <span dir="ltr" className="truncate">
+                {group.title}
+              </span>
+            </Link>
+            {!isComplete && audioWord && (
+              <div className="flex shrink-0 items-center gap-3">
+                {!drillWord && blockSize > 0 && (
+                  <span className="text-muted-foreground text-sm font-medium" dir="ltr">
+                    {doneInBlock.size} / {blockSize}
+                  </span>
+                )}
+                <LessonSettings
+                  // Only the target word is pronounced — never the full
+                  // sentence. This is the one rule this whole screen is
+                  // built around; see the component doc comment above.
+                  text={audioWord.targetWord}
+                  audioUrl={audioWord.audioUrl}
+                  autoPlay
+                  resetKey={drillWord ? `drill:${audioWord.id}` : audioWord.id}
+                  inputRef={inputRef}
+                  kokoroVoiceId={defaultVoiceId}
+                  contentType="word"
+                  contentId={audioWord.id}
+                />
+              </div>
+            )}
+          </div>
+          {previewMode && (
+            <div className="border-accent/40 bg-accent/10 text-accent-foreground mt-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
+              {t.wordLists.previewModeNotice}
             </div>
           )}
-        </div>
-        {previewMode && (
-          <div className="border-accent/40 bg-accent/10 text-accent-foreground mt-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
-            {t.wordLists.previewModeNotice}
-          </div>
-        )}
-        {redesign && !isComplete && !showSummary && !drillWord && blockSize > 0 && (
-          <BatchProgress
-            batchIndex={blockIndex}
-            batchCount={blocks.length}
-            done={doneInBlock.size}
-            size={blockSize}
-          />
-        )}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {isComplete ? (
-          <motion.div
-            key="complete"
-            className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
-          >
-            <motion.div
-              variants={popIn}
-              initial="hidden"
-              animate="visible"
-              className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
-            >
-              {redesign ? (
-                // A progress ring and a counted number say how far the learner got; no icon of celebration.
-                <MasteryRing
-                  bands={bandsFromCompleted(total, completedCount)}
-                  size={112}
-                  stroke={10}
-                  label={t.wordLists.redesign.ringAriaNoSchedule
-                    .replace("{done}", String(completedCount))
-                    .replace("{total}", String(total))}
-                >
-                  <span className="text-3xl font-bold tabular-nums" dir="ltr">
-                    <CountUp value={completedCount} />
-                    <span className="text-muted-foreground text-base font-semibold">
-                      {" "}
-                      / {total}
-                    </span>
-                  </span>
-                </MasteryRing>
-              ) : (
-                <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-                  <PartyPopper className="size-7" aria-hidden="true" />
-                </div>
-              )}
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  {redesign ? t.wordLists.redesign.completeHeading : t.wordLists.complete}
-                </h2>
-                <p className="text-muted-foreground mt-1" dir="ltr">
-                  {group.title}
-                </p>
-              </div>
-              <div className={cn("w-full max-w-xs text-left", redesign && "hidden")}>
-                <div className="mb-1.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">
-                    {t.wordLists.progressLabel}
-                  </span>
-                  <span className="text-muted-foreground" dir="ltr">
-                    {completedCount} / {total} {t.wordLists.wordsUnit}
-                  </span>
-                </div>
-                <Progress value={(completedCount / total) * 100} />
-              </div>
-              <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-                <Button variant="outline" asChild>
-                  <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
-                </Button>
-                {redesign && (
-                  // The topic's wall is where the new strengths, the mastery ring and the rank are.
-                  <Button variant="outline" asChild>
-                    <Link href={`/learn/word-lists/${group.id}/words`}>
-                      {t.wordLists.redesign.viewWall}
-                    </Link>
-                  </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    setBlockIndex(0);
-                    setQueue(blocks[0]?.map((_, i) => i) ?? []);
-                    setDoneInBlock(new Set());
-                    markedWordIdsRef.current = new Set();
-                    attempts.reset();
-                    setBlockResults(new Map());
-                    typeAhead.clear();
-                    setShowSummary(false);
-                    setIsComplete(false);
-                  }}
-                >
-                  {t.wordLists.practiceAgain}
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : drillWord ? (
-          <motion.div key={`drill-${drillWord.id}`} initial={false} className="flex flex-1">
-            <VocabularyWordDrill
-              word={drillWord}
-              inputRef={inputRef}
-              fontFamily={sectionFontFamily}
-              onSolved={handleDrillSolved}
-              onWrong={() => play("error")}
-              onBack={() => setDrillWord(null)}
+          {redesign && !isComplete && !showSummary && !drillWord && blockSize > 0 && (
+            <BatchProgress
+              batchIndex={blockIndex}
+              batchCount={blocks.length}
+              done={doneInBlock.size}
+              size={blockSize}
             />
-          </motion.div>
-        ) : showSummary ? (
-          <VocabularyBlockSummary
-            key={`summary-${blockIndex}`}
-            words={currentBlock}
-            blockNumber={blockIndex + 1}
-            blockCount={blocks.length}
-            firstWordNumber={blockIndex * BLOCK_SIZE + 1}
-            totalWords={total}
-            onContinue={continueFromSummary}
-            defaultVoiceId={defaultVoiceId}
-            results={isSmart ? blockResults : undefined}
-            onPracticeWord={setDrillWord}
-          />
-        ) : (
-          word && (
+          )}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {isComplete ? (
             <motion.div
-              key={word.id}
-              initial={false}
-              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
+              key="complete"
+              className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
             >
-              {/* The support-language TERM leads, large and clear — it's the
+              <motion.div
+                variants={popIn}
+                initial="hidden"
+                animate="visible"
+                className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+              >
+                {redesign ? (
+                  // A progress ring and a counted number say how far the learner got; no icon of celebration.
+                  <MasteryRing
+                    bands={bandsFromCompleted(total, completedCount)}
+                    size={112}
+                    stroke={10}
+                    label={t.wordLists.redesign.ringAriaNoSchedule
+                      .replace("{done}", String(completedCount))
+                      .replace("{total}", String(total))}
+                  >
+                    <span className="text-3xl font-bold tabular-nums" dir="ltr">
+                      <CountUp value={completedCount} />
+                      <span className="text-muted-foreground text-base font-semibold">
+                        {" "}
+                        / {total}
+                      </span>
+                    </span>
+                  </MasteryRing>
+                ) : (
+                  <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
+                    <PartyPopper className="size-7" aria-hidden="true" />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    {redesign ? t.wordLists.redesign.completeHeading : t.wordLists.complete}
+                  </h2>
+                  <p className="text-muted-foreground mt-1" dir="ltr">
+                    {group.title}
+                  </p>
+                </div>
+                <div className={cn("w-full max-w-xs text-left", redesign && "hidden")}>
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">
+                      {t.wordLists.progressLabel}
+                    </span>
+                    <span className="text-muted-foreground" dir="ltr">
+                      {completedCount} / {total} {t.wordLists.wordsUnit}
+                    </span>
+                  </div>
+                  <Progress value={(completedCount / total) * 100} />
+                </div>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+                  <Button variant="outline" asChild>
+                    <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
+                  </Button>
+                  {redesign && (
+                    // The topic's wall is where the new strengths, the mastery ring and the rank are.
+                    <Button variant="outline" asChild>
+                      <Link href={`/learn/word-lists/${group.id}/words`}>
+                        {t.wordLists.redesign.viewWall}
+                      </Link>
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => {
+                      setBlockIndex(0);
+                      setQueue(blocks[0]?.map((_, i) => i) ?? []);
+                      setDoneInBlock(new Set());
+                      markedWordIdsRef.current = new Set();
+                      attempts.reset();
+                      setBlockResults(new Map());
+                      typeAhead.clear();
+                      setShowSummary(false);
+                      setIsComplete(false);
+                    }}
+                  >
+                    {t.wordLists.practiceAgain}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          ) : drillWord ? (
+            <motion.div key={`drill-${drillWord.id}`} initial={false} className="flex flex-1">
+              <VocabularyWordDrill
+                word={drillWord}
+                inputRef={inputRef}
+                fontFamily={sectionFontFamily}
+                onSolved={handleDrillSolved}
+                onWrong={() => play("error")}
+                onBack={() => setDrillWord(null)}
+              />
+            </motion.div>
+          ) : showSummary ? (
+            <VocabularyBlockSummary
+              key={`summary-${blockIndex}`}
+              words={currentBlock}
+              blockNumber={blockIndex + 1}
+              blockCount={blocks.length}
+              firstWordNumber={blockIndex * BLOCK_SIZE + 1}
+              totalWords={total}
+              onContinue={continueFromSummary}
+              defaultVoiceId={defaultVoiceId}
+              results={isSmart ? blockResults : undefined}
+              onPracticeWord={setDrillWord}
+            />
+          ) : (
+            word && (
+              <motion.div
+                key={word.id}
+                initial={false}
+                className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
+              >
+                {/* The support-language TERM leads, large and clear — it's the
                   answer to "what does this word mean," the first thing a
                   learner needs before they can recall it. The definition
                   (when splitWordHint finds one) sits underneath at roughly
@@ -638,76 +641,77 @@ function VocabularyPracticeSession({
                   types/word-lists.ts's hintAr doc comment), so a genuinely
                   missing translation renders nothing here rather than a
                   semantically wrong stand-in. */}
-              {hint.term && (
-                <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                  {redesign && <WordPosBadge pos={word.pos} />}
-                  <p
-                    className="text-foreground/85 text-[1.8rem] font-bold text-balance sm:text-[2.16rem]"
-                    dir={dir}
-                  >
-                    {hint.term}
-                  </p>
-                  {hint.definition && (
+                {hint.term && (
+                  <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
+                    {redesign && <WordPosBadge pos={word.pos} />}
                     <p
-                      className="land-kb-hide text-muted-foreground text-[1.2rem] font-medium"
+                      className="text-foreground/85 text-[1.8rem] font-bold text-balance sm:text-[2.16rem]"
                       dir={dir}
                     >
-                      {hint.definition}
+                      {hint.term}
                     </p>
+                    {hint.definition && (
+                      <p
+                        className="land-kb-hide text-muted-foreground text-[1.2rem] font-medium"
+                        dir={dir}
+                      >
+                        {hint.definition}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
+
+                <div className="flex w-full max-w-2xl flex-col items-center gap-3">
+                  <VocabularySentence
+                    sentence={word.sentence}
+                    targetWord={word.targetWord}
+                    onResult={handleWordResult}
+                    inputRef={inputRef}
+                    fontFamily={sectionFontFamily}
+                    enlarged
+                    inline={redesign}
+                    smart={
+                      isSmart
+                        ? {
+                            alternates: word.alternates,
+                            typeAhead,
+                            controlsRef,
+                            onStatusChange: handleStatusChange,
+                            onHint: handleHint,
+                            onHintBusyChange: setHintBusy,
+                          }
+                        : undefined
+                    }
+                  />
+                  {isSmart && (
+                    <WordHelpBar
+                      attempt={attempt}
+                      settled={wordStatus !== "pending"}
+                      busy={hintBusy}
+                      onHint={() =>
+                        // Closed once the last star has gone on a hint.
+                        word && canTakeHint(attempts.get(word.id))
+                          ? (controlsRef.current?.hint() ?? false)
+                          : false
+                      }
+                      onGiveUp={() => controlsRef.current?.giveUp()}
+                    />
                   )}
                 </div>
-              )}
 
-              <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
-
-              <div className="flex w-full max-w-2xl flex-col items-center gap-3">
-                <VocabularySentence
-                  sentence={word.sentence}
-                  targetWord={word.targetWord}
-                  onResult={handleWordResult}
-                  inputRef={inputRef}
-                  fontFamily={sectionFontFamily}
-                  enlarged
-                  inline={redesign}
-                  smart={
-                    isSmart
-                      ? {
-                          alternates: word.alternates,
-                          typeAhead,
-                          controlsRef,
-                          onStatusChange: handleStatusChange,
-                          onHint: handleHint,
-                          onHintBusyChange: setHintBusy,
-                        }
-                      : undefined
-                  }
-                />
-                {isSmart && (
-                  <WordHelpBar
-                    attempt={attempt}
-                    settled={wordStatus !== "pending"}
-                    busy={hintBusy}
-                    onHint={() =>
-                      // Closed once the last star has gone on a hint.
-                      word && canTakeHint(attempts.get(word.id))
-                        ? (controlsRef.current?.hint() ?? false)
-                        : false
-                    }
-                    onGiveUp={() => controlsRef.current?.giveUp()}
-                  />
+                {isWordCompleted(word.id) && (
+                  <span className="text-success text-xs font-medium">
+                    {t.wordLists.completedBefore}
+                  </span>
                 )}
-              </div>
-
-              {isWordCompleted(word.id) && (
-                <span className="text-success text-xs font-medium">
-                  {t.wordLists.completedBefore}
-                </span>
-              )}
-            </motion.div>
-          )
-        )}
-      </AnimatePresence>
-    </div>
+              </motion.div>
+            )
+          )}
+        </AnimatePresence>
+      </div>
+    </SharedInputProvider>
   );
 }
 

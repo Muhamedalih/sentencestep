@@ -1,5 +1,6 @@
 "use client";
 
+import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -350,166 +351,169 @@ export function WordReviewSession({
   }
 
   return (
-    <div className="h-app flex w-full flex-col">
-      {!isComplete && <ShiftReplayHint />}
-      <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
-        <div className="flex items-center justify-between gap-4">
-          <Link
-            href={resolvedBackHref}
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            {backLabel}
-          </Link>
-          {!isComplete && word && (
-            <div className="flex shrink-0 items-center gap-3">
-              <span className="text-muted-foreground text-sm font-medium" dir="ltr">
-                {correctedCount + 1} / {total}
-              </span>
-              <LessonSettings
-                text={word.targetWord}
-                audioUrl={word.audioUrl}
-                autoPlay
-                resetKey={word.id}
-                inputRef={inputRef}
-                kokoroVoiceId={defaultVoiceId}
-                contentType={word.pronunciationContentType ?? "word"}
-                contentId={word.pronunciationContentId ?? word.id}
-              />
-            </div>
-          )}
+    <SharedInputProvider>
+      <div className="h-app relative flex w-full flex-col">
+        <SharedInputHost />
+        {!isComplete && <ShiftReplayHint />}
+        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href={resolvedBackHref}
+              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              {backLabel}
+            </Link>
+            {!isComplete && word && (
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-muted-foreground text-sm font-medium" dir="ltr">
+                  {correctedCount + 1} / {total}
+                </span>
+                <LessonSettings
+                  text={word.targetWord}
+                  audioUrl={word.audioUrl}
+                  autoPlay
+                  resetKey={word.id}
+                  inputRef={inputRef}
+                  kokoroVoiceId={defaultVoiceId}
+                  contentType={word.pronunciationContentType ?? "word"}
+                  contentId={word.pronunciationContentId ?? word.id}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <AnimatePresence mode="wait">
-        {isComplete ? (
-          <motion.div
-            key="complete"
-            className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
-          >
+        <AnimatePresence mode="wait">
+          {isComplete ? (
             <motion.div
-              variants={popIn}
-              initial="hidden"
-              animate="visible"
-              className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+              key="complete"
+              className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
             >
-              <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-                <CheckCircle2 className="size-7" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight">{completeHeading}</h2>
-                <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
-                {smartConfig && moreWaiting > 0 && (
-                  <p className="text-muted-foreground mt-3 text-sm">
-                    {t.wordLists.smart.moreWaiting.replace("{n}", String(moreWaiting))}
-                  </p>
-                )}
-                {variant === "session" && sessionReward && (
-                  <p
-                    className={
-                      sessionReward.first
-                        ? "text-accent mt-3 font-semibold"
-                        : "text-muted-foreground mt-3 text-sm"
-                    }
-                  >
-                    {sessionReward.first
-                      ? t.dailySession.xpEarned.replace("{xp}", String(sessionReward.xp))
-                      : t.dailySession.alreadyRewarded}
-                  </p>
-                )}
-              </div>
-              <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-                {smartConfig && moreWaiting > 0 && (
-                  // A full page load of the same route, not a client navigation: this
-                  // screen keeps the words it mounted with, so only a fresh load builds
-                  // (and shows) the next round's queue.
-                  <Button onClick={() => window.location.assign("/learn/word-lists/review")}>
-                    {t.wordLists.smart.reviewMore}
-                  </Button>
-                )}
-                <Button asChild variant={smartConfig && moreWaiting > 0 ? "outline" : "default"}>
-                  <Link href={resolvedBackHref}>
-                    {variant === "recall" || variant === "cards" || variant === "session"
-                      ? backLabel
-                      : t.wordLists.backToWordLists}
-                  </Link>
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : (
-          word && (
-            <motion.div
-              key={word.id}
-              initial={false}
-              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
-            >
-              {hint.term && (
-                <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                  <p
-                    className="text-foreground text-[clamp(2.1rem,1.68rem+1.92vw,2.7rem)] leading-tight font-bold text-balance"
-                    dir={dir}
-                  >
-                    {hint.term}
-                  </p>
-                  {hint.definition && (
+              <motion.div
+                variants={popIn}
+                initial="hidden"
+                animate="visible"
+                className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+              >
+                <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
+                  <CheckCircle2 className="size-7" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight">{completeHeading}</h2>
+                  <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
+                  {smartConfig && moreWaiting > 0 && (
+                    <p className="text-muted-foreground mt-3 text-sm">
+                      {t.wordLists.smart.moreWaiting.replace("{n}", String(moreWaiting))}
+                    </p>
+                  )}
+                  {variant === "session" && sessionReward && (
                     <p
-                      className="text-muted-foreground text-[clamp(1.02rem,0.96rem+0.36vw,1.2rem)] font-medium"
-                      dir={dir}
+                      className={
+                        sessionReward.first
+                          ? "text-accent mt-3 font-semibold"
+                          : "text-muted-foreground mt-3 text-sm"
+                      }
                     >
-                      {hint.definition}
+                      {sessionReward.first
+                        ? t.dailySession.xpEarned.replace("{xp}", String(sessionReward.xp))
+                        : t.dailySession.alreadyRewarded}
                     </p>
                   )}
                 </div>
-              )}
-
-              <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
-
-              <div className="flex w-full max-w-2xl flex-col items-center gap-2">
-                <VocabularySentence
-                  sentence={word.sentence}
-                  targetWord={word.targetWord}
-                  onResult={handleResult}
-                  inputRef={inputRef}
-                  fontFamily={sectionFontFamily}
-                  enlarged
-                  smart={
-                    smartConfig
-                      ? {
-                          alternates: word.alternates,
-                          typeAhead,
-                          controlsRef,
-                          onStatusChange: handleStatusChange,
-                          onHint: handleHint,
-                          onHintBusyChange: setHintBusy,
-                        }
-                      : undefined
-                  }
-                />
-                {smartConfig && (
-                  <div className="mt-1">
-                    <WordHelpBar
-                      attempt={attempt}
-                      settled={wordStatus !== "pending"}
-                      busy={hintBusy}
-                      onHint={() =>
-                        // Closed once the last star has gone on a hint.
-                        word && canTakeHint(attempts.get(word.id))
-                          ? (controlsRef.current?.hint() ?? false)
-                          : false
-                      }
-                      onGiveUp={() => controlsRef.current?.giveUp()}
-                    />
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+                  {smartConfig && moreWaiting > 0 && (
+                    // A full page load of the same route, not a client navigation: this
+                    // screen keeps the words it mounted with, so only a fresh load builds
+                    // (and shows) the next round's queue.
+                    <Button onClick={() => window.location.assign("/learn/word-lists/review")}>
+                      {t.wordLists.smart.reviewMore}
+                    </Button>
+                  )}
+                  <Button asChild variant={smartConfig && moreWaiting > 0 ? "outline" : "default"}>
+                    <Link href={resolvedBackHref}>
+                      {variant === "recall" || variant === "cards" || variant === "session"
+                        ? backLabel
+                        : t.wordLists.backToWordLists}
+                    </Link>
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          ) : (
+            word && (
+              <motion.div
+                key={word.id}
+                initial={false}
+                className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
+              >
+                {hint.term && (
+                  <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
+                    <p
+                      className="text-foreground text-[clamp(2.1rem,1.68rem+1.92vw,2.7rem)] leading-tight font-bold text-balance"
+                      dir={dir}
+                    >
+                      {hint.term}
+                    </p>
+                    {hint.definition && (
+                      <p
+                        className="text-muted-foreground text-[clamp(1.02rem,0.96rem+0.36vw,1.2rem)] font-medium"
+                        dir={dir}
+                      >
+                        {hint.definition}
+                      </p>
+                    )}
                   </div>
                 )}
-                {contextLabel && (
-                  <p className="text-muted-foreground text-xs font-medium">{contextLabel}</p>
-                )}
-              </div>
-            </motion.div>
-          )
-        )}
-      </AnimatePresence>
-    </div>
+
+                <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
+
+                <div className="flex w-full max-w-2xl flex-col items-center gap-2">
+                  <VocabularySentence
+                    sentence={word.sentence}
+                    targetWord={word.targetWord}
+                    onResult={handleResult}
+                    inputRef={inputRef}
+                    fontFamily={sectionFontFamily}
+                    enlarged
+                    smart={
+                      smartConfig
+                        ? {
+                            alternates: word.alternates,
+                            typeAhead,
+                            controlsRef,
+                            onStatusChange: handleStatusChange,
+                            onHint: handleHint,
+                            onHintBusyChange: setHintBusy,
+                          }
+                        : undefined
+                    }
+                  />
+                  {smartConfig && (
+                    <div className="mt-1">
+                      <WordHelpBar
+                        attempt={attempt}
+                        settled={wordStatus !== "pending"}
+                        busy={hintBusy}
+                        onHint={() =>
+                          // Closed once the last star has gone on a hint.
+                          word && canTakeHint(attempts.get(word.id))
+                            ? (controlsRef.current?.hint() ?? false)
+                            : false
+                        }
+                        onGiveUp={() => controlsRef.current?.giveUp()}
+                      />
+                    </div>
+                  )}
+                  {contextLabel && (
+                    <p className="text-muted-foreground text-xs font-medium">{contextLabel}</p>
+                  )}
+                </div>
+              </motion.div>
+            )
+          )}
+        </AnimatePresence>
+      </div>
+    </SharedInputProvider>
   );
 }

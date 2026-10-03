@@ -357,7 +357,7 @@ export function DictationSentence({
   const audioWords = useMemo(() => dictationAudioWords(sentence.en), [sentence.en]);
   const wordAudioEnabled =
     showWordBlanks && (mode === "normal" || mode === "stories") && Boolean(sentenceVoiceId);
-  const wordClip = useAudioClip();
+  const wordClip = useAudioClip(undefined, { shared: true });
   const speech = useSpeech();
   const { resolveSentenceWord, getResolvedAudio, getPlayableUrl, registerResolvedAudio } =
     usePronunciationSettings();

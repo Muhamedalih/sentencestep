@@ -159,7 +159,8 @@ export function AppHeader({
           aria-label={t.marketing.dashboardLinkAriaLabel}
           className="inline-flex min-h-11 items-center justify-self-start"
         >
-          <Logo />
+          {/* Under 340px the wordmark gives way to the logo mark so the streak and buttons still fit. */}
+          <Logo className="max-[340px]:[&>span:last-child]:hidden" />
         </Link>
 
         <div className="justify-self-center">

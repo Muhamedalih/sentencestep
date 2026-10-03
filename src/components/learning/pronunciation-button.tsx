@@ -177,6 +177,8 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     const resolvedForKeyRef = useRef<string | undefined>(undefined);
     const clip = useAudioClip(audioUrl ?? kokoroUrl, {
       ...(disableSpeechFallback ? { maxRetries: 2, retryDelayMs: 400 } : {}),
+      // Books (disableSpeechFallback) keep their own audio elements; everything else shares one.
+      shared: !disableSpeechFallback,
       onEnded,
     });
 
