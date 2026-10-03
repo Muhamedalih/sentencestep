@@ -220,7 +220,7 @@ export function TypingSentence({
     positions.add(engine.errorIndex - located.startOffset);
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
-  const wordClip = useAudioClip();
+  const wordClip = useAudioClip(undefined, { shared: true });
   const { resolveSentenceWord, registerResolvedAudio } = usePronunciationSettings();
   // Only the latest click plays: a slow earlier word must not start after a later, faster one.
   const wordRequestRef = useRef(0);

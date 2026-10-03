@@ -1,5 +1,6 @@
 "use client";
 
+import { SharedInput } from "@/components/learning/shared-input";
 import {
   useEffect,
   useImperativeHandle,
@@ -155,6 +156,11 @@ export function VocabularySentence({
   const { t, dir } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
   const [isFocused, setIsFocused] = useState(false);
+  // The shared input is usually still focused when the next word appears, so no focus event will announce it.
+  useEffect(() => {
+    if (document.activeElement === engine.inputRef.current) setIsFocused(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mounted word
+  }, []);
   // Where the correct-answer reveal is, once a wrong attempt's diff has had its
   // moment on screen — see the effect below. "hidden" covers the diff itself
   // and every word that wasn't missed. Resets for free on the next word (this
@@ -456,8 +462,8 @@ export function VocabularySentence({
               </span>
             ) : null}
           </BlankBox>
-          <input
-            ref={engine.inputRef}
+          <SharedInput
+            inputRef={engine.inputRef}
             value={engine.typed}
             onChange={engine.handleChange}
             onKeyDown={(event) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { SharedInput } from "@/components/learning/shared-input";
 import { motion } from "framer-motion";
 import {
   useEffect,
@@ -426,8 +427,8 @@ export function TypingText({
           reducedMotion ? { duration: 0 } : { type: "tween", duration: 0.16, ease: "easeOut" }
         }
       />
-      <input
-        ref={inputRef}
+      <SharedInput
+        inputRef={inputRef}
         value={typed}
         onChange={onChange}
         onPaste={onPaste}

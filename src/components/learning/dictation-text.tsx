@@ -1,5 +1,6 @@
 "use client";
 
+import { SharedInput } from "@/components/learning/shared-input";
 import { motion } from "framer-motion";
 import {
   useEffect,
@@ -438,8 +439,8 @@ export function DictationText({
         }
       />
 
-      <input
-        ref={inputRef}
+      <SharedInput
+        inputRef={inputRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {

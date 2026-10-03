@@ -118,7 +118,7 @@ export function StoryPreviousSentences({
   // autoplayed, so this call is a synchronous-fast cache hit, not a fresh
   // generation. this never triggers new audio; it only ever reuses what's
   // already there.
-  const narrationClip = useAudioClip();
+  const narrationClip = useAudioClip(undefined, { shared: true });
   const hasSentences = sentences.length > 0;
 
   /**
