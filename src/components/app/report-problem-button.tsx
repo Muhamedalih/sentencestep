@@ -110,7 +110,7 @@ export function ReportProblemButton({
           className={cn(
             "border-border bg-card text-foreground fixed z-40 flex items-center rounded-full border font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40",
             size === "compact"
-              ? "bottom-3 left-3 size-9 justify-center pointer-coarse:size-11"
+              ? "bottom-3 left-3 size-9 justify-center pointer-coarse:size-11 [html[data-keyboard]_&]:hidden"
               : "bottom-4 left-4 gap-2 px-4 py-2.5 text-sm max-sm:hidden",
           )}
           aria-haspopup="dialog"

@@ -1002,6 +1002,8 @@ export const tr: Dictionary = {
     masteredTag: "Öğrenildi",
     nextReview: "Sonraki tekrar {date}",
     removeCard: "Kaldır",
+    cardRemoved: "Kart kaldırıldı",
+    undoRemove: "Geri al",
     reviewCompleteHeading: "Kartlar tamamlandı!",
     reviewCompleteSubtitle: "{n} kartı tekrar ettin. Aralıklı bir programla geri gelecekler.",
     signInHeading: "Kartlarım'ı kullanmak için giriş yap",

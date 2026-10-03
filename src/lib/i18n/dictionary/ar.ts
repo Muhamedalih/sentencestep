@@ -968,6 +968,8 @@ export const ar: Dictionary = {
     masteredTag: "متقنة",
     nextReview: "المراجعة القادمة {date}",
     removeCard: "إزالة",
+    cardRemoved: "تمت إزالة البطاقة",
+    undoRemove: "تراجع",
     reviewCompleteHeading: "تمت مراجعة البطاقات!",
     reviewCompleteSubtitle: "راجعت {n} بطاقة. ستعود إليك بجدولة متباعدة.",
     signInHeading: "سجّل الدخول لاستخدام بطاقاتي",

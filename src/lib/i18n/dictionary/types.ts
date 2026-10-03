@@ -1202,6 +1202,8 @@ export interface Dictionary {
     masteredTag: string;
     nextReview: string;
     removeCard: string;
+    cardRemoved: string;
+    undoRemove: string;
     reviewCompleteHeading: string;
     reviewCompleteSubtitle: string;
     signInHeading: string;

@@ -991,6 +991,8 @@ export const en: Dictionary = {
     masteredTag: "Mastered",
     nextReview: "Next review {date}",
     removeCard: "Remove",
+    cardRemoved: "Card removed",
+    undoRemove: "Undo",
     reviewCompleteHeading: "Cards reviewed!",
     reviewCompleteSubtitle: "You reviewed {n} card(s). They'll come back on a spaced schedule.",
     signInHeading: "Sign in to use My Cards",
