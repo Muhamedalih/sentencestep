@@ -822,10 +822,11 @@ export function LessonSession({
                     // Normal mode's topic illustration is a nice-to-have next to
                     // the real task (typing), but on a phone it eats the top of
                     // the screen before the learner even reaches the sentence —
-                    // hidden below sm: (tablet and up keep it, unchanged).
-                    // Conversation mode's own illustration is left alone: this
-                    // was asked for regular lessons specifically.
-                    unit.mode === "normal" && "max-sm:hidden",
+                    // hidden below sm: (tablet and up keep it, unchanged) — and
+                    // for Conversation too, whose 211px picture pushed the chat
+                    // bubble below the on-screen keyboard. Also hidden while the
+                    // keyboard is open or the screen is a short landscape one.
+                    "compact-hide max-sm:hidden",
                   )}
                 >
                   {illustrationView === "list" ? (
@@ -938,7 +939,7 @@ export function LessonSession({
                       (sessionLabel, above) already gives assistive tech. */}
                   <div
                     aria-hidden="true"
-                    className="mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
+                    className="compact-hide mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
                   >
                     {unit.title}
                   </div>

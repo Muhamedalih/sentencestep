@@ -375,3 +375,27 @@
     }
   }
 }
+
+/*
+ * Full-screen sessions (lessons, Word Lists practice/review) size to the
+ * visible area while a touch device's on-screen keyboard is open — see
+ * KeyboardViewport, which sets --app-h only then. Otherwise 100svh, as before.
+ */
+.h-app {
+  height: var(--app-h, 100svh);
+}
+
+/*
+ * Secondary chrome (title, stats, picture, dividers) steps aside while the
+ * keyboard is open and on short landscape phone screens, so the sentence being
+ * typed stays on screen. Plain unlayered rules on purpose: they beat the
+ * layered Tailwind display utilities on the same elements.
+ */
+html[data-keyboard] .compact-hide {
+  display: none;
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .compact-hide {
+    display: none;
+  }
+}

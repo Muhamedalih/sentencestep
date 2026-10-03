@@ -350,7 +350,7 @@ export function WordReviewSession({
   }
 
   return (
-    <div className="flex h-svh w-full flex-col">
+    <div className="h-app flex w-full flex-col">
       {!isComplete && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
@@ -442,7 +442,7 @@ export function WordReviewSession({
             <motion.div
               key={word.id}
               initial={false}
-              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16"
+              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
             >
               {hint.term && (
                 <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
@@ -463,7 +463,7 @@ export function WordReviewSession({
                 </div>
               )}
 
-              <div className="bg-border h-10 w-px" aria-hidden="true" />
+              <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
 
               <div className="flex w-full max-w-2xl flex-col items-center gap-2">
                 <VocabularySentence

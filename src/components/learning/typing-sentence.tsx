@@ -471,7 +471,11 @@ export function TypingSentence({
           <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
             {supportText}
           </p>
-          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+          <div className="compact-hide">
+            <div className="compact-hide">
+              <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+            </div>
+          </div>
         </div>
       </motion.div>
     );
@@ -529,7 +533,9 @@ export function TypingSentence({
         <p className="mt-6 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
-        <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        <div className="compact-hide">
+          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        </div>
       </div>
     </motion.div>
   );

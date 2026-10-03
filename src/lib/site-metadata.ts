@@ -49,4 +49,6 @@ export const SITE_VIEWPORT: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  // Android Chrome: the on-screen keyboard shrinks the page instead of covering it (iOS is handled by KeyboardViewport).
+  interactiveWidget: "resizes-content",
 };
