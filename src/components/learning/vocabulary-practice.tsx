@@ -35,8 +35,8 @@ import { cn } from "@/lib/utils";
 import { bandsFromCompleted } from "@/lib/word-mastery/dashboard";
 import { splitWordHint } from "@/lib/word-lists-hint";
 import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
-import { canTakeHint, outcomeFor } from "@/lib/word-mastery/schedule";
-import type { WordOutcome } from "@/lib/word-mastery/schedule";
+import { canTakeHint, outcomeFor, resumePoint } from "@/lib/word-mastery/schedule";
+import type { ResumePoint, WordOutcome } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import type { ReportedOutcome } from "@/lib/word-mastery/types";
 import { createTypeAheadBuffer } from "@/lib/word-typing";
@@ -150,34 +150,39 @@ export function VocabularyPractice({
       smart={visit.smart}
       groupWordIds={visit.groupWordIds}
       redesign={visit.redesign}
-      startBlock={0}
+      resume={null}
     />
   );
 }
 
 /**
  * A Continue visit: waits for the learner's saved progress (a guest's lives in
- * the browser, so only the client knows it), then opens at the first block that
- * still has an unfinished word. The block is worked out once, when the progress
- * arrives — later answers change the progress but must not move a running visit.
+ * the browser, so only the client knows it), then opens at the first unfinished
+ * word. The progress is read once, from this one load — a second
+ * useWordProgress() would start empty and see nothing finished — and handed to
+ * the session as it was when the visit opened, so later answers change the
+ * progress without moving a running visit.
  */
-function ResumedPractice(
-  props: Omit<ComponentProps<typeof VocabularyPracticeSession>, "startBlock">,
-) {
-  const { isLoaded } = useWordProgress();
+function ResumedPractice(props: Omit<ComponentProps<typeof VocabularyPracticeSession>, "resume">) {
+  const { isLoaded, completedWordIds } = useWordProgress();
   if (!isLoaded) return <div className="flex-1" aria-busy="true" />;
-  return <ResumedSession {...props} />;
+  return <ResumedSession {...props} completedWordIds={completedWordIds} />;
 }
 
-function ResumedSession(
-  props: Omit<ComponentProps<typeof VocabularyPracticeSession>, "startBlock">,
-) {
-  const { isWordCompleted } = useWordProgress();
-  const [startBlock] = useState(() => {
-    const firstUnfinished = props.group.words.findIndex((word) => !isWordCompleted(word.id));
-    return firstUnfinished < 0 ? 0 : Math.floor(firstUnfinished / BLOCK_SIZE);
-  });
-  return <VocabularyPracticeSession {...props} startBlock={startBlock} />;
+function ResumedSession({
+  completedWordIds,
+  ...props
+}: Omit<ComponentProps<typeof VocabularyPracticeSession>, "resume"> & {
+  completedWordIds: readonly string[];
+}) {
+  const [resume] = useState(() =>
+    resumePoint(
+      props.group.words.map((word) => word.id),
+      new Set(completedWordIds),
+      BLOCK_SIZE,
+    ),
+  );
+  return <VocabularyPracticeSession {...props} resume={resume} />;
 }
 
 /** The running visit: everything it is made of arrives as props that never change (see VocabularyPractice). */
@@ -188,7 +193,7 @@ function VocabularyPracticeSession({
   smart,
   groupWordIds,
   redesign,
-  startBlock,
+  resume,
 }: {
   group: WordGroup;
   previewMode: boolean;
@@ -196,8 +201,8 @@ function VocabularyPracticeSession({
   smart: SmartPracticeConfig | null;
   groupWordIds: readonly string[];
   redesign: boolean;
-  /** The block the visit opens at: 0 for a fresh start, later when it picks up where the learner left off. "Practice again" always goes back to 0. */
-  startBlock: number;
+  /** Where the visit opens when it picks up where the learner left off, or null for a fresh start. "Practice again" always goes back to the first block. */
+  resume: ResumePoint | null;
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;
@@ -217,14 +222,14 @@ function VocabularyPracticeSession({
     }
     return chunks;
   }, [words]);
-  const [blockIndex, setBlockIndex] = useState(() => (blocks[startBlock] ? startBlock : 0));
+  const [blockIndex, setBlockIndex] = useState(() => resume?.blockIndex ?? 0);
   const [queue, setQueue] = useState<number[]>(
-    () => (blocks[startBlock] ?? blocks[0])?.map((_, i) => i) ?? [],
+    () => resume?.open ?? blocks[0]?.map((_, i) => i) ?? [],
   );
   // Distinct slots resolved correctly in the CURRENT block — grows only on a
   // right answer (a retry that finally lands doesn't double-count), purely
   // to drive the "n / blockSize" counter below.
-  const [doneInBlock, setDoneInBlock] = useState<Set<number>>(() => new Set());
+  const [doneInBlock, setDoneInBlock] = useState<Set<number>>(() => new Set(resume?.done));
   // True from the moment the current block's last word is answered correctly
   // until the learner presses Next (or Finish, on the last block) on the
   // summary of the five words they just did — see VocabularyBlockSummary.

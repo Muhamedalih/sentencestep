@@ -289,6 +289,40 @@ export function practiceVisitKey(groupId: string, scope: PracticeScope): string 
   return `${groupId}:${scope}`;
 }
 
+/** Where a Continue visit opens: the block of the first unfinished word, which of that block's slots still need asking, and which are already done. */
+export interface ResumePoint {
+  blockIndex: number;
+  /** Indices into the opening block of the words not finished yet, in order. */
+  open: number[];
+  /** Indices into the opening block of the words already finished — they count toward the block's progress but are not asked again. */
+  done: number[];
+}
+
+/**
+ * Works out where "Continue" picks up in a group practised in fixed-size blocks:
+ * the block holding the first word the learner has not finished, with that
+ * block's finished words already counted. A group with nothing finished, or with
+ * everything finished, opens at the very start and asks every word of the first
+ * block. `completed` is the learner's saved progress and has to be the loaded one
+ * — an empty set is indistinguishable from "nothing finished yet".
+ */
+export function resumePoint(
+  wordIds: readonly string[],
+  completed: ReadonlySet<string>,
+  blockSize: number,
+): ResumePoint {
+  const first = wordIds.findIndex((id) => !completed.has(id));
+  const blockIndex = first < 0 ? 0 : Math.floor(first / blockSize);
+  const open: number[] = [];
+  const done: number[] = [];
+  const block = wordIds.slice(blockIndex * blockSize, (blockIndex + 1) * blockSize);
+  block.forEach((id, index) => {
+    if (first < 0 || !completed.has(id)) open.push(index);
+    else done.push(index);
+  });
+  return { blockIndex, open, done };
+}
+
 export interface GroupMastery {
   total: number;
   /** Words the learner has never practiced. */
