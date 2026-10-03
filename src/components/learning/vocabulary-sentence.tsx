@@ -430,7 +430,8 @@ export function VocabularySentence({
         className={cn(
           "text-muted-foreground w-full text-center leading-tight font-semibold text-balance",
           enlarged
-            ? "text-[clamp(1.68rem,1.2rem+2.16vw,2.7rem)]"
+            ? // Back to the regular size while the keyboard is open, so the sentence, Check and the help bar all fit above it.
+              "text-[clamp(1.68rem,1.2rem+2.16vw,2.7rem)] [html[data-keyboard]_&]:text-[clamp(1.4rem,1rem+1.8vw,2.25rem)]"
             : "text-[clamp(1.4rem,1rem+1.8vw,2.25rem)]",
         )}
       >

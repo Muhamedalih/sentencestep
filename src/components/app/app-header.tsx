@@ -139,7 +139,7 @@ export function AppHeader({
       <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
       <Link
         href="/login"
-        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
       >
         {t.common.signIn}
       </Link>
@@ -157,7 +157,7 @@ export function AppHeader({
         <Link
           href="/learn"
           aria-label={t.marketing.dashboardLinkAriaLabel}
-          className="inline-flex min-h-11 items-center justify-self-start"
+          className="inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11"
         >
           {/* Under 340px the wordmark gives way to the logo mark so the streak and buttons still fit. */}
           <Logo className="max-[340px]:[&>span:last-child]:hidden" />

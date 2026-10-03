@@ -200,7 +200,7 @@ export function WordListsDashboard({
                       aria-selected={active}
                       onClick={() => setActiveLevel(level)}
                       className={cn(
-                        "focus-visible:ring-ring focus-visible:ring-offset-background flex items-center justify-center gap-2 rounded-full px-2 py-1.5 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                        "focus-visible:ring-ring focus-visible:ring-offset-background flex items-center justify-center gap-2 rounded-full px-2 py-1.5 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 pointer-coarse:min-h-11",
                         active
                           ? "bg-background text-primary shadow-sm"
                           : "text-muted-foreground hover:text-foreground",
@@ -228,14 +228,14 @@ export function WordListsDashboard({
                   placeholder={copy.searchPlaceholder}
                   dir={dir}
                   autoComplete="off"
-                  className="border-input bg-background focus-visible:ring-ring h-10 w-full rounded-xl border ps-9 pe-9 text-sm outline-none focus-visible:ring-2 [&::-webkit-search-cancel-button]:hidden"
+                  className="border-input bg-background focus-visible:ring-ring h-10 w-full rounded-xl border ps-9 pe-9 text-sm outline-none focus-visible:ring-2 pointer-coarse:h-11 [&::-webkit-search-cancel-button]:hidden"
                 />
                 {searching && (
                   <button
                     type="button"
                     onClick={() => setQuery("")}
                     aria-label={copy.searchClear}
-                    className="text-muted-foreground hover:text-foreground absolute end-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full"
+                    className="text-muted-foreground hover:text-foreground absolute end-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full pointer-coarse:end-0 pointer-coarse:size-11"
                   >
                     <X className="size-4" aria-hidden="true" />
                   </button>

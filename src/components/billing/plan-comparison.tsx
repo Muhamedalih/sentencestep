@@ -68,7 +68,24 @@ export function PlanComparison({ t }: { t: Dictionary }) {
         <CardTitle className="text-xl">{t.premium.comparisonHeading}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative">
+        {/* Phones: one block per feature (Free / Premium underneath) instead of a table that scrolls sideways and hides the Premium column. */}
+        <ul className="divide-border/60 divide-y sm:hidden">
+          {rows.map((row) => (
+            <li key={row.feature} className="py-3 first:pt-0 last:pb-0">
+              <p className="text-sm font-medium">{row.feature}</p>
+              <dl className="mt-1.5 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1 text-sm">
+                <dt className="text-muted-foreground">{t.common.freePlan}</dt>
+                <dd className="text-muted-foreground">{row.free}</dd>
+                <dt className="text-primary font-medium">{t.common.premium}</dt>
+                <dd className="text-foreground inline-flex items-center gap-1.5">
+                  <Check className="text-success size-4 shrink-0" aria-hidden="true" />
+                  {row.premium}
+                </dd>
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="relative hidden sm:block">
           <div ref={scrollRef} className="overflow-x-auto">
             <table className="w-full min-w-[26rem] border-collapse text-sm">
               <thead>

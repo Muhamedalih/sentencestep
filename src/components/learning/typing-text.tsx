@@ -352,6 +352,10 @@ export function TypingText({
                 // `isolate` makes the stacking context permanent so the mark's
                 // z-index always resolves the same way, hover or not.
                 "focus-visible:ring-primary relative isolate inline-block cursor-pointer whitespace-nowrap transition-transform duration-200 ease-out hover:scale-[1.045] focus-visible:ring-2 focus-visible:outline-none",
+                // A word is 12–125px wide and ~36px tall: on a touch screen the tap area is
+                // widened (not the word) to a comfortable size, same as the Dictation blanks.
+                onWordClick &&
+                  "pointer-coarse:before:absolute pointer-coarse:before:-inset-x-2 pointer-coarse:before:-inset-y-1 pointer-coarse:before:content-['']",
                 // Subtle, always-on cue — never affects layout height meaningfully
                 // (underline-offset keeps it clear of the glyphs) and never
                 // changes click/keyboard behavior, which stays driven by
