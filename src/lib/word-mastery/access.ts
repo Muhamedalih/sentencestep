@@ -48,3 +48,18 @@ export async function getLearnerToday(): Promise<string> {
     new Date().toISOString().slice(0, 10)
   );
 }
+
+/**
+ * Whether the redesigned Word Lists screens are open to the CURRENT visitor
+ * (the admin-controlled "Word Lists redesign" feature, see FEATURE_IDS in
+ * src/lib/features/config.ts). Off -> nobody, Admin preview -> admins only on
+ * the live site, On -> everyone: publishing it is that one switch in
+ * /admin/features, and no caller changes, because every redesigned page and
+ * screen asks through this one flag. Independent of Smart word practice: the
+ * redesign shows the learner's schedule when getSmartWordsAccess provides one
+ * and local progress otherwise.
+ */
+export async function getWordsRedesignEnabled(): Promise<boolean> {
+  const features = await getEffectiveFeatures();
+  return features.wordsRedesign.enabled;
+}

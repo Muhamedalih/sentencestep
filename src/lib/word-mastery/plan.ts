@@ -1,5 +1,5 @@
 import type { WordOutcome } from "@/lib/word-mastery/schedule";
-import type { ReportedOutcome } from "@/lib/word-mastery/types";
+import type { LearnChoice, ReportedOutcome } from "@/lib/word-mastery/types";
 
 /**
  * What recording one word's outcome writes, decided in one place and kept pure
@@ -53,4 +53,21 @@ export function planOutcome(outcome: ReportedOutcome, trackable: boolean): Outco
       // Corrects an active mistake, or advances a due review; nothing else.
       return { schedule: "clean", ledger: trackable ? ["markCorrected", "reviewClean"] : [] };
   }
+}
+
+/**
+ * What the redesigned Learn screen's two buttons write ("I know it" / "I'm still
+ * learning"). Self-reported, so deliberately lighter than a typed answer:
+ *
+ *  - It touches only the SCHEDULE, never the weak-word ledger (the learner has not
+ *    typed anything, so nothing is a mistake) and earns no quest credit.
+ *  - "I know it" on a word never met starts it at the first rung (due tomorrow);
+ *    on a word already on the schedule it holds where it is rather than climbing —
+ *    a claim is not recall, and only typing the word right moves it up.
+ *  - "Still learning" sends the word back to the start, due tomorrow, even from a
+ *    strong one: the learner is telling us it slipped.
+ */
+export function planLearnChoice(choice: LearnChoice, alreadyScheduled: boolean): WordOutcome {
+  if (choice === "learning") return "missed";
+  return alreadyScheduled ? "assisted" : "clean";
 }

@@ -61,6 +61,11 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
     description:
       "The upgraded Word Lists practice: every word gets a strength from 0 to 5 and comes back on a 1/3/7/16/30-day schedule (a miss sends it back), a word you missed is never wiped from the weak list, Continue starts at the first words that aren't locked in, a due-today card, keystrokes typed while a word settles are kept, Enter skips the answer screen, a first-letter hint and “I don't know” that cost stars, British spellings and synonyms accepted, the word is spoken after the attempt, and a separate listen-and-type mode. Everything else works for guests too; the schedule needs a signed-in account. Admin preview shows all of it to admins only; turn it On to roll it out to everyone.",
   },
+  wordsRedesign: {
+    title: "Word Lists redesign",
+    description:
+      "The redesigned Word Lists: a dashboard with mastery rings per topic (new / learning / mastered), sticky level tabs on mobile and search; a word wall per topic with each word's strength and “practice the weak ones only”; typing inside the blank with batch progress and a word-type badge; Learn in batches of five with swipe, arrows, IPA and “I know it / still learning” feeding the schedule; and progress rings, counting numbers and bronze / silver / gold ranks instead of party icons. Purely visual: it needs no migration of data and works with or without Smart word practice (mastery shows once that is on). Admin preview shows it to admins only on the live site; turn it On to publish it to everyone.",
+  },
 };
 
 const STATE_OPTIONS: { value: FeatureState; label: string; hint: string }[] = [

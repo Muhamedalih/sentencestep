@@ -9,7 +9,12 @@ import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
-import { getLearnerToday, getSmartWordsAccess } from "@/lib/word-mastery/access";
+import {
+  getLearnerToday,
+  getSmartWordsAccess,
+  getWordsRedesignEnabled,
+} from "@/lib/word-mastery/access";
+import { selectWeakWords } from "@/lib/word-mastery/dashboard";
 import { readMasteryStates } from "@/lib/word-mastery/queue";
 import { practiceScope, practiceVisitKey, selectContinueWords } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
@@ -36,9 +41,11 @@ export async function generateMetadata({
 
 /**
  * `?scope=all` practices every word of the group instead of only the ones that
- * are new or due. It only matters while "Smart word practice" is open to the
- * visitor (an admin preview, or On for everyone) — otherwise it is ignored and
- * the page is the practice it always was.
+ * are new or due, and `?scope=weak` (the redesigned word wall's button) only the
+ * ones the learner has met but not secured. They only matter while "Smart word
+ * practice" is open to the visitor (an admin preview, or On for everyone) —
+ * otherwise they are ignored and the page is the practice it always was; `weak`
+ * additionally needs the redesign to be open, and is Continue without it.
  *
  * This page is rendered again after every answer (each answer is reported with a
  * Server Action that revalidates, and Next answers such an action with a fresh
@@ -57,7 +64,10 @@ export default async function WordGroupPracticePage({
 }) {
   const { groupId } = await params;
   const { scope: rawScope } = await searchParams;
-  const scope = practiceScope(rawScope);
+  // The redesign is admin-controlled (see getWordsRedesignEnabled); `weak` is part of it.
+  const redesign = await getWordsRedesignEnabled();
+  const requestedScope = practiceScope(rawScope);
+  const scope = requestedScope === "weak" && !redesign ? "continue" : requestedScope;
   const locale = await getLocale();
   const group = await getWordGroupById(groupId, locale ?? undefined);
   if (!group) notFound();
@@ -98,13 +108,16 @@ export default async function WordGroupPracticePage({
   let smart: SmartPracticeConfig | null = null;
   if (access.enabled) {
     smart = { spaced: access.spaced };
-    if (access.spaced && access.userId && scope === "continue") {
+    if (access.spaced && access.userId && (scope === "continue" || scope === "weak")) {
       const [states, today] = await Promise.all([
         readMasteryStates(access.userId),
         getLearnerToday(),
       ]);
-      const pick = selectContinueWords(group.words, states, today);
-      if (pick.words.length === 0) {
+      const picked =
+        scope === "weak"
+          ? selectWeakWords(group.words, states)
+          : selectContinueWords(group.words, states, today).words;
+      if (picked.length === 0) {
         const dueDates = group.words
           .map((word) => states.get(word.id)?.dueOn)
           .filter((dueOn): dueOn is string => dueOn !== undefined)
@@ -120,7 +133,7 @@ export default async function WordGroupPracticePage({
           />
         );
       }
-      practiceWords = pick.words;
+      practiceWords = picked;
     }
   }
 
@@ -151,6 +164,7 @@ export default async function WordGroupPracticePage({
       defaultVoiceId={defaultVoiceId}
       smart={smart}
       groupWordIds={group.words.map((word) => word.id)}
+      redesign={redesign}
     />
   );
 }

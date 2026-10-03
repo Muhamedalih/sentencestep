@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { wordGroups as localWordGroups } from "@/data/word-lists";
 import { WORD_IPA } from "@/data/word-lists/ipa";
+import { WORD_POS } from "@/data/word-lists/pos";
 import { fetchWordGroupById, fetchWordGroupSummaries } from "@/lib/supabase/queries/word-lists";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -38,6 +39,7 @@ function withIpa(group: WordGroup): WordGroup {
     words: group.words.map((word) => ({
       ...word,
       ipa: normalizeIpa(word.ipa) ?? WORD_IPA[word.targetWord.toLowerCase()] ?? null,
+      pos: WORD_POS[word.targetWord.toLowerCase()] ?? null,
     })),
   };
 }

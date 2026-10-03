@@ -10,10 +10,10 @@ import {
   recordMistake,
   recordMistakeReview,
 } from "@/lib/supabase/queries/mistakes";
-import { recordWordReview } from "@/lib/supabase/queries/word-mastery";
+import { fetchMasteryStates, recordWordReview } from "@/lib/supabase/queries/word-mastery";
 import { getLearnerToday, getSmartWordsAccess } from "@/lib/word-mastery/access";
-import { planOutcome } from "@/lib/word-mastery/plan";
-import { isWordOutcomeInput } from "@/lib/word-mastery/types";
+import { planLearnChoice, planOutcome } from "@/lib/word-mastery/plan";
+import { isLearnChoiceInput, isWordOutcomeInput } from "@/lib/word-mastery/types";
 import type { WordOutcomeResult } from "@/lib/word-mastery/types";
 
 /** Runs one optional write; a failure is logged and never stops the others (or the learner). */
@@ -102,5 +102,36 @@ export async function recordWordOutcomeAction(input: unknown): Promise<WordOutco
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");
 
+  return review ? { strength: review.strength, dueOn: review.dueOn } : null;
+}
+
+/**
+ * Records what a learner said about a word on the redesigned Learn screen ("I
+ * know it" / "I'm still learning") on their spaced schedule — see
+ * planLearnChoice for the rules. Self-reported, so it writes the schedule only:
+ * never the weak-word ledger and never quest credit.
+ *
+ * Quiet like recordWordOutcomeAction: null for a guest, with Smart word practice
+ * off for this visitor, or before the migration is applied; a failure is logged
+ * and never shown. Re-validated and re-gated because a Server Action is reachable
+ * as a direct POST.
+ */
+export async function recordLearnChoiceAction(input: unknown): Promise<WordOutcomeResult | null> {
+  if (!isLearnChoiceInput(input)) return null;
+  const access = await getSmartWordsAccess();
+  if (!access.spaced || !access.userId) return null;
+  const userId = access.userId;
+
+  const [today, states] = await Promise.all([
+    getLearnerToday(),
+    attempt("learn choice states", () => fetchMasteryStates(userId)),
+  ]);
+  const outcome = planLearnChoice(input.choice, states?.has(input.wordId) ?? false);
+  const review = await attempt("learn choice review", () =>
+    recordWordReview(input.wordId, outcome, today),
+  );
+
+  revalidatePath("/learn/word-lists");
+  revalidatePath("/learn/word-lists/review");
   return review ? { strength: review.strength, dueOn: review.dueOn } : null;
 }

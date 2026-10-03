@@ -289,3 +289,52 @@ test("the smartWords seed migration puts only that feature in admin preview and 
   // Everything else in the document is left alone: it only sets this one path.
   assert.match(sql, /jsonb_set\(/);
 });
+
+test("wordsRedesign: off for everyone by default, admin preview shows it to admins only, On to everyone", () => {
+  const config = defaultFeatureConfig();
+  assert.equal(config.features.wordsRedesign.state, "off");
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).wordsRedesign, { enabled: false });
+  }
+
+  config.features.wordsRedesign.state = "admin";
+  for (const viewer of [guest, learner, premium]) {
+    assert.deepEqual(resolveFeatures(config, viewer).wordsRedesign, { enabled: false });
+  }
+  assert.deepEqual(resolveFeatures(config, admin).wordsRedesign, { enabled: true });
+
+  // Publishing is that one switch: guests and learners get it too, nothing else changes.
+  config.features.wordsRedesign.state = "on";
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).wordsRedesign, { enabled: true });
+  }
+  // Not an account feature, so it never produces a "sign in to unlock" teaser.
+  assert.equal(resolveFeatures(config, guest).guestTeaser, false);
+});
+
+test("wordsRedesign: independent of smartWords", () => {
+  const config = defaultFeatureConfig();
+  config.features.wordsRedesign.state = "on";
+  const effective = resolveFeatures(config, learner);
+  assert.equal(effective.wordsRedesign.enabled, true);
+  assert.equal(effective.smartWords.enabled, false);
+});
+
+test("wordsRedesign: a settings document saved before the feature existed keeps it off", () => {
+  const legacy = sanitizeFeatureConfig({ features: { smartWords: { state: "on" } } });
+  assert.equal(legacy.features.wordsRedesign.state, "off");
+  assert.equal(resolveFeatures(legacy, admin).wordsRedesign.enabled, false);
+});
+
+test("the wordsRedesign seed migration puts only that feature in admin preview and never overwrites a saved choice", () => {
+  const sql = readFileSync(
+    join(process.cwd(), "supabase/migrations/20250327000000_feature_settings_words_redesign.sql"),
+    "utf8",
+  );
+  const body = /\$json\$([\s\S]*?)\$json\$/.exec(sql)?.[1];
+  assert.ok(body, "the seed entry must be dollar-quoted as $json$ ... $json$");
+  const entry = JSON.parse(body) as { state: string };
+  assert.equal(entry.state, "admin");
+  assert.match(sql, /not \(coalesce\(config -> 'features', '\{\}'::jsonb\) \? 'wordsRedesign'\)/);
+  assert.match(sql, /jsonb_set\(/);
+});

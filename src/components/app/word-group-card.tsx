@@ -69,7 +69,7 @@ const TOPIC_ICON: Record<string, LucideIcon> = {
   Media: Newspaper,
 };
 
-function iconForGroup(title: string): LucideIcon {
+export function iconForGroup(title: string): LucideIcon {
   return TOPIC_ICON[title] ?? BookOpen;
 }
 

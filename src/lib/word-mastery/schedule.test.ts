@@ -327,7 +327,8 @@ test("a Continue list shrinks with every answer, so a running visit cannot follo
 
 test("a practice visit is Continue unless the URL asks for scope=all, and its key tells visits apart", () => {
   assert.equal(practiceScope("all"), "all");
-  for (const raw of [undefined, null, "", "continue", "ALL", "everything"]) {
+  assert.equal(practiceScope("weak"), "weak");
+  for (const raw of [undefined, null, "", "continue", "ALL", "WEAK", "everything"]) {
     assert.equal(practiceScope(raw), "continue");
   }
 
@@ -335,6 +336,7 @@ test("a practice visit is Continue unless the URL asks for scope=all, and its ke
   assert.equal(practiceVisitKey("family", "continue"), practiceVisitKey("family", "continue"));
   // …and another scope or another group is a different visit that starts fresh.
   assert.notEqual(practiceVisitKey("family", "continue"), practiceVisitKey("family", "all"));
+  assert.notEqual(practiceVisitKey("family", "weak"), practiceVisitKey("family", "all"));
   assert.notEqual(practiceVisitKey("family", "continue"), practiceVisitKey("travel", "continue"));
   assert.notEqual(practiceVisitKey("family", "all"), practiceVisitKey("travel", "all"));
 });
