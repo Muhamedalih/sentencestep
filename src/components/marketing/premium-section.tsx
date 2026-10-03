@@ -14,7 +14,7 @@ export function PremiumSection({ t }: { t: Dictionary }) {
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             {t.marketing.premiumHeading}
           </h2>
-          <p className="text-muted-foreground mt-3 max-w-lg text-lg text-balance">
+          <p className="text-muted-foreground mt-3 max-w-lg text-lg text-balance" dir="auto">
             {t.marketing.premiumSubtitle.replace("{price}", formatPrice())}
           </p>
           <div className="mt-6">

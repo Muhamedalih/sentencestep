@@ -54,17 +54,17 @@ export function StoryCard({
       >
         <div
           className={cn(
-            "border-border/60 bg-card relative flex h-full w-full flex-col overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300",
+            "border-border/60 bg-card relative flex h-full w-full flex-col overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300 max-sm:flex-row",
             locked ? "opacity-90" : "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
           )}
         >
-          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
+          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden max-sm:aspect-auto max-sm:min-h-28 max-sm:w-32">
             <LessonIllustration
               mode="stories"
               lessonId={lesson.id}
               title={lesson.title}
               illustrationUrl={lesson.illustrationUrl}
-              className="aspect-[4/3] w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
+              className="aspect-[4/3] w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 max-sm:absolute max-sm:inset-0 max-sm:aspect-auto max-sm:h-full"
             />
 
             <span
@@ -99,8 +99,8 @@ export function StoryCard({
               single-line/truncated: showing it in full isn't what was
               asked for here, and clamping both lines would make the tile
               noticeably taller than this fix calls for. */}
-          <div className="flex flex-1 flex-col items-center gap-2 p-4 text-center">
-            <div className="flex w-full flex-col items-center gap-0.5">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 p-4 text-center max-sm:items-start max-sm:p-3 max-sm:text-start">
+            <div className="flex w-full flex-col items-center gap-0.5 max-sm:items-start">
               <h3 className="line-clamp-2 w-full text-sm leading-snug font-semibold" dir="ltr">
                 {lesson.title}
               </h3>
@@ -119,7 +119,7 @@ export function StoryCard({
               // lesson that doesn't have a description yet, so nothing shows
               // an empty box.
               <p
-                className="border-foreground/10 bg-foreground/5 text-muted-foreground line-clamp-3 w-full rounded-xl border p-3 text-start text-sm leading-relaxed"
+                className="border-foreground/10 bg-foreground/5 text-muted-foreground line-clamp-3 w-full rounded-xl border p-3 text-start text-sm leading-relaxed max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0"
                 dir={lesson.supportDescription ? dir : "ltr"}
               >
                 {hook}

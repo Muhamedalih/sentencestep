@@ -127,7 +127,7 @@ function LessonCard({
       >
         <div
           className={cn(
-            "border-border/60 relative aspect-[4/3] w-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-300",
+            "border-border/60 relative aspect-[4/3] w-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 max-sm:aspect-[2/1]",
             locked
               ? "opacity-90"
               : "hover:shadow-xl hover:shadow-black/25 motion-safe:group-hover:-translate-y-1",

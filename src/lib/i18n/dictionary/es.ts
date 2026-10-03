@@ -1038,6 +1038,8 @@ export const es: Dictionary = {
     masteredTag: "Dominada",
     nextReview: "Próximo repaso {date}",
     removeCard: "Quitar",
+    cardRemoved: "Tarjeta quitada",
+    undoRemove: "Deshacer",
     reviewCompleteHeading: "¡Tarjetas repasadas!",
     reviewCompleteSubtitle: "Repasaste {n} tarjeta(s). Volverán con un calendario espaciado.",
     signInHeading: "Inicia sesión para usar Mis tarjetas",

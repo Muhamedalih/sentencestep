@@ -237,7 +237,9 @@ export function HomeHero({
               </p>
             </div>
             <Button asChild size="lg" className="mt-1 w-fit">
-              <Link href="/upgrade">{t.premium.upgradeCta.replace("{price}", formatPrice())}</Link>
+              <Link href="/upgrade" dir="auto">
+                {t.premium.upgradeCta.replace("{price}", formatPrice())}
+              </Link>
             </Button>
           </div>
         )}
