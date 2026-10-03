@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentProps } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, PartyPopper } from "lucide-react";
@@ -90,6 +91,7 @@ export function VocabularyPractice({
   caughtUp,
   groupWordIds,
   redesign = false,
+  resume = false,
 }: {
   group: WordGroup;
   previewMode?: boolean;
@@ -103,6 +105,8 @@ export function VocabularyPractice({
   groupWordIds?: readonly string[];
   /** The redesigned screen (see the component comment). Decided once with the rest of the visit. */
   redesign?: boolean;
+  /** Pick up where the learner left off: open at the first block that still has a word they have not finished, instead of the first block. Decided once with the rest of the visit. */
+  resume?: boolean;
 }) {
   const [visit] = useState(() => ({
     group,
@@ -110,6 +114,7 @@ export function VocabularyPractice({
     caughtUp: caughtUp ?? null,
     groupWordIds: groupWordIds ?? group.words.map((word) => word.id),
     redesign,
+    resume,
   }));
 
   if (visit.group.words.length === 0) {
@@ -124,6 +129,19 @@ export function VocabularyPractice({
     );
   }
 
+  if (visit.resume) {
+    return (
+      <ResumedPractice
+        group={visit.group}
+        previewMode={previewMode}
+        defaultVoiceId={defaultVoiceId}
+        smart={visit.smart}
+        groupWordIds={visit.groupWordIds}
+        redesign={visit.redesign}
+      />
+    );
+  }
+
   return (
     <VocabularyPracticeSession
       group={visit.group}
@@ -132,8 +150,34 @@ export function VocabularyPractice({
       smart={visit.smart}
       groupWordIds={visit.groupWordIds}
       redesign={visit.redesign}
+      startBlock={0}
     />
   );
+}
+
+/**
+ * A Continue visit: waits for the learner's saved progress (a guest's lives in
+ * the browser, so only the client knows it), then opens at the first block that
+ * still has an unfinished word. The block is worked out once, when the progress
+ * arrives — later answers change the progress but must not move a running visit.
+ */
+function ResumedPractice(
+  props: Omit<ComponentProps<typeof VocabularyPracticeSession>, "startBlock">,
+) {
+  const { isLoaded } = useWordProgress();
+  if (!isLoaded) return <div className="flex-1" aria-busy="true" />;
+  return <ResumedSession {...props} />;
+}
+
+function ResumedSession(
+  props: Omit<ComponentProps<typeof VocabularyPracticeSession>, "startBlock">,
+) {
+  const { isWordCompleted } = useWordProgress();
+  const [startBlock] = useState(() => {
+    const firstUnfinished = props.group.words.findIndex((word) => !isWordCompleted(word.id));
+    return firstUnfinished < 0 ? 0 : Math.floor(firstUnfinished / BLOCK_SIZE);
+  });
+  return <VocabularyPracticeSession {...props} startBlock={startBlock} />;
 }
 
 /** The running visit: everything it is made of arrives as props that never change (see VocabularyPractice). */
@@ -144,6 +188,7 @@ function VocabularyPracticeSession({
   smart,
   groupWordIds,
   redesign,
+  startBlock,
 }: {
   group: WordGroup;
   previewMode: boolean;
@@ -151,6 +196,8 @@ function VocabularyPracticeSession({
   smart: SmartPracticeConfig | null;
   groupWordIds: readonly string[];
   redesign: boolean;
+  /** The block the visit opens at: 0 for a fresh start, later when it picks up where the learner left off. "Practice again" always goes back to 0. */
+  startBlock: number;
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;
@@ -170,8 +217,10 @@ function VocabularyPracticeSession({
     }
     return chunks;
   }, [words]);
-  const [blockIndex, setBlockIndex] = useState(0);
-  const [queue, setQueue] = useState<number[]>(() => blocks[0]?.map((_, i) => i) ?? []);
+  const [blockIndex, setBlockIndex] = useState(() => (blocks[startBlock] ? startBlock : 0));
+  const [queue, setQueue] = useState<number[]>(
+    () => (blocks[startBlock] ?? blocks[0])?.map((_, i) => i) ?? [],
+  );
   // Distinct slots resolved correctly in the CURRENT block — grows only on a
   // right answer (a retry that finally lands doesn't double-count), purely
   // to drive the "n / blockSize" counter below.
