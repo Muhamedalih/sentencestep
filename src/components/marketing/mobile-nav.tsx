@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 
@@ -39,6 +40,10 @@ export function MobileNav({ links, authArea }: { links: NavLink[]; authArea: Rea
           id="mobile-nav-panel"
           className="border-border/60 bg-background absolute inset-x-0 top-16 flex flex-col gap-1 border-b px-6 py-4 shadow-sm"
         >
+          {/* Lives here, not in the top bar: logo + three flags + theme + menu is wider than a 360px phone. */}
+          <div className="px-2 pb-2">
+            <LanguageSwitcher className="w-fit" />
+          </div>
           <nav className="flex flex-col gap-1" aria-label={t.marketing.primaryNav}>
             {links.map((link) => (
               <a

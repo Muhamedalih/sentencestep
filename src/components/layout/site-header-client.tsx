@@ -151,7 +151,6 @@ export function SiteHeaderClient({
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
-          <LanguageSwitcher />
           <ThemeToggle />
           <MobileNav links={NAV_LINKS} authArea={authArea} />
         </div>
