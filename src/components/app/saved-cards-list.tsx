@@ -88,7 +88,7 @@ export function SavedCardsList({ cards }: { cards: CardListItem[] }) {
       window.clearTimeout(entry.timer);
       commit(entry);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount only
+    // Unmount only.
     [],
   );
 
