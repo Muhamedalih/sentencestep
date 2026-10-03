@@ -540,6 +540,7 @@ export const tr: Dictionary = {
     wordsAndHintDetail: "Her biri bir bağlam cümlesi ve bir ipucuyla birlikte 20 kelime.",
     learnAction: "Öğren",
     practiceAction: "Alıştır",
+    restartAction: "Baştan tekrar et",
     startTest: "Teste başla",
     replayAction: "Tekrar",
     wordListPanelAria: "Kelime listesi",

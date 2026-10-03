@@ -40,6 +40,8 @@ export async function generateMetadata({
 }
 
 /**
+ * `?scope=resume` (the card's Continue, for a group the learner has part-finished)
+ * opens the same practice at the first block with a word not finished yet, and
  * `?scope=all` practices every word of the group instead of only the ones that
  * are new or due, and `?scope=weak` (the redesigned word wall's button) only the
  * ones the learner has met but not secured. They only matter while "Smart word
@@ -165,6 +167,7 @@ export default async function WordGroupPracticePage({
       smart={smart}
       groupWordIds={group.words.map((word) => word.id)}
       redesign={redesign}
+      resume={scope === "resume"}
     />
   );
 }

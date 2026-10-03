@@ -515,6 +515,7 @@ export const ar: Dictionary = {
     wordsAndHintDetail: "20 كلمة، لكل واحدة جملة سياق وتلميح.",
     learnAction: "تعلّم",
     practiceAction: "تدرّب",
+    restartAction: "راجع من البداية",
     startTest: "ابدأ الاختبار",
     replayAction: "Replay",
     wordListPanelAria: "قائمة الكلمات",

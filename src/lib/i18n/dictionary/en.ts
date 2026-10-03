@@ -531,6 +531,7 @@ export const en: Dictionary = {
     wordsAndHintDetail: "20 words, one context sentence and hint each",
     learnAction: "Learn",
     practiceAction: "Practice",
+    restartAction: "Review from the start",
     startTest: "Start the test",
     replayAction: "Replay",
     wordListPanelAria: "Word list",

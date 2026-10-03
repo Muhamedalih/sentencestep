@@ -549,6 +549,7 @@ export const es: Dictionary = {
     wordsAndHintDetail: "20 palabras, cada una con una oración de contexto y una pista.",
     learnAction: "Aprender",
     practiceAction: "Practicar",
+    restartAction: "Repasar desde el principio",
     startTest: "Comenzar la prueba",
     replayAction: "Repetir",
     wordListPanelAria: "Lista de palabras",

@@ -113,6 +113,10 @@ export function WordGroupCard({
   const supportTitle = group.supportTitle ?? group.title;
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
+  // Part-way through a group (without the spaced schedule's own Continue): the
+  // primary action picks up where the learner left off, and a second one starts
+  // the whole list again from its first word.
+  const partlyDone = !mastery && isLoaded && completedCount > 0 && completedCount < group.wordCount;
 
   const difficulty = difficultyForLevel(group.level);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : "";
@@ -273,12 +277,25 @@ export function WordGroupCard({
                   </Link>
                 </Button>
                 <Button asChild className="flex-1 gap-1.5">
-                  <Link href={`/learn/word-lists/${group.id}`}>
+                  <Link href={`/learn/word-lists/${group.id}${partlyDone ? "?scope=resume" : ""}`}>
                     <PencilLine className="size-4" aria-hidden="true" />
-                    {mastery ? t.wordLists.smart.continueAction : t.wordLists.practiceAction}
+                    {mastery || partlyDone
+                      ? t.wordLists.smart.continueAction
+                      : t.wordLists.practiceAction}
                   </Link>
                 </Button>
               </div>
+              {partlyDone && (
+                <div className="px-4 pb-4">
+                  <Link
+                    href={`/learn/word-lists/${group.id}?scope=all`}
+                    className="border-primary/25 from-primary/15 to-primary/5 text-primary hover:border-primary/50 hover:from-primary/25 hover:to-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-center gap-2 rounded-xl border bg-gradient-to-b px-4 py-2.5 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2"
+                  >
+                    <Layers className="size-4" aria-hidden="true" />
+                    {t.wordLists.restartAction}
+                  </Link>
+                </div>
+              )}
               {mastery && (
                 // The whole list again, whatever is due: a quiet but real button (tinted
                 // surface, icon, hover lift) rather than a grey text link, so it reads as
