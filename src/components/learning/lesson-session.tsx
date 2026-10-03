@@ -144,7 +144,9 @@ export function LessonSession({
   // own toggle button. Lives here rather than inside that component because
   // LessonSession is what sizes its grid column (see the "content" grid
   // below); local state, not persisted, same as illustrationView above.
-  const [storyPanelCollapsed, setStoryPanelCollapsed] = useState(false);
+  // null = the learner hasn't touched the toggle: the box starts collapsed on a phone,
+  // where its 16:9 shape would otherwise push the sentence being typed below the keyboard.
+  const [storyPanelPref, setStoryPanelPref] = useState<boolean | null>(null);
   // Mobile-only "tap to start" gate (see TypingSentence's TapToStartOverlay)
   // — held here, not inside TypingSentence, specifically so it survives
   // that component's own per-sentence remount (key={sentence.id} below) and
@@ -152,6 +154,7 @@ export function LessonSession({
   // sentence.
   const [tapped, setTapped] = useState(false);
   const isMobileViewport = useIsMobileViewport();
+  const storyPanelCollapsed = storyPanelPref ?? isMobileViewport;
   // Dictation (admin feature, see /admin/features): hides the sentence and
   // grades a whole typed answer on Enter instead of per keystroke. Starts
   // off on both server and client (the remembered preference is applied in
@@ -810,10 +813,11 @@ export function LessonSession({
             >
               {unit.mode === "stories" ? (
                 <StoryPreviousSentences
+                  className="[html[data-keyboard]_&]:max-lg:hidden"
                   sentences={previousSentences}
                   resolvedVoiceId={resolvedVoiceId}
                   collapsed={storyPanelCollapsed}
-                  onToggleCollapsed={() => setStoryPanelCollapsed((collapsed) => !collapsed)}
+                  onToggleCollapsed={() => setStoryPanelPref(!storyPanelCollapsed)}
                 />
               ) : (
                 <div
@@ -952,7 +956,7 @@ export function LessonSession({
                             onClick={handleGoBackSentence}
                             aria-label={t.lesson.previousSentenceButton}
                             title={t.lesson.previousSentenceButton}
-                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors"
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-2 pointer-coarse:size-11"
                           >
                             <ChevronLeft className="size-3.5" aria-hidden="true" />
                           </button>
@@ -966,7 +970,7 @@ export function LessonSession({
                             onClick={handleGoForwardSentence}
                             aria-label={t.lesson.nextSentenceButton}
                             title={t.lesson.nextSentenceButton}
-                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors"
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-2 pointer-coarse:size-11"
                           >
                             <ChevronRight className="size-3.5" aria-hidden="true" />
                           </button>
@@ -996,7 +1000,7 @@ export function LessonSession({
                         onClick={handleToggleDictation}
                         title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
                         className={cn(
-                          "mt-2 flex h-11 w-fit items-center gap-3 self-center rounded-full border-2 pr-3 pl-4 text-sm font-semibold shadow-sm transition-all duration-200 active:scale-[0.97]",
+                          "compact-hide mt-2 flex h-11 w-fit items-center gap-3 self-center rounded-full border-2 pr-3 pl-4 text-sm font-semibold shadow-sm transition-all duration-200 active:scale-[0.97]",
                           dictationOn
                             ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-[var(--lesson-primary)]/20"
                             : "border-border bg-card/70 text-foreground/80 hover:bg-muted hover:border-[var(--lesson-primary)]/60",

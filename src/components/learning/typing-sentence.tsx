@@ -468,7 +468,10 @@ export function TypingSentence({
             "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
             true,
           )}
-          <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
+          <p
+            className="mt-6 text-xl text-[var(--lesson-subtitle)] select-none sm:text-2xl"
+            dir={dir}
+          >
             {supportText}
           </p>
           <div className="compact-hide">
