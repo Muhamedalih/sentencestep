@@ -332,14 +332,14 @@ export function DictationHelp({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
       className={cn(
-        "inline-flex w-full max-w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl border p-1.5 sm:w-auto sm:flex-nowrap",
+        "inline-flex w-full max-w-full flex-wrap items-center justify-center gap-1.5 rounded-2xl border p-1.5 sm:w-auto sm:flex-nowrap [html[data-keyboard]_&]:min-[360px]:flex-nowrap",
         quiet
           ? "border-border/50 bg-transparent"
           : "border-border/70 bg-card/90 shadow-lg shadow-black/10 backdrop-blur-sm",
       )}
     >
       {(showPrompt || showStakes) && (
-        <div className="flex w-full items-center justify-center gap-3 px-2 py-1 sm:w-auto sm:justify-start sm:py-0">
+        <div className="flex w-full items-center justify-center gap-3 px-2 py-1 sm:w-auto sm:justify-start sm:py-0 [html[data-keyboard]_&]:w-auto [html[data-keyboard]_&]:shrink-0 [html[data-keyboard]_&]:py-0 max-[359px]:[html[data-keyboard]_&]:hidden">
           {showPrompt && (
             <span className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
               <CircleHelp
@@ -554,7 +554,7 @@ function HelpAction({
       whileHover={reduced || disabled ? undefined : { scale: 1.04 }}
       whileTap={reduced || disabled ? undefined : { scale: 0.95 }}
       className={cn(
-        "group/help focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:flex-none pointer-coarse:h-12 [&_svg]:shrink-0",
+        "group/help focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:flex-none pointer-coarse:h-12 [&_svg]:shrink-0 [html[data-keyboard]_&]:gap-1.5 [html[data-keyboard]_&]:px-2",
         // transition-colors only: the base `transition-all` would smooth (and
         // lag) framer-motion's per-frame scale on hover and press.
         "transition-colors duration-200",

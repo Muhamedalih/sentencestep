@@ -355,7 +355,7 @@ export function WordReviewSession({
       <div className="h-app relative flex w-full flex-col">
         <SharedInputHost />
         {!isComplete && <ShiftReplayHint />}
-        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
+        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
           <div className="flex items-center justify-between gap-4">
             <Link
               href={resolvedBackHref}

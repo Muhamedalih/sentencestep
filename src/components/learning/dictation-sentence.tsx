@@ -757,8 +757,10 @@ export function DictationSentence({
 
   // What sits under the sentence while it is hidden, in the spot the
   // translation has in the typing view (the translation would give it away).
+  // kb-hide: once the keyboard is open the learner is already typing, and these
+  // lines would push Show the word / Give up below the keyboard's edge.
   const listening = (
-    <>
+    <div className="kb-hide">
       <p
         className={cn(
           "text-[var(--lesson-subtitle)] select-none",
@@ -778,7 +780,7 @@ export function DictationSentence({
           {t.dictation.retryNote}
         </p>
       )}
-    </>
+    </div>
   );
 
   // Letter by letter: Show the word / Give up, once the learner is stuck at one
@@ -789,8 +791,8 @@ export function DictationSentence({
   const helpStrip = letterMode && (
     <div
       className={cn(
-        "flex min-h-[6.5rem] items-center sm:min-h-14",
-        mode === "conversation" ? "mt-3" : "mt-5 justify-center",
+        "flex min-h-[6.5rem] items-center sm:min-h-14 [html[data-keyboard]_&]:min-h-0",
+        mode === "conversation" ? "mt-3" : "mt-5 justify-center [html[data-keyboard]_&]:mt-2",
       )}
     >
       <span className="sr-only" role="status">

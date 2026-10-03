@@ -394,6 +394,10 @@
 html[data-keyboard] .compact-hide {
   display: none;
 }
+/* Same, but only while the keyboard is open — for controls that must stay reachable on a short landscape phone (e.g. the Dictation switch). */
+html[data-keyboard] .kb-hide {
+  display: none;
+}
 @media (pointer: coarse) and (max-height: 500px) {
   .compact-hide {
     display: none;

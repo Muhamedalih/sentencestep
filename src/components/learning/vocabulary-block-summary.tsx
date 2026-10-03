@@ -170,7 +170,7 @@ export function VocabularyBlockSummary({
           <button
             type="button"
             onClick={toggleAll}
-            className="text-primary focus-visible:ring-ring min-h-8 rounded-md px-1 text-sm font-semibold outline-none focus-visible:ring-2"
+            className="text-primary focus-visible:ring-ring min-h-8 rounded-md px-1 text-sm font-semibold outline-none focus-visible:ring-2 pointer-coarse:min-h-11 pointer-coarse:px-3"
           >
             {allOpen ? t.wordLists.collapseAll : t.wordLists.expandAll}
           </button>
@@ -333,7 +333,7 @@ function SummaryRow({
             variant="outline"
             onClick={onPractice}
             aria-label={t.wordLists.practiceWordAria.replace("{word}", word.targetWord)}
-            className="text-primary h-9 shrink-0 gap-1.5 rounded-full px-3 max-sm:px-2.5"
+            className="text-primary h-9 shrink-0 gap-1.5 rounded-full px-3 max-sm:px-2.5 pointer-coarse:h-11 pointer-coarse:min-w-11"
           >
             <PencilLine className="size-4" aria-hidden="true" />
             <span className="max-sm:sr-only">{t.wordLists.practiceWord}</span>

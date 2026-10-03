@@ -143,7 +143,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
               isActive={isActive}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium",
-                "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap",
+                "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap pointer-coarse:md:min-h-11",
                 isActive
                   ? "text-primary md:bg-brand-muted"
                   : "text-muted-foreground hover:text-foreground md:hover:bg-secondary",
@@ -206,7 +206,7 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
                   href={subItem.href}
                   isActive={subItem.isSubActive}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap",
+                    "rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:py-3",
                     subItem.isSubActive
                       ? "text-primary bg-brand-muted"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary",

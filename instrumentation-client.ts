@@ -1,5 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
-
 /**
  * Production error monitoring — added after an audit flagged that this app
  * had no visibility into real-user errors at all beyond console.error/server
@@ -12,17 +10,33 @@ import * as Sentry from "@sentry/nextjs";
  * every deployment that hasn't configured this yet behaves exactly as
  * before (see .env.example's own doc comment for how to get a free DSN).
  */
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  // A modest sample rate rather than 1.0 — this app has no paid Sentry
-  // quota to spend on full performance-trace volume; error reporting
-  // (always on, unsampled) is the actual point of this integration.
-  tracesSampleRate: 0.1,
-  // Session Replay is off by default: it captures real learner sessions,
-  // which needs an explicit privacy-and-cost decision this integration
-  // doesn't make on its own. Enable deliberately later if wanted.
-  enabled: process.env.NODE_ENV === "production",
-});
+// The SDK is large (about a third of every page's JavaScript), so it is fetched
+// in the background instead of being part of the first load: the download
+// starts immediately, it just no longer blocks the page. Only when a DSN is
+// set and only in production, which is exactly when init() did anything.
+// An error thrown in the first moments, before the SDK arrives, is not
+// reported; route error boundaries report through the same lazy import.
+const sentry: Promise<typeof import("@sentry/nextjs")> | null =
+  process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_SENTRY_DSN
+    ? import("@sentry/nextjs").then((Sentry) => {
+        Sentry.init({
+          dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+          // A modest sample rate rather than 1.0 — this app has no paid Sentry
+          // quota to spend on full performance-trace volume; error reporting
+          // (always on, unsampled) is the actual point of this integration.
+          tracesSampleRate: 0.1,
+          // Session Replay is off by default: it captures real learner sessions,
+          // which needs an explicit privacy-and-cost decision this integration
+          // doesn't make on its own. Enable deliberately later if wanted.
+        });
+        return Sentry;
+      })
+    : null;
 
 /** Lets Sentry's performance tracing follow client-side route changes (App Router navigations), not just full page loads — Sentry's own required export for this SDK version. */
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+export const onRouterTransitionStart = (
+  url: string,
+  navigationType: "push" | "replace" | "traverse",
+) => {
+  void sentry?.then((Sentry) => Sentry.captureRouterTransitionStart(url, navigationType));
+};

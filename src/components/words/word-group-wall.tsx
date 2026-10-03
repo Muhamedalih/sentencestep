@@ -127,7 +127,7 @@ export function WordGroupWall({
     <div className="mx-auto max-w-5xl px-6 py-10 sm:py-14">
       <Link
         href="/learn/word-lists"
-        className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm font-medium"
+        className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
         dir={dir}
       >
         <BackArrow className="size-4" aria-hidden="true" />
@@ -254,7 +254,7 @@ export function WordGroupWall({
           <div
             role="group"
             aria-label={copy.filterAria}
-            className="flex flex-wrap gap-1.5"
+            className="flex flex-wrap gap-1.5 pointer-coarse:gap-2"
             dir={dir}
           >
             {filters.map((item) => (
@@ -264,7 +264,7 @@ export function WordGroupWall({
                 aria-pressed={filter === item.value}
                 onClick={() => setFilter(item.value)}
                 className={cn(
-                  "focus-visible:ring-ring focus-visible:ring-offset-background rounded-full border px-3 py-1 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                  "focus-visible:ring-ring focus-visible:ring-offset-background rounded-full border px-3 py-1 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 pointer-coarse:min-h-11 pointer-coarse:px-4",
                   filter === item.value
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border text-muted-foreground hover:text-foreground",

@@ -3,17 +3,15 @@
 import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, PartyPopper } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
-import { VocabularyBlockSummary } from "@/components/learning/vocabulary-block-summary";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
 import type { WordSentenceControls } from "@/components/learning/vocabulary-sentence";
-import { VocabularyWordDrill } from "@/components/learning/vocabulary-word-drill";
-import { WordGroupCaughtUp } from "@/components/learning/word-group-caught-up";
 import { WordHelpBar } from "@/components/learning/word-help-bar";
 import { CountUp } from "@/components/words/count-up";
 import { MasteryRing } from "@/components/words/mastery-ring";
@@ -42,6 +40,17 @@ import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import type { ReportedOutcome } from "@/lib/word-mastery/types";
 import { createTypeAheadBuffer } from "@/lib/word-typing";
 import type { VocabularyWord, WordGroup } from "@/types/word-lists";
+
+// Only reached after the first five words (summary, drill) or before any practice (caught up): split out of the first load.
+const VocabularyBlockSummary = dynamic(() =>
+  import("@/components/learning/vocabulary-block-summary").then((m) => m.VocabularyBlockSummary),
+);
+const VocabularyWordDrill = dynamic(() =>
+  import("@/components/learning/vocabulary-word-drill").then((m) => m.VocabularyWordDrill),
+);
+const WordGroupCaughtUp = dynamic(() =>
+  import("@/components/learning/word-group-caught-up").then((m) => m.WordGroupCaughtUp),
+);
 
 /** Words per practice block — see the queue/block state in VocabularyPractice. Groups no longer all share one fixed word count (20-30, see the word-lists content expansion); this just chunks whatever length a group actually has, with a shorter final block when it doesn't divide evenly. */
 const BLOCK_SIZE = 5;
@@ -465,14 +474,14 @@ function VocabularyPracticeSession({
       <div className="h-app relative flex w-full flex-col">
         <SharedInputHost />
         {!isComplete && (!showSummary || drillWord) && <ShiftReplayHint />}
-        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
+        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/learn/word-lists"
               className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
             >
               <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
-              <span dir="ltr" className="truncate">
+              <span dir="ltr" className="truncate max-[359px]:sr-only">
                 {group.title}
               </span>
             </Link>
@@ -734,7 +743,8 @@ function BatchProgress({
   const { t, dir } = useLocale();
   const copy = t.wordLists.redesign;
   return (
-    <div className="mt-3" dir={dir}>
+    // kb-hide: the same position is in the header counter, and the room is needed for the help bar above the keyboard.
+    <div className="kb-hide mt-3" dir={dir}>
       <div className="text-muted-foreground mb-1.5 flex items-center justify-between text-xs font-semibold">
         <span>
           {copy.batchProgress
