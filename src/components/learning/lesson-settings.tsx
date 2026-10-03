@@ -175,7 +175,7 @@ export const LessonSettings = forwardRef<
   const speedLabels = [t.pronunciation.normalSpeed, t.pronunciation.slow, t.pronunciation.verySlow];
 
   return (
-    <div ref={rootRef} className={cn("relative shrink-0", className)}>
+    <div ref={rootRef} className={cn("relative flex shrink-0 items-center gap-2", className)}>
       <PronunciationButton
         {...pronunciation}
         ref={pronunciationRef}
@@ -183,6 +183,47 @@ export const LessonSettings = forwardRef<
         headless
         onStatusChange={setStatus}
       />
+
+      {/* Touch devices have no Shift key, so the replay and speed controls live
+          on the screen itself (one tap each) instead of behind the gear. Fine
+          pointers keep the original gear-only layout. */}
+      {showReplay && (
+        <button
+          type="button"
+          onMouseDown={keepInputFocus}
+          onClick={handleReplay}
+          disabled={status.loading}
+          aria-label={t.lessonSettings.replayTitle}
+          title={t.lessonSettings.replayTitle}
+          className="hidden size-14 shrink-0 items-center justify-center rounded-full bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-sm transition-[transform,opacity] outline-none active:scale-95 disabled:opacity-60 pointer-coarse:flex"
+        >
+          {status.loading ? (
+            <Loader2
+              className={cn("size-6", !reducedMotion && "animate-spin")}
+              aria-hidden="true"
+            />
+          ) : (
+            <Volume2
+              className={cn("size-6", status.playing && !reducedMotion && "animate-pulse")}
+              aria-hidden="true"
+            />
+          )}
+        </button>
+      )}
+      {showSpeed && (
+        <button
+          type="button"
+          onMouseDown={keepInputFocus}
+          onClick={() => handleSpeed((speedIndex + 1) % PRONUNCIATION_SPEED_STEPS.length)}
+          aria-label={`${t.lessonSettings.speedTitle}: ${speedLabels[speedIndex]}`}
+          title={t.lessonSettings.speedTitle}
+          dir="ltr"
+          className="hidden h-12 min-w-14 shrink-0 items-center justify-center gap-1 rounded-full border border-[var(--lesson-primary)]/40 px-3 text-sm font-bold text-[var(--lesson-icon)] tabular-nums outline-none active:scale-95 pointer-coarse:flex"
+        >
+          <SpeedIcon className="size-4" aria-hidden="true" />
+          {PRONUNCIATION_SPEED_STEPS[speedIndex]?.multiplier}×
+        </button>
+      )}
 
       {hasAnyRow && (
         <button
@@ -195,7 +236,8 @@ export const LessonSettings = forwardRef<
           aria-label={t.lessonSettings.buttonLabel}
           title={t.lessonSettings.buttonLabel}
           className={cn(
-            "border-border/60 bg-background/85 text-muted-foreground relative flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-sm backdrop-blur-md",
+            "border-border/60 bg-background/85 text-muted-foreground relative flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-sm backdrop-blur-md pointer-coarse:size-12",
+            !showKeySounds && "pointer-coarse:hidden",
             "transition-[transform,box-shadow,border-color,color] duration-200 ease-out",
             "hover:border-border hover:text-foreground hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.97]",
             "focus-visible:ring-ring focus-visible:ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
@@ -249,6 +291,7 @@ export const LessonSettings = forwardRef<
               <div className="divide-border/60 flex flex-col divide-y">
                 {showSpeed && (
                   <SettingRow
+                    className="pointer-coarse:hidden"
                     icon={<SpeedIcon className="size-[18px]" aria-hidden="true" />}
                     title={t.lessonSettings.speedTitle}
                     description={t.lessonSettings.speedDescription}
@@ -294,6 +337,7 @@ export const LessonSettings = forwardRef<
 
                 {showReplay && (
                   <SettingRow
+                    className="pointer-coarse:hidden"
                     icon={<Volume2 className="size-[18px]" aria-hidden="true" />}
                     title={t.lessonSettings.replayTitle}
                     description={
@@ -347,7 +391,7 @@ export const LessonSettings = forwardRef<
                         aria-label={t.lessonSettings.keySoundsTitle}
                         onClick={handleKeySounds}
                         className={cn(
-                          "focus-visible:ring-ring relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 outline-none focus-visible:ring-2",
+                          "focus-visible:ring-ring relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 outline-none before:absolute before:-inset-3 before:content-[''] focus-visible:ring-2",
                           muted ? "bg-foreground/25" : "bg-[var(--lesson-primary)]",
                         )}
                       >
@@ -373,12 +417,14 @@ export const LessonSettings = forwardRef<
 
 /** One row of the panel: a round icon, a title with its one-line explanation, and (optionally) a control at the end — or, for a row that needs more room, `children` beneath the text. */
 function SettingRow({
+  className,
   icon,
   title,
   description,
   action,
   children,
 }: {
+  className?: string;
   icon: ReactNode;
   title: string;
   description: string;
@@ -386,7 +432,7 @@ function SettingRow({
   children?: ReactNode;
 }) {
   return (
-    <div className="p-3">
+    <div className={cn("p-3", className)}>
       <div className="flex items-center gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]">
           {icon}

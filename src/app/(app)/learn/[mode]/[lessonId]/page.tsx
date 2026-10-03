@@ -222,7 +222,7 @@ export default async function LessonPage({
   return (
     <div
       className={cn(
-        "lesson-shell bg-background text-foreground h-svh w-full",
+        "lesson-shell bg-background text-foreground h-app w-full",
         mode === "stories" && "lesson-shell-stories",
       )}
     >

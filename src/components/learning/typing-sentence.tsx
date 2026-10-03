@@ -86,7 +86,7 @@ interface TypingSentenceProps {
    * itself. `showTapToStart` instead reflects only `tapped` (LessonSession's
    * own plain `useState(false)`, identical on server and client, so there's
    * nothing to reconcile), and relies purely on TapToStartOverlay's own
-   * `sm:hidden` CSS class — evaluated by the browser at paint time, not
+   * `tap-gate` CSS class — evaluated by the browser at paint time, not
    * baked into the markup one way or the other — to stay invisible on
    * tablet/desktop. Undefined behaves as "never show it" (every caller that
    * doesn't pass it, including Conversation and the admin preview).
@@ -337,7 +337,7 @@ export function TypingSentence({
         onChange={engine.handleChange}
         onPaste={engine.handlePaste}
         reducedMotion={reducedMotion}
-        textClassName={sizeClass}
+        textClassName={`${sizeClass} lesson-sentence`}
         textStyle={textStyle}
         onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
         targetVocabularyIndices={targetVocabularyIndices}
@@ -350,11 +350,11 @@ export function TypingSentence({
   if (mode === "conversation") {
     return (
       <ConversationBubble speaker={sentence.speaker}>
-        <div className="flex items-start gap-2">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
           <div className="min-w-0 flex-1">
             {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 max-sm:self-end">
             <LessonSettings
               text={sentence.en}
               audioUrl={sentence.audioUrl}
@@ -468,10 +468,17 @@ export function TypingSentence({
             "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
             true,
           )}
-          <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
+          <p
+            className="mt-6 text-xl text-[var(--lesson-subtitle)] select-none sm:text-2xl"
+            dir={dir}
+          >
             {supportText}
           </p>
-          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+          <div className="compact-hide">
+            <div className="compact-hide">
+              <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+            </div>
+          </div>
         </div>
       </motion.div>
     );
@@ -529,14 +536,16 @@ export function TypingSentence({
         <p className="mt-6 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
-        <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        <div className="compact-hide">
+          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        </div>
       </div>
     </motion.div>
   );
 }
 
 /**
- * Mobile-only (sm:hidden) gate shown once per lesson, before the learner has
+ * Mobile-only (see .tap-gate in globals.css) gate shown once per lesson, before the learner has
  * tapped anything yet: dims the sentence behind it and asks for a deliberate
  * tap before the keyboard opens, rather than the keyboard trying to appear
  * on its own the instant the lesson loads (unreliable on a phone — most
@@ -580,7 +589,7 @@ export function TapToStartOverlay({
         event.preventDefault();
         onStart();
       }}
-      className="bg-background/45 fixed inset-0 z-20 flex cursor-pointer items-center justify-center sm:hidden"
+      className="tap-gate bg-background/45 fixed inset-0 z-20 flex cursor-pointer items-center justify-center"
     >
       <div className="border-border/60 bg-card/95 mx-6 flex flex-col items-center gap-1.5 rounded-2xl border px-7 py-5 text-center shadow-xl shadow-black/30">
         <span className="text-foreground text-base font-semibold">{heading}</span>

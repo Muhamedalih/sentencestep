@@ -190,7 +190,7 @@ export function StoryPreviousSentences({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={transitions.smooth}
-            className="border-foreground/10 pointer-events-none absolute inset-0 rounded-[20px] border bg-black shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_40px_-8px_rgba(0,0,0,0.6),0_2px_10px_rgba(0,0,0,0.4)]"
+            className="border-foreground/10 bg-background pointer-events-none absolute inset-0 rounded-[20px] border shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_40px_-8px_rgba(0,0,0,0.6),0_2px_10px_rgba(0,0,0,0.4)]"
           >
             <div className="absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,transparent,color-mix(in_oklch,var(--lesson-story-label)_35%,transparent),transparent)]" />
           </motion.div>
@@ -208,7 +208,7 @@ export function StoryPreviousSentences({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { delay: 0.14, duration: 0.22 } }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            className="absolute top-[14px] right-[14px] z-10 flex size-[30px] items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/75 backdrop-blur-md transition-colors hover:border-white/20 hover:bg-white/[0.13] hover:text-white"
+            className="border-foreground/10 bg-foreground/[0.06] text-foreground/75 hover:border-foreground/20 hover:bg-foreground/[0.13] hover:text-foreground absolute top-[14px] right-[14px] z-10 flex size-[30px] items-center justify-center rounded-full border backdrop-blur-md transition-colors pointer-coarse:size-11"
           >
             <PanelLeftClose aria-hidden="true" className="size-[15px]" />
           </motion.button>

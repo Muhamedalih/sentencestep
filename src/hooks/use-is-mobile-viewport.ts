@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-/** Same cutoff as every other "mobile" check across the app (LearnSidebar's tab strip, the lesson screen's tap-to-start gate, …). */
-const MOBILE_MEDIA_QUERY = "(max-width: 639px)";
+/**
+ * Same cutoff as every other "mobile" check across the app (LearnSidebar's tab strip, the lesson screen's tap-to-start gate, …).
+ * A phone held sideways is wider than 639px but only ~375px tall, so a short touch screen counts too.
+ */
+export const MOBILE_MEDIA_QUERY = "(max-width: 639px), (pointer: coarse) and (max-height: 500px)";
 
 function matchesMobile(): boolean {
   return typeof window !== "undefined" && window.matchMedia(MOBILE_MEDIA_QUERY).matches;

@@ -460,16 +460,18 @@ function VocabularyPracticeSession({
   }
 
   return (
-    <div className="flex h-svh w-full flex-col">
+    <div className="h-app flex w-full flex-col">
       {!isComplete && (!showSummary || drillWord) && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
         <div className="flex items-center justify-between gap-4">
           <Link
             href="/learn/word-lists"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
+            className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium"
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            <span dir="ltr">{group.title}</span>
+            <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+            <span dir="ltr" className="truncate">
+              {group.title}
+            </span>
           </Link>
           {!isComplete && audioWord && (
             <div className="flex shrink-0 items-center gap-3">
@@ -622,7 +624,7 @@ function VocabularyPracticeSession({
             <motion.div
               key={word.id}
               initial={false}
-              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16"
+              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
             >
               {/* The support-language TERM leads, large and clear — it's the
                   answer to "what does this word mean," the first thing a
@@ -646,14 +648,17 @@ function VocabularyPracticeSession({
                     {hint.term}
                   </p>
                   {hint.definition && (
-                    <p className="text-muted-foreground text-[1.2rem] font-medium" dir={dir}>
+                    <p
+                      className="land-kb-hide text-muted-foreground text-[1.2rem] font-medium"
+                      dir={dir}
+                    >
                       {hint.definition}
                     </p>
                   )}
                 </div>
               )}
 
-              <div className="bg-border h-10 w-px" aria-hidden="true" />
+              <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
 
               <div className="flex w-full max-w-2xl flex-col items-center gap-3">
                 <VocabularySentence

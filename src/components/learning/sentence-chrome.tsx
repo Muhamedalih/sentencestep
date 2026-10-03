@@ -37,20 +37,20 @@ export function StoryHeaderRow({
   const { t } = useLocale();
 
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="land-kb-hide mb-3 flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <StoryProgressRing current={sentenceNumber} total={totalSentences} />
         <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--lesson-story-label)] uppercase">
           {t.lesson.story}
         </span>
         {storyTitle && (
-          <span className="text-foreground/40 min-w-0 truncate text-xs" dir="ltr">
+          <span className="text-foreground/40 min-w-0 truncate text-xs max-sm:hidden" dir="ltr">
             · {storyTitle}
           </span>
         )}
       </div>
       <div
-        className="text-muted-foreground hidden items-center gap-1 text-xs font-medium tabular-nums sm:flex"
+        className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs font-medium tabular-nums"
         dir="ltr"
       >
         {onGoBack && sentenceNumber != null && sentenceNumber > 1 && (
@@ -59,7 +59,7 @@ export function StoryHeaderRow({
             onClick={onGoBack}
             aria-label={t.lesson.previousSentenceButton}
             title={t.lesson.previousSentenceButton}
-            className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
+            className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-3 pointer-coarse:size-11"
           >
             <ChevronLeft className="size-3" aria-hidden="true" />
           </button>
@@ -75,7 +75,7 @@ export function StoryHeaderRow({
             onClick={onGoForward}
             aria-label={t.lesson.nextSentenceButton}
             title={t.lesson.nextSentenceButton}
-            className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
+            className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-3 pointer-coarse:size-11"
           >
             <ChevronRight className="size-3" aria-hidden="true" />
           </button>

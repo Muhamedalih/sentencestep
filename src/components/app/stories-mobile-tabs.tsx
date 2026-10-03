@@ -40,7 +40,7 @@ export function StoriesMobileTabs({
       aria-label={t.nav.stories}
       dir={dir}
       className={cn(
-        "bg-muted/60 ring-border/50 inline-flex items-center gap-0.5 self-start rounded-full p-1 ring-1 md:hidden",
+        "bg-muted/60 ring-border/50 grid w-full grid-cols-2 gap-0.5 rounded-2xl p-1 ring-1 md:hidden",
         className,
       )}
     >
@@ -73,7 +73,7 @@ function TabLink({
       aria-selected={active}
       {...intent}
       className={cn(
-        "focus-visible:ring-ring focus-visible:ring-offset-background rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+        "focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-11 items-center justify-center rounded-xl px-2 py-1.5 text-center text-sm leading-snug font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
         // Pressed: look selected right away and pulse until the page swaps (see LinkPendingMarker).
         "has-[[data-pending]]:bg-background has-[[data-pending]]:text-primary has-[[data-pending]]:animate-pulse has-[[data-pending]]:shadow-sm",
         active
