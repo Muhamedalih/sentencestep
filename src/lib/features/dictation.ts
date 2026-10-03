@@ -605,16 +605,72 @@ export function dictationTypedPrefix(target: string, value: string): string {
   return prefix;
 }
 
+/** Stars every letter-by-letter sentence starts with. */
+export const DICTATION_BASE_STARS = 3;
+/** Stars a sentence can start with at most: the three it always has plus two gifts. */
+export const DICTATION_MAX_STARS = 5;
+/** Sentences in a row finished without using a star that earn one gift star. */
+export const DICTATION_GIFT_EVERY = 3;
+/** Wrong tries at the same blank that cost one star. */
+export const DICTATION_MISSES_PER_STAR = 3;
+
+/** Gift stars a lesson can hold (they sit on top of the three every sentence has). */
+export const DICTATION_MAX_GIFTS = DICTATION_MAX_STARS - DICTATION_BASE_STARS;
+
+/** How many stars a sentence starts with in a lesson that has earned `gifts` gift stars. */
+export function dictationStarCapacity(gifts: number): number {
+  return Math.min(DICTATION_MAX_STARS, DICTATION_BASE_STARS + Math.max(0, gifts));
+}
+
 /**
- * 1–3 stars for one letter-by-letter sentence, simple enough to show live: it
- * starts at three, every time the word is shown costs one, and every third
- * wrong letter costs one. Never below one. A slip or two is not a loss (they
- * show in the count of wrong letters, and keep the sentence from being
- * "Perfect"), so the stars in front of the learner never drop on a first typo.
+ * Stars lost to wrong letters: every third wrong try at the same blank costs one
+ * (so two slips at a letter are free, and a letter that is wrong six times costs
+ * two). `missesByBlank` is the number of wrong tries at each blank so far.
  */
-export function dictationStars(slips: number, helps: number): 1 | 2 | 3 {
-  const lost = helps + Math.floor(slips / 3);
-  return Math.max(1, 3 - lost) as 1 | 2 | 3;
+export function dictationMissStarsLost(missesByBlank: Iterable<number>): number {
+  let lost = 0;
+  for (const count of missesByBlank) lost += Math.floor(count / DICTATION_MISSES_PER_STAR);
+  return lost;
+}
+
+/**
+ * Stars left for one letter-by-letter sentence, simple enough to show live: it
+ * starts at `capacity` (three, plus any gift stars the lesson has earned),
+ * every time the word is shown costs one and every third wrong try at the same
+ * blank costs one. Wrong letters alone never take the last star — a slip is not
+ * a loss, so the stars in front of the learner never vanish on typos — but the
+ * word shown at the last star spends it (`spent`): the stars of that sentence
+ * are then gone, and nothing is taken after that.
+ */
+export function dictationStars(capacity: number, lost: number, spent = false): number {
+  if (spent) return 0;
+  return Math.max(1, capacity - lost);
+}
+
+/** What a finished sentence does to the lesson's run towards a gift star. */
+export interface DictationGiftState {
+  /** Gift stars the lesson has earned so far (0 to DICTATION_MAX_GIFTS). */
+  gifts: number;
+  /** Sentences in a row finished without using a star, towards the next gift. */
+  run: number;
+}
+
+/**
+ * The gift state after a first-try sentence: one that used no star adds to the
+ * run, and every DICTATION_GIFT_EVERY of them earns one gift star (up to five
+ * stars in all — past that the run stops counting); a sentence that used a star
+ * starts the run over. Gift stars belong to the lesson, so nothing here ever
+ * takes one back.
+ */
+export function advanceDictationGift(
+  state: DictationGiftState,
+  usedStar: boolean,
+): DictationGiftState & { earned: boolean } {
+  if (usedStar || state.gifts >= DICTATION_MAX_GIFTS)
+    return { gifts: state.gifts, run: 0, earned: false };
+  const run = state.run + 1;
+  if (run >= DICTATION_GIFT_EVERY) return { gifts: state.gifts + 1, run: 0, earned: true };
+  return { gifts: state.gifts, run, earned: false };
 }
 
 /**
