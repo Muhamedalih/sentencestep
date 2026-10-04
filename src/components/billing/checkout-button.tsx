@@ -6,18 +6,23 @@ import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { startCheckout } from "@/lib/billing/checkout-actions";
 import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
+import { PREMIUM_DAYS } from "@/lib/billing/pricing";
 
 const initialState: CheckoutActionState = {};
 
-/** Submits to the real (currently inert) checkout action — see startCheckout for why this can't fake success. */
-export function CheckoutButton() {
+/** Submits to startCheckout, which prices the order on the server and redirects to the provider's hosted payment page. `extend` relabels the same action for a learner who is already Premium. */
+export function CheckoutButton({ extend = false }: { extend?: boolean }) {
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
   const { t } = useLocale();
+
+  const label = extend
+    ? t.premium.extendCta.replace("{days}", String(PREMIUM_DAYS))
+    : t.common.upgrade;
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? t.premium.redirecting : t.common.upgrade}
+        {pending ? t.premium.redirecting : label}
       </Button>
       {state?.error && (
         <p role="alert" className="text-muted-foreground text-center text-xs">

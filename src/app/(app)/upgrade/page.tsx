@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
@@ -6,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutButton } from "@/components/billing/checkout-button";
-import { ManageBillingButton } from "@/components/billing/manage-billing-button";
 import { PlanComparison } from "@/components/billing/plan-comparison";
 import { PremiumFaq } from "@/components/billing/premium-faq";
 import { Logo } from "@/components/layout/logo";
@@ -14,7 +14,13 @@ import { devSetAdmin } from "@/lib/admin/dev-actions";
 import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
 import { devSetPlan } from "@/lib/billing/dev-actions";
-import { formatPrice } from "@/lib/billing/pricing";
+import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import {
+  PREMIUM_DAYS,
+  TIER_PRICE_USD_CENTS,
+  formatUsd,
+  tierForCountry,
+} from "@/lib/billing/pricing";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -28,7 +34,9 @@ export const metadata: Metadata = {
 // short-circuit before ever reading a cookie, which would otherwise let
 // this page qualify for static generation — and a statically-generated
 // page only ever runs its body once, at build time, not per real visitor,
-// which would silently break the UPGRADE_VIEWED tracking call below.
+// which would silently break the UPGRADE_VIEWED tracking call below. The
+// price shown also depends on the visitor's country (request headers), so
+// this page must be rendered per request.
 export const dynamic = "force-dynamic";
 
 export default async function UpgradePage() {
@@ -42,6 +50,13 @@ export default async function UpgradePage() {
   // Supabase project required) precisely so free/premium can be exercised
   // in an environment with no account system configured at all.
   const showDevTools = process.env.NODE_ENV !== "production";
+
+  // The price is the one place a visitor ever sees one (always USD). It is
+  // resolved here from trusted request headers — the same resolution the
+  // checkout action repeats server-side — never from anything the client sends.
+  const { country } = resolvePricingCountry(await headers());
+  const price = formatUsd(TIER_PRICE_USD_CENTS[tierForCountry(country)]);
+  const days = String(PREMIUM_DAYS);
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
 
@@ -74,7 +89,7 @@ export default async function UpgradePage() {
               <Badge className="w-fit">{t.common.premium}</Badge>
               <CardTitle className="text-xl">{t.premium.fullAccessHeading}</CardTitle>
               <CardDescription>
-                {access.cancelAtPeriodEnd && access.expiresAt
+                {access.expiresAt
                   ? t.premium.thanksWithDate.replace(
                       "{date}",
                       new Date(access.expiresAt).toLocaleDateString(),
@@ -82,20 +97,34 @@ export default async function UpgradePage() {
                   : t.premium.thanks}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" asChild>
+            <CardContent className="flex flex-col gap-5">
+              <Button variant="outline" asChild className="w-fit">
                 <Link href="/learn">{t.premium.backToLearning}</Link>
               </Button>
-              <ManageBillingButton />
+
+              {/* Only a real, dated purchase can be extended — the sitewide
+                  free-for-all promotion and the dev override have no end date. */}
+              {access.expiresAt && (
+                <div className="border-border flex flex-col gap-3 border-t pt-5">
+                  <p className="text-2xl font-semibold">
+                    {price}
+                    <span className="text-muted-foreground text-base font-normal">
+                      {t.premium.priceForDays.replace("{days}", days)}
+                    </span>
+                  </p>
+                  <p className="text-muted-foreground text-xs">{t.premium.oneTimeNote}</p>
+                  <CheckoutButton extend />
+                </div>
+              )}
             </CardContent>
           </Card>
         ) : (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-baseline gap-1.5 text-3xl">
-                {formatPrice()}
+                {price}
                 <span className="text-muted-foreground text-base font-normal">
-                  {t.premium.cancelAnytime}
+                  {t.premium.priceForDays.replace("{days}", days)}
                 </span>
               </CardTitle>
               <CardDescription>{t.premium.everythingInFree}</CardDescription>
@@ -111,7 +140,12 @@ export default async function UpgradePage() {
               </ul>
 
               {user ? (
-                <CheckoutButton />
+                <div className="flex flex-col gap-2">
+                  <p className="text-muted-foreground text-center text-xs">
+                    {t.premium.oneTimeNote}
+                  </p>
+                  <CheckoutButton />
+                </div>
               ) : (
                 <Button asChild className="w-full">
                   <Link href="/login?next=/upgrade">{t.premium.signInToUpgrade}</Link>

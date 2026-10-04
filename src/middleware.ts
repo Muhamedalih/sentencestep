@@ -46,7 +46,7 @@ function generateNonce(): string {
  * Amiri/Lora (root-html-shell.tsx) are self-hosted via next/font/google —
  * served from this app's own origin, so they need no fonts.googleapis.com/
  * fonts.gstatic.com entry here at all, unlike a classic Google Fonts
- * <link>. PayTabs checkout is a real
+ * <link>. The payment provider's hosted checkout (Wayl) is a real
  * top-level navigation (redirect(), see checkout-actions.ts), never a form
  * POST or fetch from this origin, so it needs no entry here at all.
  * media-src includes blob: (mirroring img-src's own blob: entry) for

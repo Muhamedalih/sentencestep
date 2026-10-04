@@ -281,7 +281,8 @@ export const es: Dictionary = {
     thanksWithDate: "Gracias por apoyar a SentenceStep. Tu acceso continúa hasta el {date}.",
     thanks: "Gracias por apoyar a SentenceStep.",
     backToLearning: "Volver a aprender",
-    cancelAnytime: ", cancela cuando quieras",
+    priceForDays: " por {days} días",
+    oneTimeNote: "Pago único. Nunca se renueva automáticamente.",
     everythingInFree: "Todo lo del plan gratuito, más la biblioteca completa.",
     benefits: [
       "Biblioteca completa de historias, todos los niveles",
@@ -292,18 +293,18 @@ export const es: Dictionary = {
     ],
     signInToUpgrade: "Inicia sesión para mejorar tu plan",
     redirecting: "Redirigiendo…",
-    opening: "Abriendo…",
-    manageBilling: "Gestionar facturación",
+    extendCta: "Añadir {days} días más",
+    premiumUntil: "Premium hasta el {date}",
     lockedBenefits: [
       "Desbloquea esta lección",
       "Desbloquea la biblioteca completa",
-      "Cancela cuando quieras",
+      "Un solo pago, sin renovación automática",
     ],
     premiumLessonBadge: "Lección premium",
     lockedBody:
       "Esta lección es parte de SentenceStep Premium. Mejora tu plan para desbloquearla, junto con el resto de la biblioteca.",
     backToLessons: "Volver a las lecciones",
-    upgradeCta: "Mejorar plan — {price}",
+    upgradeCta: "Mejorar a Premium",
     priceAnchorCaption: "Menos que un café",
     contentUnavailableBody:
       "Esta lección no está disponible en este momento. No se perdió nada: inténtalo de nuevo en un momento o elige otra lección.",
@@ -322,9 +323,9 @@ export const es: Dictionary = {
     faqIncludedQ: "¿Qué incluye realmente Premium?",
     faqIncludedA:
       "Todos los niveles de Lecciones Normales, Historias y Conversación, además de la colección completa de Listas de Palabras. Tu racha, XP y meta diaria ya funcionan igual en el plan gratuito — Premium se trata de desbloquear contenido, no de la gamificación.",
-    faqCancelQ: "¿Puedo cancelar en cualquier momento?",
-    faqCancelA:
-      "Sí. Cancela cuando quieras desde Gestionar facturación — conservarás el acceso Premium hasta el final de tu período de facturación actual.",
+    faqRenewQ: "¿Se me cobrará de nuevo automáticamente?",
+    faqRenewA:
+      "No. Premium es un pago único que desbloquea {days} días de acceso. Nada se renueva solo: cuando se acaban los días vuelves al plan gratuito y tu progreso sigue guardado.",
     faqProgressQ: "¿Qué pasa con mi progreso si no mejoro mi plan?",
     faqProgressA:
       "Nada se pierde jamás. Tu racha, tu XP y cada lección que completaste se guardan, y conservas el acceso gratuito al contenido de nivel principiante en cada modo.",
@@ -333,7 +334,23 @@ export const es: Dictionary = {
       "Hay algo mejor que una prueba con cuenta regresiva: lecciones reales de nivel principiante en todos los modos son gratis para siempre, para que decidas con práctica real, no con un temporizador.",
     faqSwitchQ: "¿Puedo cambiar entre Gratis y Premium más adelante?",
     faqSwitchA:
-      "Sí — mejora tu plan cuando estés listo, o cancélalo después desde Gestionar facturación.",
+      "Sí — mejora tu plan cuando estés listo. Puedes añadir más días en cualquier momento mientras tengas Premium, y se suman a los que te queden.",
+    checkoutNotConnected: "El pago aún no está disponible — vuelve pronto.",
+    checkoutSignIn: "Inicia sesión primero.",
+    checkoutTryAgain: "No pudimos iniciar el pago. Inténtalo de nuevo en un momento.",
+    checkoutTooManyAttempts: "Demasiados intentos. Espera un poco e inténtalo de nuevo.",
+    paymentConfirmedHeading: "Pago confirmado",
+    paymentConfirmedBody: "Premium está activo hasta el {date}. Gracias por apoyar a SentenceStep.",
+    paymentPendingHeading: "Confirmando tu pago…",
+    paymentPendingBody:
+      "Suele tardar unos segundos y esta página se actualiza sola. Si tarda más, no vuelvas a pagar: tu Premium se activa automáticamente en cuanto se confirme el pago.",
+    paymentNotCompletedHeading: "Pago no completado",
+    paymentNotCompletedBody:
+      "Este pago no se realizó, así que Premium no se activó. Puedes intentarlo de nuevo cuando quieras.",
+    paymentReviewHeading: "Estamos revisando tu pago",
+    paymentReviewBody:
+      "Este pago necesita una revisión manual rápida. Premium se activará en cuanto se confirme; no hace falta que vuelvas a pagar.",
+    paymentNotFound: "No encontramos ese pago.",
   },
   lesson: {
     completeHeading: "Lección completada",
@@ -716,7 +733,7 @@ export const es: Dictionary = {
     freeModeCount: "{mode} gratis",
     startLearningFree: "Empezar a aprender gratis",
     premiumHeading: "Cuando estés listo para más",
-    premiumSubtitle: "Premium desbloquea todo lo que ofrece SentenceStep, por {price}.",
+    premiumSubtitle: "Premium desbloquea todo lo que ofrece SentenceStep.",
     unlockPremiumCta: "Desbloquear SentenceStep Premium",
     modesHeading: "Tres formas de ganar fluidez",
     modesSubtitle:

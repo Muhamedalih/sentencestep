@@ -314,13 +314,18 @@ export interface Dictionary {
     thanksWithDate: string;
     thanks: string;
     backToLearning: string;
-    cancelAnytime: string;
+    /** Shown right after the price, e.g. "$3" + " for 30 days" — `{days}` is replaced with PREMIUM_DAYS. */
+    priceForDays: string;
+    /** One-time-payment reassurance shown above the checkout button. */
+    oneTimeNote: string;
     everythingInFree: string;
     benefits: string[];
     signInToUpgrade: string;
     redirecting: string;
-    opening: string;
-    manageBilling: string;
+    /** Button for a current premium learner to pay for more days — `{days}` is replaced with PREMIUM_DAYS. */
+    extendCta: string;
+    /** Settings' plan row: "Premium until {date}". */
+    premiumUntil: string;
     lockedBenefits: string[];
     premiumLessonBadge: string;
     lockedBody: string;
@@ -346,14 +351,30 @@ export interface Dictionary {
     faqHeading: string;
     faqIncludedQ: string;
     faqIncludedA: string;
-    faqCancelQ: string;
-    faqCancelA: string;
+    /** `{days}` is replaced with PREMIUM_DAYS. */
+    faqRenewQ: string;
+    faqRenewA: string;
     faqProgressQ: string;
     faqProgressA: string;
     faqTrialQ: string;
     faqTrialA: string;
     faqSwitchQ: string;
     faqSwitchA: string;
+    /** Errors shown by the checkout action (src/lib/billing/checkout-actions.ts). */
+    checkoutNotConnected: string;
+    checkoutSignIn: string;
+    checkoutTryAgain: string;
+    checkoutTooManyAttempts: string;
+    /** The /billing/return page, shown when the payment provider sends the learner back. `{date}` is the premium end date. */
+    paymentConfirmedHeading: string;
+    paymentConfirmedBody: string;
+    paymentPendingHeading: string;
+    paymentPendingBody: string;
+    paymentNotCompletedHeading: string;
+    paymentNotCompletedBody: string;
+    paymentReviewHeading: string;
+    paymentReviewBody: string;
+    paymentNotFound: string;
   };
   lesson: {
     completeHeading: string;
@@ -818,7 +839,7 @@ export interface Dictionary {
     freeModeCount: string;
     startLearningFree: string;
     premiumHeading: string;
-    /** `Premium unlocks everything SentenceStep offers, for {price}.` */
+    /** Deliberately has no price: prices are only shown on /upgrade, resolved per visitor on the server. */
     premiumSubtitle: string;
     unlockPremiumCta: string;
     modesHeading: string;

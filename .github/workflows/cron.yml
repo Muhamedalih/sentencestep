@@ -23,6 +23,7 @@ on:
     # how quickly a real backlog (e.g. a cache-invalidating provider/version
     # switch) gets worked through in small, bounded steps.
     - cron: "*/15 * * * *" # voice-sweep
+    - cron: "*/10 * * * *" # payments-reconcile
   workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
 
 jobs:
@@ -70,3 +71,16 @@ jobs:
           curl --fail-with-body -sS -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://sentencestep.com/api/cron/voice-sweep
+
+  # Safety net behind the payment webhook and the return page: settles any
+  # payment order whose webhook never arrived (src/lib/billing/payments/
+  # reconcile.ts). Skips quietly until a payment provider is configured.
+  payments-reconcile:
+    if: github.event.schedule == '*/10 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/payments-reconcile
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/payments-reconcile
