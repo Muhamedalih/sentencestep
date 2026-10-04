@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 // this page qualify for static generation — and a statically-generated
 // page only ever runs its body once, at build time, not per real visitor,
 // which would silently break the UPGRADE_VIEWED tracking call below. The
-// price shown also depends on the visitor's country (request headers), so
+// price shown also depends on the visitor's country (the hosting platform's geolocation), so
 // this page must be rendered per request.
 export const dynamic = "force-dynamic";
 
@@ -52,7 +52,7 @@ export default async function UpgradePage() {
   const showDevTools = process.env.NODE_ENV !== "production";
 
   // The price is the one place a visitor ever sees one (always USD). It is
-  // resolved here from trusted request headers — the same resolution the
+  // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
   const price = formatUsd(TIER_PRICE_USD_CENTS[tierForCountry(country)]);

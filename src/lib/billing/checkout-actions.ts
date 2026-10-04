@@ -21,7 +21,7 @@ export interface CheckoutActionState {
  * Starts a real checkout once a payment provider is configured (see
  * provider-registry.ts — until then this returns the honest "not connected"
  * state). The price is decided entirely on the server: the country comes from
- * trusted request headers, never from the form, and the callback URLs come
+ * the hosting platform's geolocation, never from the form, and the callback URLs come
  * from the configured site origin, never from a request header. This never
  * redirects to a fake success page or grants access on its own — only a
  * payment verified with the provider's own API ever does (see

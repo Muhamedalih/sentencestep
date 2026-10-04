@@ -37,7 +37,7 @@ export interface CheckoutDeps {
 
 export interface CheckoutInput {
   userId: string;
-  /** Resolved on the server from trusted request headers — never from client input. */
+  /** Resolved on the server from the hosting platform's geolocation — never from client input. */
   country: ResolvedPricingCountry;
   /** The canonical site origin, never a request header. */
   origin: string;
