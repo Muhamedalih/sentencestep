@@ -77,11 +77,23 @@ test("createCheckout: the provider is asked for a link with our own callback URL
     referenceId: "ss_123e4567e89b12d3a456426614174000",
     amount: 3960,
     currency: "IQD",
-    description: "SentenceStep Premium (30 days)",
+    description: "SentenceStep Premium (30 days) - $3",
     webhookUrl: `${ORIGIN}/api/billing/webhook/wayl`,
     redirectUrl: `${ORIGIN}/billing/return`,
     expiresIn: "1h",
   });
+});
+
+test("createCheckout: the product line names the dollar price of the buyer's tier", async () => {
+  const tierA = setup();
+  await createCheckout(tierA.deps, { userId: "user-1", country: iraq, origin: ORIGIN });
+  assert.equal(tierA.provider.created[0]!.amount, 2640);
+  assert.equal(tierA.provider.created[0]!.description, "SentenceStep Premium (30 days) - $2");
+
+  const tierB = setup();
+  await createCheckout(tierB.deps, { userId: "user-1", country: unknown, origin: ORIGIN });
+  assert.equal(tierB.provider.created[0]!.amount, 3960);
+  assert.equal(tierB.provider.created[0]!.description, "SentenceStep Premium (30 days) - $3");
 });
 
 test("createCheckout: the order is marked pending with the provider's link once it exists", async () => {

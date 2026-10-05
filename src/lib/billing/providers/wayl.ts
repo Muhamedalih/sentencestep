@@ -66,6 +66,24 @@ export function mapWaylStatus(rawStatus: string): PaymentStatus {
   }
 }
 
+// Wayl's webhook describes the buyer (name, city, phone...) under `customer`.
+// Nothing here needs that, and the payload is kept for the audit log, so
+// anything that looks personal is dropped, at every depth, before it leaves
+// the adapter.
+const PERSONAL_KEY = /customer|buyer|name|phone|mobile|email|address|city|contact/i;
+
+export function withoutPersonalData(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutPersonalData);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !PERSONAL_KEY.test(key))
+        .map(([key, inner]) => [key, withoutPersonalData(inner)]),
+    );
+  }
+  return value;
+}
+
 function isHttpsUrl(value: unknown): value is string {
   if (typeof value !== "string") return false;
   try {
@@ -306,7 +324,12 @@ export function createWaylProvider(config: WaylConfig): PaymentProvider {
       const eventId =
         typeof fields.id === "string" && fields.id !== "" ? `${fields.id}:${eventType}` : null;
 
-      return { referenceId: fields.referenceId, eventId, eventType, payload };
+      return {
+        referenceId: fields.referenceId,
+        eventId,
+        eventType,
+        payload: withoutPersonalData(payload),
+      };
     },
   };
 }

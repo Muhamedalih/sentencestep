@@ -430,6 +430,35 @@ test("verifyWebhook: reads the payload shape Wayl documents in its dashboard (ev
   assert.equal(verified.eventId, null);
 });
 
+test("verifyWebhook: the payload kept for the audit log has the buyer's personal details removed", () => {
+  const body = JSON.stringify({
+    event: "order.created",
+    referenceId: "ss_abc",
+    paymentStatus: "Complete",
+    total: 2640,
+    customer: { id: "c_1", name: "Test Person", phone: "+9647700000000", city: "Kirkuk" },
+    note: {
+      contactEmail: "test@example.com",
+      items: [{ label: "SentenceStep Premium", buyerName: "Test Person" }],
+    },
+  });
+
+  const verified = verify(body, signHex(body));
+
+  assert.equal(verified.referenceId, "ss_abc");
+  assert.deepEqual(verified.payload, {
+    event: "order.created",
+    referenceId: "ss_abc",
+    paymentStatus: "Complete",
+    total: 2640,
+    note: { items: [{ label: "SentenceStep Premium" }] },
+  });
+  const kept = JSON.stringify(verified.payload);
+  for (const personal of ["Test Person", "+9647700000000", "Kirkuk", "test@example.com"]) {
+    assert.equal(kept.includes(personal), false, personal);
+  }
+});
+
 test("verifyWebhook: when the payload carries an id, the audit key combines it with the event name", () => {
   const body = JSON.stringify({ id: "evt_7", event: "order.paid", referenceId: "ss_abc" });
   const verified = verify(body, signHex(body));

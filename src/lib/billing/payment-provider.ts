@@ -45,6 +45,7 @@ export interface VerifiedWebhook {
   /** Best-effort key for the audit log; null when the payload offers none. */
   eventId: string | null;
   eventType: string;
+  /** The payload as it may be kept in the audit log: an adapter strips the buyer's personal details first. */
   payload: unknown;
 }
 

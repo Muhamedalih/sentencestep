@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { PaymentProvider } from "@/lib/billing/payment-provider";
 import type { ResolvedPricingCountry } from "@/lib/billing/geo-pricing";
-import { quotePrice, tierForCountry } from "@/lib/billing/pricing";
+import { formatUsd, quotePrice, tierForCountry } from "@/lib/billing/pricing";
 import type { PricingTier } from "@/lib/billing/pricing";
 
 import {
@@ -109,7 +109,9 @@ export async function createCheckout(
       referenceId: order.reference_id,
       amount: quote.amount,
       currency: quote.currency,
-      description: `SentenceStep Premium (${quote.premiumDays} days)`,
+      // Wayl's page can only charge and show dinars; naming the dollar price in
+      // the product line is what lets the buyer match it to what they saw here.
+      description: `SentenceStep Premium (${quote.premiumDays} days) - ${formatUsd(quote.usdCents)}`,
       webhookUrl: `${origin}/api/billing/webhook/${provider.name}`,
       redirectUrl: `${origin}/billing/return`,
       expiresIn: LINK_EXPIRES_IN,

@@ -14,6 +14,7 @@ import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
 import type { PaymentOrder } from "@/lib/billing/payments/types";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
+import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -93,10 +94,7 @@ export default async function BillingReturnPage({
         icon: <CircleCheck className="size-6" aria-hidden="true" />,
         heading: t.premium.paymentConfirmedHeading,
         body: premiumUntil
-          ? t.premium.paymentConfirmedBody.replace(
-              "{date}",
-              new Date(premiumUntil).toLocaleDateString(),
-            )
+          ? t.premium.paymentConfirmedBody.replace("{date}", formatLongDate(premiumUntil, locale))
           : t.premium.thanks,
       };
       break;

@@ -22,6 +22,7 @@ import {
   tierForCountry,
 } from "@/lib/billing/pricing";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
+import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -92,7 +93,7 @@ export default async function UpgradePage() {
                 {access.expiresAt
                   ? t.premium.thanksWithDate.replace(
                       "{date}",
-                      new Date(access.expiresAt).toLocaleDateString(),
+                      formatLongDate(access.expiresAt, locale),
                     )
                   : t.premium.thanks}
               </CardDescription>

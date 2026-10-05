@@ -16,6 +16,7 @@ import { getLearnerLevel, learnerLevelSupportLabel } from "@/lib/progress/learne
 import { clearProgress } from "@/lib/progress/store";
 import type { StreakState } from "@/lib/progress/types";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { formatLongDate } from "@/lib/i18n/format-date";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { AccessState } from "@/lib/billing/types";
 import { cn } from "@/lib/utils";
@@ -116,7 +117,7 @@ export function AccountSection({
                 <span>
                   {t.settings.memberSinceLabel.replace(
                     "{date}",
-                    new Date(memberSince).toLocaleDateString(),
+                    formatLongDate(memberSince, locale),
                   )}
                 </span>
               )}
@@ -156,7 +157,7 @@ export function AccountSection({
                   <span className="text-muted-foreground text-xs md:text-sm">
                     {t.premium.premiumUntil.replace(
                       "{date}",
-                      new Date(access.expiresAt).toLocaleDateString(),
+                      formatLongDate(access.expiresAt, locale),
                     )}
                   </span>
                   <Button
