@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -7,10 +9,12 @@ import { freeForAllAppliesTo, parseExcludedEmails } from "@/lib/billing/free-acc
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { TIER_PRICE_USD_CENTS, formatUsd, tierForCountry } from "@/lib/billing/pricing";
 import {
+  listOwnOrderReferences,
   listOwnOrders,
   listRecordedWaylEvents,
   listWebhookAttempts,
 } from "@/lib/billing/payments/webhook-attempts";
+import type { PaymentProvider } from "@/lib/billing/payment-provider";
 import { getPaymentProvider } from "@/lib/billing/provider-registry";
 import { getSiteUrl } from "@/lib/site-url";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -19,6 +23,73 @@ import { getCurrentUser } from "@/lib/supabase/auth";
 export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "no-store" };
+
+function briefError(error: unknown): string {
+  return error instanceof Error ? error.message.slice(0, 300) : "unknown error";
+}
+
+/** Asks Wayl about the visitor's own latest orders with the same batch call the reconcile job makes. */
+async function lookUpOrdersInBatch(provider: PaymentProvider, references: string[]) {
+  try {
+    const payments = await provider.getPayments(references);
+    return payments.map((payment) => ({
+      status: payment.status,
+      providerStatus: payment.rawStatus,
+      amount: payment.amount,
+      currency: payment.currency,
+      completed: payment.paidAt !== null,
+    }));
+  } catch (error) {
+    return { error: briefError(error) };
+  }
+}
+
+/**
+ * Sends this deployment's own webhook endpoint a delivery signed the way the
+ * adapter expects, through the public URL, so the route, the raw body, the
+ * signature check and the audit write are exercised end to end. It names the
+ * visitor's latest order, which a webhook can only ever re-verify with Wayl.
+ */
+async function pingOwnWebhook(referenceId: string) {
+  const body = JSON.stringify({
+    verb: "POST",
+    event: "test.ping",
+    referenceId,
+    paymentStatus: "Complete",
+  });
+  const signature = createHmac("sha256", process.env.WAYL_WEBHOOK_SECRET ?? "")
+    .update(body)
+    .digest("hex");
+  try {
+    const response = await fetch(`${getSiteUrl().replace(/\/+$/, "")}/api/billing/webhook/wayl`, {
+      method: "POST",
+      headers: {
+        "content-type": "text/plain",
+        "x-wayl-signature-256": signature,
+        "user-agent": "sentencestep-selfcheck",
+      },
+      body,
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    return { status: response.status, body: await response.json().catch(() => null) };
+  } catch (error) {
+    return { error: briefError(error) };
+  }
+}
+
+async function runSelfCheck(userId: string, provider: PaymentProvider | null) {
+  if (!provider) return { error: "no_provider_configured" };
+  const references = await listOwnOrderReferences(userId);
+  const latest = references[0];
+  if (!latest) return { error: "no_orders_yet" };
+
+  const [batchLookup, webhookPing] = await Promise.all([
+    lookUpOrdersInBatch(provider, references),
+    pingOwnWebhook(latest),
+  ]);
+  return { batchLookup, webhookPing };
+}
 
 /**
  * Temporary pre-launch diagnostics for trying the payment flow on a Netlify
@@ -30,8 +101,12 @@ const NO_STORE = { "Cache-Control": "no-store" };
  * signature, anyone's email or any personal detail, and it does not exist on a
  * deployment taking real payments (WAYL_ENV=live). Remove it once the payment
  * flow has been verified.
+ *
+ * Adding ?check=1 also runs a self-check: the batch lookup the reconcile job
+ * depends on, against Wayl itself, and a signed delivery to this deployment's
+ * own webhook endpoint.
  */
-export async function GET() {
+export async function GET(request: Request) {
   if (process.env.WAYL_ENV === "live") {
     return new NextResponse("Not found", { status: 404, headers: NO_STORE });
   }
@@ -42,6 +117,12 @@ export async function GET() {
   try {
     const excludedRaw = process.env.FREE_ACCESS_EXCLUDED_EMAILS;
     const excluded = parseExcludedEmails(excludedRaw);
+    const provider = getPaymentProvider();
+    // Before the lists below are read, so its own delivery shows up in them.
+    const selfCheck =
+      new URL(request.url).searchParams.get("check") === "1"
+        ? await runSelfCheck(user.id, provider)
+        : undefined;
     const [settings, access, requestHeaders, orders, events, attempts] = await Promise.all([
       getAccessSettings(),
       getAccessState(),
@@ -52,7 +133,6 @@ export async function GET() {
     ]);
     const { country, source } = resolvePricingCountry(requestHeaders);
     const tier = tierForCountry(country);
-    const provider = getPaymentProvider();
 
     return NextResponse.json(
       {
@@ -76,6 +156,7 @@ export async function GET() {
         yourOrders: orders,
         webhookEventsRecorded: events,
         webhookDeliveries: attempts,
+        ...(selfCheck !== undefined && { selfCheck }),
       },
       { headers: NO_STORE },
     );

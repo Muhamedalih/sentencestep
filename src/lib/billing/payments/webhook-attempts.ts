@@ -64,3 +64,15 @@ export async function listOwnOrders(userId: string, limit = 3) {
   if (error) throw error;
   return data ?? [];
 }
+
+/** The references of the visitor's own latest orders, newest first. For server use only; never sent to the browser. */
+export async function listOwnOrderReferences(userId: string, limit = 3): Promise<string[]> {
+  const { data, error } = await createServiceRoleClient()
+    .from("payment_orders")
+    .select("reference_id")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((row) => row.reference_id);
+}

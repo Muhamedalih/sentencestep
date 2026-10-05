@@ -145,7 +145,24 @@ test("reconcile: one failing order does not stop the others", async () => {
   assert.deepEqual(summary.errors, ["ss_boom: database timeout"]);
 });
 
-test("reconcile: an unreachable provider fails the whole run, so the scheduler reports it", async () => {
-  const { deps } = setup([orderFor("ss_a")], new Error("Wayl is down"));
+test("reconcile: when the batch call fails it falls back to one lookup per order and still settles them", async () => {
+  const { store, provider, alerts, deps } = setup(
+    [orderFor("ss_paid")],
+    new Error("batch endpoint rejected the request"),
+  );
+  provider.payment = paymentFor("ss_paid");
+
+  const summary = await reconcileOpenOrders(deps);
+
+  assert.equal(summary.fulfilled, 1);
+  assert.deepEqual(summary.errors, []);
+  assert.equal(store.get("ss_paid").status, "fulfilled");
+  assert.deepEqual(provider.getPaymentCalls, ["ss_paid"]);
+  assert.equal(alerts[0]!.code, "reconcile_batch_lookup_failed");
+});
+
+test("reconcile: a provider that cannot be reached at all fails the whole run, so the scheduler reports it", async () => {
+  const { provider, deps } = setup([orderFor("ss_a")], new Error("Wayl is down"));
+  provider.payment = new Error("Wayl is down");
   await assert.rejects(reconcileOpenOrders(deps), /Wayl is down/);
 });
