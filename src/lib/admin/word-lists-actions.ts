@@ -8,6 +8,8 @@ import { logAdminAction } from "@/lib/admin/audit-log";
 import { validateWordGroupInput, validateWordGroupWords } from "@/lib/admin/word-lists-validation";
 import type { VocabularyWordInput, WordGroupInput } from "@/lib/admin/word-lists-validation";
 import { createClient } from "@/lib/supabase/server";
+import { parseAlternates } from "@/lib/word-lists-answer";
+import { normalizeIpa } from "@/lib/word-lists-ipa";
 import { triggerAutomaticWordGroupVoiceGeneration } from "@/lib/voice/auto-trigger";
 
 export interface ActionResult {
@@ -46,6 +48,7 @@ export async function createWordGroup(input: WordGroupInput): Promise<ActionResu
       description_ar: input.descriptionAr?.trim() || null,
       is_free: input.isFree,
       status: input.status,
+      voice_id: input.voiceId || null,
     })
     .select("id")
     .single();
@@ -83,6 +86,7 @@ export async function updateWordGroup(
       description_ar: input.descriptionAr?.trim() || null,
       is_free: input.isFree,
       status: input.status,
+      voice_id: input.voiceId || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.id);
@@ -92,6 +96,14 @@ export async function updateWordGroup(
     }
     return { error: "Couldn't save the word group. Please try again." };
   }
+
+  // Best-effort, non-blocking: a changed voice is a different cache key
+  // (see resolution.ts's cacheKeyParts), so this re-generates this group's
+  // words under the new voice right away instead of waiting for the next
+  // voice-sweep cron tick — same trigger saveWordGroupWords already fires
+  // after a words edit, safe to call unconditionally since a voice that
+  // didn't actually change just hits the existing cache and no-ops.
+  triggerAutomaticWordGroupVoiceGeneration(input.id);
 
   void logAdminAction("word_group.updated", "word_group", input.id);
   revalidatePath("/admin/word-lists");
@@ -211,6 +223,17 @@ export async function saveWordGroupWords(
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
 
+  // Accepted answers are written only when the form offered the field for every
+  // word (the database has the accepted_answers column): upserting a column that
+  // does not exist would fail the whole save, and a bulk upsert needs every row
+  // to carry the same columns.
+  const includeAlternates =
+    words.length > 0 && words.every((w) => typeof w.alternates === "string");
+  const alternatesFor = (word: VocabularyWordInput) =>
+    includeAlternates
+      ? { accepted_answers: parseAlternates(word.alternates ?? "", word.targetWord) }
+      : {};
+
   const existing = words
     .map((word, index) => ({ word, index }))
     .filter(
@@ -231,6 +254,8 @@ export async function saveWordGroupWords(
       target_word: word.targetWord.trim().toLowerCase(),
       sentence: word.sentence.trim(),
       hint_ar: word.hintAr.trim(),
+      ipa: normalizeIpa(word.ipa),
+      ...alternatesFor(word),
       updated_at: nowIso,
     }));
     const { error } = await supabase
@@ -248,6 +273,8 @@ export async function saveWordGroupWords(
     target_word: word.targetWord.trim().toLowerCase(),
     sentence: word.sentence.trim(),
     hint_ar: word.hintAr.trim(),
+    ipa: normalizeIpa(word.ipa),
+    ...alternatesFor(word),
     updated_at: nowIso,
   }));
   const { error: finalError } = await supabase

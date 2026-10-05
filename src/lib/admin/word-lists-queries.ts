@@ -1,3 +1,4 @@
+import { WORD_IPA } from "@/data/word-lists/ipa";
 import { createClient } from "@/lib/supabase/server";
 import type { WordGroupStatus } from "@/lib/admin/word-lists-validation";
 
@@ -20,6 +21,8 @@ export interface AdminWordGroup {
   descriptionAr: string | null;
   isFree: boolean;
   status: WordGroupStatus;
+  /** Per-group Edge-TTS narration override — see word_groups.voice_id's own doc comment (src/types/database.ts). Null means "use the site-wide Word Lists default voice". */
+  voiceId: string | null;
   wordCount: number;
 }
 
@@ -56,6 +59,7 @@ export async function listWordGroupsAdmin(): Promise<AdminWordGroup[]> {
     descriptionAr: row.description_ar,
     isFree: row.is_free,
     status: row.status as WordGroupStatus,
+    voiceId: row.voice_id,
     wordCount: countByGroup.get(row.id) ?? 0,
   }));
 }
@@ -67,10 +71,18 @@ export interface AdminVocabularyWord {
   targetWord: string;
   sentence: string;
   hintAr: string;
+  /** The IPA an admin set for this word, bare without slashes; null when none (the generated fallback applies). */
+  ipa: string | null;
+  /** The generated fallback for this word's target word (src/data/word-lists/ipa.ts), shown as the field's placeholder; null when there is none. */
+  suggestedIpa: string | null;
+  /** Extra answers this word accepts (British spellings, synonyms). null when the database has no accepted_answers column yet — the editor then does not offer the field. */
+  alternates: string[] | null;
 }
 
 export interface AdminWordGroupDetail extends AdminWordGroup {
   words: AdminVocabularyWord[];
+  /** The database has the accepted_answers column (20250324000000_word_accepted_answers.sql is applied), so the words editor can offer and save it. */
+  alternatesSupported: boolean;
 }
 
 export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupDetail | null> {
@@ -90,6 +102,19 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
     .order("order_index", { ascending: true });
   if (wordsError) throw wordsError;
 
+  // A group that already has words answers the question by its own rows; an
+  // empty one has to ask the table.
+  let alternatesSupported: boolean;
+  if ((words ?? []).length > 0) {
+    alternatesSupported = (words ?? []).every((w) => Array.isArray(w.accepted_answers));
+  } else {
+    const { error: probeError } = await supabase
+      .from("vocabulary_words")
+      .select("accepted_answers")
+      .limit(1);
+    alternatesSupported = !probeError;
+  }
+
   return {
     id: group.id,
     level: group.level,
@@ -100,7 +125,9 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
     descriptionAr: group.description_ar,
     isFree: group.is_free,
     status: group.status as WordGroupStatus,
+    voiceId: group.voice_id,
     wordCount: words?.length ?? 0,
+    alternatesSupported,
     words: (words ?? []).map((w) => ({
       id: w.id,
       groupId: w.group_id,
@@ -108,6 +135,9 @@ export async function getWordGroupByIdAdmin(id: string): Promise<AdminWordGroupD
       targetWord: w.target_word,
       sentence: w.sentence,
       hintAr: w.hint_ar,
+      ipa: w.ipa,
+      suggestedIpa: WORD_IPA[w.target_word.toLowerCase()] ?? null,
+      alternates: Array.isArray(w.accepted_answers) ? w.accepted_answers : null,
     })),
   };
 }

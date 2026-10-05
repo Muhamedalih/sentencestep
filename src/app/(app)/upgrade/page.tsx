@@ -64,7 +64,7 @@ export default async function UpgradePage() {
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
       <Link
         href={user ? "/learn" : "/"}
-        className="self-center"
+        className="inline-flex min-h-11 items-center self-center"
         aria-label={t.marketing.homeLinkAriaLabel}
       >
         <Logo />

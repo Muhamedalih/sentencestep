@@ -1,0 +1,204 @@
+-- Word Lists content: 6 new groups (2 per tier: Beginner/Intermediate/
+-- Advanced), 25 words each — bringing every tier from 6 groups to 8.
+-- Historical record of scripts/insert-word-lists-expansion-2.ts, same
+-- precedent as 20250204000000_word_lists_expansion.sql /
+-- 20250205000000_word_lists_topup.sql.
+--
+-- Inserted as status 'draft' on purpose (every prior word_groups seed used
+-- 'published') — under the "Published word groups are public; admins see
+-- all" RLS policy (20250119000000_word_lists.sql), a draft row is visible
+-- only to an admin session, never to a learner. Flip each group to
+-- 'published' from Admin > Word Lists once it's been reviewed; this
+-- migration deliberately does not do that itself.
+--
+-- Themes are distinct from all 18 existing groups (Family/Colors/Animals/
+-- Food/House/Clothes, Friendship/Travel/Health/Shopping/Weather/Work,
+-- Politics/Finance/Technology/Environment/Education/Media) — every target
+-- word below was checked by hand against all ~465 existing words and
+-- against the other 5 new groups; none repeat. `on conflict (id) do
+-- nothing` makes this safe to run again without clobbering admin edits.
+--
+-- order_index is computed from the table's current max, not hardcoded —
+-- word_groups.order_index has its own `unique` constraint (see
+-- 20250119000000_word_lists.sql), separate from the `id` primary key, and
+-- `on conflict (id) do nothing` only suppresses a conflict on `id`. A
+-- hardcoded 19-24 here previously collided with that constraint whenever
+-- the live table already had a group at one of those order_index values
+-- (e.g. one added by hand through /admin/word-lists/new, which this
+-- repo's migration history wouldn't reflect) — Postgres raised a
+-- unique-violation error on the whole insert, the transaction rolled
+-- back, and neither the groups nor the words below it were ever saved.
+begin;
+
+with base as (
+  select coalesce(max(order_index), 0) as start_order from word_groups
+),
+new_groups (ord, id, level, title, title_ar, description, description_ar) as (
+  values
+    (1, 'body', 1, 'Body', 'الجسم', 'The body parts people actually talk about — from head to toe.', 'أجزاء الجسم التي يتحدث عنها الناس فعلاً، من الرأس إلى القدم.'),
+    (2, 'transportation', 1, 'Transportation', 'المواصلات', 'How people actually get around — cars, trains, and everything on the road.', 'كيف يتنقل الناس فعلاً — السيارات والقطارات وكل ما يتعلق بالطريق.'),
+    (3, 'sports', 2, 'Sports', 'الرياضة', 'The vocabulary of games, matches, and staying active.', 'مفردات الألعاب والمباريات والنشاط البدني.'),
+    (4, 'emotions', 2, 'Emotions', 'المشاعر', 'The feelings people actually name when talking about their day.', 'المشاعر التي يسميها الناس فعلاً عند الحديث عن يومهم.'),
+    (5, 'law', 3, 'Law', 'القانون', 'The vocabulary of courts, contracts, and the legal system.', 'مفردات المحاكم والعقود والنظام القانوني.'),
+    (6, 'science', 3, 'Science', 'العلوم', 'The language of experiments, theories, and how researchers actually talk about them.', 'لغة التجارب والنظريات وكيف يتحدث الباحثون عنها فعلاً.')
+)
+insert into word_groups (id, level, order_index, title, title_ar, description, description_ar, is_free, status)
+select new_groups.id, new_groups.level, base.start_order + new_groups.ord, new_groups.title, new_groups.title_ar,
+       new_groups.description, new_groups.description_ar, false, 'draft'
+from new_groups, base
+on conflict (id) do nothing;
+
+insert into vocabulary_words (id, group_id, order_index, target_word, sentence, hint_ar) values
+  ('body-head', 'body', 1, 'head', 'He hit his ___ on the low doorway.', 'الرأس.'),
+  ('body-hair', 'body', 2, 'hair', 'She dyed her ___ a bright red color.', 'الشعر.'),
+  ('body-eye', 'body', 3, 'eye', 'Close one ___ and look through the camera.', 'العين.'),
+  ('body-ear', 'body', 4, 'ear', 'He whispered the answer in my ___.', 'الأذن.'),
+  ('body-nose', 'body', 5, 'nose', 'The dog sniffed the ground with its ___.', 'الأنف.'),
+  ('body-mouth', 'body', 6, 'mouth', 'Don''t talk with food in your ___.', 'الفم.'),
+  ('body-tooth', 'body', 7, 'tooth', 'She lost a ___ playing hockey last year.', 'السن أو الضرس.'),
+  ('body-tongue', 'body', 8, 'tongue', 'He burned his ___ on the hot soup.', 'اللسان.'),
+  ('body-neck', 'body', 9, 'neck', 'The scarf kept her ___ warm all winter.', 'الرقبة.'),
+  ('body-shoulder', 'body', 10, 'shoulder', 'He carried the bag over one ___.', 'الكتف.'),
+  ('body-arm', 'body', 11, 'arm', 'She broke her ___ falling off the bike.', 'الذراع.'),
+  ('body-elbow', 'body', 12, 'elbow', 'He leaned his ___ on the table.', 'المرفق.'),
+  ('body-hand', 'body', 13, 'hand', 'Raise your ___ if you know the answer.', 'اليد.'),
+  ('body-finger', 'body', 14, 'finger', 'She cut her ___ chopping onions.', 'الإصبع.'),
+  ('body-nail', 'body', 15, 'nail', 'He painted his sister''s ___s bright pink.', 'الظفر.'),
+  ('body-chest', 'body', 16, 'chest', 'The doctor listened to his ___ carefully.', 'الصدر.'),
+  ('body-back', 'body', 17, 'back', 'Lifting the box hurt his ___.', 'الظهر.'),
+  ('body-stomach', 'body', 18, 'stomach', 'Her ___ growled during the meeting.', 'المعدة أو البطن.'),
+  ('body-leg', 'body', 19, 'leg', 'He stretched his ___s before the race.', 'الساق أو الرجل.'),
+  ('body-knee', 'body', 20, 'knee', 'She scraped her ___ falling off the swing.', 'الركبة.'),
+  ('body-ankle', 'body', 21, 'ankle', 'He twisted his ___ on the uneven path.', 'الكاحل.'),
+  ('body-foot', 'body', 22, 'foot', 'Watch your ___, the step is broken.', 'القدم.'),
+  ('body-toe', 'body', 23, 'toe', 'She stubbed her ___ on the bed frame.', 'إصبع القدم.'),
+  ('body-skin', 'body', 24, 'skin', 'Use sunscreen to protect your ___.', 'الجلد أو البشرة.'),
+  ('body-wrist', 'body', 25, 'wrist', 'He wears his watch on his left ___.', 'المعصم.'),
+  ('transportation-car', 'transportation', 1, 'car', 'We drove to the coast in my brother''s ___.', 'السيارة.'),
+  ('transportation-bus', 'transportation', 2, 'bus', 'The ___ arrives at the corner every ten minutes.', 'الحافلة.'),
+  ('transportation-train', 'transportation', 3, 'train', 'She takes the ___ to work every morning.', 'القطار.'),
+  ('transportation-bicycle', 'transportation', 4, 'bicycle', 'He rides his ___ to school every day.', 'الدراجة الهوائية.'),
+  ('transportation-motorcycle', 'transportation', 5, 'motorcycle', 'A ___ passed us quickly on the highway.', 'الدراجة النارية.'),
+  ('transportation-taxi', 'transportation', 6, 'taxi', 'We called a ___ to get to the airport.', 'سيارة الأجرة.'),
+  ('transportation-subway', 'transportation', 7, 'subway', 'The ___ was packed during rush hour.', 'مترو الأنفاق.'),
+  ('transportation-truck', 'transportation', 8, 'truck', 'A large ___ delivered the furniture this morning.', 'الشاحنة.'),
+  ('transportation-ship', 'transportation', 9, 'ship', 'The ___ sailed out of the harbor at noon.', 'السفينة.'),
+  ('transportation-boat', 'transportation', 10, 'boat', 'They rowed the small ___ across the lake.', 'القارب.'),
+  ('transportation-driver', 'transportation', 11, 'driver', 'The ___ stopped to let the children cross.', 'السائق.'),
+  ('transportation-passenger', 'transportation', 12, 'passenger', 'Every ___ must wear a seatbelt.', 'الراكب.'),
+  ('transportation-traffic', 'transportation', 13, 'traffic', '___ was heavy on the way home tonight.', 'حركة المرور.'),
+  ('transportation-highway', 'transportation', 14, 'highway', 'We took the ___ to save some time.', 'الطريق السريع.'),
+  ('transportation-fuel', 'transportation', 15, 'fuel', 'The car ran out of ___ near the bridge.', 'الوقود.'),
+  ('transportation-engine', 'transportation', 16, 'engine', 'The mechanic fixed the ___ in an hour.', 'المحرك.'),
+  ('transportation-wheel', 'transportation', 17, 'wheel', 'One ___ on the cart is wobbly.', 'العجلة.'),
+  ('transportation-brake', 'transportation', 18, 'brake', 'He hit the ___ before the light turned red.', 'الفرامل.'),
+  ('transportation-horn', 'transportation', 19, 'horn', 'The driver honked his ___ at the cat.', 'بوق السيارة.'),
+  ('transportation-license', 'transportation', 20, 'license', 'You need a driving ___ to rent a car.', 'الرخصة.'),
+  ('transportation-garage', 'transportation', 21, 'garage', 'She parked the car in the ___ overnight.', 'المرآب أو الكراج.'),
+  ('transportation-seatbelt', 'transportation', 22, 'seatbelt', 'Please fasten your ___ before we start driving.', 'حزام الأمان.'),
+  ('transportation-parking', 'transportation', 23, 'parking', '___ near the stadium is almost impossible to find.', 'موقف السيارات.'),
+  ('transportation-pedestrian', 'transportation', 24, 'pedestrian', 'Cars must stop for a ___ at the crosswalk.', 'المشاة.'),
+  ('transportation-route', 'transportation', 25, 'route', 'We took a shorter ___ to avoid the traffic.', 'الطريق أو المسار.'),
+  ('sports-team', 'sports', 1, 'team', 'Our ___ won the championship last year.', 'الفريق.'),
+  ('sports-player', 'sports', 2, 'player', 'The best ___ on the field scored twice.', 'اللاعب.'),
+  ('sports-coach', 'sports', 3, 'coach', 'The ___ called a timeout before the final minute.', 'المدرب.'),
+  ('sports-referee', 'sports', 4, 'referee', 'The ___ gave a yellow card for that foul.', 'الحكم.'),
+  ('sports-score', 'sports', 5, 'score', 'What''s the ___ at halftime?', 'النتيجة.'),
+  ('sports-goal', 'sports', 6, 'goal', 'She scored the winning ___ in the last minute.', 'الهدف.'),
+  ('sports-match', 'sports', 7, 'match', 'The ___ was postponed because of the storm.', 'المباراة.'),
+  ('sports-championship', 'sports', 8, 'championship', 'They''ve won the ___ three years in a row.', 'البطولة.'),
+  ('sports-stadium', 'sports', 9, 'stadium', 'The ___ was completely full for the final.', 'الملعب أو الاستاد.'),
+  ('sports-tournament', 'sports', 10, 'tournament', 'He''s playing in a chess ___ this weekend.', 'البطولة (منافسة).'),
+  ('sports-medal', 'sports', 11, 'medal', 'She won a gold ___ in swimming.', 'الميدالية.'),
+  ('sports-fitness', 'sports', 12, 'fitness', 'Regular exercise improves your overall ___.', 'اللياقة البدنية.'),
+  ('sports-gym', 'sports', 13, 'gym', 'He goes to the ___ three times a week.', 'صالة الرياضة.'),
+  ('sports-exercise', 'sports', 14, 'exercise', 'Try to ___ for thirty minutes every day.', 'يمارس الرياضة.'),
+  ('sports-jog', 'sports', 15, 'jog', 'She likes to ___ along the river every morning.', 'يهرول أو يركض بخفة.'),
+  ('sports-stretch', 'sports', 16, 'stretch', 'Always ___ before you start running.', 'يمدد العضلات.'),
+  ('sports-opponent', 'sports', 17, 'opponent', 'His ___ was much taller than him.', 'الخصم أو المنافس.'),
+  ('sports-victory', 'sports', 18, 'victory', 'The whole town celebrated the team''s ___.', 'الانتصار.'),
+  ('sports-defeat', 'sports', 19, 'defeat', 'It was a hard ___ to accept after such a good season.', 'الهزيمة.'),
+  ('sports-penalty', 'sports', 20, 'penalty', 'The team scored from a ___ in the second half.', 'ضربة الجزاء.'),
+  ('sports-foul', 'sports', 21, 'foul', 'The referee called a ___ near the goal line.', 'المخالفة.'),
+  ('sports-sprint', 'sports', 22, 'sprint', 'She had to ___ the last hundred meters.', 'العدو السريع.'),
+  ('sports-marathon', 'sports', 23, 'marathon', 'He finished his first ___ in under four hours.', 'سباق الماراثون.'),
+  ('sports-athlete', 'sports', 24, 'athlete', 'Every ___ on the team practices six days a week.', 'الرياضي المحترف.'),
+  ('sports-whistle', 'sports', 25, 'whistle', 'The coach blew his ___ to start practice.', 'الصافرة.'),
+  ('emotions-happy', 'emotions', 1, 'happy', 'She felt ___ when she saw her old friend.', 'سعيد.'),
+  ('emotions-sad', 'emotions', 2, 'sad', 'He looked ___ after hearing the news.', 'حزين.'),
+  ('emotions-angry', 'emotions', 3, 'angry', 'She got ___ when the flight was cancelled.', 'غاضب.'),
+  ('emotions-afraid', 'emotions', 4, 'afraid', 'The child was ___ of the dark.', 'خائف.'),
+  ('emotions-surprised', 'emotions', 5, 'surprised', 'I was ___ to see him at the party.', 'متفاجئ.'),
+  ('emotions-nervous', 'emotions', 6, 'nervous', 'She felt ___ before the job interview.', 'متوتر أو قلق.'),
+  ('emotions-excited', 'emotions', 7, 'excited', 'The kids were ___ about the trip.', 'متحمس.'),
+  ('emotions-bored', 'emotions', 8, 'bored', 'He got ___ waiting at the station for an hour.', 'ضجران أو ملول.'),
+  ('emotions-proud', 'emotions', 9, 'proud', 'Her parents were ___ of her graduation.', 'فخور.'),
+  ('emotions-embarrassed', 'emotions', 10, 'embarrassed', 'He felt ___ after tripping in front of everyone.', 'محرج.'),
+  ('emotions-confused', 'emotions', 11, 'confused', 'I''m ___ about which bus to take.', 'مرتبك أو حائر.'),
+  ('emotions-relieved', 'emotions', 12, 'relieved', 'She felt ___ when the test results came back normal.', 'مرتاح البال بعد قلق.'),
+  ('emotions-anxious', 'emotions', 13, 'anxious', 'He felt ___ about the results of his test.', 'قلق.'),
+  ('emotions-calm', 'emotions', 14, 'calm', 'Try to stay ___ during the interview.', 'هادئ.'),
+  ('emotions-frustrated', 'emotions', 15, 'frustrated', 'He was ___ after losing his keys twice.', 'محبط أو منزعج.'),
+  ('emotions-curious', 'emotions', 16, 'curious', 'The child was ___ about how the toy worked.', 'فضولي.'),
+  ('emotions-hopeful', 'emotions', 17, 'hopeful', 'She remained ___ despite the bad news.', 'متفائل.'),
+  ('emotions-grateful', 'emotions', 18, 'grateful', 'I''m ___ for all your help this year.', 'ممتن.'),
+  ('emotions-disappointed', 'emotions', 19, 'disappointed', 'He was ___ when the trip got cancelled.', 'خائب الأمل.'),
+  ('emotions-confident', 'emotions', 20, 'confident', 'She felt ___ walking into the exam.', 'واثق من نفسه.'),
+  ('emotions-overwhelmed', 'emotions', 21, 'overwhelmed', 'He felt ___ by all the emails after vacation.', 'غارق بالمهام أو مرهق.'),
+  ('emotions-terrified', 'emotions', 22, 'terrified', 'She was ___ of flying for years.', 'مرعوب.'),
+  ('emotions-ashamed', 'emotions', 23, 'ashamed', 'He felt ___ after forgetting her birthday.', 'خجلان أو يشعر بالعار.'),
+  ('emotions-cheerful', 'emotions', 24, 'cheerful', 'The waiter was ___ even during the busy shift.', 'مرح أو بشوش.'),
+  ('emotions-miserable', 'emotions', 25, 'miserable', 'He felt ___ stuck in traffic for two hours.', 'بائس أو تعيس.'),
+  ('law-lawsuit', 'law', 1, 'lawsuit', 'The company settled the ___ out of court.', 'الدعوى القضائية.'),
+  ('law-verdict', 'law', 2, 'verdict', 'The jury reached a ___ after six hours.', 'الحكم أو القرار القضائي.'),
+  ('law-evidence', 'law', 3, 'evidence', 'The lawyer presented new ___ to the court.', 'الدليل أو البينة.'),
+  ('law-witness', 'law', 4, 'witness', 'A ___ described exactly what happened that night.', 'الشاهد.'),
+  ('law-defendant', 'law', 5, 'defendant', 'The ___ pleaded not guilty to the charge.', 'المتهم.'),
+  ('law-plaintiff', 'law', 6, 'plaintiff', 'The ___ asked the court for full compensation.', 'المدعي.'),
+  ('law-attorney', 'law', 7, 'attorney', 'She hired an ___ to review the contract.', 'المحامي.'),
+  ('law-jury', 'law', 8, 'jury', 'Twelve people were chosen for the ___.', 'هيئة المحلفين.'),
+  ('law-contract', 'law', 9, 'contract', 'Both sides signed the ___ yesterday afternoon.', 'العقد.'),
+  ('law-clause', 'law', 10, 'clause', 'A single ___ in the contract caused the whole dispute.', 'بند في عقد أو قانون.'),
+  ('law-testimony', 'law', 11, 'testimony', 'Her ___ convinced the jury of his innocence.', 'الشهادة.'),
+  ('law-custody', 'law', 12, 'custody', 'The parents share ___ of their two children.', 'الحضانة أو الوصاية.'),
+  ('law-felony', 'law', 13, 'felony', 'He was charged with a ___ for the break-in.', 'جناية، جريمة كبرى.'),
+  ('law-misdemeanor', 'law', 14, 'misdemeanor', 'Shoplifting is usually treated as a ___.', 'جنحة، جريمة بسيطة.'),
+  ('law-appeal', 'law', 15, 'appeal', 'Her lawyer plans to file an ___ next week.', 'الاستئناف.'),
+  ('law-warrant', 'law', 16, 'warrant', 'Police obtained a ___ to search the house.', 'مذكرة قضائية.'),
+  ('law-tribunal', 'law', 17, 'tribunal', 'The case was referred to an international ___.', 'محكمة أو هيئة قضائية خاصة.'),
+  ('law-arbitration', 'law', 18, 'arbitration', 'The two companies settled the dispute through ___.', 'التحكيم.'),
+  ('law-negligence', 'law', 19, 'negligence', 'The driver was found guilty of ___.', 'الإهمال.'),
+  ('law-settlement', 'law', 20, 'settlement', 'They reached a ___ before the trial began.', 'التسوية القضائية.'),
+  ('law-plea', 'law', 21, 'plea', 'He entered a guilty ___ in court today.', 'الإقرار أو الدفع القضائي.'),
+  ('law-statute', 'law', 22, 'statute', 'This ___ has been in effect since 1990.', 'القانون أو النص التشريعي.'),
+  ('law-injunction', 'law', 23, 'injunction', 'The court issued an ___ to stop construction.', 'أمر قضائي بالمنع.'),
+  ('law-prosecutor', 'law', 24, 'prosecutor', 'The ___ presented the case against him.', 'المدعي العام.'),
+  ('law-acquit', 'law', 25, 'acquit', 'The jury voted to ___ him of all charges.', 'يبرّئ من التهمة.'),
+  ('science-hypothesis', 'science', 1, 'hypothesis', 'Her ___ turned out to be correct after the test.', 'الفرضية.'),
+  ('science-experiment', 'science', 2, 'experiment', 'They ran the ___ three times to confirm the result.', 'التجربة العلمية.'),
+  ('science-theory', 'science', 3, 'theory', 'Scientists proposed a new ___ to explain the data.', 'النظرية.'),
+  ('science-molecule', 'science', 4, 'molecule', 'Water is made of a simple ___ structure.', 'الجزيء.'),
+  ('science-gene', 'science', 5, 'gene', 'A single ___ can affect eye color.', 'الجين الوراثي.'),
+  ('science-evolution', 'science', 6, 'evolution', 'The museum has an exhibit about human ___.', 'التطور.'),
+  ('science-laboratory', 'science', 7, 'laboratory', 'The samples were sent to a ___ for testing.', 'المختبر.'),
+  ('science-observation', 'science', 8, 'observation', 'The report is based on months of careful ___.', 'الملاحظة العلمية.'),
+  ('science-variable', 'science', 9, 'variable', 'Researchers changed one ___ at a time.', 'المتغير.'),
+  ('science-data', 'science', 10, 'data', 'The team collected ___ from over a thousand people.', 'البيانات.'),
+  ('science-analysis', 'science', 11, 'analysis', 'The ___ showed a clear pattern in the results.', 'التحليل.'),
+  ('science-chemical', 'science', 12, 'chemical', 'The factory uses several ___s in the process.', 'المادة الكيميائية.'),
+  ('science-reaction', 'science', 13, 'reaction', 'The ___ produced a bright blue gas.', 'التفاعل الكيميائي.'),
+  ('science-organism', 'science', 14, 'organism', 'Every living ___ needs some form of energy.', 'الكائن الحي.'),
+  ('science-bacteria', 'science', 15, 'bacteria', 'The infection was caused by common ___.', 'البكتيريا.'),
+  ('science-virus', 'science', 16, 'virus', 'Scientists are studying how the ___ spreads.', 'الفيروس.'),
+  ('science-atom', 'science', 17, 'atom', 'Every ___ contains a nucleus and electrons.', 'الذرة.'),
+  ('science-particle', 'science', 18, 'particle', 'A tiny ___ of dust floated in the light.', 'الجسيم الدقيق.'),
+  ('science-gravity', 'science', 19, 'gravity', '___ pulls every object toward the ground.', 'الجاذبية.'),
+  ('science-velocity', 'science', 20, 'velocity', 'The car''s ___ doubled in just ten seconds.', 'السرعة المتجهة.'),
+  ('science-mass', 'science', 21, 'mass', 'The scale measures the ___ of each sample.', 'الكتلة.'),
+  ('science-frequency', 'science', 22, 'frequency', 'The radio picks up signals at a certain ___.', 'التردد.'),
+  ('science-magnetic', 'science', 23, 'magnetic', 'The compass needle points toward the ___ north.', 'مغناطيسي.'),
+  ('science-spectrum', 'science', 24, 'spectrum', 'The prism split the light into a full ___.', 'الطيف الضوئي.'),
+  ('science-equation', 'science', 25, 'equation', 'She solved the ___ in under a minute.', 'المعادلة الرياضية.')
+on conflict (id) do nothing;
+
+commit;

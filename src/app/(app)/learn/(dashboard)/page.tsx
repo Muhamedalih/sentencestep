@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
+import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
-import { HomeHero, type LessonStatsMap } from "@/components/app/home-hero";
+import { HomeHero } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessons } from "@/lib/content";
+import { getHomeLessons } from "@/lib/content";
+import { startHomeEngagement } from "@/lib/features/home-engagement";
+import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { LEARNING_MODES } from "@/lib/learning-modes";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -19,6 +23,7 @@ import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/quer
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
+import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Book } from "@/types/library";
@@ -48,6 +53,11 @@ export default async function LearnHomePage() {
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
+  // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
+  // sentence/word counts, never the sentence bodies themselves (see that
+  // function's doc comment: Home used to pull every sentence of every mode,
+  // with word translations, and ship them all to the browser).
+  //
   // Every fetch below is independent of every other (the only real
   // dependency in this whole page is book counts/progress needing to know
   // which book got recommended first — see further down), so they all fire
@@ -73,7 +83,7 @@ export default async function LearnHomePage() {
   // book yet (the common state until an admin marks one — see
   // fetchFirstPublishedBook's doc comment). Firing it in parallel instead
   // means it's hidden entirely under whichever other query in this batch
-  // takes longest (in practice one of the getLessons calls), at the cost of
+  // takes longest, at the cost of
   // one extra always-issued, cheap, indexed single-row query that goes
   // unused whenever a featured book already exists. That trade is worth it
   // here: the discarded query is a `select("*") ... limit(1)`, not a scan,
@@ -102,43 +112,53 @@ export default async function LearnHomePage() {
   const progressPromise = userPromise.then((user) =>
     user ? fetchProgressCached(todayISO) : undefined,
   );
+  // The engagement cards (today's session, quests, streak strip) load HERE,
+  // alongside everything above, instead of in the browser after hydration —
+  // there they were three separate Server Actions that Next queues one behind
+  // the other, each re-resolving features and the session, which is what made
+  // Home feel slow the moment they were added. They are keyed by the learner's
+  // LOCAL date, which the server derives from the time zone the browser left
+  // in a cookie (see TimezoneCookie); without that cookie yet (first ever
+  // visit) the cards fall back to one browser request. Each card streams in
+  // through its own <Suspense> slot (see HomeEngagementSection), so a slow one
+  // never holds back the rest of the page or the other cards. weakWordsPromise
+  // is shared so the session count doesn't redo it.
+  const learnerToday = localISODateInTimeZone((await cookies()).get(TIMEZONE_COOKIE)?.value);
+  const weakWordsPromise = fetchWeakWordsAction();
+  // The same number the Word Lists hero shows (see countWordsWaitingForReview) —
+  // only what is actually up for review, not every word that was ever weak.
+  const reviewWaitingPromise = weakWordsPromise.then(countWordsWaitingForReview);
+  const engagement = startHomeEngagement({
+    todayISO: learnerToday,
+    features: getEffectiveFeatures(),
+    user: userPromise,
+    // Swallowed here only for the count: the page's own await below still surfaces a real failure.
+    weakWordCount: weakWordsPromise.then((words) => words.length).catch(() => 0),
+  });
   const [
-    units,
+    { units, storiesUnits, lessonStats },
     hasPremium,
     isAdminUser,
     user,
-    storiesLessons,
-    conversationLessons,
     attemptCount,
     featuredBooks,
     fallbackBook,
     weakWords,
+    reviewWaiting,
     initialProgress,
   ] = await Promise.all([
-    getLessons("normal", locale ?? undefined),
+    getHomeLessons(locale ?? undefined),
     hasPremiumAccess(),
     isAdmin(),
     userPromise,
-    getLessons("stories", locale ?? undefined),
-    getLessons("conversation", locale ?? undefined),
     attemptCountPromise,
     fetchFeaturedBooks(supabase, locale),
     fetchFirstPublishedBook(supabase, locale),
-    fetchWeakWordsAction(),
+    weakWordsPromise,
+    reviewWaitingPromise,
     progressPromise,
   ]);
 
-  const byMode = { normal: units, stories: storiesLessons, conversation: conversationLessons };
-  const lessonStats: LessonStatsMap = {};
-  for (const lessonMode of LEARNING_MODES) {
-    for (const lesson of byMode[lessonMode]) {
-      const words = lesson.sentences.reduce(
-        (sum, sentence) => sum + sentence.en.trim().split(/\s+/).filter(Boolean).length,
-        0,
-      );
-      lessonStats[`${lessonMode}:${lesson.id}`] = { sentences: lesson.sentences.length, words };
-    }
-  }
   // The Book recommendation card: the first featured, published book, or
   // the Library's first published book at all if none is explicitly marked
   // featured yet (see fetchFirstPublishedBook's doc comment for why that's
@@ -176,29 +196,38 @@ export default async function LearnHomePage() {
 
   return (
     <ProgressProvider initialProgress={initialProgress}>
-      <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16">
+      <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
         <HomeHeaderBar
           user={user}
           lessonStats={lessonStats}
           sessionCount={attemptCount}
-          className="mb-10"
+          className="mb-10 max-sm:order-1 max-sm:mb-6"
         />
-        <GuestProgressBanner isGuest={!user} className="mb-6" />
-        <NeedsReviewWords words={weakWords} />
-        <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-          {t.progress.upNextLabel}
-        </p>
-        <HomeHero
-          units={units}
-          storiesUnits={storiesLessons}
-          book={recommendedBook}
-          bookSectionCount={bookSectionCount}
-          bookSentenceCount={bookSentenceCount}
-          bookProgressPercent={bookProgressPercent}
-          isPremiumUser={isPremiumUser}
-          hasWeakWords={weakWords.length > 0}
-          isAdminUser={isAdminUser}
-        />
+        <div className="max-sm:order-3">
+          <GuestProgressBanner isGuest={!user} className="mb-6" />
+          <HomeEngagementSection stream={engagement} className="mb-6" />
+          <NeedsReviewWords
+            words={weakWords.filter((word) => word.dueNow)}
+            count={reviewWaiting.count}
+            smart={reviewWaiting.smart}
+          />
+        </div>
+        <div className="max-sm:order-2">
+          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+            {t.progress.upNextLabel}
+          </p>
+          <HomeHero
+            units={units}
+            storiesUnits={storiesUnits}
+            book={recommendedBook}
+            bookSectionCount={bookSectionCount}
+            bookSentenceCount={bookSentenceCount}
+            bookProgressPercent={bookProgressPercent}
+            isPremiumUser={isPremiumUser}
+            hasWeakWords={reviewWaiting.count > 0}
+            isAdminUser={isAdminUser}
+          />
+        </div>
       </div>
     </ProgressProvider>
   );

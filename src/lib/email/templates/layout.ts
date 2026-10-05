@@ -9,10 +9,11 @@ export interface EmailLayoutInput {
   heading: string;
   /** Pre-escaped/trusted HTML fragment — callers build this from escapeHtml()'d dynamic values. */
   bodyHtml: string;
-  ctaLabel: string;
-  ctaUrl: string;
-  /** Always the app-side preferences page — see src/app/learn/settings/page.tsx and the Milestone 9 report for what a provider-side unsubscribe link would add later. */
-  unsubscribeUrl: string;
+  /** Both or neither — a plain message (e.g. a support reply) has no call to action. */
+  ctaLabel?: string;
+  ctaUrl?: string;
+  /** The app-side preferences page — see src/app/learn/settings/page.tsx and the Milestone 9 report for what a provider-side unsubscribe link would add later. Omit for staff notices (e.g. an admin's new-reply alert), which have no preference to manage. */
+  unsubscribeUrl?: string;
 }
 
 export function escapeHtml(value: string): string {
@@ -45,6 +46,17 @@ export function renderEmailLayout({
   ctaUrl,
   unsubscribeUrl,
 }: EmailLayoutInput): string {
+  const footerHtml = unsubscribeUrl
+    ? `You're receiving this because of your SentenceStep account.
+            <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">Manage email preferences</a>.`
+    : "You're receiving this because you're a SentenceStep admin.";
+
+  const ctaRow =
+    ctaLabel && ctaUrl
+      ? `
+                <a href="${escapeHtml(ctaUrl)}" style="display:inline-block;background-color:${BRAND_PURPLE};color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 24px;border-radius:10px;">${escapeHtml(ctaLabel)}</a>`
+      : "";
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -66,19 +78,17 @@ export function renderEmailLayout({
             </tr>
             <tr>
               <td style="padding:16px 32px 8px 32px;">
-                <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px 0;color:${INK};">${escapeHtml(heading)}</h1>
+                <h1 dir="auto" style="font-size:22px;line-height:1.3;margin:0 0 12px 0;color:${INK};">${escapeHtml(heading)}</h1>
                 <div style="font-size:15px;line-height:1.6;color:${MUTED_INK};">${bodyHtml}</div>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px 32px 32px 32px;">
-                <a href="${escapeHtml(ctaUrl)}" style="display:inline-block;background-color:${BRAND_PURPLE};color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 24px;border-radius:10px;">${escapeHtml(ctaLabel)}</a>
+              <td style="padding:${ctaRow ? "24px 32px 32px 32px" : "8px 32px 24px 32px"};">${ctaRow}
               </td>
             </tr>
           </table>
           <p style="max-width:480px;color:${FAINT_INK};font-size:12px;line-height:1.6;margin-top:16px;padding:0 8px;">
-            You're receiving this because of your SentenceStep account.
-            <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">Manage email preferences</a>.
+            ${footerHtml}
           </p>
         </td>
       </tr>

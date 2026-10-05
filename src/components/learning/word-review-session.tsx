@@ -1,28 +1,42 @@
 "use client";
 
+import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
+import type { WordSentenceControls } from "@/components/learning/vocabulary-sentence";
+import { WordHelpBar } from "@/components/learning/word-help-bar";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { Button } from "@/components/ui/button";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { useWordAttempts } from "@/hooks/use-word-attempts";
+import type { WordAttemptStatus } from "@/hooks/use-word-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
+import { markCardReviewedAction } from "@/lib/cards/actions";
+import { completeDailySessionAction } from "@/lib/features/daily-session-actions";
+import type { SessionSource } from "@/lib/features/daily-session";
+import { completeSessionWord } from "@/lib/features/session-completion";
+import { todayLocalISODate } from "@/lib/progress/streak";
 import { masterMistakeWordAction } from "@/lib/mistakes/actions";
 import { markVocabularyRecallCompletedAction } from "@/lib/vocabulary-recall/actions";
 import { popIn } from "@/lib/motion";
+import { recordWordOutcomeAction } from "@/lib/word-mastery/actions";
+import { canTakeHint, outcomeFor } from "@/lib/word-mastery/schedule";
+import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
+import type { ReportedOutcome } from "@/lib/word-mastery/types";
+import { createTypeAheadBuffer } from "@/lib/word-typing";
 import type { WeakWordReason } from "@/lib/weak-words/types";
 import { splitWordHint } from "@/lib/word-lists-hint";
-import type { VoiceAudioContentType } from "@/lib/voice/voice-audio";
+import { lookupCachedAudioUrl, type VoiceAudioContentType } from "@/lib/voice/voice-audio";
 import type { VocabularyWord } from "@/types/word-lists";
 
 export interface ReviewWord extends VocabularyWord {
@@ -45,6 +59,8 @@ export interface ReviewWord extends VocabularyWord {
   pronunciationContentType?: VoiceAudioContentType;
   /** Paired with pronunciationContentType — defaults to this word's own `id` (a real vocabulary_words id) when absent, exactly as before this field existed. */
   pronunciationContentId?: string;
+  /** Daily session only (variant="session") — which source this word came from, which decides the completion action (see completeSessionWord). */
+  sessionSource?: SessionSource;
 }
 
 /**
@@ -84,6 +100,8 @@ export function WordReviewSession({
   defaultVoiceId,
   variant = "wordLists",
   backHref,
+  smart,
+  moreWaiting = 0,
 }: {
   words: ReviewWord[];
   /** Word Lists' one global voice (see VocabularyPractice's identical prop) — a review queue can span multiple word groups, so there's no single group-level voice to prefer here either. */
@@ -96,7 +114,7 @@ export function WordReviewSession({
    * instead of Word Lists' own catalog, and framed as "words you've met"
    * rather than "words you got wrong."
    */
-  variant?: "wordLists" | "recall";
+  variant?: "wordLists" | "recall" | "cards" | "session";
   /**
    * Overrides variant's default back link (a plain string, not a function —
    * safe to pass from a Server Component, unlike onWordCompleted used to be).
@@ -105,8 +123,18 @@ export function WordReviewSession({
    * should return there, not to the generic /learn default.
    */
   backHref?: string;
+  /**
+   * Smart word practice for the Word Lists review only (variant "wordLists"):
+   * the practice upgrades (typed-ahead letters, hints, "I don't know",
+   * alternates) and the learner's spaced schedule. Absent, or for any other
+   * variant, the review is exactly what it always was.
+   */
+  smart?: SmartPracticeConfig | null;
+  /** Smart review only: how many due words did not fit in this visit and are still waiting (the finish screen offers another round). */
+  moreWaiting?: number;
 }) {
   const { t, dir } = useLocale();
+  const smartConfig = variant === "wordLists" && smart ? smart : null;
   // Snapshotted once at mount, deliberately NOT read live off the `words`
   // prop below: masterMistakeWordAction's own revalidatePath calls target
   // this exact page, since it's the one place they need to take effect on a
@@ -142,40 +170,160 @@ export function WordReviewSession({
     sentenceCompleteSound: typingSoundSettings.sentenceCompleteSound,
   });
 
+  // Smart review only: what has been done with each word this visit, the state
+  // of the word on screen, whether a hint is being drawn, the keys typed ahead
+  // and the handles to the help bar.
+  const attempts = useWordAttempts();
+  const [wordStatus, setWordStatus] = useState<WordAttemptStatus>("pending");
+  const [hintBusy, setHintBusy] = useState(false);
+  const [typeAhead] = useState(() => createTypeAheadBuffer());
+  const controlsRef = useRef<WordSentenceControls>(null);
+
   const currentIndex: number | undefined = queue[0];
   const word = currentIndex !== undefined ? words[currentIndex] : undefined;
+  const attempt = word ? attempts.get(word.id) : { missed: false, hints: 0 };
   const total = words.length;
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
 
-  const resolvedBackHref = backHref ?? (variant === "recall" ? "/learn" : "/learn/word-lists");
-  const backLabel = variant === "recall" ? t.mistakes.learningHome : t.wordLists.navLabel;
+  const resolvedBackHref =
+    backHref ??
+    (variant === "recall" || variant === "session"
+      ? "/learn"
+      : variant === "cards"
+        ? "/learn/cards"
+        : "/learn/word-lists");
+  const backLabel =
+    variant === "recall" || variant === "session"
+      ? t.mistakes.learningHome
+      : variant === "cards"
+        ? t.myCards.title
+        : t.wordLists.navLabel;
   const completeHeading =
-    variant === "recall" ? t.vocabularyRecall.completeHeading : t.mistakes.allCaughtUp;
+    variant === "recall"
+      ? t.vocabularyRecall.completeHeading
+      : variant === "cards"
+        ? t.myCards.reviewCompleteHeading
+        : variant === "session"
+          ? t.dailySession.completeHeading
+          : t.mistakes.allCaughtUp;
   const completeSubtitle = (
-    variant === "recall" ? t.vocabularyRecall.completeSubtitle : t.mistakes.correctedCount
+    variant === "recall"
+      ? t.vocabularyRecall.completeSubtitle
+      : variant === "cards"
+        ? t.myCards.reviewCompleteSubtitle
+        : variant === "session"
+          ? t.dailySession.completeSubtitle
+          : t.mistakes.correctedCount
   ).replace("{n}", String(correctedCount));
   const contextLabel =
-    variant === "recall" && word?.lessonTitle
+    (variant === "recall" || variant === "cards" || variant === "session") && word?.lessonTitle
       ? t.vocabularyRecall.sourceLabel
           .replace("{title}", word.lessonTitle)
           .replace("{n}", String(word.daysAgo ?? 1))
       : undefined;
 
   useEffect(() => {
-    if (queue.length === 0) setIsComplete(true);
+    if (queue.length === 0) {
+      // Letters typed ahead after the last word belong to no word.
+      typeAhead.clear();
+      setIsComplete(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the queue changes
   }, [queue]);
 
-  const { prefetchPronunciation } = usePronunciationSettings();
+  // Daily session only: once the queue empties, tell the server (which pays
+  // the once-a-day XP — see complete_daily_session) and show what came back.
+  const [sessionReward, setSessionReward] = useState<{ first: boolean; xp: number } | null>(null);
+  const sessionReportedRef = useRef(false);
+  useEffect(() => {
+    if (variant !== "session" || !isComplete || sessionReportedRef.current) return;
+    sessionReportedRef.current = true;
+    completeDailySessionAction(todayLocalISODate(), correctedCount)
+      .then(setSessionReward)
+      .catch((error: unknown) => console.error("[daily-session] completion report failed", error));
+  }, [variant, isComplete, correctedCount]);
+
+  const { prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
   const nextWord = queue.length > 1 ? words[queue[1]!] : undefined;
   useEffect(() => {
     if (!defaultVoiceId || !nextWord) return;
+    if (variant === "session") {
+      // Today's session words aren't all Word Lists entries, so the Word
+      // Lists prefetch below doesn't apply (their ids aren't vocabulary ids),
+      // and resolving one on demand would synthesize speech — slow, and it
+      // queues behind every other server action. Instead look up the
+      // already-made Word Lists-voice clip (cache-only, cheap; it may have
+      // been generated since the page loaded) and hand it to the shared
+      // resolved-audio cache under the id PronunciationButton will ask for.
+      const contentId = nextWord.pronunciationContentId ?? nextWord.id;
+      if (nextWord.audioUrl) {
+        fetch(nextWord.audioUrl).catch(() => {});
+        return;
+      }
+      lookupCachedAudioUrl(nextWord.targetWord, defaultVoiceId)
+        .then((url) => {
+          if (!url) return;
+          registerResolvedAudio(contentId, url);
+          fetch(url).catch(() => {});
+        })
+        .catch(() => {});
+      return;
+    }
     prefetchPronunciation({ contentType: "word", contentId: nextWord.id, voiceId: defaultVoiceId });
-  }, [nextWord, defaultVoiceId, prefetchPronunciation]);
+  }, [nextWord, defaultVoiceId, variant, prefetchPronunciation, registerResolvedAudio]);
+
+  /** One call per word outcome, to the learner's schedule and weak-word ledger (see recordWordOutcomeAction). */
+  function reportOutcome(target: ReviewWord, outcome: ReportedOutcome) {
+    recordWordOutcomeAction({ wordId: target.id, word: target.targetWord, outcome }).catch(
+      (error: unknown) => {
+        console.error("[word-review] recordWordOutcomeAction failed", error);
+      },
+    );
+  }
+
+  // The smart Word Lists review. As in smart practice, a word missed during this
+  // visit is NOT wiped from the weak list when it is finally typed right: the
+  // miss goes to the schedule when it happens (see handleStatusChange), and the
+  // final right answer only moves the weak-word ledger on, so the word is
+  // re-checked tomorrow.
+  function handleSmartResult(config: SmartPracticeConfig, target: ReviewWord, correct: boolean) {
+    if (correct) {
+      const tried = attempts.get(target.id);
+      playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
+      setCorrectedCount((count) => count + 1);
+      if (config.spaced) reportOutcome(target, tried.missed ? "recovered" : outcomeFor(tried));
+      setQueue((prev) => prev.slice(1));
+    } else {
+      // Already recorded as a miss when the wrong answer landed: only the requeue is left.
+      setQueue((prev) => [...prev.slice(1), prev[0]!]);
+    }
+  }
+
+  /** A wrong answer (or "I don't know") is a miss from the moment it lands: the stars and the schedule hear about it at once, and the error sound plays at once. Only the first miss of a word in a visit is reported. */
+  function handleStatusChange(status: WordAttemptStatus) {
+    setWordStatus(status);
+    if (status !== "incorrect" || !smartConfig || !word) return;
+    play("error");
+    if (attempts.get(word.id).missed) return;
+    attempts.update(word.id, { missed: true });
+    if (smartConfig.spaced) reportOutcome(word, "missed");
+  }
+
+  /** A hint has taken effect: it costs a star, and the second one counts as a miss, which the schedule hears about at once (like a wrong answer). */
+  function handleHint() {
+    if (!word) return;
+    const lapsed = attempts.addHint(word.id);
+    if (lapsed && smartConfig?.spaced) reportOutcome(word, "missed");
+  }
 
   function handleResult(correct: boolean) {
     if (!word || currentIndex === undefined) return;
+    if (smartConfig) {
+      handleSmartResult(smartConfig, word, correct);
+      return;
+    }
     if (correct) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       setCorrectedCount((count) => count + 1);
@@ -186,7 +334,11 @@ export function WordReviewSession({
       const complete =
         variant === "recall"
           ? markVocabularyRecallCompletedAction(word.targetWord, hadErrors)
-          : masterMistakeWordAction(word.targetWord);
+          : variant === "cards"
+            ? markCardReviewedAction(word.targetWord, hadErrors)
+            : variant === "session"
+              ? completeSessionWord(word, hadErrors)
+              : masterMistakeWordAction(word.targetWord);
       complete.catch((error: unknown) => {
         console.error("[word-review] completion action failed", error);
       });
@@ -199,111 +351,169 @@ export function WordReviewSession({
   }
 
   return (
-    <div className="flex h-svh w-full flex-col">
-      {!isComplete && <ShiftReplayHint />}
-      <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
-        <div className="flex items-center justify-between gap-4">
-          <Link
-            href={resolvedBackHref}
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            {backLabel}
-          </Link>
-          {!isComplete && word && (
-            <div className="flex shrink-0 items-center gap-3">
-              <span className="text-muted-foreground text-sm font-medium" dir="ltr">
-                {correctedCount + 1} / {total}
-              </span>
-              <PronunciationSpeedControl inputRef={inputRef} />
-              <PronunciationButton
-                text={word.targetWord}
-                audioUrl={word.audioUrl}
-                autoPlay
-                resetKey={word.id}
-                inputRef={inputRef}
-                kokoroVoiceId={defaultVoiceId}
-                contentType={word.pronunciationContentType ?? "word"}
-                contentId={word.pronunciationContentId ?? word.id}
-                label={t.wordLists.replayAction}
-                variant="outline"
-                size="sm"
-              />
-            </div>
-          )}
+    <SharedInputProvider>
+      <div className="h-app relative flex w-full flex-col">
+        <SharedInputHost />
+        {!isComplete && <ShiftReplayHint />}
+        <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href={resolvedBackHref}
+              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              {backLabel}
+            </Link>
+            {!isComplete && word && (
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-muted-foreground text-sm font-medium" dir="ltr">
+                  {correctedCount + 1} / {total}
+                </span>
+                <LessonSettings
+                  text={word.targetWord}
+                  audioUrl={word.audioUrl}
+                  autoPlay
+                  resetKey={word.id}
+                  inputRef={inputRef}
+                  kokoroVoiceId={defaultVoiceId}
+                  contentType={word.pronunciationContentType ?? "word"}
+                  contentId={word.pronunciationContentId ?? word.id}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <AnimatePresence mode="wait">
-        {isComplete ? (
-          <motion.div
-            key="complete"
-            className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
-          >
+        <AnimatePresence mode="wait">
+          {isComplete ? (
             <motion.div
-              variants={popIn}
-              initial="hidden"
-              animate="visible"
-              className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+              key="complete"
+              className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
             >
-              <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-                <CheckCircle2 className="size-7" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight">{completeHeading}</h2>
-                <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
-              </div>
-              <Button asChild className="mt-2">
-                <Link href={resolvedBackHref}>
-                  {variant === "recall" ? backLabel : t.wordLists.backToWordLists}
-                </Link>
-              </Button>
-            </motion.div>
-          </motion.div>
-        ) : (
-          word && (
-            <motion.div
-              key={word.id}
-              initial={false}
-              className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16"
-            >
-              {hint.term && (
-                <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
-                  <p
-                    className="text-foreground text-[clamp(1.75rem,1.4rem+1.6vw,2.25rem)] leading-tight font-bold text-balance"
-                    dir={dir}
-                  >
-                    {hint.term}
-                  </p>
-                  {hint.definition && (
+              <motion.div
+                variants={popIn}
+                initial="hidden"
+                animate="visible"
+                className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+              >
+                <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
+                  <CheckCircle2 className="size-7" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight">{completeHeading}</h2>
+                  <p className="text-muted-foreground mt-1">{completeSubtitle}</p>
+                  {smartConfig && moreWaiting > 0 && (
+                    <p className="text-muted-foreground mt-3 text-sm">
+                      {t.wordLists.smart.moreWaiting.replace("{n}", String(moreWaiting))}
+                    </p>
+                  )}
+                  {variant === "session" && sessionReward && (
                     <p
-                      className="text-muted-foreground text-[clamp(0.85rem,0.8rem+0.3vw,1rem)] font-medium"
-                      dir={dir}
+                      className={
+                        sessionReward.first
+                          ? "text-accent mt-3 font-semibold"
+                          : "text-muted-foreground mt-3 text-sm"
+                      }
                     >
-                      {hint.definition}
+                      {sessionReward.first
+                        ? t.dailySession.xpEarned.replace("{xp}", String(sessionReward.xp))
+                        : t.dailySession.alreadyRewarded}
                     </p>
                   )}
                 </div>
-              )}
-
-              <div className="bg-border h-10 w-px" aria-hidden="true" />
-
-              <div className="flex w-full max-w-2xl flex-col items-center gap-2">
-                <VocabularySentence
-                  sentence={word.sentence}
-                  targetWord={word.targetWord}
-                  onResult={handleResult}
-                  inputRef={inputRef}
-                  fontFamily={sectionFontFamily}
-                />
-                {contextLabel && (
-                  <p className="text-muted-foreground text-xs font-medium">{contextLabel}</p>
-                )}
-              </div>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+                  {smartConfig && moreWaiting > 0 && (
+                    // A full page load of the same route, not a client navigation: this
+                    // screen keeps the words it mounted with, so only a fresh load builds
+                    // (and shows) the next round's queue.
+                    <Button onClick={() => window.location.assign("/learn/word-lists/review")}>
+                      {t.wordLists.smart.reviewMore}
+                    </Button>
+                  )}
+                  <Button asChild variant={smartConfig && moreWaiting > 0 ? "outline" : "default"}>
+                    <Link href={resolvedBackHref}>
+                      {variant === "recall" || variant === "cards" || variant === "session"
+                        ? backLabel
+                        : t.wordLists.backToWordLists}
+                    </Link>
+                  </Button>
+                </div>
+              </motion.div>
             </motion.div>
-          )
-        )}
-      </AnimatePresence>
-    </div>
+          ) : (
+            word && (
+              <motion.div
+                key={word.id}
+                initial={false}
+                className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-8 lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
+              >
+                {hint.term && (
+                  <div className="flex w-full max-w-2xl flex-col items-center gap-2 text-center">
+                    <p
+                      className="text-foreground text-[clamp(2.1rem,1.68rem+1.92vw,2.7rem)] leading-tight font-bold text-balance"
+                      dir={dir}
+                    >
+                      {hint.term}
+                    </p>
+                    {hint.definition && (
+                      <p
+                        className="text-muted-foreground text-[clamp(1.02rem,0.96rem+0.36vw,1.2rem)] font-medium"
+                        dir={dir}
+                      >
+                        {hint.definition}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
+
+                <div className="flex w-full max-w-2xl flex-col items-center gap-2">
+                  <VocabularySentence
+                    sentence={word.sentence}
+                    targetWord={word.targetWord}
+                    onResult={handleResult}
+                    inputRef={inputRef}
+                    fontFamily={sectionFontFamily}
+                    enlarged
+                    smart={
+                      smartConfig
+                        ? {
+                            alternates: word.alternates,
+                            typeAhead,
+                            controlsRef,
+                            onStatusChange: handleStatusChange,
+                            onHint: handleHint,
+                            onHintBusyChange: setHintBusy,
+                          }
+                        : undefined
+                    }
+                  />
+                  {smartConfig && (
+                    <div className="mt-1">
+                      <WordHelpBar
+                        attempt={attempt}
+                        settled={wordStatus !== "pending"}
+                        busy={hintBusy}
+                        onHint={() =>
+                          // Closed once the last star has gone on a hint.
+                          word && canTakeHint(attempts.get(word.id))
+                            ? (controlsRef.current?.hint() ?? false)
+                            : false
+                        }
+                        onGiveUp={() => controlsRef.current?.giveUp()}
+                      />
+                    </div>
+                  )}
+                  {contextLabel && (
+                    <p className="text-muted-foreground text-xs font-medium">{contextLabel}</p>
+                  )}
+                </div>
+              </motion.div>
+            )
+          )}
+        </AnimatePresence>
+      </div>
+    </SharedInputProvider>
   );
 }

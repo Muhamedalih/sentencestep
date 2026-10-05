@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { describePlaybackFailure, isAutoplayBlockedError } from "@/lib/audio-errors";
+import { acquireSharedAudio, installAudioUnlock, releaseSharedAudio } from "@/lib/shared-audio";
+
 export type AudioClipStatus = "idle" | "loading" | "playing" | "error";
 
 export interface UseAudioClipOptions {
@@ -26,6 +29,12 @@ export interface UseAudioClipOptions {
    * so a caller doesn't need to memoize this to keep it fresh.
    */
   onEnded?: () => void;
+  /**
+   * Plays through the one page-wide <audio> element (see shared-audio.ts) instead of a new
+   * element per clip: iOS then keeps allowing playback after the first tap, and a new clip
+   * stops the previous one. Off by default; Books keep their own elements.
+   */
+  shared?: boolean;
 }
 
 /**
@@ -37,9 +46,18 @@ export interface UseAudioClipOptions {
  */
 export function useAudioClip(src?: string | null, options?: UseAudioClipOptions) {
   const maxRetries = options?.maxRetries ?? 0;
+  const shared = options?.shared ?? false;
   const retryDelayMs = options?.retryDelayMs ?? 300;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Removes the "play on the learner's first key press / click" listeners a
+  // browser-blocked autoplay registered (see `attempt`) — cleared by
+  // invalidate() the same way a pending retry timer is, so a sentence the
+  // learner has already moved past can never start playing later.
+  const gestureCleanupRef = useRef<(() => void) | undefined>(undefined);
+  // Removes the current attempt's listeners from its element (matters when the element is shared and outlives the attempt).
+  const detachRef = useRef<(() => void) | undefined>(undefined);
+  const sharedReleaseRef = useRef<(() => void) | undefined>(undefined);
   const [status, setStatus] = useState<AudioClipStatus>("idle");
   const onEndedRef = useRef(options?.onEnded);
   onEndedRef.current = options?.onEnded;
@@ -60,9 +78,21 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = undefined;
     }
+    gestureCleanupRef.current?.();
+    gestureCleanupRef.current = undefined;
+    detachRef.current?.();
+    detachRef.current = undefined;
+    if (sharedReleaseRef.current) {
+      releaseSharedAudio(sharedReleaseRef.current);
+      sharedReleaseRef.current = undefined;
+    }
     audioRef.current?.pause();
     audioRef.current = null;
   }
+
+  useEffect(() => {
+    if (shared) installAudioUnlock();
+  }, [shared]);
 
   useEffect(() => {
     return () => {
@@ -112,7 +142,30 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
 
       function attempt(url: string, retriesLeft: number, resumeFromSeconds: number) {
         const attemptStartedAt = diagnostics ? performance.now() : 0;
-        const audio = new Audio(url);
+        // A retry or a second play on the same element must not stack listeners on it.
+        detachRef.current?.();
+        let audio: HTMLAudioElement;
+        if (shared) {
+          const release = () => {
+            invalidate();
+            setStatus("idle");
+          };
+          audio = acquireSharedAudio(release);
+          sharedReleaseRef.current = release;
+          audio.src = url;
+        } else {
+          audio = new Audio(url);
+        }
+        const detachers: Array<() => void> = [];
+        detachRef.current = () => detachers.forEach((detach) => detach());
+        const on = <K extends keyof HTMLMediaElementEventMap>(
+          type: K,
+          listener: () => void,
+          listenerOptions?: AddEventListenerOptions,
+        ) => {
+          audio.addEventListener(type, listener, listenerOptions);
+          detachers.push(() => audio.removeEventListener(type, listener));
+        };
         // Same file, just played back slower — never a separate audio asset
         // per speed (see PronunciationSettingsProvider). preservesPitch keeps
         // a slowed-down clip sounding natural rather than a dragged-out
@@ -143,7 +196,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         // failure path run at most once no matter which path (or both) fires.
         let handled = false;
 
-        function handleFailure() {
+        function handleFailure(detail: string) {
           if (handled || !isCurrent()) return;
           handled = true;
           if (diagnostics) {
@@ -166,11 +219,39 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
             }, retryDelayMs);
             return;
           }
+          console.warn(`[audio] the clip could not be played (${detail}):`, url);
           setStatus("error");
         }
 
+        // The browser's autoplay policy rejects play() until the learner has
+        // interacted with the page (most often on a fresh page load rather
+        // than a click-through). The clip itself is fine, so it must NOT be
+        // treated as a failure — that is what used to make the player swap in
+        // a different voice (or, where there's no fallback, stay silent).
+        // Wait for the first key press or click — the learner is about to
+        // type, so that is moments away — and play it then.
+        function playOnNextGesture() {
+          if (handled || !isCurrent()) return;
+          handled = true;
+          setStatus("idle");
+          console.info(
+            "[audio] autoplay was blocked by the browser; will play on the first key press or click.",
+          );
+          const events = ["pointerdown", "keydown"] as const;
+          const onGesture = () => {
+            cleanup();
+            if (isCurrent()) attempt(url, retriesLeft, resumeFromSeconds);
+          };
+          const cleanup = () => {
+            for (const name of events) window.removeEventListener(name, onGesture, true);
+            if (gestureCleanupRef.current === cleanup) gestureCleanupRef.current = undefined;
+          };
+          gestureCleanupRef.current = cleanup;
+          for (const name of events) window.addEventListener(name, onGesture, true);
+        }
+
         if (resumeFromSeconds > 0) {
-          audio.addEventListener(
+          on(
             "loadedmetadata",
             () => {
               if (isCurrent() && resumeFromSeconds < audio.duration) {
@@ -181,7 +262,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
           );
         }
 
-        audio.addEventListener("playing", () => {
+        on("playing", () => {
           if (!isCurrent()) return;
           if (diagnostics) {
             const elapsedMs = Math.round(performance.now() - attemptStartedAt);
@@ -193,12 +274,12 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
           }
           setStatus("playing");
         });
-        audio.addEventListener("ended", () => {
+        on("ended", () => {
           if (!isCurrent()) return;
           setStatus("idle");
           onEndedRef.current?.();
         });
-        audio.addEventListener("error", handleFailure);
+        on("error", () => handleFailure(describePlaybackFailure(audio.error)));
 
         // Stops at the slice's own end instead of playing into whatever
         // comes after it in the underlying clip. Confirmed live to still
@@ -223,7 +304,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
         // since pause() on an already-paused element is a no-op.
         if (range) {
           const sliceDurationSeconds = Math.max(0, range.end - range.start);
-          audio.addEventListener(
+          on(
             "playing",
             () => {
               if (!isCurrent()) return;
@@ -237,7 +318,7 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
             },
             { once: true },
           );
-          audio.addEventListener("timeupdate", () => {
+          on("timeupdate", () => {
             if (isCurrent() && audio.currentTime >= range.end && !audio.paused) {
               audio.pause();
               setStatus("idle");
@@ -245,12 +326,15 @@ export function useAudioClip(src?: string | null, options?: UseAudioClipOptions)
           });
         }
 
-        audio.play().catch(handleFailure);
+        audio.play().catch((error: unknown) => {
+          if (isAutoplayBlockedError(error)) playOnNextGesture();
+          else handleFailure(describePlaybackFailure(error));
+        });
       }
 
       attempt(resolvedSrc, maxRetries, range?.start ?? 0);
     },
-    [src, maxRetries, retryDelayMs],
+    [src, maxRetries, retryDelayMs, shared],
   );
 
   return { play, stop, status };

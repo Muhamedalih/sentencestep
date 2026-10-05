@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Menu, X } from "lucide-react";
+import { Bookmark, Flame, Layers, Menu, Trophy, UserRound, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ function ProgressHud({ initialProgress }: { initialProgress?: ProgressState }) {
   if (!isLoaded) return null;
 
   return (
-    <div className="text-muted-foreground hidden items-center gap-4 text-sm font-semibold sm:flex">
+    <div className="text-muted-foreground flex items-center gap-4 text-sm font-semibold">
       <span className="inline-flex items-center gap-1.5 text-base sm:gap-2 sm:text-lg">
         <Flame
           className={cn(
@@ -63,6 +64,7 @@ export function AppHeader({
   initialProgress?: ProgressState;
 }) {
   const { t } = useLocale();
+  const features = useFeatures();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -83,6 +85,24 @@ export function AppHeader({
   const utilityCluster = user ? (
     <>
       <div className="flex items-center gap-1">
+        {features.personalCards.page && (
+          <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
+            <Link href="/learn/cards" aria-label={t.myCards.navLabel} title={t.myCards.navLabel}>
+              <Layers className="text-muted-foreground size-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
+        {features.badges.enabled && (
+          <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
+            <Link
+              href="/learn/achievements"
+              aria-label={t.badges.navLabel}
+              title={t.badges.navLabel}
+            >
+              <Trophy className="text-muted-foreground size-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
         <div className="relative">
           <Button asChild variant="ghost" size="icon-sm" className="sm:size-10 sm:[&_svg]:size-5">
             <Link href="/learn/saved" aria-label={t.nav.mySaves} title={t.nav.mySaves}>
@@ -119,7 +139,7 @@ export function AppHeader({
       <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
       <Link
         href="/login"
-        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
       >
         {t.common.signIn}
       </Link>
@@ -137,9 +157,10 @@ export function AppHeader({
         <Link
           href="/learn"
           aria-label={t.marketing.dashboardLinkAriaLabel}
-          className="justify-self-start"
+          className="inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11"
         >
-          <Logo />
+          {/* Under 340px the wordmark gives way to the logo mark so the streak and buttons still fit. */}
+          <Logo className="max-[340px]:[&>span:last-child]:hidden" />
         </Link>
 
         <div className="justify-self-center">
@@ -153,6 +174,17 @@ export function AppHeader({
               (see locales.ts's dirFor), the far edge here is the physical
               right side of the screen either way. */}
           <div className="hidden items-center gap-2 sm:flex sm:gap-3">{utilityCluster}</div>
+          {user && (
+            <Button asChild variant="ghost" size="icon-sm" className="sm:hidden">
+              <Link
+                href="/learn/settings"
+                aria-label={t.account.manageAccountLabel}
+                title={t.account.manageAccountLabel}
+              >
+                <UserRound aria-hidden="true" />
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon-sm"
@@ -174,7 +206,7 @@ export function AppHeader({
       {menuOpen && (
         <div
           id="app-header-menu"
-          className="border-border/60 bg-background flex items-center gap-3 border-t px-3 py-3 sm:hidden"
+          className="border-border/60 bg-background flex flex-wrap items-center gap-3 border-t px-3 py-3 sm:hidden"
         >
           {utilityCluster}
         </div>

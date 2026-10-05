@@ -3,7 +3,16 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertCircle, ArrowRight, BookOpen, Home, Loader2, RotateCcw, Wand2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  Brain,
+  Home,
+  Loader2,
+  RotateCcw,
+  Wand2,
+} from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,6 +31,9 @@ import {
 } from "@/lib/progress/learner-level";
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
+import { BadgeMedal } from "@/components/app/badge-medal";
+import { BADGE_DEFS } from "@/lib/features/catalog";
+import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { RewardEvent } from "@/lib/progress/types";
 import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/content";
@@ -137,6 +149,16 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
       return t.lesson.rewardDailyGoalReached;
     case "streakGraceDay":
       return t.lesson.streakGraceNote;
+    case "streakFreezeUsed":
+      return t.streakCalendar.freezeUsedNote.replace("{n}", String(reward.count));
+    case "questCompleted":
+      return t.quests.rewardCompleted
+        .replace("{quest}", questTitle(t, reward.questType))
+        .replace("{xp}", String(reward.xp));
+    case "badgeEarned":
+      return t.badges.rewardEarned.replace("{badge}", t.badges.items[reward.badgeId].name);
+    case "badgesBulk":
+      return t.badges.rewardBulk.replace("{n}", String(reward.count));
   }
 }
 
@@ -188,6 +210,7 @@ export function LessonCompletion({
   mistakeCount = 0,
   onFixMistakes,
   onViewWords,
+  onPracticeFromMemory,
   saveStatus = "saved",
   onRetrySave,
   onRetryLesson,
@@ -219,6 +242,8 @@ export function LessonCompletion({
   onFixMistakes?: () => void;
   /** Opens StoryWordsPanel in place of this screen (see LessonSession's isViewingWords branch) — Stories mode only; every other mode keeps the plain inline vocabulary chips below since they have no per-word practice flow yet. */
   onViewWords?: () => void;
+  /** Opens the optional From-memory round (see FromMemorySession) in place of this screen. Undefined when the admin feature is off for this section, or the lesson has no translated sentences to ask — the button is then simply not rendered. */
+  onPracticeFromMemory?: () => void;
   /**
    * Status of the signed-in save this completion triggered (see useProgress).
    * Defaults to "saved" so every other caller (and any test/story that
@@ -235,6 +260,8 @@ export function LessonCompletion({
   const { t, locale, dir } = useLocale();
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
+  // Read early: a new badge is one of the things that turns the celebration on.
+  const badgeRewards = rewards.filter((reward) => reward.type === "badgeEarned");
   const accuracyPercent = Math.round(accuracy * 100);
   // Non-null only for a stand-out result — the same >=95% cutoff the
   // accuracyExcellent/accuracyGood subtitle copy above already switches on,
@@ -271,7 +298,8 @@ export function LessonCompletion({
   // actually worth celebrating (a stand-out accuracy or a level crossed by
   // this completion), never every ordinary completion, and never at all
   // for a viewer who prefers reduced motion.
-  const showCelebration = !reducedMotion && (accuracyPercent >= 95 || leveledUp);
+  const showCelebration =
+    !reducedMotion && (accuracyPercent >= 95 || leveledUp || badgeRewards.length > 0);
   const celebrationGlowColor = accuracyTierColor ?? theme.colorAccent;
   // Real confetti isn't monochrome — alternates between the screen's brand
   // color and TIER_EXCELLENT (the same green a >=95% result already colors
@@ -295,7 +323,7 @@ export function LessonCompletion({
   // accent, always — so "which action is primary" is communicated by
   // size/weight alone, never by a warning-colored border.
   type CompletionAction = {
-    id: "fix" | "next" | "retry" | "home";
+    id: "fix" | "next" | "memory" | "retry" | "home";
     icon: typeof Wand2;
     label: string;
     href?: string;
@@ -312,6 +340,16 @@ export function LessonCompletion({
             icon: ArrowRight,
             label: t.lesson.nextLesson,
             href: `/learn/${mode}/${nextLesson.id}`,
+          },
+        ]
+      : []),
+    ...(onPracticeFromMemory
+      ? [
+          {
+            id: "memory" as const,
+            icon: Brain,
+            label: t.fromMemory.button,
+            onClick: onPracticeFromMemory,
           },
         ]
       : []),
@@ -335,7 +373,16 @@ export function LessonCompletion({
   // number just above it (see streakGraceNote's doc comment in the
   // dictionary types).
   const graceReward = rewards.find((reward) => reward.type === "streakGraceDay");
-  const celebratedRewards = rewards.filter((reward) => reward.type !== "streakGraceDay");
+  const freezeReward = rewards.find((reward) => reward.type === "streakFreezeUsed");
+  // Badges get their own medal cards below (or, for a flood of them, the one
+  // bulk summary line) rather than a place in the joined reward sentence.
+  const bulkBadgeReward = rewards.find((reward) => reward.type === "badgesBulk");
+  const celebratedRewards = rewards.filter(
+    (reward) =>
+      reward.type !== "streakGraceDay" &&
+      reward.type !== "streakFreezeUsed" &&
+      reward.type !== "badgeEarned",
+  );
 
   // Stat cells shown inside the stats/XP panel — accuracy has its own quiet
   // badge in the header, so it's never repeated here. Built as a filtered
@@ -447,7 +494,11 @@ export function LessonCompletion({
             >
               {theme.headingText || t.lesson.completeHeading}
             </h2>
-            <p style={{ fontSize: theme.bodySize, color: styles.textSecondary }} className="mt-1.5">
+            <p
+              dir="auto"
+              style={{ fontSize: theme.bodySize, color: styles.textSecondary }}
+              className="mt-1.5"
+            >
               {(accuracyPercent >= 95 ? t.lesson.accuracyExcellent : t.lesson.accuracyGood).replace(
                 "{n}",
                 String(accuracyPercent),
@@ -649,10 +700,20 @@ export function LessonCompletion({
 
           {graceReward && (
             <p
+              dir="auto"
               style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
               {formatReward(graceReward, t)}
+            </p>
+          )}
+          {freezeReward && (
+            <p
+              dir="auto"
+              style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+              className="mt-3 text-center"
+            >
+              {formatReward(freezeReward, t)}
             </p>
           )}
 
@@ -672,10 +733,47 @@ export function LessonCompletion({
 
           {celebratedRewards.length > 0 && (
             <p
+              dir="auto"
               style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
               className="mt-3 text-center font-medium"
             >
               {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
+            </p>
+          )}
+          {badgeRewards.length > 0 && (
+            <ul className="mt-4 flex flex-wrap justify-center gap-3">
+              {badgeRewards.map((reward) => {
+                const group = BADGE_DEFS.find((badge) => badge.id === reward.badgeId)?.group;
+                return (
+                  <li
+                    key={reward.badgeId}
+                    style={{ borderColor: theme.colorBorder, color: styles.textPrimary }}
+                    className="flex items-center gap-3 rounded-2xl border px-4 py-2.5"
+                  >
+                    {group && <BadgeMedal group={group} earned className="size-11" />}
+                    <span className="text-start" dir={dir}>
+                      <span
+                        style={{ color: theme.colorAccent }}
+                        className="block text-xs font-semibold tracking-wide uppercase"
+                      >
+                        {t.badges.newTag}
+                      </span>
+                      <span className="block text-sm font-semibold">
+                        {t.badges.items[reward.badgeId].name}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {bulkBadgeReward && (
+            <p
+              dir="auto"
+              style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
+              className="mt-3 text-center font-medium"
+            >
+              {formatReward(bulkBadgeReward, t)}
             </p>
           )}
         </motion.div>
@@ -689,10 +787,14 @@ export function LessonCompletion({
         {/* ---------------------------------------------------------------
             NEXT ACTION — one clear primary CTA, everything else quieter.
             --------------------------------------------------------------- */}
+        {/* Below lg the page scrolls, so on a short phone the CTA used to sit
+            under the fold after the stats/vocabulary panels — pinned to the
+            bottom edge instead (solid theme background so the content
+            scrolling beneath never shows through). */}
         <motion.div
           variants={fadeInUp}
-          style={{ gap: fluid(theme.cardSpacing, 8) }}
-          className="flex flex-col items-center"
+          style={{ gap: fluid(theme.cardSpacing, 8), backgroundColor: styles.bg }}
+          className="flex flex-col items-center max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:pt-2 max-lg:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         >
           {primaryAction && (
             <PrimaryActionButton
@@ -832,7 +934,7 @@ export function PrimaryActionButton({
 
   const className = cn(
     buttonVariants({ variant: "ghost" }),
-    "flex w-full max-w-sm items-center justify-center gap-2 text-center sm:w-auto",
+    "flex w-full max-w-sm items-center justify-center gap-2 text-center pointer-coarse:min-h-12 sm:w-auto",
   );
   const hoverAnimation = {
     boxShadow: `0 16px 32px -12px color-mix(in srgb, ${theme.colorAccent} 60%, transparent)`,
@@ -916,7 +1018,7 @@ export function SecondaryActionButton({
 
   const className = cn(
     buttonVariants({ variant: "ghost" }),
-    "flex items-center gap-2 border text-center",
+    "flex items-center gap-2 border text-center pointer-coarse:min-h-11",
   );
   const hoverAnimation = {
     borderColor: theme.colorAccent,

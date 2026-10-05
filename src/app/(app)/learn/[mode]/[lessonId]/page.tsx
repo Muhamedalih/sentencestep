@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { preload } from "react-dom";
 
 import { ContentUnavailable } from "@/components/learning/content-unavailable";
 import { LessonSession } from "@/components/learning/lesson-session";
@@ -11,13 +12,12 @@ import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
-import { isTrackableWord, normalizeMistakeWord } from "@/lib/mistakes/normalize";
-import { tokenize } from "@/lib/typing";
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { resolveVoiceId } from "@/lib/voice/resolution";
 import { resolveStoryNarratorVoice } from "@/lib/voice/story-voice-generation";
-import { lookupCachedAudioUrl, lookupCachedWordAudioUrls } from "@/lib/voice/voice-audio";
+import { resolveWordAudioForText } from "@/lib/voice/isolated-word-audio";
+import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 import { getSpeakerVoiceMap } from "@/lib/voice/speaker-voices";
 import { cn } from "@/lib/utils";
 
@@ -164,44 +164,65 @@ export default async function LessonPage({
   // just leaves the sentence to resolve on demand exactly as before. Only
   // the first sentence, not the whole lesson — deliberately not bulk
   // pre-resolving every sentence's audio up front.
+  //
+  // The first sentence's individual WORDS get the same head start (the
+  // measured root cause of "the first sentence's word clicks take 10-20+
+  // seconds, every lesson"): no earlier sentence exists to have loaded them
+  // while the learner typed, so they must already be known when the page
+  // arrives. They were being looked up under the narrator's own voice id —
+  // but an isolated word never lives there (a Cartesia/ElevenLabs narrator
+  // never pays for a single word; its clips sit under a free gender-matched
+  // Edge-TTS voice), so for every paid-narrator lesson that lookup missed
+  // every single time, leaving the very first words to be fetched cold. The
+  // same fix Books already has: resolveWordAudioForText looks under the voice
+  // the words really live under, and under both spellings a word may be
+  // cached as. Word click only exists in Normal/Stories (see TypingSentence's
+  // own enableWordClick scope), so Conversation skips it. Both lookups are
+  // cache-only (never generate) and run side by side rather than one after
+  // the other, so together they add one round trip to the page instead of two;
+  // a failed word lookup just leaves those words to load on the client.
   const firstSentence = unit.sentences[0];
+  const wordAudioWanted = mode === "normal" || mode === "stories";
+  const [firstSentenceAudioUrl, firstSentenceWordAudio] = await Promise.all([
+    firstSentence && !firstSentence.audioUrl && resolvedVoiceId
+      ? lookupCachedAudioUrl(firstSentence.en, resolvedVoiceId).catch((error: unknown) => {
+          // A head start that failed must never take the lesson down with it.
+          console.error("[lesson page] first-sentence audio lookup failed", error);
+          return null;
+        })
+      : Promise.resolve(firstSentence?.audioUrl ?? null),
+    firstSentence && resolvedVoiceId && wordAudioWanted
+      ? resolveWordAudioForText({
+          sentenceId: firstSentence.id,
+          text: firstSentence.en,
+          voiceId: resolvedVoiceId,
+        })
+          .then((result) => result?.urls)
+          .catch((error: unknown) => {
+            console.error("[lesson page] first-sentence word audio lookup failed", error);
+            return undefined;
+          })
+      : Promise.resolve(undefined),
+  ]);
   const sentences =
     firstSentence && !firstSentence.audioUrl && resolvedVoiceId
-      ? [
-          {
-            ...firstSentence,
-            audioUrl: await lookupCachedAudioUrl(firstSentence.en, resolvedVoiceId),
-          },
-          ...unit.sentences.slice(1),
-        ]
+      ? [{ ...firstSentence, audioUrl: firstSentenceAudioUrl }, ...unit.sentences.slice(1)]
       : unit.sentences;
 
-  // Root-cause fix for "the first sentence's word clicks take 10-20+
-  // seconds, every lesson" — see lookupCachedWordAudioUrls' own doc comment
-  // for the measured evidence. Only the first sentence's own narration
-  // above ever got this server-side, cache-only pre-resolution; its
-  // individual words never did, so this mirrors that exact treatment for
-  // them. Word click only exists in Normal/Stories (see TypingSentence's
-  // own enableWordClick scope — Conversation never enables it), so this is
-  // skipped entirely for every other mode. Cache-only, same as the
-  // sentence-level lookup above: never generates, so a miss here just
-  // leaves that word to resolve on demand client-side exactly as before.
-  const firstSentenceWordAudio =
-    firstSentence && resolvedVoiceId && (mode === "normal" || mode === "stories")
-      ? await lookupCachedWordAudioUrls(
-          new Map(
-            Array.from(new Set(tokenize(firstSentence.en).filter(isTrackableWord))).map(
-              (word) => [word, `${firstSentence.id}::${normalizeMistakeWord(word)}`] as const,
-            ),
-          ),
-          resolvedVoiceId,
-        )
-      : undefined;
+  // Starts downloading those word clips with the HTML itself (a <link
+  // rel="preload"> in the head), before the page's JavaScript has even
+  // loaded — the word-audio preloader then finds them already on their way.
+  // crossOrigin matches the preloader's own fetch() (credentials omitted for a
+  // cross-origin request) so the browser reuses the response instead of
+  // downloading it twice.
+  for (const url of new Set(Object.values(firstSentenceWordAudio ?? {}))) {
+    preload(url, { as: "fetch", crossOrigin: "anonymous" });
+  }
 
   return (
     <div
       className={cn(
-        "lesson-shell bg-background text-foreground h-svh w-full",
+        "lesson-shell bg-background text-foreground h-app w-full",
         mode === "stories" && "lesson-shell-stories",
       )}
     >

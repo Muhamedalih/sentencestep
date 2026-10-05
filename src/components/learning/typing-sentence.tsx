@@ -1,27 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
-import { PronunciationButton } from "@/components/learning/pronunciation-button";
-import { PronunciationSpeedControl } from "@/components/learning/pronunciation-speed-control";
+import { LessonSettings } from "@/components/learning/lesson-settings";
+import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
+import type { WordCardsApi } from "@/hooks/use-saved-cards";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import {
   isMistakeWorthTracking,
   isTrackableWord,
+  isWordWorthSaving,
   normalizeMistakeWord,
+  savableWordIndices,
 } from "@/lib/mistakes/normalize";
-import { getCurrentWordIndex, locateWordAtCharIndex, tokenize } from "@/lib/typing";
-import { cn } from "@/lib/utils";
+import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
 import type { LearningMode, Sentence } from "@/types/content";
 
 interface TypingSentenceProps {
@@ -85,7 +86,7 @@ interface TypingSentenceProps {
    * itself. `showTapToStart` instead reflects only `tapped` (LessonSession's
    * own plain `useState(false)`, identical on server and client, so there's
    * nothing to reconcile), and relies purely on TapToStartOverlay's own
-   * `sm:hidden` CSS class — evaluated by the browser at paint time, not
+   * `tap-gate` CSS class — evaluated by the browser at paint time, not
    * baked into the markup one way or the other — to stay invisible on
    * tablet/desktop. Undefined behaves as "never show it" (every caller that
    * doesn't pass it, including Conversation and the admin preview).
@@ -93,10 +94,16 @@ interface TypingSentenceProps {
   showTapToStart?: boolean;
   /** Fired once, the first time the learner taps the mobile-only "tap to start" overlay below — see `showTapToStart`'s own doc comment. */
   onStart?: () => void;
+  /** Personal word cards (admin feature): when present, the current-word label shows a save star. null/undefined = the feature is off here. */
+  wordCards?: WordCardsApi | null;
   /** Stories mode only — steps back one sentence (LessonSession owns the actual state change). Rendered as a small button beside the counter only when provided AND sentenceNumber > 1; every other mode gets its own copy of this button from LessonSession's separate counter row instead. */
   onGoBack?: () => void;
   /** Stories mode only — steps forward again, one sentence. LessonSession only ever passes this when sentenceNumber is still behind maxSentenceIndexReached (see its own doc comment) — undefined otherwise, which is what hides the button entirely rather than this component re-deriving that condition itself. */
   onGoForward?: () => void;
+  /** Dictation handing a half-typed sentence back (the learner gave up, or switched Dictation off): the part already typed correctly, as the keystroke engine's own buffer. Read once, when this sentence mounts. */
+  initialTyped?: string;
+  /** The words that already had wrong letters in that dictation attempt, folded into this sentence's own mistakes so Fix Your Mistakes hears about them once, when the sentence is finished. Read once, on mount. */
+  initialMistakes?: { word: string; errorIndexes: number[] }[];
 }
 
 export function TypingSentence({
@@ -119,6 +126,9 @@ export function TypingSentence({
   onStart,
   onGoBack,
   onGoForward,
+  wordCards,
+  initialTyped,
+  initialMistakes,
 }: TypingSentenceProps) {
   // This exact sentence's voice: a Conversation speaker's assigned voice
   // when one exists, otherwise the lesson-wide resolvedVoiceId (unchanged
@@ -156,6 +166,17 @@ export function TypingSentence({
   // attempt (a Set, since retyping the same wrong position twice — e.g.
   // after a shake-and-retry — must still only count once).
   const mistakeWordsRef = useRef<Map<string, Set<number>>>(new Map());
+  useEffect(() => {
+    // Mount-only: mistakes a dictation attempt at this same sentence already
+    // made. (An effect, not the ref's initial value, so Strict Mode's second
+    // run merges into the same sets instead of doubling anything.)
+    for (const { word, errorIndexes } of initialMistakes ?? []) {
+      const positions = mistakeWordsRef.current.get(word) ?? new Set<number>();
+      for (const index of errorIndexes) positions.add(index);
+      mistakeWordsRef.current.set(word, positions);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleComplete(wpm: number) {
     if (mistakeWordsRef.current.size > 0) {
@@ -182,6 +203,7 @@ export function TypingSentence({
     // (which only ever covered TypingText's OWN mount-time focus call) —
     // both need to read the same gate.
     autoFocus: hasStarted,
+    initialTyped,
   });
 
   // Fires once per genuinely new wrong keystroke (errorIndex transitions
@@ -198,8 +220,10 @@ export function TypingSentence({
     positions.add(engine.errorIndex - located.startOffset);
     mistakeWordsRef.current.set(located.word, positions);
   }, [engine.errorIndex, sentence.en]);
-  const wordClip = useAudioClip();
-  const { resolveAudio, prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
+  const wordClip = useAudioClip(undefined, { shared: true });
+  const { resolveSentenceWord, registerResolvedAudio } = usePronunciationSettings();
+  // Only the latest click plays: a slow earlier word must not start after a later, faster one.
+  const wordRequestRef = useRef(0);
 
   // Feeds LessonPage's server-side pre-resolution (see wordAudioUrls' own
   // doc comment) into the SAME shared cache resolveAudio itself checks
@@ -217,11 +241,14 @@ export function TypingSentence({
   /**
    * A word click's real voice, same rule as PronunciationButton's own
    * `kokoroVoiceId` prop (sentenceVoiceId, computed above) — never a
-   * different provider/voice than the sentence it's part of. A cache hit, or
-   * a free Edge-TTS on-demand synthesis when the sentence itself is
-   * Edge-TTS-sourced, plays the resolved clip directly; a paid-provider
-   * sentence voice (Cartesia for Normal lessons, ElevenLabs for Stories)
-   * instead gets a gender-matched free Edge-TTS substitute for just this one
+   * different provider/voice than the sentence it's part of. Normally a
+   * synchronous cache hit, already downloaded into memory: LessonSession's
+   * word-audio window loads this sentence's words the moment the lesson opens
+   * and the next sentence's while this one is being typed (see
+   * WordAudioPreloader). Only a click that beats that preload joins it — moved
+   * to the front of the queue — instead of starting its own request. A
+   * paid-provider sentence voice (Cartesia for Normal lessons, ElevenLabs for
+   * Stories) gets a gender-matched free Edge-TTS substitute for just this one
    * word (see resolvePronunciationAudioAction's own doc comment) — the
    * sentence's own paid voice is never touched, only this isolated word is
    * spoken by a different (free) voice.
@@ -232,69 +259,42 @@ export function TypingSentence({
    * testing (see git history on this function for that whole arc) — kept as
    * standalone, unused infrastructure (word-timing.ts, the
    * sentence_word_timings table) rather than deleted, in case it's revisited
-   * later, but this call site is back to exactly its pre-2026-09-11
-   * behavior: no resolveWordTimings call, no slice-play.
+   * later, but this call site never calls resolveWordTimings or slice-plays.
    */
   async function handleWordClick(word: string) {
     if (!sentenceVoiceId || !isTrackableWord(word)) return;
-    const contentId = `${sentence.id}::${normalizeMistakeWord(word)}`;
-    const url = await resolveAudio({
-      contentType: "sentence_word",
-      contentId,
+    const request = ++wordRequestRef.current;
+    const url = await resolveSentenceWord({
+      sentenceId: sentence.id,
+      text: sentence.en,
       voiceId: sentenceVoiceId,
+      key: normalizeMistakeWord(word),
     });
-    if (url) wordClip.play(url);
+    if (url && request === wordRequestRef.current) wordClip.play(url);
   }
 
-  // Warms every trackable word's clip in the background the moment this
-  // sentence mounts, the same prefetchPronunciation mechanism/dedup
-  // PronunciationButton's own next-sentence prefetch uses — a first-time
-  // isolated-word synthesis measured ~3-4s (a real Edge-TTS round trip plus
-  // a Storage upload), which felt like a hang when it only started the
-  // instant a learner actually clicked. Firing it here instead means most
-  // clicks land well after the learner has started reading/typing the
-  // sentence, by which point the word is very likely already cached — a
-  // near-instant play instead of a multi-second wait. Only for
-  // Normal/Stories (enableWordClick's own scope — Conversation never
-  // enables word click at all), and only once real content/voice exist.
-  //
-  // Staggered and delayed (root-cause fix, matching
-  // BookSentenceReader's identical effect — see that component's own doc
-  // comment): firing every word's prefetch (a server action plus a
-  // follow-up warm fetch each) all at once, right as this sentence becomes
-  // active, competed for the browser's own per-origin connection limit with
-  // THIS SAME sentence's own narration-audio fetch (the autoPlay
-  // PronunciationButton above) — the measured cause of the reported "word
-  // click takes a long time to play" delay: an early click's own resolve/
-  // fetch queued behind every other word's prefetch instead of running
-  // promptly. Giving the narration a 600ms head start, then trickling word
-  // prefetches in one at a time, costs nothing (none of this is needed
-  // immediately — it only pays off on a later word click) and stops them
-  // from starving the audio that actually matters at this moment. Cleared on
-  // unmount/sentence change so a sentence the learner already left behind
-  // never keeps competing for bandwidth the newly-active sentence needs.
-  useEffect(() => {
-    if (mode !== "normal" && mode !== "stories") return;
-    if (!sentenceVoiceId) return;
-    const words = Array.from(new Set(tokenize(sentence.en).filter(isTrackableWord)));
-    const timers = words.map((word, index) =>
-      setTimeout(
-        () => {
-          prefetchPronunciation({
-            contentType: "sentence_word",
-            contentId: `${sentence.id}::${normalizeMistakeWord(word)}`,
-            voiceId: sentenceVoiceId,
-          });
-        },
-        600 + index * 150,
-      ),
-    );
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when this sentence/voice actually changes, not on every render
-  }, [sentence.id, sentenceVoiceId, mode]);
-
-  const currentWord =
-    sentence.supportWordTranslations?.[getCurrentWordIndex(sentence.en, engine.typed.length)];
+  const currentWordIndex = getCurrentWordIndex(sentence.en, engine.typed.length);
+  const currentWord = sentence.supportWordTranslations?.[currentWordIndex];
+  // The current word's save star (Personal word cards) — only for a real
+  // word (never a bare punctuation token), and only when the feature is open.
+  const currentWordKey = currentWord ? normalizeMistakeWord(currentWord.en) : "";
+  const currentWordSave =
+    wordCards && currentWord && isWordWorthSaving(currentWord.en)
+      ? {
+          saved: wordCards.isSaved(currentWordKey),
+          label: wordCards.isSaved(currentWordKey) ? t.myCards.removeWord : t.myCards.saveWord,
+          onToggle: () => {
+            wordCards.toggle({
+              word: currentWordKey,
+              meaning: currentWord.text,
+              wordIndex: currentWordIndex,
+              sentenceId: sentence.id,
+              sentenceEn: sentence.en,
+            });
+            engine.inputRef.current?.focus();
+          },
+        }
+      : undefined;
 
   // No enter/exit animation here (initial: false, no exit prop) —
   // animating this element on mount/unmount, combined with
@@ -318,6 +318,15 @@ export function TypingSentence({
       ? new Set(sentence.targetVocabularyIndices)
       : undefined;
 
+  // Personal word cards: only some words can be saved (see isWordWorthSaving),
+  // so in Normal lessons those words carry a dotted underline — the learner
+  // can see at a glance which words are worth a star instead of wondering
+  // about every one. Stories keeps its own vocabulary marks untouched.
+  const savableIndices = useMemo(
+    () => (wordCards && mode === "normal" ? savableWordIndices(sentence.en) : undefined),
+    [wordCards, mode, sentence.en],
+  );
+
   function renderText(sizeClass: string, enableWordClick = false) {
     return (
       <TypingText
@@ -328,72 +337,51 @@ export function TypingSentence({
         onChange={engine.handleChange}
         onPaste={engine.handlePaste}
         reducedMotion={reducedMotion}
-        textClassName={sizeClass}
+        textClassName={`${sizeClass} lesson-sentence`}
         textStyle={textStyle}
         onWordClick={enableWordClick ? (word) => void handleWordClick(word) : undefined}
         targetVocabularyIndices={targetVocabularyIndices}
+        savableWordIndices={savableIndices}
         autoFocus={hasStarted}
       />
     );
   }
 
   if (mode === "conversation") {
-    const isReplier = sentence.speaker === "B";
     return (
-      <motion.div
-        {...enterExit}
-        className={cn("flex", isReplier ? "justify-end" : "justify-start")}
-      >
-        <div
-          className={cn(
-            "flex max-w-[92%] items-start gap-3 sm:max-w-[75%]",
-            isReplier && "flex-row-reverse",
-          )}
-        >
-          <div
-            aria-hidden="true"
-            className={cn(
-              "mt-1 flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-              isReplier
-                ? "text-primary-foreground bg-[var(--lesson-speaker)]"
-                : "bg-[var(--lesson-secondary)] text-[var(--lesson-speaker)]",
-            )}
-          >
-            {sentence.speaker}
+      <ConversationBubble speaker={sentence.speaker}>
+        {showTapToStart && (
+          <TapToStartOverlay
+            heading={t.lesson.tapToStartHeading}
+            body={t.lesson.tapToStartBody}
+            onStart={() => {
+              engine.inputRef.current?.focus();
+              onStart?.();
+            }}
+          />
+        )}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:gap-2">
+          <div className="min-w-0 flex-1">
+            {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
           </div>
-          <div
-            className={cn(
-              "border-border min-w-0 rounded-2xl border p-5 sm:p-6",
-              isReplier ? "bg-primary/5 rounded-tr-sm" : "bg-card rounded-tl-sm",
-            )}
-          >
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                {renderText("text-[clamp(1.5rem,1.1rem+2.2vw,2.75rem)]")}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <PronunciationSpeedControl inputRef={engine.inputRef} />
-                <PronunciationButton
-                  text={sentence.en}
-                  audioUrl={sentence.audioUrl}
-                  onPlay={onAudioPlay}
-                  autoPlay
-                  resetKey={sentence.id}
-                  inputRef={engine.inputRef}
-                  kokoroVoiceId={sentenceVoiceId}
-                  contentType="sentence"
-                  contentId={sentence.id}
-                  variant="outline"
-                  className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
-                />
-              </div>
-            </div>
-            <p className="mt-4 text-base text-[var(--lesson-subtitle)] select-none" dir={dir}>
-              {supportText}
-            </p>
+          <div className="flex shrink-0 items-center gap-2 max-sm:self-end">
+            <LessonSettings
+              text={sentence.en}
+              audioUrl={sentence.audioUrl}
+              onPlay={onAudioPlay}
+              autoPlay={hasStarted}
+              resetKey={sentence.id}
+              inputRef={engine.inputRef}
+              kokoroVoiceId={sentenceVoiceId}
+              contentType="sentence"
+              contentId={sentence.id}
+            />
           </div>
         </div>
-      </motion.div>
+        <p className="mt-4 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
+          {supportText}
+        </p>
+      </ConversationBubble>
     );
   }
 
@@ -425,61 +413,22 @@ export function TypingSentence({
             }}
           />
         )}
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <StoryProgressRing current={sentenceNumber} total={totalSentences} />
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--lesson-story-label)] uppercase">
-              {t.lesson.story}
-            </span>
-            {storyTitle && (
-              <span className="text-foreground/40 min-w-0 truncate text-xs" dir="ltr">
-                · {storyTitle}
-              </span>
-            )}
-          </div>
-          <div
-            className="text-muted-foreground hidden items-center gap-1 text-xs font-medium tabular-nums sm:flex"
-            dir="ltr"
-          >
-            {onGoBack && sentenceNumber != null && sentenceNumber > 1 && (
-              <button
-                type="button"
-                onClick={onGoBack}
-                aria-label={t.lesson.previousSentenceButton}
-                title={t.lesson.previousSentenceButton}
-                className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
-              >
-                <ChevronLeft className="size-3" aria-hidden="true" />
-              </button>
-            )}
-            {sentenceNumber != null && totalSentences != null && (
-              <span>
-                {sentenceNumber} / {totalSentences}
-              </span>
-            )}
-            {onGoForward && (
-              <button
-                type="button"
-                onClick={onGoForward}
-                aria-label={t.lesson.nextSentenceButton}
-                title={t.lesson.nextSentenceButton}
-                className="hover:text-foreground hover:bg-muted -my-1 flex size-5 shrink-0 items-center justify-center rounded-full transition-colors"
-              >
-                <ChevronRight className="size-3" aria-hidden="true" />
-              </button>
-            )}
-            {storyTimeRemainingLabel && <span className="text-foreground/30">·</span>}
-            {storyTimeRemainingLabel && <span>{storyTimeRemainingLabel}</span>}
-          </div>
-        </div>
+        <StoryHeaderRow
+          storyTitle={storyTitle}
+          sentenceNumber={sentenceNumber}
+          totalSentences={totalSentences}
+          storyTimeRemainingLabel={storyTimeRemainingLabel}
+          onGoBack={onGoBack}
+          onGoForward={onGoForward}
+        />
         <div className="mb-4 flex items-center justify-end gap-2">
-          <PronunciationSpeedControl inputRef={engine.inputRef} />
-          {/* Mobile only (see hasStarted's own doc comment): a guest who
-              hasn't tapped the "tap to start" overlay yet shouldn't hear the
-              first sentence narrate itself before they've even engaged with
-              the lesson. Every sentence after the first, and every desktop/
-              tablet session, keeps the original always-autoPlay behavior. */}
-          <PronunciationButton
+          {/* autoPlay is gated on hasStarted — mobile only (see its own doc
+              comment): a guest who hasn't tapped the "tap to start" overlay
+              yet shouldn't hear the first sentence narrate itself before
+              they've even engaged with the lesson. Every sentence after the
+              first, and every desktop/tablet session, keeps the original
+              always-autoPlay behavior. */}
+          <LessonSettings
             text={sentence.en}
             audioUrl={sentence.audioUrl}
             onPlay={onAudioPlay}
@@ -489,8 +438,6 @@ export function TypingSentence({
             kokoroVoiceId={sentenceVoiceId}
             contentType="sentence"
             contentId={sentence.id}
-            variant="outline"
-            className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
           />
         </div>
         {/* Centers this group (word label through stats) within whatever
@@ -513,7 +460,7 @@ export function TypingSentence({
             the header was split out. */}
         <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
           <div className="mb-1">
-            <CurrentWordLabel word={currentWord} dir={dir} />
+            <CurrentWordLabel word={currentWord} dir={dir} save={currentWordSave} />
           </div>
           {/* lg:text-[68px] (not clamp-scaled, unlike every other mode's
               renderText call): sized specifically for the narrow fixed-width
@@ -531,10 +478,17 @@ export function TypingSentence({
             "font-serif max-sm:text-[2rem] text-[clamp(3rem,1.4rem+4.5vw,7rem)] lg:text-[68px]",
             true,
           )}
-          <p className="mt-6 text-2xl text-[var(--lesson-subtitle)] select-none" dir={dir}>
+          <p
+            className="mt-6 text-xl text-[var(--lesson-subtitle)] select-none sm:text-2xl"
+            dir={dir}
+          >
             {supportText}
           </p>
-          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+          <div className="compact-hide">
+            <div className="compact-hide">
+              <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+            </div>
+          </div>
         </div>
       </motion.div>
     );
@@ -553,9 +507,8 @@ export function TypingSentence({
         />
       )}
       <div className="mb-4 flex items-center justify-end gap-2">
-        <PronunciationSpeedControl inputRef={engine.inputRef} />
-        {/* Mobile only — see the Stories branch's identical comment above. */}
-        <PronunciationButton
+        {/* autoPlay gated on hasStarted — see the Stories branch's identical comment above. */}
+        <LessonSettings
           text={sentence.en}
           audioUrl={sentence.audioUrl}
           onPlay={onAudioPlay}
@@ -565,8 +518,6 @@ export function TypingSentence({
           kokoroVoiceId={sentenceVoiceId}
           contentType="sentence"
           contentId={sentence.id}
-          variant="outline"
-          className="border-border/60 bg-background/85 shadow-sm backdrop-blur-md"
         />
       </div>
       {/* The current-word translation now lives INSIDE this centered group,
@@ -583,7 +534,7 @@ export function TypingSentence({
           tested against. */}
       <div className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
         <div className="mb-1">
-          <CurrentWordLabel word={currentWord} dir={dir} />
+          <CurrentWordLabel word={currentWord} dir={dir} save={currentWordSave} />
         </div>
         {/* A fixed, smaller size below sm: (the illustration panel above is
             hidden there too — see LessonSession — so this no longer needs to
@@ -595,14 +546,16 @@ export function TypingSentence({
         <p className="mt-6 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
-        <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        <div className="compact-hide">
+          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        </div>
       </div>
     </motion.div>
   );
 }
 
 /**
- * Mobile-only (sm:hidden) gate shown once per lesson, before the learner has
+ * Mobile-only (see .tap-gate in globals.css) gate shown once per lesson, before the learner has
  * tapped anything yet: dims the sentence behind it and asks for a deliberate
  * tap before the keyboard opens, rather than the keyboard trying to appear
  * on its own the instant the lesson loads (unreliable on a phone — most
@@ -627,7 +580,7 @@ export function TypingSentence({
  * blurred version — is deliberate too: the sentence should still read as
  * present and legible-ish behind the card, not obscured.
  */
-function TapToStartOverlay({
+export function TapToStartOverlay({
   heading,
   body,
   onStart,
@@ -646,64 +599,12 @@ function TapToStartOverlay({
         event.preventDefault();
         onStart();
       }}
-      className="bg-background/45 fixed inset-0 z-20 flex cursor-pointer items-center justify-center sm:hidden"
+      className="tap-gate bg-background/45 fixed inset-0 z-20 flex cursor-pointer items-center justify-center"
     >
       <div className="border-border/60 bg-card/95 mx-6 flex flex-col items-center gap-1.5 rounded-2xl border px-7 py-5 text-center shadow-xl shadow-black/30">
         <span className="text-foreground text-base font-semibold">{heading}</span>
         <span className="text-muted-foreground text-sm">{body}</span>
       </div>
     </div>
-  );
-}
-
-/**
- * Small book icon ringed by this story's overall completion (current
- * sentence / total), Stories mode's header only. Falls back to a plain
- * (un-ringed) icon when either number is missing rather than guessing a
- * percentage — callers that don't pass sentenceNumber/totalSentences get
- * exactly the old bare-icon look.
- */
-function StoryProgressRing({ current, total }: { current?: number; total?: number }) {
-  if (!current || !total) {
-    return <BookOpen className="size-3.5 text-[var(--lesson-story-label)]" aria-hidden="true" />;
-  }
-
-  const size = 20;
-  const strokeWidth = 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const percent = Math.min(1, current / total);
-  const offset = circumference * (1 - percent);
-
-  return (
-    <span
-      className="relative inline-flex shrink-0 items-center justify-center"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className="text-[var(--lesson-story-label)] opacity-20"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="text-[var(--lesson-story-label)] transition-[stroke-dashoffset] duration-500 ease-out"
-        />
-      </svg>
-      <BookOpen className="absolute size-2.5 text-[var(--lesson-story-label)]" aria-hidden="true" />
-    </span>
   );
 }

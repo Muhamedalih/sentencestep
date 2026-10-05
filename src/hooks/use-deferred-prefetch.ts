@@ -34,17 +34,24 @@ const STAGGER_MS = 120;
  * memoize the array they pass in — a new array with the same routes, in the
  * same order, on every render (the common case for a list derived from
  * props) won't restart the schedule.
+ *
+ * `initialDelayMs` is for the one or two routes a learner is overwhelmingly
+ * likely to tap next (the other half of a two-way switch like Daily Lessons /
+ * General Stories): waiting the default 400ms plus a stagger there left a
+ * window right after landing on a page in which a tap found nothing warmed and
+ * paid the full server round trip with no feedback. A short list fired right
+ * after mount doesn't bring back the burst this hook exists to avoid.
  */
-export function useDeferredPrefetch(hrefs: string[]) {
+export function useDeferredPrefetch(hrefs: string[], initialDelayMs: number = INITIAL_DELAY_MS) {
   const router = useRouter();
   const key = hrefs.join("|");
 
   useEffect(() => {
     if (hrefs.length === 0) return;
     const timers = hrefs.map((href, index) =>
-      setTimeout(() => router.prefetch(href), INITIAL_DELAY_MS + index * STAGGER_MS),
+      setTimeout(() => router.prefetch(href), initialDelayMs + index * STAGGER_MS),
     );
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on `key` (see doc comment), not `hrefs`/`router` themselves
-  }, [key]);
+  }, [key, initialDelayMs]);
 }

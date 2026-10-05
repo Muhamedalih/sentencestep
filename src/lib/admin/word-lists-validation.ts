@@ -1,3 +1,11 @@
+import {
+  MAX_ALTERNATES,
+  MAX_ALTERNATE_LENGTH,
+  isAlternateShape,
+  normalizeAnswer,
+  splitAlternates,
+} from "@/lib/word-lists-answer";
+import { MAX_IPA_LENGTH, normalizeIpa } from "@/lib/word-lists-ipa";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
 // Pure, no I/O — safe to unit test and safe to reuse for client-side UX
@@ -22,6 +30,8 @@ export interface WordGroupInput {
   descriptionAr?: string;
   isFree: boolean;
   status: WordGroupStatus;
+  /** Per-group Edge-TTS narration override — see word_groups.voice_id's own doc comment (src/types/database.ts). Undefined/null means "use the site-wide Word Lists default voice". */
+  voiceId?: string | null;
 }
 
 const MAX_TITLE_LENGTH = 200;
@@ -60,6 +70,16 @@ export interface VocabularyWordInput {
   targetWord: string;
   sentence: string;
   hintAr: string;
+  /** Optional IPA override, with or without surrounding slashes. Empty means "use the generated fallback". */
+  ipa?: string | null;
+  /**
+   * Extra answers this word accepts (British spellings, synonyms that fit the
+   * sentence), as typed: comma- or line-separated. Empty means only the target
+   * word. null/undefined means the database has no accepted_answers column yet
+   * (its migration is not applied), so the field is not offered and nothing is
+   * written for it.
+   */
+  alternates?: string | null;
 }
 
 const ARABIC_CHAR_RE = /[؀-ۿ]/;
@@ -117,6 +137,53 @@ export function validateVocabularyWordInput(input: VocabularyWordInput): string[
     );
   }
 
+  const ipa = normalizeIpa(input.ipa);
+  if (ipa) {
+    if (ipa.length > MAX_IPA_LENGTH) {
+      errors.push(`"${targetWord || "word"}": IPA must be ${MAX_IPA_LENGTH} characters or fewer.`);
+    }
+    // Plain letters are fine ('red' is valid IPA); Arabic, digits and markup never are.
+    if (ARABIC_CHAR_RE.test(ipa) || /[0-9<>"]/.test(ipa)) {
+      errors.push(
+        `"${targetWord || "word"}": IPA must use phonetic symbols, not Arabic or digits.`,
+      );
+    }
+  }
+
+  errors.push(...validateAlternates(input.alternates, targetWord));
+
+  return errors;
+}
+
+/**
+ * The accepted answers an admin typed: each must be a plain word (or a short
+ * phrase) the typing field can match, and a word may carry only so many. Names
+ * every piece it rejects so the admin can fix it; duplicates and the stored word
+ * itself are not errors — they are simply dropped when the list is saved.
+ */
+function validateAlternates(raw: string | null | undefined, targetWord: string): string[] {
+  if (!raw?.trim()) return [];
+  const label = targetWord || "word";
+  const own = normalizeAnswer(targetWord);
+  const errors: string[] = [];
+  const distinct = new Set<string>();
+  for (const piece of splitAlternates(raw)) {
+    if (piece.length > MAX_ALTERNATE_LENGTH) {
+      errors.push(
+        `"${label}": the accepted answer "${piece.slice(0, 20)}…" is longer than ${MAX_ALTERNATE_LENGTH} characters.`,
+      );
+    } else if (!isAlternateShape(piece)) {
+      errors.push(
+        `"${label}": the accepted answer "${piece}" must be letters only (spaces, hyphens and apostrophes are fine).`,
+      );
+    } else {
+      const key = normalizeAnswer(piece);
+      if (key !== own) distinct.add(key);
+    }
+  }
+  if (distinct.size > MAX_ALTERNATES) {
+    errors.push(`"${label}": at most ${MAX_ALTERNATES} accepted answers are allowed.`);
+  }
   return errors;
 }
 

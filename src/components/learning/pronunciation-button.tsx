@@ -47,9 +47,21 @@ export interface PronunciationButtonHandle {
    * in Books. A no-op if nothing is currently playing.
    */
   stop: () => void;
+  /** Plays the sentence again from the top, exactly as a click on the button or the Shift shortcut would — Dictation's "Try again" uses it so the learner hears the audio afresh. */
+  replay: () => void;
 }
 
-interface PronunciationButtonProps {
+/** What a `headless` PronunciationButton reports about itself — see `onStatusChange`. */
+export interface PronunciationStatus {
+  /** False when no audio source exists at all (no clip, no voice, no speech synthesis) — the same condition under which a visible button renders nothing. */
+  supported: boolean;
+  /** A clip is being resolved or is still loading. */
+  loading: boolean;
+  /** Audio (a clip or the browser voice) is playing right now. */
+  playing: boolean;
+}
+
+export interface PronunciationButtonProps {
   text: string;
   audioUrl?: string | null;
   /** Fired once per successful play press, regardless of source — lets a caller record a lightweight "pronunciation was used" signal without this component knowing about analytics. */
@@ -110,6 +122,16 @@ interface PronunciationButtonProps {
    * passes this) or for a caller with no audio source at all.
    */
   onEnded?: () => void;
+  /**
+   * Keeps all the playback behavior (auto-play, the Shift shortcut's replay,
+   * the imperative handle) but draws nothing — for a caller that offers
+   * replay from its own control (LessonSettings' panel) instead of this
+   * button. Pair it with `onStatusChange`, since the button's own
+   * loading/playing styling is gone.
+   */
+  headless?: boolean;
+  /** Called whenever `supported`/`loading`/`playing` change (and once on mount). Optional. */
+  onStatusChange?: (status: PronunciationStatus) => void;
 }
 
 export const PronunciationButton = forwardRef<PronunciationButtonHandle, PronunciationButtonProps>(
@@ -131,6 +153,8 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       disableSpeechFallback = false,
       onBeforePlay,
       onEnded,
+      headless = false,
+      onStatusChange,
     },
     ref,
   ) {
@@ -153,6 +177,8 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     const resolvedForKeyRef = useRef<string | undefined>(undefined);
     const clip = useAudioClip(audioUrl ?? kokoroUrl, {
       ...(disableSpeechFallback ? { maxRetries: 2, retryDelayMs: 400 } : {}),
+      // Books (disableSpeechFallback) keep their own audio elements; everything else shares one.
+      shared: !disableSpeechFallback,
       onEnded,
     });
 
@@ -180,8 +206,19 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       };
     }, []);
 
+    // The word/sentence this button is on right now, readable from a play that
+    // started for an earlier one. A button that stays mounted across words
+    // (Word Lists keeps one in the page header) can have a resolve still in
+    // flight when the learner moves on — Server Actions run one at a time, so a
+    // clip can be seconds late — and without this check that clip would play
+    // when it finally arrived, saying a word that is no longer on screen (and
+    // stopping the right one), and would be remembered as the new word's clip.
+    const currentKeyRef = useRef(resetKey);
+    currentKeyRef.current = resetKey;
+
     useEffect(() => {
       setKokoroUrl(null);
+      setIsResolvingKokoro(false);
       resolvedForKeyRef.current = undefined;
     }, [resetKey]);
 
@@ -259,20 +296,34 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
             );
           }
         }
-        if (url && mountedRef.current) setKokoroUrl(url);
+        // Only the word still on screen keeps what it found (see currentKeyRef).
+        if (url && mountedRef.current && currentKeyRef.current === resetKey) setKokoroUrl(url);
         return url;
       } finally {
-        if (mountedRef.current) setIsResolvingKokoro(false);
+        if (mountedRef.current && currentKeyRef.current === resetKey) setIsResolvingKokoro(false);
       }
+    }
+
+    // Every switch to the browser's own voice says why, in the console: it is
+    // the one thing a learner hears as "the wrong voice", and without a reason
+    // on record there is no telling a missing clip from a failed one.
+    function warnBrowserVoiceFallback(reason: string) {
+      console.warn(`[pronunciation] using the browser voice for "${text}": ${reason}`, {
+        contentType: contentType ?? null,
+        contentId: contentId ?? null,
+        voiceId: kokoroVoiceId ?? null,
+        hadClipUrl: Boolean(audioUrl),
+      });
     }
 
     async function playAuto() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
+        warnBrowserVoiceFallback("no clip could be found or made for it");
         speech.speakSentence(text, speedMultiplier);
       }
       onPlay?.();
@@ -281,10 +332,11 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     async function playReplay() {
       onBeforePlay?.();
       const url = await resolvePlaybackUrl();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
       } else if (!disableSpeechFallback) {
+        warnBrowserVoiceFallback("no clip could be found or made for it");
         speech.replaySentence(text, speedMultiplier);
       }
       onPlay?.();
@@ -299,12 +351,13 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     // `key={sentence.id}` / `key={word.id}` on their parents).
     const playReplayRef = useRef(playReplay);
     playReplayRef.current = playReplay;
-    useEffect(() => {
-      registerReplay(() => {
-        void playReplayRef.current();
-      });
-      return () => registerReplay(null);
-    }, [registerReplay]);
+    useEffect(
+      () =>
+        registerReplay(() => {
+          void playReplayRef.current();
+        }),
+      [registerReplay],
+    );
 
     // If the recorded/resolved clip fails, fall back to speech synthesis. Every click
     // starts a fresh Audio element (see useAudioClip), so status always
@@ -317,12 +370,17 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     // than substituting a different voice.
     useEffect(() => {
       if (clip.status === "error" && !disableSpeechFallback) {
+        warnBrowserVoiceFallback("its clip failed to play (see the [audio] line above)");
         speech.speakSentence(text);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the clip's own status changes
     }, [clip.status]);
 
-    useImperativeHandle(ref, () => ({ stop: () => clip.stop() }), [clip]);
+    useImperativeHandle(
+      ref,
+      () => ({ stop: () => clip.stop(), replay: () => void playReplayRef.current() }),
+      [clip],
+    );
 
     // Guards against React Strict Mode's dev-only double-invoke of effects
     // (mount → cleanup → mount again), which would otherwise call playAuto()
@@ -354,10 +412,22 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
 
     const hasAudioSource = Boolean(audioUrl) || Boolean(kokoroVoiceId);
     const isSupported = hasAudioSource || (!disableSpeechFallback && speech.isSupported);
-    if (!isSupported) return null;
-
     const isLoading = clip.status === "loading" || isResolvingKokoro;
     const isPlaying = clip.status === "playing" || speech.isSpeaking;
+
+    // Latest callback via a ref so a caller passing an inline function never
+    // re-runs the effect below on every render — only a real status change does.
+    const onStatusChangeRef = useRef(onStatusChange);
+    onStatusChangeRef.current = onStatusChange;
+    useEffect(() => {
+      onStatusChangeRef.current?.({
+        supported: isSupported,
+        loading: isLoading,
+        playing: isPlaying,
+      });
+    }, [isSupported, isLoading, isPlaying]);
+
+    if (!isSupported || headless) return null;
 
     function handleClick() {
       void playReplay();

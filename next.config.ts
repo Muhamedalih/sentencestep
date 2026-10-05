@@ -80,6 +80,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Typing-sound recordings (public/sounds/typing) never change once
+        // shipped under a given name, and every learner session fetches the
+        // same handful — cache them in the browser instead of revalidating.
+        source: "/sounds/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },

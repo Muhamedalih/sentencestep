@@ -37,16 +37,16 @@ function MainLessonCardBody({
 }) {
   return (
     <>
-      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden">
+      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden max-sm:aspect-[12/5]">
         <LessonIllustration
           mode="normal"
           lessonId={lesson.id}
           title={lesson.title}
           illustrationUrl={lesson.illustrationUrl}
-          className="aspect-[16/10] w-full"
+          className="aspect-[16/10] w-full max-sm:aspect-[12/5]"
         />
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-2 p-6 sm:p-8">
+      <div className="flex flex-1 flex-col justify-center gap-2 p-4 sm:p-8">
         <p className="text-muted-foreground text-sm font-medium" dir={dir}>
           {eyebrow}
         </p>
@@ -105,7 +105,7 @@ export function HomeHero({
   isAdminUser,
 }: {
   units: LessonUnit[];
-  /** Stories-mode lessons — same shape/fetch as `units`, already resolved server-side by (dashboard)/[mode]/page.tsx (it fetches all three modes' content for lessonStats already; this is that same array, not a new query). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
+  /** Stories-mode lessons — same shape as `units` (lesson cards without sentence bodies, from getHomeLessons). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
   storiesUnits: LessonUnit[];
   /** The Library's real recommended book (fetchFeaturedBooks()'s first result, or the first published book if nothing is marked featured) — null only when the Library has no published books at all, in which case the top-right card is simply omitted rather than showing empty/fake data. */
   book: Book | null;
@@ -236,7 +236,9 @@ export function HomeHero({
               </p>
             </div>
             <Button asChild size="lg" className="mt-1 w-fit">
-              <Link href="/upgrade">{t.premium.upgradeCta}</Link>
+              <Link href="/upgrade" dir="auto">
+                {t.premium.upgradeCta}
+              </Link>
             </Button>
           </div>
         )}

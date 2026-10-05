@@ -132,7 +132,7 @@ export function StoriesLibrary({
               aria-selected={isActive}
               onClick={() => selectTier(tier)}
               className={cn(
-                "focus-visible:ring-ring focus-visible:ring-offset-background relative flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                "focus-visible:ring-ring focus-visible:ring-offset-background relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-4 sm:py-3",
                 isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -211,7 +211,7 @@ export function StoriesLibrary({
             initial="hidden"
             animate="visible"
             variants={staggerChildren}
-            className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+            className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
           >
             {pageItems.map((lesson) => (
               <StoryCard

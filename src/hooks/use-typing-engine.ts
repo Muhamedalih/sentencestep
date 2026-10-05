@@ -60,6 +60,13 @@ interface UseTypingEngineOptions {
    * bypassing whatever TypingText decided. Both now read the same gate.
    */
   autoFocus?: boolean;
+  /**
+   * Text the learner has already typed correctly before this engine took over —
+   * Dictation handing a half-typed sentence back to the normal view. Only the
+   * engine's first `resetKey` starts from it (a later sentence starts empty),
+   * and only when it really is a prefix of `target`.
+   */
+  initialTyped?: string;
 }
 
 /**
@@ -80,6 +87,7 @@ export function useTypingEngine({
   errorDelayMs = 300,
   inputRef: externalInputRef,
   autoFocus = true,
+  initialTyped,
 }: UseTypingEngineOptions) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
@@ -99,12 +107,17 @@ export function useTypingEngine({
   const correctKeystrokesRef = useRef(0);
   const totalKeystrokesRef = useRef(0);
   const [, setStatsTick] = useState(0);
+  // Kept with the key it was meant for, not consumed on first use: React may
+  // run the reset effect twice on mount (Strict Mode), and both runs must
+  // start from the same text.
+  const seedRef = useRef({ key: resetKey, typed: initialTyped });
 
   // Reset cleanly whenever we move to a new sentence. A sentence can itself
   // start with punctuation (e.g. an opening quote), so the auto-skip pass
   // runs here too, not just after each accepted keystroke below.
   useEffect(() => {
-    setTyped(advanceAutoSkip(target, ""));
+    const seed = seedRef.current.key === resetKey ? (seedRef.current.typed ?? "") : "";
+    setTyped(advanceAutoSkip(target, isValidPrefixEdit(target, seed) ? seed : ""));
     setErrorIndex(null);
     setErrorChar(null);
     completedRef.current = false;

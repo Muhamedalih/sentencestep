@@ -9,15 +9,19 @@ export function PremiumSection({ t }: { t: Dictionary }) {
   return (
     <section id="premium" className="mx-auto max-w-6xl px-6 py-20">
       <Card className="grid gap-10 rounded-2xl p-8 sm:p-12 lg:grid-cols-2 lg:items-center">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             {t.marketing.premiumHeading}
           </h2>
-          <p className="text-muted-foreground mt-3 max-w-lg text-lg text-balance">
+          <p className="text-muted-foreground mt-3 max-w-lg text-lg text-balance" dir="auto">
             {t.marketing.premiumSubtitle}
           </p>
           <div className="mt-6">
-            <Button size="lg" asChild>
+            <Button
+              size="lg"
+              asChild
+              className="h-auto min-h-13 py-2 text-center whitespace-normal"
+            >
               <Link href="/upgrade">{t.marketing.unlockPremiumCta}</Link>
             </Button>
           </div>

@@ -375,3 +375,71 @@
     }
   }
 }
+
+/*
+ * Full-screen sessions (lessons, Word Lists practice/review) size to the
+ * visible area while a touch device's on-screen keyboard is open — see
+ * KeyboardViewport, which sets --app-h only then. Otherwise 100svh, as before.
+ */
+.h-app {
+  height: var(--app-h, 100svh);
+}
+
+/*
+ * Secondary chrome (title, stats, picture, dividers) steps aside while the
+ * keyboard is open and on short landscape phone screens, so the sentence being
+ * typed stays on screen. Plain unlayered rules on purpose: they beat the
+ * layered Tailwind display utilities on the same elements.
+ */
+html[data-keyboard] .compact-hide {
+  display: none;
+}
+/* Same, but only while the keyboard is open — for controls that must stay reachable on a short landscape phone (e.g. the Dictation switch). */
+html[data-keyboard] .kb-hide {
+  display: none;
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .compact-hide {
+    display: none;
+  }
+}
+
+/*
+ * A phone held sideways is wider than the 640px "tablet" cutoff but only
+ * ~375px tall, so height + touch decide these, not width.
+ *  - .tap-gate: the "tap to start" card is for touch screens only.
+ *  - .lesson-sentence: the typed sentence takes a phone-sized size instead of
+ *    the desktop one, which left almost no room above the keyboard.
+ *  - .land-kb-hide: counter/progress/definition step aside while the keyboard
+ *    is open on such a screen.
+ */
+@media (min-width: 640px) {
+  .tap-gate {
+    display: none;
+  }
+}
+@media (min-width: 640px) and (pointer: coarse) and (max-height: 500px) {
+  .tap-gate {
+    display: flex;
+  }
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .lesson-shell .lesson-sentence {
+    font-size: 1.75rem;
+  }
+  html[data-keyboard] .land-kb-hide {
+    display: none;
+  }
+}
+
+/*
+ * The not-yet-typed letters sat at ~1.8:1 against the page (40% of the muted
+ * text colour), which is hard to read on a phone in daylight. Touch screens get
+ * a stronger default (~3:1); an admin colour override still wins, as it is
+ * declared after this stylesheet.
+ */
+@media (pointer: coarse) {
+  .lesson-shell {
+    --lesson-letter-pending: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
+  }
+}

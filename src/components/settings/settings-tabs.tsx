@@ -33,7 +33,8 @@ export function SettingsTabs({
               onClick={() => setActive(tab.id)}
               aria-current={isActive ? "true" : undefined}
               className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 md:gap-3 md:px-5 md:py-3.5 md:text-lg",
+                // Phones: the tabs share the row (icon over label) instead of scrolling sideways with the last one cut off.
+                "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 max-md:min-w-0 max-md:flex-1 max-md:flex-col max-md:gap-1 max-md:px-1 max-md:text-center max-md:text-xs md:shrink-0 md:gap-3 md:px-5 md:py-3.5 md:text-lg md:whitespace-nowrap pointer-coarse:py-3",
                 tab.tone === "danger"
                   ? isActive
                     ? "bg-danger/10 text-danger"

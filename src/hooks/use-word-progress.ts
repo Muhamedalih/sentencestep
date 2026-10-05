@@ -70,7 +70,8 @@ export function useWordProgress() {
   );
 
   const completedCountIn = useCallback(
-    (wordIds: string[]) => wordIds.filter((id) => state.completedWordIds.includes(id)).length,
+    (wordIds: readonly string[]) =>
+      wordIds.filter((id) => state.completedWordIds.includes(id)).length,
     [state.completedWordIds],
   );
 

@@ -51,6 +51,17 @@ async function getDevPlanOverride(): Promise<Plan | null> {
   return value === "premium" ? "premium" : null;
 }
 
+async function readSubscription(userId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 /**
  * The app's single question — "does this user have premium access right
  * now?" — so every gate (lesson pages, content queries, UI) goes through
@@ -64,20 +75,22 @@ export async function getAccessState(): Promise<AccessState> {
 
   if (!isSupabaseConfigured()) return FREE_ACCESS;
 
-  const { freeForAll } = await getAccessSettings();
+  // The subscription read doesn't depend on the free-for-all switch, only on who is
+  // asking, so it starts alongside it instead of after it — this used to be two
+  // round trips in a row on every page that checks access. When free-for-all is
+  // on the result goes unused, which costs one cheap indexed read in a rare,
+  // admin-chosen state. The no-op catch only marks the promise handled for that
+  // unused case; awaiting it below still throws as before.
+  const settingsPromise = getAccessSettings();
+  const user = await getCurrentUser();
+  const subscriptionPromise = user ? readSubscription(user.id) : null;
+  subscriptionPromise?.catch(() => undefined);
+
+  const { freeForAll } = await settingsPromise;
   if (freeForAll) return FREE_FOR_ALL_ACCESS;
 
-  const user = await getCurrentUser();
-  if (!user) return FREE_ACCESS;
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (error) throw error;
+  if (!user || !subscriptionPromise) return FREE_ACCESS;
+  const data = await subscriptionPromise;
 
   return deriveAccessState(
     data && {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { RevokeRoleButton } from "@/components/admin/revoke-role-button";
+import { SendEmailForm } from "@/components/admin/send-email-form";
 import { UserRoleForm } from "@/components/admin/user-role-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,20 @@ export default async function AdminUsersPage() {
         </CardHeader>
         <CardContent>
           <UserRoleForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Send an email</CardTitle>
+          <CardDescription>
+            Email any registered user from the site&apos;s official address. Replies go to
+            EMAIL_REPLY_TO_ADDRESS when it&apos;s set (and show up in Inbox once inbound email is
+            set up), otherwise to EMAIL_FROM_ADDRESS.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SendEmailForm />
         </CardContent>
       </Card>
 

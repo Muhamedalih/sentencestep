@@ -14,6 +14,7 @@ import {
   HeartPulse,
   Home,
   Landmark,
+  Layers,
   Leaf,
   Lock,
   Newspaper,
@@ -36,6 +37,7 @@ import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
 import { TIER_BADGE_CLASS, TIER_ICON_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
+import type { GroupMastery } from "@/lib/word-mastery/schedule";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 /**
@@ -67,7 +69,7 @@ const TOPIC_ICON: Record<string, LucideIcon> = {
   Media: Newspaper,
 };
 
-function iconForGroup(title: string): LucideIcon {
+export function iconForGroup(title: string): LucideIcon {
   return TOPIC_ICON[title] ?? BookOpen;
 }
 
@@ -96,11 +98,14 @@ export function WordGroupCard({
   completedCount,
   isLoaded,
   isPremiumUser,
+  mastery = null,
 }: {
   group: WordGroupSummary;
   completedCount: number;
   isLoaded: boolean;
   isPremiumUser: boolean;
+  /** Smart word practice for a signed-in learner: this group's mastery. The bar and the percent show how many of the group's words the learner has finished (10 of 20 reads 50%), the counts say what is due and new, and the primary action becomes Continue. */
+  mastery?: GroupMastery | null;
 }) {
   const locked = !group.isFree && !isPremiumUser;
   const percent = group.wordCount === 0 ? 0 : Math.round((completedCount / group.wordCount) * 100);
@@ -108,6 +113,10 @@ export function WordGroupCard({
   const supportTitle = group.supportTitle ?? group.title;
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
+  // Part-way through a group (without the spaced schedule's own Continue): the
+  // primary action picks up where the learner left off, and a second one starts
+  // the whole list again from its first word.
+  const partlyDone = !mastery && isLoaded && completedCount > 0 && completedCount < group.wordCount;
 
   const difficulty = difficultyForLevel(group.level);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : "";
@@ -124,7 +133,7 @@ export function WordGroupCard({
           <div className="border-border/60 bg-card relative flex w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-4 opacity-90 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span
               className={cn(
-                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm sm:text-[10px]",
                 TIER_BADGE_CLASS[difficulty],
               )}
             >
@@ -171,7 +180,7 @@ export function WordGroupCard({
         >
           <span
             className={cn(
-              "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm",
+              "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm sm:text-[10px]",
               TIER_BADGE_CLASS[difficulty],
             )}
           >
@@ -205,7 +214,31 @@ export function WordGroupCard({
           </div>
 
           <div className="mt-1 flex w-full flex-col items-center gap-1">
-            {isLoaded ? (
+            {mastery ? (
+              <>
+                <Progress value={mastery.percent} className="h-1.5 w-full" />
+                <span className="text-muted-foreground text-xs font-medium tabular-nums" dir={dir}>
+                  {t.wordLists.smart.masteryPercent.replace("{n}", String(mastery.percent))}
+                </span>
+                {(mastery.dueCount > 0 || mastery.newCount > 0) && (
+                  <span
+                    className="flex flex-wrap items-center justify-center gap-x-2 text-xs font-semibold tabular-nums"
+                    dir={dir}
+                  >
+                    {mastery.dueCount > 0 && (
+                      <span className="text-accent">
+                        {t.wordLists.smart.dueBadge.replace("{n}", String(mastery.dueCount))}
+                      </span>
+                    )}
+                    {mastery.newCount > 0 && (
+                      <span className="text-muted-foreground">
+                        {t.wordLists.smart.newBadge.replace("{n}", String(mastery.newCount))}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </>
+            ) : isLoaded ? (
               <>
                 <Progress value={percent} className="h-1.5 w-full" />
                 <span className="text-muted-foreground text-xs font-medium tabular-nums" dir="ltr">
@@ -236,7 +269,7 @@ export function WordGroupCard({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
-              <div className="flex items-center gap-2 px-4 pt-1 pb-4">
+              <div className={cn("flex items-center gap-2 px-4 pt-1", mastery ? "pb-3" : "pb-4")}>
                 <Button asChild variant="outline" className="flex-1 gap-1.5">
                   <Link href={`/learn/word-lists/${group.id}/learn`}>
                     <GraduationCap className="size-4" aria-hidden="true" />
@@ -244,12 +277,39 @@ export function WordGroupCard({
                   </Link>
                 </Button>
                 <Button asChild className="flex-1 gap-1.5">
-                  <Link href={`/learn/word-lists/${group.id}`}>
+                  <Link href={`/learn/word-lists/${group.id}${partlyDone ? "?scope=resume" : ""}`}>
                     <PencilLine className="size-4" aria-hidden="true" />
-                    {t.wordLists.practiceAction}
+                    {mastery || partlyDone
+                      ? t.wordLists.smart.continueAction
+                      : t.wordLists.practiceAction}
                   </Link>
                 </Button>
               </div>
+              {partlyDone && (
+                <div className="px-4 pb-4">
+                  <Link
+                    href={`/learn/word-lists/${group.id}?scope=all`}
+                    className="border-primary/25 from-primary/15 to-primary/5 text-primary hover:border-primary/50 hover:from-primary/25 hover:to-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-center gap-2 rounded-xl border bg-gradient-to-b px-4 py-2.5 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2"
+                  >
+                    <Layers className="size-4" aria-hidden="true" />
+                    {t.wordLists.restartAction}
+                  </Link>
+                </div>
+              )}
+              {mastery && (
+                // The whole list again, whatever is due: a quiet but real button (tinted
+                // surface, icon, hover lift) rather than a grey text link, so it reads as
+                // a deliberate second path next to Learn and Continue.
+                <div className="px-4 pb-4">
+                  <Link
+                    href={`/learn/word-lists/${group.id}?scope=all`}
+                    className="border-primary/25 from-primary/15 to-primary/5 text-primary hover:border-primary/50 hover:from-primary/25 hover:to-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-center gap-2 rounded-xl border bg-gradient-to-b px-4 py-2.5 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2"
+                  >
+                    <Layers className="size-4" aria-hidden="true" />
+                    {t.wordLists.smart.practiceAllAction}
+                  </Link>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

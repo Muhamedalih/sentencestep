@@ -43,7 +43,7 @@ type DbClient = SupabaseClient<Database>;
  * every word gets the same flat, neutral delivery.
  */
 /** Edge-TTS ignores the model argument entirely (see providers/edge-tts.ts's doc comment) — "edge-tts" here only satisfies buildProviderSynthesisInput/synthesize's shared shape and is stored as voice_audio_cache.model, mirroring voice-audio.ts's identical `model: "edge-tts"` for isolated word clips. */
-const WORD_LIST_MODEL = "edge-tts";
+export const WORD_LIST_MODEL = "edge-tts";
 /**
  * generation_version is intentionally unchanged across the Cartesia ->
  * Edge-TTS reassignment (2026-09-10): provider identity was already dropped
@@ -54,9 +54,9 @@ const WORD_LIST_MODEL = "edge-tts";
  * touching or invalidating the existing Cartesia-voiced rows still sitting
  * in voice_audio_cache.
  */
-const WORD_LIST_GENERATION_VERSION = "word-list:v2";
+export const WORD_LIST_GENERATION_VERSION = "word-list:v2";
 
-const NEUTRAL_VOICE_SETTINGS = {
+export const NEUTRAL_VOICE_SETTINGS = {
   stability: 0.5,
   similarityBoost: 0.75,
   style: 0,
@@ -64,7 +64,7 @@ const NEUTRAL_VOICE_SETTINGS = {
   useSpeakerBoost: true,
 };
 
-const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
+export const NEUTRAL_DIRECTION: Omit<SentenceDirection, "sentenceId"> = {
   emotion: "neutral",
   energy: "medium",
   pace: "normal",
@@ -112,18 +112,42 @@ export async function generateWordGroupVoiceDraft(
     return { generated: 0, skipped: 0, failed: 0, error: "Couldn't load the word group's words." };
   if (!words || words.length === 0) return { generated: 0, skipped: 0, failed: 0 };
 
-  const defaultVoiceId = await getDefaultPronunciationVoiceId();
+  // A group's own voice_id wins when it actually resolves to an Edge-TTS
+  // voice — same override-then-fallback precedence
+  // resolveStoryNarratorVoice/resolveTargetVoices already use for a
+  // lesson/book's voice_id, applied here to word_groups.voice_id (see
+  // 20250311000000_word_group_voice_override.sql). A voice_id left over
+  // from some other provider (there's no admin path that could set one
+  // today, but nothing prevents it at the DB level) is silently ignored
+  // rather than rejected — falls through to the site-wide default exactly
+  // as if the group had no override at all.
+  const { data: group } = await supabase
+    .from("word_groups")
+    .select("voice_id")
+    .eq("id", groupId)
+    .maybeSingle();
+
+  let candidateVoiceId = await getDefaultPronunciationVoiceId();
+  if (group?.voice_id) {
+    const { data: overrideVoice } = await supabase
+      .from("voices")
+      .select("id, source")
+      .eq("id", group.voice_id)
+      .maybeSingle();
+    if (overrideVoice?.source === provider.name) candidateVoiceId = overrideVoice.id;
+  }
+
   const { data: voiceRow } = await supabase
     .from("voices")
     .select("id, provider_voice_id, source")
-    .eq("id", defaultVoiceId)
+    .eq("id", candidateVoiceId)
     .maybeSingle();
   if (!voiceRow || voiceRow.source !== provider.name) {
     return {
       generated: 0,
       skipped: 0,
       failed: words.length,
-      error: `The Word Lists voice (${defaultVoiceId}) is missing or isn't a ${provider.name} voice.`,
+      error: `The Word Lists voice (${candidateVoiceId}) is missing or isn't a ${provider.name} voice.`,
     };
   }
   const voiceId = voiceRow.id;

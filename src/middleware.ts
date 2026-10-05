@@ -427,6 +427,7 @@ function isLibraryRoute(pathname: string): boolean {
  * never a bare substring match, for the same reason isAdminRoute isn't one.
  */
 const ADMIN_ONLY_SEGMENTS = [
+  "features",
   "color-settings",
   "voice",
   "typing-sound",
@@ -434,6 +435,7 @@ const ADMIN_ONLY_SEGMENTS = [
   "lesson-fonts",
   "lesson-completion",
   "reports",
+  "inbox",
   "audit-log",
   "users",
 ];
@@ -670,5 +672,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|wav)$).*)",
+  ],
 };

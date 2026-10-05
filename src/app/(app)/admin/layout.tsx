@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { isAdmin, isEditorOrAdmin } from "@/lib/admin/access";
+import { countNewInboundEmails } from "@/lib/admin/inbox-queries";
 import { countNewProblemReports } from "@/lib/admin/reports-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signOut } from "@/lib/supabase/auth-actions";
@@ -30,8 +31,16 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   // been applied to this environment's database yet). Editors never see
   // this at all — Reports is one of the admin-only areas (see middleware's
   // ADMIN_ONLY_SEGMENTS), so the count would be noise to them anyway.
-  const newReportsCount =
-    fullAdmin && isSupabaseConfigured() ? await countNewProblemReports().catch(() => 0) : 0;
+  // Inbox is the same story (support mail, admin-only, and its migration may
+  // not be applied yet), and the two counts are independent, so they run
+  // together rather than one after the other on every admin request.
+  const [newReportsCount, newInboxCount] =
+    fullAdmin && isSupabaseConfigured()
+      ? await Promise.all([
+          countNewProblemReports().catch(() => 0),
+          countNewInboundEmails().catch(() => 0),
+        ])
+      : [0, 0];
 
   if (!authorized) {
     return (
@@ -116,6 +125,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                     Free access
                   </Link>
                   <Link
+                    href="/admin/features"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Features
+                  </Link>
+                  <Link
                     href="/admin/color-settings"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -151,6 +166,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                   >
                     Reports
                     {newReportsCount > 0 && <Badge variant="secondary">{newReportsCount}</Badge>}
+                  </Link>
+                  <Link
+                    href="/admin/inbox"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                  >
+                    Inbox
+                    {newInboxCount > 0 && <Badge variant="secondary">{newInboxCount}</Badge>}
                   </Link>
                   <Link
                     href="/admin/audit-log"

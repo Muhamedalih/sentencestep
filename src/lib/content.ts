@@ -5,6 +5,8 @@ import { lessonsByMode } from "@/data/lessons";
 import {
   fetchLessonById,
   fetchLessonNav,
+  fetchLessonSentenceStats,
+  fetchLessonSummaries,
   fetchLessons,
   fetchLevelNames,
   fetchLevelPreviews,
@@ -12,10 +14,16 @@ import {
 } from "@/lib/supabase/queries/content";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { LEARNING_MODES } from "@/lib/learning-modes";
-import { withSupportTextFallback } from "@/lib/content-helpers";
+import { countWords, withSupportTextFallback } from "@/lib/content-helpers";
 import { deriveStoryVocabulary, withStoryVocabulary } from "@/lib/content/story-vocabulary";
 import type { SupportLocale } from "@/lib/i18n/locales";
-import type { LearningMode, Lesson, LessonActivity, PreviewSentence } from "@/types/content";
+import type {
+  LearningMode,
+  Lesson,
+  LessonActivity,
+  LessonUnit,
+  PreviewSentence,
+} from "@/types/content";
 
 export * from "@/lib/content-helpers";
 
@@ -59,6 +67,86 @@ export async function getLessons(mode: LearningMode, locale?: SupportLocale): Pr
   if (isSupabaseConfigured()) return fetchLessons(mode, locale);
   if (mode === "stories") return lessonsByMode.stories.map(withStoryVocabulary);
   return lessonsByMode[mode].map(withLessonVocabulary);
+}
+
+/**
+ * A mode's lessons as catalog cards: title, level, order, illustration,
+ * free/premium and the support-language title/description — and NO sentence
+ * bodies. The Stories and Daily Lessons list pages only ever render cards, but
+ * they used to call getLessons, which downloads every sentence of every lesson
+ * (plus word and sentence translations), runs the vocabulary ranking over all
+ * of it, and ships every sentence into the browser inside the page payload.
+ * That made each visit to those two pages one of the heaviest requests in the
+ * app, and switching between them on a phone felt like the tap had been
+ * ignored. See fetchLessonSummaries for why this read is safe to share-cache
+ * across viewers. A page that shows something from the bodies (Conversation's
+ * line count) still needs getLessons.
+ */
+export async function getLessonSummaries(
+  mode: LearningMode,
+  locale?: SupportLocale,
+): Promise<LessonUnit[]> {
+  if (isSupabaseConfigured()) return fetchLessonSummaries(mode, locale);
+  return lessonsByMode[mode].map((lesson) => ({ ...lesson, sentences: [] }));
+}
+
+/** Sentence and word counts of one lesson — see HomeLessons.lessonStats. */
+export type LessonCounts = { sentences: number; words: number };
+
+export interface HomeLessons {
+  /** Normal-mode lessons, without their sentences — everything the "up next" card needs. */
+  units: LessonUnit[];
+  /** Stories-mode lessons, without their sentences. */
+  storiesUnits: LessonUnit[];
+  /** Sentence/word counts keyed `${mode}:${lessonId}`, across all three modes — the Home stats row sums these over the learner's completions. */
+  lessonStats: Record<string, LessonCounts>;
+}
+
+/**
+ * What the Home dashboard needs from the lesson catalog, and nothing more —
+ * see fetchLessonSummaries's doc comment. Home used to call getLessons for all
+ * three modes, which pulled every sentence (with word translations and
+ * per-sentence translations) out of the database, ran vocabulary derivation
+ * over all of it, and serialized every sentence body into the page sent to the
+ * browser, only to show a handful of lesson cards and add up two numbers.
+ * This returns lessons WITHOUT sentence bodies plus per-lesson counts, so the
+ * payload and the work stay small however much content is authored.
+ */
+export async function getHomeLessons(locale?: SupportLocale): Promise<HomeLessons> {
+  if (!isSupabaseConfigured()) {
+    const lessonStats: Record<string, LessonCounts> = {};
+    const strip = (lesson: LessonUnit): LessonUnit => ({ ...lesson, sentences: [] });
+    for (const mode of LEARNING_MODES) {
+      for (const lesson of lessonsByMode[mode]) {
+        lessonStats[`${mode}:${lesson.id}`] = {
+          sentences: lesson.sentences.length,
+          words: lesson.sentences.reduce((sum, sentence) => sum + countWords(sentence.en), 0),
+        };
+      }
+    }
+    return {
+      units: lessonsByMode.normal.map(strip),
+      storiesUnits: lessonsByMode.stories.map(strip),
+      lessonStats,
+    };
+  }
+
+  const [units, storiesUnits, conversationUnits] = await Promise.all([
+    fetchLessonSummaries("normal", locale),
+    fetchLessonSummaries("stories", locale),
+    fetchLessonSummaries("conversation", locale),
+  ]);
+  const counts = await fetchLessonSentenceStats(
+    [...units, ...storiesUnits, ...conversationUnits].map((lesson) => lesson.id),
+  );
+  const lessonStats: Record<string, LessonCounts> = {};
+  for (const lesson of [...units, ...storiesUnits, ...conversationUnits]) {
+    lessonStats[`${lesson.mode}:${lesson.id}`] = counts.get(lesson.id) ?? {
+      sentences: 0,
+      words: 0,
+    };
+  }
+  return { units, storiesUnits, lessonStats };
 }
 
 /**

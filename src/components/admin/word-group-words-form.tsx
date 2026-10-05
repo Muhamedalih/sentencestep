@@ -16,10 +16,23 @@ interface WordRow {
   targetWord: string;
   sentence: string;
   hintAr: string;
+  /** The IPA override as typed; empty means "use the generated fallback". */
+  ipa: string;
+  /** The generated fallback for this word, shown as the IPA field's placeholder. Not saved. */
+  suggestedIpa: string;
+  /** Extra accepted answers as typed (comma-separated); null when the database cannot store them yet, which hides the field and keeps it out of the save. */
+  alternates: string | null;
 }
 
-function emptyWord(): WordRow {
-  return { targetWord: "", sentence: "", hintAr: "" };
+function emptyWord(alternatesSupported: boolean): WordRow {
+  return {
+    targetWord: "",
+    sentence: "",
+    hintAr: "",
+    ipa: "",
+    suggestedIpa: "",
+    alternates: alternatesSupported ? "" : null,
+  };
 }
 
 /**
@@ -33,9 +46,12 @@ function emptyWord(): WordRow {
 export function WordGroupWordsForm({
   groupId,
   initial,
+  alternatesSupported,
 }: {
   groupId: string;
   initial: AdminVocabularyWord[];
+  /** The database has the accepted_answers column — see AdminWordGroupDetail. */
+  alternatesSupported: boolean;
 }) {
   const [words, setWords] = useState<WordRow[]>(
     initial.length > 0
@@ -44,8 +60,11 @@ export function WordGroupWordsForm({
           targetWord: w.targetWord,
           sentence: w.sentence,
           hintAr: w.hintAr,
+          ipa: w.ipa ?? "",
+          suggestedIpa: w.suggestedIpa ?? "",
+          alternates: w.alternates === null ? null : w.alternates.join(", "),
         }))
-      : [emptyWord()],
+      : [emptyWord(alternatesSupported)],
   );
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleting] = useTransition();
@@ -58,7 +77,7 @@ export function WordGroupWordsForm({
   }
 
   function addWord() {
-    setWords((prev) => [...prev, emptyWord()]);
+    setWords((prev) => [...prev, emptyWord(alternatesSupported)]);
     setSuccess(null);
   }
 
@@ -195,6 +214,41 @@ export function WordGroupWordsForm({
                 required
               />
             </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label htmlFor={`ipa-${index}`} className="text-xs font-medium">
+                IPA pronunciation (optional)
+              </label>
+              <Input
+                id={`ipa-${index}`}
+                value={word.ipa}
+                onChange={(e) => updateWord(index, { ipa: e.target.value })}
+                placeholder={word.suggestedIpa ? `${word.suggestedIpa} (automatic)` : "e.g. ænt"}
+                dir="ltr"
+              />
+              <p className="text-muted-foreground text-xs">
+                Shown on the summary after each block of five words. Leave empty to use the
+                automatic one; the slashes are added for you.
+              </p>
+            </div>
+            {word.alternates !== null && (
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <label htmlFor={`alternates-${index}`} className="text-xs font-medium">
+                  Also accepted answers (optional)
+                </label>
+                <Input
+                  id={`alternates-${index}`}
+                  value={word.alternates}
+                  onChange={(e) => updateWord(index, { alternates: e.target.value })}
+                  placeholder="e.g. grey, flat"
+                  dir="ltr"
+                />
+                <p className="text-muted-foreground text-xs">
+                  British spellings and synonyms that fit the sentence and the Arabic hint,
+                  separated by commas. With Smart word practice on (Admin → Features), typing one
+                  counts as right and says “also correct”.
+                </p>
+              </div>
+            )}
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <label htmlFor={`sentence-${index}`} className="text-xs font-medium">
                 Sentence (use ___ where the word belongs)

@@ -25,6 +25,10 @@ export const BLANK_TOKEN = "___";
  */
 export const WORDS_PER_GROUP = 20;
 
+/** The word type shown as a badge on the redesigned Word Lists screens. */
+export const WORD_POS_VALUES = ["noun", "verb", "adjective", "adverb"] as const;
+export type WordPos = (typeof WORD_POS_VALUES)[number];
+
 export interface VocabularyWord {
   id: string;
   groupId: string;
@@ -38,6 +42,12 @@ export interface VocabularyWord {
   hintAr: string;
   /** Same locale-resolution rules as Sentence.supportText in src/types/content.ts — the word's hint in the request's active support locale, only populated when the fetch layer was given a locale. */
   supportHint?: string;
+  /** How the word is pronounced, as bare IPA without the slashes ("ænt") — the word's own `ipa` column when an admin set one, else the generated fallback in src/data/word-lists/ipa.ts (see src/lib/word-lists.ts). Absent for a word with neither; the block summary then simply shows no pronunciation line. Display it through formatIpa (src/lib/word-lists-ipa.ts). */
+  ipa?: string | null;
+  /** The word's type (noun, verb, adjective, adverb) in the sense its sentence uses — the generated map in src/data/word-lists/pos.ts, attached server-side (see src/lib/word-lists.ts). Only the redesigned Word Lists screens show it; absent means no badge. */
+  pos?: WordPos | null;
+  /** Extra answers this word accepts besides targetWord — British spellings and synonyms that fit the sentence and the hint (vocabulary_words.accepted_answers), lower-case. Only the "Smart word practice" screens read it; absent or empty means targetWord alone. See src/lib/word-lists-answer.ts. */
+  alternates?: string[];
   /** Pre-resolved Kokoro pronunciation URL for this word, when already cached — set server-side only for the group's first word (see WordGroupPracticePage), the same "skip the on-demand round trip when we already know the answer" fix as Sentence.audioUrl. Absent/null is normal; PronunciationButton falls back to its existing on-demand resolve. */
   audioUrl?: string | null;
 }

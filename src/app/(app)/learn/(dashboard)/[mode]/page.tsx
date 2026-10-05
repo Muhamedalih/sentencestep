@@ -7,7 +7,7 @@ import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { MODE_TITLE_KEY, MODE_DESCRIPTION_KEY } from "@/components/marketing/mode-title-key";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessons, getLevelNames } from "@/lib/content";
+import { getLessonSummaries, getLessons, getLevelNames } from "@/lib/content";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { LEARNING_MODES, isLearningMode, modeMeta } from "@/lib/learning-modes";
@@ -73,8 +73,13 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
   const title = mode === "normal" ? t.library.normalHeading : t.nav[MODE_TITLE_KEY[mode]];
   const description = t.marketing[MODE_DESCRIPTION_KEY[mode]];
 
+  // Daily Lessons ("normal") cards show no sentence content, so skip loading
+  // it — see getLessonSummaries. Conversation's cards print a line count, which
+  // needs the real sentences.
   const [units, hasPremium, isAdminUser, levelNames, recallCount, user] = await Promise.all([
-    getLessons(mode, locale ?? undefined),
+    mode === "normal"
+      ? getLessonSummaries(mode, locale ?? undefined)
+      : getLessons(mode, locale ?? undefined),
     hasPremiumAccess(),
     isAdmin(),
     getLevelNames(mode, locale ?? undefined),

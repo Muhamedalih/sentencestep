@@ -60,6 +60,7 @@ export default async function AdminWordGroupPreviewPage({
       targetWord: word.targetWord,
       sentence: word.sentence,
       hintAr: word.hintAr,
+      ipa: word.ipa ?? word.suggestedIpa,
     })),
   };
 

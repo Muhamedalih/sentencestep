@@ -1,3 +1,5 @@
+import type { BadgeId } from "@/lib/features/catalog";
+
 /**
  * Shape of every UI-chrome string this app can show, keyed by section. The
  * English strings already live in the components as literals (this app's
@@ -615,6 +617,7 @@ export interface Dictionary {
     completedBefore: string;
     /** Hint shown under the fill-in-the-blank word once the learner has typed something wrong-length-or-content and needs to submit it for grading — see VocabularySentence's Enter-to-check flow. */
     pressEnterToCheck: string;
+    checkAnswer: string;
     unavailableBody: string;
     lockedBadge: string;
     lockedBody: string;
@@ -623,6 +626,8 @@ export interface Dictionary {
     learnAction: string;
     /** Label for the "Practice" action (the existing fill-in-the-blank exercise) — the card expansion's other choice. */
     practiceAction: string;
+    /** A partly finished word group's second action, next to Continue: practice the whole list again from its first word. */
+    restartAction: string;
     /** Button at the bottom of the Learn flashcard view that hands off to the practice exercise for the same group. */
     startTest: string;
     /** Label for the Learn view's labeled replay button (PronunciationButton's `label` prop) — deliberately kept as the English word across locales to match the app's existing convention of English micro-copy for playback controls (see pronunciation.replayHint's "Shift" keycap). */
@@ -633,6 +638,202 @@ export interface Dictionary {
     prevWordAria: string;
     /** Aria-label for the Learn view's "next word" arrow control. */
     nextWordAria: string;
+    /** The block summary's heading (VocabularyBlockSummary), shown after every block of five words. Deliberately has no count: the last block of a group can be shorter and the range line below it already says how many. */
+    blockDoneTitle: string;
+    /** Hint under the block summary heading: the rows open on tap. */
+    blockDoneHint: string;
+    /** Which words of the group the summary covers — {from}, {to} and {total} are 1-based positions and the group's word count. */
+    blockRange: string;
+    /** Accessible label of the block progress segments under the summary heading — {current} of {total} blocks. */
+    blockProgressAria: string;
+    /** Opens every row of the block summary. */
+    expandAll: string;
+    /** Closes every row of the block summary. */
+    collapseAll: string;
+    /** The block summary's button that opens the next five words. */
+    nextBlock: string;
+    /** Under the Next button: which words it opens — {from} and {to} are 1-based positions in the group. */
+    nextBlockHint: string;
+    /** The block summary's button on a group's last block: it leads to the group-complete screen instead of more words. */
+    finishBlock: string;
+    /** Under the Finish button. */
+    finishBlockHint: string;
+    /** Block summary: the button on each word that opens a free practice of just that word. */
+    practiceWord: string;
+    /** Its accessible name — {word} is the word. */
+    practiceWordAria: string;
+    /** On that free practice: back to the block summary. */
+    drillBack: string;
+    /** On that free practice: it records nothing. */
+    drillNote: string;
+    /** Smart word practice (admin-controlled; see FEATURE_IDS in src/lib/features/config.ts): the help bar, the "also correct" note, the group card's Continue and mastery figures, and the review hero. */
+    smart: {
+      /** The help bar's accessible name (for screen readers; not shown on screen). */
+      helpPrompt: string;
+      /** The hint button: the next right letter, mending anything wrong before it. */
+      hint: string;
+      /** Tooltip of the hint button — says what it does and what it costs. */
+      hintTitle: string;
+      /** The give-up button: counts as a miss and shows the right spelling. */
+      dontKnow: string;
+      /** Tooltip of the give-up button. */
+      dontKnowTitle: string;
+      /** Accessible label of the three stars — {n} is how many are lit. */
+      starsLabel: string;
+      /** The price tag on the hint button while a star can still be taken. */
+      costLabel: string;
+      /** The price tag at one star: nothing left to take, the help is only recorded. */
+      costRecorded: string;
+      /** Said in place of the stars once the hint has taken the last one. */
+      noStars: string;
+      /** Tooltip of the closed hint button: what to do instead. */
+      noStarsTitle: string;
+      /** Under the sentence after an accepted alternate (British spelling, synonym) — {word} is the stored word. */
+      alsoCorrect: string;
+      /** The button that skips the missed-word screen (Enter does the same). */
+      continueEnter: string;
+      /** Block summary line: how many of the block's words were right on the first try — {n} of {total}. */
+      firstTry: string;
+      /** Accessible label of a word's stars in the block summary. */
+      starsAria: string;
+      /** The group card's primary action: pick up where you left off. */
+      continueAction: string;
+      /** Practice every word of the group, not just the ones that are new or due. */
+      practiceAllAction: string;
+      /** The group card's mastery figure — {n} is 0-100. */
+      masteryPercent: string;
+      /** Words in the group due for review today — {n}. */
+      dueBadge: string;
+      /** Words in the group not met yet — {n}. */
+      newBadge: string;
+      /** Subtitle of the review hero when words are due. */
+      reviewDueSubtitle: string;
+      /** Shown instead of a practice session when no word in the group is new or due. */
+      caughtUpHeading: string;
+      /** Under the caught-up heading — {date} is the next day a word of this group falls due (already formatted). */
+      caughtUpBody: string;
+      /** Caught-up body when no due date is known. */
+      caughtUpBodyNoDate: string;
+      /** On the review finish screen when the visit was capped — {n} words are still waiting. */
+      moreWaiting: string;
+      /** The button on that screen that starts another review round. */
+      reviewMore: string;
+    };
+    /** The redesigned Word Lists screens (admin-controlled; see the wordsRedesign feature in src/lib/features/config.ts): the mastery dashboard, the word wall, in-the-blank practice and five-card Learn batches. */
+    redesign: {
+      /** Dashboard heading: the learner's whole vocabulary at a glance. */
+      overviewTitle: string;
+      /** Band label: words at strength 4 or more (the 16-day review passed). */
+      bandMastered: string;
+      /** Band label: words met but not strong yet. */
+      bandLearning: string;
+      /** Band label: words never met. */
+      bandNew: string;
+      /** Dashboard figure label: words due for review today. */
+      overviewDue: string;
+      /** Accessible label of a mastery ring — {mastered} of {total} words. */
+      ringAria: string;
+      /** Accessible label of a ring when there is no schedule — {done} of {total}. */
+      ringAriaNoSchedule: string;
+      /** The dashboard's review button — {n} words. */
+      reviewNow: string;
+      /** Under the review button. */
+      reviewNowHint: string;
+      /** Placeholder of the topic search box. */
+      searchPlaceholder: string;
+      /** Accessible name of the topic search box. */
+      searchAria: string;
+      /** Accessible name of the button that clears the search box. */
+      searchClear: string;
+      /** Shown when the search matches no topic. */
+      noResultsHeading: string;
+      /** Under that heading. */
+      noResultsBody: string;
+      /** A topic card's line — {done} of {total} words met. */
+      topicMet: string;
+      /** A topic card's due count — {n}. */
+      topicDue: string;
+      /** A locked topic card's line. */
+      lockedTopic: string;
+      /** Heading of a mastery rank. */
+      rankTitle: string;
+      /** No rank earned yet. */
+      rankNone: string;
+      /** Rank name. */
+      rankBronze: string;
+      /** Rank name. */
+      rankSilver: string;
+      /** Rank name. */
+      rankGold: string;
+      /** How far the next rank is — {n} more mastered words, {rank} is the rank's name. */
+      rankNext: string;
+      /** Shown at the top rank. */
+      rankTop: string;
+      /** The group page's heading for the word wall. */
+      wallHeading: string;
+      /** Under the word wall heading. */
+      wallSubtitle: string;
+      /** Back link from the word wall. */
+      backToTopics: string;
+      /** The word wall's filter that shows every word. */
+      filterAll: string;
+      /** Accessible name of the word wall's filter. */
+      filterAria: string;
+      /** Shown when the filter matches no word. */
+      wallEmpty: string;
+      /** A word's strength — {n} of 5. */
+      strengthAria: string;
+      /** Tag on a word that is due for review. */
+      dueTag: string;
+      /** Tag on a word never met. */
+      notMetYet: string;
+      /** The wall's button: practice only the weak words. */
+      practiceWeak: string;
+      /** Under that button — {n} weak words. */
+      practiceWeakCount: string;
+      /** Under that button when no word is weak. */
+      practiceWeakNone: string;
+      /** Practice header — which batch of five this is. */
+      batchProgress: string;
+      /** Accessible label of the batch progress bar. */
+      batchProgressAria: string;
+      /** Word type badge. */
+      posNoun: string;
+      /** Word type badge. */
+      posVerb: string;
+      /** Word type badge. */
+      posAdjective: string;
+      /** Word type badge. */
+      posAdverb: string;
+      /** Finish screen heading of a practice visit. */
+      completeHeading: string;
+      /** Finish screen: the button to the topic's word wall, where the new strengths and the rank are. */
+      viewWall: string;
+      /** Learn header — which batch of five. */
+      learnBatchTitle: string;
+      /** Learn: the card position inside its batch — {current} of {total}. */
+      learnCounter: string;
+      /** Learn: under the card. */
+      learnSwipeHint: string;
+      /** Learn: the button for a word the learner already knows. */
+      learnKnown: string;
+      /** Learn: the button for a word the learner is still learning. */
+      learnStill: string;
+      /** Learn: heading after the last card of a batch. */
+      learnBatchDone: string;
+      /** Learn: summary after a batch — {known} known, {total} words, {learning} to come back. */
+      learnBatchSummary: string;
+      /** Learn: summary note — {n} cards were not answered. */
+      learnUnanswered: string;
+      /** Learn: the button that opens the next batch. */
+      learnNextBatch: string;
+      /** Learn: the button that goes through the batch again. */
+      learnRepeatBatch: string;
+      /** Learn: the last batch's button that hands over to practice. */
+      learnStartPractice: string;
+      /** Learn: shown once, under the buttons, to a learner whose answers are stored. */
+      learnSavedNote: string;
+    };
   };
   /**
    * Vocabulary Recall (src/lib/vocabulary-recall) — a curiosity-framed, opt-in
@@ -807,6 +1008,23 @@ export interface Dictionary {
     /** `Type this sentence: {sentence}` — the hidden typing input's aria-label when nothing is obscured. */
     typeThisSentence: string;
   };
+  /** The one settings button beside every lesson's sentence (LessonSettings) and the panel it opens: voice speed, replay, typing sounds — each row a title plus a one-line explanation. */
+  lessonSettings: {
+    /** aria-label/title of the settings button itself. */
+    buttonLabel: string;
+    /** Heading of the panel. */
+    title: string;
+    speedTitle: string;
+    speedDescription: string;
+    replayTitle: string;
+    replayDescription: string;
+    /** Same explanation plus the Shift shortcut — used wherever the shortcut is actually wired up. */
+    replayDescriptionShift: string;
+    /** The replay row's button. */
+    replayAction: string;
+    keySoundsTitle: string;
+    keySoundsDescription: string;
+  };
   /** The five XP-based learner levels (see src/lib/progress/learner-level.ts) — a separate progression from the lesson-difficulty tiers in src/lib/levels.ts, keyed by LearnerLevel.name so the underlying English name stays a stable identifier. */
   learnerLevels: {
     beginner: string;
@@ -867,5 +1085,161 @@ export interface Dictionary {
     startFirstLesson: string;
     homeLinkAriaLabel: string;
     dashboardLinkAriaLabel: string;
+  };
+  /** Dictation mode (src/components/learning/dictation-sentence.tsx) — hide the sentence, listen, and type it: checked letter by letter, or all at once with Enter (an admin option). */
+  dictation: {
+    toggleLabel: string;
+    toggleTitleOn: string;
+    toggleTitleOff: string;
+    listenAndType: string;
+    inputLabel: string;
+    pressEnter: string;
+    pressEnterContinue: string;
+    check: string;
+    continue: string;
+    perfect: string;
+    almost: string;
+    youTyped: string;
+    correctSentence: string;
+    retry: string;
+    retryNote: string;
+    blankHint: string;
+    hearWord: string;
+    /** Letter-by-letter mode: the help that appears after two misses in a row, and the end-of-sentence summary. */
+    help: string;
+    helpTitle: string;
+    giveUp: string;
+    giveUpTitle: string;
+    stuckPrompt: string;
+    done: string;
+    mistakeCount: string;
+    /** Accessible label of the sentence's stars — {n} are lit, {max} is how many it started with (3, plus gift stars). */
+    starsLabel: string;
+    /** Said in place of the stars once the word shown at the last star has spent it. */
+    noStars: string;
+    /** The recap chip when this sentence earned a gift star — {n} is how many stars every sentence in the lesson now starts with. */
+    giftEarned: string;
+    /** The recap chip on a sentence that used no star — {n} sentences so far of {total} for the next gift star. */
+    giftProgress: string;
+    wrongLetter: string;
+    /** After a letter-by-letter sentence: a small "again" button beside Continue (practice, only the first try counts). */
+    retrySentence: string;
+    retrySentenceTitle: string;
+    /** The help mark in the end-of-sentence recap ("Help × 2"). */
+    helpCount: string;
+    /** On the Show the word button: what pressing it costs. */
+    costLabel: string;
+    costRecorded: string;
+    /** The chip counting sentences in a row finished without Show the word. */
+    streakLabel: string;
+    streakRisk: string;
+    streakBroken: string;
+    streakAria: string;
+  };
+  /** From-memory mode (src/components/learning/from-memory-session.tsx) — an optional round after a lesson: read the meaning, type the English. */
+  fromMemory: {
+    button: string;
+    title: string;
+    promptLabel: string;
+    placeholder: string;
+    showFirstLetters: string;
+    revealWord: string;
+    backToResults: string;
+    finish: string;
+    summaryHeading: string;
+    summaryBody: string;
+    mistakesSaved: string;
+  };
+  /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
+  streakCalendar: {
+    heading: string;
+    freezesLeft: string;
+    freezesLeftOne: string;
+    noFreezes: string;
+    freezeUsedNote: string;
+    showMonth: string;
+    hideMonth: string;
+    previousMonth: string;
+    nextMonth: string;
+    legendActive: string;
+    legendGrace: string;
+    legendFrozen: string;
+    dayPracticed: string;
+    dayFrozen: string;
+    dayGrace: string;
+    dayMissed: string;
+    loadError: string;
+  };
+  /** Daily quests card on Home (src/components/app/quests-card.tsx) and the guest sign-in teaser for the account-only engagement features. */
+  quests: {
+    heading: string;
+    xpReward: string;
+    allDone: string;
+    loadError: string;
+    rewardCompleted: string;
+    typeSentences: string;
+    typeLessons: string;
+    typeAccuracy: string;
+    typeMasterWords: string;
+    typeDictation: string;
+    typeDailySession: string;
+    guestHeading: string;
+    guestBody: string;
+    guestCta: string;
+  };
+  /** Achievements page + badge celebration (src/app/(app)/learn/(dashboard)/achievements). */
+  badges: {
+    heading: string;
+    subtitle: string;
+    earnedCount: string;
+    earnedOn: string;
+    locked: string;
+    newTag: string;
+    progress: string;
+    rewardEarned: string;
+    rewardBulk: string;
+    navLabel: string;
+    signInHeading: string;
+    signInBody: string;
+    emptyState: string;
+    items: Record<BadgeId, { name: string; description: string }>;
+  };
+  /** Personal word cards: the save star in lessons, the /learn/cards page, its review session and the Anki export. */
+  myCards: {
+    title: string;
+    navLabel: string;
+    subtitle: string;
+    saveWord: string;
+    removeWord: string;
+    practiceDue: string;
+    practiceAll: string;
+    nothingDue: string;
+    exportAnki: string;
+    exportHint: string;
+    emptyHeading: string;
+    emptyBody: string;
+    cardCount: string;
+    dueTag: string;
+    masteredTag: string;
+    nextReview: string;
+    removeCard: string;
+    cardRemoved: string;
+    undoRemove: string;
+    reviewCompleteHeading: string;
+    reviewCompleteSubtitle: string;
+    signInHeading: string;
+    signInBody: string;
+  };
+  /** Today's session: the Home card (src/components/app/daily-session-card.tsx) and the session's completion screen. */
+  dailySession: {
+    cardHeading: string;
+    cardBody: string;
+    cardBodyDone: string;
+    reward: string;
+    start: string;
+    completeHeading: string;
+    completeSubtitle: string;
+    xpEarned: string;
+    alreadyRewarded: string;
   };
 }

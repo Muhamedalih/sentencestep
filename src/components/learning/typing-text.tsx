@@ -1,5 +1,6 @@
 "use client";
 
+import { SharedInput } from "@/components/learning/shared-input";
 import { motion } from "framer-motion";
 import {
   useEffect,
@@ -74,6 +75,13 @@ interface TypingTextProps {
    */
   targetVocabularyIndices?: ReadonlySet<number>;
   /**
+   * Personal word cards: word indices (same indexing as targetVocabularyIndices)
+   * that are worth saving to the learner's deck — marked with a slightly
+   * stronger dotted underline than the Stories vocabulary cue so it is easy
+   * to see which words carry a save star. Passive, like targetVocabularyIndices.
+   */
+  savableWordIndices?: ReadonlySet<number>;
+  /**
    * Enables double-click-to-highlight (addition 3) for every word in this
    * sentence, independent of whether `wordTranslations` has data for any
    * given word — highlighting is a Book Reading feature, not a translation
@@ -127,7 +135,7 @@ interface TypingTextProps {
   highlightIndexes?: ReadonlySet<number> | null;
 }
 
-interface UnderlineRect {
+export interface UnderlineRect {
   x: number;
   y: number;
   width: number;
@@ -157,6 +165,7 @@ export function TypingText({
   wordTranslations,
   translationDir = "ltr",
   targetVocabularyIndices,
+  savableWordIndices,
   enableWordHighlight = false,
   showTypingCursor = true,
   disabled = false,
@@ -257,6 +266,7 @@ export function TypingText({
           const isRevealed = wordTranslations !== undefined && revealedWordIndex === thisWordIndex;
           const isHighlighted = highlightedWordIndices.has(thisWordIndex);
           const isTargetVocabulary = targetVocabularyIndices?.has(thisWordIndex) ?? false;
+          const isSavable = savableWordIndices?.has(thisWordIndex) ?? false;
 
           // MouseEvent.detail is the native click-count (1 for a plain
           // click, 2+ for the second click of a double-click) — checking it
@@ -342,12 +352,19 @@ export function TypingText({
                 // `isolate` makes the stacking context permanent so the mark's
                 // z-index always resolves the same way, hover or not.
                 "focus-visible:ring-primary relative isolate inline-block cursor-pointer whitespace-nowrap transition-transform duration-200 ease-out hover:scale-[1.045] focus-visible:ring-2 focus-visible:outline-none",
+                // A word is 12–125px wide and ~36px tall: on a touch screen the tap area is
+                // widened (not the word) to a comfortable size, same as the Dictation blanks.
+                onWordClick &&
+                  "pointer-coarse:before:absolute pointer-coarse:before:-inset-x-2 pointer-coarse:before:-inset-y-1 pointer-coarse:before:content-['']",
                 // Subtle, always-on cue — never affects layout height meaningfully
                 // (underline-offset keeps it clear of the glyphs) and never
                 // changes click/keyboard behavior, which stays driven by
                 // onWordClick/onKeyDown exactly as before.
                 isTargetVocabulary &&
                   "decoration-primary/40 underline decoration-dotted underline-offset-[6px]",
+                isSavable &&
+                  !isTargetVocabulary &&
+                  "decoration-primary/70 underline decoration-dotted decoration-2 underline-offset-[7px]",
               )}
             >
               {isHighlighted && <HighlightMark reducedMotion={reducedMotion} />}
@@ -414,8 +431,8 @@ export function TypingText({
           reducedMotion ? { duration: 0 } : { type: "tween", duration: 0.16, ease: "easeOut" }
         }
       />
-      <input
-        ref={inputRef}
+      <SharedInput
+        inputRef={inputRef}
         value={typed}
         onChange={onChange}
         onPaste={onPaste}
@@ -551,7 +568,7 @@ function WordTranslationPopover({ text, dir }: { text: string; dir: "rtl" | "ltr
  * indicators share this one measuring implementation so they can never
  * drift into different positioning logic.
  */
-function useUnderlinePosition(
+export function useUnderlinePosition(
   containerRef: RefObject<HTMLDivElement | null>,
   selector: string,
   yOffset: number,

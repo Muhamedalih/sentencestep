@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
+import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
 import {
@@ -10,7 +12,7 @@ import {
   recordVocabularyReview,
 } from "@/lib/supabase/queries/vocabulary-recall";
 import { type RecallMode } from "@/lib/vocabulary-recall/constants";
-import { BLANK_TOKEN } from "@/types/word-lists";
+import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import type { LearningMode } from "@/types/content";
 
@@ -49,14 +51,6 @@ export async function fetchVocabularyRecallCountAction(mode?: LearningMode): Pro
     console.error("[vocabulary-recall] fetchDueVocabularyRecallCount failed", error);
     return 0;
   }
-}
-
-/** `sentence` with its target word blanked back out — same convention Word Lists content is hand-authored in (see BLANK_TOKEN), just derived here instead of pre-written, since a Recall word's sentence is a real lesson/story sentence rather than a purpose-built one. */
-function buildBlankSentence(sentenceEn: string, wordIndex: number): string {
-  const words = sentenceEn.split(/\s+/);
-  if (wordIndex < 0 || wordIndex >= words.length) return sentenceEn;
-  words[wordIndex] = BLANK_TOKEN;
-  return words.join(" ");
 }
 
 /**
@@ -121,6 +115,11 @@ export async function markVocabularyRecallCompletedAction(
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   await recordVocabularyReview(word, hadErrors);
+  if (!hadErrors) {
+    after(async () => {
+      await recordQuestEventsAndBadges(userId, [{ type: "masterWords", amount: 1 }]);
+    });
+  }
   revalidatePath("/learn");
   revalidatePath("/learn/recall");
 }

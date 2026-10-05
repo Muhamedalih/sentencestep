@@ -372,6 +372,155 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;
         Relationships: [];
       };
+      activity_days: {
+        Row: {
+          user_id: string;
+          day: string;
+          sentences: number;
+          xp: number;
+          /** 'active' = practiced; 'grace'/'frozen' = a missed day the streak was carried across (see src/lib/features/streak-freeze.ts). */
+          kind: "active" | "grace" | "frozen";
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          day: string;
+          sentences?: number;
+          xp?: number;
+          kind?: "active" | "grace" | "frozen";
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["activity_days"]["Insert"]>;
+        Relationships: [];
+      };
+      streak_freeze_usage: {
+        Row: {
+          user_id: string;
+          /** 'YYYY-MM' the `used` count applies to. */
+          period: string;
+          used: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          period: string;
+          used?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["streak_freeze_usage"]["Insert"]>;
+        Relationships: [];
+      };
+      daily_quests: {
+        Row: {
+          user_id: string;
+          quest_date: string;
+          slot: number;
+          quest_type: string;
+          target: number;
+          xp: number;
+          progress: number;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          quest_date: string;
+          slot: number;
+          quest_type: string;
+          target: number;
+          xp?: number;
+          progress?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["daily_quests"]["Insert"]>;
+        Relationships: [];
+      };
+      user_badges: {
+        Row: {
+          user_id: string;
+          badge_id: string;
+          earned_at: string;
+          seen_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+          earned_at?: string;
+          seen_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["user_badges"]["Insert"]>;
+        Relationships: [];
+      };
+      saved_words: {
+        Row: {
+          id: string;
+          user_id: string;
+          word: string;
+          meaning: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_id: string | null;
+          sentence_en: string;
+          word_index: number;
+          review_stage: number;
+          next_review_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          word: string;
+          meaning: string;
+          mode: "normal" | "stories";
+          lesson_id: string;
+          lesson_title: string;
+          sentence_id?: string | null;
+          sentence_en: string;
+          word_index: number;
+          review_stage?: number;
+          next_review_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["saved_words"]["Insert"]>;
+        Relationships: [];
+      };
+      daily_sessions: {
+        Row: {
+          user_id: string;
+          session_date: string;
+          completed_at: string;
+          xp: number;
+        };
+        Insert: {
+          user_id: string;
+          session_date: string;
+          completed_at?: string;
+          xp?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["daily_sessions"]["Insert"]>;
+        Relationships: [];
+      };
+      feature_settings: {
+        Row: {
+          id: number;
+          /** The whole feature-availability document — validated by sanitizeFeatureConfig (src/lib/features/config.ts), never trusted as-is. */
+          config: unknown;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          config?: unknown;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["feature_settings"]["Insert"]>;
+        Relationships: [];
+      };
       analytics_events: {
         Row: {
           id: string;
@@ -747,6 +896,8 @@ export interface Database {
           description_ar: string | null;
           is_free: boolean;
           status: "draft" | "published" | "archived";
+          /** Per-group narration voice override — mirrors books.voice_id (see 20250311000000_word_group_voice_override.sql). Null falls back to tts_settings.default_pronunciation_voice_id, exactly like a group with no override. Must resolve to an Edge-TTS voice; generateWordGroupVoiceDraft ignores it otherwise. */
+          voice_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -760,6 +911,7 @@ export interface Database {
           description_ar?: string | null;
           is_free?: boolean;
           status?: "draft" | "published" | "archived";
+          voice_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -775,6 +927,10 @@ export interface Database {
           /** English context sentence containing a literal "___" in place of target_word — see BLANK_TOKEN in src/types/word-lists.ts. */
           sentence: string;
           hint_ar: string;
+          /** Bare IPA pronunciation without slashes ("ænt"), set from Admin -> Word Lists. Null means "use the generated fallback in src/data/word-lists/ipa.ts". */
+          ipa: string | null;
+          /** Extra answers this word accepts besides target_word (British spellings, synonyms that fit the sentence), lower-case. Empty = only target_word. Absent on a project that has not applied 20250324000000_word_accepted_answers.sql yet. */
+          accepted_answers?: string[];
           created_at: string;
           updated_at: string;
         };
@@ -785,6 +941,8 @@ export interface Database {
           target_word: string;
           sentence: string;
           hint_ar: string;
+          ipa?: string | null;
+          accepted_answers?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -809,6 +967,38 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["word_progress"]["Insert"]>;
+        Relationships: [];
+      };
+      word_mastery: {
+        Row: {
+          user_id: string;
+          word_id: string;
+          /** 0 = new or just missed ... 5 = passed the 30-day review. */
+          strength: number;
+          /** The learner-local day this word is next due ("YYYY-MM-DD"). */
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews: number;
+          clean_reviews: number;
+          misses: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          word_id: string;
+          strength?: number;
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews?: number;
+          clean_reviews?: number;
+          misses?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["word_mastery"]["Insert"]>;
         Relationships: [];
       };
       lesson_attempts: {
@@ -1217,6 +1407,41 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["problem_reports"]["Insert"]>;
         Relationships: [];
       };
+      /** A reply a learner emailed to our support address, surfaced in Admin > Inbox. See 20250326000000_inbound_emails.sql. */
+      inbound_emails: {
+        Row: {
+          id: string;
+          provider_email_id: string;
+          message_id: string | null;
+          from_email: string;
+          from_name: string | null;
+          to_email: string;
+          subject: string;
+          body_text: string;
+          attachment_names: string[];
+          status: "new" | "read" | "replied" | "archived";
+          received_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider_email_id: string;
+          message_id?: string | null;
+          from_email: string;
+          from_name?: string | null;
+          to_email: string;
+          subject?: string;
+          body_text?: string;
+          attachment_names?: string[];
+          status?: "new" | "read" | "replied" | "archived";
+          received_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["inbound_emails"]["Insert"]>;
+        Relationships: [];
+      };
       /** Service-role-only sign-in attempt ledger backing signIn's lockout. See 20250216000000_login_attempt_lockout.sql. */
       login_attempts: {
         Row: {
@@ -1262,6 +1487,57 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      add_quest_progress: {
+        Args: { p_type: string; p_amount: number; p_date?: string | null };
+        Returns: {
+          out_slot: number;
+          out_type: string;
+          out_xp: number;
+          out_progress: number;
+          out_target: number;
+          out_completed_now: boolean;
+        }[];
+      };
+      award_badges: {
+        Args: { p_ids: string[] };
+        Returns: { out_badge_id: string }[];
+      };
+      mark_badges_seen: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+      badge_metrics: {
+        Args: Record<string, never>;
+        Returns: {
+          out_longest_streak: number;
+          out_total_sentences: number;
+          out_lesson_count: number;
+          out_perfect_lessons: number;
+          out_max_wpm: number;
+          out_xp: number;
+          out_fixed_words: number;
+        }[];
+      };
+      record_card_review: {
+        Args: { p_word: string; p_had_errors: boolean };
+        Returns: undefined;
+      };
+      complete_daily_session: {
+        Args: { p_date: string; p_xp: number };
+        Returns: boolean;
+      };
+      record_activity_day: {
+        Args: { p_day: string; p_sentences: number; p_xp: number };
+        Returns: undefined;
+      };
+      record_streak_bridge_days: {
+        Args: { p_days: string[]; p_kinds: string[] };
+        Returns: undefined;
+      };
+      consume_streak_freezes: {
+        Args: { p_period: string; p_count: number; p_monthly: number };
+        Returns: number;
+      };
       record_mistake: {
         Args: { p_word: string; p_sentence_id: string | null; p_error_indexes?: number[] | null };
         Returns: undefined;
@@ -1269,6 +1545,10 @@ export interface Database {
       record_mistake_review: {
         Args: { p_word: string; p_had_errors: boolean };
         Returns: undefined;
+      };
+      record_word_review: {
+        Args: { p_word_id: string; p_outcome: string; p_today: string };
+        Returns: { out_strength: number; out_due_on: string; out_advanced: boolean }[];
       };
       record_vocabulary_encounter: {
         Args: {

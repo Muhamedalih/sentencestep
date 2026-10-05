@@ -35,7 +35,7 @@ function StatTile({ value, label }: { value: number; label: string }) {
       >
         {value}
       </span>
-      <span className="text-muted-foreground text-[11px] font-semibold md:text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs font-semibold">{label}</span>
     </div>
   );
 }

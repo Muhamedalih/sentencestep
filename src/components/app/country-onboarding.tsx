@@ -148,7 +148,7 @@ export function CountryOnboarding() {
         type="button"
         dir={dir}
         onClick={() => setForceLevelStep(true)}
-        className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors"
+        className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors pointer-coarse:min-h-11"
       >
         <BackIcon aria-hidden="true" className="size-4" />
         {t.onboarding.back}
@@ -200,7 +200,7 @@ export function CountryOnboarding() {
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               dir={dir}
               onClick={(event) => event.stopPropagation()}
-              className="border-border bg-card flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl border p-5"
+              className="border-border bg-card flex max-h-[80dvh] w-full max-w-md flex-col rounded-2xl border p-5"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
@@ -213,7 +213,7 @@ export function CountryOnboarding() {
                   type="button"
                   onClick={() => setIsOpen(false)}
                   aria-label={t.countryOnboarding.closeLabel}
-                  className="text-muted-foreground hover:text-foreground flex size-6 shrink-0 items-center justify-center"
+                  className="text-muted-foreground hover:text-foreground flex size-6 shrink-0 items-center justify-center pointer-coarse:size-11"
                 >
                   <X aria-hidden="true" className="size-4" />
                 </button>

@@ -12,6 +12,7 @@ import { staggerChildren } from "@/lib/motion";
 import { TIER_RING_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { WeakWordItem } from "@/lib/weak-words/types";
+import type { LibraryMastery } from "@/lib/word-mastery/types";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 const LEVELS = [1, 2, 3];
@@ -51,10 +52,13 @@ export function WordListsLibrary({
   groups,
   isPremiumUser,
   weakWords,
+  mastery = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
   weakWords: WeakWordItem[];
+  /** Smart word practice for a signed-in learner: each group's mastery and how many words wait for review. Null for a guest or when the schedule could not be read — the library is then exactly what it always was. */
+  mastery?: LibraryMastery | null;
 }) {
   const { isLoaded, completedCountIn } = useWordProgress();
   const { locale, dir, t } = useLocale();
@@ -70,7 +74,11 @@ export function WordListsLibrary({
         </p>
       </div>
 
-      <NeedsReviewWords words={weakWords} />
+      <NeedsReviewWords
+        words={weakWords.filter((word) => word.dueNow)}
+        count={mastery?.reviewCount}
+        smart={!!mastery}
+      />
 
       {groups.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -127,6 +135,7 @@ export function WordListsLibrary({
                         completedCount={completedCountIn(group.wordIds)}
                         isLoaded={isLoaded}
                         isPremiumUser={isPremiumUser}
+                        mastery={mastery?.byGroup[group.id] ?? null}
                       />
                     ))}
                   </motion.div>

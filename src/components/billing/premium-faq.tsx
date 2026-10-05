@@ -26,7 +26,7 @@ export function PremiumFaq({ t }: { t: Dictionary }) {
       <CardContent className="flex flex-col gap-1">
         {items.map((item) => (
           <details key={item.q} className="group border-border/60 border-b py-3 last:border-0">
-            <summary className="focus-visible:ring-ring flex cursor-pointer list-none items-center justify-between gap-3 rounded-md text-sm font-medium outline-none focus-visible:ring-2">
+            <summary className="focus-visible:ring-ring flex cursor-pointer list-none items-center justify-between gap-3 rounded-md text-sm font-medium outline-none focus-visible:ring-2 pointer-coarse:min-h-11">
               {item.q}
               <span
                 aria-hidden="true"

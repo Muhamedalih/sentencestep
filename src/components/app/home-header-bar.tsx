@@ -14,7 +14,7 @@ function BigStat({ value, label }: { value: number; label: string }) {
       <div className="font-mono text-3xl leading-none font-extrabold tabular-nums" dir="ltr">
         {value}
       </div>
-      <div className="text-muted-foreground mt-2 text-[10.5px] font-bold tracking-wide uppercase">
+      <div className="text-muted-foreground mt-2 text-xs font-bold tracking-wide uppercase sm:text-[10.5px]">
         {label}
       </div>
     </div>
@@ -53,7 +53,7 @@ export function HomeHeaderBar({
   if (!isLoaded) {
     return (
       <div
-        className={cn("flex flex-wrap items-center justify-between gap-6", className)}
+        className={cn("flex flex-wrap items-center justify-between gap-x-6 gap-y-3", className)}
         aria-hidden="true"
       >
         <div className="flex items-center gap-3.5">
@@ -92,7 +92,7 @@ export function HomeHeaderBar({
   const sessions = sessionCount ?? completions.length;
 
   return (
-    <div className={cn("flex flex-wrap items-center justify-between gap-6", className)}>
+    <div className={cn("flex flex-wrap items-center justify-between gap-x-6 gap-y-3", className)}>
       <div className="flex items-center gap-3.5">
         {user && (
           <InitialsAvatar
