@@ -12,12 +12,21 @@
  * proof of ownership is needed.
  */
 
-/** The emails in a comma, semicolon or whitespace separated list, lowercased. */
+/**
+ * The emails in a comma, semicolon or whitespace separated list, lowercased.
+ * Quotes, brackets and angle brackets around an entry are dropped, since a
+ * value pasted into a dashboard often arrives as "a@b.com" or <a@b.com>.
+ */
 export function parseExcludedEmails(raw: string | undefined): Set<string> {
   return new Set(
     (raw ?? "")
       .split(/[\s,;]+/)
-      .map((email) => email.trim().toLowerCase())
+      .map((email) =>
+        email
+          .trim()
+          .toLowerCase()
+          .replace(/^["'<([]+|[>"')\]]+$/g, ""),
+      )
       .filter((email) => email !== ""),
   );
 }

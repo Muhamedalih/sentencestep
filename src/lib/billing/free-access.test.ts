@@ -22,6 +22,22 @@ test("parseExcludedEmails: splits on commas, semicolons and whitespace and lower
   ]);
 });
 
+test("parseExcludedEmails: drops quotes, brackets and angle brackets pasted around an entry", () => {
+  const parsed = parseExcludedEmails(
+    `"quoted@example.com", 'single@example.com' <angle@example.com> ["array@example.com"]`,
+  );
+  assert.deepEqual([...parsed].sort(), [
+    "angle@example.com",
+    "array@example.com",
+    "quoted@example.com",
+    "single@example.com",
+  ]);
+});
+
+test("freeForAllAppliesTo: a quoted entry still exempts the matching account", () => {
+  assert.equal(freeForAllAppliesTo(true, "tester@example.com", '"tester@example.com"'), false);
+});
+
 test("freeForAllAppliesTo: with the promotion off it never applies", () => {
   assert.equal(freeForAllAppliesTo(false, "tester@example.com", undefined), false);
   assert.equal(freeForAllAppliesTo(false, null, "tester@example.com"), false);
