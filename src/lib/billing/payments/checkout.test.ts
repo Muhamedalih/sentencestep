@@ -77,6 +77,7 @@ test("createCheckout: the provider is asked for a link with our own callback URL
     referenceId: "ss_123e4567e89b12d3a456426614174000",
     amount: 3960,
     currency: "IQD",
+    description: "SentenceStep Premium (30 days)",
     webhookUrl: `${ORIGIN}/api/billing/webhook/wayl`,
     redirectUrl: `${ORIGIN}/billing/return`,
     expiresIn: "1h",

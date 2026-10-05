@@ -108,6 +108,7 @@ export async function createCheckout(
       referenceId: order.reference_id,
       amount: quote.amount,
       currency: quote.currency,
+      description: `SentenceStep Premium (${quote.premiumDays} days)`,
       webhookUrl: `${origin}/api/billing/webhook/${provider.name}`,
       redirectUrl: `${origin}/billing/return`,
       expiresIn: LINK_EXPIRES_IN,

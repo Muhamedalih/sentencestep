@@ -14,6 +14,8 @@ export interface CreatePaymentInput {
   /** Whole units of `currency`. */
   amount: number;
   currency: string;
+  /** A short human-readable label the provider may show on its hosted payment page. */
+  description: string;
   webhookUrl: string;
   redirectUrl: string;
   /** Provider-agnostic duration such as "1h". */

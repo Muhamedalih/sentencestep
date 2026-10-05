@@ -23,10 +23,9 @@ export interface WaylConfig {
   fetch?: typeof fetch;
 }
 
-const BASE_URLS = {
-  live: "https://api.thewayl.com",
-  test: "https://api.thewayl-staging.com",
-} as const;
+// Wayl's test mode is the `env` field on a link, on this same API and with the
+// same key — not a separate server or account.
+const BASE_URL = "https://api.thewayl.com";
 
 const REQUEST_TIMEOUT_MS = 8_000;
 const BATCH_SIZE = 100;
@@ -125,13 +124,11 @@ function toProviderPayment(link: WaylLink): ProviderPayment {
  * and is never placed in an error message.
  */
 export function createWaylProvider(config: WaylConfig): PaymentProvider {
-  const baseUrl = BASE_URLS[config.environment];
-
   async function request(path: string, init: { method: "GET" | "POST"; body?: unknown }) {
     const fetchImpl = config.fetch ?? globalThis.fetch;
     let response: Response;
     try {
-      response = await fetchImpl(`${baseUrl}${path}`, {
+      response = await fetchImpl(`${BASE_URL}${path}`, {
         method: init.method,
         headers: {
           "X-WAYL-AUTHENTICATION": config.apiKey,
@@ -196,6 +193,8 @@ export function createWaylProvider(config: WaylConfig): PaymentProvider {
           referenceId: input.referenceId,
           total: input.amount,
           currency: input.currency,
+          // Wayl's own guide shows links created with line items that add up to the total.
+          lineItem: [{ label: input.description, amount: input.amount, type: "increase" }],
           webhookUrl: input.webhookUrl,
           webhookSecret: config.webhookSecret,
           redirectionUrl: input.redirectUrl,
@@ -282,12 +281,25 @@ export function createWaylProvider(config: WaylConfig): PaymentProvider {
         throw new MalformedWebhookError("Wayl webhook body is not valid JSON.");
       }
 
-      const fields = (payload ?? {}) as { referenceId?: unknown; id?: unknown; status?: unknown };
+      // Wayl's dashboard shows the payload as { verb, event: "order.created",
+      // referenceId, paymentStatus, total, customer, … }. Only referenceId is
+      // used to find the order; the event name is just for the audit log.
+      const fields = (payload ?? {}) as {
+        referenceId?: unknown;
+        id?: unknown;
+        event?: unknown;
+        status?: unknown;
+      };
       if (typeof fields.referenceId !== "string" || fields.referenceId === "") {
         throw new MalformedWebhookError("Wayl webhook payload has no referenceId.");
       }
 
-      const eventType = typeof fields.status === "string" ? fields.status : "unknown";
+      const eventType =
+        typeof fields.event === "string" && fields.event !== ""
+          ? fields.event
+          : typeof fields.status === "string"
+            ? fields.status
+            : "unknown";
       const eventId =
         typeof fields.id === "string" && fields.id !== "" ? `${fields.id}:${eventType}` : null;
 

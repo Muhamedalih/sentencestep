@@ -65,6 +65,7 @@ const createInput = {
   referenceId: "ss_abc",
   amount: 3960,
   currency: "IQD",
+  description: "SentenceStep Premium (30 days)",
   webhookUrl: "https://sentencestep.example/api/billing/webhook/wayl",
   redirectUrl: "https://sentencestep.example/billing/return",
   expiresIn: "1h",
@@ -72,7 +73,7 @@ const createInput = {
 
 // --- createPayment ---
 
-test("createPayment: posts the documented link body, in IQD, to the test server", async () => {
+test("createPayment: posts the documented link body, in IQD, as a test-mode link", async () => {
   const { calls, fetchStub } = stubFetch(() => json(201, { data: link(), message: "ok" }));
 
   const result = await providerWith(fetchStub).createPayment(createInput);
@@ -80,7 +81,7 @@ test("createPayment: posts the documented link body, in IQD, to the test server"
   assert.equal(result.providerPaymentId, "link_123");
   assert.equal(result.checkoutUrl, "https://pay.example.com/link_123");
   assert.equal(calls.length, 1);
-  assert.equal(calls[0]!.url, "https://api.thewayl-staging.com/api/v1/links");
+  assert.equal(calls[0]!.url, "https://api.thewayl.com/api/v1/links");
   assert.equal(calls[0]!.init.method, "POST");
   const headers = calls[0]!.init.headers as Record<string, string>;
   assert.equal(headers["X-WAYL-AUTHENTICATION"], API_KEY);
@@ -89,6 +90,7 @@ test("createPayment: posts the documented link body, in IQD, to the test server"
     referenceId: "ss_abc",
     total: 3960,
     currency: "IQD",
+    lineItem: [{ label: "SentenceStep Premium (30 days)", amount: 3960, type: "increase" }],
     webhookUrl: createInput.webhookUrl,
     webhookSecret: SECRET,
     redirectionUrl: createInput.redirectUrl,
@@ -96,13 +98,16 @@ test("createPayment: posts the documented link body, in IQD, to the test server"
   });
 });
 
-test("createPayment: the live environment uses the production server and env=live", async () => {
+test("createPayment: live and test links use the same server and key, told apart only by env", async () => {
   const { calls, fetchStub } = stubFetch(() => json(201, { data: link() }));
 
   await providerWith(fetchStub, "live").createPayment(createInput);
+  await providerWith(fetchStub, "test").createPayment(createInput);
 
   assert.equal(calls[0]!.url, "https://api.thewayl.com/api/v1/links");
+  assert.equal(calls[1]!.url, "https://api.thewayl.com/api/v1/links");
   assert.equal(JSON.parse(calls[0]!.init.body as string).env, "live");
+  assert.equal(JSON.parse(calls[1]!.init.body as string).env, "test");
 });
 
 test("createPayment: rejects a created link that does not match what was requested", async () => {
@@ -163,7 +168,7 @@ test("getPayment: reads the link by reference id and maps a completed payment to
 
   const payment = await providerWith(fetchStub).getPayment("ss_abc");
 
-  assert.equal(calls[0]!.url, "https://api.thewayl-staging.com/api/v1/links/ss_abc");
+  assert.equal(calls[0]!.url, "https://api.thewayl.com/api/v1/links/ss_abc");
   assert.equal(calls[0]!.init.method, "GET");
   assert.deepEqual(payment, {
     referenceId: "ss_abc",
@@ -245,7 +250,7 @@ test("getPayments: looks up many references in one batch call", async () => {
   const payments = await providerWith(fetchStub).getPayments(["ss_1", "ss_2", "ss_3"]);
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0]!.url, "https://api.thewayl-staging.com/api/v1/links/batch");
+  assert.equal(calls[0]!.url, "https://api.thewayl.com/api/v1/links/batch");
   assert.deepEqual(JSON.parse(calls[0]!.init.body as string), {
     referenceIds: ["ss_1", "ss_2", "ss_3"],
   });
@@ -377,4 +382,37 @@ test("verifyWebhook: a payload without an id still verifies, with no audit key",
   const verified = verify(body, signHex(body));
   assert.equal(verified.eventId, null);
   assert.equal(verified.eventType, "unknown");
+});
+
+test("verifyWebhook: reads the payload shape Wayl documents in its dashboard (event name, no id)", () => {
+  const body = JSON.stringify({
+    verb: "POST",
+    event: "order.created",
+    referenceId: "ss_abc",
+    paymentMethod: "...",
+    paymentStatus: "...",
+    paymentProcessor: "...",
+    total: 1000,
+    commission: 0,
+    code: "I94F590I",
+    customer: {
+      id: "cmBkktqmz0000g00btwuo4ill",
+      name: "...",
+      country: "IQ",
+      city: "iraq_al_basrah",
+    },
+  });
+
+  const verified = verify(body, signHex(body));
+
+  assert.equal(verified.referenceId, "ss_abc");
+  assert.equal(verified.eventType, "order.created");
+  assert.equal(verified.eventId, null);
+});
+
+test("verifyWebhook: when the payload carries an id, the audit key combines it with the event name", () => {
+  const body = JSON.stringify({ id: "evt_7", event: "order.paid", referenceId: "ss_abc" });
+  const verified = verify(body, signHex(body));
+  assert.equal(verified.eventType, "order.paid");
+  assert.equal(verified.eventId, "evt_7:order.paid");
 });
