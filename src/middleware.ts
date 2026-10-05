@@ -671,8 +671,29 @@ export async function middleware(request: NextRequest) {
   return withCsp(response, csp);
 }
 
+/**
+ * Everything this middleware does — refreshing the Supabase session cookie,
+ * the MFA and locale reconciliation, the CSP header — is about a browser
+ * navigating between pages. The routes excluded below never use a session at
+ * all, so for a signed-in learner running this middleware on them was pure
+ * overhead: `getClaims()` makes a real round trip to the Auth server (which
+ * reads the database) whenever the project still signs JWTs with the legacy
+ * shared secret (see supabase-js's getClaims: HS* algorithms and kid-less
+ * tokens fall back to getUser()), and `reconcileLocaleCookie` can add a
+ * `profiles` read on top.
+ *  - api/voice/sentence-words: fired by the lesson's word-audio preloader once
+ *    per sentence the learner reaches, twice (lookup + generate). It is open to
+ *    guests and authenticates nothing — it names a sentence and a voice and
+ *    talks to the database with the service-role client.
+ *  - api/cron/*, api/billing/webhook, api/email/inbound: machine-to-machine
+ *    (CRON_SECRET / provider signature), never a browser session. The cron
+ *    ones in particular ran this on every scheduled call.
+ * Routes that DO read the learner's session (api/account/export,
+ * api/cards/export) are deliberately NOT listed and still pass through.
+ * Next requires `matcher` to be a literal, so the alternation is spelled out.
+ */
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|wav)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/voice/sentence-words|api/cron/|api/billing/webhook|api/email/inbound|.*\\.(?:svg|png|jpg|jpeg|gif|webp|wav)$).*)",
   ],
 };
