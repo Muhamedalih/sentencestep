@@ -11,3 +11,6 @@ export const UNATTACHED_ORDER_GRACE_MS = 5 * 60 * 1000;
 export const MIN_REUSABLE_LINK_LIFE_MS = 2 * 60 * 1000;
 
 export const MAX_ORDERS_PER_HOUR = 5;
+
+/** The provider's own wording kept on a failed order is cut to this, so one odd response can't bloat a row. */
+export const MAX_FAILURE_DETAIL_CHARS = 400;

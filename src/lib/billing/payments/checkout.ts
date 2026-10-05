@@ -8,6 +8,7 @@ import type { PricingTier } from "@/lib/billing/pricing";
 import {
   LINK_EXPIRES_IN,
   LINK_TTL_MS,
+  MAX_FAILURE_DETAIL_CHARS,
   MAX_ORDERS_PER_HOUR,
   MIN_REUSABLE_LINK_LIFE_MS,
 } from "./constants";
@@ -125,8 +126,13 @@ export async function createCheckout(
   } catch (error) {
     const detail = error instanceof Error ? error.message : "unknown error";
     deps.report({ code: "checkout_link_creation_failed", referenceId, detail });
+    // The adapter has already stripped its key and secret from this text, so
+    // keeping it on the order makes a failed link diagnosable from the row alone.
     await store
-      .updateOrder(order.id, { status: "failed", failure_reason: "link_creation_failed" })
+      .updateOrder(order.id, {
+        status: "failed",
+        failure_reason: `link_creation_failed: ${detail}`.slice(0, MAX_FAILURE_DETAIL_CHARS),
+      })
       .catch(() => undefined);
     return { ok: false, error: "provider_unavailable" };
   }

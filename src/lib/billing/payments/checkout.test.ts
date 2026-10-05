@@ -163,6 +163,6 @@ test("createCheckout: when the provider cannot create the link the order is fail
   assert.deepEqual(result, { ok: false, error: "provider_unavailable" });
   const order = store.get("ss_123e4567e89b12d3a456426614174000");
   assert.equal(order.status, "failed");
-  assert.equal(order.failure_reason, "link_creation_failed");
+  assert.equal(order.failure_reason, "link_creation_failed: Wayl POST failed (503)");
   assert.equal(alerts[0]!.code, "checkout_link_creation_failed");
 });
