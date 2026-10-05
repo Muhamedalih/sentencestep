@@ -27,7 +27,8 @@ export interface WaylConfig {
 // same key — not a separate server or account.
 const BASE_URL = "https://api.thewayl.com";
 
-const REQUEST_TIMEOUT_MS = 8_000;
+// Short enough that a slow Wayl can't push a page or checkout past the host's function time limit.
+const REQUEST_TIMEOUT_MS = 6_000;
 const BATCH_SIZE = 100;
 const ERROR_BODY_PREVIEW_CHARS = 300;
 const SIGNATURE_HEADER = "x-wayl-signature-256";
@@ -153,10 +154,12 @@ export function createWaylProvider(config: WaylConfig): PaymentProvider {
     path: string,
     response: Response,
   ): Promise<PaymentProviderError> {
-    const preview = await response
-      .text()
-      .then((text) => text.slice(0, ERROR_BODY_PREVIEW_CHARS))
-      .catch(() => "");
+    const body = await response.text().catch(() => "");
+    // Redact before truncating, so a secret cut in half by the limit can't survive.
+    const preview = [config.apiKey, config.webhookSecret]
+      .filter((secret) => secret !== "")
+      .reduce((text, secret) => text.split(secret).join("[redacted]"), body)
+      .slice(0, ERROR_BODY_PREVIEW_CHARS);
     const retryable = response.status >= 500 || response.status === 429 || response.status === 408;
     return new PaymentProviderError(
       `Wayl ${method} ${path} failed (${response.status}): ${preview}`,

@@ -143,6 +143,26 @@ test("createPayment: a 4xx is a non-retryable error and never leaks the API key"
   });
 });
 
+test("createPayment: secrets echoed back in an error body are redacted, even at the truncation boundary", async () => {
+  const echoes = [
+    `invalid webhookSecret ${SECRET}`,
+    `${"x".repeat(280)}${SECRET}${API_KEY}`,
+    `${"x".repeat(295)}${API_KEY}`,
+  ];
+  for (const body of echoes) {
+    const { fetchStub } = stubFetch(() => new Response(body, { status: 422 }));
+
+    await assert.rejects(providerWith(fetchStub).createPayment(createInput), (error: unknown) => {
+      assert.ok(error instanceof PaymentProviderError);
+      assert.ok(!error.message.includes(SECRET));
+      assert.ok(!error.message.includes(API_KEY));
+      assert.ok(!error.message.includes(SECRET.slice(0, 12)));
+      assert.ok(!error.message.includes(API_KEY.slice(0, 12)));
+      return true;
+    });
+  }
+});
+
 test("createPayment: a 5xx or a network failure is retryable", async () => {
   const serverError = stubFetch(() => json(503, { message: "down" }));
   await assert.rejects(
