@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { deriveAccessState } from "@/lib/billing/domain";
 import { getAccessSettings } from "@/lib/billing/access-settings-queries";
+import { freeForAllAppliesTo } from "@/lib/billing/free-access";
 import { FREE_ACCESS } from "@/lib/billing/types";
 import type { AccessState, Plan } from "@/lib/billing/types";
 
@@ -22,7 +23,9 @@ const PREMIUM_DEV_ACCESS: AccessState = {
 /**
  * Returned for every visitor while an admin has free_for_all switched on
  * (see /admin/free-access) — a temporary, sitewide promotion, not a real
- * subscription. Shaped identically to a real active premium subscriber so
+ * subscription — except an account listed in FREE_ACCESS_EXCLUDED_EMAILS,
+ * which keeps its real plan so the paid flow can be tried (free-access.ts).
+ * Shaped identically to a real active premium subscriber so
  * it flows through every existing isPremium-gated screen (lesson locks,
  * upgrade CTAs, the checkout button) unchanged. Nothing about any real
  * subscriptions row is ever written by this path, so switching free_for_all
@@ -87,7 +90,9 @@ export async function getAccessState(): Promise<AccessState> {
   subscriptionPromise?.catch(() => undefined);
 
   const { freeForAll } = await settingsPromise;
-  if (freeForAll) return FREE_FOR_ALL_ACCESS;
+  if (freeForAllAppliesTo(freeForAll, user?.email, process.env.FREE_ACCESS_EXCLUDED_EMAILS)) {
+    return FREE_FOR_ALL_ACCESS;
+  }
 
   if (!user || !subscriptionPromise) return FREE_ACCESS;
   const data = await subscriptionPromise;
