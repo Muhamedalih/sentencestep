@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { getAccessState } from "@/lib/billing/access";
@@ -18,6 +18,9 @@ import type { PaymentProvider } from "@/lib/billing/payment-provider";
 import { getPaymentProvider } from "@/lib/billing/provider-registry";
 import { getSiteUrl } from "@/lib/site-url";
 import { getCurrentUser } from "@/lib/supabase/auth";
+import { SUPABASE_AUTH_COOKIE_PATTERN } from "@/lib/supabase/auth-cookie-pattern";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createClient } from "@/lib/supabase/server";
 
 // Per request and per visitor: never cached or shared.
 export const dynamic = "force-dynamic";
@@ -26,6 +29,43 @@ const NO_STORE = { "Cache-Control": "no-store" };
 
 function briefError(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 300) : "unknown error";
+}
+
+/**
+ * Why a visitor reads as signed out, without any identity: the host the server
+ * saw, whether the browser sent a Supabase session cookie at all, and what the
+ * session check said about it. It tells "never signed in on this host" (another
+ * domain, or cookies not kept) from "signed in but the session was rejected".
+ */
+async function describeSignedOutState() {
+  const [requestHeaders, cookieStore] = await Promise.all([headers(), cookies()]);
+  const sessionCookies = cookieStore
+    .getAll()
+    .filter((cookie) => SUPABASE_AUTH_COOKIE_PATTERN.test(cookie.name));
+
+  let sessionCheck: string;
+  if (!isSupabaseConfigured()) {
+    sessionCheck = "supabase_not_configured";
+  } else if (sessionCookies.length === 0) {
+    sessionCheck = "no_session_cookie_sent";
+  } else {
+    try {
+      const { data, error } = await (await createClient()).auth.getClaims();
+      sessionCheck = error
+        ? `rejected: ${error.message.slice(0, 120)}`
+        : data?.claims
+          ? "valid"
+          : "no_claims";
+    } catch (error) {
+      sessionCheck = `failed: ${briefError(error)}`;
+    }
+  }
+
+  return {
+    host: requestHeaders.get("host"),
+    sessionCookiesSent: sessionCookies.length,
+    sessionCheck,
+  };
 }
 
 /** Asks Wayl about the visitor's own latest orders with the same batch call the reconcile job makes. */
@@ -112,7 +152,12 @@ export async function GET(request: Request) {
   }
 
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ signedIn: false }, { headers: NO_STORE });
+  if (!user) {
+    return NextResponse.json(
+      { signedIn: false, why: await describeSignedOutState() },
+      { headers: NO_STORE },
+    );
+  }
 
   try {
     const excludedRaw = process.env.FREE_ACCESS_EXCLUDED_EMAILS;
