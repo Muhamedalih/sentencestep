@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 
 import { getPaymentRuntime, toWebhookDeps } from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
+import { recordWebhookAttempt } from "@/lib/billing/payments/webhook-attempts";
 import { handleProviderWebhook } from "@/lib/billing/payments/webhook-handler";
+import { summarizeWaylWebhookAttempt } from "@/lib/billing/providers/wayl-diagnostics";
 
 /**
  * Where the configured payment provider's webhooks land
@@ -38,5 +40,25 @@ export async function POST(
     rawBody,
     request.headers,
   );
+  if (status >= 400) console.warn("[payments] webhook not accepted", { providerName, status });
+
+  // Temporary, test mode only, and unable to change the response: keep a
+  // summary of what was delivered so a missing or rejected webhook can be
+  // explained. Removed together with /api/billing/test-status.
+  if (runtime.provider.environment === "test" && providerName === "wayl") {
+    try {
+      await recordWebhookAttempt(
+        summarizeWaylWebhookAttempt({
+          status,
+          rawBody,
+          headers: request.headers,
+          secret: process.env.WAYL_WEBHOOK_SECRET ?? "",
+        }),
+      );
+    } catch (error) {
+      console.error("[payments] webhook diagnostics failed", error);
+    }
+  }
+
   return NextResponse.json(body, { status });
 }
