@@ -72,10 +72,10 @@ export const es: Dictionary = {
     headingPrefix: "Aprende inglés,",
     headingEmphasis: "letra por letra.",
     subtitle:
-      "SentenceStep convierte oraciones, historias y conversaciones reales en una práctica de escritura enfocada: escúchala, escríbela, siéntela.",
+      "SentenceStep convierte oraciones e historias reales en una práctica de escritura enfocada: escúchala, escríbela, siéntela.",
     ctaGuest: "Comienza a aprender gratis",
     ctaNoCard:
-      "No se requiere tarjeta de crédito: prueba gratis las lecciones Normales, Historias y Conversación.",
+      "No se requiere tarjeta de crédito: prueba gratis las lecciones Normales y las Historias.",
     ctaSecondary: "Mira cómo funciona",
   },
   localeSwitcher: {
@@ -206,7 +206,7 @@ export const es: Dictionary = {
     point2Title: "Corrección al instante en cada error",
     point2Body: "Ves exactamente dónde te equivocaste en el momento, para que no se repita.",
     point3Title: "De oraciones simples a historias reales",
-    point3Body: "Lecciones normales, historias y conversaciones crecen contigo, nivel a nivel.",
+    point3Body: "Las lecciones normales y las historias crecen contigo, nivel a nivel.",
     point4Title: "Unos minutos al día son suficientes",
     point4Body:
       "La práctica breve y constante gana a las sesiones largas y ocasionales — y ya demostraste que puedes.",
@@ -273,6 +273,8 @@ export const es: Dictionary = {
         "Se han solicitado demasiados correos de confirmación. Espera un momento e inténtalo de nuevo.",
       emailNotConfirmed:
         "Confirma tu correo electrónico antes de iniciar sesión — revisa tu bandeja de entrada para ver el enlace.",
+      passwordWeak:
+        "Esa contraseña es muy fácil de adivinar o ha aparecido en una filtración de datos. Elige otra distinta.",
       missingFields: "Ingresa tu correo electrónico y contraseña.",
       networkError: "Error de conexión. Revisa tu conexión a internet e inténtalo de nuevo.",
       genericError: "Ocurrió un error. Inténtalo de nuevo.",
@@ -305,8 +307,8 @@ export const es: Dictionary = {
     lockedContentAriaLabel: "{title} — contenido premium, toca para ver detalles",
     premiumHeading: "Tienes el plan Premium",
     upgradeHeading: "Mejora a SentenceStep Premium",
-    premiumSubtitle: "Todas las lecciones, historias y conversaciones están desbloqueadas.",
-    upgradeSubtitle: "Desbloquea todas las lecciones, historias y conversaciones.",
+    premiumSubtitle: "Todas las lecciones e historias están desbloqueadas.",
+    upgradeSubtitle: "Desbloquea todas las lecciones e historias.",
     fullAccessHeading: "Tienes acceso completo",
     thanksWithDate: "Gracias por apoyar a SentenceStep. Tu acceso continúa hasta el {date}.",
     thanks: "Gracias por apoyar a SentenceStep.",
@@ -315,7 +317,6 @@ export const es: Dictionary = {
     everythingInFree: "Todo lo del plan gratuito, más la biblioteca completa.",
     benefits: [
       "Biblioteca completa de historias, todos los niveles",
-      "Biblioteca completa de conversaciones, todos los niveles",
       "La progresión completa de lecciones normales",
       "Todas las listas de palabras, no solo la inicial",
       "Nuevas funciones premium a medida que se lanzan",
@@ -341,7 +342,7 @@ export const es: Dictionary = {
     termsNoticeLink: "Términos",
     termsNoticeSuffix: ".",
     contentStatsHeading: "Lo que abre Premium",
-    contentStatLessons: "lecciones, historias y conversaciones",
+    contentStatLessons: "lecciones e historias",
     contentStatWords: "palabras en las listas",
     contentStatWordLists: "listas de palabras",
     compareLine:
@@ -372,7 +373,7 @@ export const es: Dictionary = {
     expiryBannerDismiss: "Cerrar",
     freeNowHeading: "Todo es gratis por ahora",
     freeNowSubtitle:
-      "Todas las lecciones, historias y conversaciones están abiertas por ahora: crea una cuenta gratuita para guardar tu progreso.",
+      "Todas las lecciones e historias están abiertas por ahora: crea una cuenta gratuita para guardar tu progreso.",
     freeNowBadge: "Gratis por ahora",
     freeNowBody:
       "Crea una cuenta gratuita para guardar tu racha y tu progreso en todos tus dispositivos.",
@@ -402,7 +403,7 @@ export const es: Dictionary = {
     homeFreeCompleteHeading: "Has completado todas las lecciones gratuitas",
     homeFreeCompleteBody: "Mejora a Premium para seguir avanzando con el resto de la biblioteca.",
     homeAllDoneHeading: "Has completado todas las lecciones",
-    homeAllDoneBody: "Un trabajo increíble — explora Historias o Conversación para practicar más.",
+    homeAllDoneBody: "Un trabajo increíble — explora Historias para practicar más.",
     faqHeading: "Preguntas frecuentes",
     faqCurrencyQ: "¿En qué moneda se cobra?",
     faqCurrencyA:
@@ -512,7 +513,7 @@ export const es: Dictionary = {
     learningReminders: "Recordatorios de aprendizaje",
     learningRemindersBody: "Un recordatorio amable si no has practicado en unos días.",
     progressEmails: "Correos de progreso y logros",
-    progressEmailsBody: "Completaste un nivel, una historia, una conversación o un logro de racha.",
+    progressEmailsBody: "Completaste un nivel, una historia o un logro de racha.",
     savePreferences: "Guardar preferencias",
     savingPreferences: "Guardando…",
     essentialEmailNotice:
@@ -949,7 +950,7 @@ export const es: Dictionary = {
     ctaWelcomeBackBody: "Tu progreso te espera justo donde lo dejaste.",
     ctaTryFirst: "Prueba SentenceStep antes de comprometerte",
     ctaTryFirstBody:
-      "Las lecciones gratuitas de Normal, Historias y Conversación están disponibles desde el inicio — sin necesidad de cuenta para hacerte una idea.",
+      "Las lecciones gratuitas de Normal e Historias están disponibles desde el inicio — sin necesidad de cuenta para hacerte una idea.",
     startFirstLesson: "Comienza tu primera lección",
     homeLinkAriaLabel: "Inicio de SentenceStep",
     dashboardLinkAriaLabel: "Panel de SentenceStep",

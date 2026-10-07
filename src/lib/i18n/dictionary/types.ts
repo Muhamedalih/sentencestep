@@ -304,6 +304,8 @@ export interface Dictionary {
       invalidEmail: string;
       emailRateLimited: string;
       emailNotConfirmed: string;
+      /** A password that is too easy to guess or, with leaked-password protection on in Supabase, found in a known data breach. */
+      passwordWeak: string;
       missingFields: string;
       networkError: string;
       genericError: string;
