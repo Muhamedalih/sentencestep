@@ -1,9 +1,14 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { track } from "@/lib/analytics/track";
+import {
+  AFTER_PAYMENT_COOKIE,
+  AFTER_PAYMENT_MAX_AGE_SECONDS,
+  safeLessonPath,
+} from "@/lib/billing/after-payment";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { bonusDaysForCheckout } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
@@ -95,6 +100,24 @@ export async function startCheckout(
           ? t.premium.checkoutTooManyAttempts
           : t.premium.checkoutTryAgain,
     };
+  }
+
+  // Only now that a checkout exists: remember the lesson the learner was stopped
+  // at (if the form carried a real lesson path), or forget an older one, so the
+  // confirmation page leads back to the right place. The cookie never touches the
+  // payment itself — see after-payment.ts.
+  const cookieStore = await cookies();
+  const afterPaymentPath = safeLessonPath(formData.get("next"));
+  if (afterPaymentPath) {
+    cookieStore.set(AFTER_PAYMENT_COOKIE, afterPaymentPath, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: AFTER_PAYMENT_MAX_AGE_SECONDS,
+    });
+  } else {
+    cookieStore.delete(AFTER_PAYMENT_COOKIE);
   }
 
   redirect(result.url);

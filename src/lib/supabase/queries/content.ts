@@ -492,15 +492,16 @@ export async function fetchLessonSentenceStats(
   return stats;
 }
 
-/** The subset of a lesson findNextLesson actually needs to pick the next one and build its `/learn/{mode}/{id}` link — see fetchLessonNav's doc comment. */
+/** The subset of a lesson findNextLesson actually needs to pick the next one and build its `/learn/{mode}/{id}` link — see fetchLessonNav's doc comment. `isFree` is only there so the lesson page can tell a learner, before they tap it, that the next lesson is Premium. */
 export interface LessonNavEntry {
   id: string;
   mode: LearningMode;
   level: number;
   order: number;
+  isFree: boolean;
 }
 
-type LessonNavRow = Pick<LessonRow, "id" | "mode" | "order_index" | "status"> & {
+type LessonNavRow = Pick<LessonRow, "id" | "mode" | "order_index" | "status" | "is_free"> & {
   levels: Pick<Database["public"]["Tables"]["levels"]["Row"], "index"> | null;
 };
 
@@ -533,7 +534,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
 
   const { data, error } = await supabase
     .from("lessons")
-    .select("id, mode, order_index, status, levels(index)")
+    .select("id, mode, order_index, status, is_free, levels(index)")
     .eq("mode", mode)
     .eq("status", "published")
     .order("order_index");
@@ -549,6 +550,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
       mode: lesson.mode,
       level: lesson.levels?.index ?? 1,
       order: lesson.order_index,
+      isFree: lesson.is_free,
     }));
 }
 
@@ -569,7 +571,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
  * saveLesson/archiveLesson/restoreLesson/bulkUpdateLessonStatus, all of
  * which call revalidateTag("lesson-nav").
  */
-export const fetchLessonNav = unstable_cache(fetchLessonNavUncached, ["fetch-lesson-nav"], {
+export const fetchLessonNav = unstable_cache(fetchLessonNavUncached, ["fetch-lesson-nav-v2"], {
   tags: ["lesson-nav"],
 });
 

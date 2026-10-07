@@ -14,12 +14,15 @@ const BENEFIT_ICONS = [BookOpen, MessagesSquare, Sparkles];
 
 export function PremiumLocked({
   mode,
+  lessonId,
   title,
   titleAr,
   supportTitle,
   fromPrice,
 }: {
   mode: LearningMode;
+  /** This lesson's id: the upgrade page is opened with it, so after paying the learner can go straight back to this lesson (see AFTER_PAYMENT_COOKIE). */
+  lessonId: string;
   title: string;
   titleAr: string;
   /** Resolved for the active locale server-side — see LessonUnit.supportTitle's doc comment. Falls back to titleAr only for Arabic (never for Spanish). */
@@ -63,8 +66,11 @@ export function PremiumLocked({
 
       <div className="flex w-full flex-col items-center gap-3 sm:w-56 sm:shrink-0">
         <Button asChild size="lg" className="w-full">
-          <Link href="/upgrade" dir="auto">
-            {t.premium.upgradeCta}
+          <Link
+            href={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${lessonId}`)}`}
+            dir="auto"
+          >
+            {t.premium.seePlansCta}
           </Link>
         </Button>
         <p className="text-muted-foreground text-xs" dir="auto">

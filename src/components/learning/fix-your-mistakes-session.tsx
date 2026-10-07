@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Home, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Home, Loader2, Lock } from "lucide-react";
 
 import { CurrentWordCard } from "@/components/learning/current-word-card";
 import {
@@ -54,6 +54,7 @@ export function FixYourMistakesSession({
   lessonId,
   defaultVoiceId,
   nextLesson,
+  nextLessonLocked = false,
 }: {
   /** The lesson whose completion screen opened this flow (see LessonSession) — scopes the fetched queue to only this lesson's own mistakes/due reviews (see fetchMistakesAction's own doc comment for why the underlying table is account-wide but this view isn't). */
   lessonId: string;
@@ -61,6 +62,8 @@ export function FixYourMistakesSession({
   defaultVoiceId?: string | null;
   /** Same "what's next" lesson the ordinary completion screen would have offered — FYM's own completion screen offers the identical destination as its secondary action. */
   nextLesson?: NextLessonRef;
+  /** The next lesson is Premium and this learner can't open it — the button says so, as it does on the ordinary finish screen (see LessonCompletion). */
+  nextLessonLocked?: boolean;
 }) {
   const { t } = useLocale();
   const [queue, setQueue] = useState<MistakeQueueItem[] | null>(null);
@@ -207,6 +210,7 @@ export function FixYourMistakesSession({
           <FixYourMistakesComplete
             correctedCount={correctedCount}
             nextLesson={nextLesson}
+            nextLessonLocked={nextLessonLocked}
             loadError={loadError && correctedCount === 0}
           />
         )}
@@ -336,10 +340,12 @@ function MistakeItemSession({
 function FixYourMistakesComplete({
   correctedCount,
   nextLesson,
+  nextLessonLocked,
   loadError,
 }: {
   correctedCount: number;
   nextLesson?: NextLessonRef;
+  nextLessonLocked: boolean;
   loadError: boolean;
 }) {
   const reducedMotion = useReducedMotion();
@@ -420,8 +426,8 @@ function FixYourMistakesComplete({
       >
         {nextLesson && (
           <PrimaryActionButton
-            icon={ArrowRight}
-            label={t.lesson.nextLesson}
+            icon={nextLessonLocked ? Lock : ArrowRight}
+            label={nextLessonLocked ? t.lesson.nextLessonPremium : t.lesson.nextLesson}
             href={`/learn/${nextLesson.mode}/${nextLesson.id}`}
             theme={theme}
             reducedMotion={Boolean(reducedMotion)}

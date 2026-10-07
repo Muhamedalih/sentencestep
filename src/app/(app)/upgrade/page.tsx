@@ -13,6 +13,7 @@ import { Logo } from "@/components/layout/logo";
 import { devSetAdmin } from "@/lib/admin/dev-actions";
 import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
+import { firstParam, safeLessonPath } from "@/lib/billing/after-payment";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { isOfferActive } from "@/lib/billing/launch-offer";
@@ -42,12 +43,20 @@ export const metadata: Metadata = {
 // this page must be rendered per request.
 export const dynamic = "force-dynamic";
 
-export default async function UpgradePage() {
-  const [user, access, locale] = await Promise.all([
+export default async function UpgradePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const [user, access, locale, params] = await Promise.all([
     getCurrentUser(),
     getAccessState(),
     getLocale(),
+    searchParams,
   ]);
+  // Set by a locked lesson's button: after paying, the confirmation page can lead
+  // straight back to that lesson. Anything that is not a lesson page is ignored.
+  const afterPaymentPath = safeLessonPath(firstParam(params.next));
   const t = locale ? getDictionary(locale) : fallbackDictionary;
   // Not gated on being signed in: the dev override works standalone (no
   // Supabase project required) precisely so free/premium can be exercised
@@ -195,6 +204,7 @@ export default async function UpgradePage() {
                 extend
                 offerNotice={offerNotice}
                 waylShowsDollars={showUsdOnWaylPage()}
+                afterPaymentPath={afterPaymentPath}
               />
             )}
           </>
@@ -206,6 +216,7 @@ export default async function UpgradePage() {
             socialProof={socialProof}
             fromMonthly={cheapestPerMonth(tier)}
             waylShowsDollars={showUsdOnWaylPage()}
+            afterPaymentPath={afterPaymentPath}
           />
         )}
 

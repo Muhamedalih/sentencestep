@@ -60,6 +60,8 @@ interface CheckoutCardProps {
    * heads-up about another currency is kept.
    */
   waylShowsDollars?: boolean;
+  /** A lesson page (already checked with safeLessonPath) the learner was stopped at: sent with the form so the confirmation page can lead back to it. Never read for anything about the payment. */
+  afterPaymentPath?: string | null;
 }
 
 /**
@@ -77,6 +79,7 @@ export function CheckoutCard({
   socialProof = null,
   fromMonthly,
   waylShowsDollars = false,
+  afterPaymentPath = null,
 }: CheckoutCardProps) {
   const { t, locale } = useLocale();
   const formId = useId();
@@ -156,6 +159,7 @@ export function CheckoutCard({
           )}
 
           <form id={formId} action={formAction} className="flex flex-col gap-5">
+            {afterPaymentPath && <input type="hidden" name="next" value={afterPaymentPath} />}
             {offerNotice && (
               <p
                 className="bg-accent/15 border-accent/40 text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm font-medium"

@@ -19,6 +19,8 @@ interface MilestoneCopy {
   heading: string;
   message: string;
   preview: string;
+  /** Adds a quiet "see what Premium includes" link under the message. Only the level email for a free learner whose next level is Premium sets it. */
+  premiumLink?: boolean;
 }
 
 /**
@@ -50,6 +52,17 @@ function milestoneCopy(event: MilestoneEvent): MilestoneCopy {
       };
     case "LEVEL_COMPLETED": {
       const modeName = modeMeta[event.mode].title;
+      // A free learner who just finished the last level they can open must not
+      // be told the next one is "ready": it is Premium. Say so plainly and
+      // kindly, promise nothing is lost, and keep the button on learning.
+      if (event.nextLevelLocked) {
+        return {
+          heading: `Level ${event.level} completed`,
+          message: `You've completed Level ${event.level} in ${modeName} — nice work. Your progress and streak stay saved. The next levels are part of Premium (a one-time payment, no auto-renewal) whenever you'd like to keep going.`,
+          preview: `Level ${event.level} complete.`,
+          premiumLink: true,
+        };
+      }
       return {
         heading: `Level ${event.level} completed`,
         message: `You've completed Level ${event.level} in ${modeName}. The next level is ready when you are.`,
@@ -69,12 +82,16 @@ export function milestoneEmail({ origin, displayName, event }: MilestoneEmailInp
   const safeName = displayName ? escapeHtml(displayName) : "there";
   const learnUrl = `${origin}/learn`;
   const settingsUrl = `${origin}/learn/settings`;
+  const upgradeUrl = `${origin}/upgrade`;
   const copy = milestoneCopy(event);
   const safeMessage = escapeHtml(copy.message);
 
+  const premiumLinkHtml = copy.premiumLink
+    ? `<p style="margin:12px 0 0 0;"><a href="${escapeHtml(upgradeUrl)}" style="color:#5b45e0;">See what Premium includes</a></p>`
+    : "";
   const bodyHtml = `
     <p style="margin:0 0 12px 0;">Hi ${safeName},</p>
-    <p style="margin:0;">${safeMessage}</p>
+    <p style="margin:0;">${safeMessage}</p>${premiumLinkHtml}
   `;
 
   return {
@@ -87,6 +104,6 @@ export function milestoneEmail({ origin, displayName, event }: MilestoneEmailInp
       ctaUrl: learnUrl,
       unsubscribeUrl: settingsUrl,
     }),
-    text: `Hi ${displayName ?? "there"},\n\n${copy.message}\n\n${learnUrl}\n\nManage email preferences: ${settingsUrl}`,
+    text: `Hi ${displayName ?? "there"},\n\n${copy.message}\n\n${learnUrl}${copy.premiumLink ? `\n\nSee what Premium includes: ${upgradeUrl}` : ""}\n\nManage email preferences: ${settingsUrl}`,
   };
 }
