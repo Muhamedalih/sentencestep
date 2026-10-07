@@ -10,6 +10,7 @@ import {
   Brain,
   Home,
   Loader2,
+  Lock,
   RotateCcw,
   Wand2,
 } from "lucide-react";
@@ -201,6 +202,7 @@ export function LessonCompletion({
   accuracy,
   wpm,
   nextLesson,
+  nextLessonLocked = false,
   vocabulary,
   streak,
   xp,
@@ -221,6 +223,8 @@ export function LessonCompletion({
   /** Average words-per-minute across the lesson's sentences; 0 if unavailable. */
   wpm: number;
   nextLesson?: NextLessonRef;
+  /** The next lesson is Premium and this learner can't open it: the button keeps its place but wears a lock and says "(Premium)", so tapping it is never a surprise. It still opens that lesson's page, which explains Premium calmly. */
+  nextLessonLocked?: boolean;
   vocabulary?: VocabularyItem[];
   streak: number;
   /** Running XP total (post this completion) — used only to show numeric progress toward the next level; the per-completion reward is xpEarned below. */
@@ -337,8 +341,8 @@ export function LessonCompletion({
       ? [
           {
             id: "next" as const,
-            icon: ArrowRight,
-            label: t.lesson.nextLesson,
+            icon: nextLessonLocked ? Lock : ArrowRight,
+            label: nextLessonLocked ? t.lesson.nextLessonPremium : t.lesson.nextLesson,
             href: `/learn/${mode}/${nextLesson.id}`,
           },
         ]

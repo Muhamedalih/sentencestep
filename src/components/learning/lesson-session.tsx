@@ -99,6 +99,7 @@ function vibrateLightly(): void {
 export function LessonSession({
   unit,
   nextLesson,
+  nextLessonLocked = false,
   previewMode = false,
   resolvedVoiceId,
   defaultVoiceId,
@@ -108,6 +109,8 @@ export function LessonSession({
 }: {
   unit: Lesson;
   nextLesson?: NextLessonRef;
+  /** The next lesson is Premium and this learner can't open it — the finish screen says so on its button (a lock, "Premium") instead of leading to a lock page by surprise. */
+  nextLessonLocked?: boolean;
   /** Admin content preview (see src/app/admin/content/[lessonId]/preview) — reuses this exact component and the real typing engine, but never writes progress or fires analytics/email triggers for what isn't a real learner session. */
   previewMode?: boolean;
   /** Already resolved server-side (unit.voiceId ?? globalDefaultVoiceId — see resolveVoiceId) and passed straight through to TypingSentence/PronunciationButton; this component never re-derives it. */
@@ -737,6 +740,7 @@ export function LessonSession({
                 lessonId={unit.id}
                 defaultVoiceId={defaultVoiceId}
                 nextLesson={nextLesson}
+                nextLessonLocked={nextLessonLocked}
               />
             </div>
           ) : isComplete && isPracticingFromMemory && fromMemoryItems.length > 0 ? (
@@ -791,6 +795,7 @@ export function LessonSession({
                   accuracy={finalAccuracy}
                   wpm={finalWpm}
                   nextLesson={nextLesson}
+                  nextLessonLocked={nextLessonLocked}
                   vocabulary={unit.vocabulary}
                   streak={streak.currentStreak}
                   xp={xp}

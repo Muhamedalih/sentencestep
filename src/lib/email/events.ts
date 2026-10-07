@@ -25,7 +25,18 @@ export type NotificationEvent =
   | { type: "LESSON_COMPLETED"; totalCompleted: number }
   | { type: "STORY_COMPLETED"; lessonId: string }
   | { type: "CONVERSATION_COMPLETED"; lessonId: string }
-  | { type: "LEVEL_COMPLETED"; mode: LearningMode; level: number }
+  | {
+      type: "LEVEL_COMPLETED";
+      mode: LearningMode;
+      level: number;
+      /**
+       * True when this learner is on the free plan and every lesson they can see
+       * in the next level is Premium, so the email must not say the next level
+       * is "ready" (see milestoneEmail). Absent for a Premium learner, for the
+       * last level of a mode, and for events recorded before this existed.
+       */
+      nextLevelLocked?: boolean;
+    }
   | { type: "STREAK_MILESTONE"; streak: number }
   | { type: "INACTIVE_LEARNER"; daysInactive: number }
   // A distinct type (not a reuse of INACTIVE_LEARNER) specifically so its

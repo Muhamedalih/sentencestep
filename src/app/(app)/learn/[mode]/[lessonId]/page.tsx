@@ -92,13 +92,20 @@ export default async function LessonPage({
   // unit, since the response's streaming reveal never completed. Stories
   // lessons go through this same isFree/premium check as every other mode
   // now that Stories is open to every learner, not just admins.
-  const canAccess =
-    unit.isFree || (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
+  // Asked at most once per request, and still as one parallel pair (see above):
+  // the finish screen also needs it, to say when the next lesson is Premium.
+  let viewerAccess: Promise<boolean> | undefined;
+  const viewerHasAccess = () =>
+    (viewerAccess ??= Promise.all([hasPremiumAccess(), isAdmin()]).then((answers) =>
+      answers.some(Boolean),
+    ));
+  const canAccess = unit.isFree || (await viewerHasAccess());
   if (!canAccess) {
     return (
       <div className="lesson-shell bg-background text-foreground mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <PremiumLocked
           mode={mode}
+          lessonId={unit.id}
           title={unit.title}
           titleAr={unit.titleAr}
           supportTitle={unit.supportTitle}
@@ -124,6 +131,11 @@ export default async function LessonPage({
   }
 
   const nextLesson = findNextLesson(lessonNav, unit.id);
+  // Only when the next lesson is Premium is the viewer's access worth asking
+  // about: then the finish screen says so on its button instead of leading to
+  // a lock page by surprise.
+  const nextLessonLocked =
+    nextLesson !== undefined && nextLesson.isFree === false ? !(await viewerHasAccess()) : false;
   // Normal lessons fall back to their own admin-configurable default
   // (tts_settings.default_normal_lesson_voice_id) — never the shared
   // tts_settings.default_voice_id, which is Stories/Conversation's own
@@ -231,6 +243,7 @@ export default async function LessonPage({
       <LessonSession
         unit={{ ...unit, sentences }}
         nextLesson={nextLesson}
+        nextLessonLocked={nextLessonLocked}
         resolvedVoiceId={resolvedVoiceId}
         defaultVoiceId={defaultVoiceId}
         storyNarratorVoiceId={storyNarratorVoiceId}

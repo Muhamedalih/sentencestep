@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CircleAlert, CircleCheck, Clock, SearchX } from "lucide-react";
@@ -9,6 +10,7 @@ import { ReportPaymentProblem } from "@/components/billing/report-payment-proble
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AFTER_PAYMENT_COOKIE, safeLessonPath } from "@/lib/billing/after-payment";
 import { verifyAndFulfill } from "@/lib/billing/payments/fulfillment";
 import type { FulfillmentOutcome } from "@/lib/billing/payments/fulfillment";
 import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
@@ -147,6 +149,9 @@ export default async function BillingReturnPage({
   }
 
   const confirmed = outcome.outcome === "fulfilled" || outcome.outcome === "already_fulfilled";
+  // The lesson the learner was stopped at when they opened the upgrade page, if
+  // any (see startCheckout); the button goes there instead of to the dashboard.
+  const afterPaymentPath = safeLessonPath((await cookies()).get(AFTER_PAYMENT_COOKIE)?.value);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
@@ -173,7 +178,9 @@ export default async function BillingReturnPage({
         <CardContent className="flex flex-wrap items-center justify-center gap-3">
           {confirmed && (
             <Button asChild size="lg">
-              <Link href="/learn">{t.common.startLearning}</Link>
+              <Link href={afterPaymentPath ?? "/learn"}>
+                {afterPaymentPath ? t.premium.continueLesson : t.common.startLearning}
+              </Link>
             </Button>
           )}
           {content.retry && (

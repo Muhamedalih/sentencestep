@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { PremiumExpiryBanner } from "@/components/app/premium-expiry-banner";
+import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
@@ -225,9 +226,12 @@ export default async function LearnHomePage() {
           />
         </div>
         <div className="max-sm:order-2">
-          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-            {t.progress.upNextLabel}
-          </p>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              {t.progress.upNextLabel}
+            </p>
+            {!isPremiumUser && <StarterPathProgress units={units} />}
+          </div>
           <HomeHero
             units={units}
             storiesUnits={storiesUnits}

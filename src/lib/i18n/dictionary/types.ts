@@ -434,13 +434,21 @@ export interface Dictionary {
     premiumLessonBadge: string;
     lockedBody: string;
     backToLessons: string;
-    upgradeCta: string;
     /** Small caption under the upgrade CTA on locked content — `{amount}` is the cheapest per-month USD price for the visitor's tier, e.g. "$1.17". It names no currency but USD and no provider. */
     fromPerMonthCaption: string;
     contentUnavailableBody: string;
     /** Home hero's dead-end state once a free learner has completed every free lesson (see HomeHero) — distinct from lockedBody, which is per-lesson. */
     homeFreeCompleteHeading: string;
     homeFreeCompleteBody: string;
+    /** The calm button on the locked-lesson page and the finished-the-starter-lessons card; the plans page it opens states the price. */
+    seePlansCta: string;
+    /** The Home page's starter-lessons line (see StarterPathProgress): a free learner's progress through the lessons open to everyone. */
+    starterProgressLabel: string;
+    starterProgressDone: string;
+    /** `{done}` and `{total}` — read out by screen readers for the progress bar. */
+    starterProgressAria: string;
+    /** After paying, the button back to the lesson the learner was stopped at. */
+    continueLesson: string;
     /** Home hero's state once a premium/admin learner has completed every lesson across every level. */
     homeAllDoneHeading: string;
     homeAllDoneBody: string;
@@ -492,6 +500,8 @@ export interface Dictionary {
     /** Placeholder for the retype-to-reveal input that appears after practiceWord is pressed. */
     typeToRevealPlaceholder: string;
     nextLesson: string;
+    /** The finish screen's "next lesson" button when that lesson is Premium and this learner can't open it. */
+    nextLessonPremium: string;
     fixMistakes: string;
     /** Completion screen only — restarts the same lesson from its first sentence (see LessonSession's handleRetryLesson). Always a secondary action, never fixMistakes/nextLesson's replacement. */
     retryLesson: string;

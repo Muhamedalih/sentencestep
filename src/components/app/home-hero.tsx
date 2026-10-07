@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Sparkles, Trophy } from "lucide-react";
 
@@ -28,12 +29,15 @@ function MainLessonCardBody({
   ctaLabel,
   href,
   dir,
+  footer,
 }: {
   lesson: LessonUnit;
   eyebrow: string;
   ctaLabel: string;
   href: string;
   dir: "rtl" | "ltr";
+  /** Optional quiet block under the button — only the finished-the-starter-lessons card uses it. */
+  footer?: ReactNode;
 }) {
   return (
     <>
@@ -69,6 +73,7 @@ function MainLessonCardBody({
         <Button asChild size="lg" className="mt-2 w-fit">
           <Link href={href}>{ctaLabel}</Link>
         </Button>
+        {footer}
       </div>
     </>
   );
@@ -206,15 +211,32 @@ export function HomeHero({
           // of the fix request: never fall back to a plain text-only
           // completion message) — eyebrow/CTA deliberately say
           // homeFreeCompleteHeading/practice, not continueLearning/
-          // startLearning/upgradeCta, so this never implies the lesson is
-          // unfinished or silently swaps in the upsell flow; it's an honest
-          // "you're done with free content, here's one to revisit."
+          // startLearning, so this never implies the lesson is
+          // unfinished or turns the main button into an upsell; it's an
+          // honest "you're done with the starter lessons, here's one to
+          // revisit", with a quiet, optional "see Premium plans" step
+          // underneath (the footer).
           <MainLessonCardBody
             lesson={freeFallbackLesson}
             eyebrow={t.premium.homeFreeCompleteHeading}
             ctaLabel={t.bookLibrary.practice}
             href={`/learn/normal/${freeFallbackLesson.id}`}
             dir={dir}
+            footer={
+              // A warm, optional next step: say what Premium adds, promise the
+              // progress is safe either way, and keep the button quiet (outline,
+              // small) so Practice stays the main thing on the card.
+              <div className="border-border mt-3 flex flex-col gap-2 border-t pt-3">
+                <p className="text-muted-foreground text-sm" dir={dir}>
+                  {t.premium.homeFreeCompleteBody}
+                </p>
+                <Button asChild variant="outline" size="sm" className="w-fit">
+                  <Link href="/upgrade" dir="auto">
+                    {t.premium.seePlansCta}
+                  </Link>
+                </Button>
+              </div>
+            }
           />
         )}
 
@@ -237,7 +259,7 @@ export function HomeHero({
             </div>
             <Button asChild size="lg" className="mt-1 w-fit">
               <Link href="/upgrade" dir="auto">
-                {t.premium.upgradeCta}
+                {t.premium.seePlansCta}
               </Link>
             </Button>
           </div>
