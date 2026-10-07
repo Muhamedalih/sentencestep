@@ -151,6 +151,31 @@ export interface Dictionary {
     errorEmpty: string;
     errorGeneric: string;
   };
+  /** "Problem with your payment?" (src/components/billing/report-payment-problem.tsx): filed through submitPaymentReport, which alerts the admins at once. */
+  paymentReport: {
+    trigger: string;
+    title: string;
+    subtitle: string;
+    categoryPaidNotActive: string;
+    categoryFailed: string;
+    categoryWrongPrice: string;
+    categoryOther: string;
+    notePlaceholder: string;
+    notePlaceholderOther: string;
+    send: string;
+    sending: string;
+    cancel: string;
+    errorChoose: string;
+    errorNote: string;
+    errorTooMany: string;
+    errorSignIn: string;
+    errorGeneric: string;
+    successTitle: string;
+    successBody: string;
+    recheckTitle: string;
+    recheckBody: string;
+    recheckCta: string;
+  };
   /** The first-time starting-level placement picker (src/components/app/starting-level-onboarding.tsx) — tier names themselves come from src/lib/levels.ts's tierSupportLabel, not from here. */
   onboarding: {
     heading: string;
@@ -337,6 +362,10 @@ export interface Dictionary {
     paymentPartnerNote: string;
     /** Under the checkout button: card or wallet details are handled by the payment partner, never by us. */
     paymentDetailsCaption: string;
+    /** The line by the pay button saying every purchase is final and linking the Terms: the text before the link, the link text, and the text after it, so each language can put the link where its grammar wants it. */
+    termsNoticePrefix: string;
+    termsNoticeLink: string;
+    termsNoticeSuffix: string;
     /** Heading of the "add more days" block for a current Premium learner. */
     extendHeading: string;
     /** `{days}` is the number of days of the chosen plan. */

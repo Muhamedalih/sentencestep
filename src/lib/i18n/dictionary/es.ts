@@ -136,6 +136,33 @@ export const es: Dictionary = {
     errorEmpty: "Describe el problema antes de enviarlo.",
     errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
   },
+  paymentReport: {
+    trigger: "¿Problema con tu pago?",
+    title: "Cuéntanos qué salió mal",
+    subtitle:
+      "Nos avisa al instante cuando lo envías y respondemos al correo de tu cuenta. Adjuntamos automáticamente los datos de tu último pago.",
+    categoryPaidNotActive: "Pagué pero Premium no está activo",
+    categoryFailed: "Mi pago falló o fue rechazado",
+    categoryWrongPrice: "El precio parece incorrecto",
+    categoryOther: "Otra cosa",
+    notePlaceholder: "¿Algo más que debamos saber? (opcional)",
+    notePlaceholderOther: "Describe lo que pasó",
+    send: "Enviar ahora",
+    sending: "Enviando…",
+    cancel: "Cancelar",
+    errorChoose: "Primero elige qué pasó.",
+    errorNote: "Describe lo que pasó, por favor.",
+    errorTooMany:
+      "Ya enviaste varios reportes esta hora. Estamos en ello; espera nuestra respuesta.",
+    errorSignIn: "Inicia sesión de nuevo y vuelve a enviarlo.",
+    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+    successTitle: "Gracias, ya nos avisaron",
+    successBody: "Lo estamos revisando ahora y responderemos al correo de tu cuenta.",
+    recheckTitle: "¿Ya pagaste? Compruébalo ahora",
+    recheckBody:
+      "Esto vuelve a preguntar a nuestro socio de pagos y activa Premium si tu pago se completó.",
+    recheckCta: "Comprobar mi pago ahora",
+  },
   onboarding: {
     heading: "¿Desde dónde empiezas?",
     subtitle: "Elige un punto de partida — siempre puedes explorar otros niveles cuando quieras.",
@@ -310,6 +337,9 @@ export const es: Dictionary = {
       "Pagarás en una página segura gestionada por nuestro socio de pagos. Puede mostrar el importe en otra moneda: el precio que vale es el que ves aquí.",
     paymentDetailsCaption:
       "Tus datos de pago los gestiona nuestro socio de pagos: nosotros nunca los vemos ni los guardamos.",
+    termsNoticePrefix: "Todas las compras son definitivas. Al pagar aceptas nuestros ",
+    termsNoticeLink: "Términos",
+    termsNoticeSuffix: ".",
     extendHeading: "Añade más días",
     extendStackNote: "Los {days} días extra se suman a los que te quedan.",
     plan1m: "1 mes",

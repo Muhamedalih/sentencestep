@@ -69,7 +69,7 @@ export async function reconcileOpenOrders(
   } catch (error) {
     batchError = error;
     const detail = error instanceof Error ? error.message : "unknown error";
-    deps.report({ code: "reconcile_batch_lookup_failed", referenceId: "batch", detail });
+    await deps.report({ code: "reconcile_batch_lookup_failed", referenceId: "batch", detail });
   }
 
   const startedAt = Date.now();

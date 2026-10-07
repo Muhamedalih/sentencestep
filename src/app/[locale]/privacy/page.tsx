@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "Privacy",
 };
 
-/** "/ar/privacy", "/es/privacy", "/tr/privacy" — see src/app/(default)/privacy/page.tsx's unprefixed sibling; identical content (this page has no translated text). */
+/** "/ar/privacy", "/es/privacy", "/tr/privacy" — see src/app/(default)/privacy/page.tsx's unprefixed sibling; the text is in Arabic for "/ar" and in English for the other locales. */
 export default async function LocalePrivacyPage({
   params,
 }: {
@@ -26,5 +26,5 @@ export default async function LocalePrivacyPage({
   const { locale } = await params;
   if (!isSupportLocale(locale)) notFound();
 
-  return <PrivacyPageContent />;
+  return <PrivacyPageContent locale={locale} />;
 }

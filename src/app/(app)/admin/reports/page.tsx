@@ -4,7 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { ReportReplyForm } from "@/components/admin/report-reply-form";
 import { ReportStatusControl } from "@/components/admin/report-status-control";
-import { listProblemReports, type ProblemReportStatus } from "@/lib/admin/reports-queries";
+import {
+  listProblemReports,
+  type AdminProblemReport,
+  type ProblemReportStatus,
+} from "@/lib/admin/reports-queries";
+import { isPaymentReportPath, paymentReportOriginalPath } from "@/lib/billing/payment-report";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -18,6 +23,15 @@ const STATUS_VARIANT: Record<ProblemReportStatus, "secondary" | "outline" | "suc
   dismissed: "muted",
 };
 
+const PAYMENT_BADGE_CLASS = "bg-danger/15 text-danger border-transparent";
+
+/** An unhandled payment problem may mean someone is waiting to use what they paid for, so those come first; the rest keep their newest-first order. */
+function paymentProblemsFirst(reports: AdminProblemReport[]): AdminProblemReport[] {
+  const urgent = (report: AdminProblemReport) =>
+    report.status === "new" && isPaymentReportPath(report.pagePath);
+  return [...reports.filter(urgent), ...reports.filter((report) => !urgent(report))];
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
     dateStyle: "medium",
@@ -28,8 +42,11 @@ function formatDate(iso: string): string {
 export default async function AdminReportsPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const reports = await listProblemReports();
+  const reports = paymentProblemsFirst(await listProblemReports());
   const newCount = reports.filter((report) => report.status === "new").length;
+  const newPaymentCount = reports.filter(
+    (report) => report.status === "new" && isPaymentReportPath(report.pagePath),
+  ).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,9 +54,17 @@ export default async function AdminReportsPage() {
         <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
           Reports
           {newCount > 0 && <Badge variant="secondary">{newCount} new</Badge>}
+          {newPaymentCount > 0 && (
+            <Badge variant="muted" className={PAYMENT_BADGE_CLASS}>
+              {newPaymentCount} payment
+            </Badge>
+          )}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Problems learners flagged from the &quot;Report a problem&quot; button, newest first.
+          Problems learners flagged from the &quot;Report a problem&quot; button and from
+          &quot;Problem with your payment?&quot;, newest first. Unhandled payment problems are kept
+          at the top: each one lists the learner&apos;s account and newest orders, and you were
+          emailed the moment it arrived.
         </p>
       </div>
 
@@ -49,28 +74,53 @@ export default async function AdminReportsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {reports.map((report) => (
-            <div key={report.id} className="border-border rounded-xl border p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{report.userEmail}</span>
-                    <Badge variant={STATUS_VARIANT[report.status]}>
-                      {report.status.replace("_", " ")}
-                    </Badge>
+          {reports.map((report) => {
+            const isPayment = isPaymentReportPath(report.pagePath);
+            return (
+              <div
+                key={report.id}
+                className={
+                  isPayment
+                    ? "border-danger/40 bg-danger/5 rounded-xl border p-4"
+                    : "border-border rounded-xl border p-4"
+                }
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{report.userEmail}</span>
+                      {isPayment && (
+                        <Badge variant="muted" className={PAYMENT_BADGE_CLASS}>
+                          Payment
+                        </Badge>
+                      )}
+                      <Badge variant={STATUS_VARIANT[report.status]}>
+                        {report.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      {formatDate(report.createdAt)} ·{" "}
+                      <code>{paymentReportOriginalPath(report.pagePath)}</code>
+                    </p>
                   </div>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    {formatDate(report.createdAt)} · <code>{report.pagePath}</code>
-                  </p>
+                  <ReportStatusControl id={report.id} status={report.status} />
                 </div>
-                <ReportStatusControl id={report.id} status={report.status} />
+                <p
+                  dir="auto"
+                  className={
+                    isPayment
+                      ? "mt-3 font-mono text-xs leading-relaxed whitespace-pre-wrap"
+                      : "mt-3 text-sm whitespace-pre-wrap"
+                  }
+                >
+                  {report.message}
+                </p>
+                <div className="mt-3">
+                  <ReportReplyForm reportId={report.id} userEmail={report.userEmail} />
+                </div>
               </div>
-              <p className="mt-3 text-sm whitespace-pre-wrap">{report.message}</p>
-              <div className="mt-3">
-                <ReportReplyForm reportId={report.id} userEmail={report.userEmail} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

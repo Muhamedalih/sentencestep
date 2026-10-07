@@ -117,7 +117,8 @@ export interface PaymentAlert {
 export interface FulfillmentDeps {
   provider: PaymentProvider;
   store: FulfillmentStore;
-  report: (alert: PaymentAlert) => void;
+  /** May be async (it can email the admins), so every call is awaited. It must not throw. */
+  report: (alert: PaymentAlert) => void | Promise<void>;
   now?: () => Date;
 }
 
@@ -192,13 +193,13 @@ export async function verifyAndFulfill(
         case "not_found":
           return { outcome: "unknown_reference" };
         case "missing_paid_at":
-          report({ code: "paid_without_completion_time", referenceId, detail: source });
+          await report({ code: "paid_without_completion_time", referenceId, detail: source });
           return { outcome: "pending" };
         case "mismatch":
         case "user_not_found":
         case "needs_review": {
           const reason = result.result === "needs_review" ? "needs_review" : result.result;
-          report({
+          await report({
             code: reason,
             referenceId,
             detail: `${source}: paid at the provider but not granted`,
@@ -225,7 +226,7 @@ export async function verifyAndFulfill(
         last_verified_at: verifiedAt,
         ...(decision.providerStatus !== null && { provider_status: decision.providerStatus }),
       });
-      report({
+      await report({
         code: decision.reason,
         referenceId,
         detail: `${source}: provider reports a payment that does not match the order`,
@@ -237,7 +238,7 @@ export async function verifyAndFulfill(
         last_verified_at: verifiedAt,
         ...(decision.providerStatus !== null && { provider_status: decision.providerStatus }),
       });
-      if (decision.anomaly) report({ code: decision.anomaly, referenceId, detail: source });
+      if (decision.anomaly) await report({ code: decision.anomaly, referenceId, detail: source });
       return CLOSED_STATUSES.includes(order.status)
         ? { outcome: "closed", status: order.status as ClosedStatus }
         : { outcome: "pending" };

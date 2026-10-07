@@ -5,6 +5,7 @@ import { CircleAlert, CircleCheck, Clock, SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { PaymentStatusRefresh } from "@/components/billing/payment-status-refresh";
+import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { verifyAndFulfill } from "@/lib/billing/payments/fulfillment";
 import type { FulfillmentOutcome } from "@/lib/billing/payments/fulfillment";
 import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
+import type { PaymentReportCategory } from "@/lib/billing/payment-report";
 import type { PaymentOrder } from "@/lib/billing/payments/types";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatLongDate } from "@/lib/i18n/format-date";
@@ -84,7 +86,15 @@ export default async function BillingReturnPage({
     }
   }
 
-  let content: { icon: ReactNode; heading: string; body: string; live?: boolean; retry?: boolean };
+  let content: {
+    icon: ReactNode;
+    heading: string;
+    body: string;
+    live?: boolean;
+    retry?: boolean;
+    /** What most likely went wrong in this state, so reporting it is one tap. */
+    reportAs: PaymentReportCategory | null;
+  };
 
   switch (outcome.outcome) {
     case "fulfilled":
@@ -96,6 +106,7 @@ export default async function BillingReturnPage({
         body: premiumUntil
           ? t.premium.paymentConfirmedBody.replace("{date}", formatLongDate(premiumUntil, locale))
           : t.premium.thanks,
+        reportAs: null,
       };
       break;
     }
@@ -105,6 +116,7 @@ export default async function BillingReturnPage({
         heading: t.premium.paymentPendingHeading,
         body: t.premium.paymentPendingBody,
         live: true,
+        reportAs: "paid_not_active",
       };
       break;
     case "closed":
@@ -113,6 +125,7 @@ export default async function BillingReturnPage({
         heading: t.premium.paymentNotCompletedHeading,
         body: t.premium.paymentNotCompletedBody,
         retry: true,
+        reportAs: "payment_failed",
       };
       break;
     case "needs_review":
@@ -120,6 +133,7 @@ export default async function BillingReturnPage({
         icon: <CircleAlert className="size-6" aria-hidden="true" />,
         heading: t.premium.paymentReviewHeading,
         body: t.premium.paymentReviewBody,
+        reportAs: "paid_not_active",
       };
       break;
     default:
@@ -128,6 +142,7 @@ export default async function BillingReturnPage({
         heading: t.premium.paymentNotFound,
         body: "",
         retry: true,
+        reportAs: null,
       };
   }
 
@@ -166,6 +181,14 @@ export default async function BillingReturnPage({
             </Button>
           )}
           {content.live && <PaymentStatusRefresh />}
+          {!confirmed && (
+            <div className="flex w-full justify-center pt-1">
+              <ReportPaymentProblem
+                defaultCategory={content.reportAs}
+                variant={content.live ? "link" : "button"}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

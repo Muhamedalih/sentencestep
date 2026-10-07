@@ -294,3 +294,22 @@ test("createCheckout: when the provider cannot create the link the order is fail
   assert.equal(order.failure_reason, "link_creation_failed: Wayl POST failed (503)");
   assert.equal(alerts[0]!.code, "checkout_link_creation_failed");
 });
+
+test("createCheckout: the alert about a failed link is finished before the call returns", async () => {
+  const { deps } = setup({
+    createResult: new PaymentProviderError("Wayl POST failed (503)", {
+      retryable: true,
+      status: 503,
+    }),
+  });
+  const events: string[] = [];
+  deps.report = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    events.push("alert sent");
+  };
+
+  await createCheckout(deps, { userId: "user-1", country: iraq, origin: ORIGIN, plan: "1m" });
+  events.push("returned");
+
+  assert.deepEqual(events, ["alert sent", "returned"]);
+});
