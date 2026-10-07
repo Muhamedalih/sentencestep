@@ -27,23 +27,23 @@ test("tierForCountry: only normalized lowercase codes match, so unexpected input
   assert.equal(tierForCountry("iraq"), "B");
 });
 
-test("quotePrice: the one-month plan is $2 (Tier A) = 2640 IQD at the fixed 1320 rate", () => {
+test("quotePrice: the one-month plan is $2 (Tier A) = 3040 IQD at the fixed 1520 rate", () => {
   const quote = quotePrice("A", "IQD", "1m");
   assert.deepEqual(quote, {
     tier: "A",
     planId: "1m",
     usdCents: 200,
     currency: "IQD",
-    fxRatePerUsd: 1320,
-    amount: 2640,
+    fxRatePerUsd: 1520,
+    amount: 3040,
     premiumDays: 30,
   });
 });
 
-test("quotePrice: the one-month plan is $3 (Tier B) = 3960 IQD at the fixed 1320 rate", () => {
+test("quotePrice: the one-month plan is $3 (Tier B) = 4560 IQD at the fixed 1520 rate", () => {
   const quote = quotePrice("B", "IQD", "1m");
-  assert.equal(quote.amount, 3960);
-  assert.equal(quote.fxRatePerUsd, 1320);
+  assert.equal(quote.amount, 4560);
+  assert.equal(quote.fxRatePerUsd, 1520);
   assert.equal(quote.usdCents, 300);
 });
 

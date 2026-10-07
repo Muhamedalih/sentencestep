@@ -19,7 +19,7 @@ function waylLink(overrides: LinkOverrides = {}) {
   return {
     id: "link_1",
     referenceId: "ss_abc",
-    total: "3960",
+    total: "4560",
     currency: "IQD",
     status: "Complete",
     completedAt: "2026-10-04T11:59:00.000Z",

@@ -14,7 +14,7 @@ export type { PricingTier } from "./plans";
  * Fixed on purpose: never fetched from an exchange-rate API. Changing a rate
  * is a deliberate code change, and every order snapshots the rate it used.
  */
-const FIXED_FX_RATES_PER_USD: ReadonlyMap<string, number> = new Map([["IQD", 1320]]);
+const FIXED_FX_RATES_PER_USD: ReadonlyMap<string, number> = new Map([["IQD", 1520]]);
 
 /** Lowercase ISO 3166-1 alpha-2 codes, the same format as profiles.country. */
 const TIER_A_COUNTRIES: ReadonlySet<string> = new Set([

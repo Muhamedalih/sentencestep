@@ -75,6 +75,10 @@ export function LaunchOfferForm({
             placeholder="e.g. 7"
             disabled={isPending}
           />
+          <span className="text-muted-foreground text-xs font-normal">
+            Extra days added on top of the plan the buyer picks, for example 7. The price does not
+            change.
+          </span>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           Last day of the offer
@@ -84,6 +88,11 @@ export function LaunchOfferForm({
             onChange={(event) => setEndsOn(event.target.value)}
             disabled={isPending}
           />
+          <span className="text-muted-foreground text-xs font-normal">
+            The final day anyone can still get the bonus. Click the calendar icon to pick it. The
+            offer runs through the end of that day in UTC, which is 3 AM the next morning in
+            Baghdad.
+          </span>
         </label>
       </div>
 

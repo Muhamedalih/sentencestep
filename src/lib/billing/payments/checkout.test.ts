@@ -29,7 +29,7 @@ function setup(options: Parameters<typeof makeFakeProvider>[0] = {}) {
 const iraq = { country: "iq", source: "netlify_geo" } as const;
 const unknown = { country: null, source: "default" } as const;
 
-test("createCheckout: a Tier A country is priced $2 and charged 2640 IQD, with the full snapshot stored", async () => {
+test("createCheckout: a Tier A country is priced $2 and charged 3040 IQD, with the full snapshot stored", async () => {
   const { store, provider, deps } = setup();
 
   const result = await createCheckout(deps, {
@@ -51,17 +51,17 @@ test("createCheckout: a Tier A country is priced $2 and charged 2640 IQD, with t
     pricing_country: "iq",
     pricing_country_source: "netlify_geo",
     price_usd_cents: 200,
-    fx_rate_per_usd: 1320,
-    charge_amount: 2640,
+    fx_rate_per_usd: 1520,
+    charge_amount: 3040,
     charge_currency: "IQD",
     premium_days: 30,
     status: "created",
   });
-  assert.equal(provider.created[0]!.amount, 2640);
+  assert.equal(provider.created[0]!.amount, 3040);
   assert.equal(provider.created[0]!.currency, "IQD");
 });
 
-test("createCheckout: an unknown country is priced $3 and charged 3960 IQD", async () => {
+test("createCheckout: an unknown country is priced $3 and charged 4560 IQD", async () => {
   const { store, provider, deps } = setup();
 
   await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN, plan: "1m" });
@@ -70,7 +70,7 @@ test("createCheckout: an unknown country is priced $3 and charged 3960 IQD", asy
   assert.equal(store.inserted[0]!.price_usd_cents, 300);
   assert.equal(store.inserted[0]!.pricing_country, null);
   assert.equal(store.inserted[0]!.pricing_country_source, "default");
-  assert.equal(provider.created[0]!.amount, 3960);
+  assert.equal(provider.created[0]!.amount, 4560);
 });
 
 test("createCheckout: the provider is asked for a link with our own callback URLs, a reference and a 1h expiry", async () => {
@@ -85,7 +85,7 @@ test("createCheckout: the provider is asked for a link with our own callback URL
 
   assert.deepEqual(provider.created[0]!, {
     referenceId: "ss_123e4567e89b12d3a456426614174000",
-    amount: 3960,
+    amount: 4560,
     currency: "IQD",
     description: "SentenceStep Premium (30 days) - $3",
     webhookUrl: `${ORIGIN}/api/billing/webhook/wayl`,
@@ -97,7 +97,7 @@ test("createCheckout: the provider is asked for a link with our own callback URL
 test("createCheckout: the product line names the dollar price of the buyer's tier", async () => {
   const tierA = setup();
   await createCheckout(tierA.deps, { userId: "user-1", country: iraq, origin: ORIGIN, plan: "1m" });
-  assert.equal(tierA.provider.created[0]!.amount, 2640);
+  assert.equal(tierA.provider.created[0]!.amount, 3040);
   assert.equal(tierA.provider.created[0]!.description, "SentenceStep Premium (30 days) - $2");
 
   const tierB = setup();
@@ -107,15 +107,15 @@ test("createCheckout: the product line names the dollar price of the buyer's tie
     origin: ORIGIN,
     plan: "1m",
   });
-  assert.equal(tierB.provider.created[0]!.amount, 3960);
+  assert.equal(tierB.provider.created[0]!.amount, 4560);
   assert.equal(tierB.provider.created[0]!.description, "SentenceStep Premium (30 days) - $3");
 });
 
 test("createCheckout: each plan is priced from the server's table and stores its own days", async () => {
   const expected = [
-    { plan: "1m", cents: 200, days: 30, amount: 2640, label: "30 days) - $2" },
-    { plan: "3m", cents: 400, days: 90, amount: 5280, label: "90 days) - $4" },
-    { plan: "6m", cents: 700, days: 180, amount: 9240, label: "180 days) - $7" },
+    { plan: "1m", cents: 200, days: 30, amount: 3040, label: "30 days) - $2" },
+    { plan: "3m", cents: 400, days: 90, amount: 6080, label: "90 days) - $4" },
+    { plan: "6m", cents: 700, days: 180, amount: 10640, label: "180 days) - $7" },
   ] as const;
 
   for (const { plan, cents, days, amount, label } of expected) {
@@ -145,15 +145,15 @@ test("createCheckout: launch-offer bonus days go into the order's days and the p
   const order = store.inserted[0]!;
   assert.equal(order.premium_days, 97);
   assert.equal(order.price_usd_cents, 400);
-  assert.equal(order.charge_amount, 5280);
-  assert.equal(provider.created[0]!.amount, 5280);
+  assert.equal(order.charge_amount, 6080);
+  assert.equal(provider.created[0]!.amount, 6080);
   assert.ok(provider.created[0]!.description.endsWith("(97 days) - $4"));
   assert.equal(store.reusableQueries[0]!.premiumDays, 97);
 });
 
 test("createCheckout: an open link for the same plan without the bonus is not reused once the offer applies", async () => {
   const { store, provider, deps } = setup();
-  store.reusable = makeOrder({ pricing_tier: "A", charge_amount: 5280, premium_days: 90 });
+  store.reusable = makeOrder({ pricing_tier: "A", charge_amount: 6080, premium_days: 90 });
 
   const result = await createCheckout(deps, {
     userId: "user-1",
@@ -180,7 +180,7 @@ test("createCheckout: Tier B plans cost $3, $6 and $10", async () => {
 test("createCheckout: an open link for another plan is asked for by length and never reused for this one", async () => {
   const { store, provider, deps } = setup();
   // The store hands back a still-open one-month order (30 days, $2).
-  store.reusable = makeOrder({ pricing_tier: "A", charge_amount: 2640, premium_days: 30 });
+  store.reusable = makeOrder({ pricing_tier: "A", charge_amount: 3040, premium_days: 30 });
 
   const result = await createCheckout(deps, {
     userId: "user-1",
@@ -219,7 +219,7 @@ test("createCheckout: a provider whose currency has no fixed rate is refused bef
 
 test("createCheckout: clicking Pay again while a link is open reuses it instead of creating another order", async () => {
   const { store, provider, deps } = setup();
-  store.reusable = makeOrder({ pricing_tier: "B", charge_amount: 3960 });
+  store.reusable = makeOrder({ pricing_tier: "B", charge_amount: 4560 });
 
   const result = await createCheckout(deps, {
     userId: "user-1",

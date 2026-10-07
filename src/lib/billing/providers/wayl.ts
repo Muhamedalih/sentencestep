@@ -93,6 +93,18 @@ function isHttpsUrl(value: unknown): value is string {
   }
 }
 
+/**
+ * Per Wayl support, a payment link that carries `currency=usd` shows its price
+ * in US dollars on Wayl's hosted page. Only that display changes here: the link
+ * is still created in IQD (the one currency Wayl's API takes) and every
+ * payment is still verified against the IQD total on the link.
+ */
+export function withUsdDisplay(checkoutUrl: string): string {
+  const url = new URL(checkoutUrl);
+  url.searchParams.set("currency", "usd");
+  return url.toString();
+}
+
 function safeEqual(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
@@ -240,7 +252,7 @@ export function createWaylProvider(config: WaylConfig): PaymentProvider {
         );
       }
 
-      return { providerPaymentId: link.id as string, checkoutUrl: link.url };
+      return { providerPaymentId: link.id as string, checkoutUrl: withUsdDisplay(link.url) };
     },
 
     async getPayment(referenceId: string): Promise<ProviderPayment | null> {

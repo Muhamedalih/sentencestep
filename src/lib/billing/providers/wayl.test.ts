@@ -12,7 +12,7 @@ import {
   PaymentProviderError,
 } from "@/lib/billing/payment-provider";
 
-import { createWaylProvider, mapWaylStatus } from "./wayl";
+import { createWaylProvider, mapWaylStatus, withUsdDisplay } from "./wayl";
 
 const API_KEY = "test-api-key-do-not-leak";
 const SECRET = "0123456789abcdef0123456789abcdef";
@@ -43,7 +43,7 @@ function link(overrides: Record<string, unknown> = {}) {
   return {
     id: "link_123",
     referenceId: "ss_abc",
-    total: "3960",
+    total: "4560",
     currency: "IQD",
     status: "Created",
     completedAt: null,
@@ -63,7 +63,7 @@ function providerWith(fetchStub: typeof fetch, environment: "live" | "test" = "t
 
 const createInput = {
   referenceId: "ss_abc",
-  amount: 3960,
+  amount: 4560,
   currency: "IQD",
   description: "SentenceStep Premium (30 days)",
   webhookUrl: "https://sentencestep.example/api/billing/webhook/wayl",
@@ -79,7 +79,7 @@ test("createPayment: posts the documented link body, in IQD, as a test-mode link
   const result = await providerWith(fetchStub).createPayment(createInput);
 
   assert.equal(result.providerPaymentId, "link_123");
-  assert.equal(result.checkoutUrl, "https://pay.example.com/link_123");
+  assert.equal(result.checkoutUrl, "https://pay.example.com/link_123?currency=usd");
   assert.equal(calls.length, 1);
   assert.equal(calls[0]!.url, "https://api.thewayl.com/api/v1/links");
   assert.equal(calls[0]!.init.method, "POST");
@@ -88,14 +88,45 @@ test("createPayment: posts the documented link body, in IQD, as a test-mode link
   assert.deepEqual(JSON.parse(calls[0]!.init.body as string), {
     env: "test",
     referenceId: "ss_abc",
-    total: 3960,
+    total: 4560,
     currency: "IQD",
-    lineItem: [{ label: "SentenceStep Premium (30 days)", amount: 3960, type: "increase" }],
+    lineItem: [{ label: "SentenceStep Premium (30 days)", amount: 4560, type: "increase" }],
     webhookUrl: createInput.webhookUrl,
     webhookSecret: SECRET,
     redirectionUrl: createInput.redirectUrl,
     linkExpiresIn: "1h",
   });
+});
+
+test("createPayment: the link is still created in IQD while its page is asked to show dollars", async () => {
+  const { calls, fetchStub } = stubFetch(() => json(201, { data: link() }));
+
+  const result = await providerWith(fetchStub).createPayment(createInput);
+
+  const body = JSON.parse(calls[0]!.init.body as string);
+  assert.equal(body.currency, "IQD");
+  assert.equal(new URL(result.checkoutUrl).searchParams.get("currency"), "usd");
+});
+
+test("withUsdDisplay: adds currency=usd to a link with no query string", () => {
+  assert.equal(
+    withUsdDisplay("https://pay.example.com/link_123"),
+    "https://pay.example.com/link_123?currency=usd",
+  );
+});
+
+test("withUsdDisplay: keeps the link's own query parameters and fragment", () => {
+  assert.equal(
+    withUsdDisplay("https://pay.example.com/pay?id=abc123&lang=ar#top"),
+    "https://pay.example.com/pay?id=abc123&lang=ar&currency=usd#top",
+  );
+});
+
+test("withUsdDisplay: replaces a currency the link already carries instead of repeating it", () => {
+  const url = new URL(withUsdDisplay("https://pay.example.com/pay?id=abc123&currency=iqd"));
+
+  assert.deepEqual(url.searchParams.getAll("currency"), ["usd"]);
+  assert.equal(url.searchParams.get("id"), "abc123");
 });
 
 test("createPayment: live and test links use the same server and key, told apart only by env", async () => {
@@ -195,7 +226,7 @@ test("getPayment: reads the link by reference id and maps a completed payment to
     providerPaymentId: "link_123",
     status: "paid",
     rawStatus: "Complete",
-    amount: 3960,
+    amount: 4560,
     currency: "IQD",
     paidAt: "2026-10-04T10:00:00.000Z",
   });
@@ -435,7 +466,7 @@ test("verifyWebhook: the payload kept for the audit log has the buyer's personal
     event: "order.created",
     referenceId: "ss_abc",
     paymentStatus: "Complete",
-    total: 2640,
+    total: 3040,
     customer: { id: "c_1", name: "Test Person", phone: "+9647700000000", city: "Kirkuk" },
     note: {
       contactEmail: "test@example.com",
@@ -450,7 +481,7 @@ test("verifyWebhook: the payload kept for the audit log has the buyer's personal
     event: "order.created",
     referenceId: "ss_abc",
     paymentStatus: "Complete",
-    total: 2640,
+    total: 3040,
     note: { items: [{ label: "SentenceStep Premium" }] },
   });
   const kept = JSON.stringify(verified.payload);

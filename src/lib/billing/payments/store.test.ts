@@ -118,7 +118,7 @@ test("store.fulfillOrder: calls the atomic database function with every verified
   const result = await store.fulfillOrder({
     referenceId: "ss_abc",
     providerPaymentId: "link_1",
-    chargeAmount: 3960,
+    chargeAmount: 4560,
     chargeCurrency: "IQD",
     paidAt: "2026-10-04T11:59:00.000Z",
     providerStatus: "Complete",
@@ -130,7 +130,7 @@ test("store.fulfillOrder: calls the atomic database function with every verified
   assert.deepEqual(requests[0]!.body, {
     p_reference_id: "ss_abc",
     p_provider_payment_id: "link_1",
-    p_charge_amount: 3960,
+    p_charge_amount: 4560,
     p_charge_currency: "IQD",
     p_paid_at: "2026-10-04T11:59:00.000Z",
     p_provider_status: "Complete",
@@ -143,7 +143,7 @@ test("store.fulfillOrder: a database error is thrown so the webhook can be retri
     store.fulfillOrder({
       referenceId: "ss_abc",
       providerPaymentId: "link_1",
-      chargeAmount: 3960,
+      chargeAmount: 4560,
       chargeCurrency: "IQD",
       paidAt: "2026-10-04T11:59:00.000Z",
       providerStatus: "Complete",
@@ -202,8 +202,8 @@ test("store.insertOrder: stores the snapshot and returns the created row", async
     pricing_tier: "B",
     pricing_country_source: "default",
     price_usd_cents: 300,
-    fx_rate_per_usd: 1320,
-    charge_amount: 3960,
+    fx_rate_per_usd: 1520,
+    charge_amount: 4560,
     charge_currency: "IQD",
     premium_days: 30,
   });
@@ -211,7 +211,7 @@ test("store.insertOrder: stores the snapshot and returns the created row", async
   assert.deepEqual(inserted, row);
   assert.equal(requests[0]!.method, "POST");
   assert.equal(requests[0]!.path, "/rest/v1/payment_orders");
-  assert.equal((requests[0]!.body as { charge_amount: number }).charge_amount, 3960);
+  assert.equal((requests[0]!.body as { charge_amount: number }).charge_amount, 4560);
   assert.match(requests[0]!.headers.get("Prefer") ?? "", /return=representation/);
 });
 
