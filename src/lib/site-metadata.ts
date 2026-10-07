@@ -17,7 +17,7 @@ export const SITE_METADATA: Metadata = {
     template: "%s · SentenceStep",
   },
   description:
-    "SentenceStep is a modern English-learning app for Arabic speakers. Hear a sentence, type it letter by letter, and build fluency through Normal, Stories, and Conversation lessons.",
+    "SentenceStep is a modern English-learning app for Arabic speakers. Hear a sentence, type it letter by letter, and build fluency through Normal and Stories lessons.",
   keywords: [
     "learn English",
     "English for Arabic speakers",
@@ -28,7 +28,7 @@ export const SITE_METADATA: Metadata = {
   openGraph: {
     title: "SentenceStep — Learn English, letter by letter",
     description:
-      "Hear a sentence, type it letter by letter, and build fluency through Normal, Stories, and Conversation lessons.",
+      "Hear a sentence, type it letter by letter, and build fluency through Normal and Stories lessons.",
     siteName: "SentenceStep",
     type: "website",
   },

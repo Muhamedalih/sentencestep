@@ -50,7 +50,7 @@ const TERMS_EN: LegalDocument = {
     {
       heading: "What SentenceStep is",
       paragraphs: [
-        "SentenceStep is an English-practice service where you hear a sentence and type it letter by letter, with lessons, stories, conversations and word lists. Part of it is free; the rest is Premium.",
+        "SentenceStep is an English-practice service where you hear a sentence and type it letter by letter, with lessons, stories and word lists. Part of it is free; the rest is Premium.",
       ],
     },
     {
@@ -139,7 +139,7 @@ const TERMS_AR: LegalDocument = {
     {
       heading: "ما هي SentenceStep",
       paragraphs: [
-        "SentenceStep خدمة لتعلّم الإنجليزية: تسمع الجملة ثم تكتبها حرفًا حرفًا، وتتضمن دروسًا وقصصًا ومحادثات وقوائم كلمات. جزء منها مجاني والباقي ضمن الخطة المميّزة (Premium).",
+        "SentenceStep خدمة لتعلّم الإنجليزية: تسمع الجملة ثم تكتبها حرفًا حرفًا، وتتضمن دروسًا وقصصًا وقوائم كلمات. جزء منها مجاني والباقي ضمن الخطة المميّزة (Premium).",
       ],
     },
     {

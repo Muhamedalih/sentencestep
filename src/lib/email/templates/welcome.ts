@@ -9,7 +9,7 @@ export interface WelcomeEmailInput {
 const MESSAGE =
   "Welcome to SentenceStep. The best way to start is with one short lesson — hear a sentence, type it, and see how it feels.";
 const SUBMESSAGE =
-  "Free lessons are ready whenever you are, across ordinary sentences, stories, and conversations.";
+  "Free lessons are ready whenever you are, across ordinary sentences and stories.";
 
 export function welcomeEmail({ origin, displayName }: WelcomeEmailInput): EmailContent {
   const safeName = displayName ? escapeHtml(displayName) : "there";

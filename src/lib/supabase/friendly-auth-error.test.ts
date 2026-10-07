@@ -46,6 +46,25 @@ test("friendlyAuthError: still maps the other known Supabase errors", () => {
   );
 });
 
+test("friendlyAuthError: a weak or leaked password gets the translated message, whichever field Supabase fills", () => {
+  const raw = "Password is known to be weak and easy to guess, please choose a different one.";
+  assert.equal(friendlyAuthError(authError(raw), en), en.auth.errors.passwordWeak);
+  assert.equal(
+    friendlyAuthError({ message: "Unprocessable", code: "weak_password" } as AuthError, en),
+    en.auth.errors.passwordWeak,
+  );
+});
+
+test("friendlyAuthError: a too-short password is still reported as too short, even with the weak_password code", () => {
+  assert.equal(
+    friendlyAuthError(
+      { message: "Password should be at least 6 characters", code: "weak_password" } as AuthError,
+      en,
+    ),
+    en.auth.errors.passwordTooShort,
+  );
+});
+
 test("friendlyAuthError: an unrecognized Supabase error still falls back to its own message", () => {
   assert.equal(
     friendlyAuthError(authError("Some new Supabase error"), en),

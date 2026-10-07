@@ -68,9 +68,9 @@ export const tr: Dictionary = {
     headingPrefix: "İngilizceyi öğrenin,",
     headingEmphasis: "harf harf.",
     subtitle:
-      "SentenceStep, gerçek cümleleri, hikayeleri ve konuşmaları odaklanmış bir yazma pratiğine dönüştürür: dinle, yaz, hisset.",
+      "SentenceStep, gerçek cümleleri ve hikayeleri odaklanmış bir yazma pratiğine dönüştürür: dinle, yaz, hisset.",
     ctaGuest: "Ücretsiz öğrenmeye başla",
-    ctaNoCard: "Kredi kartı gerekmez: Normal, Hikayeler ve Konuşma derslerini ücretsiz deneyin.",
+    ctaNoCard: "Kredi kartı gerekmez: Normal ve Hikayeler derslerini ücretsiz deneyin.",
     ctaSecondary: "Nasıl çalıştığını gör",
   },
   localeSwitcher: {
@@ -200,7 +200,7 @@ export const tr: Dictionary = {
     point2Title: "Her hataya anında geri bildirim",
     point2Body: "Nerede yanlış yaptığını tam o anda görürsün, bir daha tekrarlanmasın diye.",
     point3Title: "Basit cümlelerden gerçek hikayelere",
-    point3Body: "Normal dersler, hikayeler ve konuşmalar seviye seviye seninle büyür.",
+    point3Body: "Normal dersler ve hikayeler seviye seviye seninle büyür.",
     point4Title: "Günde birkaç dakika yeter",
     point4Body:
       "Kısa ve düzenli pratik, uzun ama seyrek oturumlardan daha güçlüdür — ve bunu yapabildiğini az önce kanıtladın.",
@@ -264,6 +264,8 @@ export const tr: Dictionary = {
       emailRateLimited: "Çok fazla onay e-postası istendi. Bir süre bekleyip tekrar deneyin.",
       emailNotConfirmed:
         "Giriş yapmadan önce e-postanızı onaylayın — bağlantı için gelen kutunuzu kontrol edin.",
+      passwordWeak:
+        "Bu şifre tahmin edilmesi çok kolay veya bir veri sızıntısında yer almış. Lütfen farklı bir şifre seçin.",
       missingFields: "E-postanızı ve şifrenizi girin.",
       networkError: "Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.",
       genericError: "Bir hata oluştu. Tekrar deneyin.",
@@ -295,8 +297,8 @@ export const tr: Dictionary = {
     lockedContentAriaLabel: "{title} — premium içerik, ayrıntılar için dokunun",
     premiumHeading: "Premium plana sahipsiniz",
     upgradeHeading: "SentenceStep Premium'a yükseltin",
-    premiumSubtitle: "Tüm dersler, hikayeler ve konuşmaların kilidi açık.",
-    upgradeSubtitle: "Tüm dersler, hikayeler ve konuşmaların kilidini açın.",
+    premiumSubtitle: "Tüm derslerin ve hikayelerin kilidi açık.",
+    upgradeSubtitle: "Tüm derslerin ve hikayelerin kilidini açın.",
     fullAccessHeading: "Tam erişiminiz var",
     thanksWithDate:
       "SentenceStep'i desteklediğiniz için teşekkürler. Erişiminiz {date} tarihine kadar devam ediyor.",
@@ -306,7 +308,6 @@ export const tr: Dictionary = {
     everythingInFree: "Ücretsiz plandaki her şey, artı tüm kütüphane.",
     benefits: [
       "Tüm seviyelerde eksiksiz hikaye kütüphanesi",
-      "Tüm seviyelerde eksiksiz konuşma kütüphanesi",
       "Normal derslerin tam ilerlemesi",
       "Sadece başlangıç listesi değil, tüm kelime listeleri",
       "Yayınlandıkça yeni premium özellikler",
@@ -332,7 +333,7 @@ export const tr: Dictionary = {
     termsNoticeLink: "Koşulları",
     termsNoticeSuffix: " kabul etmiş olursunuz.",
     contentStatsHeading: "Premium'un açtıkları",
-    contentStatLessons: "ders, hikâye ve konuşma",
+    contentStatLessons: "ders ve hikâye",
     contentStatWords: "kelime listelerinde kelime",
     contentStatWordLists: "kelime listesi",
     compareLine:
@@ -363,7 +364,7 @@ export const tr: Dictionary = {
     expiryBannerDismiss: "Kapat",
     freeNowHeading: "Şu anda her şey ücretsiz",
     freeNowSubtitle:
-      "Tüm dersler, hikayeler ve konuşmalar şimdilik açık — ilerlemenizi kaydetmek için ücretsiz bir hesap oluşturun.",
+      "Tüm dersler ve hikayeler şimdilik açık — ilerlemenizi kaydetmek için ücretsiz bir hesap oluşturun.",
     freeNowBadge: "Şimdilik ücretsiz",
     freeNowBody:
       "Serinizi ve ilerlemenizi tüm cihazlarınızda saklamak için ücretsiz bir hesap oluşturun.",
@@ -392,7 +393,7 @@ export const tr: Dictionary = {
     homeFreeCompleteHeading: "Tüm ücretsiz dersleri tamamladınız",
     homeFreeCompleteBody: "Kütüphanenin geri kalanıyla devam etmek için Premium'a yükseltin.",
     homeAllDoneHeading: "Tüm dersleri tamamladınız",
-    homeAllDoneBody: "Harika iş — daha fazla pratik için Hikayeler veya Konuşma bölümüne göz atın.",
+    homeAllDoneBody: "Harika iş — daha fazla pratik için Hikayeler bölümüne göz atın.",
     faqHeading: "Sıkça sorulan sorular",
     faqCurrencyQ: "Hangi para biriminde tahsilat yapılır?",
     faqCurrencyA:
@@ -503,7 +504,7 @@ export const tr: Dictionary = {
     learningReminders: "Öğrenme hatırlatıcıları",
     learningRemindersBody: "Birkaç gündür pratik yapmadıysanız nazik bir hatırlatma.",
     progressEmails: "İlerleme ve başarı e-postaları",
-    progressEmailsBody: "Bir seviyeyi, hikayeyi, konuşmayı veya seri başarısını tamamladınız.",
+    progressEmailsBody: "Bir seviyeyi, hikayeyi veya seri başarısını tamamladınız.",
     savePreferences: "Tercihleri kaydet",
     savingPreferences: "Kaydediliyor…",
     essentialEmailNotice:
@@ -935,7 +936,7 @@ export const tr: Dictionary = {
     ctaWelcomeBackBody: "İlerlemeniz tam bıraktığınız yerde sizi bekliyor.",
     ctaTryFirst: "Taahhüt etmeden önce SentenceStep'i deneyin",
     ctaTryFirstBody:
-      "Normal, Hikayeler ve Konuşma'nın ücretsiz dersleri baştan itibaren kullanılabilir — fikir edinmek için hesap gerekmez.",
+      "Normal ve Hikayeler'in ücretsiz dersleri baştan itibaren kullanılabilir — fikir edinmek için hesap gerekmez.",
     startFirstLesson: "İlk dersinize başlayın",
     homeLinkAriaLabel: "SentenceStep ana sayfası",
     dashboardLinkAriaLabel: "SentenceStep paneli",

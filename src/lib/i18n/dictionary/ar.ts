@@ -63,9 +63,9 @@ export const ar: Dictionary = {
     headingPrefix: "تعلّم الإنجليزية،",
     headingEmphasis: "حرفًا بحرف.",
     subtitle:
-      "يحوّل SentenceStep الجمل والقصص والمحادثات الحقيقية إلى تدريب كتابي مركّز — استمع، اكتب، واشعر بالفرق.",
+      "يحوّل SentenceStep الجمل والقصص الحقيقية إلى تدريب كتابي مركّز — استمع، اكتب، واشعر بالفرق.",
     ctaGuest: "ابدأ التعلم مجانًا",
-    ctaNoCard: "لا حاجة إلى بطاقة ائتمان — جرّب دروس العادية والقصص والمحادثة مجانًا.",
+    ctaNoCard: "لا حاجة إلى بطاقة ائتمان — جرّب الدروس العادية والقصص مجانًا.",
     ctaSecondary: "شاهد كيف يعمل",
   },
   localeSwitcher: {
@@ -192,7 +192,7 @@ export const ar: Dictionary = {
     point2Title: "تصحيح فوري لكل خطأ",
     point2Body: "تشوف وين غلطت بالضبط لحظة ما تصير، عشان ما تتكرر مرة ثانية.",
     point3Title: "من الجمل البسيطة إلى القصص الحقيقية",
-    point3Body: "الدروس العادية، القصص، والمحادثات تكبر وياك خطوة بخطوة.",
+    point3Body: "الدروس العادية والقصص تكبر وياك خطوة بخطوة.",
     point4Title: "دقايق قليلة باليوم كافية",
     point4Body: "الاستمرار البسيط أقوى من الجلسات الطويلة النادرة — وأنت الحين أثبت إنك تقدر.",
     cta: "متابعة",
@@ -253,6 +253,7 @@ export const ar: Dictionary = {
         "تم طلب عدد كبير جدًا من رسائل التأكيد. يرجى الانتظار قليلاً والمحاولة مرة أخرى.",
       emailNotConfirmed:
         "يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول — تحقق من صندوق الوارد للحصول على الرابط.",
+      passwordWeak: "كلمة المرور هذه سهلة التخمين أو ظهرت في تسريب بيانات. اختر كلمة مرور مختلفة.",
       missingFields: "أدخل بريدك الإلكتروني وكلمة المرور.",
       networkError: "خطأ في الشبكة. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
       genericError: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
@@ -284,8 +285,8 @@ export const ar: Dictionary = {
     lockedContentAriaLabel: "{title} — محتوى مميز، اضغط للتفاصيل",
     premiumHeading: "أنت مشترك في الخطة المميزة",
     upgradeHeading: "الترقية إلى SentenceStep المميز",
-    premiumSubtitle: "كل درس وقصة ومحادثة متاحة بالكامل.",
-    upgradeSubtitle: "افتح كل الدروس والقصص والمحادثات.",
+    premiumSubtitle: "كل الدروس والقصص متاحة بالكامل.",
+    upgradeSubtitle: "افتح كل الدروس والقصص.",
     fullAccessHeading: "لديك وصول كامل",
     thanksWithDate: "شكرًا لدعمك SentenceStep. يستمر وصولك حتى {date}.",
     thanks: "شكرًا لدعمك SentenceStep.",
@@ -294,7 +295,6 @@ export const ar: Dictionary = {
     everythingInFree: "كل ما في الخطة المجانية، بالإضافة إلى المكتبة الكاملة.",
     benefits: [
       "مكتبة القصص الكاملة، بجميع المستويات",
-      "مكتبة المحادثات الكاملة، بجميع المستويات",
       "التسلسل الكامل للدروس العادية",
       "كل قوائم الكلمات، وليس فقط القائمة التمهيدية",
       "ميزات تعلّم مميزة جديدة عند إطلاقها",
@@ -319,7 +319,7 @@ export const ar: Dictionary = {
     termsNoticeLink: "شروط الاستخدام",
     termsNoticeSuffix: ".",
     contentStatsHeading: "ما تفتحه الخطة المميّزة",
-    contentStatLessons: "دروس وقصص ومحادثات",
+    contentStatLessons: "دروس وقصص",
     contentStatWords: "كلمة في قوائم الكلمات",
     contentStatWordLists: "قائمة كلمات",
     compareLine:
@@ -349,8 +349,7 @@ export const ar: Dictionary = {
     expiryBannerCta: "أضف أيامًا",
     expiryBannerDismiss: "إغلاق",
     freeNowHeading: "كل شيء مجاني حاليًا",
-    freeNowSubtitle:
-      "كل الدروس والقصص والمحادثات مفتوحة حاليًا — أنشئ حسابًا مجانيًا لتحفظ تقدّمك.",
+    freeNowSubtitle: "كل الدروس والقصص مفتوحة حاليًا — أنشئ حسابًا مجانيًا لتحفظ تقدّمك.",
     freeNowBadge: "مجاني حاليًا",
     freeNowBody: "أنشئ حسابًا مجانيًا لتحفظ تتابعك وتقدّمك على كل أجهزتك.",
     dayCountOne: "يوم واحد",
@@ -373,7 +372,7 @@ export const ar: Dictionary = {
     homeFreeCompleteHeading: "لقد أكملت جميع الدروس المجانية",
     homeFreeCompleteBody: "قم بالترقية إلى المميز لمواصلة التقدم في بقية المكتبة.",
     homeAllDoneHeading: "لقد أكملت جميع الدروس",
-    homeAllDoneBody: "عمل رائع — استكشف القصص أو المحادثة لمزيد من التدريب.",
+    homeAllDoneBody: "عمل رائع — استكشف القصص لمزيد من التدريب.",
     faqHeading: "الأسئلة الشائعة",
     faqCurrencyQ: "بأي عملة سيتم الدفع؟",
     faqCurrencyA:
@@ -482,7 +481,7 @@ export const ar: Dictionary = {
     learningReminders: "تذكيرات التعلم",
     learningRemindersBody: "تذكير لطيف إذا لم تتدرب لبضعة أيام.",
     progressEmails: "رسائل التقدم والإنجازات",
-    progressEmailsBody: "أكملت مستوى، قصة، محادثة، أو إنجاز تتابع.",
+    progressEmailsBody: "أكملت مستوى، قصة، أو إنجاز تتابع.",
     savePreferences: "حفظ التفضيلات",
     savingPreferences: "جارٍ الحفظ…",
     essentialEmailNotice:
@@ -902,7 +901,7 @@ export const ar: Dictionary = {
     ctaWelcomeBackBody: "تقدّمك بانتظارك تمامًا كما تركته.",
     ctaTryFirst: "جرّب SentenceStep قبل الالتزام",
     ctaTryFirstBody:
-      "دروس عادية وقصص ومحادثات مجانية متاحة منذ البداية — دون الحاجة لحساب لتكوين فكرة عنها.",
+      "دروس عادية وقصص مجانية متاحة منذ البداية — دون الحاجة لحساب لتكوين فكرة عنها.",
     startFirstLesson: "ابدأ درسك الأول",
     homeLinkAriaLabel: "الصفحة الرئيسية لـ SentenceStep",
     dashboardLinkAriaLabel: "لوحة تحكم SentenceStep",

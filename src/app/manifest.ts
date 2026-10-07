@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "SentenceStep — Learn English, letter by letter",
     short_name: "SentenceStep",
     description:
-      "Hear a sentence, type it letter by letter, and build fluency through Normal, Stories, and Conversation lessons.",
+      "Hear a sentence, type it letter by letter, and build fluency through Normal and Stories lessons.",
     start_url: "/",
     display: "standalone",
     background_color: "#f5f3fa",

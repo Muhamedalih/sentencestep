@@ -22,8 +22,12 @@ export async function FreeExperience({ t }: { t: Dictionary }) {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {LEARNING_MODES.map((mode) => {
+      {/* Conversation is left out, exactly as in mode-section.tsx and learn-sidebar.tsx:
+          it is off the current roadmap and has no published lessons, so its card
+          would read "0 free conversation". Remove the filter (and use
+          sm:grid-cols-3 again) when it comes back. */}
+      <div className="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
+        {LEARNING_MODES.filter((mode) => mode !== "conversation").map((mode) => {
           const title = t.nav[MODE_TITLE_KEY[mode]];
           const freeCount = filterFree(lessonsByMode[mode]).length;
           return (

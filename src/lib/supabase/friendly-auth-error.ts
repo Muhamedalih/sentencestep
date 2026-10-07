@@ -18,6 +18,11 @@ export function friendlyAuthError(error: AuthError, t: Dictionary): string {
   if (message.includes("invalid login credentials")) return t.auth.errors.invalidCredentials;
   if (message.includes("already registered")) return t.auth.errors.accountExists;
   if (message.includes("password should be at least")) return t.auth.errors.passwordTooShort;
+  // Too easy to guess or, once "Prevent use of leaked passwords" is switched on in the
+  // Supabase dashboard, found in a known data breach. Supabase words it in English only.
+  if (error.code === "weak_password" || message.includes("known to be weak")) {
+    return t.auth.errors.passwordWeak;
+  }
   if (message.includes("unable to validate email")) return t.auth.errors.invalidEmail;
   if (message.includes("email rate limit exceeded")) return t.auth.errors.emailRateLimited;
   if (message.includes("email not confirmed")) return t.auth.errors.emailNotConfirmed;

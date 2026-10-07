@@ -71,9 +71,9 @@ export const en: Dictionary = {
     headingPrefix: "Learn English,",
     headingEmphasis: "letter by letter.",
     subtitle:
-      "SentenceStep turns real sentences, stories, and conversations into a focused typing practice — hear it, type it, feel it click.",
+      "SentenceStep turns real sentences and stories into a focused typing practice — hear it, type it, feel it click.",
     ctaGuest: "Start learning free",
-    ctaNoCard: "No credit card required — try Normal, Stories, and Conversation lessons free.",
+    ctaNoCard: "No credit card required — try Normal and Stories lessons free.",
     ctaSecondary: "See how it works",
   },
   localeSwitcher: {
@@ -204,7 +204,7 @@ export const en: Dictionary = {
     point2Body:
       "You see exactly where you went wrong, the moment it happens, so it never happens twice.",
     point3Title: "From simple sentences to real stories",
-    point3Body: "Normal lessons, Stories, and Conversations grow with you, one level at a time.",
+    point3Body: "Normal lessons and Stories grow with you, one level at a time.",
     point4Title: "A few minutes a day is enough",
     point4Body:
       "Small, steady practice beats long, rare sessions — and you just proved you can do it.",
@@ -266,6 +266,8 @@ export const en: Dictionary = {
       emailRateLimited:
         "Too many confirmation emails have been requested. Please wait a while and try again.",
       emailNotConfirmed: "Confirm your email before signing in — check your inbox for the link.",
+      passwordWeak:
+        "That password is too easy to guess or has appeared in a data leak. Please choose a different one.",
       missingFields: "Enter your email and password.",
       networkError: "Network error. Please check your connection and try again.",
       genericError: "Something went wrong. Please try again.",
@@ -296,8 +298,8 @@ export const en: Dictionary = {
     lockedContentAriaLabel: "{title} — premium content, tap for details",
     premiumHeading: "You're on Premium",
     upgradeHeading: "Upgrade to SentenceStep Premium",
-    premiumSubtitle: "Every lesson, story, and conversation is unlocked.",
-    upgradeSubtitle: "Unlock every lesson, story, and conversation.",
+    premiumSubtitle: "Every lesson and story is unlocked.",
+    upgradeSubtitle: "Unlock every lesson and story.",
     fullAccessHeading: "You have full access",
     thanksWithDate: "Thanks for supporting SentenceStep. Your access continues until {date}.",
     thanks: "Thanks for supporting SentenceStep.",
@@ -306,7 +308,6 @@ export const en: Dictionary = {
     everythingInFree: "Everything in Free, plus the complete library.",
     benefits: [
       "Full story library, every level",
-      "Full conversation library, every level",
       "The complete ordinary-lesson progression",
       "Every word list, not just the starter set",
       "New premium learning features as they launch",
@@ -332,7 +333,7 @@ export const en: Dictionary = {
     termsNoticeLink: "Terms",
     termsNoticeSuffix: ".",
     contentStatsHeading: "What Premium opens",
-    contentStatLessons: "lessons, stories and conversations",
+    contentStatLessons: "lessons and stories",
     contentStatWords: "words in the word lists",
     contentStatWordLists: "word lists",
     compareLine:
@@ -363,7 +364,7 @@ export const en: Dictionary = {
     expiryBannerDismiss: "Dismiss",
     freeNowHeading: "Everything is free right now",
     freeNowSubtitle:
-      "Every lesson, story, and conversation is open for now — create a free account to keep your progress.",
+      "Every lesson and story is open for now — create a free account to keep your progress.",
     freeNowBadge: "Free for now",
     freeNowBody: "Create a free account to save your streak and progress across all your devices.",
     dayCountOne: "1 day",
@@ -391,7 +392,7 @@ export const en: Dictionary = {
     homeFreeCompleteHeading: "You've completed every free lesson",
     homeFreeCompleteBody: "Upgrade to Premium to keep going with the rest of the library.",
     homeAllDoneHeading: "You've completed every lesson",
-    homeAllDoneBody: "Amazing work — explore Stories or Conversation for more practice.",
+    homeAllDoneBody: "Amazing work — explore Stories for more practice.",
     faqHeading: "Frequently asked questions",
     faqCurrencyQ: "Which currency will I be charged in?",
     faqCurrencyA:
@@ -500,7 +501,7 @@ export const en: Dictionary = {
     learningReminders: "Learning reminders",
     learningRemindersBody: "A gentle nudge if you haven't practiced in a few days.",
     progressEmails: "Progress & milestone emails",
-    progressEmailsBody: "Completed a level, a story, a conversation, or a streak milestone.",
+    progressEmailsBody: "Completed a level, a story, or a streak milestone.",
     savePreferences: "Save preferences",
     savingPreferences: "Saving…",
     essentialEmailNotice:
@@ -931,7 +932,7 @@ export const en: Dictionary = {
     ctaWelcomeBackBody: "Your progress is right where you left it.",
     ctaTryFirst: "Try SentenceStep before you commit",
     ctaTryFirstBody:
-      "Free Normal, Stories, and Conversation lessons are unlocked from the start — no account required to get a feel for it.",
+      "Free Normal and Stories lessons are unlocked from the start — no account required to get a feel for it.",
     startFirstLesson: "Start your first lesson",
     homeLinkAriaLabel: "SentenceStep home",
     dashboardLinkAriaLabel: "SentenceStep dashboard",
