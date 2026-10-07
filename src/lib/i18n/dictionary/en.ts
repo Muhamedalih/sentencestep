@@ -331,6 +331,17 @@ export const en: Dictionary = {
     termsNoticePrefix: "All purchases are final. By paying you agree to our ",
     termsNoticeLink: "Terms",
     termsNoticeSuffix: ".",
+    contentStatsHeading: "What Premium opens",
+    contentStatLessons: "lessons, stories and conversations",
+    contentStatWords: "words in the word lists",
+    contentStatWordLists: "word lists",
+    compareLine:
+      "Language apps typically cost $5–$15 every month. Here it starts at {amount} a month.",
+    paymentPartnerNoteShort:
+      "You'll finish on our payment partner's secure page, about 30 seconds, and come straight back here.",
+    acceptedMethodsLabel: "Pay with",
+    socialProofRating: "{rating} average from {count}+ ratings",
+    payShort: "Pay now",
     extendHeading: "Add more days",
     extendStackNote: "The {days} extra days are added on top of the days you have left.",
     plan1m: "1 month",

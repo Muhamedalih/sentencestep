@@ -366,6 +366,21 @@ export interface Dictionary {
     termsNoticePrefix: string;
     termsNoticeLink: string;
     termsNoticeSuffix: string;
+    /** The three real figures shown above the plan card, and their heading ("What Premium opens"). The count is formatted separately; these are only the labels. */
+    contentStatsHeading: string;
+    contentStatLessons: string;
+    contentStatWords: string;
+    contentStatWordLists: string;
+    /** One honest comparison line inside the card; {amount} is the cheapest monthly price, e.g. "$1.17". */
+    compareLine: string;
+    /** The short, positive note above the pay button while Wayl's page shows dollars (the long paymentPartnerNote is used when it shows dinars). */
+    paymentPartnerNoteShort: string;
+    /** The label before the names of the accepted ways to pay. */
+    acceptedMethodsLabel: string;
+    /** The real-ratings line; {rating} is e.g. "4.8" and {count} the rounded-down number of ratings. */
+    socialProofRating: string;
+    /** The short pay-button label in the phone's sticky pay bar, where the price is already shown beside it. */
+    payShort: string;
     /** Heading of the "add more days" block for a current Premium learner. */
     extendHeading: string;
     /** `{days}` is the number of days of the chosen plan. */

@@ -114,12 +114,38 @@ export interface PaymentAlert {
   detail?: string;
 }
 
+/** What just happened: an order's payment was confirmed and its Premium granted. */
+export interface FulfilledEvent {
+  order: PaymentOrder;
+  premiumUntil: string | null;
+}
+
 export interface FulfillmentDeps {
   provider: PaymentProvider;
   store: FulfillmentStore;
+  /**
+   * Called exactly once per order, when this call is the one that granted
+   * Premium (never for an order that was already fulfilled), so it is the place
+   * to send a receipt. It is awaited but can never change the outcome: a
+   * failure is logged and ignored.
+   */
+  onFulfilled?: (event: FulfilledEvent) => void | Promise<void>;
   /** May be async (it can email the admins), so every call is awaited. It must not throw. */
   report: (alert: PaymentAlert) => void | Promise<void>;
   now?: () => Date;
+}
+
+async function announceFulfilled(
+  deps: FulfillmentDeps,
+  order: PaymentOrder,
+  premiumUntil: string | null,
+): Promise<void> {
+  if (!deps.onFulfilled) return;
+  try {
+    await deps.onFulfilled({ order, premiumUntil });
+  } catch (error) {
+    console.error("[payments] the after-fulfilment hook failed", error);
+  }
 }
 
 export type FulfillmentOutcome =
@@ -187,6 +213,7 @@ export async function verifyAndFulfill(
 
       switch (result.result) {
         case "fulfilled":
+          await announceFulfilled(deps, order, result.premium_period_end ?? null);
           return { outcome: "fulfilled", premiumUntil: result.premium_period_end ?? null };
         case "already_fulfilled":
           return { outcome: "already_fulfilled", premiumUntil: result.premium_period_end ?? null };

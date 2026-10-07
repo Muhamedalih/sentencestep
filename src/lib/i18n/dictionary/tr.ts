@@ -331,6 +331,17 @@ export const tr: Dictionary = {
     termsNoticePrefix: "Tüm satın alımlar kesindir. Ödeme yaparak ",
     termsNoticeLink: "Koşulları",
     termsNoticeSuffix: " kabul etmiş olursunuz.",
+    contentStatsHeading: "Premium'un açtıkları",
+    contentStatLessons: "ders, hikâye ve konuşma",
+    contentStatWords: "kelime listelerinde kelime",
+    contentStatWordLists: "kelime listesi",
+    compareLine:
+      "Dil uygulamaları genellikle ayda $5–$15 tutar. Burada başlangıç fiyatı ayda {amount}.",
+    paymentPartnerNoteShort:
+      "Ödeme ortağımızın güvenli sayfasında yaklaşık 30 saniyede bitirir ve doğrudan buraya dönersiniz.",
+    acceptedMethodsLabel: "Şununla öde",
+    socialProofRating: "{count}+ değerlendirmeden {rating} ortalama",
+    payShort: "Şimdi öde",
     extendHeading: "Daha fazla gün ekleyin",
     extendStackNote: "Eklenen {days} gün, kalan günlerinizin üzerine eklenir.",
     plan1m: "1 ay",

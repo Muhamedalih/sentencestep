@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { PaymentProviderError } from "@/lib/billing/payment-provider";
 
 import { decideFulfillment, verifyAndFulfill } from "./fulfillment";
+import type { FulfillmentDeps } from "./fulfillment";
 import {
   InMemoryPaymentStore,
   MINUTE,
@@ -188,7 +189,7 @@ function setup(
   const store = new InMemoryPaymentStore([options.order ?? makeOrder()]);
   const provider = makeFakeProvider({ payment: options.payment });
   const { alerts, report } = collectAlerts();
-  const deps = { provider, store, report, now: () => now };
+  const deps: FulfillmentDeps = { provider, store, report, now: () => now };
   return { store, provider, alerts, deps };
 }
 
@@ -279,6 +280,61 @@ test("verifyAndFulfill: an alert that takes time is finished before the call ret
   events.push("returned");
 
   assert.deepEqual(events, ["alert sent", "returned"]);
+});
+
+test("verifyAndFulfill: the receipt hook runs once, with the order and the new end date, when Premium is granted", async () => {
+  const { deps } = setup();
+  const events: { reference: string; premiumUntil: string | null }[] = [];
+  deps.onFulfilled = ({ order, premiumUntil }) => {
+    events.push({ reference: order.reference_id, premiumUntil });
+  };
+
+  const first = await verifyAndFulfill(deps, "ss_abc", "webhook");
+  const second = await verifyAndFulfill(deps, "ss_abc", "return_page");
+
+  assert.equal(first.outcome, "fulfilled");
+  assert.equal(second.outcome, "already_fulfilled");
+  assert.equal(events.length, 1);
+  assert.equal(events[0]!.reference, "ss_abc");
+  assert.equal(events[0]!.premiumUntil, first.outcome === "fulfilled" ? first.premiumUntil : "x");
+});
+
+test("verifyAndFulfill: the receipt hook never runs when nothing was granted", async () => {
+  for (const payment of [
+    makePayment({ status: "pending", rawStatus: "Pending", paidAt: null }),
+    makePayment({ amount: 1000 }),
+    null,
+  ]) {
+    const { deps } = setup({ payment });
+    let calls = 0;
+    deps.onFulfilled = () => {
+      calls += 1;
+    };
+
+    await verifyAndFulfill(deps, "ss_abc", "cron");
+
+    assert.equal(calls, 0);
+  }
+});
+
+test("verifyAndFulfill: a receipt hook that fails or is slow changes nothing about the outcome", async () => {
+  const failing = setup();
+  failing.deps.onFulfilled = async () => {
+    throw new Error("email provider down");
+  };
+  const failed = await verifyAndFulfill(failing.deps, "ss_abc", "webhook");
+  assert.equal(failed.outcome, "fulfilled");
+  assert.equal(failing.store.premiumGrants.length, 1);
+
+  const slow = setup();
+  const events: string[] = [];
+  slow.deps.onFulfilled = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    events.push("receipt sent");
+  };
+  await verifyAndFulfill(slow.deps, "ss_abc", "webhook");
+  events.push("returned");
+  assert.deepEqual(events, ["receipt sent", "returned"]);
 });
 
 test("verifyAndFulfill: an unknown reference is ignored without calling the provider", async () => {

@@ -340,6 +340,17 @@ export const es: Dictionary = {
     termsNoticePrefix: "Todas las compras son definitivas. Al pagar aceptas nuestros ",
     termsNoticeLink: "Términos",
     termsNoticeSuffix: ".",
+    contentStatsHeading: "Lo que abre Premium",
+    contentStatLessons: "lecciones, historias y conversaciones",
+    contentStatWords: "palabras en las listas",
+    contentStatWordLists: "listas de palabras",
+    compareLine:
+      "Las apps de idiomas suelen costar entre $5 y $15 al mes. Aquí empieza en {amount} al mes.",
+    paymentPartnerNoteShort:
+      "Terminarás en la página segura de nuestro socio de pagos, unos 30 segundos, y volverás aquí enseguida.",
+    acceptedMethodsLabel: "Paga con",
+    socialProofRating: "{rating} de media en más de {count} valoraciones",
+    payShort: "Pagar ahora",
     extendHeading: "Añade más días",
     extendStackNote: "Los {days} días extra se suman a los que te quedan.",
     plan1m: "1 mes",

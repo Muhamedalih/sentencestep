@@ -4,7 +4,7 @@ import { createWaylProvider } from "@/lib/billing/providers/wayl";
 const MIN_WEBHOOK_SECRET_LENGTH = 16;
 
 /** WAYL_SHOW_USD=false (or 0, no, off) leaves Wayl's page showing dinars; anything else, or unset, asks it to show dollars. */
-function showUsdOnWaylPage(): boolean {
+export function showUsdOnWaylPage(): boolean {
   const value = process.env.WAYL_SHOW_USD?.trim().toLowerCase();
   return !(value === "false" || value === "0" || value === "no" || value === "off");
 }
