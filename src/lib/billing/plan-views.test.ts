@@ -10,6 +10,7 @@ test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving
     {
       id: "1m",
       days: 30,
+      bonusDays: 0,
       price: "$2",
       perMonth: "$2.00",
       perDay: "$0.07",
@@ -20,6 +21,7 @@ test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving
     {
       id: "3m",
       days: 90,
+      bonusDays: 0,
       price: "$4",
       perMonth: "$1.33",
       perDay: "$0.04",
@@ -30,6 +32,7 @@ test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving
     {
       id: "6m",
       days: 180,
+      bonusDays: 0,
       price: "$7",
       perMonth: "$1.17",
       perDay: "$0.04",
@@ -73,4 +76,24 @@ test("buildPlanViews: shows dollars only", () => {
 test("cheapestPerMonth: the longest plan's monthly price in each tier", () => {
   assert.equal(cheapestPerMonth("A"), "$1.17");
   assert.equal(cheapestPerMonth("B"), "$1.67");
+});
+
+test("buildPlanViews: a launch offer adds its days to every plan and changes no price, saving or per-month figure", () => {
+  const plain = buildPlanViews("A");
+  const offer = buildPlanViews("A", 7);
+
+  assert.deepEqual(
+    offer.map((view) => [view.days, view.bonusDays]),
+    [
+      [37, 7],
+      [97, 7],
+      [187, 7],
+    ],
+  );
+  assert.deepEqual(
+    offer.map((view) => [view.price, view.perMonth, view.savingsPercent]),
+    plain.map((view) => [view.price, view.perMonth, view.savingsPercent]),
+  );
+  // Spread over the extra days, so the per-day figure can only get smaller.
+  assert.equal(offer[1]!.perDay, "$0.04");
 });

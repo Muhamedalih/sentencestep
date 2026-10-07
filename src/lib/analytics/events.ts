@@ -54,8 +54,8 @@ export type AnalyticsEvent =
   | {
       name: "UPGRADE_CTA_CLICKED";
       category: "PREMIUM";
-      /** Which plan was chosen and at which price tier, so plan mix can be compared once real purchases exist. Both come from the server (the tier from geolocation, the plan validated against the known ids), never raw client input. */
-      properties: { plan: PlanId; tier: PricingTier };
+      /** Which plan was chosen, at which price tier and with how many launch-offer bonus days, so plan mix and the offer can be compared once real purchases exist. Both come from the server (the tier from geolocation, the plan validated against the known ids), never raw client input. */
+      properties: { plan: PlanId; tier: PricingTier; bonusDays: number };
     }
   | {
       name: "AUDIO_PLAYED";

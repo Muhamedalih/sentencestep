@@ -370,6 +370,18 @@ export interface Dictionary {
     freeNowSubtitle: string;
     freeNowBadge: string;
     freeNowBody: string;
+    /** "7 days" in each language's grammar — `{days}` is the number; see formatDayCount. Arabic uses all four forms, the others only "one" and "few". */
+    dayCountOne: string;
+    dayCountTwo: string;
+    dayCountFew: string;
+    dayCountMany: string;
+    /** Notice above the plan cards while the launch offer runs — `{days}` is a formatted day count ("7 days"), `{date}` the last day. */
+    launchOfferBanner: string;
+    /** Chip on each plan card — `{days}` is a formatted day count. */
+    launchOfferChip: string;
+    /** Real aggregate figures under the pay button — `{count}` is a rounded-down, formatted number (see src/lib/stats/social-proof.ts). Only shown when the figure is large enough to quote. */
+    socialProofLearners: string;
+    socialProofLessons: string;
     /** Settings' plan row: "Premium until {date}". */
     premiumUntil: string;
     lockedBenefits: string[];

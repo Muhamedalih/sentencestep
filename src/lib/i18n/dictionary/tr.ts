@@ -327,6 +327,14 @@ export const tr: Dictionary = {
     freeNowBadge: "Şimdilik ücretsiz",
     freeNowBody:
       "Serinizi ve ilerlemenizi tüm cihazlarınızda saklamak için ücretsiz bir hesap oluşturun.",
+    dayCountOne: "1 gün",
+    dayCountTwo: "2 gün",
+    dayCountFew: "{days} gün",
+    dayCountMany: "{days} gün",
+    launchOfferBanner: "Lansman teklifi: {date} tarihine kadar her plana {days} hediye.",
+    launchOfferChip: "+{days} hediye",
+    socialProofLearners: "{count}+ öğrenci pratik yapıyor",
+    socialProofLessons: "{count}+ ders çalışıldı",
     premiumUntil: "Premium: {date} tarihine kadar",
     lockedBenefits: [
       "Bu dersin kilidini açın",

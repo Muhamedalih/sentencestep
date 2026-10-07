@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { track } from "@/lib/analytics/track";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { bonusDaysForCheckout } from "@/lib/billing/launch-offer";
+import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { isPlanId } from "@/lib/billing/plans";
 import { tierForCountry } from "@/lib/billing/pricing";
 import { createCheckout } from "@/lib/billing/payments/checkout";
@@ -25,7 +27,8 @@ export interface CheckoutActionState {
  * state). The price is decided entirely on the server: the country comes from
  * the hosting platform's geolocation, never from the form, and the form only
  * ever names a plan, which must be one of the known plan ids (a price or a
- * number of days sent by a client is never read). The callback URLs come from
+ * number of days sent by a client is never read). Launch-offer bonus days are
+ * likewise read from the server's own settings at this moment. The callback URLs come from
  * the configured site origin, never from a request header. This never
  * redirects to a fake success page or grants access on its own — only a
  * payment verified with the provider's own API ever does (see
@@ -42,6 +45,8 @@ export async function startCheckout(
   if (!isPlanId(plan)) return { error: t.premium.checkoutTryAgain };
 
   const country = resolvePricingCountry(await headers());
+  // Decided here, on the server, for this moment — never from the form.
+  const bonusDays = bonusDaysForCheckout(await getLaunchOffer(), new Date());
 
   const user = await getCurrentUser();
   if (user) {
@@ -52,7 +57,7 @@ export async function startCheckout(
       {
         name: "UPGRADE_CTA_CLICKED",
         category: "PREMIUM",
-        properties: { plan, tier: tierForCountry(country.country) },
+        properties: { plan, tier: tierForCountry(country.country), bonusDays },
       },
       user.id,
     );
@@ -76,6 +81,7 @@ export async function startCheckout(
       country,
       origin: getSiteUrl(),
       plan,
+      bonusDays,
     });
   } catch (error) {
     console.error("[payments] checkout failed", error);

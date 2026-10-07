@@ -16,12 +16,15 @@ import { formatUsd, formatUsdExact, formatUsdPerDay } from "./pricing";
  */
 export interface PlanView {
   id: PlanId;
+  /** The days the learner gets: the plan's own plus any launch-offer bonus. */
   days: number;
+  /** The launch-offer bonus days included in `days`; 0 when there is no offer. */
+  bonusDays: number;
   /** The whole price, e.g. "$4". */
   price: string;
   /** The price per 30 days, e.g. "$1.33". */
   perMonth: string;
-  /** The price per day, e.g. "$0.04". */
+  /** The price per day over all the days they get, e.g. "$0.04". */
   perDay: string;
   /** Whole percent cheaper per day than the one-month plan; null for the one-month plan. */
   savingsPercent: number | null;
@@ -29,15 +32,17 @@ export interface PlanView {
   preselected: boolean;
 }
 
-export function buildPlanViews(tier: PricingTier): PlanView[] {
+export function buildPlanViews(tier: PricingTier, bonusDays = 0): PlanView[] {
   return PLANS.map((plan) => {
     const cents = planPriceCents(tier, plan.id);
     return {
       id: plan.id,
-      days: plan.days,
+      days: plan.days + bonusDays,
+      bonusDays,
       price: formatUsd(cents),
+      // The plan's own comparison figures ignore the bonus, so they stay the same with or without an offer.
       perMonth: formatUsdExact(perMonthCents(tier, plan.id)),
-      perDay: formatUsdPerDay(cents, plan.days),
+      perDay: formatUsdPerDay(cents, plan.days + bonusDays),
       savingsPercent: savingsPercent(tier, plan.id),
       badge:
         plan.id === RECOMMENDED_PLAN_ID

@@ -47,10 +47,23 @@ export interface PriceQuote {
   premiumDays: number;
 }
 
-export function quotePrice(tier: PricingTier, currency: string, planId: PlanId): PriceQuote {
+/**
+ * `bonusDays` are extra days given with the purchase (the launch offer): they
+ * lengthen the access, never the price, and are part of the order's snapshot.
+ */
+export function quotePrice(
+  tier: PricingTier,
+  currency: string,
+  planId: PlanId,
+  bonusDays = 0,
+): PriceQuote {
   const fxRatePerUsd = FIXED_FX_RATES_PER_USD.get(currency);
   if (fxRatePerUsd === undefined) {
     throw new Error(`No fixed exchange rate is configured for ${currency}.`);
+  }
+
+  if (!Number.isInteger(bonusDays) || bonusDays < 0) {
+    throw new Error(`Bonus days must be a whole number of days, not ${bonusDays}.`);
   }
 
   const plan = getPlan(planId);
@@ -62,7 +75,15 @@ export function quotePrice(tier: PricingTier, currency: string, planId: PlanId):
     );
   }
 
-  return { tier, planId, usdCents, currency, fxRatePerUsd, amount, premiumDays: plan.days };
+  return {
+    tier,
+    planId,
+    usdCents,
+    currency,
+    fxRatePerUsd,
+    amount,
+    premiumDays: plan.days + bonusDays,
+  };
 }
 
 /** "$2" for whole dollars, "$2.50" otherwise. */

@@ -2,7 +2,19 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Check, Gem, Info, Lock, RefreshCcwDot, Sparkles, Star, Zap } from "lucide-react";
+import {
+  BookOpenCheck,
+  Check,
+  Gem,
+  Gift,
+  Info,
+  Lock,
+  RefreshCcwDot,
+  Sparkles,
+  Star,
+  Users,
+  Zap,
+} from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +24,7 @@ import { startCheckout } from "@/lib/billing/checkout-actions";
 import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
 import type { PlanView } from "@/lib/billing/plan-views";
 import type { PlanId } from "@/lib/billing/plans";
+import { formatDayCount } from "@/lib/i18n/format-days";
 import { cn } from "@/lib/utils";
 
 const initialState: CheckoutActionState = {};
@@ -25,6 +38,10 @@ interface CheckoutCardProps {
   signedIn: boolean;
   /** A current Premium learner adding days: no benefit list, and the days stack. */
   extend?: boolean;
+  /** The running launch offer, with its last day already written out for the visitor's language. */
+  offerNotice?: { bonusDays: number; endsOnLabel: string } | null;
+  /** Real aggregate figures, already rounded and formatted, or null; a field is null when too small to quote. */
+  socialProof?: { learners: string | null; lessons: string | null } | null;
 }
 
 /**
@@ -33,8 +50,14 @@ interface CheckoutCardProps {
  * the payment partner's own page may show another currency, all before the
  * button. The form only ever submits a plan id; the server decides the price.
  */
-export function CheckoutCard({ plans, signedIn, extend = false }: CheckoutCardProps) {
-  const { t } = useLocale();
+export function CheckoutCard({
+  plans,
+  signedIn,
+  extend = false,
+  offerNotice = null,
+  socialProof = null,
+}: CheckoutCardProps) {
+  const { t, locale } = useLocale();
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
   const [selectedId, setSelectedId] = useState<PlanId>(
     () => (plans.find((plan) => plan.preselected) ?? plans[0])!.id,
@@ -83,6 +106,20 @@ export function CheckoutCard({ plans, signedIn, extend = false }: CheckoutCardPr
 
       <div className="flex flex-col gap-6 px-6 py-6">
         <form action={formAction} className="flex flex-col gap-5">
+          {offerNotice && (
+            <p
+              className="bg-accent/15 border-accent/40 text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm font-medium"
+              dir="auto"
+            >
+              <Gift className="text-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>
+                {t.premium.launchOfferBanner
+                  .replace("{days}", formatDayCount(t.premium, locale, offerNotice.bonusDays))
+                  .replace("{date}", offerNotice.endsOnLabel)}
+              </span>
+            </p>
+          )}
+
           <fieldset className="flex flex-col gap-4">
             <legend className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
               {t.premium.choosePlanHeading}
@@ -143,6 +180,17 @@ export function CheckoutCard({ plans, signedIn, extend = false }: CheckoutCardPr
                           {t.premium.saveBadge.replace("{percent}", String(plan.savingsPercent))}
                         </span>
                       )}
+                      {plan.bonusDays > 0 && (
+                        <span
+                          dir="auto"
+                          className="bg-accent/20 border-accent/40 text-foreground rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap"
+                        >
+                          {t.premium.launchOfferChip.replace(
+                            "{days}",
+                            formatDayCount(t.premium, locale, plan.bonusDays),
+                          )}
+                        </span>
+                      )}
                     </span>
                   </div>
 
@@ -201,6 +249,23 @@ export function CheckoutCard({ plans, signedIn, extend = false }: CheckoutCardPr
               </p>
             )}
           </div>
+
+          {!extend && socialProof && (socialProof.learners || socialProof.lessons) && (
+            <ul className="text-foreground/80 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs font-medium">
+              {socialProof.learners && (
+                <li className="inline-flex items-center gap-1.5">
+                  <Users className="text-primary size-3.5" aria-hidden="true" />
+                  {t.premium.socialProofLearners.replace("{count}", socialProof.learners)}
+                </li>
+              )}
+              {socialProof.lessons && (
+                <li className="inline-flex items-center gap-1.5">
+                  <BookOpenCheck className="text-primary size-3.5" aria-hidden="true" />
+                  {t.premium.socialProofLessons.replace("{count}", socialProof.lessons)}
+                </li>
+              )}
+            </ul>
+          )}
 
           <ul className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
             <li className="inline-flex items-center gap-1.5">

@@ -335,6 +335,15 @@ export const es: Dictionary = {
     freeNowBadge: "Gratis por ahora",
     freeNowBody:
       "Crea una cuenta gratuita para guardar tu racha y tu progreso en todos tus dispositivos.",
+    dayCountOne: "1 día",
+    dayCountTwo: "2 días",
+    dayCountFew: "{days} días",
+    dayCountMany: "{days} días",
+    launchOfferBanner:
+      "Oferta de lanzamiento: {days} de regalo con cualquier plan hasta el {date}.",
+    launchOfferChip: "+{days} gratis",
+    socialProofLearners: "Más de {count} estudiantes practicando",
+    socialProofLessons: "Más de {count} lecciones practicadas",
     premiumUntil: "Premium hasta el {date}",
     lockedBenefits: [
       "Desbloquea esta lección",
