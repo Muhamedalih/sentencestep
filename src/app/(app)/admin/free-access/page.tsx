@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { FreeAccessToggle } from "@/components/admin/free-access-toggle";
+import { LaunchOfferForm } from "@/components/admin/launch-offer-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAccessSettings } from "@/lib/billing/access-settings-queries";
+import { isOfferActive } from "@/lib/billing/launch-offer";
+import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -13,7 +16,8 @@ export const metadata: Metadata = {
 export default async function AdminFreeAccessPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const { freeForAll } = await getAccessSettings();
+  const [{ freeForAll }, offer] = await Promise.all([getAccessSettings(), getLaunchOffer()]);
+  const offerStatus = offer ? (isOfferActive(offer, new Date()) ? "running" : "ended") : "off";
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,6 +41,26 @@ export default async function AdminFreeAccessPage() {
         </CardHeader>
         <CardContent>
           <FreeAccessToggle initialEnabled={freeForAll} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Launch offer</CardTitle>
+          <CardDescription>
+            A number of bonus days added to every purchase until a last day (through the end of that
+            day, UTC). It is shown on the upgrade page, applied when someone starts a payment, and
+            never changes what a plan costs. Nobody can buy while everything is free, except an
+            account you have excluded to try the paid flow. Leave it off, or remove it, for no
+            offer.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LaunchOfferForm
+            initialBonusDays={offer?.bonusDays ?? 0}
+            initialEndsOn={offer?.endsOn ?? null}
+            initialStatus={offerStatus}
+          />
         </CardContent>
       </Card>
     </div>

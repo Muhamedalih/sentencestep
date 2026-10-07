@@ -97,3 +97,19 @@ test("formatUsdExact: always two decimals so plans line up", () => {
   assert.equal(formatUsdExact(200), "$2.00");
   assert.equal(formatUsdExact(133), "$1.33");
 });
+
+test("quotePrice: bonus days lengthen the access and never change the price", () => {
+  const plain = quotePrice("A", "IQD", "3m");
+  const withBonus = quotePrice("A", "IQD", "3m", 7);
+
+  assert.equal(withBonus.premiumDays, 97);
+  assert.equal(plain.premiumDays, 90);
+  assert.equal(withBonus.usdCents, plain.usdCents);
+  assert.equal(withBonus.amount, plain.amount);
+});
+
+test("quotePrice: bonus days must be a whole, non-negative number of days", () => {
+  for (const bad of [-1, 1.5, Number.NaN]) {
+    assert.throws(() => quotePrice("A", "IQD", "1m", bad), /whole number of days/);
+  }
+});

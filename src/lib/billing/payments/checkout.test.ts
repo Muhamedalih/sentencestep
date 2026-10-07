@@ -131,6 +131,42 @@ test("createCheckout: each plan is priced from the server's table and stores its
   }
 });
 
+test("createCheckout: launch-offer bonus days go into the order's days and the product line, never the price", async () => {
+  const { store, provider, deps } = setup();
+
+  await createCheckout(deps, {
+    userId: "user-1",
+    country: iraq,
+    origin: ORIGIN,
+    plan: "3m",
+    bonusDays: 7,
+  });
+
+  const order = store.inserted[0]!;
+  assert.equal(order.premium_days, 97);
+  assert.equal(order.price_usd_cents, 400);
+  assert.equal(order.charge_amount, 5280);
+  assert.equal(provider.created[0]!.amount, 5280);
+  assert.ok(provider.created[0]!.description.endsWith("(97 days) - $4"));
+  assert.equal(store.reusableQueries[0]!.premiumDays, 97);
+});
+
+test("createCheckout: an open link for the same plan without the bonus is not reused once the offer applies", async () => {
+  const { store, provider, deps } = setup();
+  store.reusable = makeOrder({ pricing_tier: "A", charge_amount: 5280, premium_days: 90 });
+
+  const result = await createCheckout(deps, {
+    userId: "user-1",
+    country: iraq,
+    origin: ORIGIN,
+    plan: "3m",
+    bonusDays: 7,
+  });
+
+  assert.equal(result.ok && result.reused, false);
+  assert.equal(provider.created.length, 1);
+});
+
 test("createCheckout: Tier B plans cost $3, $6 and $10", async () => {
   const cents: number[] = [];
   for (const plan of ["1m", "3m", "6m"] as const) {

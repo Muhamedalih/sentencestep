@@ -362,11 +362,17 @@ export interface Database {
           id: number;
           /** Sitewide "everything is free" promotion switch — see src/lib/billing/access.ts. */
           free_for_all: boolean;
+          /** Bonus days added to every purchase while the launch offer runs; 0 means no offer — see src/lib/billing/launch-offer.ts. */
+          launch_offer_bonus_days: number;
+          /** The last day of the launch offer (it runs through the end of that day, UTC). */
+          launch_offer_ends_on: string | null;
           updated_at: string;
         };
         Insert: {
           id?: number;
           free_for_all?: boolean;
+          launch_offer_bonus_days?: number;
+          launch_offer_ends_on?: string | null;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;

@@ -47,6 +47,8 @@ export interface CheckoutInput {
   origin: string;
   /** Validated against the known plan ids by the caller; the price comes from the server's own table. */
   plan: PlanId;
+  /** Launch-offer days, decided on the server for this moment: added to the plan's days, never to the price. */
+  bonusDays?: number;
 }
 
 export type CheckoutResult =
@@ -70,7 +72,7 @@ export async function createCheckout(
   const origin = input.origin.replace(/\/+$/, "");
 
   const tier = tierForCountry(input.country.country);
-  const quote = quotePrice(tier, provider.settlementCurrency, input.plan);
+  const quote = quotePrice(tier, provider.settlementCurrency, input.plan, input.bonusDays ?? 0);
 
   const reusable = await store.findReusableOrder({
     userId: input.userId,

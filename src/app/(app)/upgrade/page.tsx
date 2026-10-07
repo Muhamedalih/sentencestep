@@ -15,11 +15,15 @@ import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { isOfferActive } from "@/lib/billing/launch-offer";
+import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
+import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getSocialProof } from "@/lib/stats/public-stats";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -52,7 +56,9 @@ export default async function UpgradePage() {
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
-  const plans = buildPlanViews(tierForCountry(country));
+  const offer = await getLaunchOffer();
+  const offerBonusDays = isOfferActive(offer, new Date()) ? offer.bonusDays : 0;
+  const plans = buildPlanViews(tierForCountry(country), offerBonusDays);
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
 
@@ -62,6 +68,21 @@ export default async function UpgradePage() {
   // signed-in account excluded from the promotion (to try the paid flow) sees
   // the plans.
   const freeNow = !user && access.isPremium;
+
+  // Only the plan card quotes the launch offer and real figures, so the counts
+  // are only fetched (they are cached for an hour) when that card is shown.
+  const showsPlans = !freeNow && !(user && access.isPremium);
+  const proof = showsPlans ? await getSocialProof() : null;
+  const offerNotice =
+    offer && offerBonusDays > 0
+      ? { bonusDays: offerBonusDays, endsOnLabel: formatLongDate(offer.endsOn, locale) }
+      : null;
+  const socialProof = proof
+    ? {
+        learners: proof.learners === null ? null : formatCount(proof.learners, locale),
+        lessons: proof.lessons === null ? null : formatCount(proof.lessons, locale),
+      }
+    : null;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
@@ -145,10 +166,17 @@ export default async function UpgradePage() {
 
             {/* Only a real, dated purchase can be extended — the sitewide
                 free-for-all promotion and the dev override have no end date. */}
-            {access.expiresAt && <CheckoutCard plans={plans} signedIn extend />}
+            {access.expiresAt && (
+              <CheckoutCard plans={plans} signedIn extend offerNotice={offerNotice} />
+            )}
           </>
         ) : (
-          <CheckoutCard plans={plans} signedIn={Boolean(user)} />
+          <CheckoutCard
+            plans={plans}
+            signedIn={Boolean(user)}
+            offerNotice={offerNotice}
+            socialProof={socialProof}
+          />
         )}
       </div>
 
