@@ -6,6 +6,8 @@
  * is shown the English text, as before.
  */
 
+import { isSupportLocale } from "@/lib/i18n/locales";
+
 export type LegalLanguage = "en" | "ar";
 
 export interface LegalSection {
@@ -23,6 +25,17 @@ export interface LegalDocument {
 
 export function legalLanguage(locale: string | null | undefined): LegalLanguage {
   return locale === "ar" ? "ar" : "en";
+}
+
+/** The Back button's label, in the language of the text on the page (so a Spanish visitor reading the English text sees "Back", not a mix). */
+export const LEGAL_BACK_LABEL: Record<LegalLanguage, string> = { en: "Back", ar: "رجوع" };
+
+/**
+ * Where Back goes when the page was opened directly and there is nothing to
+ * go back to: the visitor's own home page (`/ar`, `/es`, `/tr`, else `/`).
+ */
+export function legalHomeHref(locale: string | null | undefined): string {
+  return isSupportLocale(locale) ? `/${locale}` : "/";
 }
 
 export const SUPPORT_EMAIL = "support@sentencestep.com";

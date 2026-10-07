@@ -12,8 +12,8 @@ export function SiteFooter() {
     {
       title: t.footer.productColumn,
       links: [
-        // "/#..." not "#..." — SiteFooter also renders on /privacy and
-        // /terms, where a bare hash link has no matching id to scroll to.
+        // "/#..." not "#..." so the link always targets the home page's
+        // sections, whichever page the footer is shown on.
         { href: "/#how-it-works", label: t.nav.howItWorks },
         { href: "/#modes", label: t.nav.learningModes },
         { href: "/upgrade", label: t.nav.pricing },

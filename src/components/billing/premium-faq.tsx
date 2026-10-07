@@ -9,14 +9,13 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
  * support and screen-reader semantics for free.
  */
 export function PremiumFaq({ t }: { t: Dictionary }) {
+  // Only what the plan card above doesn't already say: its benefits list and
+  // its "one-time payment" / "no auto-renewal" chips cover what Premium
+  // includes and that nothing renews, so those answers aren't repeated here.
   const items: { q: string; a: string }[] = [
-    { q: t.premium.faqIncludedQ, a: t.premium.faqIncludedA },
-    { q: t.premium.faqRenewQ, a: t.premium.faqRenewA },
     { q: t.premium.faqCurrencyQ, a: t.premium.faqCurrencyA },
     { q: t.premium.faqDeclinedQ, a: t.premium.faqDeclinedA },
     { q: t.premium.faqProgressQ, a: t.premium.faqProgressA },
-    { q: t.premium.faqTrialQ, a: t.premium.faqTrialA },
-    { q: t.premium.faqSwitchQ, a: t.premium.faqSwitchA },
   ];
 
   return (

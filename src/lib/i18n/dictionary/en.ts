@@ -392,20 +392,7 @@ export const en: Dictionary = {
     homeFreeCompleteBody: "Upgrade to Premium to keep going with the rest of the library.",
     homeAllDoneHeading: "You've completed every lesson",
     homeAllDoneBody: "Amazing work — explore Stories or Conversation for more practice.",
-    comparisonHeading: "Compare plans",
-    featureColumnHeading: "Feature",
-    freeLevelAccess: "Beginner level only",
-    premiumLevelAccess: "Every level",
-    freeWordListsAccess: "1 starter list",
-    premiumWordListsAccess: "Every word list",
-    includedLabel: "Included",
     faqHeading: "Frequently asked questions",
-    faqIncludedQ: "What's actually included in Premium?",
-    faqIncludedA:
-      "Every level of Ordinary Lessons, Stories, and Conversation, plus the full Word Lists collection. Your streak, XP, and daily goal already work the same on Free — Premium is about unlocking content, not gamification.",
-    faqRenewQ: "Will I be charged again automatically?",
-    faqRenewA:
-      "No. Premium is a one-time payment that unlocks the days of the plan you pick. Nothing renews on its own — when your days run out you simply return to the Free plan, and your progress stays saved.",
     faqCurrencyQ: "Which currency will I be charged in?",
     faqCurrencyA:
       "Prices on this page are in US dollars. The payment is made on our payment partner's secure page, which processes it in its own local currency, so that page may show the amount in a different currency. The price that applies is the one shown here. If your card is in another currency, your bank may convert the amount and add its own fee.",
@@ -415,12 +402,6 @@ export const en: Dictionary = {
     faqProgressQ: "What happens to my progress if I don't upgrade?",
     faqProgressA:
       "Nothing is ever lost. Your streak, XP, and every lesson you've completed stay saved, and you keep free access to Beginner-level content in every mode.",
-    faqTrialQ: "Is there a free trial?",
-    faqTrialA:
-      "There's something better than a countdown trial: real Beginner-level lessons across every mode are free forever, so you can decide with actual practice, not a timer.",
-    faqSwitchQ: "Can I switch between Free and Premium later?",
-    faqSwitchA:
-      "Yes — upgrade whenever you're ready. You can add more days at any time while you're on Premium, and they're added on top of what you have left.",
     checkoutNotConnected: "Billing isn't connected yet — check back soon.",
     checkoutSignIn: "Sign in first.",
     checkoutTryAgain: "We couldn't start checkout. Please try again in a moment.",
