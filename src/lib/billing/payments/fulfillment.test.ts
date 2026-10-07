@@ -43,7 +43,7 @@ test("decide: an order under review is blocked even if the provider says paid", 
 
 test("decide: a paid payment for a different amount, currency or reference goes to review, never to premium", () => {
   const cases: [Partial<ReturnType<typeof makePayment>>, string][] = [
-    [{ amount: 2640 }, "amount_mismatch"],
+    [{ amount: 3040 }, "amount_mismatch"],
     [{ amount: 3959 }, "amount_mismatch"],
     [{ currency: "USD" }, "currency_mismatch"],
     [{ referenceId: "ss_other" }, "reference_mismatch"],
@@ -203,7 +203,7 @@ test("verifyAndFulfill: a verified payment grants premium once and records it", 
   assert.deepEqual(store.fulfillCalls[0]!, {
     referenceId: "ss_abc",
     providerPaymentId: "link_1",
-    chargeAmount: 3960,
+    chargeAmount: 4560,
     chargeCurrency: "IQD",
     paidAt: makePayment().paidAt,
     providerStatus: "Complete",
