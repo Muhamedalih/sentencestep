@@ -321,6 +321,12 @@ export const tr: Dictionary = {
     expiryBannerStreakBody: "Serinizi sürdürmek için şimdi gün ekleyin: {streak} gün.",
     expiryBannerCta: "Gün ekle",
     expiryBannerDismiss: "Kapat",
+    freeNowHeading: "Şu anda her şey ücretsiz",
+    freeNowSubtitle:
+      "Tüm dersler, hikayeler ve konuşmalar şimdilik açık — ilerlemenizi kaydetmek için ücretsiz bir hesap oluşturun.",
+    freeNowBadge: "Şimdilik ücretsiz",
+    freeNowBody:
+      "Serinizi ve ilerlemenizi tüm cihazlarınızda saklamak için ücretsiz bir hesap oluşturun.",
     premiumUntil: "Premium: {date} tarihine kadar",
     lockedBenefits: [
       "Bu dersin kilidini açın",

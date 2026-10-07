@@ -309,6 +309,11 @@ export const ar: Dictionary = {
     expiryBannerStreakBody: "أضف أيامًا الآن وواصل تتابعك الحالي ({streak}).",
     expiryBannerCta: "أضف أيامًا",
     expiryBannerDismiss: "إغلاق",
+    freeNowHeading: "كل شيء مجاني حاليًا",
+    freeNowSubtitle:
+      "كل الدروس والقصص والمحادثات مفتوحة حاليًا — أنشئ حسابًا مجانيًا لتحفظ تقدّمك.",
+    freeNowBadge: "مجاني حاليًا",
+    freeNowBody: "أنشئ حسابًا مجانيًا لتحفظ تتابعك وتقدّمك على كل أجهزتك.",
     premiumUntil: "الخطة المميزة حتى {date}",
     lockedBenefits: ["افتح هذا الدرس", "افتح المكتبة الكاملة", "دفعة واحدة، بدون تجديد تلقائي"],
     premiumLessonBadge: "درس مميز",

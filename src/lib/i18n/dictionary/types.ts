@@ -365,6 +365,11 @@ export interface Dictionary {
     expiryBannerStreakBody: string;
     expiryBannerCta: string;
     expiryBannerDismiss: string;
+    /** What a signed-out visitor sees on /upgrade while the sitewide free-access promotion is on: no plan and no price, just that everything is open and how to keep progress. */
+    freeNowHeading: string;
+    freeNowSubtitle: string;
+    freeNowBadge: string;
+    freeNowBody: string;
     /** Settings' plan row: "Premium until {date}". */
     premiumUntil: string;
     lockedBenefits: string[];

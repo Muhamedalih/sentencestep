@@ -329,6 +329,12 @@ export const es: Dictionary = {
     expiryBannerStreakBody: "Añade días ahora para mantener tu racha de {streak} días.",
     expiryBannerCta: "Añadir días",
     expiryBannerDismiss: "Cerrar",
+    freeNowHeading: "Todo es gratis por ahora",
+    freeNowSubtitle:
+      "Todas las lecciones, historias y conversaciones están abiertas por ahora: crea una cuenta gratuita para guardar tu progreso.",
+    freeNowBadge: "Gratis por ahora",
+    freeNowBody:
+      "Crea una cuenta gratuita para guardar tu racha y tu progreso en todos tus dispositivos.",
     premiumUntil: "Premium hasta el {date}",
     lockedBenefits: [
       "Desbloquea esta lección",
