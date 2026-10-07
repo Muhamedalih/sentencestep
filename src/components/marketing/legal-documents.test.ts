@@ -3,7 +3,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { PRIVACY, SUPPORT_EMAIL, TERMS, legalLanguage } from "./legal-documents";
+import {
+  LEGAL_BACK_LABEL,
+  PRIVACY,
+  SUPPORT_EMAIL,
+  TERMS,
+  legalHomeHref,
+  legalLanguage,
+} from "./legal-documents";
 import type { LegalDocument } from "./legal-documents";
 
 function everyText(document: LegalDocument): string[] {
@@ -27,6 +34,17 @@ test("legalLanguage: Arabic gets the Arabic text, every other visitor the Englis
   assert.equal(legalLanguage("ar"), "ar");
   for (const other of ["es", "tr", "en", "", null, undefined]) {
     assert.equal(legalLanguage(other), "en", String(other));
+  }
+});
+
+test("Back: the label is in the language of the text, and with nowhere to go back to it leads to the visitor's own home page", () => {
+  assert.equal(LEGAL_BACK_LABEL.en, "Back");
+  assert.equal(LEGAL_BACK_LABEL.ar, "رجوع");
+  assert.equal(legalHomeHref("ar"), "/ar");
+  assert.equal(legalHomeHref("es"), "/es");
+  assert.equal(legalHomeHref("tr"), "/tr");
+  for (const other of ["en", "", "fr", "ar/terms", null, undefined]) {
+    assert.equal(legalHomeHref(other), "/", String(other));
   }
 });
 

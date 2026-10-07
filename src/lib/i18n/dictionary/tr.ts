@@ -393,20 +393,7 @@ export const tr: Dictionary = {
     homeFreeCompleteBody: "Kütüphanenin geri kalanıyla devam etmek için Premium'a yükseltin.",
     homeAllDoneHeading: "Tüm dersleri tamamladınız",
     homeAllDoneBody: "Harika iş — daha fazla pratik için Hikayeler veya Konuşma bölümüne göz atın.",
-    comparisonHeading: "Planları karşılaştırın",
-    featureColumnHeading: "Özellik",
-    freeLevelAccess: "Yalnızca başlangıç seviyesi",
-    premiumLevelAccess: "Tüm seviyeler",
-    freeWordListsAccess: "1 başlangıç listesi",
-    premiumWordListsAccess: "Tüm kelime listeleri",
-    includedLabel: "Dahil",
     faqHeading: "Sıkça sorulan sorular",
-    faqIncludedQ: "Premium'a gerçekte neler dahil?",
-    faqIncludedA:
-      "Normal Dersler, Hikayeler ve Konuşmanın her seviyesi, artı eksiksiz Kelime Listeleri koleksiyonu. Seri, XP ve günlük hedefiniz Ücretsiz planda zaten aynı şekilde çalışır — Premium, oyunlaştırmayla değil, içeriğin kilidini açmakla ilgilidir.",
-    faqRenewQ: "Tekrar otomatik olarak ücretlendirilecek miyim?",
-    faqRenewA:
-      "Hayır. Premium, seçtiğiniz planın günlerinin kilidini açan tek seferlik bir ödemedir. Hiçbir şey kendiliğinden yenilenmez — günleriniz bittiğinde Ücretsiz plana dönersiniz ve ilerlemeniz kayıtlı kalır.",
     faqCurrencyQ: "Hangi para biriminde tahsilat yapılır?",
     faqCurrencyA:
       "Bu sayfadaki fiyatlar ABD dolarıyla gösterilir. Ödeme, ödeme ortağımızın güvenli sayfasında yapılır; bu sayfa ödemeyi kendi yerel para biriminde işler, bu yüzden tutarı farklı bir para biriminde gösterebilir. Geçerli fiyat burada gösterilendir. Kartınız başka bir para birimindeyse bankanız tutarı dönüştürebilir ve kendi ücretini ekleyebilir.",
@@ -416,12 +403,6 @@ export const tr: Dictionary = {
     faqProgressQ: "Yükseltme yapmazsam ilerlememe ne olur?",
     faqProgressA:
       "Hiçbir şey kaybolmaz. Seriniz, XP'niz ve tamamladığınız her ders kaydedilmiş kalır ve her modda başlangıç seviyesi içeriğine ücretsiz erişiminizi korursunuz.",
-    faqTrialQ: "Ücretsiz deneme var mı?",
-    faqTrialA:
-      "Geri sayımlı bir denemeden daha iyisi var: her moddaki gerçek başlangıç seviyesi dersleri süresiz olarak ücretsizdir, böylece bir sayaçla değil, gerçek pratikle karar verebilirsiniz.",
-    faqSwitchQ: "Daha sonra Ücretsiz ve Premium arasında geçiş yapabilir miyim?",
-    faqSwitchA:
-      "Evet — hazır olduğunuzda yükseltin. Premium'dayken istediğiniz zaman daha fazla gün ekleyebilirsiniz; kalan günlerinizin üzerine eklenir.",
     checkoutNotConnected: "Ödeme henüz bağlı değil — yakında tekrar kontrol edin.",
     checkoutSignIn: "Önce giriş yapın.",
     checkoutTryAgain: "Ödemeyi başlatamadık. Lütfen birazdan tekrar deneyin.",

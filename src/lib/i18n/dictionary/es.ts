@@ -403,20 +403,7 @@ export const es: Dictionary = {
     homeFreeCompleteBody: "Mejora a Premium para seguir avanzando con el resto de la biblioteca.",
     homeAllDoneHeading: "Has completado todas las lecciones",
     homeAllDoneBody: "Un trabajo increíble — explora Historias o Conversación para practicar más.",
-    comparisonHeading: "Compara los planes",
-    featureColumnHeading: "Función",
-    freeLevelAccess: "Solo nivel principiante",
-    premiumLevelAccess: "Todos los niveles",
-    freeWordListsAccess: "1 lista inicial",
-    premiumWordListsAccess: "Todas las listas de palabras",
-    includedLabel: "Incluido",
     faqHeading: "Preguntas frecuentes",
-    faqIncludedQ: "¿Qué incluye realmente Premium?",
-    faqIncludedA:
-      "Todos los niveles de Lecciones Normales, Historias y Conversación, además de la colección completa de Listas de Palabras. Tu racha, XP y meta diaria ya funcionan igual en el plan gratuito — Premium se trata de desbloquear contenido, no de la gamificación.",
-    faqRenewQ: "¿Se me cobrará de nuevo automáticamente?",
-    faqRenewA:
-      "No. Premium es un pago único que desbloquea los días del plan que elijas. Nada se renueva solo: cuando se acaban los días vuelves al plan gratuito y tu progreso sigue guardado.",
     faqCurrencyQ: "¿En qué moneda se cobra?",
     faqCurrencyA:
       "Los precios de esta página están en dólares estadounidenses. El pago se hace en la página segura de nuestro socio de pagos, que lo procesa en su moneda local, así que esa página puede mostrar el importe en otra moneda. El precio que vale es el que ves aquí. Si tu tarjeta está en otra moneda, tu banco puede convertir el importe y añadir su propia comisión.",
@@ -426,12 +413,6 @@ export const es: Dictionary = {
     faqProgressQ: "¿Qué pasa con mi progreso si no mejoro mi plan?",
     faqProgressA:
       "Nada se pierde jamás. Tu racha, tu XP y cada lección que completaste se guardan, y conservas el acceso gratuito al contenido de nivel principiante en cada modo.",
-    faqTrialQ: "¿Hay una prueba gratuita?",
-    faqTrialA:
-      "Hay algo mejor que una prueba con cuenta regresiva: lecciones reales de nivel principiante en todos los modos son gratis para siempre, para que decidas con práctica real, no con un temporizador.",
-    faqSwitchQ: "¿Puedo cambiar entre Gratis y Premium más adelante?",
-    faqSwitchA:
-      "Sí — mejora tu plan cuando estés listo. Puedes añadir más días en cualquier momento mientras tengas Premium, y se suman a los que te queden.",
     checkoutNotConnected: "El pago aún no está disponible — vuelve pronto.",
     checkoutSignIn: "Inicia sesión primero.",
     checkoutTryAgain: "No pudimos iniciar el pago. Inténtalo de nuevo en un momento.",

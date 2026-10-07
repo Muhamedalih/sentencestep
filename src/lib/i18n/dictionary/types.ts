@@ -442,30 +442,13 @@ export interface Dictionary {
     /** Home hero's state once a premium/admin learner has completed every lesson across every level. */
     homeAllDoneHeading: string;
     homeAllDoneBody: string;
-    /** The /upgrade page's Free-vs-Premium comparison table (src/components/billing/plan-comparison.tsx) — row labels are reused from nav.normalLessons/stories/conversation/wordLists rather than duplicated here. */
-    comparisonHeading: string;
-    featureColumnHeading: string;
-    freeLevelAccess: string;
-    premiumLevelAccess: string;
-    freeWordListsAccess: string;
-    premiumWordListsAccess: string;
-    includedLabel: string;
     faqHeading: string;
-    faqIncludedQ: string;
-    faqIncludedA: string;
-    /** `{days}` is the number of days of the plan. */
-    faqRenewQ: string;
-    faqRenewA: string;
     faqCurrencyQ: string;
     faqCurrencyA: string;
     faqDeclinedQ: string;
     faqDeclinedA: string;
     faqProgressQ: string;
     faqProgressA: string;
-    faqTrialQ: string;
-    faqTrialA: string;
-    faqSwitchQ: string;
-    faqSwitchA: string;
     /** Errors shown by the checkout action (src/lib/billing/checkout-actions.ts). */
     checkoutNotConnected: string;
     checkoutSignIn: string;

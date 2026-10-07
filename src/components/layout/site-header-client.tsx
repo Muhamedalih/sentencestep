@@ -22,13 +22,15 @@ import type { CurrentUser } from "@/lib/supabase/auth";
  *
  * `user`/`access` are always `null`/FREE_ACCESS here in practice: this
  * component is only ever rendered by SiteHeader, which is only ever used by
- * the three static marketing pages (/, /privacy, /terms + locale variants),
- * and SiteHeader deliberately never reads the session cookie server-side
- * (see its own doc comment — doing so would force those pages dynamic
- * again). That's correct for "/" (middleware redirects a signed-in visitor
- * away before this ever renders) but wrong for "/privacy" and "/terms": a
- * signed-in learner who navigates there directly would otherwise see
- * "Sign in" buttons despite already being signed in.
+ * the static marketing home page ("/" and its locale variants), and
+ * SiteHeader deliberately never reads the session cookie server-side (see
+ * its own doc comment — doing so would force that page dynamic again).
+ * That is correct for "/", because middleware redirects a signed-in
+ * visitor away before this ever renders. `looksSignedIn` is a safety net
+ * for any signed-in visitor who still gets here (it was added for the
+ * Terms and Privacy pages, which showed this header until they became
+ * plain documents): they would otherwise see "Sign in" buttons despite
+ * already being signed in.
  *
  * `looksSignedIn` fixes that WITHOUT any server round trip: after
  * hydration, it checks for the mere PRESENCE of a Supabase auth cookie
@@ -43,10 +45,9 @@ import type { CurrentUser } from "@/lib/supabase/auth";
  * shows a generic "you're signed in" state (a Dashboard link, no
  * premium/free badge) rather than the fully personalized one SiteHeader
  * renders for a real server-known `user` elsewhere in the app. This causes
- * one brief, one-time flash from signed-out to signed-in chrome for a
- * signed-in visitor landing directly on /privacy or /terms — an accepted,
- * narrowly-scoped trade-off, since today (before this check existed) that
- * case was permanently wrong instead of momentarily wrong.
+ * one brief, one-time flash from signed-out to signed-in chrome for such a
+ * visitor — an accepted, narrowly-scoped trade-off, since without the
+ * check that case would be permanently wrong instead of momentarily wrong.
  */
 export function SiteHeaderClient({
   user,

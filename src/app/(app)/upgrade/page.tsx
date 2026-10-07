@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutCard } from "@/components/billing/checkout-card";
 import { ContentStatsRow } from "@/components/billing/content-stats-row";
-import { PlanComparison } from "@/components/billing/plan-comparison";
 import { PremiumFaq } from "@/components/billing/premium-faq";
 import { Logo } from "@/components/layout/logo";
 import { devSetAdmin } from "@/lib/admin/dev-actions";
@@ -209,14 +208,9 @@ export default async function UpgradePage() {
             waylShowsDollars={showUsdOnWaylPage()}
           />
         )}
-      </div>
 
-      {!freeNow && (
-        <>
-          <PlanComparison t={t} />
-          <PremiumFaq t={t} />
-        </>
-      )}
+        {!freeNow && <PremiumFaq t={t} />}
+      </div>
 
       {showDevTools && (
         <Card className="border-dashed">
