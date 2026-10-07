@@ -1,9 +1,10 @@
 /**
  * The Terms of Service and the Privacy Policy, in English and Arabic. They
- * describe what the product does today (one-time Premium purchases through
- * Wayl, no auto-renewal, no refunds for a change of mind), so change them
- * together with the behaviour they describe. A visitor in any other language
- * is shown the English text, as before.
+ * describe what the product does today (one-time Premium purchases paid
+ * through Wayl, which is responsible for the payment itself, no
+ * auto-renewal, no refunds), so change them together with the behaviour they
+ * describe. A visitor in any other language is shown the English text, as
+ * before.
  */
 
 import { isSupportLocale } from "@/lib/i18n/locales";
@@ -55,7 +56,7 @@ const TERMS_EN: LegalDocument = {
     {
       heading: "Your account",
       paragraphs: [
-        "You need an account to save your progress across devices and to buy Premium. Give us a real email address, keep your password private, and tell us if you think someone else has used your account. You are responsible for what happens under your account. An account is for one person, so please don't share it.",
+        "You need an account to save your progress across devices and to buy Premium. Give us a real email address, keep your password private, and tell us if you think someone else has used your account. You are responsible for what happens under your account. An account is for one person, so please don't share it. If you are under 18, please use SentenceStep with a parent or guardian's permission, and ask them to make any purchase.",
       ],
     },
     {
@@ -69,17 +70,23 @@ const TERMS_EN: LegalDocument = {
       bullets: [
         "Premium is a one-time purchase of access for a fixed number of days (30, 90 or 180, depending on the plan you choose). It does not renew automatically, and we never charge you again unless you choose to pay again.",
         "If you buy again while you still have Premium, the new days are added after the days you have left.",
-        "Prices are shown in US dollars. Payments are processed by our payment partner, Wayl, in Iraqi dinars, and the amount to be charged is shown on the payment page before you pay. Your bank or card issuer may apply its own exchange rate or fees, which we don't control.",
-        "Premium is activated automatically once the payment is confirmed, usually within moments. If it isn't, use “Problem with your payment?” on the upgrade page or write to us and we will fix it.",
+        "Prices are shown in US dollars. The amount to be charged, in Iraqi dinars, is shown on the payment page before you pay. Your bank or card issuer may apply its own exchange rate or fees, which we don't control.",
+        "Premium is activated automatically once the payment is confirmed, usually within moments. If you paid and it isn't active, use “Problem with your payment?” on the upgrade page or write to us, and we will check it and activate the days you paid for.",
         "Prices depend on your country and may change. A change never affects days you have already paid for.",
         "Bonus days from a promotion are extra days of access. They have no cash value.",
       ],
     },
     {
+      heading: "Payments are handled by Wayl",
+      paragraphs: [
+        "Payments are made on the payment page of our payment partner, Wayl, an independent company, and are subject to Wayl's own terms. Wayl, not SentenceStep, processes your payment, and your card or wallet details are entered on Wayl's page and never reach us.",
+        "Wayl and your bank or card issuer are responsible for the payment itself: the charge, the exchange rate and fees they apply, declined or failed payments, duplicate charges, disputes and chargebacks, and any reversal of a payment. If a charge looks wrong, contact Wayl and your bank; write to us and we will give you the details of your order to help.",
+      ],
+    },
+    {
       heading: "All sales are final",
       paragraphs: [
-        "Because Premium is digital access that starts immediately, all purchases are final. We do not give refunds for a change of mind, for unused days, or because you stopped using SentenceStep. This does not limit any rights you have under the law where you live.",
-        "If a payment problem was on our side, for example you were charged twice, or charged but Premium was not activated, we will correct it, and if we can't, we will return that payment.",
+        "Because Premium is digital access that starts immediately, all purchases are final and SentenceStep does not offer refunds, whether for a change of mind, for unused days, or because you stopped using SentenceStep. This does not limit any rights you have under the law where you live.",
       ],
     },
     {
@@ -103,7 +110,7 @@ const TERMS_EN: LegalDocument = {
     {
       heading: "Our responsibility",
       paragraphs: [
-        "SentenceStep is provided “as is”. We work hard to keep it accurate and available, but we can't promise it will be free of errors or that it will give you a particular result. To the extent the law allows, we are not liable for indirect or consequential losses, and our total liability for any claim is limited to the amount you paid us in the 12 months before it.",
+        "SentenceStep is provided “as is”. We work hard to keep it accurate and available, but we can't promise it will be free of errors or that it will give you a particular result. To the extent the law allows, we are not liable for indirect or consequential losses, or for services run by others, such as Wayl, your bank or card issuer, including their availability, delays, fees, exchange rates and mistakes. Our total liability for any claim is limited to the amount you paid for Premium in the 12 months before it.",
       ],
     },
     {
@@ -111,6 +118,10 @@ const TERMS_EN: LegalDocument = {
       paragraphs: [
         "You can delete your account at any time in Settings. Deleting it removes your profile and learning data and ends any remaining Premium days without a refund. We keep payment records for as long as accounting and legal obligations require.",
       ],
+    },
+    {
+      heading: "Governing law",
+      paragraphs: ["These terms are governed by the laws of Iraq."],
     },
     {
       heading: "Contact",
@@ -134,7 +145,7 @@ const TERMS_AR: LegalDocument = {
     {
       heading: "حسابك",
       paragraphs: [
-        "تحتاج إلى حساب لحفظ تقدّمك على أجهزتك ولشراء الخطة المميّزة. استخدم بريدًا إلكترونيًا حقيقيًا، وحافظ على سرّية كلمة المرور، وأخبرنا إن ظننت أن أحدًا استخدم حسابك. أنت مسؤول عمّا يحدث عبر حسابك. الحساب الواحد لشخص واحد، فنرجو عدم مشاركته.",
+        "تحتاج إلى حساب لحفظ تقدّمك على أجهزتك ولشراء الخطة المميّزة. استخدم بريدًا إلكترونيًا حقيقيًا، وحافظ على سرّية كلمة المرور، وأخبرنا إن ظننت أن أحدًا استخدم حسابك. أنت مسؤول عمّا يحدث عبر حسابك. الحساب الواحد لشخص واحد، فنرجو عدم مشاركته. وإذا كان عمرك أقل من 18 عامًا فاستخدم SentenceStep بإذن أحد والديك أو وليّ أمرك، واطلب منه إتمام أي عملية شراء.",
       ],
     },
     {
@@ -148,17 +159,23 @@ const TERMS_AR: LegalDocument = {
       bullets: [
         "الخطة المميّزة عملية شراء لمرة واحدة تمنحك وصولًا لعدد محدد من الأيام (30 أو 90 أو 180 حسب الباقة التي تختارها). لا تتجدد تلقائيًا، ولن نسحب منك مبلغًا مجددًا ما لم تختر أنت الدفع.",
         "إذا اشتريت وأنت ما زلت مشتركًا، تُضاف الأيام الجديدة بعد الأيام المتبقية لك.",
-        "الأسعار معروضة بالدولار الأمريكي. تتم معالجة الدفع عبر شريكنا Wayl بالدينار العراقي، ويظهر المبلغ المطلوب في صفحة الدفع قبل أن تدفع. قد يطبّق مصرفك أو جهة إصدار بطاقتك سعر صرف أو رسومًا خاصة بها، ولا نتحكم بها.",
-        "تُفعَّل الخطة المميّزة تلقائيًا بعد تأكيد الدفع، وغالبًا خلال لحظات. إن لم تُفعَّل فاستخدم «مشكلة في الدفع؟» في صفحة الترقية أو راسلنا وسنصلح الأمر.",
+        "الأسعار معروضة بالدولار الأمريكي. ويظهر المبلغ المطلوب بالدينار العراقي في صفحة الدفع قبل أن تدفع. قد يطبّق مصرفك أو جهة إصدار بطاقتك سعر صرف أو رسومًا خاصة بها، ولا نتحكم بها.",
+        "تُفعَّل الخطة المميّزة تلقائيًا بعد تأكيد الدفع، وغالبًا خلال لحظات. وإن دفعت ولم تُفعَّل فاستخدم «مشكلة في الدفع؟» في صفحة الترقية أو راسلنا، وسنراجع الأمر ونفعّل لك الأيام التي دفعت ثمنها.",
         "تختلف الأسعار حسب بلدك وقد تتغيّر، ولا يؤثر أي تغيير على الأيام التي دفعت ثمنها.",
         "الأيام الإضافية من العروض هي أيام وصول إضافية، وليس لها قيمة نقدية.",
       ],
     },
     {
+      heading: "الدفع يتم عبر Wayl",
+      paragraphs: [
+        "تتم المدفوعات في صفحة الدفع الخاصة بشريكنا Wayl، وهي شركة مستقلة وتسري عليها شروطها الخاصة. تعالج Wayl، لا SentenceStep، دفعتك، وأنت تُدخل بيانات بطاقتك أو محفظتك في صفحة Wayl ولا تصل إلينا.",
+        "تتحمّل Wayl ومصرفك أو جهة إصدار بطاقتك المسؤولية عن عملية الدفع نفسها: الخصم، وسعر الصرف والرسوم المطبّقة عليك، والدفعات المرفوضة أو الفاشلة، والخصم المكرر، والنزاعات وطلبات رد المبلغ عبر المصرف، وأي إلغاء لعملية دفع أو ردّ لها. وإذا بدا لك أن الخصم غير صحيح فتواصل مع Wayl ومصرفك، وراسلنا وسنزوّدك بتفاصيل طلبك لمساعدتك.",
+      ],
+    },
+    {
       heading: "المبيعات نهائية",
       paragraphs: [
-        "لأن الخطة المميّزة وصول رقمي يبدأ فورًا، فكل عمليات الشراء نهائية، ولا نقدّم استرجاعًا للمبلغ بسبب تغيير الرأي أو لأيام لم تُستخدم أو لأنك توقفت عن استخدام SentenceStep. لا يقيّد هذا أي حقوق تمنحك إياها القوانين في بلدك.",
-        "وإذا كانت مشكلة الدفع من جهتنا، كأن يُخصم المبلغ مرتين أو يُخصم دون تفعيل الخطة، فسنصحّحها، وإن تعذّر ذلك فسنعيد لك ذلك المبلغ.",
+        "لأن الخطة المميّزة وصول رقمي يبدأ فورًا، فكل عمليات الشراء نهائية ولا تقدّم SentenceStep استرجاعًا للمبلغ، سواء بسبب تغيير الرأي أو لأيام لم تُستخدم أو لأنك توقفت عن استخدام SentenceStep. لا يقيّد هذا أي حقوق تمنحك إياها القوانين في بلدك.",
       ],
     },
     {
@@ -182,7 +199,7 @@ const TERMS_AR: LegalDocument = {
     {
       heading: "مسؤوليتنا",
       paragraphs: [
-        "تُقدَّم SentenceStep «كما هي». نبذل جهدنا لتكون دقيقة ومتاحة، لكن لا نعد بخلوها من الأخطاء ولا بتحقيق نتيجة معيّنة. وبالقدر الذي يسمح به القانون، لا نتحمّل الخسائر غير المباشرة أو التبعية، ويقتصر إجمالي مسؤوليتنا في أي مطالبة على المبلغ الذي دفعته لنا خلال الأشهر الاثني عشر السابقة لها.",
+        "تُقدَّم SentenceStep «كما هي». نبذل جهدنا لتكون دقيقة ومتاحة، لكن لا نعد بخلوها من الأخطاء ولا بتحقيق نتيجة معيّنة. وبالقدر الذي يسمح به القانون، لا نتحمّل الخسائر غير المباشرة أو التبعية، ولا الخدمات التي تديرها جهات أخرى مثل Wayl أو مصرفك أو جهة إصدار بطاقتك، بما في ذلك توفّرها وتأخّرها ورسومها وأسعار صرفها وأخطاؤها. ويقتصر إجمالي مسؤوليتنا في أي مطالبة على المبلغ الذي دفعته مقابل الخطة المميّزة خلال الأشهر الاثني عشر السابقة لها.",
       ],
     },
     {
@@ -190,6 +207,10 @@ const TERMS_AR: LegalDocument = {
       paragraphs: [
         "يمكنك حذف حسابك في أي وقت من الإعدادات. الحذف يزيل ملفك وبيانات تعلّمك وينهي أي أيام مميّزة متبقية دون استرداد. نحتفظ بسجلات المدفوعات بالقدر الذي تتطلبه المحاسبة والالتزامات القانونية.",
       ],
+    },
+    {
+      heading: "القانون الحاكم",
+      paragraphs: ["تخضع هذه الشروط لقوانين العراق."],
     },
     {
       heading: "التواصل",
@@ -212,7 +233,7 @@ const PRIVACY_EN: LegalDocument = {
         "Country: the country you choose when you set up your account, and the country your connection appears to come from, which our hosting provider tells us when you open the upgrade page or start a payment. We use that only to pick the price that applies to you.",
         "Payments: when you buy Premium we keep a record of the order (plan, price, amount, status and dates) and the reference from our payment partner. Your card or wallet details are entered on our payment partner's page and never reach us.",
         "Messages: the reports and emails you send us, and our replies.",
-        "Technical: basic error and performance information, and settings kept in your browser, such as language and theme, and your progress if you don't have an account.",
+        "Technical and usage: basic error and performance information, simple events about what you do in the app (such as finishing a lesson or opening the upgrade page) which we store ourselves, and settings kept in your browser, such as language and theme, and your progress if you don't have an account.",
       ],
     },
     {
@@ -230,7 +251,7 @@ const PRIVACY_EN: LegalDocument = {
       bullets: [
         "Supabase: our database and sign-in.",
         "Netlify: hosting. It also tells us your approximate country from your connection.",
-        "Wayl: payments. Wayl's own privacy terms apply to what you give them on their page, such as your name, phone number and card or wallet details.",
+        "Wayl: payments. Wayl is an independent company: what you give them on their page, such as your name, phone number and card or wallet details, is handled under Wayl's own terms and privacy policy.",
         "Resend: sending emails.",
         "Where enabled: Sentry for error monitoring, and Cloudflare Turnstile to check that sign-ups come from a person.",
         "Google: only if you choose “Continue with Google”. If you rate the app, your rating and comment are saved in a spreadsheet we control.",
@@ -286,7 +307,7 @@ const PRIVACY_AR: LegalDocument = {
         "البلد: البلد الذي تختاره عند إعداد حسابك، والبلد الذي يبدو أن اتصالك صادر منه، ونحصل عليه من مزوّد الاستضافة عند فتح صفحة الترقية أو بدء الدفع. نستخدمه فقط لتحديد السعر المناسب لك.",
         "المدفوعات: عند شراء الخطة المميّزة نحتفظ بسجل الطلب (الباقة والسعر والمبلغ والحالة والتواريخ) وبالرقم المرجعي من شريك الدفع. أما بيانات بطاقتك أو محفظتك فتُدخلها في صفحة شريك الدفع ولا تصل إلينا.",
         "الرسائل: البلاغات ورسائل البريد التي ترسلها لنا وردودنا عليها.",
-        "تقنية: معلومات أساسية عن الأخطاء والأداء، وإعدادات تُحفظ في متصفحك مثل اللغة والمظهر، وتقدّمك إن لم يكن لديك حساب.",
+        "تقنية واستخدام: معلومات أساسية عن الأخطاء والأداء، وأحداث بسيطة عمّا تفعله داخل التطبيق (مثل إكمال درس أو فتح صفحة الترقية) نحفظها لدينا، وإعدادات تُحفظ في متصفحك مثل اللغة والمظهر، وتقدّمك إن لم يكن لديك حساب.",
       ],
     },
     {
@@ -304,7 +325,7 @@ const PRIVACY_AR: LegalDocument = {
       bullets: [
         "Supabase: قاعدة البيانات وتسجيل الدخول.",
         "Netlify: الاستضافة، وتخبرنا أيضًا ببلدك التقريبي من اتصالك.",
-        "Wayl: المدفوعات. تسري سياسة Wayl الخاصة على ما تقدّمه لهم في صفحتهم، كاسمك ورقم هاتفك وبيانات بطاقتك أو محفظتك.",
+        "Wayl: المدفوعات. Wayl شركة مستقلة، وما تقدّمه لها في صفحتها، كاسمك ورقم هاتفك وبيانات بطاقتك أو محفظتك، يخضع لشروطها وسياسة الخصوصية الخاصة بها.",
         "Resend: إرسال رسائل البريد الإلكتروني.",
         "حيثما كانت مفعّلة: Sentry لمراقبة الأخطاء، وCloudflare Turnstile للتحقق من أن التسجيل يتم من شخص حقيقي.",
         "Google: فقط إذا اخترت «المتابعة عبر Google». وإذا قيّمت التطبيق تُحفظ درجتك وملاحظتك في جدول بيانات نملكه.",

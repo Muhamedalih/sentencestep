@@ -104,9 +104,31 @@ test("the terms say what was decided: one-time, no auto-renewal, all sales final
   assert.match(arabic, /الدينار العراقي/);
 });
 
-test("the terms keep the promise to fix a payment problem that was ours", () => {
-  assert.match(fullText(TERMS.en), /charged twice/i);
-  assert.match(fullText(TERMS.ar), /مرتين/);
+test("the terms promise no refund, and leave the payment itself to Wayl", () => {
+  const english = fullText(TERMS.en);
+  assert.match(english, /does not offer refunds/i);
+  assert.equal(/we will return|return that payment|will refund|we refund/i.test(english), false);
+  assert.match(english, /Wayl, not SentenceStep, processes your payment/);
+  assert.match(english, /duplicate charges/i);
+  assert.match(english, /chargebacks/i);
+
+  const arabic = fullText(TERMS.ar);
+  assert.match(arabic, /SentenceStep استرجاع/);
+  assert.equal(/سنعيد|نعيد لك/.test(arabic), false);
+  assert.match(arabic, /تعالج Wayl/);
+  assert.match(arabic, /الخصم المكرر/);
+});
+
+test("the terms keep the one promise that stays ours: activating the days that were paid for", () => {
+  assert.match(fullText(TERMS.en), /activate the days you paid for/i);
+  assert.match(fullText(TERMS.ar), /الأيام التي دفعت ثمنها/);
+});
+
+test("the terms say which law applies and ask minors to use SentenceStep with a parent's permission", () => {
+  assert.match(fullText(TERMS.en), /governed by the laws of Iraq/);
+  assert.match(fullText(TERMS.ar), /لقوانين العراق/);
+  assert.match(fullText(TERMS.en), /under 18/);
+  assert.match(fullText(TERMS.ar), /أقل من 18/);
 });
 
 test("the privacy policy names the services that touch personal data, in both languages", () => {
@@ -116,6 +138,13 @@ test("the privacy policy names the services that touch personal data, in both la
       assert.ok(text.includes(service), service);
     }
   }
+});
+
+test("the privacy policy discloses the usage events the app stores, and that Wayl is independent", () => {
+  assert.match(fullText(PRIVACY.en), /simple events about what you do in the app/i);
+  assert.match(fullText(PRIVACY.en), /Wayl is an independent company/);
+  assert.match(fullText(PRIVACY.ar), /أحداث بسيطة/);
+  assert.match(fullText(PRIVACY.ar), /Wayl شركة مستقلة/);
 });
 
 test("the privacy policy promises what the product actually does: no selling, no ads, card details never reach us", () => {
