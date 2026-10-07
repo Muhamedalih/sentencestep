@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { PaymentProvider } from "@/lib/billing/payment-provider";
 import type { ResolvedPricingCountry } from "@/lib/billing/geo-pricing";
+import type { PlanId } from "@/lib/billing/plans";
 import { formatUsd, quotePrice, tierForCountry } from "@/lib/billing/pricing";
 import type { PricingTier } from "@/lib/billing/pricing";
 
@@ -21,6 +22,8 @@ export interface CheckoutStore {
     provider: string;
     providerEnv: "live" | "test";
     pricingTier: PricingTier;
+    /** The plan's length: an open link is only reused for the same plan, never another one's. */
+    premiumDays: number;
     expiringAfter: Date;
   }): Promise<PaymentOrder | null>;
   countRecentOrders(userId: string, since: Date): Promise<number>;
@@ -42,6 +45,8 @@ export interface CheckoutInput {
   country: ResolvedPricingCountry;
   /** The canonical site origin, never a request header. */
   origin: string;
+  /** Validated against the known plan ids by the caller; the price comes from the server's own table. */
+  plan: PlanId;
 }
 
 export type CheckoutResult =
@@ -65,16 +70,21 @@ export async function createCheckout(
   const origin = input.origin.replace(/\/+$/, "");
 
   const tier = tierForCountry(input.country.country);
-  const quote = quotePrice(tier, provider.settlementCurrency);
+  const quote = quotePrice(tier, provider.settlementCurrency, input.plan);
 
   const reusable = await store.findReusableOrder({
     userId: input.userId,
     provider: provider.name,
     providerEnv: provider.environment,
     pricingTier: tier,
+    premiumDays: quote.premiumDays,
     expiringAfter: new Date(now.getTime() + MIN_REUSABLE_LINK_LIFE_MS),
   });
-  if (reusable?.checkout_url && reusable.charge_amount === quote.amount) {
+  if (
+    reusable?.checkout_url &&
+    reusable.charge_amount === quote.amount &&
+    reusable.premium_days === quote.premiumDays
+  ) {
     return { ok: true, url: reusable.checkout_url, reused: true };
   }
 

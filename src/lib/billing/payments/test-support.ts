@@ -6,6 +6,7 @@ import type {
   ProviderPayment,
 } from "@/lib/billing/payment-provider";
 
+import type { CheckoutStore } from "./checkout";
 import type { FulfillOrderArgs, PaymentAlert } from "./fulfillment";
 import type { PaymentStore } from "./store";
 import type {
@@ -128,6 +129,7 @@ export class InMemoryPaymentStore implements PaymentStore {
   rpcOverride: FulfillPaymentResult | null = null;
   recentOrderCount = 0;
   reusable: PaymentOrder | null = null;
+  reusableQueries: Parameters<CheckoutStore["findReusableOrder"]>[0][] = [];
   inserted: PaymentOrderInsert[] = [];
   listQueries: {
     provider: string;
@@ -199,7 +201,8 @@ export class InMemoryPaymentStore implements PaymentStore {
     return { result: "fulfilled", premium_period_end: premiumEnd };
   }
 
-  async findReusableOrder() {
+  async findReusableOrder(query: Parameters<CheckoutStore["findReusableOrder"]>[0]) {
+    this.reusableQueries.push(query);
     return this.reusable;
   }
 

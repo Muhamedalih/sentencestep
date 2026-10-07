@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { track } from "@/lib/analytics/track";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { isPlanId } from "@/lib/billing/plans";
+import { tierForCountry } from "@/lib/billing/pricing";
 import { createCheckout } from "@/lib/billing/payments/checkout";
 import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
@@ -21,24 +23,39 @@ export interface CheckoutActionState {
  * Starts a real checkout once a payment provider is configured (see
  * provider-registry.ts — until then this returns the honest "not connected"
  * state). The price is decided entirely on the server: the country comes from
- * the hosting platform's geolocation, never from the form, and the callback URLs come
- * from the configured site origin, never from a request header. This never
+ * the hosting platform's geolocation, never from the form, and the form only
+ * ever names a plan, which must be one of the known plan ids (a price or a
+ * number of days sent by a client is never read). The callback URLs come from
+ * the configured site origin, never from a request header. This never
  * redirects to a fake success page or grants access on its own — only a
  * payment verified with the provider's own API ever does (see
  * src/lib/billing/payments/fulfillment.ts).
  */
 export async function startCheckout(
   _prevState: CheckoutActionState | null,
+  formData: FormData,
 ): Promise<CheckoutActionState> {
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
+
+  const plan = formData.get("plan");
+  if (!isPlanId(plan)) return { error: t.premium.checkoutTryAgain };
+
+  const country = resolvePricingCountry(await headers());
 
   const user = await getCurrentUser();
   if (user) {
     // Tracked here (server-side, on real submission) rather than from a
     // client onClick handler — a click that never reaches the server isn't
     // a reliable product signal.
-    await track({ name: "UPGRADE_CTA_CLICKED", category: "PREMIUM", properties: {} }, user.id);
+    await track(
+      {
+        name: "UPGRADE_CTA_CLICKED",
+        category: "PREMIUM",
+        properties: { plan, tier: tierForCountry(country.country) },
+      },
+      user.id,
+    );
   }
 
   let runtime: PaymentRuntime | null;
@@ -52,14 +69,13 @@ export async function startCheckout(
 
   if (!user) return { error: t.premium.checkoutSignIn };
 
-  const country = resolvePricingCountry(await headers());
-
   let result;
   try {
     result = await createCheckout(runtime, {
       userId: user.id,
       country,
       origin: getSiteUrl(),
+      plan,
     });
   } catch (error) {
     console.error("[payments] checkout failed", error);

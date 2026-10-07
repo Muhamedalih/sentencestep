@@ -14,6 +14,8 @@ export interface EmailLayoutInput {
   ctaUrl?: string;
   /** The app-side preferences page — see src/app/learn/settings/page.tsx and the Milestone 9 report for what a provider-side unsubscribe link would add later. Omit for staff notices (e.g. an admin's new-reply alert), which have no preference to manage. */
   unsubscribeUrl?: string;
+  /** Replaces the default footer sentence, for an account notice that has no preference to manage (e.g. that Premium is ending). Plain text; escaped here. */
+  footerNote?: string;
 }
 
 export function escapeHtml(value: string): string {
@@ -45,11 +47,14 @@ export function renderEmailLayout({
   ctaLabel,
   ctaUrl,
   unsubscribeUrl,
+  footerNote,
 }: EmailLayoutInput): string {
-  const footerHtml = unsubscribeUrl
-    ? `You're receiving this because of your SentenceStep account.
+  const footerHtml = footerNote
+    ? escapeHtml(footerNote)
+    : unsubscribeUrl
+      ? `You're receiving this because of your SentenceStep account.
             <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">Manage email preferences</a>.`
-    : "You're receiving this because you're a SentenceStep admin.";
+      : "You're receiving this because you're a SentenceStep admin.";
 
   const ctaRow =
     ctaLabel && ctaUrl

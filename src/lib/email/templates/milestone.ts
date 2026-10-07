@@ -3,10 +3,10 @@ import type { EmailContent } from "@/lib/email/templates/layout";
 import { modeMeta } from "@/lib/learning-modes";
 import type { NotificationEvent } from "@/lib/email/events";
 
-/** Inactivity reminders (either channel) use learningReminderEmail/the push cron instead — this template only covers genuine achievements. */
+/** Inactivity reminders (either channel) use learningReminderEmail/the push cron, and a Premium-ending notice uses premiumExpiryEmail — this template only covers genuine achievements. */
 export type MilestoneEvent = Exclude<
   NotificationEvent,
-  { type: "INACTIVE_LEARNER" | "INACTIVE_LEARNER_PUSH" }
+  { type: "INACTIVE_LEARNER" | "INACTIVE_LEARNER_PUSH" | "PREMIUM_EXPIRY_REMINDER" }
 >;
 
 export interface MilestoneEmailInput {

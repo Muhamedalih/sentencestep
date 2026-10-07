@@ -287,7 +287,6 @@ export const tr: Dictionary = {
     ],
     signInToUpgrade: "Yükseltmek için giriş yapın",
     redirecting: "Yönlendiriliyor…",
-    extendCta: "{days} gün daha ekle",
     oneTimeBadge: "Tek seferlik ödeme",
     perDayCaption: "Günde yaklaşık {amount}",
     checkoutStepsHeading: "Nasıl çalışır?",
@@ -305,6 +304,23 @@ export const tr: Dictionary = {
       "Ödeme bilgilerinizi ödeme ortağımız işler — biz onları asla görmeyiz ve saklamayız.",
     extendHeading: "Daha fazla gün ekleyin",
     extendStackNote: "Eklenen {days} gün, kalan günlerinizin üzerine eklenir.",
+    plan1m: "1 ay",
+    plan3m: "3 ay",
+    plan6m: "6 ay",
+    choosePlanHeading: "Planınızı seçin",
+    perMonthCaption: "{amount} / ay",
+    saveBadge: "%{percent} tasarruf",
+    recommendedBadge: "Önerilen",
+    bestValueBadge: "En avantajlı",
+    payCta: "{price} öde · {days} gün",
+    expiryBannerTitleDays: "Premium'unuz {days} gün içinde bitiyor",
+    expiryBannerTitleTwoDays: "Premium'unuz 2 gün içinde bitiyor",
+    expiryBannerTitleTomorrow: "Premium'unuz yarın bitiyor",
+    expiryBannerTitleToday: "Premium'unuz bugün bitiyor",
+    expiryBannerBody: "Şimdi gün ekleyin; kalan günlerinizin üzerine eklenir.",
+    expiryBannerStreakBody: "Serinizi sürdürmek için şimdi gün ekleyin: {streak} gün.",
+    expiryBannerCta: "Gün ekle",
+    expiryBannerDismiss: "Kapat",
     premiumUntil: "Premium: {date} tarihine kadar",
     lockedBenefits: [
       "Bu dersin kilidini açın",
@@ -315,7 +331,7 @@ export const tr: Dictionary = {
     lockedBody:
       "Bu ders SentenceStep Premium'un bir parçasıdır. Kütüphanenin geri kalanıyla birlikte kilidini açmak için planınızı yükseltin.",
     backToLessons: "Derslere dön",
-    priceAnchorCaption: "Bir kahveden daha ucuz",
+    fromPerMonthCaption: "Planlar {amount} / ay'dan başlıyor",
     upgradeCta: "Premium'a yükselt",
     contentUnavailableBody:
       "Bu ders şu anda kullanılamıyor. Hiçbir şey kaybolmadı: birazdan tekrar deneyin veya başka bir ders seçin.",
@@ -336,7 +352,13 @@ export const tr: Dictionary = {
       "Normal Dersler, Hikayeler ve Konuşmanın her seviyesi, artı eksiksiz Kelime Listeleri koleksiyonu. Seri, XP ve günlük hedefiniz Ücretsiz planda zaten aynı şekilde çalışır — Premium, oyunlaştırmayla değil, içeriğin kilidini açmakla ilgilidir.",
     faqRenewQ: "Tekrar otomatik olarak ücretlendirilecek miyim?",
     faqRenewA:
-      "Hayır. Premium, {days} günlük erişimin kilidini açan tek seferlik bir ödemedir. Hiçbir şey kendiliğinden yenilenmez — günleriniz bittiğinde Ücretsiz plana dönersiniz ve ilerlemeniz kayıtlı kalır.",
+      "Hayır. Premium, seçtiğiniz planın günlerinin kilidini açan tek seferlik bir ödemedir. Hiçbir şey kendiliğinden yenilenmez — günleriniz bittiğinde Ücretsiz plana dönersiniz ve ilerlemeniz kayıtlı kalır.",
+    faqCurrencyQ: "Hangi para biriminde tahsilat yapılır?",
+    faqCurrencyA:
+      "Bu sayfadaki fiyatlar ABD dolarıyla gösterilir. Ödeme, ödeme ortağımızın güvenli sayfasında yapılır; bu sayfa ödemeyi kendi yerel para biriminde işler, bu yüzden tutarı farklı bir para biriminde gösterebilir. Geçerli fiyat burada gösterilendir. Kartınız başka bir para birimindeyse bankanız tutarı dönüştürebilir ve kendi ücretini ekleyebilir.",
+    faqDeclinedQ: "Kartım reddedildi. Ne yapabilirim?",
+    faqDeclinedA:
+      "Bazı bankalar internet veya yurt dışı ödemelerini varsayılan olarak engeller ya da bir kodla veya banka uygulamanızdan onay ister (3-D Secure). Bankanızdan internet ödemelerini açın, istenen onayı tamamlayın veya başka bir kart deneyin. Reddedilen bir ödemeden ücret alınmaz ve hesabınızda hiçbir şey değişmez.",
     faqProgressQ: "Yükseltme yapmazsam ilerlememe ne olur?",
     faqProgressA:
       "Hiçbir şey kaybolmaz. Seriniz, XP'niz ve tamamladığınız her ders kaydedilmiş kalır ve her modda başlangıç seviyesi içeriğine ücretsiz erişiminizi korursunuz.",

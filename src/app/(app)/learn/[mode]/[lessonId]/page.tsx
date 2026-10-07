@@ -6,6 +6,7 @@ import { ContentUnavailable } from "@/components/learning/content-unavailable";
 import { LessonSession } from "@/components/learning/lesson-session";
 import { PremiumLocked } from "@/components/learning/premium-locked";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
+import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
@@ -101,6 +102,7 @@ export default async function LessonPage({
           title={unit.title}
           titleAr={unit.titleAr}
           supportTitle={unit.supportTitle}
+          fromPrice={await getFromMonthlyPrice()}
         />
         {reportProblemButton}
       </div>

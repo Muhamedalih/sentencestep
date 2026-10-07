@@ -32,7 +32,12 @@ const unknown = { country: null, source: "default" } as const;
 test("createCheckout: a Tier A country is priced $2 and charged 2640 IQD, with the full snapshot stored", async () => {
   const { store, provider, deps } = setup();
 
-  const result = await createCheckout(deps, { userId: "user-1", country: iraq, origin: ORIGIN });
+  const result = await createCheckout(deps, {
+    userId: "user-1",
+    country: iraq,
+    origin: ORIGIN,
+    plan: "1m",
+  });
 
   assert.deepEqual(result, { ok: true, url: "https://pay.example.com/link_new", reused: false });
   assert.equal(store.inserted.length, 1);
@@ -59,7 +64,7 @@ test("createCheckout: a Tier A country is priced $2 and charged 2640 IQD, with t
 test("createCheckout: an unknown country is priced $3 and charged 3960 IQD", async () => {
   const { store, provider, deps } = setup();
 
-  await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN });
+  await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN, plan: "1m" });
 
   assert.equal(store.inserted[0]!.pricing_tier, "B");
   assert.equal(store.inserted[0]!.price_usd_cents, 300);
@@ -71,7 +76,12 @@ test("createCheckout: an unknown country is priced $3 and charged 3960 IQD", asy
 test("createCheckout: the provider is asked for a link with our own callback URLs, a reference and a 1h expiry", async () => {
   const { provider, deps } = setup();
 
-  await createCheckout(deps, { userId: "user-1", country: unknown, origin: `${ORIGIN}/` });
+  await createCheckout(deps, {
+    userId: "user-1",
+    country: unknown,
+    origin: `${ORIGIN}/`,
+    plan: "1m",
+  });
 
   assert.deepEqual(provider.created[0]!, {
     referenceId: "ss_123e4567e89b12d3a456426614174000",
@@ -86,20 +96,73 @@ test("createCheckout: the provider is asked for a link with our own callback URL
 
 test("createCheckout: the product line names the dollar price of the buyer's tier", async () => {
   const tierA = setup();
-  await createCheckout(tierA.deps, { userId: "user-1", country: iraq, origin: ORIGIN });
+  await createCheckout(tierA.deps, { userId: "user-1", country: iraq, origin: ORIGIN, plan: "1m" });
   assert.equal(tierA.provider.created[0]!.amount, 2640);
   assert.equal(tierA.provider.created[0]!.description, "SentenceStep Premium (30 days) - $2");
 
   const tierB = setup();
-  await createCheckout(tierB.deps, { userId: "user-1", country: unknown, origin: ORIGIN });
+  await createCheckout(tierB.deps, {
+    userId: "user-1",
+    country: unknown,
+    origin: ORIGIN,
+    plan: "1m",
+  });
   assert.equal(tierB.provider.created[0]!.amount, 3960);
   assert.equal(tierB.provider.created[0]!.description, "SentenceStep Premium (30 days) - $3");
+});
+
+test("createCheckout: each plan is priced from the server's table and stores its own days", async () => {
+  const expected = [
+    { plan: "1m", cents: 200, days: 30, amount: 2640, label: "30 days) - $2" },
+    { plan: "3m", cents: 400, days: 90, amount: 5280, label: "90 days) - $4" },
+    { plan: "6m", cents: 700, days: 180, amount: 9240, label: "180 days) - $7" },
+  ] as const;
+
+  for (const { plan, cents, days, amount, label } of expected) {
+    const { store, provider, deps } = setup();
+    await createCheckout(deps, { userId: "user-1", country: iraq, origin: ORIGIN, plan });
+
+    const order = store.inserted[0]!;
+    assert.equal(order.price_usd_cents, cents, plan);
+    assert.equal(order.premium_days, days, plan);
+    assert.equal(order.charge_amount, amount, plan);
+    assert.equal(provider.created[0]!.amount, amount, plan);
+    assert.ok(provider.created[0]!.description.endsWith(label), plan);
+  }
+});
+
+test("createCheckout: Tier B plans cost $3, $6 and $10", async () => {
+  const cents: number[] = [];
+  for (const plan of ["1m", "3m", "6m"] as const) {
+    const { store, deps } = setup();
+    await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN, plan });
+    cents.push(store.inserted[0]!.price_usd_cents);
+  }
+  assert.deepEqual(cents, [300, 600, 1000]);
+});
+
+test("createCheckout: an open link for another plan is asked for by length and never reused for this one", async () => {
+  const { store, provider, deps } = setup();
+  // The store hands back a still-open one-month order (30 days, $2).
+  store.reusable = makeOrder({ pricing_tier: "A", charge_amount: 2640, premium_days: 30 });
+
+  const result = await createCheckout(deps, {
+    userId: "user-1",
+    country: iraq,
+    origin: ORIGIN,
+    plan: "3m",
+  });
+
+  assert.equal(store.reusableQueries[0]!.premiumDays, 90);
+  assert.equal(result.ok && result.reused, false);
+  assert.equal(provider.created.length, 1);
+  assert.equal(store.inserted[0]!.premium_days, 90);
 });
 
 test("createCheckout: the order is marked pending with the provider's link once it exists", async () => {
   const { store, deps } = setup();
 
-  await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN });
+  await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN, plan: "1m" });
 
   const order = store.get("ss_123e4567e89b12d3a456426614174000");
   assert.equal(order.status, "pending");
@@ -112,7 +175,7 @@ test("createCheckout: a provider whose currency has no fixed rate is refused bef
   const { store, deps } = setup({ settlementCurrency: "EUR" });
 
   await assert.rejects(
-    createCheckout(deps, { userId: "user-1", country: iraq, origin: ORIGIN }),
+    createCheckout(deps, { userId: "user-1", country: iraq, origin: ORIGIN, plan: "1m" }),
     /No fixed exchange rate/,
   );
   assert.equal(store.inserted.length, 0);
@@ -122,7 +185,12 @@ test("createCheckout: clicking Pay again while a link is open reuses it instead 
   const { store, provider, deps } = setup();
   store.reusable = makeOrder({ pricing_tier: "B", charge_amount: 3960 });
 
-  const result = await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN });
+  const result = await createCheckout(deps, {
+    userId: "user-1",
+    country: unknown,
+    origin: ORIGIN,
+    plan: "1m",
+  });
 
   assert.deepEqual(result, { ok: true, url: "https://pay.example.com/link_1", reused: true });
   assert.equal(store.inserted.length, 0);
@@ -133,7 +201,12 @@ test("createCheckout: an open link priced differently from today's price is not 
   const { store, provider, deps } = setup();
   store.reusable = makeOrder({ charge_amount: 5000 });
 
-  const result = await createCheckout(deps, { userId: "user-1", country: unknown, origin: ORIGIN });
+  const result = await createCheckout(deps, {
+    userId: "user-1",
+    country: unknown,
+    origin: ORIGIN,
+    plan: "1m",
+  });
 
   assert.equal(result.ok && result.reused, false);
   assert.equal(provider.created.length, 1);
@@ -146,6 +219,7 @@ test("createCheckout: too many recent attempts are rate limited, but reusing an 
     userId: "user-1",
     country: unknown,
     origin: ORIGIN,
+    plan: "1m",
   });
   assert.deepEqual(blocked, { ok: false, error: "rate_limited" });
   assert.equal(limited.store.inserted.length, 0);
@@ -158,6 +232,7 @@ test("createCheckout: too many recent attempts are rate limited, but reusing an 
     userId: "user-1",
     country: unknown,
     origin: ORIGIN,
+    plan: "1m",
   });
   assert.equal(reused.ok, true);
 });
@@ -170,7 +245,12 @@ test("createCheckout: when the provider cannot create the link the order is fail
     }),
   });
 
-  const result = await createCheckout(deps, { userId: "user-1", country: iraq, origin: ORIGIN });
+  const result = await createCheckout(deps, {
+    userId: "user-1",
+    country: iraq,
+    origin: ORIGIN,
+    plan: "1m",
+  });
 
   assert.deepEqual(result, { ok: false, error: "provider_unavailable" });
   const order = store.get("ss_123e4567e89b12d3a456426614174000");

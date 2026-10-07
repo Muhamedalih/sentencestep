@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PREMIUM_DAYS } from "@/lib/billing/pricing";
 import { signOut, updateDisplayNameAction } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { getLearnerLevel, learnerLevelSupportLabel } from "@/lib/progress/learner-level";
@@ -166,9 +165,7 @@ export function AccountSection({
                     variant="outline"
                     className={cn(buttonLift, "hover:shadow-md md:h-10 md:px-5 md:text-base")}
                   >
-                    <Link href="/upgrade">
-                      {t.premium.extendCta.replace("{days}", String(PREMIUM_DAYS))}
-                    </Link>
+                    <Link href="/upgrade">{t.premium.extendHeading}</Link>
                   </Button>
                 </>
               )

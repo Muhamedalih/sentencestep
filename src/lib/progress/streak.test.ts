@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { isGraceDay, todayLocalISODate, updateStreak } from "./streak";
+import { isGraceDay, liveStreakDays, todayLocalISODate, updateStreak } from "./streak";
 import { emptyStreak } from "./types";
 
 test("updateStreak: first-ever activity starts the streak at 1", () => {
@@ -93,4 +93,17 @@ test("updateStreak: a gap resetting to 1, then extending again, rebuilds correct
 test("todayLocalISODate: formats as YYYY-MM-DD", () => {
   const result = todayLocalISODate(new Date(2026, 7, 13, 23, 59));
   assert.equal(result, "2026-08-13");
+});
+
+test("liveStreakDays: the stored streak counts while the last activity is today, yesterday or the grace day", () => {
+  const streak = { currentStreak: 9, longestStreak: 12, lastActiveDate: "2026-08-10" };
+  assert.equal(liveStreakDays(streak, "2026-08-10"), 9);
+  assert.equal(liveStreakDays(streak, "2026-08-11"), 9);
+  assert.equal(liveStreakDays(streak, "2026-08-12"), 9);
+});
+
+test("liveStreakDays: a streak that has lapsed, or never started, counts as 0", () => {
+  const streak = { currentStreak: 9, longestStreak: 12, lastActiveDate: "2026-08-10" };
+  assert.equal(liveStreakDays(streak, "2026-08-13"), 0);
+  assert.equal(liveStreakDays(emptyStreak, "2026-08-13"), 0);
 });

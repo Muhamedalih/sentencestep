@@ -316,19 +316,17 @@ export interface Dictionary {
     thanksWithDate: string;
     thanks: string;
     backToLearning: string;
-    /** The line under the price: what it buys — `{days}` is replaced with PREMIUM_DAYS. */
+    /** The line under the price: what it buys — `{days}` is the number of days of the plan. */
     accessForDays: string;
     everythingInFree: string;
     benefits: string[];
     signInToUpgrade: string;
     redirecting: string;
-    /** Button for a current premium learner to pay for more days — `{days}` is replaced with PREMIUM_DAYS. */
-    extendCta: string;
     /** Short chip beside the price: it is a single purchase, not a subscription. */
     oneTimeBadge: string;
     /** Under the price — `{amount}` is the USD price per day, e.g. "$0.07". */
     perDayCaption: string;
-    /** Heading and three short steps (`{days}` is PREMIUM_DAYS in the last one) above the checkout button. */
+    /** Heading and three short steps (`{days}` is the plan's days in the last one) above the checkout button. */
     checkoutStepsHeading: string;
     checkoutSteps: string[];
     /** The three reassurance chips under the checkout button. */
@@ -341,8 +339,32 @@ export interface Dictionary {
     paymentDetailsCaption: string;
     /** Heading of the "add more days" block for a current Premium learner. */
     extendHeading: string;
-    /** `{days}` is PREMIUM_DAYS. */
+    /** `{days}` is the number of days of the chosen plan. */
     extendStackNote: string;
+    /** The three plan names (1 / 3 / 6 months), shown on the plan cards. */
+    plan1m: string;
+    plan3m: string;
+    plan6m: string;
+    choosePlanHeading: string;
+    /** `{amount}` is the plan's USD price per 30 days, e.g. "$1.33". */
+    perMonthCaption: string;
+    /** `{percent}` is a whole number, e.g. 33. */
+    saveBadge: string;
+    /** Ribbon on the pre-selected plan; "Best value" marks the longest one. */
+    recommendedBadge: string;
+    bestValueBadge: string;
+    /** The checkout button for the selected plan — `{price}` e.g. "$4", `{days}` e.g. 90. */
+    payCta: string;
+    /** In-app banner shown in the last week of a dated Premium period. `{days}` is 3-7; two days, tomorrow and today have their own wording so every language gets the grammar right. */
+    expiryBannerTitleDays: string;
+    expiryBannerTitleTwoDays: string;
+    expiryBannerTitleTomorrow: string;
+    expiryBannerTitleToday: string;
+    expiryBannerBody: string;
+    /** Shown instead of the body while the learner has a live streak of three or more days — `{streak}` is its length. */
+    expiryBannerStreakBody: string;
+    expiryBannerCta: string;
+    expiryBannerDismiss: string;
     /** Settings' plan row: "Premium until {date}". */
     premiumUntil: string;
     lockedBenefits: string[];
@@ -350,8 +372,8 @@ export interface Dictionary {
     lockedBody: string;
     backToLessons: string;
     upgradeCta: string;
-    /** Small price-anchor caption shown under the upgrade CTA on the locked-lesson card (e.g. "Less than a cup of coffee") — reduces price sensitivity by framing the cost against a cheap everyday reference. */
-    priceAnchorCaption: string;
+    /** Small caption under the upgrade CTA on locked content — `{amount}` is the cheapest per-month USD price for the visitor's tier, e.g. "$1.17". It names no currency but USD and no provider. */
+    fromPerMonthCaption: string;
     contentUnavailableBody: string;
     /** Home hero's dead-end state once a free learner has completed every free lesson (see HomeHero) — distinct from lockedBody, which is per-lesson. */
     homeFreeCompleteHeading: string;
@@ -370,9 +392,13 @@ export interface Dictionary {
     faqHeading: string;
     faqIncludedQ: string;
     faqIncludedA: string;
-    /** `{days}` is replaced with PREMIUM_DAYS. */
+    /** `{days}` is the number of days of the plan. */
     faqRenewQ: string;
     faqRenewA: string;
+    faqCurrencyQ: string;
+    faqCurrencyA: string;
+    faqDeclinedQ: string;
+    faqDeclinedA: string;
     faqProgressQ: string;
     faqProgressA: string;
     faqTrialQ: string;

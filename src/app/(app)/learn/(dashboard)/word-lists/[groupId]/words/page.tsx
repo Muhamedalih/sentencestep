@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
 import { WordGroupWall } from "@/components/words/word-group-wall";
+import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -53,7 +54,11 @@ export default async function WordGroupWallPage({
   if (!canAccess) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-        <WordGroupLocked title={group.title} supportTitle={group.supportTitle} />
+        <WordGroupLocked
+          title={group.title}
+          supportTitle={group.supportTitle}
+          fromPrice={await getFromMonthlyPrice()}
+        />
       </div>
     );
   }

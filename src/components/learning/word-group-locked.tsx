@@ -19,10 +19,13 @@ import { popIn } from "@/lib/motion";
 export function WordGroupLocked({
   title,
   supportTitle,
+  fromPrice,
 }: {
   title: string;
   /** Never falls back to the Arabic column for Spanish — see types/content.ts's Sentence.supportText doc comment for the same rule applied everywhere else. */
   supportTitle?: string;
+  /** The cheapest per-month USD price for this visitor's tier, e.g. "$1.17" — see getFromMonthlyPrice. */
+  fromPrice: string;
 }) {
   const { dir, t } = useLocale();
 
@@ -63,7 +66,9 @@ export function WordGroupLocked({
             {t.premium.upgradeCta}
           </Link>
         </Button>
-        <p className="text-muted-foreground text-xs">{t.premium.priceAnchorCaption}</p>
+        <p className="text-muted-foreground text-xs" dir="auto">
+          {t.premium.fromPerMonthCaption.replace("{amount}", fromPrice)}
+        </p>
 
         <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <Sparkles className="text-primary size-3.5 shrink-0" aria-hidden="true" />

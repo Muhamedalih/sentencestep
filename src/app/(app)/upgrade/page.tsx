@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckoutButton } from "@/components/billing/checkout-button";
 import { CheckoutCard } from "@/components/billing/checkout-card";
 import { PlanComparison } from "@/components/billing/plan-comparison";
 import { PremiumFaq } from "@/components/billing/premium-faq";
@@ -15,13 +14,8 @@ import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
-import {
-  PREMIUM_DAYS,
-  TIER_PRICE_USD_CENTS,
-  formatUsd,
-  formatUsdPerDay,
-  tierForCountry,
-} from "@/lib/billing/pricing";
+import { buildPlanViews } from "@/lib/billing/plan-views";
+import { tierForCountry } from "@/lib/billing/pricing";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -57,9 +51,7 @@ export default async function UpgradePage() {
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
-  const priceCents = TIER_PRICE_USD_CENTS[tierForCountry(country)];
-  const price = formatUsd(priceCents);
-  const pricePerDay = formatUsdPerDay(priceCents, PREMIUM_DAYS);
+  const plans = buildPlanViews(tierForCountry(country));
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
 
@@ -110,34 +102,10 @@ export default async function UpgradePage() {
 
             {/* Only a real, dated purchase can be extended — the sitewide
                 free-for-all promotion and the dev override have no end date. */}
-            {access.expiresAt && (
-              <CheckoutCard
-                t={t}
-                price={price}
-                pricePerDay={pricePerDay}
-                days={PREMIUM_DAYS}
-                extend
-                action={<CheckoutButton extend />}
-              />
-            )}
+            {access.expiresAt && <CheckoutCard plans={plans} signedIn extend />}
           </>
         ) : (
-          <CheckoutCard
-            t={t}
-            price={price}
-            pricePerDay={pricePerDay}
-            days={PREMIUM_DAYS}
-            showPaymentNotes={Boolean(user)}
-            action={
-              user ? (
-                <CheckoutButton />
-              ) : (
-                <Button asChild size="lg" className="w-full">
-                  <Link href="/login?next=/upgrade">{t.premium.signInToUpgrade}</Link>
-                </Button>
-              )
-            }
-          />
+          <CheckoutCard plans={plans} signedIn={Boolean(user)} />
         )}
       </div>
 

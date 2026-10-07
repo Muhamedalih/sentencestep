@@ -64,3 +64,15 @@ test("renderEmailLayout: omits the preferences link when no unsubscribeUrl is gi
   assert.ok(!html.includes("Manage email preferences"));
   assert.ok(html.includes("you're a SentenceStep admin"));
 });
+
+test("renderEmailLayout: a footerNote replaces the default footer and is escaped", () => {
+  const html = renderEmailLayout({
+    previewText: "preview",
+    heading: "heading",
+    bodyHtml: "<p>body</p>",
+    footerNote: `You have Premium <b>access</b> & more`,
+  });
+  assert.ok(html.includes("You have Premium &lt;b&gt;access&lt;/b&gt; &amp; more"));
+  assert.ok(!html.includes("you're a SentenceStep admin"));
+  assert.ok(!html.includes("Manage email preferences"));
+});

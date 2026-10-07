@@ -18,7 +18,8 @@ export type NotificationEventType =
   | "LEVEL_COMPLETED"
   | "STREAK_MILESTONE"
   | "INACTIVE_LEARNER"
-  | "INACTIVE_LEARNER_PUSH";
+  | "INACTIVE_LEARNER_PUSH"
+  | "PREMIUM_EXPIRY_REMINDER";
 
 export type NotificationEvent =
   | { type: "LESSON_COMPLETED"; totalCompleted: number }
@@ -31,7 +32,11 @@ export type NotificationEvent =
   // dedupe_key never collides with the email reminder's — a learner who
   // gets the email must still be able to get the push, and vice versa,
   // since email_preferences and push_subscriptions are independent opt-ins.
-  | { type: "INACTIVE_LEARNER_PUSH"; daysInactive: number };
+  | { type: "INACTIVE_LEARNER_PUSH"; daysInactive: number }
+  // One reminder per stage (7 or 3 days before the end) per Premium period:
+  // `periodEnd` is the ISO timestamp the access ends, so buying more days (which
+  // moves the end) starts a fresh pair of reminders for the new end date.
+  | { type: "PREMIUM_EXPIRY_REMINDER"; stage: 7 | 3; periodEnd: string };
 
 /**
  * Whether this event clears the bar for "meaningful" — the single place
@@ -53,6 +58,10 @@ export function shouldNotify(event: NotificationEvent): boolean {
     case "INACTIVE_LEARNER":
     case "INACTIVE_LEARNER_PUSH":
       return event.daysInactive >= INACTIVITY_THRESHOLD_DAYS;
+    // Eligibility (an active, dated Premium period inside the window) is decided
+    // where the reminders are planned — see src/lib/billing/expiry-reminders.ts.
+    case "PREMIUM_EXPIRY_REMINDER":
+      return true;
     default:
       return false;
   }
@@ -86,5 +95,7 @@ export function dedupeKeyFor(event: NotificationEvent, now: Date = new Date()): 
       return `INACTIVE_LEARNER:${weekBucket(now)}`;
     case "INACTIVE_LEARNER_PUSH":
       return `INACTIVE_LEARNER_PUSH:${weekBucket(now)}`;
+    case "PREMIUM_EXPIRY_REMINDER":
+      return `PREMIUM_EXPIRY_REMINDER:${event.stage}:${event.periodEnd.slice(0, 10)}`;
   }
 }

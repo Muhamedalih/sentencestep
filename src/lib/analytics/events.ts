@@ -1,3 +1,4 @@
+import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { LearningMode } from "@/types/content";
 
 // --- The analytics event catalog. ---
@@ -50,7 +51,12 @@ export type AnalyticsEvent =
       properties: { lessonId: string; mode: LearningMode };
     }
   | { name: "UPGRADE_VIEWED"; category: "PREMIUM"; properties: Record<string, never> }
-  | { name: "UPGRADE_CTA_CLICKED"; category: "PREMIUM"; properties: Record<string, never> }
+  | {
+      name: "UPGRADE_CTA_CLICKED";
+      category: "PREMIUM";
+      /** Which plan was chosen and at which price tier, so plan mix can be compared once real purchases exist. Both come from the server (the tier from geolocation, the plan validated against the known ids), never raw client input. */
+      properties: { plan: PlanId; tier: PricingTier };
+    }
   | {
       name: "AUDIO_PLAYED";
       category: "ENGAGEMENT";
