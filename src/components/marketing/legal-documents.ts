@@ -62,7 +62,7 @@ const TERMS_EN: LegalDocument = {
     {
       heading: "Free and Premium",
       paragraphs: [
-        "The free plan includes the lessons and word lists marked as free (at the moment, beginner-level content in every mode and a starter word list). Premium unlocks the full library. What is free and what is Premium can change over time, and we may run free promotions, but a promotion is never a promise that something will stay free.",
+        "The free plan includes the lessons and word lists marked as free (at the moment, a selection of lessons and stories, and a starter word list). Premium unlocks the full library. What is free and what is Premium can change over time, and we may run free promotions, but a promotion is never a promise that something will stay free.",
       ],
     },
     {
@@ -151,7 +151,7 @@ const TERMS_AR: LegalDocument = {
     {
       heading: "الخطة المجانية والخطة المميّزة",
       paragraphs: [
-        "تتضمن الخطة المجانية الدروس وقوائم الكلمات المعلَّمة كمجانية (حاليًا: محتوى المستوى المبتدئ في كل الأنماط وقائمة كلمات تمهيدية). وتفتح الخطة المميّزة المكتبة كاملة. قد يتغيّر ما هو مجاني وما هو مميّز مع الوقت، وقد نقدّم عروضًا مجانية مؤقتة، لكن العرض المؤقت ليس وعدًا بأن يبقى شيء مجانيًا.",
+        "تتضمن الخطة المجانية الدروس وقوائم الكلمات المعلَّمة كمجانية (حاليًا: مختارات من الدروس والقصص، وقائمة كلمات تمهيدية). وتفتح الخطة المميّزة المكتبة كاملة. قد يتغيّر ما هو مجاني وما هو مميّز مع الوقت، وقد نقدّم عروضًا مجانية مؤقتة، لكن العرض المؤقت ليس وعدًا بأن يبقى شيء مجانيًا.",
       ],
     },
     {
