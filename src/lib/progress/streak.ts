@@ -29,6 +29,26 @@ export function isGraceDay(lastActiveDate: string | null, todayISO: string): boo
 }
 
 /**
+ * The streak a learner can still count on today: the stored count while their
+ * last activity was today, yesterday or the one forgiven grace day before; 0
+ * once it has lapsed. The stored `currentStreak` is only rewritten by the next
+ * lesson, so reading it alone would overstate a streak that has already ended.
+ * Deliberately conservative: it never counts days a streak freeze might still
+ * cover, so a message that quotes it can only ever understate.
+ */
+export function liveStreakDays(
+  streak: StreakState,
+  todayISO: string = todayLocalISODate(),
+): number {
+  const last = streak.lastActiveDate;
+  if (last === null) return 0;
+  if (last === todayISO || isYesterday(last, todayISO) || isGraceDay(last, todayISO)) {
+    return streak.currentStreak;
+  }
+  return 0;
+}
+
+/**
  * Advances the streak for activity happening "today" (local time). A no-op
  * if activity was already recorded today; resets to 1 if there's a gap —
  * unless that gap is exactly one missed day, which is quietly forgiven (see

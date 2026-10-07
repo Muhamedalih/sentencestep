@@ -83,6 +83,7 @@ export function createPaymentStore(
         .eq("provider", query.provider)
         .eq("provider_env", query.providerEnv)
         .eq("pricing_tier", query.pricingTier)
+        .eq("premium_days", query.premiumDays)
         .in("status", ["created", "pending"])
         .not("checkout_url", "is", null)
         .gt("link_expires_at", query.expiringAfter.toISOString())

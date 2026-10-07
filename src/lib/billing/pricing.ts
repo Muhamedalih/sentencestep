@@ -1,17 +1,14 @@
 /**
- * The one place the premium price lives. Prices are defined and shown in USD
- * only; the provider's settlement currency (Wayl accepts IQD only) is derived
- * from them with a fixed rate immediately before a payment is created.
+ * Where USD prices become a provider's currency. The prices themselves live in
+ * plans.ts, defined and shown in USD only; the provider's settlement currency
+ * (Wayl accepts IQD only) is derived from them with a fixed rate immediately
+ * before a payment is created.
  */
 
-export type PricingTier = "A" | "B";
+import { getPlan } from "./plans";
+import type { PlanId, PricingTier } from "./plans";
 
-export const PREMIUM_DAYS = 30;
-
-export const TIER_PRICE_USD_CENTS: Readonly<Record<PricingTier, number>> = {
-  A: 200,
-  B: 300,
-};
+export type { PricingTier } from "./plans";
 
 /**
  * Fixed on purpose: never fetched from an exchange-rate API. Changing a rate
@@ -41,6 +38,7 @@ export function tierForCountry(country: string | null): PricingTier {
 
 export interface PriceQuote {
   tier: PricingTier;
+  planId: PlanId;
   usdCents: number;
   currency: string;
   fxRatePerUsd: number;
@@ -49,13 +47,14 @@ export interface PriceQuote {
   premiumDays: number;
 }
 
-export function quotePrice(tier: PricingTier, currency: string): PriceQuote {
+export function quotePrice(tier: PricingTier, currency: string, planId: PlanId): PriceQuote {
   const fxRatePerUsd = FIXED_FX_RATES_PER_USD.get(currency);
   if (fxRatePerUsd === undefined) {
     throw new Error(`No fixed exchange rate is configured for ${currency}.`);
   }
 
-  const usdCents = TIER_PRICE_USD_CENTS[tier];
+  const plan = getPlan(planId);
+  const usdCents = plan.priceUsdCents[tier];
   const amount = (usdCents * fxRatePerUsd) / 100;
   if (!Number.isInteger(amount)) {
     throw new Error(
@@ -63,13 +62,18 @@ export function quotePrice(tier: PricingTier, currency: string): PriceQuote {
     );
   }
 
-  return { tier, usdCents, currency, fxRatePerUsd, amount, premiumDays: PREMIUM_DAYS };
+  return { tier, planId, usdCents, currency, fxRatePerUsd, amount, premiumDays: plan.days };
 }
 
 /** "$2" for whole dollars, "$2.50" otherwise. */
 export function formatUsd(usdCents: number): string {
   const dollars = usdCents / 100;
   return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+}
+
+/** Always two decimals: "$1.33". Used where prices of different plans are lined up for comparison. */
+export function formatUsdExact(usdCents: number): string {
+  return `$${(usdCents / 100).toFixed(2)}`;
 }
 
 /** The price spread over `days`, to the nearest cent: "$0.07" for $2 over 30 days. */

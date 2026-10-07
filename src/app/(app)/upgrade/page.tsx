@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckoutButton } from "@/components/billing/checkout-button";
 import { CheckoutCard } from "@/components/billing/checkout-card";
 import { PlanComparison } from "@/components/billing/plan-comparison";
 import { PremiumFaq } from "@/components/billing/premium-faq";
@@ -15,13 +15,8 @@ import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
-import {
-  PREMIUM_DAYS,
-  TIER_PRICE_USD_CENTS,
-  formatUsd,
-  formatUsdPerDay,
-  tierForCountry,
-} from "@/lib/billing/pricing";
+import { buildPlanViews } from "@/lib/billing/plan-views";
+import { tierForCountry } from "@/lib/billing/pricing";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -57,11 +52,16 @@ export default async function UpgradePage() {
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
-  const priceCents = TIER_PRICE_USD_CENTS[tierForCountry(country)];
-  const price = formatUsd(priceCents);
-  const pricePerDay = formatUsdPerDay(priceCents, PREMIUM_DAYS);
+  const plans = buildPlanViews(tierForCountry(country));
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
+
+  // While the sitewide free-access promotion is on, a signed-out visitor is
+  // covered by it like everyone else: they are told everything is open and how
+  // to keep their progress, and are never shown a plan or a price. Only a
+  // signed-in account excluded from the promotion (to try the paid flow) sees
+  // the plans.
+  const freeNow = !user && access.isPremium;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
@@ -75,10 +75,18 @@ export default async function UpgradePage() {
 
       <div className="mx-auto w-full max-w-lg text-center">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          {user && access.isPremium ? t.premium.premiumHeading : t.premium.upgradeHeading}
+          {freeNow
+            ? t.premium.freeNowHeading
+            : user && access.isPremium
+              ? t.premium.premiumHeading
+              : t.premium.upgradeHeading}
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
-          {user && access.isPremium ? t.premium.premiumSubtitle : t.premium.upgradeSubtitle}
+          {freeNow
+            ? t.premium.freeNowSubtitle
+            : user && access.isPremium
+              ? t.premium.premiumSubtitle
+              : t.premium.upgradeSubtitle}
         </p>
       </div>
 
@@ -86,7 +94,34 @@ export default async function UpgradePage() {
         {/* `user &&`: free_for_all (/admin/free-access) makes isPremium true
             even for a signed-out visitor, who should still see the regular
             sign-in/pricing card below, never the real-subscriber one. */}
-        {user && access.isPremium ? (
+        {freeNow ? (
+          <Card>
+            <CardHeader>
+              <Badge variant="success" className="w-fit">
+                {t.premium.freeNowBadge}
+              </Badge>
+              <CardDescription>{t.premium.freeNowBody}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <ul className="flex flex-col gap-2.5">
+                {t.premium.benefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2.5 text-sm">
+                    <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button asChild size="lg" className="sm:flex-1">
+                  <Link href="/register">{t.nav.createAccount}</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="sm:flex-1">
+                  <Link href="/login?next=/upgrade">{t.common.signIn}</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : user && access.isPremium ? (
           <>
             <Card>
               <CardHeader>
@@ -110,39 +145,19 @@ export default async function UpgradePage() {
 
             {/* Only a real, dated purchase can be extended — the sitewide
                 free-for-all promotion and the dev override have no end date. */}
-            {access.expiresAt && (
-              <CheckoutCard
-                t={t}
-                price={price}
-                pricePerDay={pricePerDay}
-                days={PREMIUM_DAYS}
-                extend
-                action={<CheckoutButton extend />}
-              />
-            )}
+            {access.expiresAt && <CheckoutCard plans={plans} signedIn extend />}
           </>
         ) : (
-          <CheckoutCard
-            t={t}
-            price={price}
-            pricePerDay={pricePerDay}
-            days={PREMIUM_DAYS}
-            showPaymentNotes={Boolean(user)}
-            action={
-              user ? (
-                <CheckoutButton />
-              ) : (
-                <Button asChild size="lg" className="w-full">
-                  <Link href="/login?next=/upgrade">{t.premium.signInToUpgrade}</Link>
-                </Button>
-              )
-            }
-          />
+          <CheckoutCard plans={plans} signedIn={Boolean(user)} />
         )}
       </div>
 
-      <PlanComparison t={t} />
-      <PremiumFaq t={t} />
+      {!freeNow && (
+        <>
+          <PlanComparison t={t} />
+          <PremiumFaq t={t} />
+        </>
+      )}
 
       {showDevTools && (
         <Card className="border-dashed">

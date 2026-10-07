@@ -17,12 +17,15 @@ export function PremiumLocked({
   title,
   titleAr,
   supportTitle,
+  fromPrice,
 }: {
   mode: LearningMode;
   title: string;
   titleAr: string;
   /** Resolved for the active locale server-side — see LessonUnit.supportTitle's doc comment. Falls back to titleAr only for Arabic (never for Spanish). */
   supportTitle?: string;
+  /** The cheapest per-month USD price for this visitor's tier, e.g. "$1.17" — see getFromMonthlyPrice. */
+  fromPrice: string;
 }) {
   const { t, dir, locale } = useLocale();
   const resolvedSupportTitle = supportTitle ?? (locale === "ar" ? titleAr : undefined);
@@ -64,7 +67,9 @@ export function PremiumLocked({
             {t.premium.upgradeCta}
           </Link>
         </Button>
-        <p className="text-muted-foreground text-xs">{t.premium.priceAnchorCaption}</p>
+        <p className="text-muted-foreground text-xs" dir="auto">
+          {t.premium.fromPerMonthCaption.replace("{amount}", fromPrice)}
+        </p>
 
         <ul className="flex w-full flex-col gap-2" dir="ltr">
           {t.premium.lockedBenefits.map((text, index) => {

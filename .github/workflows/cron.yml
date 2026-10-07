@@ -24,6 +24,7 @@ on:
     # switch) gets worked through in small, bounded steps.
     - cron: "*/15 * * * *" # voice-sweep
     - cron: "*/10 * * * *" # payments-reconcile
+    - cron: "15 7 * * *" # premium-expiry-reminders
   workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
 
 jobs:
@@ -84,3 +85,16 @@ jobs:
           curl --fail-with-body -sS -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://sentencestep.com/api/cron/payments-reconcile
+
+  # Tells learners whose paid Premium is ending (about a week and three days
+  # out) and links to adding days (src/app/api/cron/premium-expiry-reminders).
+  # Skips quietly until an email provider is configured.
+  premium-expiry-reminders:
+    if: github.event.schedule == '15 7 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/premium-expiry-reminders
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/premium-expiry-reminders

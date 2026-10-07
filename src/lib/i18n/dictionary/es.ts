@@ -295,7 +295,6 @@ export const es: Dictionary = {
     ],
     signInToUpgrade: "Inicia sesión para mejorar tu plan",
     redirecting: "Redirigiendo…",
-    extendCta: "Añadir {days} días más",
     oneTimeBadge: "Pago único",
     perDayCaption: "Unos {amount} al día",
     checkoutStepsHeading: "Cómo funciona",
@@ -313,6 +312,29 @@ export const es: Dictionary = {
       "Tus datos de pago los gestiona nuestro socio de pagos: nosotros nunca los vemos ni los guardamos.",
     extendHeading: "Añade más días",
     extendStackNote: "Los {days} días extra se suman a los que te quedan.",
+    plan1m: "1 mes",
+    plan3m: "3 meses",
+    plan6m: "6 meses",
+    choosePlanHeading: "Elige tu plan",
+    perMonthCaption: "{amount} / mes",
+    saveBadge: "Ahorra {percent}%",
+    recommendedBadge: "Recomendado",
+    bestValueBadge: "Mejor precio",
+    payCta: "Pagar {price} · {days} días",
+    expiryBannerTitleDays: "Tu Premium termina en {days} días",
+    expiryBannerTitleTwoDays: "Tu Premium termina en 2 días",
+    expiryBannerTitleTomorrow: "Tu Premium termina mañana",
+    expiryBannerTitleToday: "Tu Premium termina hoy",
+    expiryBannerBody: "Añade días ahora: se suman a los que te queden.",
+    expiryBannerStreakBody: "Añade días ahora para mantener tu racha de {streak} días.",
+    expiryBannerCta: "Añadir días",
+    expiryBannerDismiss: "Cerrar",
+    freeNowHeading: "Todo es gratis por ahora",
+    freeNowSubtitle:
+      "Todas las lecciones, historias y conversaciones están abiertas por ahora: crea una cuenta gratuita para guardar tu progreso.",
+    freeNowBadge: "Gratis por ahora",
+    freeNowBody:
+      "Crea una cuenta gratuita para guardar tu racha y tu progreso en todos tus dispositivos.",
     premiumUntil: "Premium hasta el {date}",
     lockedBenefits: [
       "Desbloquea esta lección",
@@ -324,7 +346,7 @@ export const es: Dictionary = {
       "Esta lección es parte de SentenceStep Premium. Mejora tu plan para desbloquearla, junto con el resto de la biblioteca.",
     backToLessons: "Volver a las lecciones",
     upgradeCta: "Mejorar a Premium",
-    priceAnchorCaption: "Menos que un café",
+    fromPerMonthCaption: "Planes desde {amount} / mes",
     contentUnavailableBody:
       "Esta lección no está disponible en este momento. No se perdió nada: inténtalo de nuevo en un momento o elige otra lección.",
     homeFreeCompleteHeading: "Has completado todas las lecciones gratuitas",
@@ -344,7 +366,13 @@ export const es: Dictionary = {
       "Todos los niveles de Lecciones Normales, Historias y Conversación, además de la colección completa de Listas de Palabras. Tu racha, XP y meta diaria ya funcionan igual en el plan gratuito — Premium se trata de desbloquear contenido, no de la gamificación.",
     faqRenewQ: "¿Se me cobrará de nuevo automáticamente?",
     faqRenewA:
-      "No. Premium es un pago único que desbloquea {days} días de acceso. Nada se renueva solo: cuando se acaban los días vuelves al plan gratuito y tu progreso sigue guardado.",
+      "No. Premium es un pago único que desbloquea los días del plan que elijas. Nada se renueva solo: cuando se acaban los días vuelves al plan gratuito y tu progreso sigue guardado.",
+    faqCurrencyQ: "¿En qué moneda se cobra?",
+    faqCurrencyA:
+      "Los precios de esta página están en dólares estadounidenses. El pago se hace en la página segura de nuestro socio de pagos, que lo procesa en su moneda local, así que esa página puede mostrar el importe en otra moneda. El precio que vale es el que ves aquí. Si tu tarjeta está en otra moneda, tu banco puede convertir el importe y añadir su propia comisión.",
+    faqDeclinedQ: "Mi tarjeta fue rechazada. ¿Qué puedo hacer?",
+    faqDeclinedA:
+      "Algunos bancos bloquean por defecto los pagos por internet o internacionales, o te piden confirmar con un código o en la app del banco (3-D Secure). Activa los pagos por internet en tu banco, completa la confirmación cuando te la pida o prueba con otra tarjeta. Un pago rechazado nunca se cobra y tu cuenta no cambia.",
     faqProgressQ: "¿Qué pasa con mi progreso si no mejoro mi plan?",
     faqProgressA:
       "Nada se pierde jamás. Tu racha, tu XP y cada lección que completaste se guardan, y conservas el acceso gratuito al contenido de nivel principiante en cada modo.",

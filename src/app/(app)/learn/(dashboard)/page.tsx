@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
+import { PremiumExpiryBanner } from "@/components/app/premium-expiry-banner";
 import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
-import { hasPremiumAccess } from "@/lib/billing/access";
+import { getAccessState } from "@/lib/billing/access";
+import { REMINDER_WINDOW_DAYS } from "@/lib/billing/expiry-reminders";
 import { getHomeLessons } from "@/lib/content";
 import { startHomeEngagement } from "@/lib/features/home-engagement";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
@@ -137,7 +139,7 @@ export default async function LearnHomePage() {
   });
   const [
     { units, storiesUnits, lessonStats },
-    hasPremium,
+    access,
     isAdminUser,
     user,
     attemptCount,
@@ -148,7 +150,7 @@ export default async function LearnHomePage() {
     initialProgress,
   ] = await Promise.all([
     getHomeLessons(locale ?? undefined),
-    hasPremiumAccess(),
+    getAccessState(),
     isAdmin(),
     userPromise,
     attemptCountPromise,
@@ -192,7 +194,16 @@ export default async function LearnHomePage() {
         : undefined;
   }
 
-  const isPremiumUser = hasPremium || isAdminUser;
+  const isPremiumUser = access.isPremium || isAdminUser;
+  // Only a real, dated paid period can end — the sitewide free-access promotion
+  // and the dev override have no end date, so they never get the banner.
+  const expiryEndsAt =
+    access.isPremium &&
+    access.expiresAt &&
+    new Date(access.expiresAt).getTime() > Date.now() &&
+    new Date(access.expiresAt).getTime() - Date.now() <= REMINDER_WINDOW_DAYS * 86_400_000
+      ? access.expiresAt
+      : null;
 
   return (
     <ProgressProvider initialProgress={initialProgress}>
@@ -205,6 +216,7 @@ export default async function LearnHomePage() {
         />
         <div className="max-sm:order-3">
           <GuestProgressBanner isGuest={!user} className="mb-6" />
+          {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
           <HomeEngagementSection stream={engagement} className="mb-6" />
           <NeedsReviewWords
             words={weakWords.filter((word) => word.dueNow)}

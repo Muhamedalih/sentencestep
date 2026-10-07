@@ -85,3 +85,27 @@ test("dedupeKeyFor: INACTIVE_LEARNER a week apart produces a different key (can 
   const nextWeek = new Date("2026-01-25T09:00:00Z");
   assert.notEqual(dedupeKeyFor(event, now), dedupeKeyFor(event, nextWeek));
 });
+
+test("shouldNotify: an expiry reminder is always meaningful once it has been planned", () => {
+  const event: NotificationEvent = {
+    type: "PREMIUM_EXPIRY_REMINDER",
+    stage: 7,
+    periodEnd: "2027-02-02T12:09:22.000Z",
+  };
+  assert.equal(shouldNotify(event), true);
+});
+
+test("dedupeKeyFor: an expiry reminder is keyed by its stage and the end date, so each stage is sent once per period", () => {
+  const seven: NotificationEvent = {
+    type: "PREMIUM_EXPIRY_REMINDER",
+    stage: 7,
+    periodEnd: "2027-02-02T12:09:22.000Z",
+  };
+  const three: NotificationEvent = { ...seven, stage: 3 };
+  const renewed: NotificationEvent = { ...seven, periodEnd: "2027-03-04T12:09:22.000Z" };
+
+  assert.equal(dedupeKeyFor(seven), "PREMIUM_EXPIRY_REMINDER:7:2027-02-02");
+  assert.equal(dedupeKeyFor(three), "PREMIUM_EXPIRY_REMINDER:3:2027-02-02");
+  assert.equal(dedupeKeyFor(seven), dedupeKeyFor({ ...seven }));
+  assert.notEqual(dedupeKeyFor(seven), dedupeKeyFor(renewed));
+});

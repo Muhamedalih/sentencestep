@@ -5,6 +5,7 @@ import { VocabularyLearn } from "@/components/learning/vocabulary-learn";
 import { VocabularyLearnBatches } from "@/components/words/vocabulary-learn-batches";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
+import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { isAdmin } from "@/lib/admin/access";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -50,7 +51,11 @@ export default async function WordGroupLearnPage({
   if (!canAccess) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-        <WordGroupLocked title={group.title} supportTitle={group.supportTitle} />
+        <WordGroupLocked
+          title={group.title}
+          supportTitle={group.supportTitle}
+          fromPrice={await getFromMonthlyPrice()}
+        />
       </div>
     );
   }

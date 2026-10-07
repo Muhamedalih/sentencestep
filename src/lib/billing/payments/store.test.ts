@@ -151,7 +151,7 @@ test("store.fulfillOrder: a database error is thrown so the webhook can be retri
   );
 });
 
-test("store.findReusableOrder: only an open, unexpired link of the same tier for this learner", async () => {
+test("store.findReusableOrder: only an open, unexpired link of the same tier and plan length for this learner", async () => {
   const { store, requests } = setup(() => json([]));
   const expiringAfter = new Date("2026-10-04T12:02:00.000Z");
 
@@ -160,6 +160,7 @@ test("store.findReusableOrder: only an open, unexpired link of the same tier for
     provider: "wayl",
     providerEnv: "test",
     pricingTier: "A",
+    premiumDays: 90,
     expiringAfter,
   });
 
@@ -168,6 +169,7 @@ test("store.findReusableOrder: only an open, unexpired link of the same tier for
   assert.equal(params.get("provider"), "eq.wayl");
   assert.equal(params.get("provider_env"), "eq.test");
   assert.equal(params.get("pricing_tier"), "eq.A");
+  assert.equal(params.get("premium_days"), "eq.90");
   assert.equal(params.get("status"), "in.(created,pending)");
   assert.equal(params.get("checkout_url"), "not.is.null");
   assert.equal(params.get("link_expires_at"), `gt.${expiringAfter.toISOString()}`);
