@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
 import type { PlanView } from "@/lib/billing/plan-views";
 import type { PlanId } from "@/lib/billing/plans";
 import { formatDayCount } from "@/lib/i18n/format-days";
+import { isSupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
 const initialState: CheckoutActionState = {};
@@ -248,6 +250,19 @@ export function CheckoutCard({
                 {state.error}
               </p>
             )}
+            {signedIn && (
+              <p className="text-muted-foreground text-center text-xs leading-relaxed" dir="auto">
+                {t.premium.termsNoticePrefix}
+                <Link
+                  href={locale && isSupportLocale(locale) ? `/${locale}/terms` : "/terms"}
+                  prefetch={false}
+                  className="text-foreground underline underline-offset-2"
+                >
+                  {t.premium.termsNoticeLink}
+                </Link>
+                {t.premium.termsNoticeSuffix}
+              </p>
+            )}
           </div>
 
           {!extend && socialProof && (socialProof.learners || socialProof.lessons) && (
@@ -288,6 +303,12 @@ export function CheckoutCard({
             </p>
           )}
         </form>
+
+        {signedIn && (
+          <div className="-mt-3 flex justify-center">
+            <ReportPaymentProblem />
+          </div>
+        )}
 
         {!extend && (
           <>

@@ -3,6 +3,12 @@ import { createWaylProvider } from "@/lib/billing/providers/wayl";
 
 const MIN_WEBHOOK_SECRET_LENGTH = 16;
 
+/** WAYL_SHOW_USD=false (or 0, no, off) leaves Wayl's page showing dinars; anything else, or unset, asks it to show dollars. */
+function showUsdOnWaylPage(): boolean {
+  const value = process.env.WAYL_SHOW_USD?.trim().toLowerCase();
+  return !(value === "false" || value === "0" || value === "no" || value === "off");
+}
+
 /**
  * Returns null — never a fake/mock implementation — until WAYL_API_KEY,
  * WAYL_WEBHOOK_SECRET and WAYL_ENV are all set (see .env.example). Every
@@ -21,5 +27,5 @@ export function getPaymentProvider(): PaymentProvider | null {
   if (environment !== "live" && environment !== "test") return null;
   if (environment === "live" && process.env.NODE_ENV !== "production") return null;
 
-  return createWaylProvider({ apiKey, webhookSecret, environment });
+  return createWaylProvider({ apiKey, webhookSecret, environment, showUsd: showUsdOnWaylPage() });
 }

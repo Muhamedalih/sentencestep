@@ -267,6 +267,20 @@ test("verifyAndFulfill: an amount that does not match flags the order and raises
   assert.equal(later.outcome, "needs_review");
 });
 
+test("verifyAndFulfill: an alert that takes time is finished before the call returns", async () => {
+  const { deps } = setup({ payment: makePayment({ amount: 1000 }) });
+  const events: string[] = [];
+  deps.report = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    events.push("alert sent");
+  };
+
+  await verifyAndFulfill(deps, "ss_abc", "cron");
+  events.push("returned");
+
+  assert.deepEqual(events, ["alert sent", "returned"]);
+});
+
 test("verifyAndFulfill: an unknown reference is ignored without calling the provider", async () => {
   const { deps, provider } = setup();
   const outcome = await verifyAndFulfill(deps, "ss_not_ours", "webhook");

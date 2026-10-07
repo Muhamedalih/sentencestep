@@ -34,7 +34,7 @@ export interface CheckoutStore {
 export interface CheckoutDeps {
   provider: PaymentProvider;
   store: CheckoutStore;
-  report: (alert: PaymentAlert) => void;
+  report: (alert: PaymentAlert) => void | Promise<void>;
   now?: () => Date;
   newId?: () => string;
 }
@@ -121,8 +121,9 @@ export async function createCheckout(
       referenceId: order.reference_id,
       amount: quote.amount,
       currency: quote.currency,
-      // Wayl's page can only charge and show dinars; naming the dollar price in
-      // the product line is what lets the buyer match it to what they saw here.
+      // Wayl charges in dinars; naming the dollar price in the product line is
+      // what lets the buyer match it to what they saw here, whichever currency
+      // Wayl's page shows.
       description: `SentenceStep Premium (${quote.premiumDays} days) - ${formatUsd(quote.usdCents)}`,
       webhookUrl: `${origin}/api/billing/webhook/${provider.name}`,
       redirectUrl: `${origin}/billing/return`,
@@ -139,7 +140,7 @@ export async function createCheckout(
     return { ok: true, url: created.checkoutUrl, reused: false };
   } catch (error) {
     const detail = error instanceof Error ? error.message : "unknown error";
-    deps.report({ code: "checkout_link_creation_failed", referenceId, detail });
+    await deps.report({ code: "checkout_link_creation_failed", referenceId, detail });
     // The adapter has already stripped its key and secret from this text, so
     // keeping it on the order makes a failed link diagnosable from the row alone.
     await store

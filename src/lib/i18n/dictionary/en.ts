@@ -133,6 +133,33 @@ export const en: Dictionary = {
     errorEmpty: "Please describe the problem first.",
     errorGeneric: "Something went wrong. Please try again.",
   },
+  paymentReport: {
+    trigger: "Problem with your payment?",
+    title: "Tell us what went wrong",
+    subtitle:
+      "We're alerted the moment you send this and we reply to your account email. Your latest payment details are attached automatically.",
+    categoryPaidNotActive: "I paid but Premium isn't active",
+    categoryFailed: "My payment failed or was declined",
+    categoryWrongPrice: "The price looks wrong",
+    categoryOther: "Something else",
+    notePlaceholder: "Anything else we should know? (optional)",
+    notePlaceholderOther: "Describe what happened",
+    send: "Send now",
+    sending: "Sending…",
+    cancel: "Cancel",
+    errorChoose: "Choose what happened first.",
+    errorNote: "Please describe what happened.",
+    errorTooMany:
+      "You've already sent a few reports this hour. We're on it — please wait for our reply.",
+    errorSignIn: "Please sign in again, then send this.",
+    errorGeneric: "Something went wrong. Please try again.",
+    successTitle: "Thank you — we've been alerted",
+    successBody: "We're looking into it now and will reply to your account email.",
+    recheckTitle: "Already paid? Check it now",
+    recheckBody:
+      "This asks our payment partner again and unlocks Premium if your payment went through.",
+    recheckCta: "Check my payment now",
+  },
   onboarding: {
     heading: "Where are you starting from?",
     subtitle: "Pick a starting point — you can always explore other levels anytime.",
@@ -301,6 +328,9 @@ export const en: Dictionary = {
       "You'll pay on a secure page run by our payment partner. It may show the amount in a different currency — the price that applies is the one shown here.",
     paymentDetailsCaption:
       "Your payment details are handled by our payment partner — we never see or store them.",
+    termsNoticePrefix: "All purchases are final. By paying you agree to our ",
+    termsNoticeLink: "Terms",
+    termsNoticeSuffix: ".",
     extendHeading: "Add more days",
     extendStackNote: "The {days} extra days are added on top of the days you have left.",
     plan1m: "1 month",

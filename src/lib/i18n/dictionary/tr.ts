@@ -130,6 +130,32 @@ export const tr: Dictionary = {
     errorEmpty: "Lütfen önce sorunu açıklayın.",
     errorGeneric: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
   },
+  paymentReport: {
+    trigger: "Ödemenle ilgili bir sorun mu var?",
+    title: "Neyin ters gittiğini anlat",
+    subtitle:
+      "Gönderdiğin anda bize haber gider ve hesabının e-postasına yanıt veririz. Son ödeme bilgilerin otomatik olarak eklenir.",
+    categoryPaidNotActive: "Ödedim ama Premium aktif olmadı",
+    categoryFailed: "Ödemem başarısız oldu veya reddedildi",
+    categoryWrongPrice: "Fiyat yanlış görünüyor",
+    categoryOther: "Başka bir şey",
+    notePlaceholder: "Bilmemiz gereken başka bir şey var mı? (isteğe bağlı)",
+    notePlaceholderOther: "Ne olduğunu anlat",
+    send: "Şimdi gönder",
+    sending: "Gönderiliyor…",
+    cancel: "İptal",
+    errorChoose: "Önce ne olduğunu seç.",
+    errorNote: "Lütfen ne olduğunu açıkla.",
+    errorTooMany:
+      "Bu saat içinde birkaç rapor gönderdin. Üzerinde çalışıyoruz; lütfen yanıtımızı bekle.",
+    errorSignIn: "Lütfen tekrar giriş yap, sonra gönder.",
+    errorGeneric: "Bir şeyler ters gitti. Lütfen tekrar dene.",
+    successTitle: "Teşekkürler, haberimiz oldu",
+    successBody: "Şimdi inceliyoruz ve hesabının e-postasına yanıt vereceğiz.",
+    recheckTitle: "Zaten ödedin mi? Şimdi kontrol et",
+    recheckBody: "Bu, ödeme ortağımıza yeniden sorar ve ödemen tamamlandıysa Premium'u açar.",
+    recheckCta: "Ödememi şimdi kontrol et",
+  },
   onboarding: {
     heading: "Nereden başlamak istersiniz?",
     subtitle:
@@ -302,6 +328,9 @@ export const tr: Dictionary = {
       "Ödemeyi, ödeme ortağımızın yönettiği güvenli bir sayfada yapacaksınız. Bu sayfa tutarı farklı bir para biriminde gösterebilir; geçerli fiyat burada gösterilendir.",
     paymentDetailsCaption:
       "Ödeme bilgilerinizi ödeme ortağımız işler — biz onları asla görmeyiz ve saklamayız.",
+    termsNoticePrefix: "Tüm satın alımlar kesindir. Ödeme yaparak ",
+    termsNoticeLink: "Koşulları",
+    termsNoticeSuffix: " kabul etmiş olursunuz.",
     extendHeading: "Daha fazla gün ekleyin",
     extendStackNote: "Eklenen {days} gün, kalan günlerinizin üzerine eklenir.",
     plan1m: "1 ay",

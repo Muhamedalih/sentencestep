@@ -20,6 +20,12 @@ export interface WaylConfig {
   /** Sent as `webhookSecret` on every link and used to verify the signature of every webhook. */
   webhookSecret: string;
   environment: "live" | "test";
+  /**
+   * Ask Wayl's hosted page to show the price in dollars (see withUsdDisplay).
+   * On unless explicitly false; off leaves the page showing dinars, which is
+   * what to do while Wayl's own dollar rate and ours differ.
+   */
+  showUsd?: boolean;
   fetch?: typeof fetch;
 }
 
@@ -252,7 +258,10 @@ export function createWaylProvider(config: WaylConfig): PaymentProvider {
         );
       }
 
-      return { providerPaymentId: link.id as string, checkoutUrl: withUsdDisplay(link.url) };
+      return {
+        providerPaymentId: link.id as string,
+        checkoutUrl: config.showUsd === false ? link.url : withUsdDisplay(link.url),
+      };
     },
 
     async getPayment(referenceId: string): Promise<ProviderPayment | null> {

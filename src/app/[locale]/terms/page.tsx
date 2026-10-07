@@ -17,10 +17,10 @@ export const metadata: Metadata = {
   title: "Terms",
 };
 
-/** "/ar/terms", "/es/terms", "/tr/terms" — see src/app/(default)/terms/page.tsx's unprefixed sibling; identical content (this page has no translated text). */
+/** "/ar/terms", "/es/terms", "/tr/terms" — see src/app/(default)/terms/page.tsx's unprefixed sibling; the text is in Arabic for "/ar" and in English for the other locales. */
 export default async function LocaleTermsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isSupportLocale(locale)) notFound();
 
-  return <TermsPageContent />;
+  return <TermsPageContent locale={locale} />;
 }

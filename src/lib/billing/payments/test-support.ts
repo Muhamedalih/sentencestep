@@ -152,6 +152,13 @@ export class InMemoryPaymentStore implements PaymentStore {
     return this.orders.get(referenceId) ?? null;
   }
 
+  async listRecentOrdersForUser(userId: string, limit: number) {
+    return [...this.orders.values()]
+      .filter((order) => order.user_id === userId)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, limit);
+  }
+
   async getOrderForUser(referenceId: string, userId: string) {
     const order = this.orders.get(referenceId);
     return order && order.user_id === userId ? order : null;

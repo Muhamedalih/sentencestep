@@ -64,6 +64,18 @@ test("store.getOrderByReference: no row is null", async () => {
   assert.equal(await store.getOrderByReference("ss_none"), null);
 });
 
+test("store.listRecentOrdersForUser: asks for this learner's newest orders only, capped", async () => {
+  const orders = [makeOrder({ reference_id: "ss_new" }), makeOrder({ reference_id: "ss_old" })];
+  const { store, requests } = setup(() => json(orders));
+
+  assert.deepEqual(await store.listRecentOrdersForUser("user-1", 3), orders);
+
+  assert.equal(requests[0]!.path, "/rest/v1/payment_orders");
+  assert.equal(requests[0]!.params.get("user_id"), "eq.user-1");
+  assert.equal(requests[0]!.params.get("order"), "created_at.desc");
+  assert.equal(requests[0]!.params.get("limit"), "3");
+});
+
 test("store.getOrderForUser: the lookup is scoped to the signed-in learner", async () => {
   const { store, requests } = setup(() => json([]));
 

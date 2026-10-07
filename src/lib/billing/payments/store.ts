@@ -7,6 +7,8 @@ import type { PaymentOrder } from "./types";
 export interface PaymentStore extends FulfillmentStore, CheckoutStore {
   getOrderForUser(referenceId: string, userId: string): Promise<PaymentOrder | null>;
   getLatestOrderForUser(userId: string, provider: string): Promise<PaymentOrder | null>;
+  /** The learner's newest orders across every provider, newest first — what a payment problem report quotes. */
+  listRecentOrdersForUser(userId: string, limit: number): Promise<PaymentOrder[]>;
   /** Open orders, least recently verified first so a stuck order can never starve the others. */
   listReconcilableOrders(query: {
     provider: string;
@@ -54,6 +56,16 @@ export function createPaymentStore(
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+
+    async listRecentOrdersForUser(userId, limit) {
+      const { data, error } = await orders()
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data ?? [];
     },
 
     async updateOrder(orderId, patch) {

@@ -108,6 +108,21 @@ test("createPayment: the link is still created in IQD while its page is asked to
   assert.equal(new URL(result.checkoutUrl).searchParams.get("currency"), "usd");
 });
 
+test("createPayment: with the dollar display switched off the link is left exactly as Wayl made it", async () => {
+  const { fetchStub } = stubFetch(() => json(201, { data: link() }));
+  const provider = createWaylProvider({
+    apiKey: API_KEY,
+    webhookSecret: SECRET,
+    environment: "test",
+    showUsd: false,
+    fetch: fetchStub,
+  });
+
+  const result = await provider.createPayment(createInput);
+
+  assert.equal(result.checkoutUrl, "https://pay.example.com/link_123");
+});
+
 test("withUsdDisplay: adds currency=usd to a link with no query string", () => {
   assert.equal(
     withUsdDisplay("https://pay.example.com/link_123"),
