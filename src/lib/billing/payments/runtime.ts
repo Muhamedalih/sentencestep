@@ -5,7 +5,8 @@ import { getPaymentProvider } from "@/lib/billing/provider-registry";
 import { markWebhookEventProcessed, recordWebhookEvent } from "@/lib/billing/webhook-events";
 
 import { notifyAdminsOfPaymentAlert } from "./admin-alerts";
-import type { PaymentAlert } from "./fulfillment";
+import type { FulfilledEvent, PaymentAlert } from "./fulfillment";
+import { sendPurchaseConfirmation } from "./purchase-confirmation";
 import { createPaymentStore } from "./store";
 import type { PaymentStore } from "./store";
 import type { WebhookDeps } from "./webhook-handler";
@@ -14,6 +15,8 @@ export interface PaymentRuntime {
   provider: PaymentProvider;
   store: PaymentStore;
   report: (alert: PaymentAlert) => void | Promise<void>;
+  /** Runs once when a payment is confirmed and Premium granted: the receipt email. */
+  onFulfilled?: (event: FulfilledEvent) => void | Promise<void>;
 }
 
 /**
@@ -32,7 +35,12 @@ export async function reportPaymentAlert(alert: PaymentAlert): Promise<void> {
 export function getPaymentRuntime(): PaymentRuntime | null {
   const provider = getPaymentProvider();
   if (!provider) return null;
-  return { provider, store: createPaymentStore(), report: reportPaymentAlert };
+  return {
+    provider,
+    store: createPaymentStore(),
+    report: reportPaymentAlert,
+    onFulfilled: sendPurchaseConfirmation,
+  };
 }
 
 export function toWebhookDeps(runtime: PaymentRuntime): WebhookDeps {

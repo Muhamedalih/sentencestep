@@ -156,7 +156,13 @@ export default async function BillingReturnPage({
 
       <Card className="mx-auto w-full max-w-lg">
         <CardHeader className="items-center text-center">
-          <div className="bg-brand-muted text-primary flex size-12 items-center justify-center rounded-full">
+          <div
+            className={
+              confirmed
+                ? "bg-success/15 text-success flex size-12 items-center justify-center rounded-full"
+                : "bg-brand-muted text-primary flex size-12 items-center justify-center rounded-full"
+            }
+          >
             {content.icon}
           </div>
           <CardTitle className="text-xl" role="status" aria-live="polite">
@@ -166,8 +172,8 @@ export default async function BillingReturnPage({
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-center gap-3">
           {confirmed && (
-            <Button asChild>
-              <Link href="/learn">{t.premium.backToLearning}</Link>
+            <Button asChild size="lg">
+              <Link href="/learn">{t.common.startLearning}</Link>
             </Button>
           )}
           {content.retry && (

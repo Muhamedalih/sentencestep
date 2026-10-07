@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutCard } from "@/components/billing/checkout-card";
+import { ContentStatsRow } from "@/components/billing/content-stats-row";
 import { PlanComparison } from "@/components/billing/plan-comparison";
 import { PremiumFaq } from "@/components/billing/premium-faq";
 import { Logo } from "@/components/layout/logo";
@@ -17,13 +18,15 @@ import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { isOfferActive } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
-import { buildPlanViews } from "@/lib/billing/plan-views";
+import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
+import { showUsdOnWaylPage } from "@/lib/billing/provider-registry";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getSocialProof } from "@/lib/stats/public-stats";
+import { getContentStats, getSocialProof } from "@/lib/stats/public-stats";
+import { getRatingsProof } from "@/lib/stats/ratings-proof";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -58,7 +61,8 @@ export default async function UpgradePage() {
   const { country } = resolvePricingCountry(await headers());
   const offer = await getLaunchOffer();
   const offerBonusDays = isOfferActive(offer, new Date()) ? offer.bonusDays : 0;
-  const plans = buildPlanViews(tierForCountry(country), offerBonusDays);
+  const tier = tierForCountry(country);
+  const plans = buildPlanViews(tier, offerBonusDays);
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
 
@@ -72,20 +76,35 @@ export default async function UpgradePage() {
   // Only the plan card quotes the launch offer and real figures, so the counts
   // are only fetched (they are cached for an hour) when that card is shown.
   const showsPlans = !freeNow && !(user && access.isPremium);
-  const proof = showsPlans ? await getSocialProof() : null;
+  const [proof, content] = showsPlans
+    ? await Promise.all([getSocialProof(), getContentStats()])
+    : [null, null];
+  const ratings = showsPlans ? getRatingsProof() : null;
   const offerNotice =
     offer && offerBonusDays > 0
       ? { bonusDays: offerBonusDays, endsOnLabel: formatLongDate(offer.endsOn, locale) }
       : null;
-  const socialProof = proof
-    ? {
-        learners: proof.learners === null ? null : formatCount(proof.learners, locale),
-        lessons: proof.lessons === null ? null : formatCount(proof.lessons, locale),
-      }
-    : null;
+  const socialProof =
+    proof || ratings
+      ? {
+          learners: proof?.learners == null ? null : formatCount(proof.learners, locale),
+          lessons: proof?.lessons == null ? null : formatCount(proof.lessons, locale),
+          rating: ratings
+            ? { average: ratings.average.toFixed(1), count: formatCount(ratings.count, locale) }
+            : null,
+        }
+      : null;
+  // Only figures big enough to be worth quoting are present; each is "N+" because it was rounded down.
+  const contentItems = [
+    { value: content?.lessons, label: t.premium.contentStatLessons },
+    { value: content?.words, label: t.premium.contentStatWords },
+    { value: content?.wordLists, label: t.premium.contentStatWordLists },
+  ].flatMap((item) =>
+    item.value == null ? [] : [{ value: `${formatCount(item.value, locale)}+`, label: item.label }],
+  );
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 max-sm:pb-32 sm:py-24">
       <Link
         href={user ? "/learn" : "/"}
         className="inline-flex min-h-11 items-center self-center"
@@ -110,6 +129,10 @@ export default async function UpgradePage() {
               : t.premium.upgradeSubtitle}
         </p>
       </div>
+
+      {showsPlans && (
+        <ContentStatsRow heading={t.premium.contentStatsHeading} items={contentItems} />
+      )}
 
       <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
         {/* `user &&`: free_for_all (/admin/free-access) makes isPremium true
@@ -167,7 +190,13 @@ export default async function UpgradePage() {
             {/* Only a real, dated purchase can be extended — the sitewide
                 free-for-all promotion and the dev override have no end date. */}
             {access.expiresAt && (
-              <CheckoutCard plans={plans} signedIn extend offerNotice={offerNotice} />
+              <CheckoutCard
+                plans={plans}
+                signedIn
+                extend
+                offerNotice={offerNotice}
+                waylShowsDollars={showUsdOnWaylPage()}
+              />
             )}
           </>
         ) : (
@@ -176,6 +205,8 @@ export default async function UpgradePage() {
             signedIn={Boolean(user)}
             offerNotice={offerNotice}
             socialProof={socialProof}
+            fromMonthly={cheapestPerMonth(tier)}
+            waylShowsDollars={showUsdOnWaylPage()}
           />
         )}
       </div>

@@ -318,6 +318,17 @@ export const ar: Dictionary = {
     termsNoticePrefix: "جميع عمليات الشراء نهائية. بالدفع فإنك توافق على ",
     termsNoticeLink: "شروط الاستخدام",
     termsNoticeSuffix: ".",
+    contentStatsHeading: "ما تفتحه الخطة المميّزة",
+    contentStatLessons: "دروس وقصص ومحادثات",
+    contentStatWords: "كلمة في قوائم الكلمات",
+    contentStatWordLists: "قائمة كلمات",
+    compareLine:
+      "تطبيقات تعلّم اللغات تكلّف عادةً بين $5 و$15 شهريًا. هنا تبدأ من {amount} شهريًا.",
+    paymentPartnerNoteShort:
+      "ستُكمل الدفع في صفحة آمنة لدى شريك الدفع خلال نحو 30 ثانية، ثم تعود إلى هنا تلقائيًا.",
+    acceptedMethodsLabel: "ادفع عبر",
+    socialProofRating: "متوسط {rating} من أكثر من {count} تقييم",
+    payShort: "ادفع الآن",
     extendHeading: "أضف المزيد من الأيام",
     extendStackNote: "تُضاف {days} يومًا إضافيًا فوق ما تبقّى لك من أيام.",
     plan1m: "شهر واحد",
