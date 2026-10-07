@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -21,7 +22,8 @@ export function CheckoutButton({ extend = false }: { extend?: boolean }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" size="lg" disabled={pending} className="w-full">
+        {!pending && <Lock aria-hidden="true" />}
         {pending ? t.premium.redirecting : label}
       </Button>
       {state?.error && (

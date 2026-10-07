@@ -7,6 +7,7 @@ import {
   PREMIUM_DAYS,
   TIER_PRICE_USD_CENTS,
   formatUsd,
+  formatUsdPerDay,
   quotePrice,
   tierForCountry,
 } from "./pricing";
@@ -81,4 +82,9 @@ test("formatUsd: whole dollars have no decimals", () => {
 
 test("formatUsd: fractional dollars keep two decimals", () => {
   assert.equal(formatUsd(250), "$2.50");
+});
+
+test("formatUsdPerDay: spreads the price over the days, to the nearest cent", () => {
+  assert.equal(formatUsdPerDay(200, 30), "$0.07");
+  assert.equal(formatUsdPerDay(300, 30), "$0.10");
 });

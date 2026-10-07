@@ -276,8 +276,7 @@ export const tr: Dictionary = {
       "SentenceStep'i desteklediğiniz için teşekkürler. Erişiminiz {date} tarihine kadar devam ediyor.",
     thanks: "SentenceStep'i desteklediğiniz için teşekkürler.",
     backToLearning: "Öğrenmeye dön",
-    priceForDays: " / {days} gün",
-    oneTimeNote: "Tek seferlik ödeme. Kendiliğinden asla yenilenmez.",
+    accessForDays: "{days} gün Premium erişim",
     everythingInFree: "Ücretsiz plandaki her şey, artı tüm kütüphane.",
     benefits: [
       "Tüm seviyelerde eksiksiz hikaye kütüphanesi",
@@ -289,6 +288,23 @@ export const tr: Dictionary = {
     signInToUpgrade: "Yükseltmek için giriş yapın",
     redirecting: "Yönlendiriliyor…",
     extendCta: "{days} gün daha ekle",
+    oneTimeBadge: "Tek seferlik ödeme",
+    perDayCaption: "Günde yaklaşık {amount}",
+    checkoutStepsHeading: "Nasıl çalışır?",
+    checkoutSteps: [
+      "Güvenli bir ödeme sayfasında tek seferde ödeyin.",
+      "Ödemeniz onaylanır onaylanmaz Premium açılır.",
+      "{days} gün sonra Ücretsiz plana dönersiniz — hiçbir şey yenilenmez.",
+    ],
+    trustSecure: "Güvenli ödeme",
+    trustNoRenewal: "Otomatik yenileme yok",
+    trustInstant: "Anında etkinleşir",
+    paymentPartnerNote:
+      "Ödemeyi, ödeme ortağımızın yönettiği güvenli bir sayfada yapacaksınız. Bu sayfa tutarı farklı bir para biriminde gösterebilir; geçerli fiyat burada gösterilendir.",
+    paymentDetailsCaption:
+      "Ödeme bilgilerinizi ödeme ortağımız işler — biz onları asla görmeyiz ve saklamayız.",
+    extendHeading: "Daha fazla gün ekleyin",
+    extendStackNote: "Eklenen {days} gün, kalan günlerinizin üzerine eklenir.",
     premiumUntil: "Premium: {date} tarihine kadar",
     lockedBenefits: [
       "Bu dersin kilidini açın",

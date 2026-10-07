@@ -316,16 +316,33 @@ export interface Dictionary {
     thanksWithDate: string;
     thanks: string;
     backToLearning: string;
-    /** Shown right after the price, e.g. "$3" + " for 30 days" — `{days}` is replaced with PREMIUM_DAYS. */
-    priceForDays: string;
-    /** One-time-payment reassurance shown above the checkout button. */
-    oneTimeNote: string;
+    /** The line under the price: what it buys — `{days}` is replaced with PREMIUM_DAYS. */
+    accessForDays: string;
     everythingInFree: string;
     benefits: string[];
     signInToUpgrade: string;
     redirecting: string;
     /** Button for a current premium learner to pay for more days — `{days}` is replaced with PREMIUM_DAYS. */
     extendCta: string;
+    /** Short chip beside the price: it is a single purchase, not a subscription. */
+    oneTimeBadge: string;
+    /** Under the price — `{amount}` is the USD price per day, e.g. "$0.07". */
+    perDayCaption: string;
+    /** Heading and three short steps (`{days}` is PREMIUM_DAYS in the last one) above the checkout button. */
+    checkoutStepsHeading: string;
+    checkoutSteps: string[];
+    /** The three reassurance chips under the checkout button. */
+    trustSecure: string;
+    trustNoRenewal: string;
+    trustInstant: string;
+    /** Neutral heads-up above the checkout button: the provider's own page may show the amount in another currency. It deliberately names no currency and no amount. */
+    paymentPartnerNote: string;
+    /** Under the checkout button: card or wallet details are handled by the payment partner, never by us. */
+    paymentDetailsCaption: string;
+    /** Heading of the "add more days" block for a current Premium learner. */
+    extendHeading: string;
+    /** `{days}` is PREMIUM_DAYS. */
+    extendStackNote: string;
     /** Settings' plan row: "Premium until {date}". */
     premiumUntil: string;
     lockedBenefits: string[];

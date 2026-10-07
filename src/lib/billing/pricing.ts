@@ -71,3 +71,8 @@ export function formatUsd(usdCents: number): string {
   const dollars = usdCents / 100;
   return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
 }
+
+/** The price spread over `days`, to the nearest cent: "$0.07" for $2 over 30 days. */
+export function formatUsdPerDay(usdCents: number, days: number): string {
+  return `$${(Math.round(usdCents / days) / 100).toFixed(2)}`;
+}

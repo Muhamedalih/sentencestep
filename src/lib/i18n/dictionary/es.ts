@@ -284,8 +284,7 @@ export const es: Dictionary = {
     thanksWithDate: "Gracias por apoyar a SentenceStep. Tu acceso continúa hasta el {date}.",
     thanks: "Gracias por apoyar a SentenceStep.",
     backToLearning: "Volver a aprender",
-    priceForDays: " por {days} días",
-    oneTimeNote: "Pago único. Nunca se renueva automáticamente.",
+    accessForDays: "{days} días de acceso Premium",
     everythingInFree: "Todo lo del plan gratuito, más la biblioteca completa.",
     benefits: [
       "Biblioteca completa de historias, todos los niveles",
@@ -297,6 +296,23 @@ export const es: Dictionary = {
     signInToUpgrade: "Inicia sesión para mejorar tu plan",
     redirecting: "Redirigiendo…",
     extendCta: "Añadir {days} días más",
+    oneTimeBadge: "Pago único",
+    perDayCaption: "Unos {amount} al día",
+    checkoutStepsHeading: "Cómo funciona",
+    checkoutSteps: [
+      "Paga una sola vez en una página de pago segura.",
+      "Premium se activa en cuanto se confirma tu pago.",
+      "Pasados {days} días vuelves al plan gratuito: nada se renueva.",
+    ],
+    trustSecure: "Pago seguro",
+    trustNoRenewal: "Sin renovación automática",
+    trustInstant: "Activación inmediata",
+    paymentPartnerNote:
+      "Pagarás en una página segura gestionada por nuestro socio de pagos. Puede mostrar el importe en otra moneda: el precio que vale es el que ves aquí.",
+    paymentDetailsCaption:
+      "Tus datos de pago los gestiona nuestro socio de pagos: nosotros nunca los vemos ni los guardamos.",
+    extendHeading: "Añade más días",
+    extendStackNote: "Los {days} días extra se suman a los que te quedan.",
     premiumUntil: "Premium hasta el {date}",
     lockedBenefits: [
       "Desbloquea esta lección",

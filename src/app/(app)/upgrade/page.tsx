@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Check } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutButton } from "@/components/billing/checkout-button";
+import { CheckoutCard } from "@/components/billing/checkout-card";
 import { PlanComparison } from "@/components/billing/plan-comparison";
 import { PremiumFaq } from "@/components/billing/premium-faq";
 import { Logo } from "@/components/layout/logo";
@@ -19,6 +19,7 @@ import {
   PREMIUM_DAYS,
   TIER_PRICE_USD_CENTS,
   formatUsd,
+  formatUsdPerDay,
   tierForCountry,
 } from "@/lib/billing/pricing";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
@@ -56,8 +57,9 @@ export default async function UpgradePage() {
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
-  const price = formatUsd(TIER_PRICE_USD_CENTS[tierForCountry(country)]);
-  const days = String(PREMIUM_DAYS);
+  const priceCents = TIER_PRICE_USD_CENTS[tierForCountry(country)];
+  const price = formatUsd(priceCents);
+  const pricePerDay = formatUsdPerDay(priceCents, PREMIUM_DAYS);
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
 
@@ -80,80 +82,62 @@ export default async function UpgradePage() {
         </p>
       </div>
 
-      <div className="mx-auto w-full max-w-lg">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
         {/* `user &&`: free_for_all (/admin/free-access) makes isPremium true
             even for a signed-out visitor, who should still see the regular
             sign-in/pricing card below, never the real-subscriber one. */}
         {user && access.isPremium ? (
-          <Card>
-            <CardHeader>
-              <Badge className="w-fit">{t.common.premium}</Badge>
-              <CardTitle className="text-xl">{t.premium.fullAccessHeading}</CardTitle>
-              <CardDescription>
-                {access.expiresAt
-                  ? t.premium.thanksWithDate.replace(
-                      "{date}",
-                      formatLongDate(access.expiresAt, locale),
-                    )
-                  : t.premium.thanks}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              <Button variant="outline" asChild className="w-fit">
-                <Link href="/learn">{t.premium.backToLearning}</Link>
-              </Button>
+          <>
+            <Card>
+              <CardHeader>
+                <Badge className="w-fit">{t.common.premium}</Badge>
+                <CardTitle className="text-xl">{t.premium.fullAccessHeading}</CardTitle>
+                <CardDescription>
+                  {access.expiresAt
+                    ? t.premium.thanksWithDate.replace(
+                        "{date}",
+                        formatLongDate(access.expiresAt, locale),
+                      )
+                    : t.premium.thanks}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" asChild className="w-fit">
+                  <Link href="/learn">{t.premium.backToLearning}</Link>
+                </Button>
+              </CardContent>
+            </Card>
 
-              {/* Only a real, dated purchase can be extended — the sitewide
-                  free-for-all promotion and the dev override have no end date. */}
-              {access.expiresAt && (
-                <div className="border-border flex flex-col gap-3 border-t pt-5">
-                  <p className="text-2xl font-semibold">
-                    {price}
-                    <span className="text-muted-foreground text-base font-normal">
-                      {t.premium.priceForDays.replace("{days}", days)}
-                    </span>
-                  </p>
-                  <p className="text-muted-foreground text-xs">{t.premium.oneTimeNote}</p>
-                  <CheckoutButton extend />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {/* Only a real, dated purchase can be extended — the sitewide
+                free-for-all promotion and the dev override have no end date. */}
+            {access.expiresAt && (
+              <CheckoutCard
+                t={t}
+                price={price}
+                pricePerDay={pricePerDay}
+                days={PREMIUM_DAYS}
+                extend
+                action={<CheckoutButton extend />}
+              />
+            )}
+          </>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-baseline gap-1.5 text-3xl">
-                {price}
-                <span className="text-muted-foreground text-base font-normal">
-                  {t.premium.priceForDays.replace("{days}", days)}
-                </span>
-              </CardTitle>
-              <CardDescription>{t.premium.everythingInFree}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              <ul className="flex flex-col gap-2.5">
-                {t.premium.benefits.map((benefit) => (
-                  <li key={benefit} className="flex items-start gap-2.5 text-sm">
-                    <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {user ? (
-                <div className="flex flex-col gap-2">
-                  <p className="text-muted-foreground text-center text-xs">
-                    {t.premium.oneTimeNote}
-                  </p>
-                  <CheckoutButton />
-                </div>
+          <CheckoutCard
+            t={t}
+            price={price}
+            pricePerDay={pricePerDay}
+            days={PREMIUM_DAYS}
+            showPaymentNotes={Boolean(user)}
+            action={
+              user ? (
+                <CheckoutButton />
               ) : (
-                <Button asChild className="w-full">
+                <Button asChild size="lg" className="w-full">
                   <Link href="/login?next=/upgrade">{t.premium.signInToUpgrade}</Link>
                 </Button>
-              )}
-            </CardContent>
-          </Card>
+              )
+            }
+          />
         )}
       </div>
 
