@@ -3,75 +3,77 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getBillingProvider } from "@/lib/billing/provider-registry";
 import { track } from "@/lib/analytics/track";
-import { getCurrentUser } from "@/lib/supabase/auth";
+import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { createCheckout } from "@/lib/billing/payments/checkout";
+import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
+import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
+import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/get-locale";
 import { getSiteUrl } from "@/lib/site-url";
+import { getCurrentUser } from "@/lib/supabase/auth";
 
 export interface CheckoutActionState {
   error?: string;
 }
 
-const NOT_CONFIGURED_MESSAGE = "Billing isn't connected yet — check back soon.";
-
 /**
- * Starts a real checkout session once a provider is configured (see
- * provider-registry.ts — this environment has no real PayTabs merchant
- * account, so getBillingProvider() still returns null here and this still
- * returns the honest "not connected" state). This never redirects to a fake
- * success page or grants access on its own — only the signed webhook,
- * processed against the database, is ever allowed to do that (see
- * src/app/api/billing/webhook/route.ts).
+ * Starts a real checkout once a payment provider is configured (see
+ * provider-registry.ts — until then this returns the honest "not connected"
+ * state). The price is decided entirely on the server: the country comes from
+ * the hosting platform's geolocation, never from the form, and the callback URLs come
+ * from the configured site origin, never from a request header. This never
+ * redirects to a fake success page or grants access on its own — only a
+ * payment verified with the provider's own API ever does (see
+ * src/lib/billing/payments/fulfillment.ts).
  */
 export async function startCheckout(
-   
   _prevState: CheckoutActionState | null,
 ): Promise<CheckoutActionState> {
+  const locale = await getLocale();
+  const t = locale ? getDictionary(locale) : fallbackDictionary;
+
   const user = await getCurrentUser();
   if (user) {
     // Tracked here (server-side, on real submission) rather than from a
     // client onClick handler — a click that never reaches the server isn't
-    // a reliable product signal, and this way there's no client-callable
-    // analytics endpoint for the event catalog to guard against.
+    // a reliable product signal.
     await track({ name: "UPGRADE_CTA_CLICKED", category: "PREMIUM", properties: {} }, user.id);
   }
 
-  const provider = getBillingProvider();
-  if (!provider) return { error: NOT_CONFIGURED_MESSAGE };
+  let runtime: PaymentRuntime | null;
+  try {
+    runtime = getPaymentRuntime();
+  } catch (error) {
+    console.error("[payments] checkout: payment storage is not configured", error);
+    return { error: t.premium.checkoutNotConnected };
+  }
+  if (!runtime) return { error: t.premium.checkoutNotConnected };
 
-  if (!user) return { error: "Sign in first." };
+  if (!user) return { error: t.premium.checkoutSignIn };
 
-  // Falls back to the configured production origin, not a header that can
-  // be absent — a missing Origin header must never produce a "null/upgrade"
-  // success/callback URL sent to a real payment provider. Mirrors
-  // notification-triggers.ts's and auth-actions.ts's origin fallback. See
-  // getSiteUrl's doc comment for how that origin gets set.
-  const origin = (await headers()).get("origin") ?? getSiteUrl();
-  const { url } = await provider.createCheckoutSession({
-    userId: user.id,
-    userEmail: user.email,
-    successUrl: `${origin}/upgrade?checkout=success`,
-    cancelUrl: `${origin}/upgrade?checkout=cancelled`,
-  });
+  const country = resolvePricingCountry(await headers());
 
-  redirect(url);
-}
+  let result;
+  try {
+    result = await createCheckout(runtime, {
+      userId: user.id,
+      country,
+      origin: getSiteUrl(),
+    });
+  } catch (error) {
+    console.error("[payments] checkout failed", error);
+    return { error: t.premium.checkoutTryAgain };
+  }
 
-/**
- * Starts a hosted billing-portal session where the provider offers one. A
- * real implementation additionally needs the user's stored
- * provider_customer_id (from their subscriptions row) to pass through —
- * left out here since there's no real customer id to look up yet.
- */
-export async function startCustomerPortal(
-   
-  _prevState: CheckoutActionState | null,
-): Promise<CheckoutActionState> {
-  const provider = getBillingProvider();
-  if (!provider?.createCustomerPortalSession) return { error: NOT_CONFIGURED_MESSAGE };
+  if (!result.ok) {
+    return {
+      error:
+        result.error === "rate_limited"
+          ? t.premium.checkoutTooManyAttempts
+          : t.premium.checkoutTryAgain,
+    };
+  }
 
-  const user = await getCurrentUser();
-  if (!user) return { error: "Sign in first." };
-
-  return { error: NOT_CONFIGURED_MESSAGE };
+  redirect(result.url);
 }

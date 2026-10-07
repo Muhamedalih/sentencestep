@@ -276,7 +276,7 @@ export const tr: Dictionary = {
       "SentenceStep'i desteklediğiniz için teşekkürler. Erişiminiz {date} tarihine kadar devam ediyor.",
     thanks: "SentenceStep'i desteklediğiniz için teşekkürler.",
     backToLearning: "Öğrenmeye dön",
-    cancelAnytime: ", istediğiniz zaman iptal edin",
+    accessForDays: "{days} gün Premium erişim",
     everythingInFree: "Ücretsiz plandaki her şey, artı tüm kütüphane.",
     benefits: [
       "Tüm seviyelerde eksiksiz hikaye kütüphanesi",
@@ -287,19 +287,36 @@ export const tr: Dictionary = {
     ],
     signInToUpgrade: "Yükseltmek için giriş yapın",
     redirecting: "Yönlendiriliyor…",
-    opening: "Açılıyor…",
-    manageBilling: "Faturalandırmayı yönet",
+    extendCta: "{days} gün daha ekle",
+    oneTimeBadge: "Tek seferlik ödeme",
+    perDayCaption: "Günde yaklaşık {amount}",
+    checkoutStepsHeading: "Nasıl çalışır?",
+    checkoutSteps: [
+      "Güvenli bir ödeme sayfasında tek seferde ödeyin.",
+      "Ödemeniz onaylanır onaylanmaz Premium açılır.",
+      "{days} gün sonra Ücretsiz plana dönersiniz — hiçbir şey yenilenmez.",
+    ],
+    trustSecure: "Güvenli ödeme",
+    trustNoRenewal: "Otomatik yenileme yok",
+    trustInstant: "Anında etkinleşir",
+    paymentPartnerNote:
+      "Ödemeyi, ödeme ortağımızın yönettiği güvenli bir sayfada yapacaksınız. Bu sayfa tutarı farklı bir para biriminde gösterebilir; geçerli fiyat burada gösterilendir.",
+    paymentDetailsCaption:
+      "Ödeme bilgilerinizi ödeme ortağımız işler — biz onları asla görmeyiz ve saklamayız.",
+    extendHeading: "Daha fazla gün ekleyin",
+    extendStackNote: "Eklenen {days} gün, kalan günlerinizin üzerine eklenir.",
+    premiumUntil: "Premium: {date} tarihine kadar",
     lockedBenefits: [
       "Bu dersin kilidini açın",
       "Tüm kütüphanenin kilidini açın",
-      "İstediğiniz zaman iptal edin",
+      "Tek ödeme, otomatik yenileme yok",
     ],
     premiumLessonBadge: "Premium ders",
     lockedBody:
       "Bu ders SentenceStep Premium'un bir parçasıdır. Kütüphanenin geri kalanıyla birlikte kilidini açmak için planınızı yükseltin.",
     backToLessons: "Derslere dön",
     priceAnchorCaption: "Bir kahveden daha ucuz",
-    upgradeCta: "Planı yükselt — {price}",
+    upgradeCta: "Premium'a yükselt",
     contentUnavailableBody:
       "Bu ders şu anda kullanılamıyor. Hiçbir şey kaybolmadı: birazdan tekrar deneyin veya başka bir ders seçin.",
     homeFreeCompleteHeading: "Tüm ücretsiz dersleri tamamladınız",
@@ -317,9 +334,9 @@ export const tr: Dictionary = {
     faqIncludedQ: "Premium'a gerçekte neler dahil?",
     faqIncludedA:
       "Normal Dersler, Hikayeler ve Konuşmanın her seviyesi, artı eksiksiz Kelime Listeleri koleksiyonu. Seri, XP ve günlük hedefiniz Ücretsiz planda zaten aynı şekilde çalışır — Premium, oyunlaştırmayla değil, içeriğin kilidini açmakla ilgilidir.",
-    faqCancelQ: "İstediğim zaman iptal edebilir miyim?",
-    faqCancelA:
-      "Evet. Faturalandırmayı Yönet'ten istediğiniz zaman iptal edebilirsiniz — mevcut faturalandırma döneminizin sonuna kadar Premium erişiminizi korursunuz.",
+    faqRenewQ: "Tekrar otomatik olarak ücretlendirilecek miyim?",
+    faqRenewA:
+      "Hayır. Premium, {days} günlük erişimin kilidini açan tek seferlik bir ödemedir. Hiçbir şey kendiliğinden yenilenmez — günleriniz bittiğinde Ücretsiz plana dönersiniz ve ilerlemeniz kayıtlı kalır.",
     faqProgressQ: "Yükseltme yapmazsam ilerlememe ne olur?",
     faqProgressA:
       "Hiçbir şey kaybolmaz. Seriniz, XP'niz ve tamamladığınız her ders kaydedilmiş kalır ve her modda başlangıç seviyesi içeriğine ücretsiz erişiminizi korursunuz.",
@@ -328,7 +345,24 @@ export const tr: Dictionary = {
       "Geri sayımlı bir denemeden daha iyisi var: her moddaki gerçek başlangıç seviyesi dersleri süresiz olarak ücretsizdir, böylece bir sayaçla değil, gerçek pratikle karar verebilirsiniz.",
     faqSwitchQ: "Daha sonra Ücretsiz ve Premium arasında geçiş yapabilir miyim?",
     faqSwitchA:
-      "Evet — hazır olduğunuzda yükseltin ya da daha sonra Faturalandırmayı Yönet'ten iptal edin.",
+      "Evet — hazır olduğunuzda yükseltin. Premium'dayken istediğiniz zaman daha fazla gün ekleyebilirsiniz; kalan günlerinizin üzerine eklenir.",
+    checkoutNotConnected: "Ödeme henüz bağlı değil — yakında tekrar kontrol edin.",
+    checkoutSignIn: "Önce giriş yapın.",
+    checkoutTryAgain: "Ödemeyi başlatamadık. Lütfen birazdan tekrar deneyin.",
+    checkoutTooManyAttempts: "Çok fazla deneme. Lütfen biraz bekleyip tekrar deneyin.",
+    paymentConfirmedHeading: "Ödeme onaylandı",
+    paymentConfirmedBody:
+      "Premium {date} tarihine kadar etkin. SentenceStep'i desteklediğiniz için teşekkürler.",
+    paymentPendingHeading: "Ödemeniz onaylanıyor…",
+    paymentPendingBody:
+      "Bu genellikle birkaç saniye sürer ve bu sayfa kendiliğinden güncellenir. Daha uzun sürerse tekrar ödeme yapmayın — ödeme onaylanır onaylanmaz Premium otomatik olarak etkinleşir.",
+    paymentNotCompletedHeading: "Ödeme tamamlanmadı",
+    paymentNotCompletedBody:
+      "Bu ödeme gerçekleşmedi, bu yüzden Premium etkinleştirilmedi. İstediğiniz zaman tekrar deneyebilirsiniz.",
+    paymentReviewHeading: "Ödemenizi inceliyoruz",
+    paymentReviewBody:
+      "Bu ödemenin hızlı bir elle kontrole ihtiyacı var. Onaylanır onaylanmaz Premium etkinleştirilecek — tekrar ödeme yapmanıza gerek yok.",
+    paymentNotFound: "Bu ödemeyi bulamadık.",
   },
   lesson: {
     completeHeading: "Ders tamamlandı",
@@ -822,8 +856,7 @@ export const tr: Dictionary = {
     freeModeCount: "{mode} ücretsiz",
     startLearningFree: "Ücretsiz öğrenmeye başla",
     premiumHeading: "Daha fazlasına hazır olduğunuzda",
-    premiumSubtitle:
-      "Premium, SentenceStep'in sunduğu her şeyin kilidini {price} karşılığında açar.",
+    premiumSubtitle: "Premium, SentenceStep'in sunduğu her şeyin kilidini açar.",
     unlockPremiumCta: "SentenceStep Premium'un kilidini aç",
     modesHeading: "Akıcılık kazanmanın üç yolu",
     modesSubtitle: "Her mod aynı basit döngüyü kullanır: cümleyi dinle, yaz, yerleştiğini hisset.",

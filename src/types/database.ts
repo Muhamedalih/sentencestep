@@ -290,6 +290,73 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["billing_events"]["Insert"]>;
         Relationships: [];
       };
+      payment_orders: {
+        Row: {
+          id: string;
+          user_id: string;
+          reference_id: string;
+          provider: string;
+          provider_env: "live" | "test";
+          provider_payment_id: string | null;
+          pricing_tier: "A" | "B";
+          pricing_country: string | null;
+          pricing_country_source: "netlify_geo" | "default";
+          price_usd_cents: number;
+          fx_rate_per_usd: number;
+          charge_amount: number;
+          charge_currency: string;
+          premium_days: number;
+          status:
+            | "created"
+            | "pending"
+            | "fulfilled"
+            | "failed"
+            | "cancelled"
+            | "expired"
+            | "needs_review";
+          provider_status: string | null;
+          checkout_url: string | null;
+          link_expires_at: string | null;
+          paid_at: string | null;
+          fulfilled_at: string | null;
+          premium_period_start: string | null;
+          premium_period_end: string | null;
+          failure_reason: string | null;
+          last_verified_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          reference_id: string;
+          provider: string;
+          provider_env: "live" | "test";
+          provider_payment_id?: string | null;
+          pricing_tier: "A" | "B";
+          pricing_country?: string | null;
+          pricing_country_source: "netlify_geo" | "default";
+          price_usd_cents: number;
+          fx_rate_per_usd: number;
+          charge_amount: number;
+          charge_currency: string;
+          premium_days: number;
+          status?: Database["public"]["Tables"]["payment_orders"]["Row"]["status"];
+          provider_status?: string | null;
+          checkout_url?: string | null;
+          link_expires_at?: string | null;
+          paid_at?: string | null;
+          fulfilled_at?: string | null;
+          premium_period_start?: string | null;
+          premium_period_end?: string | null;
+          failure_reason?: string | null;
+          last_verified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["payment_orders"]["Insert"]>;
+        Relationships: [];
+      };
       access_settings: {
         Row: {
           id: number;
@@ -1524,6 +1591,27 @@ export interface Database {
       complete_lesson: {
         Args: { p_lesson_id: string; p_mode: string; p_accuracy: number };
         Returns: { is_first_completion: boolean; attempt_count: number }[];
+      };
+      fulfill_payment_order: {
+        Args: {
+          p_reference_id: string;
+          p_provider_payment_id: string;
+          p_charge_amount: number;
+          p_charge_currency: string;
+          p_paid_at: string;
+          p_provider_status: string;
+        };
+        Returns: {
+          result:
+            | "fulfilled"
+            | "already_fulfilled"
+            | "not_found"
+            | "needs_review"
+            | "mismatch"
+            | "missing_paid_at"
+            | "user_not_found";
+          premium_period_end?: string | null;
+        };
       };
     };
     Enums: Record<string, never>;

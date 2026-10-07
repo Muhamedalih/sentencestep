@@ -3,7 +3,6 @@ import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { formatPrice } from "@/lib/billing/pricing";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 
 export function PremiumSection({ t }: { t: Dictionary }) {
@@ -15,7 +14,7 @@ export function PremiumSection({ t }: { t: Dictionary }) {
             {t.marketing.premiumHeading}
           </h2>
           <p className="text-muted-foreground mt-3 max-w-lg text-lg text-balance" dir="auto">
-            {t.marketing.premiumSubtitle.replace("{price}", formatPrice())}
+            {t.marketing.premiumSubtitle}
           </p>
           <div className="mt-6">
             <Button

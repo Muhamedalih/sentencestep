@@ -9,13 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ManageBillingButton } from "@/components/billing/manage-billing-button";
+import { PREMIUM_DAYS } from "@/lib/billing/pricing";
 import { signOut, updateDisplayNameAction } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { getLearnerLevel, learnerLevelSupportLabel } from "@/lib/progress/learner-level";
 import { clearProgress } from "@/lib/progress/store";
 import type { StreakState } from "@/lib/progress/types";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { formatLongDate } from "@/lib/i18n/format-date";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import type { AccessState } from "@/lib/billing/types";
 import { cn } from "@/lib/utils";
@@ -116,7 +117,7 @@ export function AccountSection({
                 <span>
                   {t.settings.memberSinceLabel.replace(
                     "{date}",
-                    new Date(memberSince).toLocaleDateString(),
+                    formatLongDate(memberSince, locale),
                   )}
                 </span>
               )}
@@ -143,7 +144,7 @@ export function AccountSection({
 
         <div className="border-border flex items-center justify-between gap-4 border-t pt-4 text-sm md:pt-5 md:text-base">
           <span className="text-muted-foreground">{t.settings.planLabel}</span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Badge
               variant={access.isPremium ? "default" : "muted"}
               className="md:px-3 md:py-1 md:text-sm"
@@ -151,9 +152,26 @@ export function AccountSection({
               {access.isPremium ? t.common.premium : t.common.freePlan}
             </Badge>
             {access.isPremium ? (
-              <ManageBillingButton
-                className={cn(buttonLift, "hover:shadow-md md:h-10 md:px-5 md:text-base")}
-              />
+              access.expiresAt && (
+                <>
+                  <span className="text-muted-foreground text-xs md:text-sm">
+                    {t.premium.premiumUntil.replace(
+                      "{date}",
+                      formatLongDate(access.expiresAt, locale),
+                    )}
+                  </span>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className={cn(buttonLift, "hover:shadow-md md:h-10 md:px-5 md:text-base")}
+                  >
+                    <Link href="/upgrade">
+                      {t.premium.extendCta.replace("{days}", String(PREMIUM_DAYS))}
+                    </Link>
+                  </Button>
+                </>
+              )
             ) : (
               <Button
                 asChild

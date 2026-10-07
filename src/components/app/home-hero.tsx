@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
-import { formatPrice } from "@/lib/billing/pricing";
 import { findCurrentLesson } from "@/lib/progress/level";
 import type { LessonUnit } from "@/types/content";
 import type { Book } from "@/types/library";
@@ -238,7 +237,7 @@ export function HomeHero({
             </div>
             <Button asChild size="lg" className="mt-1 w-fit">
               <Link href="/upgrade" dir="auto">
-                {t.premium.upgradeCta.replace("{price}", formatPrice())}
+                {t.premium.upgradeCta}
               </Link>
             </Button>
           </div>

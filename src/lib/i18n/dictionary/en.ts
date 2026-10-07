@@ -275,7 +275,7 @@ export const en: Dictionary = {
     thanksWithDate: "Thanks for supporting SentenceStep. Your access continues until {date}.",
     thanks: "Thanks for supporting SentenceStep.",
     backToLearning: "Back to learning",
-    cancelAnytime: ", cancel anytime",
+    accessForDays: "{days} days of Premium access",
     everythingInFree: "Everything in Free, plus the complete library.",
     benefits: [
       "Full story library, every level",
@@ -286,14 +286,35 @@ export const en: Dictionary = {
     ],
     signInToUpgrade: "Sign in to upgrade",
     redirecting: "Redirecting…",
-    opening: "Opening…",
-    manageBilling: "Manage billing",
-    lockedBenefits: ["Unlock this lesson", "Unlock the complete library", "Cancel anytime"],
+    extendCta: "Add {days} more days",
+    oneTimeBadge: "One-time payment",
+    perDayCaption: "About {amount} a day",
+    checkoutStepsHeading: "How it works",
+    checkoutSteps: [
+      "Pay once on a secure payment page.",
+      "Premium unlocks as soon as your payment is confirmed.",
+      "After {days} days you simply return to Free — nothing renews.",
+    ],
+    trustSecure: "Secure payment",
+    trustNoRenewal: "No auto-renewal",
+    trustInstant: "Unlocks instantly",
+    paymentPartnerNote:
+      "You'll pay on a secure page run by our payment partner. It may show the amount in a different currency — the price that applies is the one shown here.",
+    paymentDetailsCaption:
+      "Your payment details are handled by our payment partner — we never see or store them.",
+    extendHeading: "Add more days",
+    extendStackNote: "The {days} extra days are added on top of the days you have left.",
+    premiumUntil: "Premium until {date}",
+    lockedBenefits: [
+      "Unlock this lesson",
+      "Unlock the complete library",
+      "One payment, no auto-renewal",
+    ],
     premiumLessonBadge: "Premium lesson",
     lockedBody:
       "This lesson is part of SentenceStep Premium. Upgrade to unlock it — and the rest of the library.",
     backToLessons: "Back to lessons",
-    upgradeCta: "Upgrade — {price}",
+    upgradeCta: "Upgrade to Premium",
     priceAnchorCaption: "Less than a cup of coffee",
     contentUnavailableBody:
       "This lesson isn't available right now. Nothing was lost — please try again in a moment, or pick a different lesson.",
@@ -312,9 +333,9 @@ export const en: Dictionary = {
     faqIncludedQ: "What's actually included in Premium?",
     faqIncludedA:
       "Every level of Ordinary Lessons, Stories, and Conversation, plus the full Word Lists collection. Your streak, XP, and daily goal already work the same on Free — Premium is about unlocking content, not gamification.",
-    faqCancelQ: "Can I cancel anytime?",
-    faqCancelA:
-      "Yes. Cancel anytime from Manage Billing — you'll keep Premium access until the end of your current billing period.",
+    faqRenewQ: "Will I be charged again automatically?",
+    faqRenewA:
+      "No. Premium is a one-time payment that unlocks {days} days of access. Nothing renews on its own — when your days run out you simply return to the Free plan, and your progress stays saved.",
     faqProgressQ: "What happens to my progress if I don't upgrade?",
     faqProgressA:
       "Nothing is ever lost. Your streak, XP, and every lesson you've completed stay saved, and you keep free access to Beginner-level content in every mode.",
@@ -322,7 +343,24 @@ export const en: Dictionary = {
     faqTrialA:
       "There's something better than a countdown trial: real Beginner-level lessons across every mode are free forever, so you can decide with actual practice, not a timer.",
     faqSwitchQ: "Can I switch between Free and Premium later?",
-    faqSwitchA: "Yes — upgrade whenever you're ready, or cancel later from Manage Billing.",
+    faqSwitchA:
+      "Yes — upgrade whenever you're ready. You can add more days at any time while you're on Premium, and they're added on top of what you have left.",
+    checkoutNotConnected: "Billing isn't connected yet — check back soon.",
+    checkoutSignIn: "Sign in first.",
+    checkoutTryAgain: "We couldn't start checkout. Please try again in a moment.",
+    checkoutTooManyAttempts: "Too many attempts. Please wait a little and try again.",
+    paymentConfirmedHeading: "Payment confirmed",
+    paymentConfirmedBody: "Premium is active until {date}. Thank you for supporting SentenceStep.",
+    paymentPendingHeading: "Confirming your payment…",
+    paymentPendingBody:
+      "This usually takes a few seconds and this page updates by itself. If it takes longer, don't pay again — your Premium activates automatically as soon as the payment is confirmed.",
+    paymentNotCompletedHeading: "Payment not completed",
+    paymentNotCompletedBody:
+      "This payment didn't go through, so Premium wasn't activated. You can try again whenever you like.",
+    paymentReviewHeading: "We're reviewing your payment",
+    paymentReviewBody:
+      "This payment needs a quick manual check. Premium will be activated as soon as it's confirmed — there's no need to pay again.",
+    paymentNotFound: "We couldn't find that payment.",
   },
   lesson: {
     completeHeading: "Lesson complete",
@@ -813,7 +851,7 @@ export const en: Dictionary = {
     freeModeCount: "free {mode}",
     startLearningFree: "Start Learning Free",
     premiumHeading: "When you're ready for more",
-    premiumSubtitle: "Premium unlocks everything SentenceStep offers, for {price}.",
+    premiumSubtitle: "Premium unlocks everything SentenceStep offers.",
     unlockPremiumCta: "Unlock SentenceStep Premium",
     modesHeading: "Three ways to build fluency",
     modesSubtitle:

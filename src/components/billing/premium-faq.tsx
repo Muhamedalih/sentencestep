@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PREMIUM_DAYS } from "@/lib/billing/pricing";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /**
@@ -11,7 +12,7 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
 export function PremiumFaq({ t }: { t: Dictionary }) {
   const items: { q: string; a: string }[] = [
     { q: t.premium.faqIncludedQ, a: t.premium.faqIncludedA },
-    { q: t.premium.faqCancelQ, a: t.premium.faqCancelA },
+    { q: t.premium.faqRenewQ, a: t.premium.faqRenewA.replace("{days}", String(PREMIUM_DAYS)) },
     { q: t.premium.faqProgressQ, a: t.premium.faqProgressA },
     { q: t.premium.faqTrialQ, a: t.premium.faqTrialA },
     { q: t.premium.faqSwitchQ, a: t.premium.faqSwitchA },

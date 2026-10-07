@@ -316,13 +316,35 @@ export interface Dictionary {
     thanksWithDate: string;
     thanks: string;
     backToLearning: string;
-    cancelAnytime: string;
+    /** The line under the price: what it buys — `{days}` is replaced with PREMIUM_DAYS. */
+    accessForDays: string;
     everythingInFree: string;
     benefits: string[];
     signInToUpgrade: string;
     redirecting: string;
-    opening: string;
-    manageBilling: string;
+    /** Button for a current premium learner to pay for more days — `{days}` is replaced with PREMIUM_DAYS. */
+    extendCta: string;
+    /** Short chip beside the price: it is a single purchase, not a subscription. */
+    oneTimeBadge: string;
+    /** Under the price — `{amount}` is the USD price per day, e.g. "$0.07". */
+    perDayCaption: string;
+    /** Heading and three short steps (`{days}` is PREMIUM_DAYS in the last one) above the checkout button. */
+    checkoutStepsHeading: string;
+    checkoutSteps: string[];
+    /** The three reassurance chips under the checkout button. */
+    trustSecure: string;
+    trustNoRenewal: string;
+    trustInstant: string;
+    /** Neutral heads-up above the checkout button: the provider's own page may show the amount in another currency. It deliberately names no currency and no amount. */
+    paymentPartnerNote: string;
+    /** Under the checkout button: card or wallet details are handled by the payment partner, never by us. */
+    paymentDetailsCaption: string;
+    /** Heading of the "add more days" block for a current Premium learner. */
+    extendHeading: string;
+    /** `{days}` is PREMIUM_DAYS. */
+    extendStackNote: string;
+    /** Settings' plan row: "Premium until {date}". */
+    premiumUntil: string;
     lockedBenefits: string[];
     premiumLessonBadge: string;
     lockedBody: string;
@@ -348,14 +370,30 @@ export interface Dictionary {
     faqHeading: string;
     faqIncludedQ: string;
     faqIncludedA: string;
-    faqCancelQ: string;
-    faqCancelA: string;
+    /** `{days}` is replaced with PREMIUM_DAYS. */
+    faqRenewQ: string;
+    faqRenewA: string;
     faqProgressQ: string;
     faqProgressA: string;
     faqTrialQ: string;
     faqTrialA: string;
     faqSwitchQ: string;
     faqSwitchA: string;
+    /** Errors shown by the checkout action (src/lib/billing/checkout-actions.ts). */
+    checkoutNotConnected: string;
+    checkoutSignIn: string;
+    checkoutTryAgain: string;
+    checkoutTooManyAttempts: string;
+    /** The /billing/return page, shown when the payment provider sends the learner back. `{date}` is the premium end date. */
+    paymentConfirmedHeading: string;
+    paymentConfirmedBody: string;
+    paymentPendingHeading: string;
+    paymentPendingBody: string;
+    paymentNotCompletedHeading: string;
+    paymentNotCompletedBody: string;
+    paymentReviewHeading: string;
+    paymentReviewBody: string;
+    paymentNotFound: string;
   };
   lesson: {
     completeHeading: string;
@@ -1036,7 +1074,7 @@ export interface Dictionary {
     freeModeCount: string;
     startLearningFree: string;
     premiumHeading: string;
-    /** `Premium unlocks everything SentenceStep offers, for {price}.` */
+    /** Deliberately has no price: prices are only shown on /upgrade, resolved per visitor on the server. */
     premiumSubtitle: string;
     unlockPremiumCta: string;
     modesHeading: string;

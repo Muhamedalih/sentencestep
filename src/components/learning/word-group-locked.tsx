@@ -7,7 +7,6 @@ import { Lock, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
-import { formatPrice } from "@/lib/billing/pricing";
 import { popIn } from "@/lib/motion";
 
 /**
@@ -61,7 +60,7 @@ export function WordGroupLocked({
       <div className="flex w-full flex-col items-center gap-3 sm:w-56 sm:shrink-0">
         <Button asChild size="lg" className="w-full">
           <Link href="/upgrade" dir="auto">
-            {t.premium.upgradeCta.replace("{price}", formatPrice())}
+            {t.premium.upgradeCta}
           </Link>
         </Button>
         <p className="text-muted-foreground text-xs">{t.premium.priceAnchorCaption}</p>

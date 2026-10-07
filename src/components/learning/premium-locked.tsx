@@ -7,7 +7,6 @@ import { BookOpen, Lock, MessagesSquare, Sparkles } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatPrice } from "@/lib/billing/pricing";
 import { popIn } from "@/lib/motion";
 import type { LearningMode } from "@/types/content";
 
@@ -62,7 +61,7 @@ export function PremiumLocked({
       <div className="flex w-full flex-col items-center gap-3 sm:w-56 sm:shrink-0">
         <Button asChild size="lg" className="w-full">
           <Link href="/upgrade" dir="auto">
-            {t.premium.upgradeCta.replace("{price}", formatPrice())}
+            {t.premium.upgradeCta}
           </Link>
         </Button>
         <p className="text-muted-foreground text-xs">{t.premium.priceAnchorCaption}</p>
