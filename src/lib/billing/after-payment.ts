@@ -1,3 +1,5 @@
+import { authPageHref } from "@/lib/supabase/safe-redirect";
+
 /**
  * "Take me back to the lesson I was stopped at." A learner who opens the
  * upgrade page from a locked lesson is returned to that lesson after paying.
@@ -27,4 +29,17 @@ export function safeLessonPath(value: unknown): string | null {
 /** `value` of a `?next=` query parameter, which Next hands over as a string or a list. */
 export function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+/**
+ * Where a learner who is not signed in goes to sign in before paying: the
+ * plans page again, still remembering the lesson they were stopped at (if
+ * any) so the confirmation page can lead back to it.
+ */
+export function upgradeSignInHref(afterPaymentPath?: string | null): string {
+  const lesson = safeLessonPath(afterPaymentPath);
+  return authPageHref(
+    "/login",
+    lesson ? `/upgrade?next=${encodeURIComponent(lesson)}` : "/upgrade",
+  );
 }

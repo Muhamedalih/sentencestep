@@ -137,6 +137,9 @@ export async function signUp(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("displayName") ?? "").trim();
+  // Only set when the sign-up page was opened on the way somewhere (the plans
+  // page, from a locked lesson); otherwise "/learn", as it always was.
+  const next = safeNextPath(formData.get("next"));
 
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
@@ -174,7 +177,12 @@ export async function signUp(
       password,
       options: {
         ...(displayName ? { data: { display_name: displayName } } : {}),
-        emailRedirectTo: `${origin}/auth/callback`,
+        // The plain address stays exactly as before for an ordinary sign-up; `next`
+        // is added only when there is somewhere else to land after confirming.
+        emailRedirectTo:
+          next === "/learn"
+            ? `${origin}/auth/callback`
+            : `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
   } catch (err) {
@@ -213,7 +221,7 @@ export async function signUp(
       .update({ preferred_language: chosenLocale })
       .eq("id", data.session.user.id);
 
-    redirect("/learn");
+    redirect(next);
   }
 
   return { success: t.auth.checkInboxBody };

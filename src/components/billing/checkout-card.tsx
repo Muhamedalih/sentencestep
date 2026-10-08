@@ -22,6 +22,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { upgradeSignInHref } from "@/lib/billing/after-payment";
 import { startCheckout } from "@/lib/billing/checkout-actions";
 import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
 import type { PlanView } from "@/lib/billing/plan-views";
@@ -301,7 +302,9 @@ export function CheckoutCard({
                 </Button>
               ) : (
                 <Button asChild size="lg" className="w-full">
-                  <Link href="/login?next=/upgrade">{t.premium.signInToUpgrade}</Link>
+                  <Link href={upgradeSignInHref(afterPaymentPath)}>
+                    {t.premium.signInToUpgrade}
+                  </Link>
                 </Button>
               )}
               {state?.error && (
@@ -446,7 +449,7 @@ export function CheckoutCard({
               </Button>
             ) : (
               <Button asChild size="lg">
-                <Link href="/login?next=/upgrade">{t.premium.signInToUpgrade}</Link>
+                <Link href={upgradeSignInHref(afterPaymentPath)}>{t.premium.signInToUpgrade}</Link>
               </Button>
             )}
           </div>

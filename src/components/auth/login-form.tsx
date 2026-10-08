@@ -11,6 +11,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { signIn, signInWithGoogle } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { authPageHref } from "@/lib/supabase/safe-redirect";
 
 const initialState: AuthActionState = {};
 
@@ -116,7 +117,10 @@ export function LoginForm({
 
         <p className="text-muted-foreground mt-6 text-center text-sm">
           {t.auth.noAccount}{" "}
-          <Link href="/register" className="text-primary font-medium hover:underline">
+          <Link
+            href={authPageHref("/register", next)}
+            className="text-primary font-medium hover:underline"
+          >
             {t.auth.createOne}
           </Link>
         </p>

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { firstParam, safeLessonPath } from "./after-payment";
+import { firstParam, safeLessonPath, upgradeSignInHref } from "./after-payment";
 
 test("safeLessonPath: accepts a lesson page of each mode", () => {
   for (const path of [
@@ -54,4 +54,24 @@ test("firstParam: takes the first of a list, or the value itself", () => {
   assert.equal(firstParam(["a", "b"]), "a");
   assert.equal(firstParam(undefined), undefined);
   assert.equal(firstParam([]), undefined);
+});
+
+test("upgradeSignInHref: with no lesson, sign-in leads back to the plans page", () => {
+  const href = upgradeSignInHref();
+  assert.equal(new URL(href, "https://sentencestep.com").pathname, "/login");
+  assert.equal(new URL(href, "https://sentencestep.com").searchParams.get("next"), "/upgrade");
+  assert.equal(upgradeSignInHref(null), href);
+});
+
+test("upgradeSignInHref: with a lesson, the plans page it returns to still remembers the lesson", () => {
+  const href = upgradeSignInHref("/learn/normal/normal-7");
+  const next = new URL(href, "https://sentencestep.com").searchParams.get("next");
+  assert.equal(next, "/upgrade?next=%2Flearn%2Fnormal%2Fnormal-7");
+  const lesson = new URL(String(next), "https://sentencestep.com").searchParams.get("next");
+  assert.equal(safeLessonPath(lesson), "/learn/normal/normal-7");
+});
+
+test("upgradeSignInHref: anything that is not a lesson page is ignored", () => {
+  assert.equal(upgradeSignInHref("https://evil.example/x"), upgradeSignInHref());
+  assert.equal(upgradeSignInHref("/admin"), upgradeSignInHref());
 });

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   countWords,
   isLearnerVisibleStatus,
+  nextLevelIsAllPremium,
   resolveLevelSupportTitle,
   resolveVocabularySupportText,
   tallySentenceStats,
@@ -155,4 +156,48 @@ test("tallySentenceStats: totals sentences and words per lesson; lessons with no
   assert.deepEqual(stats.get("b"), { sentences: 1, words: 1 });
   assert.equal(stats.has("c"), false);
   assert.equal(tallySentenceStats([]).size, 0);
+});
+
+const lesson = (id: string, level: number, isFree: boolean) => ({ id, level, isFree });
+
+test("nextLevelIsAllPremium: the next level has lessons and none is free", () => {
+  const units = [
+    lesson("a", 1, true),
+    lesson("b", 1, true),
+    lesson("c", 2, false),
+    lesson("d", 2, false),
+  ];
+  assert.equal(nextLevelIsAllPremium(units, 1), true);
+});
+
+test("nextLevelIsAllPremium: one free lesson in the next level is enough to say it is not locked", () => {
+  const units = [lesson("a", 1, true), lesson("c", 2, false), lesson("d", 2, true)];
+  assert.equal(nextLevelIsAllPremium(units, 1), false);
+});
+
+test("nextLevelIsAllPremium: the last level has no next level", () => {
+  const units = [lesson("a", 1, true), lesson("c", 2, false)];
+  assert.equal(nextLevelIsAllPremium(units, 2), false);
+  assert.equal(nextLevelIsAllPremium([], 1), false);
+});
+
+test("nextLevelIsAllPremium: the free onboarding copies, which the catalog never lists, do not count", () => {
+  const units = [
+    lesson("a", 1, true),
+    lesson("onboarding-intermediate", 2, true),
+    lesson("onboarding-advanced", 3, true),
+    lesson("c", 2, false),
+  ];
+  assert.equal(nextLevelIsAllPremium(units, 1), true);
+});
+
+test("nextLevelIsAllPremium: levels need not be consecutive", () => {
+  const units = [lesson("a", 1, true), lesson("c", 3, false)];
+  assert.equal(nextLevelIsAllPremium(units, 1), true);
+  assert.equal(nextLevelIsAllPremium(units, 2), true);
+});
+
+test("nextLevelIsAllPremium: a level whose only lessons are hidden onboarding copies is not 'locked' (nothing is shown)", () => {
+  const units = [lesson("a", 1, true), lesson("onboarding-advanced", 2, true)];
+  assert.equal(nextLevelIsAllPremium(units, 1), false);
 });
