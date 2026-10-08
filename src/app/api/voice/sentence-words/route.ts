@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { createClient } from "@/lib/supabase/server";
 import { resolveSentenceWordAudio } from "@/lib/voice/isolated-word-audio";
+import { canReadSentence } from "@/lib/voice/sentence-access";
 
 /**
  * Every isolated-word clip of one lesson sentence, in one request.
@@ -20,7 +22,10 @@ import { resolveSentenceWordAudio } from "@/lib/voice/isolated-word-audio";
  *
  * The client names a sentence and a voice, never text: the words are derived
  * server-side from the real sentence row, so this can't be used as a general
- * text-to-speech endpoint. Open to guests, like the lessons themselves.
+ * text-to-speech endpoint. Open to guests for the free lessons, like the lessons
+ * themselves: a sentence the caller couldn't open (a Premium lesson, for someone
+ * without access) answers 404 exactly like an unknown id, decided by the same
+ * row-level security as the lesson page (see canReadSentence).
  */
 export const dynamic = "force-dynamic";
 
@@ -43,6 +48,22 @@ async function respond(
   if (!ID_PATTERN.test(sentenceId) || !ID_PATTERN.test(voiceId)) return badRequest();
 
   try {
+    // The word clips are derived from the sentence text, which the next call reads
+    // with the service role. Asked first, with the caller's own session, so a
+    // premium sentence's words and audio are never handed to someone who couldn't
+    // open its lesson.
+    const supabase = await createClient();
+    const allowed = await canReadSentence(
+      (id) => supabase.from("sentences").select("id").eq("id", id).maybeSingle(),
+      sentenceId,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Unknown sentence or voice." },
+        { status: 404, headers: { "Cache-Control": NOT_CACHEABLE } },
+      );
+    }
+
     const result = await resolveSentenceWordAudio({ sentenceId, voiceId, generate });
     if (!result) {
       return NextResponse.json(

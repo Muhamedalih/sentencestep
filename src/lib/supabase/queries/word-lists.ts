@@ -18,12 +18,16 @@ import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
  * see src/lib/word-lists.ts, the single place the rest of the app reads
  * word groups/words from.
  *
- * fetchWordGroupSummaries uses the public client: word_groups rows
- * themselves are fully public-readable regardless of premium status (same
- * as `lessons` — only the content *inside* a premium group is gated), and
- * the word count here only needs vocabulary_words ids, not their gated
- * sentence/target_word columns, both of which are still hidden from this
- * client by RLS for a premium group — harmless, since neither is read.
+ * fetchWordGroupSummaries reads the groups with the public client:
+ * word_groups rows themselves are fully public-readable regardless of
+ * premium status (same as `lessons` — only the content *inside* a premium
+ * group is gated). The word ids and counts come from the service-role
+ * client instead: vocabulary_words RLS hides a premium group's rows
+ * entirely (ids included) from the anonymous client, so reading ids there
+ * made a paying subscriber's progress on every premium group read as 0
+ * whenever the sitewide free-for-all switch was off. Only ids and group ids
+ * are read, never a gated column (target_word, sentences), so nothing a
+ * locked group protects reaches the client.
  *
  * fetchWordGroupById fetches the actual words, so it needs the
  * session-aware client — exactly the same reasoning as fetchLessonById in
@@ -36,26 +40,19 @@ import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
 export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<WordGroupSummary[]> {
   const supabase = createPublicClient();
 
-  const [
-    { data: groupRows, error: groupsError },
-    { data: words, error: wordsError },
-    { data: allWords, error: allWordsError },
-  ] = await Promise.all([
-    supabase.from("word_groups").select("*").eq("status", "published").order("order_index"),
-    supabase.from("vocabulary_words").select("id, group_id"),
-    // Service-role, not the public client above: a locked group's real word
-    // count has to be accurate regardless of whether THIS viewer can see its
-    // rows (groups no longer all have the same word count — see
-    // WORDS_PER_GROUP's doc comment). Only the count is derived from this
-    // read; wordIds below stays sourced from the public client exactly as
-    // before, so a locked group's actual word ids stay exactly as
-    // RLS-scoped as they always were.
-    createServiceRoleClient().from("vocabulary_words").select("group_id"),
-  ]);
+  const [{ data: groupRows, error: groupsError }, { data: words, error: wordsError }] =
+    await Promise.all([
+      supabase.from("word_groups").select("*").eq("status", "published").order("order_index"),
+      // Service-role, not the public client above: a group's real word ids and
+      // count have to be accurate regardless of whether THIS viewer can read
+      // its rows (a locked group viewed by a free learner, or a premium group
+      // viewed by a subscriber, which the anonymous client can never resolve
+      // as one). Ids only — see the doc comment above.
+      createServiceRoleClient().from("vocabulary_words").select("id, group_id"),
+    ]);
 
   if (groupsError) throw groupsError;
   if (wordsError) throw wordsError;
-  if (allWordsError) throw allWordsError;
   // Defensive double-check, see isLearnerVisibleStatus's doc comment.
   const groups = (groupRows ?? []).filter((group) => isLearnerVisibleStatus(group.status));
 
@@ -64,11 +61,6 @@ export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<W
     const list = idsByGroup.get(word.group_id) ?? [];
     list.push(word.id);
     idsByGroup.set(word.group_id, list);
-  }
-
-  const countByGroup = new Map<string, number>();
-  for (const word of allWords ?? []) {
-    countByGroup.set(word.group_id, (countByGroup.get(word.group_id) ?? 0) + 1);
   }
 
   const translations = locale
@@ -89,17 +81,11 @@ export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<W
       description: group.description ?? undefined,
       descriptionAr: group.description_ar ?? undefined,
       isFree: group.is_free,
-      // Not idsByGroup.get(group.id)?.length — that's RLS-scoped to what
-      // THIS viewer can see (empty for a locked group viewed by a free
-      // user), which would misreport a locked group as having 0 words. This
-      // comes from the service-role read above instead, which sees every
-      // group's true count regardless of lock status.
-      wordCount: countByGroup.get(group.id) ?? 0,
-      // Accurate for any group this session can actually see (free groups,
-      // or any group at all for a premium/admin session); empty for a
-      // locked group viewed by a free user — which is fine, since that
-      // learner's progress on a group they've never accessed is always 0
-      // anyway.
+      // Both come from the service-role read above, so they are every
+      // group's true figures whatever this viewer's access: a locked group
+      // is never misreported as empty, and a subscriber's progress on a
+      // premium group counts its real words.
+      wordCount: idsByGroup.get(group.id)?.length ?? 0,
       wordIds: idsByGroup.get(group.id) ?? [],
     };
 
