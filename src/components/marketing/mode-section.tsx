@@ -3,13 +3,13 @@ import { ArrowRight } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { REQUIRED_SENTENCE_COUNT } from "@/lib/admin/validation";
-import { filterFree, getAllLessons } from "@/lib/content";
+import { filterFree, getAllLessonSummaries } from "@/lib/content";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import { LEARNING_MODES, modeMeta } from "@/lib/learning-modes";
 import { MODE_TITLE_KEY, MODE_DESCRIPTION_KEY } from "@/components/marketing/mode-title-key";
 
 export async function ModeSection({ t }: { t: Dictionary }) {
-  const lessonsByMode = await getAllLessons();
+  const lessonsByMode = await getAllLessonSummaries();
 
   return (
     <section id="modes" className="mx-auto max-w-6xl px-6 py-20">
