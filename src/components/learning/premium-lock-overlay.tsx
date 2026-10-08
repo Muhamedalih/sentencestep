@@ -23,6 +23,9 @@ import { cn } from "@/lib/utils";
  * Fixed dark/translucent chip rather than theme tokens, for the same reason
  * as the other chips that sit on illustrations: it has to stay legible over
  * whatever the cover paints, in either site theme.
+ *
+ * The 2px blur is deliberate: 3px was checked on a mock card and hid too much
+ * of the cover, so keep it light if you tune it.
  */
 export function PremiumLockOverlay({ className }: { className?: string }) {
   const { t, dir } = useLocale();
