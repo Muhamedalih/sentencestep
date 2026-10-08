@@ -7,7 +7,6 @@ import { Home, Library, ListChecks, NotebookText } from "lucide-react";
 
 import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { cn } from "@/lib/utils";
 
@@ -96,27 +95,13 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
   ].filter((item) => item.key !== "library" || isAdminUser);
 
-  // Every route this sidebar links to, present on every /learn/* page —
-  // warmed in the background instead of through each Link's own default
-  // prefetch (see this file's Links below, all `prefetch={false}`) so they
-  // don't all fire the instant this persistent nav mounts, competing with
-  // whatever the current page itself needs to load. See
-  // useDeferredPrefetch's own doc comment for why router.prefetch() (not a
-  // <link> tag) is the right mechanism here.
-  //
-  // The sub-nav routes go first and don't wait out the usual startup delay:
-  // the only thing a learner does next from Daily Lessons is tap General
-  // Stories (or back), and queued behind the four primary routes that tap
-  // landed on a cold route for about a second after every arrival — the
-  // intermittent "button didn't respond" lag.
-  const subNavHrefs =
-    active === "stories"
-      ? ["/learn/stories", "/learn/normal"]
-      : active === "library" && isAdminUser
-        ? ["/learn/library", "/learn/library/novels"]
-        : [];
-  useDeferredPrefetch(subNavHrefs, 0);
-  useDeferredPrefetch(NAV_ITEMS.map((item) => item.href));
+  // Nothing here warms these routes in the background any more: every route
+  // is dynamic (a prefetch runs the layouts' auth and database reads on a
+  // serverless function), and warming all of them on every full page load
+  // cost a Netlify function run each (measured: Home alone fired 5) for pages
+  // the learner mostly never opens. Each Link below warms its own route on
+  // intent instead (see SidebarLink / useIntentPrefetch), and the route-level
+  // loading.tsx files show a skeleton the moment a link is pressed.
 
   return (
     <nav

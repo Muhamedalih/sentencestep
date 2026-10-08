@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { PremiumLockOverlay } from "@/components/learning/premium-lock-overlay";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
 import { TIER_BADGE_CLASS } from "@/lib/tier-colors";
@@ -40,6 +41,7 @@ export function StoryCard({
 }) {
   const locked = !lesson.isFree && !isPremiumUser;
   const { locale, dir, t } = useLocale();
+  const intent = useIntentPrefetch(`/learn/stories/${lesson.id}`);
   const difficulty = difficultyForLevel(lesson.level);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
   const supportTitle = lesson.supportTitle ?? lesson.title;
@@ -52,6 +54,12 @@ export function StoryCard({
         aria-label={
           locked ? t.premium.lockedContentAriaLabel.replace("{title}", lesson.title) : lesson.title
         }
+        // Not prefetched as it scrolls into view: each of these is a full server
+        // render of the lesson page, and a catalog shows about eight at once. The
+        // card warms its own lesson on intent instead; a locked one never does
+        // (it opens the static upsell).
+        prefetch={false}
+        {...(locked ? undefined : intent)}
         className="focus-visible:ring-ring focus-visible:ring-offset-background block h-full rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <div

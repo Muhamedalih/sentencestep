@@ -139,6 +139,7 @@ export function AppHeader({
       <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
       <Link
         href="/login"
+        prefetch={false}
         className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
       >
         {t.common.signIn}
@@ -156,6 +157,7 @@ export function AppHeader({
       <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
         <Link
           href="/learn"
+          prefetch={false}
           aria-label={t.marketing.dashboardLinkAriaLabel}
           className="inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11"
         >

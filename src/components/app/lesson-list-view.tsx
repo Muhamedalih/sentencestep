@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useLocale } from "@/components/providers/locale-provider";
 import { getLessonsByLevel, getUnits, withOpeningLessonPlacement } from "@/lib/content-helpers";
-import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
+import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { useProgress } from "@/hooks/use-progress";
 import {
   difficultyForLevel,
@@ -79,6 +79,7 @@ function LessonCard({
 }) {
   const { t, dir, locale } = useLocale();
   const locked = !lesson.isFree && !isPremiumUser;
+  const intent = useIntentPrefetch(`/learn/${mode}/${lesson.id}`);
   const difficulty = difficultyForLevel(lesson.level);
   const difficultyLabel = locale ? tierSupportLabel(difficulty, locale) : "";
   // Never falls back to lesson.description (English) under a support-
@@ -104,18 +105,18 @@ function LessonCard({
         aria-label={
           locked ? t.premium.lockedContentAriaLabel.replace("{title}", lesson.title) : lesson.title
         }
-        // Every card's own default Link prefetch would otherwise fire the
-        // instant up to LESSONS_PER_PAGE of these mount at once — UnitSection
-        // below calls useDeferredPrefetch with this same page's unlocked
-        // lesson hrefs instead, which warms the identical set of routes
-        // just spread out after the page's own critical content has
-        // rendered (see that hook's doc comment). A locked card is left out
-        // of that list entirely, not just deferred: it always opens to the
-        // same static PremiumLocked upsell rather than the real lesson, and
-        // the visible lock icon already tells a free learner they'd need to
-        // upgrade first — the least likely card in any list to actually get
-        // tapped, so there's nothing worth warming up for it at all.
+        // Not prefetched up front: every card's own default Link prefetch would
+        // fire the instant up to LESSONS_PER_PAGE of these mount at once, and
+        // warming the whole page's lessons in the background instead (what this
+        // list did until now) still ran one server render of the full lesson
+        // page per card on every visit to a catalog — about 10 per visit,
+        // measured, each billed as a Netlify function run, for lessons the
+        // learner mostly never opens. A card warms its own lesson on intent
+        // instead (pointer over it, finger down, keyboard focus — see
+        // useIntentPrefetch). A locked card never does: it always opens to the
+        // same static PremiumLocked upsell rather than the real lesson.
         prefetch={false}
+        {...(locked ? undefined : intent)}
         className="focus-visible:ring-ring focus-visible:ring-offset-background block h-full rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <div
@@ -276,20 +277,13 @@ function UnitSection({
   const { locale, dir } = useLocale();
   const [page, setPage] = useState(0);
 
-  // Computed before the empty-lessons early return below so useDeferredPrefetch
-  // (a hook — must run unconditionally, every render) always has this page's
-  // real lesson list to work from; slicing an empty array is a cheap no-op,
-  // so nothing is lost by not short-circuiting first. Locked lessons are left
-  // out — see the matching comment on LessonCard's own Link for why.
+  // Computed before the empty-lessons early return below, so it always runs
+  // with this page's real lesson list — slicing an empty array is a cheap
+  // no-op, so nothing is lost by not short-circuiting first.
   const totalPages = Math.max(1, Math.ceil(lessons.length / LESSONS_PER_PAGE));
   const pageLessons = lessons.slice(
     page * LESSONS_PER_PAGE,
     page * LESSONS_PER_PAGE + LESSONS_PER_PAGE,
-  );
-  useDeferredPrefetch(
-    pageLessons
-      .filter((lesson) => lesson.isFree || isPremiumUser)
-      .map((lesson) => `/learn/${mode}/${lesson.id}`),
   );
 
   if (lessons.length === 0) return null;

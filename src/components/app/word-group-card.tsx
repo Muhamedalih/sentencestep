@@ -127,6 +127,9 @@ export function WordGroupCard({
       <motion.div variants={fadeInUp}>
         <Link
           href={`/learn/word-lists/${group.id}`}
+          // A locked group always opens the upsell, so there is nothing worth
+          // paying a server render to warm for every locked card on the page.
+          prefetch={false}
           aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
           className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
