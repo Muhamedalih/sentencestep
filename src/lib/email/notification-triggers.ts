@@ -4,7 +4,7 @@ import { getLessons } from "@/lib/content";
 import { getLessonsByLevel, nextLevelIsAllPremium } from "@/lib/content-helpers";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEmailPreferences } from "@/lib/email/preferences";
-import { shouldNotify } from "@/lib/email/events";
+import { isEmailableMilestone, milestoneEmailModeFrom, shouldNotify } from "@/lib/email/events";
 import {
   markNotificationEventSent,
   recordNotificationEvent,
@@ -107,7 +107,11 @@ export async function evaluateAndNotify(
     const { candidates, level } = await buildEvents(mode, lessonId, progress);
     const levelCompleted = candidates.some((event) => event.type === "LEVEL_COMPLETED");
 
-    if (candidates.length === 0) return { level, levelCompleted };
+    // levelCompleted above must keep seeing every candidate (analytics and in-app
+    // rewards depend on it); only the emailing is narrowed here.
+    const emailMode = milestoneEmailModeFrom(process.env.MILESTONE_EMAILS);
+    const emailable = candidates.filter((event) => isEmailableMilestone(event, emailMode));
+    if (emailable.length === 0) return { level, levelCompleted };
 
     const [preferences, user, originHeader] = await Promise.all([
       getEmailPreferences(userId),
@@ -123,7 +127,7 @@ export async function evaluateAndNotify(
     // comment for how that origin gets set.
     const origin = originHeader ?? getSiteUrl();
 
-    for (const event of candidates) {
+    for (const event of emailable) {
       if (!preferences.progressEmails) {
         await recordNotificationEvent(userId, event, "skipped");
         continue;

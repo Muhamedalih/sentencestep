@@ -25,6 +25,11 @@ export function friendlyAuthError(error: AuthError, t: Dictionary): string {
   }
   if (message.includes("unable to validate email")) return t.auth.errors.invalidEmail;
   if (message.includes("email rate limit exceeded")) return t.auth.errors.emailRateLimited;
+  // Supabase's own mailer failed (500 "Error sending confirmation email") — the project's
+  // SMTP is missing or misconfigured. Not the learner's fault, so never show the raw string.
+  if (message.includes("error sending") && message.includes("email")) {
+    return t.auth.errors.confirmationEmailFailed;
+  }
   if (message.includes("email not confirmed")) return t.auth.errors.emailNotConfirmed;
   return error.message || t.auth.errors.genericError;
 }

@@ -303,6 +303,8 @@ export interface Dictionary {
       passwordTooShort: string;
       invalidEmail: string;
       emailRateLimited: string;
+      /** Supabase's mailer couldn't send the confirmation email ("Error sending confirmation email") — a server-side mail setup problem, not something the learner did wrong. */
+      confirmationEmailFailed: string;
       emailNotConfirmed: string;
       /** A password that is too easy to guess or, with leaked-password protection on in Supabase, found in a known data breach. */
       passwordWeak: string;

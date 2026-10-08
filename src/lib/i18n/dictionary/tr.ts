@@ -262,6 +262,8 @@ export const tr: Dictionary = {
       passwordTooShort: "Şifre en az 6 karakter olmalıdır.",
       invalidEmail: "Geçerli bir e-posta adresi girin.",
       emailRateLimited: "Çok fazla onay e-postası istendi. Bir süre bekleyip tekrar deneyin.",
+      confirmationEmailFailed:
+        "Onay e-postası şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin veya Google ile devam edin.",
       emailNotConfirmed:
         "Giriş yapmadan önce e-postanızı onaylayın — bağlantı için gelen kutunuzu kontrol edin.",
       passwordWeak:

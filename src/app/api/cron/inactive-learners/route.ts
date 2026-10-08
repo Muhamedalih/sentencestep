@@ -39,6 +39,20 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
  */
 const MAX_NOTIFICATIONS_PER_RUN = 500;
 
+/**
+ * INACTIVE_REMINDER_MAX_SENDS_PER_RUN: how many reminder emails one run may
+ * actually send. OFF unless set to a positive number: on Resend's free plan the
+ * whole account gets 100 emails/day, shared with Supabase's sign-up confirmation
+ * emails, and an uncapped run (up to 500) used the whole day's quota and made
+ * sign-up fail with "Error sending confirmation email". Unset, empty, invalid or
+ * "0" all mean off. Learners left over are picked up on a later day.
+ */
+function maxSendsPerRun(): number {
+  const parsed = Number.parseInt(process.env.INACTIVE_REMINDER_MAX_SENDS_PER_RUN?.trim() ?? "", 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return Math.min(parsed, MAX_NOTIFICATIONS_PER_RUN);
+}
+
 async function handleInactiveLearnersCron(request: Request): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
@@ -48,6 +62,13 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   const authHeader = request.headers.get("authorization") ?? "";
   if (!isValidCronAuth(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  // Off by default (see maxSendsPerRun): skip the whole run, including the read of
+  // every learner's activity, rather than do the work and send nothing.
+  const sendLimit = maxSendsPerRun();
+  if (sendLimit === 0) {
+    return NextResponse.json({ notified: 0, skipped: 0, failed: 0, disabled: true });
   }
 
   const supabase = createServiceRoleClient();
@@ -91,6 +112,10 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   let failed = 0;
 
   for (const { userId, daysInactive } of inactiveLearners) {
+    // Checked before recordNotificationEvent so a learner left over isn't marked
+    // as handled for the week without actually getting an email.
+    if (notified + failed >= sendLimit) break;
+
     const event: NotificationEvent = { type: "INACTIVE_LEARNER", daysInactive };
 
     const prefs = prefsByUserId.get(userId);

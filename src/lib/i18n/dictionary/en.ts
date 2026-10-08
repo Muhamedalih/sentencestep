@@ -265,6 +265,8 @@ export const en: Dictionary = {
       invalidEmail: "Enter a valid email address.",
       emailRateLimited:
         "Too many confirmation emails have been requested. Please wait a while and try again.",
+      confirmationEmailFailed:
+        "We couldn't send the confirmation email right now. Please try again in a little while, or continue with Google.",
       emailNotConfirmed: "Confirm your email before signing in — check your inbox for the link.",
       passwordWeak:
         "That password is too easy to guess or has appeared in a data leak. Please choose a different one.",
