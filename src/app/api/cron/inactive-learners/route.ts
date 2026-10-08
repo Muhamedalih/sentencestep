@@ -39,6 +39,22 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
  */
 const MAX_NOTIFICATIONS_PER_RUN = 500;
 
+/**
+ * Optional INACTIVE_REMINDER_MAX_SENDS_PER_RUN: how many reminder emails one run
+ * may actually send. Needed on Resend's free plan (100 emails/day for EVERYTHING,
+ * including the Supabase sign-up confirmation emails sent through the same SMTP
+ * account): an uncapped run can use the whole day's quota and make sign-up fail
+ * with "Error sending confirmation email". Unset keeps the old behavior; "0"
+ * turns reminders off. Learners left over are picked up on a later day.
+ */
+function maxSendsPerRun(): number {
+  const raw = process.env.INACTIVE_REMINDER_MAX_SENDS_PER_RUN?.trim();
+  if (!raw) return MAX_NOTIFICATIONS_PER_RUN;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return MAX_NOTIFICATIONS_PER_RUN;
+  return Math.min(parsed, MAX_NOTIFICATIONS_PER_RUN);
+}
+
 async function handleInactiveLearnersCron(request: Request): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
@@ -89,8 +105,13 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   let notified = 0;
   let skipped = 0;
   let failed = 0;
+  const sendLimit = maxSendsPerRun();
 
   for (const { userId, daysInactive } of inactiveLearners) {
+    // Checked before recordNotificationEvent so a learner left over isn't marked
+    // as handled for the week without actually getting an email.
+    if (notified + failed >= sendLimit) break;
+
     const event: NotificationEvent = { type: "INACTIVE_LEARNER", daysInactive };
 
     const prefs = prefsByUserId.get(userId);
