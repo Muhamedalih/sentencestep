@@ -283,6 +283,7 @@ export const ar: Dictionary = {
   },
   premium: {
     lockedContentAriaLabel: "{title} — محتوى مميز، اضغط للتفاصيل",
+    lockedChip: "للمشتركين",
     premiumHeading: "أنت مشترك في الخطة المميزة",
     upgradeHeading: "الترقية إلى SentenceStep المميز",
     premiumSubtitle: "كل الدروس والقصص متاحة بالكامل.",

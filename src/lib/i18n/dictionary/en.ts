@@ -296,6 +296,7 @@ export const en: Dictionary = {
   },
   premium: {
     lockedContentAriaLabel: "{title} — premium content, tap for details",
+    lockedChip: "Premium",
     premiumHeading: "You're on Premium",
     upgradeHeading: "Upgrade to SentenceStep Premium",
     premiumSubtitle: "Every lesson and story is unlocked.",
