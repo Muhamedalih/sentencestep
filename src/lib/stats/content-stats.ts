@@ -33,3 +33,22 @@ export function buildContentStats(counts: {
       counts.wordLists >= MIN_WORD_LISTS_TO_QUOTE ? roundDownForDisplay(counts.wordLists) : null,
   };
 }
+
+/** The library's size as it reads on the locked-content card: each figure is "N+" (it was rounded down), or null while too small to quote. */
+export interface GateFigures {
+  lessons: string | null;
+  words: string | null;
+  wordLists: string | null;
+}
+
+export const NO_GATE_FIGURES: GateFigures = { lessons: null, words: null, wordLists: null };
+
+/** `format` turns a whole number into the reader's digits and separators (see formatCount). */
+export function toGateFigures(stats: ContentStats, format: (value: number) => string): GateFigures {
+  const quote = (value: number | null) => (value == null ? null : `${format(value)}+`);
+  return {
+    lessons: quote(stats.lessons),
+    words: quote(stats.words),
+    wordLists: quote(stats.wordLists),
+  };
+}

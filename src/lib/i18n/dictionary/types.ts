@@ -432,10 +432,19 @@ export interface Dictionary {
     socialProofLessons: string;
     /** Settings' plan row: "Premium until {date}". */
     premiumUntil: string;
-    lockedBenefits: string[];
     premiumLessonBadge: string;
-    lockedBody: string;
     backToLessons: string;
+    /** The locked-lesson and locked-word-list card (see PremiumGate): a heading and one line above three benefits, then the button. The price line under it is fromPerMonthCaption. */
+    gateHeading: string;
+    gateSubheading: string;
+    /** `{count}` is a rounded-down, formatted number such as "190+" (see src/lib/stats/gate-figures.ts); the Plain form is used while the library is too small to quote. */
+    gateBenefitLibrary: string;
+    gateBenefitLibraryPlain: string;
+    gateBenefitMethod: string;
+    gateBenefitProgress: string;
+    gateCta: string;
+    /** The reassurance under the price: one payment, no auto-renewal, nothing to cancel. Says nothing about refunds or time limits. */
+    gateTrust: string;
     /** Small caption under the upgrade CTA on locked content — `{amount}` is the cheapest per-month USD price for the visitor's tier, e.g. "$1.17". It names no currency but USD and no provider. */
     fromPerMonthCaption: string;
     contentUnavailableBody: string;
@@ -721,8 +730,13 @@ export interface Dictionary {
     checkAnswer: string;
     unavailableBody: string;
     lockedBadge: string;
-    lockedBody: string;
-    wordsAndHintDetail: string;
+    /** The locked word-list card (see PremiumGate). `{lists}` and `{words}` are rounded-down, formatted numbers such as "24" and "400+"; the Plain form is used while either is too small to quote. */
+    gateHeading: string;
+    gateSubheading: string;
+    gateBenefitLists: string;
+    gateBenefitListsPlain: string;
+    gateBenefitContext: string;
+    gateBenefitReview: string;
     /** Label for the "Learn" action (flashcard/study view) — one of the two choices offered when a word-group card expands, alongside practiceAction. */
     learnAction: string;
     /** Label for the "Practice" action (the existing fill-in-the-blank exercise) — the card expansion's other choice. */

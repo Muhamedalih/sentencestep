@@ -1,24 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { BookOpen, Lock, MessagesSquare, Sparkles } from "lucide-react";
-
 import { useLocale } from "@/components/providers/locale-provider";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { popIn } from "@/lib/motion";
+import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { PremiumGate } from "@/components/learning/premium-gate";
+import type { GateFigures } from "@/lib/stats/content-stats";
 import type { LearningMode } from "@/types/content";
 
-const BENEFIT_ICONS = [BookOpen, MessagesSquare, Sparkles];
-
+/** What a free learner (or a visitor) sees on a lesson that is part of Premium: the lesson's own artwork and teaser beside the offer (see PremiumGate). */
 export function PremiumLocked({
   mode,
   lessonId,
   title,
   titleAr,
   supportTitle,
+  description,
+  supportDescription,
+  illustrationUrl,
   fromPrice,
+  figures,
 }: {
   mode: LearningMode;
   /** This lesson's id: the upgrade page is opened with it, so after paying the learner can go straight back to this lesson (see AFTER_PAYMENT_COOKIE). */
@@ -27,72 +26,60 @@ export function PremiumLocked({
   titleAr: string;
   /** Resolved for the active locale server-side — see LessonUnit.supportTitle's doc comment. Falls back to titleAr only for Arabic (never for Spanish). */
   supportTitle?: string;
+  /** The lesson's own one-line description, in English and in the learner's language — a taste of what is behind the lock. */
+  description?: string;
+  supportDescription?: string;
+  illustrationUrl?: string | null;
   /** The cheapest per-month USD price for this visitor's tier, e.g. "$1.17" — see getFromMonthlyPrice. */
   fromPrice: string;
+  /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
+  figures: GateFigures;
 }) {
-  const { t, dir, locale } = useLocale();
+  const { t, locale } = useLocale();
   const resolvedSupportTitle = supportTitle ?? (locale === "ar" ? titleAr : undefined);
 
   return (
-    <motion.div
-      variants={popIn}
-      initial="hidden"
-      animate="visible"
-      className="border-border bg-card relative flex flex-col items-center gap-6 overflow-hidden rounded-2xl border p-8 text-center shadow-sm sm:flex-row sm:items-center sm:gap-8 sm:p-10 sm:text-start"
-    >
-      <div className="bg-brand absolute inset-x-0 top-0 h-[3px] opacity-60" aria-hidden="true" />
-
-      <div className="flex flex-col items-center gap-4 sm:flex-1 sm:items-start">
-        <div className="flex items-center gap-3">
-          <div className="bg-brand-muted text-primary flex size-11 shrink-0 items-center justify-center rounded-full">
-            <Lock className="size-5" aria-hidden="true" />
-          </div>
-          <Badge variant="muted">{t.premium.premiumLessonBadge}</Badge>
-        </div>
-
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight" dir="ltr">
-            {title}
-          </h1>
-          {resolvedSupportTitle && (
-            <p className="text-muted-foreground mt-1" dir={dir}>
-              {resolvedSupportTitle}
-            </p>
-          )}
-        </div>
-
-        <p className="text-muted-foreground max-w-sm text-sm">{t.premium.lockedBody}</p>
-      </div>
-
-      <div className="flex w-full flex-col items-center gap-3 sm:w-56 sm:shrink-0">
-        <Button asChild size="lg" className="w-full">
-          <Link
-            href={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${lessonId}`)}`}
-            dir="auto"
-          >
-            {t.premium.seePlansCta}
-          </Link>
-        </Button>
-        <p className="text-muted-foreground text-xs" dir="auto">
-          {t.premium.fromPerMonthCaption.replace("{amount}", fromPrice)}
-        </p>
-
-        <ul className="flex w-full flex-col gap-2" dir="ltr">
-          {t.premium.lockedBenefits.map((text, index) => {
-            const Icon = BENEFIT_ICONS[index % BENEFIT_ICONS.length]!;
-            return (
-              <li key={text} className="text-muted-foreground flex items-center gap-2 text-xs">
-                <Icon className="text-primary size-3.5 shrink-0" aria-hidden="true" />
-                <span>{text}</span>
-              </li>
-            );
-          })}
-        </ul>
-
-        <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
-          <Link href={`/learn/${mode}`}>{t.premium.backToLessons}</Link>
-        </Button>
-      </div>
-    </motion.div>
+    <PremiumGate
+      preview={
+        <LessonIllustration
+          mode={mode}
+          lessonId={lessonId}
+          title={title}
+          illustrationUrl={illustrationUrl}
+          className="aspect-auto h-full w-full rounded-none border-0 lg:aspect-auto lg:h-full"
+        />
+      }
+      // The hand-drawn scene is sized for a tall frame and would be cropped in a
+      // phone's short banner, so there the banner is the lesson's photo when it
+      // has one, and otherwise just the brand's colour wash.
+      compactPreview={
+        <LessonIllustration
+          mode={mode}
+          lessonId={lessonId}
+          title={title}
+          illustrationUrl={illustrationUrl}
+          showScene={false}
+          className="aspect-auto h-full w-full rounded-none border-0 lg:aspect-auto lg:h-full"
+        />
+      }
+      badge={t.premium.premiumLessonBadge}
+      title={title}
+      supportTitle={resolvedSupportTitle}
+      description={description}
+      supportDescription={supportDescription}
+      heading={t.premium.gateHeading}
+      subheading={t.premium.gateSubheading}
+      benefits={[
+        figures.lessons
+          ? t.premium.gateBenefitLibrary.replace("{count}", figures.lessons)
+          : t.premium.gateBenefitLibraryPlain,
+        t.premium.gateBenefitMethod,
+        t.premium.gateBenefitProgress,
+      ]}
+      ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${lessonId}`)}`}
+      fromPrice={fromPrice}
+      backHref={`/learn/${mode}`}
+      backLabel={t.premium.backToLessons}
+    />
   );
 }

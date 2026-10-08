@@ -377,15 +377,18 @@ export const en: Dictionary = {
     socialProofLearners: "{count}+ learners practicing",
     socialProofLessons: "{count}+ lessons practiced",
     premiumUntil: "Premium until {date}",
-    lockedBenefits: [
-      "Unlock this lesson",
-      "Unlock the complete library",
-      "One payment, no auto-renewal",
-    ],
     premiumLessonBadge: "Premium lesson",
-    lockedBody:
-      "This lesson is part of SentenceStep Premium. Premium opens it, and the rest of the library, whenever you're ready — your progress and streak stay saved either way.",
     backToLessons: "Back to lessons",
+    gateHeading: "Your next lesson is waiting",
+    gateSubheading:
+      "One payment opens the whole library, and you carry on exactly where you stopped.",
+    gateBenefitLibrary: "The full library: {count} lessons and stories",
+    gateBenefitLibraryPlain: "The full library of lessons and stories",
+    gateBenefitMethod:
+      "Hear it, type it, remember it, with a translation and a hint for every word",
+    gateBenefitProgress: "Your progress and streak are saved, so you never start over",
+    gateCta: "Unlock with Premium",
+    gateTrust: "One payment. No auto-renewal. Nothing to cancel.",
     fromPerMonthCaption: "Plans from {amount} / month",
     contentUnavailableBody:
       "This lesson isn't available right now. Nothing was lost — please try again in a moment, or pick a different lesson.",
@@ -630,9 +633,12 @@ export const en: Dictionary = {
     unavailableBody:
       "This word list isn't available right now. Nothing was lost — please try again in a moment, or pick a different list.",
     lockedBadge: "Premium word list",
-    lockedBody:
-      "This word list is part of SentenceStep Premium. Premium opens it, and every other vocabulary group, whenever you're ready — your progress stays saved either way.",
-    wordsAndHintDetail: "20 words, one context sentence and hint each",
+    gateHeading: "Unlock the full word library",
+    gateSubheading: "One payment opens every word list, and your progress stays saved.",
+    gateBenefitLists: "{lists} word lists and {words} words to learn",
+    gateBenefitListsPlain: "Every word list in the library",
+    gateBenefitContext: "Each word comes with a sentence that shows how it is used, and a hint",
+    gateBenefitReview: "Spaced review brings each word back just before you would forget it",
     learnAction: "Learn",
     practiceAction: "Practice",
     restartAction: "Review from the start",
