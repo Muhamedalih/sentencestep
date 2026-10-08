@@ -46,6 +46,12 @@ test("friendlyAuthError: still maps the other known Supabase errors", () => {
   );
 });
 
+test("friendlyAuthError: a failed confirmation-email send gets the translated message, not Supabase's raw string", () => {
+  for (const raw of ["Error sending confirmation email", "Error sending recovery email"]) {
+    assert.equal(friendlyAuthError(authError(raw), en), en.auth.errors.confirmationEmailFailed);
+  }
+});
+
 test("friendlyAuthError: a weak or leaked password gets the translated message, whichever field Supabase fills", () => {
   const raw = "Password is known to be weak and easy to guess, please choose a different one.";
   assert.equal(friendlyAuthError(authError(raw), en), en.auth.errors.passwordWeak);
