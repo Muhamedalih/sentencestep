@@ -5,6 +5,7 @@ import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
 import { WordGroupWall } from "@/components/words/word-group-wall";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -53,11 +54,14 @@ export default async function WordGroupWallPage({
     group.isFree || (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
   if (!canAccess) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+      <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
         <WordGroupLocked
           title={group.title}
           supportTitle={group.supportTitle}
+          description={group.description}
+          supportDescription={group.supportDescription}
           fromPrice={await getFromMonthlyPrice()}
+          figures={await getGateFigures(locale)}
         />
       </div>
     );

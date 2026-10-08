@@ -8,7 +8,9 @@ import {
   MIN_WORDS_TO_QUOTE,
   MIN_WORD_LISTS_TO_QUOTE,
   NO_CONTENT_STATS,
+  NO_GATE_FIGURES,
   buildContentStats,
+  toGateFigures,
 } from "./content-stats";
 
 test("buildContentStats: figures at or above their minimum are quoted, rounded down", () => {
@@ -39,4 +41,16 @@ test("buildContentStats: a quoted figure never exceeds the real one", () => {
     const quoted = buildContentStats({ lessons: value, words: value, wordLists: value }).lessons;
     assert.ok(quoted !== null && quoted <= value, String(value));
   }
+});
+
+test("toGateFigures: each figure that can be quoted becomes N+ in the reader's digits, the rest stay null", () => {
+  const stats = buildContentStats({ lessons: 195, words: 480, wordLists: 24 });
+  const figures = toGateFigures(stats, (value) => `<${value}>`);
+  assert.equal(figures.lessons, `<${stats.lessons}>+`);
+  assert.equal(figures.words, `<${stats.words}>+`);
+  assert.equal(figures.wordLists, `<${stats.wordLists}>+`);
+
+  const small = toGateFigures(buildContentStats({ lessons: 5, words: 10, wordLists: 1 }), String);
+  assert.deepEqual(small, { lessons: null, words: null, wordLists: null });
+  assert.deepEqual(toGateFigures(NO_CONTENT_STATS, String), NO_GATE_FIGURES);
 });
