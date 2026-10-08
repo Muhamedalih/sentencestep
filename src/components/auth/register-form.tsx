@@ -13,12 +13,20 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { signUp, signInWithGoogle } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { authPageHref } from "@/lib/supabase/safe-redirect";
 
 const initialState: AuthActionState = {};
 
 const TURNSTILE_CALLBACK_NAME = "onSentenceStepTurnstileSuccess";
 
-export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function RegisterForm({
+  turnstileSiteKey,
+  next,
+}: {
+  turnstileSiteKey: string | null;
+  /** Where to go once the account exists (see authPageHref); absent means the default, /learn. */
+  next?: string;
+}) {
   const [state, formAction, pending] = useActionState(signUp, initialState);
   const { t } = useLocale();
 
@@ -61,6 +69,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
       </CardHeader>
       <CardContent>
         <form action={signInWithGoogle}>
+          {next && <input type="hidden" name="next" value={next} />}
           <Button type="submit" variant="outline" className="w-full">
             <GoogleIcon className="size-4" />
             {t.auth.googleSignIn}
@@ -76,6 +85,7 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
         </div>
 
         <form action={formAction} className="flex flex-col gap-4" noValidate>
+          {next && <input type="hidden" name="next" value={next} />}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="displayName" className="text-sm font-medium">
               {t.auth.displayNameLabel}{" "}
@@ -159,7 +169,10 @@ export function RegisterForm({ turnstileSiteKey }: { turnstileSiteKey: string | 
 
         <p className="text-muted-foreground mt-4 text-center text-sm">
           {t.auth.hasAccount}{" "}
-          <Link href="/login" className="text-primary font-medium hover:underline">
+          <Link
+            href={authPageHref("/login", next)}
+            className="text-primary font-medium hover:underline"
+          >
             {t.common.signIn}
           </Link>
         </p>

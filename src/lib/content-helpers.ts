@@ -91,6 +91,24 @@ export function withOpeningLessonPlacement<T extends { id: string; level: number
 }
 
 /**
+ * Whether the level after `level` exists and nothing in it is free — judged on
+ * the lessons the catalog actually shows, since the extra "First Steps" copies
+ * written for the onboarding flow are free but never listed
+ * (withOpeningLessonPlacement). A learner on the free plan who finishes `level`
+ * has then reached the end of what they can open. The caller still decides
+ * whether this particular learner is on the free plan.
+ */
+export function nextLevelIsAllPremium(
+  units: Pick<LessonUnit, "id" | "level" | "isFree">[],
+  level: number,
+): boolean {
+  const nextLevel = getLevels(units as LessonUnit[]).find((candidate) => candidate > level);
+  if (nextLevel === undefined) return false;
+  const shown = withOpeningLessonPlacement(units).filter((unit) => unit.level === nextLevel);
+  return shown.length > 0 && !shown.some((unit) => unit.isFree);
+}
+
+/**
  * Sorted by level first, `order` only as the tiebreaker within a level — see
  * findCurrentLesson's doc comment (src/lib/progress/level.ts) for why `order`
  * alone isn't safe to sort a whole mode by: it's one sequence per mode, not

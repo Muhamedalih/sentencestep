@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { getLessons } from "@/lib/content";
-import { getLessonsByLevel, getLevels, withOpeningLessonPlacement } from "@/lib/content-helpers";
+import { getLessonsByLevel, nextLevelIsAllPremium } from "@/lib/content-helpers";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEmailPreferences } from "@/lib/email/preferences";
 import { shouldNotify } from "@/lib/email/events";
@@ -19,17 +19,12 @@ import type { LearningMode, Lesson } from "@/types/content";
 
 /**
  * On the free plan, whether the level after the one just finished has nothing
- * this learner can open — judged on the lessons the catalog actually shows
- * (the extra "First Steps" copies written for the onboarding flow are free but
- * never listed, see withOpeningLessonPlacement). Only asks for the learner's
+ * this learner can open (see nextLevelIsAllPremium). Only asks for the learner's
  * access when the catalog says the next level is Premium, and a Premium
  * learner (or the sitewide free promotion) always gets "false".
  */
 async function nextLevelIsLockedForLearner(units: Lesson[], level: number): Promise<boolean> {
-  const nextLevel = getLevels(units).find((candidate) => candidate > level);
-  if (nextLevel === undefined) return false;
-  const shown = withOpeningLessonPlacement(units).filter((unit) => unit.level === nextLevel);
-  if (shown.length === 0 || shown.some((unit) => unit.isFree)) return false;
+  if (!nextLevelIsAllPremium(units, level)) return false;
   return !(await hasPremiumAccess());
 }
 

@@ -162,3 +162,19 @@ test("every document ends with a way to reach us", () => {
     }
   }
 });
+
+test("the privacy policy discloses the one-hour cookie that remembers the lesson during a payment", () => {
+  const english = fullText(PRIVACY.en);
+  assert.match(english, /a cookie that lasts one hour/);
+  assert.match(english, /which lesson you were on when you started a payment/);
+
+  const arabic = fullText(PRIVACY.ar);
+  assert.match(arabic, /كوكي يدوم ساعة واحدة/);
+});
+
+test("the privacy policy says the connection's country is also read on locked lessons, and that a receipt is emailed", () => {
+  assert.match(fullText(PRIVACY.en), /a locked lesson or word list/);
+  assert.match(fullText(PRIVACY.en), /a receipt when you buy Premium/);
+  assert.match(fullText(PRIVACY.ar), /مقفولة/);
+  assert.match(fullText(PRIVACY.ar), /إيصال عند شراء/);
+});

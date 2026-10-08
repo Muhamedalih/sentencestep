@@ -43,7 +43,7 @@ export const SUPPORT_EMAIL = "support@sentencestep.com";
 
 const TERMS_EN: LegalDocument = {
   title: "Terms of Service",
-  updated: "Last updated: 7 October 2026",
+  updated: "Last updated: 8 October 2026",
   intro:
     "These terms are the agreement between you and SentenceStep when you use sentencestep.com. By creating an account or using the site you agree to them. If you don't agree, please don't use SentenceStep.",
   sections: [
@@ -70,7 +70,7 @@ const TERMS_EN: LegalDocument = {
       bullets: [
         "Premium is a one-time purchase of access for a fixed number of days (30, 90 or 180, depending on the plan you choose). It does not renew automatically, and we never charge you again unless you choose to pay again.",
         "If you buy again while you still have Premium, the new days are added after the days you have left.",
-        "Prices are shown in US dollars. The amount to be charged, in Iraqi dinars, is shown on the payment page before you pay. Your bank or card issuer may apply its own exchange rate or fees, which we don't control.",
+        "Prices are shown in US dollars. Wayl charges the payment in Iraqi dinars, converted from the dollar price at a fixed rate, and its payment page shows the amount before you confirm. Your bank or card issuer may apply its own exchange rate or fees, which we don't control.",
         "Premium is activated automatically once the payment is confirmed, usually within moments. If you paid and it isn't active, use “Problem with your payment?” on the upgrade page or write to us, and we will check it and activate the days you paid for.",
         "Prices depend on your country and may change. A change never affects days you have already paid for.",
         "Bonus days from a promotion are extra days of access. They have no cash value.",
@@ -132,7 +132,7 @@ const TERMS_EN: LegalDocument = {
 
 const TERMS_AR: LegalDocument = {
   title: "شروط الاستخدام",
-  updated: "آخر تحديث: 7 أكتوبر 2026",
+  updated: "آخر تحديث: 8 أكتوبر 2026",
   intro:
     "هذه الشروط هي الاتفاق بينك وبين SentenceStep عند استخدامك موقع sentencestep.com. بإنشاء حساب أو باستخدام الموقع فإنك توافق عليها. إن لم توافق، فنرجو ألا تستخدم SentenceStep.",
   sections: [
@@ -159,7 +159,7 @@ const TERMS_AR: LegalDocument = {
       bullets: [
         "الخطة المميّزة عملية شراء لمرة واحدة تمنحك وصولًا لعدد محدد من الأيام (30 أو 90 أو 180 حسب الباقة التي تختارها). لا تتجدد تلقائيًا، ولن نسحب منك مبلغًا مجددًا ما لم تختر أنت الدفع.",
         "إذا اشتريت وأنت ما زلت مشتركًا، تُضاف الأيام الجديدة بعد الأيام المتبقية لك.",
-        "الأسعار معروضة بالدولار الأمريكي. ويظهر المبلغ المطلوب بالدينار العراقي في صفحة الدفع قبل أن تدفع. قد يطبّق مصرفك أو جهة إصدار بطاقتك سعر صرف أو رسومًا خاصة بها، ولا نتحكم بها.",
+        "الأسعار معروضة بالدولار الأمريكي. وتحصّل Wayl المبلغ بالدينار العراقي، محوَّلًا من السعر بالدولار بسعر صرف ثابت، وتعرض صفحتها المبلغ قبل أن تؤكد الدفع. قد يطبّق مصرفك أو جهة إصدار بطاقتك سعر صرف أو رسومًا خاصة بها، ولا نتحكم بها.",
         "تُفعَّل الخطة المميّزة تلقائيًا بعد تأكيد الدفع، وغالبًا خلال لحظات. وإن دفعت ولم تُفعَّل فاستخدم «مشكلة في الدفع؟» في صفحة الترقية أو راسلنا، وسنراجع الأمر ونفعّل لك الأيام التي دفعت ثمنها.",
         "تختلف الأسعار حسب بلدك وقد تتغيّر، ولا يؤثر أي تغيير على الأيام التي دفعت ثمنها.",
         "الأيام الإضافية من العروض هي أيام وصول إضافية، وليس لها قيمة نقدية.",
@@ -221,7 +221,7 @@ const TERMS_AR: LegalDocument = {
 
 const PRIVACY_EN: LegalDocument = {
   title: "Privacy Policy",
-  updated: "Last updated: 7 October 2026",
+  updated: "Last updated: 8 October 2026",
   intro:
     "This page explains what SentenceStep collects, why, and who helps us run it. We don't sell your data and we don't share it with advertisers.",
   sections: [
@@ -230,10 +230,10 @@ const PRIVACY_EN: LegalDocument = {
       bullets: [
         "Account: your email address, a display name if you give one, and your password (kept only as a secure hash by our sign-in provider). If you sign in with Google, we receive your Google email and name.",
         "Learning: your lessons and attempts, progress, streaks, points, mistakes, word-list progress, settings and preferences.",
-        "Country: the country you choose when you set up your account, and the country your connection appears to come from, which our hosting provider tells us when you open the upgrade page or start a payment. We use that only to pick the price that applies to you.",
+        "Country: the country you choose when you set up your account, and the country your connection appears to come from, which our hosting provider tells us when you open the upgrade page, a locked lesson or word list, or start a payment. We use that only to pick the price that applies to you.",
         "Payments: when you buy Premium we keep a record of the order (plan, price, amount, status and dates) and the reference from our payment partner. Your card or wallet details are entered on our payment partner's page and never reach us.",
         "Messages: the reports and emails you send us, and our replies.",
-        "Technical and usage: basic error and performance information, simple events about what you do in the app (such as finishing a lesson or opening the upgrade page) which we store ourselves, and settings kept in your browser, such as language and theme, and your progress if you don't have an account.",
+        "Technical and usage: basic error and performance information, simple events about what you do in the app (such as finishing a lesson or opening the upgrade page) which we store ourselves, and settings kept in your browser, such as language and theme, your progress if you don't have an account, and a cookie that lasts one hour and remembers which lesson you were on when you started a payment, so we can take you back to it.",
       ],
     },
     {
@@ -241,7 +241,7 @@ const PRIVACY_EN: LegalDocument = {
       bullets: [
         "To provide the lessons and save your progress.",
         "To process purchases, activate Premium and show you the right price.",
-        "To send the emails you would expect: a welcome, account notices such as Premium ending, reminders and milestones you can switch off in Settings, and replies to your messages.",
+        "To send the emails you would expect: a welcome, a receipt when you buy Premium, account notices such as Premium ending, reminders and milestones you can switch off in Settings, and replies to your messages.",
         "To fix problems, protect the service from abuse and improve the lessons.",
       ],
     },
@@ -295,7 +295,7 @@ const PRIVACY_EN: LegalDocument = {
 
 const PRIVACY_AR: LegalDocument = {
   title: "سياسة الخصوصية",
-  updated: "آخر تحديث: 7 أكتوبر 2026",
+  updated: "آخر تحديث: 8 أكتوبر 2026",
   intro:
     "توضّح هذه الصفحة ما الذي تجمعه SentenceStep ولماذا ومن يساعدنا في تشغيلها. لا نبيع بياناتك ولا نشاركها مع المعلنين.",
   sections: [
@@ -304,10 +304,10 @@ const PRIVACY_AR: LegalDocument = {
       bullets: [
         "الحساب: بريدك الإلكتروني واسم العرض (إن قدّمته) وكلمة المرور (تُحفظ فقط على شكل بصمة مشفّرة لدى مزوّد تسجيل الدخول). وإذا سجّلت الدخول عبر Google نستلم بريدك واسمك من Google.",
         "التعلّم: دروسك ومحاولاتك وتقدّمك وسلاسل أيامك ونقاطك وأخطاؤك وتقدّمك في قوائم الكلمات وإعداداتك وتفضيلاتك.",
-        "البلد: البلد الذي تختاره عند إعداد حسابك، والبلد الذي يبدو أن اتصالك صادر منه، ونحصل عليه من مزوّد الاستضافة عند فتح صفحة الترقية أو بدء الدفع. نستخدمه فقط لتحديد السعر المناسب لك.",
+        "البلد: البلد الذي تختاره عند إعداد حسابك، والبلد الذي يبدو أن اتصالك صادر منه، ونحصل عليه من مزوّد الاستضافة عند فتح صفحة الترقية أو درس أو قائمة كلمات مقفولة أو بدء الدفع. نستخدمه فقط لتحديد السعر المناسب لك.",
         "المدفوعات: عند شراء الخطة المميّزة نحتفظ بسجل الطلب (الباقة والسعر والمبلغ والحالة والتواريخ) وبالرقم المرجعي من شريك الدفع. أما بيانات بطاقتك أو محفظتك فتُدخلها في صفحة شريك الدفع ولا تصل إلينا.",
         "الرسائل: البلاغات ورسائل البريد التي ترسلها لنا وردودنا عليها.",
-        "تقنية واستخدام: معلومات أساسية عن الأخطاء والأداء، وأحداث بسيطة عمّا تفعله داخل التطبيق (مثل إكمال درس أو فتح صفحة الترقية) نحفظها لدينا، وإعدادات تُحفظ في متصفحك مثل اللغة والمظهر، وتقدّمك إن لم يكن لديك حساب.",
+        "تقنية واستخدام: معلومات أساسية عن الأخطاء والأداء، وأحداث بسيطة عمّا تفعله داخل التطبيق (مثل إكمال درس أو فتح صفحة الترقية) نحفظها لدينا، وإعدادات تُحفظ في متصفحك مثل اللغة والمظهر، وتقدّمك إن لم يكن لديك حساب، وكوكي يدوم ساعة واحدة يتذكّر الدرس الذي كنت عنده عند بدء الدفع لنعيدك إليه.",
       ],
     },
     {
@@ -315,7 +315,7 @@ const PRIVACY_AR: LegalDocument = {
       bullets: [
         "لتقديم الدروس وحفظ تقدّمك.",
         "لمعالجة المشتريات وتفعيل الخطة المميّزة وعرض السعر الصحيح لك.",
-        "لإرسال رسائل البريد المتوقعة: ترحيب، وإشعارات الحساب مثل قرب انتهاء الخطة المميّزة، وتذكيرات وإنجازات يمكنك إيقافها من الإعدادات، وردود على رسائلك.",
+        "لإرسال رسائل البريد المتوقعة: ترحيب، وإيصال عند شراء الخطة المميّزة، وإشعارات الحساب مثل قرب انتهاء الخطة المميّزة، وتذكيرات وإنجازات يمكنك إيقافها من الإعدادات، وردود على رسائلك.",
         "لإصلاح المشاكل وحماية الخدمة من إساءة الاستخدام ولتحسين الدروس.",
       ],
     },

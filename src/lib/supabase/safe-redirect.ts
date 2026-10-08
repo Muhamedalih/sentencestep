@@ -20,3 +20,17 @@ export function safeNextPath(next: FormDataEntryValue | string | null): string {
   const isSafeRelativePath = value.startsWith("/") && !secondCharIsSlashLike;
   return isSafeRelativePath ? value : "/learn";
 }
+
+/**
+ * The sign-in or sign-up page, carrying `next` along only when it points
+ * somewhere other than the default (/learn), so every plain link keeps exactly
+ * the address it had. Lets a learner who is sent to sign in or create an
+ * account on the way to somewhere (the plans page, say) end up there.
+ */
+export function authPageHref(
+  page: "/login" | "/register",
+  next: FormDataEntryValue | string | null | undefined,
+): string {
+  const safe = safeNextPath(next ?? null);
+  return safe === "/learn" ? page : `${page}?next=${encodeURIComponent(safe)}`;
+}
