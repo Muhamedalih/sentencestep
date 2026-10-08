@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check, Lock } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { PremiumLockOverlay } from "@/components/learning/premium-lock-overlay";
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
@@ -21,11 +22,12 @@ import type { Lesson } from "@/types/content";
  * illustrated cover with no new art produced per story and no ceiling on
  * how many stories the catalog can hold. Below the cover, a tier-tinted
  * teaser panel (a one-line hook pulled from the lesson's own description —
- * see the `hook` local below) and the title/subtitle. The two status chips
- * (tier, locked/completed) sit over the illustration — a fixed
- * dark/translucent treatment, not the page's own light/dark theme tokens —
- * since they have to stay legible over whatever the illustration paints
- * underneath, same as HomeLessonCard's equivalent badges.
+ * see the `hook` local below) and the title/subtitle. The status chips
+ * (tier, completed) sit over the illustration — a fixed dark/translucent
+ * treatment, not the page's own light/dark theme tokens — since they have
+ * to stay legible over whatever the illustration paints underneath, same as
+ * HomeLessonCard's equivalent badges. A locked story instead gets
+ * PremiumLockOverlay: a very light blur over the cover and a "Premium" chip.
  */
 export function StoryCard({
   lesson,
@@ -55,7 +57,7 @@ export function StoryCard({
         <div
           className={cn(
             "border-border/60 bg-card relative flex h-full w-full flex-col overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300 max-sm:flex-row",
-            locked ? "opacity-90" : "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
+            "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
           )}
         >
           <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden max-sm:aspect-auto max-sm:min-h-28 max-sm:w-32">
@@ -67,6 +69,10 @@ export function StoryCard({
               className="aspect-[4/3] w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 max-sm:absolute max-sm:inset-0 max-sm:aspect-auto max-sm:h-full"
             />
 
+            {/* Before the chips below so the tier badge and the completed
+                check stay sharp on top of the veil. */}
+            {locked && <PremiumLockOverlay />}
+
             <span
               className={cn(
                 "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm sm:text-[10px]",
@@ -76,17 +82,12 @@ export function StoryCard({
               {tierText}
             </span>
 
-            {(completed || locked) && (
+            {completed && (
               <span
                 aria-hidden="true"
-                className={cn(
-                  "absolute top-2 right-2 flex size-6 items-center justify-center rounded-full shadow-sm",
-                  completed
-                    ? "bg-success text-success-foreground"
-                    : "border border-white/15 bg-black/30 text-white backdrop-blur-sm",
-                )}
+                className="bg-success text-success-foreground absolute top-2 right-2 flex size-6 items-center justify-center rounded-full shadow-sm"
               >
-                {completed ? <Check className="size-3.5" /> : <Lock className="size-3" />}
+                <Check className="size-3.5" />
               </span>
             )}
           </div>

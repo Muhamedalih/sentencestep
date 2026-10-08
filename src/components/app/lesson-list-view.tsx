@@ -3,17 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  BookOpen,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Lock,
-  MessagesSquare,
-} from "lucide-react";
+import { BookOpen, Check, ChevronLeft, ChevronRight, Clock, MessagesSquare } from "lucide-react";
 
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { PremiumLockOverlay } from "@/components/learning/premium-lock-overlay";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -128,9 +121,7 @@ function LessonCard({
         <div
           className={cn(
             "border-border/60 relative aspect-[4/3] w-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 max-sm:aspect-[2/1]",
-            locked
-              ? "opacity-90"
-              : "hover:shadow-xl hover:shadow-black/25 motion-safe:group-hover:-translate-y-1",
+            "hover:shadow-xl hover:shadow-black/25 motion-safe:group-hover:-translate-y-1",
             isCurrent && "ring-primary ring-2 ring-offset-2",
           )}
         >
@@ -142,6 +133,10 @@ function LessonCard({
             showScene={false}
             className="absolute inset-0 aspect-[4/3] h-full w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
           />
+
+          {/* Right after the image and before the gradients/text below, so
+              only the picture is veiled — the title stays sharp. */}
+          {locked && <PremiumLockOverlay />}
 
           {/* Fixed dark overlays, not theme tokens — same reasoning as
               StoryCard/BookCard: legible over any illustration/photo in
@@ -165,17 +160,12 @@ function LessonCard({
             {number}
           </span>
 
-          {(completed || locked) && (
+          {completed && (
             <span
               aria-hidden="true"
-              className={cn(
-                "absolute end-3 top-3 flex size-8 items-center justify-center rounded-full shadow-sm",
-                completed
-                  ? "bg-success text-success-foreground"
-                  : "border border-white/15 bg-black/40 text-white backdrop-blur-sm",
-              )}
+              className="bg-success text-success-foreground absolute end-3 top-3 flex size-8 items-center justify-center rounded-full shadow-sm"
             >
-              {completed ? <Check className="size-4" /> : <Lock className="size-3.5" />}
+              <Check className="size-4" />
             </span>
           )}
 
