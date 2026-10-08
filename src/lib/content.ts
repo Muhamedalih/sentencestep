@@ -248,6 +248,25 @@ export async function getAllLessons(
   return Object.fromEntries(entries) as Record<LearningMode, Lesson[]>;
 }
 
+/**
+ * Every mode's lessons as catalog cards (see getLessonSummaries) — for the
+ * static marketing sections, which only count lessons and free lessons per
+ * mode. They are pre-rendered at build time, once per locale page and twice
+ * per page, and used to call getAllLessons for that: every build downloaded
+ * each mode's lessons with every sentence and translation (about eight full
+ * downloads of the library per deploy) from the Supabase project just to
+ * read `.length`, and any slow or throttled answer failed the whole deploy
+ * during static page generation. The card read is two small queries per mode.
+ */
+export async function getAllLessonSummaries(
+  locale?: SupportLocale,
+): Promise<Record<LearningMode, LessonUnit[]>> {
+  const entries = await Promise.all(
+    LEARNING_MODES.map(async (mode) => [mode, await getLessonSummaries(mode, locale)] as const),
+  );
+  return Object.fromEntries(entries) as Record<LearningMode, LessonUnit[]>;
+}
+
 /** The activities that make up a lesson. Only "typing" exists today; a future activity type would add another branch here. */
 export function getActivities(lesson: Lesson): LessonActivity[] {
   return [{ type: "typing", sentences: lesson.sentences }];

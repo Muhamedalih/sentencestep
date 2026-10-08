@@ -2,14 +2,14 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getAllLessons } from "@/lib/content";
+import { getAllLessonSummaries } from "@/lib/content";
 import { filterFree } from "@/lib/content-helpers";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import { LEARNING_MODES } from "@/lib/learning-modes";
 import { MODE_TITLE_KEY } from "@/components/marketing/mode-title-key";
 
 export async function FreeExperience({ t }: { t: Dictionary }) {
-  const lessonsByMode = await getAllLessons();
+  const lessonsByMode = await getAllLessonSummaries();
 
   return (
     <section id="free" className="mx-auto max-w-6xl px-6 py-20">
