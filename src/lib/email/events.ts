@@ -78,6 +78,39 @@ export function shouldNotify(event: NotificationEvent): boolean {
   }
 }
 
+/** Which milestone emails are actually sent: none, only the rare big ones, or every one `shouldNotify` allows. */
+export type MilestoneEmailMode = "off" | "major" | "all";
+
+/** Streak lengths (days) that still get an email in "major" mode. */
+const MAJOR_STREAK_MILESTONES: readonly number[] = [7, 30, 100];
+
+/** Reads MILESTONE_EMAILS ("off" | "major" | "all"); anything else, or unset, is "major". */
+export function milestoneEmailModeFrom(raw: string | undefined): MilestoneEmailMode {
+  const value = raw?.trim().toLowerCase();
+  return value === "off" || value === "all" ? value : "major";
+}
+
+/**
+ * Whether a milestone is worth an actual EMAIL, on top of `shouldNotify` (which
+ * stays the single definition of "meaningful" for analytics and in-app rewards).
+ * "major" keeps only a finished level and 7/30/100-day streaks: the first lesson,
+ * every story and conversation, and smaller streaks were each one email per
+ * learner and used up the free email quota. Non-milestone events (reminders)
+ * are not decided here.
+ */
+export function isEmailableMilestone(event: NotificationEvent, mode: MilestoneEmailMode): boolean {
+  if (mode === "all") return true;
+  if (mode === "off") return false;
+  switch (event.type) {
+    case "LEVEL_COMPLETED":
+      return true;
+    case "STREAK_MILESTONE":
+      return MAJOR_STREAK_MILESTONES.includes(event.streak);
+    default:
+      return false;
+  }
+}
+
 /** A coarse, deterministic ~7-day bucket — not calendar-precise, just enough to let an inactivity reminder recur weekly instead of once ever or every single day. */
 function weekBucket(date: Date): number {
   const daysSinceEpoch = Math.floor(date.getTime() / 86_400_000);

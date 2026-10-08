@@ -40,18 +40,16 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 const MAX_NOTIFICATIONS_PER_RUN = 500;
 
 /**
- * Optional INACTIVE_REMINDER_MAX_SENDS_PER_RUN: how many reminder emails one run
- * may actually send. Needed on Resend's free plan (100 emails/day for EVERYTHING,
- * including the Supabase sign-up confirmation emails sent through the same SMTP
- * account): an uncapped run can use the whole day's quota and make sign-up fail
- * with "Error sending confirmation email". Unset keeps the old behavior; "0"
- * turns reminders off. Learners left over are picked up on a later day.
+ * INACTIVE_REMINDER_MAX_SENDS_PER_RUN: how many reminder emails one run may
+ * actually send. OFF unless set to a positive number: on Resend's free plan the
+ * whole account gets 100 emails/day, shared with Supabase's sign-up confirmation
+ * emails, and an uncapped run (up to 500) used the whole day's quota and made
+ * sign-up fail with "Error sending confirmation email". Unset, empty, invalid or
+ * "0" all mean off. Learners left over are picked up on a later day.
  */
 function maxSendsPerRun(): number {
-  const raw = process.env.INACTIVE_REMINDER_MAX_SENDS_PER_RUN?.trim();
-  if (!raw) return MAX_NOTIFICATIONS_PER_RUN;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed < 0) return MAX_NOTIFICATIONS_PER_RUN;
+  const parsed = Number.parseInt(process.env.INACTIVE_REMINDER_MAX_SENDS_PER_RUN?.trim() ?? "", 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
   return Math.min(parsed, MAX_NOTIFICATIONS_PER_RUN);
 }
 
@@ -64,6 +62,13 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   const authHeader = request.headers.get("authorization") ?? "";
   if (!isValidCronAuth(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  // Off by default (see maxSendsPerRun): skip the whole run, including the read of
+  // every learner's activity, rather than do the work and send nothing.
+  const sendLimit = maxSendsPerRun();
+  if (sendLimit === 0) {
+    return NextResponse.json({ notified: 0, skipped: 0, failed: 0, disabled: true });
   }
 
   const supabase = createServiceRoleClient();
@@ -105,7 +110,6 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   let notified = 0;
   let skipped = 0;
   let failed = 0;
-  const sendLimit = maxSendsPerRun();
 
   for (const { userId, daysInactive } of inactiveLearners) {
     // Checked before recordNotificationEvent so a learner left over isn't marked

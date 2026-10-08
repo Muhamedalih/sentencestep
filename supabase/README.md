@@ -22,7 +22,7 @@ Once a project exists:
    lesson and sentence ids there (e.g. `normal-1`, `normal-1-s1`) are plain
    text slugs chosen to match the schema's primary keys 1:1, so the existing
    seed can be inserted as-is.
-4. In the Supabase dashboard, under Authentication → Providers → Email,
+4. In the Supabase dashboard, under Authentication → Sign In / Providers → Email,
    decide whether "Confirm email" is enabled. The app handles either setting
    correctly (see below) — this isn't something the code or migrations
    control.

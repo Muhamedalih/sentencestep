@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { dedupeKeyFor, shouldNotify } from "./events";
+import { dedupeKeyFor, isEmailableMilestone, milestoneEmailModeFrom, shouldNotify } from "./events";
 import type { NotificationEvent } from "./events";
 
 test("shouldNotify: a lesson-count milestone (5) is meaningful", () => {
@@ -108,4 +108,35 @@ test("dedupeKeyFor: an expiry reminder is keyed by its stage and the end date, s
   assert.equal(dedupeKeyFor(three), "PREMIUM_EXPIRY_REMINDER:3:2027-02-02");
   assert.equal(dedupeKeyFor(seven), dedupeKeyFor({ ...seven }));
   assert.notEqual(dedupeKeyFor(seven), dedupeKeyFor(renewed));
+});
+
+test("milestoneEmailModeFrom: unset, empty or unknown values mean major; off and all are honored", () => {
+  assert.equal(milestoneEmailModeFrom(undefined), "major");
+  assert.equal(milestoneEmailModeFrom(""), "major");
+  assert.equal(milestoneEmailModeFrom("whatever"), "major");
+  assert.equal(milestoneEmailModeFrom(" OFF "), "off");
+  assert.equal(milestoneEmailModeFrom("all"), "all");
+});
+
+test("isEmailableMilestone: major mode emails only a finished level and 7/30/100-day streaks", () => {
+  const level: NotificationEvent = { type: "LEVEL_COMPLETED", mode: "normal", level: 1 };
+  assert.equal(isEmailableMilestone(level, "major"), true);
+  assert.equal(isEmailableMilestone({ type: "STREAK_MILESTONE", streak: 7 }, "major"), true);
+  assert.equal(isEmailableMilestone({ type: "STREAK_MILESTONE", streak: 30 }, "major"), true);
+  assert.equal(isEmailableMilestone({ type: "STREAK_MILESTONE", streak: 3 }, "major"), false);
+  assert.equal(
+    isEmailableMilestone({ type: "LESSON_COMPLETED", totalCompleted: 1 }, "major"),
+    false,
+  );
+  assert.equal(isEmailableMilestone({ type: "STORY_COMPLETED", lessonId: "s1" }, "major"), false);
+  assert.equal(
+    isEmailableMilestone({ type: "CONVERSATION_COMPLETED", lessonId: "c1" }, "major"),
+    false,
+  );
+});
+
+test("isEmailableMilestone: off sends nothing, all keeps the old behavior", () => {
+  const story: NotificationEvent = { type: "STORY_COMPLETED", lessonId: "s1" };
+  assert.equal(isEmailableMilestone(story, "off"), false);
+  assert.equal(isEmailableMilestone(story, "all"), true);
 });
