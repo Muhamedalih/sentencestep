@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 const BUCKET = "voice-audio";
+const DELETE_CHUNK_SIZE = 100;
 
 /**
  * Uploads a generated MP3 Buffer to the voice-audio bucket and returns its
@@ -37,7 +38,21 @@ export async function uploadVoiceClip(path: string, mp3: Buffer): Promise<string
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(path, mp3, { contentType: "audio/mpeg", upsert: false, cacheControl: "31536000" });
-  if (error) throw error;
+  if (error) {
+    // The server client gives up on a write after 8s (fetch-with-timeout.ts), but
+    // Storage may well have stored the object by then — and the caller marks its
+    // cache row failed and retries under a NEW random path, leaving this one with
+    // nothing pointing at it forever. Only a random-UUID `generated/` path is
+    // removed: those can never collide with another object, whereas a
+    // deterministic path (samples/) failing as "already exists" must be left alone.
+    if (path.startsWith("generated/")) {
+      await supabase.storage
+        .from(BUCKET)
+        .remove([path])
+        .catch(() => undefined);
+    }
+    throw error;
+  }
 
   const {
     data: { publicUrl },
@@ -97,6 +112,13 @@ export function voiceAudioPathFromUrl(url: string): string | null {
 export async function deleteVoiceClips(paths: string[]): Promise<void> {
   if (paths.length === 0) return;
   const supabase = createServiceRoleClient();
-  const { error } = await supabase.storage.from(BUCKET).remove(paths);
-  if (error) console.error("[voice] deleteVoiceClips: Storage remove failed", { paths, error });
+  // Chunked: a voice with thousands of cached clips is removed in one admin
+  // action, and one request carrying every path risks the 8s write timeout.
+  for (let i = 0; i < paths.length; i += DELETE_CHUNK_SIZE) {
+    const chunk = paths.slice(i, i + DELETE_CHUNK_SIZE);
+    const { error } = await supabase.storage.from(BUCKET).remove(chunk);
+    if (error) {
+      console.error("[voice] deleteVoiceClips: Storage remove failed", { chunk, error });
+    }
+  }
 }

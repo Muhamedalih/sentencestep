@@ -159,12 +159,31 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
   // on-demand generation path writes with, purely for this one cleanup
   // read.
   const serviceClient = createServiceRoleClient();
-  const { data: cachedClips } = await serviceClient
-    .from("voice_audio_cache")
-    .select("audio_url")
-    .eq("voice_id", voiceId);
+  // Paged: one unpaged select returns at most 1000 rows, but the delete below
+  // cascades EVERY cache row of this voice — so a voice with more cached clips
+  // than that used to leave the rest of its files in Storage with nothing
+  // pointing at them. A failed read stops the delete for the same reason.
+  const CACHE_PAGE_SIZE = 1000;
+  const cachedClipUrls: string[] = [];
+  for (let from = 0; ; from += CACHE_PAGE_SIZE) {
+    const { data: page, error: pageError } = await serviceClient
+      .from("voice_audio_cache")
+      .select("audio_url")
+      .eq("voice_id", voiceId)
+      .order("id")
+      .range(from, from + CACHE_PAGE_SIZE - 1);
+    if (pageError) {
+      return {
+        error: "Couldn't list this voice's cached clips, so it wasn't deleted. Please try again.",
+      };
+    }
+    for (const row of page ?? []) {
+      if (row.audio_url) cachedClipUrls.push(row.audio_url);
+    }
+    if ((page ?? []).length < CACHE_PAGE_SIZE) break;
+  }
 
-  const paths = [voice.sample_audio_url, ...(cachedClips ?? []).map((row) => row.audio_url)]
+  const paths = [voice.sample_audio_url, ...cachedClipUrls]
     .filter((url): url is string => Boolean(url))
     .map(voiceAudioPathFromUrl)
     .filter((path): path is string => Boolean(path));
