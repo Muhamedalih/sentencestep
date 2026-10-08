@@ -295,6 +295,7 @@ export const tr: Dictionary = {
   },
   premium: {
     lockedContentAriaLabel: "{title} — premium içerik, ayrıntılar için dokunun",
+    lockedChip: "Premium",
     premiumHeading: "Premium plana sahipsiniz",
     upgradeHeading: "SentenceStep Premium'a yükseltin",
     premiumSubtitle: "Tüm derslerin ve hikayelerin kilidi açık.",

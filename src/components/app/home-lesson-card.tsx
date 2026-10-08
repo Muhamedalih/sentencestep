@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check, Lock } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { PremiumLockOverlay } from "@/components/learning/premium-lock-overlay";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -48,7 +49,7 @@ export function HomeLessonCard({
         <Card
           className={cn(
             "border-border/80 h-full gap-0 overflow-hidden border py-0 shadow-sm transition-all duration-300",
-            locked ? "opacity-90" : "hover:shadow-lg motion-safe:group-hover:-translate-y-0.5",
+            "hover:shadow-lg motion-safe:group-hover:-translate-y-0.5",
             isCurrent && "ring-primary ring-2 ring-offset-2",
           )}
         >
@@ -65,16 +66,9 @@ export function HomeLessonCard({
               illustrationUrl={lesson.illustrationUrl}
               className="aspect-[4/3] w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 lg:aspect-[4/3] lg:h-auto lg:w-full"
             />
+            {locked && <PremiumLockOverlay />}
             {isCurrent && (
               <Badge className="absolute top-3 left-3">{t.progress.continueMode}</Badge>
-            )}
-            {locked && (
-              <span
-                className="bg-background/90 text-foreground absolute top-3 right-3 flex size-8 items-center justify-center rounded-full shadow-sm"
-                aria-hidden="true"
-              >
-                <Lock className="size-3.5" />
-              </span>
             )}
           </div>
 
@@ -89,7 +83,6 @@ export function HomeLessonCard({
                   {t.common.done}
                 </Badge>
               )}
-              {locked && !completed && <Badge variant="muted">{t.wordLists.premiumGroup}</Badge>}
             </div>
             <h3 className="leading-snug font-semibold" dir="ltr">
               {lesson.title}

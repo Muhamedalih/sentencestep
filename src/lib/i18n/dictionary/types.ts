@@ -335,6 +335,8 @@ export interface Dictionary {
   premium: {
     /** Generic `{title} — premium content, tap for details` aria-label, reused across lesson/story/word-group cards — see wordLists.lockedAriaLabel's doc comment for why the word-group-specific wording it used to carry was replaced by this. */
     lockedContentAriaLabel: string;
+    /** Short chip centered on a locked lesson/story cover (PremiumLockOverlay) — says the card needs a subscription, in a few words. */
+    lockedChip: string;
     premiumHeading: string;
     upgradeHeading: string;
     premiumSubtitle: string;
