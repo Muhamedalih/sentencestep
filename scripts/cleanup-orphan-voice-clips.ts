@@ -45,6 +45,8 @@ const DELETE_BATCH_SIZE = 100;
 const PAUSE_BETWEEN_PAGES_MS = 150;
 const PAUSE_BETWEEN_DELETES_MS = 400;
 const HOUR_MS = 60 * 60 * 1000;
+/** More referenced paths than this missing from the bucket means the two sides are probably comparing different path formats. */
+const MAX_MISSING_SHARE = 0.05;
 
 const args = process.argv.slice(2);
 
@@ -75,8 +77,14 @@ const supabase = createClient(url, serviceRoleKey, { auth: { persistSession: fal
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Every voice-audio path any database row points at; throws on any failed read so a partial set never reaches the delete step. */
-async function collectReferencedPaths(client: SupabaseClient): Promise<Set<string>> {
+/**
+ * Every voice-audio path any database row points at; throws on any failed read so a partial set never reaches the delete step.
+ * `unparsed` counts values that mention the bucket but that bucketPathFromPublicUrl could not turn into a path — a file such a
+ * row points at would look unreferenced, so a non-zero count blocks deletion.
+ */
+async function collectReferencedPaths(
+  client: SupabaseClient,
+): Promise<{ referenced: Set<string>; unparsed: number }> {
   const sources = [
     { table: "voice_audio_cache", column: "audio_url" },
     { table: "sentences", column: "audio_url" },
@@ -85,6 +93,7 @@ async function collectReferencedPaths(client: SupabaseClient): Promise<Set<strin
   ];
 
   const referenced = new Set<string>();
+  let unparsed = 0;
   for (const { table, column } of sources) {
     let rowsRead = 0;
     for (let from = 0; ; from += PAGE_SIZE) {
@@ -100,13 +109,14 @@ async function collectReferencedPaths(client: SupabaseClient): Promise<Set<strin
         const value = row[column];
         const path = value ? bucketPathFromPublicUrl(value) : null;
         if (path) referenced.add(path);
+        else if (value?.includes(VOICE_AUDIO_BUCKET)) unparsed += 1;
       }
       rowsRead += rows.length;
       if (rows.length < PAGE_SIZE) break;
     }
     console.log(`  ${table}.${column}: ${rowsRead} rows read`);
   }
-  return referenced;
+  return { referenced, unparsed };
 }
 
 /** Every file in the bucket, walking folders breadth-first (Storage lists one level at a time). */
@@ -153,7 +163,7 @@ const megabytes = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
 async function main() {
   console.log("1/3 Reading every row that can point at a voice clip...");
-  const referenced = await collectReferencedPaths(supabase);
+  const { referenced, unparsed } = await collectReferencedPaths(supabase);
   if (referenced.size === 0) {
     throw new Error(
       "No references found at all — refusing to continue (nothing would be safe to delete).",
@@ -170,6 +180,19 @@ async function main() {
 
   const stored = new Set(objects.map((object) => object.path));
   const missingFiles = [...referenced].filter((path) => !stored.has(path)).length;
+
+  // Anything that makes the "unreferenced" verdict untrustworthy blocks deletion (a dry run still reports).
+  const blockers: string[] = [];
+  if (unparsed > 0) {
+    blockers.push(
+      `${unparsed} database value(s) mention ${VOICE_AUDIO_BUCKET} but could not be read as a path`,
+    );
+  }
+  if (missingFiles > referenced.size * MAX_MISSING_SHARE) {
+    blockers.push(
+      `${missingFiles} of ${referenced.size} referenced paths are not in the bucket — the path format may not match`,
+    );
+  }
 
   const {
     orphans,
@@ -206,8 +229,15 @@ async function main() {
   );
   console.log(`  full list (oldest first): ${reportPath}`);
 
+  for (const blocker of blockers) console.warn(`  WARNING: ${blocker}`);
+
   if (!shouldDelete) {
     console.log("\nDry run — nothing was deleted. Re-run with --delete to remove files.");
+    return;
+  }
+  if (blockers.length > 0) {
+    console.error("\nRefusing to delete: fix the warning(s) above first. Nothing was deleted.");
+    process.exitCode = 1;
     return;
   }
 
