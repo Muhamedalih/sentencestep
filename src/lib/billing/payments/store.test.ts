@@ -198,7 +198,38 @@ test("store.countRecentOrders: counts this learner's orders since the cutoff", a
   assert.equal(requests[0]!.method, "HEAD");
   assert.equal(requests[0]!.params.get("user_id"), "eq.user-1");
   assert.equal(requests[0]!.params.get("created_at"), `gte.${since.toISOString()}`);
+  assert.equal(
+    requests[0]!.params.get("or"),
+    "(status.neq.failed,provider_payment_id.not.is.null)",
+    "an order whose link was never created is not counted",
+  );
   assert.match(requests[0]!.headers.get("Prefer") ?? "", /count=exact/);
+});
+
+test("store.findOpenCheckout: the learner's newest open link with enough life left, whatever the plan", async () => {
+  const { store, requests } = setup(() => json([]));
+  const expiringAfter = new Date("2026-10-04T12:02:00.000Z");
+
+  assert.equal(
+    await store.findOpenCheckout({
+      userId: "user-1",
+      provider: "wayl",
+      providerEnv: "live",
+      expiringAfter,
+    }),
+    null,
+  );
+
+  const params = requests[0]!.params;
+  assert.equal(params.get("user_id"), "eq.user-1");
+  assert.equal(params.get("provider"), "eq.wayl");
+  assert.equal(params.get("provider_env"), "eq.live");
+  assert.equal(params.get("status"), "in.(created,pending)");
+  assert.equal(params.get("checkout_url"), "not.is.null");
+  assert.equal(params.get("link_expires_at"), `gt.${expiringAfter.toISOString()}`);
+  assert.equal(params.get("order"), "created_at.desc");
+  assert.equal(params.get("limit"), "1");
+  assert.equal(params.get("pricing_tier"), null, "not tied to one tier or plan");
 });
 
 test("store.insertOrder: stores the snapshot and returns the created row", async () => {

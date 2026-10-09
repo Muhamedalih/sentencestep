@@ -9,6 +9,13 @@ export interface PaymentStore extends FulfillmentStore, CheckoutStore {
   getLatestOrderForUser(userId: string, provider: string): Promise<PaymentOrder | null>;
   /** The learner's newest orders across every provider, newest first — what a payment problem report quotes. */
   listRecentOrdersForUser(userId: string, limit: number): Promise<PaymentOrder[]>;
+  /** The learner's newest payment link that is still open, whatever plan it is for: what the "finish your payment" note on Home points back to. */
+  findOpenCheckout(query: {
+    userId: string;
+    provider: string;
+    providerEnv: "live" | "test";
+    expiringAfter: Date;
+  }): Promise<PaymentOrder | null>;
   /** Open orders, least recently verified first so a stuck order can never starve the others. */
   listReconcilableOrders(query: {
     provider: string;
@@ -106,11 +113,29 @@ export function createPaymentStore(
       return data;
     },
 
+    async findOpenCheckout(query) {
+      const { data, error } = await orders()
+        .select("*")
+        .eq("user_id", query.userId)
+        .eq("provider", query.provider)
+        .eq("provider_env", query.providerEnv)
+        .in("status", ["created", "pending"])
+        .not("checkout_url", "is", null)
+        .gt("link_expires_at", query.expiringAfter.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+
     async countRecentOrders(userId, since) {
       const { count, error } = await orders()
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
-        .gte("created_at", since.toISOString());
+        .gte("created_at", since.toISOString())
+        // An order whose link could never be created doesn't count: during a provider outage it would lock the learner out for an hour.
+        .or("status.neq.failed,provider_payment_id.not.is.null");
       if (error) throw error;
       return count ?? 0;
     },

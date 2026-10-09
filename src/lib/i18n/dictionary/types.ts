@@ -415,6 +415,10 @@ export interface Dictionary {
     expiryBannerStreakBody: string;
     expiryBannerCta: string;
     expiryBannerDismiss: string;
+    /** Note on Home for a learner who started paying and left with the payment link still open; the button goes straight back to that link. */
+    finishPaymentTitle: string;
+    finishPaymentBody: string;
+    finishPaymentCta: string;
     /** What a signed-out visitor sees on /upgrade while the sitewide free-access promotion is on: no plan and no price, just that everything is open and how to keep progress. */
     freeNowHeading: string;
     freeNowSubtitle: string;

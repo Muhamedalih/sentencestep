@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
+import { FinishPaymentBanner } from "@/components/app/finish-payment-banner";
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { PremiumExpiryBanner } from "@/components/app/premium-expiry-banner";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
@@ -12,6 +13,7 @@ import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { getAccessState } from "@/lib/billing/access";
 import { REMINDER_WINDOW_DAYS } from "@/lib/billing/expiry-reminders";
+import { getOpenCheckout } from "@/lib/billing/open-checkout";
 import { getHomeLessons } from "@/lib/content";
 import { startHomeEngagement } from "@/lib/features/home-engagement";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
@@ -115,6 +117,8 @@ export default async function LearnHomePage() {
   const progressPromise = userPromise.then((user) =>
     user ? fetchProgressCached(todayISO) : undefined,
   );
+  // A payment link this learner left open, for the "finish your payment" note.
+  const openCheckoutPromise = userPromise.then((user) => (user ? getOpenCheckout(user.id) : null));
   // The engagement cards (today's session, quests, streak strip) load HERE,
   // alongside everything above, instead of in the browser after hydration —
   // there they were three separate Server Actions that Next queues one behind
@@ -149,6 +153,7 @@ export default async function LearnHomePage() {
     weakWords,
     reviewWaiting,
     initialProgress,
+    openCheckout,
   ] = await Promise.all([
     getHomeLessons(locale ?? undefined),
     getAccessState(),
@@ -160,6 +165,7 @@ export default async function LearnHomePage() {
     weakWordsPromise,
     reviewWaitingPromise,
     progressPromise,
+    openCheckoutPromise,
   ]);
 
   // The Book recommendation card: the first featured, published book, or
@@ -218,6 +224,13 @@ export default async function LearnHomePage() {
         <div className="max-sm:order-3">
           <GuestProgressBanner isGuest={!user} className="mb-6" />
           {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
+          {openCheckout && !isPremiumUser && (
+            <FinishPaymentBanner
+              reference={openCheckout.reference}
+              url={openCheckout.url}
+              className="mb-6"
+            />
+          )}
           <HomeEngagementSection stream={engagement} className="mb-6" />
           <NeedsReviewWords
             words={weakWords.filter((word) => word.dueNow)}

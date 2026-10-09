@@ -35,8 +35,10 @@ const initialState: CheckoutActionState = {};
 
 const PLAN_NAME_KEYS = { "1m": "plan1m", "3m": "plan3m", "6m": "plan6m" } as const;
 
-/** The ways to pay that the payment partner's page offers, written the way each brand writes itself, so never translated. */
-const ACCEPTED_METHODS = ["Visa", "Mastercard", "Super Qi", "ZainCash", "FIB"] as const;
+/** The ways to pay on the payment partner's page, written the way each brand writes itself, so never translated. */
+const CARD_METHODS = ["Visa", "Mastercard"] as const;
+/** Iraqi wallets and bank accounts: only someone in Iraq can use them, so only they are shown them. */
+const IRAQI_WALLET_METHODS = ["Super Qi", "ZainCash", "FIB"] as const;
 
 interface CheckoutCardProps {
   /** Prepared on the server for the visitor's tier: every figure is already formatted, in USD. */
@@ -61,6 +63,8 @@ interface CheckoutCardProps {
    * heads-up about another currency is kept.
    */
   waylShowsDollars?: boolean;
+  /** True for a visitor in Iraq, who is shown the Iraqi wallets beside cards. Everyone else is shown cards only, so nobody is promised a way to pay they cannot use. */
+  showIraqiWallets?: boolean;
   /** A lesson page (already checked with safeLessonPath) the learner was stopped at: sent with the form so the confirmation page can lead back to it. Never read for anything about the payment. */
   afterPaymentPath?: string | null;
 }
@@ -80,6 +84,7 @@ export function CheckoutCard({
   socialProof = null,
   fromMonthly,
   waylShowsDollars = false,
+  showIraqiWallets = false,
   afterPaymentPath = null,
 }: CheckoutCardProps) {
   const { t, locale } = useLocale();
@@ -106,6 +111,23 @@ export function CheckoutCard({
     return () => observer.disconnect();
   }, []);
 
+  // Back from the payment partner's page can restore this page frozen on
+  // "Redirecting…" with a dead button; a fresh load gives a working one.
+  const pendingRef = useRef(false);
+  useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && pendingRef.current) window.location.reload();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  const acceptedMethods = showIraqiWallets
+    ? [...CARD_METHODS, ...IRAQI_WALLET_METHODS]
+    : CARD_METHODS;
   const showRating = !extend && socialProof?.rating;
   const showSocialProof =
     !extend && socialProof && (socialProof.learners || socialProof.lessons || socialProof.rating);
@@ -308,7 +330,11 @@ export function CheckoutCard({
                 </Button>
               )}
               {state?.error && (
-                <p role="alert" className="text-muted-foreground text-center text-xs">
+                <p
+                  role="alert"
+                  className="bg-danger/10 text-danger rounded-lg px-3 py-2 text-center text-sm"
+                  dir="auto"
+                >
                   {state.error}
                 </p>
               )}
@@ -369,7 +395,7 @@ export function CheckoutCard({
 
             <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
               <span className="text-muted-foreground">{t.premium.acceptedMethodsLabel}</span>
-              {ACCEPTED_METHODS.map((method) => (
+              {acceptedMethods.map((method) => (
                 <span
                   key={method}
                   dir="ltr"

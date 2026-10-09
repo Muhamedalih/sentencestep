@@ -168,6 +168,10 @@ export class InMemoryPaymentStore implements PaymentStore {
     return null;
   }
 
+  async findOpenCheckout() {
+    return null;
+  }
+
   async updateOrder(orderId: string, patch: PaymentOrderPatch) {
     for (const [reference, order] of this.orders) {
       if (order.id !== orderId) continue;
