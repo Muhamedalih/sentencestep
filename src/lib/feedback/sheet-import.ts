@@ -2,8 +2,8 @@ import { MAX_RATING_COMMENT_LENGTH, type AppRatingInsert } from "@/lib/feedback/
 
 /**
  * Reads a CSV downloaded from the old ratings Google Sheet (File > Download >
- * Comma-separated values) into rows for the `app_ratings` table. Used by
- * scripts/import-app-ratings.ts, once, so the ratings gathered before the
+ * Comma-separated values) into rows for the `app_ratings` table. Used by Admin >
+ * Ratings' "Import from the old sheet", once, so the ratings gathered before the
  * database existed are not lost.
  *
  * The sheet's columns are the ones submitAppRatingAction used to send, after a
@@ -130,4 +130,27 @@ export function rowsToRatings(rows: string[][], utcOffset: string): SheetImportR
   });
 
   return { records, skipped };
+}
+
+/** What identifies a rating: the browser that gave it and the exact moment. Two imports of the same sheet agree on it. */
+export function ratingKey(anonId: string | undefined, createdAt: string | undefined): string {
+  return `${anonId ?? ""}|${new Date(createdAt ?? 0).toISOString()}`;
+}
+
+/**
+ * Keeps only the ratings whose key isn't already in `existingKeys`, so importing
+ * the same sheet twice adds nothing the second time. A rating repeated inside
+ * the file itself counts once too.
+ */
+export function filterNewRatings(
+  records: readonly AppRatingInsert[],
+  existingKeys: ReadonlySet<string>,
+): AppRatingInsert[] {
+  const seen = new Set(existingKeys);
+  return records.filter((record) => {
+    const key = ratingKey(record.anon_id, record.created_at);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

@@ -1,11 +1,10 @@
 import { roundDownForDisplay } from "./social-proof";
 
 /**
- * The average rating and number of ratings quoted on /upgrade. The two figures
- * are entered by the owner as environment variables, copied from the top of
- * Admin > Ratings. Nothing is shown until both are set, believable and based on enough
- * ratings; the average is only ever rounded DOWN and the count rounded down
- * like every other figure here.
+ * The average rating and number of ratings quoted on /upgrade, worked out from
+ * the ratings in the database (see public-ratings.ts). Nothing is shown until
+ * there are enough ratings to be worth quoting; the average is only ever
+ * rounded DOWN and the count rounded down like every other figure here.
  */
 export const MIN_RATINGS_TO_QUOTE = 20;
 
@@ -16,26 +15,21 @@ export interface RatingsProof {
   count: number;
 }
 
-export function parseRatingsProof(
-  rawAverage: string | undefined,
-  rawCount: string | undefined,
-): RatingsProof | null {
-  const averageText = rawAverage?.trim();
-  const countText = rawCount?.trim();
-  if (!averageText || !countText) return null;
+/**
+ * `perStar` is how many ratings gave each star: index 0 = 1 star ... index 4 =
+ * 5 stars. The average is taken from these exact counts (not from an already
+ * rounded average) so the quoted figure can never end up higher than the true one.
+ */
+export function buildRatingsProof(perStar: readonly number[]): RatingsProof | null {
+  if (perStar.length !== 5 || perStar.some((n) => !Number.isInteger(n) || n < 0)) return null;
 
-  const average = Number(averageText);
-  const count = Number(countText);
-  if (!Number.isFinite(average) || average < 1 || average > 5) return null;
-  if (!Number.isInteger(count) || count < MIN_RATINGS_TO_QUOTE) return null;
+  const count = perStar.reduce((sum, n) => sum + n, 0);
+  if (count < MIN_RATINGS_TO_QUOTE) return null;
 
+  const average = perStar.reduce((sum, n, index) => sum + n * (index + 1), 0) / count;
   return {
     // toFixed first so binary rounding noise (4.3 * 10 = 42.99999...) can't cost a tenth.
     average: Math.floor(Number((average * 10).toFixed(6))) / 10,
     count: roundDownForDisplay(count),
   };
-}
-
-export function getRatingsProof(): RatingsProof | null {
-  return parseRatingsProof(process.env.SOCIAL_PROOF_RATING, process.env.SOCIAL_PROOF_RATING_COUNT);
 }

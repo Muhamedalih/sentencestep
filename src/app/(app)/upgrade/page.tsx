@@ -26,7 +26,7 @@ import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getContentStats, getSocialProof } from "@/lib/stats/public-stats";
-import { getRatingsProof } from "@/lib/stats/ratings-proof";
+import { getRatingsProof } from "@/lib/stats/public-ratings";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -84,10 +84,9 @@ export default async function UpgradePage({
   // Only the plan card quotes the launch offer and real figures, so the counts
   // are only fetched (they are cached for an hour) when that card is shown.
   const showsPlans = !freeNow && !(user && access.isPremium);
-  const [proof, content] = showsPlans
-    ? await Promise.all([getSocialProof(), getContentStats()])
-    : [null, null];
-  const ratings = showsPlans ? getRatingsProof() : null;
+  const [proof, content, ratings] = showsPlans
+    ? await Promise.all([getSocialProof(), getContentStats(), getRatingsProof()])
+    : [null, null, null];
   const offerNotice =
     offer && offerBonusDays > 0
       ? { bonusDays: offerBonusDays, endsOnLabel: formatLongDate(offer.endsOn, locale) }

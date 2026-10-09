@@ -6,6 +6,7 @@ import {
   type RatingsSummary,
   type RatingUserType,
 } from "@/lib/admin/ratings-domain";
+import { getRatingsSettings } from "@/lib/feedback/ratings-settings";
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import { createClient } from "@/lib/supabase/server";
 
@@ -71,7 +72,11 @@ export async function listAppRatings(
   };
 }
 
-/** The figures at the top of the page: count, average, the per-star spread, and how many are waiting. */
+/**
+ * The figures at the top of the page: count, average, the per-star spread, and
+ * how many are waiting. Archived ratings are left out of all of them (and out of
+ * the average quoted on the site) — archiving is how a junk rating is removed.
+ */
 export async function getAppRatingsOverview(): Promise<
   RatingsSummary & { newCount: number; commentCount: number; publicCount: number }
 > {
@@ -81,8 +86,8 @@ export async function getAppRatingsOverview(): Promise<
   const [distribution, isNew, withComment, isPublic] = await Promise.all([
     supabase.rpc("app_rating_distribution"),
     head().eq("status", "new"),
-    head().neq("comment", ""),
-    head().eq("is_public", true),
+    head().neq("status", "archived").neq("comment", ""),
+    head().neq("status", "archived").eq("is_public", true),
   ]);
   for (const result of [distribution, isNew, withComment, isPublic]) {
     if (result.error) throw result.error;
@@ -122,16 +127,19 @@ export interface PublicAppRating {
  * no email, no account id, no browser id. This is the one way a public page
  * should read ratings — app_ratings has no public RLS policy, because RLS
  * can't hide single columns. Server-only: it uses the service-role client.
- * Returns an empty list when that isn't configured, so a page built on it
+ * Returns an empty list when that isn't configured, or while the admin has
+ * "Show approved ratings to visitors" switched off, so a page built on it
  * simply shows nothing.
  */
 export async function listPublicAppRatings(limit = 12): Promise<PublicAppRating[]> {
   if (!isServiceRoleConfigured()) return [];
+  if (!(await getRatingsSettings()).showPublicRatings) return [];
 
   const { data, error } = await createServiceRoleClient()
     .from("app_ratings")
     .select("id, rating, comment, locale, created_at")
     .eq("is_public", true)
+    .neq("status", "archived")
     .neq("comment", "")
     .order("created_at", { ascending: false })
     .limit(limit);

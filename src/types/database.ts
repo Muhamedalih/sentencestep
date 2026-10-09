@@ -1485,6 +1485,23 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["app_ratings"]["Insert"]>;
         Relationships: [];
       };
+      /** Single row: whether the average rating and approved ratings may be shown to visitors. Edited in Admin > Ratings. See 20250332000000_ratings_display_settings.sql. */
+      ratings_settings: {
+        Row: {
+          id: number;
+          show_rating_proof: boolean;
+          show_public_ratings: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          show_rating_proof?: boolean;
+          show_public_ratings?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ratings_settings"]["Insert"]>;
+        Relationships: [];
+      };
       /** Service-role-only sign-in attempt ledger backing signIn's lockout. See 20250216000000_login_attempt_lockout.sql. */
       login_attempts: {
         Row: {

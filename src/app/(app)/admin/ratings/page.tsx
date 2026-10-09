@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { PaginationControls } from "@/components/admin/pagination-controls";
 import { RatingPublicToggle } from "@/components/admin/rating-public-toggle";
+import { RatingsDisplaySettings } from "@/components/admin/ratings-display-settings";
+import { RatingsImportForm } from "@/components/admin/ratings-import-form";
 import { RatingReplyForm } from "@/components/admin/rating-reply-form";
 import { RatingStatusControl } from "@/components/admin/rating-status-control";
 import {
@@ -17,6 +19,8 @@ import {
   type RatingsFilter,
 } from "@/lib/admin/ratings-domain";
 import { getAppRatingsOverview, listAppRatings } from "@/lib/admin/ratings-queries";
+import { getRatingsSettings } from "@/lib/feedback/ratings-settings";
+import { MIN_RATINGS_TO_QUOTE, buildRatingsProof } from "@/lib/stats/ratings-proof";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { cn } from "@/lib/utils";
 
@@ -90,11 +94,16 @@ export default async function AdminRatingsPage({
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const filter = parseRatingsFilter(await searchParams);
-  const [overview, { ratings, totalCount }] = await Promise.all([
+  const [overview, { ratings, totalCount }, settings] = await Promise.all([
     getAppRatingsOverview(),
     listAppRatings(filter),
+    getRatingsSettings(),
   ]);
   const biggestStar = Math.max(1, ...overview.perStar);
+  const proof = buildRatingsProof(overview.perStar);
+  const proofPreview = proof
+    ? `“${proof.average.toFixed(1)} average from ${proof.count}+ ratings”`
+    : `nothing yet — it needs at least ${MIN_RATINGS_TO_QUOTE} ratings (you have ${overview.count})`;
 
   return (
     <div className="flex flex-col gap-6">
@@ -106,9 +115,12 @@ export default async function AdminRatingsPage({
         <p className="text-muted-foreground mt-1">
           What learners gave the app from the rating pop-up and Settings, newest first. Reply by
           email to anyone who left an address (signed-in members always have one), and approve the
-          best ones to show on the site.
+          best ones to show on the site. Archiving a rating takes it out of the figures below and
+          out of the average quoted on the site.
         </p>
       </div>
+
+      <RatingsDisplaySettings initial={settings} proofPreview={proofPreview} />
 
       <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         <div className="grid grid-cols-2 gap-3">
@@ -265,6 +277,15 @@ export default async function AdminRatingsPage({
         basePath="/admin/ratings"
         searchParams={ratingsFilterParams(filter)}
       />
+
+      <details className="border-border rounded-xl border p-4">
+        <summary className="cursor-pointer text-sm font-medium">
+          Import ratings from the old Google Sheet
+        </summary>
+        <div className="mt-4">
+          <RatingsImportForm />
+        </div>
+      </details>
     </div>
   );
 }

@@ -3,7 +3,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { parseCsv, parseSheetTimestamp, rowsToRatings } from "./sheet-import";
+import {
+  filterNewRatings,
+  parseCsv,
+  parseSheetTimestamp,
+  ratingKey,
+  rowsToRatings,
+} from "./sheet-import";
 
 test("parseCsv: quoted fields keep commas, doubled quotes and line breaks", () => {
   const rows = parseCsv('a,"b, c","say ""hi""","line1\nline2"\r\nd,e,f,g\n');
@@ -106,4 +112,27 @@ test("rowsToRatings: a missing locale is English and an unknown user type is a g
   );
   assert.equal(records[0]!.locale, "en");
   assert.equal(records[0]!.user_type, "guest");
+});
+
+test("filterNewRatings: ratings already stored, or repeated in the file, are not added again", () => {
+  const { records } = rowsToRatings(
+    [
+      ["09/10/2026 21:41:03", "5", "", "n", "n", "ar", "guest", "a"],
+      ["09/10/2026 21:42:00", "4", "", "n", "n", "ar", "guest", "b"],
+      ["09/10/2026 21:42:00", "4", "", "n", "n", "ar", "guest", "b"],
+      ["09/10/2026 21:43:00", "3", "", "n", "n", "ar", "guest", "c"],
+    ],
+    "+03:00",
+  );
+  // The database hands timestamps back in its own format; the key must still match.
+  const existing = new Set([ratingKey("a", "2026-10-09T18:41:03+00:00")]);
+  const fresh = filterNewRatings(records, existing);
+  assert.deepEqual(
+    fresh.map((r) => r.anon_id),
+    ["b", "c"],
+  );
+  assert.equal(
+    filterNewRatings(fresh, new Set(fresh.map((r) => ratingKey(r.anon_id, r.created_at)))).length,
+    0,
+  );
 });
