@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { setAppRatingPublic } from "@/lib/admin/ratings-actions";
 
-/** "Show on site" / "Hide from site" — approves a rating and its comment for public display (see listPublicAppRatings). */
+/** "Show on site" / "Hide from site" — approves a rating and its comment for public display (see listPublicReviews). */
 export function RatingPublicToggle({ id, isPublic }: { id: string; isPublic: boolean }) {
   const [current, setCurrent] = useState(isPublic);
   const [isPending, startTransition] = useTransition();

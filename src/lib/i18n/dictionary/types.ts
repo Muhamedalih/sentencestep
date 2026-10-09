@@ -1197,6 +1197,10 @@ export interface Dictionary {
     /** Deliberately has no price: prices are only shown on /upgrade, resolved per visitor on the server. */
     premiumSubtitle: string;
     unlockPremiumCta: string;
+    /** Title of the rotating box of approved learner ratings (Upgrade page and the first screen). */
+    reviewsHeading: string;
+    /** Accessible name of a dot that shows one rating; {n} is its position. */
+    reviewDotLabel: string;
     modesHeading: string;
     modesSubtitle: string;
     /** Descriptions for the three modes, shown next to their nav.* titles (nav.normalLessons/stories/conversation) — kept here rather than duplicating title keys. */

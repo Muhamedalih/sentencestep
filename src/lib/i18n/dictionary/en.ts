@@ -940,6 +940,8 @@ export const en: Dictionary = {
     premiumHeading: "When you're ready for more",
     premiumSubtitle: "Premium unlocks everything SentenceStep offers.",
     unlockPremiumCta: "Unlock SentenceStep Premium",
+    reviewsHeading: "What our learners say",
+    reviewDotLabel: "Show rating {n}",
     modesHeading: "Three ways to build fluency",
     modesSubtitle:
       "Every mode uses the same simple loop: hear the sentence, type it, feel it lock in.",

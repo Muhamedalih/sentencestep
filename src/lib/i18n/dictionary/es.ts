@@ -956,6 +956,8 @@ export const es: Dictionary = {
     premiumHeading: "Cuando estés listo para más",
     premiumSubtitle: "Premium desbloquea todo lo que ofrece SentenceStep.",
     unlockPremiumCta: "Desbloquear SentenceStep Premium",
+    reviewsHeading: "Lo que dicen nuestros estudiantes",
+    reviewDotLabel: "Ver opinión {n}",
     modesHeading: "Tres formas de ganar fluidez",
     modesSubtitle:
       "Cada modo usa el mismo ciclo simple: escucha la oración, escríbela, siente cómo se afianza.",

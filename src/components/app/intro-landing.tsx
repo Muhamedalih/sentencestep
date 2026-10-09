@@ -6,6 +6,7 @@ import { Eye, Keyboard, TrendingUp, Volume2 } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
+import { IntroReviews } from "@/components/app/intro-reviews";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
@@ -207,6 +208,8 @@ export function IntroLanding() {
               </Button>
             </div>
             <span className="text-muted-foreground text-base">{t.introLanding.nextHint}</span>
+            {/* Under the buttons, not beside the demo card: on a phone the demo card is below the fold. */}
+            <IntroReviews />
           </div>
 
           <div className="border-border bg-card overflow-hidden rounded-2xl border">

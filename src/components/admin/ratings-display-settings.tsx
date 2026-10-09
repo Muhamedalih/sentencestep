@@ -4,14 +4,18 @@ import { useState, useTransition } from "react";
 
 import { Switch } from "@/components/ui/switch";
 import { setRatingsSettings } from "@/lib/admin/ratings-actions";
+import { PUBLIC_REVIEWS_MAX } from "@/lib/feedback/reviews-display";
 import type { RatingsSettings } from "@/lib/feedback/ratings-settings";
 
 /** The two on/off switches for showing ratings to visitors. Each change saves at once and takes effect on the site immediately. */
 export function RatingsDisplaySettings({
   initial,
   proofPreview,
+  approvedWithComment,
 }: {
   initial: RatingsSettings;
+  /** How many approved ratings have a comment — the ones the public box can show. */
+  approvedWithComment: number;
   /** What the /upgrade line would say right now, or why it can't show yet. */
   proofPreview: string;
 }) {
@@ -65,10 +69,28 @@ export function RatingsDisplaySettings({
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium">Approved ratings and comments</p>
+          <p className="text-sm font-medium">Learner comments box</p>
           <p className="text-muted-foreground text-sm">
-            The master switch for the ratings you approved with &quot;Show on site&quot; below. Turn
-            it off to hide all of them at once without un-approving each one.
+            A box that shows the ratings you approved with &quot;Show on site&quot; below, one at a
+            time, each for the seconds you set on it. It appears on the Upgrade page and on the
+            first screen a new visitor sees. Turn this off to hide all of them at once without
+            un-approving each one.
+          </p>
+          <p className="mt-1 text-sm">
+            <span className="text-muted-foreground">Approved with a comment: </span>
+            <span className="font-medium">{approvedWithComment}</span>
+            {approvedWithComment > PUBLIC_REVIEWS_MAX && (
+              <span className="text-muted-foreground">
+                {" "}
+                — only the newest {PUBLIC_REVIEWS_MAX} are shown; withdraw some to choose which.
+              </span>
+            )}
+            {approvedWithComment === 0 && (
+              <span className="text-muted-foreground">
+                {" "}
+                — approve some below and the box appears.
+              </span>
+            )}
           </p>
         </div>
         <Switch
