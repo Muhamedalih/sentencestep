@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -296,6 +296,24 @@ export function LessonSession({
     }, 3000);
     return () => window.clearTimeout(timer);
   }, []);
+
+  // Fix Your Mistakes, From memory and the words list are screens of their own, not
+  // panels under the finish screen. The finish screen scrolls on a phone, so without
+  // this the next screen would open at that scroll position instead of at its top.
+  const dedicatedScreen = isFixingMistakes
+    ? "mistakes"
+    : isPracticingFromMemory
+      ? "memory"
+      : isViewingWords
+        ? "words"
+        : null;
+  const dedicatedScreenRef = useRef(dedicatedScreen);
+  useEffect(() => {
+    if (dedicatedScreenRef.current === dedicatedScreen) return;
+    dedicatedScreenRef.current = dedicatedScreen;
+    // The admin preview sits inside a normal admin page, which must not jump.
+    if (!previewMode) window.scrollTo(0, 0);
+  }, [dedicatedScreen, previewMode]);
 
   useEffect(() => {
     if (!dictationAvailable) return;
@@ -688,13 +706,13 @@ export function LessonSession({
   );
 
   return (
-    <div className="flex flex-col lg:h-full">
+    // bg-background + min-h-full: the shell's own backdrop only spans one screen height,
+    // so on a phone, where a screen can run taller than that, this keeps the black going
+    // all the way down instead of showing the page behind it.
+    <div className="bg-background flex min-h-full flex-col lg:h-full">
       {/* Kept as one persistent, invisible (sr-only has no layout footprint)
-          sibling outside the AnimatePresence switch below, rather than
-          duplicated into both of its branches — AnimatePresence can mount
-          an exiting and an entering branch at once mid-transition, and two
-          <h1>s in the DOM at the same moment is worth avoiding even though
-          neither is ever visible. */}
+          sibling outside the screen switch below, rather than duplicated
+          into each of its branches — one <h1> for the whole session. */}
       {sessionLabel}
       {!isComplete && <ShiftReplayHint />}
 
@@ -730,212 +748,216 @@ export function LessonSession({
           child's own min-height:auto (its content's height) would win over
           flex-1 shrinking it, and lg:h-full inside would then measure against
           that inflated height instead. */}
-      <div className="flex-1 lg:min-h-0">
-        <AnimatePresence>
-          {isComplete && isOpeningLesson ? (
-            <OnboardingLessonComplete key="onboarding-complete" />
-          ) : isComplete && isFixingMistakes ? (
-            <div key="fix-mistakes" className="flex flex-col lg:h-full">
-              <FixYourMistakesSession
-                lessonId={unit.id}
-                defaultVoiceId={defaultVoiceId}
-                nextLesson={nextLesson}
-                nextLessonLocked={nextLessonLocked}
-              />
-            </div>
-          ) : isComplete && isPracticingFromMemory && fromMemoryItems.length > 0 ? (
-            <div key="from-memory" className="flex flex-col lg:h-full lg:overflow-y-auto">
-              <FromMemorySession
-                items={fromMemoryItems}
-                mode={unit.mode}
-                resolvedVoiceId={resolvedVoiceId}
-                speakerVoiceMap={speakerVoiceMap}
-                allowReveal={features.fromMemory.allowReveal}
-                showFirstLetters={features.fromMemory.showFirstLetters}
-                onMistakes={previewMode ? undefined : handleSentenceMistakes}
-                onFinished={
-                  previewMode
-                    ? undefined
-                    : () => {
-                        void recordFeatureUsageAction({ fromMemoryRounds: 1 }).catch(
-                          (error: unknown) =>
-                            console.error("[features] usage report failed", error),
-                        );
-                      }
-                }
-                onExit={() => setIsPracticingFromMemory(false)}
-              />
-            </div>
-          ) : isComplete && isViewingWords && unit.vocabulary && unit.vocabulary.length > 0 ? (
-            <div key="story-words" className="flex flex-col lg:h-full">
-              <StoryWordsPanel
-                lessonId={unit.id}
-                vocabulary={unit.vocabulary}
-                sentences={unit.sentences}
-                defaultVoiceId={defaultVoiceId}
-                narratorVoiceId={storyNarratorVoiceId}
-                onBack={() => setIsViewingWords(false)}
-              />
-            </div>
-          ) : isComplete ? (
-            <div key="complete" className="flex flex-col bg-black lg:h-full">
-              {previewMode && (
-                <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
-                  <div className="border-accent/40 bg-accent/10 text-accent-foreground mb-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
-                    {t.wordLists.previewModeNotice}
-                  </div>
+      {/* Exactly one screen is ever mounted here — no exit animation holds the old screen
+          in the page while the new one opens. Fix Your Mistakes, From memory and the words
+          list are separate screens that replace the finish screen, never panels stacked
+          under it. A flex column so those screens can fill what is left under the brand
+          bar (flex-1) on a phone too, where nothing here has a fixed height. */}
+      <div className="flex flex-1 flex-col lg:min-h-0">
+        {isComplete && isOpeningLesson ? (
+          <OnboardingLessonComplete key="onboarding-complete" />
+        ) : isComplete && isFixingMistakes ? (
+          <div key="fix-mistakes" className="flex min-h-0 flex-1 flex-col">
+            <FixYourMistakesSession
+              lessonId={unit.id}
+              defaultVoiceId={defaultVoiceId}
+              nextLesson={nextLesson}
+              nextLessonLocked={nextLessonLocked}
+              onBack={() => setIsFixingMistakes(false)}
+            />
+          </div>
+        ) : isComplete && isPracticingFromMemory && fromMemoryItems.length > 0 ? (
+          <div key="from-memory" className="flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
+            <FromMemorySession
+              items={fromMemoryItems}
+              mode={unit.mode}
+              resolvedVoiceId={resolvedVoiceId}
+              speakerVoiceMap={speakerVoiceMap}
+              allowReveal={features.fromMemory.allowReveal}
+              showFirstLetters={features.fromMemory.showFirstLetters}
+              onMistakes={previewMode ? undefined : handleSentenceMistakes}
+              onFinished={
+                previewMode
+                  ? undefined
+                  : () => {
+                      void recordFeatureUsageAction({ fromMemoryRounds: 1 }).catch(
+                        (error: unknown) => console.error("[features] usage report failed", error),
+                      );
+                    }
+              }
+              onExit={() => setIsPracticingFromMemory(false)}
+            />
+          </div>
+        ) : isComplete && isViewingWords && unit.vocabulary && unit.vocabulary.length > 0 ? (
+          <div key="story-words" className="flex min-h-0 flex-1 flex-col">
+            <StoryWordsPanel
+              lessonId={unit.id}
+              vocabulary={unit.vocabulary}
+              sentences={unit.sentences}
+              defaultVoiceId={defaultVoiceId}
+              narratorVoiceId={storyNarratorVoiceId}
+              onBack={() => setIsViewingWords(false)}
+            />
+          </div>
+        ) : isComplete ? (
+          <div key="complete" className="flex flex-col bg-black lg:h-full">
+            {previewMode && (
+              <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
+                <div className="border-accent/40 bg-accent/10 text-accent-foreground mb-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
+                  {t.wordLists.previewModeNotice}
                 </div>
-              )}
-              {/* No centering/padding/max-width wrapper here — LessonCompletion
+              </div>
+            )}
+            {/* No centering/padding/max-width wrapper here — LessonCompletion
                 is a full-bleed, full-screen experience by design (see its
                 own doc comment) and owns its own internal layout. */}
-              <div className="flex-1 lg:min-h-0">
-                <LessonCompletion
-                  mode={unit.mode}
-                  accuracy={finalAccuracy}
-                  wpm={finalWpm}
-                  nextLesson={nextLesson}
-                  nextLessonLocked={nextLessonLocked}
-                  vocabulary={unit.vocabulary}
-                  streak={streak.currentStreak}
-                  xp={xp}
-                  xpEarned={previewMode ? 0 : xpEarned}
-                  learnerLevel={learnerLevel}
-                  rewards={previewMode ? [] : rewards}
-                  mistakeCount={previewMode ? 0 : mistakes.count}
-                  onFixMistakes={previewMode ? undefined : () => setIsFixingMistakes(true)}
-                  onViewWords={unit.mode === "stories" ? () => setIsViewingWords(true) : undefined}
-                  onPracticeFromMemory={
-                    fromMemoryItems.length > 0 ? () => setIsPracticingFromMemory(true) : undefined
-                  }
-                  saveStatus={previewMode ? "saved" : saveStatus}
-                  onRetrySave={previewMode ? undefined : retryMarkComplete}
-                  onRetryLesson={handleRetryLesson}
-                />
-              </div>
-              <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
+            <div className="flex-1 lg:min-h-0">
+              <LessonCompletion
+                mode={unit.mode}
+                accuracy={finalAccuracy}
+                wpm={finalWpm}
+                nextLesson={nextLesson}
+                nextLessonLocked={nextLessonLocked}
+                vocabulary={unit.vocabulary}
+                streak={streak.currentStreak}
+                xp={xp}
+                xpEarned={previewMode ? 0 : xpEarned}
+                learnerLevel={learnerLevel}
+                rewards={previewMode ? [] : rewards}
+                mistakeCount={previewMode ? 0 : mistakes.count}
+                onFixMistakes={previewMode ? undefined : () => setIsFixingMistakes(true)}
+                onViewWords={unit.mode === "stories" ? () => setIsViewingWords(true) : undefined}
+                onPracticeFromMemory={
+                  fromMemoryItems.length > 0 ? () => setIsPracticingFromMemory(true) : undefined
+                }
+                saveStatus={previewMode ? "saved" : saveStatus}
+                onRetrySave={previewMode ? undefined : retryMarkComplete}
+                onRetryLesson={handleRetryLesson}
+              />
             </div>
-          ) : (
-            // Illustration/transcript stays mounted for the whole session
-            // (never keyed to the sentence) so it never reloads or flickers as
-            // the learner advances — only the content on the right changes per
-            // sentence. On mobile this stacks above the typing content instead
-            // of beside it (see the lg:grid-cols-* breakpoint) so the
-            // sentence — the primary task — is never squeezed. Non-stories
-            // modes keep the 30/70 fr split (not 40/60): the illustration is
-            // meant to read as a full-bleed photo/scene panel, not a boxed-in
-            // thumbnail beside the real task, which is typing. Stories mode
-            // instead gives its left column a fixed, narrow track (rather than
-            // a fr share of the row) — StoryPreviousSentences is a compact
-            // numbered transcript, not a full-bleed panel, so it doesn't need
-            // (or want) 30% of the row's width the way a photo does; sizing it
-            // via the grid track here, not via width classes on the component
-            // itself, is what lets it stay a plain w-full fill of whatever
-            // track it's handed. That track itself widens once there's
-            // something to show (210px empty-spacer / 300px once the numbered
-            // list has real entries and needs a bit more room), keyed off the
-            // same `previousSentences` state StoryPreviousSentences itself
-            // reads, so the two always agree on which width applies — or
-            // shrinks to a 52px strip once the learner hides the box via its
-            // own toggle button (storyPanelCollapsed above): the box itself is
-            // gone then, and the strip only holds the small round handle that
-            // brings it back. The width
-            // itself is a CSS custom property rather than a plain arbitrary
-            // class so the lg:transition-[grid-template-columns] below can
-            // actually animate it — a class swap alone would jump instantly.
-            <div
-              key="content"
-              className={
-                unit.mode === "stories"
-                  ? "grid gap-0 lg:h-full lg:grid-cols-[var(--story-col-w)_minmax(0,1fr)] lg:items-stretch lg:transition-[grid-template-columns] lg:duration-[420ms] lg:ease-[cubic-bezier(0.32,0.72,0,1)]"
-                  : "grid gap-4 lg:h-full lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-stretch"
-              }
-              style={
-                unit.mode === "stories"
-                  ? ({
-                      "--story-col-w":
-                        previousSentences.length === 0
-                          ? "210px"
-                          : storyPanelCollapsed
-                            ? "52px"
-                            : "300px",
-                    } as CSSProperties)
-                  : undefined
-              }
-            >
-              {unit.mode === "stories" ? (
-                <StoryPreviousSentences
-                  className="[html[data-keyboard]_&]:max-lg:hidden"
-                  sentences={previousSentences}
-                  resolvedVoiceId={resolvedVoiceId}
-                  collapsed={storyPanelCollapsed}
-                  onToggleCollapsed={() => setStoryPanelPref(!storyPanelCollapsed)}
-                />
-              ) : (
-                <div
-                  className={cn(
-                    "relative lg:h-full",
-                    // Normal mode's topic illustration is a nice-to-have next to
-                    // the real task (typing), but on a phone it eats the top of
-                    // the screen before the learner even reaches the sentence —
-                    // hidden below sm: (tablet and up keep it, unchanged) — and
-                    // for Conversation too, whose 211px picture pushed the chat
-                    // bubble below the on-screen keyboard. Also hidden while the
-                    // keyboard is open or the screen is a short landscape one.
-                    "compact-hide max-sm:hidden",
-                  )}
-                >
-                  {illustrationView === "list" ? (
-                    <StoryPreviousSentences
-                      sentences={previousSentences}
-                      resolvedVoiceId={resolvedVoiceId}
-                    />
-                  ) : (
-                    <LessonIllustration
-                      mode={unit.mode}
-                      lessonId={unit.id}
-                      title={unit.title}
-                      illustrationUrl={unit.illustrationUrl}
-                    />
-                  )}
-                  {unit.mode === "normal" && (
-                    <div className="border-border/60 bg-background/85 absolute end-3 top-3 z-10 flex items-center gap-1 rounded-full border p-1 shadow-sm backdrop-blur-md">
-                      <button
-                        type="button"
-                        onClick={() => setIllustrationView("image")}
-                        aria-pressed={illustrationView === "image"}
-                        aria-label={t.lesson.illustrationViewImage}
-                        title={t.lesson.illustrationViewImage}
-                        className={cn(
-                          "flex size-7 items-center justify-center rounded-full transition-colors",
-                          illustrationView === "image"
-                            ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        <ImageIcon className="size-4" aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIllustrationView("list")}
-                        aria-pressed={illustrationView === "list"}
-                        aria-label={t.lesson.illustrationViewList}
-                        title={t.lesson.illustrationViewList}
-                        className={cn(
-                          "flex size-7 items-center justify-center rounded-full transition-colors",
-                          illustrationView === "list"
-                            ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        <ListIcon className="size-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+            <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
+          </div>
+        ) : (
+          // Illustration/transcript stays mounted for the whole session
+          // (never keyed to the sentence) so it never reloads or flickers as
+          // the learner advances — only the content on the right changes per
+          // sentence. On mobile this stacks above the typing content instead
+          // of beside it (see the lg:grid-cols-* breakpoint) so the
+          // sentence — the primary task — is never squeezed. Non-stories
+          // modes keep the 30/70 fr split (not 40/60): the illustration is
+          // meant to read as a full-bleed photo/scene panel, not a boxed-in
+          // thumbnail beside the real task, which is typing. Stories mode
+          // instead gives its left column a fixed, narrow track (rather than
+          // a fr share of the row) — StoryPreviousSentences is a compact
+          // numbered transcript, not a full-bleed panel, so it doesn't need
+          // (or want) 30% of the row's width the way a photo does; sizing it
+          // via the grid track here, not via width classes on the component
+          // itself, is what lets it stay a plain w-full fill of whatever
+          // track it's handed. That track itself widens once there's
+          // something to show (210px empty-spacer / 300px once the numbered
+          // list has real entries and needs a bit more room), keyed off the
+          // same `previousSentences` state StoryPreviousSentences itself
+          // reads, so the two always agree on which width applies — or
+          // shrinks to a 52px strip once the learner hides the box via its
+          // own toggle button (storyPanelCollapsed above): the box itself is
+          // gone then, and the strip only holds the small round handle that
+          // brings it back. The width
+          // itself is a CSS custom property rather than a plain arbitrary
+          // class so the lg:transition-[grid-template-columns] below can
+          // actually animate it — a class swap alone would jump instantly.
+          <div
+            key="content"
+            className={
+              unit.mode === "stories"
+                ? "grid gap-0 lg:h-full lg:grid-cols-[var(--story-col-w)_minmax(0,1fr)] lg:items-stretch lg:transition-[grid-template-columns] lg:duration-[420ms] lg:ease-[cubic-bezier(0.32,0.72,0,1)]"
+                : "grid gap-4 lg:h-full lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-stretch"
+            }
+            style={
+              unit.mode === "stories"
+                ? ({
+                    "--story-col-w":
+                      previousSentences.length === 0
+                        ? "210px"
+                        : storyPanelCollapsed
+                          ? "52px"
+                          : "300px",
+                  } as CSSProperties)
+                : undefined
+            }
+          >
+            {unit.mode === "stories" ? (
+              <StoryPreviousSentences
+                className="[html[data-keyboard]_&]:max-lg:hidden"
+                sentences={previousSentences}
+                resolvedVoiceId={resolvedVoiceId}
+                collapsed={storyPanelCollapsed}
+                onToggleCollapsed={() => setStoryPanelPref(!storyPanelCollapsed)}
+              />
+            ) : (
+              <div
+                className={cn(
+                  "relative lg:h-full",
+                  // Normal mode's topic illustration is a nice-to-have next to
+                  // the real task (typing), but on a phone it eats the top of
+                  // the screen before the learner even reaches the sentence —
+                  // hidden below sm: (tablet and up keep it, unchanged) — and
+                  // for Conversation too, whose 211px picture pushed the chat
+                  // bubble below the on-screen keyboard. Also hidden while the
+                  // keyboard is open or the screen is a short landscape one.
+                  "compact-hide max-sm:hidden",
+                )}
+              >
+                {illustrationView === "list" ? (
+                  <StoryPreviousSentences
+                    sentences={previousSentences}
+                    resolvedVoiceId={resolvedVoiceId}
+                  />
+                ) : (
+                  <LessonIllustration
+                    mode={unit.mode}
+                    lessonId={unit.id}
+                    title={unit.title}
+                    illustrationUrl={unit.illustrationUrl}
+                  />
+                )}
+                {unit.mode === "normal" && (
+                  <div className="border-border/60 bg-background/85 absolute end-3 top-3 z-10 flex items-center gap-1 rounded-full border p-1 shadow-sm backdrop-blur-md">
+                    <button
+                      type="button"
+                      onClick={() => setIllustrationView("image")}
+                      aria-pressed={illustrationView === "image"}
+                      aria-label={t.lesson.illustrationViewImage}
+                      title={t.lesson.illustrationViewImage}
+                      className={cn(
+                        "flex size-7 items-center justify-center rounded-full transition-colors",
+                        illustrationView === "image"
+                          ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <ImageIcon className="size-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIllustrationView("list")}
+                      aria-pressed={illustrationView === "list"}
+                      aria-label={t.lesson.illustrationViewList}
+                      title={t.lesson.illustrationViewList}
+                      className={cn(
+                        "flex size-7 items-center justify-center rounded-full transition-colors",
+                        illustrationView === "list"
+                          ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <ListIcon className="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
-              {/* justify-center below lg: is fine either way — that breakpoint
+            {/* justify-center below lg: is fine either way — that breakpoint
                 never stretches this column to the row's full height (see
                 the grid above), so there's nothing extra to center within.
                 At lg:+ this column becomes lg:h-full, matching whatever
@@ -950,14 +972,14 @@ export function LessonSession({
                 bubbles read top-down like a real conversation log, so the
                 current line starts right under the lesson counter instead of
                 drifting toward the middle of the row. */}
-              <SharedInputProvider>
-                <div
-                  className={cn(
-                    "flex flex-col lg:h-full lg:overflow-y-auto",
-                    unit.mode === "stories" && "relative",
-                  )}
-                >
-                  {/* Soft spotlight behind the sentence column, Stories mode only
+            <SharedInputProvider>
+              <div
+                className={cn(
+                  "flex flex-col lg:h-full lg:overflow-y-auto",
+                  unit.mode === "stories" && "relative",
+                )}
+              >
+                {/* Soft spotlight behind the sentence column, Stories mode only
                   — a still, off-center radial glow (not centered on the
                   column, which would visibly compete with the sentence text
                   sitting above/left of true center) that reads as ambient
@@ -966,71 +988,71 @@ export function LessonSession({
                   breaks up. pointer-events-none + -z-10 keep it purely
                   decorative and never in the way of the textbox/buttons
                   above it. */}
-                  {unit.mode === "stories" && (
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10"
-                      style={{
-                        background:
-                          "radial-gradient(60% 50% at 50% 35%, color-mix(in oklch, var(--lesson-primary) 10%, transparent), transparent 70%)",
-                      }}
-                    />
-                  )}
+                {unit.mode === "stories" && (
                   <div
-                    className={
-                      unit.mode === "stories"
-                        ? "shrink-0 px-6 pt-4 lg:px-12 lg:pt-5"
-                        : "shrink-0 px-6 pt-4 lg:px-16 lg:pt-5"
-                    }
-                  >
-                    {previewMode && (
-                      <div className="border-accent/40 bg-accent/10 text-accent-foreground mb-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
-                        {t.wordLists.previewModeNotice}
-                      </div>
-                    )}
-                    {/* Centered on this column's own width (matching the
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 -z-10"
+                    style={{
+                      background:
+                        "radial-gradient(60% 50% at 50% 35%, color-mix(in oklch, var(--lesson-primary) 10%, transparent), transparent 70%)",
+                    }}
+                  />
+                )}
+                <div
+                  className={
+                    unit.mode === "stories"
+                      ? "shrink-0 px-6 pt-4 lg:px-12 lg:pt-5"
+                      : "shrink-0 px-6 pt-4 lg:px-16 lg:pt-5"
+                  }
+                >
+                  {previewMode && (
+                    <div className="border-accent/40 bg-accent/10 text-accent-foreground mb-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
+                      {t.wordLists.previewModeNotice}
+                    </div>
+                  )}
+                  {/* Centered on this column's own width (matching the
                       counter/progress bar right below it), not the full
                       page width — the illustration column to the side isn't
                       part of what it's centered against. aria-hidden since
                       it restates the same title the sr-only <h1>
                       (sessionLabel, above) already gives assistive tech. */}
-                    <div
-                      aria-hidden="true"
-                      className="compact-hide mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
-                    >
-                      {unit.title}
-                    </div>
-                    <div className="land-kb-hide mb-3 flex flex-col gap-1.5">
-                      {unit.mode !== "stories" && (
-                        <div className="flex items-center justify-end gap-1" dir="ltr">
-                          {sentenceIndex > 0 && (
-                            <button
-                              type="button"
-                              onClick={handleGoBackSentence}
-                              aria-label={t.lesson.previousSentenceButton}
-                              title={t.lesson.previousSentenceButton}
-                              className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-2 pointer-coarse:size-11"
-                            >
-                              <ChevronLeft className="size-3.5" aria-hidden="true" />
-                            </button>
-                          )}
-                          <span className="text-muted-foreground shrink-0 text-sm font-medium">
-                            {Math.min(sentenceIndex + 1, total)} / {total}
-                          </span>
-                          {sentenceIndex < maxSentenceIndexReached && (
-                            <button
-                              type="button"
-                              onClick={handleGoForwardSentence}
-                              aria-label={t.lesson.nextSentenceButton}
-                              title={t.lesson.nextSentenceButton}
-                              className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-2 pointer-coarse:size-11"
-                            >
-                              <ChevronRight className="size-3.5" aria-hidden="true" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      {/* How much of the lesson is already behind the learner —
+                  <div
+                    aria-hidden="true"
+                    className="compact-hide mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
+                  >
+                    {unit.title}
+                  </div>
+                  <div className="land-kb-hide mb-3 flex flex-col gap-1.5">
+                    {unit.mode !== "stories" && (
+                      <div className="flex items-center justify-end gap-1" dir="ltr">
+                        {sentenceIndex > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleGoBackSentence}
+                            aria-label={t.lesson.previousSentenceButton}
+                            title={t.lesson.previousSentenceButton}
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-2 pointer-coarse:size-11"
+                          >
+                            <ChevronLeft className="size-3.5" aria-hidden="true" />
+                          </button>
+                        )}
+                        <span className="text-muted-foreground shrink-0 text-sm font-medium">
+                          {Math.min(sentenceIndex + 1, total)} / {total}
+                        </span>
+                        {sentenceIndex < maxSentenceIndexReached && (
+                          <button
+                            type="button"
+                            onClick={handleGoForwardSentence}
+                            aria-label={t.lesson.nextSentenceButton}
+                            title={t.lesson.nextSentenceButton}
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted -my-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:-my-2 pointer-coarse:size-11"
+                          >
+                            <ChevronRight className="size-3.5" aria-hidden="true" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {/* How much of the lesson is already behind the learner —
                       complements the counter above rather than duplicating
                       it: the counter reads as "position," this reads as
                       "how far I've come." Deliberately thinner than the
@@ -1041,206 +1063,199 @@ export function LessonSession({
                       (alongside the story label/reading time/sound button)
                       instead of duplicating it up here — this bar is all
                       that's left of the original counter row for that mode. */}
-                      <Progress value={(sentenceIndex / total) * 100} className="h-1" />
-                      {dictationAvailable && (
-                        // Under the progress bar, big and labelled as a switch:
-                        // Dictation is a different way to play the lesson, so it
-                        // has to read as a clear on/off choice, not a tag.
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={dictationOn}
-                          onClick={handleToggleDictation}
-                          title={
-                            dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff
-                          }
+                    <Progress value={(sentenceIndex / total) * 100} className="h-1" />
+                    {dictationAvailable && (
+                      // Under the progress bar, big and labelled as a switch:
+                      // Dictation is a different way to play the lesson, so it
+                      // has to read as a clear on/off choice, not a tag.
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={dictationOn}
+                        onClick={handleToggleDictation}
+                        title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
+                        className={cn(
+                          "kb-hide mt-2 flex h-11 w-fit items-center gap-3 self-center rounded-full border-2 pr-3 pl-4 text-sm font-semibold shadow-sm transition-all duration-200 active:scale-[0.97]",
+                          dictationOn
+                            ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-[var(--lesson-primary)]/20"
+                            : "border-border bg-card/70 text-foreground/80 hover:bg-muted hover:border-[var(--lesson-primary)]/60",
+                        )}
+                      >
+                        <Headphones className="size-5" aria-hidden="true" />
+                        <span>{t.dictation.toggleLabel}</span>
+                        <span
+                          aria-hidden="true"
                           className={cn(
-                            "kb-hide mt-2 flex h-11 w-fit items-center gap-3 self-center rounded-full border-2 pr-3 pl-4 text-sm font-semibold shadow-sm transition-all duration-200 active:scale-[0.97]",
-                            dictationOn
-                              ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-[var(--lesson-primary)]/20"
-                              : "border-border bg-card/70 text-foreground/80 hover:bg-muted hover:border-[var(--lesson-primary)]/60",
+                            "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
+                            dictationOn ? "bg-[var(--lesson-primary)]" : "bg-foreground/25",
                           )}
                         >
-                          <Headphones className="size-5" aria-hidden="true" />
-                          <span>{t.dictation.toggleLabel}</span>
                           <span
-                            aria-hidden="true"
                             className={cn(
-                              "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
-                              dictationOn ? "bg-[var(--lesson-primary)]" : "bg-foreground/25",
+                              "absolute top-0.5 size-5 rounded-full bg-white shadow transition-all duration-200",
+                              dictationOn ? "left-[22px]" : "left-0.5",
                             )}
-                          >
-                            <span
-                              className={cn(
-                                "absolute top-0.5 size-5 rounded-full bg-white shadow transition-all duration-200",
-                                dictationOn ? "left-[22px]" : "left-0.5",
-                              )}
-                            />
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div
-                    className={
-                      unit.mode === "stories"
-                        ? // justify-start (not justify-center, unlike every
-                          // other mode here): Stories' own header row (story
-                          // label + counter, see TypingSentence's stories
-                          // branch) used to be part of this same centered
-                          // block, which on a tall lg:+ viewport visibly
-                          // floated it far below the progress bar right above
-                          // it. That header now sits right after this div's
-                          // own top edge; TypingSentence's stories branch
-                          // recreates the centering ONLY for the word
-                          // label/sentence/translation/stats group below its
-                          // header (its own lg:flex-1 lg:justify-center
-                          // wrapper), matching the "normal" branch's identical
-                          // existing pattern for the same split.
-                          "relative flex flex-1 flex-col justify-start px-6 pb-8 lg:px-12"
-                        : unit.mode === "normal"
-                          ? "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-center lg:px-16"
-                          : "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16"
-                    }
-                  >
-                    {/* The one typing input for every sentence (see shared-input.tsx). Before the sentences so it is attached first. */}
-                    <SharedInputHost />
-                    {sentence &&
-                      (() => {
-                        const handedOver = carryOver?.sentenceId === sentence.id ? carryOver : null;
-                        const typingSentence =
-                          dictationAvailable && dictationOn && !handedOver ? (
-                            <DictationSentence
-                              key={`dictation-${sentence.id}`}
-                              sentence={sentence}
-                              mode={unit.mode}
-                              resolvedVoiceId={resolvedVoiceId}
-                              speakerVoiceMap={speakerVoiceMap}
-                              showWordBlanks={features.dictation.showWordBlanks}
-                              playIntro={dictationIntroFor === sentence.id}
-                              wordAudioUrls={
-                                sentenceIndex === 0 ? firstSentenceWordAudio : undefined
-                              }
-                              hasStarted={hasStarted}
-                              onStart={() => setTapped(true)}
-                              onAudioPlay={handleAudioPlay}
-                              onKeystroke={() => {
-                                play("letter");
-                                vibrateLightly();
-                              }}
-                              onExact={playSentenceCompleteSound}
-                              onComplete={handleDictationComplete}
-                              letterByLetter={features.dictation.letterByLetter}
-                              // A practice try (the retry button) sounds like any other but
-                              // only the first try goes into the lesson's tallies.
-                              onCorrectLetter={(counted) => {
-                                if (counted) correctCountRef.current += 1;
-                                play("letter");
-                                vibrateLightly();
-                              }}
-                              onErrorLetter={(counted) => {
-                                if (counted) errorCountRef.current += 1;
-                                play("error");
-                                vibrateLightly();
-                              }}
-                              helpFreeStreak={helpFreeStreak}
-                              giftStars={giftState.gifts}
-                              giftRun={giftState.run}
-                              onGiveUp={handleDictationGiveUp}
-                              onProgress={(progress) => {
-                                dictationProgressRef.current = progress;
-                              }}
-                              storyTitle={unit.title}
-                              sentenceNumber={sentenceIndex + 1}
-                              totalSentences={total}
-                              storyTimeRemainingLabel={storyTimeRemainingLabel}
-                              onGoBack={handleGoBackSentence}
-                              onGoForward={
-                                sentenceIndex < maxSentenceIndexReached
-                                  ? handleGoForwardSentence
-                                  : undefined
-                              }
-                            />
-                          ) : (
-                            <TypingSentence
-                              key={sentence.id}
-                              sentence={sentence}
-                              mode={unit.mode}
-                              resolvedVoiceId={resolvedVoiceId}
-                              speakerVoiceMap={speakerVoiceMap}
-                              wordAudioUrls={
-                                sentenceIndex === 0 ? firstSentenceWordAudio : undefined
-                              }
-                              onComplete={handleSentenceComplete}
-                              onCorrectLetter={() => {
-                                correctCountRef.current += 1;
-                                play("letter");
-                                vibrateLightly();
-                              }}
-                              onErrorLetter={() => {
-                                errorCountRef.current += 1;
-                                play("error");
-                                vibrateLightly();
-                              }}
-                              onAudioPlay={handleAudioPlay}
-                              onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
-                              storyTitle={unit.title}
-                              sentenceNumber={sentenceIndex + 1}
-                              totalSentences={total}
-                              storyTimeRemainingLabel={storyTimeRemainingLabel}
-                              hasStarted={hasStarted}
-                              showTapToStart={!tapped}
-                              onStart={() => setTapped(true)}
-                              wordCards={wordCards}
-                              initialTyped={handedOver?.typed}
-                              initialMistakes={handedOver?.mistakes}
-                              onGoBack={handleGoBackSentence}
-                              onGoForward={
-                                sentenceIndex < maxSentenceIndexReached
-                                  ? handleGoForwardSentence
-                                  : undefined
-                              }
-                            />
-                          );
-                        // Stories only: a plain mount-in transition (no
-                        // AnimatePresence, no exit) so each new sentence visibly
-                        // slides in from the right and settles at its normal
-                        // position — see TypingSentence's own doc comment for
-                        // why an exit animation on this subtree (two useSpeech
-                        // instances plus a layout-effect-driven underline) is
-                        // deliberately avoided.
-                        if (unit.mode !== "stories") return typingSentence;
-                        return (
-                          <motion.div
-                            key={sentence.id}
-                            initial={{ opacity: 0, x: 28 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={transitions.snappy}
-                            // lg:flex lg:h-full lg:flex-col: without this, this
-                            // plain wrapper has no height of its own at lg:+ (a
-                            // flex child's height defaults to its content, not
-                            // its flex-column parent's), which broke the
-                            // percentage-based lg:h-full TypingSentence's own
-                            // stories-branch root relies on to fill this row —
-                            // silently collapsing that root to its own content
-                            // height and, with it, the lg:flex-1/justify-center
-                            // wrapper inside it (see that branch's own doc
-                            // comment) that re-centers the word label/sentence/
-                            // translation/stats group below the now top-pinned
-                            // header. This class chain is what makes that
-                            // height actually reach TypingSentence.
-                            className="lg:flex lg:h-full lg:flex-col"
-                          >
-                            {typingSentence}
-                          </motion.div>
-                        );
-                      })()}
+                          />
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
-              </SharedInputProvider>
-            </div>
-          )}
-        </AnimatePresence>
+                <div
+                  className={
+                    unit.mode === "stories"
+                      ? // justify-start (not justify-center, unlike every
+                        // other mode here): Stories' own header row (story
+                        // label + counter, see TypingSentence's stories
+                        // branch) used to be part of this same centered
+                        // block, which on a tall lg:+ viewport visibly
+                        // floated it far below the progress bar right above
+                        // it. That header now sits right after this div's
+                        // own top edge; TypingSentence's stories branch
+                        // recreates the centering ONLY for the word
+                        // label/sentence/translation/stats group below its
+                        // header (its own lg:flex-1 lg:justify-center
+                        // wrapper), matching the "normal" branch's identical
+                        // existing pattern for the same split.
+                        "relative flex flex-1 flex-col justify-start px-6 pb-8 lg:px-12"
+                      : unit.mode === "normal"
+                        ? "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-center lg:px-16"
+                        : "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16"
+                  }
+                >
+                  {/* The one typing input for every sentence (see shared-input.tsx). Before the sentences so it is attached first. */}
+                  <SharedInputHost />
+                  {sentence &&
+                    (() => {
+                      const handedOver = carryOver?.sentenceId === sentence.id ? carryOver : null;
+                      const typingSentence =
+                        dictationAvailable && dictationOn && !handedOver ? (
+                          <DictationSentence
+                            key={`dictation-${sentence.id}`}
+                            sentence={sentence}
+                            mode={unit.mode}
+                            resolvedVoiceId={resolvedVoiceId}
+                            speakerVoiceMap={speakerVoiceMap}
+                            showWordBlanks={features.dictation.showWordBlanks}
+                            playIntro={dictationIntroFor === sentence.id}
+                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
+                            hasStarted={hasStarted}
+                            onStart={() => setTapped(true)}
+                            onAudioPlay={handleAudioPlay}
+                            onKeystroke={() => {
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onExact={playSentenceCompleteSound}
+                            onComplete={handleDictationComplete}
+                            letterByLetter={features.dictation.letterByLetter}
+                            // A practice try (the retry button) sounds like any other but
+                            // only the first try goes into the lesson's tallies.
+                            onCorrectLetter={(counted) => {
+                              if (counted) correctCountRef.current += 1;
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onErrorLetter={(counted) => {
+                              if (counted) errorCountRef.current += 1;
+                              play("error");
+                              vibrateLightly();
+                            }}
+                            helpFreeStreak={helpFreeStreak}
+                            giftStars={giftState.gifts}
+                            giftRun={giftState.run}
+                            onGiveUp={handleDictationGiveUp}
+                            onProgress={(progress) => {
+                              dictationProgressRef.current = progress;
+                            }}
+                            storyTitle={unit.title}
+                            sentenceNumber={sentenceIndex + 1}
+                            totalSentences={total}
+                            storyTimeRemainingLabel={storyTimeRemainingLabel}
+                            onGoBack={handleGoBackSentence}
+                            onGoForward={
+                              sentenceIndex < maxSentenceIndexReached
+                                ? handleGoForwardSentence
+                                : undefined
+                            }
+                          />
+                        ) : (
+                          <TypingSentence
+                            key={sentence.id}
+                            sentence={sentence}
+                            mode={unit.mode}
+                            resolvedVoiceId={resolvedVoiceId}
+                            speakerVoiceMap={speakerVoiceMap}
+                            wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
+                            onComplete={handleSentenceComplete}
+                            onCorrectLetter={() => {
+                              correctCountRef.current += 1;
+                              play("letter");
+                              vibrateLightly();
+                            }}
+                            onErrorLetter={() => {
+                              errorCountRef.current += 1;
+                              play("error");
+                              vibrateLightly();
+                            }}
+                            onAudioPlay={handleAudioPlay}
+                            onSentenceMistakes={previewMode ? undefined : handleSentenceMistakes}
+                            storyTitle={unit.title}
+                            sentenceNumber={sentenceIndex + 1}
+                            totalSentences={total}
+                            storyTimeRemainingLabel={storyTimeRemainingLabel}
+                            hasStarted={hasStarted}
+                            showTapToStart={!tapped}
+                            onStart={() => setTapped(true)}
+                            wordCards={wordCards}
+                            initialTyped={handedOver?.typed}
+                            initialMistakes={handedOver?.mistakes}
+                            onGoBack={handleGoBackSentence}
+                            onGoForward={
+                              sentenceIndex < maxSentenceIndexReached
+                                ? handleGoForwardSentence
+                                : undefined
+                            }
+                          />
+                        );
+                      // Stories only: a plain mount-in transition (no
+                      // AnimatePresence, no exit) so each new sentence visibly
+                      // slides in from the right and settles at its normal
+                      // position — see TypingSentence's own doc comment for
+                      // why an exit animation on this subtree (two useSpeech
+                      // instances plus a layout-effect-driven underline) is
+                      // deliberately avoided.
+                      if (unit.mode !== "stories") return typingSentence;
+                      return (
+                        <motion.div
+                          key={sentence.id}
+                          initial={{ opacity: 0, x: 28 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={transitions.snappy}
+                          // lg:flex lg:h-full lg:flex-col: without this, this
+                          // plain wrapper has no height of its own at lg:+ (a
+                          // flex child's height defaults to its content, not
+                          // its flex-column parent's), which broke the
+                          // percentage-based lg:h-full TypingSentence's own
+                          // stories-branch root relies on to fill this row —
+                          // silently collapsing that root to its own content
+                          // height and, with it, the lg:flex-1/justify-center
+                          // wrapper inside it (see that branch's own doc
+                          // comment) that re-centers the word label/sentence/
+                          // translation/stats group below the now top-pinned
+                          // header. This class chain is what makes that
+                          // height actually reach TypingSentence.
+                          className="lg:flex lg:h-full lg:flex-col"
+                        >
+                          {typingSentence}
+                        </motion.div>
+                      );
+                    })()}
+                </div>
+              </div>
+            </SharedInputProvider>
+          </div>
+        )}
       </div>
     </div>
   );

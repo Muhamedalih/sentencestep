@@ -72,6 +72,32 @@ const CONFETTI_DOTS: { left: string; delay: string }[] = [
 ];
 
 /**
+ * Daily (Normal) lessons have no target words, so their finish screen has no row of word
+ * cards: what is left (heading, accuracy badge, stats panel) is a short stack that sits as
+ * a small cluster in the middle of a large empty screen. When there are no words, the
+ * header and the stats panel are drawn this much bigger to fill that space — see
+ * enlargeTheme and its call site in LessonCompletion.
+ */
+const NO_VOCABULARY_SCALE = 1.35;
+
+/** The width cap (px) of the stats panel at its normal size (Tailwind's max-w-sm). */
+const STATS_PANEL_MAX_WIDTH = 384;
+
+/** A copy of the theme with the type and panel sizes the header and stats panel read multiplied by `factor` — colors, spacing between sections and the action buttons are left as configured. */
+function enlargeTheme(theme: LessonCompletionTheme, factor: number): LessonCompletionTheme {
+  const grow = (value: number) => Math.round(value * factor);
+  return {
+    ...theme,
+    heroNumberSize: grow(theme.heroNumberSize),
+    headingSize: grow(theme.headingSize),
+    bodySize: grow(theme.bodySize),
+    statSize: grow(theme.statSize),
+    cardPadding: grow(theme.cardPadding),
+    progressBarHeight: grow(theme.progressBarHeight),
+  };
+}
+
+/**
  * The viewport height (in dvh units) at which every fluid() value below
  * reaches its full admin-configured size — see fluid()'s own doc comment.
  * A first pass at this constant used 1200: safe against a scrollbar down to
@@ -264,6 +290,11 @@ export function LessonCompletion({
   const { t, locale, dir } = useLocale();
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
+  // The header and the stats panel read `view`; everything else (word cards, buttons) reads
+  // `theme`. They are the same object unless this lesson has no target words.
+  const hasVocabulary = Boolean(vocabulary && vocabulary.length > 0);
+  const boost = hasVocabulary ? 1 : NO_VOCABULARY_SCALE;
+  const view = boost === 1 ? theme : enlargeTheme(theme, boost);
   // Read early: a new badge is one of the things that turns the celebration on.
   const badgeRewards = rewards.filter((reward) => reward.type === "badgeEarned");
   const accuracyPercent = Math.round(accuracy * 100);
@@ -421,7 +452,6 @@ export function LessonCompletion({
       initial="hidden"
       animate="visible"
       variants={staggerChildren}
-      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
       style={{ backgroundColor: styles.bg, color: styles.textPrimary }}
       className="relative flex min-h-[100svh] w-full flex-col lg:h-full lg:min-h-0 lg:overflow-y-auto"
     >
@@ -490,7 +520,7 @@ export function LessonCompletion({
           <div>
             <h2
               style={{
-                fontSize: fluid(theme.headingSize, 19),
+                fontSize: fluid(view.headingSize, Math.round(19 * boost)),
                 fontWeight: theme.headingWeight,
                 color: styles.textPrimary,
               }}
@@ -500,7 +530,7 @@ export function LessonCompletion({
             </h2>
             <p
               dir="auto"
-              style={{ fontSize: theme.bodySize, color: styles.textSecondary }}
+              style={{ fontSize: view.bodySize, color: styles.textSecondary }}
               className="mt-1.5"
             >
               {(accuracyPercent >= 95 ? t.lesson.accuracyExcellent : t.lesson.accuracyGood).replace(
@@ -527,8 +557,9 @@ export function LessonCompletion({
               backgroundColor: accuracyTierColor
                 ? `color-mix(in srgb, ${accuracyTierColor} 10%, transparent)`
                 : undefined,
+              padding: `${Math.round(4 * boost)}px ${Math.round(12 * boost)}px`,
             }}
-            className="relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1"
+            className="relative inline-flex items-center gap-1.5 rounded-full border"
           >
             {/* The celebration's glow pulse — see showCelebration's own doc
                 comment. -z-10 so it always sits behind the number/label
@@ -547,7 +578,7 @@ export function LessonCompletion({
             )}
             <span
               style={{
-                fontSize: theme.heroNumberSize,
+                fontSize: view.heroNumberSize,
                 color: accuracyTierColor ?? styles.textPrimary,
               }}
               className="font-semibold tabular-nums"
@@ -557,7 +588,7 @@ export function LessonCompletion({
             <span
               style={{
                 color: styles.textSecondary,
-                fontSize: Math.max(9, Math.round(theme.heroNumberSize * 0.8)),
+                fontSize: Math.max(9, Math.round(view.heroNumberSize * 0.8)),
               }}
               className="font-medium tracking-wide uppercase"
             >
@@ -684,9 +715,10 @@ export function LessonCompletion({
           style={{
             borderColor: styles.border,
             borderRadius: Math.min(theme.actionCardRadius, 16),
-            padding: fluid(theme.cardPadding, 10),
+            padding: fluid(view.cardPadding, Math.round(10 * boost)),
+            maxWidth: Math.round(STATS_PANEL_MAX_WIDTH * boost),
           }}
-          className="mx-auto flex w-full max-w-sm flex-col border"
+          className="mx-auto flex w-full flex-col border"
         >
           <div className="flex items-stretch justify-center">
             {statCells.map((cell, index) => (
@@ -695,7 +727,7 @@ export function LessonCompletion({
                 label={cell.label}
                 value={cell.value}
                 valueColor={cell.accent ? (accuracyTierColor ?? theme.colorAccent) : undefined}
-                theme={theme}
+                theme={view}
                 styles={styles}
                 dividerColor={index > 0 ? styles.border : undefined}
               />
@@ -705,7 +737,7 @@ export function LessonCompletion({
           {graceReward && (
             <p
               dir="auto"
-              style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+              style={{ color: styles.textSecondary, fontSize: Math.round(view.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
               {formatReward(graceReward, t)}
@@ -714,14 +746,14 @@ export function LessonCompletion({
           {freezeReward && (
             <p
               dir="auto"
-              style={{ color: styles.textSecondary, fontSize: Math.round(theme.bodySize * 0.85) }}
+              style={{ color: styles.textSecondary, fontSize: Math.round(view.bodySize * 0.85) }}
               className="mt-3 text-center"
             >
               {formatReward(freezeReward, t)}
             </p>
           )}
 
-          <div style={{ marginTop: fluid(theme.cardPadding, 8) }}>
+          <div style={{ marginTop: fluid(view.cardPadding, Math.round(8 * boost)) }}>
             <XpProgressCard
               label={learnerLevelSupportLabel(learnerLevel.level.name, t)}
               fromPercent={xpBarFromPercent}
@@ -729,7 +761,7 @@ export function LessonCompletion({
               currentXp={xpIntoLevel}
               neededXp={xpNeededForLevel}
               reducedMotion={Boolean(reducedMotion)}
-              theme={theme}
+              theme={view}
               styles={styles}
               tierColor={accuracyTierColor}
             />
@@ -738,7 +770,7 @@ export function LessonCompletion({
           {celebratedRewards.length > 0 && (
             <p
               dir="auto"
-              style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
+              style={{ color: theme.colorAccent, fontSize: view.bodySize }}
               className="mt-3 text-center font-medium"
             >
               {celebratedRewards.map((reward) => formatReward(reward, t)).join(" · ")}
@@ -774,7 +806,7 @@ export function LessonCompletion({
           {bulkBadgeReward && (
             <p
               dir="auto"
-              style={{ color: theme.colorAccent, fontSize: theme.bodySize }}
+              style={{ color: theme.colorAccent, fontSize: view.bodySize }}
               className="mt-3 text-center font-medium"
             >
               {formatReward(bulkBadgeReward, t)}

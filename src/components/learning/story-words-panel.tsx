@@ -195,7 +195,9 @@ export function StoryWordsPanel({
   }
 
   return (
-    <div className="flex h-svh w-full flex-col">
+    // flex-1, not a fixed h-svh: LessonSession already spends part of the screen on its brand
+    // bar, and a full-height box under it ran past the bottom and made the page scroll.
+    <div className="bg-background flex min-h-0 w-full flex-1 flex-col">
       <ShiftReplayHint />
 
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">

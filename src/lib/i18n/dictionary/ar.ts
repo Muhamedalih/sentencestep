@@ -473,6 +473,7 @@ export const ar: Dictionary = {
   },
   mistakes: {
     itemsLeft: "{n} متبقية",
+    back: "رجوع",
     loading: "جارٍ تحميل أخطائك…",
     nothingToFix: "لا يوجد شيء لإصلاحه الآن",
     allCaughtUp: "لقد أنجزت كل شيء",

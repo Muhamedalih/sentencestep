@@ -490,6 +490,7 @@ export const en: Dictionary = {
   },
   mistakes: {
     itemsLeft: "{n} left",
+    back: "Back",
     loading: "Loading your mistakes…",
     nothingToFix: "Nothing to fix right now",
     allCaughtUp: "All caught up",
