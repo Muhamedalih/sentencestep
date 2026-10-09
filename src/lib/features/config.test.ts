@@ -338,3 +338,63 @@ test("the wordsRedesign seed migration puts only that feature in admin preview a
   assert.match(sql, /not \(coalesce\(config -> 'features', '\{\}'::jsonb\) \? 'wordsRedesign'\)/);
   assert.match(sql, /jsonb_set\(/);
 });
+
+test("wordQuiz: off for everyone by default, admin preview shows it to admins only, On to everyone", () => {
+  const config = defaultFeatureConfig();
+  assert.equal(config.features.wordQuiz.state, "off");
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).wordQuiz, { enabled: false });
+  }
+
+  config.features.wordQuiz.state = "admin";
+  for (const viewer of [guest, learner, premium]) {
+    assert.deepEqual(resolveFeatures(config, viewer).wordQuiz, { enabled: false });
+  }
+  assert.deepEqual(resolveFeatures(config, admin).wordQuiz, { enabled: true });
+
+  // Publishing is that one switch: guests and learners get it too, nothing else changes.
+  config.features.wordQuiz.state = "on";
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).wordQuiz, { enabled: true });
+  }
+  // Not an account feature, so it never produces a "sign in to unlock" teaser.
+  assert.equal(resolveFeatures(config, guest).guestTeaser, false);
+});
+
+test("wordQuiz: premium-only holds it back from free learners and still lets admins through", () => {
+  const config = defaultFeatureConfig();
+  config.features.wordQuiz.state = "on";
+  config.features.wordQuiz.premiumOnly = true;
+  assert.equal(resolveFeatures(config, learner).wordQuiz.enabled, false);
+  assert.equal(resolveFeatures(config, premium).wordQuiz.enabled, true);
+  assert.equal(resolveFeatures(config, admin).wordQuiz.enabled, true);
+});
+
+test("wordQuiz: independent of every other feature", () => {
+  const config = defaultFeatureConfig();
+  config.features.wordQuiz.state = "on";
+  const effective = resolveFeatures(config, learner);
+  assert.equal(effective.wordQuiz.enabled, true);
+  assert.equal(effective.dictation.sections.stories, false);
+  assert.equal(effective.smartWords.enabled, false);
+  assert.equal(effective.wordsRedesign.enabled, false);
+});
+
+test("wordQuiz: a settings document saved before the feature existed keeps it off", () => {
+  const legacy = sanitizeFeatureConfig({ features: { wordsRedesign: { state: "on" } } });
+  assert.equal(legacy.features.wordQuiz.state, "off");
+  assert.equal(resolveFeatures(legacy, admin).wordQuiz.enabled, false);
+});
+
+test("the wordQuiz seed migration puts only that feature in admin preview and never overwrites a saved choice", () => {
+  const sql = readFileSync(
+    join(process.cwd(), "supabase/migrations/20250331000000_feature_settings_word_quiz.sql"),
+    "utf8",
+  );
+  const body = /\$json\$([\s\S]*?)\$json\$/.exec(sql)?.[1];
+  assert.ok(body, "the seed entry must be dollar-quoted as $json$ ... $json$");
+  const entry = JSON.parse(body) as { state: string };
+  assert.equal(entry.state, "admin");
+  assert.match(sql, /not \(coalesce\(config -> 'features', '\{\}'::jsonb\) \? 'wordQuiz'\)/);
+  assert.match(sql, /jsonb_set\(/);
+});
