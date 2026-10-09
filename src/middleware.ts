@@ -436,6 +436,7 @@ const ADMIN_ONLY_SEGMENTS = [
   "lesson-completion",
   "reports",
   "payments",
+  "premium",
   "inbox",
   "audit-log",
   "users",
