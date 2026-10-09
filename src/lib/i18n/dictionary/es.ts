@@ -230,6 +230,7 @@ export const es: Dictionary = {
       "Tu calificación es opcional, pero marca una diferencia real: cada estrella y cada palabra que escribas nos ayuda a mejorar SentenceStep para ti y para todos los estudiantes. No volverás a ver este mensaje.",
     commentPlaceholder:
       "Comparte tus comentarios o sugerencias — tus ideas nos importan (opcional)",
+    emailPlaceholder: "Tu correo, si quieres que te respondamos (opcional)",
     skip: "Ahora no",
     submit: "Enviar opinión",
     thanksTitle: "¡Muchas gracias!",

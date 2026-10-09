@@ -221,7 +221,7 @@ const TERMS_AR: LegalDocument = {
 
 const PRIVACY_EN: LegalDocument = {
   title: "Privacy Policy",
-  updated: "Last updated: 8 October 2026",
+  updated: "Last updated: 9 October 2026",
   intro:
     "This page explains what SentenceStep collects, why, and who helps us run it. We don't sell your data and we don't share it with advertisers.",
   sections: [
@@ -233,6 +233,7 @@ const PRIVACY_EN: LegalDocument = {
         "Country: the country you choose when you set up your account, and the country your connection appears to come from, which our hosting provider tells us when you open the upgrade page, a locked lesson or word list, or start a payment. We use that only to pick the price that applies to you.",
         "Payments: when you buy Premium we keep a record of the order (plan, price, amount, status and dates) and the reference from our payment partner. Your card or wallet details are entered on our payment partner's page and never reach us.",
         "Messages: the reports and emails you send us, and our replies.",
+        "Ratings: if you rate the app, your stars, your comment, the lesson you had just finished and your language. If you are signed in we keep it with your account and may answer you at your account email; if not, you can leave an email so we can answer you. We may show a rating and its comment on our website, never with your name or email, and only after we have approved it.",
         "Technical and usage: basic error and performance information, simple events about what you do in the app (such as finishing a lesson or opening the upgrade page) which we store ourselves, and settings kept in your browser, such as language and theme, your progress if you don't have an account, and a cookie that lasts one hour and remembers which lesson you were on when you started a payment, so we can take you back to it.",
       ],
     },
@@ -254,7 +255,7 @@ const PRIVACY_EN: LegalDocument = {
         "Wayl: payments. Wayl is an independent company: what you give them on their page, such as your name, phone number and card or wallet details, is handled under Wayl's own terms and privacy policy.",
         "Resend: sending emails.",
         "Where enabled: Sentry for error monitoring, and Cloudflare Turnstile to check that sign-ups come from a person.",
-        "Google: only if you choose “Continue with Google”. If you rate the app, your rating and comment are saved in a spreadsheet we control.",
+        "Google: only if you choose “Continue with Google”. If you rate the app, your rating and comment are saved in our database and, as a backup, in a spreadsheet we control.",
         "Your browser's push service: only if you turn on notifications.",
       ],
     },
@@ -295,7 +296,7 @@ const PRIVACY_EN: LegalDocument = {
 
 const PRIVACY_AR: LegalDocument = {
   title: "سياسة الخصوصية",
-  updated: "آخر تحديث: 8 أكتوبر 2026",
+  updated: "آخر تحديث: 9 أكتوبر 2026",
   intro:
     "توضّح هذه الصفحة ما الذي تجمعه SentenceStep ولماذا ومن يساعدنا في تشغيلها. لا نبيع بياناتك ولا نشاركها مع المعلنين.",
   sections: [
@@ -307,6 +308,7 @@ const PRIVACY_AR: LegalDocument = {
         "البلد: البلد الذي تختاره عند إعداد حسابك، والبلد الذي يبدو أن اتصالك صادر منه، ونحصل عليه من مزوّد الاستضافة عند فتح صفحة الترقية أو درس أو قائمة كلمات مقفولة أو بدء الدفع. نستخدمه فقط لتحديد السعر المناسب لك.",
         "المدفوعات: عند شراء الخطة المميّزة نحتفظ بسجل الطلب (الباقة والسعر والمبلغ والحالة والتواريخ) وبالرقم المرجعي من شريك الدفع. أما بيانات بطاقتك أو محفظتك فتُدخلها في صفحة شريك الدفع ولا تصل إلينا.",
         "الرسائل: البلاغات ورسائل البريد التي ترسلها لنا وردودنا عليها.",
+        "التقييمات: إذا قيّمت التطبيق نحفظ نجومك وملاحظتك والدرس الذي أنهيته للتو ولغتك. وإن كنت مسجّلاً نحفظها مع حسابك وقد نردّ عليك على بريد حسابك؛ وإن لم تكن مسجّلاً فيمكنك ترك بريدك لنردّ عليك. وقد نعرض التقييم وملاحظته في موقعنا، ولا نعرض اسمك أو بريدك أبدًا، ولا نعرضه إلا بعد أن نوافق عليه.",
         "تقنية واستخدام: معلومات أساسية عن الأخطاء والأداء، وأحداث بسيطة عمّا تفعله داخل التطبيق (مثل إكمال درس أو فتح صفحة الترقية) نحفظها لدينا، وإعدادات تُحفظ في متصفحك مثل اللغة والمظهر، وتقدّمك إن لم يكن لديك حساب، وكوكي يدوم ساعة واحدة يتذكّر الدرس الذي كنت عنده عند بدء الدفع لنعيدك إليه.",
       ],
     },
@@ -328,7 +330,7 @@ const PRIVACY_AR: LegalDocument = {
         "Wayl: المدفوعات. Wayl شركة مستقلة، وما تقدّمه لها في صفحتها، كاسمك ورقم هاتفك وبيانات بطاقتك أو محفظتك، يخضع لشروطها وسياسة الخصوصية الخاصة بها.",
         "Resend: إرسال رسائل البريد الإلكتروني.",
         "حيثما كانت مفعّلة: Sentry لمراقبة الأخطاء، وCloudflare Turnstile للتحقق من أن التسجيل يتم من شخص حقيقي.",
-        "Google: فقط إذا اخترت «المتابعة عبر Google». وإذا قيّمت التطبيق تُحفظ درجتك وملاحظتك في جدول بيانات نملكه.",
+        "Google: فقط إذا اخترت «المتابعة عبر Google». وإذا قيّمت التطبيق تُحفظ درجتك وملاحظتك في قاعدة بياناتنا، ونسخة احتياطية منها في جدول بيانات نملكه.",
         "خدمة الإشعارات في متصفحك: فقط إذا فعّلت الإشعارات.",
       ],
     },

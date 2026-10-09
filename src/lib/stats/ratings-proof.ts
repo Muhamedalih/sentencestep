@@ -1,10 +1,9 @@
 import { roundDownForDisplay } from "./social-proof";
 
 /**
- * The average rating and number of ratings quoted on /upgrade. The app keeps
- * ratings in the owner's own spreadsheet, not in the database, so the two
- * figures are entered by the owner as environment variables, copied from that
- * sheet. Nothing is shown until both are set, believable and based on enough
+ * The average rating and number of ratings quoted on /upgrade. The two figures
+ * are entered by the owner as environment variables, copied from the top of
+ * Admin > Ratings. Nothing is shown until both are set, believable and based on enough
  * ratings; the average is only ever rounded DOWN and the count rounded down
  * like every other figure here.
  */

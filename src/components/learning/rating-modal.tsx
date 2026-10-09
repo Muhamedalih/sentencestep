@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitAppRatingAction } from "@/lib/feedback/actions";
 import { getOrCreateAnonId, markRatedApp } from "@/lib/feedback/rating-storage";
@@ -39,9 +40,12 @@ export function RatingModal({
   mode: LearningMode | "settings";
 }) {
   const { t, locale } = useLocale();
+  // A signed-in learner is answered at their account email, so only a guest is asked for one.
+  const isGuest = useAuthUserId() === null;
   const prefersReducedMotion = useReducedMotion();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   // A fresh form every time this opens — a previous rating/comment/thanks
@@ -50,6 +54,7 @@ export function RatingModal({
     if (!open) return;
     setRating(0);
     setComment("");
+    setEmail("");
     setSubmitted(false);
   }, [open]);
 
@@ -66,6 +71,7 @@ export function RatingModal({
       mode,
       locale,
       anonId: getOrCreateAnonId(),
+      contactEmail: isGuest ? email : undefined,
     });
     markRatedApp();
     setSubmitted(true);
@@ -132,6 +138,20 @@ export function RatingModal({
                   placeholder={t.rateApp.commentPlaceholder}
                   className="focus:border-primary min-h-16 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-base text-white placeholder:text-white/35 focus:outline-none md:text-sm"
                 />
+                {isGuest && (
+                  <input
+                    id="rating-modal-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    dir="ltr"
+                    maxLength={254}
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder={t.rateApp.emailPlaceholder}
+                    className="focus:border-primary w-full rounded-xl border border-white/10 bg-white/5 p-3 text-base text-white placeholder:text-white/35 focus:outline-none md:text-sm"
+                  />
+                )}
                 <div className="flex gap-2.5">
                   <Button
                     type="button"

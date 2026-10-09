@@ -178,3 +178,17 @@ test("the privacy policy says the connection's country is also read on locked le
   assert.match(fullText(PRIVACY.ar), /مقفولة/);
   assert.match(fullText(PRIVACY.ar), /إيصال عند شراء/);
 });
+
+test("the privacy policy says what rating the app keeps, who it may be shown to, and that guests choose to leave an email", () => {
+  const english = fullText(PRIVACY.en);
+  assert.match(english, /Ratings: if you rate the app/);
+  assert.match(english, /you can leave an email so we can answer you/);
+  assert.match(english, /never with your name or email, and only after we have approved it/);
+  assert.match(english, /saved in our database and, as a backup, in a spreadsheet/);
+
+  const arabic = fullText(PRIVACY.ar);
+  assert.match(arabic, /التقييمات: إذا قيّمت التطبيق/);
+  assert.match(arabic, /فيمكنك ترك بريدك/);
+  assert.match(arabic, /ولا نعرضه إلا بعد أن نوافق عليه/);
+  assert.match(arabic, /في قاعدة بياناتنا/);
+});

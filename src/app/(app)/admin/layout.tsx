@@ -8,6 +8,7 @@ import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { isAdmin, isEditorOrAdmin } from "@/lib/admin/access";
 import { countNewInboundEmails } from "@/lib/admin/inbox-queries";
+import { countNewAppRatings } from "@/lib/admin/ratings-queries";
 import { countNewProblemReports } from "@/lib/admin/reports-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signOut } from "@/lib/supabase/auth-actions";
@@ -32,15 +33,16 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   // this at all — Reports is one of the admin-only areas (see middleware's
   // ADMIN_ONLY_SEGMENTS), so the count would be noise to them anyway.
   // Inbox is the same story (support mail, admin-only, and its migration may
-  // not be applied yet), and the two counts are independent, so they run
+  // not be applied yet), and the counts are independent, so they run
   // together rather than one after the other on every admin request.
-  const [newReportsCount, newInboxCount] =
+  const [newReportsCount, newInboxCount, newRatingsCount] =
     fullAdmin && isSupabaseConfigured()
       ? await Promise.all([
           countNewProblemReports().catch(() => 0),
           countNewInboundEmails().catch(() => 0),
+          countNewAppRatings().catch(() => 0),
         ])
-      : [0, 0];
+      : [0, 0, 0];
 
   if (!authorized) {
     return (
@@ -178,6 +180,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                   >
                     Reports
                     {newReportsCount > 0 && <Badge variant="secondary">{newReportsCount}</Badge>}
+                  </Link>
+                  <Link
+                    href="/admin/ratings"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                  >
+                    Ratings
+                    {newRatingsCount > 0 && <Badge variant="secondary">{newRatingsCount}</Badge>}
                   </Link>
                   <Link
                     href="/admin/inbox"
