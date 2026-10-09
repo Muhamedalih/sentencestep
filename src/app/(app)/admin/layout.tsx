@@ -131,6 +131,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                     Payments
                   </Link>
                   <Link
+                    href="/admin/premium"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Give Premium
+                  </Link>
+                  <Link
                     href="/admin/features"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
