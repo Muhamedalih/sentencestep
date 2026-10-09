@@ -167,3 +167,54 @@ export async function replyToInboundEmail(
   revalidatePath("/admin/inbox");
   return { success: `Reply sent to ${inbound.from_email}.` };
 }
+
+/**
+ * Replies by email to someone who rated the app. The recipient is the row's
+ * own contact_email — a member's account email or the address a guest chose
+ * to leave — read on the server, never taken from the client. A rating with
+ * no contact email can't be answered. A successful reply marks the rating
+ * "replied" (best-effort: the email already went out, so a failed status
+ * write is not reported as a failed send).
+ */
+export async function replyToAppRating(
+  ratingId: string,
+  subject: string,
+  message: string,
+): Promise<AdminEmailActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const validation = validateAdminEmailInput({ subject, message });
+  if (!validation.ok) return { error: validation.error };
+
+  const supabase = await createClient();
+  const { data: rating, error } = await supabase
+    .from("app_ratings")
+    .select("contact_email")
+    .eq("id", ratingId)
+    .maybeSingle();
+  if (error) return { error: "Couldn't load this rating. Please try again." };
+  if (!rating) return { error: "This rating no longer exists." };
+  if (!rating.contact_email) return { error: "This rating has no email address to reply to." };
+
+  const sent = await deliver(
+    rating.contact_email,
+    validation.value.subject,
+    validation.value.message,
+  );
+  if ("error" in sent) return { error: sent.error };
+
+  const { error: statusError } = await supabase
+    .from("app_ratings")
+    .update({ status: "replied", updated_at: new Date().toISOString() })
+    .eq("id", ratingId);
+  if (statusError) console.error("[admin-email] couldn't mark rating replied", statusError);
+
+  void logAdminAction("rating.replied", "app_rating", ratingId, {
+    recipient: rating.contact_email,
+    subject: validation.value.subject,
+    providerMessageId: sent.messageId,
+  });
+  revalidatePath("/admin/ratings");
+  return { success: `Reply sent to ${rating.contact_email}.` };
+}

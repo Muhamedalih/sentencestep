@@ -223,6 +223,7 @@ export const tr: Dictionary = {
       "Değerlendirme isteğe bağlıdır ama gerçek bir fark yaratır; verdiğin her yıldız ve yazdığın her söz SentenceStep'i senin ve tüm öğrenenler için daha iyi hale getirmemize yardımcı olur. Bu mesajı bir daha görmeyeceksin.",
     commentPlaceholder:
       "Geri bildirimini veya önerini bizimle paylaş — fikirlerin bizim için önemli (isteğe bağlı)",
+    emailPlaceholder: "Yanıt almak istersen e-postan (isteğe bağlı)",
     skip: "Şimdi değil",
     submit: "Puanımı gönder",
     thanksTitle: "Çok teşekkürler!",

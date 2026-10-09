@@ -226,6 +226,7 @@ export const en: Dictionary = {
     subtitle:
       "Rating is optional, but it makes a real difference — every star and every word you write helps us make SentenceStep better for you and every learner. You won't see this message again.",
     commentPlaceholder: "Share your feedback or suggestions — your ideas matter to us (optional)",
+    emailPlaceholder: "Your email, if you'd like a reply (optional)",
     skip: "Not now",
     submit: "Send rating",
     thanksTitle: "Thank you so much!",

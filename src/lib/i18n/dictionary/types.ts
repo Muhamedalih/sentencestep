@@ -268,6 +268,8 @@ export interface Dictionary {
     headline: string;
     subtitle: string;
     commentPlaceholder: string;
+    /** Shown only to a visitor who isn't signed in: an optional address so we can answer them. */
+    emailPlaceholder: string;
     skip: string;
     submit: string;
     thanksTitle: string;

@@ -1448,6 +1448,60 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["inbound_emails"]["Insert"]>;
         Relationships: [];
       };
+      /** A learner's 1-5 star rating of the whole app plus optional comment, listed in Admin > Ratings. Written only by the service role. See 20250331000000_app_ratings.sql. */
+      app_ratings: {
+        Row: {
+          id: string;
+          rating: number;
+          comment: string;
+          lesson_id: string;
+          mode: string;
+          locale: string;
+          user_type: "member" | "guest";
+          user_id: string | null;
+          contact_email: string | null;
+          anon_id: string;
+          status: "new" | "read" | "replied" | "archived";
+          is_public: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          rating: number;
+          comment?: string;
+          lesson_id?: string;
+          mode?: string;
+          locale?: string;
+          user_type: "member" | "guest";
+          user_id?: string | null;
+          contact_email?: string | null;
+          anon_id?: string;
+          status?: "new" | "read" | "replied" | "archived";
+          is_public?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["app_ratings"]["Insert"]>;
+        Relationships: [];
+      };
+      /** Single row: whether the average rating and approved ratings may be shown to visitors. Edited in Admin > Ratings. See 20250332000000_ratings_display_settings.sql. */
+      ratings_settings: {
+        Row: {
+          id: number;
+          show_rating_proof: boolean;
+          show_public_ratings: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          show_rating_proof?: boolean;
+          show_public_ratings?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ratings_settings"]["Insert"]>;
+        Relationships: [];
+      };
       /** Service-role-only sign-in attempt ledger backing signIn's lockout. See 20250216000000_login_attempt_lockout.sql. */
       login_attempts: {
         Row: {
@@ -1585,6 +1639,10 @@ export interface Database {
       book_rating_summaries: {
         Args: { p_book_ids: string[] };
         Returns: { book_id: string; average: number; rating_count: number }[];
+      };
+      app_rating_distribution: {
+        Args: Record<string, never>;
+        Returns: { rating: number; rating_count: number }[];
       };
       increment_xp: {
         Args: { p_delta: number };
