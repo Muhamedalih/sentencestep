@@ -11,6 +11,7 @@ import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
+import { buildStoryWordQuiz } from "@/lib/content/story-word-quiz";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
@@ -240,6 +241,13 @@ export default async function LessonPage({
     preload(url, { as: "fetch", crossOrigin: "anonymous" });
   }
 
+  // Stories only, and only for Arabic: the quiz's answers are the target words' Arabic glosses —
+  // there are no Spanish/Turkish ones yet, so those learners get no quiz rather than an English one.
+  const wordQuiz =
+    mode === "stories" && (locale === null || locale === "ar")
+      ? buildStoryWordQuiz(unit)
+      : undefined;
+
   return (
     <div
       className={cn(
@@ -256,6 +264,7 @@ export default async function LessonPage({
         storyNarratorVoiceId={storyNarratorVoiceId}
         speakerVoiceMap={speakerVoiceMap}
         firstSentenceWordAudio={firstSentenceWordAudio}
+        wordQuiz={wordQuiz}
       />
       {reportProblemButton}
     </div>
