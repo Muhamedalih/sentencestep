@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, Eye, Lightbulb } from "lucide-react";
 
 import { ContinueButton, RetryButton } from "@/components/learning/feedback-actions";
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
+import { NO_AUTOFILL_ATTRS } from "@/components/learning/shared-input";
 import { SentenceDiff } from "@/components/learning/sentence-diff";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -212,10 +213,7 @@ export function FromMemorySession({
           onPaste={(event) => event.preventDefault()}
           placeholder={t.fromMemory.placeholder}
           aria-label={t.fromMemory.placeholder}
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
+          {...NO_AUTOFILL_ATTRS}
           enterKeyHint="done"
           dir="ltr"
           style={textStyle}

@@ -2,6 +2,7 @@
 
 import { SharedInput } from "@/components/learning/shared-input";
 import {
+  useCallback,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -12,8 +13,8 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { CornerDownLeft } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CornerDownLeft, Keyboard } from "lucide-react";
 
 import { StageLetter } from "@/components/learning/stage-letter";
 import type { StageLetterState } from "@/components/learning/stage-letter";
@@ -36,6 +37,33 @@ import { SMART_TIMING } from "@/lib/word-mastery/smart";
 import type { SmartTiming } from "@/lib/word-mastery/smart";
 import type { TypeAheadBuffer } from "@/lib/word-typing";
 import { BLANK_TOKEN } from "@/types/word-lists";
+
+/**
+ * The first-time "tap to type" cue (see TapToTypeHint) disappears for good once the learner has tapped
+ * the blank (or typed): remembered here for the rest of this page's life (every word remounts this
+ * component) and in localStorage for the next visit. Storage can be blocked, so every access is guarded.
+ */
+const TAP_HINT_SEEN_KEY = "ss:blank-tap-hint-seen";
+let tapHintSeenInMemory = false;
+
+function readTapHintSeen(): boolean {
+  if (tapHintSeenInMemory) return true;
+  try {
+    tapHintSeenInMemory = window.localStorage.getItem(TAP_HINT_SEEN_KEY) === "1";
+  } catch {
+    // Blocked storage: fall back to once per page load.
+  }
+  return tapHintSeenInMemory;
+}
+
+function writeTapHintSeen() {
+  tapHintSeenInMemory = true;
+  try {
+    window.localStorage.setItem(TAP_HINT_SEEN_KEY, "1");
+  } catch {
+    // Blocked storage: the in-memory flag still covers this page load.
+  }
+}
 
 /** How long the wrong attempt's green/red diff stays on screen before it clears and the correct spelling reveals itself. */
 const DIFF_VISIBLE_MS = 900;
@@ -161,6 +189,17 @@ export function VocabularySentence({
     if (document.activeElement === engine.inputRef.current) setIsFocused(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mounted word
   }, []);
+  // Phones only open the keyboard once the blank is tapped, and nothing says so: until the learner has
+  // done it once, the blank breathes and a small chip says "tap to type". Off at first so the server
+  // render and the first client render agree; the mount effect turns it on if it was never learned.
+  const [tapHintOn, setTapHintOn] = useState(false);
+  useEffect(() => {
+    if (!readTapHintSeen()) setTapHintOn(true);
+  }, []);
+  const dismissTapHint = useCallback(() => {
+    writeTapHintSeen();
+    setTapHintOn(false);
+  }, []);
   // Where the correct-answer reveal is, once a wrong attempt's diff has had its
   // moment on screen — see the effect below. "hidden" covers the diff itself
   // and every word that wasn't missed. Resets for free on the next word (this
@@ -240,6 +279,11 @@ export function VocabularySentence({
       clearTimeout(dissolve);
     };
   }, [engine.status, engine.gaveUp, revealInMs, diffMs, holdMs]);
+
+  useEffect(() => {
+    if (tapHintOn && engine.typed.length > 0) dismissTapHint();
+  }, [tapHintOn, engine.typed.length, dismissTapHint]);
+  const showTapHint = tapHintOn && engine.status === "pending" && engine.typed.length === 0;
 
   const isRevealPhase = engine.status === "incorrect" && (engine.gaveUp || reveal !== "hidden");
   const isDiffPhase = engine.status === "incorrect" && !isRevealPhase;
@@ -426,7 +470,10 @@ export function VocabularySentence({
           separate sibling item) had nowhere to sit but its own new line
           below the entire sentence, nowhere near the word it belongs after. */}
       <p
-        onClick={engine.focus}
+        onClick={() => {
+          dismissTapHint();
+          engine.focus();
+        }}
         className={cn(
           "text-muted-foreground w-full text-center leading-tight font-semibold text-balance",
           enlarged
@@ -448,6 +495,7 @@ export function VocabularySentence({
             revealedWord={engine.status === "correct" ? (engine.alternate ?? targetWord) : null}
             popS={popS}
             tone={inline ? (isDiffPhase ? "diff" : isRevealPhase ? "reveal" : "typing") : undefined}
+            attention={showTapHint}
           >
             {inline &&
             engine.status !== "correct" &&
@@ -525,17 +573,43 @@ export function VocabularySentence({
               label={t.wordLists.checkAnswer}
               onCheck={engine.submit}
             />
-          ) : null}
+          ) : (
+            <AnimatePresence initial={false}>
+              {showTapHint && (
+                <TapToTypeHint
+                  label={t.wordLists.tapToType}
+                  reducedMotion={reducedMotion}
+                  onTap={() => {
+                    dismissTapHint();
+                    engine.focus();
+                  }}
+                />
+              )}
+            </AnimatePresence>
+          )}
         </div>
       ) : (
-        engine.status === "pending" &&
-        engine.typed.length > 0 && (
-          <CheckHint
-            hint={t.wordLists.pressEnterToCheck}
-            label={t.wordLists.checkAnswer}
-            onCheck={engine.submit}
-          />
-        )
+        <>
+          {engine.status === "pending" && engine.typed.length > 0 && (
+            <CheckHint
+              hint={t.wordLists.pressEnterToCheck}
+              label={t.wordLists.checkAnswer}
+              onCheck={engine.submit}
+            />
+          )}
+          <AnimatePresence initial={false}>
+            {showTapHint && (
+              <TapToTypeHint
+                label={t.wordLists.tapToType}
+                reducedMotion={reducedMotion}
+                onTap={() => {
+                  dismissTapHint();
+                  engine.focus();
+                }}
+              />
+            )}
+          </AnimatePresence>
+        </>
       )}
     </div>
   );
@@ -576,12 +650,43 @@ function CheckHint({ hint, label, onCheck }: { hint: string; label: string; onCh
   );
 }
 
+/**
+ * The first-time cue under the blank, phones only (sm:hidden — a desktop keyboard needs no telling):
+ * a small, quiet pill in the lesson's own accent, tappable too, that opens the keyboard like tapping
+ * the blank does. It steps aside while the keyboard is open.
+ */
+function TapToTypeHint({
+  label,
+  onTap,
+  reducedMotion,
+}: {
+  label: string;
+  onTap: () => void;
+  reducedMotion: boolean;
+}) {
+  return (
+    <motion.button
+      type="button"
+      initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.3, ease: easeOut }}
+      onClick={onTap}
+      className="border-primary/30 bg-primary/[0.08] text-primary inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium outline-none active:scale-95 sm:hidden [html[data-keyboard]_&]:hidden"
+    >
+      <Keyboard className="size-4" aria-hidden="true" />
+      {label}
+    </motion.button>
+  );
+}
+
 function BlankBox({
   length,
   active,
   revealedWord,
   popS,
   tone,
+  attention,
   children,
 }: {
   length: number;
@@ -591,6 +696,8 @@ function BlankBox({
   popS: number;
   /** Inline typing only: what the letters inside the box are showing — the learner's own typing, a wrong attempt's diff, or the right spelling after a miss. Colors the box's border to match. */
   tone?: "typing" | "diff" | "reveal";
+  /** Phones, before the learner has ever tapped a blank: the box breathes a soft ring (a static one with reduced motion) to say "tap me". */
+  attention?: boolean;
   /** Inline typing only: what is drawn inside the box. */
   children?: ReactNode;
 }) {
@@ -631,6 +738,8 @@ function BlankBox({
         tone === "typing" &&
           children &&
           "border-solid border-[var(--lesson-underline)] bg-[var(--lesson-underline)]/[0.06]",
+        attention &&
+          "max-sm:animate-blank-attention max-sm:border-primary/60 max-sm:motion-reduce:animate-none max-sm:motion-reduce:shadow-[0_0_0_5px_color-mix(in_oklch,var(--primary)_18%,transparent)] max-sm:[html[data-keyboard]_&]:animate-none",
         tone === "diff" && "border-danger/50 bg-danger/[0.06] border-solid",
         tone === "reveal" && "border-success/50 bg-success/[0.08] border-solid",
       )}

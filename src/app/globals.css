@@ -136,6 +136,8 @@
      hasn't asked to reduce motion. */
   --animate-lc-pulse: lc-pulse 2.4s ease-in-out infinite;
   --animate-lc-confetti: lc-confetti-fall 2.8s ease-in infinite;
+  /* The fill-in-the-blank box before its first tap on a phone (VocabularySentence): a slow, soft ring that breathes out and back, so it reads as "tap me" without moving or flashing. */
+  --animate-blank-attention: blank-attention 2.6s ease-in-out infinite;
 
   @keyframes fade-in {
     from {
@@ -164,6 +166,15 @@
     50% {
       opacity: 1;
       transform: scale(1.2);
+    }
+  }
+  @keyframes blank-attention {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 0%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 7px color-mix(in oklch, var(--primary) 22%, transparent);
     }
   }
   @keyframes lc-confetti-fall {

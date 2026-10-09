@@ -624,6 +624,7 @@ export const ar: Dictionary = {
     completedBefore: "لقد أكملت هذه الكلمة من قبل — كتابتها مرة أخرى تحافظ عليها طازجة في ذاكرتك.",
     pressEnterToCheck: "اضغط Enter للتحقق",
     checkAnswer: "تحقق",
+    tapToType: "اضغط للكتابة",
     unavailableBody:
       "قائمة الكلمات هذه غير متاحة حاليًا. لم يُفقد شيء — يرجى المحاولة مرة أخرى بعد قليل، أو اختيار قائمة أخرى.",
     lockedBadge: "قائمة كلمات مميزة",

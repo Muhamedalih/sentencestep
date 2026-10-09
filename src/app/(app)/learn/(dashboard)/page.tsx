@@ -231,7 +231,13 @@ export default async function LearnHomePage() {
               className="mb-6"
             />
           )}
-          <HomeEngagementSection stream={engagement} className="mb-6" />
+        </div>
+        {/* A direct child of the page (not nested in the wrappers around it) so that on a phone
+            (max-sm) today's streak + quests can jump above everything else, the greeting included.
+            From sm: up it stays exactly where it was in the DOM flow, between the banners and the
+            review card. */}
+        <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-first" />
+        <div className="max-sm:order-3">
           <NeedsReviewWords
             words={weakWords.filter((word) => word.dueNow)}
             count={reviewWaiting.count}
