@@ -11,7 +11,7 @@ import type { LessonStatsMap } from "@/components/app/home-hero";
 function BigStat({ value, label }: { value: number; label: string }) {
   return (
     <div className="text-center">
-      <div className="font-mono text-3xl leading-none font-extrabold tabular-nums" dir="ltr">
+      <div className="text-3xl leading-none font-extrabold tabular-nums" dir="ltr">
         {value}
       </div>
       <div className="text-muted-foreground mt-2 text-xs font-bold tracking-wide uppercase sm:text-[10.5px]">

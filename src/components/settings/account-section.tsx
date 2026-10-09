@@ -29,10 +29,7 @@ const buttonLift =
 function StatTile({ value, label }: { value: number; label: string }) {
   return (
     <div className="bg-muted flex flex-col items-center gap-1 rounded-lg py-3 text-center md:py-4">
-      <span
-        className="font-mono text-xl leading-none font-extrabold tabular-nums md:text-2xl"
-        dir="ltr"
-      >
+      <span className="text-xl leading-none font-extrabold tabular-nums md:text-2xl" dir="ltr">
         {value}
       </span>
       <span className="text-muted-foreground text-xs font-semibold">{label}</span>

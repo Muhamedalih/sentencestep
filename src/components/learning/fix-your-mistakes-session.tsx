@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Home, Loader2, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Home, Loader2, Lock } from "lucide-react";
 
 import { CurrentWordCard } from "@/components/learning/current-word-card";
 import {
@@ -55,6 +55,7 @@ export function FixYourMistakesSession({
   defaultVoiceId,
   nextLesson,
   nextLessonLocked = false,
+  onBack,
 }: {
   /** The lesson whose completion screen opened this flow (see LessonSession) — scopes the fetched queue to only this lesson's own mistakes/due reviews (see fetchMistakesAction's own doc comment for why the underlying table is account-wide but this view isn't). */
   lessonId: string;
@@ -64,6 +65,8 @@ export function FixYourMistakesSession({
   nextLesson?: NextLessonRef;
   /** The next lesson is Premium and this learner can't open it — the button says so, as it does on the ordinary finish screen (see LessonCompletion). */
   nextLessonLocked?: boolean;
+  /** Leaves the flow for the finish screen it was opened from — a learner who is tired of correcting words is never stuck here. The corrections already made stay saved (each one is written the moment it is typed). */
+  onBack?: () => void;
 }) {
   const { t } = useLocale();
   const [queue, setQueue] = useState<MistakeQueueItem[] | null>(null);
@@ -174,13 +177,27 @@ export function FixYourMistakesSession({
   }
 
   return (
-    <div className="flex flex-col lg:h-full">
+    // bg-background: this screen is the same black as the rest of the lesson player (in dark
+    // mode the shell turns --background black), never the page behind it.
+    <div className="bg-background flex min-h-0 flex-1 flex-col">
       {queue !== null && queue.length > 0 && <ShiftReplayHint />}
       <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-primary text-xs font-semibold tracking-wide uppercase">
-            {current?.isReview ? t.mistakes.reviewLabel : t.lesson.fixMistakes}
-          </span>
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-muted-foreground hover:text-foreground inline-flex min-h-9 items-center gap-1.5 text-sm font-medium transition-colors pointer-coarse:min-h-11"
+              >
+                <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
+                {t.mistakes.back}
+              </button>
+            )}
+            <span className="text-primary truncate text-xs font-semibold tracking-wide uppercase">
+              {current?.isReview ? t.mistakes.reviewLabel : t.lesson.fixMistakes}
+            </span>
+          </div>
           {queue !== null && queue.length > 0 && (
             <span className="text-muted-foreground text-sm font-medium">
               {t.mistakes.itemsLeft.replace("{n}", String(correctedCount + queue.length))}

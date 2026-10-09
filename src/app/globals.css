@@ -274,6 +274,15 @@
 }
 
 /*
+ * The shell above is only one screen tall. On a phone a lesson screen can run taller (or the
+ * page can be pulled past its end), and whatever is behind the shell then showed through as
+ * the dashboard's dark navy. A page that holds a lesson shell is black all the way down.
+ */
+.dark body:has(.lesson-shell) {
+  background-color: oklch(0 0 0);
+}
+
+/*
  * BookSectionIntro's "book cover" card — styled to read as an actual book
  * that just opened to its first page rather than another flat app card
  * (see that component's own doc comment for why). Kept as real CSS classes

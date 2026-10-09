@@ -490,6 +490,7 @@ export const tr: Dictionary = {
   },
   mistakes: {
     itemsLeft: "{n} kaldı",
+    back: "Geri",
     loading: "Hatalarınız yükleniyor…",
     nothingToFix: "Şu anda düzeltilecek bir şey yok",
     allCaughtUp: "Her şey tamam",

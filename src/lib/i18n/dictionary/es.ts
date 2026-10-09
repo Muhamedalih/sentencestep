@@ -500,6 +500,7 @@ export const es: Dictionary = {
   },
   mistakes: {
     itemsLeft: "{n} restantes",
+    back: "Volver",
     loading: "Cargando tus errores…",
     nothingToFix: "No hay nada que corregir por ahora",
     allCaughtUp: "Estás al día",

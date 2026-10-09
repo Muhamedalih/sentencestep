@@ -571,6 +571,8 @@ export interface Dictionary {
   };
   mistakes: {
     itemsLeft: string;
+    /** The back button on the Fix Your Mistakes screen — returns to the lesson's finish screen. */
+    back: string;
     loading: string;
     nothingToFix: string;
     allCaughtUp: string;
