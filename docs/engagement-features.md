@@ -1,11 +1,11 @@
 # Engagement features
 
-Eight optional learning features, all controlled from **Admin → Features**
+Nine optional learning features, all controlled from **Admin → Features**
 (`/admin/features`, full admins only). The code default is **Off** for every
 feature (no settings row, or an unreadable one, means nothing shows). The seed
 migrations below move the settings row to **Admin preview** (the first seven in
-`20250321…`, Smart word practice in `20250325…`), so on the live site only
-admins see anything until a feature is set to **On**.
+`20250321…`, Smart word practice in `20250325…`, the Word quiz in `20250331…`), so on
+the live site only admins see anything until a feature is set to **On**.
 
 | Feature                  | Where it appears                                                    | Sections (admin matrix)       | Guests         |
 | ------------------------ | ------------------------------------------------------------------- | ----------------------------- | -------------- |
@@ -17,6 +17,7 @@ admins see anything until a feature is set to **On**.
 | Badges                   | Completion-screen celebration, `/learn/achievements`, header trophy | global                        | sign-in prompt |
 | Streak calendar & freeze | 7-day strip on Home (tap for the month)                             | global                        | sign-in prompt |
 | Smart word practice      | Word Lists: practice, library cards, "Review All Words"             | global                        | upgrades work  |
+| Word quiz                | Stories: a pick-the-meaning question after a target-word sentence   | global (Stories only)         | works          |
 
 ## Admin controls
 
@@ -55,6 +56,9 @@ These are new and **not applied automatically**:
 10. `20250325000000_feature_settings_smart_words.sql` (puts Smart word
     practice in Admin preview; only runs while the settings document says
     nothing about it, so a choice an admin saved is never overwritten)
+11. `20250331000000_feature_settings_word_quiz.sql` (puts the Word quiz in
+    Admin preview, same rules as 10; skipping it is safe, the feature just stays
+    Off until Admin → Features → Word quiz is set to Admin preview)
 
 Until a migration is applied, the feature that needs it degrades quietly (its
 card doesn't render, its event is skipped) — lesson completion is never
@@ -366,6 +370,24 @@ letters` (`dictationStars`). Wrong letters alone never take the last star;
     schedule does not change that. The one thing credited is the "Master N
     words" quest, and only when a word actually climbs a step, so it cannot be
     finished by retyping easy words.
+
+- **Word quiz** (Stories only) asks one quick question right after a story
+  sentence that holds one of the story's target words (the same words as the
+  "words from this lesson" screen, at most three per story): the word with a
+  listen button (the story narrator's clip), four Arabic meanings, keys 1-4.
+  A pick turns green or red, the wrong options dissolve, and the story carries
+  on by itself. Nothing is authored for it: the right answer is the target
+  word's own gloss and the wrong ones are other stories' target-word glosses
+  of the same kind and level, chosen deterministically (`buildStoryWordQuiz`
+  in `src/lib/content/story-word-quiz.ts`, covered by `npm run test:content`).
+  It needs no database change (the migration above only seeds Admin preview) and has
+  no effect on XP, accuracy or progress.
+  The lesson page builds the questions only when `getEffectiveFeatures()` says
+  the feature is open for the visitor (Off: nobody; Admin preview: admins;
+  On: everyone, _Premium only_ as for the others), so a closed feature ships
+  nothing to the browser. Arabic only for now: story target words have no
+  Spanish or Turkish gloss yet, so those learners get no quiz.
+  **Rolling it out is one click: Admin → Features → Word quiz (Stories) → On.**
 
 ## Local development
 

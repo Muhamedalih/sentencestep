@@ -11,7 +11,8 @@ import type { LearningMode } from "@/types/content";
 /**
  * Admin-controlled availability of the engagement features (dictation,
  * from-memory, personal cards, daily session, quests, badges, streak
- * calendar, smart word practice, the Word Lists redesign). One JSON document, stored in the single-row `feature_settings`
+ * calendar, smart word practice, the Word Lists redesign, the Stories word
+ * quiz). One JSON document, stored in the single-row `feature_settings`
  * table (see 20250315000000_feature_settings.sql) and edited from
  * /admin/features. Pure and dependency-free of Supabase so both the
  * server-only queries/actions and the admin form can share the exact same
@@ -33,6 +34,7 @@ export const FEATURE_IDS = [
   "streakCalendar",
   "smartWords",
   "wordsRedesign",
+  "wordQuiz",
 ] as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[number];
@@ -59,6 +61,7 @@ export const FEATURE_SECTIONS: Record<FeatureId, readonly LearningSection[]> = {
   streakCalendar: [],
   smartWords: [],
   wordsRedesign: [],
+  wordQuiz: [],
 };
 
 /** Features that need an account to store anything — guests see a sign-in teaser instead of the feature itself. Dictation and from-memory work for everyone. */
@@ -322,6 +325,13 @@ export interface EffectiveFeatures {
    * smartWords provides one, and falls back to local progress otherwise.
    */
   wordsRedesign: { enabled: boolean };
+  /**
+   * The Stories word quiz: after a story sentence that holds one of the story's
+   * target words, a quick pick-the-meaning question (see StoryWordQuiz). It
+   * only exists in Stories and has nothing to store, so it is one flag, open to
+   * guests as well.
+   */
+  wordQuiz: { enabled: boolean };
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -400,6 +410,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
     },
     smartWords: { enabled: open("smartWords"), spaced: openForAccount("smartWords") },
     wordsRedesign: { enabled: open("wordsRedesign") },
+    wordQuiz: { enabled: open("wordQuiz") },
     guestTeaser,
   };
 }

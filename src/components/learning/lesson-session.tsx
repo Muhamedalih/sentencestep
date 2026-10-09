@@ -41,6 +41,7 @@ import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
+import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
 import type { Lesson, NextLessonRef } from "@/types/content";
@@ -74,6 +75,9 @@ const RatingPrompt = dynamic(() =>
 const StoryWordsPanel = dynamic(() =>
   import("@/components/learning/story-words-panel").then((m) => m.StoryWordsPanel),
 );
+const StoryWordQuiz = dynamic(() =>
+  import("@/components/learning/story-word-quiz").then((m) => m.StoryWordQuiz),
+);
 
 const DICTATION_PREFERENCE_KEY = "sentencestep:dictation-on";
 
@@ -106,6 +110,7 @@ export function LessonSession({
   storyNarratorVoiceId,
   speakerVoiceMap,
   firstSentenceWordAudio,
+  wordQuiz,
 }: {
   unit: Lesson;
   nextLesson?: NextLessonRef;
@@ -123,6 +128,8 @@ export function LessonSession({
   speakerVoiceMap?: Record<string, string>;
   /** Server-side pre-resolved `{contentId: audioUrl}` for the FIRST sentence's trackable words only (see LessonPage's own lookupCachedWordAudioUrls call and its doc comment for the measured root cause this fixes) — passed straight through to the first TypingSentence instance, which registers these into the shared resolved-audio cache on mount so its word clicks skip the resolve round trip entirely, the same way a pre-resolved sentence.audioUrl already does for that sentence's own narration. undefined for every sentence after the first, and for Conversation mode, where word click doesn't exist. */
   firstSentenceWordAudio?: Record<string, string>;
+  /** Stories only — the lesson's "pick the meaning" questions (see buildStoryWordQuiz), each asked right after the sentence it names; absent/empty means this lesson asks none. The lesson page only builds them while the admin "Word quiz" switch is open for this visitor (see wordQuiz in src/lib/features/config.ts). */
+  wordQuiz?: StoryWordQuizQuestion[];
 }) {
   // Never true in previewMode: an admin previewing content has no
   // "get started" flow underway, so the real dashboard pitch would be a
@@ -150,6 +157,23 @@ export function LessonSession({
   const [isViewingWords, setIsViewingWords] = useState(false);
   const [finalAccuracy, setFinalAccuracy] = useState(1);
   const [finalWpm, setFinalWpm] = useState(0);
+  // Stories only: the word question(s) being asked after the sentence just typed (see
+  // StoryWordQuiz) — `questions` is that sentence's, `index` the one on screen. The lesson
+  // doesn't move on until the last is answered. `answeredQuizRef` remembers what was asked so
+  // stepping back and retyping a sentence doesn't ask for its word again.
+  const [quiz, setQuiz] = useState<{ questions: StoryWordQuizQuestion[]; index: number } | null>(
+    null,
+  );
+  const answeredQuizRef = useRef(new Set<string>());
+  const quizBySentence = useMemo(() => {
+    const bySentence = new Map<string, StoryWordQuizQuestion[]>();
+    for (const question of wordQuiz ?? []) {
+      const list = bySentence.get(question.sentenceId);
+      if (list) list.push(question);
+      else bySentence.set(question.sentenceId, [question]);
+    }
+    return bySentence;
+  }, [wordQuiz]);
   // The running numbered transcript (see StoryPreviousSentences). Stories
   // mode always shows this in place of the topic illustration; Normal mode
   // collects the same data but only shows it when the learner opts into the
@@ -293,8 +317,10 @@ export function LessonSession({
       void import("@/components/learning/from-memory-session");
       void import("@/components/learning/story-words-panel");
       void import("@/components/learning/dictation-sentence");
+      if (wordQuiz?.length) void import("@/components/learning/story-word-quiz");
     }, 3000);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per lesson mount, like the loads above
   }, []);
 
   // Fix Your Mistakes, From memory and the words list are screens of their own, not
@@ -578,6 +604,43 @@ export function LessonSession({
       ]);
     }
 
+    // Stories only: a sentence holding one of the story's target words is followed by a quick
+    // question about that word (see StoryWordQuiz), and the lesson moves on once it's answered.
+    const questions =
+      unit.mode === "stories" && sentence
+        ? (quizBySentence.get(sentence.id) ?? []).filter(
+            (question) => !answeredQuizRef.current.has(question.id),
+          )
+        : [];
+    if (questions.length > 0) {
+      setQuiz({ questions, index: 0 });
+      return;
+    }
+    advanceFromSentence();
+  }
+
+  // The chime for a word question: the same ones a finished sentence and a mistyped letter use.
+  function handleQuizResult(correct: boolean) {
+    if (correct) playSentenceCompleteSound();
+    else play("error");
+  }
+
+  // The question on screen is done: on to the sentence's next question, or on with the lesson.
+  function handleQuizDone() {
+    const question = quiz?.questions[quiz.index];
+    if (!quiz || !question) return;
+    answeredQuizRef.current.add(question.id);
+    if (quiz.index + 1 < quiz.questions.length) {
+      setQuiz({ ...quiz, index: quiz.index + 1 });
+      return;
+    }
+    setQuiz(null);
+    advanceFromSentence();
+  }
+
+  // What follows a finished sentence (and its word question, if it had one): the next sentence,
+  // or the end of the lesson.
+  function advanceFromSentence() {
     if (sentenceIndex + 1 < total) {
       const nextIndex = sentenceIndex + 1;
       setSentenceIndex(nextIndex);
@@ -635,6 +698,8 @@ export function LessonSession({
     setCarryOver(null);
     setHelpFreeStreak(0);
     setGiftState({ gifts: 0, run: 0 });
+    setQuiz(null);
+    answeredQuizRef.current.clear();
     setIsPracticingFromMemory(false);
     setIsComplete(false);
   }
@@ -1127,6 +1192,7 @@ export function LessonSession({
                   <SharedInputHost />
                   {sentence &&
                     (() => {
+                      const quizQuestion = quiz?.questions[quiz.index];
                       const handedOver = carryOver?.sentenceId === sentence.id ? carryOver : null;
                       const typingSentence =
                         dictationAvailable && dictationOn && !handedOver ? (
@@ -1247,7 +1313,21 @@ export function LessonSession({
                           // height actually reach TypingSentence.
                           className="lg:flex lg:h-full lg:flex-col"
                         >
-                          {typingSentence}
+                          {quizQuestion ? (
+                            <StoryWordQuiz
+                              key={quizQuestion.id}
+                              question={quizQuestion}
+                              voiceId={storyNarratorVoiceId ?? defaultVoiceId}
+                              number={
+                                (wordQuiz?.findIndex((q) => q.id === quizQuestion.id) ?? 0) + 1
+                              }
+                              total={wordQuiz?.length ?? 1}
+                              onResult={handleQuizResult}
+                              onDone={handleQuizDone}
+                            />
+                          ) : (
+                            typingSentence
+                          )}
                         </motion.div>
                       );
                     })()}
