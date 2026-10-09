@@ -365,6 +365,9 @@ export const tr: Dictionary = {
     expiryBannerStreakBody: "Serinizi sürdürmek için şimdi gün ekleyin: {streak} gün.",
     expiryBannerCta: "Gün ekle",
     expiryBannerDismiss: "Kapat",
+    finishPaymentTitle: "Ödemeyi henüz tamamlamadınız",
+    finishPaymentBody: "Ödeme sayfanız hâlâ açık, kaldığınız yerden devam edebilirsiniz.",
+    finishPaymentCta: "Ödemeye devam et",
     freeNowHeading: "Şu anda her şey ücretsiz",
     freeNowSubtitle:
       "Tüm dersler ve hikayeler şimdilik açık — ilerlemenizi kaydetmek için ücretsiz bir hesap oluşturun.",

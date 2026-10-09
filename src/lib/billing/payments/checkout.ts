@@ -26,6 +26,7 @@ export interface CheckoutStore {
     premiumDays: number;
     expiringAfter: Date;
   }): Promise<PaymentOrder | null>;
+  /** Orders that got (or are still getting) a provider link; one whose link could never be created is not counted. */
   countRecentOrders(userId: string, since: Date): Promise<number>;
   insertOrder(order: PaymentOrderInsert): Promise<PaymentOrder>;
   updateOrder(orderId: string, patch: PaymentOrderPatch): Promise<void>;

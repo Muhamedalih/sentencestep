@@ -365,6 +365,9 @@ export const en: Dictionary = {
     expiryBannerStreakBody: "Add days now to keep your {streak}-day streak going.",
     expiryBannerCta: "Add days",
     expiryBannerDismiss: "Dismiss",
+    finishPaymentTitle: "You haven't finished paying yet",
+    finishPaymentBody: "Your payment page is still open, so you can pick up where you left off.",
+    finishPaymentCta: "Continue to payment",
     freeNowHeading: "Everything is free right now",
     freeNowSubtitle:
       "Every lesson and story is open for now — create a free account to keep your progress.",

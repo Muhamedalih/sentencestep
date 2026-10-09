@@ -204,6 +204,7 @@ export default async function UpgradePage({
                 extend
                 offerNotice={offerNotice}
                 waylShowsDollars={showUsdOnWaylPage()}
+                showIraqiWallets={country === "iq"}
                 afterPaymentPath={afterPaymentPath}
               />
             )}
@@ -216,6 +217,7 @@ export default async function UpgradePage({
             socialProof={socialProof}
             fromMonthly={cheapestPerMonth(tier)}
             waylShowsDollars={showUsdOnWaylPage()}
+            showIraqiWallets={country === "iq"}
             afterPaymentPath={afterPaymentPath}
           />
         )}
