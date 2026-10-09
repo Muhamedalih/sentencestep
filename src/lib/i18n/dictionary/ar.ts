@@ -914,6 +914,8 @@ export const ar: Dictionary = {
     premiumHeading: "عندما تكون مستعدًا للمزيد",
     premiumSubtitle: "الخطة المميزة تفتح كل ما يقدمه SentenceStep.",
     unlockPremiumCta: "افتح SentenceStep المميز",
+    reviewsHeading: "ماذا يقول متعلمونا",
+    reviewDotLabel: "عرض التقييم {n}",
     modesHeading: "ثلاث طرق لبناء الطلاقة",
     modesSubtitle: "يستخدم كل نمط نفس الحلقة البسيطة: استمع إلى الجملة، اكتبها، اشعر بترسخها.",
     normalModeDescription: "جمل قصيرة وعملية مرتبة من السهل إلى الصعب.",

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutCard } from "@/components/billing/checkout-card";
+import { LearnerReviews } from "@/components/marketing/learner-reviews";
 import { ContentStatsRow } from "@/components/billing/content-stats-row";
 import { PremiumFaq } from "@/components/billing/premium-faq";
 import { Logo } from "@/components/layout/logo";
@@ -26,7 +27,7 @@ import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getContentStats, getSocialProof } from "@/lib/stats/public-stats";
-import { getRatingsProof } from "@/lib/stats/public-ratings";
+import { getRatingsProof, listPublicReviews } from "@/lib/stats/public-ratings";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -84,9 +85,14 @@ export default async function UpgradePage({
   // Only the plan card quotes the launch offer and real figures, so the counts
   // are only fetched (they are cached for an hour) when that card is shown.
   const showsPlans = !freeNow && !(user && access.isPremium);
-  const [proof, content, ratings] = showsPlans
-    ? await Promise.all([getSocialProof(), getContentStats(), getRatingsProof()])
-    : [null, null, null];
+  const [proof, content, ratings, reviews] = showsPlans
+    ? await Promise.all([
+        getSocialProof(),
+        getContentStats(),
+        getRatingsProof(),
+        listPublicReviews(),
+      ])
+    : [null, null, null, []];
   const offerNotice =
     offer && offerBonusDays > 0
       ? { bonusDays: offerBonusDays, endsOnLabel: formatLongDate(offer.endsOn, locale) }
@@ -209,16 +215,19 @@ export default async function UpgradePage({
             )}
           </>
         ) : (
-          <CheckoutCard
-            plans={plans}
-            signedIn={Boolean(user)}
-            offerNotice={offerNotice}
-            socialProof={socialProof}
-            fromMonthly={cheapestPerMonth(tier)}
-            waylShowsDollars={showUsdOnWaylPage()}
-            showIraqiWallets={country === "iq"}
-            afterPaymentPath={afterPaymentPath}
-          />
+          <>
+            <LearnerReviews items={reviews} />
+            <CheckoutCard
+              plans={plans}
+              signedIn={Boolean(user)}
+              offerNotice={offerNotice}
+              socialProof={socialProof}
+              fromMonthly={cheapestPerMonth(tier)}
+              waylShowsDollars={showUsdOnWaylPage()}
+              showIraqiWallets={country === "iq"}
+              afterPaymentPath={afterPaymentPath}
+            />
+          </>
         )}
 
         {!freeNow && <PremiumFaq t={t} />}

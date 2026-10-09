@@ -6,8 +6,6 @@ import {
   type RatingsSummary,
   type RatingUserType,
 } from "@/lib/admin/ratings-domain";
-import { getRatingsSettings } from "@/lib/feedback/ratings-settings";
-import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AdminAppRating {
@@ -22,6 +20,8 @@ export interface AdminAppRating {
   contactEmail: string | null;
   status: AppRatingStatus;
   isPublic: boolean;
+  /** Seconds it stays on screen in the public box, or null for automatic. */
+  displaySeconds: number | null;
   createdAt: string;
 }
 
@@ -37,7 +37,7 @@ export async function listAppRatings(
   let query = supabase
     .from("app_ratings")
     .select(
-      "id, rating, comment, lesson_id, mode, locale, user_type, contact_email, status, is_public, created_at",
+      "id, rating, comment, lesson_id, mode, locale, user_type, contact_email, status, is_public, display_seconds, created_at",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
@@ -67,6 +67,7 @@ export async function listAppRatings(
       contactEmail: row.contact_email,
       status: row.status,
       isPublic: row.is_public,
+      displaySeconds: row.display_seconds,
       createdAt: row.created_at,
     })),
   };
@@ -78,18 +79,25 @@ export async function listAppRatings(
  * the average quoted on the site) — archiving is how a junk rating is removed.
  */
 export async function getAppRatingsOverview(): Promise<
-  RatingsSummary & { newCount: number; commentCount: number; publicCount: number }
+  RatingsSummary & {
+    newCount: number;
+    commentCount: number;
+    publicCount: number;
+    /** Approved ratings that have a comment — the ones the public box can actually show. */
+    publicWithCommentCount: number;
+  }
 > {
   const supabase = await createClient();
   const head = () => supabase.from("app_ratings").select("id", { count: "exact", head: true });
 
-  const [distribution, isNew, withComment, isPublic] = await Promise.all([
+  const [distribution, isNew, withComment, isPublic, isPublicWithComment] = await Promise.all([
     supabase.rpc("app_rating_distribution"),
     head().eq("status", "new"),
     head().neq("status", "archived").neq("comment", ""),
     head().neq("status", "archived").eq("is_public", true),
+    head().neq("status", "archived").eq("is_public", true).neq("comment", ""),
   ]);
-  for (const result of [distribution, isNew, withComment, isPublic]) {
+  for (const result of [distribution, isNew, withComment, isPublic, isPublicWithComment]) {
     if (result.error) throw result.error;
   }
 
@@ -98,6 +106,7 @@ export async function getAppRatingsOverview(): Promise<
     newCount: isNew.count ?? 0,
     commentCount: withComment.count ?? 0,
     publicCount: isPublic.count ?? 0,
+    publicWithCommentCount: isPublicWithComment.count ?? 0,
   };
 }
 
@@ -111,45 +120,4 @@ export async function countNewAppRatings(): Promise<number> {
 
   if (error) throw error;
   return count ?? 0;
-}
-
-export interface PublicAppRating {
-  id: string;
-  rating: number;
-  comment: string;
-  locale: string;
-  createdAt: string;
-}
-
-/**
- * The ratings an admin approved for the site ("Show on site" in Admin >
- * Ratings), newest first, with only the columns that are safe to show anyone:
- * no email, no account id, no browser id. This is the one way a public page
- * should read ratings — app_ratings has no public RLS policy, because RLS
- * can't hide single columns. Server-only: it uses the service-role client.
- * Returns an empty list when that isn't configured, or while the admin has
- * "Show approved ratings to visitors" switched off, so a page built on it
- * simply shows nothing.
- */
-export async function listPublicAppRatings(limit = 12): Promise<PublicAppRating[]> {
-  if (!isServiceRoleConfigured()) return [];
-  if (!(await getRatingsSettings()).showPublicRatings) return [];
-
-  const { data, error } = await createServiceRoleClient()
-    .from("app_ratings")
-    .select("id, rating, comment, locale, created_at")
-    .eq("is_public", true)
-    .neq("status", "archived")
-    .neq("comment", "")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    rating: row.rating,
-    comment: row.comment,
-    locale: row.locale,
-    createdAt: row.created_at,
-  }));
 }

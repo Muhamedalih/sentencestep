@@ -1463,6 +1463,8 @@ export interface Database {
           anon_id: string;
           status: "new" | "read" | "replied" | "archived";
           is_public: boolean;
+          /** Seconds this rating stays on screen in the public rotating box; null = automatic. See 20250333000000_ratings_display_seconds.sql. */
+          display_seconds: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -1479,6 +1481,7 @@ export interface Database {
           anon_id?: string;
           status?: "new" | "read" | "replied" | "archived";
           is_public?: boolean;
+          display_seconds?: number | null;
           created_at?: string;
           updated_at?: string;
         };

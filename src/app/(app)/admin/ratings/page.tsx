@@ -6,6 +6,7 @@ import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { PaginationControls } from "@/components/admin/pagination-controls";
+import { RatingDisplaySeconds } from "@/components/admin/rating-display-seconds";
 import { RatingPublicToggle } from "@/components/admin/rating-public-toggle";
 import { RatingsDisplaySettings } from "@/components/admin/ratings-display-settings";
 import { RatingsImportForm } from "@/components/admin/ratings-import-form";
@@ -120,7 +121,11 @@ export default async function AdminRatingsPage({
         </p>
       </div>
 
-      <RatingsDisplaySettings initial={settings} proofPreview={proofPreview} />
+      <RatingsDisplaySettings
+        initial={settings}
+        proofPreview={proofPreview}
+        approvedWithComment={overview.publicWithCommentCount}
+      />
 
       <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         <div className="grid grid-cols-2 gap-3">
@@ -257,6 +262,13 @@ export default async function AdminRatingsPage({
 
               <div className="mt-3 flex flex-wrap items-start gap-3">
                 <RatingPublicToggle id={rating.id} isPublic={rating.isPublic} />
+                {rating.isPublic && rating.comment && (
+                  <RatingDisplaySeconds
+                    id={rating.id}
+                    comment={rating.comment}
+                    initialSeconds={rating.displaySeconds}
+                  />
+                )}
                 {rating.contactEmail ? (
                   <RatingReplyForm ratingId={rating.id} contactEmail={rating.contactEmail} />
                 ) : (

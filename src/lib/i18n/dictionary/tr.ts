@@ -943,6 +943,8 @@ export const tr: Dictionary = {
     premiumHeading: "Daha fazlasına hazır olduğunuzda",
     premiumSubtitle: "Premium, SentenceStep'in sunduğu her şeyin kilidini açar.",
     unlockPremiumCta: "SentenceStep Premium'un kilidini aç",
+    reviewsHeading: "Öğrencilerimiz ne diyor",
+    reviewDotLabel: "{n}. yorumu göster",
     modesHeading: "Akıcılık kazanmanın üç yolu",
     modesSubtitle: "Her mod aynı basit döngüyü kullanır: cümleyi dinle, yaz, yerleştiğini hisset.",
     normalModeDescription: "Kolaydan zora düzenlenmiş kısa, pratik cümleler.",
