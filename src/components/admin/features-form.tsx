@@ -66,6 +66,11 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
     description:
       "The redesigned Word Lists: a dashboard with mastery rings per topic (new / learning / mastered), sticky level tabs on mobile and search; a word wall per topic with each word's strength and “practice the weak ones only”; typing inside the blank with batch progress and a word-type badge; Learn in batches of five with swipe, arrows, IPA and “I know it / still learning” feeding the schedule; and progress rings, counting numbers and bronze / silver / gold ranks instead of party icons. Purely visual: it needs no migration of data and works with or without Smart word practice (mastery shows once that is on). Admin preview shows it to admins only on the live site; turn it On to publish it to everyone.",
   },
+  wordQuiz: {
+    title: "Word quiz (Stories)",
+    description:
+      "A quick “pick the meaning” question right after a Stories sentence that holds one of the story's target words (at most three per story): the word with a listen button, four Arabic meanings, keys 1–4 to answer. The pick turns green or red, the wrong options dissolve so only the right one is left, and the story carries on by itself. It uses only each story's own target words (the wrong options are other stories' target words), so there is nothing new to author. Arabic support language only for now; works for guests too. Admin preview shows it to admins only on the live site; turn it On to publish it to everyone.",
+  },
 };
 
 const STATE_OPTIONS: { value: FeatureState; label: string; hint: string }[] = [

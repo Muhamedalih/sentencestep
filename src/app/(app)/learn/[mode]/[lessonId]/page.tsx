@@ -11,6 +11,8 @@ import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
+import { buildStoryWordQuiz } from "@/lib/content/story-word-quiz";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
@@ -240,6 +242,18 @@ export default async function LessonPage({
     preload(url, { as: "fetch", crossOrigin: "anonymous" });
   }
 
+  // The Stories word quiz — asked only when the admin "Word quiz" switch (Admin -> Features) is open
+  // for this visitor (Off: nobody, Admin preview: admins, On: everyone), so a closed feature ships
+  // nothing to the browser. Arabic only: the answers are the target words' Arabic glosses, and there
+  // are no Spanish/Turkish ones yet, so those learners get no quiz rather than an English one.
+  // getEffectiveFeatures is already cached for this request by the /learn layout.
+  const wordQuiz =
+    mode === "stories" &&
+    (locale === null || locale === "ar") &&
+    (await getEffectiveFeatures()).wordQuiz.enabled
+      ? buildStoryWordQuiz(unit)
+      : undefined;
+
   return (
     <div
       className={cn(
@@ -256,6 +270,7 @@ export default async function LessonPage({
         storyNarratorVoiceId={storyNarratorVoiceId}
         speakerVoiceMap={speakerVoiceMap}
         firstSentenceWordAudio={firstSentenceWordAudio}
+        wordQuiz={wordQuiz}
       />
       {reportProblemButton}
     </div>

@@ -531,6 +531,18 @@ export interface Dictionary {
     story: string;
     /** Stories mode only — rough reading time left in the header, e.g. "~2 min left". A coarse estimate from remaining word count, never exact. */
     storyTimeRemaining: string;
+    /** Stories mode only — the quick "pick the meaning" question asked right after a sentence that holds one of the story's target words (see StoryWordQuiz). */
+    wordQuiz: {
+      title: string;
+      prompt: string;
+      correct: string;
+      wrong: string;
+      /** Keyboard-hint labels under the options: pressing 1-4 chooses, Shift replays the word. */
+      hintChoose: string;
+      hintListen: string;
+      /** Screen-reader label for the progress bars, e.g. "Question 1 of 3". */
+      progressAria: string;
+    };
     lessonNumber: string;
     sentenceCount: string;
     /** Conversation-mode lesson cards, e.g. "30 lines" — dialogue turns, not sentenceCount's generic "sentences". */
