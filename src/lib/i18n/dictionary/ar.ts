@@ -916,6 +916,7 @@ export const ar: Dictionary = {
     unlockPremiumCta: "افتح SentenceStep المميز",
     reviewsHeading: "ماذا يقول متعلمونا",
     reviewDotLabel: "عرض التقييم {n}",
+    reviewsByline: "متعلّم في SentenceStep",
     modesHeading: "ثلاث طرق لبناء الطلاقة",
     modesSubtitle: "يستخدم كل نمط نفس الحلقة البسيطة: استمع إلى الجملة، اكتبها، اشعر بترسخها.",
     normalModeDescription: "جمل قصيرة وعملية مرتبة من السهل إلى الصعب.",

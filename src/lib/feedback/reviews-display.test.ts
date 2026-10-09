@@ -60,28 +60,32 @@ const rating = (id: string, comment: string, displaySeconds: number | null = nul
   displaySeconds,
 });
 
-test("toReviewItems: keeps only ratings with words, at most five, each with its resolved seconds", () => {
+test("toReviewItems: keeps only ratings with words, each with its resolved seconds", () => {
   const items = toReviewItems([
     rating("a", "حلو"),
     rating("b", ""),
     rating("c", "   "),
     rating("d", "x".repeat(100)),
     rating("e", "pinned", 9),
-    rating("f", "f"),
-    rating("g", "g"),
-    rating("h", "h"),
   ]);
-  assert.equal(items.length, PUBLIC_REVIEWS_MAX);
   assert.deepEqual(
     items.map((i) => [i.id, i.seconds]),
     [
       ["a", 1],
       ["d", 2],
       ["e", 9],
-      ["f", 1],
-      ["g", 1],
     ],
   );
+});
+
+test("toReviewItems: no more than the cap, and it is ten", () => {
+  assert.equal(PUBLIC_REVIEWS_MAX, 10);
+  const many = Array.from({ length: PUBLIC_REVIEWS_MAX + 4 }, (_, n) => rating(`r${n}`, "ok"));
+  const items = toReviewItems(many);
+  assert.equal(items.length, PUBLIC_REVIEWS_MAX);
+  // the first ones (the newest, as the query orders them) are the ones kept
+  assert.equal(items[0]!.id, "r0");
+  assert.equal(items.at(-1)!.id, `r${PUBLIC_REVIEWS_MAX - 1}`);
 });
 
 test("toReviewItems: trims the comment and drops a rating whose stars aren't 1 to 5", () => {
@@ -144,8 +148,12 @@ test("parseReviewsResponse: anything malformed is dropped, never shown", () => {
   );
 });
 
-test("parseReviewsResponse: at most five, and a very long comment is cut", () => {
-  const many = Array.from({ length: 9 }, (_, n) => ({ id: `r${n}`, rating: 5, comment: "ok" }));
+test("parseReviewsResponse: no more than the cap, and a very long comment is cut", () => {
+  const many = Array.from({ length: PUBLIC_REVIEWS_MAX + 4 }, (_, n) => ({
+    id: `r${n}`,
+    rating: 5,
+    comment: "ok",
+  }));
   assert.equal(parseReviewsResponse({ reviews: many }).length, PUBLIC_REVIEWS_MAX);
   const [long] = parseReviewsResponse({
     reviews: [{ id: "a", rating: 5, comment: "x".repeat(5000) }],
