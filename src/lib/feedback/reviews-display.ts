@@ -5,7 +5,7 @@
  */
 
 /** At most this many approved ratings rotate in the box (the newest ones). */
-export const PUBLIC_REVIEWS_MAX = 5;
+export const PUBLIC_REVIEWS_MAX = 10;
 
 export const MIN_DISPLAY_SECONDS = 1;
 export const MAX_DISPLAY_SECONDS = 30;

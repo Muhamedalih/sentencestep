@@ -946,6 +946,7 @@ export const tr: Dictionary = {
     unlockPremiumCta: "SentenceStep Premium'un kilidini aç",
     reviewsHeading: "Öğrencilerimiz ne diyor",
     reviewDotLabel: "{n}. yorumu göster",
+    reviewsByline: "SentenceStep öğrencisi",
     modesHeading: "Akıcılık kazanmanın üç yolu",
     modesSubtitle: "Her mod aynı basit döngüyü kullanır: cümleyi dinle, yaz, yerleştiğini hisset.",
     normalModeDescription: "Kolaydan zora düzenlenmiş kısa, pratik cümleler.",

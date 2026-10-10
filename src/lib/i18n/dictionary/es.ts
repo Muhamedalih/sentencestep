@@ -959,6 +959,7 @@ export const es: Dictionary = {
     unlockPremiumCta: "Desbloquear SentenceStep Premium",
     reviewsHeading: "Lo que dicen nuestros estudiantes",
     reviewDotLabel: "Ver opinión {n}",
+    reviewsByline: "Estudiante de SentenceStep",
     modesHeading: "Tres formas de ganar fluidez",
     modesSubtitle:
       "Cada modo usa el mismo ciclo simple: escucha la oración, escríbela, siente cómo se afianza.",

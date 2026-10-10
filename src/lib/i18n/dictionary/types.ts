@@ -1203,6 +1203,8 @@ export interface Dictionary {
     reviewsHeading: string;
     /** Accessible name of a dot that shows one rating; {n} is its position. */
     reviewDotLabel: string;
+    /** Small line under a learner rating: who wrote it (never a name). */
+    reviewsByline: string;
     modesHeading: string;
     modesSubtitle: string;
     /** Descriptions for the three modes, shown next to their nav.* titles (nav.normalLessons/stories/conversation) — kept here rather than duplicating title keys. */

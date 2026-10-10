@@ -943,6 +943,7 @@ export const en: Dictionary = {
     unlockPremiumCta: "Unlock SentenceStep Premium",
     reviewsHeading: "What our learners say",
     reviewDotLabel: "Show rating {n}",
+    reviewsByline: "SentenceStep learner",
     modesHeading: "Three ways to build fluency",
     modesSubtitle:
       "Every mode uses the same simple loop: hear the sentence, type it, feel it lock in.",
