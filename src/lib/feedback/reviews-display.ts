@@ -126,3 +126,14 @@ export function parseReviewsResponse(json: unknown): ReviewItem[] {
   }
   return items;
 }
+
+/**
+ * Which way a learner's words read: right-to-left when the first letter is from
+ * an RTL script (Arabic, Hebrew, Persian, Urdu...), otherwise left-to-right.
+ * Digits, punctuation and emoji don't decide it. The box sets this on a whole
+ * rating so its stars sit on the same side as the words.
+ */
+export function textDirection(text: string): "rtl" | "ltr" {
+  const firstLetter = /\p{L}/u.exec(text)?.[0];
+  return firstLetter && /[֐-ࣿיִ-﷿ﹰ-﻿]/.test(firstLetter) ? "rtl" : "ltr";
+}

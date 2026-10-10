@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { GraduationCap, Quote, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { nextReviewIndex, type ReviewItem } from "@/lib/feedback/reviews-display";
+import { nextReviewIndex, textDirection, type ReviewItem } from "@/lib/feedback/reviews-display";
 import { cn } from "@/lib/utils";
 
 /** A card arrives from below, sharpening out of a soft blur on a spring, and leaves upward a touch quicker. */
@@ -42,7 +42,7 @@ const starVariants: Variants = {
   },
 };
 
-const STAR_GLOW = "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--accent)_65%,transparent)]";
+const STAR_GLOW = "drop-shadow-[0_0_3px_color-mix(in_oklab,var(--accent)_30%,transparent)]";
 
 function StarRow({ value, animated }: { value: number; animated: boolean }) {
   const stars = [1, 2, 3, 4, 5].map((i) => (
@@ -70,20 +70,26 @@ function StarRow({ value, animated }: { value: number; animated: boolean }) {
   );
 }
 
-function ReviewBody({ item, animated }: { item: ReviewItem; animated: boolean }) {
+function ReviewBody({
+  item,
+  byline,
+  animated,
+}: {
+  item: ReviewItem;
+  byline: string;
+  animated: boolean;
+}) {
   return (
-    // dir="auto": the stars sit on the same side as the learner's own words, in whatever language they wrote.
-    <div dir="auto" className="flex flex-col gap-3">
+    // The whole rating reads the way the learner's words do, so the stars sit on the same side as them.
+    <div dir={textDirection(item.comment)} className="flex flex-col gap-2">
       <div className="flex items-center gap-2.5">
         <StarRow value={item.rating} animated={animated} />
-        <span className="text-foreground/80 text-sm font-semibold tabular-nums" dir="ltr">
+        <span className="text-foreground text-sm font-semibold tabular-nums" dir="ltr">
           {item.rating.toFixed(1)}
         </span>
+        <span className="text-muted-foreground ms-auto truncate text-xs">{byline}</span>
       </div>
-      <blockquote
-        dir="auto"
-        className="line-clamp-4 text-[15px] leading-relaxed font-medium text-pretty sm:text-base"
-      >
+      <blockquote className="text-foreground line-clamp-3 text-[15px] leading-relaxed font-medium text-pretty sm:text-base">
         {item.comment}
       </blockquote>
     </div>
@@ -91,10 +97,11 @@ function ReviewBody({ item, animated }: { item: ReviewItem; animated: boolean })
 }
 
 /**
- * A premium box of what real learners wrote, one rating at a time. The card in
- * front is always the current one, with two more peeking out behind it like a
- * stack; every few seconds it lifts away and the next rises into its place, its
- * stars popping in one by one. Each rating stays for its own number of seconds
+ * A compact box of what real learners wrote, one rating at a time, kept quiet so
+ * the stars and the words are what the eye lands on. The card in front is always
+ * the current one, with two more peeking out behind it like a stack; every few
+ * seconds it lifts away and the next rises into its place, its stars popping in
+ * one by one. Each rating stays for its own number of seconds
  * (set in Admin > Ratings, or picked by the length of the comment), then it goes
  * round again. Hovering or focusing the box, or leaving the tab, holds the
  * current one. For visitors who ask their device for less motion nothing moves
@@ -138,11 +145,12 @@ export function LearnerReviews({
 
   if (items.length === 0) return null;
   const current = items[active % items.length]!;
+  const byline = t.marketing.reviewsByline;
 
   return (
     <section
       aria-label={t.marketing.reviewsHeading}
-      className={cn("relative mb-4", className)}
+      className={cn("relative mb-3", className)}
       onMouseEnter={() => setHeld(true)}
       onMouseLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)}
@@ -151,42 +159,56 @@ export function LearnerReviews({
       {/* Two more cards peeking out from behind: the stack. */}
       <div
         aria-hidden="true"
-        className="border-border/70 bg-card/60 absolute inset-x-4 top-4 -bottom-2 rounded-3xl border"
+        className="border-border/60 bg-card/60 absolute inset-x-3 top-3 -bottom-1.5 rounded-2xl border"
       />
       <div
         aria-hidden="true"
-        className="border-border/50 bg-card/30 absolute inset-x-8 top-8 -bottom-4 rounded-3xl border"
+        className="border-border/40 bg-card/30 absolute inset-x-6 top-6 -bottom-3 rounded-2xl border"
       />
 
-      <div className="border-primary/20 bg-card shadow-primary/10 relative overflow-hidden rounded-3xl border p-5 shadow-xl">
-        {/* A tint across the card (over a solid base, so the stack behind never shows through), a soft glow in the corner, and a quotation mark as the ornament. */}
+      <div className="border-border bg-card relative overflow-hidden rounded-2xl border px-5 py-4 shadow-md shadow-black/5">
+        {/* A very faint tint over a solid base, so the stack behind never shows through. */}
         <div
           aria-hidden="true"
-          className="from-primary/10 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent"
-        />
-        <div
-          aria-hidden="true"
-          className="bg-primary/20 pointer-events-none absolute -end-10 -top-10 size-36 rounded-full blur-3xl"
-        />
-        <Quote
-          aria-hidden="true"
-          strokeWidth={0}
-          className="text-primary/15 pointer-events-none absolute end-4 top-3 size-16 rotate-180 fill-current rtl:rotate-0"
+          className="from-primary/5 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent"
         />
 
-        <div className="relative flex items-center gap-2.5">
-          <span className="from-primary to-accent text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br shadow-md">
-            <Quote aria-hidden="true" className="size-4 fill-current" />
-          </span>
-          <h2 className="text-sm font-semibold tracking-tight">{t.marketing.reviewsHeading}</h2>
+        <div className="relative flex items-center justify-between gap-3">
+          <h2 className="text-muted-foreground min-w-0 truncate text-xs font-medium">
+            {t.marketing.reviewsHeading}
+          </h2>
+
+          {items.length > 1 && (
+            <div className="flex shrink-0 items-center">
+              {items.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActive(index)}
+                  aria-label={t.marketing.reviewDotLabel.replace("{n}", String(index + 1))}
+                  aria-current={index === active}
+                  className="group flex h-4 items-center px-[2.5px]"
+                >
+                  <span
+                    className={cn(
+                      "block h-1.5 rounded-full transition-all duration-300",
+                      index === active
+                        ? "bg-primary w-4"
+                        : "bg-muted-foreground/25 group-hover:bg-muted-foreground/50 w-1.5",
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="relative mt-4">
+        <div className="relative mt-3">
           {/* Every rating, laid on top of each other and hidden: sets the height. */}
           <div aria-hidden="true" className="invisible grid">
             {items.map((item) => (
               <div key={item.id} className="col-start-1 row-start-1">
-                <ReviewBody item={item} animated={false} />
+                <ReviewBody item={item} byline={byline} animated={false} />
               </div>
             ))}
           </div>
@@ -201,45 +223,12 @@ export function LearnerReviews({
                 exit="exit"
                 className="absolute inset-0"
               >
-                <ReviewBody item={current} animated />
+                <ReviewBody item={current} byline={byline} animated />
               </motion.div>
             </AnimatePresence>
           ) : (
             <div className="absolute inset-0">
-              <ReviewBody item={current} animated={false} />
-            </div>
-          )}
-        </div>
-
-        <div className="relative mt-4 flex items-center justify-between gap-3 border-t border-current/10 pt-3.5">
-          <span className="text-muted-foreground flex min-w-0 items-center gap-2 text-xs font-medium">
-            <span className="bg-primary/10 text-primary flex size-6 shrink-0 items-center justify-center rounded-full">
-              <GraduationCap aria-hidden="true" className="size-3.5" />
-            </span>
-            <span className="truncate">{t.marketing.reviewsByline}</span>
-          </span>
-
-          {items.length > 1 && (
-            <div className="flex shrink-0 items-center">
-              {items.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActive(index)}
-                  aria-label={t.marketing.reviewDotLabel.replace("{n}", String(index + 1))}
-                  aria-current={index === active}
-                  className="group flex h-5 items-center px-[3px]"
-                >
-                  <span
-                    className={cn(
-                      "block h-1.5 rounded-full transition-all duration-300",
-                      index === active
-                        ? "bg-primary w-5"
-                        : "bg-muted-foreground/30 group-hover:bg-muted-foreground/60 w-1.5",
-                    )}
-                  />
-                </button>
-              ))}
+              <ReviewBody item={current} byline={byline} animated={false} />
             </div>
           )}
         </div>

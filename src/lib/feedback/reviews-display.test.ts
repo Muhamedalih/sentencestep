@@ -12,6 +12,7 @@ import {
   parseDisplaySeconds,
   parseReviewsResponse,
   resolveDisplaySeconds,
+  textDirection,
   toReviewItems,
 } from "./reviews-display";
 
@@ -159,4 +160,26 @@ test("parseReviewsResponse: no more than the cap, and a very long comment is cut
     reviews: [{ id: "a", rating: 5, comment: "x".repeat(5000) }],
   });
   assert.equal(long!.comment.length, 2000);
+});
+
+test("textDirection: right-to-left scripts read right to left, everything else left to right", () => {
+  assert.equal(textDirection("حلو اوي"), "rtl");
+  assert.equal(textDirection("שלום"), "rtl");
+  assert.equal(textDirection("سلام"), "rtl");
+  assert.equal(textDirection("Perfecto"), "ltr");
+  assert.equal(textDirection("Çok güzel"), "ltr");
+});
+
+test("textDirection: digits, punctuation and emoji don't decide it, the first letter does", () => {
+  assert.equal(textDirection("5 نجوم ممتاز"), "rtl");
+  assert.equal(textDirection("!!! ممتاز"), "rtl");
+  assert.equal(textDirection("😀 great app"), "ltr");
+  assert.equal(textDirection("10/10 تطبيق"), "rtl");
+  assert.equal(textDirection("ممتاز app"), "rtl");
+  assert.equal(textDirection("app ممتاز"), "ltr");
+});
+
+test("textDirection: nothing to go on means left to right", () => {
+  assert.equal(textDirection(""), "ltr");
+  assert.equal(textDirection("123 !!!"), "ltr");
 });
