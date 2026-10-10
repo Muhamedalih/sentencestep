@@ -221,7 +221,7 @@ export default async function LearnHomePage() {
           sessionCount={attemptCount}
           className="mb-10 max-sm:order-1 max-sm:mb-6"
         />
-        <div className="max-sm:order-3">
+        <div className="max-sm:order-4">
           <GuestProgressBanner isGuest={!user} className="mb-6" />
           {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
           {openCheckout && !isPremiumUser && (
@@ -233,18 +233,18 @@ export default async function LearnHomePage() {
           )}
         </div>
         {/* A direct child of the page (not nested in the wrappers around it) so that on a phone
-            (max-sm) today's streak + quests can jump above everything else, the greeting included.
-            From sm: up it stays exactly where it was in the DOM flow, between the banners and the
-            review card. */}
-        <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-first" />
-        <div className="max-sm:order-3">
+            (max-sm) today's streak + quests sit right under the greeting/stats header and above
+            "up next". From sm: up it stays exactly where it was in the DOM flow, between the
+            banners and the review card. */}
+        <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
+        <div className="max-sm:order-4">
           <NeedsReviewWords
             words={weakWords.filter((word) => word.dueNow)}
             count={reviewWaiting.count}
             smart={reviewWaiting.smart}
           />
         </div>
-        <div className="max-sm:order-2">
+        <div className="max-sm:order-3">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
               {t.progress.upNextLabel}
