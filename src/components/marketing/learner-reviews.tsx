@@ -156,18 +156,18 @@ export function LearnerReviews({
       onFocus={() => setHeld(true)}
       onBlur={() => setHeld(false)}
     >
-      {/* Two more cards peeking out from behind: the stack. */}
+      {/* Two more cards peeking out from under the box: the stack. Only their lower edges show, so nothing busy shows through the glass. */}
       <div
         aria-hidden="true"
-        className="border-border/60 bg-card/60 absolute inset-x-3 top-3 -bottom-1.5 rounded-2xl border"
+        className="border-border/50 absolute inset-x-3 -bottom-1.5 h-4 rounded-b-2xl border-x border-b"
       />
       <div
         aria-hidden="true"
-        className="border-border/40 bg-card/30 absolute inset-x-6 top-6 -bottom-3 rounded-2xl border"
+        className="border-border/30 absolute inset-x-6 -bottom-3 h-4 rounded-b-2xl border-x border-b"
       />
 
-      <div className="border-border bg-card relative overflow-hidden rounded-2xl border px-5 py-4 shadow-md shadow-black/5">
-        {/* A very faint tint over a solid base, so the stack behind never shows through. */}
+      {/* Semi-transparent, frosted: the page shows faintly through it. */}
+      <div className="border-border/60 bg-card/50 relative overflow-hidden rounded-2xl border px-5 py-4 backdrop-blur-md">
         <div
           aria-hidden="true"
           className="from-primary/5 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent to-transparent"
