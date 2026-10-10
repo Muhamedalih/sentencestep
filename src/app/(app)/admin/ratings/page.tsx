@@ -24,6 +24,7 @@ import { getRatingsSettings } from "@/lib/feedback/ratings-settings";
 import { MIN_RATINGS_TO_QUOTE, buildRatingsProof } from "@/lib/stats/ratings-proof";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { cn } from "@/lib/utils";
+import { formatAdminDateTime } from "@/lib/admin/format-date-time";
 
 export const metadata: Metadata = {
   title: "Ratings",
@@ -37,13 +38,6 @@ const STATUS_VARIANT: Record<AppRatingStatus, "secondary" | "outline" | "success
 };
 
 const STARS = [1, 2, 3, 4, 5] as const;
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 
 /** A link to this page with one part of the filter changed; the page number always restarts at 1. */
 function hrefWith(filter: RatingsFilter, change: Record<string, string | undefined>): string {
@@ -117,7 +111,7 @@ export default async function AdminRatingsPage({
           What learners gave the app from the rating pop-up and Settings, newest first. Reply by
           email to anyone who left an address (signed-in members always have one), and approve the
           best ones to show on the site. Archiving a rating takes it out of the figures below and
-          out of the average quoted on the site.
+          out of the average quoted on the site. Times are Baghdad time (UTC+3), like the old sheet.
         </p>
       </div>
 
@@ -239,7 +233,7 @@ export default async function AdminRatingsPage({
                     {rating.isPublic && <Badge variant="success">On site</Badge>}
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {formatDate(rating.createdAt)} · {rating.locale.toUpperCase()}
+                    {formatAdminDateTime(rating.createdAt)} · {rating.locale.toUpperCase()}
                     {rating.lessonId && (
                       <>
                         {" · "}

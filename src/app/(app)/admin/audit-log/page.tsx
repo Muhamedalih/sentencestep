@@ -10,6 +10,7 @@ import {
   listAuditLogEntries,
 } from "@/lib/admin/audit-log-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { formatAdminDateTime } from "@/lib/admin/format-date-time";
 
 export const metadata: Metadata = {
   title: "Audit log",
@@ -18,10 +19,6 @@ export const metadata: Metadata = {
 interface AuditLogSearchParams {
   entityType?: string;
   page?: string;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 }
 
 /** "lesson.bulk_archived" -> "Lesson · bulk archived" — readable without a lookup table, since new action strings get added every time a new admin mutation is instrumented. */
@@ -107,7 +104,7 @@ export default async function AdminAuditLogPage({
               entries.map((entry) => (
                 <tr key={entry.id}>
                   <td className="text-muted-foreground px-4 py-3 whitespace-nowrap">
-                    {formatDate(entry.createdAt)}
+                    {formatAdminDateTime(entry.createdAt)}
                   </td>
                   <td className="px-4 py-3">{entry.adminEmail}</td>
                   <td className="px-4 py-3">

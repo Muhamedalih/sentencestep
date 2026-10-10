@@ -11,6 +11,7 @@ import {
   type InboxView,
 } from "@/lib/admin/inbox-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { formatAdminDateTime } from "@/lib/admin/format-date-time";
 
 export const metadata: Metadata = {
   title: "Inbox",
@@ -22,13 +23,6 @@ const STATUS_VARIANT: Record<InboundEmailStatus, "secondary" | "outline" | "succ
   replied: "success",
   archived: "muted",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 
 export default async function AdminInboxPage({
   searchParams,
@@ -93,7 +87,7 @@ export default async function AdminInboxPage({
                     <Badge variant={STATUS_VARIANT[message.status]}>{message.status}</Badge>
                   </div>
                   <p className="text-muted-foreground mt-0.5 text-xs">
-                    {formatDate(message.receivedAt)}
+                    {formatAdminDateTime(message.receivedAt)}
                     {message.toEmail ? ` · to ${message.toEmail}` : ""}
                   </p>
                 </div>
