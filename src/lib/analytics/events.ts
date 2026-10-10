@@ -50,6 +50,14 @@ export type AnalyticsEvent =
       category: "PREMIUM";
       properties: { lessonId: string; mode: LearningMode };
     }
+  | {
+      name: "PAYWALL_VIEWED";
+      category: "PREMIUM";
+      /** A visitor was shown a lock page instead of the content (PremiumLocked / WordGroupLocked) — the step before UPGRADE_VIEWED, and the only place the number of people who actually hit the paywall is known (PREMIUM_CONTENT_VIEWED only fires for those who got in). One row per page render, so count distinct users, not rows. See trackPaywallViewed. */
+      properties:
+        | { kind: "lesson"; mode: LearningMode; lessonId: string }
+        | { kind: "word_group"; groupId: string };
+    }
   | { name: "UPGRADE_VIEWED"; category: "PREMIUM"; properties: Record<string, never> }
   | {
       name: "UPGRADE_CTA_CLICKED";
