@@ -6,6 +6,7 @@ import { ContentUnavailable } from "@/components/learning/content-unavailable";
 import { LessonSession } from "@/components/learning/lesson-session";
 import { PremiumLocked } from "@/components/learning/premium-locked";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
+import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
@@ -104,6 +105,13 @@ export default async function LessonPage({
     ));
   const canAccess = unit.isFree || (await viewerHasAccess());
   if (!canAccess) {
+    // The view is counted in the same parallel batch as the lock's price and
+    // figures, so recording it costs no extra wait.
+    const [fromPrice, figures] = await Promise.all([
+      getFromMonthlyPrice(),
+      getGateFigures(locale),
+      trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id }),
+    ]);
     return (
       <div className="lesson-shell bg-background text-foreground min-h-svh">
         <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
@@ -116,8 +124,8 @@ export default async function LessonPage({
             description={unit.description}
             supportDescription={unit.supportDescription}
             illustrationUrl={unit.illustrationUrl}
-            fromPrice={await getFromMonthlyPrice()}
-            figures={await getGateFigures(locale)}
+            fromPrice={fromPrice}
+            figures={figures}
           />
         </div>
         {reportProblemButton}
