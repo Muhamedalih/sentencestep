@@ -146,7 +146,7 @@ export function IntroLanding() {
 
   return (
     <div
-      className="bg-background fixed inset-0 z-100 flex flex-col p-6"
+      className="bg-background fixed inset-0 z-100 flex flex-col p-6 max-md:overflow-y-auto max-md:overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-label={`${t.hero.headingPrefix} ${t.hero.headingEmphasis}`}

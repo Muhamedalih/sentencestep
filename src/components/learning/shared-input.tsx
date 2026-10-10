@@ -29,6 +29,25 @@ import {
 
 type InputProps = ComponentPropsWithoutRef<"input">;
 
+/**
+ * Every typing input in the app (this shared one, and Dictation/Typing/Word Lists through it)
+ * asks the browser and password managers to leave it alone. A literal `autocomplete="off"` is
+ * ignored by Chrome's autofill heuristics, so an unrecognized token is used instead (it falls
+ * outside them); the `data-*` flags are the opt-outs LastPass, 1Password, Bitwarden and Dashlane
+ * honor. These are hints, not a guarantee: the key / card / pin strip above Chrome Android's
+ * keyboard is Chrome's own UI and no page can switch it off for sure.
+ */
+export const NO_AUTOFILL_ATTRS = {
+  autoComplete: "sentencestep-no-suggestions",
+  autoCorrect: "off",
+  autoCapitalize: "off",
+  spellCheck: false,
+  "data-lpignore": "true",
+  "data-1p-ignore": "true",
+  "data-bwignore": "true",
+  "data-form-type": "other",
+} as const;
+
 interface Slot {
   token: symbol;
   props: InputProps;
@@ -109,6 +128,7 @@ export function SharedInputHost() {
     <input
       ref={setElement}
       {...props}
+      {...NO_AUTOFILL_ATTRS}
       className="pointer-events-none absolute inset-0 h-full w-full cursor-text opacity-0"
     />
   );
@@ -142,5 +162,5 @@ export function SharedInput({
   }, [store, inputRef]);
 
   if (store) return null;
-  return <input ref={inputRef} {...props} />;
+  return <input ref={inputRef} {...props} {...NO_AUTOFILL_ATTRS} />;
 }

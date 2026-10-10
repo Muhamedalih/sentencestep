@@ -750,6 +750,8 @@ export interface Dictionary {
     /** Hint shown under the fill-in-the-blank word once the learner has typed something wrong-length-or-content and needs to submit it for grading — see VocabularySentence's Enter-to-check flow. */
     pressEnterToCheck: string;
     checkAnswer: string;
+    /** First-time cue under a fill-in-the-blank on a phone: the keyboard only opens once the learner taps the blank (see VocabularySentence). Kept to a couple of words. */
+    tapToType: string;
     unavailableBody: string;
     lockedBadge: string;
     /** The locked word-list card (see PremiumGate). `{lists}` and `{words}` are rounded-down, formatted numbers such as "24" and "400+"; the Plain form is used while either is too small to quote. */

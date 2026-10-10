@@ -646,6 +646,7 @@ export const en: Dictionary = {
     completedBefore: "You've completed this word before — typing it again keeps it fresh.",
     pressEnterToCheck: "Press Enter to check",
     checkAnswer: "Check",
+    tapToType: "Tap to type",
     unavailableBody:
       "This word list isn't available right now. Nothing was lost — please try again in a moment, or pick a different list.",
     lockedBadge: "Premium word list",
