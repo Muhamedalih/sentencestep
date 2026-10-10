@@ -11,6 +11,7 @@ import {
 } from "@/lib/admin/reports-queries";
 import { isPaymentReportPath, paymentReportOriginalPath } from "@/lib/billing/payment-report";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { formatAdminDateTime } from "@/lib/admin/format-date-time";
 
 export const metadata: Metadata = {
   title: "Reports",
@@ -30,13 +31,6 @@ function paymentProblemsFirst(reports: AdminProblemReport[]): AdminProblemReport
   const urgent = (report: AdminProblemReport) =>
     report.status === "new" && isPaymentReportPath(report.pagePath);
   return [...reports.filter(urgent), ...reports.filter((report) => !urgent(report))];
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 }
 
 export default async function AdminReportsPage() {
@@ -99,7 +93,7 @@ export default async function AdminReportsPage() {
                       </Badge>
                     </div>
                     <p className="text-muted-foreground mt-0.5 text-xs">
-                      {formatDate(report.createdAt)} ·{" "}
+                      {formatAdminDateTime(report.createdAt)} ·{" "}
                       <code>{paymentReportOriginalPath(report.pagePath)}</code>
                     </p>
                   </div>
