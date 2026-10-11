@@ -60,6 +60,65 @@ export async function countReadyWordClips(
  * costs nothing extra (no query); any lookup failure falls back to the
  * default, never to silence.
  */
+/**
+ * resolveWordGroupPlaybackVoiceId for MANY groups at once — what a screen
+ * that mixes words from several groups (Review All Words) needs so each word
+ * still plays in its own group's voice. Returns only the groups whose
+ * playback voice differs from `defaultVoiceId` (a group with no voice of
+ * its own, one still being generated, or one whose voice IS the default is
+ * simply absent — callers fall back to the default for those), so the common
+ * case costs a single small query. Never throws: any failure leaves the map
+ * empty, i.e. everything plays in the site default, never silence.
+ */
+export async function resolveGroupPlaybackVoices(
+  groupIds: readonly string[],
+  defaultVoiceId: string,
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  const ids = [...new Set(groupIds)];
+  if (ids.length === 0) return result;
+
+  try {
+    const supabase = createServiceRoleClient();
+    const { data: groups, error } = await supabase
+      .from("word_groups")
+      .select("id, voice_id")
+      .in("id", ids)
+      .not("voice_id", "is", null);
+    if (error) throw error;
+    const overridden = (groups ?? []).filter(
+      (group) => group.voice_id && group.voice_id !== defaultVoiceId,
+    );
+    if (overridden.length === 0) return result;
+
+    const { data: words, error: wordsError } = await supabase
+      .from("vocabulary_words")
+      .select("group_id, target_word")
+      .in(
+        "group_id",
+        overridden.map((group) => group.id),
+      );
+    if (wordsError) throw wordsError;
+
+    await Promise.all(
+      overridden.map(async (group) => {
+        const groupWords = (words ?? [])
+          .filter((word) => word.group_id === group.id)
+          .map((word) => ({ targetWord: word.target_word }));
+        const voiceId = await resolveWordGroupPlaybackVoiceId(
+          { voiceId: group.voice_id, words: groupWords },
+          defaultVoiceId,
+        );
+        if (voiceId !== defaultVoiceId) result.set(group.id, voiceId);
+      }),
+    );
+  } catch (error) {
+    console.error("[word-group-playback-voice] couldn't resolve the groups' voices", error);
+    result.clear();
+  }
+  return result;
+}
+
 export async function resolveWordGroupPlaybackVoiceId(
   group: { voiceId?: string | null; words: readonly { targetWord: string }[] },
   defaultVoiceId: string,

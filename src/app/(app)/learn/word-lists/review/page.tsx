@@ -9,6 +9,7 @@ import { getWordGroupById } from "@/lib/word-lists";
 import { getLearnerToday, getSmartWordsAccess } from "@/lib/word-mastery/access";
 import { buildSmartReviewQueue } from "@/lib/word-mastery/queue";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
+import { resolveGroupPlaybackVoices } from "@/lib/voice/word-group-playback-voice";
 
 // Same reasoning as /learn/word-lists and /learn/word-lists/[groupId]:
 // weak words are session-derived, so this page must never be statically
@@ -82,18 +83,32 @@ export default async function WordListsReviewPage() {
   // Shared with Normal lessons & Word Lists, isolated from
   // Stories/Conversation's own default.
   const defaultVoiceId = await getDefaultPronunciationVoiceId();
+
+  // These words come from several groups; each one plays in its OWN group's
+  // voice (once that group is fully generated in it), exactly like the Learn
+  // and Practice screens, and in the site default otherwise.
+  const groupVoices = await resolveGroupPlaybackVoices(
+    words.map((word) => word.groupId),
+    defaultVoiceId,
+  );
+  const voicedWords = words.map((word) => {
+    const voiceId = groupVoices.get(word.groupId);
+    return voiceId ? { ...word, voiceId } : word;
+  });
+
   // Same cache-only pre-resolution as WordGroupPracticePage.
-  const firstWord = words[0];
+  const firstWord = voicedWords[0];
+  const firstVoiceId = firstWord?.voiceId ?? defaultVoiceId;
   const hydratedWords =
-    firstWord && !firstWord.audioUrl && defaultVoiceId
+    firstWord && !firstWord.audioUrl && firstVoiceId
       ? [
           {
             ...firstWord,
-            audioUrl: await lookupCachedAudioUrl(firstWord.targetWord, defaultVoiceId),
+            audioUrl: await lookupCachedAudioUrl(firstWord.targetWord, firstVoiceId),
           },
-          ...words.slice(1),
+          ...voicedWords.slice(1),
         ]
-      : words;
+      : voicedWords;
 
   return (
     <WordReviewSession
