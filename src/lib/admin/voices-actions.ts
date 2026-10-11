@@ -186,5 +186,6 @@ export async function deleteVoiceAction(voiceId: string): Promise<ActionResult> 
   if (deleteError) return { error: "Couldn't delete the voice. Please try again." };
 
   revalidatePath("/admin/voice");
+  revalidatePath("/admin/voice/words");
   return { success: "Voice deleted." };
 }

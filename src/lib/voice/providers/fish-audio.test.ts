@@ -107,6 +107,28 @@ test("synthesize: maps 401, 402, 429 and 503 to clear errors that never include 
   }
 });
 
+test("synthesize: a transient 429 is retried once and the retry's audio is used", async () => {
+  let calls = 0;
+  const restore = stubFetch(async () => {
+    calls += 1;
+    return calls === 1
+      ? new Response("busy", { status: 429 })
+      : new Response(new Uint8Array([7, 7]), { status: 200 });
+  });
+  try {
+    const result = await createFishAudioProvider("k").synthesize({
+      text: "x",
+      voiceId: "v",
+      model: "s2.1-pro-free",
+      voiceSettings: SETTINGS,
+    });
+    assert.equal(calls, 2);
+    assert.deepEqual([...result.audio], [7, 7]);
+  } finally {
+    restore();
+  }
+});
+
 test("synthesize: an empty 200 body is an error, not a silent empty clip", async () => {
   const restore = stubFetch(async () => new Response(new Uint8Array([]), { status: 200 }));
   try {

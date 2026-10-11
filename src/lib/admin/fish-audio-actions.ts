@@ -66,6 +66,7 @@ export async function addFishAudioVoiceAction(
 
   void logAdminAction("voice.added", "voice", id, { name: input.name, source: "fish-audio" });
   revalidatePath("/admin/voice");
+  revalidatePath("/admin/voice/words");
   return { success: `Added "${input.name}".` };
 }
 

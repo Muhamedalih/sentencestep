@@ -79,9 +79,14 @@ export default async function AdminVoicePage() {
             pronunciation and replay.
           </p>
         </div>
-        <Button asChild variant="secondary">
-          <Link href="/admin/voice/content">Story audio status</Link>
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button asChild variant="secondary">
+            <Link href="/admin/voice/words">Word audio status</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="/admin/voice/content">Story audio status</Link>
+          </Button>
+        </div>
       </div>
       <VoiceCollections voices={voices} defaultVoiceId={defaultVoiceId} />
       <NormalLessonDefaultVoiceForm
