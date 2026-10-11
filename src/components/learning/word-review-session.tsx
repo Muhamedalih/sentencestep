@@ -59,6 +59,8 @@ export interface ReviewWord extends VocabularyWord {
   pronunciationContentType?: VoiceAudioContentType;
   /** Paired with pronunciationContentType — defaults to this word's own `id` (a real vocabulary_words id) when absent, exactly as before this field existed. */
   pronunciationContentId?: string;
+  /** The voice this word's own group is narrated in, when that isn't the site default (a group with its own Fish/Edge voice, fully generated) — set by the pages that mix words from several groups (Review All Words). Absent means the session's `defaultVoiceId`. */
+  voiceId?: string;
   /** Daily session only (variant="session") — which source this word came from, which decides the completion action (see completeSessionWord). */
   sessionSource?: SessionSource;
 }
@@ -247,8 +249,9 @@ export function WordReviewSession({
 
   const { prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
   const nextWord = queue.length > 1 ? words[queue[1]!] : undefined;
+  const nextVoiceId = nextWord?.voiceId ?? defaultVoiceId;
   useEffect(() => {
-    if (!defaultVoiceId || !nextWord) return;
+    if (!nextVoiceId || !nextWord) return;
     if (variant === "session") {
       // Today's session words aren't all Word Lists entries, so the Word
       // Lists prefetch below doesn't apply (their ids aren't vocabulary ids),
@@ -262,7 +265,7 @@ export function WordReviewSession({
         fetch(nextWord.audioUrl).catch(() => {});
         return;
       }
-      lookupCachedAudioUrl(nextWord.targetWord, defaultVoiceId)
+      lookupCachedAudioUrl(nextWord.targetWord, nextVoiceId)
         .then((url) => {
           if (!url) return;
           registerResolvedAudio(contentId, url);
@@ -271,8 +274,8 @@ export function WordReviewSession({
         .catch(() => {});
       return;
     }
-    prefetchPronunciation({ contentType: "word", contentId: nextWord.id, voiceId: defaultVoiceId });
-  }, [nextWord, defaultVoiceId, variant, prefetchPronunciation, registerResolvedAudio]);
+    prefetchPronunciation({ contentType: "word", contentId: nextWord.id, voiceId: nextVoiceId });
+  }, [nextWord, nextVoiceId, variant, prefetchPronunciation, registerResolvedAudio]);
 
   /** One call per word outcome, to the learner's schedule and weak-word ledger (see recordWordOutcomeAction). */
   function reportOutcome(target: ReviewWord, outcome: ReportedOutcome) {
@@ -375,7 +378,7 @@ export function WordReviewSession({
                   autoPlay
                   resetKey={word.id}
                   inputRef={inputRef}
-                  kokoroVoiceId={defaultVoiceId}
+                  kokoroVoiceId={word.voiceId ?? defaultVoiceId}
                   contentType={word.pronunciationContentType ?? "word"}
                   contentId={word.pronunciationContentId ?? word.id}
                 />
