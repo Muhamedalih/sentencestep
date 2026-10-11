@@ -12,8 +12,9 @@
  *
  * Each content type below is pinned to one provider on purpose: Stories,
  * Conversation, and Books keep the original expressive-narration provider
- * (ElevenLabs); Word Lists use Edge-TTS (reassigned from Cartesia
- * 2026-09-10 at the user's explicit request, to the free "Emma" Edge-TTS
+ * (ElevenLabs); Word Lists use Edge-TTS by default (and Fish Audio per
+ * voice — see WORD_LIST_PROVIDERS below; the Edge-TTS default was
+ * reassigned from Cartesia 2026-09-10 at the user's explicit request, to the free "Emma" Edge-TTS
  * voice — tts_settings.default_pronunciation_voice_id already pointed at
  * edge-tts-en-us-emma before this change, so word-list-voice-generation.ts
  * was rejecting every word with "isn't a Cartesia voice" until this mapping
@@ -46,7 +47,43 @@
  */
 export const STORIES_AND_BOOKS_PROVIDER = "elevenlabs";
 export const NORMAL_LESSON_PROVIDER = "cartesia";
-export const WORD_LIST_PROVIDER = "edge-tts";
+
+/**
+ * Word Lists is the one content type that deliberately allows two
+ * providers, chosen per VOICE rather than per code path: the free Edge-TTS
+ * voices (the site default) and Fish Audio voices (added 2026-10-11 at the
+ * user's request, so each word group can be narrated by its own Fish
+ * voice — see word_groups.voice_id). The voice row's own `source` decides
+ * which adapter runs; it is never auto-detected and never falls back to
+ * another provider — a voice from any provider outside this list is
+ * rejected with an error, exactly like the single pinned provider this
+ * replaced. Changing which voice a group uses only changes that voice's
+ * cache key (see resolution.ts's cacheKeyParts), so existing Edge-TTS
+ * clips are never touched.
+ */
+export const WORD_LIST_PROVIDERS = ["edge-tts", "fish-audio"] as const;
+
+export function isWordListProvider(source: string): boolean {
+  return (WORD_LIST_PROVIDERS as readonly string[]).includes(source);
+}
+
+/**
+ * Fish Audio's free tier: the `s2.1-pro-free` model, $0 per million bytes
+ * under Fish's Fair Use Policy, no card required (confirmed against
+ * docs.fish.audio's pricing page and a live free-account call on
+ * 2026-10-11). Caveats from Fish's own announcement: no SLA, requests may
+ * be used to improve their models, and the free window has been extended
+ * several times with no firm end date — if it is ever withdrawn the API
+ * answers 402 and every Fish voice simply stops generating new clips
+ * (existing clips keep playing). Pinned to this exact model string so the
+ * pipeline can never silently bill the paid `s2.1-pro` model.
+ */
+export const FISH_AUDIO_MODEL = "s2.1-pro-free";
+
+/** The model string stored in voice_audio_cache.model for a Word Lists clip — Edge-TTS ignores its model argument entirely, Fish needs the free-tier model id. */
+export function wordListModelFor(source: string): string {
+  return source === "fish-audio" ? FISH_AUDIO_MODEL : "edge-tts";
+}
 
 /**
  * Cartesia's own model id — never elevenlabs_settings.model. That column

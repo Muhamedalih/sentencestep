@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
+import { isWordListProvider, wordListModelFor } from "@/lib/voice/content-provider-map";
+import type { TTSProvider } from "@/lib/voice/provider";
 import { createProviderForSource } from "@/lib/voice/provider-registry";
 import { cacheKeyParts } from "@/lib/voice/resolution";
 import { uploadVoiceClip } from "@/lib/voice/storage";
@@ -27,16 +28,17 @@ type DbClient = SupabaseClient<Database>;
  * vocabulary words instead of lesson/book sentences.
  *
  * Deliberately isolated from Stories/Books/Conversation's narration
- * pipeline: always Edge-TTS specifically (a fixed assignment, see
- * content-provider-map.ts — never auto-detected; reassigned from Cartesia
- * 2026-09-10), never elevenlabs_settings — that table is Stories/Books' own
- * settings and must never be read from or affect Word Lists. The default
- * voice comes from tts_settings.default_pronunciation_voice_id (see
+ * pipeline: only the providers in content-provider-map.ts's
+ * WORD_LIST_PROVIDERS (Edge-TTS and Fish Audio — chosen by the resolved
+ * voice's own `source`, never auto-detected; the Edge-TTS default was
+ * reassigned from Cartesia 2026-09-10), never elevenlabs_settings — that
+ * table is Stories/Books' own settings and must never be read from or
+ * affect Word Lists. The default voice comes from
+ * tts_settings.default_pronunciation_voice_id (see
  * getDefaultPronunciationVoiceId, admin-configurable independently of
  * Stories/Books and of Normal lessons' own
- * default_normal_lesson_voice_id). No per-group voice override exists yet
- * (word_groups has no voice_id column), so every group uses that one
- * shared default.
+ * default_normal_lesson_voice_id); a group's own word_groups.voice_id wins
+ * over it when it resolves to a Word Lists provider's voice.
  *
  * Also skips the Voice Director entirely, unlike Stories/Books: a single
  * vocabulary word has no story arc or character for an LLM to interpret —
@@ -44,6 +46,11 @@ type DbClient = SupabaseClient<Database>;
  */
 /** Edge-TTS ignores the model argument entirely (see providers/edge-tts.ts's doc comment) — "edge-tts" here only satisfies buildProviderSynthesisInput/synthesize's shared shape and is stored as voice_audio_cache.model, mirroring voice-audio.ts's identical `model: "edge-tts"` for isolated word clips. */
 export const WORD_LIST_MODEL = "edge-tts";
+
+/** How long one generation call keeps STARTING new words before leaving the rest for the next trigger/sweep — Fish takes ~1-2s per word (Edge-TTS well under 1s), and a serverless function has a hard ceiling. */
+const DEFAULT_GENERATION_DEADLINE_MS = 40_000;
+/** Fish's free tier allows 5 concurrent requests; 2 leaves headroom for a second group generating at the same moment (and keeps a 429 from burning a word's retry budget). Edge-TTS keeps its original one-at-a-time behaviour. */
+const FISH_AUDIO_CONCURRENCY = 2;
 /**
  * generation_version is intentionally unchanged across the Cartesia ->
  * Edge-TTS reassignment (2026-09-10): provider identity was already dropped
@@ -95,14 +102,9 @@ export async function generateWordGroupVoiceDraft(
   supabase: DbClient,
   groupId: string,
   forceWordIds?: ReadonlySet<string>,
+  options: { deadlineMs?: number } = {},
 ): Promise<VoiceGenerationOutcome> {
-  let provider;
-  try {
-    provider = createProviderForSource(WORD_LIST_PROVIDER);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { generated: 0, skipped: 0, failed: 0, error: message };
-  }
+  const deadlineAt = Date.now() + (options.deadlineMs ?? DEFAULT_GENERATION_DEADLINE_MS);
 
   const { data: words, error: wordsError } = await supabase
     .from("vocabulary_words")
@@ -112,10 +114,10 @@ export async function generateWordGroupVoiceDraft(
     return { generated: 0, skipped: 0, failed: 0, error: "Couldn't load the word group's words." };
   if (!words || words.length === 0) return { generated: 0, skipped: 0, failed: 0 };
 
-  // A group's own voice_id wins when it actually resolves to an Edge-TTS
-  // voice — same override-then-fallback precedence
-  // resolveStoryNarratorVoice/resolveTargetVoices already use for a
-  // lesson/book's voice_id, applied here to word_groups.voice_id (see
+  // A group's own voice_id wins when it actually resolves to a Word Lists
+  // provider's voice (Edge-TTS or Fish Audio) — same override-then-fallback
+  // precedence resolveStoryNarratorVoice/resolveTargetVoices already use for
+  // a lesson/book's voice_id, applied here to word_groups.voice_id (see
   // 20250311000000_word_group_voice_override.sql). A voice_id left over
   // from some other provider (there's no admin path that could set one
   // today, but nothing prevents it at the DB level) is silently ignored
@@ -134,7 +136,9 @@ export async function generateWordGroupVoiceDraft(
       .select("id, source")
       .eq("id", group.voice_id)
       .maybeSingle();
-    if (overrideVoice?.source === provider.name) candidateVoiceId = overrideVoice.id;
+    if (overrideVoice && isWordListProvider(overrideVoice.source)) {
+      candidateVoiceId = overrideVoice.id;
+    }
   }
 
   const { data: voiceRow } = await supabase
@@ -142,14 +146,25 @@ export async function generateWordGroupVoiceDraft(
     .select("id, provider_voice_id, source")
     .eq("id", candidateVoiceId)
     .maybeSingle();
-  if (!voiceRow || voiceRow.source !== provider.name) {
+  if (!voiceRow || !isWordListProvider(voiceRow.source)) {
     return {
       generated: 0,
       skipped: 0,
       failed: words.length,
-      error: `The Word Lists voice (${candidateVoiceId}) is missing or isn't a ${provider.name} voice.`,
+      error: `The Word Lists voice (${candidateVoiceId}) is missing or isn't an Edge-TTS or Fish Audio voice.`,
     };
   }
+  // The adapter comes from the voice's own source (see
+  // content-provider-map.ts's WORD_LIST_PROVIDERS) — a missing API key
+  // throws here rather than substituting another provider.
+  let provider: TTSProvider;
+  try {
+    provider = createProviderForSource(voiceRow.source);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { generated: 0, skipped: 0, failed: 0, error: message };
+  }
+  const model = wordListModelFor(voiceRow.source);
   const voiceId = voiceRow.id;
   const providerVoiceId = voiceRow.provider_voice_id;
   const generationVersion = WORD_LIST_GENERATION_VERSION;
@@ -199,7 +214,12 @@ export async function generateWordGroupVoiceDraft(
   let failed = 0;
   const notes: string[] = [];
 
-  for (const item of eligible) {
+  // Workers pull from one shared cursor and stop STARTING words once the
+  // deadline passes (a started word is always finished, so no row is ever
+  // abandoned mid-"generating"); whatever is left is picked up by the next
+  // trigger or sweep, since a word without a ready clip stays eligible.
+  // Edge-TTS keeps its original one-at-a-time pace.
+  async function generateOne(item: (typeof eligible)[number]): Promise<void> {
     const direction: SentenceDirection = { sentenceId: item.word.id, ...NEUTRAL_DIRECTION };
     const existing = existingByTextHash.get(item.key.textHash);
 
@@ -212,14 +232,14 @@ export async function generateWordGroupVoiceDraft(
     const claimed = await claimCacheRow(
       supabase,
       item.key,
-      WORD_LIST_MODEL,
+      model,
       direction,
       existingByKeyForClaim,
       provider.name,
     );
     if (!claimed) {
       skipped += 1; // lost the claim race to a concurrent attempt
-      continue;
+      return;
     }
 
     try {
@@ -233,7 +253,7 @@ export async function generateWordGroupVoiceDraft(
       const { audio, durationMs } = await provider.synthesize({
         text,
         voiceId: providerVoiceId,
-        model: WORD_LIST_MODEL,
+        model,
         voiceSettings,
       });
       const audioUrl = await uploadVoiceClip(clipPathForProvider(provider.name, voiceId), audio);
@@ -263,6 +283,16 @@ export async function generateWordGroupVoiceDraft(
       notes.push(`Word ${item.word.id}: ${message}`);
     }
   }
+
+  let cursor = 0;
+  const worker = async (): Promise<void> => {
+    while (cursor < eligible.length && Date.now() < deadlineAt) {
+      const item = eligible[cursor++];
+      if (item) await generateOne(item);
+    }
+  };
+  const concurrency = provider.name === "fish-audio" ? FISH_AUDIO_CONCURRENCY : 1;
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
   return { generated, skipped, failed, error: notes.length > 0 ? notes.join(" ") : undefined };
 }

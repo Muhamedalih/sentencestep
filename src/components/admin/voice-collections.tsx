@@ -15,6 +15,7 @@ const COLLECTION_LABELS: Record<string, string> = {
   "edge-tts": "Edge-TTS",
   elevenlabs: "ElevenLabs",
   cartesia: "Cartesia",
+  "fish-audio": "Fish Audio",
   hume: "Hume AI",
 };
 

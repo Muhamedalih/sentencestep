@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
+import { isWordListProvider, wordListModelFor } from "@/lib/voice/content-provider-map";
 import type { TTSProvider } from "@/lib/voice/provider";
 import { createProviderForSource } from "@/lib/voice/provider-registry";
 import { cacheKeyParts, hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
@@ -19,7 +19,6 @@ import {
   NEUTRAL_DIRECTION,
   NEUTRAL_VOICE_SETTINGS,
   WORD_LIST_GENERATION_VERSION,
-  WORD_LIST_MODEL,
 } from "@/lib/voice/word-list-voice-generation";
 import type { Database } from "@/types/database";
 
@@ -231,6 +230,7 @@ async function synthesizeWord(
   word: string,
   voice: { id: string; providerVoiceId: string },
   existing: ExistingRow | undefined,
+  model: string,
 ): Promise<SynthesisOutcome> {
   if (existing) {
     if (existing.status === "ready" && existing.audio_url) return { url: existing.audio_url };
@@ -250,7 +250,7 @@ async function synthesizeWord(
   const claimed = await claimCacheRow(
     supabase,
     key,
-    WORD_LIST_MODEL,
+    model,
     direction,
     existingByKey,
     provider.name,
@@ -268,7 +268,7 @@ async function synthesizeWord(
     const { audio, durationMs } = await provider.synthesize({
       text,
       voiceId: voice.providerVoiceId,
-      model: WORD_LIST_MODEL,
+      model,
       voiceSettings,
     });
     const audioUrl = await uploadVoiceClip(clipPathForProvider(provider.name, voice.id), audio);
@@ -343,14 +343,15 @@ export async function generateWordListVoiceAudio(
       .select("id, provider_voice_id, source")
       .eq("id", voiceId)
       .maybeSingle();
-    if (!voiceRow || voiceRow.source !== WORD_LIST_PROVIDER) {
+    if (!voiceRow || !isWordListProvider(voiceRow.source)) {
       result.errors.push(
-        `the Word Lists voice (${voiceId}) is missing or isn't a ${WORD_LIST_PROVIDER} voice`,
+        `the Word Lists voice (${voiceId}) is missing or isn't an Edge-TTS or Fish Audio voice`,
       );
       return result;
     }
     const voice = { id: voiceRow.id, providerVoiceId: voiceRow.provider_voice_id };
-    const provider = createProviderForSource(WORD_LIST_PROVIDER);
+    const provider = createProviderForSource(voiceRow.source);
+    const model = wordListModelFor(voiceRow.source);
 
     const hashOf = (word: string) =>
       cacheKeyParts(word, voice.id, WORD_LIST_GENERATION_VERSION).textHash;
@@ -367,7 +368,8 @@ export async function generateWordListVoiceAudio(
 
     const outcomes = await runWithinBudget(
       misses,
-      (word) => synthesizeWord(supabase, provider, word, voice, existingByHash.get(hashOf(word))),
+      (word) =>
+        synthesizeWord(supabase, provider, word, voice, existingByHash.get(hashOf(word)), model),
       { concurrency: options.concurrency ?? DEFAULT_CONCURRENCY, deadlineAt },
     );
     misses.forEach((word, index) => {

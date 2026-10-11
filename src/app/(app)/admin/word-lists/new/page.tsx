@@ -5,7 +5,7 @@ import { WordGroupForm } from "@/components/admin/word-group-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getVoices } from "@/lib/admin/voices-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
+import { isWordListProvider } from "@/lib/voice/content-provider-map";
 
 export const metadata: Metadata = {
   title: "Add word group",
@@ -14,11 +14,12 @@ export const metadata: Metadata = {
 export default async function NewWordGroupPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  // Word Lists is permanently pinned to Edge-TTS (see
-  // content-provider-map.ts) — same "only offer voices that would
-  // actually work if chosen" filtering AdminVoiceContentPage already
-  // applies for Stories/Books and Normal lessons.
-  const voices = (await getVoices()).filter((voice) => voice.source === WORD_LIST_PROVIDER);
+  // Word Lists accepts Edge-TTS and Fish Audio voices (see
+  // content-provider-map.ts's WORD_LIST_PROVIDERS) — same "only offer
+  // voices that would actually work if chosen" filtering
+  // AdminVoiceContentPage already applies for Stories/Books and Normal
+  // lessons.
+  const voices = (await getVoices()).filter((voice) => isWordListProvider(voice.source));
 
   return (
     <div className="flex flex-col gap-6">

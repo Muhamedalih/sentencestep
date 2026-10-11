@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getVoices } from "@/lib/admin/voices-queries";
 import { getWordGroupByIdAdmin } from "@/lib/admin/word-lists-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { WORD_LIST_PROVIDER } from "@/lib/voice/content-provider-map";
+import { isWordListProvider } from "@/lib/voice/content-provider-map";
+import { countReadyWordClips } from "@/lib/voice/word-group-playback-voice";
 
 export const metadata: Metadata = {
   title: "Edit word group",
@@ -26,11 +27,19 @@ export default async function EditWordGroupPage({
   const { groupId } = await params;
   const [group, allVoices] = await Promise.all([getWordGroupByIdAdmin(groupId), getVoices()]);
   if (!group) notFound();
-  // Word Lists is permanently pinned to Edge-TTS (see
-  // content-provider-map.ts) — same "only offer voices that would
-  // actually work if chosen" filtering AdminVoiceContentPage already
-  // applies for Stories/Books and Normal lessons.
-  const voices = allVoices.filter((voice) => voice.source === WORD_LIST_PROVIDER);
+  // Word Lists accepts Edge-TTS and Fish Audio voices (see
+  // content-provider-map.ts's WORD_LIST_PROVIDERS) — same "only offer
+  // voices that would actually work if chosen" filtering
+  // AdminVoiceContentPage already applies for Stories/Books and Normal
+  // lessons.
+  const voices = allVoices.filter((voice) => isWordListProvider(voice.source));
+
+  // How much of the group is already generated under its saved voice — only
+  // worth a query when the group has a voice of its own. A failed read just
+  // hides the status line.
+  const voiceStatus = group.voiceId
+    ? await countReadyWordClips(group.voiceId, group.words).catch(() => null)
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,7 +60,7 @@ export default async function EditWordGroupPage({
           <CardTitle className="text-lg">Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <WordGroupForm initial={group} voices={voices} />
+          <WordGroupForm initial={group} voices={voices} voiceStatus={voiceStatus} />
         </CardContent>
       </Card>
 

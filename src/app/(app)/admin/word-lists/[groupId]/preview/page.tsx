@@ -6,8 +6,9 @@ import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { VocabularyPractice } from "@/components/learning/vocabulary-practice";
 import { Button } from "@/components/ui/button";
 import { getWordGroupByIdAdmin } from "@/lib/admin/word-lists-queries";
-import { getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { resolveWordGroupPlaybackVoiceId } from "@/lib/voice/word-group-playback-voice";
 import type { WordGroup } from "@/types/word-lists";
 
 export const metadata: Metadata = {
@@ -28,9 +29,9 @@ export default async function AdminWordGroupPreviewPage({
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const { groupId } = await params;
-  const [detail, defaultVoiceId] = await Promise.all([
+  const [detail, siteDefaultVoiceId] = await Promise.all([
     getWordGroupByIdAdmin(groupId),
-    getDefaultVoiceId(),
+    getDefaultPronunciationVoiceId(),
   ]);
   if (!detail) notFound();
   if (detail.words.length === 0) {
@@ -63,6 +64,14 @@ export default async function AdminWordGroupPreviewPage({
       ipa: word.ipa ?? word.suggestedIpa,
     })),
   };
+
+  // The voice learners hear for this group — its own once every word is ready
+  // in it, else the Word Lists default (the Stories default this used to
+  // read isn't what Word Lists audio is generated with).
+  const defaultVoiceId = await resolveWordGroupPlaybackVoiceId(
+    { voiceId: detail.voiceId ?? undefined, words: group.words },
+    siteDefaultVoiceId,
+  );
 
   return (
     <div className="flex flex-col gap-6">

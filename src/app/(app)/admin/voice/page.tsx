@@ -10,6 +10,7 @@ import { ElevenLabsSettingsForm } from "@/components/admin/elevenlabs-settings-f
 import { ElevenLabsVoiceForm } from "@/components/admin/elevenlabs-voice-form";
 import { EdgeTtsVoiceForm } from "@/components/admin/edge-tts-voice-form";
 import { CartesiaVoiceForm } from "@/components/admin/cartesia-voice-form";
+import { FishAudioVoiceForm } from "@/components/admin/fish-audio-voice-form";
 import { HumeVoiceForm } from "@/components/admin/hume-voice-form";
 import { Button } from "@/components/ui/button";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
@@ -22,6 +23,7 @@ import {
 import { getElevenLabsSettings, getElevenLabsVoices } from "@/lib/admin/elevenlabs-queries";
 import { getEdgeTtsVoices } from "@/lib/admin/edge-tts-queries";
 import { getCartesiaVoices } from "@/lib/admin/cartesia-queries";
+import { getFishAudioVoices } from "@/lib/admin/fish-audio-queries";
 import { getHumeVoices } from "@/lib/admin/hume-queries";
 import { DEFAULT_CARTESIA_MODEL } from "@/lib/voice/content-provider-map";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -44,6 +46,7 @@ export default async function AdminVoicePage() {
     edgeTtsVoices,
     cartesiaVoices,
     humeVoices,
+    fishAudioVoices,
   ] = await Promise.all([
     getVoiceSettings(),
     getVoices(),
@@ -55,6 +58,7 @@ export default async function AdminVoicePage() {
     getEdgeTtsVoices(),
     getCartesiaVoices(),
     getHumeVoices(),
+    getFishAudioVoices(),
   ]);
 
   // The "default narration voice" dropdown (ElevenLabsSettingsForm) needs
@@ -85,13 +89,14 @@ export default async function AdminVoicePage() {
         currentVoiceId={defaultNormalLessonVoiceId}
       />
       <PronunciationDefaultVoiceForm
-        voices={edgeTtsVoices}
+        voices={[...edgeTtsVoices, ...fishAudioVoices]}
         currentVoiceId={defaultPronunciationVoiceId}
       />
       <VoiceSettingsForm initial={settings} />
       <EdgeTtsVoiceForm voices={edgeTtsVoices} />
       <ElevenLabsSettingsForm initial={elevenlabsSettings} voices={narrationVoices} />
       <ElevenLabsVoiceForm voices={elevenlabsVoices} settings={elevenlabsSettings} />
+      <FishAudioVoiceForm voices={fishAudioVoices} />
       <CartesiaVoiceForm voices={cartesiaVoices} model={DEFAULT_CARTESIA_MODEL} />
       <HumeVoiceForm voices={humeVoices} />
     </div>

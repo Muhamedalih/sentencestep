@@ -1,6 +1,7 @@
 import { createCartesiaProvider } from "@/lib/voice/providers/cartesia";
 import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
 import { createElevenLabsProvider } from "@/lib/voice/providers/elevenlabs";
+import { createFishAudioProvider } from "@/lib/voice/providers/fish-audio";
 import { createHumeProvider } from "@/lib/voice/providers/hume";
 import type { TTSProvider } from "@/lib/voice/provider";
 
@@ -39,6 +40,11 @@ export function createProviderForSource(source: string): TTSProvider {
       const key = process.env.HUME_API_KEY;
       if (!key) throw new Error("HUME_API_KEY is not configured.");
       return createHumeProvider(key);
+    }
+    case "fish-audio": {
+      const key = process.env.FISH_AUDIO_API_KEY;
+      if (!key) throw new Error("FISH_AUDIO_API_KEY is not configured.");
+      return createFishAudioProvider(key);
     }
     case "edge-tts":
       return createEdgeTtsProvider();

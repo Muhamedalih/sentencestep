@@ -6,6 +6,7 @@ import { isAdmin } from "@/lib/admin/access";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { isWordListProvider } from "@/lib/voice/content-provider-map";
 import { deleteVoiceClips, voiceAudioPathFromUrl } from "@/lib/voice/storage";
 
 async function requireAdmin(): Promise<string | null> {
@@ -43,6 +44,17 @@ export async function setDefaultPronunciationVoiceAction(voiceId: string): Promi
   if (!voiceId.trim()) return { error: "Pick a voice first." };
 
   const supabase = await createClient();
+  // Word Lists can only generate with Edge-TTS or Fish Audio voices (see
+  // content-provider-map.ts's WORD_LIST_PROVIDERS) — refuse anything else
+  // here instead of saving a default every generation would then reject.
+  const { data: voice } = await supabase
+    .from("voices")
+    .select("source")
+    .eq("id", voiceId)
+    .maybeSingle();
+  if (!voice || !isWordListProvider(voice.source)) {
+    return { error: "Word Lists can only use an Edge-TTS or Fish Audio voice." };
+  }
   const { error } = await supabase
     .from("tts_settings")
     .update({ default_pronunciation_voice_id: voiceId, updated_at: new Date().toISOString() })

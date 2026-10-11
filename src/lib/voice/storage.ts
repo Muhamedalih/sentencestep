@@ -75,6 +75,11 @@ export function generatedHumeClipPath(voiceId: string): string {
   return `generated/hume/${voiceId}/${randomUUID()}.mp3`;
 }
 
+/** Same bucket, a separate `generated/fish-audio/` prefix — mirrors generatedCartesiaClipPath's per-provider prefix convention for the Fish Audio Word Lists pipeline (see providers/fish-audio.ts). */
+export function generatedFishAudioClipPath(voiceId: string): string {
+  return `generated/fish-audio/${voiceId}/${randomUUID()}.mp3`;
+}
+
 /** The path for a voice's one admin-preview sample — deterministic (not UUID-suffixed) so re-seeding the same voice overwrites its old sample instead of accumulating orphans. */
 export function samplePath(voiceId: string): string {
   return `samples/${voiceId}.mp3`;

@@ -22,6 +22,7 @@ import { readMasteryStates } from "@/lib/word-mastery/queue";
 import { practiceScope, practiceVisitKey, selectContinueWords } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
+import { resolveWordGroupPlaybackVoiceId } from "@/lib/voice/word-group-playback-voice";
 
 /**
  * Full-screen practice route, deliberately outside the "(dashboard)" route
@@ -157,7 +158,12 @@ export default async function WordGroupPracticePage({
   // Shared with Normal lessons & Mistake Review, isolated from
   // Stories/Conversation's own default (see word-list-voice-generation.ts's
   // own doc comment).
-  const defaultVoiceId = await getDefaultPronunciationVoiceId();
+  // The group's own voice (word_groups.voice_id) once all its words are
+  // ready in it, else the site default — see resolveWordGroupPlaybackVoiceId.
+  const defaultVoiceId = await resolveWordGroupPlaybackVoiceId(
+    group,
+    await getDefaultPronunciationVoiceId(),
+  );
 
   // Same fix as LessonPage's identical pre-resolution: only the first
   // word, cache-only, so a miss just leaves the word to resolve on demand
