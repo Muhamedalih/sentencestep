@@ -15,6 +15,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
 import { getSmartWordsAccess, getWordsRedesignEnabled } from "@/lib/word-mastery/access";
 import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
+import { resolveWordGroupPlaybackVoiceId } from "@/lib/voice/word-group-playback-voice";
 
 /**
  * Full-screen Learn (flashcard/study) route for one word group — the
@@ -78,7 +79,12 @@ export default async function WordGroupLearnPage({
     );
   }
 
-  const defaultVoiceId = await getDefaultPronunciationVoiceId();
+  // The group's own voice (word_groups.voice_id) once all its words are
+  // ready in it, else the site default — see resolveWordGroupPlaybackVoiceId.
+  const defaultVoiceId = await resolveWordGroupPlaybackVoiceId(
+    group,
+    await getDefaultPronunciationVoiceId(),
+  );
 
   // Same fix as the Practice route's identical pre-resolution
   // (../page.tsx): only the first word, cache-only, so a miss just leaves

@@ -18,6 +18,7 @@ import {
   generatedCartesiaClipPath,
   generatedEdgeTtsClipPath,
   generatedElevenLabsClipPath,
+  generatedFishAudioClipPath,
   generatedHumeClipPath,
   uploadVoiceClip,
 } from "@/lib/voice/storage";
@@ -936,8 +937,8 @@ export function buildProviderSynthesisInput(
   if (providerName === "edge-tts") {
     return { text: toProsodyInput(direction, text, providerVoiceId).ssml, voiceSettings: base };
   }
-  if (providerName === "cartesia" || providerName === "hume") {
-    // Neither has a verified inline direction syntax (no ElevenLabs-style
+  if (providerName === "cartesia" || providerName === "hume" || providerName === "fish-audio") {
+    // None has a verified inline direction syntax (no ElevenLabs-style
     // bracketed tags, no SSML) — sending either would risk the tags being
     // read aloud as literal words. Same "no fake control" honesty as
     // direction-to-prosody.ts: only the pause is simulated, via the same
@@ -960,6 +961,7 @@ export function clipPathForProvider(providerName: string, voiceId: string): stri
   if (providerName === "edge-tts") return generatedEdgeTtsClipPath(voiceId);
   if (providerName === "cartesia") return generatedCartesiaClipPath(voiceId);
   if (providerName === "hume") return generatedHumeClipPath(voiceId);
+  if (providerName === "fish-audio") return generatedFishAudioClipPath(voiceId);
   return generatedElevenLabsClipPath(voiceId);
 }
 

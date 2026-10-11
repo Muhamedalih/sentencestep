@@ -12,18 +12,27 @@ import type { VoiceRow } from "@/lib/admin/voices-queries";
 
 /**
  * Same optional-`initial` pattern as CategoryForm/LessonForm — one
- * component for both create and edit. `voices` is every Edge-TTS voice
- * (pre-filtered by the caller — see EditWordGroupPage/NewWordGroupPage),
+ * component for both create and edit. `voices` is every Word Lists voice
+ * — Edge-TTS and Fish Audio (pre-filtered by the caller — see
+ * EditWordGroupPage/NewWordGroupPage),
  * matching the "Story audio status" dashboard's own per-row voice picker
  * (VoiceDashboardRow), which is likewise handed only the pickable subset
  * rather than filtering client-side.
  */
+const VOICE_SOURCE_LABELS: Record<string, string> = {
+  "edge-tts": "Edge-TTS (free)",
+  "fish-audio": "Fish Audio",
+};
+
 export function WordGroupForm({
   initial,
   voices,
+  voiceStatus,
 }: {
   initial?: AdminWordGroup;
   voices: VoiceRow[];
+  /** How many of the group's words already have a clip under its saved voice — edit page only, null when the group has no voice override. */
+  voiceStatus?: { ready: number; total: number } | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -150,11 +159,19 @@ export function WordGroupForm({
             className="border-input bg-background h-9 rounded-lg border px-3 text-sm"
           >
             <option value="">Site default</option>
-            {voices.map((voice) => (
-              <option key={voice.id} value={voice.id}>
-                {voice.name} ({voice.gender}, {voice.accent})
-              </option>
-            ))}
+            {Object.entries(VOICE_SOURCE_LABELS).map(([source, label]) => {
+              const group = voices.filter((voice) => voice.source === source);
+              if (group.length === 0) return null;
+              return (
+                <optgroup key={source} label={label}>
+                  {group.map((voice) => (
+                    <option key={voice.id} value={voice.id}>
+                      {voice.name} ({voice.gender}, {voice.accent})
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
           </select>
         </Field>
         <label className="flex items-center gap-2 self-end pb-2 text-sm font-medium">
@@ -169,8 +186,16 @@ export function WordGroupForm({
       </div>
       {voiceId && (
         <p className="text-muted-foreground -mt-2 text-sm">
-          Saving re-generates every word in this group under the new voice — the pronunciation
-          button will keep using the old clip until that finishes (usually a few seconds).
+          Saving generates every word in this group under the chosen voice. Learners keep hearing
+          the site-default voice for this group until all of its words are ready, then switch over
+          together (a few seconds for Edge-TTS, up to a minute for Fish Audio).
+        </p>
+      )}
+      {voiceStatus && voiceId === (initial?.voiceId ?? "") && (
+        <p className="-mt-2 text-sm font-medium">
+          {voiceStatus.ready >= voiceStatus.total
+            ? `All ${voiceStatus.total} words are ready in this voice — learners are hearing it now.`
+            : `${voiceStatus.ready} of ${voiceStatus.total} words are ready in this voice — learners still hear the site default until the rest finish.`}
         </p>
       )}
 

@@ -76,7 +76,7 @@ export default async function EditContentPage({
       <LessonForm
         levels={levels}
         initial={lesson}
-        voices={voices}
+        voices={voices.filter((voice) => voice.source !== "fish-audio")}
         enabledLocales={enabledLocales}
         elevenlabsVoices={elevenlabsVoices}
         speakerVoiceMap={speakerVoiceMap}

@@ -66,6 +66,8 @@ export interface WordGroup {
   /** Same locale-resolution rules as Sentence.supportText in src/types/content.ts. */
   supportDescription?: string;
   isFree: boolean;
+  /** This group's own narration voice (word_groups.voice_id) — null/absent means the site default. Learner pages play it only once every word has a clip in it (see resolveWordGroupPlaybackVoiceId). */
+  voiceId?: string;
   words: VocabularyWord[];
 }
 

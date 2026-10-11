@@ -39,7 +39,7 @@ export default async function NewContentPage({
       <LessonForm
         levels={levels}
         defaultMode={defaultMode}
-        voices={voices}
+        voices={voices.filter((voice) => voice.source !== "fish-audio")}
         enabledLocales={enabledLocales}
       />
     </div>

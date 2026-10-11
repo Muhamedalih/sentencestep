@@ -189,6 +189,7 @@ export async function fetchWordGroupById(
     description: group.description ?? undefined,
     descriptionAr: group.description_ar ?? undefined,
     isFree: group.is_free,
+    voiceId: group.voice_id ?? undefined,
     words: (words ?? []).map((w) => {
       const word = {
         id: w.id,

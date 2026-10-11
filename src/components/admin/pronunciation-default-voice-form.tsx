@@ -6,6 +6,7 @@ import { Loader2, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { previewEdgeTtsAction } from "@/lib/admin/edge-tts-actions";
+import { previewFishAudioAction } from "@/lib/admin/fish-audio-actions";
 import { setDefaultPronunciationVoiceAction } from "@/lib/admin/voices-actions";
 import type { VoiceRow } from "@/lib/admin/voices-queries";
 import { dataUriToBlobUrl } from "@/lib/audio-preview";
@@ -23,11 +24,10 @@ const PREVIEW_TEXT = "The old house creaked softly as the wind picked up outside
  * ElevenLabsSettingsForm's "Default narration voice (Stories & Books)"
  * (elevenlabs_settings.default_story_voice_id) — picking a voice here can
  * never affect Stories, Conversation, Books, or Normal lessons. Only lists
- * Edge-TTS voices: Word Lists' generation pipeline always uses Edge-TTS
- * specifically (reassigned from Cartesia 2026-09-10 — see
- * word-list-voice-generation.ts's own doc comment and
- * content-provider-map.ts), so any other source would just fail to
- * resolve.
+ * Edge-TTS and Fish Audio voices — the two providers Word Lists'
+ * generation pipeline accepts (see content-provider-map.ts's
+ * WORD_LIST_PROVIDERS and word-list-voice-generation.ts's own doc
+ * comment), so any other source would just fail to resolve.
  */
 export function PronunciationDefaultVoiceForm({
   voices,
@@ -65,10 +65,13 @@ export function PronunciationDefaultVoiceForm({
     });
     setIsPreviewing(true);
     startTransition(async () => {
-      const result = await previewEdgeTtsAction({
-        text: PREVIEW_TEXT,
-        providerVoiceId: current.providerVoiceId,
-      });
+      const result =
+        current.source === "fish-audio"
+          ? await previewFishAudioAction({ providerVoiceId: current.providerVoiceId })
+          : await previewEdgeTtsAction({
+              text: PREVIEW_TEXT,
+              providerVoiceId: current.providerVoiceId,
+            });
       setIsPreviewing(false);
       if (result.error || !result.audioDataUri) {
         setMessage({ kind: "error", text: result.error ?? "Preview failed." });
@@ -93,15 +96,19 @@ export function PronunciationDefaultVoiceForm({
       <CardHeader>
         <CardTitle className="text-lg">Default voice — Word Lists</CardTitle>
         <CardDescription>
-          Applies to every Word List (no per-group override exists yet). Never affects Stories,
-          Conversation, Books, or Normal lessons — see Voice collections above and the Normal
-          Lessons section below for those separate settings.
+          Applies to every Word List that has no voice of its own (set one per group from Word Lists
+          → Edit group → Narration voice). Changing this re-generates every Word List under the new
+          voice, and words without a clip yet fall back to the device&apos;s own voice until the
+          background sweep finishes — to try a Fish voice first, give it to one group instead. Never
+          affects Stories, Conversation, Books, or Normal lessons — see Voice collections above and
+          the Normal Lessons section below for those separate settings.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {voices.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No Edge-TTS voices registered yet — add some from the Edge-TTS section below first.
+            No Word Lists voices registered yet — add some from the Edge-TTS or Fish Audio section
+            below first.
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
@@ -119,6 +126,7 @@ export function PronunciationDefaultVoiceForm({
               {voices.map((voice) => (
                 <option key={voice.id} value={voice.id}>
                   {voice.name} — {voice.gender} · {voice.accent}
+                  {voice.source === "fish-audio" ? " · Fish Audio" : ""}
                 </option>
               ))}
             </select>
