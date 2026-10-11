@@ -4,6 +4,9 @@ import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice
 
 const API_BASE = "https://api.fish.audio";
 
+/** One retry for a transient 429/503 (rate limit / overload) after this pause — enough to ride out a brief burst without hammering the free tier. */
+const TRANSIENT_RETRY_DELAY_MS = 800;
+
 /** 128kbps mono MP3 — the exact output the approved Fish Audio samples (2026-10-11) were generated at. */
 const MP3_BITRATE = 128;
 
@@ -40,15 +43,21 @@ export function createFishAudioProvider(apiKey: string): TTSProvider {
       };
       if (input.voiceId) body.reference_id = input.voiceId;
 
-      const response = await fetchWithTimeout(`${API_BASE}/v1/tts`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          model: input.model,
-        },
-        body: JSON.stringify(body),
-      });
+      const send = () =>
+        fetchWithTimeout(`${API_BASE}/v1/tts`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            model: input.model,
+          },
+          body: JSON.stringify(body),
+        });
+      let response = await send();
+      if (response.status === 429 || response.status === 503) {
+        await new Promise((resolve) => setTimeout(resolve, TRANSIENT_RETRY_DELAY_MS));
+        response = await send();
+      }
 
       if (!response.ok) {
         const bodyText = await response.text().catch(() => "");
