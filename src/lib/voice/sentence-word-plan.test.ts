@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  answerFromClips,
   clipKey,
   pickWordClip,
+  planCandidateTexts,
+  planSentenceWords,
   sentenceWordEntries,
   wordContentId,
   wordTextCandidates,
@@ -108,4 +111,62 @@ test("pickWordClip: nothing cached under any spelling or voice is undefined, nev
   const clips = new Map([[clipKey("other-voice", "hello"), "https://clips.test/other.mp3"]]);
   assert.equal(pickWordClip(["Hello,", "hello"], ["edge-emma"], clips), undefined);
   assert.equal(pickWordClip([], ["edge-emma"], clips), undefined);
+});
+
+test("planSentenceWords: the words of a sentence with every spelling each may be cached under", () => {
+  const plan = planSentenceWords("s1", "Went home, then slept.", 40);
+  assert.equal(plan.sentenceId, "s1");
+  assert.deepEqual(
+    plan.entries.map((entry) => entry.key),
+    ["went", "home", "then", "slept"],
+  );
+  assert.equal(plan.candidates.length, plan.entries.length);
+  // "Went" is capitalised in the sentence: both spellings are candidates, raw first.
+  assert.deepEqual(plan.candidates[0], wordTextCandidates("Went", "went"));
+});
+
+test("planSentenceWords: never plans more than maxWords words", () => {
+  const plan = planSentenceWords("s1", "one two three four five", 3);
+  assert.deepEqual(
+    plan.entries.map((entry) => entry.key),
+    ["one", "two", "three"],
+  );
+});
+
+test("planCandidateTexts: every spelling of every sentence, for one combined lookup", () => {
+  const plans = [planSentenceWords("s1", "Go home", 40), planSentenceWords("s2", "Stay", 40)];
+  const texts = planCandidateTexts(plans);
+  for (const plan of plans) {
+    for (const candidates of plan.candidates) {
+      for (const text of candidates) assert.ok(texts.includes(text), `${text} is looked up`);
+    }
+  }
+});
+
+test("answerFromClips: words with a clip get its URL, the rest are listed as missing, in reading order", () => {
+  const plan = planSentenceWords("s1", "go home now", 40);
+  const clips = new Map([
+    [clipKey("v", "go"), "https://clips.test/go.mp3"],
+    [clipKey("v", "now"), "https://clips.test/now.mp3"],
+  ]);
+  assert.deepEqual(answerFromClips(plan, ["v"], clips), {
+    urls: { "s1::go": "https://clips.test/go.mp3", "s1::now": "https://clips.test/now.mp3" },
+    missing: ["s1::home"],
+  });
+});
+
+test("answerFromClips: a sentence with no words has nothing to load", () => {
+  const plan = planSentenceWords("s1", "— ...", 40);
+  assert.deepEqual(answerFromClips(plan, ["v"], new Map()), { urls: {}, missing: [] });
+});
+
+test("answerFromClips: agrees with pickWordClip — the narrator's voice wins over the word voice", () => {
+  const plan = planSentenceWords("s1", "Yes", 40);
+  const clips = new Map([
+    [clipKey("narrator", "yes"), "https://clips.test/narrator-yes.mp3"],
+    [clipKey("word-voice", "yes"), "https://clips.test/word-yes.mp3"],
+  ]);
+  assert.deepEqual(answerFromClips(plan, ["narrator", "word-voice"], clips).urls, {
+    "s1::yes": "https://clips.test/narrator-yes.mp3",
+  });
 });

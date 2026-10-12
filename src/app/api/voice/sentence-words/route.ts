@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { resolveSentenceWordAudio } from "@/lib/voice/isolated-word-audio";
+import { resolveLessonWordAudio, resolveSentenceWordAudio } from "@/lib/voice/isolated-word-audio";
 import { canReadSentence } from "@/lib/voice/sentence-access";
 
 /**
@@ -16,6 +16,15 @@ import { canReadSentence } from "@/lib/voice/sentence-access";
  * everything else — and answers for the whole sentence with two Supabase reads.
  *
  *  - GET  ?sentenceId=…&voiceId=…  cache-only: the clips that already exist.
+ *  - GET  …&scope=lesson           the same for the named sentence, plus every
+ *                                  other sentence of its lesson under `lesson`
+ *                                  (sentenceId -> the same {urls, missing}), so
+ *                                  a learner makes ONE request per lesson
+ *                                  instead of one per sentence — each request is
+ *                                  a serverless invocation, and a typing session
+ *                                  made dozens of them. Access is still decided
+ *                                  on the named sentence: a lesson's sentences
+ *                                  all share its visibility.
  *  - POST {sentenceId, voiceId}    the same, but synthesizes the words that
  *                                  have no clip yet (bounded — see
  *                                  resolveSentenceWordAudio) and returns them.
@@ -44,6 +53,7 @@ async function respond(
   sentenceId: string,
   voiceId: string,
   generate: boolean,
+  wholeLesson = false,
 ): Promise<NextResponse> {
   if (!ID_PATTERN.test(sentenceId) || !ID_PATTERN.test(voiceId)) return badRequest();
 
@@ -64,14 +74,18 @@ async function respond(
       );
     }
 
-    const result = await resolveSentenceWordAudio({ sentenceId, voiceId, generate });
+    const lesson =
+      wholeLesson && !generate ? await resolveLessonWordAudio({ sentenceId, voiceId }) : null;
+    // A lesson too long to cover (or a sentence it doesn't list) still gets its own answer.
+    const result =
+      lesson?.[sentenceId] ?? (await resolveSentenceWordAudio({ sentenceId, voiceId, generate }));
     if (!result) {
       return NextResponse.json(
         { error: "Unknown sentence or voice." },
         { status: 404, headers: { "Cache-Control": NOT_CACHEABLE } },
       );
     }
-    return NextResponse.json(result, {
+    return NextResponse.json(lesson ? { ...result, lesson } : result, {
       headers: {
         "Cache-Control": !generate && result.missing.length === 0 ? CACHEABLE : NOT_CACHEABLE,
       },
@@ -87,7 +101,12 @@ async function respond(
 
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
-  return respond(searchParams.get("sentenceId") ?? "", searchParams.get("voiceId") ?? "", false);
+  return respond(
+    searchParams.get("sentenceId") ?? "",
+    searchParams.get("voiceId") ?? "",
+    false,
+    searchParams.get("scope") === "lesson",
+  );
 }
 
 export async function POST(request: Request): Promise<NextResponse> {

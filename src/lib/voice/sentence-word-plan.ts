@@ -91,3 +91,57 @@ export function pickWordClip(
   }
   return undefined;
 }
+
+/** What one sentence's word clips look like to a caller: the clips that exist, and the words that still have none. */
+export interface SentenceWordAnswer {
+  /** contentId -> clip URL, for every word of the sentence that has a clip. */
+  urls: Record<string, string>;
+  /** contentIds of the words that still have none. */
+  missing: string[];
+}
+
+/** One sentence's words together with every spelling each may be cached under — what a clip lookup needs, nothing else. */
+export interface SentenceWordPlan {
+  sentenceId: string;
+  entries: SentenceWordEntry[];
+  /** wordTextCandidates for each entry, in the same order as `entries`. */
+  candidates: string[][];
+}
+
+/** The words of one sentence (capped at `maxWords`) and the spellings to look each up under. */
+export function planSentenceWords(
+  sentenceId: string,
+  text: string,
+  maxWords: number,
+): SentenceWordPlan {
+  const entries = sentenceWordEntries(sentenceId, text).slice(0, maxWords);
+  return {
+    sentenceId,
+    entries,
+    candidates: entries.map((entry) => wordTextCandidates(entry.raw, entry.key)),
+  };
+}
+
+/** Every spelling any sentence of `plans` may need, for one combined clip lookup. */
+export function planCandidateTexts(plans: readonly SentenceWordPlan[]): string[] {
+  return plans.flatMap((plan) => plan.candidates.flat());
+}
+
+/** Which of one sentence's words have a clip among `clips`, and which don't — the same choice pickWordClip makes everywhere else. */
+export function answerFromClips(
+  plan: SentenceWordPlan,
+  voiceIds: readonly string[],
+  clips: ReadonlyMap<string, string>,
+): SentenceWordAnswer {
+  const urls: Record<string, string> = {};
+  plan.entries.forEach((entry, index) => {
+    const url = pickWordClip(plan.candidates[index] ?? [], voiceIds, clips);
+    if (url) urls[entry.contentId] = url;
+  });
+  return {
+    urls,
+    missing: plan.entries
+      .map((entry) => entry.contentId)
+      .filter((contentId) => !(contentId in urls)),
+  };
+}

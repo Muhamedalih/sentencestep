@@ -6,7 +6,10 @@ import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
 import type { TTSVoiceSettings } from "@/lib/voice/provider";
 import { cacheKeyParts, hashText } from "@/lib/voice/resolution";
 import {
+  answerFromClips,
   pickWordClip,
+  planCandidateTexts,
+  planSentenceWords,
   sentenceWordEntries,
   wordTextCandidates,
 } from "@/lib/voice/sentence-word-plan";
@@ -273,9 +276,19 @@ export async function generateIsolatedWordAudio(
 }
 
 /**
+ * Text hashes per query. A hash is 16 characters and goes into the request URL,
+ * so one sentence's lookup (a few dozen at most) is a single query exactly as it
+ * always was, while a whole lesson's (hundreds) is split into short URLs and
+ * result sets that stay well under the API's row cap — each hash can have a row
+ * per voice and per generation version.
+ */
+const CLIP_LOOKUP_CHUNK_SIZE = 100;
+
+/**
  * Newest ready clip per (voice, text hash), for any of `texts` under any of
- * `voiceIds`, in ONE query. Keyed `${voiceId}:${hash}`; a text or voice with no
- * ready clip is simply absent.
+ * `voiceIds`. Keyed `${voiceId}:${hash}`; a text or voice with no ready clip is
+ * simply absent. One query per CLIP_LOOKUP_CHUNK_SIZE distinct hashes, run
+ * together — a hash lives in exactly one chunk, so the results never overlap.
  */
 async function lookupReadyClips(
   texts: readonly string[],
@@ -285,19 +298,31 @@ async function lookupReadyClips(
   if (texts.length === 0 || voiceIds.length === 0) return clips;
 
   const supabase = createServiceRoleClient();
-  const { data } = await supabase
-    .from("voice_audio_cache")
-    .select("voice_id, text_hash, audio_url, updated_at")
-    .in("voice_id", [...voiceIds])
-    .in("text_hash", [...new Set(texts.map((text) => hashText(text)))])
-    .eq("status", "ready")
-    .not("audio_url", "is", null)
-    .order("updated_at", { ascending: false });
+  const hashes = [...new Set(texts.map((text) => hashText(text)))];
+  const chunks: string[][] = [];
+  for (let start = 0; start < hashes.length; start += CLIP_LOOKUP_CHUNK_SIZE) {
+    chunks.push(hashes.slice(start, start + CLIP_LOOKUP_CHUNK_SIZE));
+  }
 
-  for (const row of data ?? []) {
-    const key = `${row.voice_id}:${row.text_hash}`;
-    // Newest first, so the first row seen for a key is the freshest.
-    if (row.audio_url && !clips.has(key)) clips.set(key, row.audio_url);
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      supabase
+        .from("voice_audio_cache")
+        .select("voice_id, text_hash, audio_url, updated_at")
+        .in("voice_id", [...voiceIds])
+        .in("text_hash", chunk)
+        .eq("status", "ready")
+        .not("audio_url", "is", null)
+        .order("updated_at", { ascending: false }),
+    ),
+  );
+
+  for (const { data } of results) {
+    for (const row of data ?? []) {
+      const key = `${row.voice_id}:${row.text_hash}`;
+      // Newest first, so the first row seen for a key is the freshest.
+      if (row.audio_url && !clips.has(key)) clips.set(key, row.audio_url);
+    }
   }
   return clips;
 }
@@ -405,4 +430,53 @@ export async function resolveSentenceWordAudio(input: {
   const text = sentenceRow.data?.en;
   if (!text) return null;
   return resolveWordAudioForText({ sentenceId, text, voiceId, generate });
+}
+
+/** A lesson never has this many sentences in practice; the cap keeps one request's lookup bounded whatever a caller asks. */
+const MAX_LESSON_SENTENCES = 200;
+
+/**
+ * Every sentence of the lesson that `sentenceId` belongs to, each with the word
+ * clips that already exist for it — cache-only, answered in one pass (the
+ * sentence rows, then ONE combined clip lookup) instead of one request per
+ * sentence as the learner reaches it. Keyed by sentence id. Null when the
+ * sentence or the voice isn't real.
+ *
+ * Access is the caller's job and is decided once, on the sentence they named
+ * (see canReadSentence): every sentence of a lesson shares that lesson's
+ * visibility, so someone who may open one may open them all. The words are
+ * derived here from the real rows, never from anything the client sent.
+ */
+export async function resolveLessonWordAudio(input: {
+  sentenceId: string;
+  voiceId: string;
+}): Promise<Record<string, SentenceWordAudio> | null> {
+  const { sentenceId, voiceId } = input;
+  const supabase = createServiceRoleClient();
+
+  const { data: anchor } = await supabase
+    .from("sentences")
+    .select("lesson_id")
+    .eq("id", sentenceId)
+    .maybeSingle();
+  if (!anchor) return null;
+
+  const [{ data: rows }, wordVoice] = await Promise.all([
+    supabase
+      .from("sentences")
+      .select("id, en")
+      .eq("lesson_id", anchor.lesson_id)
+      .order("order_index")
+      .limit(MAX_LESSON_SENTENCES),
+    resolveWordVoice(voiceId),
+  ]);
+  if (!wordVoice || !rows || rows.length === 0) return null;
+
+  const plans = rows.map((row) => planSentenceWords(row.id, row.en, MAX_WORDS_PER_SENTENCE));
+  const voiceIds = [...new Set([voiceId, wordVoice.id])];
+  const clips = await lookupReadyClips(planCandidateTexts(plans), voiceIds);
+
+  return Object.fromEntries(
+    plans.map((plan) => [plan.sentenceId, answerFromClips(plan, voiceIds, clips)]),
+  );
 }

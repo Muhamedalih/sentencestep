@@ -13,6 +13,18 @@ import { countNewProblemReports } from "@/lib/admin/reports-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signOut } from "@/lib/supabase/auth-actions";
 
+/**
+ * Every admin page is per-request by nature (it is gated on the caller's
+ * session), so none of them may be attempted at build time. Pages like
+ * /admin/free-access and /admin/color-settings read their settings through the
+ * anonymous client, which touches no cookies, so `next build` started their
+ * database reads during "Generating static pages" and a slow Supabase answer
+ * there stalled the build past its 60-second per-page limit — three attempts,
+ * then a failed deploy. Declared once here instead of on each page, so a new
+ * admin page can't reintroduce it.
+ */
+export const dynamic = "force-dynamic";
+
 /** Belt-and-suspenders alongside robots.ts's `disallow: /admin` — a crawler that ignores robots.txt still gets an explicit noindex here. */
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
