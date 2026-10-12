@@ -233,6 +233,17 @@ export default async function LearnHomePage() {
       ? access.expiresAt
       : null;
 
+  // With the plan (admin preview) the review card sits under it; otherwise it stays above "Up next".
+  const reviewBlock = (
+    <div className="max-sm:order-4">
+      <NeedsReviewWords
+        words={weakWords.filter((word) => word.dueNow)}
+        count={reviewWaiting.count}
+        smart={reviewWaiting.smart}
+      />
+    </div>
+  );
+
   return (
     <ProgressProvider initialProgress={initialProgress}>
       <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
@@ -258,20 +269,13 @@ export default async function LearnHomePage() {
             "up next". From sm: up it stays exactly where it was in the DOM flow, between the
             banners and the review card. */}
         <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
-        <div className="max-sm:order-4">
-          <NeedsReviewWords
-            words={weakWords.filter((word) => word.dueNow)}
-            count={reviewWaiting.count}
-            smart={reviewWaiting.smart}
-          />
-        </div>
+        {!showHomePlan && reviewBlock}
         <div className="max-sm:order-3">
           {showHomePlan ? (
             <HomePlan
               units={units}
               storiesUnits={storiesUnits}
               words={planWords}
-              reviewCount={reviewWaiting.count}
               isPremiumUser={isPremiumUser}
             />
           ) : (
@@ -296,6 +300,7 @@ export default async function LearnHomePage() {
             </>
           )}
         </div>
+        {showHomePlan && reviewBlock}
       </div>
     </ProgressProvider>
   );

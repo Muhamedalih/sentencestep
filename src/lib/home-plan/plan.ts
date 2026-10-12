@@ -1,11 +1,12 @@
+import { getCurrentLevel } from "@/lib/progress/level";
 import { resumePoint } from "@/lib/word-mastery/schedule";
 import type { WordGroupSummary } from "@/types/word-lists";
 
 /**
  * Pure rules behind Home's "Today's plan" (admin preview): three steps in a
- * fixed order — a few new words, a story, a writing lesson — and a level card
- * that measures the same three tracks together. No I/O: the words come from
- * words.ts, lessons and stories from what Home already loads.
+ * fixed order — a few new words, a story, a writing lesson — and the level card
+ * on the Profile that measures the same three tracks together. No I/O: the
+ * words come from words.ts, lessons and stories from what Home already loads.
  */
 
 /** New words per day: one practice block (BLOCK_SIZE in vocabulary-practice.tsx). */
@@ -90,6 +91,36 @@ export function wordCountsByLevel(
     entry.done += group.wordIds.filter((id) => completed.has(id)).length;
   }
   return byLevel;
+}
+
+/**
+ * The learner's current level (by their lessons, like everywhere else) and how
+ * far each of the three tracks is inside it — what the Profile's level card shows.
+ */
+export function levelProgress(input: {
+  units: readonly { id: string; level: number; isFree: boolean }[];
+  storiesUnits: readonly { id: string; level: number; isFree: boolean }[];
+  groups: readonly WordGroupSummary[];
+  lessonIds: readonly string[];
+  storyIds: readonly string[];
+  completedWordIds: ReadonlySet<string>;
+  startingLevel: number | null;
+  isPremiumUser: boolean;
+}): { level: number; counts: Record<Track, TrackCount> } {
+  const level = getCurrentLevel(input.units, input.lessonIds, input.startingLevel);
+  return {
+    level,
+    counts: {
+      words: wordCountsByLevel(input.groups, input.completedWordIds, input.isPremiumUser)[
+        level
+      ] ?? {
+        done: 0,
+        total: 0,
+      },
+      stories: levelCount(input.storiesUnits, input.storyIds, level, input.isPremiumUser),
+      lessons: levelCount(input.units, input.lessonIds, level, input.isPremiumUser),
+    },
+  };
 }
 
 export interface NextWordBlock {

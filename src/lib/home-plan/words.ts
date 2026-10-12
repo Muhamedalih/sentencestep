@@ -3,13 +3,10 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchWordProgressDated } from "@/lib/supabase/queries/word-progress";
 import { getWordGroupById, getWordGroupSummaries } from "@/lib/word-lists";
 
-import { WORDS_PER_DAY, pickNextWordBlock, wordCountsByLevel } from "./plan";
-import type { TrackCount } from "./plan";
+import { WORDS_PER_DAY, pickNextWordBlock } from "./plan";
 
 /** What Home's plan needs from Word Lists, read once on the server. */
 export interface HomePlanWords {
-  /** Words done and total per level (the level card's words ring). */
-  byLevel: Record<number, TrackCount>;
   /** Today's block of new words, or null once every word is done. */
   next: {
     groupId: string;
@@ -73,11 +70,7 @@ export async function loadHomePlanWords(args: {
           }
         : null;
 
-    return {
-      byLevel: wordCountsByLevel(groups, completed, args.isPremiumUser),
-      next,
-      learnedToday,
-    };
+    return { next, learnedToday };
   } catch (error) {
     console.error("[home-plan] loadHomePlanWords failed", error);
     return null;

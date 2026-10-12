@@ -8,6 +8,7 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 export interface PlanCopy {
   planTitle: string;
   planSub: string;
+  startHere: string;
   skillWords: string;
   skillStory: string;
   skillWrite: string;
@@ -45,21 +46,12 @@ export interface PlanCopy {
   tipWords: string;
   tipStories: string;
   tipLessons: string;
-  exploreTitle: string;
-  exploreSub: string;
-  tileWords: string;
-  tileStories: string;
-  tileLessons: string;
-  tileReview: string;
-  reviewReady: string;
-  reviewNone: string;
-  tileLibrary: string;
-  tileLibrarySub: string;
 }
 
 const en: PlanCopy = {
   planTitle: "Today's plan",
   planSub: "Words feed the story, writing makes it stick · about 15 minutes",
+  startHere: "Start here",
   skillWords: "Vocabulary",
   skillStory: "Language",
   skillWrite: "Writing",
@@ -97,21 +89,12 @@ const en: PlanCopy = {
   tipWords: "Five words today is enough.",
   tipStories: "Today's story helps.",
   tipLessons: "The next writing lesson strengthens it.",
-  exploreTitle: "Explore on your own",
-  exploreSub: "Open any section whenever you like. What you finish counts toward your level.",
-  tileWords: "Word Lists",
-  tileStories: "General stories",
-  tileLessons: "Daily lessons",
-  tileReview: "Review words",
-  reviewReady: "{n} ready",
-  reviewNone: "Nothing right now",
-  tileLibrary: "Library",
-  tileLibrarySub: "Books and novels",
 };
 
 const ar: PlanCopy = {
   planTitle: "خطة اليوم",
   planSub: "الكلمات تغذّي القصة، والكتابة تثبّت ما تعلمته · نحو 15 دقيقة",
+  startHere: "ابدأ من هنا",
   skillWords: "المفردات",
   skillStory: "اللغة",
   skillWrite: "الكتابة",
@@ -149,16 +132,6 @@ const ar: PlanCopy = {
   tipWords: "خمس كلمات اليوم تكفي.",
   tipStories: "قصة اليوم تقرّبك.",
   tipLessons: "درس الكتابة التالي يقوّيها.",
-  exploreTitle: "استكشف بنفسك",
-  exploreSub: "افتح أي قسم وقتما تريد. ما تُنهيه يُحسب في تقدمك.",
-  tileWords: "قوائم الكلمات",
-  tileStories: "القصص العامة",
-  tileLessons: "الدروس اليومية",
-  tileReview: "مراجعة الكلمات",
-  reviewReady: "{n} جاهزة",
-  reviewNone: "لا شيء الآن",
-  tileLibrary: "المكتبة",
-  tileLibrarySub: "كتب وروايات",
 };
 
 export function planCopy(locale: SupportLocale | null): PlanCopy {
