@@ -8,6 +8,7 @@ import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeEngagementSection } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
+import { HomePlan } from "@/components/app/home-plan";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
@@ -16,6 +17,7 @@ import { REMINDER_WINDOW_DAYS } from "@/lib/billing/expiry-reminders";
 import { getOpenCheckout } from "@/lib/billing/open-checkout";
 import { getHomeLessons } from "@/lib/content";
 import { startHomeEngagement } from "@/lib/features/home-engagement";
+import { loadHomePlanWords } from "@/lib/home-plan/words";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
@@ -130,7 +132,8 @@ export default async function LearnHomePage() {
   // through its own <Suspense> slot (see HomeEngagementSection), so a slow one
   // never holds back the rest of the page or the other cards. weakWordsPromise
   // is shared so the session count doesn't redo it.
-  const learnerToday = localISODateInTimeZone((await cookies()).get(TIMEZONE_COOKIE)?.value);
+  const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
+  const learnerToday = localISODateInTimeZone(timeZone);
   const weakWordsPromise = fetchWeakWordsAction();
   // The same number the Word Lists hero shows (see countWordsWaitingForReview) —
   // only what is actually up for review, not every word that was ever weak.
@@ -142,6 +145,20 @@ export default async function LearnHomePage() {
     // Swallowed here only for the count: the page's own await below still surfaces a real failure.
     weakWordCount: weakWordsPromise.then((words) => words.length).catch(() => 0),
   });
+  // Admin preview of "Today's plan" (HomePlan): its Word Lists reads only run for an admin.
+  const isAdminPromise = isAdmin();
+  const planWordsPromise = Promise.all([isAdminPromise, userPromise, progressPromise]).then(
+    ([admin, signedIn, progress]) =>
+      admin && signedIn
+        ? loadHomePlanWords({
+            userId: signedIn.id,
+            locale: locale ?? undefined,
+            timeZone,
+            isPremiumUser: true,
+            startingLevel: progress?.startingLevel ?? null,
+          })
+        : null,
+  );
   const [
     { units, storiesUnits, lessonStats },
     access,
@@ -154,10 +171,11 @@ export default async function LearnHomePage() {
     reviewWaiting,
     initialProgress,
     openCheckout,
+    planWords,
   ] = await Promise.all([
     getHomeLessons(locale ?? undefined),
     getAccessState(),
-    isAdmin(),
+    isAdminPromise,
     userPromise,
     attemptCountPromise,
     fetchFeaturedBooks(supabase, locale),
@@ -166,6 +184,7 @@ export default async function LearnHomePage() {
     reviewWaitingPromise,
     progressPromise,
     openCheckoutPromise,
+    planWordsPromise,
   ]);
 
   // The Book recommendation card: the first featured, published book, or
@@ -182,8 +201,10 @@ export default async function LearnHomePage() {
   let bookProgressPercent: number | undefined;
   // The Library (and this book-recommendation card into it) is admin-only
   // for now — skip its extra queries for a regular learner, who'd never see
-  // the card HomeHero renders from them anyway.
-  if (recommendedBook && isAdminUser) {
+  // the card HomeHero renders from them anyway. Admins now see the plan instead
+  // of HomeHero (admin preview), so they skip these queries too.
+  const showHomePlan = isAdminUser;
+  if (recommendedBook && isAdminUser && !showHomePlan) {
     // countsPromise is shared with fetchBookProgressAction below (instead of
     // each independently calling fetchBookContentCounts) — see that
     // function's own doc comment for why it used to redundantly re-run the
@@ -245,23 +266,35 @@ export default async function LearnHomePage() {
           />
         </div>
         <div className="max-sm:order-3">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-              {t.progress.upNextLabel}
-            </p>
-            {!isPremiumUser && <StarterPathProgress units={units} />}
-          </div>
-          <HomeHero
-            units={units}
-            storiesUnits={storiesUnits}
-            book={recommendedBook}
-            bookSectionCount={bookSectionCount}
-            bookSentenceCount={bookSentenceCount}
-            bookProgressPercent={bookProgressPercent}
-            isPremiumUser={isPremiumUser}
-            hasWeakWords={reviewWaiting.count > 0}
-            isAdminUser={isAdminUser}
-          />
+          {showHomePlan ? (
+            <HomePlan
+              units={units}
+              storiesUnits={storiesUnits}
+              words={planWords}
+              reviewCount={reviewWaiting.count}
+              isPremiumUser={isPremiumUser}
+            />
+          ) : (
+            <>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  {t.progress.upNextLabel}
+                </p>
+                {!isPremiumUser && <StarterPathProgress units={units} />}
+              </div>
+              <HomeHero
+                units={units}
+                storiesUnits={storiesUnits}
+                book={recommendedBook}
+                bookSectionCount={bookSectionCount}
+                bookSentenceCount={bookSentenceCount}
+                bookProgressPercent={bookProgressPercent}
+                isPremiumUser={isPremiumUser}
+                hasWeakWords={reviewWaiting.count > 0}
+                isAdminUser={isAdminUser}
+              />
+            </>
+          )}
         </div>
       </div>
     </ProgressProvider>
