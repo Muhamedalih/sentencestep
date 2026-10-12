@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { KeyboardViewport } from "@/components/app/keyboard-viewport";
+import { SectionTimeTracker } from "@/components/app/section-time-tracker";
 import { TimezoneCookie } from "@/components/app/timezone-cookie";
 import { AuthUserProvider } from "@/components/providers/auth-user-provider";
 import { FeatureProvider } from "@/components/providers/feature-provider";
@@ -79,6 +80,8 @@ export default async function LearnLayout({ children }: { children: ReactNode })
       {lessonColorCss && <style>{lessonColorCss}</style>}
       {/* Tells the server the learner's time zone so Home can render its date-keyed cards up front — see TimezoneCookie. */}
       <TimezoneCookie />
+      {/* Per-section (Stories / Daily Lessons) active time, reported to Clarity — see SectionTimeTracker. */}
+      <SectionTimeTracker />
       <KeyboardViewport />
       <AuthUserProvider userId={user?.id ?? null}>
         <FeatureProvider features={features}>
