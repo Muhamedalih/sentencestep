@@ -6,6 +6,7 @@ import type { WordGroupSummary } from "@/types/word-lists";
 import {
   cefrForLevel,
   levelCount,
+  levelProgress,
   pickNextWordBlock,
   stepStates,
   summarizeLevel,
@@ -139,4 +140,35 @@ test("wordCountsByLevel sums the words per level", () => {
   const groups = [group("a", 1, 1, 10), group("b", 1, 2, 10), group("c", 2, 1, 10, false)];
   const counts = wordCountsByLevel(groups, new Set(["a-1", "b-1", "c-1"]), false);
   assert.deepEqual(counts, { 1: { done: 2, total: 20 } });
+});
+
+test("levelProgress: the level follows the lessons and every track is measured inside it", () => {
+  const units = [
+    { id: "l1", level: 1, isFree: true },
+    { id: "l2", level: 1, isFree: true },
+    { id: "l3", level: 2, isFree: true },
+  ];
+  const stories = [
+    { id: "s1", level: 1, isFree: true },
+    { id: "s2", level: 2, isFree: true },
+  ];
+  const groups = [group("a", 1, 1, 10), group("b", 2, 1, 10)];
+  const base = {
+    units,
+    storiesUnits: stories,
+    groups,
+    completedWordIds: new Set(["a-1", "a-2", "b-1"]),
+    startingLevel: null,
+    isPremiumUser: true,
+  };
+  const first = levelProgress({ ...base, lessonIds: ["l1"], storyIds: ["s1"] });
+  assert.equal(first.level, 1);
+  assert.deepEqual(first.counts, {
+    words: { done: 2, total: 10 },
+    stories: { done: 1, total: 1 },
+    lessons: { done: 1, total: 2 },
+  });
+  const second = levelProgress({ ...base, lessonIds: ["l1", "l2"], storyIds: [] });
+  assert.equal(second.level, 2);
+  assert.deepEqual(second.counts.words, { done: 1, total: 10 });
 });

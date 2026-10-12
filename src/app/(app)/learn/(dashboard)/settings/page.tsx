@@ -5,6 +5,7 @@ import { AlertTriangle, Home, KeyRound, SlidersHorizontal, UserRound } from "luc
 import { AccountSection } from "@/components/settings/account-section";
 import { DailyGoalForm } from "@/components/settings/daily-goal-form";
 import { DangerZone } from "@/components/settings/danger-zone";
+import { LevelProgressCard } from "@/components/settings/level-progress-card";
 import { EmailPreferencesForm } from "@/components/settings/email-preferences-form";
 import { PasswordForm } from "@/components/settings/password-form";
 import { PushNotificationsForm } from "@/components/settings/push-notifications-form";
@@ -15,8 +16,10 @@ import { StartingLevelForm } from "@/components/settings/starting-level-form";
 import { TwoFactorSettings } from "@/components/settings/two-factor-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { isAdmin } from "@/lib/admin/access";
 import { getAccessState } from "@/lib/billing/access";
 import { getEmailPreferences } from "@/lib/email/preferences";
+import { loadLevelProgress } from "@/lib/home-plan/level";
 import { hasPushSubscription } from "@/lib/push/subscriptions";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
@@ -61,6 +64,17 @@ export default async function SettingsPage() {
     );
   }
 
+  // Admin preview: the level card (Home's plan keeps its words, the Profile shows the level).
+  const wordsPromise = fetchWordProgress(user.id);
+  const levelProgressPromise = isAdmin().then(async (admin) =>
+    admin
+      ? loadLevelProgress({
+          locale: locale ?? undefined,
+          completedWordIds: await wordsPromise,
+        })
+      : null,
+  );
+
   const [
     preferences,
     pushEnabled,
@@ -73,6 +87,7 @@ export default async function SettingsPage() {
     streak,
     sessionCount,
     wordsLearned,
+    levelProgress,
   ] = await Promise.all([
     getEmailPreferences(user.id),
     hasPushSubscription(user.id),
@@ -84,7 +99,8 @@ export default async function SettingsPage() {
     fetchXp(user.id),
     fetchStreak(user.id),
     fetchAttemptCount(user.id),
-    fetchWordProgress(user.id),
+    wordsPromise,
+    levelProgressPromise,
   ]);
 
   return (
@@ -114,20 +130,29 @@ export default async function SettingsPage() {
             label: t.settings.tabProfile,
             icon: <UserRound />,
             content: (
-              <AccountSection
-                t={t}
-                locale={locale}
-                userId={user.id}
-                displayName={user.displayName}
-                email={user.email}
-                access={access}
-                memberSince={createdAt}
-                country={country}
-                xp={xp}
-                streak={streak}
-                sessionCount={sessionCount}
-                wordsLearnedCount={wordsLearned.length}
-              />
+              <>
+                <AccountSection
+                  t={t}
+                  locale={locale}
+                  userId={user.id}
+                  displayName={user.displayName}
+                  email={user.email}
+                  access={access}
+                  memberSince={createdAt}
+                  country={country}
+                  xp={xp}
+                  streak={streak}
+                  sessionCount={sessionCount}
+                  wordsLearnedCount={wordsLearned.length}
+                />
+                {levelProgress && (
+                  <LevelProgressCard
+                    locale={locale}
+                    level={levelProgress.level}
+                    counts={levelProgress.counts}
+                  />
+                )}
+              </>
             ),
           },
           {

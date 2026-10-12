@@ -10,8 +10,8 @@ import type { LessonUnit } from "@/types/content";
  * never re-applies to a returning learner or overrides real progress.
  */
 export function getCurrentLevel(
-  units: LessonUnit[],
-  completedIds: string[],
+  units: readonly Pick<LessonUnit, "id" | "level">[],
+  completedIds: readonly string[],
   startingLevel?: number | null,
 ): number {
   const levels = Array.from(new Set(units.map((unit) => unit.level))).sort((a, b) => a - b);
