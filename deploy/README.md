@@ -73,8 +73,14 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
 6. **Cloudflare** (the domain's DNS is already there):
    - SSL/TLS → Overview: **Full (strict)**. Edge Certificates: Always Use HTTPS on, minimum TLS 1.2.
    - SSL/TLS → Origin Server → Create Certificate for `sentencestep.com` and `*.sentencestep.com`
-     (15 years). Save the two files on the server as `/opt/sentencestep/caddy/certs/origin.pem` and
-     `origin.key` (`chmod 600 origin.key`). Keep a copy in your password manager.
+     (15 years). Done the way that keeps the private key on the server: generate the key and a CSR
+     there (`openssl ecparam -genkey -name prime256v1 -noout -out origin.key`, then
+     `openssl req -new -key origin.key -out origin.csr -subj "/CN=sentencestep.com"`), choose
+     "Use my private key and CSR" in the dashboard, paste the CSR, and save the certificate it returns
+     as `/opt/sentencestep/caddy/certs/origin.pem` (`chmod 600 origin.key`). After replacing either file
+     run `docker exec sentencestep-caddy-1 caddy reload --force --config /etc/caddy/Caddyfile` — a plain
+     reload does nothing when the Caddyfile itself is unchanged, so the old certificate would stay in use.
+     Check which one is served: `echo | openssl s_client -connect 127.0.0.1:443 -servername sentencestep.com | openssl x509 -noout -issuer`.
    - Network: **IP Geolocation on** (this is what produces `cf-ipcountry`).
    - Speed → Optimization: **Rocket Loader off**, Auto Minify off (they rewrite the page's scripts
      and break hydration). Scrape Shield → **Email Address Obfuscation off** (it rewrites e-mail
@@ -136,13 +142,12 @@ a Cloudflare DNS export are saved; the database change is applied.
    audio, word lists, the Iraq price, admin, a webhook, a cron call).
 7. Watch Sentry, Supabase logs and the uptime monitor for 30 minutes.
 
-**Rolling back to Netlify** (takes about a minute): in Cloudflare DNS restore exactly these records and set them to _DNS only_ (grey cloud):
+**Rolling back to Netlify** (takes about a minute): in Cloudflare DNS restore exactly these records and set them to _DNS only_ (grey cloud). These are the records as they were before the migration (checked in the Cloudflare dashboard on 2026-10-14); the apex is a CNAME that Cloudflare flattens, which resolves to Netlify's addresses `75.2.60.5` and `99.83.231.61`:
 
-| Name               | Type  | Value (as of the migration) |
-| ------------------ | ----- | --------------------------- |
-| `sentencestep.com` | A     | `75.2.60.5`                 |
-| `sentencestep.com` | A     | `99.83.231.61`              |
-| `www`              | CNAME | `sentencestep.netlify.app`  |
+| Name               | Type  | Value (as of the migration)     |
+| ------------------ | ----- | ------------------------------- |
+| `sentencestep.com` | CNAME | `apex-loadbalancer.netlify.com` |
+| `www`              | CNAME | `sentencestep.netlify.app`      |
 
 Both hosts use the same database, so nothing diverges while you move back and forth.
 

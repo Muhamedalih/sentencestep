@@ -19,7 +19,9 @@
 #    for trust, it is a second layer);
 #  - never swaps in a suspicious list (fewer than 5 networks);
 #  - idempotent: running it twice leaves exactly one rule;
-#  - SSH (22) is never touched: DOCKER-USER only sees traffic going to containers.
+#  - SSH (22) is never touched: DOCKER-USER only sees traffic going to containers;
+#  - inbound only: the rule is bound to the public interface, so the containers' own
+#    outbound connections (database, e-mail, payments, speech) are never affected.
 #
 #   sentencestep-firewall            install / refresh
 #   sentencestep-firewall --remove   take the rule away again
@@ -35,9 +37,24 @@ CIDR_RE='^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$'
 
 log() { logger -t sentencestep-firewall "$*"; echo "$*"; }
 
-rule_spec=(-p tcp -m multiport --dports "$PORTS" -m set ! --match-set "$SET" src -j DROP)
-rule_exists() { iptables -C "$CHAIN" "${rule_spec[@]}" 2>/dev/null; }
-remove_rule() { while rule_exists; do iptables -D "$CHAIN" "${rule_spec[@]}"; done; }
+# The public network interface: where connections from the internet arrive. The rule is
+# bound to it (-i) because the containers' own OUTBOUND web traffic (their calls to the
+# database, the e-mail and payment providers, the speech service, ...) ALSO passes through
+# DOCKER-USER with destination port 443; a rule without -i drops all of it. Containers
+# reach the outside through their bridge, never through this interface, so they never match.
+EXT_IF="$(ip -4 route show default | awk '/^default/ {print $5; exit}')"
+
+# Takes away every earlier copy of this rule, whatever its exact form (a first version had
+# no -i), by turning each matching "-A ..." line that `iptables -S` prints into a delete.
+remove_rule() {
+  local line
+  local -a args
+  while line="$(iptables -S "$CHAIN" | grep -m1 -- "--match-set $SET src")"; do
+    read -ra args <<<"$line"
+    args[0]="-D"
+    iptables "${args[@]}"
+  done
+}
 
 if [ "${1:-}" = "--remove" ]; then
   remove_rule
@@ -74,5 +91,9 @@ ipset destroy "$tmp_set"
 # 3. the rule: drop web-port connections that do not come from the set. Inserted first, so
 #    nothing earlier in the chain can accept the packet before this sees it.
 remove_rule
-iptables -I "$CHAIN" 1 "${rule_spec[@]}"
-log "only Cloudflare may reach ports $PORTS now (list from $source_of_list)"
+if [ -z "$EXT_IF" ]; then
+  log "no public network interface found - leaving the ports open"
+  exit 1
+fi
+iptables -I "$CHAIN" 1 -i "$EXT_IF" -p tcp -m multiport --dports "$PORTS" -m set ! --match-set "$SET" src -j DROP
+log "only Cloudflare may reach ports $PORTS on $EXT_IF now (list from $source_of_list)"
