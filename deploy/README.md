@@ -145,19 +145,51 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
 
 ## Cutover (production from Netlify to the server)
 
-Preconditions: the staging copy has run for several days without errors; `smoke-test.sh` passes;
-a real payment test and the Wayl/Resend webhooks have been verified on staging; a Supabase backup and
-a Cloudflare DNS export are saved; the database change is applied.
+Already prepared (state on 2026-10-14, verified on the staging copy through Cloudflare): the database
+change is applied; the Cloudflare zone is set up (Full strict, origin certificate valid to 2041, the
+`X-Origin-Auth` rule already covers `sentencestep.com` and `www`, WAF skip rule, Always Use HTTPS,
+TLS 1.2); the server firewall, watchdog and uptime workflow are running; a complete production env
+file is waiting on the server as `/opt/sentencestep/server.env.production` (inactive; it holds a NEW
+Wayl key made for this server, a freshly generated `WAYL_WEBHOOK_SECRET`, `WAYL_ENV=live`, and the live
+`NEXT_PUBLIC_SITE_URL`); the privacy-text change is on branch `claude/privacy-new-hosting`.
 
-1. A day before: lower the TTL of the apex and `www` records to 60 s (or leave them proxied after the switch).
-2. Freeze merges. Deploy the final commit to staging; run the smoke test.
-3. Add the Cloudflare **Origin certificate** hostnames for the apex if not already covered, confirm
-   Caddy serves `sentencestep.com` (test with `curl --resolve sentencestep.com:443:<ip> -k https://sentencestep.com/api/health`).
-4. In Cloudflare DNS, at the quietest hour: apex `A` → the Reserved IP, **proxied**; `www` `CNAME` → `sentencestep.com`, **proxied**.
-5. Switch the workflow trigger to `release` and `DEPLOY_URL` to `https://sentencestep.com`.
-6. Run `deploy/smoke-test.sh https://sentencestep.com`, then the 12-point manual list (home, sign-in, a lesson,
-   audio, word lists, the Iraq price, admin, a webhook, a cron call).
-7. Watch Sentry, Supabase logs and the uptime monitor for 30 minutes.
+Preconditions (confirm before starting): Netlify still has credits (it is the fallback, and costs
+almost nothing once it gets no traffic); `WAYL_ENV=live` is right; the privacy wording is approved.
+
+1. **Release the wording.** Merge `claude/privacy-new-hosting` into `master` (it must be true the moment
+   the site moves). Then build the image the site will run, on the server, from that commit with the
+   live address baked in (an image built for staging points auth e-mails and canonical URLs at staging):
+   clone `master`, `docker build` with the five values in `deploy/build-public.env`,
+   `NEXT_PUBLIC_SITE_URL=https://sentencestep.com`, `GIT_COMMIT_SHA=<sha>` and the Server Actions key as a
+   build secret, tag it `sentencestep:<sha>` (about 2.5 minutes). Confirm it carries the right address:
+   `grep -rl staging.sentencestep.com /app/.next` inside the image must find nothing.
+2. **Rehearse it in isolation** (no traffic): run the image with `--env-file server.env.production` on the
+   compose network with no published port, and check `/api/health` reports the commit and an UNSIGNED
+   `POST /api/billing/webhook/wayl` answers `401 Invalid webhook signature` (it answers 501 when Wayl is
+   not configured).
+3. **Switch the server to the live env and deploy.** `cp server.env server.env.staging-backup`, then
+   `cp server.env.production server.env` (mode 600), then
+   `docker save sentencestep:<sha> | gzip | /opt/sentencestep/deploy.sh <sha>`. The blue/green script starts the
+   new copy, waits until it is healthy, flips Caddy gracefully and probes through it. Run the smoke test
+   from the server with a temporary `/etc/hosts` line for `sentencestep.com` and the origin
+   certificate as `CURL_CA_BUNDLE` (as done for staging), then remove that line.
+4. **Move the traffic** (Cloudflare → DNS, at a quiet hour, with the owner present). Edit the apex record
+   `sentencestep.com`: type **A**, `165.245.161.138` (the server), **Proxied**. Edit `www`: **CNAME** →
+   `sentencestep.com`, **Proxied**. Cloudflare applies it at once; resolvers holding the old answer reach
+   Netlify for up to its TTL (both serve the same database, so nobody notices).
+5. **Check it from outside**: `deploy/smoke-test.sh https://sentencestep.com <sha>` (23 checks); from Iraq
+   `https://sentencestep.com/upgrade` must list the Iraqi wallets; `http://` redirects to `https://`; `www`
+   redirects to the bare domain; one cron call with the real secret
+   (`/api/cron/session-word-audio`, harmless) answers 200 and a wrong secret 401; sign in with a real
+   account and open a lesson with audio.
+6. **First real payment**: the owner pays the smallest plan once; check the order becomes paid, Premium
+   is active, and the webhook arrived (Wayl dashboard + Supabase `payment_orders`).
+7. **Move the pipeline**: GitHub variables `DEPLOY_URL=https://sentencestep.com`; the workflow trigger
+   becomes `release`. In Netlify lock auto publishing (Deploys → "Lock to stop auto publishing") so a push
+   to `release` no longer spends 15 credits there; Netlify stays as the standby.
+8. Watch Sentry, Supabase logs and the uptime workflow for 30 minutes, then daily for a week.
+9. Later (after about a week without trouble): remove Netlify's old Wayl key in the Wayl dashboard, delete
+   the temporary QA account, and decide whether to retire the Netlify site.
 
 **Rolling back to Netlify** (takes about a minute): in Cloudflare DNS restore exactly these records and set them to _DNS only_ (grey cloud). These are the records as they were before the migration (checked in the Cloudflare dashboard on 2026-10-14); the apex is a CNAME that Cloudflare flattens, which resolves to Netlify's addresses `75.2.60.5` and `99.83.231.61`:
 
