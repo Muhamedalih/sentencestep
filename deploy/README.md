@@ -71,7 +71,10 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
    An extra cloud-provider firewall (DigitalOcean → Networking → Firewalls) is an optional second layer.
    If the server ever gets an IPv6 address, the rule must be repeated with `ip6tables`.
 6. **Cloudflare** (the domain's DNS is already there):
-   - SSL/TLS → Overview: **Full (strict)**. Edge Certificates: Always Use HTTPS on, minimum TLS 1.2.
+   - SSL/TLS → Overview: **Full (strict)** (choose it by hand: the default "Automatic" mode picks
+     for you). Edge Certificates: **Always Use HTTPS on** (the origin deliberately drops port 80,
+     so without this a visitor who types `http://` gets Cloudflare error 520) and **minimum TLS 1.2**
+     (the default is 1.0).
    - SSL/TLS → Origin Server → Create Certificate for `sentencestep.com` and `*.sentencestep.com`
      (15 years). Done the way that keeps the private key on the server: generate the key and a CSR
      there (`openssl ecparam -genkey -name prime256v1 -noout -out origin.key`, then
@@ -82,15 +85,29 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
      reload does nothing when the Caddyfile itself is unchanged, so the old certificate would stay in use.
      Check which one is served: `echo | openssl s_client -connect 127.0.0.1:443 -servername sentencestep.com | openssl x509 -noout -issuer`.
    - Network: **IP Geolocation on** (this is what produces `cf-ipcountry`).
-   - Speed → Optimization: **Rocket Loader off**, Auto Minify off (they rewrite the page's scripts
-     and break hydration). Scrape Shield → **Email Address Obfuscation off** (it rewrites e-mail
-     addresses in the HTML, which makes React's hydration disagree with the server's markup).
-   - Rules → Transform Rules → _Modify Request Header_: for all requests set the header
-     `X-Origin-Auth` to the same value as `ORIGIN_AUTH_SECRET`. (Cloudflare overwrites whatever a
-     visitor sent, which is what makes the stamp trustworthy.)
-   - Rules → Cache Rules: (a) path starts with `/_next/static/` → eligible for cache, respect origin
-     headers (they are `immutable`); (b) path starts with `/_next/image` → eligible for cache,
-     edge TTL 7 days. Marketing-page HTML caching is a later, separate step (see "Speed" below).
+   - Speed → Settings → Content Optimization: **Rocket Loader off** (it was ON by default; it
+     rewrites the page's scripts and breaks hydration; Auto Minify no longer exists). Security →
+     Settings → **Email Address Obfuscation off** (it was ON by default; it rewrites e-mail addresses
+     in the HTML, which makes React's hydration disagree with the server's markup). Judge every
+     toggle by the picture, not by what the page's text says (grey knob on the left = off).
+   - Caching → Configuration → **Browser Cache TTL: Respect Existing Headers** (the default of 4
+     hours makes Cloudflare rewrite `max-age=0` to 4 hours on `sw.js`, icons and other files from
+     /public, so a changed service worker would reach browsers hours late).
+   - Rules → Transform Rules → _Modify Request Header_ → "Set static": `X-Origin-Auth` = the value of
+     `ORIGIN_AUTH_SECRET`. (Cloudflare overwrites whatever a visitor sent, which is what makes the
+     stamp trustworthy.) Scope the rule by hostname — `(http.host eq "staging.sentencestep.com")`
+     while testing; at the cutover edit the expression to also match `sentencestep.com` and
+     `www.sentencestep.com`. Paste the secret from the clipboard rather than typing it, and check the
+     rule by its effect, not by opening it: from Iraq, `https://<host>/upgrade` must list the Iraqi
+     wallets (ZainCash), and a forged `cf-ipcountry` / `x-origin-auth` sent by hand must change nothing.
+   - Caching: nothing to add for `/_next/static/*` (a year, `immutable`, already served from
+     Cloudflare's cache: `cf-cache-status: HIT`). `/_next/image` is not cached by default; the whole
+     site used 20 source images a month, so a rule is not worth it. HTML is never cached by default,
+     which is right (it varies by cookie). Marketing-page HTML caching is a later, separate step
+     (see "Speed" below).
+   - Known harmless noise: Cloudflare injects its Web Analytics beacon into HTML for browsers and the
+     site's CSP blocks it, so the browser console shows one CSP error per page. It changes nothing
+     visible; to silence it, disable Web Analytics for the zone or allow the script in the CSP.
    - Security → WAF → Custom rules: **Skip** all remaining rules for paths starting with
      `/api/billing/webhook`, `/api/email/inbound` and `/api/cron` (payment, e-mail and scheduler
      calls come from servers that cannot solve a browser challenge), and tick the extra components
