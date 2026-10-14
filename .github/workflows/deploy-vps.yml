@@ -15,19 +15,19 @@ name: Deploy to the self-hosted server
 # "Cutover"). To roll the live site back without deploying anything: Actions ->
 # this workflow -> Run workflow -> tick "rollback".
 #
-# Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on), DEPLOY_URL (the
-#   address of the site this run feeds; it also becomes NEXT_PUBLIC_SITE_URL in the build),
-#   and SERVER_HOST_KEY (the server's public SSH host key, written with the name `server`
-#   instead of its address, because a variable is printed in clear in a public run log:
-#   `server ssh-ed25519 AAAA...` - take the key from `ssh-keyscan -t ed25519 <server>` and
-#   replace the first word).
+# Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on) and DEPLOY_URL (the
+#   address of the site this run feeds; it also becomes NEXT_PUBLIC_SITE_URL in the build).
 # Repository secrets:    SERVER_HOST (the server's address), SERVER_SSH_KEY (the CI deploy
 #   private key), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, and optionally CF_ACCESS_CLIENT_ID /
 #   CF_ACCESS_CLIENT_SECRET (a Cloudflare Access service token, when the target is
 #   protected by Cloudflare Access).
-# Committed, not configured: deploy/build-public.env holds the five public values that are
-#   the same for every target (Supabase URL and anon key, Sentry DSN, Turnstile site key,
-#   VAPID public key).
+# Committed, not configured:
+#   - deploy/build-public.env: the five public values that are the same for every target
+#     (Supabase URL and anon key, Sentry DSN, Turnstile site key, VAPID public key);
+#   - deploy/known_hosts: the server's PUBLIC SSH host key, written under the name `server`
+#     (never the address - a variable or file with the address would be readable in this
+#     public repository's run logs). Regenerate with
+#     `ssh-keyscan -t ed25519 <server> | grep -v '^#' | awk '{print "server", $2, $3}'`.
 
 on:
   push:
@@ -78,12 +78,11 @@ jobs:
       - name: Prepare SSH
         env:
           SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SERVER_HOST_KEY: ${{ vars.SERVER_HOST_KEY }}
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$SERVER_HOST_KEY" > ~/.ssh/known_hosts
+          install -m 644 deploy/known_hosts ~/.ssh/known_hosts
           cat > ~/.ssh/config <<EOF
           Host server
             HostName ${SERVER_HOST}
@@ -119,14 +118,13 @@ jobs:
         env:
           NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
           SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SERVER_HOST_KEY: ${{ vars.SERVER_HOST_KEY }}
         run: |
           # An image built with a public value missing would run, but be broken in the
           # browser; stop here, before anything is built or sent.
           missing=0
           for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_SITE_URL \
                       NEXT_PUBLIC_SENTRY_DSN NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_VAPID_PUBLIC_KEY \
-                      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY SERVER_HOST DEPLOY_URL; do
+                      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST DEPLOY_URL; do
             if [ -z "${!name:-}" ]; then echo "::error::$name is not set"; missing=1; fi
           done
           [ "$missing" = 0 ] || exit 1

@@ -85,11 +85,11 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
    - Turnstile: add `staging.sentencestep.com` to the widget's hostnames.
    - Supabase → Authentication → URL configuration: add `https://staging.sentencestep.com/**`.
 7. **GitHub** → Settings → Secrets and variables → Actions: variables and secrets listed at the top
-   of `.github/workflows/deploy-vps.yml`. `SERVER_HOST_KEY` is the output of
-   `ssh-keyscan -t ed25519 <reserved ip>` with the address replaced by the word `server` (a variable
-   is printed in clear in a public run log, so it must not contain the address). Set `DEPLOY_URL=https://staging.sentencestep.com`. The server's
-   address goes in as the **secret** `SERVER_HOST` (this repository is public, so run logs are public: a
-   secret is masked there, a variable is not), and `DEPLOY_ENABLED=true` switches the workflow on.
+   of `.github/workflows/deploy-vps.yml`. The server's public SSH host key is committed as
+   `deploy/known_hosts` under the name `server` (never the address). Set
+   `DEPLOY_URL=https://staging.sentencestep.com`. The server's address goes in as the **secret**
+   `SERVER_HOST` (this repository is public, so run logs are public: a secret is masked there, a
+   variable is not), and `DEPLOY_ENABLED=true` switches the workflow on.
 8. **Database change** (once, before the first deploy that serves real checkouts):
    apply `supabase/migrations/20250334000000_pricing_country_source_cloudflare.sql`. It only widens
    one check constraint; no row is touched.
