@@ -65,7 +65,7 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
 6. **Cloudflare** (the domain's DNS is already there):
    - SSL/TLS → Overview: **Full (strict)**. Edge Certificates: Always Use HTTPS on, minimum TLS 1.2.
    - SSL/TLS → Origin Server → Create Certificate for `sentencestep.com` and `*.sentencestep.com`
-     (15 years). Save the two files on the server as `/opt/sentencestep/certs/origin.pem` and
+     (15 years). Save the two files on the server as `/opt/sentencestep/caddy/certs/origin.pem` and
      `origin.key` (`chmod 600 origin.key`). Keep a copy in your password manager.
    - Network: **IP Geolocation on** (this is what produces `cf-ipcountry`).
    - Speed → Optimization: **Rocket Loader off**, Auto Minify off (they rewrite the page's scripts
@@ -86,7 +86,8 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
    - Supabase → Authentication → URL configuration: add `https://staging.sentencestep.com/**`.
 7. **GitHub** → Settings → Secrets and variables → Actions: variables and secrets listed at the top
    of `.github/workflows/deploy-vps.yml`. `SERVER_HOST_KEY` is the output of
-   `ssh-keyscan -t ed25519 <reserved ip>`. Set `DEPLOY_URL=https://staging.sentencestep.com`. The server's
+   `ssh-keyscan -t ed25519 <reserved ip>` with the address replaced by the word `server` (a variable
+   is printed in clear in a public run log, so it must not contain the address). Set `DEPLOY_URL=https://staging.sentencestep.com`. The server's
    address goes in as the **secret** `SERVER_HOST` (this repository is public, so run logs are public: a
    secret is masked there, a variable is not), and `DEPLOY_ENABLED=true` switches the workflow on.
 8. **Database change** (once, before the first deploy that serves real checkouts):
@@ -151,5 +152,10 @@ cache `/`, `/ar`, `/es`, `/tr`, `/privacy`, `/terms` for a few minutes **only wh
   the origin certificate from the password manager → run the deploy workflow → move the Reserved IP.
 - **Cloudflare 100-second limit**: a single request through Cloudflare may not take longer than 100 s
   (Netlify's limit was lower). Long admin jobs must stay bounded.
+- **Caddy's files**: `sync` keeps `caddy/Caddyfile` current and reloads Caddy gracefully, but it never
+  restarts containers. After a change to `docker-compose.yml` that concerns Caddy itself (ports, mounts),
+  run `cd /opt/sentencestep && docker compose --env-file state.env up -d caddy` once, in a quiet hour.
+  The container sees `/opt/sentencestep/caddy` as a whole directory on purpose: a single-file bind mount
+  keeps pointing at the old file after the file is replaced, which once made every traffic switch a no-op.
 - **Secrets**: never paste `server.env` values in chat or tickets. Rotate `ORIGIN_AUTH_SECRET` in both
   places (Cloudflare rule and `server.env`) if it is ever exposed.

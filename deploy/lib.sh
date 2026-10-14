@@ -4,7 +4,10 @@
 
 APP_DIR="${APP_DIR:-/opt/sentencestep}"
 STATE_FILE="$APP_DIR/state.env"
-UPSTREAM_FILE="$APP_DIR/active-upstream.caddy"
+# Caddy's config directory (mounted at /etc/caddy in the container as a whole, so that a
+# file replaced by rename is seen — see docker-compose.yml).
+CADDY_DIR="$APP_DIR/caddy"
+UPSTREAM_FILE="$CADDY_DIR/active-upstream.caddy"
 UPSTREAM_TEMPLATE="$APP_DIR/active-upstream.caddy.example"
 
 log() { printf '%s %s\n' "$(date -u +%H:%M:%S)" "$*" >&2; }

@@ -17,7 +17,10 @@ name: Deploy to the self-hosted server
 #
 # Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on), DEPLOY_URL (the
 #   address of the site this run feeds; it also becomes NEXT_PUBLIC_SITE_URL in the build),
-#   and SERVER_HOST_KEY (the output of `ssh-keyscan -t ed25519 <server>`).
+#   and SERVER_HOST_KEY (the server's public SSH host key, written with the name `server`
+#   instead of its address, because a variable is printed in clear in a public run log:
+#   `server ssh-ed25519 AAAA...` - take the key from `ssh-keyscan -t ed25519 <server>` and
+#   replace the first word).
 # Repository secrets:    SERVER_HOST (the server's address), SERVER_SSH_KEY (the CI deploy
 #   private key), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, and optionally CF_ACCESS_CLIENT_ID /
 #   CF_ACCESS_CLIENT_SECRET (a Cloudflare Access service token, when the target is
@@ -84,6 +87,7 @@ jobs:
           cat > ~/.ssh/config <<EOF
           Host server
             HostName ${SERVER_HOST}
+            HostKeyAlias server
             User deploy
             IdentityFile ~/.ssh/deploy_key
             IdentitiesOnly yes
@@ -125,7 +129,11 @@ jobs:
                       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY SERVER_HOST DEPLOY_URL; do
             if [ -z "${!name:-}" ]; then echo "::error::$name is not set"; missing=1; fi
           done
-          exit $missing
+          [ "$missing" = 0 ] || exit 1
+          # A short fingerprint (never the key) so the copy in this repository's secrets can
+          # be compared with the one in the server's env file: they must be identical, the
+          # build and the running server have to use the same Server Actions key.
+          echo "Server Actions key fingerprint: $(printf %s "$NEXT_SERVER_ACTIONS_ENCRYPTION_KEY" | sha256sum | cut -c1-8)"
 
       - uses: docker/setup-buildx-action@v3
         if: ${{ !inputs.rollback }}

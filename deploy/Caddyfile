@@ -1,6 +1,6 @@
 # Origin web server. Visitors never reach this directly: they connect to Cloudflare,
 # which connects here over HTTPS using a Cloudflare Origin CA certificate (installed
-# in ./certs by hand, see README). Cloudflare's SSL mode must be "Full (strict)".
+# in ./caddy/certs by hand, see README). Cloudflare's SSL mode must be "Full (strict)".
 
 {
 	# Certificates are the Cloudflare Origin CA ones below, not ACME ones.

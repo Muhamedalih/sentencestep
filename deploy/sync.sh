@@ -14,16 +14,21 @@ APP_DIR="${APP_DIR:-/opt/sentencestep}"
 cd "$APP_DIR"
 
 SCRIPTS=(lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh)
-CONFIGS=(docker-compose.yml Caddyfile active-upstream.caddy.example)
+CONFIGS=(docker-compose.yml active-upstream.caddy.example)
+# The Caddyfile lives in Caddy's config directory, which the container mounts as a whole
+# (see docker-compose.yml: a replaced file is only seen through a directory mount).
+CADDY_DIR="$APP_DIR/caddy"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 tar -xz -C "$tmp" --no-same-owner --no-same-permissions
 
+mkdir -p "$CADDY_DIR"
 changed_caddyfile=0
-if [ -f "$tmp/Caddyfile" ] && ! cmp -s "$tmp/Caddyfile" "$APP_DIR/Caddyfile"; then
+if [ -f "$tmp/Caddyfile" ] && ! cmp -s "$tmp/Caddyfile" "$CADDY_DIR/Caddyfile"; then
   changed_caddyfile=1
-  cp -p "$APP_DIR/Caddyfile" "$tmp/Caddyfile.previous" 2>/dev/null || true
+  cp -p "$CADDY_DIR/Caddyfile" "$tmp/Caddyfile.previous" 2>/dev/null || true
+  install -m 644 "$tmp/Caddyfile" "$CADDY_DIR/Caddyfile"
 fi
 
 for f in "${CONFIGS[@]}"; do
@@ -36,7 +41,7 @@ if [ "$changed_caddyfile" -eq 1 ]; then
        && docker exec sentencestep-caddy-1 caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1; then
       echo "Caddyfile updated and reloaded"
     else
-      [ -f "$tmp/Caddyfile.previous" ] && install -m 644 "$tmp/Caddyfile.previous" "$APP_DIR/Caddyfile"
+      [ -f "$tmp/Caddyfile.previous" ] && install -m 644 "$tmp/Caddyfile.previous" "$CADDY_DIR/Caddyfile"
       echo "ERROR: the new Caddyfile was rejected; the previous one was restored" >&2
       exit 1
     fi

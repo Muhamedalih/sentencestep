@@ -11,3 +11,4 @@ Caddyfile text eol=lf
 deploy/docker-compose.yml text eol=lf
 deploy/server.env.example text eol=lf
 .github/workflows/*.yml text eol=lf
+deploy/build-public.env text eol=lf

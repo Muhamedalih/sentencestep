@@ -138,13 +138,16 @@ EOF
 sysctl --system >/dev/null
 
 echo "==> $APP_DIR"
-install -d -m 755 -o deploy -g deploy "$APP_DIR" "$APP_DIR/certs"
-for f in docker-compose.yml Caddyfile lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh active-upstream.caddy.example; do
+# caddy/ is the directory the Caddy container mounts as /etc/caddy (a directory, not single
+# files, so that files replaced by rename are seen - see docker-compose.yml).
+install -d -m 755 -o deploy -g deploy "$APP_DIR" "$APP_DIR/caddy" "$APP_DIR/caddy/certs"
+for f in docker-compose.yml lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh active-upstream.caddy.example; do
   install -m 755 -o deploy -g deploy "$SRC_DIR/$f" "$APP_DIR/$f"
 done
-chmod 644 "$APP_DIR/docker-compose.yml" "$APP_DIR/Caddyfile" "$APP_DIR/active-upstream.caddy.example"
-if [ ! -f "$APP_DIR/active-upstream.caddy" ]; then
-  install -m 644 -o deploy -g deploy "$SRC_DIR/active-upstream.caddy.example" "$APP_DIR/active-upstream.caddy"
+chmod 644 "$APP_DIR/docker-compose.yml" "$APP_DIR/active-upstream.caddy.example"
+install -m 644 -o deploy -g deploy "$SRC_DIR/Caddyfile" "$APP_DIR/caddy/Caddyfile"
+if [ ! -f "$APP_DIR/caddy/active-upstream.caddy" ]; then
+  install -m 644 -o deploy -g deploy "$SRC_DIR/active-upstream.caddy.example" "$APP_DIR/caddy/active-upstream.caddy"
 fi
 if [ ! -f "$APP_DIR/server.env" ]; then
   install -m 600 -o deploy -g deploy "$SRC_DIR/server.env.example" "$APP_DIR/server.env"
@@ -152,6 +155,6 @@ if [ ! -f "$APP_DIR/server.env" ]; then
 fi
 
 echo
-echo "Bootstrap finished. Next (README.md): put the Cloudflare origin certificate in $APP_DIR/certs,"
+echo "Bootstrap finished. Next (README.md): put the Cloudflare origin certificate in $APP_DIR/caddy/certs,"
 echo "fill in $APP_DIR/server.env, then start Caddy:  cd $APP_DIR && docker compose up -d caddy"
 echo "Log in as:  ssh deploy@<server>. Root login is closed only by the second stage (HARDEN_SSH=1)."

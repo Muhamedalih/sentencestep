@@ -1,4 +1,4 @@
-# Copied to /opt/sentencestep/active-upstream.caddy on first setup and rewritten by
+# Copied to /opt/sentencestep/caddy/active-upstream.caddy on first setup and rewritten by
 # deploy.sh / rollback.sh on every deploy. `app-blue` or `app-green` is the live slot.
 reverse_proxy app-blue:3000 {
 	health_uri /api/health

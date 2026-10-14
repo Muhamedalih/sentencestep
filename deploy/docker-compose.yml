@@ -38,9 +38,13 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./active-upstream.caddy:/etc/caddy/active-upstream.caddy:ro
-      - ./certs:/etc/caddy/certs:ro
+      # The whole config DIRECTORY is mounted, never single files: deploy.sh and sync.sh
+      # replace files by renaming a new one over the old, and a single-file bind mount keeps
+      # pointing at the OLD file (the container would silently keep serving the previous
+      # slot). A directory mount sees every rename. It holds the Caddyfile, the
+      # active-upstream.caddy that says which slot is live, and certs/ (the Cloudflare
+      # origin certificate, installed by hand).
+      - ./caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
     networks: [web]
