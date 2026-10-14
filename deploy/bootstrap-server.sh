@@ -31,7 +31,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "==> packages"
 apt-get update -y
-apt-get upgrade -y
+apt-get -o Dpkg::Options::=--force-confold upgrade -y
 apt-get install -y ca-certificates curl gnupg jq ufw fail2ban unattended-upgrades logrotate
 
 echo "==> Docker (official repository)"
@@ -60,6 +60,11 @@ if ! id deploy >/dev/null 2>&1; then
   adduser --disabled-password --gecos "" deploy
 fi
 usermod -aG docker deploy
+# The people who administer the server (the admin key) can use sudo without a password
+# prompt; the CI key cannot reach a shell at all (it is pinned to ci-entry.sh below).
+echo 'deploy ALL=(ALL) NOPASSWD:ALL' >/etc/sudoers.d/90-deploy
+chmod 440 /etc/sudoers.d/90-deploy
+visudo -cf /etc/sudoers.d/90-deploy >/dev/null
 install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
 {
   echo "$ADMIN_KEY"
@@ -68,8 +73,12 @@ install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
 chown deploy:deploy /home/deploy/.ssh/authorized_keys
 chmod 600 /home/deploy/.ssh/authorized_keys
 
-echo "==> SSH hardening (keys only, no root, no passwords)"
-cat >/etc/ssh/sshd_config.d/99-hardening.conf <<'EOF'
+# SSH hardening is a SECOND stage on purpose: first prove that `ssh deploy@server` works
+# with the admin key, and only then close root login (a mistake here would otherwise
+# lock everyone out). Run the script again with HARDEN_SSH=1 after checking the login.
+if [ "${HARDEN_SSH:-0}" = "1" ]; then
+  echo "==> SSH hardening (keys only, no root, no passwords)"
+  cat >/etc/ssh/sshd_config.d/99-hardening.conf <<'EOF'
 PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
@@ -79,8 +88,11 @@ MaxAuthTries 3
 LoginGraceTime 20
 X11Forwarding no
 EOF
-sshd -t
-systemctl reload ssh || systemctl reload sshd
+  sshd -t
+  systemctl reload ssh || systemctl reload sshd
+else
+  echo "==> SSH hardening skipped (stage 1). Once 'ssh deploy@<server>' works, run again with HARDEN_SSH=1."
+fi
 
 echo "==> fail2ban"
 cat >/etc/fail2ban/jail.d/sshd.local <<'EOF'
@@ -142,4 +154,4 @@ fi
 echo
 echo "Bootstrap finished. Next (README.md): put the Cloudflare origin certificate in $APP_DIR/certs,"
 echo "fill in $APP_DIR/server.env, then start Caddy:  cd $APP_DIR && docker compose up -d caddy"
-echo "From now on log in as:  ssh deploy@<server>   (root login is disabled)"
+echo "Log in as:  ssh deploy@<server>. Root login is closed only by the second stage (HARDEN_SSH=1)."
