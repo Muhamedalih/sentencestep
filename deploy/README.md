@@ -137,7 +137,7 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
 
 | Want to…             | Do                                                                                                                                               |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Deploy               | push to the trigger branch (`master` while testing, `release` after cutover)                                                                     |
+| Deploy               | `git push origin master:release` (or Actions → _Deploy to the self-hosted server_ → Run workflow, to deploy any branch by hand)                  |
 | Roll back            | GitHub → Actions → _Deploy to the self-hosted server_ → Run workflow → tick **rollback**; or `ssh deploy@SERVER "/opt/sentencestep/rollback.sh"` |
 | See what is running  | `ssh deploy@SERVER "/opt/sentencestep/status.sh"`                                                                                                |
 | Read the site's logs | `ssh deploy@SERVER "docker logs --tail 200 sentencestep-app-blue-1"` (or `-green-`; `status.sh` says which is live)                              |

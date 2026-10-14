@@ -9,11 +9,11 @@ name: Deploy to the self-hosted server
 # address is therefore a SECRET (GitHub masks secrets in logs; variables it does not),
 # and nothing in this file may ever print a secret.
 #
-# During the migration this feeds the TEST copy of the site (DEPLOY_URL =
-# https://staging.sentencestep.com). At cutover the trigger below becomes the
-# `release` branch and DEPLOY_URL becomes https://sentencestep.com (README.md,
-# "Cutover"). To roll the live site back without deploying anything: Actions ->
-# this workflow -> Run workflow -> tick "rollback".
+# This feeds the live site (DEPLOY_URL = https://sentencestep.com). Publishing is what it
+# was on Netlify: push to the `release` branch (`git push origin master:release`). Pushes
+# to `master` do not deploy anything. To deploy any other branch or commit by hand:
+# Actions -> this workflow -> Run workflow -> pick the branch. To roll the live site back
+# without deploying anything: the same button, tick "rollback".
 #
 # Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on) and DEPLOY_URL (the
 #   address of the site this run feeds; it also becomes NEXT_PUBLIC_SITE_URL in the build).
@@ -31,10 +31,7 @@ name: Deploy to the self-hosted server
 
 on:
   push:
-    # `migration/vps` is only here while the test copy is being built: the "Run workflow"
-    # button needs this file on the default branch, a push does not. Drop it once the
-    # branch is merged. At cutover `master` becomes `release`.
-    branches: [master, migration/vps]
+    branches: [release]
   workflow_dispatch:
     inputs:
       rollback:
