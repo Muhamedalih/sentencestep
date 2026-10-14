@@ -69,7 +69,8 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
      `origin.key` (`chmod 600 origin.key`). Keep a copy in your password manager.
    - Network: **IP Geolocation on** (this is what produces `cf-ipcountry`).
    - Speed → Optimization: **Rocket Loader off**, Auto Minify off (they rewrite the page's scripts
-     and break hydration).
+     and break hydration). Scrape Shield → **Email Address Obfuscation off** (it rewrites e-mail
+     addresses in the HTML, which makes React's hydration disagree with the server's markup).
    - Rules → Transform Rules → _Modify Request Header_: for all requests set the header
      `X-Origin-Auth` to the same value as `ORIGIN_AUTH_SECRET`. (Cloudflare overwrites whatever a
      visitor sent, which is what makes the stamp trustworthy.)
@@ -78,8 +79,12 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
      edge TTL 7 days. Marketing-page HTML caching is a later, separate step (see "Speed" below).
    - Security → WAF → Custom rules: **Skip** all remaining rules for paths starting with
      `/api/billing/webhook`, `/api/email/inbound` and `/api/cron` (payment, e-mail and scheduler
-     calls come from servers that cannot solve a browser challenge). Bot Fight Mode: off.
-   - Zero Trust → Access: protect `staging.sentencestep.com` (your e-mail + a service token for CI).
+     calls come from servers that cannot solve a browser challenge), and tick the extra components
+     **Browser Integrity Check** and **Security Level** in that skip rule (their callers do not
+     look like browsers either). Bot Fight Mode: off.
+   - Zero Trust → Access (optional): protect `staging.sentencestep.com` (your e-mail + a service
+     token for CI). Staging uses the live database, so this is a nice-to-have; the page tells search
+     engines to stay away (`X-Robots-Tag`) and the address is not published.
    - DNS: `staging` → A record to the Reserved IP, **proxied**. (The apex and `www` stay as they are
      until the cutover.)
    - Turnstile: add `staging.sentencestep.com` to the widget's hostnames.
