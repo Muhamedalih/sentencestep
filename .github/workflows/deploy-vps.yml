@@ -2,8 +2,12 @@ name: Deploy to the self-hosted server
 
 # Builds the Docker image on GitHub's runner and ships it to the server over SSH
 # (deploy/deploy.sh does the zero-downtime switch there). Replaces what Netlify did on
-# every push. Nothing here runs until the server exists AND `SERVER_HOST` is set as a
-# repository variable — until then the deploy job is skipped, not failed.
+# every push. Nothing here runs until the server exists AND the repository variable
+# `DEPLOY_ENABLED` is set to `true` — until then the jobs are skipped, not failed.
+#
+# This repository is public, so the logs of every run are public too: the server's
+# address is therefore a SECRET (GitHub masks secrets in logs; variables it does not),
+# and nothing in this file may ever print a secret.
 #
 # During the migration this feeds the TEST copy of the site (DEPLOY_URL =
 # https://staging.sentencestep.com). At cutover the trigger below becomes the
@@ -11,12 +15,12 @@ name: Deploy to the self-hosted server
 # "Cutover"). To roll the live site back without deploying anything: Actions ->
 # this workflow -> Run workflow -> tick "rollback".
 #
-# Repository variables:  SERVER_HOST, SERVER_HOST_KEY (the output of
-#   `ssh-keyscan -t ed25519 <server>`), DEPLOY_URL, and the six public values
-#   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SITE_URL,
+# Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on), DEPLOY_URL,
+#   SERVER_HOST_KEY (the output of `ssh-keyscan -t ed25519 <server>`), and the six public
+#   values NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SITE_URL,
 #   NEXT_PUBLIC_SENTRY_DSN, NEXT_PUBLIC_TURNSTILE_SITE_KEY, NEXT_PUBLIC_VAPID_PUBLIC_KEY.
-# Repository secrets:    SERVER_SSH_KEY (the CI deploy private key),
-#   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, and optionally CF_ACCESS_CLIENT_ID /
+# Repository secrets:    SERVER_HOST (the server's address), SERVER_SSH_KEY (the CI deploy
+#   private key), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, and optionally CF_ACCESS_CLIENT_ID /
 #   CF_ACCESS_CLIENT_SECRET (a Cloudflare Access service token, when the target is
 #   protected by Cloudflare Access).
 
@@ -39,7 +43,7 @@ permissions:
 
 jobs:
   checks:
-    if: ${{ vars.SERVER_HOST != '' && !inputs.rollback }}
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && !inputs.rollback }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,10 +59,10 @@ jobs:
   deploy:
     needs: checks
     # `checks` is skipped on a rollback run; the deploy job must still run then.
-    if: ${{ always() && vars.SERVER_HOST != '' && (inputs.rollback || needs.checks.result == 'success') }}
+    if: ${{ always() && vars.DEPLOY_ENABLED == 'true' && (inputs.rollback || needs.checks.result == 'success') }}
     runs-on: ubuntu-latest
     env:
-      SERVER_HOST: ${{ vars.SERVER_HOST }}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
       DEPLOY_URL: ${{ vars.DEPLOY_URL }}
     steps:
       - uses: actions/checkout@v4
@@ -99,11 +103,12 @@ jobs:
           NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
           SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SERVER_HOST_KEY: ${{ vars.SERVER_HOST_KEY }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
         run: |
           # An image built with a public value missing would run, but be broken in the
           # browser; stop here, before anything is built or sent.
           missing=0
-          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_SITE_URL                       NEXT_PUBLIC_SENTRY_DSN NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_VAPID_PUBLIC_KEY                       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY DEPLOY_URL; do
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_SITE_URL                       NEXT_PUBLIC_SENTRY_DSN NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_VAPID_PUBLIC_KEY                       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY SERVER_HOST DEPLOY_URL; do
             if [ -z "${!name:-}" ]; then echo "::error::$name is not set"; missing=1; fi
           done
           exit $missing
