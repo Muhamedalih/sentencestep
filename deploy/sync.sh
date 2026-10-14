@@ -13,7 +13,7 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/sentencestep}"
 cd "$APP_DIR"
 
-SCRIPTS=(lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh)
+SCRIPTS=(lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh watchdog.sh)
 CONFIGS=(docker-compose.yml active-upstream.caddy.example)
 # The Caddyfile lives in Caddy's config directory, which the container mounts as a whole
 # (see docker-compose.yml: a replaced file is only seen through a directory mount).

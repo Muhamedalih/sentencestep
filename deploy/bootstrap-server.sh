@@ -141,9 +141,13 @@ echo "==> $APP_DIR"
 # caddy/ is the directory the Caddy container mounts as /etc/caddy (a directory, not single
 # files, so that files replaced by rename are seen - see docker-compose.yml).
 install -d -m 755 -o deploy -g deploy "$APP_DIR" "$APP_DIR/caddy" "$APP_DIR/caddy/certs"
-for f in docker-compose.yml lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh active-upstream.caddy.example; do
+for f in docker-compose.yml lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh watchdog.sh active-upstream.caddy.example; do
   install -m 755 -o deploy -g deploy "$SRC_DIR/$f" "$APP_DIR/$f"
 done
+# The watchdog restarts an app container that hangs (Docker only marks it unhealthy).
+install -m 644 "$SRC_DIR/systemd/sentencestep-watchdog.service" "$SRC_DIR/systemd/sentencestep-watchdog.timer" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now sentencestep-watchdog.timer
 chmod 644 "$APP_DIR/docker-compose.yml" "$APP_DIR/active-upstream.caddy.example"
 install -m 644 -o deploy -g deploy "$SRC_DIR/Caddyfile" "$APP_DIR/caddy/Caddyfile"
 if [ ! -f "$APP_DIR/caddy/active-upstream.caddy" ]; then

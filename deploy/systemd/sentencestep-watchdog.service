@@ -1,0 +1,12 @@
+[Unit]
+Description=Restart a hung SentenceStep app container
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+RuntimeDirectory=sentencestep-watchdog
+RuntimeDirectoryPreserve=yes
+Environment=STATE_DIR=/run/sentencestep-watchdog
+ExecStart=/opt/sentencestep/watchdog.sh
