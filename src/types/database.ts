@@ -300,7 +300,7 @@ export interface Database {
           provider_payment_id: string | null;
           pricing_tier: "A" | "B";
           pricing_country: string | null;
-          pricing_country_source: "netlify_geo" | "default";
+          pricing_country_source: "netlify_geo" | "cloudflare_geo" | "default";
           price_usd_cents: number;
           fx_rate_per_usd: number;
           charge_amount: number;
@@ -335,7 +335,7 @@ export interface Database {
           provider_payment_id?: string | null;
           pricing_tier: "A" | "B";
           pricing_country?: string | null;
-          pricing_country_source: "netlify_geo" | "default";
+          pricing_country_source: "netlify_geo" | "cloudflare_geo" | "default";
           price_usd_cents: number;
           fx_rate_per_usd: number;
           charge_amount: number;

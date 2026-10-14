@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# One-time setup of a brand-new Ubuntu 24.04 server for the site. Run as root, once,
+# right after creating the machine:
+#
+#   scp -r deploy root@SERVER:/root/deploy
+#   ssh root@SERVER "bash /root/deploy/bootstrap-server.sh 'ssh-ed25519 AAAA... your-key' 'ssh-ed25519 AAAA... ci-deploy'"
+#
+# Arguments: <admin public key> <CI deploy public key>. The admin key gets a normal
+# login for the `deploy` user (for people); the CI key is pinned to ci-entry.sh and
+# can do nothing else. Safe to run again (every step checks before it changes).
+#
+# What it sets up: Docker; the `deploy` user; key-only SSH with root login and
+# passwords off; automatic security updates; fail2ban; a small swap file; log
+# rotation; /opt/sentencestep with the stack's files. It does NOT start the site —
+# that needs the secrets in server.env and the Cloudflare certificate (README.md).
+#
+# Note for whoever extends it: Docker publishes ports straight through the firewall
+# (ufw's rules do not apply to published container ports). Restricting who may
+# reach 80/443 is therefore done in the cloud provider's own firewall (README.md,
+# "Firewall"), not here.
+set -euo pipefail
+
+ADMIN_KEY="${1:-}"
+CI_KEY="${2:-}"
+[ "$(id -u)" -eq 0 ] || { echo "run as root" >&2; exit 1; }
+[[ "$ADMIN_KEY" == ssh-* && "$CI_KEY" == ssh-* ]] || { echo "usage: $0 '<admin public key>' '<ci deploy public key>'" >&2; exit 1; }
+
+APP_DIR=/opt/sentencestep
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export DEBIAN_FRONTEND=noninteractive
+
+echo "==> packages"
+apt-get update -y
+apt-get upgrade -y
+apt-get install -y ca-certificates curl gnupg jq ufw fail2ban unattended-upgrades logrotate
+
+echo "==> Docker (official repository)"
+if ! command -v docker >/dev/null 2>&1; then
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+    >/etc/apt/sources.list.d/docker.list
+  apt-get update -y
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+fi
+mkdir -p /etc/docker
+cat >/etc/docker/daemon.json <<'EOF'
+{
+  "log-driver": "json-file",
+  "log-opts": { "max-size": "20m", "max-file": "5" },
+  "live-restore": true
+}
+EOF
+systemctl enable --now docker
+systemctl reload docker || systemctl restart docker
+
+echo "==> deploy user"
+if ! id deploy >/dev/null 2>&1; then
+  adduser --disabled-password --gecos "" deploy
+fi
+usermod -aG docker deploy
+install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
+{
+  echo "$ADMIN_KEY"
+  echo "command=\"$APP_DIR/ci-entry.sh\",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding $CI_KEY"
+} >/home/deploy/.ssh/authorized_keys
+chown deploy:deploy /home/deploy/.ssh/authorized_keys
+chmod 600 /home/deploy/.ssh/authorized_keys
+
+echo "==> SSH hardening (keys only, no root, no passwords)"
+cat >/etc/ssh/sshd_config.d/99-hardening.conf <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AllowUsers deploy
+MaxAuthTries 3
+LoginGraceTime 20
+X11Forwarding no
+EOF
+sshd -t
+systemctl reload ssh || systemctl reload sshd
+
+echo "==> fail2ban"
+cat >/etc/fail2ban/jail.d/sshd.local <<'EOF'
+[sshd]
+enabled = true
+maxretry = 4
+findtime = 10m
+bantime = 1h
+EOF
+systemctl enable --now fail2ban
+systemctl restart fail2ban
+
+echo "==> automatic security updates (no automatic reboot)"
+cat >/etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+EOF
+cat >/etc/apt/apt.conf.d/52unattended-upgrades-local <<'EOF'
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+EOF
+
+echo "==> host firewall: SSH, HTTP, HTTPS (who may reach 80/443 is set in the cloud firewall)"
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
+
+echo "==> 2 GB swap (a safety net against out-of-memory kills)"
+if ! swapon --show | grep -q /swapfile; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >>/etc/fstab
+fi
+cat >/etc/sysctl.d/99-sentencestep.conf <<'EOF'
+vm.swappiness = 10
+net.core.somaxconn = 1024
+EOF
+sysctl --system >/dev/null
+
+echo "==> $APP_DIR"
+install -d -m 755 -o deploy -g deploy "$APP_DIR" "$APP_DIR/certs"
+for f in docker-compose.yml Caddyfile lib.sh deploy.sh rollback.sh status.sh ci-entry.sh sync.sh smoke-test.sh active-upstream.caddy.example; do
+  install -m 755 -o deploy -g deploy "$SRC_DIR/$f" "$APP_DIR/$f"
+done
+chmod 644 "$APP_DIR/docker-compose.yml" "$APP_DIR/Caddyfile" "$APP_DIR/active-upstream.caddy.example"
+if [ ! -f "$APP_DIR/active-upstream.caddy" ]; then
+  install -m 644 -o deploy -g deploy "$SRC_DIR/active-upstream.caddy.example" "$APP_DIR/active-upstream.caddy"
+fi
+if [ ! -f "$APP_DIR/server.env" ]; then
+  install -m 600 -o deploy -g deploy "$SRC_DIR/server.env.example" "$APP_DIR/server.env"
+  echo "    created $APP_DIR/server.env from the example — fill in the real values (README.md, step 4)"
+fi
+
+echo
+echo "Bootstrap finished. Next (README.md): put the Cloudflare origin certificate in $APP_DIR/certs,"
+echo "fill in $APP_DIR/server.env, then start Caddy:  cd $APP_DIR && docker compose up -d caddy"
+echo "From now on log in as:  ssh deploy@<server>   (root login is disabled)"

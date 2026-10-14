@@ -1,0 +1,46 @@
+# Origin web server. Visitors never reach this directly: they connect to Cloudflare,
+# which connects here over HTTPS using a Cloudflare Origin CA certificate (installed
+# in ./certs by hand, see README). Cloudflare's SSL mode must be "Full (strict)".
+
+{
+	# Certificates are the Cloudflare Origin CA ones below, not ACME ones.
+	auto_https off
+}
+
+# Which app slot (blue/green) is live. Rewritten by deploy.sh / rollback.sh, then
+# applied with a graceful `caddy reload` — in-flight requests finish normally.
+(app) {
+	encode zstd gzip
+	header -Server
+	import /etc/caddy/active-upstream.caddy
+}
+
+# The bare domain is the primary one; www redirects to it (what Netlify does today).
+www.sentencestep.com {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+	redir https://sentencestep.com{uri} permanent
+}
+
+sentencestep.com {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+	import app
+}
+
+# The test copy of the site (same image, same database). Search engines are told
+# to stay away; access is additionally limited by Cloudflare Access.
+staging.sentencestep.com {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+	header X-Robots-Tag "noindex, nofollow, noarchive"
+	import app
+}
+
+# Anything else that reaches the machine (a request by raw IP, or by a hostname
+# that is not ours) gets nothing — the connection is dropped.
+:443 {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+	abort
+}
+
+:80 {
+	abort
+}

@@ -1,0 +1,76 @@
+# The whole production stack on the server, started from /opt/sentencestep.
+#
+#   caddy      the only thing listening on the internet (ports 80/443). Cloudflare
+#              connects to it; it forwards to whichever app copy is "active".
+#   app-blue   two identical slots for the Next.js server. A deploy starts the
+#   app-green  IDLE slot with the new image, waits until it is healthy, then points
+#              Caddy at it — the old slot keeps running untouched, so rolling back
+#              is just pointing Caddy back. See deploy.sh / rollback.sh.
+#
+# Everything per-release (which image each slot runs, which slot is active) lives in
+# state.env; `docker compose --env-file state.env ...` is how deploy.sh drives this.
+# Secrets live only in server.env on the server (never in git, never in an image).
+
+name: sentencestep
+
+x-app: &app
+  restart: unless-stopped
+  init: true
+  env_file: ./server.env
+  networks: [web]
+  # A runaway process is stopped by the kernel rather than taking the whole
+  # machine (and Caddy) down with it.
+  mem_limit: 1800m
+  pids_limit: 512
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./active-upstream.caddy:/etc/caddy/active-upstream.caddy:ro
+      - ./certs:/etc/caddy/certs:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [web]
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  app-blue:
+    <<: *app
+    image: ${APP_IMAGE_BLUE:-sentencestep:none}
+    environment:
+      GIT_COMMIT_SHA: ${SHA_BLUE:-unknown}
+    volumes:
+      - next_cache_blue:/app/.next/cache
+
+  app-green:
+    <<: *app
+    image: ${APP_IMAGE_GREEN:-sentencestep:none}
+    environment:
+      GIT_COMMIT_SHA: ${SHA_GREEN:-unknown}
+    volumes:
+      - next_cache_green:/app/.next/cache
+
+networks:
+  web:
+
+volumes:
+  caddy_data:
+  caddy_config:
+  next_cache_blue:
+  next_cache_green:

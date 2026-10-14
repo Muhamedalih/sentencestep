@@ -12,10 +12,23 @@ import { withSentryConfig } from "@sentry/nextjs/config";
  */
 const isNetlifyBuild = process.env.NETLIFY === "true";
 
+/**
+ * The self-hosted (Docker) build skips the same two checks for the same reason:
+ * its CI job has already run the type-check, lint and tests before it builds the
+ * image (see .github/workflows/deploy-vps.yml). Opt-in by env var, so Netlify's
+ * own build and a local `next build` behave exactly as they always have.
+ */
+const skipBuildChecks = isNetlifyBuild || process.env.SKIP_BUILD_CHECKS === "1";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: isNetlifyBuild },
-  eslint: { ignoreDuringBuilds: isNetlifyBuild },
+  // `NEXT_OUTPUT=standalone` (set only by the Dockerfile) makes `next build` emit
+  // a self-contained server — .next/standalone — with just the files it needs, so
+  // the container image stays small and starts with `node server.js`. Unset
+  // (Netlify, local dev, `next start`) the output is the default one, untouched.
+  ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const } : {}),
+  typescript: { ignoreBuildErrors: skipBuildChecks },
+  eslint: { ignoreDuringBuilds: skipBuildChecks },
   // Server Actions' encryption key needs no config field here — Next.js
   // reads process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY directly at build
   // time (see node_modules/next/dist/server/app-render/encryption-utils-server.js)

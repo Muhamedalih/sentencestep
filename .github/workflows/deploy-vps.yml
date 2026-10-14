@@ -1,0 +1,153 @@
+name: Deploy to the self-hosted server
+
+# Builds the Docker image on GitHub's runner and ships it to the server over SSH
+# (deploy/deploy.sh does the zero-downtime switch there). Replaces what Netlify did on
+# every push. Nothing here runs until the server exists AND `SERVER_HOST` is set as a
+# repository variable — until then the deploy job is skipped, not failed.
+#
+# During the migration this feeds the TEST copy of the site (DEPLOY_URL =
+# https://staging.sentencestep.com). At cutover the trigger below becomes the
+# `release` branch and DEPLOY_URL becomes https://sentencestep.com (README.md,
+# "Cutover"). To roll the live site back without deploying anything: Actions ->
+# this workflow -> Run workflow -> tick "rollback".
+#
+# Repository variables:  SERVER_HOST, SERVER_HOST_KEY (the output of
+#   `ssh-keyscan -t ed25519 <server>`), DEPLOY_URL, and the six public values
+#   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SITE_URL,
+#   NEXT_PUBLIC_SENTRY_DSN, NEXT_PUBLIC_TURNSTILE_SITE_KEY, NEXT_PUBLIC_VAPID_PUBLIC_KEY.
+# Repository secrets:    SERVER_SSH_KEY (the CI deploy private key),
+#   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, and optionally CF_ACCESS_CLIENT_ID /
+#   CF_ACCESS_CLIENT_SECRET (a Cloudflare Access service token, when the target is
+#   protected by Cloudflare Access).
+
+on:
+  push:
+    branches: [master] # at cutover: [release]
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: "Roll back to the previous release instead of deploying"
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    if: ${{ vars.SERVER_HOST != '' && !inputs.rollback }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm test
+
+  deploy:
+    needs: checks
+    # `checks` is skipped on a rollback run; the deploy job must still run then.
+    if: ${{ always() && vars.SERVER_HOST != '' && (inputs.rollback || needs.checks.result == 'success') }}
+    runs-on: ubuntu-latest
+    env:
+      SERVER_HOST: ${{ vars.SERVER_HOST }}
+      DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare SSH
+        env:
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_HOST_KEY: ${{ vars.SERVER_HOST_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SERVER_HOST_KEY" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host server
+            HostName ${SERVER_HOST}
+            User deploy
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ~/.ssh/known_hosts
+            ServerAliveInterval 30
+          EOF
+
+      - name: Roll back
+        if: ${{ inputs.rollback }}
+        run: ssh server rollback
+
+      - name: Check the configuration is complete
+        if: ${{ !inputs.rollback }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_HOST_KEY: ${{ vars.SERVER_HOST_KEY }}
+        run: |
+          # An image built with a public value missing would run, but be broken in the
+          # browser; stop here, before anything is built or sent.
+          missing=0
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_SITE_URL                       NEXT_PUBLIC_SENTRY_DSN NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_VAPID_PUBLIC_KEY                       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY DEPLOY_URL; do
+            if [ -z "${!name:-}" ]; then echo "::error::$name is not set"; missing=1; fi
+          done
+          exit $missing
+
+      - uses: docker/setup-buildx-action@v3
+        if: ${{ !inputs.rollback }}
+
+      - name: Build the image
+        if: ${{ !inputs.rollback }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: sentencestep:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+            GIT_COMMIT_SHA=${{ github.sha }}
+          secrets: |
+            server_actions_key=${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Send the deploy files and the image to the server, switch traffic
+        if: ${{ !inputs.rollback }}
+        run: |
+          tar -czf - -C deploy . | ssh server sync
+          docker save "sentencestep:${GITHUB_SHA}" | gzip -1 | ssh server "deploy ${GITHUB_SHA}"
+
+      - name: Check the live copy
+        id: smoke
+        if: ${{ !inputs.rollback }}
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: bash deploy/smoke-test.sh "$DEPLOY_URL" "$GITHUB_SHA"
+
+      # Only when the deploy itself succeeded but the live copy then failed its checks.
+      # (If deploy.sh failed, it has already left the previous copy live — rolling back
+      # again would switch to the copy that just failed.)
+      - name: Roll back automatically if the live check failed
+        if: ${{ !inputs.rollback && steps.smoke.outcome == 'failure' }}
+        run: ssh server rollback

@@ -1,0 +1,13 @@
+# Files that run on Linux (the server, the container, CI) must always have LF line
+# endings: a CRLF in a shell script or a Caddyfile breaks it on the server ("bad
+# interpreter", "unexpected token"), and this repo is edited on Windows, where git
+# would otherwise convert them on checkout.
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+Caddyfile text eol=lf
+*.caddy text eol=lf
+*.caddy.example text eol=lf
+deploy/docker-compose.yml text eol=lf
+deploy/server.env.example text eol=lf
+.github/workflows/*.yml text eol=lf

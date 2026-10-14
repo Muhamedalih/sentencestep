@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 
+import { clientIpFrom } from "@/lib/security/client-ip";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { SentenceDirection } from "@/lib/voice/director-types";
 import { createEdgeTtsProvider } from "@/lib/voice/providers/edge-tts";
@@ -147,8 +148,7 @@ const SYNTHESIS_RATE_WINDOW_MS = 60_000;
 const synthesisRateBuckets = new Map<string, { count: number; windowStart: number }>();
 
 export async function isSynthesisRateLimited(): Promise<boolean> {
-  const forwardedFor = (await headers()).get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIpFrom(await headers());
 
   const now = Date.now();
   const bucket = synthesisRateBuckets.get(ip);

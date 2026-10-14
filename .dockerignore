@@ -1,0 +1,24 @@
+# Anything listed here is NOT sent to the image build. The first block is the one
+# that matters most: local env files hold real secrets and must never be copied
+# into an image layer.
+.env
+.env.*
+!.env.example
+
+.git
+.github
+.claude
+.vscode
+node_modules
+.next
+coverage
+*.log
+tsconfig.tsbuildinfo
+
+# Not needed to build or run the app
+docs
+deploy
+scripts
+supabase
+**/*.test.ts
+**/*.test.tsx
