@@ -1,0 +1,20 @@
+[Unit]
+Description=Allow only Cloudflare to reach the web ports (80/443)
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+# When Docker restarts (an upgrade, a manual restart) it can rebuild its firewall
+# chains, so this rule is applied again with it.
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/sentencestep-firewall
+ExecStop=/usr/local/sbin/sentencestep-firewall --remove
+# A failed fetch right after boot (network not quite up) is retried instead of left undone.
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

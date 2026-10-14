@@ -1,0 +1,7 @@
+[Unit]
+Description=Refresh the Cloudflare-only firewall rule
+After=sentencestep-firewall.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/sentencestep-firewall

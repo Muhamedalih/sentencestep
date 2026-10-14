@@ -16,8 +16,9 @@
 #
 # Note for whoever extends it: Docker publishes ports straight through the firewall
 # (ufw's rules do not apply to published container ports). Restricting who may
-# reach 80/443 is therefore done in the cloud provider's own firewall (README.md,
-# "Firewall"), not here.
+# reach 80/443 is therefore done in Docker's own DOCKER-USER chain by
+# cloudflare-firewall.sh (installed below, root-owned, refreshed daily) and, as an
+# optional second layer, in the cloud provider's firewall (README.md, "Firewall").
 set -euo pipefail
 
 ADMIN_KEY="${1:-}"
@@ -32,7 +33,7 @@ export DEBIAN_FRONTEND=noninteractive
 echo "==> packages"
 apt-get update -y
 apt-get -o Dpkg::Options::=--force-confold upgrade -y
-apt-get install -y ca-certificates curl gnupg jq ufw fail2ban unattended-upgrades logrotate
+apt-get install -y ca-certificates curl gnupg jq ufw fail2ban unattended-upgrades logrotate ipset
 
 echo "==> Docker (official repository)"
 if ! command -v docker >/dev/null 2>&1; then
@@ -146,8 +147,14 @@ for f in docker-compose.yml lib.sh deploy.sh rollback.sh status.sh ci-entry.sh s
 done
 # The watchdog restarts an app container that hangs (Docker only marks it unhealthy).
 install -m 644 "$SRC_DIR/systemd/sentencestep-watchdog.service" "$SRC_DIR/systemd/sentencestep-watchdog.timer" /etc/systemd/system/
+# Only Cloudflare may reach ports 80/443. The script is owned by root and kept OUT of
+# /opt/sentencestep on purpose: root runs it, so the deploy user (and the CI key) must not
+# be able to replace it. It fails open if Cloudflare's list cannot be fetched.
+install -m 755 -o root -g root "$SRC_DIR/cloudflare-firewall.sh" /usr/local/sbin/sentencestep-firewall
+install -m 644 "$SRC_DIR/systemd/sentencestep-firewall.service" "$SRC_DIR/systemd/sentencestep-firewall.timer" "$SRC_DIR/systemd/sentencestep-firewall-refresh.service" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now sentencestep-watchdog.timer
+systemctl enable --now sentencestep-firewall.service sentencestep-firewall.timer
 chmod 644 "$APP_DIR/docker-compose.yml" "$APP_DIR/active-upstream.caddy.example"
 install -m 644 -o deploy -g deploy "$SRC_DIR/Caddyfile" "$APP_DIR/caddy/Caddyfile"
 if [ ! -f "$APP_DIR/caddy/active-upstream.caddy" ]; then

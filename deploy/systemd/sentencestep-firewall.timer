@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh the list of Cloudflare addresses allowed to reach the web ports
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+# Re-running a oneshot service that is "active" (RemainAfterExit) needs a restart.
+Unit=sentencestep-firewall-refresh.service
+
+[Install]
+WantedBy=timers.target

@@ -58,10 +58,18 @@ Who does what: **you** create the accounts and paste secrets; the repository doe
 4. **Secrets on the server.** Fill `/opt/sentencestep/server.env` (copy each value from the Netlify
    environment variables; add `ORIGIN_AUTH_SECRET` = 48+ random characters, e.g.
    `openssl rand -hex 32`). Permissions stay `600`.
-5. **Firewall** (DigitalOcean → Networking → Firewalls): inbound TCP **80 and 443 only from
-   Cloudflare's address ranges** (https://www.cloudflare.com/ips/), TCP 22 from anywhere (key-only,
-   fail2ban). Docker ignores the server's own firewall for published ports, so this cloud
-   firewall is the real gate.
+5. **Firewall.** Nothing to do by hand: `bootstrap-server.sh` installs
+   `/usr/local/sbin/sentencestep-firewall` (from `deploy/cloudflare-firewall.sh`) and a systemd unit
+   that allows TCP **80 and 443 only from Cloudflare's published address ranges**, in Docker's
+   `DOCKER-USER` chain (Docker ignores ufw for published ports, so that chain is the real gate).
+   It re-applies itself at boot and after a Docker restart, refreshes the list daily, and fails
+   open (ports stay reachable) if Cloudflare's list cannot be fetched. SSH (22) is key-only with
+   fail2ban and is not touched. Check it: `sudo iptables -S DOCKER-USER` shows one DROP rule, and
+   from any non-Cloudflare machine `curl -sk --connect-timeout 8 https://<server>/` times out.
+   The script is root-owned and is NOT updated by `sync`; to change it, copy it to the server and
+   `sudo install -m 755 -o root -g root cloudflare-firewall.sh /usr/local/sbin/sentencestep-firewall`.
+   An extra cloud-provider firewall (DigitalOcean → Networking → Firewalls) is an optional second layer.
+   If the server ever gets an IPv6 address, the rule must be repeated with `ip6tables`.
 6. **Cloudflare** (the domain's DNS is already there):
    - SSL/TLS → Overview: **Full (strict)**. Edge Certificates: Always Use HTTPS on, minimum TLS 1.2.
    - SSL/TLS → Origin Server → Create Certificate for `sentencestep.com` and `*.sentencestep.com`
