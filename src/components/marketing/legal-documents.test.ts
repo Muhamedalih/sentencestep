@@ -134,7 +134,7 @@ test("the terms say which law applies and ask minors to use SentenceStep with a 
 test("the privacy policy names the services that touch personal data, in both languages", () => {
   for (const document of [PRIVACY.en, PRIVACY.ar]) {
     const text = fullText(document);
-    for (const service of ["Supabase", "Netlify", "Wayl", "Resend"]) {
+    for (const service of ["Supabase", "DigitalOcean", "Cloudflare", "Wayl", "Resend"]) {
       assert.ok(text.includes(service), service);
     }
   }

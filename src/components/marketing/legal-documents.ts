@@ -251,7 +251,8 @@ const PRIVACY_EN: LegalDocument = {
       paragraphs: ["Each of these receives only what it needs to do its job:"],
       bullets: [
         "Supabase: our database and sign-in.",
-        "Netlify: hosting. It also tells us your approximate country from your connection.",
+        "DigitalOcean: the server that runs SentenceStep.",
+        "Cloudflare: sits in front of it to keep it fast and safe, and tells us your approximate country from your connection.",
         "Wayl: payments. Wayl is an independent company: what you give them on their page, such as your name, phone number and card or wallet details, is handled under Wayl's own terms and privacy policy.",
         "Resend: sending emails.",
         "Where enabled: Sentry for error monitoring, and Cloudflare Turnstile to check that sign-ups come from a person.",
@@ -326,7 +327,8 @@ const PRIVACY_AR: LegalDocument = {
       paragraphs: ["تستلم كل جهة منها ما تحتاجه فقط لأداء عملها:"],
       bullets: [
         "Supabase: قاعدة البيانات وتسجيل الدخول.",
-        "Netlify: الاستضافة، وتخبرنا أيضًا ببلدك التقريبي من اتصالك.",
+        "DigitalOcean: الخادم الذي يشغّل SentenceStep.",
+        "Cloudflare: تقف أمامه لتسريعه وحمايته، وتخبرنا أيضًا ببلدك التقريبي من اتصالك.",
         "Wayl: المدفوعات. Wayl شركة مستقلة، وما تقدّمه لها في صفحتها، كاسمك ورقم هاتفك وبيانات بطاقتك أو محفظتك، يخضع لشروطها وسياسة الخصوصية الخاصة بها.",
         "Resend: إرسال رسائل البريد الإلكتروني.",
         "حيثما كانت مفعّلة: Sentry لمراقبة الأخطاء، وCloudflare Turnstile للتحقق من أن التسجيل يتم من شخص حقيقي.",
