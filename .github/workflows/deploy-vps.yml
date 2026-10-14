@@ -15,18 +15,23 @@ name: Deploy to the self-hosted server
 # "Cutover"). To roll the live site back without deploying anything: Actions ->
 # this workflow -> Run workflow -> tick "rollback".
 #
-# Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on), DEPLOY_URL,
-#   SERVER_HOST_KEY (the output of `ssh-keyscan -t ed25519 <server>`), and the six public
-#   values NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SITE_URL,
-#   NEXT_PUBLIC_SENTRY_DSN, NEXT_PUBLIC_TURNSTILE_SITE_KEY, NEXT_PUBLIC_VAPID_PUBLIC_KEY.
+# Repository variables:  DEPLOY_ENABLED (`true` to switch the workflow on), DEPLOY_URL (the
+#   address of the site this run feeds; it also becomes NEXT_PUBLIC_SITE_URL in the build),
+#   and SERVER_HOST_KEY (the output of `ssh-keyscan -t ed25519 <server>`).
 # Repository secrets:    SERVER_HOST (the server's address), SERVER_SSH_KEY (the CI deploy
 #   private key), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, and optionally CF_ACCESS_CLIENT_ID /
 #   CF_ACCESS_CLIENT_SECRET (a Cloudflare Access service token, when the target is
 #   protected by Cloudflare Access).
+# Committed, not configured: deploy/build-public.env holds the five public values that are
+#   the same for every target (Supabase URL and anon key, Sentry DSN, Turnstile site key,
+#   VAPID public key).
 
 on:
   push:
-    branches: [master] # at cutover: [release]
+    # `migration/vps` is only here while the test copy is being built: the "Run workflow"
+    # button needs this file on the default branch, a push does not. Drop it once the
+    # branch is merged. At cutover `master` becomes `release`.
+    branches: [master, migration/vps]
   workflow_dispatch:
     inputs:
       rollback:
@@ -91,24 +96,33 @@ jobs:
         if: ${{ inputs.rollback }}
         run: ssh server rollback
 
+      - name: Load the public build values
+        if: ${{ !inputs.rollback }}
+        run: |
+          # The five values that are the same everywhere come from the committed file; the
+          # site address is the target's own (DEPLOY_URL), so a build for the test copy
+          # points at the test copy and a build for the live site points at the live site.
+          set -euo pipefail
+          case "$DEPLOY_URL" in
+            https://*) ;;
+            *) echo "::error::DEPLOY_URL must start with https:// (it is '${DEPLOY_URL}')"; exit 1 ;;
+          esac
+          grep -E '^NEXT_PUBLIC_[A-Z_]+=.+$' deploy/build-public.env >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SITE_URL=${DEPLOY_URL%/}" >> "$GITHUB_ENV"
+
       - name: Check the configuration is complete
         if: ${{ !inputs.rollback }}
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
-          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
           NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
           SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SERVER_HOST_KEY: ${{ vars.SERVER_HOST_KEY }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
         run: |
           # An image built with a public value missing would run, but be broken in the
           # browser; stop here, before anything is built or sent.
           missing=0
-          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_SITE_URL                       NEXT_PUBLIC_SENTRY_DSN NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_VAPID_PUBLIC_KEY                       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY SERVER_HOST DEPLOY_URL; do
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_SITE_URL \
+                      NEXT_PUBLIC_SENTRY_DSN NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_VAPID_PUBLIC_KEY \
+                      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY SERVER_SSH_KEY SERVER_HOST_KEY SERVER_HOST DEPLOY_URL; do
             if [ -z "${!name:-}" ]; then echo "::error::$name is not set"; missing=1; fi
           done
           exit $missing
@@ -124,12 +138,12 @@ jobs:
           load: true
           tags: sentencestep:${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
-            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
-            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
-            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SITE_URL=${{ env.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ env.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ env.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ env.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
             GIT_COMMIT_SHA=${{ github.sha }}
           secrets: |
             server_actions_key=${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
