@@ -183,6 +183,7 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "The boat touched the water, and for a terrible second, neither of them breathed. Then it floated, calm and proud, on the shining lake.",
             ar: "لامس القارب الماء، وفي ثانية رهيبة لم يتنفس أيٌّ منهما. ثم طفا، هادئاً وفخوراً، على البحيرة اللامعة.",
+            pause: { after: "neither of them breathed." },
           },
         ],
         question: {
@@ -450,6 +451,7 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "On the third day, he understood. The problem was not in the computer. It was in the way people worked, and Paul had spent twenty-two years learning exactly that.",
             ar: "في اليوم الثالث، فهم. لم تكن المشكلة في الحاسوب. كانت في طريقة عمل الناس، وقد قضى بول اثنتين وعشرين سنة يتعلم ذلك بالضبط.",
+            pause: { after: "he understood." },
           },
           {
             en: "He wrote a small program in two weeks. It was not beautiful, but it worked. The lost boxes dropped from fifty a week to three.",
@@ -502,6 +504,7 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "At forty-six, Paul finally understood: he had not lost twenty-two years. He had been collecting them.",
             ar: "في السادسة والأربعين، فهم بول أخيراً: لم يكن قد خسر اثنتين وعشرين سنة. كان يجمعها.",
+            pause: { after: "twenty-two years." },
           },
         ],
         question: {
@@ -750,6 +753,7 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "When the snow melted, Elena opened her café at six in the morning, as always. She almost dropped her keys.",
             ar: "حين ذاب الثلج، فتحت إيلينا مقهاها في السادسة صباحاً، كالعادة. وكادت تُسقط مفاتيحها.",
+            pause: { after: "as always." },
           },
           {
             en: "There was a line outside. It went down the street and around the corner.",

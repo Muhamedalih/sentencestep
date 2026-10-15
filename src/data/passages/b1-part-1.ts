@@ -83,10 +83,12 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: 'It was the wrong button. It was "Reply All."',
             ar: "كان الزر الخطأ. كان «الرد على الجميع».",
+            pause: { after: "wrong button." },
           },
           {
             en: "For ten seconds, nothing happened. Then Mark's phone started to buzz. And buzz. And buzz.",
             ar: "لعشر ثوانٍ، لم يحدث شيء. ثم بدأ هاتف مارك يهتز. ويهتز. ويهتز.",
+            pause: { after: "nothing happened." },
           },
           {
             who: "Mark",
@@ -169,6 +171,7 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
             who: "Mr. Whitfield",
             en: "Sit down, Mark. I read your email. All three times.",
             ar: "اجلس يا مارك. لقد قرأت رسالتك. ثلاث مرات.",
+            pause: { after: "your email." },
           },
           {
             who: "Mark",
@@ -475,6 +478,7 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
             who: "Mrs. Walker",
             en: "And it was an accident, dear. Imagine what a good thing a wrong number can be.",
             ar: "وقد كان مصادفة يا عزيزي. تخيّل كم يمكن أن يكون الرقم الخطأ شيئاً جميلاً.",
+            pause: { after: "accident, dear." },
           },
         ],
         question: {
@@ -658,6 +662,7 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
             who: "Walt",
             en: "She wouldn't know. But I would.",
             ar: "هي لن تعرف. لكنني أنا سأعرف.",
+            pause: { after: "wouldn't know." },
           },
         ],
         question: {

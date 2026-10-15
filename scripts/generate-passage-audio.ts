@@ -14,7 +14,15 @@
  * Which voice speaks a character is decided in the passage's data (an alias
  * such as "zara" or "russ"); the aliases are resolved to registered ElevenLabs
  * voices in VOICE_IDS below. To change a character's voice, change its alias
- * there and re-run with --force --only=<slug>.
+ * there and re-run with --force --only=<slug>. One voice reads the story and every
+ * character has one of their own — the script refuses a passage in which two of them
+ * would end up with the same voice.
+ *
+ * Small pauses: a line that calls for a beat — a startled "Suddenly, …", a punchline, a
+ * reaction — is sent with a pause written into it (ellipses for eleven_v3, a break tag for the
+ * older models); see src/lib/passages/narration-pauses.ts. It exists only in the request to
+ * the voice: the learner reads the line as written. A line's own `say` or `pause` in the data
+ * overrides it, and --dry-run shows exactly what will be sent.
  *
  * Run with:
  *   npx tsx --env-file=.env.local scripts/generate-passage-audio.ts --dry-run
@@ -25,7 +33,9 @@
  *   --limit=<n>        stop after n lines (a quick listen-test)
  *   --speed=<0.7-1.2>  override the speed slider for this run (default: the admin's setting)
  *   --concurrency=<n>  parallel requests (default 3)
- *   --dry-run          list what would be generated and how many characters it costs
+ *   --dry-run          list what would be generated and how many characters it costs, with the
+ *                      lines that get a small pause shown as they will be sent (the dots are the pause)
+ *   --no-pauses        send every line exactly as spoken, without the small pauses (see below)
  * The key is read from ELEVENLABS_API_KEY, or from the file given with --key-file
  * (its content is never printed).
  */
@@ -36,7 +46,7 @@ import { createClient } from "@supabase/supabase-js";
 import { PASSAGE_SEEDS } from "../src/data/passages";
 import type { PassageVoiceAlias } from "../src/data/passages";
 import { sentenceIdFor } from "../src/lib/passages/ids";
-import { spokenTextFor } from "../src/lib/passages/spoken-text";
+import { narrationTextFor, spokenTextFor } from "../src/lib/passages/spoken-text";
 import { createElevenLabsProvider } from "../src/lib/voice/providers/elevenlabs";
 import { generatedElevenLabsClipPath, uploadVoiceClip } from "../src/lib/voice/storage";
 import type { Database } from "../src/types/database";
@@ -55,6 +65,7 @@ function option(name: string): string | undefined {
   return args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 }
 const dryRun = args.includes("--dry-run");
+const noPauses = args.includes("--no-pauses");
 const force = args.includes("--force");
 const only = option("only");
 const limit = Number(option("limit") ?? "0") || Infinity;
@@ -91,7 +102,10 @@ function readApiKey(): string {
 interface Job {
   sentenceId: string;
   slug: string;
+  /** What is sent to the voice: the spoken text, with the small pause a person would take in it (if any). */
   text: string;
+  /** The spoken text without that pause — what `text` is compared with to see which lines got one. */
+  plain: string;
   alias: PassageVoiceAlias;
 }
 
@@ -129,22 +143,25 @@ async function main() {
     return row;
   }
 
-  // What each passage line needs.
-  const { data: sentenceRows, error: sentencesError } = await supabase
-    .from("passage_sentences")
-    .select("id, en, audio_url")
-    .in(
-      "id",
-      seeds.flatMap((seed) =>
-        seed.sections.flatMap((section, sectionIndex) =>
-          section.lines.map((_line, lineIndex) =>
-            sentenceIdFor(seed.slug, sectionIndex + 1, lineIndex + 1),
-          ),
-        ),
+  // What each passage line needs. Read in batches: every line's id goes into the request's address,
+  // and all twenty-six passages at once (hundreds of ids) is longer than the server accepts.
+  const sentenceIds = seeds.flatMap((seed) =>
+    seed.sections.flatMap((section, sectionIndex) =>
+      section.lines.map((_line, lineIndex) =>
+        sentenceIdFor(seed.slug, sectionIndex + 1, lineIndex + 1),
       ),
-    );
-  if (sentencesError) fail(`Couldn't read passage_sentences: ${sentencesError.message}`);
-  const rowById = new Map((sentenceRows ?? []).map((row) => [row.id, row]));
+    ),
+  );
+  const sentenceRows: { id: string; en: string; audio_url: string | null }[] = [];
+  for (let from = 0; from < sentenceIds.length; from += 100) {
+    const { data, error } = await supabase
+      .from("passage_sentences")
+      .select("id, en, audio_url")
+      .in("id", sentenceIds.slice(from, from + 100));
+    if (error) fail(`Couldn't read passage_sentences: ${error.message}`);
+    sentenceRows.push(...(data ?? []));
+  }
+  const rowById = new Map(sentenceRows.map((row) => [row.id, row]));
 
   const jobs: Job[] = [];
   let missingRows = 0;
@@ -161,7 +178,14 @@ async function main() {
         jobs.push({
           sentenceId,
           slug: seed.slug,
-          text: spokenTextFor(line),
+          // The pauses are decided here, from the line and the one before it, and live only in this
+          // request: the learner reads the line as written (see src/lib/passages/narration-pauses.ts).
+          text: narrationTextFor(line, {
+            model: settings!.model,
+            previousEn: section.lines[lineIndex - 1]?.en,
+            pauses: !noPauses,
+          }),
+          plain: spokenTextFor(line),
           alias: line.who ? (seed.cast[line.who] ?? "narrator") : "narrator",
         });
       });
@@ -189,8 +213,38 @@ async function main() {
         )
         .join(", "),
   );
+
+  // One voice reads the story and every character has one of their own: no two roles of a passage
+  // may end up with the same ElevenLabs voice (the narrator's own default included).
+  for (const seed of seeds) {
+    const roles = new Map<string, string>();
+    roles.set("the narrator", voiceFor("narrator").provider_voice_id);
+    for (const [name, alias] of Object.entries(seed.cast)) {
+      if (alias === "narrator") continue;
+      roles.set(name, voiceFor(alias).provider_voice_id);
+    }
+    const owners = new Map<string, string>();
+    for (const [role, voiceId] of roles) {
+      const other = owners.get(voiceId);
+      if (other) {
+        fail(
+          `${seed.slug}: ${role} and ${other} would speak with the same voice — give each their own.`,
+        );
+      }
+      owners.set(voiceId, role);
+    }
+  }
+
+  // The small pauses, as they will be sent — the dots (or break tags) are the pause. Only an admin
+  // ever sees this: a learner reads the lines as written.
+  const paused = todo.filter((job) => job.text !== job.plain);
+  if (paused.length > 0) {
+    console.log(`\n${paused.length} of ${todo.length} line(s) get a small pause:`);
+    for (const job of paused) console.log(`  ~ ${job.sentenceId}: ${job.text}`);
+  }
+
   if (dryRun || todo.length === 0) {
-    console.log(dryRun ? "DRY RUN — nothing was generated." : "Nothing to do.");
+    console.log(dryRun ? "\nDRY RUN — nothing was generated." : "Nothing to do.");
     return;
   }
 

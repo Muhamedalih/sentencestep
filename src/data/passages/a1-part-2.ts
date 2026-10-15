@@ -138,6 +138,7 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
             who: "Dad",
             en: "OH NO. I SENT A SAD FACE TO MY HAPPY GIRL.",
             ar: "يا إلهي. أرسلت وجهاً حزيناً إلى ابنتي السعيدة.",
+            pause: { after: "OH NO." },
           },
         ],
         question: {
@@ -182,6 +183,7 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "No big letters. The right face. Sara smiles. It is the best message of her life.",
             ar: "لا حروف كبيرة. والوجه صحيح. تبتسم سارة. إنها أجمل رسالة في حياتها.",
+            pause: { after: "Sara smiles." },
           },
         ],
         question: {
@@ -359,6 +361,7 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
             who: "Lisa",
             en: "I know. And I let go ten seconds ago.",
             ar: "أعرف. وقد تركتكِ منذ عشر ثوانٍ.",
+            pause: { after: "I know." },
           },
         ],
         question: {
@@ -534,6 +537,7 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
             who: "Dan",
             en: "Then nobody gives you a million dollars. It is a trick.",
             ar: "إذن لا أحد يعطيكِ مليون دولار. إنها خدعة.",
+            pause: { after: "million dollars." },
           },
         ],
         question: {

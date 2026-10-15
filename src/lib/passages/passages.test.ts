@@ -14,6 +14,15 @@ import {
   wordIdFor,
 } from "@/lib/passages/ids";
 import { posterArtFor, speakerClassFor } from "@/lib/passages/art";
+import {
+  BELL_PARTIALS,
+  CHIME_TAIL_SECONDS,
+  CORRECT_CHIME_NOTES,
+  CORRECT_CHIME_SPARKLE,
+  createChimeBus,
+  scheduleCorrectChime,
+} from "@/lib/passages/chime";
+import type { ChimeContext } from "@/lib/passages/chime";
 import { parseQuestions } from "@/lib/passages/parse";
 import { NO_EVIDENCE_LINE, storedQuestionsFor } from "@/lib/passages/seed-rows";
 import {
@@ -36,7 +45,14 @@ import {
 } from "@/lib/passages/progress";
 import { QUEST_DEFAULTS, QUEST_TYPES } from "@/lib/features/catalog";
 import type { PassageSummary } from "@/lib/passages/types";
-import { spokenTextFor } from "@/lib/passages/spoken-text";
+import { pauseMarksFor } from "@/lib/passages/admin-pauses";
+import {
+  pausePlanFor,
+  pauseStyleFor,
+  problemWithHint,
+  withPause,
+} from "@/lib/passages/narration-pauses";
+import { narrationTextFor, spokenTextFor } from "@/lib/passages/spoken-text";
 import { containsWholeWord, passageTextSizeFor, splitAroundWord } from "@/lib/passages/text";
 import type { PassageProgress } from "@/lib/passages/types";
 import { validatePassageSeed, validatePassageSet } from "@/lib/passages/validate";
@@ -429,6 +445,277 @@ test("stored questions: a part keeps its own question, the last part also the cl
     assert.equal(closing.evidence, NO_EVIDENCE_LINE, "a closing question has no line to light up");
   }
   assert.deepEqual(storedQuestionsFor(PASSAGE_SEEDS[0]!, 99), []);
+});
+
+// --- The narrator's small pauses --------------------------------------------------------
+
+test("pauses: a startled lead-in, a punchline and a reaction each get one beat — in the style the model understands", () => {
+  const lead = pausePlanFor("Suddenly, Milo jumps on Tom's face.");
+  assert.equal(lead?.reason, "lead-in");
+  assert.equal(
+    withPause("Suddenly, Milo jumps on Tom's face.", lead, "ellipsis"),
+    "Suddenly... Milo jumps on Tom's face.",
+  );
+  assert.equal(
+    withPause("Suddenly, Milo jumps on Tom's face.", lead, "break"),
+    'Suddenly, <break time="0.4s" /> Milo jumps on Tom\'s face.',
+  );
+
+  const punch = pausePlanFor("Tom opens a third box. The same thing!");
+  assert.equal(punch?.reason, "punchline");
+  assert.equal(
+    withPause("Tom opens a third box. The same thing!", punch, "ellipsis"),
+    "Tom opens a third box... The same thing!",
+  );
+
+  const reaction = pausePlanFor("What? You're not hungry?");
+  assert.equal(
+    withPause("What? You're not hungry?", reaction, "ellipsis"),
+    "What? ... You're not hungry?",
+  );
+
+  const reveal = pausePlanFor('In cat language, it means: "Food. Now."');
+  assert.equal(reveal?.reason, "reveal");
+  assert.equal(
+    withPause('In cat language, it means: "Food. Now."', reveal, "ellipsis"),
+    'In cat language, it means... "Food. Now."',
+  );
+
+  // A short reaction right after a long sentence gets the beat before it.
+  const beat = pausePlanFor("MILO!", {
+    previous: "Milo jumps on the table. He takes the sandwich and runs away.",
+  });
+  assert.equal(beat?.at, 0);
+  assert.equal(withPause("Milo!", beat, "ellipsis"), "... Milo!");
+});
+
+test("pauses: an ordinary line gets none, and never more than one", () => {
+  for (const plain of [
+    "Tom has a cat. His name is Milo.",
+    "It is five o'clock in the morning. Tom is asleep.",
+    "Then he walks away.",
+    "Okay. I'm coming.",
+    "He puts food in Milo's bowl.",
+  ]) {
+    assert.equal(pausePlanFor(plain), null, plain);
+  }
+  // A line that already carries its own dots is left as the author wrote it.
+  assert.equal(pausePlanFor("Help... please."), null);
+  // In a character's speech a short closing sentence is only a reveal when it opens like one.
+  assert.equal(
+    pausePlanFor("Sorry, everybody. It's a package. One minute!", { dialogue: true }),
+    null,
+  );
+  assert.equal(
+    pausePlanFor("There is a burglar in my living room. Maybe two!", { dialogue: true })?.reason,
+    "punchline",
+  );
+
+  for (const seed of PASSAGE_SEEDS) {
+    for (const section of seed.sections) {
+      section.lines.forEach((line, index) => {
+        for (const style of ["ellipsis", "break"] as const) {
+          const text = narrationTextFor(line, {
+            model: style === "break" ? "eleven_multilingual_v2" : "eleven_v3",
+            previousEn: section.lines[index - 1]?.en,
+          });
+          const marks =
+            style === "break"
+              ? (text.match(/<break/g) ?? []).length
+              : (text.match(/\.\.\./g) ?? []).length;
+          const own = (spokenTextFor(line).match(/\.\.\./g) ?? []).length;
+          assert.ok(
+            marks - (style === "break" ? 0 : own) <= 1,
+            `${seed.slug}: more than one pause in "${line.en}"`,
+          );
+        }
+      });
+    }
+  }
+});
+
+test("pauses: an author's hint places, moves or removes the beat, and a say always wins", () => {
+  assert.equal(
+    narrationTextFor(
+      { en: "Emily? Ryan's friend was called Julia!", pause: { after: "Emily?" } },
+      { model: "eleven_v3" },
+    ),
+    "Emily? ... Ryan's friend was called Julia!",
+  );
+  assert.equal(
+    narrationTextFor({ en: "Suddenly, Milo jumps on Tom's face.", pause: "none" }),
+    "Suddenly, Milo jumps on Tom's face.",
+  );
+  assert.equal(narrationTextFor({ en: "Nice ducks.", pause: { before: true } }), "... Nice ducks.");
+  assert.equal(
+    narrationTextFor({ en: "Nice ducks.", pause: { before: true, length: "long" } }),
+    "... ... Nice ducks.",
+  );
+  // An anchor that is not in the spoken text falls back to the rules.
+  assert.equal(
+    narrationTextFor({ en: "Suddenly, Milo jumps on Tom's face.", pause: { after: "nowhere" } }),
+    "Suddenly... Milo jumps on Tom's face.",
+  );
+  // The author's own say is sent exactly as written.
+  assert.equal(
+    narrationTextFor({ en: "Suddenly, Milo jumps.", say: "Suddenly, Milo jumps!" }),
+    "Suddenly, Milo jumps!",
+  );
+  // Switched off for a run: only the spoken text.
+  assert.equal(
+    narrationTextFor({ en: "Suddenly, Milo jumps on Tom's face." }, { pauses: false }),
+    "Suddenly, Milo jumps on Tom's face.",
+  );
+
+  assert.equal(problemWithHint("Emily? Ryan's friend.", { after: "Emily?" }), null);
+  assert.match(
+    problemWithHint("Emily? Ryan's friend.", { after: "Zoe" }) ?? "",
+    /is not in the line/,
+  );
+  assert.match(problemWithHint("Emily?", { after: "Emily?" }) ?? "", /end of the line/);
+  assert.match(problemWithHint("Emily?", { after: " " }) ?? "", /empty/);
+  assert.equal(pauseStyleFor("eleven_v3"), "ellipsis");
+  assert.equal(pauseStyleFor("eleven_multilingual_v2"), "break");
+  assert.equal(pauseStyleFor(null), "ellipsis");
+});
+
+test("pauses: a touch, not a performance — about one line in ten, and what a learner reads is untouched", () => {
+  let lines = 0;
+  let paused = 0;
+  for (const seed of PASSAGE_SEEDS) {
+    for (const section of seed.sections) {
+      section.lines.forEach((line, index) => {
+        lines += 1;
+        const text = narrationTextFor(line, {
+          model: "eleven_v3",
+          previousEn: section.lines[index - 1]?.en,
+        });
+        if (text !== spokenTextFor(line)) paused += 1;
+        // The displayed line never carries a marker of its own.
+        assert.ok(!/<break/.test(line.en), line.en);
+      });
+    }
+  }
+  const share = paused / lines;
+  assert.ok(share >= 0.03 && share <= 0.15, `${Math.round(share * 100)}% of the lines get a pause`);
+
+  // The admin's marks are the same plans, by sentence id.
+  const marks = pauseMarksFor("my-cat-is-my-boss");
+  assert.deepEqual(marks[sentenceIdFor("my-cat-is-my-boss", 1, 4)], {
+    afterWord: 1,
+    length: "short",
+  });
+  assert.equal(marks[sentenceIdFor("my-cat-is-my-boss", 1, 1)], undefined);
+  assert.deepEqual(pauseMarksFor("no-such-passage"), {});
+});
+
+test("voices: every character has a voice of their own; the narrator's own lines aside", () => {
+  const twins = cloneSeed();
+  twins.cast = { Tom: "russ", Milo: "russ" };
+  assert.ok(validatePassageSeed(twins).some((problem) => /share the voice "russ"/.test(problem)));
+
+  const fine = cloneSeed();
+  fine.cast = { Tom: "russ", Email: "narrator", Sign: "narrator" };
+  assert.ok(!validatePassageSeed(fine).some((problem) => /share the voice/.test(problem)));
+
+  for (const seed of PASSAGE_SEEDS) {
+    const voices = Object.values(seed.cast).filter((voice) => voice !== "narrator");
+    assert.equal(new Set(voices).size, voices.length, `${seed.slug}: two characters share a voice`);
+  }
+});
+
+// --- The right-answer chime ------------------------------------------------------------
+
+/** A recording stand-in for an AudioContext: enough to see what the chime schedules without a browser. */
+function fakeChimeContext() {
+  const oscillators: { frequency: number; start: number; stop: number }[] = [];
+  const peaks: number[] = [];
+  const gainNode = () =>
+    ({
+      gain: {
+        value: 0,
+        setValueAtTime() {},
+        linearRampToValueAtTime(value: number) {
+          peaks.push(value);
+        },
+        exponentialRampToValueAtTime() {},
+      },
+      connect() {},
+    }) as unknown as GainNode;
+  const context: ChimeContext = {
+    currentTime: 10,
+    sampleRate: 8000,
+    destination: {} as AudioNode,
+    createGain: gainNode,
+    createOscillator() {
+      const entry = { frequency: 0, start: 0, stop: 0 };
+      oscillators.push(entry);
+      return {
+        type: "sine",
+        frequency: {
+          setValueAtTime(value: number) {
+            entry.frequency = value;
+          },
+        },
+        connect() {},
+        start(when: number) {
+          entry.start = when;
+        },
+        stop(when: number) {
+          entry.stop = when;
+        },
+      } as unknown as OscillatorNode;
+    },
+    createConvolver: () => ({ buffer: null, connect() {} }) as unknown as ConvolverNode,
+    createBuffer: (_channels, length) =>
+      ({ getChannelData: () => new Float32Array(length) }) as unknown as AudioBuffer,
+  };
+  return { context, oscillators, peaks };
+}
+
+test("the right-answer chime climbs, is quiet enough not to clip, and is over within its tail", () => {
+  const notes = CORRECT_CHIME_NOTES;
+  for (let index = 1; index < notes.length; index += 1) {
+    assert.ok(notes[index]!.at > notes[index - 1]!.at, "the notes follow one another");
+    assert.ok(notes[index]!.frequency > notes[index - 1]!.frequency, "and rise");
+  }
+  assert.ok(
+    BELL_PARTIALS.every(
+      (partial, index) => index === 0 || partial.gain < BELL_PARTIALS[index - 1]!.gain,
+    ),
+  );
+  assert.ok(
+    BELL_PARTIALS.every((partial) => partial.decayScale <= 1),
+    "overtones fade no slower than the note",
+  );
+
+  const { context, oscillators, peaks } = fakeChimeContext();
+  const bus = createChimeBus(context);
+  const started = scheduleCorrectChime(context, bus, 1);
+  const expected = [...CORRECT_CHIME_NOTES, ...CORRECT_CHIME_SPARKLE].reduce(
+    (sum, note) =>
+      sum + BELL_PARTIALS.filter((partial) => note.frequency * partial.ratio <= 9000).length,
+    0,
+  );
+  assert.equal(started, expected);
+  assert.equal(oscillators.length, expected);
+  assert.ok(
+    oscillators.every((oscillator) => oscillator.stop <= context.currentTime + CHIME_TAIL_SECONDS),
+  );
+  assert.ok(oscillators.every((oscillator) => oscillator.frequency <= 9000));
+  assert.ok(Math.max(...peaks) <= 0.3, `loudest single partial ${Math.max(...peaks)}`);
+});
+
+test("the right-answer chime follows the volume and stays silent at zero", () => {
+  const quiet = fakeChimeContext();
+  assert.equal(scheduleCorrectChime(quiet.context, createChimeBus(quiet.context), 0), 0);
+  assert.equal(quiet.oscillators.length, 0);
+
+  const half = fakeChimeContext();
+  scheduleCorrectChime(half.context, createChimeBus(half.context), 0.5);
+  const full = fakeChimeContext();
+  scheduleCorrectChime(full.context, createChimeBus(full.context), 1);
+  assert.ok(Math.max(...half.peaks) < Math.max(...full.peaks));
 });
 
 // --- The migrations --------------------------------------------------------------------

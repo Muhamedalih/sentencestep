@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef } from "react";
 
 import { speakerClassFor } from "@/lib/passages/art";
+import type { PauseMark } from "@/lib/passages/narration-pauses";
 import { passageTextSizeFor } from "@/lib/passages/text";
 import type { PassageTextSize } from "@/lib/passages/text";
 import type { PassageSentence } from "@/lib/passages/types";
@@ -46,6 +47,46 @@ interface PassageTextProps {
   evidenceIndex: number | null;
   /** A question is open and not yet answered: the text is blurred so the answer has to come from memory. */
   blurred: boolean;
+  /** Where the narrator will pause, by sentence id — given only to an admin, who sees small dots there; absent for a learner. */
+  pauseMarks?: Record<string, PauseMark>;
+}
+
+/**
+ * A sentence's English, with — for an admin only — the small dots that show where the narrator pauses.
+ * The dots are aria-hidden and cannot be selected, so they are never read out or copied.
+ */
+function EnglishText({ text, mark }: { text: string; mark?: PauseMark }) {
+  if (!mark) return <>{text}</>;
+  const parts = text.split(/(\s+)/);
+  let seen = 0;
+  let split = parts.length;
+  if (mark.afterWord === 0) split = 0;
+  else {
+    for (let index = 0; index < parts.length; index += 1) {
+      if (parts[index] && !/^\s+$/.test(parts[index]!)) seen += 1;
+      if (seen === mark.afterWord) {
+        split = index + 1;
+        break;
+      }
+    }
+  }
+  const dots = (
+    <span
+      aria-hidden="true"
+      title="The narrator pauses here (only an admin sees this)"
+      className="text-primary mx-[0.15em] align-baseline text-[0.62em] font-bold tracking-[0.12em] opacity-70 select-none"
+    >
+      {mark.length === "long" ? "·····" : "···"}
+    </span>
+  );
+  return (
+    <>
+      {parts.slice(0, split).join("")}
+      {dots}
+      {parts.slice(split).join("").trimStart() ? " " : null}
+      {parts.slice(split).join("").trimStart()}
+    </>
+  );
 }
 
 /** The type classes for each size (see passageTextSizeFor). */
@@ -84,6 +125,7 @@ export function PassageText({
   showTranslation,
   evidenceIndex,
   blurred,
+  pauseMarks,
 }: PassageTextProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const size =
@@ -159,7 +201,11 @@ export function PassageText({
                 {sentence.speaker}
               </span>
             )}
-            {language === "en" ? sentence.en : sentence.ar}
+            {language === "en" ? (
+              <EnglishText text={sentence.en} mark={pauseMarks?.[sentence.id]} />
+            ) : (
+              sentence.ar
+            )}
           </span>{" "}
         </Fragment>
       );

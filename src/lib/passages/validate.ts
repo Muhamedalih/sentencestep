@@ -1,5 +1,6 @@
 import type { PassageClosingSeed, PassageSeed, PassageVoiceAlias } from "@/data/passages/types";
 import { isPassageIconKey } from "@/lib/passages/icons";
+import { problemWithHint } from "@/lib/passages/narration-pauses";
 import { containsWholeWord } from "@/lib/passages/text";
 import { PASSAGE_LEVELS, PASSAGE_TONES } from "@/lib/passages/types";
 import type { PassageLevel } from "@/lib/passages/types";
@@ -101,6 +102,18 @@ export function validatePassageSeed(seed: PassageSeed): string[] {
     if (!name.trim()) at("cast", "a character has an empty name");
     if (!VOICE_ALIASES.includes(voice)) at("cast", `${name}: unknown voice "${voice}"`);
   }
+  // One voice reads the story and every character has a voice of their own: two characters never share one. (A "narrator" entry — an email, a sign — is read by the narrator on purpose.)
+  const voiceOwner = new Map<string, string>();
+  for (const [name, voice] of Object.entries(seed.cast)) {
+    if (voice === "narrator") continue;
+    const owner = voiceOwner.get(voice);
+    if (owner)
+      at(
+        "cast",
+        `${name} and ${owner} share the voice "${voice}" — each character needs their own`,
+      );
+    voiceOwner.set(voice, name);
+  }
 
   const { sections } = seed;
   if (sections.length < SECTIONS_PER_PASSAGE.min || sections.length > SECTIONS_PER_PASSAGE.max) {
@@ -142,6 +155,12 @@ export function validatePassageSeed(seed: PassageSeed): string[] {
       if (line.who !== undefined) {
         usedSpeakers.add(line.who);
         if (!castNames.includes(line.who)) at(where, `speaker "${line.who}" is not in the cast`);
+      }
+      if (line.pause !== undefined) {
+        const problem = problemWithHint(line.en, line.pause);
+        if (problem) at(where, problem);
+        if (line.say?.trim())
+          at(where, "has a pause hint and its own say — the hint would be ignored");
       }
       allEnglish.push(line.en);
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2, Play, Trophy } from "lucide-react";
 
@@ -18,6 +18,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { usePassageAudio } from "@/hooks/use-passage-audio";
+import { usePassageChime } from "@/hooks/use-passage-chime";
 import {
   readTipsSeen,
   usePassagePreferences,
@@ -27,6 +28,7 @@ import { questTitle } from "@/lib/features/quest-labels";
 import { savePassageProgressAction } from "@/lib/passages/actions";
 import { posterArtFor } from "@/lib/passages/art";
 import type { PassageRewards } from "@/lib/passages/engagement";
+import type { PauseMark } from "@/lib/passages/narration-pauses";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Passage, PassageQuestion, PassageSection } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
@@ -55,6 +57,8 @@ export interface PassageReaderProps {
   nextPassage: { id: string; title: string } | null;
   /** Where "Practice these words" goes, and whether it is the real Word Lists page or the admin-only preview of a lesson that is not published yet. Null when the passage has no word lesson. */
   wordsLink: { href: string; adminPreview: boolean } | null;
+  /** Where the narrator will pause, by sentence id — passed only to an admin, who sees it as small dots in the text; a learner is never given it. */
+  pauseMarks?: Record<string, PauseMark>;
 }
 
 type Phase = "read" | "check";
@@ -65,6 +69,7 @@ export function PassageReader({
   translationAvailable,
   nextPassage,
   wordsLink,
+  pauseMarks,
 }: PassageReaderProps) {
   const { t } = useLocale();
   const userId = useAuthUserId();
@@ -79,6 +84,9 @@ export function PassageReader({
   const [questionIndex, setQuestionIndex] = useState(0);
   const [complete, setComplete] = useState(false);
   const [answers, setAnswers] = useState<Record<string, PassageAnswer>>({});
+  /** The questions already answered this visit (read at once, unlike `answers`, which a second key could beat) — so a right answer chimes once. */
+  const answeredRef = useRef<Set<string>>(new Set());
+  const { playCorrect } = usePassageChime();
   const [evidenceIndex, setEvidenceIndex] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [showTips, setShowTips] = useState(false);
@@ -223,6 +231,11 @@ export function PassageReader({
 
   const handleAnswer = useCallback(
     (question: PassageQuestion, picked: number) => {
+      // The first pick of a question is its answer; a right one is rewarded with the chime — once, even if a second key lands before the card has settled.
+      const firstPick = !answeredRef.current.has(question.id);
+      answeredRef.current.add(question.id);
+      if (firstPick && picked === question.answer) playCorrect();
+
       setAnswers((current) => {
         // One try per question: the first pick is the answer, so the score means something.
         if (current[question.id]) return current;
@@ -241,7 +254,7 @@ export function PassageReader({
         }, 160);
       }
     },
-    [reducedMotion],
+    [playCorrect, reducedMotion],
   );
 
   const handleDockNext = useCallback(() => {
@@ -256,6 +269,7 @@ export function PassageReader({
 
   const handleReadAgain = useCallback(() => {
     resetPart();
+    answeredRef.current.clear();
     setAnswers({});
     setComplete(false);
     setSectionIndex(0);
@@ -532,6 +546,7 @@ export function PassageReader({
                   showTranslation={showTranslation}
                   evidenceIndex={evidenceIndex}
                   blurred={recalling}
+                  pauseMarks={pauseMarks}
                 />
               </motion.div>
             )}

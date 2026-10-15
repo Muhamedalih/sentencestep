@@ -633,22 +633,46 @@ html[data-keyboard] .kb-hide {
 }
 
 /*
- * The audio button of the listen-only screen (PassageListenStage). While the part is read, rings
- * leave the button one after another and fade; while it waits, a soft halo breathes behind it so
- * it reads as "press me". Both stop for a learner who asked for less motion.
+ * The audio button of the listen-only screen (PassageListenStage): while it waits, a soft halo
+ * breathes behind it so it reads as "press me" (it stops for a learner who asked for less motion).
+ * While the part is read, the voice shows as a row of bars (PassageVoiceBars) that swing like a
+ * speaking voice: every bar has its own height, speed and starting point (set inline as
+ * --bar-peak / --bar-period / --bar-delay), so the row never moves in step. Paused, the bars hold
+ * where they are; at rest they sit low and dim.
  */
-@keyframes passage-orb-ripple {
+@keyframes passage-voice-bar {
   0% {
-    transform: scale(1);
-    opacity: 0.55;
+    transform: scaleY(0.16);
+  }
+  16% {
+    transform: scaleY(calc(var(--bar-peak) * 0.86));
+  }
+  33% {
+    transform: scaleY(calc(var(--bar-peak) * 0.34));
+  }
+  51% {
+    transform: scaleY(var(--bar-peak));
+  }
+  69% {
+    transform: scaleY(calc(var(--bar-peak) * 0.48));
+  }
+  85% {
+    transform: scaleY(calc(var(--bar-peak) * 0.92));
   }
   100% {
-    transform: scale(1.75);
-    opacity: 0;
+    transform: scaleY(0.16);
   }
 }
-.passage-orb-ripple {
-  animation: passage-orb-ripple 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+.passage-voice-bar {
+  transform: scaleY(var(--bar-rest));
+  transition: opacity 0.35s ease-out;
+}
+.passage-voice-bar[data-engaged="true"] {
+  animation: passage-voice-bar var(--bar-period) ease-in-out var(--bar-delay) infinite;
+  animation-play-state: paused;
+}
+.passage-voice-bar[data-engaged="true"][data-speaking="true"] {
+  animation-play-state: running;
 }
 @keyframes passage-orb-breathe {
   0%,
@@ -665,8 +689,9 @@ html[data-keyboard] .kb-hide {
   animation: passage-orb-breathe 3.4s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .passage-orb-ripple {
-    display: none;
+  .passage-voice-bar,
+  .passage-voice-bar[data-engaged="true"] {
+    animation: none;
   }
   .passage-orb-breathe {
     animation: none;

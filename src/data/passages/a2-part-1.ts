@@ -99,6 +99,7 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "Emily? Ryan's friend was called Julia!",
             ar: "إيميلي؟ لكن صديقة رايان اسمها جوليا!",
+            pause: { after: "Emily?" },
           },
           {
             who: "Ryan",
@@ -336,6 +337,7 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "The camera was still on.",
             ar: "كانت الكاميرا لا تزال تعمل.",
+            pause: { before: true },
           },
         ],
         question: {
@@ -384,6 +386,7 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
             who: "Ms. Parker",
             en: "Nice ducks.",
             ar: "بط جميل.",
+            pause: { before: true },
           },
         ],
         question: {
@@ -606,6 +609,7 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "Then the lights came on, and thirty people stood up with their hands in the air.",
             ar: "ثم أضاءت الأنوار، ووقف ثلاثون شخصاً رافعين أيديهم في الهواء.",
+            pause: { before: true },
           },
           {
             who: "Dave",
@@ -836,6 +840,7 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
             who: "Waiter",
             en: "Oh no. There are two Dans tonight.",
             ar: "يا للهول. هناك اثنان باسم دان الليلة.",
+            pause: { after: "Oh no." },
           },
         ],
         question: {
@@ -1018,6 +1023,7 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "Then she heard a very weak voice from inside.",
             ar: "ثم سمعت صوتاً ضعيفاً جداً من الداخل.",
+            pause: { before: true },
           },
           {
             who: "Mr. Hall",

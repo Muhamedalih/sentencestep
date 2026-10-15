@@ -1,3 +1,4 @@
+import type { PauseHint } from "@/lib/passages/narration-pauses";
 import type { PassageLevel, PassageTone } from "@/lib/passages/types";
 
 /**
@@ -32,6 +33,10 @@ export interface PassageLineSeed {
   ar: string;
   /** What the narrator voice says when it should differ from `en` (e.g. a spelled-out number, or text that is displayed in capitals). Optional: by default the clip says `en` with emoji removed and capitals toned down (see spokenTextFor in src/lib/passages/spoken-text.ts). */
   say?: string;
+  /**
+   * Where the voice takes a breath in this line — never shown to a learner (an admin sees it as a marker in the reader). By default the rules in src/lib/passages/narration-pauses.ts find the few lines that call for one (a startled "Suddenly, …", a punchline, a reaction); this overrides them: `"none"` takes the automatic pause away, `{ after: "Suddenly," }` puts it right after that exact piece of the line, `{ before: true }` puts it before the line, and `length: "long"` holds it twice as long. Ignored when the line has its own `say`.
+   */
+  pause?: PauseHint;
 }
 
 export interface PassageQuestionSeed {

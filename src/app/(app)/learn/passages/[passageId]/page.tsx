@@ -5,6 +5,7 @@ import { PassageReader } from "@/components/passages/passage-reader";
 import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { pauseMarksFor } from "@/lib/passages/admin-pauses";
 import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -67,10 +68,15 @@ export default async function PassageReaderPage({
         : null
     : null;
 
+  // Where the narrator will pause: shown to an admin as small dots between the words, to nobody else —
+  // it is computed here, from the authored data, and never sent to a learner's browser.
+  const pauseMarks = isAdminUser ? pauseMarksFor(passage.id) : undefined;
+
   return (
     <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
       <PassageReader
         passage={passage}
+        pauseMarks={pauseMarks}
         initialSectionIndex={resumeSectionIndex(progress, passage.sections.length)}
         // Only Arabic translations are written so far (see PassageSentence.ar).
         translationAvailable={locale === "ar"}

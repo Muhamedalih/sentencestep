@@ -108,6 +108,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "On the eighth night, at ten o'clock, the phone finally rang.",
             ar: "في الليلة الثامنة، عند العاشرة، رنّ الهاتف أخيراً.",
+            pause: { before: true },
           },
           {
             who: "Hannah",
@@ -117,6 +118,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "It was a small voice. A child.",
             ar: "كان صوتاً صغيراً. صوت طفلة.",
+            pause: { after: "voice." },
           },
           {
             who: "Ben",
@@ -396,6 +398,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "That night, at home, Frank took out his phone. He did not call his son. He wrote one short message.",
             ar: "في تلك الليلة، في بيته، أخرج فرانك هاتفه. لم يتصل بابنه. كتب رسالة قصيرة واحدة.",
+            pause: { after: "his son." },
           },
           {
             who: "Frank",
@@ -622,6 +625,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: 'The examiner smiled for the first time. "Congratulations. You passed."',
             ar: "ابتسم الممتحن لأول مرة. «تهانينا. لقد نجحتِ.»",
+            pause: { after: "first time." },
           },
           {
             who: "Linda",
@@ -862,6 +866,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
             who: "Josh",
             en: "You were last of three thousand people. The other three million people stayed at home.",
             ar: "كنتِ الأخيرة بين ثلاثة آلاف شخص. أما الملايين الثلاثة الآخرون فبقوا في بيوتهم.",
+            pause: { after: "three thousand people." },
           },
           {
             who: "Jess",
@@ -954,6 +959,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "Daniel smiled and nodded. He did not understand one word.",
             ar: "ابتسم دانيال وأومأ برأسه. لم يفهم كلمة واحدة.",
+            pause: { after: "nodded." },
           },
           {
             who: "Emma",
@@ -1088,6 +1094,7 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
           {
             en: "Emma did not say a word. She ran across the yard and jumped into his arms.",
             ar: "لم تقل إيما كلمة. ركضت عبر الفناء وقفزت بين ذراعيه.",
+            pause: { after: "say a word." },
           },
           {
             who: "Emma",

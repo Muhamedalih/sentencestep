@@ -650,6 +650,7 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "He plays his grandfather's song. Slowly, with no mistakes.",
             ar: "يعزف أغنية جده. ببطء ودون أخطاء.",
+            pause: { after: "grandfather's song." },
           },
           {
             en: "Grandma cries. They are happy tears.",
@@ -837,6 +838,7 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "Emma opens the box. There is only one slice.",
             ar: "تفتح إيما الصندوق. لا توجد إلا شريحة واحدة.",
+            pause: { after: "box." },
           },
           {
             who: "Emma",
@@ -961,6 +963,7 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
           {
             en: "She opens it. There are two hundred dollars inside.",
             ar: "تفتحها. يوجد فيها مئتا دولار.",
+            pause: { after: "She opens it." },
           },
           {
             who: "Maria",
@@ -1058,6 +1061,7 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
             who: "Mr. Carter",
             en: "Thank you, young lady. The money is not important. But the photo is my wife. She is not here anymore.",
             ar: "شكراً لكِ يا آنسة. المال ليس مهماً. لكن الصورة هي زوجتي. لم تعد معنا.",
+            pause: { after: "my wife." },
           },
           {
             en: "Maria feels something warm in her heart.",

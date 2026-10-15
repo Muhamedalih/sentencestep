@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { EyeOff, Loader2, Pause, Play, RotateCcw } from "lucide-react";
 
 import { PassageButton, passageButtonClass } from "@/components/passages/passage-button";
+import { PassageVoiceBars } from "@/components/passages/passage-voice-bars";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { usePassageAudio } from "@/hooks/use-passage-audio";
 import type { PassageSentence } from "@/lib/passages/types";
@@ -17,11 +18,12 @@ import { cn } from "@/lib/utils";
  * understand it by ear; after the question the text is revealed. "Show the
  * text" is always one press away (a learner who is lost should not be stuck).
  *
- * The button is the one thing that moves. A thin ring around it fills as the
- * part is heard (written from the audio clock on every frame, outside React, like
- * the highlight in the text); rings leave it one after another while the voice
- * speaks; a soft halo breathes behind it while it waits; and its icon turns into
- * the next one — play, pause, spinner, "again" — instead of being swapped.
+ * The button is the control: a thin ring around it fills as the part is heard
+ * (written from the audio clock on every frame, outside React, like the highlight
+ * in the text); a soft halo breathes behind it while it waits; and its icon turns
+ * into the next one — play, pause, spinner, "again" — instead of being swapped.
+ * Under it, the voice itself is a row of sound-wave bars (PassageVoiceBars) that
+ * swing while it speaks, hold while it is paused and sit low when it is still.
  */
 
 const RING_RADIUS = 56;
@@ -103,7 +105,7 @@ export function PassageListenStage({
   const showPlay = !showSpinner && !showPause && !showAgain;
 
   return (
-    <div className="border-border bg-card/60 flex min-h-[19rem] flex-col items-center justify-center gap-7 rounded-[2rem] border px-6 py-12 text-center">
+    <div className="border-border bg-card/60 flex min-h-[19rem] flex-col items-center justify-center gap-5 rounded-[2rem] border px-6 py-9 text-center">
       <div className="relative flex size-[7.5rem] items-center justify-center">
         {/* A wide, soft light behind the button while the voice is on. */}
         <span
@@ -113,16 +115,6 @@ export function PassageListenStage({
             voiceOn ? "opacity-100" : "opacity-0",
           )}
         />
-        {/* Rings that leave the button one after another while the voice speaks. */}
-        {voiceOn &&
-          [0, 1, 2].map((index) => (
-            <span
-              key={index}
-              aria-hidden="true"
-              className="passage-orb-ripple border-primary/50 pointer-events-none absolute inset-[0.75rem] rounded-full border"
-              style={{ animationDelay: `${index * 0.8}s` }}
-            />
-          ))}
         {/* The halo that breathes while the button waits to be pressed. */}
         {!inRun && (
           <span
@@ -186,6 +178,9 @@ export function PassageListenStage({
           </span>
         </button>
       </div>
+
+      {/* The voice: bars that swing while it speaks, hold while it is paused, sit low when still. */}
+      <PassageVoiceBars state={voiceOn ? "speaking" : inRun ? "paused" : "idle"} />
 
       <p className="text-muted-foreground min-h-6 text-base" role="status">
         <bdi>{caption}</bdi>
