@@ -1175,6 +1175,7 @@ export const en: Dictionary = {
     listeningLine: "Sentence {n} of {total}",
     pressToListen: "Press play and listen",
     listeningDone: "Finished. Now answer the question.",
+    listenAgain: "Listen again",
     speed: "Speed",
     tipsHeading: "Before you begin",
     tipListenTitle: "Listen first",

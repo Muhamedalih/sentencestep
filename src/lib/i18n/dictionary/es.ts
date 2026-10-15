@@ -1218,6 +1218,7 @@ export const es: Dictionary = {
     listeningLine: "Frase {n} de {total}",
     pressToListen: "Pulsa reproducir y escucha",
     listeningDone: "Terminó el audio. Ahora responde la pregunta.",
+    listenAgain: "Escuchar de nuevo",
     speed: "Velocidad",
     tipsHeading: "Antes de empezar",
     tipListenTitle: "Escucha primero",

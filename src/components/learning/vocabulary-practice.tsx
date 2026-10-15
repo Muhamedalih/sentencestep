@@ -508,11 +508,6 @@ function VocabularyPracticeSession({
               </div>
             )}
           </div>
-          {previewMode && (
-            <div className="border-accent/40 bg-accent/10 text-accent-foreground mt-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
-              {t.wordLists.previewModeNotice}
-            </div>
-          )}
           {redesign && !isComplete && !showSummary && !drillWord && blockSize > 0 && (
             <BatchProgress
               batchIndex={blockIndex}

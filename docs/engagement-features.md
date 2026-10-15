@@ -423,6 +423,24 @@ Passages are about understanding it. Arabic support language only for now.
   **Speed** cycles 0.75× · 1× · 1.25× · 1.5× for every clip. These two and the
   translation switch are remembered on the device only (`localStorage`, keys in
   `src/lib/passages/prefs.ts`), never in the database.
+  - _Switching listen-only changes the part at once._ While a part is being read,
+    flipping the switch stops the voice, returns to the first sentence and reads
+    on in the new mode — text to no text and back (`handleSetListenOnly` in
+    `passage-reader.tsx`). The switch shows what the part looks like _now_ (so it
+    reads "off" after "Show the text") and is held still while a question is open.
+  - _The play stage_ (`passage-listen-stage.tsx`) is one round button: a ring
+    around it fills with how much of the part has been heard (written from the
+    audio clock each frame, outside React, like the highlight), rings leave it
+    while the voice speaks, a halo breathes while it waits, and its icon turns
+    into the next one (play, pause, spinner, "again"). All of it is off under
+    reduced motion.
+  - _Shift says the part again._ The app-wide standalone-Shift shortcut
+    (`PronunciationSettingsProvider.registerReplay`) is wired to the part's
+    narration from its first sentence, and the keycap pill (`ShiftReplayHint`
+    with `showOnTablet`) says so. Both exist only while a part is being read and
+    has a clip for every line — not while a question is open, nor on the end
+    screen — and the pill shows on laptops and tablets (from 768px wide), never on
+    a phone in either orientation (a touch screen under 600px tall counts as one).
 - **Content** lives in `src/data/passages` (reviewable in a diff, validated by
   `npm run test:passages` — every answer index, evidence line, translation and
   word is checked). `scripts/insert-passages.ts` writes it to the database
@@ -433,7 +451,10 @@ Passages are about understanding it. Arabic support language only for now.
   passage's `cast`; it reads the admin voice settings but never writes them, and
   never touches Stories/Books audio. A part is only offered for listening when
   every one of its lines has a clip. `scripts/generate-passage-word-audio.ts`
-  makes the pronunciation clips of the word lessons with the Word Lists pipeline.
+  makes the pronunciation clips of the word lessons with the Word Lists pipeline
+  — the free Edge-TTS voice (default "Emma"), never ElevenLabs. A word without a
+  clip is read by the browser's own voice, which sounds poor: run the script
+  (it is re-runnable) after adding passages, and again if Edge answers 429.
 - **Who sees what.** The content tables are closed to learners by RLS; the pages
   read them with the service role _after_ the "passages" switch. Off: nobody;
   Admin preview: admins (a bar at the top of the list says so); On: everyone.

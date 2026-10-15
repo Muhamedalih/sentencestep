@@ -54,6 +54,7 @@ function ToolbarSwitch({
 export function PassageControls({
   audioAvailable,
   listenOnly,
+  listenOnlyLocked = false,
   onToggleListenOnly,
   rate,
   onCycleRate,
@@ -63,7 +64,10 @@ export function PassageControls({
 }: {
   /** The current part has a clip for every sentence. */
   audioAvailable: boolean;
+  /** What this part looks like right now: true while the text is hidden. */
   listenOnly: boolean;
+  /** The switch is held still (while a question is open the text is already blurred or revealed, and changing mode would only confuse). */
+  listenOnlyLocked?: boolean;
   onToggleListenOnly: () => void;
   rate: number;
   onCycleRate: () => void;
@@ -77,7 +81,7 @@ export function PassageControls({
     <div className="bg-foreground/[0.06] flex items-center gap-0.5 rounded-2xl p-1">
       <ToolbarSwitch
         active={listenOnly && audioAvailable}
-        disabled={!audioAvailable}
+        disabled={!audioAvailable || listenOnlyLocked}
         label={t.passages.listenOnly}
         title={audioAvailable ? undefined : t.passages.audioMissing}
         onClick={onToggleListenOnly}

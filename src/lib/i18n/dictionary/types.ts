@@ -1429,6 +1429,8 @@ export interface Dictionary {
     listeningLine: string;
     pressToListen: string;
     listeningDone: string;
+    /** The listen-only button once the part has been heard to the end: press to hear it again. */
+    listenAgain: string;
     /** The narration speed button. */
     speed: string;
     tipsHeading: string;

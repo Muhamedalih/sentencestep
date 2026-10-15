@@ -1145,6 +1145,7 @@ export const ar: Dictionary = {
     listeningLine: "الجملة {n} من {total}",
     pressToListen: "اضغط تشغيل واستمع",
     listeningDone: "انتهى الصوت. أجب عن السؤال الآن.",
+    listenAgain: "استمع مرة أخرى",
     speed: "السرعة",
     tipsHeading: "قبل أن تبدأ",
     tipListenTitle: "استمع أولاً",

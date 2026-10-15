@@ -25,7 +25,14 @@ import { cn } from "@/lib/utils";
  * feedback) without touching the shared default every other lesson type
  * still gets untouched.
  */
-export function ShiftReplayHint({ className }: { className?: string } = {}) {
+export function ShiftReplayHint({
+  className,
+  showOnTablet = false,
+}: {
+  className?: string;
+  /** Show the pill on touch tablets too (not only on devices driven by a mouse): a tablet with a keyboard has a Shift key, a phone does not — so it stays hidden below the md breakpoint, and on a touch screen that is under 600px tall (a phone turned sideways). Passages sets it; every other screen keeps the original rule. */
+  showOnTablet?: boolean;
+} = {}) {
   const { isActive, shiftPulse } = usePronunciationSettings();
   const { dir, t } = useLocale();
   const [isPressed, setIsPressed] = useState(false);
@@ -51,7 +58,10 @@ export function ShiftReplayHint({ className }: { className?: string } = {}) {
     <div
       aria-hidden="true"
       className={cn(
-        "border-border/50 bg-background/80 pointer-events-none fixed right-4 bottom-4 z-30 flex items-center gap-2.5 rounded-2xl border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md select-none max-sm:pr-1.5 sm:right-6 sm:bottom-6 pointer-coarse:hidden",
+        "border-border/50 bg-background/80 pointer-events-none fixed right-4 bottom-4 z-30 flex items-center gap-2.5 rounded-2xl border py-1.5 pr-3.5 pl-1.5 shadow-sm backdrop-blur-md select-none max-sm:pr-1.5 sm:right-6 sm:bottom-6",
+        showOnTablet
+          ? "max-md:hidden [@media(pointer:coarse)_and_(max-height:599px)]:hidden"
+          : "pointer-coarse:hidden",
         className,
       )}
     >

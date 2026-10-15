@@ -1179,6 +1179,7 @@ export const tr: Dictionary = {
     listeningLine: "Cümle {n} / {total}",
     pressToListen: "Oynat'a bas ve dinle",
     listeningDone: "Ses bitti. Şimdi soruyu yanıtla.",
+    listenAgain: "Tekrar dinle",
     speed: "Hız",
     tipsHeading: "Başlamadan önce",
     tipListenTitle: "Önce dinle",

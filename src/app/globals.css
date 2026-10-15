@@ -631,3 +631,45 @@ html[data-keyboard] .kb-hide {
     display: none;
   }
 }
+
+/*
+ * The audio button of the listen-only screen (PassageListenStage). While the part is read, rings
+ * leave the button one after another and fade; while it waits, a soft halo breathes behind it so
+ * it reads as "press me". Both stop for a learner who asked for less motion.
+ */
+@keyframes passage-orb-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+.passage-orb-ripple {
+  animation: passage-orb-ripple 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes passage-orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.14);
+    opacity: 0.12;
+  }
+}
+.passage-orb-breathe {
+  animation: passage-orb-breathe 3.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passage-orb-ripple {
+    display: none;
+  }
+  .passage-orb-breathe {
+    animation: none;
+    opacity: 0.3;
+  }
+}

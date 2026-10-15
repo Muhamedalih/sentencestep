@@ -12,8 +12,10 @@ import { PassageQuestionDock } from "@/components/passages/passage-question-dock
 import type { PassageAnswer } from "@/components/passages/passage-question-dock";
 import { PassageText } from "@/components/passages/passage-text";
 import { PassageTips } from "@/components/passages/passage-tips";
+import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { usePassageAudio } from "@/hooks/use-passage-audio";
 import {
@@ -263,6 +265,41 @@ export function PassageReader({
     window.scrollTo({ top: 0 });
   }, [resetPart]);
 
+  // Switching between "with the text" and "listen only" while a part is being read: the new mode
+  // shows at once, and a reading that was under way starts again from the top in it (stopped and
+  // back to zero, then going on). From the text the stage appears; from the stage the text does.
+  const { setListenOnly: setListenOnlyPreference } = prefs;
+  const { playAll } = audio;
+  const handleSetListenOnly = useCallback(
+    (next: boolean) => {
+      const wasReading = audio.readingThrough && audio.activeIndex !== null && !audio.paused;
+      stopAudio();
+      // A part whose text was shown ("Show the text") goes back behind the stage when listen-only is asked for.
+      if (next && phase === "read") setRevealed(false);
+      setListenOnlyPreference(next);
+      if (wasReading) playAll();
+    },
+    [
+      audio.activeIndex,
+      audio.paused,
+      audio.readingThrough,
+      phase,
+      playAll,
+      setListenOnlyPreference,
+      stopAudio,
+    ],
+  );
+
+  // Shift replays the audio — the same shortcut as in Word Lists and the typing lessons (the
+  // provider answers a lone Shift press with whatever is registered): here the part is read again
+  // from its first sentence. Only while the text or the stage is on screen, not under a question.
+  const { registerReplay } = usePronunciationSettings();
+  const shiftReplayEnabled = phase === "read" && !complete && audio.hasAudio;
+  useEffect(() => {
+    if (!shiftReplayEnabled) return;
+    return registerReplay(playAll);
+  }, [playAll, registerReplay, shiftReplayEnabled]);
+
   // Enter does what the Check button does — the same shortcut the other check-then-continue screens
   // have (a focused button or sentence keeps its own Enter, and the tips card is not in the way).
   useEnterToContinue(phase === "read" && !complete && !showTips, handleCheck);
@@ -351,8 +388,10 @@ export function PassageReader({
           {!complete && (
             <PassageControls
               audioAvailable={audio.hasAudio}
-              listenOnly={prefs.listenOnly}
-              onToggleListenOnly={prefs.toggleListenOnly}
+              // What the part looks like, not what is stored: after "Show the text" the switch reads off.
+              listenOnly={listenOnlyActive}
+              listenOnlyLocked={checking}
+              onToggleListenOnly={() => handleSetListenOnly(!listenOnlyActive)}
               rate={prefs.rate}
               onCycleRate={prefs.cycleRate}
               translationAvailable={translationAvailable}
@@ -543,6 +582,9 @@ export function PassageReader({
           </p>
         </motion.div>
       )}
+
+      {/* "Shift — to replay the audio", on a laptop or a tablet (a phone has no Shift key). */}
+      {shiftReplayEnabled && <ShiftReplayHint showOnTablet />}
 
       {showTips && <PassageTips onStart={dismissTips} />}
     </div>

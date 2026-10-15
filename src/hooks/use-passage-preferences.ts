@@ -44,6 +44,8 @@ export interface PassagePreferences {
   rate: PlaybackRate;
   toggleTranslation: () => void;
   toggleListenOnly: () => void;
+  /** Sets listen-only to a given value (the reader asks for a definite state, not a flip: what the toolbar shows is what this part looks like, which can differ from the stored choice). */
+  setListenOnly: (value: boolean) => void;
   cycleRate: () => void;
 }
 
@@ -74,6 +76,11 @@ export function usePassagePreferences(): PassagePreferences {
     });
   }, []);
 
+  const setListenOnlyTo = useCallback((value: boolean) => {
+    setListenOnly(value);
+    writeString(PASSAGE_PREF_KEYS.listenOnly, value ? "1" : null);
+  }, []);
+
   const cycleRate = useCallback(() => {
     setRate((current) => {
       const next = nextPlaybackRate(current);
@@ -82,7 +89,16 @@ export function usePassagePreferences(): PassagePreferences {
     });
   }, []);
 
-  return { ready, translation, listenOnly, rate, toggleTranslation, toggleListenOnly, cycleRate };
+  return {
+    ready,
+    translation,
+    listenOnly,
+    rate,
+    toggleTranslation,
+    toggleListenOnly,
+    setListenOnly: setListenOnlyTo,
+    cycleRate,
+  };
 }
 
 /** The one-time "before you begin" card: whether it has been dismissed on this device. */
