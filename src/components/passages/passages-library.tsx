@@ -1,7 +1,5 @@
 "use client";
 
-import { Headphones } from "lucide-react";
-
 import { PassageCard } from "@/components/passages/passage-card";
 import { PassagesAdminBar } from "@/components/passages/passages-admin-bar";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -16,9 +14,10 @@ const LEVEL_KEYS: Record<PassageLevel, "a1" | "a2" | "b1" | "b2"> = {
 };
 
 /**
- * The Passages list: a heading, the cards grouped by level, and — for admins
+ * The Passages list: a heading, the posters grouped by level, and — for admins
  * only — the preview/publish bar. Levels with nothing in them are not shown at
- * all (no empty "coming soon" boxes).
+ * all (no empty "coming soon" boxes). The grid is five posters across on a wide
+ * screen, so the ten passages of a level are two tidy rows.
  */
 export function PassagesLibrary({
   passages,
@@ -39,19 +38,14 @@ export function PassagesLibrary({
   const levels = [...new Set(passages.map((passage) => passage.level))];
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
+    <div className="mx-auto max-w-7xl px-6 py-8 sm:py-10">
       {adminState && <PassagesAdminBar isPublic={adminState === "on"} />}
 
-      <header className="mb-8 flex items-start gap-4">
-        <span className="bg-brand-muted text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-          <Headphones className="size-6" aria-hidden="true" />
-        </span>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t.passages.title}</h1>
-          <p className="text-muted-foreground mt-1.5 max-w-2xl leading-relaxed">
-            {t.passages.subtitle}
-          </p>
-        </div>
+      <header className="mb-9">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t.passages.title}</h1>
+        <p className="text-muted-foreground mt-2 max-w-2xl leading-relaxed">
+          {t.passages.subtitle}
+        </p>
       </header>
 
       {passages.length === 0 ? (
@@ -67,8 +61,8 @@ export function PassagesLibrary({
               passageStatus(progressById.get(passage.id), passage.sectionCount) === "done",
           ).length;
           return (
-            <section key={level} className="mb-10 last:mb-0">
-              <div className="border-border mb-5 flex items-baseline justify-between gap-4 border-b pb-3">
+            <section key={level} className="mb-12 last:mb-0">
+              <div className="border-border mb-6 flex items-baseline justify-between gap-4 border-b pb-3">
                 <h2 className="flex items-baseline gap-2.5 text-lg font-semibold">
                   <span className="text-primary font-bold">{level}</span>
                   <bdi>{t.passages.levels[LEVEL_KEYS[level]]}</bdi>
@@ -77,7 +71,7 @@ export function PassagesLibrary({
                   {doneCount} / {inLevel.length}
                 </span>
               </div>
-              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {inLevel.map((passage) => (
                   <li key={passage.id}>
                     <PassageCard

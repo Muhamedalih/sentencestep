@@ -13,7 +13,15 @@ import {
   wordGroupIdFor,
   wordIdFor,
 } from "@/lib/passages/ids";
+import { posterArtFor, speakerClassFor } from "@/lib/passages/art";
 import { parseQuestions } from "@/lib/passages/parse";
+import {
+  DEFAULT_PLAYBACK_RATE,
+  PLAYBACK_RATES,
+  formatPlaybackRate,
+  nextPlaybackRate,
+  parsePlaybackRate,
+} from "@/lib/passages/prefs";
 import {
   estimatePassageMinutes,
   parsePassageProgressInput,
@@ -333,4 +341,77 @@ test("the passages seed migration puts only that feature in admin preview and ne
   assert.equal((JSON.parse(body) as { state: string }).state, "admin");
   assert.match(sql, /not \(coalesce\(config -> 'features', '\{\}'::jsonb\) \? 'passages'\)/);
   assert.match(sql, /jsonb_set\(/);
+});
+
+// --- Narration speed -----------------------------------------------------------------
+
+test("speed: the button cycles through the steps and wraps; an unknown speed restarts at 1x", () => {
+  assert.deepEqual([...PLAYBACK_RATES], [0.75, 1, 1.25, 1.5]);
+  assert.equal(nextPlaybackRate(0.75), 1);
+  assert.equal(nextPlaybackRate(1), 1.25);
+  assert.equal(nextPlaybackRate(1.25), 1.5);
+  assert.equal(nextPlaybackRate(1.5), 0.75, "wraps around");
+  assert.equal(nextPlaybackRate(2), DEFAULT_PLAYBACK_RATE);
+});
+
+test("speed: a stored value is read back safely, and a speed has a readable label", () => {
+  assert.equal(parsePlaybackRate("1.25"), 1.25);
+  assert.equal(parsePlaybackRate(0.75), 0.75);
+  assert.equal(parsePlaybackRate("3"), DEFAULT_PLAYBACK_RATE, "a speed that does not exist");
+  assert.equal(parsePlaybackRate("fast"), DEFAULT_PLAYBACK_RATE);
+  assert.equal(parsePlaybackRate(null), DEFAULT_PLAYBACK_RATE);
+  assert.equal(parsePlaybackRate(undefined), DEFAULT_PLAYBACK_RATE);
+  assert.equal(formatPlaybackRate(1), "1\u00d7");
+  assert.equal(formatPlaybackRate(0.75), "0.75\u00d7");
+});
+
+// --- Posters ------------------------------------------------------------------------------
+
+/** Hue of a #rrggbb colour, 0-360. */
+function hueOf(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [
+    number,
+    number,
+    number,
+  ];
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  if (delta === 0) return 0;
+  const hue =
+    max === r ? ((g - b) / delta) % 6 : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+  return (hue * 60 + 360) % 360;
+}
+
+test("posters: deterministic, one per passage, and never yellow or amber", () => {
+  assert.deepEqual(posterArtFor("funny", 1), posterArtFor("funny", 1));
+  assert.notEqual(
+    posterArtFor("funny", 1).from,
+    posterArtFor("serious", 1).from,
+    "each mood has its own colour",
+  );
+
+  for (const seed of PASSAGE_SEEDS) {
+    const art = posterArtFor(seed.tone, seed.order);
+    assert.match(art.backgroundImage, /linear-gradient\(155deg/);
+    for (const colour of [art.from, art.to]) {
+      assert.match(colour, /^#[0-9a-f]{6}$/);
+      const hue = hueOf(colour);
+      assert.ok(
+        hue < 38 || hue > 75,
+        `${seed.slug}: ${colour} (hue ${Math.round(hue)}) is yellow/amber`,
+      );
+    }
+  }
+});
+
+test("speaker colours repeat only after every colour has been used", () => {
+  const first = [0, 1, 2, 3].map(speakerClassFor);
+  assert.equal(new Set(first).size, 4);
+  assert.equal(speakerClassFor(4), first[0]);
+  assert.equal(
+    speakerClassFor(-1),
+    speakerClassFor(1),
+    "an unknown speaker (-1) still gets a colour",
+  );
 });

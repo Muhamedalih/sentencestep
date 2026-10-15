@@ -403,6 +403,21 @@ the text; at the end the passage's own words are handed over as a word lesson.
 Nothing is typed — Stories and Daily Lessons are about producing the sentence,
 Passages are about understanding it. Arabic support language only for now.
 
+- **The reader** sets a part's text as a flowing paragraph (a character's name
+  in front of their lines, in a colour of its own), so a part fits one screen.
+  While a part is read aloud the sentence being spoken is lit — a tint and a thin
+  underline, never a change of size — with its Arabic twin lit in step when the
+  translation is on. The question is not on the page while reading: it rises from
+  the bottom as a card only when the learner presses **Check yourself**, and after
+  a wrong answer the sentence that holds the answer is lit green. The list shows
+  each passage as a poster card whose gradient comes from its tone and number
+  (`src/lib/passages/art.ts`) — no pictures, no tone labels.
+- **Listen first and speed** (header controls). **Listen without text** replaces
+  a part's text with a play stage until its question has been answered, then
+  reveals the text; it is only offered when the part has a clip for every line.
+  **Speed** cycles 0.75× · 1× · 1.25× · 1.5× for every clip. These two and the
+  translation switch are remembered on the device only (`localStorage`, keys in
+  `src/lib/passages/prefs.ts`), never in the database.
 - **Content** lives in `src/data/passages` (reviewable in a diff, validated by
   `npm run test:passages` — every answer index, evidence line, translation and
   word is checked). `scripts/insert-passages.ts` writes it to the database

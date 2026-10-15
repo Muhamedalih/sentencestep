@@ -1394,12 +1394,8 @@ export interface Dictionary {
     title: string;
     subtitle: string;
     levels: { a1: string; a2: string; b1: string; b2: string };
-    tones: { funny: string; serious: string; inspiring: string };
-    /** "{n} parts" */
-    partsCount: string;
     /** "{n} min" */
     minutesShort: string;
-    start: string;
     continue: string;
     upNext: string;
     done: string;
@@ -1416,8 +1412,22 @@ export interface Dictionary {
     correct: string;
     notQuite: string;
     nextPart: string;
+    nextQuestion: string;
     finish: string;
+    /** The button that ends the reading and brings up the question. */
+    checkYourself: string;
+    /** "Question {n} of {total}" — only shown when a part asks more than one. */
+    questionOf: string;
     audioMissing: string;
+    /** Listen-only mode: the switch, the stage's captions and the way out. */
+    listenOnly: string;
+    showText: string;
+    /** "Sentence {n} of {total}" */
+    listeningLine: string;
+    pressToListen: string;
+    listeningDone: string;
+    /** The narration speed button. */
+    speed: string;
     tipsHeading: string;
     tipListenTitle: string;
     tipListenBody: string;
