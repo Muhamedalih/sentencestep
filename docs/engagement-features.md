@@ -457,7 +457,12 @@ Passages are about understanding it. Arabic support language only for now.
   `npm run test:passages` — every answer index, evidence line, translation and
   word is checked). `scripts/insert-passages.ts` writes it to the database
   (re-runnable; it never changes a passage's status, an admin's edits to the word
-  lesson, or a line's clip while its English is unchanged).
+  lesson, or a line's clip while its English is unchanged). **The right answer
+  must not sit in the same place**: the first batch had it as option 1 in nearly
+  every question, so the tests now require it to be spread over the three
+  positions (a third each, overall and within a level), never four in a row, and
+  at least two positions in every passage. Author new questions in any order and
+  move the right answer around.
 - **Audio** is one clip per line (`passage_sentences.audio_url`), made by
   `scripts/generate-passage-audio.ts` with ElevenLabs and the voices named in the
   passage's `cast`; it reads the admin voice settings but never writes them, and

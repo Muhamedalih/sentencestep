@@ -67,11 +67,63 @@ test("every passage has an Arabic translation for every line, question and optio
   }
 });
 
-test("the right answer is never the same option position in every part (no pattern to guess)", () => {
-  const positions = new Set(
-    PASSAGE_SEEDS.flatMap((seed) => seed.sections.map((section) => section.question.answer)),
-  );
-  assert.ok(positions.size >= 2);
+/** Every question in reading order — each part's own, then the passage's closing one — with the position of its right answer. */
+function answerPositionsInOrder(): { slug: string; level: string; position: number }[] {
+  return PASSAGE_SEEDS.flatMap((seed) => [
+    ...seed.sections.map((section) => ({
+      slug: seed.slug,
+      level: seed.level,
+      position: section.question.answer,
+    })),
+    { slug: seed.slug, level: seed.level, position: seed.closing.answer },
+  ]);
+}
+
+test("the right answer is spread over every option position (no pattern to guess)", () => {
+  const all = answerPositionsInOrder();
+  const optionCount = 3;
+  for (let position = 0; position < optionCount; position += 1) {
+    const share = all.filter((entry) => entry.position === position).length / all.length;
+    assert.ok(
+      share >= 0.25 && share <= 0.42,
+      `option ${position + 1} holds the right answer ${Math.round(share * 100)}% of the time`,
+    );
+  }
+
+  // The same holds inside each level, so a learner at one level cannot learn "pick the first one".
+  for (const level of new Set(all.map((entry) => entry.level))) {
+    const inLevel = all.filter((entry) => entry.level === level);
+    for (let position = 0; position < optionCount; position += 1) {
+      const share = inLevel.filter((entry) => entry.position === position).length / inLevel.length;
+      assert.ok(
+        share <= 0.5,
+        `${level}: option ${position + 1} holds the right answer ${Math.round(share * 100)}% of the time`,
+      );
+    }
+  }
+
+  // And no streak of the same position runs on.
+  let run = 1;
+  for (let index = 1; index < all.length; index += 1) {
+    run = all[index]!.position === all[index - 1]!.position ? run + 1 : 1;
+    assert.ok(
+      run <= 3,
+      `${all[index]!.slug}: the right answer sits at the same position ${run} times in a row`,
+    );
+  }
+});
+
+test("a passage's questions do not all keep the right answer in one position", () => {
+  for (const seed of PASSAGE_SEEDS) {
+    const positions = new Set([
+      ...seed.sections.map((section) => section.question.answer),
+      seed.closing.answer,
+    ]);
+    assert.ok(
+      positions.size >= 2,
+      `${seed.slug}: every right answer is option ${[...positions][0]! + 1}`,
+    );
+  }
 });
 
 test("every passage closes with one question about the whole passage", () => {
