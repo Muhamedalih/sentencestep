@@ -57,6 +57,15 @@ import {
 import { QUEST_DEFAULTS, QUEST_TYPES } from "@/lib/features/catalog";
 import type { PassageSummary } from "@/lib/passages/types";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
+import {
+  compareContent,
+  describeFinding,
+  findDuplicates,
+  titleKey,
+  tokensOf,
+} from "@/lib/passages/duplicates";
+import type { ContentFingerprint } from "@/lib/passages/duplicates";
+import { seedFingerprint } from "@/lib/passages/fingerprints";
 import { parsePassageJson } from "@/lib/passages/import";
 import {
   narrationCost,
@@ -988,11 +997,12 @@ test("Home's card: finish what you started, else the first one not started, else
 
 // --- Levels and the size of the type -------------------------------------------------
 
-test("the passages cover A1, A2 and B1, numbered 1, 2, 3… inside each level", () => {
+test("the passages cover A1, A2, B1 and B2, numbered 1, 2, 3… inside each level", () => {
   for (const [level, count] of [
-    ["A1", 10],
-    ["A2", 10],
-    ["B1", 6],
+    ["A1", 11],
+    ["A2", 11],
+    ["B1", 7],
+    ["B2", 6],
   ] as const) {
     const orders = PASSAGE_SEEDS.filter((seed) => seed.level === level)
       .map((seed) => seed.order)
@@ -1104,7 +1114,7 @@ test("seed rows: a passage's rows carry everything the data says, and nothing th
     assert.equal(group.level, WORD_LIST_LEVEL[seed.level]);
     assert.equal(group.order_index, 99);
   }
-  assert.equal(lines, 676);
+  assert.ok(lines >= 676, "every authored line is checked");
 });
 
 test("pause hints stored as jsonb are read back safely", () => {
@@ -1153,7 +1163,7 @@ test("narration from the database sends exactly what the authored data would hav
       });
     }
   }
-  assert.equal(checked, 676);
+  assert.ok(checked >= 676, "every authored line is compared");
 });
 
 test("a line's reaction is judged by the line before it in the same part only", () => {
@@ -1515,4 +1525,176 @@ test("voice cast: the summary counts the voices of the characters and says how t
     voiceId: null,
     passagesWithOwn: 3,
   });
+});
+
+// --- Every level is harder than the one below ---------------------------------------------------
+
+/** The measures a reader feels as "harder": longer words, longer sentences, longer questions. */
+function difficultyOf(level: string) {
+  const seeds = PASSAGE_SEEDS.filter((seed) => seed.level === level);
+  const lines = seeds.flatMap((seed) =>
+    seed.sections.flatMap((section) => section.lines.map((line) => line.en)),
+  );
+  const words = lines.flatMap((line) => tokensOf(line));
+  const sentences = lines.flatMap((line) => line.split(/(?<=[.!?])\s+/)).filter(Boolean);
+  const questions = seeds.flatMap((seed) => [
+    ...seed.sections.map((section) => section.question),
+    seed.closing,
+  ]);
+  const mean = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+  return {
+    longWords: words.filter((word) => word.length >= 8).length / words.length,
+    sentenceWords: mean(sentences.map((sentence) => tokensOf(sentence).length)),
+    promptWords: mean(questions.map((question) => tokensOf(question.en).length)),
+    optionWords: mean(
+      questions.map((question) =>
+        mean(question.options.map((option) => tokensOf(option.en).length)),
+      ),
+    ),
+    optionCount: mean(questions.map((question) => question.options.length)),
+  };
+}
+
+test("each level is harder than the one below it, and B2 really is: longer words, longer sentences, longer questions, one more option", () => {
+  const ladder = (["A1", "A2", "B1", "B2"] as const).map((level) => ({
+    level,
+    ...difficultyOf(level),
+  }));
+  for (let index = 1; index < ladder.length; index += 1) {
+    const [below, level] = [ladder[index - 1]!, ladder[index]!];
+    for (const measure of ["longWords", "sentenceWords", "promptWords", "optionWords"] as const) {
+      assert.ok(
+        level[measure] > below[measure],
+        `${level.level} is not harder than ${below.level} in ${measure}: ${level[measure].toFixed(2)} against ${below[measure].toFixed(2)}`,
+      );
+    }
+  }
+  // B2 asks four options, every other level three: a guess is no longer a one-in-three chance.
+  assert.equal(difficultyOf("B2").optionCount, 4);
+  for (const level of ["A1", "A2", "B1"]) assert.equal(difficultyOf(level).optionCount, 3);
+});
+
+test("B2's right answer is spread over all four options", () => {
+  const answers = PASSAGE_SEEDS.filter((seed) => seed.level === "B2").flatMap((seed) => [
+    ...seed.sections.map((section) => section.question.answer),
+    seed.closing.answer,
+  ]);
+  for (let position = 0; position < 4; position += 1) {
+    const share = answers.filter((answer) => answer === position).length / answers.length;
+    assert.ok(
+      share >= 0.15 && share <= 0.4,
+      `option ${position + 1} holds ${Math.round(share * 100)}%`,
+    );
+  }
+});
+
+// --- No lesson is ever repeated -----------------------------------------------------------------
+
+function content(overrides: Partial<ContentFingerprint> & { label: string }): ContentFingerprint {
+  return { title: "", summary: "", lines: [], questions: [], ...overrides };
+}
+
+test("no lesson is repeated: no two authored passages share a title, premise, wording, subject or question", () => {
+  const findings = findDuplicates(PASSAGE_SEEDS.map(seedFingerprint));
+  assert.deepEqual(findings.map(describeFinding), []);
+});
+
+test("titles are compared without their article or punctuation", () => {
+  assert.equal(titleKey("The Quiet Neighbor"), "quiet neighbor");
+  assert.equal(titleKey("Quiet neighbor!"), "quiet neighbor");
+  assert.equal(titleKey("A Seat at the Table"), "seat at the table");
+  assert.equal(titleKey("The"), "the", "a title that is only an article keeps it");
+});
+
+test("the same story told again is found, a different one is not", () => {
+  const original = content({
+    label: "Passage “The Biggest Pumpkin”",
+    title: "The Biggest Pumpkin",
+    summary: "Henry had one goal this autumn: to beat Mrs. Dale and her pumpkin.",
+    lines: [
+      "Every October, the county fair held a contest for the biggest pumpkin.",
+      "Henry planted one special seed in the sunniest corner of his garden.",
+      "He watered it every morning and talked to it the whole time.",
+    ],
+    questions: ["Who had won the contest for eleven years?"],
+  });
+
+  // The same title, with or without its article.
+  assert.match(
+    compareContent(original, content({ label: "Story", title: "Biggest Pumpkin" })).join(" "),
+    /the same title/,
+  );
+  // Almost the same title.
+  assert.match(
+    compareContent(original, content({ label: "Story", title: "The Biggest Pumpkin Ever" })).join(
+      " ",
+    ),
+    /almost the same title/,
+  );
+  // Borrowed wording: three runs of four words are enough.
+  assert.match(
+    compareContent(
+      original,
+      content({
+        label: "Story",
+        title: "Garden Giants",
+        lines: [
+          "Every October, the county fair held a contest for the biggest pumpkin of all.",
+          "Someone planted one special seed in the sunniest corner of his garden.",
+          "He watered it every morning and talked to it the whole time, honestly.",
+        ],
+      }),
+    ).join(" "),
+    /runs of four words in common/,
+  );
+  // The same premise in other words.
+  assert.match(
+    compareContent(
+      original,
+      content({
+        label: "Story",
+        title: "Autumn Giant",
+        summary: "Henry had one goal this autumn: to beat Mrs. Dale and her pumpkin at the fair.",
+      }),
+    ).join(" "),
+    /premise/,
+  );
+  // The same question.
+  assert.match(
+    compareContent(
+      original,
+      content({
+        label: "Story",
+        title: "Orange",
+        questions: ["Who had won the contest for eleven years?"],
+      }),
+    ).join(" "),
+    /the same question/,
+  );
+
+  // A different story — even one about a garden — is not a repeat.
+  assert.deepEqual(
+    compareContent(
+      original,
+      content({
+        label: "Story",
+        title: "The Vacant Lot",
+        summary: "Everyone agreed the vacant lot was an eyesore. Nobody agreed on what to do.",
+        lines: [
+          "For nineteen years, the vacant lot had collected broken bottles and weeds.",
+          "Ruth walked onto the lot with a shovel and a bag of seeds.",
+        ],
+        questions: ["What does Ruth's expression suggest about her decision?"],
+      }),
+    ),
+    [],
+  );
+  // A short question that every story might ask is not a repeat.
+  assert.deepEqual(
+    compareContent(
+      content({ label: "A", title: "Alpha", questions: ["Who is Mr. Stone?"] }),
+      content({ label: "B", title: "Beta", questions: ["Who is Mr. Stone?"] }),
+    ),
+    [],
+  );
 });

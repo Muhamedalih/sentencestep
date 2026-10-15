@@ -4,6 +4,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
+import { describeFinding, findDuplicates } from "@/lib/passages/duplicates";
+import { loadLibraryFingerprints, seedFingerprint } from "@/lib/passages/fingerprints";
 import { parsePassageJson } from "@/lib/passages/import";
 import {
   loadAllPassageVoices,
@@ -334,6 +336,22 @@ export async function importPassage(raw: string, mode: "check" | "add"): Promise
     if (!known.has(row.voice_id)) {
       problems.push(`The voice of ${row.speaker} is not registered (Admin → Voice).`);
     }
+  }
+
+  // No lesson is ever repeated: the passage is compared with every passage, Daily Lesson, Story
+  // and book already there (title, premise, wording, subject, questions — see duplicates.ts).
+  try {
+    const library = await loadLibraryFingerprints(supabase);
+    for (const finding of findDuplicates(
+      [seedFingerprint(seed)],
+      [...library.passages, ...library.others],
+    )) {
+      problems.push(`That would repeat a lesson: ${describeFinding(finding)}`);
+    }
+  } catch {
+    return {
+      error: "Couldn't compare the passage with the rest of the library. Please try again.",
+    };
   }
   if (problems.length > 0) return { problems };
 

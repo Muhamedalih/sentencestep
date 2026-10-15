@@ -567,13 +567,37 @@ Passages are about understanding it. Arabic support language only for now.
     deleted here comes back the next time `insert-passages.ts` runs.
   - Every change is an audit-log entry (`passage.status_changed`, `access_changed`,
     `voice_changed`, `imported`, `deleted`, `audio_generated`).
-- **Levels**: A1 (ten scenes), A2 (ten) and B1 (six), written in
-  `src/data/passages/{a1,a2,b1}-part-*.ts`. The line-length limit grows with the
+- **Levels**: A1 (eleven scenes), A2 (eleven), B1 (seven) and B2 (six), written in
+  `src/data/passages/{a1,a2,b1,b2}-part-*.ts`. The line-length limit grows with the
   level (`MAX_WORDS_PER_LINE_BY_LEVEL`), the reader sets a longer part in a
   smaller size so it still fits one screen (`textSizeFor`), and a passage's words
   are never words Word Lists already teaches (the insert script refuses a
   clash). The list groups the posters by level; "Up next" and Home's card point at
   the first unfinished passage in list order, whatever its level.
+- **B2 is harder, not longer.** It has fewer words than B1 but each is heavier: less
+  common vocabulary (circular, contempt, rubble, lease, reluctantly), sentences that carry
+  more than one idea (reported speech, the past perfect, relative and participle
+  clauses), a register that moves between the everyday and the formal — and its
+  questions rarely ask what happened, they ask what it means: what a sentence implies, why
+  someone did something, what a word means in its context, what the ending says. Every B2
+  question has **four** options (A1-B1 have three). A test keeps the ladder honest: every
+  level must have longer words, longer sentences and longer questions than the one below
+  it, so a later B2 passage can't quietly be easier than B1. B2's right answer is spread
+  over all four options.
+- **No lesson is ever repeated** (the user's standing rule). `src/lib/passages/duplicates.ts`
+  compares two pieces of content by title (without its article), one-line premise, wording
+  (runs of four words), subject (their commonest words) and questions, with limits set
+  well above any pair of real lessons. Three places enforce it: a test compares every
+  authored passage with every other; `npx tsx --env-file=.env.local
+scripts/check-passage-duplicates.ts` compares them also with every Daily Lesson, Story
+  and Conversation in the database, the Library's book titles and any passage an admin
+  imported — run it BEFORE inserting new passages (exit 1 on a repeat; `--top=n` prints the
+  closest pairs); and the admin's "Add a passage" runs the same comparison against
+  everything in the database and refuses a repeat, saying what it repeats. It judges
+  wording and subject, not plot: a story told in other words still needs a human who has
+  read the neighbours first. When it was introduced it found two passages whose titles
+  were the title of a Story, now renamed (slug and id unchanged): "The Quiet Neighbor" →
+  "The Man Who Never Said Hello" and "The Wrong Number" → "A Seat at the Table".
 - **It counts toward what the app already has** (`src/lib/passages/engagement.ts`,
   run by `savePassageProgressAction` after the learner's place is saved, all of it
   best-effort — a failure in any of it never costs a learner their progress):
