@@ -544,7 +544,7 @@ Passages are about understanding it. Arabic support language only for now.
     at a time (`generatePassageAudio`, six per round, each call short) with a progress
     bar, skips what it already did, stops at once on a key / payment / quota error and
     leaves any other failed line for the next press. **Nothing is ever narrated unless
-    an admin presses a button.** A role's sample ▶ shows when its voice has a sample.
+    an admin presses a button.** Below the roles, "Listen to the voices" plays a short sample of every registered voice (female and male), and a role's ▶ plays the sample of the voice it has; the samples are made by `scripts/generate-voice-samples.ts` (one short line per voice, with the narration's own model and sliders — run it again after registering a voice).
     **Delete** (only a draft) removes the passage, its parts, lines, learners' progress,
     its own word lesson and its clips from Storage. **Preview as a learner** opens the
     reader, which an admin may open even for a draft.

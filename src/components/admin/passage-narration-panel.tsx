@@ -177,9 +177,9 @@ export function PassageNarrationPanel({ passage }: { passage: AdminPassageDetail
         <CardTitle className="text-base">Voices and narration</CardTitle>
         <CardDescription>
           One voice reads the story and every character has a voice of their own — never two the
-          same, a man&apos;s or a woman&apos;s. Audition voices in Admin → Voice. Narration is made
-          with ElevenLabs ({passage.model}) only when you press a button, and costs ElevenLabs
-          characters.
+          same, a man&apos;s or a woman&apos;s. Listen to the voices below before you choose.
+          Narration is made with ElevenLabs ({passage.model}) only when you press a button, and
+          costs ElevenLabs characters.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -207,6 +207,43 @@ export function PassageNarrationPanel({ passage }: { passage: AdminPassageDetail
             </ul>
           </div>
         )}
+
+        <details open className="rounded-lg border px-3 py-2.5">
+          <summary className="cursor-pointer text-sm font-medium">Listen to the voices</summary>
+          <div className="mt-3 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+            {[
+              { label: "Female voices", voices: female },
+              { label: "Male voices", voices: male },
+            ].map((group) => (
+              <div key={group.label} className="min-w-0">
+                <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wide uppercase">
+                  {group.label}
+                </p>
+                <ul className="flex flex-col gap-0.5">
+                  {group.voices.map((voice) => (
+                    <li key={voice.id}>
+                      <button
+                        type="button"
+                        onClick={() => toggleSample(voice)}
+                        disabled={!voice.sampleAudioUrl}
+                        className="hover:bg-muted flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm transition-colors disabled:opacity-50"
+                      >
+                        {sampling === voice.id ? (
+                          <Square className="size-3.5 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <Play className="size-3.5 shrink-0" aria-hidden="true" />
+                        )}
+                        <span className="truncate" title={voice.name}>
+                          {voice.name}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </details>
 
         <div className="flex flex-col gap-2">
           {passage.roles.map((role) => {
