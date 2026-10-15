@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Mic, Play, RotateCcw, Square } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { useVoiceSample } from "@/components/admin/use-voice-sample";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { generatePassageAudio, setPassageVoice } from "@/lib/admin/passages-actions";
-import type {
-  AdminPassageDetail,
-  AdminPassageRole,
-  AdminVoiceOption,
-} from "@/lib/admin/passages-queries";
+import type { AdminPassageDetail, AdminPassageRole } from "@/lib/admin/passages-queries";
 import { NARRATOR_ROLE } from "@/lib/passages/voice-aliases";
 import { cn } from "@/lib/utils";
 
@@ -48,12 +45,10 @@ export function PassageNarrationPanel({ passage }: { passage: AdminPassageDetail
   const [running, setRunning] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ handled: number; total: number } | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
-  const [sampling, setSampling] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { sampling, toggleSample } = useVoiceSample();
 
   // A refresh brings the saved voices back in.
   useEffect(() => setChoices(choicesOf(passage.roles)), [passage.roles]);
-  useEffect(() => () => audioRef.current?.pause(), []);
 
   const busy = Boolean(running) || isSaving;
   const voiceById = new Map(passage.voices.map((voice) => [voice.id, voice]));
@@ -80,20 +75,6 @@ export function PassageNarrationPanel({ passage }: { passage: AdminPassageDetail
       setMessage({ kind: "success", text: result.success ?? "Voice saved." });
       router.refresh();
     });
-  }
-
-  function toggleSample(voice: AdminVoiceOption | undefined) {
-    if (!voice?.sampleAudioUrl) return;
-    audioRef.current?.pause();
-    if (sampling === voice.id) {
-      setSampling(null);
-      return;
-    }
-    const audio = new Audio(voice.sampleAudioUrl);
-    audioRef.current = audio;
-    audio.onended = () => setSampling(null);
-    setSampling(voice.id);
-    audio.play().catch(() => setSampling(null));
   }
 
   async function narrate(options: { role?: string; force?: boolean }, label: string) {

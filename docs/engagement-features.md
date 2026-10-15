@@ -531,6 +531,15 @@ Passages are about understanding it. Arabic support language only for now.
   own status: a draft passage keeps its lesson hidden even while the switch is On).
 - **Admin → Passages** (`/admin/passages`, full admins only — in the nav and in the
   middleware's admin-only list) is where each passage is run:
+  - _Voices for all passages_ (the card at the top of the list; `voice-cast.ts`): the
+    characters of the passages speak with a handful of voices (the five the authored
+    cast names), so the voices are chosen ONCE for the library — pick another voice for
+    one of them and `replaceCharacterVoice` replaces it for every character who has it,
+    in every passage (a passage's narrator row is never touched), and the narrator row
+    sets `setNarratorForAll` (one voice for the story of every passage, or back to the
+    site default). A change that would give one voice to two roles of a passage is
+    refused with nothing changed, naming the passages. Narrated lines keep their old
+    voice until narrated again ("Redo all" on the passage).
   - _The list_: every passage, drafts included, with its characters, how many lines
     have a clip, and two selects that save on change — **Draft / Published** and
     **Free / Premium** (a Premium passage's own word lesson follows).

@@ -5,7 +5,12 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { parsePassageJson } from "@/lib/passages/import";
-import { loadPassageNarration, planPassageNarration, runNarration } from "@/lib/passages/narration";
+import {
+  loadAllPassageVoices,
+  loadPassageNarration,
+  planPassageNarration,
+  runNarration,
+} from "@/lib/passages/narration";
 import { narrationCost, resolveNarrationVoices, rolesOf } from "@/lib/passages/narration-plan";
 import { passageIdFor, wordGroupIdFor } from "@/lib/passages/ids";
 import { syncPassageWordGroups } from "@/lib/passages/publish";
@@ -19,6 +24,11 @@ import {
 } from "@/lib/passages/seed-rows";
 import { PASSAGES_CACHE_TAG } from "@/lib/passages/types";
 import { NARRATOR_ROLE } from "@/lib/passages/voice-aliases";
+import {
+  voiceClashes,
+  withCharacterVoiceReplaced,
+  withNarratorSet,
+} from "@/lib/passages/voice-cast";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createElevenLabsProvider } from "@/lib/voice/providers/elevenlabs";
 import { deleteVoiceClips, voiceAudioPathFromUrl } from "@/lib/voice/storage";
@@ -472,4 +482,115 @@ export async function generatePassageAudio(
     remaining,
     handled: outcome.handled,
   };
+}
+
+/** What a change of voice leaves behind: the clips already narrated keep the old voice until they are narrated again. */
+const KEEPS_OLD_CLIPS = (who: string) =>
+  `Lines already narrated keep the old voice — use "Redo all" on ${who} to hear the new one.`;
+
+/** Shows at most three clashes, so a refusal stays readable. */
+function refusal(clashes: string[]): string {
+  const shown = clashes.slice(0, 3).join(" ");
+  const more = clashes.length > 3 ? ` (and ${clashes.length - 3} more)` : "";
+  return `Nothing was changed. ${shown}${more} Give those passages their own voices first.`;
+}
+
+/**
+ * Every character who speaks with `fromVoiceId`, in every passage, speaks with `toVoiceId`
+ * instead — the way to choose the characters' voices once for the whole library. A
+ * passage's narrator is never touched. Refused, with nothing changed, when it would give one
+ * voice to two roles of a passage.
+ */
+export async function replaceCharacterVoice(input: {
+  fromVoiceId: string;
+  toVoiceId: string;
+}): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const { fromVoiceId, toVoiceId } = input;
+  if (!fromVoiceId || !toVoiceId || fromVoiceId === toVoiceId) {
+    return { error: "Choose another voice." };
+  }
+
+  const supabase = createServiceRoleClient();
+  let all;
+  try {
+    all = await loadAllPassageVoices(supabase);
+  } catch {
+    return { error: "Couldn't read the passages. Please try again." };
+  }
+  const to = all.voices.get(toVoiceId);
+  if (!to) return { error: "That is not a registered ElevenLabs voice." };
+
+  const changed = withCharacterVoiceReplaced(all.passages, fromVoiceId, toVoiceId);
+  if (changed.length === 0) return { error: "No character speaks with that voice any more." };
+  const clashes = voiceClashes(changed, all.defaultNarratorVoiceId, all.voices);
+  if (clashes.length > 0) return { error: refusal(clashes) };
+
+  const { data, error } = await supabase
+    .from("passage_speaker_voices")
+    .update({ voice_id: toVoiceId, updated_at: new Date().toISOString() })
+    .eq("voice_id", fromVoiceId)
+    .neq("speaker", NARRATOR_ROLE)
+    .select("passage_id");
+  if (error) return { error: "Couldn't save the voices. Please try again." };
+
+  const characters = data?.length ?? 0;
+  const passages = new Set((data ?? []).map((row) => row.passage_id)).size;
+  void logAdminAction("passage.voice_replaced", "passage", null, {
+    from: fromVoiceId,
+    to: toVoiceId,
+    characters,
+  });
+  refresh();
+  return {
+    success: `Now ${to.name}: ${characters} characters in ${passages} passages. ${KEEPS_OLD_CLIPS("those characters")}`,
+  };
+}
+
+/**
+ * The narrator of every passage: `voiceId` for all of them, or `null` to give them all the
+ * site's default narration voice back. Refused, with nothing changed, when the voice is
+ * already a character's in some passage.
+ */
+export async function setNarratorForAll(voiceId: string | null): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+
+  const supabase = createServiceRoleClient();
+  let all;
+  try {
+    all = await loadAllPassageVoices(supabase);
+  } catch {
+    return { error: "Couldn't read the passages. Please try again." };
+  }
+  const chosen = voiceId ? all.voices.get(voiceId) : undefined;
+  if (voiceId && !chosen) return { error: "That is not a registered ElevenLabs voice." };
+
+  const changed = withNarratorSet(all.passages, voiceId);
+  if (changed.length === 0) return { success: "Every passage already has that narrator." };
+  const clashes = voiceClashes(changed, all.defaultNarratorVoiceId, all.voices);
+  if (clashes.length > 0) return { error: refusal(clashes) };
+
+  const now = new Date().toISOString();
+  const { error } = voiceId
+    ? await supabase.from("passage_speaker_voices").upsert(
+        changed.map((passage) => ({
+          passage_id: passage.passageId,
+          speaker: NARRATOR_ROLE,
+          voice_id: voiceId,
+          updated_at: now,
+        })),
+        { onConflict: "passage_id,speaker" },
+      )
+    : await supabase.from("passage_speaker_voices").delete().eq("speaker", NARRATOR_ROLE);
+  if (error) return { error: "Couldn't save the narrator. Please try again." };
+
+  void logAdminAction("passage.narrator_set_for_all", "passage", null, { voiceId });
+  refresh();
+  const done = chosen
+    ? `The narrator of all ${all.passages.length} passages is now ${chosen.name}.`
+    : "Every passage reads with the site's default narration voice again.";
+  return { success: `${done} ${KEEPS_OLD_CLIPS("the narrator")}` };
 }

@@ -9,6 +9,7 @@ import type {
   NarrationVoice,
   VoiceSetup,
 } from "@/lib/passages/narration-plan";
+import type { PassageVoiceRows } from "@/lib/passages/voice-cast";
 import type { TTSProvider } from "@/lib/voice/provider";
 import { generatedElevenLabsClipPath, uploadVoiceClip } from "@/lib/voice/storage";
 import type { Database } from "@/types/database";
@@ -43,6 +44,22 @@ export interface PassageNarration {
   sentences: NarrationSentence[];
   setup: VoiceSetup;
   settings: NarrationSettings;
+}
+
+function voiceOf(row: {
+  id: string;
+  name: string;
+  gender: "female" | "male";
+  provider_voice_id: string;
+  sample_audio_url: string | null;
+}): NarrationVoice {
+  return {
+    id: row.id,
+    name: row.name,
+    gender: row.gender,
+    providerVoiceId: row.provider_voice_id,
+    sampleAudioUrl: row.sample_audio_url,
+  };
 }
 
 function check<T>(label: string, result: { data: T; error: { message: string } | null }): T {
@@ -129,18 +146,7 @@ export async function loadPassageNarration(
     setup: {
       assigned: new Map(assigned.map((row) => [row.speaker, row.voice_id])),
       defaultNarratorVoiceId: settings.default_story_voice_id,
-      voices: new Map(
-        voiceRows.map((row) => [
-          row.id,
-          {
-            id: row.id,
-            name: row.name,
-            gender: row.gender,
-            providerVoiceId: row.provider_voice_id,
-            sampleAudioUrl: row.sample_audio_url,
-          } satisfies NarrationVoice,
-        ]),
-      ),
+      voices: new Map(voiceRows.map((row) => [row.id, voiceOf(row)])),
     },
     settings: {
       model: settings.model,
@@ -249,4 +255,61 @@ export async function runNarration(args: {
     }),
   );
   return outcome;
+}
+
+export interface AllPassageVoices {
+  /** Every passage with the voices chosen for it, in list order. */
+  passages: PassageVoiceRows[];
+  /** Every registered ElevenLabs voice, by voices.id. */
+  voices: Map<string, NarrationVoice>;
+  /** The site's default narration voice. */
+  defaultNarratorVoiceId: string | null;
+}
+
+/** The voices chosen for every passage, to choose them for all at once (see voice-cast.ts). Throws when the database can't be read. */
+export async function loadAllPassageVoices(supabase: Db): Promise<AllPassageVoices> {
+  const [passagesResult, voicesResult, settingsResult] = await Promise.all([
+    supabase.from("passages").select("id, title").order("level").order("order_index"),
+    supabase
+      .from("voices")
+      .select("id, name, gender, provider_voice_id, sample_audio_url")
+      .eq("source", "elevenlabs"),
+    supabase.from("elevenlabs_settings").select("default_story_voice_id").eq("id", 1).maybeSingle(),
+  ]);
+  const passages = check("the passages", passagesResult) ?? [];
+  const voiceRows = check("the voices", voicesResult) ?? [];
+  const settings = check("the ElevenLabs settings", settingsResult);
+
+  // PostgREST returns at most a thousand rows a request: read them page by page.
+  const rows: { passage_id: string; speaker: string; voice_id: string }[] = [];
+  for (let from = 0; ; from += 1000) {
+    const page =
+      check(
+        "the voices of the characters",
+        await supabase
+          .from("passage_speaker_voices")
+          .select("passage_id, speaker, voice_id")
+          .order("passage_id")
+          .order("speaker")
+          .range(from, from + 999),
+      ) ?? [];
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+
+  const byPassage = new Map<string, Map<string, string>>();
+  for (const row of rows) {
+    const assigned = byPassage.get(row.passage_id) ?? new Map<string, string>();
+    assigned.set(row.speaker, row.voice_id);
+    byPassage.set(row.passage_id, assigned);
+  }
+  return {
+    passages: passages.map((passage) => ({
+      passageId: passage.id,
+      title: passage.title,
+      assigned: byPassage.get(passage.id) ?? new Map<string, string>(),
+    })),
+    voices: new Map(voiceRows.map((row) => [row.id, voiceOf(row)])),
+    defaultNarratorVoiceId: settings?.default_story_voice_id ?? null,
+  };
 }

@@ -69,6 +69,13 @@ import {
 } from "@/lib/passages/narration-plan";
 import type { NarrationSentence, NarrationVoice, VoiceSetup } from "@/lib/passages/narration-plan";
 import { wordGroupStatusFor } from "@/lib/passages/publish";
+import {
+  summarizeVoiceCast,
+  voiceClashes,
+  withCharacterVoiceReplaced,
+  withNarratorSet,
+} from "@/lib/passages/voice-cast";
+import type { PassageVoiceRows } from "@/lib/passages/voice-cast";
 import { NARRATOR_ROLE, PASSAGE_VOICE_IDS } from "@/lib/passages/voice-aliases";
 import {
   pausePlanFor,
@@ -1375,4 +1382,137 @@ test("import: bad JSON, a wrong shape and a broken rule are each said in plain w
     JSON.stringify({ sections: Array.from({ length: 40 }, () => 1) }),
   );
   assert.ok(hopeless.problems.length <= 12);
+});
+
+// --- Voices for all passages ------------------------------------------------------------------
+
+function votes(id: string, assigned: Record<string, string>): PassageVoiceRows {
+  return { passageId: id, title: `Passage ${id}`, assigned: new Map(Object.entries(assigned)) };
+}
+
+const castVoices = new Map(["n", "a", "b", "c", "d"].map((id) => [id, voice(id)] as const));
+
+test("voice cast: replacing a voice changes the characters who have it, never a narrator row", () => {
+  const passages = [
+    votes("p1", { Tom: "a", Ann: "b" }),
+    votes("p2", { Max: "a", narrator: "a" }),
+    votes("p3", { Zed: "c" }),
+  ];
+  const changed = withCharacterVoiceReplaced(passages, "a", "d");
+  assert.deepEqual(
+    changed.map((passage) => passage.passageId),
+    ["p1", "p2"],
+  );
+  assert.equal(changed[0]!.assigned.get("Tom"), "d");
+  assert.equal(changed[0]!.assigned.get("Ann"), "b");
+  assert.equal(changed[1]!.assigned.get("Max"), "d");
+  assert.equal(changed[1]!.assigned.get("narrator"), "a", "a narrator row is never touched");
+  assert.equal(passages[0]!.assigned.get("Tom"), "a", "the originals are left as they were");
+  assert.deepEqual(withCharacterVoiceReplaced(passages, "zzz", "d"), []);
+});
+
+test("voice cast: the narrator of all passages is set, or given back to the site default", () => {
+  const passages = [
+    votes("p1", { Tom: "a" }),
+    votes("p2", { narrator: "b" }),
+    votes("p3", { narrator: "c" }),
+  ];
+  assert.deepEqual(
+    withNarratorSet(passages, "b").map((passage) => passage.passageId),
+    ["p1", "p3"],
+    "a passage that already has it is left alone",
+  );
+  const back = withNarratorSet(passages, null);
+  assert.deepEqual(
+    back.map((passage) => passage.passageId),
+    ["p2", "p3"],
+  );
+  assert.ok(back.every((passage) => !passage.assigned.has("narrator")));
+  assert.equal(passages[1]!.assigned.get("narrator"), "b", "the originals are left as they were");
+});
+
+test("voice cast: a change that gives one voice to two roles of a passage is found", () => {
+  // A character takes the voice another character already has.
+  const twins = voiceClashes(
+    withCharacterVoiceReplaced([votes("p1", { Tom: "a", Ann: "b" })], "a", "b"),
+    "n",
+    castVoices,
+  );
+  assert.equal(twins.length, 1);
+  assert.match(twins[0]!, /“Passage p1”: .* would speak with the same voice/);
+
+  // A character takes the narrator's voice — the passage's own, or the site default when it has none.
+  assert.equal(
+    voiceClashes(withNarratorSet([votes("p1", { Tom: "a" })], "a"), "n", castVoices).length,
+    1,
+  );
+  assert.equal(
+    voiceClashes(withCharacterVoiceReplaced([votes("p1", { Tom: "a" })], "a", "n"), "n", castVoices)
+      .length,
+    1,
+  );
+
+  // Two registered voices that are one ElevenLabs voice count as the same.
+  const same = new Map(
+    [voice("n"), voice("x", "shared"), voice("y", "shared")].map(
+      (entry) => [entry.id, entry] as const,
+    ),
+  );
+  const shared = voiceClashes(
+    withCharacterVoiceReplaced([votes("p1", { Tom: "x", Ann: "z" })], "z", "y"),
+    "n",
+    same,
+  );
+  assert.equal(shared.length, 1);
+  assert.match(shared[0]!, /same voice/);
+
+  // A fine change says nothing.
+  assert.deepEqual(
+    voiceClashes(
+      withCharacterVoiceReplaced([votes("p1", { Tom: "a" })], "a", "d"),
+      "n",
+      castVoices,
+    ),
+    [],
+  );
+});
+
+test("voice cast: the summary counts the voices of the characters and says how the narrator stands", () => {
+  const passages = [
+    votes("p1", { Tom: "a", Ann: "b" }),
+    votes("p2", { Max: "a" }),
+    votes("p3", { Zed: "a", Kim: "c" }),
+  ];
+  const summary = summarizeVoiceCast(passages);
+  assert.deepEqual(summary.characters, [
+    { voiceId: "a", characters: 3, passages: 3 },
+    { voiceId: "b", characters: 1, passages: 1 },
+    { voiceId: "c", characters: 1, passages: 1 },
+  ]);
+  assert.deepEqual(summary.narrator, { mode: "default", voiceId: null, passagesWithOwn: 0 });
+
+  const withNarrator = (narrators: (string | null)[]) =>
+    summarizeVoiceCast(
+      passages.map((passage, index) =>
+        votes(passage.passageId, {
+          ...Object.fromEntries(passage.assigned),
+          ...(narrators[index] ? { narrator: narrators[index]! } : {}),
+        }),
+      ),
+    ).narrator;
+  assert.deepEqual(withNarrator(["n", "n", "n"]), {
+    mode: "same",
+    voiceId: "n",
+    passagesWithOwn: 3,
+  });
+  assert.deepEqual(withNarrator(["n", "n", null]), {
+    mode: "mixed",
+    voiceId: null,
+    passagesWithOwn: 2,
+  });
+  assert.deepEqual(withNarrator(["n", "b", "n"]), {
+    mode: "mixed",
+    voiceId: null,
+    passagesWithOwn: 3,
+  });
 });

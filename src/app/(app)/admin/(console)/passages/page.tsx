@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { PassageImport } from "@/components/admin/passage-import";
+import { PassageVoiceCast } from "@/components/admin/passage-voice-cast";
 import { PassagesTable } from "@/components/admin/passages-table";
-import { listAdminPassages } from "@/lib/admin/passages-queries";
+import { getVoiceCast, listAdminPassages } from "@/lib/admin/passages-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 export default async function AdminPassagesPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const passages = await listAdminPassages();
+  const [passages, voiceCast] = await Promise.all([listAdminPassages(), getVoiceCast()]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -30,6 +31,7 @@ export default async function AdminPassagesPage() {
         </p>
       </div>
 
+      <PassageVoiceCast cast={voiceCast} />
       <PassagesTable passages={passages} />
       <PassageImport />
     </div>

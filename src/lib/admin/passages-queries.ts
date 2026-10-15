@@ -1,7 +1,12 @@
-import { loadPassageNarration, planPassageNarration } from "@/lib/passages/narration";
+import {
+  loadAllPassageVoices,
+  loadPassageNarration,
+  planPassageNarration,
+} from "@/lib/passages/narration";
 import { narrationCost, rolesOf } from "@/lib/passages/narration-plan";
 import { IN_CHUNK_SIZE, chunk } from "@/lib/passages/queries";
 import type { PassageLevel, PassageTone } from "@/lib/passages/types";
+import { summarizeVoiceCast } from "@/lib/passages/voice-cast";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
@@ -245,5 +250,47 @@ export async function getAdminPassage(id: string): Promise<AdminPassageDetail | 
     problems: plan.problems,
     model: narration.settings.model,
     missing: narrationCost(plan.jobs),
+  };
+}
+
+export interface VoiceCast {
+  /** The voices the characters speak with, the most used first. */
+  characters: { voice: AdminVoiceOption; characters: number; passages: number }[];
+  narrator: {
+    mode: "default" | "same" | "mixed";
+    /** The narrator every passage shares, when `mode` is "same". */
+    voice: AdminVoiceOption | null;
+    passagesWithOwn: number;
+    total: number;
+  };
+  /** The site's default narration voice (Admin → Voice). */
+  defaultNarrator: AdminVoiceOption | null;
+  /** Every ElevenLabs voice an admin can pick, by name. */
+  voices: AdminVoiceOption[];
+}
+
+/** How the characters of all the passages are voiced, for the "Voices for all passages" card. */
+export async function getVoiceCast(): Promise<VoiceCast> {
+  const { passages, voices, defaultNarratorVoiceId } =
+    await loadAllPassageVoices(createServiceRoleClient());
+  const { characters, narrator } = summarizeVoiceCast(passages);
+  const known = (id: string | null) => (id ? voices.get(id) : undefined);
+  const narratorVoice = known(narrator.voiceId);
+  const defaultVoice = known(defaultNarratorVoiceId);
+  return {
+    characters: characters.flatMap((use) => {
+      const voice = known(use.voiceId);
+      return voice
+        ? [{ voice: option(voice), characters: use.characters, passages: use.passages }]
+        : [];
+    }),
+    narrator: {
+      mode: narrator.mode,
+      voice: narratorVoice ? option(narratorVoice) : null,
+      passagesWithOwn: narrator.passagesWithOwn,
+      total: passages.length,
+    },
+    defaultNarrator: defaultVoice ? option(defaultVoice) : null,
+    voices: [...voices.values()].map(option).sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
