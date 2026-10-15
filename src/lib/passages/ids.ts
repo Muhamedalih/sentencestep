@@ -32,3 +32,8 @@ export function wordGroupIdFor(slug: string): string {
 export function wordIdFor(slug: string, word: string): string {
   return `${wordGroupIdFor(slug)}-${word.trim().toLowerCase().replace(/\s+/g, "-")}`;
 }
+
+/** Whether a Word Lists group is the word lesson of a passage (its id is `passage-<slug>`, see wordGroupIdFor). */
+export function isPassageWordGroupId(id: string): boolean {
+  return id.startsWith("passage-");
+}

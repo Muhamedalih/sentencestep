@@ -620,6 +620,7 @@ export const ar: Dictionary = {
     progressLabel: "التقدم",
     wordsUnit: "كلمات",
     backToWordLists: "العودة إلى قوائم الكلمات",
+    backToPassages: "العودة إلى النصوص",
     practiceAgain: "تدرّب مرة أخرى",
     wordListBadge: "قائمة كلمات",
     completedBefore: "لقد أكملت هذه الكلمة من قبل — كتابتها مرة أخرى تحافظ عليها طازجة في ذاكرتك.",

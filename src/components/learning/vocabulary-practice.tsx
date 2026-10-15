@@ -21,7 +21,8 @@ import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
-import { Button } from "@/components/ui/button";
+import { Shine, SHINE_LIFT } from "@/components/learning/shine";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordAttempts } from "@/hooks/use-word-attempts";
@@ -30,6 +31,7 @@ import { useWordProgress } from "@/hooks/use-word-progress";
 import { masterMistakeWordAction, recordWordListMistakeAction } from "@/lib/mistakes/actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
+import { isPassageWordGroupId } from "@/lib/passages/ids";
 import { cn } from "@/lib/utils";
 import { bandsFromCompleted } from "@/lib/word-mastery/dashboard";
 import { splitWordHint } from "@/lib/word-lists-hint";
@@ -223,6 +225,13 @@ function VocabularyPracticeSession({
 }) {
   const { t, dir } = useLocale();
   const isSmart = smart != null;
+  // Where the "back" links lead: the caller's choice, else — for a passage's word lesson — the
+  // Passages list it came from, else the Word Lists page (the default of each link).
+  const back =
+    backLink ??
+    (isPassageWordGroupId(group.id)
+      ? { href: "/learn/passages", label: t.wordLists.backToPassages }
+      : undefined);
   // Words are practiced in fixed-size blocks (see BLOCK_SIZE), not straight
   // through the whole group: a wrong word doesn't get corrected on the spot
   // (that would just be per-keystroke rejection wearing a different hat) —
@@ -484,12 +493,12 @@ function VocabularyPracticeSession({
         <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
           <div className="flex items-center justify-between gap-4">
             <Link
-              href={backLink?.href ?? "/learn/word-lists"}
+              href={back?.href ?? "/learn/word-lists"}
               className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
             >
               <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
               <span dir="ltr" className="truncate max-[359px]:sr-only">
-                {backLink?.label ?? group.title}
+                {back?.label ?? group.title}
               </span>
             </Link>
             {!isComplete && audioWord && (
@@ -535,7 +544,7 @@ function VocabularyPracticeSession({
                 variants={popIn}
                 initial="hidden"
                 animate="visible"
-                className="border-border bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border p-12 text-center"
+                className="border-border bg-card flex w-full max-w-md flex-col items-center gap-6 rounded-3xl border px-8 py-10 text-center sm:px-12 sm:py-12"
               >
                 {redesign ? (
                   // A progress ring and a counted number say how far the learner got; no icon of celebration.
@@ -556,44 +565,68 @@ function VocabularyPracticeSession({
                     </span>
                   </MasteryRing>
                 ) : (
-                  <div className="bg-success/15 text-success flex size-14 items-center justify-center rounded-full">
-                    <PartyPopper className="size-7" aria-hidden="true" />
-                  </div>
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 18, delay: 0.1 }}
+                    className="bg-success/12 text-success ring-success/10 flex size-16 items-center justify-center rounded-full ring-8"
+                  >
+                    <PartyPopper className="size-8" aria-hidden="true" />
+                  </motion.div>
                 )}
-                <div>
-                  <h2 className="text-2xl font-semibold tracking-tight">
+                <div className="flex flex-col gap-1.5">
+                  <h2 className="text-3xl font-bold tracking-tight text-balance">
                     {redesign ? t.wordLists.redesign.completeHeading : t.wordLists.complete}
                   </h2>
-                  <p className="text-muted-foreground mt-1" dir="ltr">
+                  <p className="text-muted-foreground" dir="ltr">
                     {group.title}
                   </p>
                 </div>
-                <div className={cn("w-full max-w-xs text-left", redesign && "hidden")}>
-                  <div className="mb-1.5 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">
-                      {t.wordLists.progressLabel}
-                    </span>
-                    <span className="text-muted-foreground" dir="ltr">
-                      {completedCount} / {total} {t.wordLists.wordsUnit}
-                    </span>
+                {/* A preview records nothing, so its "0 / 5" would only be wrong. */}
+                {!redesign && !previewMode && (
+                  <div className="w-full max-w-xs text-start">
+                    <div className="mb-1.5 flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        {t.wordLists.progressLabel}
+                      </span>
+                      <span className="text-muted-foreground" dir="ltr">
+                        {completedCount} / {total} {t.wordLists.wordsUnit}
+                      </span>
+                    </div>
+                    <Progress value={(completedCount / total) * 100} />
                   </div>
-                  <Progress value={(completedCount / total) * 100} />
-                </div>
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-                  <Button variant="outline" asChild>
-                    <Link href={backLink?.href ?? "/learn/word-lists"}>
-                      {backLink?.label ?? t.wordLists.backToWordLists}
+                )}
+                <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                  {back && (
+                    // Where this lesson came from (a passage's list, or the editor in a preview) leads, as the main button.
+                    <Link
+                      href={back.href}
+                      className={cn(buttonVariants({ size: "lg" }), SHINE_LIFT, "sm:min-w-48")}
+                    >
+                      <Shine />
+                      <ArrowLeft
+                        className="transition-transform duration-200 group-hover/shine:-translate-x-1 rtl:rotate-180 rtl:group-hover/shine:translate-x-1"
+                        aria-hidden="true"
+                      />
+                      {back.label}
                     </Link>
-                  </Button>
+                  )}
+                  {!back && (
+                    <Button variant="outline" size="lg" asChild>
+                      <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
+                    </Button>
+                  )}
                   {redesign && (
                     // The topic's wall is where the new strengths, the mastery ring and the rank are.
-                    <Button variant="outline" asChild>
+                    <Button variant="outline" size="lg" asChild>
                       <Link href={`/learn/word-lists/${group.id}/words`}>
                         {t.wordLists.redesign.viewWall}
                       </Link>
                     </Button>
                   )}
                   <Button
+                    size="lg"
+                    variant={back ? "outline" : "default"}
                     onClick={() => {
                       setBlockIndex(0);
                       setQueue(blocks[0]?.map((_, i) => i) ?? []);

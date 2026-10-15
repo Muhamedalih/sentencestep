@@ -746,6 +746,8 @@ export interface Dictionary {
     progressLabel: string;
     wordsUnit: string;
     backToWordLists: string;
+    /** The way back from a passage's word lesson: the Passages list, not the Word Lists one. */
+    backToPassages: string;
     practiceAgain: string;
     wordListBadge: string;
     completedBefore: string;

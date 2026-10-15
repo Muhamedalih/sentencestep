@@ -6,6 +6,7 @@ import test from "node:test";
 import { PASSAGE_SEEDS } from "@/data/passages";
 import type { PassageSeed } from "@/data/passages";
 import {
+  isPassageWordGroupId,
   passageIdFor,
   questionIdFor,
   sectionIdFor,
@@ -254,6 +255,9 @@ test("ids: readable, 1-based and stable", () => {
   assert.equal(questionIdFor("my-cat", 2), "my-cat-p2-q1");
   assert.equal(wordGroupIdFor("my-cat"), "passage-my-cat");
   assert.equal(wordIdFor("my-cat", "Hungry "), "passage-my-cat-hungry");
+  // A passage's word lesson is recognised by its id, so its back links can lead to the Passages list.
+  assert.equal(isPassageWordGroupId(wordGroupIdFor("my-cat")), true);
+  assert.equal(isPassageWordGroupId("group-1a2b3c4d"), false);
 });
 
 // --- What the narrator says ---------------------------------------------------

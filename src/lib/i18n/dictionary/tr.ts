@@ -644,6 +644,7 @@ export const tr: Dictionary = {
     progressLabel: "İlerleme",
     wordsUnit: "kelime",
     backToWordLists: "Kelime listelerine dön",
+    backToPassages: "Metinlere dön",
     practiceAgain: "Tekrar pratik yap",
     wordListBadge: "Kelime listesi",
     completedBefore:

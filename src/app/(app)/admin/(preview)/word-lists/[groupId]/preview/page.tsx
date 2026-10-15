@@ -7,6 +7,8 @@ import { VocabularyPractice } from "@/components/learning/vocabulary-practice";
 import { Button } from "@/components/ui/button";
 import { getWordGroupByIdAdmin } from "@/lib/admin/word-lists-queries";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { isPassageWordGroupId } from "@/lib/passages/ids";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { resolveWordGroupPlaybackVoiceId } from "@/lib/voice/word-group-playback-voice";
 import type { WordGroup } from "@/types/word-lists";
@@ -31,9 +33,10 @@ export default async function AdminWordGroupPreviewPage({
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const { groupId } = await params;
-  const [detail, siteDefaultVoiceId] = await Promise.all([
+  const [detail, siteDefaultVoiceId, locale] = await Promise.all([
     getWordGroupByIdAdmin(groupId),
     getDefaultPronunciationVoiceId(),
+    getLocale(),
   ]);
   if (!detail) notFound();
   const backLink = { href: `/admin/word-lists/${detail.id}/edit`, label: "Back to editor" };
@@ -64,6 +67,8 @@ export default async function AdminWordGroupPreviewPage({
       targetWord: word.targetWord,
       sentence: word.sentence,
       hintAr: word.hintAr,
+      // The meaning a learner sees next to the word (Arabic only here — the other languages come from the translations table).
+      ...(locale === "ar" ? { supportHint: word.hintAr } : {}),
       ipa: word.ipa ?? word.suggestedIpa,
     })),
   };
@@ -77,12 +82,13 @@ export default async function AdminWordGroupPreviewPage({
   );
 
   // The learner's screen as it is — the layout around it (admin/(preview)/layout.tsx) draws no
-  // admin bar, and the practice's own back link leads to the editor instead of the learner's list.
+  // admin bar. A passage's word lesson leads back to the Passages list, as it does for a learner;
+  // any other group's back links lead to the editor instead of the learner's list.
   return (
     <VocabularyPractice
       group={group}
       previewMode
-      backLink={backLink}
+      backLink={isPassageWordGroupId(detail.id) ? undefined : backLink}
       defaultVoiceId={defaultVoiceId}
     />
   );

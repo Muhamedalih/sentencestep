@@ -655,6 +655,7 @@ export const es: Dictionary = {
     progressLabel: "Progreso",
     wordsUnit: "palabras",
     backToWordLists: "Volver a las listas de palabras",
+    backToPassages: "Volver a los textos",
     practiceAgain: "Practicar de nuevo",
     wordListBadge: "Lista de palabras",
     completedBefore:

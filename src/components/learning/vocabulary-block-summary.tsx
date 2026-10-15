@@ -2,9 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, ChevronDown, PencilLine, Star } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  PencilLine,
+  Star,
+} from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
+import { Shine, SHINE_BASE } from "@/components/learning/shine";
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { Button } from "@/components/ui/button";
@@ -130,7 +139,7 @@ export function VocabularyBlockSummary({
             </h2>
             <p className="text-muted-foreground mt-0.5 text-xs">{t.wordLists.blockDoneHint}</p>
           </div>
-          <div className="flex w-full shrink-0 flex-col items-end gap-1 sm:w-36">
+          <div className="flex w-full shrink-0 flex-col items-end gap-1.5 sm:w-auto sm:min-w-44">
             <div
               role="img"
               aria-label={t.wordLists.blockProgressAria
@@ -148,7 +157,7 @@ export function VocabularyBlockSummary({
                 />
               ))}
             </div>
-            <p className="text-muted-foreground text-xs font-semibold tabular-nums">
+            <p className="text-muted-foreground text-xs font-semibold whitespace-nowrap tabular-nums">
               {t.wordLists.blockRange
                 .replace("{from}", String(firstWordNumber))
                 .replace("{to}", String(lastWordNumber))
@@ -170,8 +179,13 @@ export function VocabularyBlockSummary({
           <button
             type="button"
             onClick={toggleAll}
-            className="text-primary focus-visible:ring-ring min-h-8 rounded-md px-1 text-sm font-semibold outline-none focus-visible:ring-2 pointer-coarse:min-h-11 pointer-coarse:px-3"
+            className="text-primary hover:bg-primary/10 focus-visible:ring-ring flex min-h-8 items-center gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 pointer-coarse:min-h-11"
           >
+            {allOpen ? (
+              <ChevronsDownUp className="size-4" aria-hidden="true" />
+            ) : (
+              <ChevronsUpDown className="size-4" aria-hidden="true" />
+            )}
             {allOpen ? t.wordLists.collapseAll : t.wordLists.expandAll}
           </button>
         </div>
@@ -204,13 +218,24 @@ export function VocabularyBlockSummary({
               ref={continueRef}
               size="lg"
               onClick={onContinue}
-              className="shadow-primary/25 hover:shadow-primary/35 w-full shadow-lg transition-shadow sm:min-w-64"
+              // The button takes keyboard focus on its own (see FOCUS_DELAY_MS), so its ring is kept soft.
+              className={cn(
+                SHINE_BASE,
+                "shadow-primary/25 hover:shadow-primary/35 focus-visible:ring-primary/40 w-full shadow-lg transition-shadow sm:min-w-64",
+              )}
             >
+              <Shine />
               {isLastBlock ? t.wordLists.finishBlock : t.wordLists.nextBlock}
               {isLastBlock ? (
-                <Check aria-hidden="true" />
+                <Check
+                  className="transition-transform duration-200 group-hover/shine:scale-125"
+                  aria-hidden="true"
+                />
               ) : (
-                <ArrowRight className="rtl:rotate-180" aria-hidden="true" />
+                <ArrowRight
+                  className="transition-transform duration-200 group-hover/shine:translate-x-1 rtl:rotate-180 rtl:group-hover/shine:-translate-x-1"
+                  aria-hidden="true"
+                />
               )}
             </Button>
           </motion.div>
@@ -280,11 +305,11 @@ function SummaryRow({
       transition={{ duration: 0.45, ease: easeOut, delay: 0.1 + index * 0.07 }}
       data-open={open}
       className={cn(
-        "bg-card overflow-hidden rounded-2xl border transition-colors duration-200",
-        open ? "border-primary/40" : "border-border",
+        "overflow-hidden rounded-2xl border transition-colors duration-200",
+        open ? "border-primary/40 bg-card" : "bg-card/70 border-border/70 hover:border-primary/25",
       )}
     >
-      <div className="flex items-center gap-2 py-1 ps-3 pe-2">
+      <div className="flex items-center gap-1.5 py-1 ps-3 pe-2">
         <button
           type="button"
           onClick={onToggle}
@@ -295,7 +320,12 @@ function SummaryRow({
           <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums">
             {position}
           </span>
-          <span dir="ltr" lang="en" className="shrink-0 text-xl font-extrabold tracking-tight">
+          {/* A column of its own, so the meanings line up under one another down the list. */}
+          <span
+            dir="ltr"
+            lang="en"
+            className="w-28 shrink-0 truncate text-xl font-extrabold tracking-tight sm:w-36"
+          >
             {word.targetWord}
           </span>
           {hint && (
@@ -324,16 +354,16 @@ function SummaryRow({
           kokoroVoiceId={defaultVoiceId}
           contentType="word"
           contentId={word.id}
-          variant="outline"
-          className="text-primary rounded-full"
+          variant="ghost"
+          className="text-primary hover:bg-primary/10 rounded-full"
         />
         {onPractice && (
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={onPractice}
             aria-label={t.wordLists.practiceWordAria.replace("{word}", word.targetWord)}
-            className="text-primary h-9 shrink-0 gap-1.5 rounded-full px-3 max-sm:px-2.5 pointer-coarse:h-11 pointer-coarse:min-w-11"
+            className="text-primary hover:bg-primary/10 h-9 shrink-0 gap-1.5 rounded-full px-3 max-sm:px-2.5 pointer-coarse:h-11 pointer-coarse:min-w-11"
           >
             <PencilLine className="size-4" aria-hidden="true" />
             <span className="max-sm:sr-only">{t.wordLists.practiceWord}</span>
