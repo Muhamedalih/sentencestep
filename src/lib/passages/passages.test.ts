@@ -15,6 +15,7 @@ import {
 } from "@/lib/passages/ids";
 import { posterArtFor, speakerClassFor } from "@/lib/passages/art";
 import { parseQuestions } from "@/lib/passages/parse";
+import { NO_EVIDENCE_LINE, storedQuestionsFor } from "@/lib/passages/seed-rows";
 import {
   DEFAULT_PLAYBACK_RATE,
   PLAYBACK_RATES,
@@ -61,6 +62,8 @@ test("every passage has an Arabic translation for every line, question and optio
       assert.match(section.question.ar, /[ء-ي]/);
       for (const option of section.question.options) assert.match(option.ar, /[ء-ي]/);
     }
+    assert.match(seed.closing.ar, /[ء-ي]/, `${seed.slug}: closing question`);
+    for (const option of seed.closing.options) assert.match(option.ar, /[ء-ي]/, seed.slug);
   }
 });
 
@@ -69,6 +72,17 @@ test("the right answer is never the same option position in every part (no patte
     PASSAGE_SEEDS.flatMap((seed) => seed.sections.map((section) => section.question.answer)),
   );
   assert.ok(positions.size >= 2);
+});
+
+test("every passage closes with one question about the whole passage", () => {
+  for (const seed of PASSAGE_SEEDS) {
+    const partPrompts = seed.sections.map((section) => section.question.en.trim().toLowerCase());
+    assert.ok(
+      !partPrompts.includes(seed.closing.en.trim().toLowerCase()),
+      `${seed.slug}: the closing question repeats a part's question`,
+    );
+    assert.ok(seed.closing.options.length >= 3, `${seed.slug}: the closing question has choices`);
+  }
 });
 
 // --- The validator catches what it should ----------------------------------
@@ -87,6 +101,40 @@ test("validate: evidence must point at a real line of the same part", () => {
   const seed = cloneSeed();
   seed.sections[0]!.question.evidence = 99;
   assert.ok(validatePassageSeed(seed).some((problem) => /evidence 99/.test(problem)));
+});
+
+test("validate: the closing question is checked like any other, and a passage must have one", () => {
+  const missing = cloneSeed() as Partial<PassageSeed>;
+  delete missing.closing;
+  assert.ok(
+    validatePassageSeed(missing as PassageSeed).some((problem) =>
+      /closing question: the passage has none/.test(problem),
+    ),
+  );
+
+  const badAnswer = cloneSeed();
+  badAnswer.closing.answer = 7;
+  assert.ok(
+    validatePassageSeed(badAnswer).some((problem) =>
+      /closing question: answer 7 is not one of the 3 options/.test(problem),
+    ),
+  );
+
+  const untranslated = cloneSeed();
+  untranslated.closing.ar = "";
+  assert.ok(
+    validatePassageSeed(untranslated).some((problem) =>
+      /closing question: question has no Arabic translation/.test(problem),
+    ),
+  );
+
+  const repeated = cloneSeed();
+  repeated.closing.en = ` ${repeated.sections[1]!.question.en.toUpperCase()} `;
+  assert.ok(
+    validatePassageSeed(repeated).some((problem) =>
+      /closing question: repeats the question of one of the parts/.test(problem),
+    ),
+  );
 });
 
 test("validate: a speaker missing from the cast, or a cast member who never speaks, is reported", () => {
@@ -307,6 +355,28 @@ test("parseQuestions: valid questions come through, malformed ones drop out", ()
   assert.equal(parsed[0]!.promptAr, "من هو المدير؟");
   assert.deepEqual(parseQuestions(null), []);
   assert.deepEqual(parseQuestions("nope"), []);
+});
+
+test("stored questions: a part keeps its own question, the last part also the closing one, and the reader parses them all", () => {
+  for (const seed of PASSAGE_SEEDS) {
+    const lastIndex = seed.sections.length - 1;
+    seed.sections.forEach((section, index) => {
+      const stored = storedQuestionsFor(seed, index);
+      assert.equal(stored.length, index === lastIndex ? 2 : 1, `${seed.slug} part ${index + 1}`);
+      assert.equal(stored[0]!.id, questionIdFor(seed.slug, index + 1, 1));
+      assert.equal(stored[0]!.evidence, section.question.evidence);
+
+      // What the insert script writes is what parseQuestions reads back, nothing dropped.
+      assert.equal(parseQuestions(stored).length, stored.length, `${seed.slug} part ${index + 1}`);
+    });
+
+    const closing = storedQuestionsFor(seed, lastIndex)[1]!;
+    assert.equal(closing.id, questionIdFor(seed.slug, lastIndex + 1, 2));
+    assert.equal(closing.prompt, seed.closing.en);
+    assert.equal(closing.answer, seed.closing.answer);
+    assert.equal(closing.evidence, NO_EVIDENCE_LINE, "a closing question has no line to light up");
+  }
+  assert.deepEqual(storedQuestionsFor(PASSAGE_SEEDS[0]!, 99), []);
 });
 
 // --- The migrations --------------------------------------------------------------------

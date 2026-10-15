@@ -1163,6 +1163,7 @@ export const en: Dictionary = {
     quickCheck: "Quick check",
     correct: "Correct!",
     notQuite: "Not quite. Look at the sentence that is lit up.",
+    notQuiteNoLine: "Not quite. The right answer is in green.",
     nextPart: "Next part",
     nextQuestion: "Next question",
     finish: "Finish",

@@ -1206,6 +1206,7 @@ export const es: Dictionary = {
     quickCheck: "Pregunta rápida",
     correct: "¡Correcto!",
     notQuite: "No exactamente. Mira la frase resaltada.",
+    notQuiteNoLine: "No exactamente. La respuesta correcta está en verde.",
     nextPart: "Siguiente parte",
     nextQuestion: "Siguiente pregunta",
     finish: "Terminar",

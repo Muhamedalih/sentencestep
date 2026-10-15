@@ -245,6 +245,16 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "How did Mark feel when he went to the CEO's office?",
+      ar: "كيف شعر مارك وهو ذاهب إلى مكتب المدير التنفيذي؟",
+      options: [
+        { en: "He was sure he would lose his job", ar: "كان متأكداً أنه سيفقد وظيفته" },
+        { en: "He was excited about a promotion", ar: "كان متحمساً لترقية" },
+        { en: "He was proud of his email", ar: "كان فخوراً برسالته" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "complain",
@@ -523,6 +533,16 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What did Mrs. Walker become to Ethan over the years?",
+      ar: "ماذا صارت السيدة والكر بالنسبة لإيثان على مرّ السنين؟",
+      options: [
+        { en: "Like a grandmother", ar: "مثل جدّة له" },
+        { en: "His teacher at the university", ar: "معلمته في الجامعة" },
+        { en: "A neighbor from his dormitory", ar: "جارة من سكنه الجامعي" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "stranger",
@@ -784,6 +804,19 @@ export const B1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What did Tyler want Walt to do at first?",
+      ar: "ماذا أراد تايلر من والت أن يفعل في البداية؟",
+      options: [
+        {
+          en: "Say it was the water pump and charge Rachel more",
+          ar: "أن يقول إنها مضخة الماء ويطلب من راشيل مبلغاً أكبر",
+        },
+        { en: "Fix the car for free", ar: "أن يصلح السيارة مجاناً" },
+        { en: "Send Rachel to another garage", ar: "أن يرسل راشيل إلى ورشة أخرى" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "hood",

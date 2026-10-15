@@ -241,7 +241,12 @@ export function PassageQuestionDock({
                   answer.correct ? "text-success" : "text-muted-foreground",
                 )}
               >
-                {answer.correct ? t.passages.correct : t.passages.notQuite}
+                {answer.correct
+                  ? t.passages.correct
+                  : // A question about the whole passage (the closing one) has no sentence to light up.
+                    question.evidence >= 0
+                    ? t.passages.notQuite
+                    : t.passages.notQuiteNoLine}
               </motion.p>
               <motion.div
                 initial={reduced ? false : { opacity: 0, x: 12 }}

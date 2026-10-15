@@ -441,6 +441,18 @@ Passages are about understanding it. Arabic support language only for now.
     has a clip for every line — not while a question is open, nor on the end
     screen — and the pill shows on laptops and tablets (from 768px wide), never on
     a phone in either orientation (a touch screen under 600px tall counts as one).
+- **One question per part, and one closing question per passage.** A part ends
+  with a quick check on its own lines (the quickest thing to answer, so the story
+  keeps moving). After the last part's check comes a **closing question**
+  (`closing` in the seed) about the passage as a whole or an early part of it —
+  "Question 2 of 2", the text blurred again, answered from memory — so a second
+  retrieval comes late rather than right after the first (a second question about
+  the same few lines adds little and costs flow). It is never a repeat of a part's
+  question (validated), has no `evidence` line, and after a miss says "the right
+  answer is in green" (`notQuiteNoLine`) instead of "look at the lit sentence".
+  Stored as the second question of the last part (`storedQuestionsFor` in
+  `src/lib/passages/seed-rows.ts`: id `<slug>-p<last>-q2`, `evidence: -1`), so the
+  reader, the score and the progress save needed no change.
 - **Content** lives in `src/data/passages` (reviewable in a diff, validated by
   `npm run test:passages` — every answer index, evidence line, translation and
   word is checked). `scripts/insert-passages.ts` writes it to the database

@@ -29,12 +29,12 @@ import { PASSAGE_SEEDS } from "../src/data/passages";
 import type { PassageSeed } from "../src/data/passages";
 import {
   passageIdFor,
-  questionIdFor,
   sectionIdFor,
   sentenceIdFor,
   wordGroupIdFor,
   wordIdFor,
 } from "../src/lib/passages/ids";
+import { storedQuestionsFor } from "../src/lib/passages/seed-rows";
 import { validatePassageSet } from "../src/lib/passages/validate";
 import type { Database } from "../src/types/database";
 
@@ -270,16 +270,8 @@ async function main() {
         order_index: sectionNumber,
         title: section.title,
         title_ar: section.titleAr,
-        questions: [
-          {
-            id: questionIdFor(seed.slug, sectionNumber),
-            prompt: section.question.en,
-            prompt_ar: section.question.ar,
-            options: section.question.options,
-            answer: section.question.answer,
-            evidence: section.question.evidence,
-          },
-        ],
+        // The part's own question, and on the last part the passage's closing question after it.
+        questions: storedQuestionsFor(seed, sectionIndex),
         updated_at: new Date().toISOString(),
       };
     });

@@ -1167,6 +1167,7 @@ export const tr: Dictionary = {
     quickCheck: "Hızlı soru",
     correct: "Doğru!",
     notQuite: "Tam değil. Işıklı cümleye bak.",
+    notQuiteNoLine: "Tam değil. Doğru cevap yeşil renkte.",
     nextPart: "Sonraki bölüm",
     nextQuestion: "Sonraki soru",
     finish: "Bitir",

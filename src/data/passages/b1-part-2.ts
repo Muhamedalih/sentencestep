@@ -243,6 +243,22 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "How did building the boat change the brothers?",
+      ar: "كيف غيّر بناء القارب الأخوين؟",
+      options: [
+        {
+          en: "It helped them talk and forgive each other",
+          ar: "ساعدهما على الحديث ومسامحة بعضهما",
+        },
+        { en: "It made them argue about money again", ar: "جعلهما يتشاجران حول المال من جديد" },
+        {
+          en: "It made them want to sell the house faster",
+          ar: "جعلهما يريدان بيع البيت بسرعة أكبر",
+        },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "funeral",
@@ -504,6 +520,16 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "According to Karen, what made Paul good?",
+      ar: "حسب كارين، ما الذي يجعل بول جيداً؟",
+      options: [
+        { en: "He did not quit on a machine that did not work", ar: "لم يستسلم أمام آلة لا تعمل" },
+        { en: "He learned faster than the young students", ar: "كان يتعلّم أسرع من الطلاب الشباب" },
+        { en: "He already knew a lot about computers", ar: "كان يعرف الكثير عن الحواسيب مسبقاً" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "factory",
@@ -764,6 +790,16 @@ export const B1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What kind of café did Elena dream of from the start?",
+      ar: "أي نوع من المقاهي حلمت به إيلينا منذ البداية؟",
+      options: [
+        { en: "A small one with a big table for everyone", ar: "مقهى صغير بطاولة كبيرة للجميع" },
+        { en: "A big modern café with many tables", ar: "مقهى كبير وحديث بطاولات كثيرة" },
+        { en: "A fast café open all night", ar: "مقهى سريع يفتح طوال الليل" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "survive",

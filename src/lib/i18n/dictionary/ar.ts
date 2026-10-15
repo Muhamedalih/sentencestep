@@ -1133,6 +1133,7 @@ export const ar: Dictionary = {
     quickCheck: "سؤال سريع",
     correct: "إجابة صحيحة!",
     notQuite: "ليست صحيحة. انظر إلى الجملة المضاءة.",
+    notQuiteNoLine: "ليست صحيحة. الإجابة الصحيحة باللون الأخضر.",
     nextPart: "الجزء التالي",
     nextQuestion: "السؤال التالي",
     finish: "إنهاء",

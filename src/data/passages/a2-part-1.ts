@@ -218,6 +218,16 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What came in the mail a week after the wedding?",
+      ar: "ما الذي وصل بالبريد بعد أسبوع من الزفاف؟",
+      options: [
+        { en: "A dinner invitation from Rose", ar: "دعوة إلى العشاء من روز" },
+        { en: "A photo from the wedding", ar: "صورة من حفل الزفاف" },
+        { en: "A letter from the bride", ar: "رسالة من العروس" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "bride",
@@ -436,6 +446,16 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What new rule did Ms. Parker make?",
+      ar: "ما القاعدة الجديدة التي وضعتها السيدة باركر؟",
+      options: [
+        { en: "Every Friday is Pajama Day", ar: "كل يوم جمعة هو يوم البيجامة" },
+        { en: "Everybody must turn the camera off", ar: "على الجميع إطفاء الكاميرا" },
+        { en: "Everybody must work from the office", ar: "على الجميع العمل من المكتب" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "camera",
@@ -650,6 +670,16 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "Why did Lisa come home early?",
+      ar: "لماذا عادت ليزا إلى البيت مبكراً؟",
+      options: [
+        { en: "She was sad and wanted to cry at home", ar: "كانت حزينة وأرادت أن تبكي في البيت" },
+        { en: "Her boss sent her home", ar: "أرسلها مديرها إلى البيت" },
+        { en: "She forgot her phone at home", ar: "نسيت هاتفها في البيت" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "secret",
@@ -869,6 +899,16 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What did Chloe say she liked about Dan?",
+      ar: "ما الذي قالت كلوي إنه يعجبها في دان؟",
+      options: [
+        { en: "When he tells the truth", ar: "حين يقول الحقيقة" },
+        { en: "His funny jokes", ar: "نكاته المضحكة" },
+        { en: "His expensive gifts", ar: "هداياه الغالية" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "date",
@@ -1092,6 +1132,19 @@ export const A2_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What was different in the building at the end?",
+      ar: "ما الذي اختلف في المبنى في النهاية؟",
+      options: [
+        {
+          en: "People said good morning to Jenny first",
+          ar: "صار الناس يقولون صباح الخير لجيني أولاً",
+        },
+        { en: "Mr. Hall moved to another building", ar: "انتقل السيد هول إلى مبنى آخر" },
+        { en: "Jenny moved to a new apartment", ar: "انتقلت جيني إلى شقة جديدة" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "newspaper",

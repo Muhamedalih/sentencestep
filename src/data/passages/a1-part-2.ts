@@ -197,6 +197,19 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What is this story mostly about?",
+      ar: "عمّ تدور هذه القصة في الغالب؟",
+      options: [
+        {
+          en: "A dad learns to text with his daughter's help",
+          ar: "أب يتعلّم كتابة الرسائل بمساعدة ابنته",
+        },
+        { en: "A girl loses her new phone", ar: "فتاة تضيّع هاتفها الجديد" },
+        { en: "A dad buys a car for his daughter", ar: "أب يشتري سيارة لابنته" },
+      ],
+      answer: 0,
+    },
     words: [
       { word: "message", sentence: "Sara gets her first ___.", hintAr: "الرسالة." },
       {
@@ -408,6 +421,16 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What is the lesson of this story?",
+      ar: "ما العبرة من هذه القصة؟",
+      options: [
+        { en: "It is never too late to start", ar: "لا يفوت الأوان أبداً على البدء" },
+        { en: "Swimming is only for children", ar: "السباحة للأطفال فقط" },
+        { en: "Beaches are not safe", ar: "الشواطئ ليست آمنة" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "scary",
@@ -617,6 +640,16 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What does Anna want to buy with the money?",
+      ar: "ماذا تريد آنا أن تشتري بالمال؟",
+      options: [
+        { en: "A big house", ar: "بيتاً كبيراً" },
+        { en: "A small boat", ar: "قارباً صغيراً" },
+        { en: "A new phone", ar: "هاتفاً جديداً" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "believe",
@@ -824,6 +857,16 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What time is Ben's interview?",
+      ar: "في أي ساعة موعد مقابلة بن؟",
+      options: [
+        { en: "At ten o'clock", ar: "في العاشرة" },
+        { en: "At nine o'clock", ar: "في التاسعة" },
+        { en: "At eleven o'clock", ar: "في الحادية عشرة" },
+      ],
+      answer: 0,
+    },
     words: [
       { word: "lost", sentence: "Hi! You look ___. Can I help?", hintAr: "تائه، ضائع." },
       {
@@ -1050,6 +1093,16 @@ export const A1_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "According to the story, what is the hard part?",
+      ar: "حسب القصة، ما الجزء الصعب؟",
+      options: [
+        { en: "Coming back every day", ar: "العودة كل يوم" },
+        { en: "Starting on January first", ar: "البدء في الأول من يناير" },
+        { en: "Buying a gym card", ar: "شراء بطاقة النادي" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "strong",

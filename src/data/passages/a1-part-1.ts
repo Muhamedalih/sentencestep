@@ -199,6 +199,16 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "How does Milo wake Tom up?",
+      ar: "كيف يوقظ ميلو توم؟",
+      options: [
+        { en: "He jumps on Tom's face", ar: "يقفز على وجه توم" },
+        { en: "He pulls Tom's blanket", ar: "يسحب بطانية توم" },
+        { en: "He opens the window", ar: "يفتح النافذة" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "asleep",
@@ -401,6 +411,16 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What does Jake want at the start of the story?",
+      ar: "ماذا يريد جيك في بداية القصة؟",
+      options: [
+        { en: "A new profile photo", ar: "صورة جديدة لحسابه" },
+        { en: "A new phone", ar: "هاتفاً جديداً" },
+        { en: "A new hat", ar: "قبعة جديدة" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "wind",
@@ -659,6 +679,16 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What helps Leo learn the song?",
+      ar: "ما الذي يساعد ليو على تعلّم الأغنية؟",
+      options: [
+        { en: "Practicing a little every day", ar: "التدرّب قليلاً كل يوم" },
+        { en: "Playing for one hour on Sundays", ar: "العزف ساعة كل يوم أحد" },
+        { en: "Getting a new teacher", ar: "الحصول على معلم جديد" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "guitar",
@@ -872,6 +902,16 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "Who is Joe?",
+      ar: "من هو جو؟",
+      options: [
+        { en: "The pizza delivery man", ar: "موصّل البيتزا" },
+        { en: "Emma's brother", ar: "أخو إيما" },
+        { en: "Mr. Brown's son", ar: "ابن السيد براون" },
+      ],
+      answer: 0,
+    },
     words: [
       { word: "wrong", sentence: "That's the ___ house, Joe!", hintAr: "خاطئ، الخطأ." },
       {
@@ -1076,6 +1116,16 @@ export const A1_PASSAGES_PART_1: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "Why does Maria want to find Mr. Carter?",
+      ar: "لماذا تريد ماريا أن تجد السيد كارتر؟",
+      options: [
+        { en: "Because he needs his wallet", ar: "لأنه يحتاج إلى محفظته" },
+        { en: "Because she wants a reward", ar: "لأنها تريد مكافأة" },
+        { en: "Because her mother says so", ar: "لأن أمها تطلب ذلك" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "bench",

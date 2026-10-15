@@ -1,4 +1,4 @@
-import type { PassageSeed, PassageVoiceAlias } from "@/data/passages/types";
+import type { PassageClosingSeed, PassageSeed, PassageVoiceAlias } from "@/data/passages/types";
 import { isPassageIconKey } from "@/lib/passages/icons";
 import { containsWholeWord } from "@/lib/passages/text";
 import { PASSAGE_LEVELS, PASSAGE_TONES } from "@/lib/passages/types";
@@ -45,6 +45,40 @@ export const MAX_WORDS_PER_LINE = MAX_WORDS_PER_LINE_BY_LEVEL.A1;
 
 function wordCount(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
+}
+
+/** What every question has to be, whether it ends a part or closes the passage: worded, translated, 2-4 distinct options and a right answer that is one of them. */
+function checkQuestion(
+  question: PassageClosingSeed,
+  where: string,
+  at: (where: string, message: string) => void,
+): void {
+  if (!question.en.trim()) at(where, "question is empty");
+  if (!ARABIC_LETTER.test(question.ar)) at(where, "question has no Arabic translation");
+  if (
+    question.options.length < OPTIONS_PER_QUESTION.min ||
+    question.options.length > OPTIONS_PER_QUESTION.max
+  ) {
+    at(
+      where,
+      `question needs ${OPTIONS_PER_QUESTION.min}-${OPTIONS_PER_QUESTION.max} options, has ${question.options.length}`,
+    );
+  }
+  const optionTexts = question.options.map((option) => option.en.trim().toLowerCase());
+  if (new Set(optionTexts).size !== optionTexts.length) {
+    at(where, "question has duplicate options");
+  }
+  question.options.forEach((option, optionIndex) => {
+    if (!option.en.trim()) at(where, `option ${optionIndex + 1} is empty`);
+    if (!ARABIC_LETTER.test(option.ar)) at(where, `option ${optionIndex + 1} has no Arabic`);
+  });
+  if (
+    !Number.isInteger(question.answer) ||
+    question.answer < 0 ||
+    question.answer >= question.options.length
+  ) {
+    at(where, `answer ${question.answer} is not one of the ${question.options.length} options`);
+  }
 }
 
 export function validatePassageSeed(seed: PassageSeed): string[] {
@@ -113,31 +147,7 @@ export function validatePassageSeed(seed: PassageSeed): string[] {
     });
 
     const { question } = section;
-    if (!question.en.trim()) at(part, "question is empty");
-    if (!ARABIC_LETTER.test(question.ar)) at(part, "question has no Arabic translation");
-    if (
-      question.options.length < OPTIONS_PER_QUESTION.min ||
-      question.options.length > OPTIONS_PER_QUESTION.max
-    ) {
-      at(
-        part,
-        `question needs ${OPTIONS_PER_QUESTION.min}-${OPTIONS_PER_QUESTION.max} options, has ${question.options.length}`,
-      );
-    }
-    const optionTexts = question.options.map((option) => option.en.trim().toLowerCase());
-    if (new Set(optionTexts).size !== optionTexts.length)
-      at(part, "question has duplicate options");
-    question.options.forEach((option, optionIndex) => {
-      if (!option.en.trim()) at(part, `option ${optionIndex + 1} is empty`);
-      if (!ARABIC_LETTER.test(option.ar)) at(part, `option ${optionIndex + 1} has no Arabic`);
-    });
-    if (
-      !Number.isInteger(question.answer) ||
-      question.answer < 0 ||
-      question.answer >= question.options.length
-    ) {
-      at(part, `answer ${question.answer} is not one of the ${question.options.length} options`);
-    }
+    checkQuestion(question, part, at);
     if (
       !Number.isInteger(question.evidence) ||
       question.evidence < 0 ||
@@ -146,6 +156,18 @@ export function validatePassageSeed(seed: PassageSeed): string[] {
       at(part, `evidence ${question.evidence} is not one of the ${section.lines.length} lines`);
     }
   });
+
+  // The closing question: one, about the passage as a whole, so it points at no line of its own.
+  const { closing } = seed;
+  if (!closing) {
+    at("closing question", "the passage has none");
+  } else {
+    checkQuestion(closing, "closing question", at);
+    const asked = new Set(sections.map((section) => section.question.en.trim().toLowerCase()));
+    if (asked.has(closing.en.trim().toLowerCase())) {
+      at("closing question", "repeats the question of one of the parts");
+    }
+  }
 
   for (const name of castNames) {
     if (!usedSpeakers.has(name)) at("cast", `${name} never speaks`);

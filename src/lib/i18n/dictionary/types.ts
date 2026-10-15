@@ -1412,6 +1412,8 @@ export interface Dictionary {
     quickCheck: string;
     correct: string;
     notQuite: string;
+    /** After a miss on a question that has no sentence to light up (the closing question): points at the right answer instead. */
+    notQuiteNoLine: string;
     nextPart: string;
     nextQuestion: string;
     finish: string;

@@ -44,6 +44,14 @@ export interface PassageQuestionSeed {
   evidence: number;
 }
 
+/**
+ * The question that closes a passage. Asked once, after the last part's own
+ * question, it is about the passage as a whole (or an early part of it), so the
+ * answer comes from memory of the story and not from the lines on screen —
+ * which is why it has no `evidence` line to point at after a miss.
+ */
+export type PassageClosingSeed = Omit<PassageQuestionSeed, "evidence">;
+
 export interface PassageSectionSeed {
   title: string;
   titleAr: string;
@@ -77,6 +85,8 @@ export interface PassageSeed {
   /** Character name -> the voice that speaks it. */
   cast: Record<string, PassageVoiceAlias>;
   sections: PassageSectionSeed[];
+  /** One question about the whole passage, stored as the second question of the last part. */
+  closing: PassageClosingSeed;
   /** 4-6 words taken from the passage; they become the passage's word lesson. */
   words: PassageWordSeed[];
 }

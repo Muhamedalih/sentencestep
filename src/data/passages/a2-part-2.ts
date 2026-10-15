@@ -195,6 +195,19 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What did Ben do the night Rusty was lost?",
+      ar: "ماذا فعل بن في الليلة التي ضاع فيها رَستي؟",
+      options: [
+        {
+          en: "He looked for Rusty in the rain until midnight",
+          ar: "بحث عن رَستي تحت المطر حتى منتصف الليل",
+        },
+        { en: "He called the police", ar: "اتصل بالشرطة" },
+        { en: "He went to bed early", ar: "نام مبكراً" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "gate",
@@ -407,6 +420,19 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What did Frank and Leo have in common?",
+      ar: "ما الذي كان مشتركاً بين فرانك وليو؟",
+      options: [
+        {
+          en: "Both had a fight with someone in their family",
+          ar: "كلاهما تشاجر مع أحد من عائلته",
+        },
+        { en: "Both drove the number 9 bus", ar: "كلاهما قاد الحافلة رقم 9" },
+        { en: "Both lived on the same street", ar: "كلاهما سكن في الشارع نفسه" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "grades",
@@ -624,6 +650,16 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What does Linda always tell Katie?",
+      ar: "ماذا تقول ليندا لكاتي دائماً؟",
+      options: [
+        { en: "Failing is just learning", ar: "الفشل مجرد تعلّم" },
+        { en: "Buses are better than cars", ar: "الحافلات أفضل من السيارات" },
+        { en: "Driving is only for young people", ar: "القيادة للشباب فقط" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "scared",
@@ -846,6 +882,16 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "What did Jess buy on the night of the bet?",
+      ar: "ماذا اشترت جيس في ليلة الرهان؟",
+      options: [
+        { en: "A pair of running shoes", ar: "حذاء جري" },
+        { en: "A ticket for the race", ar: "تذكرة للسباق" },
+        { en: "A gift for Josh", ar: "هدية لجوش" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "bet",
@@ -1067,6 +1113,16 @@ export const A2_PASSAGES_PART_2: PassageSeed[] = [
         },
       },
     ],
+    closing: {
+      en: "Why did Daniel go to the English class?",
+      ar: "لماذا ذهب دانيال إلى دورة اللغة الإنجليزية؟",
+      options: [
+        { en: "He wanted to talk with Emma", ar: "أراد أن يتحدث مع إيما" },
+        { en: "He needed it for his job", ar: "احتاج إليها في عمله" },
+        { en: "A friend asked him to go", ar: "طلب منه صديق أن يذهب" },
+      ],
+      answer: 0,
+    },
     words: [
       {
         word: "construction",
