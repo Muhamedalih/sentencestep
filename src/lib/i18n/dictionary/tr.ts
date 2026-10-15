@@ -1057,6 +1057,7 @@ export const tr: Dictionary = {
     typeMasterWords: "Tekrarda kelimelerde ustalaş",
     typeDictation: "Dikte cümleleri çalış",
     typeDailySession: "Bugünkü oturumu bitir",
+    typePassages: "Metin bölümlerini bitir",
     guestHeading: "Günlük görevlerin kilidini açmak için giriş yap",
     guestBody:
       "Günlük görevlerden ekstra XP kazanmak, rozet toplamak ve serini dondurmayla korumak için ücretsiz hesap oluştur.",
@@ -1101,6 +1102,9 @@ export const tr: Dictionary = {
       firstFromMemory: { name: "Hafıza Testi", description: "Bir «Ezberden» turunu bitir." },
       firstCard: { name: "Koleksiyoncu", description: "İlk kelime kartını kaydet." },
       firstDailySession: { name: "Günlük Ritüel", description: "Bir günlük oturumu bitir." },
+      firstPassage: { name: "İlk Sayfa", description: "İlk metnini bitir." },
+      passages5: { name: "Kitap Kurdu", description: "5 metin bitir." },
+      passages10: { name: "Hikâye Aşığı", description: "10 metin bitir." },
       questDay: {
         name: "Görevler Tamam",
         description: "Tüm günlük görevlerini tek günde tamamla.",
@@ -1167,6 +1171,7 @@ export const tr: Dictionary = {
     nextQuestion: "Sonraki soru",
     finish: "Bitir",
     checkYourself: "Kendini dene",
+    recallHint: "Hafızandan cevapla — seçince metin netleşir.",
     questionOf: "Soru {n} / {total}",
     audioMissing: "Bu metnin sesi henüz hazır değil. Yine de okuyabilirsin.",
     listenOnly: "Sadece dinle",
@@ -1193,5 +1198,8 @@ export const tr: Dictionary = {
     signInToSave: "İlerlemeni kaydetmek için giriş yap.",
     listenToWord: "Kelimeyi dinle",
     savingFailed: "İlerlemen kaydedilemedi.",
+    homeContinue: "Metnine devam et",
+    homeNext: "Sıradaki metnin",
+    homeStart: "Oku",
   },
 };

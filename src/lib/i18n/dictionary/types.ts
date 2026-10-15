@@ -1330,6 +1330,7 @@ export interface Dictionary {
     typeMasterWords: string;
     typeDictation: string;
     typeDailySession: string;
+    typePassages: string;
     guestHeading: string;
     guestBody: string;
     guestCta: string;
@@ -1416,6 +1417,8 @@ export interface Dictionary {
     finish: string;
     /** The button that ends the reading and brings up the question. */
     checkYourself: string;
+    /** Under an open question, while the text is blurred: why it is out of focus (the learner answers from memory). */
+    recallHint: string;
     /** "Question {n} of {total}" — only shown when a part asks more than one. */
     questionOf: string;
     audioMissing: string;
@@ -1447,5 +1450,9 @@ export interface Dictionary {
     signInToSave: string;
     listenToWord: string;
     savingFailed: string;
+    /** Home's Passages card: the label when a passage is under way, the label when none is, and the button for the latter. */
+    homeContinue: string;
+    homeNext: string;
+    homeStart: string;
   };
 }

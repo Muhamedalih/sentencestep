@@ -91,6 +91,7 @@ const QUEST_LABELS: Record<QuestType, string> = {
   masterWords: "Master N words (clean reviews)",
   dictation: "Complete N dictation sentences",
   dailySession: "Finish today's session",
+  passages: "Finish N passage parts",
 };
 
 const BADGE_LABELS: Record<BadgeId, string> = {
@@ -118,6 +119,9 @@ const BADGE_LABELS: Record<BadgeId, string> = {
   firstFromMemory: "First from-memory round",
   firstCard: "First saved word card",
   firstDailySession: "First daily session",
+  firstPassage: "First passage finished",
+  passages5: "5 passages finished",
+  passages10: "10 passages finished",
   questDay: "All daily quests in one day",
 };
 

@@ -16,5 +16,7 @@ export function questTitle(t: Dictionary, type: QuestType): string {
       return t.quests.typeDictation;
     case "dailySession":
       return t.quests.typeDailySession;
+    case "passages":
+      return t.quests.typePassages;
   }
 }

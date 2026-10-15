@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowRight, Check, Loader2, Volume2 } from "lucide-react";
+import { ArrowRight, Check, Loader2, Trophy, Volume2 } from "lucide-react";
 
+import { PassageButton, PassageLinkButton } from "@/components/passages/passage-button";
 import type { PassageAnswer } from "@/components/passages/passage-question-dock";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Button } from "@/components/ui/button";
 import { scorePercent } from "@/lib/passages/progress";
 import { splitAroundWord } from "@/lib/passages/text";
 import type { Passage, PassageQuestion, PassageWord } from "@/lib/passages/types";
@@ -89,6 +89,7 @@ export function PassageCompletion({
   meaningsAvailable,
   signedIn,
   saveFailed,
+  rewardLines,
   nextPassage,
   wordsLink,
   onReadAgain,
@@ -100,6 +101,8 @@ export function PassageCompletion({
   meaningsAvailable: boolean;
   signedIn: boolean;
   saveFailed: boolean;
+  /** What finishing earned in the daily quests and badges ("Quest complete: …", "New badge: …"); empty when nothing. */
+  rewardLines: string[];
   nextPassage: { id: string; title: string } | null;
   wordsLink: { href: string; adminPreview: boolean } | null;
   onReadAgain: () => void;
@@ -169,22 +172,41 @@ export function PassageCompletion({
         </div>
         <span className="sr-only">{percent}%</span>
 
+        {rewardLines.length > 0 && (
+          <ul className="mt-4 flex flex-col gap-1.5">
+            {rewardLines.map((line) => (
+              <motion.li
+                key={line}
+                initial={reduced ? false : { opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 340, damping: 24, delay: 0.25 }}
+                className="bg-primary/10 text-primary flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium"
+              >
+                <Trophy className="size-4 shrink-0" aria-hidden="true" />
+                <bdi>{line}</bdi>
+              </motion.li>
+            ))}
+          </ul>
+        )}
+
         <div className="mt-6 flex flex-col gap-2.5">
           {nextPassage && (
-            <Button asChild size="lg" className="w-full justify-between rounded-full px-6">
-              <Link href={`/learn/passages/${nextPassage.id}`}>
-                <span>{t.passages.nextPassage}</span>
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
+            <PassageLinkButton
+              href={`/learn/passages/${nextPassage.id}`}
+              size="lg"
+              className="w-full justify-between"
+              trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+            >
+              {t.passages.nextPassage}
+            </PassageLinkButton>
           )}
           <div className="grid grid-cols-2 gap-2.5">
-            <Button type="button" variant="outline" className="rounded-full" onClick={onReadAgain}>
+            <PassageButton variant="quiet" onClick={onReadAgain}>
               {t.passages.readAgain}
-            </Button>
-            <Button asChild variant="outline" className="rounded-full">
-              <Link href="/learn/passages">{t.passages.backToAll}</Link>
-            </Button>
+            </PassageButton>
+            <PassageLinkButton href="/learn/passages" variant="quiet">
+              {t.passages.backToAll}
+            </PassageLinkButton>
           </div>
         </div>
 
@@ -270,9 +292,9 @@ export function PassageCompletion({
 
           {wordsLink && (
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Button asChild variant="secondary" className="rounded-full">
-                <Link href={wordsLink.href}>{t.passages.practiceWords}</Link>
-              </Button>
+              <PassageLinkButton href={wordsLink.href} variant="soft">
+                {t.passages.practiceWords}
+              </PassageLinkButton>
               {wordsLink.adminPreview && (
                 <p className="text-muted-foreground text-xs">
                   Admin preview: this word lesson is hidden from learners until Passages is

@@ -23,3 +23,18 @@ export function splitAroundWord(text: string, word: string): [string, string, st
   const matched = match[2] ?? word;
   return [text.slice(0, start), matched, text.slice(start + matched.length)];
 }
+
+/**
+ * How large a part's text is set: the longer the part, the smaller the type, so a
+ * whole part still fits one laptop screen. The short A1 scenes are set big, the
+ * longer B1 ones a step or two smaller. Chosen by the part's length in
+ * characters (English).
+ */
+export type PassageTextSize = "large" | "medium" | "small" | "xsmall";
+
+export function passageTextSizeFor(characters: number): PassageTextSize {
+  if (characters <= 430) return "large";
+  if (characters <= 540) return "medium";
+  if (characters <= 650) return "small";
+  return "xsmall";
+}

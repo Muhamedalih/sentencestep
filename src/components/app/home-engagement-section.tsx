@@ -7,10 +7,15 @@ import {
   HomeEngagementFrame,
 } from "@/components/app/home-engagement";
 import { EngagementStrip } from "@/components/app/engagement-strip";
+import { PassagesCard } from "@/components/app/passages-card";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 
 async function DailySessionSlot({ data }: { data: HomeEngagementStream["dailySession"] }) {
   return <DailySessionCard summary={await data} />;
+}
+
+async function PassagesSlot({ data }: { data: HomeEngagementStream["passages"] }) {
+  return <PassagesCard data={await data} />;
 }
 
 async function EngagementStripSlot({
@@ -27,7 +32,8 @@ async function EngagementStripSlot({
 }
 
 /**
- * Server half of Home's engagement cards. Each card is its OWN <Suspense>
+ * Server half of Home's engagement cards (today's session, quests + streak,
+ * the Passages card). Each card is its OWN <Suspense>
  * slot awaiting only its own data (started alongside the page's queries, see
  * startHomeEngagement), so a card appears the moment it is ready instead of
  * waiting for the slowest of the three, and none of them can hold back the
@@ -48,7 +54,14 @@ export function HomeEngagementSection({
         <DailySessionSlot data={stream.dailySession} />
       </Suspense>
       <Suspense fallback={<CardSkeleton feature="strip" />}>
-        <EngagementStripSlot today={stream.todayISO} quests={stream.quests} streak={stream.streak} />
+        <EngagementStripSlot
+          today={stream.todayISO}
+          quests={stream.quests}
+          streak={stream.streak}
+        />
+      </Suspense>
+      <Suspense fallback={<CardSkeleton feature="passages" />}>
+        <PassagesSlot data={stream.passages} />
       </Suspense>
     </HomeEngagementFrame>
   );

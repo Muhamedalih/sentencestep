@@ -405,11 +405,16 @@ Passages are about understanding it. Arabic support language only for now.
 
 - **The reader** sets a part's text as a flowing paragraph (a character's name
   in front of their lines, in a colour of its own), so a part fits one screen.
-  While a part is read aloud the sentence being spoken is lit — a tint and a thin
-  underline, never a change of size — with its Arabic twin lit in step when the
-  translation is on. The question is not on the page while reading: it rises from
-  the bottom as a card only when the learner presses **Check yourself**, and after
-  a wrong answer the sentence that holds the answer is lit green. The list shows
+  While a part is read aloud the sentence being spoken has a soft band behind it
+  that fills along the sentence as the voice reads it (one continuous ribbon even
+  when the sentence wraps; `--passage-p` is written from the audio clock, not
+  React state) — never a change of size — with its Arabic twin lit in step when
+  the translation is on. The question is not on the page while reading: it rises
+  from the bottom as a card when the learner presses **Check yourself** (or
+  Enter, like the other check-then-continue screens), the text is **blurred while
+  the question is open** so the answer comes from memory, and it clears the moment
+  the learner has answered; after a wrong answer the sentence that holds the
+  answer is lit green. The buttons share one press feel (`PassageButton`). The list shows
   each passage as a poster card whose gradient comes from its tone and number
   (`src/lib/passages/art.ts`) — no pictures, no tone labels.
 - **Listen first and speed** (header controls). **Listen without text** replaces
@@ -438,6 +443,32 @@ Passages are about understanding it. Arabic support language only for now.
   from the end of the passage via the admin preview — is published with it, and
   hidden again when the switch goes back to Admin preview or Off
   (`syncPassageWordGroups`, which follows the _saved_ switch).
+- **Levels**: A1 (ten scenes), A2 (ten) and B1 (six), written in
+  `src/data/passages/{a1,a2,b1}-part-*.ts`. The line-length limit grows with the
+  level (`MAX_WORDS_PER_LINE_BY_LEVEL`), the reader sets a longer part in a
+  smaller size so it still fits one screen (`textSizeFor`), and a passage's words
+  are never words Word Lists already teaches (the insert script refuses a
+  clash). The list groups the posters by level; "Up next" and Home's card point at
+  the first unfinished passage in list order, whatever its level.
+- **It counts toward what the app already has** (`src/lib/passages/engagement.ts`,
+  run by `savePassageProgressAction` after the learner's place is saved, all of it
+  best-effort — a failure in any of it never costs a learner their progress):
+  every finished **part** moves the daily quest **"Finish passage parts"**
+  (`QUEST_TYPES.passages`, default 3 parts for 15 XP, tunable in Admin → Features;
+  dealt only to a learner Passages is open to); it counts as learning activity for
+  the **streak** (the same `planStreakForCompletion` a lesson uses, freezes
+  included, moved to `streak-service.ts`) and marks the day on the streak
+  calendar without adding sentences or XP; and finishing a **passage** earns the
+  event badges **Page Turner** (first), **Bookworm** (5) and **Story Lover** (10),
+  which stay off the Achievements shelf until Passages is open to the learner. The
+  learner's own date comes from the browser and is only believed when it can be
+  somebody's today (`plausibleLearnerDate`). A quest or badge a part earns shows
+  as a short notice the moment it happens and on the end screen.
+- **Home card** (`PassagesCard`, loaded by `loadPassagesHomeCard` as one more
+  streamed slot next to the session and quests cards): "Continue your passage"
+  with how far the learner is, or "Your next passage" — the same poster the list
+  uses. Not drawn when Passages is not open to the visitor, for a guest, or once
+  every passage is finished.
 
 ## Local development
 

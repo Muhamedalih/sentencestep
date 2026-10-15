@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Loader2, Pause, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Play, Trophy } from "lucide-react";
 
+import { PassageButton, PassageLinkButton } from "@/components/passages/passage-button";
 import { PassageCompletion } from "@/components/passages/passage-completion";
 import { PassageControls } from "@/components/passages/passage-controls";
 import { PassageListenStage } from "@/components/passages/passage-listen-stage";
@@ -14,15 +14,18 @@ import { PassageText } from "@/components/passages/passage-text";
 import { PassageTips } from "@/components/passages/passage-tips";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Button } from "@/components/ui/button";
+import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { usePassageAudio } from "@/hooks/use-passage-audio";
 import {
   readTipsSeen,
   usePassagePreferences,
   writeTipsSeen,
 } from "@/hooks/use-passage-preferences";
+import { questTitle } from "@/lib/features/quest-labels";
 import { savePassageProgressAction } from "@/lib/passages/actions";
 import { posterArtFor } from "@/lib/passages/art";
+import type { PassageRewards } from "@/lib/passages/engagement";
+import { todayLocalISODate } from "@/lib/progress/streak";
 import type { Passage, PassageQuestion, PassageSection } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +81,9 @@ export function PassageReader({
   const [revealed, setRevealed] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  /** What finished parts have earned in the quests and badges so far this visit — shown on the end screen, and as a short notice the moment it happens. */
+  const [rewards, setRewards] = useState<PassageRewards>({ quests: [], badges: [] });
+  const [notice, setNotice] = useState<string | null>(null);
   /** How much of the screen's bottom the question card takes (its height and margin) — the page leaves that much room under the text. */
   const [dockSpace, setDockSpace] = useState(0);
 
@@ -125,6 +131,20 @@ export function PassageReader({
     [passage.tone, passage.order],
   );
 
+  const lineForReward = useCallback(
+    (reward: PassageRewards): string[] => [
+      ...reward.quests.map((quest) =>
+        t.quests.rewardCompleted
+          .replace("{quest}", questTitle(t, quest.type))
+          .replace("{xp}", String(quest.xp)),
+      ),
+      ...reward.badges.map((id) =>
+        t.badges.rewardEarned.replace("{badge}", t.badges.items[id].name),
+      ),
+    ],
+    [t],
+  );
+
   const saveProgress = useCallback(
     async (sectionsDone: number, completed: boolean) => {
       if (!userId) return;
@@ -134,6 +154,8 @@ export function PassageReader({
         correct: correctCount,
         total: answeredCount,
         completed,
+        // The learner's own date: the streak and the daily quest are keyed on it.
+        todayISO: todayLocalISODate(),
       };
       // One quiet retry: a dropped request must not leave a finished part unsaved.
       for (let attempt = 0; attempt < 2; attempt++) {
@@ -141,6 +163,14 @@ export function PassageReader({
           const result = await savePassageProgressAction(payload);
           if (result.ok || result.reason === "signed-out" || result.reason === "unavailable") {
             if (completed) setSaveFailed(false);
+            if (result.rewards) {
+              const earned = result.rewards;
+              setRewards((current) => ({
+                quests: [...current.quests, ...earned.quests],
+                badges: [...current.badges, ...earned.badges],
+              }));
+              setNotice(lineForReward(earned).join("  ·  "));
+            }
             return;
           }
         } catch {
@@ -150,8 +180,15 @@ export function PassageReader({
       }
       if (completed) setSaveFailed(true);
     },
-    [answeredCount, correctCount, passage.id, userId],
+    [answeredCount, correctCount, lineForReward, passage.id, userId],
   );
+
+  // A reward notice is a moment, not a fixture: it goes away by itself.
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   const resetPart = useCallback(() => {
     stopAudio();
@@ -221,10 +258,16 @@ export function PassageReader({
     setComplete(false);
     setSectionIndex(0);
     setSaveFailed(false);
+    setRewards({ quests: [], badges: [] });
+    setNotice(null);
     window.scrollTo({ top: 0 });
   }, [resetPart]);
 
-  // When the question card has settled, make sure it is not sitting on the text: if the text runs
+  // Enter does what the Check button does — the same shortcut the other check-then-continue screens
+  // have (a focused button or sentence keeps its own Enter, and the tips card is not in the way).
+  useEnterToContinue(phase === "read" && !complete && !showTips, handleCheck);
+
+  // When the question card appears, make sure it is not sitting on the text: if the text runs
   // under it, the page scrolls just far enough to lift the text clear (the page keeps room for it).
   const checkingNow = phase === "check" && !complete;
 
@@ -244,7 +287,9 @@ export function PassageReader({
 
   useEffect(() => {
     if (!checkingNow) return;
-    const timer = window.setTimeout(() => {
+    // The card is in the page from this commit on. One frame later it has been laid out, so the text
+    // is lifted at once and the two move together (instead of the text jumping after the card).
+    const frame = requestAnimationFrame(() => {
       const text = document.getElementById("passage-text");
       const dock = document.getElementById("passage-dock");
       if (!text || !dock) return;
@@ -258,9 +303,19 @@ export function PassageReader({
       if (overlap > 0) {
         window.scrollBy({ top: overlap, behavior: reducedMotion ? "auto" : "smooth" });
       }
-    }, 600);
-    return () => window.clearTimeout(timer);
-  }, [checkingNow, revealed, sectionIndex, questionIndex, showTranslation, reducedMotion]);
+    });
+    return () => cancelAnimationFrame(frame);
+    // dockSpace is a dependency on purpose: the card's size arrives a frame after it appears (and
+    // changes with the translation), and the page only has room to scroll once that is known.
+  }, [
+    checkingNow,
+    dockSpace,
+    revealed,
+    sectionIndex,
+    questionIndex,
+    showTranslation,
+    reducedMotion,
+  ]);
 
   if (!section) return null;
 
@@ -280,17 +335,18 @@ export function PassageReader({
   const readingThrough = audio.readingThrough && audio.activeIndex !== null;
   const readingActive = readingThrough && !audio.paused;
   const checking = phase === "check" && !complete;
+  // The question is open and not yet answered: the text is blurred, so the answer comes from memory.
+  // (Listen-only already has no text on screen, so there is nothing to blur there.)
+  const recalling = checking && Boolean(activeQuestion) && !answers[activeQuestion?.id ?? ""];
 
   return (
     <div className="bg-background text-foreground min-h-svh">
       <header className="border-border/60 bg-background/90 sticky top-0 z-30 border-b backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5 sm:px-6">
-          <Button asChild variant="ghost" size="sm" className="-ms-2 gap-1.5">
-            <Link href="/learn/passages">
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              {t.passages.backToAll}
-            </Link>
-          </Button>
+          <PassageLinkButton href="/learn/passages" variant="quiet" size="sm" className="-ms-1">
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            {t.passages.backToAll}
+          </PassageLinkButton>
           <div className="flex-1" />
           {!complete && (
             <PassageControls
@@ -337,6 +393,7 @@ export function PassageReader({
               meaningsAvailable={translationAvailable}
               signedIn={Boolean(userId)}
               saveFailed={saveFailed}
+              rewardLines={lineForReward(rewards)}
               nextPassage={nextPassage}
               wordsLink={wordsLink}
               onReadAgain={handleReadAgain}
@@ -378,11 +435,10 @@ export function PassageReader({
               </div>
 
               {audio.hasAudio && !listenOnlyActive && (
-                <Button
-                  type="button"
-                  variant={readingActive ? "secondary" : "default"}
+                <PassageButton
+                  variant={readingActive ? "quiet" : "primary"}
                   size="lg"
-                  className="gap-2 rounded-full px-6"
+                  className="min-w-40"
                   onClick={() => {
                     if (readingActive) audio.pause();
                     else if (readingThrough) audio.resume();
@@ -392,12 +448,17 @@ export function PassageReader({
                   {audio.loading && readingActive ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                   ) : readingActive ? (
-                    <Pause className="size-4" fill="currentColor" aria-hidden="true" />
+                    // Three bars that dance while the voice is speaking.
+                    <span className="flex h-4 items-center gap-[0.18rem]" aria-hidden="true">
+                      <i className="passage-eq-bar" />
+                      <i className="passage-eq-bar" />
+                      <i className="passage-eq-bar" />
+                    </span>
                   ) : (
                     <Play className="size-4" fill="currentColor" aria-hidden="true" />
                   )}
                   {readingActive ? t.passages.pause : t.passages.listen}
-                </Button>
+                </PassageButton>
               )}
             </div>
 
@@ -425,21 +486,28 @@ export function PassageReader({
                   speakers={speakers}
                   activeIndex={audio.activeIndex}
                   readingAloud={audio.readingThrough && audio.activeIndex !== null}
+                  speaking={audio.playing && !audio.loading}
+                  getProgress={audio.getProgress}
                   canPlay={audio.hasAudio}
                   onPlay={audio.playLine}
                   showTranslation={showTranslation}
                   evidenceIndex={evidenceIndex}
-                  dimmed={checking}
+                  blurred={recalling}
                 />
               </motion.div>
             )}
 
             {phase === "read" && (
-              <div className="mt-10 flex justify-end">
-                <Button size="lg" className="gap-2 rounded-full px-7" onClick={handleCheck}>
+              <div className="mt-12 flex justify-center">
+                <PassageButton
+                  size="lg"
+                  keyHint="↵"
+                  trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+                  className="min-w-56"
+                  onClick={handleCheck}
+                >
                   {section.questions.length > 0 ? t.passages.checkYourself : t.passages.nextPart}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Button>
+                </PassageButton>
               </div>
             )}
           </motion.div>
@@ -458,6 +526,22 @@ export function PassageReader({
           onAnswer={(picked) => handleAnswer(activeQuestion, picked)}
           onNext={handleDockNext}
         />
+      )}
+
+      {/* A quest or badge the part just earned. On the end screen the same lines are in the result card. */}
+      {notice && !complete && (
+        <motion.div
+          role="status"
+          initial={reducedMotion ? false : { opacity: 0, y: -14, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 380, damping: 26 }}
+          className="pointer-events-none fixed inset-x-0 top-24 z-40 flex justify-center px-4"
+        >
+          <p className="border-border bg-card flex max-w-xl items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-medium shadow-lg">
+            <Trophy className="text-primary size-4 shrink-0" aria-hidden="true" />
+            <bdi>{notice}</bdi>
+          </p>
+        </motion.div>
       )}
 
       {showTips && <PassageTips onStart={dismissTips} />}

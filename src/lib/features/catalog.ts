@@ -18,6 +18,7 @@ export const QUEST_TYPES = [
   "masterWords",
   "dictation",
   "dailySession",
+  "passages",
 ] as const;
 
 export type QuestType = (typeof QUEST_TYPES)[number];
@@ -37,6 +38,8 @@ export const QUEST_DEFAULTS: Record<QuestType, QuestDefault> = {
   masterWords: { target: 5, xp: 10 },
   dictation: { target: 5, xp: 15 },
   dailySession: { target: 1, xp: 15 },
+  /** Passage parts finished (a part is a minute or two of reading plus its question). */
+  passages: { target: 3, xp: 15 },
 };
 
 /** How many quests a learner is dealt per day. */
@@ -94,8 +97,14 @@ export const BADGE_DEFS = [
   { id: "firstFromMemory", group: "firsts", metric: "event", threshold: 1 },
   { id: "firstCard", group: "firsts", metric: "event", threshold: 1 },
   { id: "firstDailySession", group: "firsts", metric: "event", threshold: 1 },
+  { id: "firstPassage", group: "firsts", metric: "event", threshold: 1 },
+  { id: "passages5", group: "practice", metric: "event", threshold: 1 },
+  { id: "passages10", group: "practice", metric: "event", threshold: 1 },
   { id: "questDay", group: "quests", metric: "event", threshold: 1 },
 ] as const satisfies readonly BadgeDef[];
+
+/** The badges that belong to Passages: hidden from the Achievements shelf for a learner the Passages feature is not open to yet, so nobody sees a locked badge they cannot earn. */
+export const PASSAGE_BADGE_IDS = ["firstPassage", "passages5", "passages10"] as const;
 
 /** A catalog entry with its literal id type preserved (BadgeDef.id is just `string`), so `t.badges.items[badge.id]` type-checks. */
 export type BadgeDefinition = (typeof BADGE_DEFS)[number];
@@ -110,4 +119,11 @@ export function isBadgeId(value: string): value is BadgeId {
 
 /** Event badges are awarded by name when the action happens (see awardEventBadgeAction). */
 export type EventBadgeId =
-  "firstDictation" | "firstFromMemory" | "firstCard" | "firstDailySession" | "questDay";
+  | "firstDictation"
+  | "firstFromMemory"
+  | "firstCard"
+  | "firstDailySession"
+  | "firstPassage"
+  | "passages5"
+  | "passages10"
+  | "questDay";

@@ -49,6 +49,8 @@ export interface QuestEligibilityInput {
   dictationAvailable: boolean;
   /** Whether the Daily session is open to this learner. */
   dailySessionAvailable: boolean;
+  /** Whether Passages is open to this learner — "finish passage parts" is only dealt to someone who can read them. */
+  passagesAvailable: boolean;
 }
 
 export interface QuestTypeSettings {
@@ -71,6 +73,8 @@ export function eligibleQuestTypes(
         return input.dictationAvailable;
       case "dailySession":
         return input.dailySessionAvailable;
+      case "passages":
+        return input.passagesAvailable;
       default:
         return true;
     }

@@ -24,14 +24,19 @@ import {
 } from "@/lib/passages/prefs";
 import {
   estimatePassageMinutes,
+  homeCardPick,
   parsePassageProgressInput,
+  passageBadgesFor,
   passageStatus,
+  plausibleLearnerDate,
   recommendedPassageId,
   resumeSectionIndex,
   scorePercent,
 } from "@/lib/passages/progress";
+import { QUEST_DEFAULTS, QUEST_TYPES } from "@/lib/features/catalog";
+import type { PassageSummary } from "@/lib/passages/types";
 import { spokenTextFor } from "@/lib/passages/spoken-text";
-import { containsWholeWord, splitAroundWord } from "@/lib/passages/text";
+import { containsWholeWord, passageTextSizeFor, splitAroundWord } from "@/lib/passages/text";
 import type { PassageProgress } from "@/lib/passages/types";
 import { validatePassageSeed, validatePassageSet } from "@/lib/passages/validate";
 
@@ -255,7 +260,8 @@ test("a progress save is validated before it reaches the database", () => {
     total: 2,
     completed: false,
   };
-  assert.deepEqual(parsePassageProgressInput(good), good);
+  // Without a date the save is still valid — it just carries none.
+  assert.deepEqual(parsePassageProgressInput(good), { ...good, todayISO: null });
   assert.equal(parsePassageProgressInput(null), null);
   assert.equal(parsePassageProgressInput({ ...good, passageId: "Not A Slug" }), null);
   assert.equal(parsePassageProgressInput({ ...good, passageId: "../x" }), null);
@@ -414,4 +420,141 @@ test("speaker colours repeat only after every colour has been used", () => {
     speakerClassFor(1),
     "an unknown speaker (-1) still gets a colour",
   );
+});
+
+// --- What a finished part counts toward -------------------------------------------
+
+test("a learner's date is only believed when it can be somebody's today", () => {
+  const now = Date.parse("2026-10-15T09:30:00Z");
+  assert.equal(plausibleLearnerDate("2026-10-15", now), "2026-10-15");
+  // Time zones reach a day either side of UTC.
+  assert.equal(plausibleLearnerDate("2026-10-16", now), "2026-10-16");
+  assert.equal(plausibleLearnerDate("2026-10-14", now), "2026-10-14");
+  // …and no further: a crafted date must not move anybody's streak.
+  assert.equal(plausibleLearnerDate("2026-10-20", now), null);
+  assert.equal(plausibleLearnerDate("2030-01-01", now), null);
+  assert.equal(plausibleLearnerDate("2026-02-30", now), null, "not a real date");
+  assert.equal(plausibleLearnerDate("15/10/2026", now), null);
+  assert.equal(plausibleLearnerDate(20261015, now), null);
+  assert.equal(plausibleLearnerDate(undefined, now), null);
+});
+
+test("a progress save carries the learner's date only when it is believable", () => {
+  const now = Date.parse("2026-10-15T09:30:00Z");
+  const save = { passageId: "x-y", sectionsDone: 1, correct: 1, total: 1, completed: false };
+  assert.equal(
+    parsePassageProgressInput({ ...save, todayISO: "2026-10-15" }, now)?.todayISO,
+    "2026-10-15",
+  );
+  // A wrong date never costs the learner their place — only the day-keyed extras.
+  const crafted = parsePassageProgressInput({ ...save, todayISO: "1999-01-01" }, now);
+  assert.ok(crafted, "the save itself is still accepted");
+  assert.equal(crafted?.todayISO, null);
+});
+
+test("passage badges: the first one, then five and ten", () => {
+  assert.deepEqual(passageBadgesFor(0), []);
+  assert.deepEqual(passageBadgesFor(1), ["firstPassage"]);
+  assert.deepEqual(passageBadgesFor(5), ["firstPassage", "passages5"]);
+  assert.deepEqual(passageBadgesFor(12), ["firstPassage", "passages5", "passages10"]);
+});
+
+test("the passages quest is part of the daily-quest pool with real defaults", () => {
+  assert.ok(QUEST_TYPES.includes("passages"));
+  assert.ok(QUEST_DEFAULTS.passages.target >= 1);
+  assert.ok(QUEST_DEFAULTS.passages.xp >= 0);
+});
+
+function summary(id: string, order: number, sectionCount = 4): PassageSummary {
+  return {
+    id,
+    order,
+    level: "A1",
+    tone: "funny",
+    icon: "book",
+    title: id,
+    titleAr: id,
+    summary: "",
+    summaryAr: "",
+    isFree: true,
+    sectionCount,
+    sentenceCount: 20,
+    estimatedMinutes: 4,
+    wordGroupId: null,
+  };
+}
+
+function progressFor(passageId: string, sectionsDone: number, completed = false): PassageProgress {
+  return {
+    passageId,
+    sectionsDone,
+    correctAnswers: 0,
+    totalQuestions: 0,
+    completedAt: completed ? "2026-10-15T09:00:00Z" : null,
+  };
+}
+
+test("Home's card: finish what you started, else the first one not started, else nothing", () => {
+  const list = [summary("a", 1), summary("b", 2), summary("c", 3)];
+
+  // Nothing started: the first.
+  const fresh = homeCardPick(list, new Map());
+  assert.equal(fresh?.passage.id, "a");
+  assert.equal(fresh?.mode, "next");
+  assert.equal(fresh?.sectionsDone, 0);
+
+  // One in progress comes before the first untouched one, and says how far.
+  const started = homeCardPick(
+    list,
+    new Map([
+      ["a", progressFor("a", 4, true)],
+      ["b", progressFor("b", 2)],
+    ]),
+  );
+  assert.equal(started?.passage.id, "b");
+  assert.equal(started?.mode, "continue");
+  assert.equal(started?.sectionsDone, 2);
+
+  // Everything finished: no card.
+  const all = new Map(list.map((item) => [item.id, progressFor(item.id, 4, true)]));
+  assert.equal(homeCardPick(list, all), null);
+  assert.equal(homeCardPick([], new Map()), null);
+});
+
+// --- Levels and the size of the type -------------------------------------------------
+
+test("the passages cover A1, A2 and B1, numbered 1, 2, 3… inside each level", () => {
+  for (const [level, count] of [
+    ["A1", 10],
+    ["A2", 10],
+    ["B1", 6],
+  ] as const) {
+    const orders = PASSAGE_SEEDS.filter((seed) => seed.level === level)
+      .map((seed) => seed.order)
+      .sort((a, b) => a - b);
+    assert.deepEqual(
+      orders,
+      Array.from({ length: count }, (_, index) => index + 1),
+      `level ${level}`,
+    );
+  }
+});
+
+test("a longer part is set in smaller type, so every part fits a screen", () => {
+  assert.equal(passageTextSizeFor(0), "large");
+  assert.equal(passageTextSizeFor(430), "large");
+  assert.equal(passageTextSizeFor(431), "medium");
+  assert.equal(passageTextSizeFor(540), "medium");
+  assert.equal(passageTextSizeFor(541), "small");
+  assert.equal(passageTextSizeFor(650), "small");
+  assert.equal(passageTextSizeFor(651), "xsmall");
+  // The authored levels land where they should: A1 big, B1 smaller.
+  const sizes = (level: string) =>
+    PASSAGE_SEEDS.filter((seed) => seed.level === level).flatMap((seed) =>
+      seed.sections.map((section) =>
+        passageTextSizeFor(section.lines.reduce((sum, line) => sum + line.en.length, 0)),
+      ),
+    );
+  assert.ok(sizes("A1").every((size) => size === "large"));
+  assert.ok(sizes("B1").some((size) => size !== "large"));
 });

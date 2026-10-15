@@ -2,10 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, Check, EyeOff, X } from "lucide-react";
 
+import { PassageButton } from "@/components/passages/passage-button";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Button } from "@/components/ui/button";
+import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import type { PassageQuestion } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +44,7 @@ export function PassageQuestionDock({
   onAnswer: (picked: number) => void;
   onNext: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, dir } = useLocale();
   const reduced = useReducedMotion();
   const cardRef = useRef<HTMLElement | null>(null);
 
@@ -52,28 +53,23 @@ export function PassageQuestionDock({
     cardRef.current?.focus({ preventScroll: true });
   }, []);
 
+  // Keys 1-4 choose while the question is open…
   useEffect(() => {
+    if (answer) return;
     function onKey(event: KeyboardEvent) {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (!answer) {
-        const number = Number(event.key);
-        if (Number.isInteger(number) && number >= 1 && number <= question.options.length) {
-          event.preventDefault();
-          onAnswer(number - 1);
-        }
-        return;
-      }
-      if (event.key === "Enter") {
-        // A focused button handles its own Enter; this is for the rest of the page.
-        const target = event.target as HTMLElement | null;
-        if (target && (target.tagName === "BUTTON" || target.tagName === "A")) return;
+      const number = Number(event.key);
+      if (Number.isInteger(number) && number >= 1 && number <= question.options.length) {
         event.preventDefault();
-        onNext();
+        onAnswer(number - 1);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [answer, onAnswer, onNext, question.options.length]);
+  }, [answer, onAnswer, question.options.length]);
+
+  // …and, once it is answered, Enter moves on (the same hook the other check-and-continue screens use).
+  useEnterToContinue(Boolean(answer), onNext);
 
   const cardVariants: Variants = reduced
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
@@ -231,14 +227,15 @@ export function PassageQuestionDock({
         </div>
 
         {/* The row is always there (so the card does not jump when the answer arrives); its content fades in. */}
-        <div className="mt-3.5 flex min-h-11 items-center justify-between gap-3">
-          {answer && (
+        <div className="mt-3.5 flex min-h-12 items-center justify-between gap-3">
+          {answer ? (
             <>
               <motion.p
                 initial={reduced ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
                 role="status"
+                dir={dir}
                 className={cn(
                   "text-sm font-medium",
                   answer.correct ? "text-success" : "text-muted-foreground",
@@ -251,12 +248,28 @@ export function PassageQuestionDock({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 26 }}
               >
-                <Button type="button" size="lg" className="gap-2 rounded-full" onClick={onNext}>
+                <PassageButton
+                  size="lg"
+                  keyHint="↵"
+                  trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+                  onClick={onNext}
+                >
                   {nextLabel}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Button>
+                </PassageButton>
               </motion.div>
             </>
+          ) : (
+            // While the question is open this row tells the learner why the text is out of focus.
+            <motion.p
+              initial={reduced ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+              dir={dir}
+              className="text-muted-foreground flex items-center gap-2 text-sm"
+            >
+              <EyeOff className="size-4 shrink-0" aria-hidden="true" />
+              {t.passages.recallHint}
+            </motion.p>
           )}
         </div>
       </motion.section>

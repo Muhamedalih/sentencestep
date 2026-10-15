@@ -9,6 +9,7 @@ import { buildBadgeShelf } from "@/lib/features/badge-display";
 import { fetchBadgeMetrics, fetchEarnedBadges, markBadgesSeen } from "@/lib/features/badge-queries";
 import { evaluateAndAwardBadges } from "@/lib/features/badge-service";
 import { EMPTY_BADGE_METRICS } from "@/lib/features/badges";
+import { PASSAGE_BADGE_IDS } from "@/lib/features/catalog";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -65,7 +66,12 @@ export default async function AchievementsPage() {
     fetchBadgeMetrics().catch(() => EMPTY_BADGE_METRICS),
     fetchEarnedBadges(user.id).catch(() => []),
   ]);
-  const shelf = buildBadgeShelf(metrics, earned, new Set(features.badges.disabled));
+  // The Passages badges stay off the shelf until Passages is open to this learner (a locked badge they cannot earn is just noise).
+  const hidden = new Set<string>([
+    ...features.badges.disabled,
+    ...(features.passages.enabled ? [] : PASSAGE_BADGE_IDS),
+  ]);
+  const shelf = buildBadgeShelf(metrics, earned, hidden);
   const earnedCount = shelf.filter((item) => item.earned).length;
   // The "New" markers below are computed from this read; clear them for next time.
   if (shelf.some((item) => item.isNew)) await markBadgesSeen().catch(() => undefined);

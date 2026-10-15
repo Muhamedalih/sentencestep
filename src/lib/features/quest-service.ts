@@ -56,6 +56,7 @@ export async function dealDailyQuests(
     reviewableWords: await countReviewableWords(userId),
     dictationAvailable: Object.values(features.dictation.sections).some(Boolean),
     dailySessionAvailable: features.dailySession.enabled,
+    passagesAvailable: features.passages.enabled,
   });
   if (eligible.length === 0) return [];
 

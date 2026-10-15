@@ -2,6 +2,7 @@ import type { PassageSeed, PassageVoiceAlias } from "@/data/passages/types";
 import { isPassageIconKey } from "@/lib/passages/icons";
 import { containsWholeWord } from "@/lib/passages/text";
 import { PASSAGE_LEVELS, PASSAGE_TONES } from "@/lib/passages/types";
+import type { PassageLevel } from "@/lib/passages/types";
 
 /**
  * Integrity rules for authored passages — every one of them exists because a
@@ -31,8 +32,16 @@ export const LINES_PER_SECTION = { min: 3, max: 8 } as const;
 export const WORDS_PER_PASSAGE = { min: 4, max: 6 } as const;
 export const OPTIONS_PER_QUESTION = { min: 2, max: 4 } as const;
 
-/** A1 sentences are short; a line longer than this is almost certainly two thoughts. */
-export const MAX_WORDS_PER_LINE = 22;
+/** A line longer than this is almost certainly two thoughts. The limit grows with the level: A1 sentences are short, B1 ones carry a clause more. */
+export const MAX_WORDS_PER_LINE_BY_LEVEL: Record<PassageLevel, number> = {
+  A1: 22,
+  A2: 26,
+  B1: 32,
+  B2: 38,
+};
+
+/** The A1 limit, kept under its old name. */
+export const MAX_WORDS_PER_LINE = MAX_WORDS_PER_LINE_BY_LEVEL.A1;
 
 function wordCount(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
@@ -89,8 +98,12 @@ export function validatePassageSeed(seed: PassageSeed): string[] {
       const where = `${part} line ${lineIndex + 1}`;
       if (!line.en.trim()) at(where, "English is empty");
       if (!ARABIC_LETTER.test(line.ar)) at(where, "Arabic translation has no Arabic letters");
-      if (wordCount(line.en) > MAX_WORDS_PER_LINE) {
-        at(where, `is ${wordCount(line.en)} words long (max ${MAX_WORDS_PER_LINE}) — split it`);
+      const maxWords = MAX_WORDS_PER_LINE_BY_LEVEL[seed.level] ?? MAX_WORDS_PER_LINE;
+      if (wordCount(line.en) > maxWords) {
+        at(
+          where,
+          `is ${wordCount(line.en)} words long (max ${maxWords} at ${seed.level}) — split it`,
+        );
       }
       if (line.who !== undefined) {
         usedSpeakers.add(line.who);

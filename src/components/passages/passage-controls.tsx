@@ -8,13 +8,15 @@ import { formatPlaybackRate } from "@/lib/passages/prefs";
 import { cn } from "@/lib/utils";
 
 /**
- * The reader's three switches, in the header: listen-only (hides the text so the
- * part has to be understood by ear), the narration speed, and the Arabic
- * translation. Each one is a per-device preference; on a phone only the icons
- * stay, so the row never crowds the back link.
+ * The reader's three switches, in one small toolbar in the header: listen-only
+ * (hides the text so the part has to be understood by ear), the narration speed
+ * and the Arabic translation. A switch that is on sits raised in the toolbar,
+ * lit with the brand colour; each press has the same sink-and-spring feel as
+ * every Passages button. Each one is a per-device preference; on a phone only the
+ * icons stay, so the toolbar never crowds the back link.
  */
 
-function ControlButton({
+function ToolbarSwitch({
   active = false,
   disabled = false,
   label,
@@ -36,12 +38,12 @@ function ControlButton({
       disabled={disabled}
       aria-pressed={active}
       aria-label={label}
-      title={title ?? label}
+      title={title}
       className={cn(
-        "focus-visible:ring-ring flex h-9 items-center gap-2 rounded-lg border px-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-40 sm:px-3 pointer-coarse:h-11",
+        "passage-btn focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-xl px-2.5 text-[0.82rem] font-medium outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-40 sm:px-3 pointer-coarse:h-10",
         active
-          ? "border-primary/40 bg-brand-muted text-primary"
-          : "border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:hover:bg-transparent",
+          ? "bg-background text-primary shadow-[0_1px_2px_rgb(0_0_0/0.28),0_0_0_1px_color-mix(in_oklab,var(--primary)_38%,transparent)]"
+          : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] disabled:hover:bg-transparent",
       )}
     >
       {children}
@@ -72,19 +74,19 @@ export function PassageControls({
   const { t } = useLocale();
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2">
-      <ControlButton
+    <div className="bg-foreground/[0.06] flex items-center gap-0.5 rounded-2xl p-1">
+      <ToolbarSwitch
         active={listenOnly && audioAvailable}
         disabled={!audioAvailable}
         label={t.passages.listenOnly}
-        title={audioAvailable ? t.passages.listenOnly : t.passages.audioMissing}
+        title={audioAvailable ? undefined : t.passages.audioMissing}
         onClick={onToggleListenOnly}
       >
         <Headphones className="size-4" aria-hidden="true" />
         <span className="hidden md:inline">{t.passages.listenOnly}</span>
-      </ControlButton>
+      </ToolbarSwitch>
 
-      <ControlButton
+      <ToolbarSwitch
         disabled={!audioAvailable}
         label={`${t.passages.speed}: ${formatPlaybackRate(rate)}`}
         onClick={onCycleRate}
@@ -93,17 +95,17 @@ export function PassageControls({
         <span className="min-w-[2.25rem] text-start tabular-nums" dir="ltr">
           {formatPlaybackRate(rate)}
         </span>
-      </ControlButton>
+      </ToolbarSwitch>
 
       {translationAvailable && (
-        <ControlButton
+        <ToolbarSwitch
           active={translation}
           label={t.passages.translation}
           onClick={onToggleTranslation}
         >
           <Languages className="size-4" aria-hidden="true" />
           <span className="hidden md:inline">{t.passages.translation}</span>
-        </ControlButton>
+        </ToolbarSwitch>
       )}
     </div>
   );

@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { DailySessionCard } from "@/components/app/daily-session-card";
 import { GuestFeatureTeaser } from "@/components/app/guest-feature-teaser";
 import { EngagementStrip } from "@/components/app/engagement-strip";
+import { PassagesCard } from "@/components/app/passages-card";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { fetchHomeEngagementAction } from "@/lib/features/home-engagement-actions";
 import type { HomeEngagementData } from "@/lib/features/home-engagement";
@@ -34,6 +35,7 @@ export function HomeEngagementFrame({
 const SKELETON_HEIGHT = {
   dailySession: "h-28",
   strip: "h-16",
+  passages: "h-[6.25rem]",
 } as const;
 
 /**
@@ -64,8 +66,9 @@ export function CardSkeleton({ feature }: { feature: keyof typeof SKELETON_HEIGH
  * the server renders them itself (see HomeEngagementSection) and this never runs.
  */
 export function HomeEngagement({ className }: { className?: string }) {
-  const { dailySession, quests, streakCalendar } = useFeatures();
-  const anyEnabled = dailySession.enabled || quests.enabled || streakCalendar.enabled;
+  const { dailySession, quests, streakCalendar, passages } = useFeatures();
+  const anyEnabled =
+    dailySession.enabled || quests.enabled || streakCalendar.enabled || passages.enabled;
   // undefined = still loading; null = loaded but nothing to show.
   const [data, setData] = useState<HomeEngagementData | null | undefined>(undefined);
 
@@ -86,12 +89,14 @@ export function HomeEngagement({ className }: { className?: string }) {
         <>
           <CardSkeleton feature="dailySession" />
           <CardSkeleton feature="strip" />
+          <CardSkeleton feature="passages" />
         </>
       ) : (
         data && (
           <>
             <DailySessionCard summary={data.dailySession} />
             <EngagementStrip today={data.todayISO} quests={data.quests} streak={data.streak} />
+            <PassagesCard data={data.passages} />
           </>
         )
       )}

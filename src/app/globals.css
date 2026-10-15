@@ -463,3 +463,171 @@ html[data-keyboard] .kb-hide {
     --lesson-letter-pending: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
   }
 }
+
+/*
+ * Passages reader — the sentence being read aloud (see PassageText). A soft band sits behind it:
+ * faint over the whole sentence, stronger over the part already spoken. How far the voice has got
+ * is --passage-p (0 to 1), written on every animation frame from the audio clock; --passage-a is
+ * how visible the band is, and is what fades it in and out between sentences. Both are registered
+ * numbers so the browser can animate --passage-a (a browser that cannot simply snaps).
+ *
+ * `box-decoration-break: slice` is what keeps a sentence that wraps over two or three lines ONE
+ * ribbon, rounded only at its two ends — with `clone` every line became its own little box.
+ * The padding is cancelled by the same negative margin, so lighting a sentence never moves a word.
+ */
+@property --passage-p {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --passage-a {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.passage-sentence {
+  --passage-p: 0;
+  --passage-a: 0;
+  padding: 0.12em 0.22em;
+  margin-inline: -0.22em;
+  border-radius: 0.3em;
+  -webkit-box-decoration-break: slice;
+  box-decoration-break: slice;
+  /* The edge of the filled part is feathered over 1.1em; the stops are scaled so that at 0 the feather is wholly before the sentence and at 1 wholly after it. */
+  background-image: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--primary) calc(var(--passage-a) * 30%), transparent)
+      calc(var(--passage-p) * (100% + 1.1em) - 1.1em),
+    color-mix(in oklab, var(--primary) calc(var(--passage-a) * 11%), transparent)
+      calc(var(--passage-p) * (100% + 1.1em))
+  );
+  text-decoration: underline dotted transparent;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.3em;
+  /* Room above a sentence that is scrolled to, so the sticky header never covers it. */
+  scroll-margin-top: 9rem;
+  transition:
+    --passage-a 0.4s ease,
+    opacity 0.35s ease,
+    text-decoration-color 0.2s ease;
+}
+.passage-sentence[data-state="active"] {
+  --passage-a: 1;
+}
+/* The sentence that holds the answer, after a wrong pick: one flat green band. */
+.passage-sentence[data-state="evidence"] {
+  background-image: linear-gradient(
+    color-mix(in oklab, var(--success) 26%, transparent),
+    color-mix(in oklab, var(--success) 26%, transparent)
+  );
+}
+.passage-sentence[data-faded="true"] {
+  opacity: 0.36;
+}
+/* A sentence can be tapped to hear it again: a quiet dotted line says so, with no box around it. */
+.passage-sentence[role="button"] {
+  cursor: pointer;
+}
+.passage-sentence[role="button"]:hover {
+  text-decoration-color: color-mix(in oklab, currentColor 38%, transparent);
+}
+.passage-sentence[role="button"][data-faded="true"]:hover {
+  opacity: 0.7;
+}
+.passage-sentence:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--ring) 75%, transparent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passage-sentence {
+    transition: none;
+  }
+}
+
+/* The three bars that dance on the Pause button while a part is being read aloud. */
+@keyframes passage-eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.passage-eq-bar {
+  display: block;
+  width: 0.2rem;
+  height: 0.9rem;
+  border-radius: 9999px;
+  background-color: currentColor;
+  transform-origin: center;
+  animation: passage-eq 0.9s ease-in-out infinite;
+}
+.passage-eq-bar:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.passage-eq-bar:nth-child(3) {
+  animation-delay: -0.6s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passage-eq-bar {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+}
+
+/*
+ * Passages buttons (PassageButton): a press that is felt. The button lifts a pixel under the
+ * pointer, sinks quickly when pressed, and on release springs back PAST its size and settles
+ * (the cubic-bezier overshoots), while a soft ring spreads from the pressed spot. Only `scale` and
+ * `translate` get the springy curve — colours and shadows ease normally.
+ */
+.passage-btn {
+  transition:
+    scale 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    translate 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    filter 0.2s ease,
+    opacity 0.2s ease;
+}
+@media (hover: hover) {
+  .passage-btn:not(:disabled):hover {
+    translate: 0 -1px;
+  }
+}
+.passage-btn:not(:disabled):active {
+  scale: 0.955;
+  translate: 0 0;
+  transition-duration: 0.08s, 0.08s, 0.2s, 0.2s, 0.2s, 0.2s;
+}
+@keyframes passage-ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.2;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.passage-ripple {
+  transform: scale(0);
+  animation: passage-ripple 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passage-btn {
+    transition:
+      background-color 0.2s ease,
+      opacity 0.2s ease;
+  }
+  .passage-btn:not(:disabled):hover,
+  .passage-btn:not(:disabled):active {
+    translate: none;
+    scale: none;
+  }
+  .passage-ripple {
+    display: none;
+  }
+}

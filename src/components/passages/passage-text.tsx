@@ -1,9 +1,10 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef } from "react";
 
-import { useLocale } from "@/components/providers/locale-provider";
 import { speakerClassFor } from "@/lib/passages/art";
+import { passageTextSizeFor } from "@/lib/passages/text";
+import type { PassageTextSize } from "@/lib/passages/text";
 import type { PassageSentence } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
 
@@ -14,10 +15,15 @@ import { cn } from "@/lib/utils";
  * colour of their own, so a dialogue still reads as a script.
  *
  * Each sentence is one tappable span. While a part is read aloud the speaking
- * sentence is lit by a soft tint and a thin underline (the others step back) —
- * the highlight changes only colour and opacity, never size or position, so
- * nothing in the paragraph ever moves. With the translation on, the Arabic sits
- * in a second column with the same sentences lit in step.
+ * sentence has a soft band behind it that fills from its first word to wherever
+ * the voice has got to (the others step back) — the band is plain CSS driven by
+ * one number (`--passage-p`, see globals.css) that is written straight onto the
+ * span on every animation frame, so following the voice never re-renders the
+ * page and nothing in the paragraph ever moves. With the translation on, the
+ * Arabic sits in a second column and the same sentence is lit there, in step.
+ *
+ * While a question is open the whole text is blurred: the learner answers from
+ * memory, and the text clears the moment they have answered.
  */
 
 interface PassageTextProps {
@@ -28,56 +34,88 @@ interface PassageTextProps {
   activeIndex: number | null;
   /** A part is being read aloud: the sentences that are not speaking step back. */
   readingAloud: boolean;
+  /** The active sentence's clip is playing right now — the band follows the voice only then. */
+  speaking: boolean;
+  /** How far through the playing clip the voice is, 0 to 1. */
+  getProgress: () => number;
   /** Tapping a sentence plays it — false while the part has no complete audio. */
   canPlay: boolean;
   onPlay: (index: number) => void;
   showTranslation: boolean;
   /** The sentence that holds the answer, lit green after a wrong answer. */
   evidenceIndex: number | null;
-  /** The question is open: the text steps back so the question has the attention (the evidence sentence stays bright). */
-  dimmed: boolean;
+  /** A question is open and not yet answered: the text is blurred so the answer has to come from memory. */
+  blurred: boolean;
 }
 
-// The underline is a real text decoration (transparent until a sentence is lit), not a shadow: a
-// shadow follows the rounded corners and reads as a border, a decoration is just a clean line.
-// scroll-mt: room above a sentence that is scrolled to, so the sticky header never covers it.
-const SENTENCE_BASE =
-  "scroll-mt-36 rounded-[0.35em] px-[0.3em] py-[0.1em] -mx-[0.3em] box-decoration-clone underline decoration-transparent decoration-2 underline-offset-[0.3em] outline-none transition-[background-color,text-decoration-color,opacity,color] duration-300 ease-out";
-
-function sentenceClasses(state: {
-  canPlay: boolean;
-  active: boolean;
-  evidence: boolean;
-  faded: boolean;
-}): string {
-  return cn(
-    SENTENCE_BASE,
-    state.canPlay &&
-      "hover:bg-foreground/[0.07] focus-visible:ring-ring cursor-pointer focus-visible:ring-2",
-    state.active && "bg-primary/20 decoration-primary/70",
-    state.evidence && "bg-success/25 decoration-success",
-    state.faded && "opacity-40",
-  );
-}
+/** The type classes for each size (see passageTextSizeFor). */
+const TEXT_SIZES: Record<PassageTextSize, { en: string; enWithTranslation: string; ar: string }> = {
+  large: {
+    en: "text-[1.6rem] sm:text-[1.9rem] sm:leading-[1.72]",
+    enWithTranslation: "text-[1.55rem] sm:text-[1.65rem]",
+    ar: "text-[1.3rem] sm:text-[1.45rem]",
+  },
+  medium: {
+    en: "text-[1.45rem] sm:text-[1.65rem] sm:leading-[1.7]",
+    enWithTranslation: "text-[1.4rem] sm:text-[1.5rem]",
+    ar: "text-[1.2rem] sm:text-[1.3rem]",
+  },
+  small: {
+    en: "text-[1.35rem] sm:text-[1.5rem] sm:leading-[1.68]",
+    enWithTranslation: "text-[1.3rem] sm:text-[1.38rem]",
+    ar: "text-[1.15rem] sm:text-[1.22rem]",
+  },
+  xsmall: {
+    en: "text-[1.25rem] sm:text-[1.4rem] sm:leading-[1.66]",
+    enWithTranslation: "text-[1.2rem] sm:text-[1.28rem]",
+    ar: "text-[1.08rem] sm:text-[1.15rem]",
+  },
+};
 
 export function PassageText({
   sentences,
   speakers,
   activeIndex,
   readingAloud,
+  speaking,
+  getProgress,
   canPlay,
   onPlay,
   showTranslation,
   evidenceIndex,
-  dimmed,
+  blurred,
 }: PassageTextProps) {
-  const { t } = useLocale();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const size =
+    TEXT_SIZES[
+      passageTextSizeFor(sentences.reduce((sum, sentence) => sum + sentence.en.length, 0))
+    ];
+
+  // The band behind the speaking sentence follows the voice: its progress is read from the audio
+  // clock on every frame and written onto the span, outside React. Paused or between two sentences
+  // it just holds the value the clip reached.
+  useEffect(() => {
+    if (activeIndex === null) return;
+    const span = rootRef.current?.querySelector<HTMLElement>(
+      `[data-sentence="${activeIndex}"][lang="en"]`,
+    );
+    if (!span) return;
+    span.style.setProperty("--passage-p", getProgress().toFixed(4));
+    if (!speaking) return;
+    let frame = 0;
+    const tick = () => {
+      span.style.setProperty("--passage-p", getProgress().toFixed(4));
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [activeIndex, speaking, getProgress]);
 
   function renderSentences(language: "en" | "ar") {
     return sentences.map((sentence, index) => {
       const active = activeIndex === index;
       const evidence = evidenceIndex === index;
-      const faded = (readingAloud && !active) || (dimmed && !evidence);
+      const faded = (readingAloud && !active) || (evidenceIndex !== null && !evidence);
       const showSpeaker =
         Boolean(sentence.speaker) && sentence.speaker !== sentences[index - 1]?.speaker;
       const speakerIndex = sentence.speaker ? speakers.indexOf(sentence.speaker) : -1;
@@ -86,9 +124,12 @@ export function PassageText({
         <Fragment key={sentence.id}>
           <span
             id={language === "en" ? `sentence-${index}` : undefined}
+            data-sentence={index}
+            data-state={evidence ? "evidence" : active ? "active" : "idle"}
+            data-faded={faded ? "true" : "false"}
+            lang={language}
             role={canPlay ? "button" : undefined}
             tabIndex={canPlay ? 0 : undefined}
-            title={canPlay ? t.passages.replayLine : undefined}
             aria-current={active ? "true" : undefined}
             onClick={canPlay ? () => onPlay(index) : undefined}
             onKeyDown={
@@ -101,10 +142,9 @@ export function PassageText({
                   }
                 : undefined
             }
-            className={cn(
-              sentenceClasses({ canPlay, active, evidence, faded }),
-              language === "ar" && active && "text-foreground",
-            )}
+            // The Arabic twin has no clip of its own, so its band is simply all there at once.
+            style={language === "ar" ? ({ "--passage-p": 1 } as React.CSSProperties) : undefined}
+            className="passage-sentence"
           >
             {showSpeaker && (
               <span
@@ -128,15 +168,20 @@ export function PassageText({
 
   return (
     <div
+      ref={rootRef}
       id="passage-text"
-      className={cn("grid gap-x-16 gap-y-10", showTranslation ? "md:grid-cols-2" : "max-w-[62rem]")}
+      // Inert while blurred: not clickable, not focusable, not read out — the text really is out of reach.
+      inert={blurred}
+      className={cn(
+        "grid gap-x-16 gap-y-10 transition-[filter,opacity] duration-500 ease-out motion-reduce:transition-none",
+        showTranslation ? "md:grid-cols-2" : "max-w-[62rem]",
+        blurred && "opacity-60 blur-[5px] select-none",
+      )}
     >
       <p
         className={cn(
           "font-quote text-foreground leading-[1.78] tracking-[-0.005em]",
-          showTranslation
-            ? "text-[1.55rem] sm:text-[1.65rem]"
-            : "text-[1.6rem] sm:text-[1.9rem] sm:leading-[1.72]",
+          showTranslation ? size.enWithTranslation : size.en,
         )}
         dir="ltr"
         lang="en"
@@ -145,7 +190,10 @@ export function PassageText({
       </p>
       {showTranslation && (
         <p
-          className="text-muted-foreground border-border/70 text-[1.3rem] leading-[2.05] sm:text-[1.45rem] md:border-l md:pl-16"
+          className={cn(
+            "text-muted-foreground border-border/70 leading-[2.05] md:border-l md:pl-16",
+            size.ar,
+          )}
           dir="rtl"
           lang="ar"
         >

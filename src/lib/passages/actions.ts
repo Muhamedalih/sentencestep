@@ -7,6 +7,8 @@ import type { ActionResult } from "@/lib/admin/content-actions";
 import { saveFeatureConfig } from "@/lib/features/actions";
 import { sanitizeFeatureConfig } from "@/lib/features/config";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { NO_PASSAGE_REWARDS, recordPassagePartEngagement } from "@/lib/passages/engagement";
+import type { PassageRewards } from "@/lib/passages/engagement";
 import { parsePassageProgressInput } from "@/lib/passages/progress";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -15,15 +17,21 @@ export interface SavePassageProgressResult {
   ok: boolean;
   /** Why nothing was saved — a guest has nowhere to keep progress (not an error), anything else is. */
   reason?: "signed-out" | "unavailable" | "invalid" | "failed";
+  /** What the finished part earned in the app's quests and badges (only when something was). */
+  rewards?: PassageRewards;
 }
 
 /**
  * Saves how far the signed-in learner got in a passage: parts finished and the
- * best score, once after each part and once more when the whole passage is
- * done. The database function (record_passage_progress) only ever moves
- * progress forward, so a retry or a replay of a finished passage cannot undo
- * anything. A guest simply gets { ok: false, reason: "signed-out" } — reading
- * and listening never need an account, only remembering the place does.
+ * best score, once after each part (the last one marks the passage done). The
+ * database function (record_passage_progress) only ever moves progress
+ * forward, so a retry or a replay of a finished passage cannot undo anything.
+ * A guest simply gets { ok: false, reason: "signed-out" } — reading and
+ * listening never need an account, only remembering the place does.
+ *
+ * Once the place is saved, the finished part is also counted toward the daily
+ * quest, the streak and the badges (see recordPassagePartEngagement) — after
+ * the save and best-effort, so none of it can cost a learner their progress.
  */
 export async function savePassageProgressAction(
   input: unknown,
@@ -47,7 +55,18 @@ export async function savePassageProgressAction(
     console.error("[passages] record_passage_progress failed", error);
     return { ok: false, reason: "failed" };
   }
-  return { ok: true };
+
+  const rewards = await recordPassagePartEngagement({
+    userId: user.id,
+    todayISO: parsed.todayISO,
+    passageCompleted: parsed.completed,
+    features,
+  }).catch((engagementError: unknown) => {
+    console.error("[passages] recordPassagePartEngagement failed", engagementError);
+    return NO_PASSAGE_REWARDS;
+  });
+  const earnedSomething = rewards.quests.length > 0 || rewards.badges.length > 0;
+  return earnedSomething ? { ok: true, rewards } : { ok: true };
 }
 
 /**

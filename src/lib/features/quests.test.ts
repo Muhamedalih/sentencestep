@@ -20,7 +20,12 @@ function settings(overrides: Partial<Record<QuestType, Partial<QuestTypeSettings
   return out;
 }
 
-const everything = { reviewableWords: 50, dictationAvailable: true, dailySessionAvailable: true };
+const everything = {
+  reviewableWords: 50,
+  dictationAvailable: true,
+  dailySessionAvailable: true,
+  passagesAvailable: true,
+};
 
 test("pickDailyQuestTypes: deals three distinct types and is stable for the same learner and day", () => {
   const first = pickDailyQuestTypes("user-1", "2026-09-30", QUEST_TYPES);
@@ -79,6 +84,13 @@ test("eligibleQuestTypes: dictation and daily-session quests follow their featur
   });
   assert.equal(off.includes("dictation"), false);
   assert.equal(off.includes("dailySession"), false);
+});
+
+test("eligibleQuestTypes: the passages quest is only dealt to a learner Passages is open to", () => {
+  const closed = eligibleQuestTypes(settings(), { ...everything, passagesAvailable: false });
+  assert.equal(closed.includes("passages"), false);
+  const open = eligibleQuestTypes(settings(), everything);
+  assert.equal(open.includes("passages"), true);
 });
 
 test("questEventsForLesson: sentences, one lesson, and accuracy only at 95%+", () => {

@@ -1,3 +1,4 @@
+import type { BadgeId } from "@/lib/features/catalog";
 import type { PassageProgress, PassageSummary } from "@/lib/passages/types";
 
 /**
@@ -52,7 +53,49 @@ export function recommendedPassageId(
   return firstNew;
 }
 
-/** What the reader sends after each part and once more at the end. */
+/** Passages finished -> the event badge earned on reaching that many. */
+export const PASSAGE_COUNT_BADGES: readonly { count: number; id: BadgeId }[] = [
+  { count: 1, id: "firstPassage" },
+  { count: 5, id: "passages5" },
+  { count: 10, id: "passages10" },
+];
+
+/** The badges a learner who has finished `finished` passages holds by now (the database ignores the ones they already have). */
+export function passageBadgesFor(finished: number): BadgeId[] {
+  return PASSAGE_COUNT_BADGES.filter((badge) => finished >= badge.count).map((badge) => badge.id);
+}
+
+/** What Home's Passages card points at. */
+export interface PassageHomePick {
+  passage: PassageSummary;
+  /** "continue": a passage already started; "next": the first one not started yet. */
+  mode: "continue" | "next";
+  /** Parts already finished (0 for "next"). */
+  sectionsDone: number;
+}
+
+/**
+ * The one passage Home suggests: the same pick as the list's "Up next"
+ * (recommendedPassageId) with what the card needs to say about it. Null once
+ * every passage is done — the card is then simply not shown.
+ */
+export function homeCardPick(
+  passages: readonly PassageSummary[],
+  progressById: ReadonlyMap<string, PassageProgress>,
+): PassageHomePick | null {
+  const id = recommendedPassageId(passages, progressById);
+  const passage = id === null ? undefined : passages.find((candidate) => candidate.id === id);
+  if (!passage) return null;
+  const progress = progressById.get(passage.id);
+  const inProgress = passageStatus(progress, passage.sectionCount) === "in-progress";
+  return {
+    passage,
+    mode: inProgress ? "continue" : "next",
+    sectionsDone: inProgress ? (progress?.sectionsDone ?? 0) : 0,
+  };
+}
+
+/** What the reader sends after each part. */
 export interface PassageProgressInput {
   passageId: string;
   /** Parts finished so far (answered and moved past). */
@@ -61,8 +104,10 @@ export interface PassageProgressInput {
   correct: number;
   /** Questions answered so far. */
   total: number;
-  /** True only on the final save, when the whole passage is finished. */
+  /** True only on the save of the last part, when the whole passage is finished. */
   completed: boolean;
+  /** The learner's own calendar date (the server cannot know it), for the quest, streak and calendar a finished part counts toward. Null when it was missing or could not be right. */
+  todayISO: string | null;
 }
 
 const MAX_COUNT = 60;
@@ -71,14 +116,34 @@ function isCount(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= MAX_COUNT;
 }
 
+/** Every real time zone is within this many hours of UTC, so a date further from "now" than this is not a learner's today. */
+const MAX_TIME_ZONE_OFFSET_HOURS = 36;
+
+/**
+ * The date a learner's browser reported, if it can be their today: a
+ * YYYY-MM-DD that is a real date and no further from the server's clock than
+ * any time zone reaches. The streak and the quests are keyed on this date and
+ * the browser is not trusted with an arbitrary one.
+ */
+export function plausibleLearnerDate(value: unknown, now: number = Date.now()): string | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const at = Date.parse(`${value}T12:00:00Z`);
+  if (Number.isNaN(at) || new Date(at).toISOString().slice(0, 10) !== value) return null;
+  return Math.abs(at - now) <= (MAX_TIME_ZONE_OFFSET_HOURS + 12) * 3_600_000 ? value : null;
+}
+
 /**
  * Validates a progress save before it reaches the database — a Server Action
  * is reachable as a direct POST, so the reader's own arithmetic is never the
  * boundary. Null means "reject": wrong shape, an id that cannot be a passage
  * id, a score above the number of questions asked, or counts no real passage
- * could have.
+ * could have. A date that cannot be right does not reject the save (the
+ * learner's place must still be kept) — it only costs the day-keyed extras.
  */
-export function parsePassageProgressInput(raw: unknown): PassageProgressInput | null {
+export function parsePassageProgressInput(
+  raw: unknown,
+  now: number = Date.now(),
+): PassageProgressInput | null {
   if (typeof raw !== "object" || raw === null) return null;
   const input = raw as Record<string, unknown>;
   const { passageId, sectionsDone, correct, total, completed } = input;
@@ -87,7 +152,14 @@ export function parsePassageProgressInput(raw: unknown): PassageProgressInput | 
   if (!isCount(sectionsDone) || !isCount(correct) || !isCount(total)) return null;
   if (correct > total) return null;
   if (typeof completed !== "boolean") return null;
-  return { passageId, sectionsDone, correct, total, completed };
+  return {
+    passageId,
+    sectionsDone,
+    correct,
+    total,
+    completed,
+    todayISO: plausibleLearnerDate(input.todayISO, now),
+  };
 }
 
 /** Whole-number percentage, 0 when nothing was asked. */

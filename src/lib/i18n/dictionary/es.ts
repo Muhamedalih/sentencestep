@@ -1073,6 +1073,7 @@ export const es: Dictionary = {
     typeMasterWords: "Domina palabras en el repaso",
     typeDictation: "Practica oraciones de dictado",
     typeDailySession: "Termina la sesión de hoy",
+    typePassages: "Termina partes de los textos",
     guestHeading: "Inicia sesión para desbloquear las misiones diarias",
     guestBody:
       "Crea una cuenta gratis para ganar XP extra con las misiones diarias, coleccionar insignias y proteger tu racha con congelaciones.",
@@ -1138,6 +1139,9 @@ export const es: Dictionary = {
       },
       firstCard: { name: "Coleccionista", description: "Guarda tu primera tarjeta de palabra." },
       firstDailySession: { name: "Ritual diario", description: "Termina una sesión diaria." },
+      firstPassage: { name: "Primera página", description: "Termina tu primer texto." },
+      passages5: { name: "Ratón de biblioteca", description: "Termina 5 textos." },
+      passages10: { name: "Amante de las historias", description: "Termina 10 textos." },
       questDay: {
         name: "Misiones cumplidas",
         description: "Completa todas tus misiones diarias en un día.",
@@ -1206,6 +1210,7 @@ export const es: Dictionary = {
     nextQuestion: "Siguiente pregunta",
     finish: "Terminar",
     checkYourself: "Compruébalo",
+    recallHint: "Responde de memoria: el texto se aclara cuando eliges.",
     questionOf: "Pregunta {n} de {total}",
     audioMissing: "El audio de este texto aún no está listo. Puedes leerlo.",
     listenOnly: "Solo audio",
@@ -1232,5 +1237,8 @@ export const es: Dictionary = {
     signInToSave: "Inicia sesión para guardar tu progreso.",
     listenToWord: "Escuchar la palabra",
     savingFailed: "No se pudo guardar tu progreso.",
+    homeContinue: "Sigue con tu texto",
+    homeNext: "Tu próximo texto",
+    homeStart: "Leer",
   },
 };

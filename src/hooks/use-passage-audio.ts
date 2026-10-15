@@ -205,6 +205,17 @@ export function usePassageAudio(lines: readonly PassageAudioLine[], rate = 1) {
       .catch(() => stop());
   }, [playAll, state.activeIndex, stop]);
 
+  /**
+   * How far through the clip that is playing the voice is, 0 to 1. A getter and not state on
+   * purpose: the highlight reads it on every animation frame, and a re-render of the whole page
+   * sixty times a second would be the wrong way to follow a voice.
+   */
+  const getProgress = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return 0;
+    return Math.min(1, Math.max(0, audio.currentTime / audio.duration));
+  }, []);
+
   // A new speed applies at once to the clip that is playing, not only from the next one.
   useEffect(() => {
     const audio = audioRef.current;
@@ -227,5 +238,5 @@ export function usePassageAudio(lines: readonly PassageAudioLine[], rate = 1) {
     };
   }, []);
 
-  return { ...state, hasAudio, playAll, playLine, pause, resume, stop };
+  return { ...state, hasAudio, playAll, playLine, pause, resume, stop, getProgress };
 }

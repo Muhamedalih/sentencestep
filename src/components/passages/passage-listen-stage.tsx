@@ -2,8 +2,8 @@
 
 import { EyeOff, Loader2, Pause, Play } from "lucide-react";
 
+import { PassageButton, passageButtonClass } from "@/components/passages/passage-button";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Button } from "@/components/ui/button";
 import type { usePassageAudio } from "@/hooks/use-passage-audio";
 import type { PassageSentence } from "@/lib/passages/types";
 import { cn } from "@/lib/utils";
@@ -62,7 +62,7 @@ export function PassageListenStage({
           type="button"
           onClick={handleMainPress}
           aria-label={speaking ? t.passages.pause : t.passages.listen}
-          className="bg-primary text-primary-foreground focus-visible:ring-ring focus-visible:ring-offset-background relative flex size-24 items-center justify-center rounded-full shadow-lg transition-transform duration-200 outline-none hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95"
+          className={cn(passageButtonClass("primary", "lg"), "size-24 rounded-full px-0")}
         >
           {audio.loading && speaking ? (
             <Loader2 className="size-9 animate-spin" aria-hidden="true" />
@@ -100,10 +100,10 @@ export function PassageListenStage({
         })}
       </div>
 
-      <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={onShowText}>
+      <PassageButton variant="quiet" size="md" onClick={onShowText}>
         <EyeOff className="size-4" aria-hidden="true" />
         {t.passages.showText}
-      </Button>
+      </PassageButton>
     </div>
   );
 }

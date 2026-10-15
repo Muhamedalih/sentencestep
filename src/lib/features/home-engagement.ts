@@ -13,10 +13,12 @@ import { dealDailyQuests } from "@/lib/features/quest-service";
 import { allQuestsCompleted } from "@/lib/features/quests";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { addDays, freezesRemaining, monthPeriod } from "@/lib/features/streak-freeze";
+import { loadPassagesHomeCard } from "@/lib/passages/home-card";
+import type { PassagesHomeData } from "@/lib/passages/home-card";
 
 /**
- * Everything Home's three engagement cards (today's session, daily quests,
- * streak strip) show, loaded in ONE parallel pass. They used to be three
+ * Everything Home's engagement cards (today's session, daily quests, streak
+ * strip, and the Passages card) show, loaded in ONE parallel pass. They used to be three
  * separate Server Actions fired from the browser after hydration — Next runs
  * Server Actions one at a time, so they queued behind each other, and each
  * one re-resolved the feature switches and the session from scratch. Now the
@@ -35,10 +37,12 @@ export interface HomeEngagementData {
   dailySession: DailySessionSummary | null;
   quests: DailyQuestsPayload | null;
   streak: StreakCalendarData | null;
+  /** The passage Home points at (Passages feature); null when it is not open to this visitor or nothing is left to suggest. */
+  passages: PassagesHomeData | null;
 }
 
 export function emptyHomeEngagement(todayISO: string): HomeEngagementData {
-  return { todayISO, dailySession: null, quests: null, streak: null };
+  return { todayISO, dailySession: null, quests: null, streak: null, passages: null };
 }
 
 /** How many days back the 7-day strip reaches (today plus the six before it). */
@@ -138,7 +142,7 @@ export async function loadHomeEngagement(
   features: EffectiveFeatures,
   weakWordCount?: Promise<number>,
 ): Promise<HomeEngagementData> {
-  const [dailySession, quests, streak] = await Promise.all([
+  const [dailySession, quests, streak, passages] = await Promise.all([
     loadDailySessionSummary(userId, todayISO, features, weakWordCount),
     loadDailyQuests(userId, todayISO, features),
     loadStreakCalendar(
@@ -148,8 +152,9 @@ export async function loadHomeEngagement(
       todayISO,
       features,
     ),
+    loadPassagesHomeCard(userId, features),
   ]);
-  return { todayISO, dailySession, quests, streak };
+  return { todayISO, dailySession, quests, streak, passages };
 }
 
 /**
@@ -168,6 +173,7 @@ export interface HomeEngagementStream {
   dailySession: Promise<DailySessionSummary | null>;
   quests: Promise<DailyQuestsPayload | null>;
   streak: Promise<StreakCalendarData | null>;
+  passages: Promise<PassagesHomeData | null>;
 }
 
 /**
@@ -239,5 +245,6 @@ export function startHomeEngagement(input: {
         started.streak ? await started.streak : null,
       ),
     ),
+    passages: card("passages", (userId, features) => loadPassagesHomeCard(userId, features)),
   };
 }
