@@ -50,7 +50,7 @@ export default async function AdminBookSectionPreviewPage({
 
   if (section.sentences.length === 0) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
         <Button asChild variant="ghost" size="sm" className="w-fit">
           <Link href={`/admin/library/${bookId}/sections/${sectionId}/edit`}>← Back to editor</Link>
         </Button>

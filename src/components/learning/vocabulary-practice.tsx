@@ -96,6 +96,7 @@ const BLOCK_SIZE = 5;
 export function VocabularyPractice({
   group,
   previewMode = false,
+  backLink,
   defaultVoiceId,
   smart,
   caughtUp,
@@ -105,6 +106,8 @@ export function VocabularyPractice({
 }: {
   group: WordGroup;
   previewMode?: boolean;
+  /** Where the screen's own "back" links lead, when that is not the learner's Word Lists page — the admin preview sends them back to the editor, so it is the learner's screen exactly, with no second back button around it. */
+  backLink?: { href: string; label: string };
   /** Word Lists always uses the global default voice — there's no per-word-group override (word groups have no admin editor to set one from yet; see resolveVoiceId's callers for the lesson-level equivalent). */
   defaultVoiceId?: string | null;
   /** Smart word practice for this visitor, or null/absent for the practice exactly as it always was. */
@@ -144,6 +147,7 @@ export function VocabularyPractice({
       <ResumedPractice
         group={visit.group}
         previewMode={previewMode}
+        backLink={backLink}
         defaultVoiceId={defaultVoiceId}
         smart={visit.smart}
         groupWordIds={visit.groupWordIds}
@@ -156,6 +160,7 @@ export function VocabularyPractice({
     <VocabularyPracticeSession
       group={visit.group}
       previewMode={previewMode}
+      backLink={backLink}
       defaultVoiceId={defaultVoiceId}
       smart={visit.smart}
       groupWordIds={visit.groupWordIds}
@@ -199,6 +204,7 @@ function ResumedSession({
 function VocabularyPracticeSession({
   group,
   previewMode,
+  backLink,
   defaultVoiceId,
   smart,
   groupWordIds,
@@ -207,6 +213,7 @@ function VocabularyPracticeSession({
 }: {
   group: WordGroup;
   previewMode: boolean;
+  backLink?: { href: string; label: string };
   defaultVoiceId?: string | null;
   smart: SmartPracticeConfig | null;
   groupWordIds: readonly string[];
@@ -477,12 +484,12 @@ function VocabularyPracticeSession({
         <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
           <div className="flex items-center justify-between gap-4">
             <Link
-              href="/learn/word-lists"
+              href={backLink?.href ?? "/learn/word-lists"}
               className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
             >
               <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
               <span dir="ltr" className="truncate max-[359px]:sr-only">
-                {group.title}
+                {backLink?.label ?? group.title}
               </span>
             </Link>
             {!isComplete && audioWord && (
@@ -574,7 +581,9 @@ function VocabularyPracticeSession({
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
                   <Button variant="outline" asChild>
-                    <Link href="/learn/word-lists">{t.wordLists.backToWordLists}</Link>
+                    <Link href={backLink?.href ?? "/learn/word-lists"}>
+                      {backLink?.label ?? t.wordLists.backToWordLists}
+                    </Link>
                   </Button>
                   {redesign && (
                     // The topic's wall is where the new strengths, the mastery ring and the rank are.

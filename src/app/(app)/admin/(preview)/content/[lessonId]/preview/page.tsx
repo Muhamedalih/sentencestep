@@ -19,7 +19,8 @@ export const metadata: Metadata = {
  * Renders the exact learner-facing LessonSession/typing engine — no second
  * implementation — in previewMode, which suppresses progress/analytics/email
  * side effects so an admin clicking through a draft never pollutes their
- * own real learning history.
+ * own real learning history. It sits in the `(preview)` group, not the admin
+ * console, so it is the learner's full screen with none of the admin bar.
  */
 export default async function AdminPreviewPage({
   params,
@@ -52,12 +53,16 @@ export default async function AdminPreviewPage({
     })),
   };
 
+  // The learner's frame: a full-viewport column, with the way back to the editor in a slim row
+  // above the session (the session itself has no back link of its own).
   return (
-    <div className="flex flex-col gap-6">
-      <Button asChild variant="ghost" size="sm" className="w-fit">
-        <Link href={`/admin/content/${detail.id}/edit`}>← Back to editor</Link>
-      </Button>
-      <div className="mx-auto w-full max-w-5xl">
+    <div className="flex h-svh w-full flex-col">
+      <div className="flex shrink-0 items-center px-6 pt-3 lg:px-16">
+        <Button asChild variant="ghost" size="sm" className="w-fit">
+          <Link href={`/admin/content/${detail.id}/edit`}>← Back to editor</Link>
+        </Button>
+      </div>
+      <div className="min-h-0 flex-1">
         <LessonSession unit={unit} previewMode resolvedVoiceId={resolvedVoiceId} />
       </div>
     </div>

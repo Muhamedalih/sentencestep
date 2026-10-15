@@ -20,6 +20,8 @@ export const metadata: Metadata = {
  * implementation — in previewMode (see that component's own doc comment),
  * which skips marking words as reviewed so an admin clicking through a
  * draft group never pollutes a real learner's mistake/review ledger.
+ * It sits in the `(preview)` group, not the admin console, so it is the
+ * learner's full screen with none of the admin bar around it.
  */
 export default async function AdminWordGroupPreviewPage({
   params,
@@ -34,11 +36,12 @@ export default async function AdminWordGroupPreviewPage({
     getDefaultPronunciationVoiceId(),
   ]);
   if (!detail) notFound();
+  const backLink = { href: `/admin/word-lists/${detail.id}/edit`, label: "Back to editor" };
   if (detail.words.length === 0) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
         <Button asChild variant="ghost" size="sm" className="w-fit">
-          <Link href={`/admin/word-lists/${detail.id}/edit`}>← Back to editor</Link>
+          <Link href={backLink.href}>← {backLink.label}</Link>
         </Button>
         <p className="text-muted-foreground">This group has no words yet — nothing to preview.</p>
       </div>
@@ -73,12 +76,14 @@ export default async function AdminWordGroupPreviewPage({
     siteDefaultVoiceId,
   );
 
+  // The learner's screen as it is — the layout around it (admin/(preview)/layout.tsx) draws no
+  // admin bar, and the practice's own back link leads to the editor instead of the learner's list.
   return (
-    <div className="flex flex-col gap-6">
-      <Button asChild variant="ghost" size="sm" className="w-fit">
-        <Link href={`/admin/word-lists/${detail.id}/edit`}>← Back to editor</Link>
-      </Button>
-      <VocabularyPractice group={group} previewMode defaultVoiceId={defaultVoiceId} />
-    </div>
+    <VocabularyPractice
+      group={group}
+      previewMode
+      backLink={backLink}
+      defaultVoiceId={defaultVoiceId}
+    />
   );
 }
