@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { PassageLocked } from "@/components/passages/passage-locked";
 import { PassageReader } from "@/components/passages/passage-reader";
 import { isAdmin } from "@/lib/admin/access";
+import { trackPaywallViewed } from "@/lib/analytics/paywall";
+import { hasPremiumAccess } from "@/lib/billing/access";
+import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
+import { canOpenPassage, openablePassages } from "@/lib/passages/access";
 import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
+import { getGateFigures } from "@/lib/stats/gate-figures";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 /**
@@ -28,7 +34,9 @@ export async function generateMetadata({
   if (!(await getEffectiveFeatures()).passages.enabled) return { title: "Passages" };
   const { passageId } = await params;
   const passage = await fetchPassage(passageId);
-  return { title: passage ? `${passage.title} · Passages` : "Passages" };
+  return {
+    title: passage?.status === "published" ? `${passage.title} · Passages` : "Passages",
+  };
 }
 
 export default async function PassageReaderPage({
@@ -48,14 +56,49 @@ export default async function PassageReaderPage({
     isAdmin(),
   ]);
   if (!passage || passage.sections.length === 0) notFound();
+  // A draft is an admin's preview: nobody else can open it, nor learn it exists.
+  if (passage.status !== "published" && !isAdminUser) notFound();
+
+  // A Premium passage is for subscribers and admins; everyone else gets the lock screen. The
+  // subscription is only looked up when it matters — this passage or a suggested next one is
+  // Premium — so a free passage opens with no extra work.
+  const canOpenPremium =
+    isAdminUser ||
+    (passage.isFree && !summaries.some((summary) => !summary.isFree)) ||
+    (await hasPremiumAccess());
+  if (!canOpenPassage(passage, canOpenPremium)) {
+    const [fromPrice, figures] = await Promise.all([
+      getFromMonthlyPrice(),
+      getGateFigures(locale),
+      trackPaywallViewed({ kind: "passage", passageId: passage.id }),
+    ]);
+    return (
+      <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
+        <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
+          <PassageLocked
+            tone={passage.tone}
+            order={passage.order}
+            title={passage.title}
+            titleAr={passage.titleAr}
+            summary={passage.summary}
+            summaryAr={passage.summaryAr}
+            fromPrice={fromPrice}
+            figures={figures}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const progress = user
     ? (await fetchPassageProgress(user.id)).find((entry) => entry.passageId === passage.id)
     : undefined;
 
-  // The next passage in list order — a suggestion on the end screen, never a requirement.
-  const position = summaries.findIndex((summary) => summary.id === passage.id);
-  const next = position >= 0 ? summaries[position + 1] : undefined;
+  // The next passage in list order — a suggestion on the end screen, never a requirement, and
+  // never one this viewer can't open.
+  const openable = openablePassages(summaries, canOpenPremium);
+  const position = openable.findIndex((summary) => summary.id === passage.id);
+  const next = position >= 0 ? openable[position + 1] : undefined;
 
   // "Practice these words": the real Word Lists page once the lesson is published (the
   // Passages switch is On); until then only an admin gets a way in, the admin preview of
@@ -69,8 +112,8 @@ export default async function PassageReaderPage({
     : null;
 
   // Where the narrator will pause: shown to an admin as small dots between the words, to nobody else —
-  // it is computed here, from the authored data, and never sent to a learner's browser.
-  const pauseMarks = isAdminUser ? pauseMarksFor(passage.id) : undefined;
+  // it is computed here, from the stored lines, and never sent to a learner's browser.
+  const pauseMarks = isAdminUser ? await pauseMarksFor(passage.id) : undefined;
 
   return (
     <div className="lesson-shell bg-background text-foreground min-h-svh w-full">

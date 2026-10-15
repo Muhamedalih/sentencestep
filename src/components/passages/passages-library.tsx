@@ -23,12 +23,15 @@ export function PassagesLibrary({
   passages,
   progress,
   upNextId,
+  lockedIds,
   adminState,
 }: {
   passages: PassageSummary[];
   progress: PassageProgress[];
   /** The passage to point at ("Up next"), or null once everything is done. */
   upNextId: string | null;
+  /** The Premium passages this viewer can't open (empty for a subscriber and for an admin). */
+  lockedIds: string[];
   /** For an admin: "admin" (preview) or "on" (public). Null for everyone else — they get no bar. */
   adminState: "admin" | "on" | null;
 }) {
@@ -78,6 +81,7 @@ export function PassagesLibrary({
                       passage={passage}
                       status={passageStatus(progressById.get(passage.id), passage.sectionCount)}
                       isUpNext={passage.id === upNextId}
+                      locked={lockedIds.includes(passage.id)}
                     />
                   </li>
                 ))}

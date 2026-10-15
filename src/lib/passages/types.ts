@@ -95,6 +95,8 @@ export interface PassageSummary {
 }
 
 export interface Passage extends PassageSummary {
+  /** Whether the passage itself is open to learners (the section's switch decides the rest). A draft is read by an admin only, as a preview. */
+  status: "draft" | "published";
   sections: PassageSection[];
   words: PassageWord[];
   /** The linked word lesson's publication status — "published" means it is open in Word Lists for learners, anything else means only an admin can preview it. Null when there is no linked group. */

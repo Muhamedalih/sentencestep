@@ -64,6 +64,9 @@ These are new and **not applied automatically**:
     the `record_passage_progress` function)
 13. `20250336000000_feature_settings_passages.sql` (puts Passages in Admin
     preview, same rules as 10)
+14. `20250337000000_passage_admin.sql` (Admin → Passages: `passage_speaker_voices`,
+    one voice per character behind admin-only RLS, and the `say` / `pause` columns
+    of `passage_sentences`). Apply it BEFORE deploying the code that reads it
 
 Until a migration is applied, the feature that needs it degrades quietly (its
 card doesn't render, its event is skipped) — lesson completion is never
@@ -464,21 +467,28 @@ Passages are about understanding it. Arabic support language only for now.
 - **Content** lives in `src/data/passages` (reviewable in a diff, validated by
   `npm run test:passages` — every answer index, evidence line, translation and
   word is checked). `scripts/insert-passages.ts` writes it to the database
-  (re-runnable; it never changes a passage's status, an admin's edits to the word
-  lesson, or a line's clip while its English is unchanged). **The right answer
+  (re-runnable; it never changes a passage's status or Free/Premium, an admin's
+  edits to the word lesson or to a character's voice, or a line's clip while its
+  English is unchanged). The rows it writes come from the pure builders in
+  `src/lib/passages/seed-rows.ts`, which the admin's JSON import uses too, so the
+  two can't write different shapes. **The right answer
   must not sit in the same place**: the first batch had it as option 1 in nearly
   every question, so the tests now require it to be spread over the three
   positions (a third each, overall and within a level), never four in a row, and
   at least two positions in every passage. Author new questions in any order and
   move the right answer around.
-- **Audio** is one clip per line (`passage_sentences.audio_url`), made by
-  `scripts/generate-passage-audio.ts` with ElevenLabs and the voices named in the
-  passage's `cast`; it reads the admin voice settings but never writes them, and
-  never touches Stories/Books audio. A part is only offered for listening when
-  every one of its lines has a clip. **One voice reads the story and every
-  character has a voice of their own**: two characters never share one (the
-  validator refuses it, and the script refuses a passage whose narrator and
-  characters would resolve to the same ElevenLabs voice).
+- **Audio** is one clip per line (`passage_sentences.audio_url`), made with
+  ElevenLabs from the database — by the Generate buttons of Admin → Passages or by
+  `scripts/generate-passage-audio.ts`, which share one implementation
+  (`src/lib/passages/narration.ts`, the pure planning in `narration-plan.ts`). It
+  reads the admin voice settings but never writes them, and never touches
+  Stories/Books audio. A part is only offered for listening when every one of its
+  lines has a clip. **One voice reads the story and every character has a voice of
+  their own**, chosen per passage (`passage_speaker_voices`; a character nobody gave
+  a voice — an email, a sign — is read by the narrator, and the narrator is the
+  site's default narration voice until the passage gets its own): two roles never
+  share one — the validator refuses it in the data, the admin refuses it in the
+  voice picker, and narration refuses to start on a passage set up that way.
   **Small pauses**: a line that calls for a beat — "Suddenly, …", a punchline, a
   reaction, a reveal after a colon — is sent to the voice with one pause written
   into it (ellipses for `eleven_v3`, a break tag for the older models;
@@ -505,13 +515,49 @@ Passages are about understanding it. Arabic support language only for now.
   in `admin/layout.tsx`, above both.
 - **Who sees what.** The content tables are closed to learners by RLS; the pages
   read them with the service role _after_ the "passages" switch. Off: nobody;
-  Admin preview: admins (a bar at the top of the list says so); On: everyone.
+  Admin preview: admins (a bar at the top of the list says so); On: everyone —
+  but a passage a learner can open is also **Published** (a draft is an admin's
+  preview, reached by its URL) and, when it is **Premium** (`is_free = false`),
+  only for a subscriber or an admin: anyone else gets the lock screen
+  (`PassageLocked`, the same card as a locked lesson or word list; `canOpenPassage`
+  in `src/lib/passages/access.ts`) and a "Premium" chip on its poster. "Up next",
+  Home's card and the end screen's next passage never point a free learner at one.
 - **Publishing is one click**: the **Publish to everyone** button on the Passages
   page (admins only, asks twice), or Admin → Features → Passages → On. Either way
   each passage's word lesson — a draft Word Lists group until then, previewable
   from the end of the passage via the admin preview — is published with it, and
   hidden again when the switch goes back to Admin preview or Off
-  (`syncPassageWordGroups`, which follows the _saved_ switch).
+  (`syncPassageWordGroups`, which follows the _saved_ switch and each passage's
+  own status: a draft passage keeps its lesson hidden even while the switch is On).
+- **Admin → Passages** (`/admin/passages`, full admins only — in the nav and in the
+  middleware's admin-only list) is where each passage is run:
+  - _The list_: every passage, drafts included, with its characters, how many lines
+    have a clip, and two selects that save on change — **Draft / Published** and
+    **Free / Premium** (a Premium passage's own word lesson follows).
+  - _A passage's page_ (`/admin/passages/<slug>`): the same two controls; **Voices
+    and narration** — the narrator and each character with a voice picker (female and
+    male voices, so a man and a woman are easy to tell apart; the same voice twice is
+    refused with the reason), per role **Narrate** (the lines with no clip) and
+    **Redo all** (after changing its voice: a changed voice never touches the clips
+    already made), and **Narrate the missing lines** for the whole passage. A press
+    asks first and shows what it costs in ElevenLabs characters; it runs a few lines
+    at a time (`generatePassageAudio`, six per round, each call short) with a progress
+    bar, skips what it already did, stops at once on a key / payment / quota error and
+    leaves any other failed line for the next press. **Nothing is ever narrated unless
+    an admin presses a button.** A role's sample ▶ shows when its voice has a sample.
+    **Delete** (only a draft) removes the passage, its parts, lines, learners' progress,
+    its own word lesson and its clips from Storage. **Preview as a learner** opens the
+    reader, which an admin may open even for a draft.
+  - _Add a passage_: paste one passage as JSON (the `PassageSeed` shape of
+    `src/data/passages/types.ts`, e.g. `JSON.stringify` of a seed). **Check** reports
+    every problem in plain words without saving — the shape, every rule of
+    `validate.ts`, a slug or position already taken, a word Word Lists already
+    teaches, an unregistered voice; **Add as draft** writes it (draft, free, its own
+    draft word lesson, a voice per character from its cast, and takes everything back
+    if a write fails half way). A passage authored in `src/data/passages` that is
+    deleted here comes back the next time `insert-passages.ts` runs.
+  - Every change is an audit-log entry (`passage.status_changed`, `access_changed`,
+    `voice_changed`, `imported`, `deleted`, `audio_generated`).
 - **Levels**: A1 (ten scenes), A2 (ten) and B1 (six), written in
   `src/data/passages/{a1,a2,b1}-part-*.ts`. The line-length limit grows with the
   level (`MAX_WORDS_PER_LINE_BY_LEVEL`), the reader sets a longer part in a

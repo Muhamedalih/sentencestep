@@ -1460,5 +1460,8 @@ export interface Dictionary {
     homeContinue: string;
     homeNext: string;
     homeStart: string;
+    /** The locked screen of a Premium passage (see PassageLocked): the label over its poster and the heading above the benefits. */
+    lockedBadge: string;
+    gateHeading: string;
   };
 }

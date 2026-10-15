@@ -1170,5 +1170,7 @@ export const ar: Dictionary = {
     homeContinue: "أكمل نصك",
     homeNext: "نصك التالي",
     homeStart: "اقرأ",
+    lockedBadge: "نص مميز",
+    gateHeading: "نصك التالي بانتظارك",
   },
 };

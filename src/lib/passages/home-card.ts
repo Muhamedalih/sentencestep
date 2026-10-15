@@ -1,4 +1,7 @@
+import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
 import type { EffectiveFeatures } from "@/lib/features/config";
+import { openablePassages } from "@/lib/passages/access";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { homeCardPick } from "@/lib/passages/progress";
 import type { PassageLevel, PassageTone } from "@/lib/passages/types";
@@ -45,8 +48,13 @@ export async function loadPassagesHomeCard(
       fetchPassageSummaries(),
       fetchPassageProgress(userId),
     ]);
+    // Home never points a free learner at a Premium passage they can't open. Who can is only
+    // looked up when some passage is Premium, so Home pays nothing while every one is free.
+    const canOpenPremium =
+      !summaries.some((summary) => !summary.isFree) ||
+      (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
     const pick = homeCardPick(
-      summaries,
+      openablePassages(summaries, canOpenPremium),
       new Map(progress.map((entry) => [entry.passageId, entry])),
     );
     if (!pick) return null;

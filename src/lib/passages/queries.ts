@@ -49,9 +49,9 @@ const CACHE_SECONDS = 120;
 type PassageRow = Database["public"]["Tables"]["passages"]["Row"];
 
 /** A PostgREST `in (...)` list rides in the URL — keep each request's list short however many parts there are. */
-const IN_CHUNK_SIZE = 40;
+export const IN_CHUNK_SIZE = 40;
 
-function chunk<T>(items: readonly T[], size: number): T[][] {
+export function chunk<T>(items: readonly T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
   return chunks;
@@ -196,7 +196,6 @@ async function loadPassage(id: string): Promise<Passage | null> {
     .from("passages")
     .select("*")
     .eq("id", id)
-    .eq("status", "published")
     .maybeSingle();
   if (error) throw error;
   if (!row) return null;
@@ -287,6 +286,7 @@ async function loadPassage(id: string): Promise<Passage | null> {
 
   return {
     ...toSummary(row, sections.length, sentenceCount, questionCount),
+    status: row.status,
     sections,
     words,
     wordGroupStatus: groupResult.data?.status ?? null,
@@ -294,9 +294,10 @@ async function loadPassage(id: string): Promise<Passage | null> {
 }
 
 /**
- * One published passage with its parts, lines, questions and words, or null
- * when it does not exist (or is held back). Share-cached per passage id; see
- * the file's doc comment.
+ * One passage with its parts, lines, questions and words, or null when it does
+ * not exist. A draft is returned too, carrying its `status`: whether the viewer may
+ * see it (an admin, as a preview) is the page's call, never this read's. Share-cached
+ * per passage id; see the file's doc comment.
  */
 export const fetchPassage = cache(async (id: string): Promise<Passage | null> => {
   if (!isSupabaseConfigured()) return null;

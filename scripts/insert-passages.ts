@@ -7,7 +7,9 @@
  * Safe to re-run, and built to be: every row is keyed by a readable slug id
  * (src/lib/passages/ids.ts), so a second run updates instead of duplicating.
  * What a re-run never touches:
- *   - a passage's `status` (an admin who held one back keeps it held back);
+ *   - a passage's `status` and `is_free` (an admin who held one back, or made one
+ *     Premium, keeps it so), nor the voices an admin chose for its characters (they are
+ *     seeded from the cast only when missing — see passage_speaker_voices);
  *   - a word group's `status`, order and anything an admin edited in Word
  *     Lists (the group and its words are only INSERTED when missing) — a draft
  *     group stays draft until the Passages switch publishes it (see
@@ -26,16 +28,17 @@
 import { createClient } from "@supabase/supabase-js";
 
 import { PASSAGE_SEEDS } from "../src/data/passages";
-import type { PassageSeed } from "../src/data/passages";
+import { passageIdFor, wordGroupIdFor } from "../src/lib/passages/ids";
 import {
-  passageIdFor,
-  sectionIdFor,
-  sentenceIdFor,
-  wordGroupIdFor,
-  wordIdFor,
-} from "../src/lib/passages/ids";
-import { storedQuestionsFor } from "../src/lib/passages/seed-rows";
+  passageFieldsFor,
+  sectionRowsFor,
+  sentenceRowsFor,
+  speakerVoiceRowsFor,
+  wordGroupRowFor,
+  wordRowsFor,
+} from "../src/lib/passages/seed-rows";
 import { validatePassageSet } from "../src/lib/passages/validate";
+import { NARRATOR_ROLE } from "../src/lib/passages/voice-aliases";
 import type { Database } from "../src/types/database";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -55,9 +58,6 @@ const supabase = createClient<Database>(url, serviceRoleKey, {
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const only = args.find((arg) => arg.startsWith("--only="))?.slice("--only=".length);
-
-/** Word Lists' own level scale: 1 = Beginner, 2 = Intermediate, 3 = Advanced. */
-const WORD_LIST_LEVEL: Record<PassageSeed["level"], number> = { A1: 1, A2: 2, B1: 2, B2: 3 };
 
 function fail(message: string): never {
   console.error(message);
@@ -153,6 +153,13 @@ async function main() {
             .in("section_id", sectionIdsInDb),
         );
   const existingSentenceById = new Map(existingSentences.map((row) => [row.id, row]));
+  const existingVoices = await must(
+    "reading existing character voices",
+    supabase
+      .from("passage_speaker_voices")
+      .select("passage_id, speaker")
+      .in("passage_id", passageIds),
+  );
 
   // word_groups.order_index is globally unique: new groups go after the current maximum.
   const maxRow = await mustMaybe<{ order_index: number }>(
@@ -175,6 +182,8 @@ async function main() {
   let linesLosingClip = 0;
   let removedSections = 0;
   let removedLines = 0;
+  let newVoices = 0;
+  let removedVoices = 0;
 
   for (const seed of seeds) {
     const passageId = passageIdFor(seed.slug);
@@ -186,20 +195,10 @@ async function main() {
       if (!dryRun) {
         await must(
           `inserting word group ${groupId}`,
+          // A draft: hidden from learners until the Passages switch publishes it.
           supabase
             .from("word_groups")
-            .insert({
-              id: groupId,
-              level: WORD_LIST_LEVEL[seed.level],
-              order_index: nextGroupOrder,
-              title: `Words from “${seed.title}”`,
-              title_ar: `كلمات من «${seed.titleAr}»`,
-              description: `The key words of the passage “${seed.title}”.`,
-              description_ar: `الكلمات الأساسية من النص «${seed.titleAr}».`,
-              is_free: true,
-              // Hidden from learners until the Passages switch publishes it.
-              status: "draft",
-            })
+            .insert(wordGroupRowFor(seed, nextGroupOrder, true))
             .select("id"),
         );
       }
@@ -210,35 +209,14 @@ async function main() {
         `inserting words of ${groupId}`,
         supabase
           .from("vocabulary_words")
-          .upsert(
-            seed.words.map((word, index) => ({
-              id: wordIdFor(seed.slug, word.word),
-              group_id: groupId,
-              order_index: index + 1,
-              target_word: word.word,
-              sentence: word.sentence,
-              hint_ar: word.hintAr,
-            })),
-            { onConflict: "id", ignoreDuplicates: true },
-          )
+          .upsert(wordRowsFor(seed), { onConflict: "id", ignoreDuplicates: true })
           .select("id"),
       );
     }
 
-    // 2. The passage itself. `status` is only set on a brand-new row.
-    const passageFields = {
-      order_index: seed.order,
-      level: seed.level,
-      tone: seed.tone,
-      icon: seed.icon,
-      title: seed.title,
-      title_ar: seed.titleAr,
-      summary: seed.summary,
-      summary_ar: seed.summaryAr,
-      is_free: true,
-      word_group_id: groupId,
-      updated_at: new Date().toISOString(),
-    };
+    // 2. The passage itself. `status` and `is_free` are only set on a brand-new row: after that
+    // they are the admin's (Admin -> Passages).
+    const passageFields = { ...passageFieldsFor(seed), updated_at: new Date().toISOString() };
     if (existingPassageIds.has(passageId)) {
       updatedPassages += 1;
       if (!dryRun) {
@@ -254,49 +232,31 @@ async function main() {
           `inserting passage ${passageId}`,
           supabase
             .from("passages")
-            .insert({ id: passageId, status: "published", ...passageFields })
+            .insert({ id: passageId, status: "published", is_free: true, ...passageFields })
             .select("id"),
         );
       }
     }
 
     // 3. Parts and their questions.
-    const sectionRows = seed.sections.map((section, sectionIndex) => {
-      const sectionNumber = sectionIndex + 1;
-      const sectionId = sectionIdFor(seed.slug, sectionNumber);
-      return {
-        id: sectionId,
-        passage_id: passageId,
-        order_index: sectionNumber,
-        title: section.title,
-        title_ar: section.titleAr,
-        // The part's own question, and on the last part the passage's closing question after it.
-        questions: storedQuestionsFor(seed, sectionIndex),
-        updated_at: new Date().toISOString(),
-      };
-    });
+    const sectionRows = sectionRowsFor(seed).map((row) => ({
+      ...row,
+      updated_at: new Date().toISOString(),
+    }));
     sectionCount += sectionRows.length;
 
     // 4. Lines. A line keeps its clip only while its English is unchanged.
-    const sentenceRows = seed.sections.flatMap((section, sectionIndex) =>
-      section.lines.map((line, lineIndex) => {
-        const id = sentenceIdFor(seed.slug, sectionIndex + 1, lineIndex + 1);
-        const previous = existingSentenceById.get(id);
-        const keepClip = Boolean(previous && previous.en === line.en && previous.audio_url);
-        if (keepClip) linesWithClip += 1;
-        else if (previous?.audio_url) linesLosingClip += 1;
-        return {
-          id,
-          section_id: sectionIdFor(seed.slug, sectionIndex + 1),
-          order_index: lineIndex + 1,
-          speaker: line.who ?? null,
-          en: line.en,
-          ar: line.ar,
-          audio_url: keepClip ? (previous?.audio_url ?? null) : null,
-          updated_at: new Date().toISOString(),
-        };
-      }),
-    );
+    const sentenceRows = sentenceRowsFor(seed).map((row) => {
+      const previous = existingSentenceById.get(row.id);
+      const keepClip = Boolean(previous && previous.en === row.en && previous.audio_url);
+      if (keepClip) linesWithClip += 1;
+      else if (previous?.audio_url) linesLosingClip += 1;
+      return {
+        ...row,
+        audio_url: keepClip ? (previous?.audio_url ?? null) : null,
+        updated_at: new Date().toISOString(),
+      };
+    });
     lineCount += sentenceRows.length;
 
     const keepSectionIds = new Set(sectionRows.map((row) => row.id));
@@ -312,6 +272,18 @@ async function main() {
     );
     removedSections += orphanSections.length;
     removedLines += orphanSentences.length;
+
+    // 5. Who speaks: one voice per character, from the cast. Only inserted when missing — the
+    // admin may have chosen others — and a character no longer in the cast loses theirs (the
+    // narrator's own row, if the admin set one, stays).
+    const voiceRows = speakerVoiceRowsFor(seed);
+    const haveVoices = new Set(
+      existingVoices.filter((row) => row.passage_id === passageId).map((row) => row.speaker),
+    );
+    const castNames = new Set([...Object.keys(seed.cast), NARRATOR_ROLE]);
+    const orphanVoices = [...haveVoices].filter((speaker) => !castNames.has(speaker));
+    newVoices += voiceRows.filter((row) => !haveVoices.has(row.speaker)).length;
+    removedVoices += orphanVoices.length;
 
     if (!dryRun) {
       await must(
@@ -348,6 +320,26 @@ async function main() {
             .select("id"),
         );
       }
+      if (voiceRows.length > 0) {
+        await must(
+          `saving the voices of ${passageId}`,
+          supabase
+            .from("passage_speaker_voices")
+            .upsert(voiceRows, { onConflict: "passage_id,speaker", ignoreDuplicates: true })
+            .select("passage_id"),
+        );
+      }
+      if (orphanVoices.length > 0) {
+        await must(
+          `removing old voices of ${passageId}`,
+          supabase
+            .from("passage_speaker_voices")
+            .delete()
+            .eq("passage_id", passageId)
+            .in("speaker", orphanVoices)
+            .select("passage_id"),
+        );
+      }
     }
   }
 
@@ -359,6 +351,7 @@ async function main() {
       `parts: ${sectionCount}, lines: ${lineCount}`,
       `lines keeping their clip: ${linesWithClip}, losing it (text changed): ${linesLosingClip}`,
       `removed: ${removedSections} parts, ${removedLines} lines`,
+      `character voices: ${newVoices} new, ${removedVoices} removed (existing ones are kept)`,
     ].join("\n"),
   );
 }

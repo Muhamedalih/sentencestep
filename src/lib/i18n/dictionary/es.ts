@@ -1243,5 +1243,7 @@ export const es: Dictionary = {
     homeContinue: "Sigue con tu texto",
     homeNext: "Tu próximo texto",
     homeStart: "Leer",
+    lockedBadge: "Texto Premium",
+    gateHeading: "Tu próximo texto te espera",
   },
 };

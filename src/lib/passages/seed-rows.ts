@@ -1,5 +1,13 @@
 import type { PassageSeed } from "@/data/passages/types";
-import { questionIdFor } from "@/lib/passages/ids";
+import {
+  passageIdFor,
+  questionIdFor,
+  sectionIdFor,
+  sentenceIdFor,
+  wordGroupIdFor,
+  wordIdFor,
+} from "@/lib/passages/ids";
+import { PASSAGE_VOICE_IDS } from "@/lib/passages/voice-aliases";
 
 /**
  * How an authored passage's questions are stored: the jsonb a part keeps in
@@ -53,4 +61,89 @@ export function storedQuestionsFor(seed: PassageSeed, sectionIndex: number): Sto
   }
 
   return questions;
+}
+
+// --- The rows of an authored passage ------------------------------------------
+// Shared by scripts/insert-passages.ts (which keeps a passage in step with its data) and the
+// admin's JSON import (which adds a passage), so the two can never write different shapes.
+
+/** Word Lists' own level scale: 1 = Beginner, 2 = Intermediate, 3 = Advanced. */
+export const WORD_LIST_LEVEL: Record<PassageSeed["level"], number> = { A1: 1, A2: 2, B1: 2, B2: 3 };
+
+/** The draft Word Lists group a passage's words become — hidden from learners until its passage is open to them (see syncPassageWordGroups). */
+export function wordGroupRowFor(seed: PassageSeed, orderIndex: number, isFree: boolean) {
+  return {
+    id: wordGroupIdFor(seed.slug),
+    level: WORD_LIST_LEVEL[seed.level],
+    order_index: orderIndex,
+    title: `Words from “${seed.title}”`,
+    title_ar: `كلمات من «${seed.titleAr}»`,
+    description: `The key words of the passage “${seed.title}”.`,
+    description_ar: `الكلمات الأساسية من النص «${seed.titleAr}».`,
+    is_free: isFree,
+    status: "draft" as const,
+  };
+}
+
+export function wordRowsFor(seed: PassageSeed) {
+  return seed.words.map((word, index) => ({
+    id: wordIdFor(seed.slug, word.word),
+    group_id: wordGroupIdFor(seed.slug),
+    order_index: index + 1,
+    target_word: word.word,
+    sentence: word.sentence,
+    hint_ar: word.hintAr,
+  }));
+}
+
+/** What a passage's row holds that the data decides. `status` and `is_free` are not here: they are the admin's, set once when the row is created and never overwritten by the data. */
+export function passageFieldsFor(seed: PassageSeed) {
+  return {
+    order_index: seed.order,
+    level: seed.level,
+    tone: seed.tone,
+    icon: seed.icon,
+    title: seed.title,
+    title_ar: seed.titleAr,
+    summary: seed.summary,
+    summary_ar: seed.summaryAr,
+    word_group_id: wordGroupIdFor(seed.slug),
+  };
+}
+
+export function sectionRowsFor(seed: PassageSeed) {
+  return seed.sections.map((section, sectionIndex) => ({
+    id: sectionIdFor(seed.slug, sectionIndex + 1),
+    passage_id: passageIdFor(seed.slug),
+    order_index: sectionIndex + 1,
+    title: section.title,
+    title_ar: section.titleAr,
+    // The part's own question, and on the last part the passage's closing question after it.
+    questions: storedQuestionsFor(seed, sectionIndex),
+  }));
+}
+
+/** The lines, without their clips (`audio_url` is the caller's to set: the insert script keeps a clip while its line is unchanged). `say` and `pause` are what the narration needs besides the English. */
+export function sentenceRowsFor(seed: PassageSeed) {
+  return seed.sections.flatMap((section, sectionIndex) =>
+    section.lines.map((line, lineIndex) => ({
+      id: sentenceIdFor(seed.slug, sectionIndex + 1, lineIndex + 1),
+      section_id: sectionIdFor(seed.slug, sectionIndex + 1),
+      order_index: lineIndex + 1,
+      speaker: line.who ?? null,
+      en: line.en,
+      ar: line.ar,
+      say: line.say?.trim() ? line.say.trim() : null,
+      pause: line.pause ?? null,
+    })),
+  );
+}
+
+/** One voice per character; a character the narrator reads (an email, a sign) has none — "no row" means "the narrator's voice". */
+export function speakerVoiceRowsFor(seed: PassageSeed) {
+  return Object.entries(seed.cast).flatMap(([speaker, alias]) =>
+    alias === "narrator"
+      ? []
+      : [{ passage_id: passageIdFor(seed.slug), speaker, voice_id: PASSAGE_VOICE_IDS[alias] }],
+  );
 }

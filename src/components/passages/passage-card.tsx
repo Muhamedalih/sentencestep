@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { posterArtFor } from "@/lib/passages/art";
@@ -14,22 +14,28 @@ import { cn } from "@/lib/utils";
  * its own (see posterArtFor), with its number, how long it takes and where the
  * learner stands. No illustrations and no mood labels — the hue carries the mood.
  * A one-line hook sits under the poster. The suggested next passage is marked
- * "Up next" — a pointer, never a lock: every passage is open.
+ * "Up next" — a pointer, never a lock. A Premium passage the viewer can't open says so
+ * with a small "Premium" chip in the same place (white on the poster, no veil: the title
+ * stays as readable as on every other card).
  */
 export function PassageCard({
   passage,
   status,
   isUpNext,
+  locked = false,
 }: {
   passage: PassageSummary;
   status: PassageStatus;
   isUpNext: boolean;
+  /** A Premium passage this viewer can't open: it still opens, onto the lock screen. */
+  locked?: boolean;
 }) {
   const { t, locale } = useLocale();
   const art = posterArtFor(passage.tone, passage.order);
 
-  const badge =
-    status === "done"
+  const badge = locked
+    ? t.premium.lockedChip
+    : status === "done"
       ? t.passages.done
       : status === "in-progress"
         ? t.passages.continue
@@ -38,7 +44,13 @@ export function PassageCard({
           : null;
 
   return (
-    <Link href={`/learn/passages/${passage.id}`} className="group block outline-none">
+    <Link
+      href={`/learn/passages/${passage.id}`}
+      className="group block outline-none"
+      aria-label={
+        locked ? t.premium.lockedContentAriaLabel.replace("{title}", passage.title) : undefined
+      }
+    >
       <div
         className={cn(
           "relative aspect-[3/4] overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/10 transition-all duration-300 dark:ring-white/10",
@@ -52,7 +64,8 @@ export function PassageCard({
           </span>
           {badge && (
             <span className="flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[0.7rem] font-semibold text-white backdrop-blur-sm">
-              {status === "done" && <Check className="size-3" aria-hidden="true" />}
+              {locked && <Lock className="size-3" aria-hidden="true" />}
+              {!locked && status === "done" && <Check className="size-3" aria-hidden="true" />}
               <bdi>{badge}</bdi>
             </span>
           )}

@@ -1619,6 +1619,10 @@ export interface Database {
           en: string;
           ar: string;
           audio_url: string | null;
+          /** What the voice says when it must differ from `en` (a spelled-out number); null: the line as written. */
+          say: string | null;
+          /** The author's say-so about where the voice pauses (a PauseHint, see narration-pauses.ts); null: by the rules. */
+          pause: unknown;
           created_at: string;
           updated_at: string;
         };
@@ -1630,10 +1634,29 @@ export interface Database {
           en: string;
           ar: string;
           audio_url?: string | null;
+          say?: string | null;
+          pause?: unknown;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["passage_sentences"]["Insert"]>;
+        Relationships: [];
+      };
+      passage_speaker_voices: {
+        Row: {
+          passage_id: string;
+          /** A character's name as in passage_sentences.speaker, or "narrator" for the voice that reads the story. */
+          speaker: string;
+          voice_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          passage_id: string;
+          speaker: string;
+          voice_id: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["passage_speaker_voices"]["Insert"]>;
         Relationships: [];
       };
       passage_progress: {

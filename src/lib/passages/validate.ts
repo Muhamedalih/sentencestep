@@ -4,6 +4,7 @@ import { problemWithHint } from "@/lib/passages/narration-pauses";
 import { containsWholeWord } from "@/lib/passages/text";
 import { PASSAGE_LEVELS, PASSAGE_TONES } from "@/lib/passages/types";
 import type { PassageLevel } from "@/lib/passages/types";
+import { NARRATOR_ROLE, PASSAGE_VOICE_IDS } from "@/lib/passages/voice-aliases";
 
 /**
  * Integrity rules for authored passages — every one of them exists because a
@@ -17,11 +18,7 @@ import type { PassageLevel } from "@/lib/passages/types";
 
 const VOICE_ALIASES: readonly PassageVoiceAlias[] = [
   "narrator",
-  "russ",
-  "calm-male",
-  "zara",
-  "ash",
-  "autumn",
+  ...(Object.keys(PASSAGE_VOICE_IDS) as (keyof typeof PASSAGE_VOICE_IDS)[]),
 ];
 
 const ARABIC_LETTER = /[ء-ي]/;
@@ -100,6 +97,10 @@ export function validatePassageSeed(seed: PassageSeed): string[] {
   const castNames = Object.keys(seed.cast);
   for (const [name, voice] of Object.entries(seed.cast)) {
     if (!name.trim()) at("cast", "a character has an empty name");
+    // "narrator" is where the voice that reads the story is kept (passage_speaker_voices): no character can be called that.
+    if (name.trim().toLowerCase() === NARRATOR_ROLE) {
+      at("cast", `a character can't be called "${NARRATOR_ROLE}" — that name is the narrator's`);
+    }
     if (!VOICE_ALIASES.includes(voice)) at("cast", `${name}: unknown voice "${voice}"`);
   }
   // One voice reads the story and every character has a voice of their own: two characters never share one. (A "narrator" entry — an email, a sign — is read by the narrator on purpose.)

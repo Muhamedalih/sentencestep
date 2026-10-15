@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 
 import { PassagesLibrary } from "@/components/passages/passages-library";
 import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures, getFeatureConfig } from "@/lib/features/queries";
+import { canOpenPassage, openablePassages } from "@/lib/passages/access";
 import { recommendedPassageId } from "@/lib/passages/progress";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -27,6 +29,11 @@ export default async function PassagesPage() {
     isAdmin(),
     getFeatureConfig(),
   ]);
+  // A Premium passage opens for subscribers and admins only; "Up next" never points anyone at a
+  // lock. The subscription is only looked up when some passage is Premium (none is, until an
+  // admin makes one so), so a list of free passages costs nothing extra.
+  const canOpenPremium =
+    isAdminUser || !passages.some((passage) => !passage.isFree) || (await hasPremiumAccess());
 
   const switchState = config.features.passages.state;
   const adminState =
@@ -38,7 +45,10 @@ export default async function PassagesPage() {
     <PassagesLibrary
       passages={passages}
       progress={progress}
-      upNextId={recommendedPassageId(passages, progressById)}
+      upNextId={recommendedPassageId(openablePassages(passages, canOpenPremium), progressById)}
+      lockedIds={passages
+        .filter((passage) => !canOpenPassage(passage, canOpenPremium))
+        .map((passage) => passage.id)}
       adminState={adminState}
     />
   );

@@ -25,7 +25,17 @@ import {
 } from "@/lib/passages/chime";
 import type { ChimeContext } from "@/lib/passages/chime";
 import { parseQuestions } from "@/lib/passages/parse";
-import { NO_EVIDENCE_LINE, storedQuestionsFor } from "@/lib/passages/seed-rows";
+import {
+  NO_EVIDENCE_LINE,
+  WORD_LIST_LEVEL,
+  passageFieldsFor,
+  sectionRowsFor,
+  sentenceRowsFor,
+  speakerVoiceRowsFor,
+  storedQuestionsFor,
+  wordGroupRowFor,
+  wordRowsFor,
+} from "@/lib/passages/seed-rows";
 import {
   DEFAULT_PLAYBACK_RATE,
   PLAYBACK_RATES,
@@ -46,7 +56,20 @@ import {
 } from "@/lib/passages/progress";
 import { QUEST_DEFAULTS, QUEST_TYPES } from "@/lib/features/catalog";
 import type { PassageSummary } from "@/lib/passages/types";
-import { pauseMarksFor } from "@/lib/passages/admin-pauses";
+import { canOpenPassage, openablePassages } from "@/lib/passages/access";
+import { parsePassageJson } from "@/lib/passages/import";
+import {
+  narrationCost,
+  narrationJobsFor,
+  parsePauseHint,
+  pauseMarksForSentences,
+  planNarration,
+  resolveNarrationVoices,
+  rolesOf,
+} from "@/lib/passages/narration-plan";
+import type { NarrationSentence, NarrationVoice, VoiceSetup } from "@/lib/passages/narration-plan";
+import { wordGroupStatusFor } from "@/lib/passages/publish";
+import { NARRATOR_ROLE, PASSAGE_VOICE_IDS } from "@/lib/passages/voice-aliases";
 import {
   pausePlanFor,
   pauseStyleFor,
@@ -158,6 +181,28 @@ test("every passage closes with one question about the whole passage", () => {
 
 function cloneSeed(): PassageSeed {
   return structuredClone(PASSAGE_SEEDS[0]!);
+}
+
+function seedBySlug(slug: string): PassageSeed {
+  const seed = PASSAGE_SEEDS.find((candidate) => candidate.slug === slug);
+  assert.ok(seed, slug);
+  return seed;
+}
+
+/** A seed's lines the way the narration reads them back from the database. */
+function sentencesOf(
+  seed: PassageSeed,
+  clips: ReadonlySet<string> = new Set(),
+): NarrationSentence[] {
+  return sentenceRowsFor(seed).map((row) => ({
+    id: row.id,
+    sectionId: row.section_id,
+    speaker: row.speaker,
+    en: row.en,
+    say: row.say,
+    pause: row.pause,
+    audioUrl: clips.has(row.id) ? "https://example.test/clip.mp3" : null,
+  }));
 }
 
 test("validate: a question whose answer index is out of range is reported", () => {
@@ -604,13 +649,13 @@ test("pauses: a touch, not a performance — about one line in ten, and what a l
   assert.ok(share >= 0.03 && share <= 0.15, `${Math.round(share * 100)}% of the lines get a pause`);
 
   // The admin's marks are the same plans, by sentence id.
-  const marks = pauseMarksFor("my-cat-is-my-boss");
+  const marks = pauseMarksForSentences(sentencesOf(seedBySlug("my-cat-is-my-boss")));
   assert.deepEqual(marks[sentenceIdFor("my-cat-is-my-boss", 1, 4)], {
     afterWord: 1,
     length: "short",
   });
   assert.equal(marks[sentenceIdFor("my-cat-is-my-boss", 1, 1)], undefined);
-  assert.deepEqual(pauseMarksFor("no-such-passage"), {});
+  assert.deepEqual(pauseMarksForSentences([]), {});
 });
 
 test("voices: every character has a voice of their own; the narrator's own lines aside", () => {
@@ -970,4 +1015,364 @@ test("a longer part is set in smaller type, so every part fits a screen", () => 
     );
   assert.ok(sizes("A1").every((size) => size === "large"));
   assert.ok(sizes("B1").some((size) => size !== "large"));
+});
+
+// --- Admin -> Passages: the rows, the narration, the voices ----------------------------------
+
+test("the admin migration: one voice per character behind admin-only RLS, and two additive columns", () => {
+  const sql = readMigration("20250337000000_passage_admin.sql");
+  assert.match(sql, /create table if not exists passage_speaker_voices \(/);
+  assert.match(sql, /primary key \(passage_id, speaker\)/);
+  // A passage's voices go with it; a voice in use can't be deleted from under it.
+  assert.match(sql, /passage_id text not null references passages \(id\) on delete cascade/);
+  assert.match(sql, /voice_id text not null references voices \(id\) on delete restrict/);
+  assert.match(sql, /alter table passage_speaker_voices enable row level security/);
+  assert.match(sql, /create policy "Admins manage passage speaker voices"[\s\S]*is_admin/);
+  assert.match(sql, /alter table passage_sentences add column if not exists say text/);
+  assert.match(sql, /alter table passage_sentences add column if not exists pause jsonb/);
+  assert.doesNotMatch(sql, /drop (table|column)/i, "nothing that exists is removed");
+});
+
+test("voice aliases: every alias but the narrator names a registered ElevenLabs voice, and no two share one", () => {
+  const ids = Object.values(PASSAGE_VOICE_IDS);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const id of ids) assert.match(id, /^elevenlabs-[a-z0-9]+$/);
+  assert.ok(
+    !("narrator" in PASSAGE_VOICE_IDS),
+    "the narrator is the site's default, never an id here",
+  );
+});
+
+test("seed rows: a passage's rows carry everything the data says, and nothing the admin owns", () => {
+  let lines = 0;
+  for (const seed of PASSAGE_SEEDS) {
+    const rows = sentenceRowsFor(seed);
+    lines += rows.length;
+    assert.equal(
+      rows.length,
+      seed.sections.reduce((sum, section) => sum + section.lines.length, 0),
+    );
+    assert.equal(new Set(rows.map((row) => row.id)).size, rows.length);
+
+    // say and pause are kept as authored (an empty say is no say).
+    const authored = seed.sections.flatMap((section) => section.lines);
+    rows.forEach((row, index) => {
+      assert.equal(row.say, authored[index]!.say?.trim() ? authored[index]!.say!.trim() : null);
+      assert.deepEqual(row.pause, authored[index]!.pause ?? null);
+      assert.equal(row.speaker, authored[index]!.who ?? null);
+    });
+
+    const parts = sectionRowsFor(seed);
+    assert.equal(parts.length, seed.sections.length);
+    parts.forEach((part, index) => {
+      assert.equal(part.passage_id, passageIdFor(seed.slug));
+      assert.deepEqual(part.questions, storedQuestionsFor(seed, index));
+    });
+
+    // Who speaks: one row per character the narrator doesn't read, each with its own voice.
+    const voiceRows = speakerVoiceRowsFor(seed);
+    const characters = Object.entries(seed.cast).filter(([, alias]) => alias !== "narrator");
+    assert.deepEqual(
+      voiceRows.map((row) => row.speaker),
+      characters.map(([name]) => name),
+    );
+    assert.equal(new Set(voiceRows.map((row) => row.voice_id)).size, voiceRows.length);
+    for (const row of voiceRows) assert.equal(row.passage_id, passageIdFor(seed.slug));
+
+    // The data never decides status or access: those are the admin's.
+    const fields = passageFieldsFor(seed);
+    assert.ok(!("status" in fields) && !("is_free" in fields));
+    assert.equal(fields.word_group_id, wordGroupIdFor(seed.slug));
+
+    const words = wordRowsFor(seed);
+    assert.equal(words.length, seed.words.length);
+    assert.ok(words.every((word) => word.group_id === wordGroupIdFor(seed.slug)));
+    assert.deepEqual(
+      words.map((word) => word.id),
+      seed.words.map((word) => wordIdFor(seed.slug, word.word)),
+    );
+
+    const group = wordGroupRowFor(seed, 99, true);
+    assert.equal(group.status, "draft");
+    assert.equal(group.level, WORD_LIST_LEVEL[seed.level]);
+    assert.equal(group.order_index, 99);
+  }
+  assert.equal(lines, 676);
+});
+
+test("pause hints stored as jsonb are read back safely", () => {
+  assert.equal(parsePauseHint("none"), "none");
+  assert.deepEqual(parsePauseHint({ after: "Suddenly,", length: "long" }), {
+    after: "Suddenly,",
+    length: "long",
+  });
+  assert.deepEqual(parsePauseHint({ before: true }), { before: true });
+  assert.deepEqual(parsePauseHint({ before: true, length: "short" }), {
+    before: true,
+    length: "short",
+  });
+  for (const bad of [null, undefined, 3, "later", {}, { after: "" }, { before: false }, []]) {
+    assert.equal(parsePauseHint(bad), undefined, JSON.stringify(bad));
+  }
+  assert.deepEqual(parsePauseHint({ after: "Wow,", length: "weird" }), { after: "Wow," });
+});
+
+test("narration from the database sends exactly what the authored data would have", () => {
+  let checked = 0;
+  for (const seed of PASSAGE_SEEDS) {
+    const jobs = narrationJobsFor(sentencesOf(seed), { model: "eleven_v3" });
+    const plain = narrationJobsFor(sentencesOf(seed), { model: "eleven_v3", pauses: false });
+    let index = 0;
+    for (const section of seed.sections) {
+      section.lines.forEach((line, lineIndex) => {
+        const job = jobs[index]!;
+        assert.equal(
+          job.sentenceId,
+          sentenceIdFor(seed.slug, seed.sections.indexOf(section) + 1, lineIndex + 1),
+        );
+        assert.equal(
+          job.text,
+          narrationTextFor(line, {
+            model: "eleven_v3",
+            previousEn: section.lines[lineIndex - 1]?.en,
+          }),
+          job.sentenceId,
+        );
+        assert.equal(job.plain, spokenTextFor(line));
+        assert.equal(plain[index]!.text, spokenTextFor(line));
+        assert.equal(job.role, line.who ?? NARRATOR_ROLE);
+        index += 1;
+        checked += 1;
+      });
+    }
+  }
+  assert.equal(checked, 676);
+});
+
+test("a line's reaction is judged by the line before it in the same part only", () => {
+  const sentences: NarrationSentence[] = [
+    {
+      id: "a",
+      sectionId: "s1",
+      speaker: null,
+      en: "The dog ate the whole cake.",
+      say: null,
+      pause: null,
+      audioUrl: null,
+    },
+    { id: "b", sectionId: "s2", speaker: null, en: "Wow.", say: null, pause: null, audioUrl: null },
+  ];
+  const jobs = narrationJobsFor(sentences, { model: "eleven_v3" });
+  const sameParts = narrationJobsFor(
+    sentences.map((sentence) => ({ ...sentence, sectionId: "s1" })),
+    { model: "eleven_v3" },
+  );
+  // Across a part break "Wow." has nothing to react to; in one part it follows a long sentence.
+  assert.equal(jobs[1]!.text, narrationTextFor({ en: "Wow." }, { model: "eleven_v3" }));
+  assert.equal(
+    sameParts[1]!.text,
+    narrationTextFor(
+      { en: "Wow." },
+      { model: "eleven_v3", previousEn: "The dog ate the whole cake." },
+    ),
+  );
+});
+
+function voice(
+  id: string,
+  providerVoiceId = `provider-${id}`,
+  gender: "female" | "male" = "female",
+): NarrationVoice {
+  return { id, name: `Voice ${id}`, gender, providerVoiceId, sampleAudioUrl: null };
+}
+
+function setupOf(
+  assigned: Record<string, string>,
+  options: { narrator?: string | null; voices?: NarrationVoice[] } = {},
+): VoiceSetup {
+  const voices = options.voices ?? ["n", "a", "b", "c"].map((id) => voice(id));
+  return {
+    assigned: new Map(Object.entries(assigned)),
+    defaultNarratorVoiceId: options.narrator === undefined ? "n" : options.narrator,
+    voices: new Map(voices.map((entry) => [entry.id, entry])),
+  };
+}
+
+test("voices: the narrator falls back to the site default, a character nobody voiced to the narrator", () => {
+  const { voiceFor, problems } = resolveNarrationVoices(
+    [NARRATOR_ROLE, "Anna", "Email"],
+    setupOf({ Anna: "a" }),
+  );
+  assert.deepEqual(problems, []);
+  assert.equal(voiceFor.get(NARRATOR_ROLE)?.id, "n");
+  assert.equal(voiceFor.get("Anna")?.id, "a");
+  assert.equal(
+    voiceFor.get("Email")?.id,
+    "n",
+    "a character with no voice of their own is read by the narrator",
+  );
+
+  // The passage's own narrator beats the site default.
+  const own = resolveNarrationVoices(
+    [NARRATOR_ROLE, "Anna"],
+    setupOf({ narrator: "b", Anna: "a" }),
+  );
+  assert.equal(own.voiceFor.get(NARRATOR_ROLE)?.id, "b");
+  assert.deepEqual(own.problems, []);
+});
+
+test("voices: two roles never share a voice, and nothing is narrated with a voice nobody chose", () => {
+  const twins = resolveNarrationVoices(
+    ["Anna", "Dan"],
+    setupOf(
+      { Anna: "a", Dan: "b" },
+      { voices: [voice("n"), voice("a", "same"), voice("b", "same")] },
+    ),
+  );
+  assert.ok(
+    twins.problems.some((problem) => /Dan and Anna would speak with the same voice/.test(problem)),
+  );
+
+  // A character with the narrator's own voice is the same problem.
+  const withNarrator = resolveNarrationVoices(
+    ["Anna"],
+    setupOf({ Anna: "a" }, { voices: [voice("n", "same"), voice("a", "same")] }),
+  );
+  assert.ok(withNarrator.problems.some((problem) => /Anna and the narrator/.test(problem)));
+
+  const noNarrator = resolveNarrationVoices(["Anna"], setupOf({ Anna: "a" }, { narrator: null }));
+  assert.ok(noNarrator.problems.some((problem) => /no narrator voice/.test(problem)));
+
+  const unknown = resolveNarrationVoices(["Anna"], setupOf({ Anna: "ghost" }));
+  assert.ok(
+    unknown.problems.some((problem) => /Anna is not a registered|chosen for Anna/.test(problem)),
+  );
+});
+
+test("the plan narrates what is missing, or everything with force, for one role, minus what a run already did", () => {
+  const seed = seedBySlug("my-cat-is-my-boss");
+  const ids = sentenceRowsFor(seed).map((row) => row.id);
+  const clips = new Set(ids.slice(0, 3));
+  const sentences = sentencesOf(seed, clips);
+  const cast = Object.keys(seed.cast);
+  const setup = setupOf(
+    Object.fromEntries(
+      speakerVoiceRowsFor(seed).map((row, index) => [row.speaker, ["a", "b", "c"][index]!]),
+    ),
+  );
+
+  const missing = planNarration(sentences, setup, "eleven_v3");
+  assert.deepEqual(missing.problems, []);
+  assert.equal(missing.all.length, ids.length);
+  assert.deepEqual(
+    missing.jobs.map((job) => job.sentenceId),
+    ids.slice(3),
+  );
+
+  const forced = planNarration(sentences, setup, "eleven_v3", { force: true });
+  assert.equal(forced.jobs.length, ids.length);
+
+  const one = planNarration(sentences, setup, "eleven_v3", { force: true, role: cast[0] });
+  assert.ok(one.jobs.length > 0 && one.jobs.every((job) => job.role === cast[0]));
+
+  const skipped = planNarration(sentences, setup, "eleven_v3", {
+    force: true,
+    skip: new Set(ids.slice(0, 10)),
+  });
+  assert.deepEqual(
+    skipped.jobs.map((job) => job.sentenceId),
+    ids.slice(10),
+  );
+
+  // A passage whose setup is wrong still plans, but says so: nothing narrates until it is fixed.
+  const broken = planNarration(sentences, setupOf({}, { narrator: null }), "eleven_v3");
+  assert.ok(broken.problems.length > 0);
+
+  assert.deepEqual(rolesOf(sentences)[0], NARRATOR_ROLE);
+  const cost = narrationCost(missing.jobs);
+  assert.equal(cost.lines, missing.jobs.length);
+  assert.equal(
+    cost.characters,
+    missing.jobs.reduce((sum, job) => sum + job.text.length, 0),
+  );
+});
+
+test("the narrator is a reserved name: no character can be called that", () => {
+  const seed = cloneSeed();
+  const [name, alias] = Object.entries(seed.cast)[0]!;
+  seed.cast = { ...seed.cast, Narrator: alias };
+  delete seed.cast[name];
+  for (const section of seed.sections) {
+    for (const line of section.lines) if (line.who === name) line.who = "Narrator";
+  }
+  assert.ok(
+    validatePassageSeed(seed).some((problem) => /can't be called "narrator"/.test(problem)),
+  );
+});
+
+test("a Premium passage opens for a subscriber or an admin, a free one for everybody", () => {
+  assert.equal(canOpenPassage({ isFree: true }, false), true);
+  assert.equal(canOpenPassage({ isFree: false }, false), false);
+  assert.equal(canOpenPassage({ isFree: false }, true), true);
+  const mixed = [
+    { id: "a", isFree: true },
+    { id: "b", isFree: false },
+    { id: "c", isFree: true },
+  ];
+  assert.deepEqual(
+    openablePassages(mixed, false).map((passage) => passage.id),
+    ["a", "c"],
+  );
+  assert.equal(openablePassages(mixed, true).length, 3);
+});
+
+test("a word lesson is open in Word Lists only while the section is On and its passage is published", () => {
+  assert.equal(wordGroupStatusFor("on", "published"), "published");
+  assert.equal(wordGroupStatusFor("on", "draft"), "draft");
+  assert.equal(wordGroupStatusFor("admin", "published"), "draft");
+  assert.equal(wordGroupStatusFor("off", "published"), "draft");
+});
+
+test("import: an authored passage written out as JSON is accepted, as it is", () => {
+  for (const seed of PASSAGE_SEEDS) {
+    const parsed = parsePassageJson(JSON.stringify(seed));
+    assert.deepEqual(parsed.problems, [], seed.slug);
+    assert.deepEqual(parsed.seed, seed);
+  }
+});
+
+test("import: bad JSON, a wrong shape and a broken rule are each said in plain words", () => {
+  assert.match(parsePassageJson("{ nope").problems[0]!, /not valid JSON/);
+  assert.match(parsePassageJson("[]").problems[0]!, /must be one passage/);
+  assert.match(parsePassageJson("3").problems[0]!, /must be one passage/);
+
+  const wrongShape = JSON.parse(JSON.stringify(cloneSeed())) as Record<string, unknown>;
+  wrongShape.order = "first";
+  wrongShape.cast = "Anna";
+  wrongShape.sections = {};
+  const shape = parsePassageJson(JSON.stringify(wrongShape));
+  assert.equal(shape.seed, null);
+  assert.ok(shape.problems.some((problem) => /order must be a whole number/.test(problem)));
+  assert.ok(shape.problems.some((problem) => /cast must be an object/.test(problem)));
+  assert.ok(shape.problems.some((problem) => /sections must be a list/.test(problem)));
+
+  const badPause = structuredClone(cloneSeed());
+  (badPause.sections[0]!.lines[0] as { pause?: unknown }).pause = 7;
+  assert.ok(
+    parsePassageJson(JSON.stringify(badPause)).problems.some((problem) =>
+      /pause must be/.test(problem),
+    ),
+  );
+
+  const brokenRule = cloneSeed();
+  brokenRule.sections[0]!.question.answer = 9;
+  const rule = parsePassageJson(JSON.stringify(brokenRule));
+  assert.equal(rule.seed, null);
+  assert.ok(rule.problems.some((problem) => /answer 9 is not one of/.test(problem)));
+
+  // However much is wrong, a dozen problems are enough to start fixing.
+  const hopeless = parsePassageJson(
+    JSON.stringify({ sections: Array.from({ length: 40 }, () => 1) }),
+  );
+  assert.ok(hopeless.problems.length <= 12);
 });

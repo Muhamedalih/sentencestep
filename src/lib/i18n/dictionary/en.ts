@@ -1200,5 +1200,7 @@ export const en: Dictionary = {
     homeContinue: "Continue your passage",
     homeNext: "Your next passage",
     homeStart: "Read",
+    lockedBadge: "Premium passage",
+    gateHeading: "Your next passage is waiting",
   },
 };

@@ -1204,5 +1204,7 @@ export const tr: Dictionary = {
     homeContinue: "Metnine devam et",
     homeNext: "Sıradaki metnin",
     homeStart: "Oku",
+    lockedBadge: "Premium metin",
+    gateHeading: "Sıradaki metnin seni bekliyor",
   },
 };

@@ -96,6 +96,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
               {fullAdmin && (
                 <>
                   <Link
+                    href="/admin/passages"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Passages
+                  </Link>
+                  <Link
                     href="/admin/lesson-completion"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
