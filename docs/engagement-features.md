@@ -1,23 +1,24 @@
 # Engagement features
 
-Nine optional learning features, all controlled from **Admin → Features**
+Ten optional learning features, all controlled from **Admin → Features**
 (`/admin/features`, full admins only). The code default is **Off** for every
 feature (no settings row, or an unreadable one, means nothing shows). The seed
 migrations below move the settings row to **Admin preview** (the first seven in
-`20250321…`, Smart word practice in `20250325…`, the Word quiz in `20250331…`), so on
+`20250321…`, Smart word practice in `20250325…`, the Word quiz in `20250331…`, Passages in `20250336…`), so on
 the live site only admins see anything until a feature is set to **On**.
 
-| Feature                  | Where it appears                                                    | Sections (admin matrix)       | Guests         |
-| ------------------------ | ------------------------------------------------------------------- | ----------------------------- | -------------- |
-| Dictation                | "Dictation" toggle under the lesson title                           | Normal, Stories, Conversation | works          |
-| From memory              | Button on the lesson-completion screen                              | Normal, Stories, Conversation | works          |
-| Personal word cards      | Star on the current-word label, `/learn/cards`, Anki export         | save star: Normal, Stories    | sign-in prompt |
-| Daily session            | Card at the top of Home, `/learn/session`                           | global                        | sign-in prompt |
-| Daily quests             | Card on Home, quest lines on the completion screen                  | global                        | sign-in prompt |
-| Badges                   | Completion-screen celebration, `/learn/achievements`, header trophy | global                        | sign-in prompt |
-| Streak calendar & freeze | 7-day strip on Home (tap for the month)                             | global                        | sign-in prompt |
-| Smart word practice      | Word Lists: practice, library cards, "Review All Words"             | global                        | upgrades work  |
-| Word quiz                | Stories: a pick-the-meaning question after a target-word sentence   | global (Stories only)         | works          |
+| Feature                  | Where it appears                                                    | Sections (admin matrix)       | Guests                                                 |
+| ------------------------ | ------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------ |
+| Dictation                | "Dictation" toggle under the lesson title                           | Normal, Stories, Conversation | works                                                  |
+| From memory              | Button on the lesson-completion screen                              | Normal, Stories, Conversation | works                                                  |
+| Personal word cards      | Star on the current-word label, `/learn/cards`, Anki export         | save star: Normal, Stories    | sign-in prompt                                         |
+| Daily session            | Card at the top of Home, `/learn/session`                           | global                        | sign-in prompt                                         |
+| Daily quests             | Card on Home, quest lines on the completion screen                  | global                        | sign-in prompt                                         |
+| Badges                   | Completion-screen celebration, `/learn/achievements`, header trophy | global                        | sign-in prompt                                         |
+| Streak calendar & freeze | 7-day strip on Home (tap for the month)                             | global                        | sign-in prompt                                         |
+| Smart word practice      | Word Lists: practice, library cards, "Review All Words"             | global                        | upgrades work                                          |
+| Word quiz                | Stories: a pick-the-meaning question after a target-word sentence   | global (Stories only)         | works                                                  |
+| Passages                 | Sidebar item, `/learn/passages` (list) and `/learn/passages/<slug>` | global                        | read and listen work, saving progress needs an account |
 
 ## Admin controls
 
@@ -59,6 +60,10 @@ These are new and **not applied automatically**:
 11. `20250331000000_feature_settings_word_quiz.sql` (puts the Word quiz in
     Admin preview, same rules as 10; skipping it is safe, the feature just stays
     Off until Admin → Features → Word quiz is set to Admin preview)
+12. `20250335000000_passages.sql` (Passages: the four tables, their RLS and
+    the `record_passage_progress` function)
+13. `20250336000000_feature_settings_passages.sql` (puts Passages in Admin
+    preview, same rules as 10)
 
 Until a migration is applied, the feature that needs it degrades quietly (its
 card doesn't render, its event is skipped) — lesson completion is never
@@ -388,6 +393,36 @@ letters` (`dictationStars`). Wrong letters alone never take the last star;
   nothing to the browser. Arabic only for now: story target words have no
   Spanish or Turkish gloss yet, so those learners get no quiz.
   **Rolling it out is one click: Admin → Features → Word quiz (Stories) → On.**
+
+## Passages
+
+Short real-life scenes (funny, serious, inspiring) a learner listens to and reads
+part by part: each part is a handful of lines (a narrator, or a named character
+with their own voice) followed by one quick question whose answer is always in
+the text; at the end the passage's own words are handed over as a word lesson.
+Nothing is typed — Stories and Daily Lessons are about producing the sentence,
+Passages are about understanding it. Arabic support language only for now.
+
+- **Content** lives in `src/data/passages` (reviewable in a diff, validated by
+  `npm run test:passages` — every answer index, evidence line, translation and
+  word is checked). `scripts/insert-passages.ts` writes it to the database
+  (re-runnable; it never changes a passage's status, an admin's edits to the word
+  lesson, or a line's clip while its English is unchanged).
+- **Audio** is one clip per line (`passage_sentences.audio_url`), made by
+  `scripts/generate-passage-audio.ts` with ElevenLabs and the voices named in the
+  passage's `cast`; it reads the admin voice settings but never writes them, and
+  never touches Stories/Books audio. A part is only offered for listening when
+  every one of its lines has a clip. `scripts/generate-passage-word-audio.ts`
+  makes the pronunciation clips of the word lessons with the Word Lists pipeline.
+- **Who sees what.** The content tables are closed to learners by RLS; the pages
+  read them with the service role _after_ the "passages" switch. Off: nobody;
+  Admin preview: admins (a bar at the top of the list says so); On: everyone.
+- **Publishing is one click**: the **Publish to everyone** button on the Passages
+  page (admins only, asks twice), or Admin → Features → Passages → On. Either way
+  each passage's word lesson — a draft Word Lists group until then, previewable
+  from the end of the passage via the admin preview — is published with it, and
+  hidden again when the switch goes back to Admin preview or Off
+  (`syncPassageWordGroups`, which follows the _saved_ switch).
 
 ## Local development
 

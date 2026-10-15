@@ -35,6 +35,7 @@ export const FEATURE_IDS = [
   "smartWords",
   "wordsRedesign",
   "wordQuiz",
+  "passages",
 ] as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[number];
@@ -62,6 +63,7 @@ export const FEATURE_SECTIONS: Record<FeatureId, readonly LearningSection[]> = {
   smartWords: [],
   wordsRedesign: [],
   wordQuiz: [],
+  passages: [],
 };
 
 /** Features that need an account to store anything — guests see a sign-in teaser instead of the feature itself. Dictation and from-memory work for everyone. */
@@ -332,6 +334,16 @@ export interface EffectiveFeatures {
    * guests as well.
    */
   wordQuiz: { enabled: boolean };
+  /**
+   * Passages: short real-life scenes the learner listens to and reads part by
+   * part, with a quick comprehension check after each part and a word lesson
+   * at the end (see src/lib/passages). Reading and listening work for guests
+   * too (only saving progress needs an account), so it is one flag, not an
+   * account feature. Admin preview shows the whole section — sidebar entry,
+   * list and reader — to admins only; On publishes it to everyone (the
+   * "Publish" button on the Passages page and /admin/features both end here).
+   */
+  passages: { enabled: boolean };
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -411,6 +423,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
     smartWords: { enabled: open("smartWords"), spaced: openForAccount("smartWords") },
     wordsRedesign: { enabled: open("wordsRedesign") },
     wordQuiz: { enabled: open("wordQuiz") },
+    passages: { enabled: open("passages") },
     guestTeaser,
   };
 }

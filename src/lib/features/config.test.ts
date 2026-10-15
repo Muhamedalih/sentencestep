@@ -398,3 +398,48 @@ test("the wordQuiz seed migration puts only that feature in admin preview and ne
   assert.match(sql, /not \(coalesce\(config -> 'features', '\{\}'::jsonb\) \? 'wordQuiz'\)/);
   assert.match(sql, /jsonb_set\(/);
 });
+
+test("passages: off for everyone by default, admin preview shows it to admins only, On to everyone", () => {
+  const config = defaultFeatureConfig();
+  assert.equal(config.features.passages.state, "off");
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).passages, { enabled: false });
+  }
+
+  config.features.passages.state = "admin";
+  for (const viewer of [guest, learner, premium]) {
+    assert.deepEqual(resolveFeatures(config, viewer).passages, { enabled: false });
+  }
+  assert.deepEqual(resolveFeatures(config, admin).passages, { enabled: true });
+
+  // Publishing is that one switch: guests and learners get it too, nothing else changes.
+  config.features.passages.state = "on";
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).passages, { enabled: true });
+  }
+  // Reading works for guests (only saving progress needs an account), so it is never a "sign in to unlock" teaser.
+  assert.equal(resolveFeatures(config, guest).guestTeaser, false);
+});
+
+test("passages: premium-only holds it back from free learners and still lets admins through", () => {
+  const config = defaultFeatureConfig();
+  config.features.passages.state = "on";
+  config.features.passages.premiumOnly = true;
+  assert.equal(resolveFeatures(config, learner).passages.enabled, false);
+  assert.equal(resolveFeatures(config, premium).passages.enabled, true);
+  assert.equal(resolveFeatures(config, admin).passages.enabled, true);
+});
+
+test("passages: independent of every other feature, and a document saved before it existed keeps it off", () => {
+  const config = defaultFeatureConfig();
+  config.features.passages.state = "on";
+  const effective = resolveFeatures(config, learner);
+  assert.equal(effective.passages.enabled, true);
+  assert.equal(effective.wordQuiz.enabled, false);
+  assert.equal(effective.smartWords.enabled, false);
+  assert.equal(effective.wordsRedesign.enabled, false);
+
+  const legacy = sanitizeFeatureConfig({ features: { wordQuiz: { state: "on" } } });
+  assert.equal(legacy.features.passages.state, "off");
+  assert.equal(resolveFeatures(legacy, admin).passages.enabled, false);
+});

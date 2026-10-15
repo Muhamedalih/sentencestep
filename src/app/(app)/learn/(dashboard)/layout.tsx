@@ -5,6 +5,7 @@ import { DashboardChrome } from "@/components/app/dashboard-chrome";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { isAdmin } from "@/lib/admin/access";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -47,17 +48,21 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
   // progress need only user.id), so they used to wait on isAdmin's role lookup
   // for no reason, adding a full round trip to every dashboard page.
   const user = await getCurrentUser();
-  const [isAdminUser, savedCount, initialProgress] = await Promise.all([
+  const [isAdminUser, savedCount, initialProgress, features] = await Promise.all([
     isAdmin(),
     user ? fetchMySavedSentencesCount(user.id) : 0,
     user ? fetchProgressCached(todayLocalISODate()) : undefined,
+    // Already resolved for this request by LearnLayout (cache()'d), so it costs nothing here.
+    getEffectiveFeatures(),
   ]);
 
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
         header={<AppHeader user={user} savedCount={savedCount} initialProgress={initialProgress} />}
-        sidebar={<LearnSidebar isAdminUser={isAdminUser} />}
+        sidebar={
+          <LearnSidebar isAdminUser={isAdminUser} passagesEnabled={features.passages.enabled} />
+        }
       >
         {children}
       </DashboardChrome>

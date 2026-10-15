@@ -51,6 +51,8 @@ export interface Dictionary {
     exitToHome: string;
     home: string;
     wordLists: string;
+    /** The Passages nav item (short real-life scenes read part by part). */
+    passages: string;
     /** The Library nav item (books/summaries section) — distinct from `library` below, which is the Stories/Word Lists listing pages' own heading namespace. */
     library: string;
     /** The personal "My Saves" area (Lightweight Save + Notes system) — every sentence the learner has saved and/or annotated, across all books. Not a primary LearnSidebar item (that list is curriculum sections only) — linked from AppHeader instead, next to Settings. */
@@ -1386,5 +1388,54 @@ export interface Dictionary {
     completeSubtitle: string;
     xpEarned: string;
     alreadyRewarded: string;
+  };
+  /** Passages: short real-life scenes read part by part — the list page and the reader (src/components/passages). */
+  passages: {
+    title: string;
+    subtitle: string;
+    levels: { a1: string; a2: string; b1: string; b2: string };
+    tones: { funny: string; serious: string; inspiring: string };
+    /** "{n} parts" */
+    partsCount: string;
+    /** "{n} min" */
+    minutesShort: string;
+    start: string;
+    continue: string;
+    upNext: string;
+    done: string;
+    emptyHeading: string;
+    emptyBody: string;
+    backToAll: string;
+    /** "Part {n} of {total}" */
+    partOf: string;
+    listen: string;
+    pause: string;
+    replayLine: string;
+    translation: string;
+    quickCheck: string;
+    correct: string;
+    notQuite: string;
+    nextPart: string;
+    finish: string;
+    audioMissing: string;
+    tipsHeading: string;
+    tipListenTitle: string;
+    tipListenBody: string;
+    tipTapTitle: string;
+    tipTapBody: string;
+    tipLookBackTitle: string;
+    tipLookBackBody: string;
+    tipsStart: string;
+    completeHeading: string;
+    /** "{correct} of {total} right on the first try" */
+    score: string;
+    wordsHeading: string;
+    wordsBody: string;
+    practiceWords: string;
+    nextPassage: string;
+    readAgain: string;
+    signInToSave: string;
+    listenToWord: string;
+    savingFailed: string;
   };
 }

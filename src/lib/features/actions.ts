@@ -7,6 +7,8 @@ import { logAdminAction } from "@/lib/admin/audit-log";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import { sanitizeFeatureConfig } from "@/lib/features/config";
 import type { FeatureConfig } from "@/lib/features/config";
+import { syncPassageWordGroups } from "@/lib/passages/publish";
+import { PASSAGES_CACHE_TAG } from "@/lib/passages/types";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -22,12 +24,33 @@ export async function saveFeatureConfig(input: FeatureConfig): Promise<ActionRes
 
   const config = sanitizeFeatureConfig(input);
   const supabase = await createClient();
-  const { error } = await supabase
+
+  // Where the Passages switch stood before this save — the word lessons made
+  // from the passages only change when it does (see syncPassageWordGroups), so a
+  // save that touches some other feature never republishes a lesson an admin
+  // hid by hand.
+  const { data: previousRow } = await supabase
+    .from("feature_settings")
+    .select("config")
+    .eq("id", 1)
+    .maybeSingle();
+  const previousPassagesState = sanitizeFeatureConfig(previousRow?.config).features.passages.state;
+
+  // `.select("id")` so a write that matched no row (RLS refusing a session that is not
+  // really an admin updates nothing and raises no error) is reported, not mistaken for a save.
+  const { data: updated, error } = await supabase
     .from("feature_settings")
     .update({ config, updated_at: new Date().toISOString() })
-    .eq("id", 1);
+    .eq("id", 1)
+    .select("id");
 
-  if (error) return { error: "Couldn't save the feature settings. Please try again." };
+  if (error || !updated || updated.length === 0) {
+    return { error: "Couldn't save the feature settings. Please try again." };
+  }
+
+  // The settings are saved; a failure keeping the word lessons in step is reported, not fatal.
+  const passagesWarning =
+    config.features.passages.state !== previousPassagesState ? await syncPassageWordGroups() : null;
 
   void logAdminAction("feature_settings.updated", "feature_settings", null, {
     states: Object.fromEntries(
@@ -36,9 +59,15 @@ export async function saveFeatureConfig(input: FeatureConfig): Promise<ActionRes
   });
   // The share-cached settings read (see readFeatureConfigRow) must not serve the old document.
   revalidateTag("feature-settings");
+  // Passages' share-cached reads carry the word lesson's status — refresh them with the switch.
+  revalidateTag(PASSAGES_CACHE_TAG);
   // "layout" so every /learn/* route's cached client payload picks up the new
   // availability immediately, same reasoning as setFreeForAll.
   revalidatePath("/learn", "layout");
   revalidatePath("/admin/features");
-  return { success: "Feature settings saved." };
+  return {
+    success: passagesWarning
+      ? `Feature settings saved. ${passagesWarning}`
+      : "Feature settings saved.",
+  };
 }

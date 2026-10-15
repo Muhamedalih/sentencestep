@@ -1547,6 +1547,119 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["admin_audit_log"]["Insert"]>;
         Relationships: [];
       };
+      /** Passages (20250335000000_passages.sql): short real-life scenes read part by part. Readable only by admins through RLS; learners get them through server code behind the "passages" feature switch. */
+      passages: {
+        Row: {
+          id: string;
+          order_index: number;
+          level: "A1" | "A2" | "B1" | "B2";
+          tone: "funny" | "serious" | "inspiring";
+          icon: string;
+          title: string;
+          title_ar: string;
+          summary: string;
+          summary_ar: string;
+          status: "draft" | "published";
+          is_free: boolean;
+          word_group_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          order_index: number;
+          level?: "A1" | "A2" | "B1" | "B2";
+          tone: "funny" | "serious" | "inspiring";
+          icon?: string;
+          title: string;
+          title_ar: string;
+          summary: string;
+          summary_ar: string;
+          status?: "draft" | "published";
+          is_free?: boolean;
+          word_group_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["passages"]["Insert"]>;
+        Relationships: [];
+      };
+      passage_sections: {
+        Row: {
+          id: string;
+          passage_id: string;
+          order_index: number;
+          title: string;
+          title_ar: string;
+          /** [{ id, prompt, prompt_ar, options: [{ en, ar }], answer, evidence }] — see PassageQuestion in src/lib/passages/types.ts. */
+          questions: unknown;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          passage_id: string;
+          order_index: number;
+          title: string;
+          title_ar: string;
+          questions?: unknown;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["passage_sections"]["Insert"]>;
+        Relationships: [];
+      };
+      passage_sentences: {
+        Row: {
+          id: string;
+          section_id: string;
+          order_index: number;
+          /** The character speaking this line; null for the narrator. */
+          speaker: string | null;
+          en: string;
+          ar: string;
+          audio_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          section_id: string;
+          order_index: number;
+          speaker?: string | null;
+          en: string;
+          ar: string;
+          audio_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["passage_sentences"]["Insert"]>;
+        Relationships: [];
+      };
+      passage_progress: {
+        Row: {
+          user_id: string;
+          passage_id: string;
+          sections_done: number;
+          correct_answers: number;
+          total_questions: number;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          passage_id: string;
+          sections_done?: number;
+          correct_answers?: number;
+          total_questions?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["passage_progress"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1583,6 +1696,16 @@ export interface Database {
       };
       record_card_review: {
         Args: { p_word: string; p_had_errors: boolean };
+        Returns: undefined;
+      };
+      record_passage_progress: {
+        Args: {
+          p_passage_id: string;
+          p_sections_done: number;
+          p_correct: number;
+          p_total: number;
+          p_completed: boolean;
+        };
         Returns: undefined;
       };
       complete_daily_session: {

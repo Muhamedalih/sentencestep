@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, ListChecks, NotebookText } from "lucide-react";
+import { Headphones, Home, Library, ListChecks, NotebookText } from "lucide-react";
 
 import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -56,7 +56,14 @@ import { cn } from "@/lib/utils";
  * that one is visible on every viewport, not just md:+, so keeping a second
  * copy here would just be the same numbers shown twice.
  */
-export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean }) {
+export function LearnSidebar({
+  isAdminUser = false,
+  passagesEnabled = false,
+}: {
+  isAdminUser?: boolean;
+  /** The "passages" feature switch, resolved for this visitor — the nav item exists only while it is open to them (Admin preview: admins only). */
+  passagesEnabled?: boolean;
+}) {
   const pathname = usePathname();
   const { t, dir } = useLocale();
   // Home is an exact match (not a prefix) — "/learn" is a short enough
@@ -76,11 +83,13 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
           ? "conversation"
           : pathname.startsWith("/learn/stories")
             ? "stories"
-            : pathname.startsWith("/learn/word-lists")
-              ? "word-lists"
-              : pathname.startsWith("/learn/library")
-                ? "library"
-                : null;
+            : pathname.startsWith("/learn/passages")
+              ? "passages"
+              : pathname.startsWith("/learn/word-lists")
+                ? "word-lists"
+                : pathname.startsWith("/learn/library")
+                  ? "library"
+                  : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
   // opens on /learn/normal (Daily Lessons) by default — see the
@@ -89,12 +98,19 @@ export function LearnSidebar({ isAdminUser = false }: { isAdminUser?: boolean })
   // Library is admin-only for now (see (dashboard)/library/page.tsx and its
   // sibling pages, which enforce this same gate server-side) — a regular
   // learner never sees the nav item to it.
+  // Passages sits right after Stories (the two reading-flavoured sections) and, like
+  // Library, only exists while the section is open to this visitor — see
+  // passagesEnabled (the "passages" feature switch: Admin preview = admins only).
   const NAV_ITEMS = [
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
     { key: "stories", href: "/learn/normal", label: t.nav.stories, icon: NotebookText },
+    { key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
-  ].filter((item) => item.key !== "library" || isAdminUser);
+  ].filter(
+    (item) =>
+      (item.key !== "library" || isAdminUser) && (item.key !== "passages" || passagesEnabled),
+  );
 
   // Every route this sidebar links to, present on every /learn/* page —
   // warmed in the background instead of through each Link's own default

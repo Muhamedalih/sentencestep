@@ -71,6 +71,11 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
     description:
       "A quick “pick the meaning” question right after a Stories sentence that holds one of the story's target words (at most three per story): the word with a listen button, four Arabic meanings, keys 1–4 to answer. The pick turns green or red, the wrong options dissolve so only the right one is left, and the story carries on by itself. It uses only each story's own target words (the wrong options are other stories' target words), so there is nothing new to author. Arabic support language only for now; works for guests too. Admin preview shows it to admins only on the live site; turn it On to publish it to everyone.",
   },
+  passages: {
+    title: "Passages",
+    description:
+      "A new section in the sidebar: short real-life scenes (funny, serious, inspiring) the learner listens to and reads part by part, with a narrator that lights up each line, a tap-to-replay on every line, an Arabic translation switch, a quick question after each part, and at the end a word lesson made from the passage's own words. Arabic support language only for now; reading and listening work for guests, saving progress needs an account. Admin preview shows the whole section to admins only on the live site; turn it On to publish it to everyone — that also publishes each passage's word lesson in Word Lists (back to Admin preview or Off hides them again). The Publish button on the Passages page does the same thing.",
+  },
 };
 
 const STATE_OPTIONS: { value: FeatureState; label: string; hint: string }[] = [
