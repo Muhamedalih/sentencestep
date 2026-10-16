@@ -9,6 +9,7 @@ import {
 } from "@/lib/email/notification-events";
 import { sendTemplateEmail } from "@/lib/email/send";
 import { learningReminderEmail } from "@/lib/email/templates/reminder";
+import { getRequestOrigin } from "@/lib/request-origin";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
@@ -77,10 +78,10 @@ async function handleInactiveLearnersCron(request: Request): Promise<NextRespons
   // set by the browser itself and can't be spoofed from page content), this
   // is a machine-to-machine call — any client that knows CRON_SECRET could
   // set an arbitrary Origin header. The request URL's own origin is
-  // trustworthy (it's how the request reached this server), a client-sent
-  // header is not, so only the former is used to build links in the emails
-  // this sends to real users.
-  const origin = new URL(request.url).origin;
+  // trustworthy (the public address it was sent to, which Caddy sets itself), a
+  // client-sent Origin header is not, so only the former is used to build links
+  // in the emails this sends to real users.
+  const origin = getRequestOrigin(request);
 
   let inactiveLearners;
   try {

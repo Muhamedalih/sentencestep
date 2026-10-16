@@ -5,6 +5,7 @@ import { queueWelcomeEmail } from "@/lib/email/welcome-trigger";
 import { track } from "@/lib/analytics/track";
 import { CONFIRMATION_FAILED_ERROR, OAUTH_FAILED_ERROR } from "@/lib/supabase/auth-errors";
 import { safeNextPath } from "@/lib/supabase/safe-redirect";
+import { getRequestOrigin } from "@/lib/request-origin";
 
 /**
  * Where Supabase sends the learner back after either (a) they click the
@@ -22,7 +23,8 @@ import { safeNextPath } from "@/lib/supabase/safe-redirect";
  * and mis-tracking every later Google login as a signup.
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = getRequestOrigin(request);
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
 

@@ -11,6 +11,7 @@ import { getEmailProvider } from "@/lib/email/provider-registry";
 import { sendTemplateEmail } from "@/lib/email/send";
 import { premiumExpiryEmail } from "@/lib/email/templates/premium-expiry";
 import { formatLongDate } from "@/lib/i18n/format-date";
+import { getRequestOrigin } from "@/lib/request-origin";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
@@ -50,9 +51,10 @@ async function handlePremiumExpiryCron(request: Request): Promise<NextResponse> 
 
   const supabase = createServiceRoleClient();
   const now = new Date();
-  // The request URL's own origin is how this call reached the server; a
-  // client-sent header is not trustworthy for links put into real users' mail.
-  const origin = new URL(request.url).origin;
+  // The public address this call was sent to (not the server's own 0.0.0.0:3000
+  // bind address); a client-sent Origin header is not trustworthy for links put
+  // into real users' mail.
+  const origin = getRequestOrigin(request);
   const windowEnd = new Date(now.getTime() + REMINDER_WINDOW_DAYS * 86_400_000);
 
   const { data: rows, error } = await supabase
