@@ -233,7 +233,7 @@ export default async function LearnHomePage() {
       ? access.expiresAt
       : null;
 
-  // With the plan (admin preview) the review card sits under it; otherwise it stays above "Up next".
+  // The review card always sits directly under "Up next" (or under the plan, in the admin preview).
   const reviewBlock = (
     <div className="max-sm:order-4">
       <NeedsReviewWords
@@ -267,9 +267,8 @@ export default async function LearnHomePage() {
         {/* A direct child of the page (not nested in the wrappers around it) so that on a phone
             (max-sm) today's streak + quests sit right under the greeting/stats header and above
             "up next". From sm: up it stays exactly where it was in the DOM flow, between the
-            banners and the review card. */}
+            banners and "up next". */}
         <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
-        {!showHomePlan && reviewBlock}
         <div className="max-sm:order-3">
           {showHomePlan ? (
             <HomePlan
@@ -300,7 +299,7 @@ export default async function LearnHomePage() {
             </>
           )}
         </div>
-        {showHomePlan && reviewBlock}
+        {reviewBlock}
       </div>
     </ProgressProvider>
   );
