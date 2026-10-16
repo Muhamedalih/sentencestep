@@ -24,6 +24,12 @@ import {
   scheduleCorrectChime,
 } from "@/lib/passages/chime";
 import type { ChimeContext } from "@/lib/passages/chime";
+import {
+  movedBy,
+  planRenumbering,
+  positionForNewPassage,
+  reorderProblem,
+} from "@/lib/passages/order";
 import { parseQuestions } from "@/lib/passages/parse";
 import {
   NO_EVIDENCE_LINE,
@@ -1146,9 +1152,9 @@ test("seed rows: a passage's rows carry everything the data says, and nothing th
     assert.equal(new Set(voiceRows.map((row) => row.voice_id)).size, voiceRows.length);
     for (const row of voiceRows) assert.equal(row.passage_id, passageIdFor(seed.slug));
 
-    // The data never decides status or access: those are the admin's.
+    // The data never decides status, access or the order: those are the admin's.
     const fields = passageFieldsFor(seed);
-    assert.ok(!("status" in fields) && !("is_free" in fields));
+    assert.ok(!("status" in fields) && !("is_free" in fields) && !("order_index" in fields));
     assert.equal(fields.word_group_id, wordGroupIdFor(seed.slug));
 
     const words = wordRowsFor(seed);
@@ -1747,4 +1753,87 @@ test("the same story told again is found, a different one is not", () => {
     ),
     [],
   );
+});
+
+// --- The order an admin arranges --------------------------------------------------
+
+test("a requested order must be exactly the passages the level holds", () => {
+  const level = ["a", "b", "c"];
+  assert.equal(reorderProblem(level, ["c", "a", "b"]), null);
+  assert.equal(reorderProblem(level, ["a", "b", "c"]), null);
+  assert.ok(reorderProblem(level, ["a", "b"]), "a passage left out");
+  assert.ok(reorderProblem(level, ["a", "b", "c", "d"]), "a passage that is not there");
+  assert.ok(reorderProblem(level, ["a", "a", "b"]), "a passage listed twice");
+  assert.ok(reorderProblem(level, ["a", "b", "x"]), "a passage of another level");
+  assert.ok(reorderProblem(level, "abc"), "not a list");
+  assert.ok(reorderProblem(level, ["a", 2, "c"]), "not all ids");
+});
+
+test("a new order renumbers 1..n and touches only the passages whose place changes", () => {
+  const level = [
+    { id: "a", order: 1 },
+    { id: "b", order: 2 },
+    { id: "c", order: 3 },
+    { id: "d", order: 4 },
+  ];
+  assert.deepEqual(planRenumbering(level, ["a", "b", "c", "d"]), []);
+  // The last one to the front: everyone else moves one place down.
+  assert.deepEqual(planRenumbering(level, ["d", "a", "b", "c"]), [
+    { id: "d", from: 4, to: 1 },
+    { id: "a", from: 1, to: 2 },
+    { id: "b", from: 2, to: 3 },
+    { id: "c", from: 3, to: 4 },
+  ]);
+  // Two swapped: only those two change.
+  assert.deepEqual(planRenumbering(level, ["a", "c", "b", "d"]), [
+    { id: "c", from: 3, to: 2 },
+    { id: "b", from: 2, to: 3 },
+  ]);
+  // Numbers with a gap (a deleted passage) are closed up.
+  assert.deepEqual(
+    planRenumbering(
+      [
+        { id: "a", order: 1 },
+        { id: "b", order: 4 },
+      ],
+      ["a", "b"],
+    ),
+    [{ id: "b", from: 4, to: 2 }],
+  );
+});
+
+test("a passage that moves can always land on a place nobody else holds", () => {
+  // The database's (level, order_index) is unique: the places a moving passage lands on must be free
+  // once every moving passage is parked, so the two-step write can never collide.
+  const level = [1, 2, 3, 4, 5, 6].map((order) => ({ id: `p${order}`, order }));
+  const requested = ["p6", "p2", "p1", "p5", "p3", "p4"];
+  const moves = planRenumbering(level, requested);
+  const movingIds = new Set(moves.map((move) => move.id));
+  const stayingPlaces = new Set(level.filter((p) => !movingIds.has(p.id)).map((p) => p.order));
+  const targets = moves.map((move) => move.to);
+  assert.equal(new Set(targets).size, targets.length, "no two passages land on the same place");
+  for (const target of targets) assert.ok(!stayingPlaces.has(target), `place ${target} is free`);
+  // And together with the passages that stay, the level ends up numbered 1..n.
+  assert.deepEqual(
+    [...stayingPlaces, ...targets].sort((x, y) => x - y),
+    [1, 2, 3, 4, 5, 6],
+  );
+});
+
+test("a new passage takes its own place when free, otherwise goes after the last", () => {
+  assert.equal(positionForNewPassage([1, 2, 3], 4), 4);
+  assert.equal(positionForNewPassage([1, 2, 3], 2), 4);
+  assert.equal(positionForNewPassage([], 1), 1);
+  assert.equal(positionForNewPassage([1, 2, 5], 5), 6);
+  assert.equal(positionForNewPassage([1, 2, 3], 0), 4);
+  assert.equal(positionForNewPassage([1, 2, 3], Number.NaN), 4);
+});
+
+test("moving a passage by one place", () => {
+  const ids = ["a", "b", "c"];
+  assert.deepEqual(movedBy(ids, 1, -1), ["b", "a", "c"]);
+  assert.deepEqual(movedBy(ids, 1, 1), ["a", "c", "b"]);
+  assert.deepEqual(movedBy(ids, 0, -1), ids, "the first cannot go up");
+  assert.deepEqual(movedBy(ids, 2, 1), ids, "the last cannot go down");
+  assert.deepEqual(ids, ["a", "b", "c"], "the original list is left alone");
 });

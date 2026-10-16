@@ -96,10 +96,14 @@ export function wordRowsFor(seed: PassageSeed) {
   }));
 }
 
-/** What a passage's row holds that the data decides. `status` and `is_free` are not here: they are the admin's, set once when the row is created and never overwritten by the data. */
+/**
+ * What a passage's row holds that the data decides. `status`, `is_free` and `order_index` are not
+ * here: they are the admin's (Admin → Passages), set once when the row is created and never
+ * overwritten by the data — a re-run must not undo an order an admin arranged. A new row's place
+ * comes from `positionForNewPassage` (order.ts).
+ */
 export function passageFieldsFor(seed: PassageSeed) {
   return {
-    order_index: seed.order,
     level: seed.level,
     tone: seed.tone,
     icon: seed.icon,

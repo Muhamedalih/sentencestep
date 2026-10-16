@@ -16,6 +16,7 @@ import {
 } from "@/lib/passages/narration";
 import { narrationCost, resolveNarrationVoices, rolesOf } from "@/lib/passages/narration-plan";
 import { passageIdFor, wordGroupIdFor } from "@/lib/passages/ids";
+import { planRenumbering, positionForNewPassage, reorderProblem } from "@/lib/passages/order";
 import { syncPassageWordGroups } from "@/lib/passages/publish";
 import {
   passageFieldsFor,
@@ -25,7 +26,8 @@ import {
   wordGroupRowFor,
   wordRowsFor,
 } from "@/lib/passages/seed-rows";
-import { PASSAGES_CACHE_TAG } from "@/lib/passages/types";
+import { PASSAGES_CACHE_TAG, PASSAGE_LEVELS } from "@/lib/passages/types";
+import type { PassageLevel } from "@/lib/passages/types";
 import { NARRATOR_ROLE } from "@/lib/passages/voice-aliases";
 import {
   voiceClashes,
@@ -117,6 +119,87 @@ export async function setPassageAccess(passageId: string, isFree: boolean): Prom
   void logAdminAction("passage.access_changed", "passage", passageId, { isFree });
   refresh(passageId);
   return { success: isFree ? "Now free for everyone." : "Now Premium." };
+}
+
+/**
+ * Puts the passages of one level in the order an admin arranged: `orderedIds` is every passage of
+ * the level, first to last. They are renumbered 1, 2, 3 … (the learner list, the number on each
+ * card, "Up next" and the next-passage suggestion all follow it); a passage whose place did not
+ * change is not touched.
+ *
+ * (level, order_index) is unique, so two passages cannot swap places in one step: each passage
+ * that moves is first parked above the highest number in use, then set on its own place — the
+ * places it lands on are free by then.
+ */
+export async function setPassageOrder(
+  level: PassageLevel,
+  orderedIds: string[],
+): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+  if (!PASSAGE_LEVELS.includes(level)) return { error: "Unknown level." };
+
+  const supabase = createServiceRoleClient();
+  const { data: rows, error } = await supabase
+    .from("passages")
+    .select("id, order_index")
+    .eq("level", level)
+    .order("order_index");
+  if (error || !rows) return { error: "Couldn't read the current order. Please try again." };
+
+  const problem = reorderProblem(
+    rows.map((row) => row.id),
+    orderedIds,
+  );
+  if (problem) {
+    refresh();
+    return { error: problem };
+  }
+
+  const moves = planRenumbering(
+    rows.map((row) => ({ id: row.id, order: row.order_index })),
+    orderedIds,
+  );
+  if (moves.length === 0) return { success: "Already in this order." };
+
+  const now = new Date().toISOString();
+  const parkAbove = Math.max(...rows.map((row) => row.order_index)) + 1;
+  const parked = await Promise.all(
+    moves.map((move, index) =>
+      supabase
+        .from("passages")
+        .update({ order_index: parkAbove + index, updated_at: now })
+        .eq("id", move.id),
+    ),
+  );
+  if (parked.some((result) => result.error)) {
+    // Put back whatever did get parked (only a row still parked is touched), so nothing is left half-way.
+    await Promise.all(
+      moves.map((move, index) =>
+        supabase
+          .from("passages")
+          .update({ order_index: move.from })
+          .eq("id", move.id)
+          .eq("order_index", parkAbove + index),
+      ),
+    );
+    refresh();
+    return { error: "Couldn't save the new order, so nothing was changed. Please try again." };
+  }
+
+  const settled = await Promise.all(
+    moves.map((move) =>
+      supabase.from("passages").update({ order_index: move.to }).eq("id", move.id),
+    ),
+  );
+  if (settled.some((result) => result.error)) {
+    refresh();
+    return { error: "The new order was only partly saved. Reload the page and arrange it again." };
+  }
+
+  void logAdminAction("passage.reordered", "passage_level", level, { order: orderedIds });
+  refresh();
+  return { success: "Saved — learners see this order." };
 }
 
 /**
@@ -288,14 +371,9 @@ export async function importPassage(raw: string, mode: "check" | "add"): Promise
   const voiceRows = speakerVoiceRowsFor(seed);
 
   // What only the database knows.
-  const [existing, positionTaken, groupTaken, wordsTaken, voicesKnown] = await Promise.all([
+  const [existing, levelPlaces, groupTaken, wordsTaken, voicesKnown] = await Promise.all([
     supabase.from("passages").select("id").eq("id", passageId).maybeSingle(),
-    supabase
-      .from("passages")
-      .select("id")
-      .eq("level", seed.level)
-      .eq("order_index", seed.order)
-      .maybeSingle(),
+    supabase.from("passages").select("order_index").eq("level", seed.level),
     supabase.from("word_groups").select("id").eq("id", groupId).maybeSingle(),
     supabase
       .from("vocabulary_words")
@@ -313,7 +391,7 @@ export async function importPassage(raw: string, mode: "check" | "add"): Promise
   ]);
   if (
     existing.error ||
-    positionTaken.error ||
+    levelPlaces.error ||
     groupTaken.error ||
     wordsTaken.error ||
     voicesKnown.error
@@ -323,11 +401,6 @@ export async function importPassage(raw: string, mode: "check" | "add"): Promise
 
   const problems: string[] = [];
   if (existing.data) problems.push(`A passage with the slug "${seed.slug}" already exists.`);
-  if (positionTaken.data) {
-    problems.push(
-      `Level ${seed.level} already has a passage in position ${seed.order} ("${positionTaken.data.id}") — pick a free position.`,
-    );
-  }
   if (groupTaken.data) problems.push(`The Word Lists group "${groupId}" already exists.`);
   for (const row of wordsTaken.data ?? []) {
     problems.push(
@@ -379,9 +452,17 @@ export async function importPassage(raw: string, mode: "check" | "add"): Promise
         .insert(wordGroupRowFor(seed, (last?.order_index ?? 0) + 1, true)),
     () => supabase.from("vocabulary_words").insert(wordRowsFor(seed)),
     () =>
-      supabase
-        .from("passages")
-        .insert({ id: passageId, status: "draft", is_free: true, ...passageFieldsFor(seed) }),
+      supabase.from("passages").insert({
+        id: passageId,
+        status: "draft",
+        is_free: true,
+        // The place its data asks for when it is free, else last in its level (never on top of an order an admin arranged).
+        order_index: positionForNewPassage(
+          (levelPlaces.data ?? []).map((row) => row.order_index),
+          seed.order,
+        ),
+        ...passageFieldsFor(seed),
+      }),
     () => supabase.from("passage_sections").insert(sectionRowsFor(seed)),
     () => supabase.from("passage_sentences").insert(sentenceRowsFor(seed)),
     () =>

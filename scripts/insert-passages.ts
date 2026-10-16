@@ -31,6 +31,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { PASSAGE_SEEDS } from "../src/data/passages";
 import { passageIdFor, wordGroupIdFor } from "../src/lib/passages/ids";
+import { positionForNewPassage } from "../src/lib/passages/order";
 import {
   passageFieldsFor,
   sectionRowsFor,
@@ -158,6 +159,18 @@ async function main() {
   );
   const existingPassageIds = new Set(existingPassages.map((row) => row.id));
 
+  // The places already taken in each level — a new passage takes the place its data asks for when it
+  // is free, otherwise the next one after the last (an admin may have arranged the order: Admin -> Passages).
+  const placesByLevel = new Map<string, Set<number>>();
+  for (const row of await must(
+    "reading the passages' places",
+    supabase.from("passages").select("level, order_index"),
+  )) {
+    const places = placesByLevel.get(row.level) ?? new Set<number>();
+    places.add(row.order_index);
+    placesByLevel.set(row.level, places);
+  }
+
   const groupIds = seeds.map((seed) => wordGroupIdFor(seed.slug));
   const existingGroups = await must(
     "reading existing word groups",
@@ -266,12 +279,22 @@ async function main() {
       }
     } else {
       newPassages += 1;
+      const places = placesByLevel.get(seed.level) ?? new Set<number>();
+      const newPlace = positionForNewPassage(places, seed.order);
+      places.add(newPlace);
+      placesByLevel.set(seed.level, places);
       if (!dryRun) {
         await must(
           `inserting passage ${passageId}`,
           supabase
             .from("passages")
-            .insert({ id: passageId, status: "published", is_free: true, ...passageFields })
+            .insert({
+              id: passageId,
+              status: "published",
+              is_free: true,
+              order_index: newPlace,
+              ...passageFields,
+            })
             .select("id"),
         );
       }

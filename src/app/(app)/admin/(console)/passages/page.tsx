@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { PassageImport } from "@/components/admin/passage-import";
+import { PassageOrder } from "@/components/admin/passage-order";
 import { PassageVoiceCast } from "@/components/admin/passage-voice-cast";
 import { PassagesTable } from "@/components/admin/passages-table";
 import { getVoiceCast, listAdminPassages } from "@/lib/admin/passages-queries";
@@ -22,8 +23,9 @@ export default async function AdminPassagesPage() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Passages</h1>
         <p className="text-muted-foreground mt-1 max-w-3xl">
-          Publish a passage or hold it back, make it Free or Premium, choose who speaks it and
-          narrate it. The section itself — Off, Admin preview or On — is switched in{" "}
+          Arrange the order learners meet the passages in, publish a passage or hold it back, make
+          it Free or Premium, choose who speaks it and narrate it. The section itself — Off, Admin
+          preview or On — is switched in{" "}
           <Link href="/admin/features" className="text-primary underline">
             Features
           </Link>
@@ -31,6 +33,7 @@ export default async function AdminPassagesPage() {
         </p>
       </div>
 
+      <PassageOrder passages={passages} />
       <PassageVoiceCast cast={voiceCast} />
       <PassagesTable passages={passages} />
       <PassageImport />

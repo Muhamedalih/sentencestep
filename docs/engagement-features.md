@@ -563,6 +563,16 @@ Passages are about understanding it. Arabic support language only for now.
     site default). A change that would give one voice to two roles of a passage is
     refused with nothing changed, naming the passages. Narrated lines keep their old
     voice until narrated again ("Redo all" on the passage).
+  - _Order of the lessons_ (the first card; `passage-order.tsx`, `setPassageOrder`,
+    `src/lib/passages/order.ts`): one tab per level, each passage a row with a drag handle
+    (and ▲ ▼) — dropping it saves at once and renumbers the level 1…n
+    (`passages.order_index`, unique per level, so a moving passage is first parked above
+    the highest number, then set). Learners see the passages of a level in this order: the
+    list, "Up next", the next-passage suggestion and the number on each card all follow it
+    (the colours of a passage without a picture are picked from that number, so they
+    follow it too). The order is the admin's: `insert-passages.ts` and the JSON import
+    never overwrite it — a NEW passage takes the place its data asks for when that place
+    is free in its level, otherwise the next one after the last.
   - _The list_: every passage, drafts included, with its characters, how many lines
     have a clip, and two selects that save on change — **Draft / Published** and
     **Free / Premium** (a Premium passage's own word lesson follows).
@@ -583,7 +593,7 @@ Passages are about understanding it. Arabic support language only for now.
   - _Add a passage_: paste one passage as JSON (the `PassageSeed` shape of
     `src/data/passages/types.ts`, e.g. `JSON.stringify` of a seed). **Check** reports
     every problem in plain words without saving — the shape, every rule of
-    `validate.ts`, a slug or position already taken, a word Word Lists already
+    `validate.ts`, a slug already taken, a word Word Lists already
     teaches, an unregistered voice; **Add as draft** writes it (draft, free, its own
     draft word lesson, a voice per character from its cast, and takes everything back
     if a write fails half way). A passage authored in `src/data/passages` that is
