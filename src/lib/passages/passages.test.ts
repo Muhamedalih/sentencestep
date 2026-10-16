@@ -1013,8 +1013,8 @@ test("the passages cover A1, A2, B1 and B2, numbered 1, 2, 3… inside each leve
   for (const [level, count] of [
     ["A1", 14],
     ["A2", 14],
-    ["B1", 10],
-    ["B2", 9],
+    ["B1", 11],
+    ["B2", 10],
   ] as const) {
     const orders = PASSAGE_SEEDS.filter((seed) => seed.level === level)
       .map((seed) => seed.order)

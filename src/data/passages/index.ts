@@ -13,10 +13,12 @@ import { B1_PASSAGES_PART_2 } from "@/data/passages/b1-part-2";
 import { B1_PASSAGES_PART_3 } from "@/data/passages/b1-part-3";
 import { B1_PASSAGES_PART_4 } from "@/data/passages/b1-part-4";
 import { B1_PASSAGES_PART_5 } from "@/data/passages/b1-part-5";
+import { B1_PASSAGES_PART_6 } from "@/data/passages/b1-part-6";
 import { B2_PASSAGES_PART_1 } from "@/data/passages/b2-part-1";
 import { B2_PASSAGES_PART_2 } from "@/data/passages/b2-part-2";
 import { B2_PASSAGES_PART_3 } from "@/data/passages/b2-part-3";
 import { B2_PASSAGES_PART_4 } from "@/data/passages/b2-part-4";
+import { B2_PASSAGES_PART_5 } from "@/data/passages/b2-part-5";
 import type { PassageSeed } from "@/data/passages/types";
 
 /** Every authored passage, in list order. */
@@ -36,10 +38,12 @@ export const PASSAGE_SEEDS: PassageSeed[] = [
   ...B1_PASSAGES_PART_3,
   ...B1_PASSAGES_PART_4,
   ...B1_PASSAGES_PART_5,
+  ...B1_PASSAGES_PART_6,
   ...B2_PASSAGES_PART_1,
   ...B2_PASSAGES_PART_2,
   ...B2_PASSAGES_PART_3,
   ...B2_PASSAGES_PART_4,
+  ...B2_PASSAGES_PART_5,
 ].sort((a, b) => a.level.localeCompare(b.level) || a.order - b.order);
 
 export type { PassageSeed, PassageVoiceAlias } from "@/data/passages/types";
