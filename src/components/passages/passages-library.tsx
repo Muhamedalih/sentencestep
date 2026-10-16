@@ -1,5 +1,8 @@
 "use client";
 
+import { Headphones } from "lucide-react";
+
+import { LevelBadge } from "@/components/passages/level-badge";
 import { PassageCard } from "@/components/passages/passage-card";
 import { PassagesAdminBar } from "@/components/passages/passages-admin-bar";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -45,7 +48,14 @@ export function PassagesLibrary({
       {adminState && <PassagesAdminBar isPublic={adminState === "on"} />}
 
       <header className="mb-9">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t.passages.title}</h1>
+        <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+          {/* Passages are lessons you listen to: the headphones sway slowly beside the title to say so (see .passage-headphones). */}
+          <Headphones
+            aria-hidden="true"
+            className="passage-headphones text-primary size-7 shrink-0 sm:size-9"
+          />
+          {t.passages.title}
+        </h1>
         <p className="text-muted-foreground mt-2 max-w-2xl leading-relaxed">
           {t.passages.subtitle}
         </p>
@@ -65,9 +75,9 @@ export function PassagesLibrary({
           ).length;
           return (
             <section key={level} className="mb-12 last:mb-0">
-              <div className="border-border mb-6 flex items-baseline justify-between gap-4 border-b pb-3">
-                <h2 className="flex items-baseline gap-2.5 text-lg font-semibold">
-                  <span className="text-primary font-bold">{level}</span>
+              <div className="border-border mb-6 flex items-center justify-between gap-4 border-b pb-3">
+                <h2 className="flex items-center gap-3 text-lg font-semibold">
+                  <LevelBadge level={level} />
                   <bdi>{t.passages.levels[LEVEL_KEYS[level]]}</bdi>
                 </h2>
                 <span className="text-muted-foreground text-sm tabular-nums">

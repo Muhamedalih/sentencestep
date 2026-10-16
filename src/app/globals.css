@@ -578,6 +578,42 @@ html[data-keyboard] .kb-hide {
 }
 
 /*
+ * The headphones beside the Passages title: a slow, damped sway from the headband that settles
+ * and rests (about half of each cycle is stillness), so the page says "these are lessons you
+ * listen to" without ever nagging. Nothing moves for a visitor who asks for reduced motion.
+ */
+@keyframes passage-headphones {
+  0% {
+    transform: rotate(0deg);
+  }
+  12% {
+    transform: rotate(-10deg);
+  }
+  28% {
+    transform: rotate(8deg);
+  }
+  44% {
+    transform: rotate(-5deg);
+  }
+  58% {
+    transform: rotate(2.5deg);
+  }
+  70%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.passage-headphones {
+  transform-origin: 50% 15%;
+  animation: passage-headphones 4.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passage-headphones {
+    animation: none;
+  }
+}
+
+/*
  * Passages buttons (PassageButton): a press that is felt. The button lifts a pixel under the
  * pointer, sinks quickly when pressed, and on release springs back PAST its size and settles
  * (the cubic-bezier overshoots), while a soft ring spreads from the pressed spot. Only `scale` and

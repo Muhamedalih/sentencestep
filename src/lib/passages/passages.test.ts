@@ -14,7 +14,7 @@ import {
   wordGroupIdFor,
   wordIdFor,
 } from "@/lib/passages/ids";
-import { posterArtFor, speakerClassFor } from "@/lib/passages/art";
+import { LEVEL_LOOKS, posterArtFor, speakerClassFor } from "@/lib/passages/art";
 import {
   BELL_PARTIALS,
   CHIME_TAIL_SECONDS,
@@ -883,6 +883,16 @@ test("posters: deterministic, one per passage, and never yellow or amber", () =>
       );
     }
   }
+});
+
+test("the four levels each look their own: a colour of their own and one more lit bar per step, never yellow or amber", () => {
+  const looks = (["A1", "A2", "B1", "B2"] as const).map((level) => LEVEL_LOOKS[level]);
+  assert.deepEqual(
+    looks.map((look) => look.steps),
+    [1, 2, 3, 4],
+  );
+  assert.equal(new Set(looks.map((look) => look.chip)).size, 4, "no two levels share a look");
+  for (const look of looks) assert.doesNotMatch(look.chip, /yellow|amber|lime|orange/);
 });
 
 test("speaker colours repeat only after every colour has been used", () => {
