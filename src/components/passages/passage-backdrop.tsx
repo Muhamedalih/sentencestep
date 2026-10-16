@@ -6,7 +6,8 @@ const FADE = "linear-gradient(to bottom, #000 0%, #000 30%, transparent 100%)";
  * page: faded into the page, and light enough that the title, the buttons and the text keep
  * the page's own colours and stay as readable as ever, on a dark picture in the light theme
  * and on a bright one in the dark. It scrolls away with the page and takes no room — nothing
- * on the page moves for it. Draws nothing without a picture.
+ * on the page moves for it. Draws nothing without a picture, and nothing from the `sm` width up:
+ * it is a phone-only touch, laptops and tablets keep the plain page.
  *
  * The page it sits in must be `relative isolate`: the backdrop paints above that page's own
  * background and below everything on it.
@@ -16,14 +17,15 @@ export function PassageBackdrop({ src }: { src: string | null }) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 overflow-hidden sm:h-96"
+      className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 overflow-hidden sm:hidden"
     >
-      {/* Already sized when it was uploaded (see background-image.ts); decoration only, so it never competes with the text for the network. */}
+      {/* Already sized when it was uploaded (see background-image.ts); decoration only, so it never competes with the text for the network. Lazy, so a laptop (where the wrapper is display:none) never downloads it. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt=""
         decoding="async"
+        loading="lazy"
         fetchPriority="low"
         draggable={false}
         className="size-full object-cover opacity-30 dark:opacity-25"
