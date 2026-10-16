@@ -1,10 +1,11 @@
 /**
  * The sound a learner hears when they pick the right answer in Passages: a
- * short, soft, rising chime — four bell notes that climb and land, with a faint
- * sparkle riding on the last one and a little room around the whole thing, so
- * it reads as a small reward and never as an alarm. Synthesized with the Web
- * Audio API (no audio file to ship, decode or cache), like every other sound in
- * the app (see sentence-complete-sounds.ts).
+ * quiet "glow" — a soft G major chord, strummed upward in under a tenth of a
+ * second and left to fade in a small room. It stays in the low register on
+ * purpose (nothing above D5, no high sparkle): the earlier bright, glassy
+ * four-note chime was found annoying. Synthesized with the Web Audio API (no
+ * audio file to ship, decode or cache), like every other sound in the app (see
+ * sentence-complete-sounds.ts).
  *
  * The notes and the way a bell is built are plain data here so the sound can be
  * tuned in one place and checked by a test; `scheduleCorrectChime` turns them
@@ -23,39 +24,32 @@ export interface ChimeNote {
   level: number;
 }
 
-/** G major, climbing and landing: G5 B5 D6 G6. The last note is held the longest. */
+/** G major, strummed upward and softer the higher it goes: G4 B4 D5, each fading a little later than the one before. */
 export const CORRECT_CHIME_NOTES: readonly ChimeNote[] = [
-  { frequency: 783.99, at: 0, decay: 0.55, level: 1 },
-  { frequency: 987.77, at: 0.07, decay: 0.6, level: 1 },
-  { frequency: 1174.66, at: 0.14, decay: 0.7, level: 1 },
-  { frequency: 1567.98, at: 0.23, decay: 1.1, level: 1.15 },
+  { frequency: 392, at: 0, decay: 0.7, level: 1 },
+  { frequency: 493.88, at: 0.04, decay: 0.75, level: 0.85 },
+  { frequency: 587.33, at: 0.08, decay: 0.8, level: 0.7 },
 ];
 
-/** The sparkle on the landing: higher, much quieter, a touch later. */
-export const CORRECT_CHIME_SPARKLE: readonly ChimeNote[] = [
-  { frequency: 2349.32, at: 0.27, decay: 0.8, level: 0.35 },
-  { frequency: 3135.96, at: 0.31, decay: 0.7, level: 0.22 },
-];
+/** Extra high, quiet notes on the landing — none: a sparkle up there is what made the old chime annoying. */
+export const CORRECT_CHIME_SPARKLE: readonly ChimeNote[] = [];
 
 /**
- * What gives a note its bell colour: the fundamental plus a few overtones that
- * are weaker and fade faster. The last two sit a little off the whole-number
- * series on purpose — that slight mismatch is what makes it glassy, not a
- * flute.
+ * What gives a note its colour: the fundamental plus one faint octave overtone
+ * that fades faster — enough to keep it from being a bare tone, with nothing
+ * glassy or bright on top.
  */
 export const BELL_PARTIALS: readonly { ratio: number; gain: number; decayScale: number }[] = [
   { ratio: 1, gain: 1, decayScale: 1 },
-  { ratio: 2, gain: 0.34, decayScale: 0.55 },
-  { ratio: 3.01, gain: 0.13, decayScale: 0.32 },
-  { ratio: 4.16, gain: 0.05, decayScale: 0.2 },
+  { ratio: 2, gain: 0.1, decayScale: 0.4 },
 ];
 
 /** Peak gain of one note's fundamental at full volume (before the learner's volume setting). */
-export const CHIME_PEAK = 0.075;
+export const CHIME_PEAK = 0.05;
 /** How much of the sound is sent through the small room, and how long that room rings. */
-export const CHIME_ROOM = { wet: 0.28, seconds: 1.2, decayPower: 3.2 } as const;
-/** Nothing is audible after this long, whichever note started last. */
-export const CHIME_TAIL_SECONDS = 1.7;
+export const CHIME_ROOM = { wet: 0.3, seconds: 1.0, decayPower: 3.2 } as const;
+/** Every note has stopped by this long after the chime starts (the room's own tail rings a little past it). */
+export const CHIME_TAIL_SECONDS = 1.0;
 /** Overtones above this are left out — inaudible for most ears and a source of harshness. */
 const HIGHEST_PARTIAL_HZ = 9000;
 

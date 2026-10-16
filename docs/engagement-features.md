@@ -447,8 +447,11 @@ Passages are about understanding it. Arabic support language only for now.
     height and speed while the voice speaks, they hold where they are when it is
     paused and sit low and dim when it is still. All motion is off under reduced
     motion.
-  - _A right answer chimes._ Picking the right option plays a short, soft, rising
-    bell chime (`src/lib/passages/chime.ts`, played by `use-passage-chime.ts`),
+  - _A right answer chimes._ Picking the right option plays a quiet "glow" — a
+    soft G major chord (G4 B4 D5) strummed upward and left to fade
+    (`src/lib/passages/chime.ts`, played by `use-passage-chime.ts`; the user picked
+    it from five options after finding the first bright four-note bell chime
+    annoying, so it stays low — a test keeps every note at or below D5),
     synthesized with the Web Audio API like the other sounds — no file to ship.
     It follows the one global sound setting (Admin → Typing sound: off there, it
     is silent; the volume is that slider's), once per question.

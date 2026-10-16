@@ -745,8 +745,13 @@ function fakeChimeContext() {
   return { context, oscillators, peaks };
 }
 
-test("the right-answer chime climbs, is quiet enough not to clip, and is over within its tail", () => {
+test("the right-answer chime climbs, stays low and soft, and is over within its tail", () => {
   const notes = CORRECT_CHIME_NOTES;
+  // The bright, glassy chime it replaced was found annoying: every note stays in the low register.
+  assert.ok(
+    [...CORRECT_CHIME_NOTES, ...CORRECT_CHIME_SPARKLE].every((note) => note.frequency <= 700),
+    "no note above D5",
+  );
   for (let index = 1; index < notes.length; index += 1) {
     assert.ok(notes[index]!.at > notes[index - 1]!.at, "the notes follow one another");
     assert.ok(notes[index]!.frequency > notes[index - 1]!.frequency, "and rise");
