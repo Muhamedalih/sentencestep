@@ -595,7 +595,7 @@ Passages are about understanding it. Arabic support language only for now.
   - Every change is an audit-log entry (`passage.status_changed`, `access_changed`,
     `voice_changed`, `imported`, `deleted`, `audio_generated`, `background_changed`,
     `background_removed`).
-- **Levels**: A1 (thirteen scenes), A2 (thirteen), B1 (nine) and B2 (eight), written in
+- **Levels**: A1 (fourteen scenes), A2 (fourteen), B1 (ten) and B2 (nine), written in
   `src/data/passages/{a1,a2,b1,b2}-part-*.ts`. The line-length limit grows with the
   level (`MAX_WORDS_PER_LINE_BY_LEVEL`), the reader sets a longer part in a
   smaller size so it still fits one screen (`textSizeFor`), and a passage's words

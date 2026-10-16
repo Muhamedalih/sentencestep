@@ -1010,10 +1010,10 @@ test("Home's card: finish what you started, else the first one not started, else
 
 test("the passages cover A1, A2, B1 and B2, numbered 1, 2, 3… inside each level", () => {
   for (const [level, count] of [
-    ["A1", 13],
-    ["A2", 13],
-    ["B1", 9],
-    ["B2", 8],
+    ["A1", 14],
+    ["A2", 14],
+    ["B1", 10],
+    ["B2", 9],
   ] as const) {
     const orders = PASSAGE_SEEDS.filter((seed) => seed.level === level)
       .map((seed) => seed.order)
