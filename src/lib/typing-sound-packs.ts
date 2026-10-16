@@ -29,7 +29,8 @@ export type ToneSoundPack =
   | "typewriter"
   | "premium"
   | "mechanical"
-  | "crystal";
+  | "crystal"
+  | "knock";
 
 export type SoundPack = ToneSoundPack | LayeredSoundPack | SampleSoundPack;
 
@@ -100,6 +101,12 @@ export const SOUND_PACKS: Record<ToneSoundPack, Record<SoundVariant, ToneConfig>
     error: { type: "triangle", duration: 0.11, frequency: 240, peakGain: 0.05 },
     complete: { type: "triangle", duration: 0.55, frequency: 1050, peakGain: 0.11 },
   },
+  /** A round, hollow knock — a short sine at a woodblock-like pitch, warmer than "click" and with none of its edge. Picked by the admin from six candidates. */
+  knock: {
+    letter: { type: "sine", duration: 0.055, frequency: 420, peakGain: 0.085 },
+    error: { type: "sine", duration: 0.09, frequency: 210, peakGain: 0.05 },
+    complete: { type: "sine", duration: 0.4, frequency: 640, peakGain: 0.09 },
+  },
 };
 
 export { LAYERED_SOUND_PACKS, SAMPLE_SOUND_PACKS };
@@ -133,6 +140,7 @@ export const SOUND_PACK_LABELS: Record<SoundPack, string> = {
   premium: "Premium",
   mechanical: "Mechanical",
   crystal: "Crystal",
+  knock: "Knock",
   ceramic: "Ceramic",
   aluminum: "Aluminum",
   softTouch: "Soft-Touch",
@@ -181,6 +189,7 @@ export const SOUND_PACK_DESCRIPTIONS: Record<SoundPack, string> = {
   premium: "A clean, polished tone with a fuller decay.",
   mechanical: "A heavier, punchier keyboard clack.",
   crystal: "Bright, ringing tones with the most headroom.",
+  knock: "A round, hollow knock — short and warm.",
   ceramic: "A dense, crisp ceramic click — clean and expensive.",
   aluminum: "A warm, machined-metal click with a soft key-up.",
   softTouch: "A muted, rubberized press — quiet and cushioned.",

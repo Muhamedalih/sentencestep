@@ -2,7 +2,7 @@
 
 Every keystroke sound pack the app can play, where its audio comes from, and
 under what license. Keep this file in sync with `SOUND_PACK_NAMES` in
-`src/lib/typing-sound-packs.ts` (44 packs in four collections). A test
+`src/lib/typing-sound-packs.ts` (45 packs in four collections). A test
 (`npm run test:typing-sound`) fails if a recording ships without a row here.
 
 ## Summary
@@ -11,7 +11,7 @@ under what license. Keep this file in sync with `SOUND_PACK_NAMES` in
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------- |
 | **Real Recordings** | `classicOffice`, `tactileSwitch`, `softOffice`, `deepThock`, `studioClick`                                                                                                                                        | Real recordings of real hardware, shipped as WAV files in `public/sounds/typing/` | **CC0 1.0** (public domain) — details below     |
 | Premium Buttons     | `ceramic`, `aluminum`, `softTouch`, `magnetic`, `haptic`, `glassButton`, `pearl`, `toggle`, `microSwitch`                                                                                                         | Synthesized at play time (Web Audio)                                              | Original to this project — no third-party audio |
-| Classic tones       | `soft`, `gentle`, `minimal`, `click`, `pop`, `bubble`, `typewriter`, `premium`, `mechanical`, `crystal`                                                                                                           | Synthesized at play time                                                          | Original to this project — no third-party audio |
+| Classic tones       | `soft`, `gentle`, `minimal`, `click`, `pop`, `bubble`, `typewriter`, `premium`, `mechanical`, `crystal`, `knock`                                                                                                  | Synthesized at play time                                                          | Original to this project — no third-party audio |
 | Sound Lab           | `glass`, `softTap`, `clean`, `modern`, `digital`, `tactile`, `calm`, `woodBlock`, `marimba`, `kalimba`, `pluck`, `waterDrop`, `thock`, `clicky`, `analog`, `handDrum`, `whisper`, `ticker`, `bamboo`, `feltPiano` | Synthesized at play time                                                          | Original to this project — no third-party audio |
 
 The sentence-completion and lesson-end sounds (`src/lib/sentence-complete-sounds.ts`,

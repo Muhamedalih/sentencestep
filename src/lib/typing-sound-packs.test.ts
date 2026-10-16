@@ -40,14 +40,14 @@ function seeded(seed: number): () => number {
 
 // --- The library as a whole ---
 
-test("the library has 44 packs: 10 tones, 20 sound-lab, 9 premium buttons and 5 real recordings", () => {
-  assert.equal(Object.keys(SOUND_PACKS).length, 10);
+test("the library has 45 packs: 11 tones, 20 sound-lab, 9 premium buttons and 5 real recordings", () => {
+  assert.equal(Object.keys(SOUND_PACKS).length, 11);
   assert.equal(BUTTON_SOUND_PACK_NAMES.length, 9);
   assert.equal(LAB_SOUND_PACK_NAMES.length, 20);
   assert.equal(LAYERED_SOUND_PACK_NAMES.length, 29);
   assert.equal(SAMPLE_SOUND_PACK_NAMES.length, 5);
-  assert.equal(SOUND_PACK_NAMES.length, 44);
-  assert.equal(new Set(SOUND_PACK_NAMES).size, 44, "pack names are unique");
+  assert.equal(SOUND_PACK_NAMES.length, 45);
+  assert.equal(new Set(SOUND_PACK_NAMES).size, 45, "pack names are unique");
 });
 
 test("every pack belongs to exactly one collection, and the real recordings come first", () => {
