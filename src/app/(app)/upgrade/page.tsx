@@ -15,6 +15,7 @@ import { devSetAdmin } from "@/lib/admin/dev-actions";
 import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
 import { firstParam, safeLessonPath } from "@/lib/billing/after-payment";
+import { premiumBenefits } from "@/lib/billing/benefits";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { isOfferActive } from "@/lib/billing/launch-offer";
@@ -22,6 +23,7 @@ import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
 import { showUsdOnWaylPage } from "@/lib/billing/provider-registry";
+import { isFeaturePublished } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
@@ -49,11 +51,13 @@ export default async function UpgradePage({
 }: {
   searchParams: Promise<{ next?: string | string[] }>;
 }) {
-  const [user, access, locale, params] = await Promise.all([
+  const [user, access, locale, params, passagesOpen] = await Promise.all([
     getCurrentUser(),
     getAccessState(),
     getLocale(),
     searchParams,
+    // Tells a buyer the Passages section is included — but only once everyone can open it.
+    isFeaturePublished("passages"),
   ]);
   // Set by a locked lesson's button: after paying, the confirmation page can lead
   // straight back to that lesson. Anything that is not a lesson page is ignored.
@@ -161,7 +165,7 @@ export default async function UpgradePage({
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
               <ul className="flex flex-col gap-2.5">
-                {t.premium.benefits.map((benefit) => (
+                {premiumBenefits(t.premium, passagesOpen).map((benefit) => (
                   <li key={benefit} className="flex items-start gap-2.5 text-sm">
                     <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
                     <span>{benefit}</span>
@@ -220,6 +224,7 @@ export default async function UpgradePage({
             <CheckoutCard
               plans={plans}
               signedIn={Boolean(user)}
+              passagesOpen={passagesOpen}
               offerNotice={offerNotice}
               socialProof={socialProof}
               fromMonthly={cheapestPerMonth(tier)}

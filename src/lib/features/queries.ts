@@ -9,7 +9,7 @@ import {
   resolveFeatures,
   sanitizeFeatureConfig,
 } from "@/lib/features/config";
-import type { EffectiveFeatures, FeatureConfig } from "@/lib/features/config";
+import type { EffectiveFeatures, FeatureConfig, FeatureId } from "@/lib/features/config";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -59,6 +59,16 @@ export const getFeatureConfig = cache(async (): Promise<FeatureConfig> => {
     return defaultFeatureConfig();
   }
 });
+
+/**
+ * True while a feature is published to EVERYONE ("On"), not only previewed by admins. What a page that
+ * tells visitors about a feature may rely on, so nobody is promised something only an admin can open
+ * yet. Reads the same share-cached config as everything else, and is false whenever it can't be read.
+ */
+export async function isFeaturePublished(id: FeatureId): Promise<boolean> {
+  const config = await getFeatureConfig();
+  return config.features[id].state === "on";
+}
 
 /**
  * What the CURRENT visitor actually gets — config resolved against whether

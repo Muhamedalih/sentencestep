@@ -317,6 +317,7 @@ export const en: Dictionary = {
       "Every word list, not just the starter set",
       "New premium learning features as they launch",
     ],
+    benefitPassages: "All Passages: real-life scenes to listen to, each with its own word lesson",
     signInToUpgrade: "Sign in to upgrade",
     redirecting: "Redirecting…",
     oneTimeBadge: "One-time payment",

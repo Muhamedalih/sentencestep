@@ -317,6 +317,8 @@ export const tr: Dictionary = {
       "Sadece başlangıç listesi değil, tüm kelime listeleri",
       "Yayınlandıkça yeni premium özellikler",
     ],
+    benefitPassages:
+      "Tüm Metinler: dinleyebileceğiniz gerçek hayat sahneleri, her biri kendi kelime dersiyle",
     signInToUpgrade: "Yükseltmek için giriş yapın",
     redirecting: "Yönlendiriliyor…",
     oneTimeBadge: "Tek seferlik ödeme",

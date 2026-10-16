@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { upgradeSignInHref } from "@/lib/billing/after-payment";
+import { premiumBenefits } from "@/lib/billing/benefits";
 import { startCheckout } from "@/lib/billing/checkout-actions";
 import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
 import type { PlanView } from "@/lib/billing/plan-views";
@@ -47,6 +48,8 @@ interface CheckoutCardProps {
   signedIn: boolean;
   /** A current Premium learner adding days: no benefit list, and the days stack. */
   extend?: boolean;
+  /** True once the Passages section is open to everyone: the benefit list then says a subscriber gets all of it. */
+  passagesOpen?: boolean;
   /** The running launch offer, with its last day already written out for the visitor's language. */
   offerNotice?: { bonusDays: number; endsOnLabel: string } | null;
   /** Real aggregate figures, already rounded and formatted, or null; a field is null when too small to quote. */
@@ -80,6 +83,7 @@ export function CheckoutCard({
   plans,
   signedIn,
   extend = false,
+  passagesOpen = false,
   offerNotice = null,
   socialProof = null,
   fromMonthly,
@@ -422,7 +426,7 @@ export function CheckoutCard({
           {!extend && (
             <>
               <ul className="border-border flex flex-col gap-3 border-t pt-6">
-                {t.premium.benefits.map((benefit) => (
+                {premiumBenefits(t.premium, passagesOpen).map((benefit) => (
                   <li key={benefit} className="flex items-start gap-3 text-sm">
                     <span className="bg-success/15 text-success mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full">
                       <Check className="size-3.5" aria-hidden="true" strokeWidth={3} />

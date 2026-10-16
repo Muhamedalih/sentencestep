@@ -533,6 +533,18 @@ Passages are about understanding it. Arabic support language only for now.
   (`PassageLocked`, the same card as a locked lesson or word list; `canOpenPassage`
   in `src/lib/passages/access.ts`) and a "Premium" chip on its poster. "Up next",
   Home's card and the end screen's next passage never point a free learner at one.
+- **What a subscriber gets.** A Premium passage opens with the same check as every
+  other Premium lesson (`hasPremiumAccess`: a paid plan whose period has not ended, or
+  the sitewide free-access promotion), so the day the section goes On every active
+  subscriber can open all of it — and each word lesson — until their own period ends.
+  Nothing has to be granted or migrated, and it ends with the rest of Premium. New
+  buyers are told: while the switch is On, the benefit list of `/upgrade` (the plan
+  card and the "free right now" card; `premiumBenefits` with `isFeaturePublished`)
+  gets one more line, "All Passages…" (`premium.benefitPassages`, in the four
+  languages). While the switch is Off or in Admin preview the line is absent, so nobody
+  is promised a section only an admin can open. The Home page's Premium section is
+  static (no database read, by design) and says nothing about Passages: add the line to
+  its `benefits` lists when the section is published.
 - **Publishing is one click**: the **Publish to everyone** button on the Passages
   page (admins only, asks twice), or Admin → Features → Passages → On. Either way
   each passage's word lesson — a draft Word Lists group until then, previewable

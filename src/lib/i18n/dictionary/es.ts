@@ -326,6 +326,8 @@ export const es: Dictionary = {
       "Todas las listas de palabras, no solo la inicial",
       "Nuevas funciones premium a medida que se lanzan",
     ],
+    benefitPassages:
+      "Todos los Textos: escenas de la vida real para escuchar, cada una con su propia lección de palabras",
     signInToUpgrade: "Inicia sesión para mejorar tu plan",
     redirecting: "Redirigiendo…",
     oneTimeBadge: "Pago único",

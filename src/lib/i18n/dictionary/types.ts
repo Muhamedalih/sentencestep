@@ -355,6 +355,8 @@ export interface Dictionary {
     accessForDays: string;
     everythingInFree: string;
     benefits: string[];
+    /** One more benefit, shown only while the Passages section is open to everyone (see premiumBenefits): whoever subscribes gets the whole section. Named after the section (passages.title). */
+    benefitPassages: string;
     signInToUpgrade: string;
     redirecting: string;
     /** Short chip beside the price: it is a single purchase, not a subscription. */
