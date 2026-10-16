@@ -1,21 +1,31 @@
 "use client";
 
 import { PremiumGate } from "@/components/learning/premium-gate";
+import { PosterPicture } from "@/components/passages/poster-picture";
 import { useLocale } from "@/components/providers/locale-provider";
 import { posterArtFor } from "@/lib/passages/art";
 import type { PassageTone } from "@/lib/passages/types";
 import type { GateFigures } from "@/lib/stats/content-stats";
 
-/** The passage's own poster — its colour and number, as on the list — standing in for artwork. What is behind the lock is never sent to the viewer, so nothing here pretends to show it. */
-function PosterArt({ tone, order }: { tone: PassageTone; order: number }) {
+/** The passage's own poster — its picture when an admin chose one, else its colour — and number, as on the list, standing in for artwork. What is behind the lock is never sent to the viewer, so nothing here pretends to show it. */
+function PosterArt({
+  tone,
+  order,
+  posterUrl,
+}: {
+  tone: PassageTone;
+  order: number;
+  posterUrl: string | null;
+}) {
   const art = posterArtFor(tone, order);
   return (
     <div
       aria-hidden="true"
-      className="flex h-full w-full items-end p-6"
+      className="relative flex h-full w-full items-end overflow-hidden p-6"
       style={{ backgroundImage: art.backgroundImage }}
     >
-      <span className="text-6xl leading-none font-semibold text-white/30 tabular-nums">
+      <PosterPicture src={posterUrl} />
+      <span className="relative text-6xl leading-none font-semibold text-white/30 tabular-nums">
         {String(order).padStart(2, "0")}
       </span>
     </div>
@@ -30,6 +40,7 @@ function PosterArt({ tone, order }: { tone: PassageTone; order: number }) {
 export function PassageLocked({
   tone,
   order,
+  posterUrl,
   title,
   titleAr,
   summary,
@@ -39,6 +50,8 @@ export function PassageLocked({
 }: {
   tone: PassageTone;
   order: number;
+  /** The passage's own picture, when an admin chose one (see PassageSummary.posterUrl). */
+  posterUrl: string | null;
   title: string;
   titleAr: string;
   summary: string;
@@ -53,7 +66,7 @@ export function PassageLocked({
 
   return (
     <PremiumGate
-      preview={<PosterArt tone={tone} order={order} />}
+      preview={<PosterArt tone={tone} order={order} posterUrl={posterUrl} />}
       badge={t.passages.lockedBadge}
       title={title}
       supportTitle={arabic ? titleAr : undefined}

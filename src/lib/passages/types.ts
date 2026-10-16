@@ -92,9 +92,13 @@ export interface PassageSummary {
   estimatedMinutes: number;
   /** The Word Lists group made from this passage's words; null when there is none. */
   wordGroupId: string | null;
+  /** The picture an admin chose, cropped to the poster's 3:4 shape (see background.ts); null = the poster keeps its generated colours. */
+  posterUrl: string | null;
 }
 
 export interface Passage extends PassageSummary {
+  /** The same picture at up to 1600 px, the soft backdrop at the top of the reading page; null with no picture. */
+  backgroundUrl: string | null;
   /** Whether the passage itself is open to learners (the section's switch decides the rest). A draft is read by an admin only, as a preview. */
   status: "draft" | "published";
   sections: PassageSection[];

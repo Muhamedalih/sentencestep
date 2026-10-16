@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/admin/access";
 import { logAdminAction } from "@/lib/admin/audit-log";
+import { removeBackgroundFiles } from "@/lib/admin/passage-backgrounds";
 import { describeFinding, findDuplicates } from "@/lib/passages/duplicates";
 import { loadLibraryFingerprints, seedFingerprint } from "@/lib/passages/fingerprints";
 import { parsePassageJson } from "@/lib/passages/import";
@@ -211,7 +212,7 @@ export async function deletePassage(passageId: string): Promise<ActionResult> {
   const supabase = createServiceRoleClient();
   const { data: passage, error: readError } = await supabase
     .from("passages")
-    .select("id, status, word_group_id")
+    .select("id, status, word_group_id, poster_url, background_url")
     .eq("id", passageId)
     .maybeSingle();
   if (readError) return { error: "Couldn't read the passage. Please try again." };
@@ -250,6 +251,8 @@ export async function deletePassage(passageId: string): Promise<ActionResult> {
     .map((clip) => (clip.audio_url ? voiceAudioPathFromUrl(clip.audio_url) : null))
     .filter((path): path is string => Boolean(path));
   await deleteVoiceClips(paths);
+  // Its background picture goes too (the two files; see passage-backgrounds.ts).
+  await removeBackgroundFiles([passage.poster_url, passage.background_url]);
 
   void logAdminAction("passage.deleted", "passage", passageId, { clips: paths.length });
   refresh();

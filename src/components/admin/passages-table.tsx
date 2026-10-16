@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PassageBackgroundThumb } from "@/components/admin/passage-background-field";
 import {
   PassageAccessSelect,
   PassageStatusSelect,
@@ -33,6 +34,7 @@ export function PassagesTable({ passages }: { passages: AdminPassageRow[] }) {
         <thead className="bg-muted/50 text-muted-foreground text-left text-xs font-medium tracking-wide uppercase">
           <tr>
             <th className="px-4 py-3">#</th>
+            <th className="px-4 py-3">Picture</th>
             <th className="px-4 py-3">Passage</th>
             <th className="px-4 py-3">Voices</th>
             <th className="px-4 py-3">Audio</th>
@@ -47,6 +49,15 @@ export function PassagesTable({ passages }: { passages: AdminPassageRow[] }) {
               <td className="text-muted-foreground px-4 py-3 whitespace-nowrap tabular-nums">
                 <span className="text-foreground font-semibold">{passage.level}</span> ·{" "}
                 {passage.order}
+              </td>
+              <td className="px-4 py-3">
+                <PassageBackgroundThumb
+                  passageId={passage.id}
+                  title={passage.title}
+                  order={passage.order}
+                  tone={passage.tone}
+                  posterUrl={passage.posterUrl}
+                />
               </td>
               <td className="max-w-64 px-4 py-3">
                 <Link

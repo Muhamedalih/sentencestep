@@ -1562,6 +1562,10 @@ export interface Database {
           status: "draft" | "published";
           is_free: boolean;
           word_group_id: string | null;
+          /** The admin's picture cropped to the poster's 3:4 shape (a public URL in the passage-backgrounds bucket); null = the generated colours. */
+          poster_url: string | null;
+          /** The same picture at up to 1600 px, the backdrop of the reading page; set and cleared together with poster_url. */
+          background_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1578,6 +1582,8 @@ export interface Database {
           status?: "draft" | "published";
           is_free?: boolean;
           word_group_id?: string | null;
+          poster_url?: string | null;
+          background_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };

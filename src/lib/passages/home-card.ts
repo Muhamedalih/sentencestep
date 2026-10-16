@@ -33,6 +33,8 @@ export interface PassagesHomeData {
     summaryAr: string;
     minutes: number;
     sectionCount: number;
+    /** The passage's own picture, when an admin chose one (see PassageSummary.posterUrl). */
+    posterUrl: string | null;
   };
   /** Parts already finished (0 when the passage has not been started). */
   sectionsDone: number;
@@ -73,6 +75,7 @@ export async function loadPassagesHomeCard(
         summaryAr: passage.summaryAr,
         minutes: passage.estimatedMinutes,
         sectionCount: passage.sectionCount,
+        posterUrl: passage.posterUrl,
       },
     };
   } catch (error) {

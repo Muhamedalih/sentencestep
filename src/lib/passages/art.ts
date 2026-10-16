@@ -52,6 +52,17 @@ export function posterArtFor(tone: PassageTone, order: number): PosterArt {
   };
 }
 
+/**
+ * What goes over a passage's own picture (see background.ts) on a poster: a soft shade at the
+ * top for the number and the badge, a deeper one at the bottom for the title, so white text
+ * reads on any picture — a bright one included. The generated colours need no such help, they
+ * are chosen so white text works on them.
+ */
+export const PICTURE_SHADE = [
+  "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.44) 40%, rgba(0,0,0,0) 72%)",
+  "linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0) 28%)",
+].join(", ");
+
 /** Colours for a character's name above their sentences — one per character in the order they first speak, so a dialogue reads as a script. */
 const SPEAKER_CLASSES = [
   "text-violet-600 dark:text-violet-400",

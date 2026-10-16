@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, Lock } from "lucide-react";
 
+import { PosterPicture } from "@/components/passages/poster-picture";
 import { useLocale } from "@/components/providers/locale-provider";
 import { posterArtFor } from "@/lib/passages/art";
 import type { PassageStatus } from "@/lib/passages/progress";
@@ -11,8 +12,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * One passage on the list, as a poster: the title is the picture, on a colour of
- * its own (see posterArtFor), with its number, how long it takes and where the
- * learner stands. No illustrations and no mood labels — the hue carries the mood.
+ * its own (see posterArtFor) — or on the picture an admin chose for the passage (see
+ * PosterPicture) — with its number, how long it takes and where the learner stands. No
+ * illustrations of our own and no mood labels — the hue carries the mood.
  * A one-line hook sits under the poster. The suggested next passage is marked
  * "Up next" — a pointer, never a lock. A Premium passage the viewer can't open says so
  * with a small "Premium" chip in the same place (white on the poster, no veil: the title
@@ -58,6 +60,7 @@ export function PassageCard({
         )}
         style={{ backgroundImage: art.backgroundImage }}
       >
+        <PosterPicture src={passage.posterUrl} />
         <div className="absolute inset-x-4 top-4 flex items-center justify-between">
           <span className="text-xs font-medium tracking-wider text-white/60 tabular-nums">
             {String(passage.order).padStart(2, "0")}

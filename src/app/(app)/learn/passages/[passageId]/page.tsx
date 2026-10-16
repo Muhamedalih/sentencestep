@@ -78,6 +78,7 @@ export default async function PassageReaderPage({
           <PassageLocked
             tone={passage.tone}
             order={passage.order}
+            posterUrl={passage.posterUrl}
             title={passage.title}
             titleAr={passage.titleAr}
             summary={passage.summary}

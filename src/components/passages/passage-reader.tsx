@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2, Play, Trophy } from "lucide-react";
 
+import { PassageBackdrop } from "@/components/passages/passage-backdrop";
 import { PassageButton, PassageLinkButton } from "@/components/passages/passage-button";
 import { PassageCompletion } from "@/components/passages/passage-completion";
 import { PassageControls } from "@/components/passages/passage-controls";
@@ -391,7 +392,8 @@ export function PassageReader({
   const recalling = checking && Boolean(activeQuestion) && !answers[activeQuestion?.id ?? ""];
 
   return (
-    <div className="bg-background text-foreground min-h-svh">
+    <div className="bg-background text-foreground relative isolate min-h-svh">
+      <PassageBackdrop src={passage.backgroundUrl} />
       <header className="border-border/60 bg-background/90 sticky top-0 z-30 border-b backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5 sm:px-6">
           <PassageLinkButton href="/learn/passages" variant="quiet" size="sm" className="-ms-1">

@@ -955,6 +955,7 @@ function summary(id: string, order: number, sectionCount = 4): PassageSummary {
     sentenceCount: 20,
     estimatedMinutes: 4,
     wordGroupId: null,
+    posterUrl: null,
   };
 }
 

@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 
 import { DeletePassageButton } from "@/components/admin/delete-passage-button";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
+import { PassageBackgroundField } from "@/components/admin/passage-background-field";
 import { PassageNarrationPanel } from "@/components/admin/passage-narration-panel";
 import {
   PassageAccessSelect,
@@ -87,6 +88,26 @@ export default async function AdminPassagePage({
               ? WORD_LESSON_TEXT[passage.wordGroupStatus]
               : "this passage has none."}
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Background picture</CardTitle>
+          <CardDescription>
+            A picture of your choice for this passage. It becomes the passage&apos;s poster on the
+            list, on Home and on the lock screen, and a soft backdrop at the top of the lesson
+            itself. Without one the passage keeps its own colour.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PassageBackgroundField
+            passageId={passage.id}
+            title={passage.title}
+            order={passage.order}
+            tone={passage.tone}
+            posterUrl={passage.posterUrl}
+          />
         </CardContent>
       </Card>
 

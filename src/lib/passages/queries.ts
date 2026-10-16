@@ -78,6 +78,7 @@ function toSummary(
     sentenceCount,
     estimatedMinutes: estimatePassageMinutes(sentenceCount, questionCount),
     wordGroupId: row.word_group_id,
+    posterUrl: row.poster_url,
   };
 }
 
@@ -286,6 +287,7 @@ async function loadPassage(id: string): Promise<Passage | null> {
 
   return {
     ...toSummary(row, sections.length, sentenceCount, questionCount),
+    backgroundUrl: row.background_url,
     status: row.status,
     sections,
     words,

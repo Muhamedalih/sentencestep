@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { PassageLinkButton } from "@/components/passages/passage-button";
+import { PosterPicture } from "@/components/passages/poster-picture";
 import { useLocale } from "@/components/providers/locale-provider";
 import { posterArtFor } from "@/lib/passages/art";
 import type { PassagesHomeData } from "@/lib/passages/home-card";
@@ -50,6 +51,7 @@ export function PassagesCard({
         className="relative h-[4.75rem] w-[3.75rem] shrink-0 overflow-hidden rounded-xl ring-1 ring-black/10 dark:ring-white/10"
         style={{ backgroundImage: art.backgroundImage }}
       >
+        <PosterPicture src={passage.posterUrl} />
         <span className="absolute start-2 bottom-1.5 text-[0.7rem] font-semibold tracking-wider text-white/75 tabular-nums">
           {String(passage.order).padStart(2, "0")}
         </span>

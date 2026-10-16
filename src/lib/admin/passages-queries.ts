@@ -23,6 +23,8 @@ export interface AdminPassageRow {
   level: PassageLevel;
   tone: PassageTone;
   title: string;
+  /** The picture an admin chose for the poster (its 3:4 file); null = the generated colours. */
+  posterUrl: string | null;
   status: "draft" | "published";
   isFree: boolean;
   sections: number;
@@ -110,6 +112,7 @@ export async function listAdminPassages(): Promise<AdminPassageRow[]> {
       level: passage.level,
       tone: passage.tone,
       title: passage.title,
+      posterUrl: passage.poster_url,
       status: passage.status,
       isFree: passage.is_free,
       sections: ownSections.length,
@@ -151,6 +154,9 @@ export interface AdminPassageDetail {
   title: string;
   titleAr: string;
   summary: string;
+  /** The picture an admin chose, as the poster (3:4) and as the backdrop of the reading page; null = none. */
+  posterUrl: string | null;
+  backgroundUrl: string | null;
   status: "draft" | "published";
   isFree: boolean;
   wordGroupId: string | null;
@@ -237,6 +243,8 @@ export async function getAdminPassage(id: string): Promise<AdminPassageDetail | 
     title: passage.title,
     titleAr: passage.title_ar,
     summary: passage.summary,
+    posterUrl: passage.poster_url,
+    backgroundUrl: passage.background_url,
     status: passage.status,
     isFree: passage.is_free,
     wordGroupId: passage.word_group_id,
