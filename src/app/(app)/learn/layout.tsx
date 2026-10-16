@@ -21,7 +21,7 @@ export default function LearnLayout({ children }: { children: ReactNode }) {
     <>
       {/* Tells the server the learner's time zone so Home can render its date-keyed cards up front — see TimezoneCookie. */}
       <TimezoneCookie />
-      {/* Per-section (Stories / Daily Lessons) active time, reported to Clarity — see SectionTimeTracker. */}
+      {/* Per-section (Stories / Daily Lessons / Word Lists / Passages) active time, reported to Clarity — see SectionTimeTracker. */}
       <SectionTimeTracker />
       <KeyboardViewport />
       <LearnerProviders>{children}</LearnerProviders>

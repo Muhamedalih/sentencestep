@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-type Section = "stories" | "daily_lessons";
+type Section = "stories" | "daily_lessons" | "word_lists" | "passages";
 
-const SECTIONS: Section[] = ["stories", "daily_lessons"];
+const SECTIONS: Section[] = ["stories", "daily_lessons", "word_lists", "passages"];
 /** Active time in a section at which one Clarity event is sent (once per section per tab session). */
 const MILESTONES_SECONDS = [10, 30, 60, 120, 300, 600];
 /** A pause between two actions longer than this means the learner walked away: that pause is not counted. */
@@ -15,12 +15,15 @@ const STORAGE_KEY = "looma:section-active-ms";
 function sectionOf(pathname: string): Section | null {
   if (pathname === "/learn/stories" || pathname.startsWith("/learn/stories/")) return "stories";
   if (pathname === "/learn/normal" || pathname.startsWith("/learn/normal/")) return "daily_lessons";
+  if (pathname === "/learn/word-lists" || pathname.startsWith("/learn/word-lists/"))
+    return "word_lists";
+  if (pathname === "/learn/passages" || pathname.startsWith("/learn/passages/")) return "passages";
   return null;
 }
 
 /** Totals survive a full page reload within the tab, so a reload neither restarts the clock nor re-sends milestones. */
 function loadTotals(): Record<Section, number> {
-  const totals = { stories: 0, daily_lessons: 0 };
+  const totals = { stories: 0, daily_lessons: 0, word_lists: 0, passages: 0 };
   try {
     const saved: unknown = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "null");
     if (saved && typeof saved === "object") {
@@ -43,23 +46,27 @@ function sendToClarity(method: "set" | "event", ...args: string[]) {
 }
 
 /**
- * Measures how long a learner really spends in Stories and in Daily Lessons and
- * reports it to Microsoft Clarity. Clarity itself only has session-wide numbers
+ * Measures how long a learner really spends in Stories, Daily Lessons, Word Lists
+ * and Passages and reports it to Microsoft Clarity. Clarity itself only has session-wide numbers
  * (its "active time" is one figure for the whole visit and only counts input it
  * recognises), so it cannot say how many seconds went to one section; this counts
  * them directly instead. The time between two consecutive actions (key, pointer,
  * touch, scroll) counts when it is 30 seconds or less, so reading and thinking
  * between actions is included but walking away is not, and time in a hidden tab
  * never is. The section comes from the URL: /learn/stories/* is Stories,
- * /learn/normal/* is Daily Lessons.
+ * /learn/normal/* is Daily Lessons, /learn/word-lists/* is Word Lists (the
+ * lists, the learn flow and Review All Words), /learn/passages/* is Passages.
  *
  * What shows up in Clarity:
- * - Smart events `stories_10s … stories_600s` and `daily_lessons_10s … daily_lessons_600s`,
- *   each sent once the section's active time in the tab session reaches that mark
- *   (Dashboard / Filters / Recordings: "sessions that spent 2+ minutes in Stories").
- * - Custom tags `stories_seconds` and `daily_lessons_seconds` holding the exact total
- *   so far, refreshed whenever the learner leaves a section or hides the tab. Clarity
- *   keeps every value a tag is given in a session, so the highest one is the total.
+ * - Smart events `<section>_10s … <section>_600s` (`stories_`, `daily_lessons_`,
+ *   `word_lists_`, `passages_`), each sent once the section's active time in the
+ *   tab session reaches that mark (Dashboard / Filters / Recordings: "sessions
+ *   that spent 2+ minutes in Word Lists"). The 10s event also doubles as "people
+ *   who really used the section"; plain visits can be counted with Clarity's URL
+ *   filter (URL contains /learn/word-lists).
+ * - Custom tags `<section>_seconds` holding the exact total so far, refreshed
+ *   whenever the learner leaves a section or hides the tab. Clarity keeps every
+ *   value a tag is given in a session, so the highest one is the total.
  *
  * Renders nothing and talks only to Clarity — no Supabase or server load.
  */
@@ -73,6 +80,8 @@ export function SectionTimeTracker() {
     const sent = {
       stories: Math.floor(totals.stories / 1000),
       daily_lessons: Math.floor(totals.daily_lessons / 1000),
+      word_lists: Math.floor(totals.word_lists / 1000),
+      passages: Math.floor(totals.passages / 1000),
     };
     // The last action, or the moment the tab became visible again.
     let lastActivity = Date.now();
