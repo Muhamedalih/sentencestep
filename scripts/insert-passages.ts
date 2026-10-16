@@ -16,7 +16,9 @@
  *     syncPassageWordGroups);
  *   - a line's narrated clip, as long as that line's English did not change
  *     (a changed line loses its clip, so the audio script regenerates exactly
- *     it and nothing stale is ever played).
+ *     it and nothing stale is ever played) — and a line that is already exactly what
+ *     the data says is not even written, so a run can never overwrite a clip an admin
+ *     is narrating at that very moment.
  * Lines, parts and questions that exist in the database but no longer in the
  * authored data are removed.
  *
@@ -32,6 +34,7 @@ import { passageIdFor, wordGroupIdFor } from "../src/lib/passages/ids";
 import {
   passageFieldsFor,
   sectionRowsFor,
+  sentenceIsCurrent,
   sentenceRowsFor,
   speakerVoiceRowsFor,
   wordGroupRowFor,
@@ -74,6 +77,31 @@ async function must<T>(label: string, query: QueryResult<T[]>): Promise<T[]> {
   const { data, error } = await query;
   if (error) fail(`${label} failed: ${error.message}${error.code ? ` (${error.code})` : ""}`);
   return data ?? [];
+}
+
+const PAGE = 1000;
+
+/**
+ * Reads EVERY row a query matches. PostgREST answers at most 1000 rows per request and says nothing
+ * when it cuts: a read that quietly stops there makes the rest of the library look new, and a line
+ * that looks new is written without its clip. That once unlinked 150 narrated clips, so every read of
+ * existing rows goes through here — in pages, over chunks of ids short enough for the request's URL.
+ */
+async function mustAll<T>(
+  label: string,
+  ids: readonly string[],
+  page: (ids: string[], from: number, to: number) => QueryResult<T[]>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let start = 0; start < ids.length; start += 60) {
+    const chunk = ids.slice(start, start + 60);
+    for (let from = 0; ; from += PAGE) {
+      const part = await must(label, page(chunk, from, from + PAGE - 1));
+      rows.push(...part);
+      if (part.length < PAGE) break;
+    }
+  }
+  return rows;
 }
 
 /** Same, for a query that returns at most one row (maybeSingle). */
@@ -137,28 +165,38 @@ async function main() {
   );
   const existingGroupIds = new Set(existingGroups.map((row) => row.id));
 
-  const existingSections = await must(
-    "reading existing parts",
-    supabase.from("passage_sections").select("id, passage_id").in("passage_id", passageIds),
+  const existingSections = await mustAll("reading existing parts", passageIds, (ids, from, to) =>
+    supabase
+      .from("passage_sections")
+      .select("id, passage_id")
+      .in("passage_id", ids)
+      .order("id")
+      .range(from, to),
   );
   const sectionIdsInDb = existingSections.map((row) => row.id);
-  const existingSentences =
-    sectionIdsInDb.length === 0
-      ? []
-      : await must(
-          "reading existing lines",
-          supabase
-            .from("passage_sentences")
-            .select("id, section_id, en, audio_url")
-            .in("section_id", sectionIdsInDb),
-        );
+  const existingSentences = await mustAll(
+    "reading existing lines",
+    sectionIdsInDb,
+    (ids, from, to) =>
+      supabase
+        .from("passage_sentences")
+        .select("id, section_id, order_index, speaker, en, ar, say, pause, audio_url")
+        .in("section_id", ids)
+        .order("id")
+        .range(from, to),
+  );
   const existingSentenceById = new Map(existingSentences.map((row) => [row.id, row]));
-  const existingVoices = await must(
+  const existingVoices = await mustAll(
     "reading existing character voices",
-    supabase
-      .from("passage_speaker_voices")
-      .select("passage_id, speaker")
-      .in("passage_id", passageIds),
+    passageIds,
+    (ids, from, to) =>
+      supabase
+        .from("passage_speaker_voices")
+        .select("passage_id, speaker")
+        .in("passage_id", ids)
+        .order("passage_id")
+        .order("speaker")
+        .range(from, to),
   );
 
   // word_groups.order_index is globally unique: new groups go after the current maximum.
@@ -180,6 +218,7 @@ async function main() {
   let lineCount = 0;
   let linesWithClip = 0;
   let linesLosingClip = 0;
+  let linesWritten = 0;
   let removedSections = 0;
   let removedLines = 0;
   let newVoices = 0;
@@ -258,6 +297,12 @@ async function main() {
       };
     });
     lineCount += sentenceRows.length;
+    // Only a new or changed line is written: an unchanged one is left alone, so a clip an admin is
+    // narrating at this very moment can never be overwritten by this run's earlier snapshot of it.
+    const rowsToWrite = sentenceRows.filter(
+      (row) => !sentenceIsCurrent(existingSentenceById.get(row.id), row),
+    );
+    linesWritten += rowsToWrite.length;
 
     const keepSectionIds = new Set(sectionRows.map((row) => row.id));
     const keepSentenceIds = new Set(sentenceRows.map((row) => row.id));
@@ -292,7 +337,12 @@ async function main() {
       );
       await must(
         `saving lines of ${passageId}`,
-        supabase.from("passage_sentences").upsert(sentenceRows, { onConflict: "id" }).select("id"),
+        rowsToWrite.length === 0
+          ? Promise.resolve({ data: [], error: null })
+          : supabase
+              .from("passage_sentences")
+              .upsert(rowsToWrite, { onConflict: "id" })
+              .select("id"),
       );
       if (orphanSentences.length > 0) {
         await must(
@@ -348,7 +398,7 @@ async function main() {
     [
       `passages: ${newPassages} new, ${updatedPassages} updated`,
       `word groups (draft): ${newGroups} new`,
-      `parts: ${sectionCount}, lines: ${lineCount}`,
+      `parts: ${sectionCount}, lines: ${lineCount} (written: ${linesWritten}, left alone: ${lineCount - linesWritten})`,
       `lines keeping their clip: ${linesWithClip}, losing it (text changed): ${linesLosingClip}`,
       `removed: ${removedSections} parts, ${removedLines} lines`,
       `character voices: ${newVoices} new, ${removedVoices} removed (existing ones are kept)`,

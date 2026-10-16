@@ -476,7 +476,11 @@ Passages are about understanding it. Arabic support language only for now.
   word is checked). `scripts/insert-passages.ts` writes it to the database
   (re-runnable; it never changes a passage's status or Free/Premium, an admin's
   edits to the word lesson or to a character's voice, or a line's clip while its
-  English is unchanged). The rows it writes come from the pure builders in
+  English is unchanged). It reads what is already there page by page (PostgREST
+  cuts any read at 1000 rows without saying so, and a line it believed was new would
+  be written without its clip) and writes only the lines that are new or changed, so
+  a clip an admin is narrating while it runs can't be overwritten by its older
+  snapshot. The rows it writes come from the pure builders in
   `src/lib/passages/seed-rows.ts`, which the admin's JSON import uses too, so the
   two can't write different shapes. **The right answer
   must not sit in the same place**: the first batch had it as option 1 in nearly

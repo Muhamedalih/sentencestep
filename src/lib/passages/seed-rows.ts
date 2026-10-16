@@ -139,6 +139,51 @@ export function sentenceRowsFor(seed: PassageSeed) {
   );
 }
 
+/** What a stored line holds, as far as the data decides it. */
+export interface StoredSentence {
+  section_id: string;
+  order_index: number;
+  speaker: string | null;
+  en: string;
+  ar: string;
+  say: string | null;
+  pause: unknown;
+}
+
+/** JSON with its keys in a fixed order, so the same value always reads the same (Postgres keeps jsonb keys in its own order). */
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${stableJson(entry)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+/**
+ * Whether a stored line already says exactly what the data says. A line that does is not
+ * written again, so a run of the insert script can never touch the clip an admin narrated
+ * (or is narrating) for it: only a new or changed line is ever written, and a changed line
+ * loses its clip on purpose. `audio_url` is not compared: it belongs to the admin, never to the data.
+ */
+export function sentenceIsCurrent(
+  stored: StoredSentence | undefined,
+  row: ReturnType<typeof sentenceRowsFor>[number],
+): boolean {
+  return (
+    stored !== undefined &&
+    stored.section_id === row.section_id &&
+    stored.order_index === row.order_index &&
+    stored.speaker === row.speaker &&
+    stored.en === row.en &&
+    stored.ar === row.ar &&
+    stored.say === row.say &&
+    stableJson(stored.pause) === stableJson(row.pause)
+  );
+}
+
 /** One voice per character; a character the narrator reads (an email, a sign) has none — "no row" means "the narrator's voice". */
 export function speakerVoiceRowsFor(seed: PassageSeed) {
   return Object.entries(seed.cast).flatMap(([speaker, alias]) =>

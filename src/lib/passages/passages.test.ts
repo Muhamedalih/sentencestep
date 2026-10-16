@@ -30,6 +30,7 @@ import {
   WORD_LIST_LEVEL,
   passageFieldsFor,
   sectionRowsFor,
+  sentenceIsCurrent,
   sentenceRowsFor,
   speakerVoiceRowsFor,
   storedQuestionsFor,
@@ -1069,6 +1070,44 @@ test("voice aliases: every alias but the narrator names a registered ElevenLabs 
     !("narrator" in PASSAGE_VOICE_IDS),
     "the narrator is the site's default, never an id here",
   );
+});
+
+test("the insert script writes a line only when it is new or changed — never one an admin may be narrating", () => {
+  const seed = PASSAGE_SEEDS[0]!;
+  const rows = sentenceRowsFor(seed);
+  const row = rows[0]!;
+  const stored = {
+    section_id: row.section_id,
+    order_index: row.order_index,
+    speaker: row.speaker,
+    en: row.en,
+    ar: row.ar,
+    say: row.say,
+    pause: row.pause,
+  };
+  // Exactly what the data says: left alone (whatever clip it has).
+  assert.equal(sentenceIsCurrent(stored, row), true);
+  assert.equal(
+    sentenceIsCurrent(
+      { ...stored, audio_url: "https://example.test/clip.mp3" } as typeof stored,
+      row,
+    ),
+    true,
+  );
+  // New, or different in anything the data decides: written.
+  assert.equal(sentenceIsCurrent(undefined, row), false);
+  assert.equal(sentenceIsCurrent({ ...stored, en: stored.en + "!" }, row), false);
+  assert.equal(sentenceIsCurrent({ ...stored, ar: "مختلف" }, row), false);
+  assert.equal(sentenceIsCurrent({ ...stored, speaker: "Someone Else" }, row), false);
+  assert.equal(sentenceIsCurrent({ ...stored, order_index: row.order_index + 1 }, row), false);
+  assert.equal(sentenceIsCurrent({ ...stored, say: "something else" }, row), false);
+  // jsonb keeps its keys in its own order: the same hint is still the same hint.
+  const withHint = { ...row, pause: { after: "Suddenly,", length: "long" as const } };
+  assert.equal(
+    sentenceIsCurrent({ ...stored, pause: { length: "long", after: "Suddenly," } }, withHint),
+    true,
+  );
+  assert.equal(sentenceIsCurrent({ ...stored, pause: { after: "Suddenly," } }, withHint), false);
 });
 
 test("seed rows: a passage's rows carry everything the data says, and nothing the admin owns", () => {
