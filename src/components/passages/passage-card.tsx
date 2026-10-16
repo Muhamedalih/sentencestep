@@ -17,8 +17,8 @@ import { cn } from "@/lib/utils";
  * illustrations of our own and no mood labels — the hue carries the mood.
  * A one-line hook sits under the poster. The suggested next passage is marked
  * "Up next" — a pointer, never a lock. A Premium passage the viewer can't open says so
- * with a small "Premium" chip in the same place (white on the poster, no veil: the title
- * stays as readable as on every other card).
+ * with a small "Premium" chip in the same place, and its picture is blurred right out (the
+ * title, number and chip stay sharp and as readable as on every other card).
  */
 export function PassageCard({
   passage,
@@ -60,7 +60,7 @@ export function PassageCard({
         )}
         style={{ backgroundImage: art.backgroundImage }}
       >
-        <PosterPicture src={passage.posterUrl} />
+        <PosterPicture src={passage.posterUrl} blurred={locked} />
         <div className="absolute inset-x-4 top-4 flex items-center justify-between">
           <span className="text-xs font-medium tracking-wider text-white/60 tabular-nums">
             {String(passage.order).padStart(2, "0")}

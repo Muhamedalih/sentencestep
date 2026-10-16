@@ -3,9 +3,11 @@ import {
   summarizeDistribution,
   type AppRatingStatus,
   type RatingsFilter,
+  type RatingsSource,
   type RatingsSummary,
   type RatingUserType,
 } from "@/lib/admin/ratings-domain";
+import { PASSAGES_RATING_MODE } from "@/lib/feedback/rating-record";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AdminAppRating {
@@ -42,6 +44,10 @@ export async function listAppRatings(
     )
     .order("created_at", { ascending: false });
 
+  query =
+    filter.source === "passages"
+      ? query.eq("mode", PASSAGES_RATING_MODE)
+      : query.neq("mode", PASSAGES_RATING_MODE);
   if (filter.view === "archived") query = query.eq("status", "archived");
   else if (filter.view === "public") query = query.eq("is_public", true);
   else query = query.neq("status", "archived");
@@ -75,10 +81,11 @@ export async function listAppRatings(
 
 /**
  * The figures at the top of the page: count, average, the per-star spread, and
- * how many are waiting. Archived ratings are left out of all of them (and out of
- * the average quoted on the site) — archiving is how a junk rating is removed.
+ * how many are waiting — for one source (the app's own ratings, or the Passages
+ * section's). Archived ratings are left out of all of them (and out of the
+ * average quoted on the site) — archiving is how a junk rating is removed.
  */
-export async function getAppRatingsOverview(): Promise<
+export async function getAppRatingsOverview(source: RatingsSource): Promise<
   RatingsSummary & {
     newCount: number;
     commentCount: number;
@@ -88,10 +95,17 @@ export async function getAppRatingsOverview(): Promise<
   }
 > {
   const supabase = await createClient();
-  const head = () => supabase.from("app_ratings").select("id", { count: "exact", head: true });
+  const head = () => {
+    const query = supabase.from("app_ratings").select("id", { count: "exact", head: true });
+    return source === "passages"
+      ? query.eq("mode", PASSAGES_RATING_MODE)
+      : query.neq("mode", PASSAGES_RATING_MODE);
+  };
 
   const [distribution, isNew, withComment, isPublic, isPublicWithComment] = await Promise.all([
-    supabase.rpc("app_rating_distribution"),
+    source === "passages"
+      ? supabase.rpc("passage_rating_distribution")
+      : supabase.rpc("app_rating_distribution"),
     head().eq("status", "new"),
     head().neq("status", "archived").neq("comment", ""),
     head().neq("status", "archived").eq("is_public", true),
@@ -110,7 +124,22 @@ export async function getAppRatingsOverview(): Promise<
   };
 }
 
-/** Powers the admin nav badge — ratings nobody has opened yet. */
+/** How many ratings nobody has opened yet on each tab of Admin > Ratings. */
+export async function countNewRatingsBySource(): Promise<Record<RatingsSource, number>> {
+  const supabase = await createClient();
+  const unread = () =>
+    supabase.from("app_ratings").select("id", { count: "exact", head: true }).eq("status", "new");
+
+  const [passages, app] = await Promise.all([
+    unread().eq("mode", PASSAGES_RATING_MODE),
+    unread().neq("mode", PASSAGES_RATING_MODE),
+  ]);
+  if (passages.error) throw passages.error;
+  if (app.error) throw app.error;
+  return { app: app.count ?? 0, passages: passages.count ?? 0 };
+}
+
+/** Powers the admin nav badge — ratings nobody has opened yet (from every source). */
 export async function countNewAppRatings(): Promise<number> {
   const supabase = await createClient();
   const { count, error } = await supabase

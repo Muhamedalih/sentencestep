@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitAppRatingAction } from "@/lib/feedback/actions";
-import { getOrCreateAnonId, markRatedApp } from "@/lib/feedback/rating-storage";
+import { getOrCreateAnonId, markRatedApp, markRatedPassages } from "@/lib/feedback/rating-storage";
 import { popIn, transitions } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { LearningMode } from "@/types/content";
@@ -26,6 +26,11 @@ const MAX_COMMENT_LENGTH = 2000;
  * regardless of which caller opened this, so rating from Settings also
  * retires the automatic prompt for good — there's no reason to still nag a
  * learner who already told us what they think.
+ *
+ * With mode "passages" it is the Passages section's own card instead (see
+ * PassageRatingPrompt): the question is about that section, its words come
+ * from t.passages.rating, and a submit retires only that card's own one-time
+ * gate — a learner who rated Passages still gets asked about the app itself.
  */
 export function RatingModal({
   open,
@@ -36,10 +41,12 @@ export function RatingModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lessonId: string;
-  /** "settings" identifies a rating given from the always-available Settings card rather than right after a real lesson. */
-  mode: LearningMode | "settings";
+  /** "settings" identifies a rating given from the always-available Settings card rather than right after a real lesson; "passages" is the Passages section's own card (the lessonId is then the passage). */
+  mode: LearningMode | "settings" | "passages";
 }) {
   const { t, locale } = useLocale();
+  const forPassages = mode === "passages";
+  const copy = forPassages ? { ...t.rateApp, ...t.passages.rating } : t.rateApp;
   // A signed-in learner is answered at their account email, so only a guest is asked for one.
   const isGuest = useAuthUserId() === null;
   const prefersReducedMotion = useReducedMotion();
@@ -73,7 +80,8 @@ export function RatingModal({
       anonId: getOrCreateAnonId(),
       contactEmail: isGuest ? email : undefined,
     });
-    markRatedApp();
+    if (forPassages) markRatedPassages();
+    else markRatedApp();
     setSubmitted(true);
     window.setTimeout(() => onOpenChange(false), 1800);
   }
@@ -89,7 +97,7 @@ export function RatingModal({
           transition={transitions.snappy}
           role="dialog"
           aria-modal="true"
-          aria-label={t.rateApp.headline}
+          aria-label={copy.headline}
         >
           <motion.div
             variants={prefersReducedMotion ? undefined : popIn}
@@ -103,13 +111,13 @@ export function RatingModal({
                 <div className="bg-primary/15 text-primary flex size-11 items-center justify-center rounded-full">
                   <Check className="size-5" aria-hidden="true" />
                 </div>
-                <h3 className="text-base font-bold">{t.rateApp.thanksTitle}</h3>
-                <p className="text-sm text-white/60">{t.rateApp.thanksBody}</p>
+                <h3 className="text-base font-bold">{copy.thanksTitle}</h3>
+                <p className="text-sm text-white/60">{copy.thanksBody}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                <h3 className="text-[17px] font-bold text-balance">{t.rateApp.headline}</h3>
-                <p className="text-sm leading-relaxed text-white/60">{t.rateApp.subtitle}</p>
+                <h3 className="text-[17px] font-bold text-balance">{copy.headline}</h3>
+                <p className="text-sm leading-relaxed text-white/60">{copy.subtitle}</p>
                 <div className="flex justify-center gap-2">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <button
@@ -135,7 +143,7 @@ export function RatingModal({
                   id="rating-modal-comment"
                   value={comment}
                   onChange={(event) => setComment(event.target.value.slice(0, MAX_COMMENT_LENGTH))}
-                  placeholder={t.rateApp.commentPlaceholder}
+                  placeholder={copy.commentPlaceholder}
                   className="focus:border-primary min-h-16 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-base text-white placeholder:text-white/35 focus:outline-none md:text-sm"
                 />
                 {isGuest && (

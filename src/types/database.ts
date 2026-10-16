@@ -1799,6 +1799,10 @@ export interface Database {
         Args: Record<string, never>;
         Returns: { rating: number; rating_count: number }[];
       };
+      passage_rating_distribution: {
+        Args: Record<string, never>;
+        Returns: { rating: number; rating_count: number }[];
+      };
       increment_xp: {
         Args: { p_delta: number };
         Returns: { previous_xp: number; xp: number }[];

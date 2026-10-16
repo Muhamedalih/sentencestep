@@ -1473,5 +1473,15 @@ export interface Dictionary {
     /** The locked screen of a Premium passage (see PassageLocked): the label over its poster and the heading above the benefits. */
     lockedBadge: string;
     gateHeading: string;
+    /** The small tag above the list's title: what the section is for ("Listening training"). */
+    eyebrow: string;
+    /** The one-time rating card shown after a learner's first finished passage (RatingModal with kind "passages"); the buttons, email field and star labels are rateApp's. */
+    rating: {
+      headline: string;
+      subtitle: string;
+      commentPlaceholder: string;
+      thanksTitle: string;
+      thanksBody: string;
+    };
   };
 }

@@ -1155,7 +1155,7 @@ export const tr: Dictionary = {
   passages: {
     title: "Metinler",
     subtitle:
-      "Gerçek hayattan kısa sahneler. Dinle, oku, hızlı bir soruyu yanıtla ve kelimeleri sakla.",
+      "Kulağını eğiten, gerçek hayattan kısa sahneler. Dinle, oku, hızlı bir soruyu yanıtla ve kelimeleri sakla.",
     levels: { a1: "Başlangıç", a2: "Temel", b1: "Orta", b2: "Orta üstü" },
     minutesShort: "{n} dk",
     continue: "Devam et",
@@ -1210,5 +1210,15 @@ export const tr: Dictionary = {
     homeStart: "Oku",
     lockedBadge: "Premium metin",
     gateHeading: "Sıradaki metnin seni bekliyor",
+    eyebrow: "Dinleme antrenmanı",
+    rating: {
+      headline: "Yeni Metinler bölümünü nasıl buldun?",
+      subtitle:
+        "Metinler'i büyük bir özenle hazırladık ve nereye varacağını çok iyi biliyoruz; ama onu olgunlaştıran şey senin dürüst görüşün. Verdiğin her yıldız ve yazdığın her söz sonraki adımlarımıza yön veriyor, bu yüzden daha da iyi yapmamıza yardım et. Birkaç saniye sürer, tamamen isteğe bağlıdır ve bu mesajı bir daha görmeyeceksin.",
+      commentPlaceholder: "Metinler'de neyi beğendin, neyi geliştirmeliyiz? (isteğe bağlı)",
+      thanksTitle: "Şekillendirmemize yardım ettiğin için teşekkürler",
+      thanksBody:
+        "Puanın bize ulaştı ve Metinler'in bundan sonraki gelişiminin bir parçası olacak.",
+    },
   },
 };

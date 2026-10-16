@@ -3,6 +3,14 @@ import type { Database } from "@/types/database";
 
 export const MAX_RATING_COMMENT_LENGTH = 2000;
 
+/**
+ * The `mode` of a rating given to the Passages section (its `lesson_id` is then the passage the
+ * learner had just finished). The database keeps these apart from the app's own ratings — the
+ * app's average and the site's quoted figure leave them out — so this value must match the one
+ * written into app_rating_distribution() and passage_rating_distribution().
+ */
+export const PASSAGES_RATING_MODE = "passages";
+
 export type AppRatingInsert = Database["public"]["Tables"]["app_ratings"]["Insert"];
 
 export interface AppRatingSubmission {

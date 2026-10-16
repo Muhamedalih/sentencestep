@@ -19,7 +19,11 @@ import {
   type AppRatingStatus,
   type RatingsFilter,
 } from "@/lib/admin/ratings-domain";
-import { getAppRatingsOverview, listAppRatings } from "@/lib/admin/ratings-queries";
+import {
+  countNewRatingsBySource,
+  getAppRatingsOverview,
+  listAppRatings,
+} from "@/lib/admin/ratings-queries";
 import { getRatingsSettings } from "@/lib/feedback/ratings-settings";
 import { MIN_RATINGS_TO_QUOTE, buildRatingsProof } from "@/lib/stats/ratings-proof";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -89,11 +93,13 @@ export default async function AdminRatingsPage({
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const filter = parseRatingsFilter(await searchParams);
-  const [overview, { ratings, totalCount }, settings] = await Promise.all([
-    getAppRatingsOverview(),
+  const [overview, { ratings, totalCount }, settings, newBySource] = await Promise.all([
+    getAppRatingsOverview(filter.source),
     listAppRatings(filter),
     getRatingsSettings(),
+    countNewRatingsBySource(),
   ]);
+  const forPassages = filter.source === "passages";
   const biggestStar = Math.max(1, ...overview.perStar);
   const proof = buildRatingsProof(overview.perStar);
   const proofPreview = proof
@@ -108,18 +114,43 @@ export default async function AdminRatingsPage({
           {overview.newCount > 0 && <Badge variant="secondary">{overview.newCount} new</Badge>}
         </h1>
         <p className="text-muted-foreground mt-1">
-          What learners gave the app from the rating pop-up and Settings, newest first. Reply by
-          email to anyone who left an address (signed-in members always have one), and approve the
-          best ones to show on the site. Archiving a rating takes it out of the figures below and
-          out of the average quoted on the site. Times are Baghdad time (UTC+3), like the old sheet.
+          {forPassages
+            ? "What learners said about the Passages section, from the one-time card shown after their first finished passage (the passage is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
+            : "What learners gave the app from the rating pop-up and Settings, newest first. "}
+          Reply by email to anyone who left an address (signed-in members always have one), and
+          approve the best ones to show on the site. Archiving a rating takes it out of the figures
+          below
+          {forPassages ? "" : " and out of the average quoted on the site"}. Times are Baghdad time
+          (UTC+3), like the old sheet.
         </p>
       </div>
 
-      <RatingsDisplaySettings
-        initial={settings}
-        proofPreview={proofPreview}
-        approvedWithComment={overview.publicWithCommentCount}
-      />
+      <div className="flex flex-wrap gap-1">
+        <Chip href={hrefWith(filter, { source: undefined })} active={filter.source === "app"}>
+          App
+          {newBySource.app > 0 && (
+            <Badge variant="secondary" className="ms-2">
+              {newBySource.app} new
+            </Badge>
+          )}
+        </Chip>
+        <Chip href={hrefWith(filter, { source: "passages" })} active={filter.source === "passages"}>
+          Passages
+          {newBySource.passages > 0 && (
+            <Badge variant="secondary" className="ms-2">
+              {newBySource.passages} new
+            </Badge>
+          )}
+        </Chip>
+      </div>
+
+      {!forPassages && (
+        <RatingsDisplaySettings
+          initial={settings}
+          proofPreview={proofPreview}
+          approvedWithComment={overview.publicWithCommentCount}
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         <div className="grid grid-cols-2 gap-3">

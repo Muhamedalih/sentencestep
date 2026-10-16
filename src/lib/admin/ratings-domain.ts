@@ -13,7 +13,15 @@ export const APP_RATING_STATUSES: readonly AppRatingStatus[] = [
 /** Ratings shown per page in Admin > Ratings. */
 export const RATINGS_PAGE_SIZE = 25;
 
+/**
+ * Where a rating was given. "app" is everything about SentenceStep itself (the rating pop-up
+ * and Settings); "passages" is the one-time card after a learner's first finished passage.
+ * They are listed and counted apart, and only the app's own ratings make the site's average.
+ */
+export type RatingsSource = "app" | "passages";
+
 export interface RatingsFilter {
+  source: RatingsSource;
   view: RatingsView;
   /** Only this many stars, or null for all. */
   stars: 1 | 2 | 3 | 4 | 5 | null;
@@ -37,6 +45,7 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
   const page = Number(first(params.page));
 
   return {
+    source: first(params.source) === "passages" ? "passages" : "app",
     view: view === "archived" || view === "public" ? view : "active",
     stars:
       Number.isInteger(stars) && stars >= 1 && stars <= 5 ? (stars as 1 | 2 | 3 | 4 | 5) : null,
@@ -49,6 +58,7 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
 /** The query-string form of a filter — what the page's links and pager keep when one part changes. */
 export function ratingsFilterParams(filter: RatingsFilter): Record<string, string | undefined> {
   return {
+    source: filter.source === "app" ? undefined : filter.source,
     view: filter.view === "active" ? undefined : filter.view,
     stars: filter.stars ? String(filter.stars) : undefined,
     type: filter.userType ?? undefined,

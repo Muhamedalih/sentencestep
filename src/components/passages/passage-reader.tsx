@@ -11,6 +11,7 @@ import { PassageControls } from "@/components/passages/passage-controls";
 import { PassageListenStage } from "@/components/passages/passage-listen-stage";
 import { PassageQuestionDock } from "@/components/passages/passage-question-dock";
 import type { PassageAnswer } from "@/components/passages/passage-question-dock";
+import { PassageRatingPrompt } from "@/components/passages/passage-rating-prompt";
 import { PassageText } from "@/components/passages/passage-text";
 import { PassageTips } from "@/components/passages/passage-tips";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
@@ -604,6 +605,9 @@ export function PassageReader({
       {shiftReplayEnabled && <ShiftReplayHint showOnTablet />}
 
       {showTips && <PassageTips onStart={dismissTips} />}
+
+      {/* The first time a learner finishes a passage: a one-time "what do you think of Passages?" card. */}
+      <PassageRatingPrompt show={complete} passageId={passage.id} />
     </div>
   );
 }

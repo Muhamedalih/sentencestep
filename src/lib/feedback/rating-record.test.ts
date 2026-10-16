@@ -3,7 +3,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildAppRatingRecord, MAX_RATING_COMMENT_LENGTH } from "./rating-record";
+import {
+  buildAppRatingRecord,
+  MAX_RATING_COMMENT_LENGTH,
+  PASSAGES_RATING_MODE,
+} from "./rating-record";
 
 const base = {
   rating: 5,
@@ -74,4 +78,13 @@ test("long text is cut to what the table allows", () => {
 
 test("no locale means the un-prefixed English default", () => {
   assert.equal(buildAppRatingRecord({ ...base, locale: null }, null)?.locale, "en");
+});
+
+test("a Passages rating is stored under its own mode, with the passage it followed", () => {
+  const record = buildAppRatingRecord(
+    { ...base, lessonId: "the-quiet-hour", mode: PASSAGES_RATING_MODE },
+    null,
+  );
+  assert.equal(record?.mode, "passages");
+  assert.equal(record?.lesson_id, "the-quiet-hour");
 });

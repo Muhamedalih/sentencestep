@@ -7,7 +7,7 @@ import { posterArtFor } from "@/lib/passages/art";
 import type { PassageTone } from "@/lib/passages/types";
 import type { GateFigures } from "@/lib/stats/content-stats";
 
-/** The passage's own poster — its picture when an admin chose one, else its colour — and number, as on the list, standing in for artwork. What is behind the lock is never sent to the viewer, so nothing here pretends to show it. */
+/** The passage's own poster — its picture when an admin chose one (blurred out, as on the list), else its colour — and number, standing in for artwork. What is behind the lock is never sent to the viewer, so nothing here pretends to show it. */
 function PosterArt({
   tone,
   order,
@@ -24,7 +24,7 @@ function PosterArt({
       className="relative flex h-full w-full items-end overflow-hidden p-6"
       style={{ backgroundImage: art.backgroundImage }}
     >
-      <PosterPicture src={posterUrl} />
+      <PosterPicture src={posterUrl} blurred />
       <span className="relative text-6xl leading-none font-semibold text-white/30 tabular-nums">
         {String(order).padStart(2, "0")}
       </span>

@@ -5,8 +5,9 @@ import assert from "node:assert/strict";
 
 import { parseRatingsFilter, ratingsFilterParams, summarizeDistribution } from "./ratings-domain";
 
-test("no query string means the default view: active, every star, everyone, page 1", () => {
+test("no query string means the default view: the app's ratings, active, every star, everyone, page 1", () => {
   assert.deepEqual(parseRatingsFilter({}), {
+    source: "app",
     view: "active",
     stars: null,
     userType: null,
@@ -18,14 +19,23 @@ test("no query string means the default view: active, every star, everyone, page
 test("each filter is read from its query parameter", () => {
   assert.deepEqual(
     parseRatingsFilter({ view: "public", stars: "4", type: "guest", comments: "1", page: "3" }),
-    { view: "public", stars: 4, userType: "guest", commentOnly: true, page: 3 },
+    {
+      source: "app",
+      view: "public",
+      stars: 4,
+      userType: "guest",
+      commentOnly: true,
+      page: 3,
+    },
   );
   assert.equal(parseRatingsFilter({ view: "archived" }).view, "archived");
   assert.equal(parseRatingsFilter({ type: "member" }).userType, "member");
+  assert.equal(parseRatingsFilter({ source: "passages" }).source, "passages");
 });
 
 test("nonsense in the query string falls back to the default instead of failing", () => {
   const filter = parseRatingsFilter({
+    source: "mars",
     view: "everything",
     stars: "9",
     type: "robot",
@@ -33,6 +43,7 @@ test("nonsense in the query string falls back to the default instead of failing"
     page: "-2",
   });
   assert.deepEqual(filter, {
+    source: "app",
     view: "active",
     stars: null,
     userType: null,
@@ -49,18 +60,21 @@ test("a repeated parameter uses its first value", () => {
 
 test("the filter round-trips through its query-string form, leaving defaults out", () => {
   assert.deepEqual(ratingsFilterParams(parseRatingsFilter({})), {
+    source: undefined,
     view: undefined,
     stars: undefined,
     type: undefined,
     comments: undefined,
   });
   const filter = parseRatingsFilter({
+    source: "passages",
     view: "archived",
     stars: "1",
     type: "member",
     comments: "1",
   });
   assert.deepEqual(ratingsFilterParams(filter), {
+    source: "passages",
     view: "archived",
     stars: "1",
     type: "member",

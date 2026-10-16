@@ -1150,7 +1150,7 @@ export const en: Dictionary = {
   passages: {
     title: "Passages",
     subtitle:
-      "Short real-life scenes. Listen, read, answer one quick question, and keep the words.",
+      "Short real-life scenes that train your ear. Listen, read, answer one quick question, and keep the words.",
     levels: { a1: "Beginner", a2: "Elementary", b1: "Intermediate", b2: "Upper intermediate" },
     minutesShort: "{n} min",
     continue: "Continue",
@@ -1205,5 +1205,15 @@ export const en: Dictionary = {
     homeStart: "Read",
     lockedBadge: "Premium passage",
     gateHeading: "Your next passage is waiting",
+    eyebrow: "Listening training",
+    rating: {
+      headline: "What do you think of the new Passages section?",
+      subtitle:
+        "We built Passages with care, and we know exactly where it is heading — your honest opinion is what sharpens it. Every star and every word you write guides our next steps, so help us make it even better. It takes a few seconds, it is completely optional, and you won't see this message again.",
+      commentPlaceholder: "What did you like, and what should we improve in Passages? (optional)",
+      thanksTitle: "Thank you for helping us shape it",
+      thanksBody:
+        "Your rating has reached us, and it will be part of how Passages grows from here.",
+    },
   },
 };

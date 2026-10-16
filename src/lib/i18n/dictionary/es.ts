@@ -1194,7 +1194,7 @@ export const es: Dictionary = {
   passages: {
     title: "Textos",
     subtitle:
-      "Escenas cortas de la vida real. Escucha, lee, responde una pregunta rápida y quédate con las palabras.",
+      "Escenas cortas de la vida real que entrenan tu oído. Escucha, lee, responde una pregunta rápida y quédate con las palabras.",
     levels: { a1: "Principiante", a2: "Elemental", b1: "Intermedio", b2: "Intermedio alto" },
     minutesShort: "{n} min",
     continue: "Continuar",
@@ -1249,5 +1249,15 @@ export const es: Dictionary = {
     homeStart: "Leer",
     lockedBadge: "Texto Premium",
     gateHeading: "Tu próximo texto te espera",
+    eyebrow: "Entrenamiento auditivo",
+    rating: {
+      headline: "¿Qué te parece la nueva sección de Textos?",
+      subtitle:
+        "Hemos creado Textos con mucho cuidado y tenemos muy claro hacia dónde va, pero tu opinión sincera es lo que lo termina de perfeccionar. Cada estrella y cada palabra que escribas guiará nuestros próximos pasos, así que ayúdanos a mejorarlo. Solo lleva unos segundos, es totalmente opcional y no volverás a ver este mensaje.",
+      commentPlaceholder: "¿Qué te gustó y qué deberíamos mejorar en Textos? (opcional)",
+      thanksTitle: "Gracias por ayudarnos a darle forma",
+      thanksBody:
+        "Hemos recibido tu valoración y formará parte de cómo crece Textos a partir de ahora.",
+    },
   },
 };

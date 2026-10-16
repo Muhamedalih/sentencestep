@@ -1,6 +1,6 @@
 "use client";
 
-import { Headphones } from "lucide-react";
+import { AudioLines, Headphones } from "lucide-react";
 
 import { LevelBadge } from "@/components/passages/level-badge";
 import { PassageCard } from "@/components/passages/passage-card";
@@ -8,6 +8,7 @@ import { PassagesAdminBar } from "@/components/passages/passages-admin-bar";
 import { useLocale } from "@/components/providers/locale-provider";
 import { passageStatus } from "@/lib/passages/progress";
 import type { PassageLevel, PassageProgress, PassageSummary } from "@/lib/passages/types";
+import { cn } from "@/lib/utils";
 
 const LEVEL_KEYS: Record<PassageLevel, "a1" | "a2" | "b1" | "b2"> = {
   A1: "a1",
@@ -17,7 +18,8 @@ const LEVEL_KEYS: Record<PassageLevel, "a1" | "a2" | "b1" | "b2"> = {
 };
 
 /**
- * The Passages list: a heading, the posters grouped by level, and — for admins
+ * The Passages list: a heading (a "Listening training" tag, the title, one line on how it
+ * works), the posters grouped by level, and — for admins
  * only — the preview/publish bar. Levels with nothing in them are not shown at
  * all (no empty "coming soon" boxes). The grid is five posters across on a wide
  * screen, so the ten passages of a level are two tidy rows.
@@ -38,7 +40,7 @@ export function PassagesLibrary({
   /** For an admin: "admin" (preview) or "on" (public). Null for everyone else — they get no bar. */
   adminState: "admin" | "on" | null;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const progressById = new Map(progress.map((entry) => [entry.passageId, entry]));
 
   const levels = [...new Set(passages.map((passage) => passage.level))];
@@ -48,6 +50,16 @@ export function PassagesLibrary({
       {adminState && <PassagesAdminBar isPublic={adminState === "on"} />}
 
       <header className="mb-9">
+        {/* Says what the section is for before anything else: it trains the ear. (Arabic joins its letters, so it is never spaced out or capitalised.) */}
+        <p
+          className={cn(
+            "border-primary/25 bg-primary/10 text-primary mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold",
+            locale !== "ar" && "tracking-[0.14em] uppercase",
+          )}
+        >
+          <AudioLines aria-hidden="true" className="size-3.5" />
+          {t.passages.eyebrow}
+        </p>
         <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl">
           {/* Passages are lessons you listen to: the headphones sway slowly beside the title to say so (see .passage-headphones). */}
           <Headphones
