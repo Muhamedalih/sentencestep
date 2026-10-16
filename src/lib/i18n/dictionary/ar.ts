@@ -885,7 +885,9 @@ export const ar: Dictionary = {
     replayDescriptionShift: "استمع إلى الجملة مرة أخرى، أو اضغط مفتاح Shift.",
     replayAction: "تشغيل",
     keySoundsTitle: "صوت أزرار الكيبورد",
-    keySoundsDescription: "شغّل أو أوقف صوت النقر الذي يُسمع مع كل حرف تكتبه.",
+    keySoundsDescription: "اختر صوت النقر الذي يُسمع مع كل حرف تكتبه، أو أوقفه.",
+    keySoundsToneLabel: "نغمة الكتابة",
+    keySoundsTones: { premium: "بريميوم", bubble: "فقاعة", knock: "طَرقة" },
   },
   learnerLevels: {
     beginner: "مبتدئ",

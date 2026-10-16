@@ -1169,6 +1169,14 @@ export interface Dictionary {
     replayAction: string;
     keySoundsTitle: string;
     keySoundsDescription: string;
+    /** Accessible name of the tone picker under the typing-sounds switch (the three options are the names below). */
+    keySoundsToneLabel: string;
+    /** The three tones a learner can pick (see LEARNER_SOUND_TONES in src/lib/typing-sound-packs.ts). */
+    keySoundsTones: {
+      premium: string;
+      bubble: string;
+      knock: string;
+    };
   };
   /** The five XP-based learner levels (see src/lib/progress/learner-level.ts) — a separate progression from the lesson-difficulty tiers in src/lib/levels.ts, keyed by LearnerLevel.name so the underlying English name stays a stable identifier. */
   learnerLevels: {

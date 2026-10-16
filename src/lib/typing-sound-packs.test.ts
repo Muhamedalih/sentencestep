@@ -13,6 +13,7 @@ import {
 import type { SoundLayer, SoundTake } from "./typing-sound-layered-packs";
 import {
   DEFAULT_SOUND_PACK,
+  LEARNER_SOUND_TONES,
   SOUND_PACKS,
   SOUND_PACK_COLLECTIONS,
   SOUND_PACK_DESCRIPTIONS,
@@ -20,6 +21,7 @@ import {
   SOUND_PACK_NAMES,
   getSoundPackVariationCount,
   isLayeredSoundPack,
+  isLearnerSoundTone,
   isSampleSoundPack,
 } from "./typing-sound-packs";
 import type { SoundVariant } from "./typing-sound-packs";
@@ -76,6 +78,19 @@ test("every pack belongs to exactly one collection, and the real recordings come
 test("the default pack is still a real pack (persisted 'soft' selections keep working)", () => {
   assert.equal(DEFAULT_SOUND_PACK, "soft");
   assert.ok(SOUND_PACK_NAMES.includes(DEFAULT_SOUND_PACK));
+});
+
+test("the learner's tone picker offers three real Classic tones, led by the sound lessons already play", () => {
+  assert.deepEqual([...LEARNER_SOUND_TONES], ["premium", "bubble", "knock"]);
+  const classic = SOUND_PACK_COLLECTIONS.find((collection) => collection.id === "classic")!.packs;
+  for (const tone of LEARNER_SOUND_TONES) {
+    assert.ok(classic.includes(tone), `${tone} is a Classic tone`);
+    assert.ok(tone in SOUND_PACKS, `${tone} is a synthesized single-tone pack`);
+  }
+  assert.equal(isLearnerSoundTone("premium"), true);
+  assert.equal(isLearnerSoundTone("soft"), false);
+  assert.equal(isLearnerSoundTone(null), false);
+  assert.equal(isLearnerSoundTone(undefined), false);
 });
 
 test("every pack has a distinct label and a short description", () => {

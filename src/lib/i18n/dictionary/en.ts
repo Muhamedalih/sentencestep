@@ -908,7 +908,9 @@ export const en: Dictionary = {
     replayDescriptionShift: "Hear the sentence one more time. Shortcut: press Shift.",
     replayAction: "Play",
     keySoundsTitle: "Typing sounds",
-    keySoundsDescription: "Turn the click sound of every key you type on or off.",
+    keySoundsDescription: "Choose the click you hear with every key you type, or turn it off.",
+    keySoundsToneLabel: "Typing sound",
+    keySoundsTones: { premium: "Premium", bubble: "Bubble", knock: "Knock" },
   },
   learnerLevels: {
     beginner: "Beginner",

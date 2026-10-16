@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import { useKeySoundMuted } from "@/hooks/use-key-sound-muted";
+import { useKeySoundTone } from "@/hooks/use-key-sound-tone";
 import {
   DEFAULT_SOUND_PACK,
   LAYERED_SOUND_PACKS,
@@ -109,6 +110,11 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
   } = options;
   const { muted: learnerMuted } = useKeySoundMuted();
   const keystrokesMuted = options.keystrokesMuted ?? learnerMuted;
+  // The tone the learner picked in the lesson settings panel wins over the
+  // admin's pack until they pick another; never chosen = the admin's pack.
+  // (The admin's Preview buttons name their pack explicitly, see play().)
+  const { tone: learnerTone } = useKeySoundTone();
+  const activePack: SoundPack = learnerTone ?? pack;
   const contextRef = useRef<AudioContext | undefined>(undefined);
   // Index of the take each layered pack/variant played last, so a pack with
   // several takes never plays the same one twice in a row. Per hook instance
@@ -155,7 +161,7 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
    */
   const preload = useCallback(
     (overridePack?: SoundPack) => {
-      const target = overridePack ?? pack;
+      const target = overridePack ?? activePack;
       if (!isSampleSoundPack(target)) return;
       try {
         void loadSamplePack(ensureContext(), SAMPLE_SOUND_PACKS[target]);
@@ -163,7 +169,7 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
         // No Web Audio (or blocked): the pack just stays silent, like any missed cue.
       }
     },
-    [ensureContext, pack],
+    [ensureContext, activePack],
   );
 
   useEffect(() => {
@@ -178,7 +184,7 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
       try {
         const ctx = getContext();
         const now = ctx.currentTime;
-        const resolvedPack = overridePack ?? pack;
+        const resolvedPack = overridePack ?? activePack;
 
         if (isLayeredSoundPack(resolvedPack)) {
           const layered = LAYERED_SOUND_PACKS[resolvedPack];
@@ -276,7 +282,7 @@ export function useTypingSound(options: UseTypingSoundOptions = {}) {
         // missed sound cue isn't worth surfacing an error for.
       }
     },
-    [getContext, pack, enabled, keystrokesMuted, volume],
+    [getContext, activePack, enabled, keystrokesMuted, volume],
   );
 
   /**

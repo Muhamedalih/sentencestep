@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -34,6 +35,10 @@ import {
 import { useLocale } from "@/components/providers/locale-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { useKeySoundMuted } from "@/hooks/use-key-sound-muted";
+import { useKeySoundTone } from "@/hooks/use-key-sound-tone";
+import { useTypingSound } from "@/hooks/use-typing-sound";
+import { LEARNER_SOUND_TONES, isLearnerSoundTone } from "@/lib/typing-sound-packs";
+import type { LearnerSoundTone } from "@/lib/typing-sound-packs";
 import { cn } from "@/lib/utils";
 
 const SPEED_ICONS = [Rabbit, Turtle, Snail];
@@ -49,7 +54,10 @@ const SPEED_ICONS = [Rabbit, Turtle, Snail];
  *  - Replay the audio: plays the sentence again (and says the Shift shortcut
  *    does the same, wherever that shortcut is wired up).
  *  - Typing sounds: an on/off switch for the per-keystroke click
- *    (useKeySoundMuted), same as the old keyboard button.
+ *    (useKeySoundMuted), same as the old keyboard button, and — while it is
+ *    on — a pick of three classic tones (useKeySoundTone). Choosing one plays
+ *    it once so the learner hears what they are picking, and the choice stays
+ *    until they pick another.
  *
  * Rows whose feature isn't available are left out rather than shown dead:
  * speed outside a PronunciationSettingsProvider (the Admin content preview),
@@ -82,6 +90,14 @@ export const LessonSettings = forwardRef<
   const { isActive, speedIndex, setSpeed } = usePronunciationSettings();
   const soundSettings = useTypingSoundSettings();
   const { muted, toggle: toggleMuted } = useKeySoundMuted();
+  const { tone, setTone } = useKeySoundTone();
+  // Its own instance, only ever asked to play the sample when a tone is picked
+  // (named explicitly, so it doesn't matter which pack the lesson itself uses).
+  const tonePreview = useTypingSound({
+    enabled: true,
+    volume: soundSettings.volume,
+    keystrokesMuted: false,
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<PronunciationStatus>({
@@ -171,8 +187,26 @@ export const LessonSettings = forwardRef<
     inputRef?.current?.focus();
   }
 
+  function handleTone(next: LearnerSoundTone) {
+    setTone(next);
+    tonePreview.play("letter", next);
+    inputRef?.current?.focus();
+  }
+
   const SpeedIcon = SPEED_ICONS[speedIndex] ?? Rabbit;
-  const speedLabels = [t.pronunciation.normalSpeed, t.pronunciation.slow, t.pronunciation.verySlow];
+  const speedOptions = [
+    { value: 0, label: t.pronunciation.normalSpeed },
+    { value: 1, label: t.pronunciation.slow },
+    { value: 2, label: t.pronunciation.verySlow },
+  ];
+  const toneOptions = LEARNER_SOUND_TONES.map((value) => ({
+    value,
+    label: t.lessonSettings.keySoundsTones[value],
+  }));
+  // Until the learner picks, they hear the sound the app is set to — shown as
+  // selected when it is one of the three on offer.
+  const selectedTone =
+    tone ?? (isLearnerSoundTone(soundSettings.soundPack) ? soundSettings.soundPack : null);
 
   return (
     <div ref={rootRef} className={cn("relative flex shrink-0 items-center gap-2", className)}>
@@ -215,7 +249,7 @@ export const LessonSettings = forwardRef<
           type="button"
           onMouseDown={keepInputFocus}
           onClick={() => handleSpeed((speedIndex + 1) % PRONUNCIATION_SPEED_STEPS.length)}
-          aria-label={`${t.lessonSettings.speedTitle}: ${speedLabels[speedIndex]}`}
+          aria-label={`${t.lessonSettings.speedTitle}: ${speedOptions[speedIndex]?.label}`}
           title={t.lessonSettings.speedTitle}
           dir="ltr"
           className="hidden h-12 min-w-14 shrink-0 items-center justify-center gap-1 rounded-full border border-[var(--lesson-primary)]/40 px-3 text-sm font-bold text-[var(--lesson-icon)] tabular-nums outline-none active:scale-95 pointer-coarse:flex"
@@ -296,42 +330,13 @@ export const LessonSettings = forwardRef<
                     title={t.lessonSettings.speedTitle}
                     description={t.lessonSettings.speedDescription}
                   >
-                    <div
-                      role="radiogroup"
-                      aria-label={t.lessonSettings.speedTitle}
-                      className="bg-muted/60 mt-3 grid grid-cols-3 gap-1 rounded-xl p-1"
-                    >
-                      {PRONUNCIATION_SPEED_STEPS.map((step, index) => {
-                        const Icon = SPEED_ICONS[index] ?? Rabbit;
-                        const selected = index === speedIndex;
-                        return (
-                          <button
-                            key={step.key}
-                            type="button"
-                            role="radio"
-                            aria-checked={selected}
-                            onClick={() => handleSpeed(index)}
-                            className={cn(
-                              "focus-visible:ring-ring flex min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-2 text-xs font-medium transition-colors outline-none focus-visible:ring-2",
-                              selected
-                                ? "bg-card text-foreground shadow-sm ring-1 ring-[var(--lesson-primary)]/40"
-                                : "text-muted-foreground hover:text-foreground",
-                            )}
-                          >
-                            <Icon
-                              className={cn(
-                                "size-4",
-                                selected ? "text-[var(--lesson-icon)]" : undefined,
-                              )}
-                              aria-hidden="true"
-                            />
-                            <span className="max-w-full truncate" dir={dir}>
-                              {speedLabels[index]}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <ChoiceGroup
+                      label={t.lessonSettings.speedTitle}
+                      options={speedOptions}
+                      value={speedIndex}
+                      onChange={handleSpeed}
+                      reducedMotion={reducedMotion}
+                    />
                   </SettingRow>
                 )}
 
@@ -404,7 +409,30 @@ export const LessonSettings = forwardRef<
                         />
                       </button>
                     }
-                  />
+                  >
+                    {/* The tone only matters while the sound is on, so the picker
+                        folds away with the switch rather than sitting dead. */}
+                    <AnimatePresence initial={false}>
+                      {!muted && (
+                        <motion.div
+                          key="tones"
+                          initial={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                          animate={reducedMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+                          exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
+                          className="overflow-hidden"
+                        >
+                          <ChoiceGroup
+                            label={t.lessonSettings.keySoundsToneLabel}
+                            options={toneOptions}
+                            value={selectedTone}
+                            onChange={handleTone}
+                            reducedMotion={reducedMotion}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </SettingRow>
                 )}
               </div>
             </div>
@@ -414,6 +442,70 @@ export const LessonSettings = forwardRef<
     </div>
   );
 });
+
+/**
+ * A short list of choices (voice speed, typing-sound tone) as one row of
+ * equal pills: plain text, with the selected one filled in the lesson's soft
+ * brand tint and ringed in its brand color. The fill slides to the new choice
+ * (not at all under reduced motion). Needs no icons or captions — the label is
+ * the whole option — which keeps three choices readable at a glance in the
+ * panel's narrow width, in any of the four languages.
+ */
+function ChoiceGroup<T extends string | number>({
+  label,
+  options,
+  value,
+  onChange,
+  reducedMotion,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  /** null = none of the options is selected (e.g. the app plays a sound that isn't on offer). */
+  value: T | null;
+  onChange: (value: T) => void;
+  reducedMotion: boolean;
+}) {
+  const indicatorId = useId();
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="border-border/60 bg-muted/40 mt-3 grid grid-cols-3 gap-1 rounded-xl border p-1"
+    >
+      {options.map((option) => {
+        const selected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "focus-visible:ring-ring relative h-9 min-w-0 rounded-lg px-2 text-sm transition-colors outline-none focus-visible:ring-2",
+              selected
+                ? "font-semibold text-[var(--lesson-icon)]"
+                : "text-muted-foreground hover:text-foreground font-medium",
+            )}
+          >
+            {selected && (
+              <motion.span
+                layoutId={indicatorId}
+                aria-hidden="true"
+                transition={
+                  reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 40 }
+                }
+                className="absolute inset-0 rounded-lg bg-[var(--lesson-secondary)] ring-1 ring-[var(--lesson-primary)]/40"
+              />
+            )}
+            <span className="relative block truncate">{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /** One row of the panel: a round icon, a title with its one-line explanation, and (optionally) a control at the end — or, for a row that needs more room, `children` beneath the text. */
 function SettingRow({

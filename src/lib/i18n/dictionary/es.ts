@@ -925,7 +925,9 @@ export const es: Dictionary = {
     replayDescriptionShift: "Escucha la oración una vez más. Atajo: pulsa Shift.",
     replayAction: "Reproducir",
     keySoundsTitle: "Sonido de las teclas",
-    keySoundsDescription: "Activa o desactiva el clic que suena con cada tecla que pulsas.",
+    keySoundsDescription: "Elige el clic que suena con cada tecla que pulsas, o desactívalo.",
+    keySoundsToneLabel: "Sonido al escribir",
+    keySoundsTones: { premium: "Premium", bubble: "Burbuja", knock: "Golpe" },
   },
   learnerLevels: {
     beginner: "Principiante",

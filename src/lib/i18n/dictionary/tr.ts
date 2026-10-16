@@ -913,7 +913,9 @@ export const tr: Dictionary = {
     replayDescriptionShift: "Cümleyi bir kez daha dinleyin. Kısayol: Shift tuşuna basın.",
     replayAction: "Çal",
     keySoundsTitle: "Yazma sesleri",
-    keySoundsDescription: "Yazdığınız her tuşun tık sesini açın veya kapatın.",
+    keySoundsDescription: "Yazdığınız her tuşta duyacağınız tık sesini seçin veya kapatın.",
+    keySoundsToneLabel: "Yazma sesi",
+    keySoundsTones: { premium: "Premium", bubble: "Baloncuk", knock: "Vuruş" },
   },
   learnerLevels: {
     beginner: "Başlangıç",

@@ -276,3 +276,23 @@ export function getSoundPackVariationCount(pack: SoundPack): number {
 }
 
 export const DEFAULT_SOUND_PACK: SoundPack = "soft";
+
+/**
+ * The classic tones a learner can pick between in the lesson settings panel,
+ * in display order (see LessonSettings / useKeySoundTone). A small curated
+ * subset of the Classic tones on purpose — three clearly different sounds are
+ * easier to choose from than the whole library, which stays an admin matter.
+ * The first is the sound lessons already play, so a learner who never opens
+ * the picker hears no change.
+ */
+export const LEARNER_SOUND_TONES = [
+  "premium",
+  "bubble",
+  "knock",
+] as const satisfies readonly ToneSoundPack[];
+
+export type LearnerSoundTone = (typeof LEARNER_SOUND_TONES)[number];
+
+export function isLearnerSoundTone(value: unknown): value is LearnerSoundTone {
+  return typeof value === "string" && (LEARNER_SOUND_TONES as readonly string[]).includes(value);
+}
