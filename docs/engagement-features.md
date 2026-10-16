@@ -67,6 +67,10 @@ These are new and **not applied automatically**:
 14. `20250337000000_passage_admin.sql` (Admin → Passages: `passage_speaker_voices`,
     one voice per character behind admin-only RLS, and the `say` / `pause` columns
     of `passage_sentences`). Apply it BEFORE deploying the code that reads it
+15. `20250338000000_passage_backgrounds.sql` (Admin → Passages background pictures:
+    the `poster_url` and `background_url` columns of `passages` and the public
+    `passage-backgrounds` Storage bucket, WebP only). Apply it BEFORE deploying the code
+    that uses it (the upload writes the two columns; it is already applied to the live project)
 
 Until a migration is applied, the feature that needs it degrades quietly (its
 card doesn't render, its event is skipped) — lesson completion is never
@@ -419,7 +423,10 @@ Passages are about understanding it. Arabic support language only for now.
   the learner has answered; after a wrong answer the sentence that holds the
   answer is lit green. The buttons share one press feel (`PassageButton`). The list shows
   each passage as a poster card whose gradient comes from its tone and number
-  (`src/lib/passages/art.ts`) — no pictures, no tone labels.
+  (`src/lib/passages/art.ts`) — no pictures of our own, no tone labels. An admin can give
+  a passage a picture of their choice instead (see "Background picture" under Admin →
+  Passages): the poster, Home's card and the lock screen then show it, and the reading
+  page gets it as a faint backdrop at the top.
 - **Listen first and speed** (header controls). **Listen without text** replaces
   a part's text with a play stage until its question has been answered, then
   reveals the text; it is only offered when the part has a clip for every line.
@@ -565,9 +572,30 @@ Passages are about understanding it. Arabic support language only for now.
     draft word lesson, a voice per character from its cast, and takes everything back
     if a write fails half way). A passage authored in `src/data/passages` that is
     deleted here comes back the next time `insert-passages.ts` runs.
+  - _Background picture_ (a card on the passage's page, and a small "Picture" column in
+    the list — click a poster in miniature to choose a file): the admin picks any
+    JPG, PNG, WebP or AVIF (at least 600 px on each side, up to 12 MB) and it becomes the
+    passage's background. One upload makes two files (`background-image.ts`, with the
+    `sharp` library the app already ships for its image optimizer): the **poster**, cropped
+    to 600 × 800 around the most interesting part of the picture, for the Passages list,
+    Home's card and the lock screen (`PosterPicture`, over a shade that keeps the white
+    number, badge and title readable on any picture), and a **wide** one (up to 1600 px)
+    for the soft backdrop at the top of the reading page (`PassageBackdrop`: faded into the
+    page, light in both themes, takes no room, so nothing moves for it). Both are
+    re-encoded as WebP, turned the right way up and stripped of metadata, so only a clean
+    picture is ever stored, and a learner downloads about 50 KB for a poster instead of
+    the original. They live in the public `passage-backgrounds` bucket under
+    `<passage>/<uuid>.webp` (a new name per upload, so a replaced picture never comes
+    from a cache); the old files are deleted when it is replaced, removed or when the
+    passage is deleted. Without a picture a passage keeps its generated colours, exactly
+    as before. It is a route handler (`POST|DELETE /api/admin/passages/<slug>/background`),
+    not a Server Action, because a Server Action may carry only 1 MB; it checks what Next.js
+    would check for a Server Action — the request must come from this site (`isSameOrigin`)
+    and from an admin.
   - Every change is an audit-log entry (`passage.status_changed`, `access_changed`,
-    `voice_changed`, `imported`, `deleted`, `audio_generated`).
-- **Levels**: A1 (eleven scenes), A2 (eleven), B1 (seven) and B2 (six), written in
+    `voice_changed`, `imported`, `deleted`, `audio_generated`, `background_changed`,
+    `background_removed`).
+- **Levels**: A1 (thirteen scenes), A2 (thirteen), B1 (nine) and B2 (eight), written in
   `src/data/passages/{a1,a2,b1,b2}-part-*.ts`. The line-length limit grows with the
   level (`MAX_WORDS_PER_LINE_BY_LEVEL`), the reader sets a longer part in a
   smaller size so it still fits one screen (`textSizeFor`), and a passage's words
