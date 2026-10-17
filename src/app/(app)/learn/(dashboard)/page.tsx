@@ -9,6 +9,7 @@ import { HomeEngagementSection, HomePassages } from "@/components/app/home-engag
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
 import { HomePlan } from "@/components/app/home-plan";
+import { HomeReviewCard } from "@/components/app/home-review-card";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
@@ -237,16 +238,9 @@ export default async function LearnHomePage() {
       ? access.expiresAt
       : null;
 
-  // The review card sits under the Stories card inside "Up next" (or under the plan, in the admin preview).
-  const reviewCard = (inColumn: boolean) => (
-    <NeedsReviewWords
-      words={weakWords.filter((word) => word.dueNow)}
-      count={reviewWaiting.count}
-      smart={reviewWaiting.smart}
-      compact={inColumn}
-      className={inColumn ? "mb-0 sm:mb-0" : undefined}
-    />
-  );
+  // The review card sits under the Stories card inside "Up next", drawn like it (HomeReviewCard) —
+  // in the admin preview it stays the Word Lists page's own full-width card, under the plan.
+  const reviewWords = weakWords.filter((word) => word.dueNow);
 
   return (
     <ProgressProvider initialProgress={initialProgress}>
@@ -301,12 +295,26 @@ export default async function LearnHomePage() {
                 isPremiumUser={isPremiumUser}
                 hasWeakWords={reviewWaiting.count > 0}
                 isAdminUser={isAdminUser}
-                review={reviewCard(true)}
+                review={
+                  <HomeReviewCard
+                    words={reviewWords}
+                    count={reviewWaiting.count}
+                    smart={reviewWaiting.smart}
+                  />
+                }
               />
             </>
           )}
         </div>
-        {showHomePlan && <div className="max-sm:order-4">{reviewCard(false)}</div>}
+        {showHomePlan && (
+          <div className="max-sm:order-4">
+            <NeedsReviewWords
+              words={reviewWords}
+              count={reviewWaiting.count}
+              smart={reviewWaiting.smart}
+            />
+          </div>
+        )}
       </div>
     </ProgressProvider>
   );

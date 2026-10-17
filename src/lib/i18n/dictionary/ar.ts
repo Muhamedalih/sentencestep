@@ -613,6 +613,7 @@ export const ar: Dictionary = {
   wordLists: {
     needsReviewHeading: "راجع كل الكلمات",
     needsReviewSubtitle: "الكلمات التي أخطأت بها من قبل — راجعها الآن وثبّتها في ذاكرتك للأبد.",
+    needsReviewAction: "راجع الآن",
     wordCount: "{n} كلمة",
     premiumGroup: "مميز",
     navLabel: "قوائم الكلمات",

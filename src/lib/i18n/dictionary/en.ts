@@ -635,6 +635,7 @@ export const en: Dictionary = {
     needsReviewHeading: "Review All Words",
     needsReviewSubtitle:
       "Words you've gotten wrong before — review them now to lock them into memory for good.",
+    needsReviewAction: "Review now",
     wordCount: "{n} words",
     premiumGroup: "Premium",
     navLabel: "Word Lists",

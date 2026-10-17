@@ -740,6 +740,8 @@ export interface Dictionary {
     /** Heading/subtitle for the Word Lists dashboard's "Review All Words" hero card — see src/lib/weak-words and NeedsReviewWords. Links to /learn/word-lists/review, which quizzes only these specific weak words. */
     needsReviewHeading: string;
     needsReviewSubtitle: string;
+    /** The small button on Home's review card (HomeReviewCard) — the Word Lists page's own card has no button. */
+    needsReviewAction: string;
     wordCount: string;
     premiumGroup: string;
     navLabel: string;

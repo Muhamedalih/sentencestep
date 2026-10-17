@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { cn } from "@/lib/utils";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 
 /**
@@ -27,18 +26,12 @@ export function NeedsReviewWords({
   words,
   count,
   smart = false,
-  compact = false,
-  className,
 }: {
   words: WeakWordItem[];
   /** Smart word practice: everything waiting for review (due on the learner's schedule, or weak), each word once — shown instead of the weak-word count alone. */
   count?: number;
   /** Smart word practice is on: the hero says the review time has come, since the queue is now the schedule's due words as well as the weak ones. */
   smart?: boolean;
-  /** From lg up, a smaller padding, sticker and text — for Home, where the card shares a half-width column with the Stories card. Below lg nothing changes. */
-  compact?: boolean;
-  /** Overrides the card's own classes — Home passes a zero bottom margin when the card sits inside a column instead of at the end of the page. */
-  className?: string;
 }) {
   const { t, dir } = useLocale();
   const total = count ?? words.length;
@@ -49,11 +42,7 @@ export function NeedsReviewWords({
   return (
     <Link
       href="/learn/word-lists/review"
-      className={cn(
-        "border-border from-primary/10 hover:border-primary/40 focus-visible:ring-ring focus-visible:ring-offset-background group relative mb-6 flex flex-row items-center gap-4 overflow-hidden rounded-2xl border bg-gradient-to-br via-transparent to-transparent p-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:mb-10 sm:gap-8 sm:p-8",
-        compact && "lg:gap-5 lg:p-6",
-        className,
-      )}
+      className="border-border from-primary/10 hover:border-primary/40 focus-visible:ring-ring focus-visible:ring-offset-background group relative mb-6 flex flex-row items-center gap-4 overflow-hidden rounded-2xl border bg-gradient-to-br via-transparent to-transparent p-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:mb-10 sm:gap-8 sm:p-8"
     >
       {/* Off-white "sticker" chip, deliberately not themed to the page's own
           dark palette — a chunky bottom-edge shadow (the flat colored line
@@ -64,32 +53,18 @@ export function NeedsReviewWords({
           light and dark site themes. */}
       <div
         dir="ltr"
-        className={cn(
-          "flex shrink-0 -rotate-2 flex-col items-center justify-center self-center rounded-2xl bg-[oklch(0.96_0.015_85)] px-4 py-2 text-[oklch(0.32_0.03_60)] shadow-[0_3px_0_0_oklch(0.85_0.03_80),0_10px_20px_-8px_rgba(0,0,0,0.45)] transition-transform duration-200 group-hover:rotate-0 sm:px-8 sm:py-6",
-          compact && "lg:px-5 lg:py-3",
-        )}
+        className="flex shrink-0 -rotate-2 flex-col items-center justify-center self-center rounded-2xl bg-[oklch(0.96_0.015_85)] px-4 py-2 text-[oklch(0.32_0.03_60)] shadow-[0_3px_0_0_oklch(0.85_0.03_80),0_10px_20px_-8px_rgba(0,0,0,0.45)] transition-transform duration-200 group-hover:rotate-0 sm:px-8 sm:py-6"
       >
-        <span
-          className={cn(
-            "text-3xl font-extrabold tracking-tight sm:text-5xl",
-            compact && "lg:text-4xl",
-          )}
-        >
-          {total}
-        </span>
+        <span className="text-3xl font-extrabold tracking-tight sm:text-5xl">{total}</span>
         <span className="text-xs font-semibold tracking-wide uppercase opacity-70">
           {t.wordLists.wordsUnit}
         </span>
       </div>
       <div className="min-w-0 flex-1" dir={dir}>
-        <h2
-          className={cn("text-lg font-semibold tracking-tight sm:text-xl", compact && "lg:text-lg")}
-        >
+        <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
           {t.wordLists.needsReviewHeading}
         </h2>
-        <p
-          className={cn("text-muted-foreground mt-1 text-sm sm:text-base", compact && "lg:text-sm")}
-        >
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
           {smart ? t.wordLists.smart.reviewDueSubtitle : t.wordLists.needsReviewSubtitle}
         </p>
       </div>

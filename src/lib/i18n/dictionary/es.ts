@@ -649,6 +649,7 @@ export const es: Dictionary = {
     needsReviewHeading: "Repasar todas las palabras",
     needsReviewSubtitle:
       "Palabras que te equivocaste antes — repásalas ahora para fijarlas en tu memoria para siempre.",
+    needsReviewAction: "Repasar ahora",
     wordCount: "{n} palabras",
     premiumGroup: "Premium",
     navLabel: "Listas de palabras",

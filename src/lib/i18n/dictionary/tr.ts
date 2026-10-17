@@ -638,6 +638,7 @@ export const tr: Dictionary = {
     needsReviewHeading: "Tüm Kelimeleri Gözden Geçir",
     needsReviewSubtitle:
       "Daha önce yanlış yaptığın kelimeler — kalıcı olarak hafızana yerleştirmek için şimdi gözden geçir.",
+    needsReviewAction: "Şimdi gözden geçir",
     wordCount: "{n} kelime",
     premiumGroup: "Premium",
     navLabel: "Kelime listeleri",
