@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Sparkles, Trophy } from "lucide-react";
+import { BookOpen, Sparkles, Trophy } from "lucide-react";
 
 import { HomeBookCard } from "@/components/app/home-book-card";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
@@ -10,7 +10,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
-import { posterArtFor } from "@/lib/passages/art";
 import { findCurrentLesson } from "@/lib/progress/level";
 import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
@@ -189,13 +188,12 @@ export function HomeHero({
     isPremiumUser,
     startingLevel,
   );
-  // A story without a picture shows its title in large type on a cover in the Passages posters'
-  // indigo (always the same one, so the cover stays on-brand), so the line under it only repeats
-  // the title when the story has no translated one.
+  // A story without a picture shows its title in large type on a cover in the site's own grey,
+  // with a faint book outline in the corner, so the line under it only repeats the title when the
+  // story has no translated one.
   const storyBandTitle = currentStoryLesson?.illustrationUrl
     ? null
     : (currentStoryLesson?.title ?? t.nav.stories);
-  const storyArt = posterArtFor("inspiring", 2);
   const storySubtitle = currentStoryLesson
     ? (currentStoryLesson.supportTitle ?? currentStoryLesson.title)
     : t.marketing.storiesModeDescription;
@@ -367,8 +365,9 @@ export function HomeHero({
               // an admin-set photo (this branch) crops fine at any size, but
               // the SVG-scene fallback (the "no photo" case, below) does not,
               // so it gets this card's own treatment instead: a cover in the
-              // Passages posters' violet colours with the story's title in
-              // large type (below).
+              // site's own grey (the same one the review card beside it uses)
+              // with a hairline book outline in the brand colour at 22% and
+              // the story's title in large type (below).
               // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as LessonIllustration's own <Image>'s source, but at a thumbnail size next/image's pipeline isn't worth the extra config for.
               <img
                 src={currentStoryLesson.illustrationUrl}
@@ -376,12 +375,14 @@ export function HomeHero({
                 className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
               />
             ) : (
-              <div
-                className="absolute inset-0 flex items-end p-4"
-                style={{ backgroundImage: storyArt.backgroundImage }}
-              >
+              <div className="absolute inset-0 flex items-end bg-[linear-gradient(180deg,var(--muted),var(--card))] p-4">
+                <BookOpen
+                  aria-hidden="true"
+                  strokeWidth={1.5}
+                  className="text-primary/[0.22] pointer-events-none absolute -end-[6%] -top-[15%] aspect-square h-[131%] w-auto [&_path]:[vector-effect:non-scaling-stroke]"
+                />
                 <span
-                  className="line-clamp-3 text-xl leading-tight font-semibold tracking-tight text-white"
+                  className="text-foreground relative line-clamp-3 text-xl leading-tight font-semibold tracking-tight dark:text-white"
                   dir="ltr"
                 >
                   {storyBandTitle}
