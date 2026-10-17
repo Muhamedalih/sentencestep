@@ -20,10 +20,16 @@ import type { Book } from "@/types/library";
 export type LessonStatsMap = Record<string, { sentences: number; words: number }>;
 
 /**
- * The large card's actual image+text content — shared by the real
- * current-lesson state and the free-lessons-exhausted fallback below (same
- * JSX either way, just a different lesson/eyebrow/CTA), so fixing or
- * restyling this layout never means keeping two copies in sync.
+ * The large card's actual content — shared by the real current-lesson state and the
+ * free-lessons-exhausted fallback below (same JSX either way, just a different
+ * lesson/eyebrow/CTA), so restyling this layout never means keeping two copies in sync.
+ *
+ * The whole card is the lesson's picture (the admin's pictures are 4:5 portraits, which is why
+ * the card is 4:5 from lg up). The eyebrow sits on it as a small glass pill; the title, its
+ * translation, the two short blurbs and the button are written in white over a shade that
+ * fades up from the bottom, so they read on any picture, a bright one included. A lesson with
+ * no picture keeps its hand-drawn scene in the card's upper part. The whole card opens the
+ * lesson; the button is the one link keyboard and screen-reader users reach.
  */
 function MainLessonCardBody({
   lesson,
@@ -41,43 +47,59 @@ function MainLessonCardBody({
   /** Optional quiet block under the button — only the finished-the-starter-lessons card uses it. */
   footer?: ReactNode;
 }) {
+  const hasPicture = Boolean(lesson.illustrationUrl);
   return (
-    <>
-      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden max-sm:aspect-[12/5]">
-        <LessonIllustration
-          mode="normal"
-          lessonId={lesson.id}
-          title={lesson.title}
-          illustrationUrl={lesson.illustrationUrl}
-          className="aspect-[16/10] w-full max-sm:aspect-[12/5]"
-        />
-      </div>
-      <div className="flex flex-1 flex-col justify-center gap-2 p-4 sm:p-8">
-        <p className="text-muted-foreground text-sm font-medium" dir={dir}>
-          {eyebrow}
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl" dir="ltr">
+    <div className="relative isolate flex flex-1 flex-col justify-end">
+      <LessonIllustration
+        mode="normal"
+        lessonId={lesson.id}
+        title={lesson.title}
+        illustrationUrl={lesson.illustrationUrl}
+        className={cn(
+          "absolute aspect-auto rounded-none border-0 shadow-none transition-transform duration-500 ease-out motion-safe:group-hover:scale-105",
+          hasPicture
+            ? "inset-0 size-full"
+            : "inset-x-0 top-0 bottom-[44%] h-auto [mask-image:linear-gradient(to_bottom,#000_72%,transparent)] lg:h-auto",
+        )}
+      />
+      <span
+        className="absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
+        dir={dir}
+      >
+        {eyebrow}
+      </span>
+      {/* The shade belongs to the text block, not to the card: it is as tall as the text (so the text always sits on its darkest part, whatever the card's height or the picture), and its top 64px fade into the picture. */}
+      <div className="relative flex flex-col gap-1.5 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-16 pb-5 sm:px-6 sm:pb-6">
+        <h2
+          className="line-clamp-2 text-2xl leading-tight font-semibold tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)] sm:text-3xl"
+          dir="ltr"
+        >
           {lesson.title}
         </h2>
-        <p className="text-muted-foreground text-sm" dir={dir}>
+        <p className="line-clamp-2 text-base font-medium text-white/85" dir={dir}>
           {lesson.supportTitle ?? lesson.title}
         </p>
-        {lesson.description && (
-          <p className="text-muted-foreground line-clamp-2 text-sm" dir="ltr">
-            {lesson.description}
-          </p>
+        {(lesson.description || lesson.supportDescription) && (
+          <div className="mt-1.5 flex flex-col gap-1 border-t border-white/15 pt-2.5">
+            {lesson.description && (
+              <p className="line-clamp-2 text-sm leading-snug text-white/75" dir="ltr">
+                {lesson.description}
+              </p>
+            )}
+            {lesson.supportDescription && (
+              <p className="line-clamp-2 text-sm leading-snug text-white/75" dir={dir}>
+                {lesson.supportDescription}
+              </p>
+            )}
+          </div>
         )}
-        {lesson.supportDescription && (
-          <p className="text-muted-foreground line-clamp-2 text-sm" dir={dir}>
-            {lesson.supportDescription}
-          </p>
-        )}
-        <Button asChild size="lg" className="mt-2 w-fit">
+        <Button asChild size="lg" className="relative z-10 mt-3 w-fit">
           <Link href={href}>{ctaLabel}</Link>
         </Button>
         {footer}
       </div>
-    </>
+      <Link href={href} tabIndex={-1} aria-hidden="true" className="absolute inset-0" />
+    </div>
   );
 }
 
@@ -200,11 +222,12 @@ export function HomeHero({
     <div className="mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch">
       {/*
         The large primary card — it fills one column on its own (the right one from lg up, via
-        order, while on a phone it still comes first), and the Stories card plus the review
-        card stack in the other column; the grid stretches both columns to the same height, so
-        the two stacked cards together are exactly as tall as this one.
+        order, while on a phone it still comes first) and is a 4:5 picture card from lg up; the
+        Stories card plus the review card stack in the other column, and the grid stretches both
+        columns to the same height, so the two stacked cards together are exactly as tall as
+        this one.
       */}
-      <div className="border-border bg-card flex flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] lg:order-2">
+      <div className="group border-border bg-card relative flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] lg:order-2 lg:aspect-[4/5] lg:min-h-0">
         {currentLesson && (
           <MainLessonCardBody
             lesson={currentLesson}
@@ -246,12 +269,18 @@ export function HomeHero({
             footer={
               // A warm, optional next step: say what Premium adds, promise the
               // progress is safe either way, and keep the button quiet (outline,
-              // small) so Practice stays the main thing on the card.
-              <div className="border-border mt-3 flex flex-col gap-2 border-t pt-3">
-                <p className="text-muted-foreground text-sm" dir={dir}>
+              // small) so Practice stays the main thing on the card. Written in
+              // white like the rest of the card, since it sits on the picture's shade.
+              <div className="mt-3 flex flex-col gap-2 border-t border-white/20 pt-3">
+                <p className="line-clamp-3 text-sm leading-snug text-white/75" dir={dir}>
                   {t.premium.homeFreeCompleteBody}
                 </p>
-                <Button asChild variant="outline" size="sm" className="w-fit">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="relative z-10 w-fit border-white/30 text-white hover:bg-white/15 hover:text-white"
+                >
                   <Link href="/upgrade" dir="auto">
                     {t.premium.seePlansCta}
                   </Link>
