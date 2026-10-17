@@ -163,7 +163,7 @@ export function StreakStripView({
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <Flame className="text-accent size-4" aria-hidden="true" />
+          <Flame className="size-4 text-orange-500 dark:text-orange-400" aria-hidden="true" />
           <span dir={dir}>{t.streakCalendar.heading}</span>
         </h2>
         <button

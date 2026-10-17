@@ -6,11 +6,12 @@ import { Sparkles, Trophy } from "lucide-react";
 
 import { HomeBookCard } from "@/components/app/home-book-card";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
 import { findCurrentLesson } from "@/lib/progress/level";
+import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 import type { Book } from "@/types/library";
 
@@ -162,6 +163,14 @@ export function HomeHero({
     isPremiumUser,
     startingLevel,
   );
+  // A story without a picture shows its title in large type on the card's band, so the
+  // line under it only repeats the title when the story has no translated one.
+  const storyBandTitle = currentStoryLesson?.illustrationUrl
+    ? null
+    : (currentStoryLesson?.title ?? t.nav.stories);
+  const storySubtitle = currentStoryLesson
+    ? (currentStoryLesson.supportTitle ?? currentStoryLesson.title)
+    : t.marketing.storiesModeDescription;
 
   if (!isLoaded) {
     return (
@@ -307,7 +316,7 @@ export function HomeHero({
           href="/learn/stories"
           className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
         >
-          <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32">
+          <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32 lg:h-auto lg:min-h-32 lg:flex-1">
             {currentStoryLesson?.illustrationUrl ? (
               // Same plain-<img>/object-cover treatment as HomeBookCard right
               // above it, deliberately not LessonIllustration here: that
@@ -316,30 +325,35 @@ export function HomeHero({
               // overflows/clips at this card's much smaller h-28/h-32 band —
               // an admin-set photo (this branch) crops fine at any size, but
               // the SVG-scene fallback (the "no photo" case, below) does not,
-              // so it gets this card's own compact icon+gradient treatment
-              // instead, matching HomeBookCard's identical "no cover" state.
+              // so it gets this card's own treatment instead: a calm tinted
+              // band with the story's title in large type (below).
               // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as LessonIllustration's own <Image>'s source, but at a thumbnail size next/image's pipeline isn't worth the extra config for.
               <img
                 src={currentStoryLesson.illustrationUrl}
                 alt=""
-                className="size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
+                className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
               />
             ) : (
-              <div className="from-brand-muted to-muted flex size-full items-center justify-center bg-gradient-to-br">
-                <Sparkles className="text-muted-foreground/50 size-8" aria-hidden="true" />
+              <div className="bg-brand-muted absolute inset-0 flex items-end p-4">
+                <span
+                  className="line-clamp-3 text-xl leading-tight font-semibold tracking-tight"
+                  dir="ltr"
+                >
+                  {storyBandTitle}
+                </span>
               </div>
             )}
           </div>
-          <div className="flex flex-1 flex-col justify-center gap-0.5 p-4">
+          <div className="flex shrink-0 flex-col gap-0.5 p-4">
             <h3 className="truncate text-sm font-semibold" dir={dir}>
               {t.nav.stories}
             </h3>
-            <p className="text-muted-foreground truncate text-xs" dir={dir}>
-              {currentStoryLesson
-                ? (currentStoryLesson.supportTitle ?? currentStoryLesson.title)
-                : t.marketing.storiesModeDescription}
-            </p>
-            <span className="text-primary mt-1.5 text-xs font-semibold">
+            {storySubtitle !== storyBandTitle && (
+              <p className="text-muted-foreground truncate text-xs" dir={dir}>
+                {storySubtitle}
+              </p>
+            )}
+            <span className={cn(buttonVariants({ size: "sm" }), "mt-2 w-fit")}>
               {storiesCompletedIds.length > 0 ? t.common.continueLearning : t.common.startLearning}
             </span>
           </div>

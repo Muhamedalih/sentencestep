@@ -669,11 +669,16 @@ scripts/check-passage-duplicates.ts` compares them also with every Daily Lesson,
   learner's own date comes from the browser and is only believed when it can be
   somebody's today (`plausibleLearnerDate`). A quest or badge a part earns shows
   as a short notice the moment it happens and on the end screen.
-- **Home card** (`PassagesCard`, loaded by `loadPassagesHomeCard` as one more
-  streamed slot next to the session and quests cards): "Continue your passage"
-  with how far the learner is, or "Your next passage" — the same poster the list
-  uses. Not drawn when Passages is not open to the visitor, for a guest, or once
-  every passage is finished.
+- **Home card** (`PassagesCard`, loaded by `loadPassagesHomeCard`; the page starts
+  it with `startHomePassagesCard` on every visit — it needs no time zone — and it
+  streams in by itself under Home's "Up next" heading, above the big lesson
+  cards): "Continue your passage" with how far the learner is, or "Your next
+  passage". The poster (the generated colour or the admin's own picture, the same
+  one the list uses) is a cover running the card's full height; the middle holds
+  the title, the one-line hook (`summary`) and the minutes or the progress; the
+  level chip and the button sit at the end, and the whole card opens the passage.
+  Not drawn when Passages is not open to the visitor, for a guest, or once every
+  passage is finished.
 
 ## Local development
 

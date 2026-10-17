@@ -27,7 +27,9 @@ function ProgressHud({ initialProgress }: { initialProgress?: ProgressState }) {
         <Flame
           className={cn(
             "size-4 sm:size-5",
-            streak.currentStreak > 0 ? "text-accent" : "text-muted-foreground",
+            streak.currentStreak > 0
+              ? "text-orange-500 dark:text-orange-400"
+              : "text-muted-foreground",
           )}
           aria-hidden="true"
         />

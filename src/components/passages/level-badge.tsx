@@ -5,15 +5,17 @@ import { cn } from "@/lib/utils";
 /**
  * A level's code in a chip of its own colour, with four small bars lit one more for each step
  * up: A1 lights one, B2 all four. The list's four levels used to be the same violet letters;
- * now each can be told apart (and read as easier or harder) without a word.
+ * now each can be told apart (and read as easier or harder) without a word. `sm` is the size
+ * for a card (Home's), `md` the one the list's level headers use.
  */
-export function LevelBadge({ level }: { level: PassageLevel }) {
+export function LevelBadge({ level, size = "md" }: { level: PassageLevel; size?: "sm" | "md" }) {
   const look = LEVEL_LOOKS[level];
   return (
     <span
       dir="ltr"
       className={cn(
-        "inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-bold ring-1 ring-inset",
+        "inline-flex items-center rounded-full font-bold ring-1 ring-inset",
+        size === "sm" ? "gap-1.5 px-2.5 py-0.5 text-xs" : "gap-2 px-3 py-1 text-sm",
         look.chip,
       )}
     >

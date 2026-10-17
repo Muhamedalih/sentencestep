@@ -27,7 +27,8 @@ function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }
               kind === "active" && "border-primary bg-primary",
               kind === "grace" && "border-primary/50",
               kind === "frozen" && "border-sky-400 bg-sky-400/15",
-              kind === "none" && (iso === today ? "border-primary/60 border-dashed" : "border-border"),
+              kind === "none" &&
+                (iso === today ? "border-primary/60 border-dashed" : "border-border"),
             )}
           />
         );
@@ -39,7 +40,8 @@ function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }
 /**
  * Home's one-line summary of the week streak and today's quests. It replaces the
  * two tall cards those used to be; the full cards open beneath it on demand, so
- * Home keeps the "up next" actions above the fold.
+ * Home keeps the "up next" actions above the fold. The whole strip opens them (the
+ * chevron button's `after` covers it), not just the chevron.
  */
 export function EngagementStrip({
   today,
@@ -68,19 +70,22 @@ export function EngagementStrip({
 
   return (
     <div className={className}>
-      <div className="border-border/60 bg-card/60 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3">
+      <div className="border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors">
         {streak && (
           <div className="flex items-center gap-3">
-            <Flame className="text-accent size-5 shrink-0" aria-hidden="true" />
+            <Flame
+              className="size-5 shrink-0 text-orange-500 dark:text-orange-400"
+              aria-hidden="true"
+            />
             <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-xs sm:text-[11px] leading-none" dir={dir}>
+              <span className="text-muted-foreground text-xs leading-none" dir={dir}>
                 {t.streakCalendar.heading}
               </span>
               <WeekDots today={today} strip={streak} />
             </div>
             {remaining > 0 && (
               <span
-                className="text-muted-foreground flex items-center gap-1 text-xs"
+                className="text-muted-foreground relative z-10 flex items-center gap-1 text-xs"
                 title={t.streakCalendar.freezesLeft.replace("{n}", String(remaining))}
               >
                 <Snowflake className="size-3.5 text-sky-500" aria-hidden="true" />
@@ -89,9 +94,11 @@ export function EngagementStrip({
             )}
           </div>
         )}
-        {streak && quests && <span className="bg-border/70 hidden h-8 w-px sm:block" aria-hidden="true" />}
+        {streak && quests && (
+          <span className="bg-border/70 hidden h-8 w-px sm:block" aria-hidden="true" />
+        )}
         {quests && (
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-w-44 flex-1 items-center gap-3">
             <span
               className="relative flex size-10 shrink-0 items-center justify-center rounded-full"
               style={{
@@ -110,7 +117,7 @@ export function EngagementStrip({
               </span>
             </span>
             <div className="min-w-0">
-              <p className="text-muted-foreground text-xs sm:text-[11px] leading-none" dir={dir}>
+              <p className="text-muted-foreground text-xs leading-none" dir={dir}>
                 {t.quests.heading}
               </p>
               <p className="mt-1 truncate text-sm font-medium" dir={dir}>
@@ -134,7 +141,7 @@ export function EngagementStrip({
           aria-expanded={open}
           aria-controls={panelId}
           aria-label={t.quests.heading}
-          className="text-muted-foreground hover:text-foreground hover:bg-muted ms-auto flex size-9 shrink-0 items-center justify-center rounded-full transition-colors"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted ms-auto flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors after:absolute after:inset-0 after:rounded-2xl"
         >
           <ChevronDown
             className={cn("size-5 transition-transform", open && "rotate-180")}

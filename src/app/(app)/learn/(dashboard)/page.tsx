@@ -5,7 +5,7 @@ import { FinishPaymentBanner } from "@/components/app/finish-payment-banner";
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { PremiumExpiryBanner } from "@/components/app/premium-expiry-banner";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
-import { HomeEngagementSection } from "@/components/app/home-engagement-section";
+import { HomeEngagementSection, HomePassages } from "@/components/app/home-engagement-section";
 import { HomeHeaderBar } from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
 import { HomePlan } from "@/components/app/home-plan";
@@ -22,6 +22,7 @@ import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { startHomePassagesCard } from "@/lib/passages/home-card";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -145,6 +146,9 @@ export default async function LearnHomePage() {
     // Swallowed here only for the count: the page's own await below still surfaces a real failure.
     weakWordCount: weakWordsPromise.then((words) => words.length).catch(() => 0),
   });
+  // The Passages card needs no time zone, so unlike the cards above it starts on every visit and
+  // always renders under the "Up next" heading, whichever way the other cards were loaded.
+  const passages = startHomePassagesCard({ user: userPromise, features: getEffectiveFeatures() });
   // Admin preview of "Today's plan" (HomePlan): its Word Lists reads only run for an admin.
   const isAdminPromise = isAdmin();
   const planWordsPromise = Promise.all([isAdminPromise, userPromise, progressPromise]).then(
@@ -271,20 +275,22 @@ export default async function LearnHomePage() {
         <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
         <div className="max-sm:order-3">
           {showHomePlan ? (
-            <HomePlan
-              units={units}
-              storiesUnits={storiesUnits}
-              words={planWords}
-              isPremiumUser={isPremiumUser}
-            />
+            <>
+              <HomePassages data={passages} className="mb-6" />
+              <HomePlan
+                units={units}
+                storiesUnits={storiesUnits}
+                words={planWords}
+                isPremiumUser={isPremiumUser}
+              />
+            </>
           ) : (
             <>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                  {t.progress.upNextLabel}
-                </p>
+                <h2 className="text-lg font-semibold tracking-tight">{t.progress.upNextLabel}</h2>
                 {!isPremiumUser && <StarterPathProgress units={units} />}
               </div>
+              <HomePassages data={passages} className="mb-4" />
               <HomeHero
                 units={units}
                 storiesUnits={storiesUnits}

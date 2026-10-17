@@ -5,6 +5,7 @@ import { openablePassages } from "@/lib/passages/access";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { homeCardPick } from "@/lib/passages/progress";
 import type { PassageLevel, PassageTone } from "@/lib/passages/types";
+import type { CurrentUser } from "@/lib/supabase/auth";
 
 /**
  * What Home's Passages card shows: the one passage to point at — the one the
@@ -16,7 +17,7 @@ import type { PassageLevel, PassageTone } from "@/lib/passages/types";
  *
  * It costs Home almost nothing: the passage list is the same share-cached read
  * the Passages page uses, and the learner's progress is one query for their own
- * rows. Both start alongside the page's other reads (see startHomeEngagement) and
+ * rows. Both start alongside the page's other reads (see startHomePassagesCard) and
  * the card streams in by itself, so it can never hold the page back.
  */
 
@@ -82,4 +83,22 @@ export async function loadPassagesHomeCard(
     console.error("[passages] loadPassagesHomeCard failed", error);
     return null;
   }
+}
+
+/**
+ * Starts the card's read for the Home page, before the page awaits its own batch.
+ * Unlike the session, quests and streak cards it needs no time zone, so Home starts
+ * it on every visit — the very first one included — and the card always sits in the
+ * same place. The promise never rejects.
+ */
+export function startHomePassagesCard(input: {
+  user: Promise<CurrentUser | null>;
+  features: Promise<EffectiveFeatures>;
+}): Promise<PassagesHomeData | null> {
+  return Promise.all([input.user, input.features])
+    .then(([user, features]) => (user ? loadPassagesHomeCard(user.id, features) : null))
+    .catch((error: unknown) => {
+      console.error("[passages] startHomePassagesCard failed", error);
+      return null;
+    });
 }

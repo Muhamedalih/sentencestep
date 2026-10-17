@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import { DailySessionCard } from "@/components/app/daily-session-card";
 import { GuestFeatureTeaser } from "@/components/app/guest-feature-teaser";
 import { EngagementStrip } from "@/components/app/engagement-strip";
-import { PassagesCard } from "@/components/app/passages-card";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { fetchHomeEngagementAction } from "@/lib/features/home-engagement-actions";
 import type { HomeEngagementData } from "@/lib/features/home-engagement";
@@ -35,7 +34,7 @@ export function HomeEngagementFrame({
 const SKELETON_HEIGHT = {
   dailySession: "h-28",
   strip: "h-16",
-  passages: "h-[6.25rem]",
+  passages: "h-28 sm:h-[8.75rem]",
 } as const;
 
 /**
@@ -43,7 +42,13 @@ const SKELETON_HEIGHT = {
  * only if that feature is switched on for this visitor, so nothing reserves
  * space for a card that will never appear.
  */
-export function CardSkeleton({ feature }: { feature: keyof typeof SKELETON_HEIGHT }) {
+export function CardSkeleton({
+  feature,
+  className,
+}: {
+  feature: keyof typeof SKELETON_HEIGHT;
+  className?: string;
+}) {
   const features = useFeatures();
   const enabled =
     feature === "strip"
@@ -52,7 +57,7 @@ export function CardSkeleton({ feature }: { feature: keyof typeof SKELETON_HEIGH
   if (!enabled) return null;
   return (
     <div
-      className={cn("bg-muted/60 animate-pulse rounded-2xl", SKELETON_HEIGHT[feature])}
+      className={cn("bg-muted/60 animate-pulse rounded-2xl", SKELETON_HEIGHT[feature], className)}
       aria-hidden="true"
     />
   );
@@ -61,14 +66,13 @@ export function CardSkeleton({ feature }: { feature: keyof typeof SKELETON_HEIGH
 /**
  * The browser-side path, used only when the server couldn't render the cards
  * with the page — a learner's very first visit, before the browser has told the
- * server its time zone (see TimezoneCookie). It asks for all three cards in ONE
+ * server its time zone (see TimezoneCookie). It asks for both cards in ONE
  * request (fetchHomeEngagementAction) rather than one each. In the normal case
  * the server renders them itself (see HomeEngagementSection) and this never runs.
  */
 export function HomeEngagement({ className }: { className?: string }) {
-  const { dailySession, quests, streakCalendar, passages } = useFeatures();
-  const anyEnabled =
-    dailySession.enabled || quests.enabled || streakCalendar.enabled || passages.enabled;
+  const { dailySession, quests, streakCalendar } = useFeatures();
+  const anyEnabled = dailySession.enabled || quests.enabled || streakCalendar.enabled;
   // undefined = still loading; null = loaded but nothing to show.
   const [data, setData] = useState<HomeEngagementData | null | undefined>(undefined);
 
@@ -89,14 +93,12 @@ export function HomeEngagement({ className }: { className?: string }) {
         <>
           <CardSkeleton feature="dailySession" />
           <CardSkeleton feature="strip" />
-          <CardSkeleton feature="passages" />
         </>
       ) : (
         data && (
           <>
             <DailySessionCard summary={data.dailySession} />
             <EngagementStrip today={data.todayISO} quests={data.quests} streak={data.streak} />
-            <PassagesCard data={data.passages} />
           </>
         )
       )}

@@ -66,8 +66,8 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
       >
         {children}
       </DashboardChrome>
-      {/* Guests have no email to follow up on — see submitProblemReport and problem_reports' RLS insert policy. */}
-      {user?.email && <ReportProblemButton />}
+      {/* Guests have no email to follow up on — see submitProblemReport and problem_reports' RLS insert policy. Phones get the inline buttons instead (see ReportProblemButton). */}
+      {user?.email && <ReportProblemButton size="compact" className="max-sm:hidden" />}
     </div>
   );
 }

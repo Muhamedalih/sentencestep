@@ -38,13 +38,21 @@ const SUCCESS_AUTOCLOSE_MS = 1800;
  * label stays on it as its aria-label/title, so it is still announced and
  * shows a tooltip — and that tiny footprint is what makes it safe to keep on
  * mobile there, unlike the default pill.
+ *
+ * The dashboard layout mounts that same compact button too, with
+ * `className="max-sm:hidden"` so it stays off phones the way the pill did (phones
+ * get the inline buttons above): a quiet icon in a neutral colour, instead of a
+ * labelled pill with a pulsing dot.
  */
 export function ReportProblemButton({
   variant = "floating",
   size = "default",
+  className,
 }: {
   variant?: "floating" | "inline";
   size?: "default" | "compact";
+  /** Extra classes for the floating button (e.g. to hide it on phones). */
+  className?: string;
 }) {
   const { t } = useLocale();
   const pathname = usePathname();
@@ -108,10 +116,11 @@ export function ReportProblemButton({
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 22 }}
           className={cn(
-            "border-border bg-card text-foreground fixed z-40 flex items-center rounded-full border font-medium shadow-lg backdrop-blur-sm hover:border-amber-500/40",
+            "border-border bg-card text-foreground hover:border-primary/40 fixed z-40 flex items-center rounded-full border font-medium shadow-lg backdrop-blur-sm",
             size === "compact"
               ? "bottom-3 left-3 size-9 justify-center pointer-coarse:size-11 [html[data-keyboard]_&]:hidden"
               : "bottom-4 left-4 gap-2 px-4 py-2.5 text-sm max-sm:hidden",
+            className,
           )}
           aria-haspopup="dialog"
           aria-label={size === "compact" ? t.reportProblem.buttonLabel : undefined}
@@ -119,11 +128,11 @@ export function ReportProblemButton({
         >
           {size !== "compact" && (
             <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/60 opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
+              <span className="bg-primary/60 absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+              <span className="bg-primary relative inline-flex size-2 rounded-full" />
             </span>
           )}
-          <TriangleAlert className="size-4 text-amber-500" aria-hidden="true" />
+          <TriangleAlert className="text-muted-foreground size-4" aria-hidden="true" />
           {size !== "compact" && t.reportProblem.buttonLabel}
         </motion.button>
       ) : (
