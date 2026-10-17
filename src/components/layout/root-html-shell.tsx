@@ -3,6 +3,7 @@ import { Amiri, Lora } from "next/font/google";
 
 import { CountryOnboarding } from "@/components/app/country-onboarding";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
+import { FirstTouchCookie } from "@/components/app/first-touch-cookie";
 import { IntroLanding } from "@/components/app/intro-landing";
 import { OnboardingIntroCard } from "@/components/app/onboarding-intro-card";
 import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
@@ -281,6 +282,8 @@ export function RootHtmlShell({
          */}
       </head>
       <body>
+        {/* Remembers which link the visitor arrived from, once, so a later signup can be traced to its post — see FirstTouchCookie. Reads nothing from the server, so the static marketing pages stay static. */}
+        <FirstTouchCookie />
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
           <GetStartedStepProvider localizedNavigation={localizedNavigation}>
             <IntroLanding />

@@ -17,6 +17,11 @@ import type { LearningMode } from "@/types/content";
 // started events with no matching completed event — computed in
 // insights.ts from the two events that ARE reliably measurable.
 
+// USER_SIGNED_UP, PAYWALL_VIEWED, UPGRADE_VIEWED and UPGRADE_CTA_CLICKED are
+// stored with a few extra properties added by track.ts (source, medium,
+// campaign, inApp, country — see attribution.ts), so the funnel can be read per
+// source and country. They are not part of the typed shapes below.
+
 export type AnalyticsEventCategory =
   "AUTH" | "LEARNING" | "CONTENT" | "PROGRESS" | "PREMIUM" | "ENGAGEMENT";
 
