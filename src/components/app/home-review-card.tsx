@@ -41,7 +41,7 @@ export function HomeReviewCard({
         <RotateCcw
           aria-hidden="true"
           strokeWidth={1.5}
-          className="text-primary/[0.22] pointer-events-none absolute -end-[6%] -top-[15%] aspect-square h-[131%] w-auto [&_path]:[vector-effect:non-scaling-stroke]"
+          className="text-primary/[0.22] pointer-events-none absolute -end-[6%] -top-[15%] aspect-square h-[131%] max-h-[230px] w-auto [&_path]:[vector-effect:non-scaling-stroke]"
         />
         <div className="absolute start-4 bottom-3.5">
           <p
