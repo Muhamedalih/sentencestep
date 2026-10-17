@@ -20,6 +20,11 @@ import { cn } from "@/lib/utils";
  * above the button. The whole card is one click target. The data is loaded with the page
  * (see startHomePassagesCard) — null when Passages is not open to this visitor or there
  * is nothing left to suggest, in which case nothing renders.
+ *
+ * Its motion is three quiet things: the card settles into place when it appears (see
+ * .passage-card-in), the headphones sway slowly like the ones on the Passages page (see
+ * .passage-headphones), and on hover the card lifts a little with the same springy ease the
+ * Home cards use while the arrow nudges forward. Reduced motion keeps none of the movement.
  */
 export function PassagesCard({
   data,
@@ -45,7 +50,7 @@ export function PassagesCard({
       // Laid out left to right in every language, like the page around it.
       dir="ltr"
       className={cn(
-        "border-border bg-card hover:border-primary/50 relative flex items-stretch overflow-hidden rounded-2xl border transition-colors",
+        "passage-card-in group border-border bg-card hover:border-primary/50 relative flex items-stretch overflow-hidden rounded-2xl border transition-[translate,box-shadow,border-color] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_18px_32px_-14px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-1",
         className,
       )}
     >
@@ -62,7 +67,7 @@ export function PassagesCard({
 
       <div className="min-w-0 flex-1 px-4 py-3.5 sm:px-5 sm:py-4">
         <p className="text-primary flex items-center gap-1.5 text-sm font-semibold">
-          <Headphones className="size-4 shrink-0" aria-hidden="true" />
+          <Headphones className="passage-headphones size-4 shrink-0" aria-hidden="true" />
           <span dir={dir}>{continuing ? t.passages.homeContinue : t.passages.homeNext}</span>
         </p>
         <h2
@@ -117,7 +122,12 @@ export function PassagesCard({
         <PassageLinkButton
           href={href}
           size="md"
-          trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+          trailingIcon={
+            <ArrowRight
+              className="size-4 transition-transform duration-300 group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
+          }
           className="z-10 max-sm:px-3"
         >
           <span className="max-sm:sr-only">

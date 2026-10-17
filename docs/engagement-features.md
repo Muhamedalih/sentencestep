@@ -677,8 +677,11 @@ scripts/check-passage-duplicates.ts` compares them also with every Daily Lesson,
   one the list uses) is a cover running the card's full height; the middle holds
   the title, the one-line hook (`summary`) and the minutes or the progress; the
   level chip and the button sit at the end, and the whole card opens the passage.
-  Not drawn when Passages is not open to the visitor, for a guest, or once every
-  passage is finished.
+  Its motion is three quiet things: it settles into place when it appears
+  (`.passage-card-in`), the headphones sway like the ones on the Passages page
+  (`.passage-headphones`), and on hover it lifts a little while the arrow nudges
+  forward; reduced motion keeps none of it. Not drawn when Passages is not open
+  to the visitor, for a guest, or once every passage is finished.
 
 ## Local development
 

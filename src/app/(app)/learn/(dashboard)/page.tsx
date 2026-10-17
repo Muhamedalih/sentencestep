@@ -237,15 +237,15 @@ export default async function LearnHomePage() {
       ? access.expiresAt
       : null;
 
-  // The review card always sits directly under "Up next" (or under the plan, in the admin preview).
-  const reviewBlock = (
-    <div className="max-sm:order-4">
-      <NeedsReviewWords
-        words={weakWords.filter((word) => word.dueNow)}
-        count={reviewWaiting.count}
-        smart={reviewWaiting.smart}
-      />
-    </div>
+  // The review card sits under the Stories card inside "Up next" (or under the plan, in the admin preview).
+  const reviewCard = (inColumn: boolean) => (
+    <NeedsReviewWords
+      words={weakWords.filter((word) => word.dueNow)}
+      count={reviewWaiting.count}
+      smart={reviewWaiting.smart}
+      compact={inColumn}
+      className={inColumn ? "mb-0 sm:mb-0" : undefined}
+    />
   );
 
   return (
@@ -301,11 +301,12 @@ export default async function LearnHomePage() {
                 isPremiumUser={isPremiumUser}
                 hasWeakWords={reviewWaiting.count > 0}
                 isAdminUser={isAdminUser}
+                review={reviewCard(true)}
               />
             </>
           )}
         </div>
-        {reviewBlock}
+        {showHomePlan && <div className="max-sm:order-4">{reviewCard(false)}</div>}
       </div>
     </ProgressProvider>
   );

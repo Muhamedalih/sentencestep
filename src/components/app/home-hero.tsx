@@ -109,6 +109,7 @@ export function HomeHero({
   isPremiumUser,
   hasWeakWords,
   isAdminUser,
+  review,
 }: {
   units: LessonUnit[];
   /** Stories-mode lessons — same shape as `units` (lesson cards without sentence bodies, from getHomeLessons). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
@@ -125,6 +126,8 @@ export function HomeHero({
   hasWeakWords: boolean;
   /** The Library is admin-only for now — gates the book-recommendation card the same way (dashboard)/library/page.tsx gates the route itself. */
   isAdminUser: boolean;
+  /** Home's "review all words" card (NeedsReviewWords, null when nothing is waiting). It sits under the Stories card, so the two together are as tall as the lesson card beside them. */
+  review?: ReactNode;
 }) {
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
@@ -174,11 +177,17 @@ export function HomeHero({
 
   if (!isLoaded) {
     return (
-      <div className="mb-10 grid gap-4 lg:grid-cols-2" aria-hidden="true">
-        <div className="bg-muted h-72 w-full animate-pulse rounded-2xl lg:h-full" />
-        <div className="flex flex-col gap-4">
-          <div className="bg-muted h-32 w-full flex-1 animate-pulse rounded-2xl" />
-          <div className="bg-muted h-32 w-full flex-1 animate-pulse rounded-2xl" />
+      <div className="mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch">
+        <div
+          className="bg-muted h-72 w-full animate-pulse rounded-2xl lg:order-2 lg:h-full"
+          aria-hidden="true"
+        />
+        <div className="flex flex-col gap-4 lg:order-1">
+          <div
+            className="bg-muted h-32 w-full flex-1 animate-pulse rounded-2xl"
+            aria-hidden="true"
+          />
+          <div className="shrink-0 empty:hidden">{review}</div>
         </div>
       </div>
     );
@@ -187,12 +196,12 @@ export function HomeHero({
   return (
     <div className="mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch">
       {/*
-        The large primary card — significantly bigger than either card in
-        the right column individually, and roughly matching their COMBINED
-        area (equal grid columns, right column split into two equal-height
-        stacked cards) rather than an arbitrarily large/small ratio.
+        The large primary card — it fills one column on its own (the right one from lg up, via
+        order, while on a phone it still comes first), and the Stories card plus the review
+        card stack in the other column; the grid stretches both columns to the same height, so
+        the two stacked cards together are exactly as tall as this one.
       */}
-      <div className="border-border bg-card flex flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]">
+      <div className="border-border bg-card flex flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] lg:order-2">
         {currentLesson && (
           <MainLessonCardBody
             lesson={currentLesson}
@@ -301,8 +310,8 @@ export function HomeHero({
         )}
       </div>
 
-      {/* Right column — book recommendation above, Stories below, matching dimensions/spacing. */}
-      <div className="flex flex-col gap-4">
+      {/* The stacked column (left from lg up) — book recommendation above, Stories in the middle taking whatever height is left, the review card at the bottom. */}
+      <div className="flex flex-col gap-4 lg:order-1">
         {book && isAdminUser && (
           <HomeBookCard
             book={book}
@@ -358,6 +367,8 @@ export function HomeHero({
             </span>
           </div>
         </Link>
+
+        <div className="shrink-0 empty:hidden">{review}</div>
       </div>
     </div>
   );

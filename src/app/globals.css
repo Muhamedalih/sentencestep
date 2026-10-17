@@ -614,6 +614,31 @@ html[data-keyboard] .kb-hide {
 }
 
 /*
+ * Home's Passages card settles into place when it appears (it streams in just after the page's
+ * first paint): a short rise and fade with no bounce. The fill mode is `backwards`, not `both`,
+ * so once it has landed the hover lift (the `translate` property) is free to move it. Nothing
+ * moves for a visitor who asks for reduced motion.
+ */
+@keyframes passage-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.passage-card-in {
+  animation: passage-card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passage-card-in {
+    animation: none;
+  }
+}
+
+/*
  * Passages buttons (PassageButton): a press that is felt. The button lifts a pixel under the
  * pointer, sinks quickly when pressed, and on release springs back PAST its size and settles
  * (the cubic-bezier overshoots), while a soft ring spreads from the pressed spot. Only `scale` and
