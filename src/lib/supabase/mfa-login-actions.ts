@@ -29,12 +29,32 @@ export async function verifyLoginMfaCode(
 
   const supabase = await createClient();
 
-  const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
-  const factor = factorsData?.totp.find((f) => f.status === "verified");
-  if (factorsError || !factor) return { error: t.twoFactor.genericError };
+  // A plain read, so one retry is safe — a single dropped request to Supabase must not
+  // turn into "something went wrong" on the learner's one chance at typing the code.
+  let factors = await supabase.auth.mfa.listFactors();
+  if (factors.error) factors = await supabase.auth.mfa.listFactors();
+  if (factors.error) return { error: t.twoFactor.genericError };
+
+  const factor = factors.data.totp.find((f) => f.status === "verified");
+  if (!factor) {
+    // The account has no verified factor any more (two-factor was switched off after this
+    // session started), yet this session still carries the old user record that lists it —
+    // which is the only reason the proxy sent the learner here, and every request keeps
+    // sending them back here until the record refreshes on its own. There is nothing left
+    // to verify, so refresh the session now (that re-reads the user, factor list included)
+    // and finish signing in, instead of trapping them on a page that can only fail.
+    const refreshed = await supabase.auth.refreshSession();
+    if (refreshed.error || !refreshed.data.session) return { error: t.twoFactor.genericError };
+    return completeSignIn(refreshed.data.user?.id, next);
+  }
 
   const { error, data } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
-  if (error) return { error: t.twoFactor.invalidCode };
+  if (error) {
+    // A wrong or expired code is the learner's to retry; a dropped connection or a 5xx from
+    // Supabase is not, and must not tell them their (correct) code was wrong.
+    const isOutage = error.name === "AuthRetryableFetchError" || (error.status ?? 0) >= 500;
+    return { error: isOutage ? t.twoFactor.genericError : t.twoFactor.invalidCode };
+  }
 
   return completeSignIn(data.user?.id, next);
 }

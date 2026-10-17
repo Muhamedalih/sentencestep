@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { startTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,9 @@ import { useLocale } from "@/components/providers/locale-provider";
  * src/app/(default)/error.tsx, src/app/[locale]/error.tsx) — each root
  * layout needs its OWN error.tsx (Next.js doesn't share a single one across
  * sibling root layouts; see root-html-shell.tsx's doc comment for why there
- * are three of them now), but the actual markup/behavior stays
- * byte-identical to what the single shared src/app/error.tsx rendered
- * before. Relies on useLocale() — safe here because error.tsx replaces only
+ * are three of them now), but the actual markup stays identical to what
+ * the single shared src/app/error.tsx rendered before. Relies on
+ * useLocale() — safe here because error.tsx replaces only
  * the failing `{children}` slot, not the layout around it, so the same
  * root layout's LocaleProvider is still mounted above it.
  */
@@ -25,6 +26,7 @@ export function RouteErrorContent({
   reset: () => void;
 }) {
   const { t } = useLocale();
+  const router = useRouter();
 
   useEffect(() => {
     console.error(error);
@@ -38,7 +40,16 @@ export function RouteErrorContent({
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">{t.errors.globalHeading}</h1>
       <p className="text-muted-foreground max-w-sm">{t.errors.globalBody}</p>
-      <Button className="mt-2" onClick={reset}>
+      {/* reset() alone only re-renders the page with the data it already has — and for an error thrown on the server that data IS the error, so the same screen came straight back until the learner reloaded by hand. Asking the server again first is what lets "Try again" actually recover. */}
+      <Button
+        className="mt-2"
+        onClick={() =>
+          startTransition(() => {
+            router.refresh();
+            reset();
+          })
+        }
+      >
         {t.common.tryAgain}
       </Button>
     </div>
