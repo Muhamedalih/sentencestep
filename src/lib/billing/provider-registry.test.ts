@@ -3,7 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { getPaymentProvider } from "./provider-registry";
+import {
+  getBinancePayProvider,
+  getBinancePayRelaySecret,
+  getPaymentProvider,
+  isBinancePayConfigured,
+} from "./provider-registry";
 
 const SECRET = "0123456789abcdef0123456789abcdef";
 
@@ -140,4 +145,37 @@ test("getPaymentProvider: WAYL_SHOW_USD=false (or 0, no, off, any case) leaves W
   for (const value of ["false", "FALSE", " false ", "0", "no", "off"]) {
     assert.equal(await checkoutUrlWith(value), "https://pay.example.com/link_1", value);
   }
+});
+
+const RELAY_SECRET = "0123456789abcdef0123456789abcdef0123456789abcdef";
+
+test("getBinancePayProvider: null without BINANCE_RELAY_SECRET (an order could never be seen as paid)", () => {
+  withEnv({ BINANCE_RELAY_SECRET: undefined }, () => {
+    assert.equal(getBinancePayProvider(), null);
+    assert.equal(getBinancePayRelaySecret(), null);
+    assert.equal(isBinancePayConfigured(), false);
+  });
+});
+
+test("getBinancePayProvider: a secret that is too short to be safe is refused", () => {
+  withEnv({ BINANCE_RELAY_SECRET: "short" }, () => {
+    assert.equal(getBinancePayProvider(), null);
+    assert.equal(isBinancePayConfigured(), false);
+  });
+});
+
+test("getBinancePayProvider: with the secret set it is Binance Pay in USDT, and builds without touching a database", () => {
+  withEnv({ BINANCE_RELAY_SECRET: RELAY_SECRET, NODE_ENV: "development" }, () => {
+    const provider = getBinancePayProvider();
+    assert.equal(provider?.name, "binance_pay");
+    assert.equal(provider?.settlementCurrency, "USDT");
+    assert.equal(provider?.environment, "test");
+    assert.equal(isBinancePayConfigured(), true);
+  });
+});
+
+test("getBinancePayProvider: live in a production build", () => {
+  withEnv({ BINANCE_RELAY_SECRET: RELAY_SECRET, NODE_ENV: "production" }, () => {
+    assert.equal(getBinancePayProvider()?.environment, "live");
+  });
 });

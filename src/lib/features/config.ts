@@ -36,6 +36,7 @@ export const FEATURE_IDS = [
   "wordsRedesign",
   "wordQuiz",
   "passages",
+  "binancePay",
 ] as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[number];
@@ -64,6 +65,7 @@ export const FEATURE_SECTIONS: Record<FeatureId, readonly LearningSection[]> = {
   wordsRedesign: [],
   wordQuiz: [],
   passages: [],
+  binancePay: [],
 };
 
 /** Features that need an account to store anything — guests see a sign-in teaser instead of the feature itself. Dictation and from-memory work for everyone. */
@@ -344,6 +346,15 @@ export interface EffectiveFeatures {
    * "Publish" button on the Passages page and /admin/features both end here).
    */
   passages: { enabled: boolean };
+  /**
+   * "Pay with Binance Pay (USDT)" beside the card button on /upgrade (see
+   * src/lib/billing/binance). It only needs the visitor to be signed in to pay,
+   * which the upgrade page already requires, so it is one flag. Admin preview
+   * shows the button to admins only on the live site; On shows it to everyone.
+   * The action that creates the order re-checks this switch, so a hidden button
+   * can never be used by posting the form by hand.
+   */
+  binancePay: { enabled: boolean };
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -424,6 +435,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
     wordsRedesign: { enabled: open("wordsRedesign") },
     wordQuiz: { enabled: open("wordQuiz") },
     passages: { enabled: open("passages") },
+    binancePay: { enabled: open("binancePay") },
     guestTeaser,
   };
 }

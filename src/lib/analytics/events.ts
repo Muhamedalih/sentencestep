@@ -69,7 +69,12 @@ export type AnalyticsEvent =
       name: "UPGRADE_CTA_CLICKED";
       category: "PREMIUM";
       /** Which plan was chosen, at which price tier and with how many launch-offer bonus days, so plan mix and the offer can be compared once real purchases exist. Both come from the server (the tier from geolocation, the plan validated against the known ids), never raw client input. */
-      properties: { plan: PlanId; tier: PricingTier; bonusDays: number };
+      properties: {
+        plan: PlanId;
+        tier: PricingTier;
+        bonusDays: number;
+        method?: "card" | "binance";
+      };
     }
   | {
       name: "AUDIO_PLAYED";

@@ -179,6 +179,30 @@ export interface Dictionary {
     recheckCta: string;
   };
   /** The first-time starting-level placement picker (src/components/app/starting-level-onboarding.tsx) — tier names themselves come from src/lib/levels.ts's tierSupportLabel, not from here. */
+  /** Pay with Binance Pay (USDT): the button on /upgrade and the payment page (see src/lib/billing/binance). */
+  binancePay: {
+    buttonLabel: string;
+    buttonCaption: string;
+    pausedToday: string;
+    pageTitle: string;
+    pageIntro: string;
+    recipientLabel: string;
+    recipientHint: string;
+    amountLabel: string;
+    amountHint: string;
+    noteLabel: string;
+    noteHint: string;
+    copy: string;
+    copied: string;
+    expiresIn: string;
+    expiredNote: string;
+    startNewOrder: string;
+    waitingHeading: string;
+    waitingBody: string;
+    onlyUsdt: string;
+    notConfigured: string;
+  };
+
   onboarding: {
     heading: string;
     subtitle: string;

@@ -63,6 +63,8 @@ export async function getPaymentsOverview(): Promise<AdminPaymentsOverview> {
         "id, user_id, reference_id, pricing_tier, pricing_country, premium_days, price_usd_cents, status, provider_status, provider_payment_id, failure_reason, created_at",
       )
       .eq("provider_env", "live")
+      // This page is Wayl's funnel ("reached the form" comes from Wayl's webhooks); Binance Pay orders have their own page.
+      .neq("provider", "binance_pay")
       .order("created_at", { ascending: false })
       .limit(PAYMENTS_ORDER_SCAN_LIMIT),
     supabase

@@ -22,8 +22,8 @@ import { isOfferActive } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
-import { showUsdOnWaylPage } from "@/lib/billing/provider-registry";
-import { isFeaturePublished } from "@/lib/features/queries";
+import { isBinancePayConfigured, showUsdOnWaylPage } from "@/lib/billing/provider-registry";
+import { getEffectiveFeatures, isFeaturePublished } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
@@ -51,14 +51,19 @@ export default async function UpgradePage({
 }: {
   searchParams: Promise<{ next?: string | string[] }>;
 }) {
-  const [user, access, locale, params, passagesOpen] = await Promise.all([
+  const [user, access, locale, params, passagesOpen, features] = await Promise.all([
     getCurrentUser(),
     getAccessState(),
     getLocale(),
     searchParams,
     // Tells a buyer the Passages section is included — but only once everyone can open it.
     isFeaturePublished("passages"),
+    getEffectiveFeatures(),
   ]);
+  // The Binance Pay button: only for the visitors the "binancePay" switch reaches (admins
+  // first), and only while the relay's secret is configured. The checkout action
+  // re-checks both, so this only decides what is drawn.
+  const binancePayOpen = features.binancePay.enabled && isBinancePayConfigured();
   // Set by a locked lesson's button: after paying, the confirmation page can lead
   // straight back to that lesson. Anything that is not a lesson page is ignored.
   const afterPaymentPath = safeLessonPath(firstParam(params.next));
@@ -215,6 +220,7 @@ export default async function UpgradePage({
                 waylShowsDollars={showUsdOnWaylPage()}
                 showIraqiWallets={country === "iq"}
                 afterPaymentPath={afterPaymentPath}
+                binancePayOpen={binancePayOpen}
               />
             )}
           </>
@@ -231,6 +237,7 @@ export default async function UpgradePage({
               waylShowsDollars={showUsdOnWaylPage()}
               showIraqiWallets={country === "iq"}
               afterPaymentPath={afterPaymentPath}
+              binancePayOpen={binancePayOpen}
             />
           </>
         )}

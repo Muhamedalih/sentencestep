@@ -438,6 +438,7 @@ const ADMIN_ONLY_SEGMENTS = [
   "reports",
   "ratings",
   "payments",
+  "binance-pay",
   "premium",
   "inbox",
   "audit-log",

@@ -357,6 +357,111 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["payment_orders"]["Insert"]>;
         Relationships: [];
       };
+      binance_pay_settings: {
+        Row: {
+          id: number;
+          /** The Binance ID senders type in Pay > Send; shown on the payment page. */
+          binance_id: string;
+          /** The nickname Binance shows the sender when they confirm. */
+          display_name: string;
+          /** Orders created in any rolling 24 hours before the button pauses; 0 pauses it. */
+          daily_order_cap: number;
+          /** When false nothing is activated by itself: every transfer waits for an admin. */
+          auto_activate: boolean;
+          /** How long after an order a transfer carrying its code still activates it. */
+          late_payment_hours: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          binance_id: string;
+          display_name: string;
+          daily_order_cap?: number;
+          auto_activate?: boolean;
+          late_payment_hours?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["binance_pay_settings"]["Insert"]>;
+        Relationships: [];
+      };
+      binance_pay_intents: {
+        Row: {
+          order_id: string;
+          /** SS-XXXXX: what the learner writes in the note of the Binance transfer. */
+          order_code: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          order_id: string;
+          order_code: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["binance_pay_intents"]["Insert"]>;
+        Relationships: [];
+      };
+      binance_pay_transactions: {
+        Row: {
+          id: string;
+          /** Binance's own id for the transfer. */
+          transaction_id: string;
+          transacted_at: string;
+          amount: number;
+          currency: string;
+          order_type: string;
+          note: string | null;
+          payer_binance_id: string | null;
+          payer_name: string | null;
+          raw: unknown;
+          status: "new" | "linked" | "ignored";
+          linked_order_id: string | null;
+          link_method: "note_code" | "manual" | null;
+          link_reason: string | null;
+          seen_at: string;
+          linked_at: string | null;
+          notified_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          transaction_id: string;
+          transacted_at: string;
+          amount: number | string;
+          currency: string;
+          order_type: string;
+          note?: string | null;
+          payer_binance_id?: string | null;
+          payer_name?: string | null;
+          raw?: unknown;
+          status?: "new" | "linked" | "ignored";
+          linked_order_id?: string | null;
+          link_method?: "note_code" | "manual" | null;
+          link_reason?: string | null;
+          seen_at?: string;
+          linked_at?: string | null;
+          notified_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["binance_pay_transactions"]["Insert"]>;
+        Relationships: [];
+      };
+      binance_relay_state: {
+        Row: {
+          id: number;
+          last_poll_at: string | null;
+          last_success_at: string | null;
+          last_error: string | null;
+          last_error_at: string | null;
+        };
+        Insert: {
+          id?: number;
+          last_poll_at?: string | null;
+          last_success_at?: string | null;
+          last_error?: string | null;
+          last_error_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["binance_relay_state"]["Insert"]>;
+        Relationships: [];
+      };
       access_settings: {
         Row: {
           id: number;
@@ -1814,6 +1919,25 @@ export interface Database {
       complete_lesson: {
         Args: { p_lesson_id: string; p_mode: string; p_accuracy: number };
         Returns: { is_first_completion: boolean; attempt_count: number }[];
+      };
+      link_binance_transaction: {
+        Args: {
+          p_transaction: string;
+          p_order: string;
+          p_method: "note_code" | "manual";
+          p_reason: string;
+        };
+        Returns: {
+          result:
+            | "linked"
+            | "already_linked_here"
+            | "transfer_already_linked"
+            | "transfer_not_found"
+            | "order_not_found"
+            | "order_already_paid"
+            | "order_already_has_transfer"
+            | "bad_method";
+        };
       };
       fulfill_payment_order: {
         Args: {

@@ -157,6 +157,35 @@ export const tr: Dictionary = {
     recheckBody: "Bu, ödeme ortağımıza yeniden sorar ve ödemen tamamlandıysa Premium'u açar.",
     recheckCta: "Ödememi şimdi kontrol et",
   },
+  binancePay: {
+    buttonLabel: "Binance Pay ile öde (USDT)",
+    buttonCaption: "Binance içinde bir transfer · komisyon yok",
+    pausedToday: "Binance Pay şu an duraklatıldı. Lütfen daha sonra tekrar dene ya da kartla öde.",
+    pageTitle: "Binance Pay ile öde",
+    pageIntro:
+      "Aşağıdaki tutarı Binance uygulamandan USDT olarak gönder. Premium kendiliğinden açılır, genellikle bir dakika içinde.",
+    recipientLabel: "Bu Binance ID'ye gönder",
+    recipientHint:
+      "Binance'te Pay'i aç, Send'e dokun ve bu ID'yi yaz. Onaylamadan önce {name} adını göreceksin.",
+    amountLabel: "USDT cinsinden tutar",
+    amountHint: "Bu tutarı ya da daha fazlasını gönder.",
+    noteLabel: "Bunu Not (Note) kutusuna yaz",
+    noteHint:
+      "Bu kod transferin sana ait olduğunu bize söyler, böylece Premium kendiliğinden açılır. Kod olmazsa elle kontrol etmemiz gerekir ve bu daha uzun sürer.",
+    copy: "Kopyala",
+    copied: "Kopyalandı",
+    expiresIn: "Bu sipariş {time} boyunca açık",
+    expiredNote:
+      "Bu siparişin süresi doldu. Transferi kodla zaten gönderdiysen Premium yine de kendiliğinden açılır. Göndermediysen yeni bir sipariş başlat.",
+    startNewOrder: "Yeni sipariş başlat",
+    waitingHeading: "Transferin bekleniyor…",
+    waitingBody:
+      "Bu sayfayı kapatabilirsin. Transfer geldiğinde Premium açılır ve sana e-postayla makbuz göndeririz.",
+    onlyUsdt:
+      "Yalnızca Binance Pay ile gönderilen USDT. Diğer coinleri ve zincir üzerindeki transferleri görmeyiz.",
+    notConfigured: "Binance Pay şu an kullanılamıyor.",
+  },
+
   onboarding: {
     heading: "Nereden başlamak istersiniz?",
     subtitle:

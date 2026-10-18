@@ -113,3 +113,23 @@ test("quotePrice: bonus days must be a whole, non-negative number of days", () =
     assert.throws(() => quotePrice("A", "IQD", "1m", bad), /whole number of days/);
   }
 });
+
+test("quotePrice: USDT is one for one with the dollar price, always a whole number of coins", () => {
+  const quote = quotePrice("B", "USDT", "3m");
+  assert.deepEqual(quote, {
+    tier: "B",
+    planId: "3m",
+    usdCents: 600,
+    currency: "USDT",
+    fxRatePerUsd: 1,
+    amount: 6,
+    premiumDays: 90,
+  });
+  for (const plan of PLANS) {
+    for (const tier of ["A", "B"] as const) {
+      const priced = quotePrice(tier, "USDT", plan.id);
+      assert.equal(Number.isInteger(priced.amount), true, plan.id + " " + tier);
+      assert.equal(priced.amount * 100, priced.usdCents);
+    }
+  }
+});

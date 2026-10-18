@@ -120,6 +120,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
                     Payments
                   </Link>
                   <Link
+                    href="/admin/binance-pay"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Binance Pay
+                  </Link>
+                  <Link
                     href="/admin/premium"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >

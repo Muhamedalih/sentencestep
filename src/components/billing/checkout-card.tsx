@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   BookOpenCheck,
   Check,
+  Coins,
   Gem,
   Gift,
   Info,
@@ -40,6 +41,8 @@ const PLAN_NAME_KEYS = { "1m": "plan1m", "3m": "plan3m", "6m": "plan6m" } as con
 const CARD_METHODS = ["Visa", "Mastercard"] as const;
 /** Iraqi wallets and bank accounts: only someone in Iraq can use them, so only they are shown them. */
 const IRAQI_WALLET_METHODS = ["Super Qi", "ZainCash", "FIB"] as const;
+/** The brand's own name, never translated; only listed while the Binance Pay button is shown to this visitor. */
+const BINANCE_PAY_METHOD = "Binance Pay";
 
 interface CheckoutCardProps {
   /** Prepared on the server for the visitor's tier: every figure is already formatted, in USD. */
@@ -70,6 +73,8 @@ interface CheckoutCardProps {
   showIraqiWallets?: boolean;
   /** A lesson page (already checked with safeLessonPath) the learner was stopped at: sent with the form so the confirmation page can lead back to it. Never read for anything about the payment. */
   afterPaymentPath?: string | null;
+  /** True when the "binancePay" switch is open for this visitor: a second button, beside the card one, pays in USDT through Binance Pay. The server re-checks the switch when the form is posted. */
+  binancePayOpen?: boolean;
 }
 
 /**
@@ -90,11 +95,14 @@ export function CheckoutCard({
   waylShowsDollars = false,
   showIraqiWallets = false,
   afterPaymentPath = null,
+  binancePayOpen = false,
 }: CheckoutCardProps) {
   const { t, locale } = useLocale();
   const formId = useId();
   const payAreaRef = useRef<HTMLDivElement>(null);
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
+  // Which of the two buttons was pressed, so only that one says "Redirecting…".
+  const [pressed, setPressed] = useState<"card" | "binance">("card");
   const [selectedId, setSelectedId] = useState<PlanId>(
     () => (plans.find((plan) => plan.preselected) ?? plans[0])!.id,
   );
@@ -129,9 +137,8 @@ export function CheckoutCard({
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  const acceptedMethods = showIraqiWallets
-    ? [...CARD_METHODS, ...IRAQI_WALLET_METHODS]
-    : CARD_METHODS;
+  const cardMethods = showIraqiWallets ? [...CARD_METHODS, ...IRAQI_WALLET_METHODS] : CARD_METHODS;
+  const acceptedMethods = binancePayOpen ? [...cardMethods, BINANCE_PAY_METHOD] : cardMethods;
   const showRating = !extend && socialProof?.rating;
   const showSocialProof =
     !extend && socialProof && (socialProof.learners || socialProof.lessons || socialProof.rating);
@@ -318,9 +325,17 @@ export function CheckoutCard({
 
             <div ref={payAreaRef} className="flex flex-col gap-2">
               {signedIn ? (
-                <Button type="submit" size="lg" disabled={pending} className="w-full">
+                <Button
+                  type="submit"
+                  name="method"
+                  value="card"
+                  size="lg"
+                  disabled={pending}
+                  onClick={() => setPressed("card")}
+                  className="w-full"
+                >
                   {!pending && <Lock aria-hidden="true" />}
-                  {pending
+                  {pending && pressed === "card"
                     ? t.premium.redirecting
                     : t.premium.payCta
                         .replace("{price}", selected.price)
@@ -332,6 +347,32 @@ export function CheckoutCard({
                     {t.premium.signInToUpgrade}
                   </Link>
                 </Button>
+              )}
+              {signedIn && binancePayOpen && (
+                <>
+                  <Button
+                    type="submit"
+                    name="method"
+                    value="binance"
+                    size="lg"
+                    variant="outline"
+                    disabled={pending}
+                    onClick={() => setPressed("binance")}
+                    className="w-full"
+                  >
+                    {pending && pressed === "binance" ? (
+                      t.premium.redirecting
+                    ) : (
+                      <>
+                        <Coins aria-hidden="true" />
+                        {t.binancePay.buttonLabel}
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-muted-foreground text-center text-xs" dir="auto">
+                    {t.binancePay.buttonCaption}
+                  </p>
+                </>
               )}
               {state?.error && (
                 <p

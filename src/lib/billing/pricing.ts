@@ -13,8 +13,14 @@ export type { PricingTier } from "./plans";
 /**
  * Fixed on purpose: never fetched from an exchange-rate API. Changing a rate
  * is a deliberate code change, and every order snapshots the rate it used.
+ * USDT is the stablecoin Binance Pay orders are charged in, one for one with
+ * the dollar price (every plan costs a whole number of dollars, so the amount
+ * is always a whole number of USDT).
  */
-const FIXED_FX_RATES_PER_USD: ReadonlyMap<string, number> = new Map([["IQD", 1520]]);
+const FIXED_FX_RATES_PER_USD: ReadonlyMap<string, number> = new Map([
+  ["IQD", 1520],
+  ["USDT", 1],
+]);
 
 /** Lowercase ISO 3166-1 alpha-2 codes, the same format as profiles.country. */
 const TIER_A_COUNTRIES: ReadonlySet<string> = new Set([

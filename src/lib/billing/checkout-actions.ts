@@ -14,9 +14,11 @@ import { bonusDaysForCheckout } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { isPlanId } from "@/lib/billing/plans";
 import { tierForCountry } from "@/lib/billing/pricing";
+import { createBinancePayStore } from "@/lib/billing/binance/store";
 import { createCheckout } from "@/lib/billing/payments/checkout";
-import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
+import { getBinancePayRuntime, getPaymentRuntime } from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getSiteUrl } from "@/lib/site-url";
@@ -48,6 +50,9 @@ export async function startCheckout(
 
   const plan = formData.get("plan");
   if (!isPlanId(plan)) return { error: t.premium.checkoutTryAgain };
+  // Which button was pressed. Anything but "binance" is the card button, so a
+  // form posted by hand can only ever choose between the two real ways to pay.
+  const method = formData.get("method") === "binance" ? "binance" : "card";
 
   const country = resolvePricingCountry(await headers());
   // Decided here, on the server, for this moment — never from the form.
@@ -62,7 +67,7 @@ export async function startCheckout(
       {
         name: "UPGRADE_CTA_CLICKED",
         category: "PREMIUM",
-        properties: { plan, tier: tierForCountry(country.country), bonusDays },
+        properties: { plan, tier: tierForCountry(country.country), bonusDays, method },
       },
       user.id,
     );
@@ -70,7 +75,16 @@ export async function startCheckout(
 
   let runtime: PaymentRuntime | null;
   try {
-    runtime = getPaymentRuntime();
+    if (method === "binance") {
+      // The button is only drawn for visitors the "binancePay" switch reaches; this
+      // re-checks it on the server, so a hand-made post can't open a Binance order.
+      if (!(await getEffectiveFeatures()).binancePay.enabled) {
+        return { error: t.premium.checkoutNotConnected };
+      }
+      runtime = getBinancePayRuntime();
+    } else {
+      runtime = getPaymentRuntime();
+    }
   } catch (error) {
     console.error("[payments] checkout: payment storage is not configured", error);
     return { error: t.premium.checkoutNotConnected };
@@ -78,6 +92,24 @@ export async function startCheckout(
   if (!runtime) return { error: t.premium.checkoutNotConnected };
 
   if (!user) return { error: t.premium.checkoutSignIn };
+
+  if (method === "binance") {
+    // The admin-set limit on orders per rolling day: a pause, never a surprise charge.
+    try {
+      const store = createBinancePayStore();
+      const [settings, recent] = await Promise.all([
+        store.getSettings(),
+        store.countOrdersSince(
+          new Date(Date.now() - 24 * 60 * 60 * 1000),
+          runtime.provider.environment,
+        ),
+      ]);
+      if (recent >= settings.dailyOrderCap) return { error: t.binancePay.pausedToday };
+    } catch (error) {
+      console.error("[payments] Binance Pay: could not read the daily limit", error);
+      return { error: t.premium.checkoutTryAgain };
+    }
+  }
 
   let result;
   try {

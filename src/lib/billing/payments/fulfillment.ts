@@ -3,7 +3,7 @@ import type { PaymentProvider, ProviderPayment } from "@/lib/billing/payment-pro
 import { LINK_EXPIRY_GRACE_MS, LINK_TTL_MS, UNATTACHED_ORDER_GRACE_MS } from "./constants";
 import type { FulfillPaymentResult, PaymentOrder, PaymentOrderPatch } from "./types";
 
-export type FulfillmentSource = "webhook" | "return_page" | "cron";
+export type FulfillmentSource = "webhook" | "return_page" | "cron" | "relay" | "admin";
 
 export type ClosedStatus = "failed" | "cancelled" | "expired";
 

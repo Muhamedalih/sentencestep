@@ -76,6 +76,11 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
     description:
       "A new section in the sidebar: short real-life scenes (funny, serious, inspiring) the learner listens to and reads part by part, with a narrator that lights up each line, a tap-to-replay on every line, an Arabic translation switch, a quick question after each part, and at the end a word lesson made from the passage's own words. Arabic support language only for now; reading and listening work for guests, saving progress needs an account. Admin preview shows the whole section to admins only on the live site; turn it On to publish it to everyone — that also publishes each passage's word lesson in Word Lists (back to Admin preview or Off hides them again). The Publish button on the Passages page does the same thing.",
   },
+  binancePay: {
+    title: "Binance Pay (USDT)",
+    description:
+      "A second payment button on the upgrade page: the learner sends USDT to your Binance account and writes a short order code in the transfer's note; the relay server reads your Binance Pay history and Premium is activated by itself when the code and the amount match. Needs the relay running and BINANCE_RELAY_SECRET set on the server. Admin preview shows the button to admins only on the live site; turn it On to open it to everyone. Orders per day, the account shown to learners and automatic activation are set on the Binance Pay page.",
+  },
 };
 
 const STATE_OPTIONS: { value: FeatureState; label: string; hint: string }[] = [

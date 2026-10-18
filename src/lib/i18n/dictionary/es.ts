@@ -164,6 +164,35 @@ export const es: Dictionary = {
       "Esto vuelve a preguntar a nuestro socio de pagos y activa Premium si tu pago se completó.",
     recheckCta: "Comprobar mi pago ahora",
   },
+  binancePay: {
+    buttonLabel: "Pagar con Binance Pay (USDT)",
+    buttonCaption: "Una transferencia dentro de Binance · sin comisiones",
+    pausedToday: "Binance Pay está en pausa por ahora. Inténtalo más tarde o paga con tarjeta.",
+    pageTitle: "Pagar con Binance Pay",
+    pageIntro:
+      "Envía el importe de abajo en USDT desde tu app de Binance. Premium se activa solo, normalmente en menos de un minuto.",
+    recipientLabel: "Envía a este Binance ID",
+    recipientHint:
+      "En Binance abre Pay, toca Send y escribe este ID. Antes de confirmar verás el nombre {name}.",
+    amountLabel: "Importe en USDT",
+    amountHint: "Envía este importe o más.",
+    noteLabel: "Escribe esto en la casilla Nota (Note)",
+    noteHint:
+      "Este código nos dice que la transferencia es tuya, así que Premium se activa solo. Sin él tenemos que comprobarlo a mano, y tarda más.",
+    copy: "Copiar",
+    copied: "Copiado",
+    expiresIn: "Este pedido sigue abierto durante {time}",
+    expiredNote:
+      "La hora de este pedido ha terminado. Si ya enviaste la transferencia con el código, Premium se activará solo. Si no, empieza un pedido nuevo.",
+    startNewOrder: "Empezar un pedido nuevo",
+    waitingHeading: "Esperando tu transferencia…",
+    waitingBody:
+      "Puedes cerrar esta página. Cuando llegue la transferencia, Premium se activa y te enviamos un recibo por correo.",
+    onlyUsdt:
+      "Solo USDT, enviados con Binance Pay. No detectamos otras monedas ni transferencias en la red.",
+    notConfigured: "Binance Pay no está disponible ahora mismo.",
+  },
+
   onboarding: {
     heading: "¿Desde dónde empiezas?",
     subtitle: "Elige un punto de partida — siempre puedes explorar otros niveles cuando quieras.",

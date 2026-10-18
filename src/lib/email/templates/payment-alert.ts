@@ -112,6 +112,27 @@ const KNOWN_ALERTS: Record<string, PaymentAlertExplanation> = {
     meaning: "The payment system stopped on this order instead of guessing.",
     action: "Compare the order below with the payment in the Wayl dashboard.",
   },
+  binance_transfer_needs_match: {
+    title: "A Binance Pay transfer could not be matched to an order",
+    meaning:
+      "Someone sent USDT with an order code in the note, but the transfer was not activated by itself (the amount is lower than the price, the order was closed or already paid, or the code belongs to no order). Nothing was granted.",
+    action:
+      "Open Admin > Binance Pay, read the reason next to the transfer, and either link it to the right order or ignore it. If the learner underpaid, ask them for the difference.",
+  },
+  binance_relay_offline: {
+    title: "The Binance Pay relay is not reporting in",
+    meaning:
+      "A learner is waiting to pay with Binance Pay, but the relay server (Frankfurt) has not asked for work for several minutes, so a transfer would not be seen.",
+    action:
+      "Check the relay server: `sudo systemctl status looma-relay` and `journalctl -u looma-relay -n 50` on it. Transfers are not lost, they are picked up when it comes back.",
+  },
+  binance_relay_error: {
+    title: "The Binance Pay relay cannot read Binance",
+    meaning:
+      "The relay is running but its last look at the Binance Pay history failed, while a learner is waiting. A transfer would not be seen until this is fixed.",
+    action:
+      "Read the error in Admin > Binance Pay. Typical causes: the API key was deleted or its IP restriction no longer matches the relay's address, or Binance is down.",
+  },
   fulfillment_mismatch: MISMATCH,
   amount_mismatch: MISMATCH,
   currency_mismatch: MISMATCH,

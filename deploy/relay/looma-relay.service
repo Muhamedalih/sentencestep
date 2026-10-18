@@ -1,0 +1,35 @@
+[Unit]
+Description=Looma Binance Pay relay (reads the Binance Pay history, reports to the site)
+Documentation=file:///opt/looma-relay/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/looma-relay
+# The keys live in a root-owned file; systemd reads it, so the process gets them as environment variables.
+EnvironmentFile=/etc/looma-relay/relay.env
+ExecStart=/usr/bin/python3 /opt/looma-relay/poller.py
+Restart=always
+RestartSec=5
+
+# The relay opens no port and writes nothing: take away everything else.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+MemoryMax=160M
+
+[Install]
+WantedBy=multi-user.target

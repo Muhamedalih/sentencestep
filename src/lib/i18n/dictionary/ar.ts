@@ -150,6 +150,33 @@ export const ar: Dictionary = {
     recheckBody: "يسأل هذا شريك الدفع مرة أخرى، ويفعّل اشتراكك إذا كانت عملية الدفع قد تمّت.",
     recheckCta: "تحقق من دفعتي الآن",
   },
+  binancePay: {
+    buttonLabel: "الدفع عبر Binance Pay (USDT)",
+    buttonCaption: "تحويل داخل باينانس · بدون رسوم",
+    pausedToday: "الدفع عبر Binance Pay متوقف مؤقتًا. يرجى المحاولة لاحقًا أو الدفع بالبطاقة.",
+    pageTitle: "الدفع عبر Binance Pay",
+    pageIntro:
+      "حوّل المبلغ أدناه بعملة USDT من تطبيق باينانس. يتفعّل Premium تلقائيًا، وغالبًا خلال دقيقة.",
+    recipientLabel: "أرسل إلى Binance ID هذا",
+    recipientHint:
+      "في باينانس افتح Pay ثم اضغط Send واكتب هذا الرقم. قبل التأكيد سيظهر لك الاسم {name}.",
+    amountLabel: "المبلغ بعملة USDT",
+    amountHint: "أرسل هذا المبلغ أو أكثر.",
+    noteLabel: "اكتب هذا في خانة الملاحظة (Note)",
+    noteHint:
+      "هذا الرمز يخبرنا أن التحويل لك، فيتفعّل Premium تلقائيًا. بدونه نتحقق يدويًا ويستغرق ذلك وقتًا أطول.",
+    copy: "نسخ",
+    copied: "تم النسخ",
+    expiresIn: "هذا الطلب مفتوح لمدة {time}",
+    expiredNote:
+      "انتهت ساعة هذا الطلب. إذا كنت قد أرسلت التحويل مع الرمز فسيتفعّل Premium تلقائيًا. وإلا فابدأ طلبًا جديدًا.",
+    startNewOrder: "ابدأ طلبًا جديدًا",
+    waitingHeading: "في انتظار تحويلك…",
+    waitingBody: "يمكنك إغلاق هذه الصفحة. عند وصول التحويل يتفعّل Premium وتصلك رسالة بالإيصال.",
+    onlyUsdt: "عملة USDT فقط وعبر Binance Pay. لا نرى العملات الأخرى ولا التحويلات على الشبكة.",
+    notConfigured: "الدفع عبر Binance Pay غير متاح حاليًا.",
+  },
+
   onboarding: {
     heading: "من أين تريد أن تبدأ؟",
     subtitle: "اختر نقطة انطلاق — يمكنك دائمًا استكشاف مستويات أخرى في أي وقت.",

@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 import type { PaymentProvider } from "@/lib/billing/payment-provider";
-import { getPaymentProvider } from "@/lib/billing/provider-registry";
+import { getBinancePayProvider, getPaymentProvider } from "@/lib/billing/provider-registry";
 import { markWebhookEventProcessed, recordWebhookEvent } from "@/lib/billing/webhook-events";
 
 import { notifyAdminsOfPaymentAlert } from "./admin-alerts";
@@ -41,6 +41,31 @@ export function getPaymentRuntime(): PaymentRuntime | null {
     report: reportPaymentAlert,
     onFulfilled: sendPurchaseConfirmation,
   };
+}
+
+/**
+ * Binance Pay's own runtime: the same store, alerts and receipt email as Wayl's,
+ * with the Binance Pay provider. Null while BINANCE_RELAY_SECRET is not set.
+ */
+export function getBinancePayRuntime(): PaymentRuntime | null {
+  const provider = getBinancePayProvider();
+  if (!provider) return null;
+  return {
+    provider,
+    store: createPaymentStore(),
+    report: reportPaymentAlert,
+    onFulfilled: sendPurchaseConfirmation,
+  };
+}
+
+/** The runtime that owns an order, found by the provider name stored on it. */
+export function getRuntimeForProvider(providerName: string): PaymentRuntime | null {
+  const candidates = [getPaymentRuntime, getBinancePayRuntime];
+  for (const candidate of candidates) {
+    const runtime = candidate();
+    if (runtime?.provider.name === providerName) return runtime;
+  }
+  return null;
 }
 
 export function toWebhookDeps(runtime: PaymentRuntime): WebhookDeps {

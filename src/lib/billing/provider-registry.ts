@@ -1,4 +1,8 @@
+import { MIN_RELAY_SECRET_LENGTH } from "@/lib/billing/binance/constants";
+import { createBinancePayStore } from "@/lib/billing/binance/store";
+import type { BinancePayStore } from "@/lib/billing/binance/store";
 import type { PaymentProvider } from "@/lib/billing/payment-provider";
+import { createBinancePayProvider } from "@/lib/billing/providers/binance-pay";
 import { createWaylProvider } from "@/lib/billing/providers/wayl";
 
 const MIN_WEBHOOK_SECRET_LENGTH = 16;
@@ -28,4 +32,35 @@ export function getPaymentProvider(): PaymentProvider | null {
   if (environment === "live" && process.env.NODE_ENV !== "production") return null;
 
   return createWaylProvider({ apiKey, webhookSecret, environment, showUsd: showUsdOnWaylPage() });
+}
+
+/**
+ * The secret shared with the relay (the small server outside the US that reads
+ * the shop's Binance Pay history), or null while BINANCE_RELAY_SECRET is unset
+ * or too short to be safe. Binance Pay is simply unavailable then: an order
+ * could be created but nothing could ever tell the site it had been paid.
+ */
+export function getBinancePayRelaySecret(): string | null {
+  const secret = process.env.BINANCE_RELAY_SECRET;
+  return secret && secret.length >= MIN_RELAY_SECRET_LENGTH ? secret : null;
+}
+
+export function isBinancePayConfigured(): boolean {
+  return getBinancePayRelaySecret() !== null;
+}
+
+/**
+ * Null — never a fake — until BINANCE_RELAY_SECRET is set. Unlike Wayl there
+ * is nothing else to configure here: the account learners pay to lives in the
+ * admin-edited binance_pay_settings row, and the database is only opened when a
+ * payment is actually created or asked about. Whether anyone is shown the
+ * button is decided separately, by the "binancePay" feature switch.
+ */
+export function getBinancePayProvider(): PaymentProvider | null {
+  if (!isBinancePayConfigured()) return null;
+  let store: BinancePayStore | undefined;
+  return createBinancePayProvider({
+    environment: process.env.NODE_ENV === "production" ? "live" : "test",
+    store: () => (store ??= createBinancePayStore()),
+  });
 }

@@ -11,6 +11,7 @@ import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AFTER_PAYMENT_COOKIE, safeLessonPath } from "@/lib/billing/after-payment";
+import { BINANCE_PAY_PROVIDER } from "@/lib/billing/binance/constants";
 import { verifyAndFulfill } from "@/lib/billing/payments/fulfillment";
 import type { FulfillmentOutcome } from "@/lib/billing/payments/fulfillment";
 import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
@@ -79,13 +80,20 @@ export default async function BillingReturnPage({
   if (runtime) {
     try {
       order = await loadOrder(runtime, user.id, referenceId);
-      if (order) outcome = await verifyAndFulfill(runtime, order.reference_id, "return_page");
+      // A Binance Pay order has its own page (below); only this runtime's own orders are asked about here.
+      if (order && order.provider === runtime.provider.name) {
+        outcome = await verifyAndFulfill(runtime, order.reference_id, "return_page");
+      }
     } catch (error) {
       // Provider or database hiccup: the learner may well have paid, so show
       // "confirming" rather than an error. The reconcile job settles it.
       console.error("[payments] return page verification failed", error);
       if (order) outcome = { outcome: "pending" };
     }
+  }
+  // Someone sent here with a Binance Pay order (a link from a report, a bookmark) is taken to that order's own page.
+  if (order?.provider === BINANCE_PAY_PROVIDER) {
+    redirect(`/billing/binance/${encodeURIComponent(order.reference_id)}`);
   }
 
   let content: {
