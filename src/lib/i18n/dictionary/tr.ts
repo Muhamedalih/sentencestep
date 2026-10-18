@@ -158,6 +158,20 @@ export const tr: Dictionary = {
     recheckCta: "Ödememi şimdi kontrol et",
   },
   binancePay: {
+    guideAsk: "Nasıl göndereceğini bilmiyor musun?",
+    guideOpen: "Adımları gör",
+    guideHeading: "Transfer, adım adım",
+    guideSteps: [
+      "[Binance] uygulamasını aç ve ana ekranda [Pay]'e dokun.",
+      "[Send]'e dokun, sonra [Send to Binance User]'ı seç.",
+      "[{id}] ID'sini yapıştır (yukarıdaki kutudan kopyala).",
+      "[{amount}] tutarını yaz ve [USDT] coinini seç.",
+      "[Note] kutusuna [{code}] yaz. Premium'u kendiliğinden açan şey bu koddur.",
+      "[Continue]'ya, sonra [Confirm]'e dokun ve [Pay PIN]'ini ya da iki adımlı doğrulamayı gir.",
+      "Bu sayfaya dön: Premium birkaç saniye içinde açılır.",
+    ],
+    guideNote:
+      "Transferler geri alınamaz, bu yüzden onaylamadan önce ID'yi kontrol et. Binance hesabının kimlik doğrulaması yapılmış olmalı. Düğme adları uygulamanın sürümüne ve diline göre biraz değişebilir.",
     noteBenefit: "Premium'u kendiliğinden açar",
     recipientIdLabel: "Binance ID",
     recipientNameLabel: "Ad",

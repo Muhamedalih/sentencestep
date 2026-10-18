@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Clock, Copy, Info, Loader2 } from "lucide-react";
+import { Check, ChevronDown, CircleHelp, Clock, Copy, Info, Loader2 } from "lucide-react";
 
 import { BinanceMark } from "@/components/billing/binance-mark";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
+import { guideSegments } from "@/lib/billing/binance/guide";
 import { cn } from "@/lib/utils";
 
 interface BinancePayInstructionsProps {
@@ -121,6 +122,89 @@ function Box({ heading, children }: { heading: ReactNode; children: ReactNode })
 }
 
 /**
+ * For someone who has never sent money in Binance: a row that opens, in place,
+ * the whole transfer step by step, with this order's own ID, amount and code in
+ * the steps. Closed it is one quiet line under the boxes, so it costs nothing to
+ * someone who already knows how. The wording of every step lives in the
+ * dictionaries (see guide.ts for how the figures and the chips are put in).
+ */
+function SendGuide({
+  binanceId,
+  amount,
+  orderCode,
+}: {
+  binanceId: string;
+  amount: number;
+  orderCode: string;
+}) {
+  const { t } = useLocale();
+  const [open, setOpen] = useState(false);
+  const values = { id: binanceId, amount: String(amount), code: orderCode };
+
+  return (
+    <details
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+      className="group border-primary/40 bg-primary/[0.08] rounded-xl border border-dashed px-3 open:border-solid"
+    >
+      <summary
+        dir="auto"
+        className="flex cursor-pointer list-none items-center justify-between gap-2 py-2.5 text-sm [&::-webkit-details-marker]:hidden"
+      >
+        <span className="flex items-center gap-2">
+          <CircleHelp className="text-primary size-[18px] shrink-0" aria-hidden="true" />
+          {open ? (
+            <span className="font-medium">{t.binancePay.guideHeading}</span>
+          ) : (
+            <span>
+              {t.binancePay.guideAsk} <span className="font-medium">{t.binancePay.guideOpen}</span>
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          className={cn(
+            "text-muted-foreground size-4 shrink-0 transition-transform",
+            open && "rotate-180",
+          )}
+          aria-hidden="true"
+        />
+      </summary>
+
+      <ol className="flex flex-col pb-2">
+        {t.binancePay.guideSteps.map((step, index) => (
+          <li key={index} className="flex items-start gap-2.5 py-1.5 text-sm">
+            <span className="bg-brand-muted text-primary mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold">
+              {index + 1}
+            </span>
+            <span className="min-w-0 leading-relaxed" dir="auto">
+              {guideSegments(step, values).map((piece, pieceIndex) =>
+                piece.chip ? (
+                  <bdi
+                    key={pieceIndex}
+                    dir="ltr"
+                    className="bg-foreground/10 rounded-md px-1.5 font-medium"
+                  >
+                    {piece.text}
+                  </bdi>
+                ) : (
+                  <Fragment key={pieceIndex}>{piece.text}</Fragment>
+                ),
+              )}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p
+        className="text-muted-foreground border-border border-t py-2.5 text-xs leading-relaxed"
+        dir="auto"
+      >
+        {t.binancePay.guideNote}
+      </p>
+    </details>
+  );
+}
+
+/**
  * What a learner needs to pay with Binance Pay, in three boxes: the price (the
  * same violet as the price on the upgrade card, with the coin and the network
  * named), who to send it to (the name Binance will show and the Binance ID),
@@ -204,6 +288,8 @@ export function BinancePayInstructions({
           copyLabel={t.binancePay.noteLabel}
         />
       </Box>
+
+      <SendGuide binanceId={binanceId} amount={amount} orderCode={orderCode} />
 
       <div className="flex flex-col gap-2 px-1" role="status" aria-live="polite">
         <div

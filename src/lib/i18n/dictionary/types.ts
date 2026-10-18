@@ -181,6 +181,13 @@ export interface Dictionary {
   /** The first-time starting-level placement picker (src/components/app/starting-level-onboarding.tsx) — tier names themselves come from src/lib/levels.ts's tierSupportLabel, not from here. */
   /** Pay with Binance Pay (USDT): the button on /upgrade and the payment page (see src/lib/billing/binance). */
   binancePay: {
+    /** Beside the guide on the order page: the question, and the part of it that opens the steps. */
+    guideAsk: string;
+    guideOpen: string;
+    guideHeading: string;
+    /** Seven steps; what is tapped or typed is in [brackets], this order's figures are {id}, {amount} and {code}. */
+    guideSteps: string[];
+    guideNote: string;
     /** Heading above the "how to pay" choice on the upgrade card. */
     methodHeading: string;
     cardTileTitle: string;

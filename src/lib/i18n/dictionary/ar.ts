@@ -151,6 +151,20 @@ export const ar: Dictionary = {
     recheckCta: "تحقق من دفعتي الآن",
   },
   binancePay: {
+    guideAsk: "لا تعرف كيف تحوّل؟",
+    guideOpen: "شاهد الخطوات",
+    guideHeading: "التحويل خطوة بخطوة",
+    guideSteps: [
+      "افتح تطبيق [Binance] واضغط [Pay] من الصفحة الرئيسية.",
+      "اضغط [Send] ثم اختر [Send to Binance User].",
+      "ألصق المعرّف [{id}] (انسخه من المربع أعلاه).",
+      "اكتب المبلغ [{amount}] واختر العملة [USDT].",
+      "في خانة الملاحظة [Note] اكتب [{code}]. هذه الخطوة تفعّل Premium تلقائيًا.",
+      "اضغط [Continue] ثم [Confirm]، وأدخل رمز [Pay PIN] أو التحقق الثنائي.",
+      "ارجع إلى هذه الصفحة: يتفعّل Premium خلال لحظات.",
+    ],
+    guideNote:
+      "التحويل لا يُسترد، فراجع المعرّف قبل التأكيد. وحسابك في Binance يجب أن يكون موثّق الهوية. قد تختلف أسماء الأزرار قليلًا حسب إصدار التطبيق ولغته.",
     noteBenefit: "يفعّل Premium تلقائيًا",
     recipientIdLabel: "معرّف Binance",
     recipientNameLabel: "الاسم",

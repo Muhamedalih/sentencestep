@@ -165,6 +165,20 @@ export const es: Dictionary = {
     recheckCta: "Comprobar mi pago ahora",
   },
   binancePay: {
+    guideAsk: "¿No sabes cómo enviarlo?",
+    guideOpen: "Ver los pasos",
+    guideHeading: "La transferencia, paso a paso",
+    guideSteps: [
+      "Abre la app de [Binance] y toca [Pay] en la pantalla de inicio.",
+      "Toca [Send] y elige [Send to Binance User].",
+      "Pega el ID [{id}] (cópialo de la casilla de arriba).",
+      "Escribe el importe [{amount}] y elige la moneda [USDT].",
+      "En la casilla [Note] escribe [{code}]. Esto es lo que activa Premium solo.",
+      "Toca [Continue], luego [Confirm], e introduce tu [Pay PIN] o la verificación en dos pasos.",
+      "Vuelve a esta página: Premium se activa en unos instantes.",
+    ],
+    guideNote:
+      "Las transferencias no se pueden deshacer, así que revisa el ID antes de confirmar. Tu cuenta de Binance debe tener la identidad verificada. Los nombres de los botones pueden variar un poco según la versión y el idioma de la app.",
     noteBenefit: "Premium se activa solo",
     recipientIdLabel: "Binance ID",
     recipientNameLabel: "Nombre",

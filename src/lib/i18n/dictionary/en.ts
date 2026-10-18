@@ -162,6 +162,20 @@ export const en: Dictionary = {
     recheckCta: "Check my payment now",
   },
   binancePay: {
+    guideAsk: "Not sure how to send it?",
+    guideOpen: "See the steps",
+    guideHeading: "The transfer, step by step",
+    guideSteps: [
+      "Open the [Binance] app and tap [Pay] on the home screen.",
+      "Tap [Send], then choose [Send to Binance User].",
+      "Paste the ID [{id}] (copy it from the box above).",
+      "Enter the amount [{amount}] and choose the coin [USDT].",
+      "In the [Note] box write [{code}]. This is what switches Premium on by itself.",
+      "Tap [Continue], then [Confirm], and enter your [Pay PIN] or the two-step check.",
+      "Come back to this page: Premium switches on within moments.",
+    ],
+    guideNote:
+      "Transfers can't be undone, so check the ID before you confirm. Your Binance account must be identity-verified. Button names can differ a little by app version and language.",
     noteBenefit: "Activates Premium by itself",
     recipientIdLabel: "Binance ID",
     recipientNameLabel: "Name",
