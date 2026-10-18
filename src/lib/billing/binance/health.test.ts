@@ -63,6 +63,25 @@ test("checkRelayHealth: a recent failure to read Binance is reported even though
   assert.equal(alerts[0]!.detail, "binance answered 451");
 });
 
+test("checkRelayHealth: a relay that asks but whose looks are no longer accepted alerts the admins", async () => {
+  const { store, alerts, check } = setup();
+  store.addOrder();
+  store.relay.lastPollAt = iso(-30 * 1000);
+  store.relay.lastSuccessAt = iso(-30 * MINUTE);
+  assert.equal(await check(), "error");
+  assert.equal(alerts[0]!.code, "binance_relay_error");
+  assert.match(alerts[0]!.detail ?? "", /last accepted look at Binance/);
+});
+
+test("checkRelayHealth: a recent accepted look keeps a waiting order healthy", async () => {
+  const { store, alerts, check } = setup();
+  store.addOrder();
+  store.relay.lastPollAt = iso(-30 * 1000);
+  store.relay.lastSuccessAt = iso(-1 * MINUTE);
+  assert.equal(await check(), "ok");
+  assert.equal(alerts.length, 0);
+});
+
 test("checkRelayHealth: an old failure that has since cleared is not reported", async () => {
   const { store, alerts, check } = setup();
   store.addOrder();

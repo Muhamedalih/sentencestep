@@ -104,7 +104,8 @@ export default async function AdminBinancePayPage() {
           className={relayOnline ? "" : "bg-danger/15 text-danger border-transparent"}
         >
           {relayOnline ? "Relay online" : "Relay offline"} · last asked{" "}
-          {secondsAgo(relay.lastPollAt, now)}
+          {secondsAgo(relay.lastPollAt, now)} · last Binance read{" "}
+          {secondsAgo(relay.lastSuccessAt, now)}
         </Badge>
         {!isBinancePayConfigured() && (
           <Badge variant="muted" className="bg-danger/15 text-danger border-transparent">

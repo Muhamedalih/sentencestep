@@ -47,5 +47,18 @@ export async function checkRelayHealth(deps: {
     });
     return "error";
   }
+
+  // The relay keeps asking, yet none of its looks at Binance has been accepted for a while: while someone
+  // waits it looks every few seconds, so a long gap means its transfers are not getting in (the site is
+  // refusing or failing to store them). A relay with no accepted look yet is brand new and is not judged.
+  const lastSuccess = state.lastSuccessAt ? Date.parse(state.lastSuccessAt) : null;
+  if (lastSuccess !== null && deps.now.getTime() - lastSuccess > OFFLINE_ALERT_AFTER_MS) {
+    await deps.report({
+      code: "binance_relay_error",
+      referenceId: "batch",
+      detail: `The relay is asking but its last accepted look at Binance was at ${state.lastSuccessAt}.`,
+    });
+    return "error";
+  }
   return "ok";
 }
