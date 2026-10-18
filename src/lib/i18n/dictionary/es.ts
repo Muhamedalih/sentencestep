@@ -165,22 +165,22 @@ export const es: Dictionary = {
     recheckCta: "Comprobar mi pago ahora",
   },
   binancePay: {
-    buttonLabel: "Pagar con Binance Pay (USDT)",
-    buttonCaption: "Una transferencia dentro de Binance · sin comisiones",
+    noteBenefit: "Premium se activa solo",
+    recipientIdLabel: "Binance ID",
+    recipientNameLabel: "Nombre",
+    recipientHeading: "Enviar a",
+    priceCaption: "USDT en Binance Pay · sin comisiones",
+    payCta: "Pagar {amount} USDT con Binance Pay",
+    tileCaption: "USDT · una transferencia dentro de Binance, sin comisiones",
+    cardTileTitle: "Tarjeta o monedero",
+    methodHeading: "Cómo pagar",
     pausedToday: "Binance Pay está en pausa por ahora. Inténtalo más tarde o paga con tarjeta.",
     limitReached:
       "Has alcanzado el límite de hoy de {count} pedidos de Binance Pay. Inténtalo mañana o paga con tarjeta.",
     pageTitle: "Pagar con Binance Pay",
-    pageIntro:
-      "Envía el importe de abajo en USDT desde tu app de Binance. Premium se activa solo, normalmente en menos de un minuto.",
-    recipientLabel: "Envía a este Binance ID",
-    recipientHint:
-      "En Binance abre Pay, toca Send y escribe este ID. Antes de confirmar verás el nombre {name}.",
-    amountLabel: "Importe en USDT",
-    amountHint: "Envía este importe o más.",
+    pageIntro: "En la app de Binance abre Pay y luego Send.",
+    amountLabel: "Importe a enviar",
     noteLabel: "Escribe esto en la casilla Nota (Note)",
-    noteHint:
-      "Este código nos dice que la transferencia es tuya, así que Premium se activa solo. Sin él tenemos que comprobarlo a mano, y tarda más.",
     copy: "Copiar",
     copied: "Copiado",
     expiresIn: "Este pedido sigue abierto durante {time}",

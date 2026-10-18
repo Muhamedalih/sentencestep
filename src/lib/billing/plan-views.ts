@@ -22,6 +22,8 @@ export interface PlanView {
   bonusDays: number;
   /** The whole price, e.g. "$4". */
   price: string;
+  /** The same price as a plain number of USDT, e.g. "4" (one USDT is one dollar), for the Binance Pay button. */
+  usdt: string;
   /** The price per 30 days, e.g. "$1.33". */
   perMonth: string;
   /** The price per day over all the days they get, e.g. "$0.04". */
@@ -40,6 +42,7 @@ export function buildPlanViews(tier: PricingTier, bonusDays = 0): PlanView[] {
       days: plan.days + bonusDays,
       bonusDays,
       price: formatUsd(cents),
+      usdt: String(cents / 100),
       // The plan's own comparison figures ignore the bonus, so they stay the same with or without an offer.
       perMonth: formatUsdExact(perMonthCents(tier, plan.id)),
       perDay: formatUsdPerDay(cents, plan.days + bonusDays),

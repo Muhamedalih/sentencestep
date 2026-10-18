@@ -151,22 +151,22 @@ export const ar: Dictionary = {
     recheckCta: "تحقق من دفعتي الآن",
   },
   binancePay: {
-    buttonLabel: "الدفع عبر Binance Pay (USDT)",
-    buttonCaption: "تحويل داخل باينانس · بدون رسوم",
+    noteBenefit: "يفعّل Premium تلقائيًا",
+    recipientIdLabel: "معرّف Binance",
+    recipientNameLabel: "الاسم",
+    recipientHeading: "أرسل إلى",
+    priceCaption: "عملة USDT على شبكة Binance Pay · بدون رسوم",
+    payCta: "ادفع {amount} USDT عبر Binance Pay",
+    tileCaption: "USDT · تحويل داخل باينانس بدون رسوم",
+    cardTileTitle: "بطاقة أو محفظة",
+    methodHeading: "طريقة الدفع",
     pausedToday: "الدفع عبر Binance Pay متوقف مؤقتًا. يرجى المحاولة لاحقًا أو الدفع بالبطاقة.",
     limitReached:
       "بلغ حسابك الحد اليومي لطلبات Binance Pay، وهو {count} طلبات. يرجى المحاولة غدًا أو الدفع بالبطاقة.",
     pageTitle: "الدفع عبر Binance Pay",
-    pageIntro:
-      "حوّل المبلغ أدناه بعملة USDT من تطبيق باينانس. يتفعّل Premium تلقائيًا، وغالبًا خلال دقيقة.",
-    recipientLabel: "أرسل إلى Binance ID هذا",
-    recipientHint:
-      "في باينانس افتح Pay ثم اضغط Send واكتب هذا الرقم. قبل التأكيد سيظهر لك الاسم {name}.",
-    amountLabel: "المبلغ بعملة USDT",
-    amountHint: "أرسل هذا المبلغ أو أكثر.",
+    pageIntro: "في تطبيق باينانس افتح Pay ثم Send.",
+    amountLabel: "المبلغ المطلوب",
     noteLabel: "اكتب هذا في خانة الملاحظة (Note)",
-    noteHint:
-      "هذا الرمز يخبرنا أن التحويل لك، فيتفعّل Premium تلقائيًا. بدونه نتحقق يدويًا ويستغرق ذلك وقتًا أطول.",
     copy: "نسخ",
     copied: "تم النسخ",
     expiresIn: "هذا الطلب مفتوح لمدة {time}",

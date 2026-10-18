@@ -12,6 +12,7 @@ test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving
       days: 30,
       bonusDays: 0,
       price: "$2",
+      usdt: "2",
       perMonth: "$2.00",
       perDay: "$0.07",
       savingsPercent: null,
@@ -23,6 +24,7 @@ test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving
       days: 90,
       bonusDays: 0,
       price: "$4",
+      usdt: "4",
       perMonth: "$1.33",
       perDay: "$0.04",
       savingsPercent: 33,
@@ -34,6 +36,7 @@ test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving
       days: 180,
       bonusDays: 0,
       price: "$7",
+      usdt: "7",
       perMonth: "$1.17",
       perDay: "$0.04",
       savingsPercent: 42,
@@ -69,6 +72,15 @@ test("buildPlanViews: shows dollars only", () => {
       for (const text of [view.price, view.perMonth, view.perDay]) {
         assert.match(text, /^\$\d+(\.\d{2})?$/);
       }
+    }
+  }
+});
+
+test("buildPlanViews: the USDT amount is the dollar price as a plain number, one USDT for each dollar", () => {
+  for (const tier of ["A", "B"] as const) {
+    for (const view of buildPlanViews(tier)) {
+      assert.match(view.usdt, /^\d+$/);
+      assert.equal(view.price, `$${view.usdt}`);
     }
   }
 });

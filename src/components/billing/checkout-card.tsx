@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { Fragment, useActionState, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BookOpenCheck,
   Check,
-  Coins,
   Gem,
   Gift,
   Info,
@@ -18,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { BinanceMark } from "@/components/billing/binance-mark";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ const PLAN_NAME_KEYS = { "1m": "plan1m", "3m": "plan3m", "6m": "plan6m" } as con
 const CARD_METHODS = ["Visa", "Mastercard"] as const;
 /** Iraqi wallets and bank accounts: only someone in Iraq can use them, so only they are shown them. */
 const IRAQI_WALLET_METHODS = ["Super Qi", "ZainCash", "FIB"] as const;
-/** The brand's own name, never translated; only listed while the Binance Pay button is shown to this visitor. */
+/** The brand's own name, never translated; only listed while Binance Pay is offered to this visitor. */
 const BINANCE_PAY_METHOD = "Binance Pay";
 
 interface CheckoutCardProps {
@@ -73,7 +73,7 @@ interface CheckoutCardProps {
   showIraqiWallets?: boolean;
   /** A lesson page (already checked with safeLessonPath) the learner was stopped at: sent with the form so the confirmation page can lead back to it. Never read for anything about the payment. */
   afterPaymentPath?: string | null;
-  /** True when the "binancePay" switch is open for this visitor: a second button, beside the card one, pays in USDT through Binance Pay. The server re-checks the switch when the form is posted. */
+  /** True when the "binancePay" switch is open for this visitor: a signed-in learner then chooses between card or wallet and Binance Pay (USDT) before the one pay button. The server re-checks the switch when the form is posted. */
   binancePayOpen?: boolean;
 }
 
@@ -101,8 +101,8 @@ export function CheckoutCard({
   const formId = useId();
   const payAreaRef = useRef<HTMLDivElement>(null);
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
-  // Which of the two buttons was pressed, so only that one says "Redirecting…".
-  const [pressed, setPressed] = useState<"card" | "binance">("card");
+  // How the learner chose to pay (only asked while Binance Pay is on offer; otherwise it is always the card).
+  const [method, setMethod] = useState<"card" | "binance">("card");
   const [selectedId, setSelectedId] = useState<PlanId>(
     () => (plans.find((plan) => plan.preselected) ?? plans[0])!.id,
   );
@@ -138,7 +138,14 @@ export function CheckoutCard({
   }, []);
 
   const cardMethods = showIraqiWallets ? [...CARD_METHODS, ...IRAQI_WALLET_METHODS] : CARD_METHODS;
+  // Someone who can pay chooses between the two in the tiles; a visitor who cannot yet (not signed in) is
+  // still shown, in the list under the button, that Binance Pay is accepted.
+  const showMethodChoice = signedIn && binancePayOpen;
   const acceptedMethods = binancePayOpen ? [...cardMethods, BINANCE_PAY_METHOD] : cardMethods;
+  const paysByCard = !showMethodChoice || method === "card";
+  const payLabel = paysByCard
+    ? t.premium.payCta.replace("{price}", selected.price).replace("{days}", daysLabel)
+    : t.binancePay.payCta.replace("{amount}", selected.usdt);
   const showRating = !extend && socialProof?.rating;
   const showSocialProof =
     !extend && socialProof && (socialProof.learners || socialProof.lessons || socialProof.rating);
@@ -309,7 +316,101 @@ export function CheckoutCard({
               </p>
             )}
 
-            {signedIn && (
+            {showMethodChoice && (
+              <fieldset className="flex flex-col gap-2.5">
+                <legend className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
+                  {t.binancePay.methodHeading}
+                </legend>
+
+                <label className="relative block cursor-pointer">
+                  <input
+                    type="radio"
+                    name="method"
+                    value="card"
+                    checked={method === "card"}
+                    onChange={() => setMethod("card")}
+                    className="peer sr-only"
+                  />
+                  <div
+                    className={cn(
+                      "bg-card flex items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all duration-200",
+                      "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2",
+                      method === "card"
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        method === "card"
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/40",
+                      )}
+                    >
+                      {method === "card" && (
+                        <Check className="text-primary-foreground size-3" strokeWidth={4} />
+                      )}
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="text-sm font-semibold">{t.binancePay.cardTileTitle}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {cardMethods.map((name, index) => (
+                          <Fragment key={name}>
+                            {index > 0 && " · "}
+                            <bdi dir="ltr">{name}</bdi>
+                          </Fragment>
+                        ))}
+                      </span>
+                    </span>
+                  </div>
+                </label>
+
+                <label className="relative block cursor-pointer">
+                  <input
+                    type="radio"
+                    name="method"
+                    value="binance"
+                    checked={method === "binance"}
+                    onChange={() => setMethod("binance")}
+                    className="peer sr-only"
+                  />
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border-2 bg-[oklch(0.12_0.008_265)] px-4 py-3 text-white transition-all duration-200",
+                      "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2",
+                      method === "binance"
+                        ? "border-primary shadow-sm"
+                        : "border-white/10 hover:border-white/25",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        method === "binance" ? "border-primary bg-primary" : "border-white/40",
+                      )}
+                    >
+                      {method === "binance" && (
+                        <Check className="text-primary-foreground size-3" strokeWidth={4} />
+                      )}
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="text-sm font-semibold">
+                        <bdi dir="ltr">{BINANCE_PAY_METHOD}</bdi>
+                      </span>
+                      <span className="text-xs text-white/70" dir="auto">
+                        {t.binancePay.tileCaption}
+                      </span>
+                    </span>
+                    <BinanceMark className="size-6 shrink-0 text-[#F0B90B]" />
+                  </div>
+                </label>
+              </fieldset>
+            )}
+
+            {signedIn && paysByCard && (
               <p
                 className="bg-muted text-muted-foreground flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-xs leading-relaxed"
                 dir="auto"
@@ -325,21 +426,10 @@ export function CheckoutCard({
 
             <div ref={payAreaRef} className="flex flex-col gap-2">
               {signedIn ? (
-                <Button
-                  type="submit"
-                  name="method"
-                  value="card"
-                  size="lg"
-                  disabled={pending}
-                  onClick={() => setPressed("card")}
-                  className="w-full"
-                >
+                <Button type="submit" size="lg" disabled={pending} className="w-full">
                   {!pending && <Lock aria-hidden="true" />}
-                  {pending && pressed === "card"
-                    ? t.premium.redirecting
-                    : t.premium.payCta
-                        .replace("{price}", selected.price)
-                        .replace("{days}", daysLabel)}
+                  {/* dir="auto": an Arabic label that carries Latin words (USDT, Binance Pay) reads in the right order only when it is laid out right to left. */}
+                  <span dir="auto">{pending ? t.premium.redirecting : payLabel}</span>
                 </Button>
               ) : (
                 <Button asChild size="lg" className="w-full">
@@ -347,32 +437,6 @@ export function CheckoutCard({
                     {t.premium.signInToUpgrade}
                   </Link>
                 </Button>
-              )}
-              {signedIn && binancePayOpen && (
-                <>
-                  <Button
-                    type="submit"
-                    name="method"
-                    value="binance"
-                    size="lg"
-                    variant="outline"
-                    disabled={pending}
-                    onClick={() => setPressed("binance")}
-                    className="w-full"
-                  >
-                    {pending && pressed === "binance" ? (
-                      t.premium.redirecting
-                    ) : (
-                      <>
-                        <Coins aria-hidden="true" />
-                        {t.binancePay.buttonLabel}
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-muted-foreground text-center text-xs" dir="auto">
-                    {t.binancePay.buttonCaption}
-                  </p>
-                </>
               )}
               {state?.error && (
                 <p
@@ -438,20 +502,22 @@ export function CheckoutCard({
               </li>
             </ul>
 
-            <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
-              <span className="text-muted-foreground">{t.premium.acceptedMethodsLabel}</span>
-              {acceptedMethods.map((method) => (
-                <span
-                  key={method}
-                  dir="ltr"
-                  className="border-border text-foreground/80 rounded-md border px-2 py-0.5 font-medium"
-                >
-                  {method}
-                </span>
-              ))}
-            </div>
+            {!showMethodChoice && (
+              <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
+                <span className="text-muted-foreground">{t.premium.acceptedMethodsLabel}</span>
+                {acceptedMethods.map((name) => (
+                  <span
+                    key={name}
+                    dir="ltr"
+                    className="border-border text-foreground/80 rounded-md border px-2 py-0.5 font-medium"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            )}
 
-            {signedIn && (
+            {signedIn && paysByCard && (
               <p className="text-muted-foreground/80 text-center text-[11px] leading-relaxed">
                 {t.premium.paymentDetailsCaption}
               </p>

@@ -194,12 +194,10 @@ export default async function BinancePayPage({
         <CardTitle className="text-xl">{t.binancePay.pageTitle}</CardTitle>
         <p className="text-sm font-medium" dir="auto">
           {t.premium.accessForDays.replace("{days}", String(order.premium_days))}
-          <span aria-hidden="true"> · </span>
-          <span dir="ltr">{order.charge_amount} USDT</span>
         </p>
         <CardDescription>{t.binancePay.pageIntro}</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-5">
+      <CardContent className="flex flex-col gap-4">
         <BinancePayInstructions
           binanceId={settings.binanceId}
           displayName={settings.displayName}

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Clock, Copy, Info, Loader2 } from "lucide-react";
 
+import { BinanceMark } from "@/components/billing/binance-mark";
 import { useLocale } from "@/components/providers/locale-provider";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface BinancePayInstructionsProps {
@@ -52,17 +55,7 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-function CopyStep({
-  step,
-  label,
-  value,
-  hint,
-}: {
-  step: number;
-  label: string;
-  value: string;
-  hint?: string;
-}) {
+function CopyButton({ value, label }: { value: string; label: string }) {
   const { t } = useLocale();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,54 +75,60 @@ function CopyStep({
   }
 
   return (
-    <li className="border-border flex flex-col gap-2 rounded-xl border px-4 py-3.5">
-      <div className="flex items-center gap-3">
-        <span className="bg-brand-muted text-primary flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-          {step}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-xs" dir="auto">
-            {label}
-          </p>
-          <p
-            dir="ltr"
-            className="mt-0.5 text-start text-xl font-semibold tracking-wide break-all tabular-nums"
-          >
-            {value}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={copy}
-          aria-label={`${t.binancePay.copy}: ${label}`}
-          className={cn(
-            "border-border hover:bg-muted focus-visible:ring-ring inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
-            copied && "border-success/40 text-success",
-          )}
-        >
-          {copied ? (
-            <Check className="size-4" aria-hidden="true" />
-          ) : (
-            <Copy className="size-4" aria-hidden="true" />
-          )}
-          <span aria-live="polite">{copied ? t.binancePay.copied : t.binancePay.copy}</span>
-        </button>
-      </div>
-      {hint && (
-        <p className="text-muted-foreground ps-9 text-xs leading-relaxed" dir="auto">
-          {hint}
-        </p>
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={`${t.binancePay.copy}: ${label}`}
+      className={cn(
+        "border-border hover:bg-background/60 focus-visible:ring-ring inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
+        copied && "border-success/40 text-success",
       )}
-    </li>
+    >
+      {copied ? (
+        <Check className="size-3.5" aria-hidden="true" />
+      ) : (
+        <Copy className="size-3.5" aria-hidden="true" />
+      )}
+      <span aria-live="polite">{copied ? t.binancePay.copied : t.binancePay.copy}</span>
+    </button>
+  );
+}
+
+/** One line of a box: what it is on one side, its value (and a copy button, where one is useful) on the other. */
+function Row({ label, value, copyLabel }: { label: ReactNode; value: string; copyLabel?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3" dir="auto">
+      <span className="text-muted-foreground min-w-0 text-sm">{label}</span>
+      <span className="flex shrink-0 items-center gap-2.5">
+        <bdi dir="ltr" className="text-lg font-semibold tracking-wide tabular-nums">
+          {value}
+        </bdi>
+        {copyLabel && <CopyButton value={value} label={copyLabel} />}
+      </span>
+    </div>
+  );
+}
+
+function Box({ heading, children }: { heading: ReactNode; children: ReactNode }) {
+  return (
+    <section className="bg-muted flex flex-col gap-3 rounded-2xl px-4 py-3.5">
+      <h2 className="text-muted-foreground text-xs font-medium" dir="auto">
+        {heading}
+      </h2>
+      {children}
+    </section>
   );
 }
 
 /**
- * The three things a learner needs to pay with Binance Pay, each with a copy
- * button: the Binance ID to send to, the amount in USDT, and the order code to
- * write in the note. The server re-renders the page every few seconds while the
- * transfer is awaited (see PaymentStatusRefresh), so the learner never has to
- * press anything: when the transfer arrives the page turns into the receipt.
+ * What a learner needs to pay with Binance Pay, in three boxes: the price (the
+ * same violet as the price on the upgrade card, with the coin and the network
+ * named), who to send it to (the name Binance will show and the Binance ID),
+ * and the note that holds the order code. Only the ID and the code can be
+ * copied: they are the two things typed into Binance. The server re-renders
+ * the page every few seconds while the transfer is awaited (see
+ * PaymentStatusRefresh), so the learner never has to press anything: when the
+ * transfer arrives the page turns into the receipt.
  */
 export function BinancePayInstructions({
   binanceId,
@@ -162,63 +161,85 @@ export function BinancePayInstructions({
   }, [expiresAt, expired, router]);
 
   return (
-    <div className="flex flex-col gap-5">
-      <ol className="flex flex-col gap-3">
-        <CopyStep
-          step={1}
-          label={t.binancePay.recipientLabel}
-          value={binanceId}
-          hint={t.binancePay.recipientHint.replace("{name}", displayName)}
+    <div className="flex flex-col gap-3">
+      <section className="relative overflow-hidden rounded-2xl bg-[linear-gradient(135deg,oklch(0.44_0.2_273),oklch(0.33_0.17_287))] px-5 py-5 text-white">
+        <div
+          aria-hidden="true"
+          className="bg-accent/25 pointer-events-none absolute -end-12 -top-16 size-48 rounded-full blur-3xl"
         />
-        <CopyStep
-          step={2}
-          label={t.binancePay.amountLabel}
-          value={String(amount)}
-          hint={t.binancePay.amountHint}
-        />
-        <CopyStep
-          step={3}
-          label={t.binancePay.noteLabel}
-          value={orderCode}
-          hint={t.binancePay.noteHint}
-        />
-      </ol>
-
-      {expired ? (
-        <p
-          className="bg-muted text-muted-foreground flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-xs leading-relaxed"
-          dir="auto"
-        >
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <span>{t.binancePay.expiredNote}</span>
-        </p>
-      ) : (
-        remaining !== null && (
-          <p
-            className="text-muted-foreground flex items-center justify-center gap-1.5 text-xs"
-            dir="auto"
-          >
-            <Clock className="size-3.5" aria-hidden="true" />
-            <span>{t.binancePay.expiresIn.replace("{time}", formatRemaining(remaining))}</span>
+        <div className="relative flex flex-col gap-2.5">
+          <div className="flex items-center justify-between gap-3" dir="auto">
+            <h2 className="text-xs font-medium text-white/80">{t.binancePay.amountLabel}</h2>
+            <span
+              dir="ltr"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-white"
+            >
+              <BinanceMark className="size-4" />
+              Binance Pay
+            </span>
+          </div>
+          <p dir="ltr" className="flex items-baseline justify-center gap-2.5">
+            <span className="text-5xl leading-none font-semibold tabular-nums">{amount}</span>
+            <Badge className="border-white/25 bg-white/10 text-sm text-white">USDT</Badge>
           </p>
-        )
-      )}
-
-      <div
-        className="bg-brand-muted/60 flex items-start gap-3 rounded-xl px-4 py-3.5"
-        role="status"
-        aria-live="polite"
-      >
-        <Loader2 className="text-primary mt-0.5 size-5 shrink-0 animate-spin" aria-hidden="true" />
-        <div className="flex flex-col gap-1" dir="auto">
-          <p className="text-sm font-semibold">{t.binancePay.waitingHeading}</p>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {t.binancePay.waitingBody}
+          <p className="text-center text-xs text-white/85" dir="auto">
+            {t.binancePay.priceCaption}
           </p>
         </div>
+      </section>
+
+      <Box heading={t.binancePay.recipientHeading}>
+        <Row label={t.binancePay.recipientNameLabel} value={displayName} />
+        <Row
+          label={t.binancePay.recipientIdLabel}
+          value={binanceId}
+          copyLabel={t.binancePay.recipientIdLabel}
+        />
+      </Box>
+
+      <Box heading={t.binancePay.noteLabel}>
+        <Row
+          label={t.binancePay.noteBenefit}
+          value={orderCode}
+          copyLabel={t.binancePay.noteLabel}
+        />
+      </Box>
+
+      <div className="flex flex-col gap-2 px-1" role="status" aria-live="polite">
+        <div
+          className="text-muted-foreground flex items-center justify-between gap-3 text-xs"
+          dir="auto"
+        >
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="text-primary size-3.5 animate-spin" aria-hidden="true" />
+            {t.binancePay.waitingHeading}
+          </span>
+          {!expired && remaining !== null && (
+            <span
+              dir="ltr"
+              className="inline-flex items-center gap-1.5 tabular-nums"
+              title={t.binancePay.expiresIn.replace("{time}", formatRemaining(remaining))}
+            >
+              <Clock className="size-3.5" aria-hidden="true" />
+              {formatRemaining(remaining)}
+            </span>
+          )}
+        </div>
+        {expired && (
+          <p
+            className="bg-muted text-muted-foreground flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-xs leading-relaxed"
+            dir="auto"
+          >
+            <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{t.binancePay.expiredNote}</span>
+          </p>
+        )}
+        <p className="text-muted-foreground text-xs leading-relaxed" dir="auto">
+          {t.binancePay.waitingBody}
+        </p>
       </div>
 
-      <p className="text-muted-foreground text-center text-xs leading-relaxed" dir="auto">
+      <p className="text-muted-foreground px-1 text-center text-xs leading-relaxed" dir="auto">
         {t.binancePay.onlyUsdt}
       </p>
     </div>
