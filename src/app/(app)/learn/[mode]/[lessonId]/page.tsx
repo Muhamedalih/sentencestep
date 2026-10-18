@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import { preload } from "react-dom";
 
 import { ContentUnavailable } from "@/components/learning/content-unavailable";
+import { FreePathComplete } from "@/components/learning/free-path-complete";
 import { LessonSession } from "@/components/learning/lesson-session";
+import { LockedLessonNotice } from "@/components/learning/locked-lesson-notice";
+import { LockedPreview } from "@/components/learning/locked-preview";
 import { PremiumLocked } from "@/components/learning/premium-locked";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
-import { trackPaywallViewed } from "@/lib/analytics/paywall";
+import { trackFreePathRedirected, trackPaywallViewed } from "@/lib/analytics/paywall";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
@@ -16,6 +20,12 @@ import { buildStoryWordQuiz } from "@/lib/content/story-word-quiz";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
+import { freePathForLevel, lockedLessonOutcome, pathChips } from "@/lib/progress/free-path";
+import type { FreePath } from "@/lib/progress/free-path";
+import { getFreePathSummary } from "@/lib/progress/free-path-summary";
+import { isFromThisSite } from "@/lib/request-origin";
+import { fetchLessonPreview } from "@/lib/supabase/queries/locked-preview";
+import { fetchCompletedLessonIds } from "@/lib/supabase/queries/progress";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -57,11 +67,15 @@ export async function generateMetadata({
 
 export default async function LessonPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ mode: string; lessonId: string }>;
+  /** `notice=locked` is added by the redirect below, so the lesson it lands on can say why the learner is there. */
+  searchParams: Promise<{ notice?: string }>;
 }) {
   const { mode, lessonId } = await params;
   if (!isLearningMode(mode)) notFound();
+  const { notice } = await searchParams;
 
   const locale = await getLocale();
   // getLessonNav, not getLessons: finding the next lesson only needs every
@@ -105,12 +119,96 @@ export default async function LessonPage({
     ));
   const canAccess = unit.isFree || (await viewerHasAccess());
   if (!canAccess) {
+    // What a Premium lesson shows depends on who opened it and how (see lockedLessonOutcome):
+    // the screen after the free path once its lessons are all done, their next free lesson for
+    // someone who arrived from outside the app with free lessons still ahead of them, and
+    // otherwise a short look at the lesson itself. The full lock stays the fallback for when
+    // that look can't be read. Only Daily Lessons have a free path to measure.
+    let path: FreePath | null = null;
+    let finishedIds: string[] = [];
+    if (mode === "normal" && user) {
+      try {
+        finishedIds = await fetchCompletedLessonIds(user.id, mode);
+        path = freePathForLevel(lessonNav, unit.level, finishedIds);
+      } catch (error) {
+        // Not knowing their progress only means the short look instead of a smarter answer.
+        console.error("[lesson page] free path unavailable", error);
+      }
+    }
+    const outcome = lockedLessonOutcome(path, {
+      signedIn: Boolean(user),
+      fromInApp: isFromThisSite(await headers()),
+    });
+    if (outcome.kind === "redirect") {
+      await trackFreePathRedirected({
+        mode,
+        fromLessonId: unit.id,
+        toLessonId: outcome.lessonId,
+      });
+      redirect(`/learn/${mode}/${outcome.lessonId}?notice=locked`);
+    }
+
+    if (outcome.kind === "milestone" && path && user) {
+      const [fromPrice, summary] = await Promise.all([
+        getFromMonthlyPrice(),
+        getFreePathSummary({
+          userId: user.id,
+          lessonId: unit.id,
+          finishedIds: path.ids.filter((id) => finishedIds.includes(id)),
+        }),
+        trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id, shape: "milestone" }),
+      ]);
+      const { labels, nextNumber } = pathChips(path.ids);
+      const firstPremiumInLevel = lessonNav
+        .filter((entry) => entry.level === unit.level && !entry.isFree)
+        .sort((a, b) => a.order - b.order)[0];
+      return (
+        <div className="lesson-shell bg-background text-foreground min-h-svh">
+          <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
+            <FreePathComplete
+              mode={mode}
+              lessonId={unit.id}
+              title={unit.title}
+              supportTitle={unit.supportTitle ?? (locale === "ar" ? unit.titleAr : undefined)}
+              isNextLesson={firstPremiumInLevel?.id === unit.id}
+              chips={labels}
+              nextNumber={nextNumber}
+              unitTitle={summary.unitTitle}
+              stats={{ sentences: summary.sentences, words: summary.words, days: summary.days }}
+              fromPrice={fromPrice}
+            />
+          </div>
+          {reportProblemButton}
+        </div>
+      );
+    }
+
+    const preview = await fetchLessonPreview(unit.id, locale ?? undefined);
+    if (preview) {
+      await trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id, shape: "preview" });
+      return (
+        <div className="lesson-shell bg-background text-foreground min-h-svh">
+          <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
+            <LockedPreview
+              kind={mode === "stories" ? "story" : "lesson"}
+              title={unit.title}
+              supportTitle={unit.supportTitle ?? (locale === "ar" ? unit.titleAr : undefined)}
+              lines={preview.lines}
+              ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${unit.id}`)}`}
+              backHref={`/learn/${mode}`}
+            />
+          </div>
+          {reportProblemButton}
+        </div>
+      );
+    }
+
     // The view is counted in the same parallel batch as the lock's price and
     // figures, so recording it costs no extra wait.
     const [fromPrice, figures] = await Promise.all([
       getFromMonthlyPrice(),
       getGateFigures(locale),
-      trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id }),
+      trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id, shape: "gate" }),
     ]);
     return (
       <div className="lesson-shell bg-background text-foreground min-h-svh">
@@ -153,6 +251,12 @@ export default async function LessonPage({
   // a lock page by surprise.
   const nextLessonLocked =
     nextLesson !== undefined && nextLesson.isFree === false ? !(await viewerHasAccess()) : false;
+  // Daily Lessons on the free plan carry the catalog down to the finish screen, so it can say when
+  // one free lesson is left (see LessonSession's freePath). Just the four fields it reads.
+  const freePathUnits =
+    mode === "normal" && unit.isFree && !(await viewerHasAccess())
+      ? lessonNav.map(({ id, level, order, isFree }) => ({ id, level, order, isFree }))
+      : undefined;
   // Normal lessons fall back to their own admin-configurable default
   // (tts_settings.default_normal_lesson_voice_id) — never the shared
   // tts_settings.default_voice_id, which is Stories/Conversation's own
@@ -269,10 +373,12 @@ export default async function LessonPage({
         mode === "stories" && "lesson-shell-stories",
       )}
     >
+      {notice === "locked" && <LockedLessonNotice />}
       <LessonSession
         unit={{ ...unit, sentences }}
         nextLesson={nextLesson}
         nextLessonLocked={nextLessonLocked}
+        freePathUnits={freePathUnits}
         resolvedVoiceId={resolvedVoiceId}
         defaultVoiceId={defaultVoiceId}
         storyNarratorVoiceId={storyNarratorVoiceId}

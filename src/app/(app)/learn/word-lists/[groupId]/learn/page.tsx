@@ -3,11 +3,8 @@ import { notFound } from "next/navigation";
 
 import { VocabularyLearn } from "@/components/learning/vocabulary-learn";
 import { VocabularyLearnBatches } from "@/components/words/vocabulary-learn-batches";
-import { WordGroupLocked } from "@/components/learning/word-group-locked";
+import { WordGroupLockScreen } from "@/components/learning/word-group-lock-screen";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
-import { trackPaywallViewed } from "@/lib/analytics/paywall";
-import { getFromMonthlyPrice } from "@/lib/billing/from-price";
-import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -52,21 +49,9 @@ export default async function WordGroupLearnPage({
   const canAccess =
     group.isFree || (await Promise.all([hasPremiumAccess(), isAdmin()])).some(Boolean);
   if (!canAccess) {
-    const [fromPrice, figures] = await Promise.all([
-      getFromMonthlyPrice(),
-      getGateFigures(locale),
-      trackPaywallViewed({ kind: "word_group", groupId }),
-    ]);
     return (
       <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
-        <WordGroupLocked
-          title={group.title}
-          supportTitle={group.supportTitle}
-          description={group.description}
-          supportDescription={group.supportDescription}
-          fromPrice={fromPrice}
-          figures={figures}
-        />
+        <WordGroupLockScreen group={group} locale={locale} />
       </div>
     );
   }

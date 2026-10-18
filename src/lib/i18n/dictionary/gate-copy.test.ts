@@ -72,3 +72,51 @@ test("the card promises what the product does: one payment, no auto-renewal", ()
   assert.match(tr.premium.gateTrust, /Otomatik yenileme yok/);
   assert.match(ar.premium.gateTrust, /بدون تجديد تلقائي/);
 });
+
+function freePathStrings(dictionary: typeof en): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(dictionary.freePath).map(([key, value]) => [`freePath.${key}`, value]),
+  );
+}
+
+test("the free-path screens only say things that are true: no refunds, deadlines, scarcity or free offers", () => {
+  const forbidden =
+    /refund|money-back|limited[- ]time|last chance|hurry|only today|ends soon|free trial|launch offer|reembols|devoluci|oferta limitada|última oportunidad|iade|sınırlı süre|son şans|استرجاع|استرداد|عرض محدود|آخر فرصة|عرض الإطلاق/i;
+  for (const [name, dictionary] of Object.entries(dictionaries)) {
+    for (const [key, value] of Object.entries(freePathStrings(dictionary))) {
+      assert.equal(forbidden.test(value), false, `${name} ${key}: ${value}`);
+    }
+  }
+});
+
+test("the free-path Arabic text has no em dash, which lands at a line edge in the left-to-right layout", () => {
+  for (const [key, value] of Object.entries(freePathStrings(ar))) {
+    assert.equal(value.includes("—"), false, `${key}: ${value}`);
+  }
+});
+
+test("the free-path screens keep their placeholders in every language", () => {
+  for (const [name, dictionary] of Object.entries(dictionaries)) {
+    const f = dictionary.freePath;
+    assert.match(f.counterCount, /\{done\}/, `${name} counterCount`);
+    assert.match(f.counterCount, /\{total\}/, `${name} counterCount`);
+    assert.match(f.counterAria, /\{done\}/, `${name} counterAria`);
+    assert.match(f.counterAria, /\{total\}/, `${name} counterAria`);
+    for (const key of [
+      "previewLessonTitle",
+      "previewStoryTitle",
+      "previewPassageTitle",
+      "previewWordsTitle",
+    ] as const) {
+      assert.match(f[key], /\{n\}/, `${name} ${key}`);
+    }
+  }
+});
+
+test("the screen after the free path promises what the product does: one payment, no auto-renewal", () => {
+  assert.match(en.freePath.milestonePriceNote, /One payment/i);
+  assert.match(en.freePath.milestonePriceNote, /no auto-renewal/i);
+  assert.match(es.freePath.milestonePriceNote, /sin renovación automática/i);
+  assert.match(tr.freePath.milestonePriceNote, /otomatik yenileme yok/i);
+  assert.match(ar.freePath.milestonePriceNote, /بدون تجديد تلقائي/);
+});

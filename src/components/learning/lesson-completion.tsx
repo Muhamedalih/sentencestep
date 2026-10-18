@@ -229,6 +229,7 @@ export function LessonCompletion({
   wpm,
   nextLesson,
   nextLessonLocked = false,
+  freePath,
   vocabulary,
   streak,
   xp,
@@ -251,6 +252,8 @@ export function LessonCompletion({
   nextLesson?: NextLessonRef;
   /** The next lesson is Premium and this learner can't open it: the button keeps its place but wears a lock and says "(Premium)", so tapping it is never a surprise. It still opens that lesson's page, which explains Premium calmly. */
   nextLessonLocked?: boolean;
+  /** Where a learner on the free plan stands on their level's free path, this lesson counted as done (see LessonSession). Only when exactly one free lesson is left does a quiet note appear, so the end of the free lessons is never a surprise. */
+  freePath?: { done: number; total: number };
   vocabulary?: VocabularyItem[];
   streak: number;
   /** Running XP total (post this completion) — used only to show numeric progress toward the next level; the per-completion reward is xpEarned below. */
@@ -814,6 +817,17 @@ export function LessonCompletion({
           )}
         </motion.div>
 
+        {freePath && freePath.total - freePath.done === 1 && (
+          <FreePathNote
+            done={freePath.done}
+            total={freePath.total}
+            theme={theme}
+            view={view}
+            styles={styles}
+            maxWidth={Math.round(STATS_PANEL_MAX_WIDTH * boost)}
+          />
+        )}
+
         <motion.div
           variants={fadeInUp}
           style={{ backgroundColor: styles.border }}
@@ -862,6 +876,81 @@ export function LessonCompletion({
             </div>
           )}
         </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
+/**
+ * The quiet note under the stats when one free lesson is left on the learner's free path: one
+ * segment for each free lesson (the finished ones in the accent), what is left in a sentence,
+ * and what follows. It is a heads-up, never a wall: nothing changes colour, nothing counts down,
+ * and the next-lesson button below stays exactly where and what it was. Sized like the stats
+ * panel above it (`view`) so the two read as one column.
+ */
+function FreePathNote({
+  done,
+  total,
+  theme,
+  view,
+  styles,
+  maxWidth,
+}: {
+  done: number;
+  total: number;
+  theme: LessonCompletionTheme;
+  /** The theme at the scale the stats panel uses (see enlargeTheme). */
+  view: LessonCompletionTheme;
+  styles: LessonCompletionStyles;
+  /** The same width cap as the stats panel, so the two line up. */
+  maxWidth: number;
+}) {
+  const { t } = useLocale();
+  return (
+    <motion.div
+      variants={fadeInUp}
+      style={{
+        borderColor: `color-mix(in srgb, ${theme.colorAccent} 30%, transparent)`,
+        backgroundColor: `color-mix(in srgb, ${theme.colorAccent} 8%, transparent)`,
+        borderRadius: Math.min(theme.actionCardRadius, 16),
+        padding: fluid(view.cardPadding, 10),
+        maxWidth,
+      }}
+      className="mx-auto flex w-full flex-col gap-2 border text-start"
+    >
+      <div
+        dir="ltr"
+        role="progressbar"
+        aria-label={t.freePath.counterAria
+          .replace("{done}", String(done))
+          .replace("{total}", String(total))}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={done}
+        className="flex gap-1"
+      >
+        {Array.from({ length: total }, (_, index) => (
+          <span
+            key={index}
+            style={{ backgroundColor: index < done ? theme.colorAccent : styles.border }}
+            className="h-[5px] flex-1 rounded-[3px]"
+          />
+        ))}
+      </div>
+      <div>
+        <p
+          dir="auto"
+          style={{ color: styles.textPrimary, fontSize: view.bodySize }}
+          className="font-medium"
+        >
+          {t.freePath.lastOneTitle}
+        </p>
+        <p
+          dir="auto"
+          style={{ color: styles.textSecondary, fontSize: Math.round(view.bodySize * 0.9) }}
+        >
+          {t.freePath.lastOneBody}
+        </p>
       </div>
     </motion.div>
   );

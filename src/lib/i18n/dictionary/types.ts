@@ -379,6 +379,57 @@ export interface Dictionary {
     termsAgreementPrefix: string;
     termsAgreementAnd: string;
   };
+  /**
+   * The free path: the lessons a learner on the free plan can do in each level (see
+   * src/lib/progress/free-path.ts). The counter on the Daily Lessons list, the note on the
+   * finish screen, the screen shown once the path is done, and the short look at a Premium
+   * lesson, story, passage or word list. Everything here says only what is true: no
+   * countdown, no scarcity, nothing about offers.
+   */
+  freePath: {
+    /** The card on the Daily Lessons list. */
+    counterTitle: string;
+    /** `{done}` of `{total}`, e.g. "2 of 4". */
+    counterCount: string;
+    counterHint: string;
+    /** Shown instead of the hint once every free lesson is done. */
+    counterDoneHint: string;
+    /** `{done}` and `{total}` — read out by screen readers for the segments. */
+    counterAria: string;
+    /** On the finish screen of the second-to-last free lesson. */
+    lastOneTitle: string;
+    lastOneBody: string;
+    /** The screen a learner meets on a Premium lesson once the free path of its level is done. */
+    milestonePill: string;
+    milestoneHeading: string;
+    milestoneNextLabel: string;
+    milestoneLockedNote: string;
+    milestoneBody: string;
+    /** After the price caption (see premium.fromPerMonthCaption): one payment and no auto-renewal, said plainly. */
+    milestonePriceNote: string;
+    milestoneCta: string;
+    milestoneReview: string;
+    /** The three figures of the learner's own free lessons. */
+    statSentences: string;
+    statWords: string;
+    statDays: string;
+    /** The short look at something Premium: `{n}` is how many are shown. One title, one line about the rest and one button for each kind. */
+    previewLessonTitle: string;
+    previewLessonRest: string;
+    previewLessonCta: string;
+    previewStoryTitle: string;
+    previewStoryRest: string;
+    previewStoryCta: string;
+    previewPassageTitle: string;
+    previewPassageRest: string;
+    previewPassageCta: string;
+    previewWordsTitle: string;
+    previewWordsRest: string;
+    previewWordsCta: string;
+    previewBack: string;
+    /** The note on the lesson a learner was taken to instead of a Premium one they opened from outside the app. */
+    redirectNotice: string;
+  };
   premium: {
     /** Generic `{title} — premium content, tap for details` aria-label, reused across lesson/story/word-group cards — see wordLists.lockedAriaLabel's doc comment for why the word-group-specific wording it used to carry was replaced by this. */
     lockedContentAriaLabel: string;

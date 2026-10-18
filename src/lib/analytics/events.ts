@@ -25,6 +25,9 @@ import type { LearningMode } from "@/types/content";
 export type AnalyticsEventCategory =
   "AUTH" | "LEARNING" | "CONTENT" | "PROGRESS" | "PREMIUM" | "ENGAGEMENT";
 
+/** Which lock a visitor met: the full offer (`gate`), a short look at the content with a button (`preview`), or the screen after the last free lesson of a level (`milestone`). */
+export type PaywallShape = "gate" | "preview" | "milestone";
+
 interface LessonProperties {
   lessonId: string;
   mode: LearningMode;
@@ -58,11 +61,17 @@ export type AnalyticsEvent =
   | {
       name: "PAYWALL_VIEWED";
       category: "PREMIUM";
-      /** A visitor was shown a lock page instead of the content (PremiumLocked / WordGroupLocked / PassageLocked) — the step before UPGRADE_VIEWED, and the only place the number of people who actually hit the paywall is known (PREMIUM_CONTENT_VIEWED only fires for those who got in). One row per page render, so count distinct users, not rows. See trackPaywallViewed. */
+      /** A visitor was shown a lock page instead of the content (PremiumLocked / WordGroupLocked / PassageLocked) — the step before UPGRADE_VIEWED, and the only place the number of people who actually hit the paywall is known (PREMIUM_CONTENT_VIEWED only fires for those who got in). One row per page render, so count distinct users, not rows. See trackPaywallViewed. `shape` says which lock they met: the full offer, a short look at the content, or the screen after the free path (absent on rows written before those existed: the full offer). */
       properties:
-        | { kind: "lesson"; mode: LearningMode; lessonId: string }
-        | { kind: "word_group"; groupId: string }
-        | { kind: "passage"; passageId: string };
+        | { kind: "lesson"; mode: LearningMode; lessonId: string; shape?: PaywallShape }
+        | { kind: "word_group"; groupId: string; shape?: PaywallShape }
+        | { kind: "passage"; passageId: string; shape?: PaywallShape };
+    }
+  | {
+      name: "FREE_PATH_REDIRECTED";
+      category: "PREMIUM";
+      /** A signed-in learner opened a Premium lesson from outside the app while they still had free lessons in that level, and was taken to the next free one instead (see lockedLessonOutcome). */
+      properties: { mode: LearningMode; fromLessonId: string; toLessonId: string };
     }
   | { name: "UPGRADE_VIEWED"; category: "PREMIUM"; properties: Record<string, never> }
   | {

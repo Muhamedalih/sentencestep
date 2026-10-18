@@ -40,6 +40,7 @@ import { buildFromMemoryItems } from "@/lib/features/from-memory";
 import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
+import { freePathForLevel, type FreePathUnit } from "@/lib/progress/free-path";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,7 @@ export function LessonSession({
   unit,
   nextLesson,
   nextLessonLocked = false,
+  freePathUnits,
   previewMode = false,
   resolvedVoiceId,
   defaultVoiceId,
@@ -116,6 +118,8 @@ export function LessonSession({
   nextLesson?: NextLessonRef;
   /** The next lesson is Premium and this learner can't open it — the finish screen says so on its button (a lock, "Premium") instead of leading to a lock page by surprise. */
   nextLessonLocked?: boolean;
+  /** Daily Lessons only, and only for a learner on the free plan (the lesson page decides): the catalog's lessons, so the finish screen can tell when one free lesson is left on this level's free path (see freePathForLevel). Absent for everyone else, which shows no note. */
+  freePathUnits?: FreePathUnit[];
   /** Admin content preview (see src/app/admin/content/[lessonId]/preview) — reuses this exact component and the real typing engine, but never writes progress or fires analytics/email triggers for what isn't a real learner session. */
   previewMode?: boolean;
   /** Already resolved server-side (unit.voiceId ?? globalDefaultVoiceId — see resolveVoiceId) and passed straight through to TypingSentence/PronunciationButton; this component never re-derives it. */
@@ -261,6 +265,17 @@ export function LessonSession({
     retryMarkComplete,
     completions,
   } = useProgress();
+  // Where this learner stands on the free path of this lesson's level, this lesson counted as
+  // done even before its save lands (the finish screen is only ever shown once it is). Undefined
+  // when the lesson isn't on a free path or the learner isn't on the free plan.
+  const freePath = useMemo(() => {
+    if (!freePathUnits || previewMode) return undefined;
+    const finished = completions
+      .filter((entry) => entry.mode === unit.mode)
+      .map((entry) => entry.lessonId);
+    const path = freePathForLevel(freePathUnits, unit.level, [...finished, unit.id]);
+    return path.ids.includes(unit.id) ? { done: path.done, total: path.total } : undefined;
+  }, [freePathUnits, previewMode, completions, unit.mode, unit.level, unit.id]);
   // The one-time "rate the app" card's own eligibility check — never the
   // opening lesson (OnboardingLessonComplete has its own dedicated pitch
   // screen instead), never mid fix-your-mistakes, and only once `saveStatus`
@@ -883,6 +898,7 @@ export function LessonSession({
                 wpm={finalWpm}
                 nextLesson={nextLesson}
                 nextLessonLocked={nextLessonLocked}
+                freePath={freePath}
                 vocabulary={unit.vocabulary}
                 streak={streak.currentStreak}
                 xp={xp}
