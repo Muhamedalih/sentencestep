@@ -172,3 +172,57 @@ test("parseRelayBody: refuses what is not a sane request", () => {
 test("parseRelayBody: no records at all is fine (the relay only reporting in)", () => {
   assert.deepEqual(parse({}), { transfers: [], skipped: 0, error: null });
 });
+
+test("parseRelayBody: with no code in the note, the code is found in another text field, and the note says so", () => {
+  const { transfers } = parse({
+    records: [
+      record({ note: "thanks", remark: "ss 7k3q2 please", extra: { message: "unrelated" } }),
+    ],
+  });
+  assert.equal(transfers[0]!.note, "ss 7k3q2 please | thanks");
+  assert.equal(transfers[0]!.raw.noteField, "remark");
+});
+
+test("parseRelayBody: the code is found in a nested field and in a list of texts", () => {
+  const nested = parse({
+    records: [record({ note: undefined, details: { memo: { text: "SS-7K3Q2" } } })],
+  });
+  assert.equal(nested.transfers[0]!.note, "SS-7K3Q2");
+  assert.equal(nested.transfers[0]!.raw.noteField, "details");
+
+  const listed = parse({ records: [record({ note: "", messages: ["hi", "SS-7K3Q2"] })] });
+  assert.equal(listed.transfers[0]!.note, "SS-7K3Q2");
+});
+
+test("parseRelayBody: a note that already holds a code is left exactly as it is", () => {
+  const { transfers } = parse({ records: [record({ note: "SS-7K3Q2", remark: "SS-ABCDE" })] });
+  assert.equal(transfers[0]!.note, "SS-7K3Q2");
+  assert.equal(transfers[0]!.raw.noteField, undefined);
+});
+
+test("parseRelayBody: who sent it, who received it and the ids are never searched for a code", () => {
+  const { transfers } = parse({
+    records: [
+      record({
+        note: "hello",
+        orderId: "SS-7K3Q2",
+        payerInfo: { name: "SS-7K3Q2", binanceId: "987654321" },
+        receiverInfo: { name: "SS-ABCDE" },
+      }),
+    ],
+  });
+  assert.equal(transfers[0]!.note, "hello");
+  assert.equal(transfers[0]!.raw.noteField, undefined);
+});
+
+test("parseRelayBody: with no code anywhere the note stays what the sender wrote, and the search is bounded", () => {
+  const plain = parse({ records: [record({ note: "hello", remark: "class abcde" })] });
+  assert.equal(plain.transfers[0]!.note, "hello");
+
+  const deep = parse({ records: [record({ note: null, a: { b: { c: { d: "SS-7K3Q2" } } } })] });
+  assert.equal(deep.transfers[0]!.note, null);
+
+  const long = parse({ records: [record({ note: "x".repeat(300), remark: "SS-7K3Q2" })] });
+  assert.ok(long.transfers[0]!.note!.length <= 200);
+  assert.ok(long.transfers[0]!.note!.startsWith("SS-7K3Q2 | "));
+});

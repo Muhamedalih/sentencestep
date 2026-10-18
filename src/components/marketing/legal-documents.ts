@@ -1,10 +1,10 @@
 /**
  * The Terms of Service and the Privacy Policy, in English and Arabic. They
  * describe what the product does today (one-time Premium purchases paid
- * through Wayl, which is responsible for the payment itself, no
- * auto-renewal, no refunds), so change them together with the behaviour they
- * describe. A visitor in any other language is shown the English text, as
- * before.
+ * through Wayl, or by a Binance Pay transfer in USDT, where the payment
+ * partner is responsible for the payment itself, no auto-renewal, no
+ * refunds), so change them together with the behaviour they describe. A
+ * visitor in any other language is shown the English text, as before.
  */
 
 import { isSupportLocale } from "@/lib/i18n/locales";
@@ -43,7 +43,7 @@ export const SUPPORT_EMAIL = "support@sentencestep.com";
 
 const TERMS_EN: LegalDocument = {
   title: "Terms of Service",
-  updated: "Last updated: 8 October 2026",
+  updated: "Last updated: 18 October 2026",
   intro:
     "These terms are the agreement between you and SentenceStep when you use sentencestep.com. By creating an account or using the site you agree to them. If you don't agree, please don't use SentenceStep.",
   sections: [
@@ -70,17 +70,19 @@ const TERMS_EN: LegalDocument = {
       bullets: [
         "Premium is a one-time purchase of access for a fixed number of days (30, 90 or 180, depending on the plan you choose). It does not renew automatically, and we never charge you again unless you choose to pay again.",
         "If you buy again while you still have Premium, the new days are added after the days you have left.",
-        "Prices are shown in US dollars. Wayl charges the payment in Iraqi dinars, converted from the dollar price at a fixed rate, and its payment page shows the amount before you confirm. Your bank or card issuer may apply its own exchange rate or fees, which we don't control.",
-        "Premium is activated automatically once the payment is confirmed, usually within moments. If you paid and it isn't active, use “Problem with your payment?” on the upgrade page or write to us, and we will check it and activate the days you paid for.",
+        "Prices are shown in US dollars. If you pay with Wayl, Wayl charges the payment in Iraqi dinars, converted from the dollar price at a fixed rate, and its payment page shows the amount before you confirm. Your bank or card issuer may apply its own exchange rate or fees, which we don't control.",
+        "If you pay with Binance Pay, you send the same dollar price in USDT (one USDT for each dollar) by a Binance Pay transfer from your own Binance account to ours, and you write the order code shown on the payment page in the transfer's note. We apply no exchange rate; Binance may apply its own fees or limits to you.",
+        "Premium is activated automatically once the payment is confirmed, usually within moments. With Binance Pay that means once your transfer arrives with the order code in its note; without the code we can only activate Premium after checking by hand, which takes longer. If you paid and it isn't active, use “Problem with your payment?” on the upgrade page or write to us, and we will check it and activate the days you paid for.",
         "Prices depend on your country and may change. A change never affects days you have already paid for.",
         "Bonus days from a promotion are extra days of access. They have no cash value.",
       ],
     },
     {
-      heading: "Payments are handled by Wayl",
+      heading: "Who handles your payment",
       paragraphs: [
-        "Payments are made on the payment page of our payment partner, Wayl, an independent company, and are subject to Wayl's own terms. Wayl, not SentenceStep, processes your payment, and your card or wallet details are entered on Wayl's page and never reach us.",
+        "When you pay by card or wallet, you pay on the payment page of our payment partner, Wayl, an independent company, and Wayl's own terms apply. Wayl, not SentenceStep, processes your payment, and your card or wallet details are entered on Wayl's page and never reach us.",
         "Wayl and your bank or card issuer are responsible for the payment itself: the charge, the exchange rate and fees they apply, declined or failed payments, duplicate charges, disputes and chargebacks, and any reversal of a payment. If a charge looks wrong, contact Wayl and your bank; write to us and we will give you the details of your order to help.",
+        "When you pay with Binance Pay, the transfer is made in your Binance app under Binance's own terms. Binance, an independent company, carries it out, and SentenceStep never sees your Binance password or wallet. Binance and your own account are responsible for the transfer itself: its availability, any fees or limits Binance applies to you, and mistakes in what you send, such as the wrong coin, the wrong amount or the wrong Binance ID. A crypto transfer cannot be reversed with a chargeback. Only USDT sent through Binance Pay, for at least the price shown, is credited, and it is credited automatically only when the order code is written in the note. If something else was sent, or the code was left out, write to us with your order code and the details of the transfer and we will check it.",
       ],
     },
     {
@@ -110,7 +112,7 @@ const TERMS_EN: LegalDocument = {
     {
       heading: "Our responsibility",
       paragraphs: [
-        "SentenceStep is provided “as is”. We work hard to keep it accurate and available, but we can't promise it will be free of errors or that it will give you a particular result. To the extent the law allows, we are not liable for indirect or consequential losses, or for services run by others, such as Wayl, your bank or card issuer, including their availability, delays, fees, exchange rates and mistakes. Our total liability for any claim is limited to the amount you paid for Premium in the 12 months before it.",
+        "SentenceStep is provided “as is”. We work hard to keep it accurate and available, but we can't promise it will be free of errors or that it will give you a particular result. To the extent the law allows, we are not liable for indirect or consequential losses, or for services run by others, such as Wayl, Binance, your bank or card issuer, including their availability, delays, fees, exchange rates and mistakes. Our total liability for any claim is limited to the amount you paid for Premium in the 12 months before it.",
       ],
     },
     {
@@ -132,7 +134,7 @@ const TERMS_EN: LegalDocument = {
 
 const TERMS_AR: LegalDocument = {
   title: "شروط الاستخدام",
-  updated: "آخر تحديث: 8 أكتوبر 2026",
+  updated: "آخر تحديث: 18 أكتوبر 2026",
   intro:
     "هذه الشروط هي الاتفاق بينك وبين SentenceStep عند استخدامك موقع sentencestep.com. بإنشاء حساب أو باستخدام الموقع فإنك توافق عليها. إن لم توافق، فنرجو ألا تستخدم SentenceStep.",
   sections: [
@@ -159,17 +161,19 @@ const TERMS_AR: LegalDocument = {
       bullets: [
         "الخطة المميّزة عملية شراء لمرة واحدة تمنحك وصولًا لعدد محدد من الأيام (30 أو 90 أو 180 حسب الباقة التي تختارها). لا تتجدد تلقائيًا، ولن نسحب منك مبلغًا مجددًا ما لم تختر أنت الدفع.",
         "إذا اشتريت وأنت ما زلت مشتركًا، تُضاف الأيام الجديدة بعد الأيام المتبقية لك.",
-        "الأسعار معروضة بالدولار الأمريكي. وتحصّل Wayl المبلغ بالدينار العراقي، محوَّلًا من السعر بالدولار بسعر صرف ثابت، وتعرض صفحتها المبلغ قبل أن تؤكد الدفع. قد يطبّق مصرفك أو جهة إصدار بطاقتك سعر صرف أو رسومًا خاصة بها، ولا نتحكم بها.",
-        "تُفعَّل الخطة المميّزة تلقائيًا بعد تأكيد الدفع، وغالبًا خلال لحظات. وإن دفعت ولم تُفعَّل فاستخدم «مشكلة في الدفع؟» في صفحة الترقية أو راسلنا، وسنراجع الأمر ونفعّل لك الأيام التي دفعت ثمنها.",
+        "الأسعار معروضة بالدولار الأمريكي. وعند الدفع عبر Wayl تحصّل Wayl المبلغ بالدينار العراقي، محوَّلًا من السعر بالدولار بسعر صرف ثابت، وتعرض صفحتها المبلغ قبل أن تؤكد الدفع. قد يطبّق مصرفك أو جهة إصدار بطاقتك سعر صرف أو رسومًا خاصة بها، ولا نتحكم بها.",
+        "وعند الدفع عبر Binance Pay ترسل السعر نفسه بالدولار على شكل USDT (واحد USDT لكل دولار) بتحويل Binance Pay من حسابك في Binance إلى حسابنا، وتكتب في ملاحظة التحويل رمز الطلب الظاهر في صفحة الدفع. لا نطبّق سعر صرف، وقد تطبّق Binance رسومًا أو حدودًا خاصة بها عليك.",
+        "تُفعَّل الخطة المميّزة تلقائيًا بعد تأكيد الدفع، وغالبًا خلال لحظات. وفي Binance Pay يعني ذلك وصول تحويلك ومعه رمز الطلب في ملاحظته؛ وبدون الرمز لا نفعّل الخطة إلا بعد مراجعة يدوية تستغرق وقتًا أطول. وإن دفعت ولم تُفعَّل فاستخدم «مشكلة في الدفع؟» في صفحة الترقية أو راسلنا، وسنراجع الأمر ونفعّل لك الأيام التي دفعت ثمنها.",
         "تختلف الأسعار حسب بلدك وقد تتغيّر، ولا يؤثر أي تغيير على الأيام التي دفعت ثمنها.",
         "الأيام الإضافية من العروض هي أيام وصول إضافية، وليس لها قيمة نقدية.",
       ],
     },
     {
-      heading: "الدفع يتم عبر Wayl",
+      heading: "من يتولّى عملية الدفع",
       paragraphs: [
-        "تتم المدفوعات في صفحة الدفع الخاصة بشريكنا Wayl، وهي شركة مستقلة وتسري عليها شروطها الخاصة. تعالج Wayl، لا SentenceStep، دفعتك، وأنت تُدخل بيانات بطاقتك أو محفظتك في صفحة Wayl ولا تصل إلينا.",
+        "عند الدفع ببطاقة أو محفظة تدفع في صفحة الدفع الخاصة بشريكنا Wayl، وهي شركة مستقلة وتسري عليها شروطها الخاصة. تعالج Wayl، لا SentenceStep، دفعتك، وأنت تُدخل بيانات بطاقتك أو محفظتك في صفحة Wayl ولا تصل إلينا.",
         "تتحمّل Wayl ومصرفك أو جهة إصدار بطاقتك المسؤولية عن عملية الدفع نفسها: الخصم، وسعر الصرف والرسوم المطبّقة عليك، والدفعات المرفوضة أو الفاشلة، والخصم المكرر، والنزاعات وطلبات رد المبلغ عبر المصرف، وأي إلغاء لعملية دفع أو ردّ لها. وإذا بدا لك أن الخصم غير صحيح فتواصل مع Wayl ومصرفك، وراسلنا وسنزوّدك بتفاصيل طلبك لمساعدتك.",
+        "وعند الدفع عبر Binance Pay يتم التحويل داخل تطبيق Binance وفق شروطها الخاصة. تنفّذ Binance، وهي شركة مستقلة، التحويل، ولا تطّلع SentenceStep أبدًا على كلمة مرور Binance أو محفظتك. وتتحمّل Binance وحسابك أنت المسؤولية عن التحويل نفسه: توفّر الخدمة، وأي رسوم أو حدود تطبّقها Binance عليك، وأخطاء ما ترسله، كاختيار عملة أو مبلغ أو معرّف Binance غير صحيح. والتحويل بالعملات الرقمية لا يمكن عكسه بطلب رد المبلغ عبر المصرف. ولا يُحتسب إلا ما أُرسل بعملة USDT عبر Binance Pay بما لا يقل عن السعر الظاهر، ولا يتم التفعيل تلقائيًا إلا إذا كُتب رمز الطلب في الملاحظة. وإن أُرسل شيء آخر أو تُرك الرمز فراسلنا مع رمز طلبك وتفاصيل التحويل وسنراجعه.",
       ],
     },
     {
@@ -199,7 +203,7 @@ const TERMS_AR: LegalDocument = {
     {
       heading: "مسؤوليتنا",
       paragraphs: [
-        "تُقدَّم SentenceStep «كما هي». نبذل جهدنا لتكون دقيقة ومتاحة، لكن لا نعد بخلوها من الأخطاء ولا بتحقيق نتيجة معيّنة. وبالقدر الذي يسمح به القانون، لا نتحمّل الخسائر غير المباشرة أو التبعية، ولا الخدمات التي تديرها جهات أخرى مثل Wayl أو مصرفك أو جهة إصدار بطاقتك، بما في ذلك توفّرها وتأخّرها ورسومها وأسعار صرفها وأخطاؤها. ويقتصر إجمالي مسؤوليتنا في أي مطالبة على المبلغ الذي دفعته مقابل الخطة المميّزة خلال الأشهر الاثني عشر السابقة لها.",
+        "تُقدَّم SentenceStep «كما هي». نبذل جهدنا لتكون دقيقة ومتاحة، لكن لا نعد بخلوها من الأخطاء ولا بتحقيق نتيجة معيّنة. وبالقدر الذي يسمح به القانون، لا نتحمّل الخسائر غير المباشرة أو التبعية، ولا الخدمات التي تديرها جهات أخرى مثل Wayl أو Binance أو مصرفك أو جهة إصدار بطاقتك، بما في ذلك توفّرها وتأخّرها ورسومها وأسعار صرفها وأخطاؤها. ويقتصر إجمالي مسؤوليتنا في أي مطالبة على المبلغ الذي دفعته مقابل الخطة المميّزة خلال الأشهر الاثني عشر السابقة لها.",
       ],
     },
     {
@@ -221,7 +225,7 @@ const TERMS_AR: LegalDocument = {
 
 const PRIVACY_EN: LegalDocument = {
   title: "Privacy Policy",
-  updated: "Last updated: 9 October 2026",
+  updated: "Last updated: 18 October 2026",
   intro:
     "This page explains what SentenceStep collects, why, and who helps us run it. We don't sell your data and we don't share it with advertisers.",
   sections: [
@@ -231,7 +235,7 @@ const PRIVACY_EN: LegalDocument = {
         "Account: your email address, a display name if you give one, and your password (kept only as a secure hash by our sign-in provider). If you sign in with Google, we receive your Google email and name.",
         "Learning: your lessons and attempts, progress, streaks, points, mistakes, word-list progress, settings and preferences.",
         "Country: the country you choose when you set up your account, and the country your connection appears to come from, which our hosting provider tells us when you open the upgrade page, a locked lesson or word list, or start a payment. We use that only to pick the price that applies to you.",
-        "Payments: when you buy Premium we keep a record of the order (plan, price, amount, status and dates) and the reference from our payment partner. Your card or wallet details are entered on our payment partner's page and never reach us.",
+        "Payments: when you buy Premium we keep a record of the order (plan, price, amount, status and dates) and the reference from our payment partner. Your card or wallet details are entered on our payment partner's page and never reach us. If you pay with Binance Pay we also keep what Binance shows us about your transfer: its transaction ID, time, amount and coin, the note you wrote (the order code), and your Binance ID and display name as Binance reports them. We never see your Binance password or wallet.",
         "Messages: the reports and emails you send us, and our replies.",
         "Ratings: if you rate the app, your stars, your comment, the lesson you had just finished and your language. If you are signed in we keep it with your account and may answer you at your account email; if not, you can leave an email so we can answer you. We may show a rating and its comment on our website, never with your name or email, and only after we have approved it.",
         "Technical and usage: basic error and performance information, simple events about what you do in the app (such as finishing a lesson or opening the upgrade page) which we store ourselves, and settings kept in your browser, such as language and theme, your progress if you don't have an account, and a cookie that lasts one hour and remembers which lesson you were on when you started a payment, so we can take you back to it.",
@@ -251,9 +255,10 @@ const PRIVACY_EN: LegalDocument = {
       paragraphs: ["Each of these receives only what it needs to do its job:"],
       bullets: [
         "Supabase: our database and sign-in.",
-        "DigitalOcean: the server that runs SentenceStep.",
+        "DigitalOcean: the servers that run SentenceStep, including a small one in Germany that reads the Binance Pay transfers we receive.",
         "Cloudflare: sits in front of it to keep it fast and safe, and tells us your approximate country from your connection.",
         "Wayl: payments. Wayl is an independent company: what you give them on their page, such as your name, phone number and card or wallet details, is handled under Wayl's own terms and privacy policy.",
+        "Binance: only if you pay with Binance Pay. Binance is an independent company: the transfer is made in your Binance app under Binance's own terms and privacy policy, and we read the incoming transfers of our own account to match them to your order.",
         "Resend: sending emails.",
         "Where enabled: Sentry for error monitoring, and Cloudflare Turnstile to check that sign-ups come from a person.",
         "Google: only if you choose “Continue with Google”. If you rate the app, your rating and comment are saved in our database and, as a backup, in a spreadsheet we control.",
@@ -297,7 +302,7 @@ const PRIVACY_EN: LegalDocument = {
 
 const PRIVACY_AR: LegalDocument = {
   title: "سياسة الخصوصية",
-  updated: "آخر تحديث: 9 أكتوبر 2026",
+  updated: "آخر تحديث: 18 أكتوبر 2026",
   intro:
     "توضّح هذه الصفحة ما الذي تجمعه SentenceStep ولماذا ومن يساعدنا في تشغيلها. لا نبيع بياناتك ولا نشاركها مع المعلنين.",
   sections: [
@@ -307,7 +312,7 @@ const PRIVACY_AR: LegalDocument = {
         "الحساب: بريدك الإلكتروني واسم العرض (إن قدّمته) وكلمة المرور (تُحفظ فقط على شكل بصمة مشفّرة لدى مزوّد تسجيل الدخول). وإذا سجّلت الدخول عبر Google نستلم بريدك واسمك من Google.",
         "التعلّم: دروسك ومحاولاتك وتقدّمك وسلاسل أيامك ونقاطك وأخطاؤك وتقدّمك في قوائم الكلمات وإعداداتك وتفضيلاتك.",
         "البلد: البلد الذي تختاره عند إعداد حسابك، والبلد الذي يبدو أن اتصالك صادر منه، ونحصل عليه من مزوّد الاستضافة عند فتح صفحة الترقية أو درس أو قائمة كلمات مقفولة أو بدء الدفع. نستخدمه فقط لتحديد السعر المناسب لك.",
-        "المدفوعات: عند شراء الخطة المميّزة نحتفظ بسجل الطلب (الباقة والسعر والمبلغ والحالة والتواريخ) وبالرقم المرجعي من شريك الدفع. أما بيانات بطاقتك أو محفظتك فتُدخلها في صفحة شريك الدفع ولا تصل إلينا.",
+        "المدفوعات: عند شراء الخطة المميّزة نحتفظ بسجل الطلب (الباقة والسعر والمبلغ والحالة والتواريخ) وبالرقم المرجعي من شريك الدفع. أما بيانات بطاقتك أو محفظتك فتُدخلها في صفحة شريك الدفع ولا تصل إلينا. وإذا دفعت عبر Binance Pay نحتفظ أيضًا بما تُظهره لنا Binance عن تحويلك: رقم المعاملة ووقتها ومبلغها وعملتها، والملاحظة التي كتبتها (رمز الطلب)، ومعرّف Binance الخاص بك واسم العرض كما تذكرهما Binance. ولا نطّلع أبدًا على كلمة مرور Binance أو محفظتك.",
         "الرسائل: البلاغات ورسائل البريد التي ترسلها لنا وردودنا عليها.",
         "التقييمات: إذا قيّمت التطبيق نحفظ نجومك وملاحظتك والدرس الذي أنهيته للتو ولغتك. وإن كنت مسجّلاً نحفظها مع حسابك وقد نردّ عليك على بريد حسابك؛ وإن لم تكن مسجّلاً فيمكنك ترك بريدك لنردّ عليك. وقد نعرض التقييم وملاحظته في موقعنا، ولا نعرض اسمك أو بريدك أبدًا، ولا نعرضه إلا بعد أن نوافق عليه.",
         "تقنية واستخدام: معلومات أساسية عن الأخطاء والأداء، وأحداث بسيطة عمّا تفعله داخل التطبيق (مثل إكمال درس أو فتح صفحة الترقية) نحفظها لدينا، وإعدادات تُحفظ في متصفحك مثل اللغة والمظهر، وتقدّمك إن لم يكن لديك حساب، وكوكي يدوم ساعة واحدة يتذكّر الدرس الذي كنت عنده عند بدء الدفع لنعيدك إليه.",
@@ -327,9 +332,10 @@ const PRIVACY_AR: LegalDocument = {
       paragraphs: ["تستلم كل جهة منها ما تحتاجه فقط لأداء عملها:"],
       bullets: [
         "Supabase: قاعدة البيانات وتسجيل الدخول.",
-        "DigitalOcean: الخادم الذي يشغّل SentenceStep.",
+        "DigitalOcean: الخوادم التي تشغّل SentenceStep، ومنها خادم صغير في ألمانيا يقرأ تحويلات Binance Pay التي نستلمها.",
         "Cloudflare: تقف أمامه لتسريعه وحمايته، وتخبرنا أيضًا ببلدك التقريبي من اتصالك.",
         "Wayl: المدفوعات. Wayl شركة مستقلة، وما تقدّمه لها في صفحتها، كاسمك ورقم هاتفك وبيانات بطاقتك أو محفظتك، يخضع لشروطها وسياسة الخصوصية الخاصة بها.",
+        "Binance: فقط إذا دفعت عبر Binance Pay. Binance شركة مستقلة؛ يتم التحويل في تطبيقها وفق شروطها وسياسة الخصوصية الخاصة بها، ونقرأ التحويلات الواردة إلى حسابنا لنربطها بطلبك.",
         "Resend: إرسال رسائل البريد الإلكتروني.",
         "حيثما كانت مفعّلة: Sentry لمراقبة الأخطاء، وCloudflare Turnstile للتحقق من أن التسجيل يتم من شخص حقيقي.",
         "Google: فقط إذا اخترت «المتابعة عبر Google». وإذا قيّمت التطبيق تُحفظ درجتك وملاحظتك في قاعدة بياناتنا، ونسخة احتياطية منها في جدول بيانات نملكه.",

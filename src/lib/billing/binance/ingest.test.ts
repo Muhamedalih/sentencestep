@@ -131,12 +131,47 @@ test("handleIngest: a transfer that is too small is stored, not activated, and a
   assert.equal(alerts.length, 1);
 });
 
-test("handleIngest: a transfer with no code just waits for an admin, quietly", async () => {
+test("handleIngest: a transfer with no code that no waiting order could be just waits for an admin, quietly", async () => {
+  const { store, deps, fulfilled, alerts } = setup();
+  // The only order costs 6 USDT: a friend's 5 USDT cannot be it.
+  store.addOrder();
+  await ingest(deps, [binanceRecord({ note: "hello", amount: "5.00000000" })]);
+  assert.deepEqual(fulfilled, []);
+  assert.equal(store.transfers[0]!.status, "new");
+  assert.equal(alerts.length, 0);
+});
+
+test("handleIngest: a transfer with no code and nobody waiting is not worth a word", async () => {
+  const { store, deps, fulfilled, alerts } = setup();
+  await ingest(deps, [binanceRecord({ note: "hello" })]);
+  assert.deepEqual(fulfilled, []);
+  assert.equal(store.transfers[0]!.status, "new");
+  assert.equal(alerts.length, 0);
+});
+
+test("handleIngest: a transfer with no code that a waiting order could be is never activated, but an admin is told once", async () => {
   const { store, deps, fulfilled, alerts } = setup();
   store.addOrder();
   await ingest(deps, [binanceRecord({ note: "hello" })]);
   assert.deepEqual(fulfilled, []);
   assert.equal(store.transfers[0]!.status, "new");
+  assert.equal(alerts.length, 1);
+  assert.equal(alerts[0]!.code, "binance_transfer_needs_match");
+  assert.equal(alerts[0]!.referenceId, "ss_ref1");
+  assert.match(alerts[0]!.detail ?? "", /no order code/);
+  assert.match(alerts[0]!.detail ?? "", /SS-7K3Q2/);
+
+  // Seen again on the next visit: still waiting, but nobody is told twice.
+  await ingest(deps, []);
+  assert.equal(alerts.length, 1);
+});
+
+test("handleIngest: the code is found even when Binance puts the sender's text under another name", async () => {
+  const { store, deps, fulfilled, alerts } = setup();
+  store.addOrder();
+  await ingest(deps, [binanceRecord({ note: undefined, remark: "ss 7k3q2 thanks" })]);
+  assert.deepEqual(fulfilled, ["ss_ref1"]);
+  assert.equal(store.transfers[0]!.status, "linked");
   assert.equal(alerts.length, 0);
 });
 

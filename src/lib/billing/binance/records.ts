@@ -1,4 +1,5 @@
 import { parseAmountUnits } from "./amount";
+import { extractOrderCodes } from "./codes";
 
 /** One incoming transfer, cleaned: the only shape the rest of the system ever sees. */
 export interface IncomingTransfer {
@@ -46,6 +47,62 @@ function cleanText(value: unknown, max: number): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Binance's own field for what a sender writes is "note", but its history is only partly documented and
+// the text of an incoming transfer could sit under another name. So when "note" holds no order code the
+// rest of the record is searched for one: the code is a random token that only the owner of an order has
+// seen, so finding it anywhere in a transfer is as good as finding it in the note. Who sent it and who
+// received it are never searched (those are names, not messages), nor the ids.
+const SCAN_SKIPPED_KEYS = new Set([
+  "note",
+  "transactionId",
+  "orderId",
+  "payerInfo",
+  "receiverInfo",
+]);
+const SCAN_MAX_DEPTH = 3;
+const SCAN_MAX_STRINGS = 60;
+
+function codeTextElsewhere(
+  record: Record<string, unknown>,
+): { text: string; field: string } | null {
+  let budget = SCAN_MAX_STRINGS;
+
+  const visit = (
+    value: unknown,
+    field: string,
+    depth: number,
+  ): { text: string; field: string } | null => {
+    if (budget <= 0) return null;
+    if (typeof value === "string") {
+      budget -= 1;
+      const text = cleanText(value, MAX_NOTE_LENGTH);
+      return text !== null && extractOrderCodes(text).length > 0 ? { text, field } : null;
+    }
+    if (depth >= SCAN_MAX_DEPTH) return null;
+    if (Array.isArray(value)) {
+      for (const item of value.slice(0, 20)) {
+        const found = visit(item, field, depth + 1);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (isRecord(value)) {
+      for (const inner of Object.values(value)) {
+        const found = visit(inner, field, depth + 1);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  for (const [key, value] of Object.entries(record)) {
+    if (SCAN_SKIPPED_KEYS.has(key)) continue;
+    const found = visit(value, key, 1);
+    if (found) return found;
+  }
+  return null;
 }
 
 /** The exact text of a Binance amount, or null when it is missing or not a positive number. */
@@ -102,13 +159,23 @@ function toTransfer(record: unknown, now: number): IncomingTransfer | null {
   const orderId = cleanText(record.orderId, 64);
   if (orderId) raw.orderId = orderId;
 
+  let note = cleanText(record.note, MAX_NOTE_LENGTH);
+  if (extractOrderCodes(note).length === 0) {
+    const elsewhere = codeTextElsewhere(record);
+    if (elsewhere) {
+      // The text that holds the code goes first, so the bound on the note can never cut it off.
+      note = [elsewhere.text, note].filter(Boolean).join(" | ").slice(0, MAX_NOTE_LENGTH);
+      raw.noteField = elsewhere.field.slice(0, 40);
+    }
+  }
+
   return {
     transactionId,
     transactedAt: new Date(time).toISOString(),
     amount,
     currency,
     orderType,
-    note: cleanText(record.note, MAX_NOTE_LENGTH),
+    note,
     payerBinanceId,
     payerName: cleanText(payer.name, MAX_NAME_LENGTH),
     raw,

@@ -8,8 +8,9 @@ import {
   WATCH_INTERVAL_SECONDS,
 } from "./constants";
 import { extractOrderCodes } from "./codes";
-import { decideLink, SKIP_REASON_TEXT } from "./matching";
-import type { SkipReason } from "./matching";
+import { decideLink, SKIP_REASON_TEXT, suggestOrders } from "./matching";
+import type { LinkDecision, MatchableOrder, SkipReason } from "./matching";
+import type { IncomingTransfer } from "./records";
 import { parseRelayBody } from "./records";
 import { verifyRelayRequest } from "./relay-auth";
 import type { BinancePayStore } from "./store";
@@ -41,9 +42,10 @@ export interface HandlerResponse {
 
 /**
  * A transfer whose note carries an order's code but could not be linked is a
- * customer's money that nothing activated: an admin is told. A transfer with no
- * code, or of a kind that is not a payment, may just be a friend sending
- * something, so it only waits in the list.
+ * customer's money that nothing activated: an admin is told. A transfer of a
+ * kind that is not a payment may just be a friend sending something, so it only
+ * waits in the list. A transfer with no code gets one more look (see
+ * alertForUnmatched): it is a customer's too when an order that waits could be it.
  */
 const ALERT_REASONS: ReadonlySet<SkipReason> = new Set([
   "unknown_code",
@@ -56,6 +58,8 @@ const ALERT_REASONS: ReadonlySet<SkipReason> = new Set([
 ]);
 
 const UNLINKED_BATCH = 200;
+/** More waiting orders than this at once is far beyond the daily cap; the newest ones are the likeliest to be paid. */
+const WAITING_ORDERS_LOOKED_AT = 20;
 
 const unauthorized: HandlerResponse = { status: 401, body: { error: "unauthorized" } };
 
@@ -80,19 +84,51 @@ export async function processUnlinkedTransfers(
   const lookBack = new Date(now.getTime() - lateWindowMs - 60 * 60 * 1000);
   const processed: Processed = { linked: 0, fulfilled: 0 };
 
+  // The orders still waiting, read at most once per visit and only if a transfer with no code needs them.
+  let waiting: MatchableOrder[] | null = null;
+  const waitingOrders = async () =>
+    (waiting ??= await deps.store.listOpenOrders(lookBack, WAITING_ORDERS_LOOKED_AT));
+
+  /** What an admin is told about a transfer that was not linked, or null when it can stay quietly in the list. */
+  async function alertForUnmatched(
+    transfer: IncomingTransfer,
+    decision: Extract<LinkDecision, { action: "skip" }>,
+  ): Promise<PaymentAlert | null> {
+    if (ALERT_REASONS.has(decision.reason)) {
+      return {
+        code: "binance_transfer_needs_match",
+        referenceId: decision.order?.referenceId ?? "batch",
+        detail: `${SKIP_REASON_TEXT[decision.reason]} Transfer ${transfer.transactionId}, ${transfer.amount} ${transfer.currency}.`,
+      };
+    }
+    if (decision.reason !== "no_code") return null;
+
+    // No code: a friend's money, or a customer whose note did not reach us. Only worth a word when an
+    // order that waits could be it (the amount covers its price and the timing fits).
+    const candidates = suggestOrders(transfer, await waitingOrders(), { lateWindowMs });
+    if (candidates.length === 0) return null;
+    const codes = candidates.map((candidate) => candidate.order.orderCode).join(", ");
+    return {
+      code: "binance_transfer_needs_match",
+      referenceId: candidates[0]!.order.referenceId,
+      detail: `A transfer of ${transfer.amount} ${transfer.currency} arrived with no order code, and it could be for ${
+        candidates.length === 1 ? "order" : "one of the orders"
+      } ${codes}. The sender may have left the note empty. Transfer ${transfer.transactionId}.`,
+    };
+  }
+
   for (const stored of await deps.store.listUnlinkedSince(lookBack, UNLINKED_BATCH)) {
     try {
       const orders = await deps.store.findOrdersByCodes(extractOrderCodes(stored.transfer.note));
       const decision = decideLink(stored.transfer, orders, { lateWindowMs });
 
       if (decision.action === "skip") {
-        if (ALERT_REASONS.has(decision.reason) && !stored.notifiedAt) {
-          await deps.report({
-            code: "binance_transfer_needs_match",
-            referenceId: decision.order?.referenceId ?? "batch",
-            detail: `${SKIP_REASON_TEXT[decision.reason]} Transfer ${stored.transfer.transactionId}, ${stored.transfer.amount} ${stored.transfer.currency}.`,
-          });
-          await deps.store.markNotified(stored.id, now);
+        if (!stored.notifiedAt) {
+          const alert = await alertForUnmatched(stored.transfer, decision);
+          if (alert) {
+            await deps.report(alert);
+            await deps.store.markNotified(stored.id, now);
+          }
         }
         continue;
       }

@@ -192,3 +192,40 @@ test("the privacy policy says what rating the app keeps, who it may be shown to,
   assert.match(arabic, /ولا نعرضه إلا بعد أن نوافق عليه/);
   assert.match(arabic, /في قاعدة بياناتنا/);
 });
+
+test("both documents say how Binance Pay works, what it keeps, and that the transfer is Binance's, not ours", () => {
+  const terms = fullText(TERMS.en);
+  assert.match(terms, /Binance Pay/);
+  assert.match(terms, /USDT/);
+  assert.match(terms, /order code/);
+  assert.match(terms, /cannot be reversed with a chargeback/);
+  assert.match(terms, /SentenceStep never sees your Binance password or wallet/);
+  assert.match(terms, /such as Wayl, Binance, your bank or card issuer/);
+
+  const privacy = fullText(PRIVACY.en);
+  assert.match(privacy, /Binance: only if you pay with Binance Pay/);
+  assert.match(privacy, /your Binance ID and display name as Binance reports them/);
+  assert.match(privacy, /We never see your Binance password or wallet/);
+  assert.match(privacy, /a small one in Germany/);
+
+  const termsAr = fullText(TERMS.ar);
+  assert.match(termsAr, /Binance Pay/);
+  assert.match(termsAr, /USDT/);
+  assert.match(termsAr, /لا يمكن عكسه/);
+  assert.match(termsAr, /ولا تطّلع SentenceStep أبدًا على كلمة مرور Binance/);
+  assert.match(termsAr, /Wayl أو Binance أو مصرفك/);
+
+  const privacyAr = fullText(PRIVACY.ar);
+  assert.match(privacyAr, /Binance: فقط إذا دفعت عبر Binance Pay/);
+  assert.match(privacyAr, /معرّف Binance الخاص بك واسم العرض/);
+  assert.match(privacyAr, /ولا نطّلع أبدًا على كلمة مرور Binance/);
+  assert.match(privacyAr, /خادم صغير في ألمانيا/);
+});
+
+test("the terms no longer say that every payment is made on Wayl's page", () => {
+  assert.equal(
+    /Payments are made on the payment page of our payment partner/i.test(fullText(TERMS.en)),
+    false,
+  );
+  assert.equal(/الدفع يتم عبر Wayl/.test(fullText(TERMS.ar)), false);
+});
