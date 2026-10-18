@@ -126,10 +126,11 @@ export default async function UpgradePage({
   );
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 max-sm:pb-32 sm:py-24">
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 max-sm:pb-32 sm:py-24 lg:pt-10">
+      {/* On a wide screen the logo sits in the page's top corner instead of taking a row of its own, so the heading starts at the top. */}
       <Link
         href={user ? "/learn" : "/"}
-        className="inline-flex min-h-11 items-center self-center"
+        className="inline-flex min-h-11 items-center self-center lg:absolute lg:start-8 lg:top-6 lg:self-auto"
         aria-label={t.marketing.homeLinkAriaLabel}
       >
         <Logo />
