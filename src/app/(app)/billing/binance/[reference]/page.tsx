@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { BinancePayInstructions } from "@/components/billing/binance-pay-instructions";
 import { PaymentStatusRefresh } from "@/components/billing/payment-status-refresh";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
+import { BackButton } from "@/components/layout/back-button";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,12 +94,22 @@ export default async function BinancePayPage({
   }
 
   const afterPaymentPath = safeLessonPath((await cookies()).get(AFTER_PAYMENT_COOKIE)?.value);
-  const shell = (content: ReactNode) => (
+  // The back control is only offered while the transfer is awaited: the other screens have their own way on.
+  const shell = (content: ReactNode, withBack = false) => (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
       <Link href="/learn" className="self-center" aria-label={t.marketing.homeLinkAriaLabel}>
         <Logo />
       </Link>
-      <Card className="mx-auto w-full max-w-lg">{content}</Card>
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-2">
+        {withBack && (
+          <BackButton
+            label={t.binancePay.back}
+            fallbackHref="/upgrade"
+            className="-ms-2 self-start"
+          />
+        )}
+        <Card className="w-full">{content}</Card>
+      </div>
     </div>
   );
 
@@ -217,5 +228,6 @@ export default async function BinancePayPage({
         <PaymentStatusRefresh {...(expired ? LATE_REFRESH : WAIT_REFRESH)} />
       </CardContent>
     </>,
+    true,
   );
 }

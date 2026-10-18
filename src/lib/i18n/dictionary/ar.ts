@@ -151,6 +151,7 @@ export const ar: Dictionary = {
     recheckCta: "تحقق من دفعتي الآن",
   },
   binancePay: {
+    back: "رجوع",
     guideAsk: "لا تعرف كيف تحوّل؟",
     guideOpen: "شاهد الخطوات",
     guideHeading: "التحويل خطوة بخطوة",

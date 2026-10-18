@@ -181,6 +181,8 @@ export interface Dictionary {
   /** The first-time starting-level placement picker (src/components/app/starting-level-onboarding.tsx) — tier names themselves come from src/lib/levels.ts's tierSupportLabel, not from here. */
   /** Pay with Binance Pay (USDT): the button on /upgrade and the payment page (see src/lib/billing/binance). */
   binancePay: {
+    /** The back control above the order page. */
+    back: string;
     /** Beside the guide on the order page: the question, and the part of it that opens the steps. */
     guideAsk: string;
     guideOpen: string;

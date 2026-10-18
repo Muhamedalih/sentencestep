@@ -162,6 +162,7 @@ export const en: Dictionary = {
     recheckCta: "Check my payment now",
   },
   binancePay: {
+    back: "Back",
     guideAsk: "Not sure how to send it?",
     guideOpen: "See the steps",
     guideHeading: "The transfer, step by step",

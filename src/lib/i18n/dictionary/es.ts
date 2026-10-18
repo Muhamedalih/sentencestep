@@ -165,6 +165,7 @@ export const es: Dictionary = {
     recheckCta: "Comprobar mi pago ahora",
   },
   binancePay: {
+    back: "Volver",
     guideAsk: "¿No sabes cómo enviarlo?",
     guideOpen: "Ver los pasos",
     guideHeading: "La transferencia, paso a paso",

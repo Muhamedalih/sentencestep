@@ -158,6 +158,7 @@ export const tr: Dictionary = {
     recheckCta: "Ödememi şimdi kontrol et",
   },
   binancePay: {
+    back: "Geri",
     guideAsk: "Nasıl göndereceğini bilmiyor musun?",
     guideOpen: "Adımları gör",
     guideHeading: "Transfer, adım adım",
