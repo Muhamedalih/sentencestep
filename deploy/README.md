@@ -224,5 +224,10 @@ cache `/`, `/ar`, `/es`, `/tr`, `/privacy`, `/terms` for a few minutes **only wh
   run `cd /opt/sentencestep && docker compose --env-file state.env up -d caddy` once, in a quiet hour.
   The container sees `/opt/sentencestep/caddy` as a whole directory on purpose: a single-file bind mount
   keeps pointing at the old file after the file is replaced, which once made every traffic switch a no-op.
+- **Binance Pay relay**: a separate, tiny server in Frankfurt (Binance refuses US addresses, so this server
+  cannot read the shop's Binance account itself). Install, update and troubleshooting are in
+  `deploy/relay/README.md`. This server only needs `BINANCE_RELAY_SECRET` (at least 32 characters, identical
+  in this `server.env` and in the relay's `relay.env`). Admin → Binance Pay shows whether the relay is online,
+  and the admins get an e-mail when it goes quiet while someone is waiting to pay.
 - **Secrets**: never paste `server.env` values in chat or tickets. Rotate `ORIGIN_AUTH_SECRET` in both
   places (Cloudflare rule and `server.env`) if it is ever exposed.
