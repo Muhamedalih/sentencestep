@@ -38,6 +38,12 @@ export interface CheckoutDeps {
   report: (alert: PaymentAlert) => void | Promise<void>;
   now?: () => Date;
   newId?: () => string;
+  /**
+   * Asked just before a NEW order would be opened, and never when an order that is still open is handed back,
+   * so a limit can stop a new order without stopping a learner from returning to the one they already have.
+   * Not set for Wayl.
+   */
+  allowNewOrder?: () => Promise<boolean>;
 }
 
 export interface CheckoutInput {
@@ -54,7 +60,7 @@ export interface CheckoutInput {
 
 export type CheckoutResult =
   | { ok: true; url: string; reused: boolean }
-  | { ok: false; error: "rate_limited" | "provider_unavailable" };
+  | { ok: false; error: "rate_limited" | "provider_unavailable" | "not_allowed" };
 
 /**
  * Starts a payment: prices it on the server, stores the complete immutable
@@ -89,6 +95,10 @@ export async function createCheckout(
     reusable.premium_days === quote.premiumDays
   ) {
     return { ok: true, url: reusable.checkout_url, reused: true };
+  }
+
+  if (deps.allowNewOrder && !(await deps.allowNewOrder())) {
+    return { ok: false, error: "not_allowed" };
   }
 
   const recentOrders = await store.countRecentOrders(

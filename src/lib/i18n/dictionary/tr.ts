@@ -161,6 +161,8 @@ export const tr: Dictionary = {
     buttonLabel: "Binance Pay ile öde (USDT)",
     buttonCaption: "Binance içinde bir transfer · komisyon yok",
     pausedToday: "Binance Pay şu an duraklatıldı. Lütfen daha sonra tekrar dene ya da kartla öde.",
+    limitReached:
+      "Bugünkü {count} Binance Pay siparişi sınırına ulaştın. Lütfen yarın tekrar dene ya da kartla öde.",
     pageTitle: "Binance Pay ile öde",
     pageIntro:
       "Aşağıdaki tutarı Binance uygulamandan USDT olarak gönder. Premium kendiliğinden açılır, genellikle bir dakika içinde.",

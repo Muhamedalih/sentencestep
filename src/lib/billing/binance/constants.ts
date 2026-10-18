@@ -39,8 +39,14 @@ export const TRANSFER_BEFORE_ORDER_TOLERANCE_MS = 5 * 60 * 1000;
  */
 export const DEFAULT_LATE_PAYMENT_HOURS = 24;
 
-/** Orders per rolling 24 hours before the Binance Pay button is paused (admin-tunable, see binance_pay_settings). */
-export const DEFAULT_DAILY_ORDER_CAP = 10;
+/**
+ * Orders per rolling 24 hours, for everyone together, before the Binance Pay button is paused (admin-tunable,
+ * see binance_pay_settings). It only guards against a flood: what one person can do is limited separately.
+ */
+export const DEFAULT_DAILY_ORDER_CAP = 200;
+
+/** New Binance Pay orders one learner can open in a rolling 24 hours (an order that is still open is handed back, not counted again). */
+export const MAX_ORDERS_PER_PERSON_PER_DAY = 5;
 
 /** The relay asks how often to look: quickly while an order is waiting, rarely otherwise. */
 export const WATCH_INTERVAL_SECONDS = 15;

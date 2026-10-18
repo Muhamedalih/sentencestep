@@ -154,6 +154,8 @@ export const ar: Dictionary = {
     buttonLabel: "الدفع عبر Binance Pay (USDT)",
     buttonCaption: "تحويل داخل باينانس · بدون رسوم",
     pausedToday: "الدفع عبر Binance Pay متوقف مؤقتًا. يرجى المحاولة لاحقًا أو الدفع بالبطاقة.",
+    limitReached:
+      "بلغ حسابك الحد اليومي لطلبات Binance Pay، وهو {count} طلبات. يرجى المحاولة غدًا أو الدفع بالبطاقة.",
     pageTitle: "الدفع عبر Binance Pay",
     pageIntro:
       "حوّل المبلغ أدناه بعملة USDT من تطبيق باينانس. يتفعّل Premium تلقائيًا، وغالبًا خلال دقيقة.",

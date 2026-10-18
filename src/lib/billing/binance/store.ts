@@ -63,6 +63,8 @@ export interface BinancePayStore {
   listPaymentStates(referenceIds: string[]): Promise<PaymentState[]>;
   /** Orders created since then, not counting one whose creation failed: the button's daily limit. */
   countOrdersSince(since: Date, providerEnv: "live" | "test"): Promise<number>;
+  /** The same count for one learner: how many orders they have opened lately. */
+  countUserOrdersSince(userId: string, since: Date, providerEnv: "live" | "test"): Promise<number>;
   /** Orders still waiting for their transfer inside the payment window. */
   countActiveOrders(providerEnv: "live" | "test", now: Date): Promise<number>;
 
@@ -266,6 +268,19 @@ export function createBinancePayStore(
         .select("id", { count: "exact", head: true })
         .eq("provider", BINANCE_PAY_PROVIDER)
         .eq("provider_env", providerEnv)
+        .gte("created_at", since.toISOString())
+        .or("status.neq.failed,provider_payment_id.not.is.null");
+      if (error) throw error;
+      return count ?? 0;
+    },
+
+    async countUserOrdersSince(userId, since, providerEnv) {
+      const { count, error } = await supabase
+        .from("payment_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("provider", BINANCE_PAY_PROVIDER)
+        .eq("provider_env", providerEnv)
+        .eq("user_id", userId)
         .gte("created_at", since.toISOString())
         .or("status.neq.failed,provider_payment_id.not.is.null");
       if (error) throw error;

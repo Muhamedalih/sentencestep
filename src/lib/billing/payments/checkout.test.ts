@@ -313,3 +313,56 @@ test("createCheckout: the alert about a failed link is finished before the call 
 
   assert.deepEqual(events, ["alert sent", "returned"]);
 });
+
+test("createCheckout: a limit that says no stops a new order before anything is stored or asked of the provider", async () => {
+  const { store, provider, deps } = setup();
+  let asked = 0;
+
+  const result = await createCheckout(
+    {
+      ...deps,
+      allowNewOrder: async () => {
+        asked += 1;
+        return false;
+      },
+    },
+    { userId: "user-1", country: iraq, origin: ORIGIN, plan: "1m" },
+  );
+
+  assert.deepEqual(result, { ok: false, error: "not_allowed" });
+  assert.equal(asked, 1);
+  assert.equal(store.inserted.length, 0);
+  assert.equal(provider.created.length, 0);
+});
+
+test("createCheckout: a limit that says yes lets the order through exactly as before", async () => {
+  const { store, deps } = setup();
+
+  const result = await createCheckout(
+    { ...deps, allowNewOrder: async () => true },
+    { userId: "user-1", country: iraq, origin: ORIGIN, plan: "1m" },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(store.inserted.length, 1);
+});
+
+test("createCheckout: the limit is not asked when an order that is still open is handed back", async () => {
+  const { store, deps } = setup();
+  store.reusable = makeOrder({ pricing_tier: "B", charge_amount: 4560 });
+  let asked = 0;
+
+  const result = await createCheckout(
+    {
+      ...deps,
+      allowNewOrder: async () => {
+        asked += 1;
+        return false;
+      },
+    },
+    { userId: "user-1", country: unknown, origin: ORIGIN, plan: "1m" },
+  );
+
+  assert.deepEqual(result, { ok: true, url: "https://pay.example.com/link_1", reused: true });
+  assert.equal(asked, 0);
+});

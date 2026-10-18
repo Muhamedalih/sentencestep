@@ -14,6 +14,9 @@ import { bonusDaysForCheckout } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { isPlanId } from "@/lib/billing/plans";
 import { tierForCountry } from "@/lib/billing/pricing";
+import { MAX_ORDERS_PER_PERSON_PER_DAY } from "@/lib/billing/binance/constants";
+import { orderLimitReason } from "@/lib/billing/binance/limits";
+import type { OrderLimitReason } from "@/lib/billing/binance/limits";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
 import { createCheckout } from "@/lib/billing/payments/checkout";
 import { getBinancePayRuntime, getPaymentRuntime } from "@/lib/billing/payments/runtime";
@@ -93,39 +96,56 @@ export async function startCheckout(
 
   if (!user) return { error: t.premium.checkoutSignIn };
 
-  if (method === "binance") {
-    // The admin-set limit on orders per rolling day: a pause, never a surprise charge.
-    try {
-      const store = createBinancePayStore();
-      const [settings, recent] = await Promise.all([
-        store.getSettings(),
-        store.countOrdersSince(
-          new Date(Date.now() - 24 * 60 * 60 * 1000),
-          runtime.provider.environment,
-        ),
-      ]);
-      if (recent >= settings.dailyOrderCap) return { error: t.binancePay.pausedToday };
-    } catch (error) {
-      console.error("[payments] Binance Pay: could not read the daily limit", error);
-      return { error: t.premium.checkoutTryAgain };
-    }
-  }
+  // The two limits on opening a NEW Binance Pay order (see limits.ts): a pause for everyone and a
+  // number per learner. They are asked only when a new order would be opened, so a learner can
+  // always go back to the order they already have. A pause is never a surprise charge.
+  const limit: { reason: OrderLimitReason | null } = { reason: null };
+  const environment = runtime.provider.environment;
+  const allowNewOrder =
+    method === "binance"
+      ? async () => {
+          const store = createBinancePayStore();
+          const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const [settings, ordersInLastDay, ordersByThisLearnerInLastDay] = await Promise.all([
+            store.getSettings(),
+            store.countOrdersSince(since, environment),
+            store.countUserOrdersSince(user.id, since, environment),
+          ]);
+          limit.reason = orderLimitReason({
+            dailyOrderCap: settings.dailyOrderCap,
+            ordersInLastDay,
+            ordersByThisLearnerInLastDay,
+          });
+          return limit.reason === null;
+        }
+      : undefined;
 
   let result;
   try {
-    result = await createCheckout(runtime, {
-      userId: user.id,
-      country,
-      origin: getSiteUrl(),
-      plan,
-      bonusDays,
-    });
+    result = await createCheckout(
+      { ...runtime, allowNewOrder },
+      {
+        userId: user.id,
+        country,
+        origin: getSiteUrl(),
+        plan,
+        bonusDays,
+      },
+    );
   } catch (error) {
     console.error("[payments] checkout failed", error);
     return { error: t.premium.checkoutTryAgain };
   }
 
   if (!result.ok) {
+    if (result.error === "not_allowed") {
+      return {
+        error:
+          limit.reason === "personal_limit"
+            ? t.binancePay.limitReached.replace("{count}", String(MAX_ORDERS_PER_PERSON_PER_DAY))
+            : t.binancePay.pausedToday,
+      };
+    }
     return {
       error:
         result.error === "rate_limited"

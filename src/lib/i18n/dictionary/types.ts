@@ -184,6 +184,7 @@ export interface Dictionary {
     buttonLabel: string;
     buttonCaption: string;
     pausedToday: string;
+    limitReached: string;
     pageTitle: string;
     pageIntro: string;
     recipientLabel: string;

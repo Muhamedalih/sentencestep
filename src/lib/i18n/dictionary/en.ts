@@ -165,6 +165,8 @@ export const en: Dictionary = {
     buttonLabel: "Pay with Binance Pay (USDT)",
     buttonCaption: "A transfer inside Binance · no fees",
     pausedToday: "Binance Pay is paused for now. Please try again later, or pay by card.",
+    limitReached:
+      "You've reached today's limit of {count} Binance Pay orders. Please try again tomorrow, or pay by card.",
     pageTitle: "Pay with Binance Pay",
     pageIntro:
       "Send the amount below in USDT from your Binance app. Premium switches on by itself, usually within a minute.",

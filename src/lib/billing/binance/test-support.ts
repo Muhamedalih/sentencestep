@@ -40,6 +40,8 @@ export function makeTransfer(overrides: Partial<IncomingTransfer> = {}): Incomin
 
 interface FakeOrder {
   id: string;
+  /** Who opened the order; the tests that do not care about it leave it as the default. */
+  userId: string;
   referenceId: string;
   status: PaymentOrderStatus;
   chargeAmount: number;
@@ -72,6 +74,7 @@ export class InMemoryBinancePayStore implements BinancePayStore {
   addOrder(overrides: Partial<FakeOrder> = {}): FakeOrder {
     const order: FakeOrder = {
       id: `order-${this.orders.size + 1}`,
+      userId: "user-1",
       referenceId: `ss_ref${this.orders.size + 1}`,
       status: "pending",
       chargeAmount: 6,
@@ -149,6 +152,12 @@ export class InMemoryBinancePayStore implements BinancePayStore {
   async countOrdersSince(since: Date) {
     return [...this.orders.values()].filter(
       (order) => Date.parse(order.createdAt) >= since.getTime(),
+    ).length;
+  }
+
+  async countUserOrdersSince(userId: string, since: Date) {
+    return [...this.orders.values()].filter(
+      (order) => order.userId === userId && Date.parse(order.createdAt) >= since.getTime(),
     ).length;
   }
 
