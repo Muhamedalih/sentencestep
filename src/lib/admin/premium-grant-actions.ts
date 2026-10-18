@@ -109,3 +109,42 @@ export async function grantPremiumByEmail(email: string, days: number): Promise<
     }).`,
   };
 }
+
+/**
+ * Ends an account's Premium at once: the same row the subscription.expired billing
+ * event writes (free plan, expired status), so the learner drops to the free plan
+ * immediately. The old period dates stay for history. Admin-only, audit-logged.
+ */
+export async function cancelPremiumByEmail(email: string): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+  if (!isServiceRoleConfigured())
+    return { error: "Service role key isn't configured for this environment." };
+
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return { error: "Enter an email address." };
+
+  const found = await findUserByEmail(normalizedEmail);
+  if (found.status === "error")
+    return { error: "Couldn't search for that user. Please try again." };
+  if (found.status === "not_found") return { error: "No account found with that email." };
+
+  const { data, error } = await createServiceRoleClient()
+    .from("subscriptions")
+    .update({
+      plan: "free",
+      status: "expired",
+      cancel_at_period_end: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", found.id)
+    .select("user_id");
+  if (error) return { error: "Couldn't save that. Please try again." };
+  if (!data?.length) return { error: `${found.email} has no subscription to cancel.` };
+
+  void logAdminAction("subscription.premium_cancelled", "subscription", found.id, {
+    email: found.email,
+  });
+  revalidatePath("/admin/premium");
+  return { success: `${found.email} is back on the free plan.` };
+}

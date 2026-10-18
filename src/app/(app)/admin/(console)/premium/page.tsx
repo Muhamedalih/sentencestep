@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CancelPremiumForm } from "@/components/admin/cancel-premium-form";
 import { GrantPremiumForm } from "@/components/admin/grant-premium-form";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,19 @@ export default function AdminPremiumPage() {
         </CardHeader>
         <CardContent>
           <GrantPremiumForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Cancel Premium</CardTitle>
+          <CardDescription>
+            Ends the account&apos;s Premium right away and puts it back on the free plan. Recorded
+            in the Audit log. To undo it, give days again above.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CancelPremiumForm />
         </CardContent>
       </Card>
     </div>
