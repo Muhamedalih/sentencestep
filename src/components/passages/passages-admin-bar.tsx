@@ -9,7 +9,7 @@ import { setPassagesPublishedAction } from "@/lib/passages/actions";
 /**
  * Shown to admins only, at the top of the Passages page. While the section is
  * in Admin preview it says so and offers the one button that opens it to every
- * learner (and publishes each passage's word lesson with it); once it is
+ * learner; once it is
  * public it offers the way back. Publishing asks for a second click, because it
  * is the one thing on this page real learners will notice. Plain English like
  * the rest of the admin panel — learners never see this bar.
@@ -47,7 +47,7 @@ export function PassagesAdminBar({ isPublic }: { isPublic: boolean }) {
           </p>
           <p className="text-muted-foreground mt-0.5">
             {confirming
-              ? "Everyone will see this section, and each passage's word lesson will appear in Word Lists. Publish now?"
+              ? "Everyone will see this section. Publish now?"
               : isPublic
                 ? "You can take it back to admins only at any time."
                 : "Check the passages, then publish them to every learner with one click."}

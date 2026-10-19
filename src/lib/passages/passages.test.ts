@@ -84,7 +84,6 @@ import {
   rolesOf,
 } from "@/lib/passages/narration-plan";
 import type { NarrationSentence, NarrationVoice, VoiceSetup } from "@/lib/passages/narration-plan";
-import { wordGroupStatusFor } from "@/lib/passages/publish";
 import {
   summarizeVoiceCast,
   voiceClashes,
@@ -1402,13 +1401,6 @@ test("a Premium passage opens for a subscriber or an admin, a free one for every
     ["a", "c"],
   );
   assert.equal(openablePassages(mixed, true).length, 3);
-});
-
-test("a word lesson is open in Word Lists only while the section is On and its passage is published", () => {
-  assert.equal(wordGroupStatusFor("on", "published"), "published");
-  assert.equal(wordGroupStatusFor("on", "draft"), "draft");
-  assert.equal(wordGroupStatusFor("admin", "published"), "draft");
-  assert.equal(wordGroupStatusFor("off", "published"), "draft");
 });
 
 test("import: an authored passage written out as JSON is accepted, as it is", () => {

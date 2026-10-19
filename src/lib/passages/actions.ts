@@ -72,9 +72,9 @@ export async function savePassageProgressAction(
 /**
  * The "Publish to everyone" button on the Passages page: flips the Passages
  * switch between Admin preview (only admins see the section) and On (everyone
- * does), through the same save the Features page uses — so the passages' word
- * lessons are published or hidden together with it (see saveFeatureConfig and
- * syncPassageWordGroups). Admin-only, checked here and again by that save.
+ * does), through the same save the Features page uses. The passages' word lessons
+ * are not part of it: they stay hidden from Word Lists (see syncPassageWordGroups).
+ * Admin-only, checked here and again by that save.
  */
 export async function setPassagesPublishedAction(publish: boolean): Promise<ActionResult> {
   const forbidden = await requireAdmin();

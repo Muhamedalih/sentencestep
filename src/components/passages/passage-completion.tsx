@@ -17,9 +17,9 @@ import { cn } from "@/lib/utils";
  * The end of a passage, laid out to fit one screen: a small "finished" card with
  * the score and the way on at the left, and the passage's words at the right —
  * each with its Arabic meaning, the sentence it was met in (the word lit up)
- * and a button to hear it. They are also a ready-made lesson in Word Lists; the
- * button under them goes there (or, for an admin looking at a passage that is
- * not published yet, to the admin preview of that lesson).
+ * and a button to hear it. They are also a lesson of their own, hidden from Word
+ * Lists; an admin gets a button to the admin preview of that lesson (a learner only
+ * gets one if an admin published the lesson on purpose).
  *
  * One audio element serves every word, so pressing a second word replaces the
  * first instead of talking over it; a word with no recorded clip falls back to
@@ -297,8 +297,7 @@ export function PassageCompletion({
               </PassageLinkButton>
               {wordsLink.adminPreview && (
                 <p className="text-muted-foreground text-xs">
-                  Admin preview: this word lesson is hidden from learners until Passages is
-                  published.
+                  Admin preview: this word lesson is hidden from learners.
                 </p>
               )}
             </div>

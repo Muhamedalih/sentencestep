@@ -70,7 +70,7 @@ export function storedQuestionsFor(seed: PassageSeed, sectionIndex: number): Sto
 /** Word Lists' own level scale: 1 = Beginner, 2 = Intermediate, 3 = Advanced. */
 export const WORD_LIST_LEVEL: Record<PassageSeed["level"], number> = { A1: 1, A2: 2, B1: 2, B2: 3 };
 
-/** The draft Word Lists group a passage's words become — hidden from learners until its passage is open to them (see syncPassageWordGroups). */
+/** The draft Word Lists group a passage's words become — hidden from learners for good (see syncPassageWordGroups). */
 export function wordGroupRowFor(seed: PassageSeed, orderIndex: number, isFree: boolean) {
   return {
     id: wordGroupIdFor(seed.slug),

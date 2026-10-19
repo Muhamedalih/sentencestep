@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 };
 
 const WORD_LESSON_TEXT = {
-  published: "Open to learners in Word Lists.",
-  draft: "Hidden — it opens in Word Lists when the passage is published and the section is On.",
+  published: "Listed in Word Lists — a passage's word lesson is meant to stay hidden.",
+  draft: "Hidden from learners — a passage's word lesson is never listed in Word Lists.",
   archived: "Archived in Word Lists.",
 } as const;
 
@@ -68,7 +68,7 @@ export default async function AdminPassagePage({
           <CardTitle className="text-base">Publishing</CardTitle>
           <CardDescription>
             A draft is seen by admins only, as a preview. A Premium passage opens for subscribers
-            and admins; everyone else sees its lock screen. Its word lesson follows.
+            and admins; everyone else sees its lock screen.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
