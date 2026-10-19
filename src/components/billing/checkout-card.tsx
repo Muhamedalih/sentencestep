@@ -27,6 +27,7 @@ import { upgradeSignInHref } from "@/lib/billing/after-payment";
 import { premiumBenefits } from "@/lib/billing/benefits";
 import { startCheckout } from "@/lib/billing/checkout-actions";
 import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
+import { BINANCE_PAY_METHOD, CARD_METHODS, IRAQI_WALLET_METHODS } from "@/lib/billing/pay-methods";
 import type { PlanView } from "@/lib/billing/plan-views";
 import type { PlanId } from "@/lib/billing/plans";
 import { formatDayCount } from "@/lib/i18n/format-days";
@@ -36,13 +37,6 @@ import { cn } from "@/lib/utils";
 const initialState: CheckoutActionState = {};
 
 const PLAN_NAME_KEYS = { "1m": "plan1m", "3m": "plan3m", "6m": "plan6m" } as const;
-
-/** The ways to pay on the payment partner's page, written the way each brand writes itself, so never translated. */
-const CARD_METHODS = ["Visa", "Mastercard"] as const;
-/** Iraqi wallets and bank accounts: only someone in Iraq can use them, so only they are shown them. */
-const IRAQI_WALLET_METHODS = ["Super Qi", "ZainCash", "FIB"] as const;
-/** The brand's own name, never translated; only listed while Binance Pay is offered to this visitor. */
-const BINANCE_PAY_METHOD = "Binance Pay";
 
 interface CheckoutCardProps {
   /** Prepared on the server for the visitor's tier: every figure is already formatted, in USD. */
@@ -158,10 +152,6 @@ export function CheckoutCard({
     <>
       <Card className="border-primary/25 gap-0 overflow-hidden rounded-2xl py-0 shadow-lg">
         <div className="relative overflow-hidden bg-[linear-gradient(135deg,oklch(0.44_0.2_273),oklch(0.33_0.17_287))] px-6 pt-6 pb-7 text-white">
-          <div
-            aria-hidden="true"
-            className="bg-accent/25 pointer-events-none absolute -end-12 -top-16 size-48 rounded-full blur-3xl"
-          />
           <div className="relative flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-transparent bg-white/15 text-white backdrop-blur-sm">
@@ -207,10 +197,10 @@ export function CheckoutCard({
             {afterPaymentPath && <input type="hidden" name="next" value={afterPaymentPath} />}
             {offerNotice && (
               <p
-                className="bg-accent/15 border-accent/40 text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm font-medium"
+                className="bg-muted/50 border-border text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm font-medium"
                 dir="auto"
               >
-                <Gift className="text-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <Gift className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 <span>
                   {offerNotice.bonusDays === null
                     ? t.premium.launchOfferBannerPerPlan
@@ -245,7 +235,7 @@ export function CheckoutCard({
                         checked
                           ? "border-primary bg-primary/5 shadow-sm"
                           : plan.badge === "recommended"
-                            ? "border-accent/60 hover:border-primary/50"
+                            ? "border-success/60 hover:border-primary/50"
                             : "border-border hover:border-primary/40",
                       )}
                     >
@@ -288,7 +278,7 @@ export function CheckoutCard({
                         {plan.bonusDays > 0 && (
                           <span
                             dir="auto"
-                            className="bg-accent/20 border-accent/40 text-foreground rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap"
+                            className="bg-success/12 border-success/30 dark:text-success rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-emerald-700"
                           >
                             {t.premium.launchOfferChip.replace(
                               "{days}",
@@ -300,7 +290,7 @@ export function CheckoutCard({
                     </div>
 
                     {plan.badge === "recommended" && (
-                      <span className="bg-accent text-accent-foreground ring-background absolute start-4 -top-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shadow-sm ring-2">
+                      <span className="bg-success text-success-foreground ring-background absolute start-4 -top-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shadow-sm ring-2">
                         <Star className="size-3 fill-current" aria-hidden="true" />
                         {t.premium.recommendedBadge}
                       </span>

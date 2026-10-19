@@ -66,8 +66,3 @@ export function buildPlanViews(tier: PricingTier, bonus: PlanBonusDays = 0): Pla
 export function cheapestPerMonth(tier: PricingTier): string {
   return formatUsdExact(Math.min(...PLANS.map((plan) => perMonthCents(tier, plan.id))));
 }
-
-/** The smallest single payment across the plans, e.g. "$2": the "from" figure on the button of a short look at locked content. */
-export function cheapestPayment(tier: PricingTier): string {
-  return formatUsd(Math.min(...PLANS.map((plan) => planPriceCents(tier, plan.id))));
-}

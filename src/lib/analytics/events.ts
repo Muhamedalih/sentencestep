@@ -25,9 +25,6 @@ import type { LearningMode } from "@/types/content";
 export type AnalyticsEventCategory =
   "AUTH" | "LEARNING" | "CONTENT" | "PROGRESS" | "PREMIUM" | "ENGAGEMENT";
 
-/** Which lock a visitor met: the full offer (`gate`), or a short look at the content with a button (`preview`). */
-export type PaywallShape = "gate" | "preview";
-
 interface LessonProperties {
   lessonId: string;
   mode: LearningMode;
@@ -64,8 +61,8 @@ export type AnalyticsEvent =
       /** A visitor was shown a lock page instead of the content (PremiumLocked / WordGroupLocked / PassageLocked) — the step before UPGRADE_VIEWED, and the only place the number of people who actually hit the paywall is known (PREMIUM_CONTENT_VIEWED only fires for those who got in). One row per page render, so count distinct users, not rows. See trackPaywallViewed. `shape` says which lock they met: the full offer, a short look at the content, or the screen after the free path (absent on rows written before those existed: the full offer). */
       properties:
         | { kind: "lesson"; mode: LearningMode; lessonId: string }
-        | { kind: "word_group"; groupId: string; shape?: PaywallShape }
-        | { kind: "passage"; passageId: string; shape?: PaywallShape };
+        | { kind: "word_group"; groupId: string }
+        | { kind: "passage"; passageId: string };
     }
   | { name: "UPGRADE_VIEWED"; category: "PREMIUM"; properties: Record<string, never> }
   | {

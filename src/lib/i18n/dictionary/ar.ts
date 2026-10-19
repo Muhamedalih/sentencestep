@@ -330,15 +330,6 @@ export const ar: Dictionary = {
     termsAgreementPrefix: "بإنشاء حساب، فإنك توافق على",
     termsAgreementAnd: "و",
   },
-  freePath: {
-    previewPassageTitle: "هذه أول {n} أسطر",
-    previewPassageRest: "باقي النص في المميّز.",
-    previewPassageCta: "افتح النص كاملاً · من {amount}",
-    previewWordsTitle: "هذه أول {n} كلمات",
-    previewWordsRest: "باقي القائمة في المميّز.",
-    previewWordsCta: "افتح القائمة كاملة · من {amount}",
-    previewBack: "رجوع",
-  },
   premium: {
     lockedContentAriaLabel: "{title} — محتوى مميز، اضغط للتفاصيل",
     lockedChip: "للمشتركين",

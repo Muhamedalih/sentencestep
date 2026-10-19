@@ -4,23 +4,28 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Check, Lock, LockOpen, Sparkles } from "lucide-react";
+import { Check, Gift, Lock, LockOpen, Sparkles } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
+import type { GatePay } from "@/lib/billing/gate-pay";
+import { formatDayCount } from "@/lib/i18n/format-days";
 import { popIn } from "@/lib/motion";
 
 /**
  * The card a learner sees when they open a lesson or a word list that is part
  * of Premium. One card, two shapes. On a laptop it is split: the lesson on the
  * left (its own artwork, title and a line about it), and on the right a deep
- * indigo panel, in the site's violet and amber, that says what one payment
- * opens and carries the one button. On a phone the same two halves stack, the
- * panel becoming the lower sheet, so the button is always one thumb away.
+ * indigo panel, in the site's violet, that says what one payment opens, shows the
+ * running offer and the ways to pay, and carries the one button. On a phone the
+ * same two halves stack, the panel becoming the lower sheet, so the button is
+ * always one thumb away.
  *
  * Everything it says is true: the figures come from the real library (and are
- * left out when too small to quote), the price is the cheapest real plan, and
- * there is no countdown, no scarcity and no promise about refunds or offers.
+ * left out when too small to quote), the price is the cheapest real plan, the offer
+ * row is there only while an offer really runs (the same numbers /upgrade shows), the
+ * ways to pay are the ones /upgrade lists for this visitor, and there is no countdown
+ * and no promise about refunds.
  *
  * Text blocks use dir="auto" so Arabic reads right to left inside the app's
  * left-to-right layout, the same way the rest of the interface handles it.
@@ -43,16 +48,21 @@ export interface PremiumGateProps {
   ctaHref: string;
   /** The cheapest per-month USD price for this visitor's tier, e.g. "$1.17". */
   fromPrice: string;
+  /** The running offer and the ways to pay, as /upgrade shows them (see getGatePay). */
+  pay: GatePay;
   backHref: string;
   backLabel: string;
 }
 
 // The panel keeps the same deep indigo in every theme, so its white text always
-// reads well; the amber is the site's own accent colour.
+// reads well. Everything on it is white, violet or (for the offer) a soft mint.
 const PANEL_BACKGROUND =
   "linear-gradient(155deg, oklch(0.42 0.17 275) 0%, oklch(0.27 0.13 283) 100%)";
-const PANEL_GLOW_AMBER = "oklch(0.78 0.16 75 / 0.3)";
+const PANEL_GLOW_SOFT = "oklch(0.78 0.1 285 / 0.26)";
 const PANEL_GLOW_VIOLET = "oklch(0.62 0.21 290 / 0.55)";
+const PANEL_LABEL = "oklch(0.88 0.06 285)";
+const PANEL_MINT = "oklch(0.9 0.1 165)";
+const PANEL_BUTTON_TEXT = "oklch(0.27 0.13 283)";
 const PANEL_BAR_BACKGROUND = "oklch(0.27 0.13 283 / 0.94)";
 
 export function PremiumGate({
@@ -68,10 +78,11 @@ export function PremiumGate({
   benefits,
   ctaHref,
   fromPrice,
+  pay,
   backHref,
   backLabel,
 }: PremiumGateProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const titleId = useId();
   // On a phone the button can sit below the fold: while the real one is out of
   // sight, a slim bar at the bottom carries the price and the same button.
@@ -108,11 +119,7 @@ export function PremiumGate({
             className="from-card/85 pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent"
           />
           <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white shadow-sm backdrop-blur-md">
-            <Sparkles
-              className="size-3.5"
-              style={{ color: "oklch(0.82 0.15 78)" }}
-              aria-hidden="true"
-            />
+            <Sparkles className="size-3.5" aria-hidden="true" />
             <span dir="auto">{badge}</span>
           </span>
         </div>
@@ -165,7 +172,7 @@ export function PremiumGate({
         <div
           aria-hidden="true"
           className="absolute -end-24 -top-28 -z-10 size-72 rounded-full blur-3xl"
-          style={{ background: PANEL_GLOW_AMBER }}
+          style={{ background: PANEL_GLOW_SOFT }}
         />
         <div
           aria-hidden="true"
@@ -175,7 +182,7 @@ export function PremiumGate({
 
         <p
           className="flex items-center gap-2 text-xs font-semibold tracking-[0.16em]"
-          style={{ color: "oklch(0.84 0.14 78)" }}
+          style={{ color: PANEL_LABEL }}
         >
           <Sparkles className="size-3.5" aria-hidden="true" />
           SENTENCESTEP PREMIUM
@@ -201,8 +208,7 @@ export function PremiumGate({
               className="flex items-start gap-3 text-sm leading-snug text-white/90"
             >
               <span
-                className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-white/15"
-                style={{ color: "oklch(0.86 0.14 80)" }}
+                className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-white/15 text-white"
                 aria-hidden="true"
               >
                 <Check className="size-3" strokeWidth={3} />
@@ -211,6 +217,54 @@ export function PremiumGate({
             </li>
           ))}
         </ul>
+
+        {pay.offer && (
+          <div
+            className="flex flex-col gap-2.5 rounded-xl border px-3.5 py-3"
+            style={{
+              color: PANEL_MINT,
+              borderColor: "oklch(0.9 0.1 165 / 0.3)",
+              backgroundColor: "oklch(0.9 0.1 165 / 0.1)",
+            }}
+          >
+            <p dir="auto" className="flex items-start gap-2 text-sm font-medium">
+              <Gift className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>
+                {pay.offer.shared === null
+                  ? t.premium.launchOfferBannerPerPlan
+                  : t.premium.launchOfferBanner.replace(
+                      "{days}",
+                      formatDayCount(t.premium, locale, pay.offer.shared),
+                    )}
+              </span>
+            </p>
+            {pay.offer.shared === null && (
+              <ul dir="auto" className="grid grid-cols-3 gap-1.5">
+                {(
+                  [
+                    ["1m", t.premium.plan1m],
+                    ["3m", t.premium.plan3m],
+                    ["6m", t.premium.plan6m],
+                  ] as const
+                ).map(([plan, name]) => (
+                  <li
+                    key={plan}
+                    dir="auto"
+                    className="flex flex-col items-center gap-0.5 rounded-lg bg-white/10 px-1.5 py-2 text-center"
+                  >
+                    <span className="text-[11px] text-white/65">{name}</span>
+                    <span className="text-xs leading-tight font-medium text-white">
+                      {t.premium.launchOfferChip.replace(
+                        "{days}",
+                        formatDayCount(t.premium, locale, pay.offer!.byPlan[plan]),
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div ref={ctaRef} className="flex flex-col gap-3 border-t border-white/15 pt-5">
           <p dir="auto" className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-white/70">
@@ -224,7 +278,8 @@ export function PremiumGate({
           <Button
             asChild
             size="lg"
-            className="bg-accent text-accent-foreground hover:bg-accent/90 h-12 w-full text-base font-semibold shadow-lg shadow-black/25"
+            className="h-12 w-full bg-white text-base font-semibold shadow-lg shadow-black/25 hover:bg-white/90"
+            style={{ color: PANEL_BUTTON_TEXT }}
           >
             <Link href={ctaHref} dir="auto">
               <LockOpen aria-hidden="true" />
@@ -235,6 +290,21 @@ export function PremiumGate({
           <p dir="auto" className="text-center text-xs text-balance text-white/60">
             {t.premium.gateTrust}
           </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
+            <span dir="auto" className="text-white/60">
+              {t.premium.acceptedMethodsLabel}
+            </span>
+            {pay.methods.map((name) => (
+              <span
+                key={name}
+                dir="ltr"
+                className="rounded-md border border-white/20 bg-white/10 px-2 py-0.5 font-medium text-white/85"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
         </div>
 
         <Link
@@ -268,7 +338,8 @@ export function PremiumGate({
             <Button
               asChild
               size="lg"
-              className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0 font-semibold shadow-lg shadow-black/25"
+              className="shrink-0 bg-white font-semibold shadow-lg shadow-black/25 hover:bg-white/90"
+              style={{ color: PANEL_BUTTON_TEXT }}
             >
               <Link href={ctaHref} dir="auto">
                 <LockOpen aria-hidden="true" />

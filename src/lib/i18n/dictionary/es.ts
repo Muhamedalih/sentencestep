@@ -354,15 +354,6 @@ export const es: Dictionary = {
     termsAgreementPrefix: "Al crear una cuenta, aceptas nuestros",
     termsAgreementAnd: "y",
   },
-  freePath: {
-    previewPassageTitle: "Estas son las primeras {n} líneas",
-    previewPassageRest: "El resto del texto está en Premium.",
-    previewPassageCta: "Desbloquea el texto · desde {amount}",
-    previewWordsTitle: "Estas son las primeras {n} palabras",
-    previewWordsRest: "El resto de la lista está en Premium.",
-    previewWordsCta: "Desbloquea la lista · desde {amount}",
-    previewBack: "Volver",
-  },
   premium: {
     lockedContentAriaLabel: "{title} — contenido premium, toca para ver detalles",
     lockedChip: "Premium",

@@ -344,15 +344,6 @@ export const tr: Dictionary = {
     termsAgreementPrefix: "Bir hesap oluşturarak şunları kabul edersiniz:",
     termsAgreementAnd: "ve",
   },
-  freePath: {
-    previewPassageTitle: "İlk {n} satır bunlar",
-    previewPassageRest: "Metnin geri kalanı Premium'da.",
-    previewPassageCta: "Metni açın · {amount} fiyatından",
-    previewWordsTitle: "İlk {n} kelime bunlar",
-    previewWordsRest: "Listenin geri kalanı Premium'da.",
-    previewWordsCta: "Listeyi açın · {amount} fiyatından",
-    previewBack: "Geri",
-  },
   premium: {
     lockedContentAriaLabel: "{title} — premium içerik, ayrıntılar için dokunun",
     lockedChip: "Premium",

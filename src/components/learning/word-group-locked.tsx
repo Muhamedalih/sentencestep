@@ -2,6 +2,7 @@
 
 import { PremiumGate } from "@/components/learning/premium-gate";
 import { useLocale } from "@/components/providers/locale-provider";
+import type { GatePay } from "@/lib/billing/gate-pay";
 import type { GateFigures } from "@/lib/stats/content-stats";
 
 /**
@@ -56,6 +57,7 @@ export function WordGroupLocked({
   description,
   supportDescription,
   fromPrice,
+  pay,
   figures,
 }: {
   title: string;
@@ -65,6 +67,8 @@ export function WordGroupLocked({
   supportDescription?: string;
   /** The cheapest per-month USD price for this visitor's tier, e.g. "$1.17" — see getFromMonthlyPrice. */
   fromPrice: string;
+  /** The running offer and the ways to pay (see getGatePay). */
+  pay: GatePay;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
 }) {
@@ -91,6 +95,7 @@ export function WordGroupLocked({
       ]}
       ctaHref="/upgrade"
       fromPrice={fromPrice}
+      pay={pay}
       backHref="/learn/word-lists"
       backLabel={t.wordLists.backToWordLists}
     />

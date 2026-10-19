@@ -345,15 +345,6 @@ export const en: Dictionary = {
     termsAgreementPrefix: "By creating an account, you agree to our",
     termsAgreementAnd: "and",
   },
-  freePath: {
-    previewPassageTitle: "These are the first {n} lines",
-    previewPassageRest: "The rest of the passage is in Premium.",
-    previewPassageCta: "Unlock the full passage · from {amount}",
-    previewWordsTitle: "These are the first {n} words",
-    previewWordsRest: "The rest of the list is in Premium.",
-    previewWordsCta: "Unlock the full list · from {amount}",
-    previewBack: "Back",
-  },
   premium: {
     lockedContentAriaLabel: "{title} — premium content, tap for details",
     lockedChip: "Premium",

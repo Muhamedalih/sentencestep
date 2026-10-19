@@ -1,18 +1,15 @@
-import { LockedPreview } from "@/components/learning/locked-preview";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
-import { getFromMonthlyPrice, getFromPaymentPrice } from "@/lib/billing/from-price";
+import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getGatePay } from "@/lib/billing/gate-pay";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { getGateFigures } from "@/lib/stats/gate-figures";
-import { fetchWordGroupPreview } from "@/lib/supabase/queries/locked-preview";
 import type { WordGroup } from "@/types/word-lists";
 
 /**
  * What a visitor sees on a word list that is part of Premium, for each of the three pages that
- * can open one (practice, Learn and the word wall): a short look at its first words with one
- * calm button (see LockedPreview), or — when those words can't be read — the full lock
- * (WordGroupLocked). Counts the view with the shape that was shown, in the same batch as the
- * reads it needs, so it adds no wait.
+ * can open one (practice, Learn and the word wall): the lock card (WordGroupLocked). Counts the
+ * view in the same batch as the reads it needs, so it adds no wait.
  */
 export async function WordGroupLockScreen({
   group,
@@ -21,29 +18,11 @@ export async function WordGroupLockScreen({
   group: Pick<WordGroup, "id" | "title" | "supportTitle" | "description" | "supportDescription">;
   locale: SupportLocale | null;
 }) {
-  const preview = await fetchWordGroupPreview(group.id, locale ?? undefined);
-  if (preview) {
-    const [previewPrice] = await Promise.all([
-      getFromPaymentPrice(),
-      trackPaywallViewed({ kind: "word_group", groupId: group.id, shape: "preview" }),
-    ]);
-    return (
-      <LockedPreview
-        kind="words"
-        title={group.title}
-        supportTitle={group.supportTitle}
-        lines={preview.lines}
-        fromPrice={previewPrice}
-        ctaHref="/upgrade"
-        backHref="/learn/word-lists"
-      />
-    );
-  }
-
-  const [fromPrice, figures] = await Promise.all([
+  const [fromPrice, figures, pay] = await Promise.all([
     getFromMonthlyPrice(),
     getGateFigures(locale),
-    trackPaywallViewed({ kind: "word_group", groupId: group.id, shape: "gate" }),
+    getGatePay(),
+    trackPaywallViewed({ kind: "word_group", groupId: group.id }),
   ]);
   return (
     <WordGroupLocked
@@ -52,6 +31,7 @@ export async function WordGroupLockScreen({
       description={group.description}
       supportDescription={group.supportDescription}
       fromPrice={fromPrice}
+      pay={pay}
       figures={figures}
     />
   );

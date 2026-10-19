@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { LockedPreview } from "@/components/learning/locked-preview";
 import { PassageLocked } from "@/components/passages/passage-locked";
 import { PassageReader } from "@/components/passages/passage-reader";
 import { isAdmin } from "@/lib/admin/access";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getFromMonthlyPrice, getFromPaymentPrice } from "@/lib/billing/from-price";
+import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getGatePay } from "@/lib/billing/gate-pay";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
@@ -16,7 +16,6 @@ import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { getCurrentUser } from "@/lib/supabase/auth";
-import { PREVIEW_LINE_COUNT } from "@/lib/supabase/queries/locked-preview";
 
 /**
  * The full-screen passage reader — outside the "(dashboard)" route group, same
@@ -69,41 +68,11 @@ export default async function PassageReaderPage({
     (passage.isFree && !summaries.some((summary) => !summary.isFree)) ||
     (await hasPremiumAccess());
   if (!canOpenPassage(passage, canOpenPremium)) {
-    // A short look at the first lines instead of the full lock: what is behind it is something
-    // they have now read, and the way on is one calm card (see LockedPreview). The full lock
-    // stays for a passage with no lines to show.
-    const firstLines = passage.sections[0]?.sentences.slice(0, PREVIEW_LINE_COUNT) ?? [];
-    if (firstLines.length > 0) {
-      const [previewPrice] = await Promise.all([
-        getFromPaymentPrice(),
-        trackPaywallViewed({ kind: "passage", passageId: passage.id, shape: "preview" }),
-      ]);
-      return (
-        <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
-          <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
-            <LockedPreview
-              kind="passage"
-              title={passage.title}
-              supportTitle={locale === "ar" ? passage.titleAr : undefined}
-              lines={firstLines.map((line) => ({
-                id: line.id,
-                en: line.speaker ? `${line.speaker}: ${line.en}` : line.en,
-                // Only Arabic translations are written so far (see PassageSentence.ar).
-                ...(locale === "ar" && line.ar ? { support: line.ar } : {}),
-              }))}
-              fromPrice={previewPrice}
-              ctaHref="/upgrade"
-              backHref="/learn/passages"
-            />
-          </div>
-        </div>
-      );
-    }
-
-    const [fromPrice, figures] = await Promise.all([
+    const [fromPrice, figures, pay] = await Promise.all([
       getFromMonthlyPrice(),
       getGateFigures(locale),
-      trackPaywallViewed({ kind: "passage", passageId: passage.id, shape: "gate" }),
+      getGatePay(),
+      trackPaywallViewed({ kind: "passage", passageId: passage.id }),
     ]);
     return (
       <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
@@ -117,6 +86,7 @@ export default async function PassageReaderPage({
             summary={passage.summary}
             summaryAr={passage.summaryAr}
             fromPrice={fromPrice}
+            pay={pay}
             figures={figures}
           />
         </div>

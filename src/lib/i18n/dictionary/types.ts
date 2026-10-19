@@ -389,16 +389,6 @@ export interface Dictionary {
    * lesson, story, passage or word list. Everything here says only what is true: no
    * countdown, no scarcity, nothing about offers.
    */
-  /** The short look at a Premium passage or word list (see LockedPreview): `{n}` is how many are shown, `{amount}` the smallest single payment ("$2"), placed where the language wants it. */
-  freePath: {
-    previewPassageTitle: string;
-    previewPassageRest: string;
-    previewPassageCta: string;
-    previewWordsTitle: string;
-    previewWordsRest: string;
-    previewWordsCta: string;
-    previewBack: string;
-  };
   premium: {
     /** Generic `{title} — premium content, tap for details` aria-label, reused across lesson/story/word-group cards — see wordLists.lockedAriaLabel's doc comment for why the word-group-specific wording it used to carry was replaced by this. */
     lockedContentAriaLabel: string;

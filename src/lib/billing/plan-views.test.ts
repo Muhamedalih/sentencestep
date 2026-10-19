@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildPlanViews, cheapestPayment, cheapestPerMonth } from "./plan-views";
+import { buildPlanViews, cheapestPerMonth } from "./plan-views";
 
 test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving figures", () => {
   assert.deepEqual(buildPlanViews("A"), [
@@ -88,11 +88,6 @@ test("buildPlanViews: the USDT amount is the dollar price as a plain number, one
 test("cheapestPerMonth: the longest plan's monthly price in each tier", () => {
   assert.equal(cheapestPerMonth("A"), "$1.17");
   assert.equal(cheapestPerMonth("B"), "$1.67");
-});
-
-test("cheapestPayment: the smallest single payment in each tier", () => {
-  assert.equal(cheapestPayment("A"), "$2");
-  assert.equal(cheapestPayment("B"), "$3");
 });
 
 test("buildPlanViews: an offer with different days per plan puts each plan's own days on its card", () => {
