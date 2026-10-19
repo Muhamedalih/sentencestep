@@ -48,16 +48,18 @@ export default async function AdminFreeAccessPage() {
         <CardHeader>
           <CardTitle className="text-lg">Launch offer</CardTitle>
           <CardDescription>
-            A number of bonus days added to every purchase until a last day (through the end of that
-            day, UTC). It is shown on the upgrade page, applied when someone starts a payment, and
-            never changes what a plan costs. Nobody can buy while everything is free, except an
-            account you have excluded to try the paid flow. Leave it off, or remove it, for no
-            offer.
+            A number of bonus days added to a purchase until a last day (through the end of that
+            day, UTC): the same for every plan, or a different number for each. It is shown on the
+            upgrade page, applied when someone starts a payment, and never changes what a plan
+            costs. Nobody can buy while everything is free, except an account you have excluded to
+            try the paid flow. Leave it off, or remove it, for no offer.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <LaunchOfferForm
             initialBonusDays={offer?.bonusDays ?? 0}
+            initialBonusDays3m={offer?.planBonusDays?.["3m"] ?? null}
+            initialBonusDays6m={offer?.planBonusDays?.["6m"] ?? null}
             initialEndsOn={offer?.endsOn ?? null}
             initialStatus={offerStatus}
           />

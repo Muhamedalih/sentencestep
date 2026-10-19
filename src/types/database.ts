@@ -471,6 +471,10 @@ export interface Database {
           launch_offer_bonus_days: number;
           /** The last day of the launch offer (it runs through the end of that day, UTC). */
           launch_offer_ends_on: string | null;
+          /** Bonus days for the three-month plan when they differ from launch_offer_bonus_days; null means the same, 0 none. */
+          launch_offer_bonus_days_3m: number | null;
+          /** The same for the six-month plan. */
+          launch_offer_bonus_days_6m: number | null;
           updated_at: string;
         };
         Insert: {
@@ -478,6 +482,8 @@ export interface Database {
           free_for_all?: boolean;
           launch_offer_bonus_days?: number;
           launch_offer_ends_on?: string | null;
+          launch_offer_bonus_days_3m?: number | null;
+          launch_offer_bonus_days_6m?: number | null;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["access_settings"]["Insert"]>;

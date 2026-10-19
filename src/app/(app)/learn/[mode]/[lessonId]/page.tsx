@@ -11,7 +11,7 @@ import { LockedPreview } from "@/components/learning/locked-preview";
 import { PremiumLocked } from "@/components/learning/premium-locked";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { trackFreePathRedirected, trackPaywallViewed } from "@/lib/analytics/paywall";
-import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getFromMonthlyPrice, getFromPaymentPrice } from "@/lib/billing/from-price";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -185,7 +185,10 @@ export default async function LessonPage({
 
     const preview = await fetchLessonPreview(unit.id, locale ?? undefined);
     if (preview) {
-      await trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id, shape: "preview" });
+      const [previewPrice] = await Promise.all([
+        getFromPaymentPrice(),
+        trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id, shape: "preview" }),
+      ]);
       return (
         <div className="lesson-shell bg-background text-foreground min-h-svh">
           <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
@@ -194,6 +197,7 @@ export default async function LessonPage({
               title={unit.title}
               supportTitle={unit.supportTitle ?? (locale === "ar" ? unit.titleAr : undefined)}
               lines={preview.lines}
+              fromPrice={previewPrice}
               ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${unit.id}`)}`}
               backHref={`/learn/${mode}`}
             />

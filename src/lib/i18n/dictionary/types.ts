@@ -415,7 +415,7 @@ export interface Dictionary {
     statSentences: string;
     statWords: string;
     statDays: string;
-    /** The short look at something Premium: `{n}` is how many are shown. One title, one line about the rest and one button for each kind. */
+    /** The short look at something Premium: `{n}` is how many are shown. One title, one line about the rest and one button for each kind; the button says it unlocks, and `{amount}` is the smallest single payment ("$2"), placed where the language wants it. */
     previewLessonTitle: string;
     previewLessonRest: string;
     previewLessonCta: string;
@@ -531,6 +531,8 @@ export interface Dictionary {
     dayCountMany: string;
     /** Notice above the plan cards while the launch offer runs — `{days}` is a formatted day count ("7 days"), `{date}` the last day. */
     launchOfferBanner: string;
+    /** The same notice when the plans get different numbers of days (each plan's chip then carries its own) — only `{date}`. */
+    launchOfferBannerPerPlan: string;
     /** Chip on each plan card — `{days}` is a formatted day count. */
     launchOfferChip: string;
     /** Real aggregate figures under the pay button — `{count}` is a rounded-down, formatted number (see src/lib/stats/social-proof.ts). Only shown when the figure is large enough to quote. */

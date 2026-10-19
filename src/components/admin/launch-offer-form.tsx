@@ -19,14 +19,25 @@ const STATUS_LABEL: Record<Status, string> = {
 
 export function LaunchOfferForm({
   initialBonusDays,
+  initialBonusDays3m,
+  initialBonusDays6m,
   initialEndsOn,
   initialStatus,
 }: {
   initialBonusDays: number;
+  /** The three- and six-month plans' own numbers, or null when they follow the one-month plan's. */
+  initialBonusDays3m: number | null;
+  initialBonusDays6m: number | null;
   initialEndsOn: string | null;
   initialStatus: Status;
 }) {
   const [bonusDays, setBonusDays] = useState(initialBonusDays > 0 ? String(initialBonusDays) : "");
+  const [bonusDays3m, setBonusDays3m] = useState(
+    initialBonusDays3m === null ? "" : String(initialBonusDays3m),
+  );
+  const [bonusDays6m, setBonusDays6m] = useState(
+    initialBonusDays6m === null ? "" : String(initialBonusDays6m),
+  );
   const [endsOn, setEndsOn] = useState(initialEndsOn ?? "");
   const [status, setStatus] = useState<Status>(initialStatus);
   const [isPending, startTransition] = useTransition();
@@ -35,8 +46,12 @@ export function LaunchOfferForm({
   function save(clear: boolean) {
     setMessage(null);
     startTransition(async () => {
+      // A blank longer-plan box means "same as the one-month plan" (null), not zero.
+      const own = (value: string) => (clear || value.trim() === "" ? null : Number(value));
       const result = await setLaunchOffer({
         bonusDays: clear ? 0 : Number(bonusDays || 0),
+        bonusDays3m: own(bonusDays3m),
+        bonusDays6m: own(bonusDays6m),
         endsOn: clear ? "" : endsOn,
       });
       if (result.error) {
@@ -45,6 +60,8 @@ export function LaunchOfferForm({
       }
       if (clear) {
         setBonusDays("");
+        setBonusDays3m("");
+        setBonusDays6m("");
         setEndsOn("");
         setStatus("off");
       } else {
@@ -61,9 +78,9 @@ export function LaunchOfferForm({
         <Badge variant={status === "running" ? "default" : "muted"}>{STATUS_LABEL[status]}</Badge>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          Bonus days on every purchase
+          Bonus days: 1-month plan
           <Input
             type="number"
             inputMode="numeric"
@@ -75,11 +92,43 @@ export function LaunchOfferForm({
             placeholder="e.g. 7"
             disabled={isPending}
           />
-          <span className="text-muted-foreground text-xs font-normal">
-            Extra days added on top of the plan the buyer picks, for example 7. The price does not
-            change.
-          </span>
         </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          Bonus days: 3-month plan
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={MAX_BONUS_DAYS}
+            step={1}
+            value={bonusDays3m}
+            onChange={(event) => setBonusDays3m(event.target.value)}
+            placeholder="e.g. 10"
+            disabled={isPending}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          Bonus days: 6-month plan
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={MAX_BONUS_DAYS}
+            step={1}
+            value={bonusDays6m}
+            onChange={(event) => setBonusDays6m(event.target.value)}
+            placeholder="e.g. 15"
+            disabled={isPending}
+          />
+        </label>
+      </div>
+      <p className="text-muted-foreground -mt-2 text-xs">
+        Extra days added on top of the plan the buyer picks. The price does not change. Leave the
+        3-month or 6-month box empty to give the same number as the 1-month plan; 0 gives no bonus
+        on that plan. The Remove offer button ends the offer.
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           Last day of the offer
           <Input

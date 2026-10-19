@@ -19,12 +19,16 @@ export type LockedPreviewKind = "lesson" | "story" | "passage" | "words";
  *
  * The lines come from the server, already cut to the few that are shown (see
  * PREVIEW_LINE_COUNT); nothing here can show more.
+ *
+ * The button names what it is — unlocking, from the smallest real payment — so nobody taps it
+ * expecting the next lines for free and lands on a price they did not expect.
  */
 export function LockedPreview({
   kind,
   title,
   supportTitle,
   lines,
+  fromPrice,
   ctaHref,
   backHref,
 }: {
@@ -33,6 +37,8 @@ export function LockedPreview({
   /** The title in the learner's language, when there is one. */
   supportTitle?: string;
   lines: PreviewLine[];
+  /** The smallest single payment for this visitor's tier, e.g. "$2" (see getFromPaymentPrice). */
+  fromPrice: string;
   ctaHref: string;
   backHref: string;
 }) {
@@ -60,6 +66,8 @@ export function LockedPreview({
     },
   }[kind];
   const isWords = kind === "words";
+  // The amount is one slot in the sentence, so each language puts it where its grammar wants it.
+  const [ctaBefore = "", ctaAfter = ""] = copy.cta.split("{amount}");
 
   return (
     <motion.section
@@ -107,7 +115,11 @@ export function LockedPreview({
         </p>
         <Button asChild className="w-full">
           <Link href={ctaHref} dir="auto">
-            {copy.cta}
+            <span>
+              {ctaBefore}
+              <span dir="ltr">{fromPrice}</span>
+              {ctaAfter}
+            </span>
           </Link>
         </Button>
         <Link

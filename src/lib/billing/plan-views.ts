@@ -34,9 +34,13 @@ export interface PlanView {
   preselected: boolean;
 }
 
-export function buildPlanViews(tier: PricingTier, bonusDays = 0): PlanView[] {
+/** Launch-offer bonus days: one number for every plan, or one for each plan. */
+export type PlanBonusDays = number | Readonly<Record<PlanId, number>>;
+
+export function buildPlanViews(tier: PricingTier, bonus: PlanBonusDays = 0): PlanView[] {
   return PLANS.map((plan) => {
     const cents = planPriceCents(tier, plan.id);
+    const bonusDays = typeof bonus === "number" ? bonus : bonus[plan.id];
     return {
       id: plan.id,
       days: plan.days + bonusDays,
@@ -61,4 +65,9 @@ export function buildPlanViews(tier: PricingTier, bonusDays = 0): PlanView[] {
 /** The lowest per-month price across the plans, e.g. "$1.17": the "from" figure shown beside locked content. */
 export function cheapestPerMonth(tier: PricingTier): string {
   return formatUsdExact(Math.min(...PLANS.map((plan) => perMonthCents(tier, plan.id))));
+}
+
+/** The smallest single payment across the plans, e.g. "$2": the "from" figure on the button of a short look at locked content. */
+export function cheapestPayment(tier: PricingTier): string {
+  return formatUsd(Math.min(...PLANS.map((plan) => planPriceCents(tier, plan.id))));
 }

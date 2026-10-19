@@ -7,8 +7,11 @@ import {
   CHECKOUT_GRACE_MS,
   bonusDaysForCheckout,
   isOfferActive,
+  offerBonusDaysByPlan,
+  offerBonusDaysForPlan,
   offerEndsAt,
   parseLaunchOffer,
+  sharedBonusDays,
   validateLaunchOfferInput,
 } from "./launch-offer";
 
@@ -49,10 +52,116 @@ test("isOfferActive: shown through the end of the last day, not after", () => {
 
 test("bonusDaysForCheckout: the offer's days while it runs and for a short grace afterwards, then none", () => {
   const end = offerEndsAt(offer).getTime();
-  assert.equal(bonusDaysForCheckout(offer, new Date("2026-11-10T09:00:00.000Z")), 7);
-  assert.equal(bonusDaysForCheckout(offer, new Date(end + CHECKOUT_GRACE_MS - 1)), 7);
-  assert.equal(bonusDaysForCheckout(offer, new Date(end + CHECKOUT_GRACE_MS)), 0);
-  assert.equal(bonusDaysForCheckout(null, new Date("2026-11-10T09:00:00.000Z")), 0);
+  assert.equal(bonusDaysForCheckout(offer, new Date("2026-11-10T09:00:00.000Z"), "1m"), 7);
+  assert.equal(bonusDaysForCheckout(offer, new Date(end + CHECKOUT_GRACE_MS - 1), "1m"), 7);
+  assert.equal(bonusDaysForCheckout(offer, new Date(end + CHECKOUT_GRACE_MS), "1m"), 0);
+  assert.equal(bonusDaysForCheckout(null, new Date("2026-11-10T09:00:00.000Z"), "1m"), 0);
+});
+
+const perPlan = { bonusDays: 7, planBonusDays: { "3m": 10, "6m": 15 }, endsOn: "2026-11-30" };
+
+test("an offer with no per-plan numbers gives the same days on every plan, as before", () => {
+  assert.deepEqual(offerBonusDaysByPlan(offer), { "1m": 7, "3m": 7, "6m": 7 });
+  assert.equal(sharedBonusDays(offer), 7);
+  for (const plan of ["1m", "3m", "6m"] as const) {
+    assert.equal(bonusDaysForCheckout(offer, new Date("2026-11-10T09:00:00.000Z"), plan), 7);
+  }
+});
+
+test("parseLaunchOffer: the three- and six-month plans can have their own number", () => {
+  assert.deepEqual(
+    parseLaunchOffer({
+      launch_offer_bonus_days: 7,
+      launch_offer_ends_on: "2026-11-30",
+      launch_offer_bonus_days_3m: 10,
+      launch_offer_bonus_days_6m: 15,
+    }),
+    perPlan,
+  );
+  // Null or absent means "same as the one-month plan": the offer carries no per-plan numbers at all.
+  assert.deepEqual(
+    parseLaunchOffer({
+      launch_offer_bonus_days: 7,
+      launch_offer_ends_on: "2026-11-30",
+      launch_offer_bonus_days_3m: null,
+      launch_offer_bonus_days_6m: null,
+    }),
+    offer,
+  );
+  // One own number, the other plan follows the one-month plan; zero is a real "no bonus here".
+  assert.deepEqual(
+    parseLaunchOffer({
+      launch_offer_bonus_days: 7,
+      launch_offer_ends_on: "2026-11-30",
+      launch_offer_bonus_days_3m: null,
+      launch_offer_bonus_days_6m: 0,
+    }),
+    { bonusDays: 7, planBonusDays: { "6m": 0 }, endsOn: "2026-11-30" },
+  );
+});
+
+test("parseLaunchOffer: a bad per-plan number spoils the whole offer", () => {
+  for (const bad of [91, -1, 2.5, "10"]) {
+    assert.equal(
+      parseLaunchOffer({
+        launch_offer_bonus_days: 7,
+        launch_offer_ends_on: "2026-11-30",
+        launch_offer_bonus_days_3m: bad,
+      }),
+      null,
+      String(bad),
+    );
+  }
+});
+
+test("per-plan offer: each plan gets its own days at checkout and in the plan list", () => {
+  const now = new Date("2026-11-10T09:00:00.000Z");
+  assert.deepEqual(offerBonusDaysByPlan(perPlan), { "1m": 7, "3m": 10, "6m": 15 });
+  assert.equal(offerBonusDaysForPlan(perPlan, "3m"), 10);
+  assert.equal(bonusDaysForCheckout(perPlan, now, "1m"), 7);
+  assert.equal(bonusDaysForCheckout(perPlan, now, "3m"), 10);
+  assert.equal(bonusDaysForCheckout(perPlan, now, "6m"), 15);
+  // The plans differ, so no single "N days free with any plan" line may be shown.
+  assert.equal(sharedBonusDays(perPlan), null);
+  // After the grace, none of them.
+  const late = new Date(offerEndsAt(perPlan).getTime() + CHECKOUT_GRACE_MS);
+  assert.equal(bonusDaysForCheckout(perPlan, late, "6m"), 0);
+});
+
+test("per-plan offer: a zero for a plan means no bonus on it", () => {
+  const noBonusOnSix = { bonusDays: 7, planBonusDays: { "6m": 0 }, endsOn: "2026-11-30" };
+  assert.deepEqual(offerBonusDaysByPlan(noBonusOnSix), { "1m": 7, "3m": 7, "6m": 0 });
+  assert.equal(sharedBonusDays(noBonusOnSix), null);
+});
+
+test("validateLaunchOfferInput: per-plan numbers are kept, blanks follow the one-month plan", () => {
+  const now = new Date("2026-11-01T10:00:00.000Z");
+  assert.deepEqual(
+    validateLaunchOfferInput(
+      { bonusDays: 7, bonusDays3m: 10, bonusDays6m: 15, endsOn: "2026-11-30" },
+      now,
+    ),
+    { ok: true, clear: false, offer: perPlan },
+  );
+  assert.deepEqual(
+    validateLaunchOfferInput(
+      { bonusDays: 7, bonusDays3m: null, bonusDays6m: undefined, endsOn: "2026-11-30" },
+      now,
+    ),
+    { ok: true, clear: false, offer: offer },
+  );
+  for (const bad of [-1, 91, 2.5]) {
+    assert.equal(
+      validateLaunchOfferInput({ bonusDays: 7, bonusDays3m: bad, endsOn: "2026-11-30" }, now).ok,
+      false,
+      String(bad),
+    );
+  }
+  // Zero on the one-month plan still removes the offer, whatever the others say.
+  assert.deepEqual(
+    validateLaunchOfferInput({ bonusDays: 0, bonusDays3m: 10, endsOn: "2026-11-30" }, now),
+    { ok: true, clear: true },
+  );
 });
 
 test("validateLaunchOfferInput: zero bonus days clears the offer whatever the date says", () => {

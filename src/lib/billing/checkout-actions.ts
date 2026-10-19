@@ -59,7 +59,7 @@ export async function startCheckout(
 
   const country = resolvePricingCountry(await headers());
   // Decided here, on the server, for this moment — never from the form.
-  const bonusDays = bonusDaysForCheckout(await getLaunchOffer(), new Date());
+  const bonusDays = bonusDaysForCheckout(await getLaunchOffer(), new Date(), plan);
 
   const user = await getCurrentUser();
   if (user) {

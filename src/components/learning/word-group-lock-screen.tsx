@@ -1,7 +1,7 @@
 import { LockedPreview } from "@/components/learning/locked-preview";
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
-import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getFromMonthlyPrice, getFromPaymentPrice } from "@/lib/billing/from-price";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { getGateFigures } from "@/lib/stats/gate-figures";
 import { fetchWordGroupPreview } from "@/lib/supabase/queries/locked-preview";
@@ -23,13 +23,17 @@ export async function WordGroupLockScreen({
 }) {
   const preview = await fetchWordGroupPreview(group.id, locale ?? undefined);
   if (preview) {
-    await trackPaywallViewed({ kind: "word_group", groupId: group.id, shape: "preview" });
+    const [previewPrice] = await Promise.all([
+      getFromPaymentPrice(),
+      trackPaywallViewed({ kind: "word_group", groupId: group.id, shape: "preview" }),
+    ]);
     return (
       <LockedPreview
         kind="words"
         title={group.title}
         supportTitle={group.supportTitle}
         lines={preview.lines}
+        fromPrice={previewPrice}
         ctaHref="/upgrade"
         backHref="/learn/word-lists"
       />

@@ -18,7 +18,7 @@ import { firstParam, safeLessonPath } from "@/lib/billing/after-payment";
 import { premiumBenefits } from "@/lib/billing/benefits";
 import { devSetPlan } from "@/lib/billing/dev-actions";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
-import { isOfferActive } from "@/lib/billing/launch-offer";
+import { isOfferActive, offerBonusDaysByPlan, sharedBonusDays } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
@@ -77,10 +77,10 @@ export default async function UpgradePage({
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
-  const offer = await getLaunchOffer();
-  const offerBonusDays = isOfferActive(offer, new Date()) ? offer.bonusDays : 0;
+  const storedOffer = await getLaunchOffer();
+  const offer = isOfferActive(storedOffer, new Date()) ? storedOffer : null;
   const tier = tierForCountry(country);
-  const plans = buildPlanViews(tier, offerBonusDays);
+  const plans = buildPlanViews(tier, offer ? offerBonusDaysByPlan(offer) : 0);
 
   await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
 
@@ -102,10 +102,11 @@ export default async function UpgradePage({
         listPublicReviews(),
       ])
     : [null, null, null, []];
-  const offerNotice =
-    offer && offerBonusDays > 0
-      ? { bonusDays: offerBonusDays, endsOnLabel: formatLongDate(offer.endsOn, locale) }
-      : null;
+  // `bonusDays` is the one number every plan gets, or null when the plans differ (the banner then
+  // says so in general terms and each plan's own chip carries its number).
+  const offerNotice = offer
+    ? { bonusDays: sharedBonusDays(offer), endsOnLabel: formatLongDate(offer.endsOn, locale) }
+    : null;
   const socialProof =
     proof || ratings
       ? {

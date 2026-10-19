@@ -113,6 +113,23 @@ test("the free-path screens keep their placeholders in every language", () => {
   }
 });
 
+test("the button on the short look at locked content says it unlocks and keeps the price slot in every language", () => {
+  // The old wording ("Continue the lesson") read as a free way on, and people tapped it expecting one.
+  const readsAsFree = /continue the|keep reading|continúa|sigue leyendo|devam edin|أكمل|تابع/i;
+  for (const [name, dictionary] of Object.entries(dictionaries)) {
+    const f = dictionary.freePath;
+    for (const key of [
+      "previewLessonCta",
+      "previewStoryCta",
+      "previewPassageCta",
+      "previewWordsCta",
+    ] as const) {
+      assert.match(f[key], /\{amount\}/, `${name} ${key} keeps the price slot`);
+      assert.equal(readsAsFree.test(f[key]), false, `${name} ${key} reads as free: ${f[key]}`);
+    }
+  }
+});
+
 test("the screen after the free path promises what the product does: one payment, no auto-renewal", () => {
   assert.match(en.freePath.milestonePriceNote, /One payment/i);
   assert.match(en.freePath.milestonePriceNote, /no auto-renewal/i);

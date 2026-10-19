@@ -7,7 +7,7 @@ import { PassageReader } from "@/components/passages/passage-reader";
 import { isAdmin } from "@/lib/admin/access";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getFromMonthlyPrice, getFromPaymentPrice } from "@/lib/billing/from-price";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
@@ -74,7 +74,10 @@ export default async function PassageReaderPage({
     // stays for a passage with no lines to show.
     const firstLines = passage.sections[0]?.sentences.slice(0, PREVIEW_LINE_COUNT) ?? [];
     if (firstLines.length > 0) {
-      await trackPaywallViewed({ kind: "passage", passageId: passage.id, shape: "preview" });
+      const [previewPrice] = await Promise.all([
+        getFromPaymentPrice(),
+        trackPaywallViewed({ kind: "passage", passageId: passage.id, shape: "preview" }),
+      ]);
       return (
         <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
           <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
@@ -88,6 +91,7 @@ export default async function PassageReaderPage({
                 // Only Arabic translations are written so far (see PassageSentence.ar).
                 ...(locale === "ar" && line.ar ? { support: line.ar } : {}),
               }))}
+              fromPrice={previewPrice}
               ctaHref="/upgrade"
               backHref="/learn/passages"
             />

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildPlanViews, cheapestPerMonth } from "./plan-views";
+import { buildPlanViews, cheapestPayment, cheapestPerMonth } from "./plan-views";
 
 test("buildPlanViews: Tier A shows $2, $4 and $7 with their per-month and saving figures", () => {
   assert.deepEqual(buildPlanViews("A"), [
@@ -88,6 +88,29 @@ test("buildPlanViews: the USDT amount is the dollar price as a plain number, one
 test("cheapestPerMonth: the longest plan's monthly price in each tier", () => {
   assert.equal(cheapestPerMonth("A"), "$1.17");
   assert.equal(cheapestPerMonth("B"), "$1.67");
+});
+
+test("cheapestPayment: the smallest single payment in each tier", () => {
+  assert.equal(cheapestPayment("A"), "$2");
+  assert.equal(cheapestPayment("B"), "$3");
+});
+
+test("buildPlanViews: an offer with different days per plan puts each plan's own days on its card", () => {
+  const views = buildPlanViews("A", { "1m": 7, "3m": 10, "6m": 15 });
+  assert.deepEqual(
+    views.map((view) => [view.id, view.days, view.bonusDays]),
+    [
+      ["1m", 37, 7],
+      ["3m", 100, 10],
+      ["6m", 195, 15],
+    ],
+  );
+  // Prices and comparison figures are the plain ones.
+  const plain = buildPlanViews("A");
+  assert.deepEqual(
+    views.map((view) => [view.price, view.perMonth, view.savingsPercent]),
+    plain.map((view) => [view.price, view.perMonth, view.savingsPercent]),
+  );
 });
 
 test("buildPlanViews: a launch offer adds its days to every plan and changes no price, saving or per-month figure", () => {
