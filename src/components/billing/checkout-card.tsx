@@ -197,7 +197,7 @@ export function CheckoutCard({
             {afterPaymentPath && <input type="hidden" name="next" value={afterPaymentPath} />}
             {offerNotice && (
               <p
-                className="bg-muted/50 border-border text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm font-medium"
+                className="bg-success/12 border-success/30 text-foreground flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm font-medium"
                 dir="auto"
               >
                 <Gift className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />

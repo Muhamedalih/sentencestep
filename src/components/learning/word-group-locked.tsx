@@ -67,7 +67,7 @@ export function WordGroupLocked({
   supportDescription?: string;
   /** The cheapest per-month USD price for this visitor's tier, e.g. "$1.17" — see getFromMonthlyPrice. */
   fromPrice: string;
-  /** The running offer and the ways to pay (see getGatePay). */
+  /** The running offer (see getGatePay). */
   pay: GatePay;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
