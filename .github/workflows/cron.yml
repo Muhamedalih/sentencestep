@@ -10,7 +10,8 @@ name: Scheduled maintenance sweeps
 # scheduling feature needed. Schedules mirror vercel.json's original ones.
 on:
   schedule:
-    - cron: "0 15 * * *" # inactive-learners
+    - cron: "0 15 * * *" # inactive-learners-push, day-one-nudge, abandoned-checkout
+    - cron: "0 17 * * *" # inactive-learners (the weekly email reminder): two hours later, so new learners and unfinished payments get the day's warm-up room first
     - cron: "0 3 * * *" # translation-sweep
     # voice-sweep: originally */15 * * * * (every 15 min), disabled after a
     # provider switch invalidated the entire voice cache and this ran the
@@ -29,7 +30,7 @@ on:
 
 jobs:
   inactive-learners:
-    if: github.event.schedule == '0 15 * * *' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 17 * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Call /api/cron/inactive-learners
