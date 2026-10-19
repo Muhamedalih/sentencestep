@@ -1,0 +1,14 @@
+# Netlify reads this file in addition to the build settings in its dashboard (the
+# build command, publish directory and Next.js runtime plugin stay as set there).
+#
+# Why NODE_OPTIONS: in Netlify's build container Node's default heap limit is
+# about 2 GB, and `next build` compiles the whole app with webpack, which can
+# need more than that. On 8 October 2026 the production build of #70 died with
+# "JavaScript heap out of memory" (exit code 134) about 30 seconds into
+# "Creating an optimized production build", while the very same code built fine
+# in a deploy preview: the build's memory use varies from run to run (cached
+# files, source maps for error monitoring), so it had been sitting just under
+# the limit. Reproduced locally: the build fails with a 1 GB heap and passes with
+# 2 GB. 4 GB leaves it double the room.
+[build.environment]
+  NODE_OPTIONS = "--max-old-space-size=4096"
