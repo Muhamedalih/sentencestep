@@ -1,166 +1,20 @@
-import { NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
 
-import { isValidCronAuth } from "@/lib/cron/auth";
-import type { NotificationEvent } from "@/lib/email/events";
-import { getInactiveLearners } from "@/lib/email/inactive-learners";
-import {
-  markNotificationEventSent,
-  recordNotificationEvent,
-} from "@/lib/email/notification-events";
-import { sendTemplateEmail } from "@/lib/email/send";
-import { learningReminderEmail } from "@/lib/email/templates/reminder";
-import { getRequestOrigin } from "@/lib/request-origin";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { handleNudgeRequest } from "@/lib/email/nudges/route-handler";
 
 /**
- * Identifies learners inactive long enough to warrant a reminder and sends
- * one — triggered by an external scheduler, never by a user's browser being
- * open. vercel.json at the repo root registers this on a daily Vercel Cron
- * schedule once deployed there; any other scheduler that can call a URL on a
- * timer (a GitHub Actions schedule, cron-job.org) works the same way.
- *
- * Fails closed: without CRON_SECRET configured, or without a matching
- * Authorization header, this never runs.
- *
- * Handles both GET and POST with identical logic (see the two exports at
- * the bottom): Vercel Cron invokes scheduled endpoints with GET, while other
- * schedulers (GitHub Actions, cron-job.org, a manual curl) more commonly use
- * POST — both are gated by the exact same isValidCronAuth check either way.
+ * The weekly "your lesson is waiting" email to learners who have been away for a few days, run by
+ * the daily scheduler (.github/workflows/cron.yml). All of the work (who is eligible, the weekly
+ * limit per learner, the 20% who are deliberately not emailed, the pacing of a new sending domain,
+ * which route the email goes through) lives in src/lib/email/nudges/run.ts, shared with the two
+ * other nudge emails, so this is only the entry point. Sends nothing until NUDGE_EMAIL_MAX_PER_RUN
+ * is set on the server; `?dry=1` counts who would be emailed without sending; `?preview=<address>`
+ * sends one sample.
  */
-/**
- * Bounded on purpose, mirroring translation-sweep/voice-sweep's own
- * per-run caps (see those routes' doc comments for the Netlify timeout
- * incident that motivated them): a plain per-row loop of a DB write + an
- * admin user lookup + an email send scales linearly with how many
- * learners cross the inactivity threshold on a given day, so it needs a
- * ceiling to avoid timing out once the learner base is large. Safe to cap
- * without losing anyone — shouldNotify's `>=` threshold plus its weekly
- * dedupe bucket mean a learner left over this run is still eligible (not
- * yet notified for that week) on tomorrow's run.
- */
-const MAX_NOTIFICATIONS_PER_RUN = 500;
-
-/**
- * INACTIVE_REMINDER_MAX_SENDS_PER_RUN: how many reminder emails one run may
- * actually send. OFF unless set to a positive number: on Resend's free plan the
- * whole account gets 100 emails/day, shared with Supabase's sign-up confirmation
- * emails, and an uncapped run (up to 500) used the whole day's quota and made
- * sign-up fail with "Error sending confirmation email". Unset, empty, invalid or
- * "0" all mean off. Learners left over are picked up on a later day.
- */
-function maxSendsPerRun(): number {
-  const parsed = Number.parseInt(process.env.INACTIVE_REMINDER_MAX_SENDS_PER_RUN?.trim() ?? "", 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
-  return Math.min(parsed, MAX_NOTIFICATIONS_PER_RUN);
-}
-
-async function handleInactiveLearnersCron(request: Request): Promise<NextResponse> {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 501 });
-  }
-
-  const authHeader = request.headers.get("authorization") ?? "";
-  if (!isValidCronAuth(authHeader, cronSecret)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
-  // Off by default (see maxSendsPerRun): skip the whole run, including the read of
-  // every learner's activity, rather than do the work and send nothing.
-  const sendLimit = maxSendsPerRun();
-  if (sendLimit === 0) {
-    return NextResponse.json({ notified: 0, skipped: 0, failed: 0, disabled: true });
-  }
-
-  const supabase = createServiceRoleClient();
-  const now = new Date();
-  // Unlike a browser-originated Server Action (where the Origin header is
-  // set by the browser itself and can't be spoofed from page content), this
-  // is a machine-to-machine call — any client that knows CRON_SECRET could
-  // set an arbitrary Origin header. The request URL's own origin is
-  // trustworthy (the public address it was sent to, which Caddy sets itself), a
-  // client-sent Origin header is not, so only the former is used to build links
-  // in the emails this sends to real users.
-  const origin = getRequestOrigin(request);
-
-  let inactiveLearners;
-  try {
-    inactiveLearners = (await getInactiveLearners(now)).slice(0, MAX_NOTIFICATIONS_PER_RUN);
-  } catch {
-    return NextResponse.json({ error: "Failed to read learner activity." }, { status: 500 });
-  }
-
-  // Everything below this filter has a real side effect (notification
-  // ledger write, an outbound email) or an ordering requirement (the
-  // idempotency check must run before sending), so it stays per-row and
-  // sequential. This preferences lookup is a plain read with no such
-  // constraint, so it's batched into one query instead of one-per-eligible-row
-  // — the previous version did a round trip per streak row that passed
-  // shouldNotify, which scales linearly with active learner count.
-  const { data: prefsRows } = inactiveLearners.length
-    ? await supabase
-        .from("email_preferences")
-        .select("user_id, learning_reminders")
-        .in(
-          "user_id",
-          inactiveLearners.map((row) => row.userId),
-        )
-    : { data: [] };
-  const prefsByUserId = new Map((prefsRows ?? []).map((p) => [p.user_id, p]));
-
-  let notified = 0;
-  let skipped = 0;
-  let failed = 0;
-
-  for (const { userId, daysInactive } of inactiveLearners) {
-    // Checked before recordNotificationEvent so a learner left over isn't marked
-    // as handled for the week without actually getting an email.
-    if (notified + failed >= sendLimit) break;
-
-    const event: NotificationEvent = { type: "INACTIVE_LEARNER", daysInactive };
-
-    const prefs = prefsByUserId.get(userId);
-    if (prefs && !prefs.learning_reminders) {
-      skipped += 1;
-      continue;
-    }
-
-    const record = await recordNotificationEvent(userId, event, "queued");
-    if (record.status === "duplicate") continue;
-
-    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
-    const email = authUser.user?.email;
-    if (!email) continue;
-
-    const displayName = (authUser.user?.user_metadata?.display_name as string | undefined) ?? null;
-    const content = learningReminderEmail({ origin, displayName, daysInactive });
-
-    // A real provider call can fail transiently (rate limit, timeout) for
-    // one learner without that being a reason to abort the whole run and
-    // skip every learner after them — each send is isolated so one failure
-    // is logged and counted, not thrown past this loop.
-    try {
-      const result = await sendTemplateEmail(email, content);
-      if (result.status === "sent") {
-        await markNotificationEventSent(record.id);
-        notified += 1;
-      }
-    } catch (error) {
-      failed += 1;
-      console.error("[cron:inactive-learners] sendTemplateEmail failed", {
-        userId,
-        error,
-      });
-    }
-  }
-
-  return NextResponse.json({ notified, skipped, failed });
-}
-
 export async function GET(request: Request): Promise<NextResponse> {
-  return handleInactiveLearnersCron(request);
+  return handleNudgeRequest(request, "reminder");
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  return handleInactiveLearnersCron(request);
+  return handleNudgeRequest(request, "reminder");
 }

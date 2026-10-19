@@ -149,3 +149,31 @@ test("getEmailProvider: EMAIL_PROVIDER=ses needs the SES keys and the sender, th
     },
   );
 });
+
+test("getEmailProvider: EMAIL_PROVIDER=hybrid uses both when both are set up, and the one that exists otherwise", () => {
+  const both = {
+    EMAIL_PROVIDER: "hybrid",
+    EMAIL_FROM_ADDRESS: "hello@example.com",
+    EMAIL_PROVIDER_API_KEY: "key",
+    AWS_SES_ACCESS_KEY_ID: "id",
+    AWS_SES_SECRET_ACCESS_KEY: "secret",
+  };
+  withEnv(both, () => {
+    assert.equal(getEmailProvider()?.name, "hybrid");
+  });
+  withEnv({ ...both, AWS_SES_SECRET_ACCESS_KEY: undefined }, () => {
+    assert.equal(getEmailProvider()?.name, "resend");
+  });
+  withEnv({ ...both, EMAIL_PROVIDER_API_KEY: undefined }, () => {
+    assert.equal(getEmailProvider()?.name, "ses");
+  });
+  withEnv(
+    { ...both, EMAIL_PROVIDER_API_KEY: undefined, AWS_SES_SECRET_ACCESS_KEY: undefined },
+    () => {
+      assert.equal(getEmailProvider(), null);
+    },
+  );
+  withEnv({ ...both, EMAIL_FROM_ADDRESS: undefined }, () => {
+    assert.equal(getEmailProvider(), null);
+  });
+});

@@ -25,7 +25,7 @@ export async function queueWelcomeEmail(user: WelcomeUser, origin: string): Prom
 
   try {
     const content = welcomeEmail({ origin, displayName: user.displayName });
-    await sendTemplateEmail(user.email, content);
+    await sendTemplateEmail(user.email, content, { priority: "bulk" });
   } catch (error) {
     console.error("[notifications] queueWelcomeEmail failed", error);
   }

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { abandonedCheckoutEmail, dayOneNudgeEmail, nudgeLanguage } from "./copy";
+import { abandonedCheckoutEmail, dayOneNudgeEmail, nudgeLanguage, reminderEmail } from "./copy";
 import type { NudgeLanguage } from "./copy";
 
 const LANGUAGES: NudgeLanguage[] = ["ar", "es", "tr", "en"];
@@ -98,4 +98,51 @@ test("abandonedCheckoutEmail: 'reply to this email' only when a reply address ex
   });
   assert.match(withReply.text, /reply to this email/i);
   assert.equal(/reply/i.test(without.text), false);
+});
+
+test("reminderEmail: complete in every language, and the offer line only while an offer runs", () => {
+  for (const language of LANGUAGES) {
+    const plain = reminderEmail({
+      origin: ORIGIN,
+      displayName: "Sara",
+      language,
+      showOffer: false,
+    });
+    const offer = reminderEmail({ origin: ORIGIN, displayName: "Sara", language, showOffer: true });
+    assert.ok(plain.subject.length > 5, language);
+    assert.ok(plain.html.includes(`${ORIGIN}/learn"`), `${language} cta`);
+    assert.equal(plain.html.includes(`${ORIGIN}/upgrade`), false, `${language} no offer link`);
+    assert.ok(offer.html.includes(`${ORIGIN}/upgrade"`), `${language} offer link`);
+    assert.ok(offer.text.includes(`${ORIGIN}/upgrade`), `${language} offer link in text`);
+    assert.ok(offer.html.length > plain.html.length, language);
+    assert.equal(FORBIDDEN.test(offer.html), false, language);
+    assert.equal(/\{[a-z]+\}/i.test(offer.html), false, `${language} unfilled placeholder`);
+  }
+});
+
+test("nudge emails: with an unsubscribe link the footer uses it and the one-click headers are sent", () => {
+  const unsubscribe = {
+    pageUrl: `${ORIGIN}/unsubscribe?u=1&t=2`,
+    headers: {
+      "List-Unsubscribe": `<${ORIGIN}/api/email/unsubscribe?u=1&t=2>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+  };
+  for (const language of LANGUAGES) {
+    const email = reminderEmail({
+      origin: ORIGIN,
+      displayName: null,
+      language,
+      showOffer: false,
+      unsubscribe,
+    });
+    assert.ok(email.html.includes(`${ORIGIN}/unsubscribe?u=1&amp;t=2`), `${language} footer link`);
+    assert.ok(email.text.includes(`${ORIGIN}/unsubscribe?u=1&t=2`), `${language} text footer`);
+    assert.equal(email.headers?.["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
+  }
+  const day = dayOneNudgeEmail({ origin: ORIGIN, displayName: null, language: "en", unsubscribe });
+  assert.ok(day.headers?.["List-Unsubscribe"]);
+  const without = dayOneNudgeEmail({ origin: ORIGIN, displayName: null, language: "en" });
+  assert.equal(without.headers, undefined);
+  assert.ok(without.html.includes(`${ORIGIN}/learn/settings`));
 });

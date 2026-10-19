@@ -578,6 +578,8 @@ export const en: Dictionary = {
     learningRemindersBody: "A gentle nudge if you haven't practiced in a few days.",
     progressEmails: "Progress & milestone emails",
     progressEmailsBody: "Completed a level, a story, or a streak milestone.",
+    offerEmails: "Offers & discounts",
+    offerEmailsBody: "Tell me about offers that are running, inside the reminder emails.",
     savePreferences: "Save preferences",
     savingPreferences: "Saving…",
     essentialEmailNotice:

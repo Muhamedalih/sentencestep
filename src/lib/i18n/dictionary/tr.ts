@@ -580,6 +580,8 @@ export const tr: Dictionary = {
     learningRemindersBody: "Birkaç gündür pratik yapmadıysanız nazik bir hatırlatma.",
     progressEmails: "İlerleme ve başarı e-postaları",
     progressEmailsBody: "Bir seviyeyi, hikayeyi veya seri başarısını tamamladınız.",
+    offerEmails: "Teklifler ve indirimler",
+    offerEmailsBody: "Hatırlatma e-postalarının içinde geçerli teklifleri bana bildir.",
     savePreferences: "Tercihleri kaydet",
     savingPreferences: "Kaydediliyor…",
     essentialEmailNotice:

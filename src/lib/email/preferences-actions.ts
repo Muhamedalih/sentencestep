@@ -19,12 +19,14 @@ export async function updateEmailPreferencesAction(
 
   const learningReminders = formData.get("learningReminders") === "on";
   const progressEmails = formData.get("progressEmails") === "on";
+  const offerEmails = formData.get("offerEmails") === "on";
   const timezone = formData.get("timezone");
 
   try {
     await updateEmailPreferences(user.id, {
       learningReminders,
       progressEmails,
+      offerEmails,
       timezone: typeof timezone === "string" && timezone ? timezone : undefined,
     });
   } catch {

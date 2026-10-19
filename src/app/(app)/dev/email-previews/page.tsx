@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { milestoneEmail } from "@/lib/email/templates/milestone";
-import { learningReminderEmail } from "@/lib/email/templates/reminder";
+import { reminderEmail } from "@/lib/email/nudges/copy";
 import { welcomeEmail } from "@/lib/email/templates/welcome";
 
 /**
@@ -20,7 +20,15 @@ export default function EmailPreviewsPage() {
     { label: "Welcome", content: welcomeEmail({ origin, displayName }) },
     {
       label: "Learning reminder",
-      content: learningReminderEmail({ origin, displayName, daysInactive: 4 }),
+      content: reminderEmail({ origin, displayName, language: "en", showOffer: false }),
+    },
+    {
+      label: "Learning reminder (with the offer line)",
+      content: reminderEmail({ origin, displayName, language: "en", showOffer: true }),
+    },
+    {
+      label: "Learning reminder (Arabic, with the offer line)",
+      content: reminderEmail({ origin, displayName, language: "ar", showOffer: true }),
     },
     {
       label: "Lesson milestone (5 lessons)",

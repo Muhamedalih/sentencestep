@@ -137,7 +137,7 @@ export async function evaluateAndNotify(
       if (record.status === "duplicate") continue;
 
       const content = milestoneEmail({ origin, displayName: user.displayName, event });
-      const result = await sendTemplateEmail(user.email, content);
+      const result = await sendTemplateEmail(user.email, content, { priority: "bulk" });
       if (result.status === "sent") {
         await markNotificationEventSent(record.id);
       }

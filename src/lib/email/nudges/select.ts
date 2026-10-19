@@ -11,6 +11,17 @@ export const DAY_MS = 86_400_000;
 export const DAY_ONE_MIN_AGE_MS = 18 * HOUR_MS;
 export const DAY_ONE_MAX_AGE_MS = 72 * HOUR_MS;
 
+/** A weekly reminder goes to learners away for 3 to 60 days: sooner is a nag, longer is mostly addresses nobody reads, which cost the sending reputation. */
+export const REMINDER_MIN_DAYS = 3;
+export const REMINDER_MAX_DAYS = 60;
+
+/** The first and last day (YYYY-MM-DD) a learner's last activity may be on to get the reminder today. */
+export function reminderWindow(now: Date): { from: string; to: string } {
+  const day = (offset: number) =>
+    new Date(now.getTime() - offset * DAY_MS).toISOString().slice(0, 10);
+  return { from: day(REMINDER_MAX_DAYS), to: day(REMINDER_MIN_DAYS) };
+}
+
 /** An order is "abandoned" once it is two hours old (long enough to have finished) and until it is thirty hours old. */
 export const ABANDONED_MIN_AGE_MS = 2 * HOUR_MS;
 export const ABANDONED_MAX_AGE_MS = 30 * HOUR_MS;

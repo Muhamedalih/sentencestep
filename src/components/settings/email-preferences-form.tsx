@@ -53,6 +53,16 @@ export function EmailPreferencesForm({ preferences }: { preferences: EmailPrefer
             <Switch name="progressEmails" defaultChecked={preferences.progressEmails} />
           </div>
 
+          <div className="flex items-start justify-between gap-4">
+            <span>
+              <span className="block text-sm font-medium">{t.settings.offerEmails}</span>
+              <span className="text-muted-foreground block text-sm">
+                {t.settings.offerEmailsBody}
+              </span>
+            </span>
+            <Switch name="offerEmails" defaultChecked={preferences.offerEmails} />
+          </div>
+
           {state?.error && (
             <p role="alert" className="text-danger text-sm">
               {state.error}

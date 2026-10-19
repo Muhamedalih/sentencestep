@@ -46,3 +46,18 @@ export async function markNotificationEventSent(id: string): Promise<void> {
     .eq("id", id);
   if (error) throw error;
 }
+
+/**
+ * Removes a row that is still "queued" because the message could not be sent for lack of room (see
+ * NoEmailRouteError), so the learner is picked up again on a later run instead of being treated as
+ * handled. A row that was sent is never touched.
+ */
+export async function discardQueuedNotificationEvent(id: string): Promise<void> {
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase
+    .from("notification_events")
+    .delete()
+    .eq("id", id)
+    .eq("email_status", "queued");
+  if (error) throw error;
+}

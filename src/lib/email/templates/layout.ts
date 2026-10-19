@@ -2,6 +2,8 @@ export interface EmailContent {
   subject: string;
   html: string;
   text: string;
+  /** Extra headers to send with the message (see SendEmailInput.headers). */
+  headers?: Record<string, string>;
 }
 
 export interface EmailLayoutInput {

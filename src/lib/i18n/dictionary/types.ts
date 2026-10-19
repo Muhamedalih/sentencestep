@@ -677,6 +677,8 @@ export interface Dictionary {
     learningRemindersBody: string;
     progressEmails: string;
     progressEmailsBody: string;
+    offerEmails: string;
+    offerEmailsBody: string;
     savePreferences: string;
     savingPreferences: string;
     essentialEmailNotice: string;

@@ -5,6 +5,7 @@ import { nudgeLanguage } from "@/lib/email/nudges/copy";
 import {
   runAbandonedCheckoutNudge,
   runDayOneNudge,
+  runReminderNudge,
   sendNudgePreview,
 } from "@/lib/email/nudges/run";
 import { getRequestOrigin } from "@/lib/request-origin";
@@ -12,7 +13,7 @@ import { getRequestOrigin } from "@/lib/request-origin";
 const EMAIL_SHAPE = /^[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+$/;
 
 /**
- * The request side of the two nudge crons, shared so the two routes stay identical: the same bearer
+ * The request side of the nudge crons, shared so the routes stay identical: the same bearer
  * check as every other cron (fails closed without CRON_SECRET), then one of
  *   - the run itself (GET or POST from the scheduler),
  *   - `?dry=1`: counts who would be emailed, sends and writes nothing,
@@ -21,7 +22,7 @@ const EMAIL_SHAPE = /^[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+$/;
  */
 export async function handleNudgeRequest(
   request: Request,
-  kind: "day-one" | "abandoned",
+  kind: "day-one" | "abandoned" | "reminder",
 ): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
@@ -49,7 +50,12 @@ export async function handleNudgeRequest(
       return NextResponse.json(result);
     }
 
-    const run = kind === "day-one" ? runDayOneNudge : runAbandonedCheckoutNudge;
+    const run =
+      kind === "day-one"
+        ? runDayOneNudge
+        : kind === "reminder"
+          ? runReminderNudge
+          : runAbandonedCheckoutNudge;
     const summary = await run({ origin, now: new Date(), dryRun: params.get("dry") === "1" });
     return NextResponse.json(summary);
   } catch (error) {

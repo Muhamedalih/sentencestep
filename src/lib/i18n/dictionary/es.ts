@@ -589,6 +589,8 @@ export const es: Dictionary = {
     learningRemindersBody: "Un recordatorio amable si no has practicado en unos días.",
     progressEmails: "Correos de progreso y logros",
     progressEmailsBody: "Completaste un nivel, una historia o un logro de racha.",
+    offerEmails: "Ofertas y descuentos",
+    offerEmailsBody: "Avísame de las ofertas activas dentro de los correos de recordatorio.",
     savePreferences: "Guardar preferencias",
     savingPreferences: "Guardando…",
     essentialEmailNotice:

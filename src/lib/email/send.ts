@@ -22,7 +22,7 @@ function redactEmail(email: string): string {
 export async function sendTemplateEmail(
   to: string,
   content: EmailContent,
-  options: { replyTo?: string | null } = {},
+  options: { replyTo?: string | null; priority?: "important" | "bulk" } = {},
 ): Promise<SendTemplateEmailResult> {
   const provider = getEmailProvider();
 
@@ -42,6 +42,9 @@ export async function sendTemplateEmail(
     html: content.html,
     text: content.text,
     replyTo: options.replyTo,
+    headers: content.headers,
+    // A message is important unless its sender says it is bulk: nothing is demoted by accident.
+    priority: options.priority ?? "important",
   });
 
   return { status: "sent", providerMessageId: result.providerMessageId };

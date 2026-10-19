@@ -40,7 +40,7 @@ export type NotificationEvent =
       nextLevelLocked?: boolean;
     }
   | { type: "STREAK_MILESTONE"; streak: number }
-  | { type: "INACTIVE_LEARNER"; daysInactive: number }
+  | { type: "INACTIVE_LEARNER"; daysInactive: number; holdout?: boolean }
   // A distinct type (not a reuse of INACTIVE_LEARNER) specifically so its
   // dedupe_key never collides with the email reminder's — a learner who
   // gets the email must still be able to get the push, and vice versa,

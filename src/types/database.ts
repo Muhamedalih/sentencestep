@@ -198,11 +198,27 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
         Relationships: [];
       };
+      email_usage: {
+        Row: {
+          period: string;
+          provider: string;
+          sent: number;
+        };
+        Insert: {
+          period: string;
+          provider: string;
+          sent?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["email_usage"]["Insert"]>;
+        Relationships: [];
+      };
       email_preferences: {
         Row: {
           user_id: string;
           learning_reminders: boolean;
           progress_emails: boolean;
+          /** Whether offers may be added to the reminders this learner gets (the one-click unsubscribe turns it off). */
+          offer_emails: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -210,6 +226,7 @@ export interface Database {
           user_id: string;
           learning_reminders?: boolean;
           progress_emails?: boolean;
+          offer_emails?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -1803,6 +1820,14 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      reserve_email_slot: {
+        Args: { p_period: string; p_provider: string; p_limit: number };
+        Returns: boolean;
+      };
+      release_email_slot: {
+        Args: { p_period: string; p_provider: string };
+        Returns: undefined;
+      };
       add_quest_progress: {
         Args: { p_type: string; p_amount: number; p_date?: string | null };
         Returns: {

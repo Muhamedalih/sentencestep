@@ -3,12 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 export interface EmailPreferences {
   learningReminders: boolean;
   progressEmails: boolean;
+  /** Offers and discounts: the offer line of the reminder emails. */
+  offerEmails: boolean;
   timezone: string | null;
 }
 
 const DEFAULT_PREFERENCES: EmailPreferences = {
   learningReminders: true,
   progressEmails: true,
+  offerEmails: true,
   timezone: null,
 };
 
@@ -23,13 +26,19 @@ export async function getEmailPreferences(userId: string): Promise<EmailPreferen
   return {
     learningReminders: prefs?.learning_reminders ?? DEFAULT_PREFERENCES.learningReminders,
     progressEmails: prefs?.progress_emails ?? DEFAULT_PREFERENCES.progressEmails,
+    offerEmails: prefs?.offer_emails ?? DEFAULT_PREFERENCES.offerEmails,
     timezone: profile?.timezone ?? null,
   };
 }
 
 export async function updateEmailPreferences(
   userId: string,
-  updates: { learningReminders: boolean; progressEmails: boolean; timezone?: string | null },
+  updates: {
+    learningReminders: boolean;
+    progressEmails: boolean;
+    offerEmails: boolean;
+    timezone?: string | null;
+  },
 ): Promise<void> {
   const supabase = await createClient();
 
@@ -38,6 +47,7 @@ export async function updateEmailPreferences(
       user_id: userId,
       learning_reminders: updates.learningReminders,
       progress_emails: updates.progressEmails,
+      offer_emails: updates.offerEmails,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },

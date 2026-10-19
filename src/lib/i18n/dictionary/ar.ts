@@ -559,6 +559,8 @@ export const ar: Dictionary = {
     learningRemindersBody: "تذكير لطيف إذا لم تتدرب لبضعة أيام.",
     progressEmails: "رسائل التقدم والإنجازات",
     progressEmailsBody: "أكملت مستوى، قصة، أو إنجاز تتابع.",
+    offerEmails: "العروض والخصومات",
+    offerEmailsBody: "تنبيهك بالعروض المتاحة داخل رسائل التذكير.",
     savePreferences: "حفظ التفضيلات",
     savingPreferences: "جارٍ الحفظ…",
     essentialEmailNotice:

@@ -46,6 +46,9 @@ export function createSesProvider(
               Html: { Data: input.html, Charset: "UTF-8" },
               Text: { Data: input.text, Charset: "UTF-8" },
             },
+            ...(input.headers && Object.keys(input.headers).length > 0
+              ? { Headers: Object.entries(input.headers).map(([Name, Value]) => ({ Name, Value })) }
+              : {}),
           },
         },
       });

@@ -44,6 +44,9 @@ export function createResendProvider(
           text: input.text,
           // Only sent when configured, so replies otherwise go to `from`.
           ...(effectiveReplyTo ? { reply_to: effectiveReplyTo } : {}),
+          ...(input.headers && Object.keys(input.headers).length > 0
+            ? { headers: input.headers }
+            : {}),
         }),
       });
 

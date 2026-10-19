@@ -19,6 +19,14 @@ export interface SendEmailInput {
    * auto-responder answering) a notice can't loop back into the Inbox.
    */
   replyTo?: string | null;
+  /** Extra message headers, e.g. List-Unsubscribe and List-Unsubscribe-Post for one-click unsubscribe. */
+  headers?: Record<string, string>;
+  /**
+   * How much it matters that this message goes out: "important" (a payment, a receipt, a support
+   * reply, an alert) or "bulk" (a reminder or a milestone). Only the routing provider reads it, to
+   * keep the free Resend quota for the important ones; the single-provider adapters ignore it.
+   */
+  priority?: "important" | "bulk";
 }
 
 export interface SendEmailResult {
