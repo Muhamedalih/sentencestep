@@ -23,7 +23,7 @@ export function MobileNav({ links, authArea }: { links: NavLink[]; authArea: Rea
   const { t } = useLocale();
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <Button
         variant="ghost"
         size="icon"

@@ -15,7 +15,9 @@ export function NotConfiguredNotice() {
         <div className="bg-muted text-muted-foreground mb-2 flex size-11 items-center justify-center rounded-lg">
           <ServerOff className="size-5" aria-hidden="true" />
         </div>
-        <CardTitle className="text-xl">{t.auth.notConfiguredHeading}</CardTitle>
+        <CardTitle role="heading" aria-level={1} className="text-xl">
+          {t.auth.notConfiguredHeading}
+        </CardTitle>
         <CardDescription>{t.auth.notConfiguredBody}</CardDescription>
       </CardHeader>
     </Card>

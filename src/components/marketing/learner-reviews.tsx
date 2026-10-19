@@ -187,7 +187,7 @@ export function LearnerReviews({
                   onClick={() => setActive(index)}
                   aria-label={t.marketing.reviewDotLabel.replace("{n}", String(index + 1))}
                   aria-current={index === active}
-                  className="group flex h-4 items-center px-[2.5px]"
+                  className="group relative flex h-4 items-center px-[2.5px] after:absolute after:inset-x-0 after:-inset-y-2.5 after:content-[''] pointer-coarse:px-1"
                 >
                   <span
                     className={cn(

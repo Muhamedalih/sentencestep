@@ -126,7 +126,7 @@ export function SiteHeaderClient({
           <Logo />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-8 text-sm font-medium lg:flex" aria-label="Primary">
           {NAV_LINKS.map((link) =>
             link.href.startsWith("#") ? (
               <a
@@ -149,13 +149,13 @@ export function SiteHeaderClient({
           )}
         </nav>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           <LanguageSwitcher />
           <ThemeToggle />
           <div className="ms-1 flex items-center gap-2">{authArea}</div>
         </div>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <ThemeToggle />
           <MobileNav links={NAV_LINKS} authArea={authArea} />
         </div>

@@ -25,11 +25,13 @@ export function ForgotPasswordForm() {
           <div className="bg-success/15 text-success mb-2 flex size-11 items-center justify-center rounded-lg">
             <MailCheck className="size-5" aria-hidden="true" />
           </div>
-          <CardTitle className="text-xl">{t.auth.checkInbox}</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-xl">
+            {t.auth.checkInbox}
+          </CardTitle>
           <CardDescription>{state.success}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/login" className="text-primary text-sm font-medium hover:underline">
+          <Link href="/login" className="text-primary py-2 text-sm font-medium hover:underline">
             {t.auth.backToSignIn}
           </Link>
         </CardContent>
@@ -40,7 +42,9 @@ export function ForgotPasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{t.auth.forgotPasswordHeading}</CardTitle>
+        <CardTitle role="heading" aria-level={1} className="text-2xl">
+          {t.auth.forgotPasswordHeading}
+        </CardTitle>
         <CardDescription>{t.auth.forgotPasswordSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -71,7 +75,7 @@ export function ForgotPasswordForm() {
         </form>
 
         <p className="text-muted-foreground mt-6 text-center text-sm">
-          <Link href="/login" className="text-primary font-medium hover:underline">
+          <Link href="/login" className="text-primary py-2 font-medium hover:underline">
             {t.auth.backToSignIn}
           </Link>
         </p>

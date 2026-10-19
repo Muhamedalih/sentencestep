@@ -31,7 +31,9 @@ export function ResetPasswordForm() {
           <div className="bg-success/15 text-success mb-2 flex size-11 items-center justify-center rounded-lg">
             <CheckCircle2 className="size-5" aria-hidden="true" />
           </div>
-          <CardTitle className="text-xl">{t.auth.resetPasswordSuccess}</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-xl">
+            {t.auth.resetPasswordSuccess}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Button asChild>
@@ -45,7 +47,9 @@ export function ResetPasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{t.auth.resetPasswordHeading}</CardTitle>
+        <CardTitle role="heading" aria-level={1} className="text-2xl">
+          {t.auth.resetPasswordHeading}
+        </CardTitle>
         <CardDescription>{t.auth.resetPasswordSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>

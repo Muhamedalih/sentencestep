@@ -32,7 +32,9 @@ export function LoginForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{t.auth.loginHeading}</CardTitle>
+        <CardTitle role="heading" aria-level={1} className="text-2xl">
+          {t.auth.loginHeading}
+        </CardTitle>
         <CardDescription>{t.auth.loginSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -87,7 +89,7 @@ export function LoginForm({
               </label>
               <Link
                 href="/forgot-password"
-                className="text-primary text-xs font-medium hover:underline"
+                className="text-primary -my-2 py-2 text-xs font-medium hover:underline"
               >
                 {t.auth.forgotPassword}
               </Link>
@@ -119,7 +121,7 @@ export function LoginForm({
           {t.auth.noAccount}{" "}
           <Link
             href={authPageHref("/register", next)}
-            className="text-primary font-medium hover:underline"
+            className="text-primary py-2 font-medium hover:underline"
           >
             {t.auth.createOne}
           </Link>

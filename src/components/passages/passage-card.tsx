@@ -66,7 +66,7 @@ export function PassageCard({
             {String(passage.order).padStart(2, "0")}
           </span>
           {badge && (
-            <span className="flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[0.7rem] font-semibold text-white backdrop-blur-sm">
+            <span className="flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
               {locked && <Lock className="size-3" aria-hidden="true" />}
               {!locked && status === "done" && <Check className="size-3" aria-hidden="true" />}
               <bdi>{badge}</bdi>

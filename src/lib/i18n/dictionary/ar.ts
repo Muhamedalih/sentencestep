@@ -32,6 +32,7 @@ export const ar: Dictionary = {
     settings: "الإعدادات",
     exitToHome: "الخروج إلى الصفحة الرئيسية",
     home: "الرئيسية",
+    skipToContent: "تخطَّ إلى المحتوى الرئيسي",
     wordLists: "قوائم الكلمات",
     passages: "النصوص",
     library: "المكتبة",

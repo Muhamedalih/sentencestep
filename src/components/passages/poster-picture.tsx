@@ -24,6 +24,8 @@ export function PosterPicture({ src, blurred = false }: { src: string | null; bl
       <img
         src={src}
         alt=""
+        width={600}
+        height={800}
         loading="lazy"
         decoding="async"
         draggable={false}

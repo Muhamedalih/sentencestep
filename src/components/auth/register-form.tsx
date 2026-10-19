@@ -54,7 +54,9 @@ export function RegisterForm({
           <div className="bg-success/15 text-success mb-2 flex size-11 items-center justify-center rounded-lg">
             <MailCheck className="size-5" aria-hidden="true" />
           </div>
-          <CardTitle className="text-xl">{t.auth.checkInbox}</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-xl">
+            {t.auth.checkInbox}
+          </CardTitle>
           <CardDescription>{state.success}</CardDescription>
         </CardHeader>
       </Card>
@@ -64,7 +66,9 @@ export function RegisterForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{t.auth.registerHeading}</CardTitle>
+        <CardTitle role="heading" aria-level={1} className="text-2xl">
+          {t.auth.registerHeading}
+        </CardTitle>
         <CardDescription>{t.auth.registerSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -157,11 +161,11 @@ export function RegisterForm({
 
         <p className="text-muted-foreground mt-4 text-center text-xs">
           {t.auth.termsAgreementPrefix}{" "}
-          <Link href="/terms" className="text-primary hover:underline">
+          <Link href="/terms" className="text-primary py-2 hover:underline">
             {t.footer.terms}
           </Link>{" "}
           {t.auth.termsAgreementAnd}{" "}
-          <Link href="/privacy" className="text-primary hover:underline">
+          <Link href="/privacy" className="text-primary py-2 hover:underline">
             {t.footer.privacy}
           </Link>
           .
@@ -171,7 +175,7 @@ export function RegisterForm({
           {t.auth.hasAccount}{" "}
           <Link
             href={authPageHref("/login", next)}
-            className="text-primary font-medium hover:underline"
+            className="text-primary py-2 font-medium hover:underline"
           >
             {t.common.signIn}
           </Link>

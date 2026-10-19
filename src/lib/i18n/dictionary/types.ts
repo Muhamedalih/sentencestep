@@ -50,6 +50,7 @@ export interface Dictionary {
     settings: string;
     exitToHome: string;
     home: string;
+    skipToContent: string;
     wordLists: string;
     /** The Passages nav item (short real-life scenes read part by part). */
     passages: string;

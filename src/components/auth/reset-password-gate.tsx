@@ -92,7 +92,9 @@ export function ResetPasswordGate() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{t.auth.resetLinkInvalid}</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-xl">
+            {t.auth.resetLinkInvalid}
+          </CardTitle>
           <CardDescription>
             <Link href="/forgot-password" className="text-primary font-medium hover:underline">
               {t.auth.forgotPassword}

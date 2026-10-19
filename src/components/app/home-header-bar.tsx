@@ -14,7 +14,7 @@ function BigStat({ value, label }: { value: number; label: string }) {
       <div className="text-3xl leading-none font-extrabold tabular-nums" dir="ltr">
         {value}
       </div>
-      <div className="text-muted-foreground mt-2 text-xs font-bold tracking-wide uppercase sm:text-[10.5px]">
+      <div className="text-muted-foreground mt-2 text-xs font-bold tracking-wide uppercase">
         {label}
       </div>
     </div>

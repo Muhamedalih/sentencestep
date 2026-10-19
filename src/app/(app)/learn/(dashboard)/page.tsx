@@ -245,6 +245,7 @@ export default async function LearnHomePage() {
   return (
     <ProgressProvider initialProgress={initialProgress}>
       <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
+        <h1 className="sr-only">{t.nav.home}</h1>
         <HomeHeaderBar
           user={user}
           lessonStats={lessonStats}

@@ -30,7 +30,7 @@ export function ContentStatsRow({
             >
               {item.value}
             </span>
-            <span className="text-muted-foreground text-[11px] leading-snug" dir="auto">
+            <span className="text-muted-foreground text-xs leading-snug" dir="auto">
               {item.label}
             </span>
           </li>

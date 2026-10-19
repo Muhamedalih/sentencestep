@@ -40,6 +40,7 @@ export const es: Dictionary = {
     settings: "Configuración",
     exitToHome: "Salir al inicio",
     home: "Inicio",
+    skipToContent: "Saltar al contenido principal",
     wordLists: "Listas de palabras",
     passages: "Textos",
     library: "Biblioteca",

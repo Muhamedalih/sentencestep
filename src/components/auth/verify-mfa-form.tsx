@@ -17,7 +17,9 @@ export function VerifyMfaForm({ next }: { next?: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{t.twoFactor.loginHeading}</CardTitle>
+        <CardTitle role="heading" aria-level={1} className="text-2xl">
+          {t.twoFactor.loginHeading}
+        </CardTitle>
         <CardDescription>{t.twoFactor.loginSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>

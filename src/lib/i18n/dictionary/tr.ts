@@ -37,6 +37,7 @@ export const tr: Dictionary = {
     settings: "Ayarlar",
     exitToHome: "Ana sayfaya çık",
     home: "Ana sayfa",
+    skipToContent: "Ana içeriğe geç",
     wordLists: "Kelime listeleri",
     passages: "Metinler",
     library: "Kütüphane",

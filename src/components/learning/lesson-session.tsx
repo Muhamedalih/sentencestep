@@ -994,7 +994,7 @@ export function LessonSession({
                       aria-label={t.lesson.illustrationViewImage}
                       title={t.lesson.illustrationViewImage}
                       className={cn(
-                        "flex size-7 items-center justify-center rounded-full transition-colors",
+                        "flex size-7 items-center justify-center rounded-full transition-colors pointer-coarse:size-10",
                         illustrationView === "image"
                           ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
                           : "text-muted-foreground hover:text-foreground",
@@ -1009,7 +1009,7 @@ export function LessonSession({
                       aria-label={t.lesson.illustrationViewList}
                       title={t.lesson.illustrationViewList}
                       className={cn(
-                        "flex size-7 items-center justify-center rounded-full transition-colors",
+                        "flex size-7 items-center justify-center rounded-full transition-colors pointer-coarse:size-10",
                         illustrationView === "list"
                           ? "bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
                           : "text-muted-foreground hover:text-foreground",

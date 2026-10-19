@@ -183,7 +183,7 @@ export function StreakStripView({
           const date = new Date(year ?? 1970, (monthNumber ?? 1) - 1, dayNumber ?? 1);
           return (
             <div key={iso} className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="text-muted-foreground text-xs font-medium sm:text-[11px]">
+              <span className="text-muted-foreground text-xs font-medium">
                 {weekdayNarrow.format(date)}
               </span>
               {strip === undefined ? (
@@ -232,10 +232,7 @@ export function StreakStripView({
           ) : (
             <div className="grid grid-cols-7 gap-y-2" dir="ltr">
               {weekHeader.map((label, index) => (
-                <span
-                  key={index}
-                  className="text-muted-foreground text-center text-xs font-medium sm:text-[11px]"
-                >
+                <span key={index} className="text-muted-foreground text-center text-xs font-medium">
                   {label}
                 </span>
               ))}
