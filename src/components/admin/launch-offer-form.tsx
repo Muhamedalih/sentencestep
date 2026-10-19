@@ -138,9 +138,10 @@ export function LaunchOfferForm({
             disabled={isPending}
           />
           <span className="text-muted-foreground text-xs font-normal">
-            The final day anyone can still get the bonus. Click the calendar icon to pick it. The
-            offer runs through the end of that day in UTC, which is 3 AM the next morning in
-            Baghdad.
+            The final day anyone can still get the bonus. Visitors are never shown this date: the
+            banner only says it is a limited-time offer, so pick a far day and end the offer
+            yourself with Remove offer whenever you want. It runs through the end of that day in
+            UTC, which is 3 AM the next morning in Baghdad.
           </span>
         </label>
       </div>

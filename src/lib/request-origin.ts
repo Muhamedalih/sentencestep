@@ -43,22 +43,3 @@ function isBindAddress(host: string): boolean {
   const name = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "");
   return name === "0.0.0.0" || name === "::";
 }
-
-/**
- * Whether the request was sent by a page of this same site — a tap on a link inside the
- * app — judged from the Referer header and the host the visitor used (see getRequestOrigin
- * for why that host comes from the forwarding headers). A bookmark, an email link, a search
- * result or the return from an identity provider arrive with another site's address or
- * none at all. A privacy tool can strip the header from a tap inside the app too, so
- * `false` means "not known to be from here", never proof of where the visitor came from.
- */
-export function isFromThisSite(headers: Headers): boolean {
-  const referer = headers.get("referer");
-  const host = firstValue(headers.get("x-forwarded-host")) ?? headers.get("host");
-  if (!referer || !host) return false;
-  try {
-    return new URL(referer).host === host;
-  } catch {
-    return false;
-  }
-}

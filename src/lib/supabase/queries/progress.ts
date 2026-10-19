@@ -230,24 +230,3 @@ export async function upsertStreak(userId: string, streak: StreakInput): Promise
 
   if (error) throw error;
 }
-
-/**
- * The ids of the lessons of one mode this learner has finished — nothing else of
- * their progress. The lock pages need only this to know whether the free lessons of
- * a level are done (see freePathForLevel), so it is one narrow read instead of the
- * seven-query fetchProgressAction Home uses.
- */
-export async function fetchCompletedLessonIds(
-  userId: string,
-  mode: LearningMode,
-): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("user_progress")
-    .select("lesson_id")
-    .eq("user_id", userId)
-    .eq("mode", mode)
-    .not("completed_at", "is", null);
-  if (error) throw error;
-  return (data ?? []).map((row) => row.lesson_id);
-}

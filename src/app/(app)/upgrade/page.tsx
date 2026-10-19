@@ -104,9 +104,7 @@ export default async function UpgradePage({
     : [null, null, null, []];
   // `bonusDays` is the one number every plan gets, or null when the plans differ (the banner then
   // says so in general terms and each plan's own chip carries its number).
-  const offerNotice = offer
-    ? { bonusDays: sharedBonusDays(offer), endsOnLabel: formatLongDate(offer.endsOn, locale) }
-    : null;
+  const offerNotice = offer ? { bonusDays: sharedBonusDays(offer) } : null;
   const socialProof =
     proof || ratings
       ? {

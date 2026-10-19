@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { getRequestOrigin, isFromThisSite } from "./request-origin";
+import { getRequestOrigin } from "./request-origin";
 
 function req(url: string, headers: Record<string, string> = {}): Request {
   return new Request(url, { headers });
@@ -65,36 +65,4 @@ test("getRequestOrigin: an unknown forwarded scheme is ignored in favour of the 
     "x-forwarded-proto": "javascript",
   });
   assert.equal(getRequestOrigin(request), "http://localhost:3000");
-});
-
-test("isFromThisSite: a tap on a link inside the app carries the site's own address", () => {
-  const headers = new Headers({
-    referer: "https://sentencestep.com/learn/normal",
-    "x-forwarded-host": "sentencestep.com",
-  });
-  assert.equal(isFromThisSite(headers), true);
-  assert.equal(
-    isFromThisSite(new Headers({ referer: "http://localhost:3000/learn", host: "localhost:3000" })),
-    true,
-  );
-});
-
-test("isFromThisSite: another site, no referer and a malformed referer are all not from here", () => {
-  const host = { "x-forwarded-host": "sentencestep.com" };
-  assert.equal(
-    isFromThisSite(new Headers({ ...host, referer: "https://accounts.google.com/" })),
-    false,
-  );
-  assert.equal(isFromThisSite(new Headers({ ...host, referer: "https://www.google.com/" })), false);
-  assert.equal(isFromThisSite(new Headers(host)), false);
-  assert.equal(isFromThisSite(new Headers({ ...host, referer: "not a url" })), false);
-  assert.equal(isFromThisSite(new Headers({ referer: "https://sentencestep.com/learn" })), false);
-});
-
-test("isFromThisSite: a look-alike host is not this site", () => {
-  const headers = new Headers({
-    referer: "https://sentencestep.com.evil.example/learn",
-    "x-forwarded-host": "sentencestep.com",
-  });
-  assert.equal(isFromThisSite(headers), false);
 });

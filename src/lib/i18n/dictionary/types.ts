@@ -388,40 +388,8 @@ export interface Dictionary {
    * lesson, story, passage or word list. Everything here says only what is true: no
    * countdown, no scarcity, nothing about offers.
    */
+  /** The short look at a Premium passage or word list (see LockedPreview): `{n}` is how many are shown, `{amount}` the smallest single payment ("$2"), placed where the language wants it. */
   freePath: {
-    /** The card on the Daily Lessons list. */
-    counterTitle: string;
-    /** `{done}` of `{total}`, e.g. "2 of 4". */
-    counterCount: string;
-    counterHint: string;
-    /** Shown instead of the hint once every free lesson is done. */
-    counterDoneHint: string;
-    /** `{done}` and `{total}` — read out by screen readers for the segments. */
-    counterAria: string;
-    /** On the finish screen of the second-to-last free lesson. */
-    lastOneTitle: string;
-    lastOneBody: string;
-    /** The screen a learner meets on a Premium lesson once the free path of its level is done. */
-    milestonePill: string;
-    milestoneHeading: string;
-    milestoneNextLabel: string;
-    milestoneLockedNote: string;
-    milestoneBody: string;
-    /** After the price caption (see premium.fromPerMonthCaption): one payment and no auto-renewal, said plainly. */
-    milestonePriceNote: string;
-    milestoneCta: string;
-    milestoneReview: string;
-    /** The three figures of the learner's own free lessons. */
-    statSentences: string;
-    statWords: string;
-    statDays: string;
-    /** The short look at something Premium: `{n}` is how many are shown. One title, one line about the rest and one button for each kind; the button says it unlocks, and `{amount}` is the smallest single payment ("$2"), placed where the language wants it. */
-    previewLessonTitle: string;
-    previewLessonRest: string;
-    previewLessonCta: string;
-    previewStoryTitle: string;
-    previewStoryRest: string;
-    previewStoryCta: string;
     previewPassageTitle: string;
     previewPassageRest: string;
     previewPassageCta: string;
@@ -429,8 +397,6 @@ export interface Dictionary {
     previewWordsRest: string;
     previewWordsCta: string;
     previewBack: string;
-    /** The note on the lesson a learner was taken to instead of a Premium one they opened from outside the app. */
-    redirectNotice: string;
   };
   premium: {
     /** Generic `{title} — premium content, tap for details` aria-label, reused across lesson/story/word-group cards — see wordLists.lockedAriaLabel's doc comment for why the word-group-specific wording it used to carry was replaced by this. */
@@ -529,9 +495,9 @@ export interface Dictionary {
     dayCountTwo: string;
     dayCountFew: string;
     dayCountMany: string;
-    /** Notice above the plan cards while the launch offer runs — `{days}` is a formatted day count ("7 days"), `{date}` the last day. */
+    /** Notice above the plan cards while the offer runs — `{days}` is a formatted day count ("7 days"). It names no end date: the owner ends the offer from the admin page. */
     launchOfferBanner: string;
-    /** The same notice when the plans get different numbers of days (each plan's chip then carries its own) — only `{date}`. */
+    /** The same notice when the plans get different numbers of days (each plan's chip then carries its own). */
     launchOfferBannerPerPlan: string;
     /** Chip on each plan card — `{days}` is a formatted day count. */
     launchOfferChip: string;

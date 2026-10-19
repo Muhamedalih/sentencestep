@@ -15,26 +15,13 @@ import type { LearningMode } from "@/types/content";
  */
 export async function trackPaywallViewed(
   target:
-    | { kind: "lesson"; mode: LearningMode; lessonId: string; shape?: PaywallShape }
+    | { kind: "lesson"; mode: LearningMode; lessonId: string }
     | { kind: "word_group"; groupId: string; shape?: PaywallShape }
     | { kind: "passage"; passageId: string; shape?: PaywallShape },
 ): Promise<void> {
   const user = await getCurrentUser();
   await track(
     { name: "PAYWALL_VIEWED", category: "PREMIUM", properties: target },
-    user?.id ?? null,
-  );
-}
-
-/** Records that a learner was taken to their next free lesson instead of a Premium one (see lockedLessonOutcome). */
-export async function trackFreePathRedirected(target: {
-  mode: LearningMode;
-  fromLessonId: string;
-  toLessonId: string;
-}): Promise<void> {
-  const user = await getCurrentUser();
-  await track(
-    { name: "FREE_PATH_REDIRECTED", category: "PREMIUM", properties: target },
     user?.id ?? null,
   );
 }

@@ -54,11 +54,11 @@ interface CheckoutCardProps {
   /** True once the Passages section is open to everyone: the benefit list then says a subscriber gets all of it. */
   passagesOpen?: boolean;
   /**
-   * The running launch offer, with its last day already written out for the visitor's language.
+   * The running launch offer (no end date is shown: the owner ends it from the admin page).
    * `bonusDays` is the one number every plan gets, or null when the plans get different numbers
    * (the banner then speaks in general terms and each plan's chip carries its own).
    */
-  offerNotice?: { bonusDays: number | null; endsOnLabel: string } | null;
+  offerNotice?: { bonusDays: number | null } | null;
   /** Real aggregate figures, already rounded and formatted, or null; a field is null when too small to quote. */
   socialProof?: {
     learners: string | null;
@@ -212,13 +212,12 @@ export function CheckoutCard({
               >
                 <Gift className="text-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 <span>
-                  {(offerNotice.bonusDays === null
+                  {offerNotice.bonusDays === null
                     ? t.premium.launchOfferBannerPerPlan
                     : t.premium.launchOfferBanner.replace(
                         "{days}",
                         formatDayCount(t.premium, locale, offerNotice.bonusDays),
-                      )
-                  ).replace("{date}", offerNotice.endsOnLabel)}
+                      )}
                 </span>
               </p>
             )}

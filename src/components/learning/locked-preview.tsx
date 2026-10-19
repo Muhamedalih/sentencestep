@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { popIn } from "@/lib/motion";
 import type { PreviewLine } from "@/lib/supabase/queries/locked-preview";
 
-export type LockedPreviewKind = "lesson" | "story" | "passage" | "words";
+export type LockedPreviewKind = "passage" | "words";
 
 /**
- * A short look at something that is part of Premium — the first few sentences of a lesson or
- * story, lines of a passage or words of a list — shown instead of the full lock when someone
- * taps it inside the app. What is behind the lock is something they have now seen, the rest is
+ * A short look at something that is part of Premium — the first lines of a passage or words of
+ * a word list — shown instead of the full lock when someone taps it inside the app. What is behind the lock is something they have now seen, the rest is
  * one calm card with one button, and the way back is always there. The offer itself (price,
  * plans) is one tap further, on the upgrade page the button opens.
  *
@@ -44,16 +43,6 @@ export function LockedPreview({
 }) {
   const { t } = useLocale();
   const copy = {
-    lesson: {
-      title: t.freePath.previewLessonTitle,
-      rest: t.freePath.previewLessonRest,
-      cta: t.freePath.previewLessonCta,
-    },
-    story: {
-      title: t.freePath.previewStoryTitle,
-      rest: t.freePath.previewStoryRest,
-      cta: t.freePath.previewStoryCta,
-    },
     passage: {
       title: t.freePath.previewPassageTitle,
       rest: t.freePath.previewPassageRest,

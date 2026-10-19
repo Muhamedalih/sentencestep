@@ -95,19 +95,10 @@ test("the free-path Arabic text has no em dash, which lands at a line edge in th
   }
 });
 
-test("the free-path screens keep their placeholders in every language", () => {
+test("the short look at a locked passage or word list keeps its placeholders in every language", () => {
   for (const [name, dictionary] of Object.entries(dictionaries)) {
     const f = dictionary.freePath;
-    assert.match(f.counterCount, /\{done\}/, `${name} counterCount`);
-    assert.match(f.counterCount, /\{total\}/, `${name} counterCount`);
-    assert.match(f.counterAria, /\{done\}/, `${name} counterAria`);
-    assert.match(f.counterAria, /\{total\}/, `${name} counterAria`);
-    for (const key of [
-      "previewLessonTitle",
-      "previewStoryTitle",
-      "previewPassageTitle",
-      "previewWordsTitle",
-    ] as const) {
+    for (const key of ["previewPassageTitle", "previewWordsTitle"] as const) {
       assert.match(f[key], /\{n\}/, `${name} ${key}`);
     }
   }
@@ -118,22 +109,9 @@ test("the button on the short look at locked content says it unlocks and keeps t
   const readsAsFree = /continue the|keep reading|continúa|sigue leyendo|devam edin|أكمل|تابع/i;
   for (const [name, dictionary] of Object.entries(dictionaries)) {
     const f = dictionary.freePath;
-    for (const key of [
-      "previewLessonCta",
-      "previewStoryCta",
-      "previewPassageCta",
-      "previewWordsCta",
-    ] as const) {
+    for (const key of ["previewPassageCta", "previewWordsCta"] as const) {
       assert.match(f[key], /\{amount\}/, `${name} ${key} keeps the price slot`);
       assert.equal(readsAsFree.test(f[key]), false, `${name} ${key} reads as free: ${f[key]}`);
     }
   }
-});
-
-test("the screen after the free path promises what the product does: one payment, no auto-renewal", () => {
-  assert.match(en.freePath.milestonePriceNote, /One payment/i);
-  assert.match(en.freePath.milestonePriceNote, /no auto-renewal/i);
-  assert.match(es.freePath.milestonePriceNote, /sin renovación automática/i);
-  assert.match(tr.freePath.milestonePriceNote, /otomatik yenileme yok/i);
-  assert.match(ar.freePath.milestonePriceNote, /بدون تجديد تلقائي/);
 });

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Check, ChevronLeft, ChevronRight, Clock, MessagesSquare } from "lucide-react";
 
-import { FreePathCard } from "@/components/app/free-path-card";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { PremiumLockOverlay } from "@/components/learning/premium-lock-overlay";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
@@ -23,7 +22,6 @@ import {
   type Difficulty,
 } from "@/lib/levels";
 import { fadeInUp, staggerChildren } from "@/lib/motion";
-import { freePathFocus } from "@/lib/progress/free-path";
 import { findCurrentLesson, getCurrentLevel } from "@/lib/progress/level";
 import { modeMeta } from "@/lib/learning-modes";
 import { TIER_BADGE_CLASS, TIER_DOT_CLASS } from "@/lib/tier-colors";
@@ -383,12 +381,6 @@ export function LessonListView({
   const currentLessonId = findCurrentLesson(units, completedIds, isPremiumUser, startingLevel)?.id;
   const currentLevel = getCurrentLevel(units, completedIds, startingLevel);
   const currentUnit = courseUnits.find((unit) => unit.level === currentLevel);
-  // Daily Lessons only, and only for a learner on the free plan once their progress is in: the
-  // free lessons of the level they are on (see freePathFocus), so they read as a path, not a limit.
-  const freePath =
-    mode === "normal" && !isPremiumUser && isLoaded
-      ? freePathFocus(rawUnits, completedIds, startingLevel)
-      : null;
   const overallPercent =
     units.length === 0 ? 0 : Math.round((completedIds.length / units.length) * 100);
 
@@ -417,8 +409,6 @@ export function LessonListView({
       </div>
 
       <VocabularySectionRecallCard mode={mode} count={recallCount} />
-
-      {freePath && <FreePathCard path={freePath} className="mb-6" />}
 
       {units.length > 0 &&
         (isLoaded ? (
