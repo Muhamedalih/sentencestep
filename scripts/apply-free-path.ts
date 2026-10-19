@@ -4,9 +4,10 @@
  *  - Daily Lessons: 4 free lessons per level — the level's First Steps plus the first three
  *    lessons of its curriculum unit (establish, build, build). The unit's closing "integrate"
  *    lesson stays Premium.
- *  - Word Lists: 3 free topic lists per level (the level's first three by order).
- *  - Passages: 2 free per level (A1, A2, B1, B2), and the word lesson that comes with each
- *    free passage is free too, so a free passage never ends at a lock.
+ *  - Word Lists: exactly 1 free list per level (the level's first topic: Family, Friendship,
+ *    Politics). Every other list is Premium, including the "Words from ..." list of each passage.
+ *  - Passages: 2 free per level (A1, A2, B1, B2). Only the passage itself is free; its word list
+ *    follows the Word Lists rule above.
  *
  * It also puts Advanced's unit in teaching order: that unit's "establish" lesson
  * (normal-8) sits at the very end of the list (order 40), so the free lessons of that level
@@ -52,18 +53,8 @@ const LESSON_ORDER_MOVES: { id: string; from: number; to: number }[] = [
   { id: "normal-8", from: 40, to: 9 },
 ];
 
-/** Word Lists topics that must be free: the first three of each level (Family, already free, is the first of Beginner). */
-const FREE_WORD_GROUPS = [
-  "family",
-  "colors",
-  "animals",
-  "friendship",
-  "travel",
-  "health",
-  "politics",
-  "finance",
-  "technology",
-];
+/** The only Word Lists that are free: the first topic of each level. Every other list is Premium. */
+const FREE_WORD_GROUPS = ["family", "friendship", "politics"];
 
 /** Passages that must be free: the ones already free (kept) and a second one per level. */
 const FREE_PASSAGES = [
@@ -91,9 +82,7 @@ async function main() {
       .select("id, level_id, order_index, is_free, status, title")
       .eq("mode", "normal"),
     supabase.from("word_groups").select("id, level, order_index, is_free, status, title"),
-    supabase
-      .from("passages")
-      .select("id, level, order_index, is_free, status, title, word_group_id"),
+    supabase.from("passages").select("id, level, order_index, is_free, status, title"),
   ]);
   if (lessonsRes.error) fail(lessonsRes.error.message);
   if (groupsRes.error) fail(groupsRes.error.message);
@@ -119,32 +108,27 @@ async function main() {
       fail(`lesson ${id} is free but is meant to stay Premium; check it.`);
   }
 
-  // The word lesson that comes with each free passage follows its passage.
-  const companionGroups = FREE_PASSAGES.map((id) => passages.get(id)?.word_group_id).filter(
-    (id): id is string => Boolean(id),
-  );
-  for (const id of companionGroups) {
-    const row = groups.get(id);
-    if (!row) fail(`the word lesson ${id} of a free passage does not exist.`);
-  }
-
   type Change = { table: "lessons" | "word_groups" | "passages"; id: string; label: string };
   const changes: Change[] = [];
+  /** Rows going back to Premium (is_free -> false); only word lists, so far. */
+  const locks: Change[] = [];
   for (const id of FREE_LESSONS) {
     if (!lessons.get(id)!.is_free) {
       changes.push({ table: "lessons", id, label: `lesson ${id} "${lessons.get(id)!.title}"` });
     }
   }
-  for (const id of [...FREE_WORD_GROUPS, ...companionGroups]) {
-    if (
-      !groups.get(id)!.is_free &&
-      !changes.some((c) => c.table === "word_groups" && c.id === id)
-    ) {
+  for (const id of FREE_WORD_GROUPS) {
+    if (!groups.get(id)!.is_free) {
       changes.push({
         table: "word_groups",
         id,
         label: `word list ${id} "${groups.get(id)!.title}"`,
       });
+    }
+  }
+  for (const [id, row] of groups) {
+    if (row.status === "published" && row.is_free && !FREE_WORD_GROUPS.includes(id)) {
+      locks.push({ table: "word_groups", id, label: `word list ${id} "${row.title}"` });
     }
   }
   for (const id of FREE_PASSAGES) {
@@ -163,6 +147,9 @@ async function main() {
   console.log("Becoming free:");
   for (const change of changes) console.log(`  + ${change.label}`);
   if (changes.length === 0) console.log("  (nothing: already as wanted)");
+  console.log("\nBecoming Premium (one free word list per level):");
+  for (const lock of locks) console.log(`  - ${lock.label}`);
+  if (locks.length === 0) console.log("  (nothing: already as wanted)");
   console.log("\nReordered (Advanced's unit into teaching order):");
   for (const move of orderMoves) console.log(`  ${move.id}: ${move.from} -> ${move.to}`);
   if (orderMoves.length === 0) {
@@ -186,6 +173,15 @@ async function main() {
       .eq("id", change.id)
       .eq("is_free", false);
     if (error) fail(`${change.label}: ${error.message}`);
+  }
+  // Same guard the other way: only a row that is still free is touched.
+  for (const lock of locks) {
+    const { error } = await supabase
+      .from(lock.table)
+      .update({ is_free: false })
+      .eq("id", lock.id)
+      .eq("is_free", true);
+    if (error) fail(`${lock.label}: ${error.message}`);
   }
   for (const move of orderMoves) {
     const { error } = await supabase
