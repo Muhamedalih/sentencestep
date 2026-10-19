@@ -19,7 +19,9 @@ export type NotificationEventType =
   | "STREAK_MILESTONE"
   | "INACTIVE_LEARNER"
   | "INACTIVE_LEARNER_PUSH"
-  | "PREMIUM_EXPIRY_REMINDER";
+  | "PREMIUM_EXPIRY_REMINDER"
+  | "DAY_ONE_NUDGE"
+  | "CHECKOUT_ABANDONED";
 
 export type NotificationEvent =
   | { type: "LESSON_COMPLETED"; totalCompleted: number }
@@ -47,7 +49,12 @@ export type NotificationEvent =
   // One reminder per stage (7 or 3 days before the end) per Premium period:
   // `periodEnd` is the ISO timestamp the access ends, so buying more days (which
   // moves the end) starts a fresh pair of reminders for the new end date.
-  | { type: "PREMIUM_EXPIRY_REMINDER"; stage: 7 | 3; periodEnd: string };
+  | { type: "PREMIUM_EXPIRY_REMINDER"; stage: 7 | 3; periodEnd: string }
+  // One "your next lesson is ready" per learner, ever. `holdout` marks a learner deliberately not
+  // emailed so the effect can be measured (see src/lib/email/nudges).
+  | { type: "DAY_ONE_NUDGE"; holdout?: boolean }
+  // One "did something go wrong with your payment?" per learner per two-week `bucket`.
+  | { type: "CHECKOUT_ABANDONED"; bucket: number; holdout?: boolean };
 
 /**
  * Whether this event clears the bar for "meaningful" — the single place
@@ -72,6 +79,10 @@ export function shouldNotify(event: NotificationEvent): boolean {
     // Eligibility (an active, dated Premium period inside the window) is decided
     // where the reminders are planned — see src/lib/billing/expiry-reminders.ts.
     case "PREMIUM_EXPIRY_REMINDER":
+      return true;
+    // Who is eligible is decided by the nudge runners (src/lib/email/nudges/select.ts).
+    case "DAY_ONE_NUDGE":
+    case "CHECKOUT_ABANDONED":
       return true;
     default:
       return false;
@@ -141,5 +152,9 @@ export function dedupeKeyFor(event: NotificationEvent, now: Date = new Date()): 
       return `INACTIVE_LEARNER_PUSH:${weekBucket(now)}`;
     case "PREMIUM_EXPIRY_REMINDER":
       return `PREMIUM_EXPIRY_REMINDER:${event.stage}:${event.periodEnd.slice(0, 10)}`;
+    case "DAY_ONE_NUDGE":
+      return "DAY_ONE_NUDGE:v1";
+    case "CHECKOUT_ABANDONED":
+      return `CHECKOUT_ABANDONED:${event.bucket}`;
   }
 }

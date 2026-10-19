@@ -110,3 +110,42 @@ test("getEmailProvider: a malformed EMAIL_REPLY_TO_ADDRESS still yields a workin
     globalThis.fetch = original.fetch;
   }
 });
+
+test("getEmailProvider: EMAIL_PROVIDER=ses needs the SES keys and the sender, then returns the SES provider", () => {
+  const base = {
+    EMAIL_PROVIDER: "ses",
+    EMAIL_FROM_ADDRESS: "hello@example.com",
+    EMAIL_PROVIDER_API_KEY: undefined,
+  };
+  withEnv(
+    { ...base, AWS_SES_ACCESS_KEY_ID: undefined, AWS_SES_SECRET_ACCESS_KEY: undefined },
+    () => {
+      assert.equal(getEmailProvider(), null);
+    },
+  );
+  withEnv({ ...base, AWS_SES_ACCESS_KEY_ID: "id", AWS_SES_SECRET_ACCESS_KEY: undefined }, () => {
+    assert.equal(getEmailProvider(), null);
+  });
+  withEnv(
+    {
+      ...base,
+      AWS_SES_ACCESS_KEY_ID: "id",
+      AWS_SES_SECRET_ACCESS_KEY: "secret",
+      AWS_SES_REGION: undefined,
+    },
+    () => {
+      assert.equal(getEmailProvider()?.name, "ses");
+    },
+  );
+  // The Resend path is untouched when EMAIL_PROVIDER is not "ses".
+  withEnv(
+    {
+      EMAIL_PROVIDER: undefined,
+      EMAIL_PROVIDER_API_KEY: "key",
+      EMAIL_FROM_ADDRESS: "hello@example.com",
+    },
+    () => {
+      assert.equal(getEmailProvider()?.name, "resend");
+    },
+  );
+});

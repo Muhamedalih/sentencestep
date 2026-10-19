@@ -53,6 +53,30 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://sentencestep.com/api/cron/inactive-learners-push
 
+  # Two one-time nudge emails, each sending nothing until NUDGE_EMAIL_MAX_PER_RUN is set on the
+  # server (see src/lib/email/nudges/run.ts): "your next lesson is ready" for a new learner who went
+  # quiet about a day ago, and "did something go wrong with your payment?" for an order that was
+  # started and never finished.
+  day-one-nudge:
+    if: github.event.schedule == '0 15 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/day-one-nudge
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/day-one-nudge
+
+  abandoned-checkout-nudge:
+    if: github.event.schedule == '0 15 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/abandoned-checkout
+        run: |
+          curl --fail-with-body -sS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/abandoned-checkout
+
   translation-sweep:
     if: github.event.schedule == '0 3 * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

@@ -1,5 +1,6 @@
 import type { EmailProvider } from "@/lib/email/provider";
 import { createResendProvider } from "@/lib/email/providers/resend";
+import { createSesProvider } from "@/lib/email/providers/ses";
 
 const BARE_ADDRESS = /^[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+$/;
 const NAMED_ADDRESS = /^[^<>]+<[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+>$/;
@@ -37,10 +38,26 @@ export function resolveReplyTo(raw: string | undefined): string | undefined {
  * most likely on an EMAIL_PROVIDER env var, so the choice stays configuration.
  */
 export function getEmailProvider(): EmailProvider | null {
-  const apiKey = process.env.EMAIL_PROVIDER_API_KEY;
   const from = process.env.EMAIL_FROM_ADDRESS;
   const replyTo = resolveReplyTo(process.env.EMAIL_REPLY_TO_ADDRESS);
 
+  // EMAIL_PROVIDER=ses sends through Amazon SES (keys: AWS_SES_ACCESS_KEY_ID and
+  // AWS_SES_SECRET_ACCESS_KEY, region AWS_SES_REGION, default us-east-1). Anything else is Resend,
+  // exactly as before, so setting nothing changes nothing.
+  if (process.env.EMAIL_PROVIDER?.trim().toLowerCase() === "ses") {
+    const accessKeyId = process.env.AWS_SES_ACCESS_KEY_ID?.trim();
+    const secretAccessKey = process.env.AWS_SES_SECRET_ACCESS_KEY?.trim();
+    if (!accessKeyId || !secretAccessKey || !from) return null;
+    return createSesProvider({
+      accessKeyId,
+      secretAccessKey,
+      region: process.env.AWS_SES_REGION?.trim() || "us-east-1",
+      from,
+      replyTo,
+    });
+  }
+
+  const apiKey = process.env.EMAIL_PROVIDER_API_KEY;
   if (!apiKey || !from) return null;
 
   return createResendProvider(apiKey, from, replyTo);

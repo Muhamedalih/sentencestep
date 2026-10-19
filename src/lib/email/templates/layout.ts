@@ -16,6 +16,10 @@ export interface EmailLayoutInput {
   unsubscribeUrl?: string;
   /** Replaces the default footer sentence, for an account notice that has no preference to manage (e.g. that Premium is ending). Plain text; escaped here. */
   footerNote?: string;
+  /** The message's language: sets <html lang> and, for Arabic, the reading direction. Defaults to English. */
+  lang?: "en" | "ar" | "es" | "tr";
+  /** The footer sentence and the label of the preferences link in the message's language (used with unsubscribeUrl; the default is English). */
+  preferences?: { text: string; linkLabel: string };
 }
 
 export function escapeHtml(value: string): string {
@@ -48,12 +52,14 @@ export function renderEmailLayout({
   ctaUrl,
   unsubscribeUrl,
   footerNote,
+  lang = "en",
+  preferences,
 }: EmailLayoutInput): string {
   const footerHtml = footerNote
     ? escapeHtml(footerNote)
     : unsubscribeUrl
-      ? `You're receiving this because of your SentenceStep account.
-            <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">Manage email preferences</a>.`
+      ? `${escapeHtml(preferences?.text ?? "You're receiving this because of your SentenceStep account.")}
+            <a href="${escapeHtml(unsubscribeUrl)}" style="color:${FAINT_INK};">${escapeHtml(preferences?.linkLabel ?? "Manage email preferences")}</a>.`
       : "You're receiving this because you're a SentenceStep admin.";
 
   const ctaRow =
@@ -63,7 +69,7 @@ export function renderEmailLayout({
       : "";
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${lang}" dir="${lang === "ar" ? "rtl" : "ltr"}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
