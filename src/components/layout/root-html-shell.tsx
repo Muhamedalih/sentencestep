@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Amiri, Lora } from "next/font/google";
+import { Amiri, Inter, Lora } from "next/font/google";
 
 import { CountryOnboarding } from "@/components/app/country-onboarding";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
@@ -30,6 +30,16 @@ const amiri = Amiri({
   display: "swap",
   preload: false,
   variable: "--font-amiri",
+});
+/**
+ * The Latin face for the whole interface (--font-sans and --font-arabic put it first). It has no
+ * Arabic glyphs, so Arabic text still comes from the next font in those stacks, as before. One
+ * variable file, preloaded: every page uses it.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
 });
 const lora = Lora({
   weight: ["500", "600"],
@@ -238,7 +248,7 @@ export function RootHtmlShell({
     <html
       lang={locale ?? "en"}
       dir={locale ? dirFor(locale) : "ltr"}
-      className={`${amiri.variable} ${lora.variable}`}
+      className={`${amiri.variable} ${lora.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
       <head>

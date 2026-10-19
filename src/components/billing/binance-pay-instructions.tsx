@@ -247,10 +247,6 @@ export function BinancePayInstructions({
   return (
     <div className="flex flex-col gap-3">
       <section className="relative overflow-hidden rounded-2xl bg-[linear-gradient(135deg,oklch(0.44_0.2_273),oklch(0.33_0.17_287))] px-5 py-5 text-white">
-        <div
-          aria-hidden="true"
-          className="bg-accent/25 pointer-events-none absolute -end-12 -top-16 size-48 rounded-full blur-3xl"
-        />
         <div className="relative flex flex-col gap-2.5">
           <div className="flex items-center justify-between gap-3" dir="auto">
             <h2 className="text-xs font-medium text-white/80">{t.binancePay.amountLabel}</h2>

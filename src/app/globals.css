@@ -42,10 +42,11 @@
   --ring: var(--brand);
 
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-arabic:
-    "Noto Sans Arabic", "Segoe UI", ui-sans-serif, system-ui, Tahoma, Arial, sans-serif;
+    var(--font-inter), "Noto Sans Arabic", "Segoe UI", ui-sans-serif, system-ui, Tahoma, Arial,
+    sans-serif;
   /* Literary Arabic serif for "opening a book" moments (the Book Learning Engine's Section Intro cover) — deliberately not used for body text, only titles/numerals, alongside the regular --font-arabic UI face. Self-hosted via next/font/google in root-html-shell.tsx, which sets the --font-amiri variable on <html>. */
   --font-book: var(--font-amiri), "Noto Sans Arabic", "Segoe UI", ui-sans-serif, system-ui, serif;
   /* My Saves' quote-card English sentence only (see SavedSentenceCard) — an editorial serif for the one place a saved sentence is presented as a literary quote rather than plain typing-lesson text. Self-hosted the same way as --font-book, via the --font-lora variable. */
@@ -375,7 +376,8 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* No Inter alternates (cv02-cv11 would give a single-storey "a" and open 4, 6, 9): learners
+       should see the standard English letter shapes. */
   }
 
   [dir="rtl"] body,

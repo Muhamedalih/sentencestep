@@ -2,15 +2,18 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BookOpen, Sparkles, Trophy } from "lucide-react";
+import { Sparkles, Trophy } from "lucide-react";
 
 import { HomeBookCard } from "@/components/app/home-book-card";
+import { StoryRibbon } from "@/components/app/story-cover-marks";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
+import { difficultyForLevel } from "@/lib/levels";
 import { findCurrentLesson } from "@/lib/progress/level";
+import { storyMonogram } from "@/lib/story-monogram";
 import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 import type { Book } from "@/types/library";
@@ -188,12 +191,11 @@ export function HomeHero({
     isPremiumUser,
     startingLevel,
   );
-  // A story without a picture shows its title in large type on a cover in the site's own grey,
-  // with a faint book outline in the corner, so the line under it only repeats the title when the
-  // story has no translated one.
-  const storyBandTitle = currentStoryLesson?.illustrationUrl
-    ? null
-    : (currentStoryLesson?.title ?? t.nav.stories);
+  // The Stories box never shows a picture: its title in large type on a cover in the site's own
+  // grey, with the title's first letter as a faint outline and a level-coloured ribbon, so the line
+  // under it only repeats the title when the story has no translated one.
+  const storyBandTitle = currentStoryLesson?.title ?? t.nav.stories;
+  const storyDifficulty = currentStoryLesson ? difficultyForLevel(currentStoryLesson.level) : null;
   const storySubtitle = currentStoryLesson
     ? (currentStoryLesson.supportTitle ?? currentStoryLesson.title)
     : t.marketing.storiesModeDescription;
@@ -356,39 +358,39 @@ export function HomeHero({
           className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
         >
           <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32 lg:h-auto lg:min-h-24 lg:flex-1">
-            {currentStoryLesson?.illustrationUrl ? (
-              // Same plain-<img>/object-cover treatment as HomeBookCard right
-              // above it, deliberately not LessonIllustration here: that
-              // component's hand-drawn-scene fallback is sized for a full
-              // lesson-session panel (hundreds of px tall) and visibly
-              // overflows/clips at this card's much smaller h-28/h-32 band —
-              // an admin-set photo (this branch) crops fine at any size, but
-              // the SVG-scene fallback (the "no photo" case, below) does not,
-              // so it gets this card's own treatment instead: a cover in the
-              // site's own grey (the same one the review card beside it uses)
-              // with a hairline book outline in the brand colour at 22% and
-              // the story's title in large type (below).
-              // eslint-disable-next-line @next/next/no-img-element -- admin-provided Supabase Storage URL, same choice as LessonIllustration's own <Image>'s source, but at a thumbnail size next/image's pipeline isn't worth the extra config for.
-              <img
-                src={currentStoryLesson.illustrationUrl}
-                alt=""
-                className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-110"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-end bg-[linear-gradient(180deg,var(--muted),var(--card))] p-4">
-                <BookOpen
-                  aria-hidden="true"
-                  strokeWidth={1.5}
-                  className="text-primary/[0.22] pointer-events-none absolute -end-[6%] -top-[15%] aspect-square h-[131%] max-h-[230px] w-auto [&_path]:[vector-effect:non-scaling-stroke]"
-                />
-                <span
-                  className="text-foreground relative line-clamp-3 text-xl leading-tight font-semibold tracking-tight dark:text-white"
-                  dir="ltr"
+            {/* No picture here: a cover in the site's own grey (the one the review card beside it
+                uses) with the title's first letter as a faint outline in the brand colour, a
+                bookmark ribbon in the level's colour, and the story's title in large type. */}
+            <div className="absolute inset-0 flex items-end bg-[linear-gradient(180deg,var(--muted),var(--card))] p-4">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 100 100"
+                className="pointer-events-none absolute -end-[3%] -top-[18%] aspect-square h-[131%] max-h-[230px] w-auto"
+              >
+                <text
+                  x="50"
+                  y="82"
+                  textAnchor="middle"
+                  fontSize="92"
+                  strokeWidth={0.6}
+                  className="font-quote stroke-primary/[0.34] fill-transparent"
                 >
-                  {storyBandTitle}
-                </span>
-              </div>
-            )}
+                  {storyMonogram(storyBandTitle)}
+                </text>
+              </svg>
+              {storyDifficulty && (
+                <StoryRibbon
+                  difficulty={storyDifficulty}
+                  className="absolute start-3.5 top-0 h-9 w-[18px]"
+                />
+              )}
+              <span
+                className="text-foreground relative line-clamp-3 text-xl leading-tight font-semibold tracking-tight dark:text-white"
+                dir="ltr"
+              >
+                {storyBandTitle}
+              </span>
+            </div>
           </div>
           <div className="flex shrink-0 flex-col gap-0.5 p-4">
             <h3 className="truncate text-sm font-semibold" dir={dir}>

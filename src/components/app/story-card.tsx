@@ -2,32 +2,24 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 
-import { LessonIllustration } from "@/components/learning/lesson-illustration";
-import { PremiumLockOverlay } from "@/components/learning/premium-lock-overlay";
+import { StoryMonogram, StoryRibbon } from "@/components/app/story-cover-marks";
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
-import { TIER_BADGE_CLASS } from "@/lib/tier-colors";
+import { TIER_CHIP_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
 
 /**
- * The Stories Library's card — a poster tile, not an info card. The cover
- * slot reuses LessonIllustration (mode="stories") rather than a per-lesson
- * icon: the same id-then-keyword-then-pool scene picker and admin-photo
- * override already built for Normal mode's 39 lessons (see that
- * component's own doc comment), so all ~120 Stories get an actual
- * illustrated cover with no new art produced per story and no ceiling on
- * how many stories the catalog can hold. Below the cover, a tier-tinted
- * teaser panel (a one-line hook pulled from the lesson's own description —
- * see the `hook` local below) and the title/subtitle. The status chips
- * (tier, completed) sit over the illustration — a fixed dark/translucent
- * treatment, not the page's own light/dark theme tokens — since they have
- * to stay legible over whatever the illustration paints underneath, same as
- * HomeLessonCard's equivalent badges. A locked story instead gets
- * PremiumLockOverlay: a very light blur over the cover and a "Premium" chip.
+ * The Stories Library's card — a reading-mark tile with no picture. Where the cover used to be,
+ * the title's first letter is drawn as a faint outline and a bookmark ribbon in the level's colour
+ * hangs from the top edge; the ribbon also carries the lock (a Premium story) or the check (a
+ * finished one), and a locked card is simply dimmed. Below: the level chip, the title, the
+ * translated title and the one-line hook from the lesson's own description (already written as a
+ * hook, see src/data/lessons/stories.ts). On a phone the card becomes a row: a small tile with the
+ * letter and ribbon, then the two titles, then the status.
  */
 export function StoryCard({
   lesson,
@@ -39,11 +31,12 @@ export function StoryCard({
   isPremiumUser: boolean;
 }) {
   const locked = !lesson.isFree && !isPremiumUser;
-  const { locale, dir, t } = useLocale();
+  const { locale, t } = useLocale();
   const difficulty = difficultyForLevel(lesson.level);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;
   const supportTitle = lesson.supportTitle ?? lesson.title;
   const hook = lesson.supportDescription ?? lesson.description;
+  const status = locked ? "locked" : completed ? "completed" : null;
 
   return (
     <motion.div variants={fadeInUp} className="group h-full">
@@ -56,77 +49,82 @@ export function StoryCard({
       >
         <div
           className={cn(
-            "border-border/60 bg-card relative flex h-full w-full flex-col overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-300 max-sm:flex-row",
-            "hover:border-white/15 motion-safe:group-hover:-translate-y-1",
+            "border-border/60 bg-card relative flex h-full min-h-64 w-full flex-col justify-end overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-[translate,border-color] duration-300",
+            "hover:border-foreground/20 motion-safe:group-hover:-translate-y-1",
+            "max-sm:min-h-0 max-sm:flex-row max-sm:items-center max-sm:justify-start max-sm:gap-3 max-sm:p-3",
           )}
         >
-          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden max-sm:aspect-auto max-sm:min-h-28 max-sm:w-32">
-            <LessonIllustration
-              mode="stories"
-              lessonId={lesson.id}
+          <StoryMonogram
+            title={lesson.title}
+            className={cn(
+              "absolute end-2 -top-2 text-[9.5rem] max-sm:hidden",
+              locked && "opacity-60",
+            )}
+          />
+          <StoryRibbon
+            difficulty={difficulty}
+            status={status}
+            className="absolute start-3.5 top-0 h-11 w-[22px] pt-2 max-sm:hidden"
+          />
+
+          <span className="bg-primary/10 relative hidden h-[52px] w-11 shrink-0 items-center justify-center rounded-[10px] max-sm:flex">
+            <StoryMonogram
               title={lesson.title}
-              illustrationUrl={lesson.illustrationUrl}
-              className="aspect-[4/3] w-full transition-transform duration-500 ease-out motion-safe:group-hover:scale-105 max-sm:absolute max-sm:inset-0 max-sm:aspect-auto max-sm:h-full"
+              className="text-primary text-[1.65rem] [-webkit-text-stroke:0]"
             />
+            <StoryRibbon
+              difficulty={difficulty}
+              className="absolute start-1.5 top-0 h-[22px] w-3"
+            />
+          </span>
 
-            {/* Before the chips below so the tier badge and the completed
-                check stay sharp on top of the veil. */}
-            {locked && <PremiumLockOverlay />}
-
+          <div
+            className={cn(
+              "relative flex min-w-0 flex-col gap-1 p-4 max-sm:flex-1 max-sm:p-0",
+              locked && "opacity-60",
+            )}
+          >
             <span
               className={cn(
-                "absolute top-2 left-2 rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-sm",
-                TIER_BADGE_CLASS[difficulty],
+                "mb-1 w-fit rounded-full border px-2 py-0.5 text-xs font-medium max-sm:hidden",
+                TIER_CHIP_CLASS[difficulty],
               )}
             >
               {tierText}
             </span>
-
-            {completed && (
-              <span
-                aria-hidden="true"
-                className="bg-success text-success-foreground absolute top-2 right-2 flex size-6 items-center justify-center rounded-full shadow-sm"
-              >
-                <Check className="size-3.5" />
-              </span>
-            )}
-          </div>
-
-          {/* line-clamp-2 (not truncate) on the title so the full text is
-              readable up to two lines — CSS Grid's default row stretch
-              (this div is h-full inside the grid cell) keeps every card in
-              a row the same height regardless of whether its own title
-              actually wraps to one line or two. The Arabic subtitle stays
-              single-line/truncated: showing it in full isn't what was
-              asked for here, and clamping both lines would make the tile
-              noticeably taller than this fix calls for. */}
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 p-4 text-center max-sm:items-start max-sm:p-3 max-sm:text-start">
-            <div className="flex w-full flex-col items-center gap-0.5 max-sm:items-start">
-              <h3 className="line-clamp-2 w-full text-sm leading-snug font-semibold" dir="ltr">
-                {lesson.title}
-              </h3>
-              <p className="text-muted-foreground w-full truncate text-xs" dir={dir}>
-                {supportTitle}
-              </p>
-            </div>
-
+            {/* line-clamp-2 (not truncate) so a long title stays readable; the translated title
+                stays on one line. The card is h-full in its grid cell, so every card in a row has
+                the same height whatever its own title does. */}
+            <h3 className="line-clamp-2 text-[15px] leading-snug font-semibold" dir="ltr">
+              {lesson.title}
+            </h3>
+            <p className="text-muted-foreground truncate text-xs" dir="auto">
+              {supportTitle}
+            </p>
             {hook && (
-              // One line from the lesson's own description/supportDescription
-              // (an existing content field, already written as a hook: see
-              // src/data/lessons/stories.ts) — below the title, not replacing
-              // it, and on a neutral/muted surface rather than the tier tint:
-              // a full-width block of that color read as too loud repeated
-              // across a whole grid of cards (verified live). Absent for any
-              // lesson that doesn't have a description yet, so nothing shows
-              // an empty box.
               <p
-                className="border-foreground/10 bg-foreground/5 text-muted-foreground line-clamp-3 w-full rounded-xl border p-3 text-start text-sm leading-relaxed max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0"
-                dir={lesson.supportDescription ? dir : "ltr"}
+                className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed max-sm:hidden"
+                dir="auto"
               >
                 {hook}
               </p>
             )}
           </div>
+
+          {status === "locked" && (
+            <span className="border-border text-muted-foreground hidden shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs max-sm:inline-flex">
+              <Lock className="size-3" aria-hidden="true" />
+              {t.premium.lockedChip}
+            </span>
+          )}
+          {status === "completed" && (
+            <span
+              aria-hidden="true"
+              className="bg-success text-success-foreground hidden size-6 shrink-0 items-center justify-center rounded-full max-sm:flex"
+            >
+              <Check className="size-3.5" />
+            </span>
+          )}
         </div>
       </Link>
     </motion.div>

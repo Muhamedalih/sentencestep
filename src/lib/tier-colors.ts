@@ -57,3 +57,18 @@ export const TIER_RING_CLASS: Record<Difficulty, string> = {
   intermediate: "bg-sky-500/10 text-sky-500 ring-sky-500/30",
   advanced: "bg-violet-500/10 text-violet-500 ring-violet-500/30",
 };
+
+/**
+ * A tier chip on a normal card surface (StoryCard): TIER_BADGE_CLASS above was drawn for the fixed
+ * dark tiles, where sky-500 on the dark cover reads well, but on a white card in the light theme
+ * it falls to about 2.8:1, so the light theme gets the 700 shades here and the dark theme the
+ * lighter ones.
+ */
+export const TIER_CHIP_CLASS: Record<Difficulty, string> = {
+  beginner:
+    "bg-emerald-600/10 text-emerald-700 border-emerald-600/25 dark:bg-success/12 dark:text-success dark:border-success/30",
+  intermediate:
+    "bg-sky-600/10 text-sky-700 border-sky-600/25 dark:bg-sky-400/12 dark:text-sky-300 dark:border-sky-400/30",
+  advanced:
+    "bg-violet-600/10 text-violet-700 border-violet-600/25 dark:bg-violet-400/12 dark:text-violet-300 dark:border-violet-400/30",
+};
