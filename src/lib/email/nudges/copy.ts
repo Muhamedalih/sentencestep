@@ -172,6 +172,17 @@ function arabicDays(n: number): string {
   return n <= 10 ? `${n} أيام` : `${n} يوماً`;
 }
 
+/** A price in USD cents for the email: "$4" for most languages; in Arabic written in words, because a "$" next to digits gets reordered ("4$") inside right-to-left text. */
+function priceText(language: NudgeLanguage, cents: number): string {
+  const whole = cents % 100 === 0;
+  if (language !== "ar") return `$${whole ? cents / 100 : (cents / 100).toFixed(2)}`;
+  if (!whole) return `${(cents / 100).toFixed(2)} دولار`;
+  const n = cents / 100;
+  if (n === 1) return "دولار واحد";
+  if (n === 2) return "دولاران";
+  return n <= 10 ? `${n} دولارات` : `${n} دولاراً`;
+}
+
 const CHECKOUT: Record<NudgeLanguage, Checkout> = {
   ar: {
     planLabel: { "1m": "شهر واحد", "3m": "3 أشهر", "6m": "6 أشهر" },
@@ -367,10 +378,7 @@ export function abandonedCheckoutEmail({
   const c = CHECKOUT[language];
   const planName = plan ? c.planLabel[plan] : null;
   const days = offer?.days && offer.days > 0 ? offer.days : null;
-  const price =
-    priceCents === null
-      ? null
-      : `$${priceCents % 100 === 0 ? priceCents / 100 : (priceCents / 100).toFixed(2)}`;
+  const price = priceCents === null ? null : priceText(language, priceCents);
   const subject = !planName
     ? c.subjectGeneric
     : days

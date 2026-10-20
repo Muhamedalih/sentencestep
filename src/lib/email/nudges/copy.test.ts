@@ -60,7 +60,11 @@ test("abandonedCheckoutEmail: short, about their own plan and price, in every la
       offer: { days: 10 },
     });
     assert.ok(email.html.includes(`${ORIGIN}/upgrade"`), `${language} cta`);
-    assert.ok(email.html.includes("$4"), `${language} their price`);
+    // Arabic writes the price in words ("4 دولارات"): a "$" inside right-to-left text gets reordered.
+    assert.ok(
+      language === "ar" ? email.html.includes("4 دولارات") : email.html.includes("$4"),
+      `${language} their price`,
+    );
     assert.ok(email.html.includes("10"), `${language} their gift days`);
     assert.ok(email.subject.includes("10"), `${language} subject names the gift`);
     assert.ok(email.html.includes("Sara"), `${language} name`);
