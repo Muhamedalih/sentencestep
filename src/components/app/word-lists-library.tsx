@@ -126,7 +126,7 @@ export function WordListsLibrary({
                     initial="hidden"
                     animate="visible"
                     variants={staggerChildren}
-                    className="flex flex-col gap-3"
+                    className="flex flex-col gap-3 lg:gap-4"
                   >
                     {levelGroups.map((group) => (
                       <WordGroupCard

@@ -72,3 +72,10 @@ export const TIER_CHIP_CLASS: Record<Difficulty, string> = {
   advanced:
     "bg-violet-600/10 text-violet-700 border-violet-600/25 dark:bg-violet-400/12 dark:text-violet-300 dark:border-violet-400/30",
 };
+
+/** Same three colors as TIER_BADGE_CLASS at 32%, for the big hollow outline icon on a Word List tile (WordGroupCard): the level shows in that icon, so the tile needs no other marker. */
+export const TIER_WATERMARK_CLASS: Record<Difficulty, string> = {
+  beginner: "text-success/32",
+  intermediate: "text-sky-500/32",
+  advanced: "text-violet-500/32",
+};
