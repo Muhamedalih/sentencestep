@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { getEmailProvider, resolveReplyTo } from "./provider-registry";
+import { getEmailProvider, isSesRouteEnabled, resolveReplyTo } from "./provider-registry";
 
 function withEnv(vars: Record<string, string | undefined>, fn: () => void): void {
   const original: Record<string, string | undefined> = {};
@@ -150,22 +150,24 @@ test("getEmailProvider: EMAIL_PROVIDER=ses needs the SES keys and the sender, th
   );
 });
 
-test("getEmailProvider: EMAIL_PROVIDER=hybrid uses both when both are set up, and the one that exists otherwise", () => {
+test("getEmailProvider: EMAIL_PROVIDER=hybrid is the budgeted route, whichever of Resend and SES exist", () => {
   const both = {
     EMAIL_PROVIDER: "hybrid",
     EMAIL_FROM_ADDRESS: "hello@example.com",
     EMAIL_PROVIDER_API_KEY: "key",
     AWS_SES_ACCESS_KEY_ID: "id",
     AWS_SES_SECRET_ACCESS_KEY: "secret",
+    EMAIL_SES_ENABLED: undefined,
   };
   withEnv(both, () => {
     assert.equal(getEmailProvider()?.name, "hybrid");
   });
+  // Resend alone is still counted, so its free daily limit is never overrun.
   withEnv({ ...both, AWS_SES_SECRET_ACCESS_KEY: undefined }, () => {
-    assert.equal(getEmailProvider()?.name, "resend");
+    assert.equal(getEmailProvider()?.name, "hybrid");
   });
   withEnv({ ...both, EMAIL_PROVIDER_API_KEY: undefined }, () => {
-    assert.equal(getEmailProvider()?.name, "ses");
+    assert.equal(getEmailProvider()?.name, "hybrid");
   });
   withEnv(
     { ...both, EMAIL_PROVIDER_API_KEY: undefined, AWS_SES_SECRET_ACCESS_KEY: undefined },
@@ -176,4 +178,22 @@ test("getEmailProvider: EMAIL_PROVIDER=hybrid uses both when both are set up, an
   withEnv({ ...both, EMAIL_FROM_ADDRESS: undefined }, () => {
     assert.equal(getEmailProvider(), null);
   });
+});
+
+test("isSesRouteEnabled: needs the keys, and EMAIL_SES_ENABLED=false keeps SES out", () => {
+  const keys = { AWS_SES_ACCESS_KEY_ID: "id", AWS_SES_SECRET_ACCESS_KEY: "secret" };
+  withEnv({ ...keys, EMAIL_SES_ENABLED: undefined }, () => assert.equal(isSesRouteEnabled(), true));
+  withEnv({ ...keys, EMAIL_SES_ENABLED: "true" }, () => assert.equal(isSesRouteEnabled(), true));
+  withEnv({ ...keys, EMAIL_SES_ENABLED: "false" }, () => assert.equal(isSesRouteEnabled(), false));
+  withEnv({ ...keys, EMAIL_SES_ENABLED: " False " }, () =>
+    assert.equal(isSesRouteEnabled(), false),
+  );
+  withEnv(
+    {
+      AWS_SES_ACCESS_KEY_ID: undefined,
+      AWS_SES_SECRET_ACCESS_KEY: "secret",
+      EMAIL_SES_ENABLED: undefined,
+    },
+    () => assert.equal(isSesRouteEnabled(), false),
+  );
 });

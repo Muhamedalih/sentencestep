@@ -1,3 +1,4 @@
+import type { PlanId } from "@/lib/billing/plans";
 import { escapeHtml, renderEmailLayout } from "@/lib/email/templates/layout";
 import type { EmailContent } from "@/lib/email/templates/layout";
 
@@ -5,12 +6,12 @@ import type { EmailContent } from "@/lib/email/templates/layout";
  * The nudge emails, written once per language the learner can have (profiles.preferred_language
  * is ar, es or tr; English is the fallback): a one-time "your next lesson is ready" a day after a
  * new learner went quiet, a weekly "your lesson is waiting" for a learner who has been away a few
- * days, and a one-time "did something go wrong with your payment?" after an order that was started
- * and never finished.
+ * days, and a short "your plan is one step away" for someone who opened checkout and did not pay
+ * (never for a declined payment: those learners are written to personally).
  *
  * Everything in them is true on the day it is sent: the offer line is added only while an offer
- * runs, the Binance Pay line only while Binance Pay is offered, the reply line only when a reply
- * address is configured, and there is no countdown, no scarcity and no promise about refunds.
+ * runs (with that plan's own number of days), and there is no countdown, no scarcity and no promise
+ * about refunds.
  * Dynamic values are escaped here; the text version is the same words without markup.
  */
 export type NudgeLanguage = "ar" | "es" | "tr" | "en";
@@ -51,17 +52,18 @@ interface DayOne {
   cta: string;
 }
 
-interface Abandoned {
-  subject: string;
+/** The reminder to someone who opened checkout and did not pay: short, about THEIR plan, in their language. */
+interface Checkout {
+  planLabel: Record<PlanId, string>;
+  subjectOffer: (plan: string, days: number) => string;
+  subjectPlain: (plan: string) => string;
+  subjectGeneric: string;
   preview: string;
   heading: string;
-  started: string;
-  /** What to do if the payment did not work: with Binance Pay, with a reply address, both or neither. */
-  helpBoth: string;
-  helpBinance: string;
-  helpReply: string;
-  helpNone: string;
-  offer: string;
+  picked: (plan: string, price: string) => string;
+  offerDays: (days: number) => string;
+  offerGeneric: string;
+  unlocked: string;
   terms: string;
   cta: string;
 }
@@ -163,60 +165,69 @@ const REMINDER: Record<NudgeLanguage, Reminder> = {
   },
 };
 
-const ABANDONED: Record<NudgeLanguage, Abandoned> = {
+/** Arabic counts days differently from 3 to 10 ("أيام") and from 11 on ("يوماً"). */
+function arabicDays(n: number): string {
+  if (n === 1) return "يوم واحد";
+  if (n === 2) return "يومان";
+  return n <= 10 ? `${n} أيام` : `${n} يوماً`;
+}
+
+const CHECKOUT: Record<NudgeLanguage, Checkout> = {
   ar: {
-    subject: "هل واجهت مشكلة في الدفع؟",
-    preview: "نقدر نساعدك تكمل الاشتراك",
-    heading: "هل واجهت مشكلة في الدفع؟",
-    started: "بدأت الاشتراك في المميّز لكنه لم يكتمل.",
-    helpBoth: "إذا لم تنجح البطاقة، جرّب Binance Pay، أو ردّ على هذه الرسالة ونساعدك.",
-    helpBinance: "إذا لم تنجح البطاقة، جرّب Binance Pay.",
-    helpReply: "إذا واجهتك مشكلة، ردّ على هذه الرسالة ونساعدك.",
-    helpNone: "تقدر تحاول مرة ثانية متى شئت.",
-    offer: "ومع أي باقة الآن أيام هدية إضافية، لفترة محدودة.",
-    terms: "الدفع مرة واحدة، بدون تجديد تلقائي.",
-    cta: "أكمل الاشتراك",
+    planLabel: { "1m": "شهر واحد", "3m": "3 أشهر", "6m": "6 أشهر" },
+    subjectOffer: (plan, days) => `${arabicDays(days)} هدية على باقة ${plan}`,
+    subjectPlain: (plan) => `باقة ${plan} المميّزة على بُعد خطوة`,
+    subjectGeneric: "اشتراكك المميّز على بُعد خطوة",
+    preview: "دفعة واحدة، بدون تجديد تلقائي",
+    heading: "باقي خطوة واحدة",
+    picked: (plan, price) => `اخترت باقة ${plan} (${price}).`,
+    offerDays: (days) => `الآن تأتيك معها ${arabicDays(days)} هدية، لفترة محدودة.`,
+    offerGeneric: "الآن مع أي باقة أيام هدية إضافية، لفترة محدودة.",
+    unlocked: "كل الدروس والقصص مفتوحة لك.",
+    terms: "دفعة واحدة، بدون تجديد تلقائي.",
+    cta: "أكمل في دقيقة",
   },
   es: {
-    subject: "¿Tuviste algún problema con el pago?",
-    preview: "Podemos ayudarte a completar la suscripción",
-    heading: "¿Tuviste algún problema con el pago?",
-    started: "Empezaste tu suscripción a Premium, pero no se completó.",
-    helpBoth:
-      "Si la tarjeta no funcionó, prueba con Binance Pay o responde a este mensaje y te ayudamos.",
-    helpBinance: "Si la tarjeta no funcionó, prueba con Binance Pay.",
-    helpReply: "Si tuviste algún problema, responde a este mensaje y te ayudamos.",
-    helpNone: "Puedes intentarlo de nuevo cuando quieras.",
-    offer: "Ahora, con cualquier plan, tienes días de regalo extra, por tiempo limitado.",
+    planLabel: { "1m": "1 mes", "3m": "3 meses", "6m": "6 meses" },
+    subjectOffer: (plan, days) => `${days} días de regalo en tu plan de ${plan}`,
+    subjectPlain: (plan) => `Tu plan Premium de ${plan} está a un paso`,
+    subjectGeneric: "Tu Premium está a un paso",
+    preview: "Un solo pago, sin renovación automática",
+    heading: "Solo falta un paso",
+    picked: (plan, price) => `Elegiste el plan de ${plan} (${price}).`,
+    offerDays: (days) => `Ahora incluye ${days} días extra de regalo, por tiempo limitado.`,
+    offerGeneric: "Ahora, con cualquier plan, tienes días de regalo extra, por tiempo limitado.",
+    unlocked: "Todas las lecciones e historias, desbloqueadas.",
     terms: "Un solo pago, sin renovación automática.",
-    cta: "Completar la suscripción",
+    cta: "Termínalo en un minuto",
   },
   tr: {
-    subject: "Ödemede bir sorun mu yaşadınız?",
-    preview: "Aboneliği tamamlamanıza yardımcı olabiliriz",
-    heading: "Ödemede bir sorun mu yaşadınız?",
-    started: "Premium aboneliğini başlattınız ama tamamlanmadı.",
-    helpBoth:
-      "Kart çalışmadıysa Binance Pay'i deneyin ya da bu iletiye yanıt verin, size yardımcı olalım.",
-    helpBinance: "Kart çalışmadıysa Binance Pay'i deneyin.",
-    helpReply: "Bir sorun yaşadıysanız bu iletiye yanıt verin, size yardımcı olalım.",
-    helpNone: "İstediğiniz zaman yeniden deneyebilirsiniz.",
-    offer: "Şu anda her pakette sınırlı süreyle ek hediye günler var.",
+    planLabel: { "1m": "1 aylık", "3m": "3 aylık", "6m": "6 aylık" },
+    subjectOffer: (plan, days) => `${plan} planınızda ${days} gün hediye`,
+    subjectPlain: (plan) => `${plan} Premium planınız bir adım uzakta`,
+    subjectGeneric: "Premium üyeliğiniz bir adım uzakta",
+    preview: "Tek ödeme, otomatik yenileme yok",
+    heading: "Tek bir adım kaldı",
+    picked: (plan, price) => `${plan} planı seçtiniz (${price}).`,
+    offerDays: (days) => `Şu anda ${days} gün ek hediye geliyor, sınırlı süreyle.`,
+    offerGeneric: "Şu anda her pakette sınırlı süreyle ek hediye günler var.",
+    unlocked: "Tüm dersler ve hikayeler açılır.",
     terms: "Tek ödeme, otomatik yenileme yok.",
-    cta: "Aboneliği tamamla",
+    cta: "Bir dakikada tamamla",
   },
   en: {
-    subject: "Did something go wrong with your payment?",
-    preview: "We can help you finish subscribing",
-    heading: "Did something go wrong with your payment?",
-    started: "You started a Premium subscription, but it didn't finish.",
-    helpBoth: "If your card didn't work, try Binance Pay, or reply to this email and we'll help.",
-    helpBinance: "If your card didn't work, try Binance Pay.",
-    helpReply: "If something went wrong, reply to this email and we'll help.",
-    helpNone: "You can try again whenever you like.",
-    offer: "Right now every plan comes with extra free days, for a limited time.",
+    planLabel: { "1m": "1-month", "3m": "3-month", "6m": "6-month" },
+    subjectOffer: (plan, days) => `${days} free days on your ${plan} plan`,
+    subjectPlain: (plan) => `Your ${plan} Premium plan is one step away`,
+    subjectGeneric: "Your Premium is one step away",
+    preview: "One payment, no auto-renewal",
+    heading: "One step left",
+    picked: (plan, price) => `You picked the ${plan} plan (${price}).`,
+    offerDays: (days) => `Right now it comes with ${days} extra days, free, for a limited time.`,
+    offerGeneric: "Right now every plan comes with extra free days, for a limited time.",
+    unlocked: "Every lesson and story, unlocked.",
     terms: "One payment, no auto-renewal.",
-    cta: "Finish subscribing",
+    cta: "Finish in a minute",
   },
 };
 
@@ -336,38 +347,44 @@ export function reminderEmail({
 }
 
 export interface AbandonedCheckoutInput extends NudgeEmailInput {
-  /** Whether Binance Pay is offered to everyone right now. */
-  binancePay: boolean;
-  /** Whether a launch offer is running right now. */
-  offerRunning: boolean;
-  /** Whether a reply address is configured, i.e. whether "reply to this email" is true. */
-  canReply: boolean;
+  /** The plan of the order they left (null when it cannot be told) and what it costs, in USD cents. */
+  plan: PlanId | null;
+  priceCents: number | null;
+  /** The offer running right now on that plan: its number of days, or null days when there is no single number; null when no offer runs. */
+  offer: { days: number | null } | null;
 }
 
-/** "Did something go wrong with your payment?": an order that was started and never finished. */
+/** "Your plan is one step away": someone who opened checkout and did not pay. Short, about their own plan and price, and the gift days only while an offer really runs. */
 export function abandonedCheckoutEmail({
   origin,
   displayName,
   language,
-  binancePay,
-  offerRunning,
-  canReply,
   unsubscribe,
+  plan,
+  priceCents,
+  offer,
 }: AbandonedCheckoutInput): EmailContent {
-  const c = ABANDONED[language];
-  const help =
-    binancePay && canReply
-      ? c.helpBoth
-      : binancePay
-        ? c.helpBinance
-        : canReply
-          ? c.helpReply
-          : c.helpNone;
+  const c = CHECKOUT[language];
+  const planName = plan ? c.planLabel[plan] : null;
+  const days = offer?.days && offer.days > 0 ? offer.days : null;
+  const price =
+    priceCents === null
+      ? null
+      : `$${priceCents % 100 === 0 ? priceCents / 100 : (priceCents / 100).toFixed(2)}`;
+  const subject = !planName
+    ? c.subjectGeneric
+    : days
+      ? c.subjectOffer(planName, days)
+      : c.subjectPlain(planName);
   return render(language, {
-    subject: c.subject,
+    subject,
     preview: c.preview,
     heading: c.heading,
-    paragraphs: [c.started, help, ...(offerRunning ? [c.offer] : []), c.terms],
+    paragraphs: [
+      ...(planName && price ? [c.picked(planName, price)] : []),
+      offer ? (days ? c.offerDays(days) : c.offerGeneric) : c.unlocked,
+      c.terms,
+    ],
     cta: c.cta,
     ctaUrl: `${origin}/upgrade`,
     settingsUrl: `${origin}/learn/settings`,

@@ -26,8 +26,16 @@ export function reminderWindow(now: Date): { from: string; to: string } {
 export const ABANDONED_MIN_AGE_MS = 2 * HOUR_MS;
 export const ABANDONED_MAX_AGE_MS = 30 * HOUR_MS;
 
-/** Order statuses that mean a payment was started and did not end in Premium. `fulfilled` and `needs_review` (it may have been paid) are not among them. */
-export const ABANDONED_STATUSES = ["created", "pending", "failed", "cancelled", "expired"] as const;
+/**
+ * Order statuses that mean a checkout was opened and the learner did not pay: they left, cancelled
+ * or let it time out. `fulfilled` and `needs_review` (it may have been paid) are not among them,
+ * and neither is `failed`: a learner whose payment was declined is written to personally, never
+ * sent an automatic email.
+ */
+export const ABANDONED_STATUSES = ["created", "pending", "cancelled", "expired"] as const;
+
+/** A declined payment. A learner with one in the window gets no checkout reminder. */
+export const FAILED_STATUS = "failed";
 
 /** The share of learners deliberately not emailed, so the effect of the emails can be measured against them. */
 const DEFAULT_HOLDOUT_PERCENT = 20;

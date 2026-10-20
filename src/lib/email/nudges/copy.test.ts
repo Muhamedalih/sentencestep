@@ -49,55 +49,92 @@ test("dayOneNudgeEmail: a missing name greets without one, and a name is escaped
   assert.equal(hostile.html.includes("<img"), false);
 });
 
-test("abandonedCheckoutEmail: what it mentions is exactly what is true right now", () => {
+test("abandonedCheckoutEmail: short, about their own plan and price, in every language", () => {
   for (const language of LANGUAGES) {
-    const all = abandonedCheckoutEmail({
+    const email = abandonedCheckoutEmail({
       origin: ORIGIN,
-      displayName: null,
+      displayName: "Sara",
       language,
-      binancePay: true,
-      offerRunning: true,
-      canReply: true,
+      plan: "3m",
+      priceCents: 400,
+      offer: { days: 10 },
     });
-    const none = abandonedCheckoutEmail({
-      origin: ORIGIN,
-      displayName: null,
-      language,
-      binancePay: false,
-      offerRunning: false,
-      canReply: false,
-    });
-    assert.ok(all.html.includes(`${ORIGIN}/upgrade"`), `${language} cta`);
-    assert.ok(all.html.includes("Binance Pay"), `${language} mentions Binance Pay when offered`);
-    assert.equal(
-      none.html.includes("Binance Pay"),
-      false,
-      `${language} must not mention it when it is not offered`,
-    );
-    assert.ok(all.html.length > none.html.length, `${language} offer line only while it runs`);
-    assert.equal(FORBIDDEN.test(all.html) || FORBIDDEN.test(none.html), false, language);
+    assert.ok(email.html.includes(`${ORIGIN}/upgrade"`), `${language} cta`);
+    assert.ok(email.html.includes("$4"), `${language} their price`);
+    assert.ok(email.html.includes("10"), `${language} their gift days`);
+    assert.ok(email.subject.includes("10"), `${language} subject names the gift`);
+    assert.ok(email.html.includes("Sara"), `${language} name`);
+    assert.equal(FORBIDDEN.test(email.html), false, language);
+    assert.equal(/\{[a-z]+\}/i.test(email.html), false, `${language} unfilled placeholder`);
+    // Short: a greeting, three sentences, one button.
+    assert.ok(email.text.split("\n").filter((l) => l.trim()).length <= 7, `${language} is short`);
   }
 });
 
-test("abandonedCheckoutEmail: 'reply to this email' only when a reply address exists", () => {
-  const withReply = abandonedCheckoutEmail({
+test("abandonedCheckoutEmail: never talks about a failed payment, a reply address or Binance Pay", () => {
+  for (const language of LANGUAGES) {
+    const email = abandonedCheckoutEmail({
+      origin: ORIGIN,
+      displayName: null,
+      language,
+      plan: "1m",
+      priceCents: 200,
+      offer: null,
+    });
+    assert.equal(
+      /Binance|reply|responde|yanıt|ردّ|ردّ|went wrong|salió mal|sorun|مشكلة/i.test(email.html),
+      false,
+      language,
+    );
+  }
+});
+
+test("abandonedCheckoutEmail: the gift line is there only while an offer runs, with the plan's own days", () => {
+  for (const language of LANGUAGES) {
+    const base = {
+      origin: ORIGIN,
+      displayName: null,
+      language,
+      plan: "1m",
+      priceCents: 200,
+    } as const;
+    const withOffer = abandonedCheckoutEmail({ ...base, offer: { days: 7 } });
+    const generic = abandonedCheckoutEmail({ ...base, offer: { days: null } });
+    const none = abandonedCheckoutEmail({ ...base, offer: null });
+    assert.ok(withOffer.text.includes("7"), `${language} specific days`);
+    assert.equal(none.text.includes("7"), false, `${language} no gift without an offer`);
+    assert.notEqual(withOffer.subject, none.subject, language);
+    assert.notEqual(generic.html, none.html, language);
+    assert.notEqual(generic.html, withOffer.html, language);
+  }
+});
+
+test("abandonedCheckoutEmail: with no known plan it is generic and never invents one", () => {
+  const email = abandonedCheckoutEmail({
     origin: ORIGIN,
     displayName: null,
     language: "en",
-    binancePay: false,
-    offerRunning: false,
-    canReply: true,
+    plan: null,
+    priceCents: null,
+    offer: null,
   });
-  const without = abandonedCheckoutEmail({
-    origin: ORIGIN,
-    displayName: null,
-    language: "en",
-    binancePay: false,
-    offerRunning: false,
-    canReply: false,
-  });
-  assert.match(withReply.text, /reply to this email/i);
-  assert.equal(/reply/i.test(without.text), false);
+  assert.equal(email.subject, "Your Premium is one step away");
+  assert.equal(/plan \(/.test(email.html), false);
+});
+
+test("abandonedCheckoutEmail: Arabic counts days properly", () => {
+  const days = (n: number) =>
+    abandonedCheckoutEmail({
+      origin: ORIGIN,
+      displayName: null,
+      language: "ar",
+      plan: "1m",
+      priceCents: 200,
+      offer: { days: n },
+    }).subject;
+  assert.match(days(7), /7 أيام/);
+  assert.match(days(10), /10 أيام/);
+  assert.match(days(15), /15 يوماً/);
 });
 
 test("reminderEmail: complete in every language, and the offer line only while an offer runs", () => {

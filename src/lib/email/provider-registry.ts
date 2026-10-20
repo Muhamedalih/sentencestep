@@ -46,6 +46,20 @@ function intFromEnv(raw: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
+/**
+ * Whether the SES route may be used: its keys are set and EMAIL_SES_ENABLED is not "false". Setting
+ * it to "false" keeps SES out of the hybrid route (for example while the AWS account is still in
+ * its sandbox, or to stay on Resend's free plan) without removing the keys.
+ */
+export function isSesRouteEnabled(): boolean {
+  return (
+    process.env.EMAIL_SES_ENABLED?.trim().toLowerCase() !== "false" &&
+    Boolean(
+      process.env.AWS_SES_ACCESS_KEY_ID?.trim() && process.env.AWS_SES_SECRET_ACCESS_KEY?.trim(),
+    )
+  );
+}
+
 function sesFromEnv(from: string | undefined, replyTo: string | undefined): EmailProvider | null {
   const accessKeyId = process.env.AWS_SES_ACCESS_KEY_ID?.trim();
   const secretAccessKey = process.env.AWS_SES_SECRET_ACCESS_KEY?.trim();
@@ -77,22 +91,25 @@ export function getEmailProvider(): EmailProvider | null {
   // AWS_SES_SECRET_ACCESS_KEY, region AWS_SES_REGION, default us-east-1).
   if (kind === "ses") return sesFromEnv(from, replyTo);
 
-  // EMAIL_PROVIDER=hybrid uses both (see providers/routed.ts): important messages go through
-  // Resend's free plan, the rest through SES, each the other's fallback. With only one of the two
-  // configured it simply uses that one. Budgets: EMAIL_RESEND_DAILY_BUDGET (default 80, Resend's
-  // free plan allows 100), EMAIL_RESEND_BULK_CEILING (default 40) and EMAIL_SES_MONTHLY_BUDGET
-  // (default 12000, about two dollars at SES's highest plan price).
+  // EMAIL_PROVIDER=hybrid is the budgeted route (see providers/routed.ts): important messages go
+  // through Resend's free plan, the rest through SES, each the other's fallback. Every send is
+  // counted, so Resend stays under its free daily limit even when it is the ONLY route: with
+  // EMAIL_SES_ENABLED=false (or no SES keys) bulk mail simply shares what Resend has left, up to
+  // EMAIL_RESEND_BULK_CEILING a day, and the rest of the daily budget is kept for important mail.
+  // Budgets: EMAIL_RESEND_DAILY_BUDGET (default 80, Resend's free plan allows 100),
+  // EMAIL_RESEND_BULK_CEILING (default 40) and EMAIL_SES_MONTHLY_BUDGET (default 12000, about two
+  // dollars at SES's highest plan price).
   if (kind === "hybrid") {
     const resend = resendFromEnv(from, replyTo);
-    const ses = sesFromEnv(from, replyTo);
-    if (!resend || !ses) return resend ?? ses;
+    const ses = isSesRouteEnabled() ? sesFromEnv(from, replyTo) : null;
+    if (!resend && !ses) return null;
     const dailyBudget = intFromEnv(process.env.EMAIL_RESEND_DAILY_BUDGET, 80);
     const store = createSupabaseUsageStore();
     return createRoutedProvider({
       resend,
       ses,
       store,
-      sesBulkDailyBudget: createWarmupBudget(store),
+      ...(ses ? { sesBulkDailyBudget: createWarmupBudget(store) } : {}),
       resendDailyBudget: dailyBudget,
       resendBulkCeiling: Math.min(
         intFromEnv(process.env.EMAIL_RESEND_BULK_CEILING, 40),

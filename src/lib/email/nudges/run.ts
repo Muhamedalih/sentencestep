@@ -1,5 +1,8 @@
-import { isOfferActive } from "@/lib/billing/launch-offer";
+import { isOfferActive, offerBonusDaysForPlan, sharedBonusDays } from "@/lib/billing/launch-offer";
+import type { LaunchOffer } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
+import { PLAN_IDS, planPriceCents } from "@/lib/billing/plans";
+import type { PlanId } from "@/lib/billing/plans";
 import { dedupeKeyFor } from "@/lib/email/events";
 import type { NotificationEvent } from "@/lib/email/events";
 import {
@@ -20,6 +23,7 @@ import {
   ABANDONED_STATUSES,
   DAY_ONE_MAX_AGE_MS,
   DAY_ONE_MIN_AGE_MS,
+  FAILED_STATUS,
   abandonedBucket,
   canEmailAccount,
   holdoutPercent,
@@ -30,13 +34,12 @@ import {
 } from "@/lib/email/nudges/select";
 import { NoEmailRouteError } from "@/lib/email/providers/routed";
 import { warmupDay, warmupLimit } from "@/lib/email/providers/warmup";
-import { getEmailProvider, resolveReplyTo } from "@/lib/email/provider-registry";
+import { getEmailProvider, isSesRouteEnabled } from "@/lib/email/provider-registry";
 import { sendTemplateEmail } from "@/lib/email/send";
 import type { EmailContent } from "@/lib/email/templates/layout";
 import { unsubscribeLinks } from "@/lib/email/unsubscribe-token";
 import type { UnsubscribeLinks } from "@/lib/email/nudges/copy";
 import { createSupabaseUsageStore, utcDay } from "@/lib/email/usage";
-import { getEffectiveFeatures } from "@/lib/features/queries";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
@@ -66,6 +69,8 @@ export interface NudgeRunSummary {
     notVerified: number;
     noEmail: number;
     overLimit: number;
+    /** A declined payment in the window: those learners are written to personally, never emailed. */
+    failedPayment: number;
   };
   /** While the sending domain is warming up (EMAIL_PROVIDER=hybrid): which day of sending it is, today's room for bulk email and how much of it is used. */
   warmup?: { day: number; dailyLimit: number; sentToday: number } | null;
@@ -87,6 +92,7 @@ function emptySummary(dryRun: boolean): NudgeRunSummary {
       notVerified: 0,
       noEmail: 0,
       overLimit: 0,
+      failedPayment: 0,
     },
   };
 }
@@ -99,6 +105,9 @@ interface Recipient {
   daysInactive?: number;
   /** The learner turned offers off: the reminder is sent without the offer line. */
   noOffers?: boolean;
+  /** The plan and price (USD cents) of the checkout they left (the checkout reminder only). */
+  plan?: PlanId | null;
+  priceCents?: number | null;
 }
 
 const CHUNK = 100;
@@ -237,7 +246,9 @@ async function processRecipients(args: {
 
 /** Today's bulk room through SES, when the hybrid route is in use (null otherwise: nothing paces the sends). */
 async function warmupStatus(now: Date) {
-  if (process.env.EMAIL_PROVIDER?.trim().toLowerCase() !== "hybrid") return null;
+  if (process.env.EMAIL_PROVIDER?.trim().toLowerCase() !== "hybrid" || !isSesRouteEnabled()) {
+    return null;
+  }
   try {
     const store = createSupabaseUsageStore();
     const today = utcDay(now);
@@ -435,22 +446,30 @@ export async function runReminderNudge(options: {
   return summary;
 }
 
-/** What the payment email may truthfully mention right now. */
-async function paymentFacts(now: Date) {
-  let binancePay = false;
-  try {
-    binancePay = (await getEffectiveFeatures()).binancePay.enabled;
-  } catch {
-    // Unknown means "do not mention it".
-  }
-  return {
-    binancePay,
-    offerRunning: isOfferActive(await getLaunchOffer(), now),
-    canReply: resolveReplyTo(process.env.EMAIL_REPLY_TO_ADDRESS) !== undefined,
-  };
+/** The plan an order was for: the one whose price in that order's pricing tier matches what the order charged. */
+function planOfOrder(tier: string, priceCents: number): PlanId | null {
+  if (tier !== "A" && tier !== "B") return null;
+  return PLAN_IDS.find((id) => planPriceCents(tier, id) === priceCents) ?? null;
 }
 
-/** "Did something go wrong with your payment?": orders started 2 to 30 hours ago that did not end in Premium. */
+/** What the checkout reminder may truthfully say about the offer right now, for this plan. */
+function checkoutOffer(
+  offer: LaunchOffer | null,
+  now: Date,
+  plan: PlanId | null,
+): { days: number | null } | null {
+  if (!isOfferActive(offer, now)) return null;
+  const days = plan ? offerBonusDaysForPlan(offer, plan) : sharedBonusDays(offer);
+  if (plan && days === 0) return null;
+  return { days: days && days > 0 ? days : null };
+}
+
+/**
+ * "Your plan is one step away": learners who opened checkout 2 to 30 hours ago and did not pay (left,
+ * cancelled or timed out). A learner with a DECLINED payment in that window is skipped: those are
+ * written to personally. The email names their own plan and price and the gift days of the offer
+ * that runs on that plan.
+ */
 export async function runAbandonedCheckoutNudge(options: {
   origin: string;
   now: Date;
@@ -465,13 +484,24 @@ export async function runAbandonedCheckoutNudge(options: {
   const db = createServiceRoleClient();
   const { data: orders, error } = await db
     .from("payment_orders")
-    .select("user_id")
+    .select("user_id, status, created_at, pricing_tier, price_usd_cents")
     .eq("provider_env", "live")
-    .in("status", [...ABANDONED_STATUSES])
+    .in("status", [...ABANDONED_STATUSES, FAILED_STATUS])
     .gte("created_at", new Date(now.getTime() - ABANDONED_MAX_AGE_MS).toISOString())
     .lte("created_at", new Date(now.getTime() - ABANDONED_MIN_AGE_MS).toISOString())
+    .order("created_at", { ascending: false })
     .limit(5000);
   if (error) throw error;
+
+  // Newest order first, so the first row seen for a learner is the checkout they left last.
+  const lastOrder = new Map<string, { tier: string; cents: number }>();
+  const hadFailure = new Set<string>();
+  for (const o of orders ?? []) {
+    if (o.status === FAILED_STATUS) hadFailure.add(o.user_id);
+    else if (!lastOrder.has(o.user_id)) {
+      lastOrder.set(o.user_id, { tier: o.pricing_tier, cents: o.price_usd_cents });
+    }
+  }
   const ids = Array.from(new Set((orders ?? []).map((o) => o.user_id)));
 
   const bucket = abandonedBucket(now);
@@ -495,27 +525,31 @@ export async function runAbandonedCheckoutNudge(options: {
   const recipients: Recipient[] = [];
   for (const id of ids) {
     if (everPaid.has(id) || exclusions.premium.has(id)) summary.skipped.premium += 1;
+    else if (hadFailure.has(id)) summary.skipped.failedPayment += 1;
     else if (exclusions.optedOut.has(id)) summary.skipped.optedOut += 1;
     else if (handled.has(id)) summary.skipped.alreadyHandled += 1;
     else {
       const profile = profileById.get(id);
+      const order = lastOrder.get(id);
       recipients.push({
         userId: id,
         displayName: profile?.display_name ?? null,
         language: nudgeLanguage(profile?.preferred_language),
+        plan: order ? planOfOrder(order.tier, order.cents) : null,
+        priceCents: order?.cents ?? null,
       });
     }
   }
   summary.candidates = recipients.length;
 
-  const facts = await paymentFacts(now);
+  const offer = await getLaunchOffer();
   await processRecipients({
     db,
     recipients,
     summary,
     limit,
     origin,
-    // A payment that did not finish is the one nudge that matters most: it goes out through Resend first.
+    // The reminder that matters most goes out through Resend first, from the room kept for important mail.
     priority: "important",
     makeEvent: (_r, holdout) => ({
       type: "CHECKOUT_ABANDONED",
@@ -528,7 +562,9 @@ export async function runAbandonedCheckoutNudge(options: {
         displayName: r.displayName,
         language: r.language,
         unsubscribe,
-        ...facts,
+        plan: r.plan ?? null,
+        priceCents: r.plan ? (r.priceCents ?? null) : null,
+        offer: checkoutOffer(offer, now, r.plan ?? null),
       }),
   });
   return summary;
@@ -560,7 +596,9 @@ export async function sendNudgePreview(options: {
             origin,
             displayName: null,
             language,
-            ...(await paymentFacts(now)),
+            plan: "3m",
+            priceCents: planPriceCents("A", "3m"),
+            offer: checkoutOffer(await getLaunchOffer(), now, "3m"),
           });
   // A sample goes the same way the real one would, so a preview also proves that route works.
   const result = await sendTemplateEmail(to, content, {
