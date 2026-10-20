@@ -140,6 +140,9 @@ export const tr: Dictionary = {
     categoryPaidNotActive: "Ödedim ama Premium aktif olmadı",
     categoryFailed: "Ödemem başarısız oldu veya reddedildi",
     categoryWrongPrice: "Fiyat yanlış görünüyor",
+    categoryNoNote: "Transferi, nottaki sipariş kodu olmadan gönderdim",
+    categoryWrongAmount: "Farklı bir tutar gönderdim",
+    categoryCantSend: "Gönderemiyorum ya da adımlar anlaşılır değil",
     categoryOther: "Başka bir şey",
     notePlaceholder: "Bilmemiz gereken başka bir şey var mı? (isteğe bağlı)",
     notePlaceholderOther: "Ne olduğunu anlat",
@@ -202,6 +205,10 @@ export const tr: Dictionary = {
     onlyUsdt:
       "Yalnızca Binance Pay ile gönderilen USDT. Diğer coinleri ve zincir üzerindeki transferleri görmeyiz.",
     notConfigured: "Binance Pay şu an kullanılamıyor.",
+    reportHeading: "Ödemenizde bir sorun mu oldu?",
+    reportBody:
+      "Ne olduğunu bize anlatın. Hemen haberdar oluruz ve hesabınızın e-postasına yanıt veririz.",
+    reportButton: "Sorun bildir",
   },
 
   onboarding: {

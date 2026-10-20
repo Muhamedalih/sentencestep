@@ -8,10 +8,11 @@ import { CircleCheck, LifeBuoy, Loader2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import {
+  BINANCE_UPGRADE_REPORT_PATH,
   MAX_PAYMENT_REPORT_NOTE_LENGTH,
-  PAYMENT_REPORT_CATEGORIES,
+  PAYMENT_REPORT_CATEGORIES_BY_CONTEXT,
 } from "@/lib/billing/payment-report";
-import type { PaymentReportCategory } from "@/lib/billing/payment-report";
+import type { PaymentReportCategory, PaymentReportContext } from "@/lib/billing/payment-report";
 import { submitPaymentReport } from "@/lib/reports/payment-actions";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,9 @@ const CATEGORY_LABEL_KEYS = {
   paid_not_active: "categoryPaidNotActive",
   payment_failed: "categoryFailed",
   wrong_price: "categoryWrongPrice",
+  binance_no_note: "categoryNoNote",
+  binance_wrong_amount: "categoryWrongAmount",
+  binance_cant_send: "categoryCantSend",
   other: "categoryOther",
 } as const;
 
@@ -34,14 +38,22 @@ const CATEGORY_LABEL_KEYS = {
  * payment is still confirming, or did not complete) preselect it. After a
  * "paid but not active" report the dialog offers an immediate re-check of the
  * payment, which often settles it before anyone has to reply.
+ *
+ * `context="binance"` is for a Binance Pay screen: the dialog offers the ways a
+ * transfer goes wrong (no order code in the note, a different amount, not knowing
+ * how to send it) instead of the card ones, the report is filed under a Binance
+ * path so Admin > Binance Pay lists it, and there is no re-check (that asks the
+ * card partner; the Binance page looks again by itself).
  */
 export function ReportPaymentProblem({
   defaultCategory = null,
   variant = "link",
+  context = "default",
   className,
 }: {
   defaultCategory?: PaymentReportCategory | null;
   variant?: "link" | "button";
+  context?: PaymentReportContext;
   className?: string;
 }) {
   const { t } = useLocale();
@@ -57,6 +69,8 @@ export function ReportPaymentProblem({
   const firstFieldRef = useRef<HTMLDivElement>(null);
 
   const labels = t.paymentReport;
+  const triggerLabel = context === "binance" ? t.binancePay.reportButton : labels.trigger;
+  const categories = PAYMENT_REPORT_CATEGORIES_BY_CONTEXT[context];
 
   function close() {
     setIsOpen(false);
@@ -98,7 +112,12 @@ export function ReportPaymentProblem({
     }
     setError(null);
     startTransition(async () => {
-      const result = await submitPaymentReport({ category, note, pagePath: pathname });
+      // A Binance report is always filed under a Binance path (the order page already is one; /upgrade is not).
+      const pagePath =
+        context === "binance" && !/binance/i.test(pathname)
+          ? BINANCE_UPGRADE_REPORT_PATH
+          : pathname;
+      const result = await submitPaymentReport({ category, note, pagePath });
       if (result.ok) {
         setSentCategory(category);
         return;
@@ -130,7 +149,7 @@ export function ReportPaymentProblem({
           )}
         >
           <LifeBuoy className="size-3.5" aria-hidden="true" />
-          {labels.trigger}
+          {triggerLabel}
         </button>
       ) : (
         <Button
@@ -143,7 +162,7 @@ export function ReportPaymentProblem({
           className={className}
         >
           <LifeBuoy aria-hidden="true" />
-          {labels.trigger}
+          {triggerLabel}
         </Button>
       )}
 
@@ -177,7 +196,7 @@ export function ReportPaymentProblem({
                 <p className="text-muted-foreground text-sm" dir="auto">
                   {labels.successBody}
                 </p>
-                {sentCategory === "paid_not_active" && (
+                {sentCategory === "paid_not_active" && context === "default" && (
                   <div className="border-border bg-muted/50 mt-2 flex w-full flex-col items-center gap-2 rounded-xl border px-4 py-4">
                     <p className="text-sm font-semibold" dir="auto">
                       {labels.recheckTitle}
@@ -207,7 +226,7 @@ export function ReportPaymentProblem({
                 <div ref={firstFieldRef} className="flex flex-col gap-4">
                   <fieldset className="flex flex-col gap-2">
                     <legend className="sr-only">{labels.title}</legend>
-                    {PAYMENT_REPORT_CATEGORIES.map((value) => {
+                    {categories.map((value) => {
                       const checked = category === value;
                       return (
                         <label

@@ -134,6 +134,9 @@ export const ar: Dictionary = {
     categoryPaidNotActive: "دفعتُ لكن الاشتراك لم يُفعَّل",
     categoryFailed: "فشلت عملية الدفع أو رُفضت",
     categoryWrongPrice: "السعر يبدو غير صحيح",
+    categoryNoNote: "أرسلت التحويل دون رمز الطلب في الملاحظة",
+    categoryWrongAmount: "أرسلت مبلغًا مختلفًا",
+    categoryCantSend: "لا أستطيع إرسال التحويل أو الخطوات غير واضحة",
     categoryOther: "شيء آخر",
     notePlaceholder: "هل هناك ما يجب أن نعرفه؟ (اختياري)",
     notePlaceholderOther: "اشرح ما حدث",
@@ -193,6 +196,9 @@ export const ar: Dictionary = {
     waitingBody: "يمكنك إغلاق هذه الصفحة. عند وصول التحويل يتفعّل Premium وتصلك رسالة بالإيصال.",
     onlyUsdt: "عملة USDT فقط وعبر Binance Pay. لا نرى العملات الأخرى ولا التحويلات على الشبكة.",
     notConfigured: "الدفع عبر Binance Pay غير متاح حاليًا.",
+    reportHeading: "هل حدثت مشكلة في الدفع؟",
+    reportBody: "أخبرنا بما حدث. يصلنا تنبيه فورًا وسنردّ على بريد حسابك.",
+    reportButton: "الإبلاغ عن مشكلة",
   },
 
   onboarding: {

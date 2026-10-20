@@ -23,6 +23,7 @@ const ORDER: PaymentReportOrder = {
   tier: "A",
   provider: "wayl",
   providerEnv: "live",
+  providerPaymentId: "link_1",
   failureReason: null,
 };
 
@@ -68,8 +69,36 @@ test("filePaymentReport: stores the report with the server-read order and alerts
   assert.match(inserted[0]!.message, /Payment problem: I paid but Premium isn't active/);
   assert.match(inserted[0]!.message, /ss_0123456789abcdef0123456789abcdef/);
   assert.deepEqual(notified, [
-    { userEmail: "sara@example.com", category: "paid_not_active", message: inserted[0]!.message },
+    {
+      userEmail: "sara@example.com",
+      category: "paid_not_active",
+      message: inserted[0]!.message,
+      binance: false,
+    },
   ]);
+});
+
+test("filePaymentReport: a report filed from a Binance Pay screen is stored under that path and the alert says so", async () => {
+  for (const pagePath of [
+    "/billing/binance/ss_0123456789abcdef0123456789abcdef",
+    "/upgrade?method=binance",
+  ]) {
+    const { deps, inserted, notified } = setup();
+
+    const result = await filePaymentReport(deps, {
+      category: "binance_no_note",
+      note: "forgot the note",
+      pagePath,
+    });
+
+    assert.deepEqual(result, { ok: true });
+    assert.equal(inserted[0]!.pagePath, `payment:${pagePath}`);
+    assert.match(
+      inserted[0]!.message,
+      /Payment problem: I sent the Binance transfer without the order code/,
+    );
+    assert.equal(notified[0]!.binance, true, pagePath);
+  }
 });
 
 test("filePaymentReport: an unknown category is refused before anything is read or stored", async () => {

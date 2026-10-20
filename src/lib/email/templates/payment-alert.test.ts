@@ -35,6 +35,29 @@ test("paymentReportAlertEmail: names the learner and the problem, and links to R
   assert.equal(/<[a-z]/i.test(email.text), false, "the text version is plain text");
 });
 
+test("paymentReportAlertEmail: a Binance Pay report points at Admin > Binance Pay and gives no Wayl advice", () => {
+  const email = paymentReportAlertEmail({
+    origin: "https://sentencestep.com",
+    userEmail: "sara@example.com",
+    category: "binance_no_note",
+    message: "Payment problem: I sent the Binance transfer without the order code in the note",
+    binance: true,
+  });
+
+  assert.equal(
+    email.subject,
+    "Binance Pay problem: I sent the Binance transfer without the order code in the note — sara@example.com",
+  );
+  assert.match(email.html, /Binance Pay problem reported/);
+  assert.match(email.html, /https:\/\/sentencestep\.com\/admin\/binance-pay/);
+  assert.match(
+    email.text,
+    /Reply from Admin > Binance Pay: https:\/\/sentencestep\.com\/admin\/binance-pay/,
+  );
+  assert.equal(/Wayl|billing\/return/.test(email.html + email.text), false);
+  assert.equal(/<[a-z]/i.test(email.text), false, "the text version is plain text");
+});
+
 test("paymentReportAlertEmail: everything the learner wrote is escaped", () => {
   const email = paymentReportAlertEmail({
     origin: "https://sentencestep.com",

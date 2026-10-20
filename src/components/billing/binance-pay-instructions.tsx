@@ -6,12 +6,15 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronDown, CircleHelp, Clock, Copy, Info, Loader2 } from "lucide-react";
 
 import { BinanceMark } from "@/components/billing/binance-mark";
+import { useBinanceVisit } from "@/components/billing/binance-visit";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { guideSegments } from "@/lib/billing/binance/guide";
 import { cn } from "@/lib/utils";
 
 interface BinancePayInstructionsProps {
+  /** The order's reference: the page tells the server about the visit under it (see binance-visit.ts). */
+  reference: string;
   /** The Binance ID learners type in Pay > Send. */
   binanceId: string;
   /** The nickname Binance shows the sender when they confirm. */
@@ -56,7 +59,15 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-function CopyButton({ value, label }: { value: string; label: string }) {
+function CopyButton({
+  value,
+  label,
+  onCopied,
+}: {
+  value: string;
+  label: string;
+  onCopied?: () => void;
+}) {
   const { t } = useLocale();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,6 +81,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 
   async function copy() {
     if (!(await copyText(value))) return;
+    onCopied?.();
     setCopied(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 2_000);
@@ -96,7 +108,17 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 }
 
 /** One line of a box: what it is on one side, its value (and a copy button, where one is useful) on the other. */
-function Row({ label, value, copyLabel }: { label: ReactNode; value: string; copyLabel?: string }) {
+function Row({
+  label,
+  value,
+  copyLabel,
+  onCopied,
+}: {
+  label: ReactNode;
+  value: string;
+  copyLabel?: string;
+  onCopied?: () => void;
+}) {
   return (
     <div className="flex items-center justify-between gap-3" dir="auto">
       <span className="text-muted-foreground min-w-0 text-sm">{label}</span>
@@ -104,7 +126,7 @@ function Row({ label, value, copyLabel }: { label: ReactNode; value: string; cop
         <bdi dir="ltr" className="text-lg font-semibold tracking-wide tabular-nums">
           {value}
         </bdi>
-        {copyLabel && <CopyButton value={value} label={copyLabel} />}
+        {copyLabel && <CopyButton value={value} label={copyLabel} onCopied={onCopied} />}
       </span>
     </div>
   );
@@ -132,10 +154,12 @@ function SendGuide({
   binanceId,
   amount,
   orderCode,
+  onOpened,
 }: {
   binanceId: string;
   amount: number;
   orderCode: string;
+  onOpened: () => void;
 }) {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
@@ -144,7 +168,10 @@ function SendGuide({
   return (
     <details
       open={open}
-      onToggle={(event) => setOpen(event.currentTarget.open)}
+      onToggle={(event) => {
+        setOpen(event.currentTarget.open);
+        if (event.currentTarget.open) onOpened();
+      }}
       className="group border-primary/40 bg-primary/[0.08] rounded-xl border border-dashed px-3 open:border-solid"
     >
       <summary
@@ -215,6 +242,7 @@ function SendGuide({
  * transfer arrives the page turns into the receipt.
  */
 export function BinancePayInstructions({
+  reference,
   binanceId,
   displayName,
   amount,
@@ -225,6 +253,7 @@ export function BinancePayInstructions({
   const { t } = useLocale();
   const router = useRouter();
   const [remaining, setRemaining] = useState<number | null>(null);
+  const { report } = useBinanceVisit(reference);
 
   useEffect(() => {
     if (!expiresAt || expired) return;
@@ -274,6 +303,7 @@ export function BinancePayInstructions({
           label={t.binancePay.recipientIdLabel}
           value={binanceId}
           copyLabel={t.binancePay.recipientIdLabel}
+          onCopied={() => report("copy_id")}
         />
       </Box>
 
@@ -282,10 +312,16 @@ export function BinancePayInstructions({
           label={t.binancePay.noteBenefit}
           value={orderCode}
           copyLabel={t.binancePay.noteLabel}
+          onCopied={() => report("copy_code")}
         />
       </Box>
 
-      <SendGuide binanceId={binanceId} amount={amount} orderCode={orderCode} />
+      <SendGuide
+        binanceId={binanceId}
+        amount={amount}
+        orderCode={orderCode}
+        onOpened={() => report("guide")}
+      />
 
       <div className="flex flex-col gap-2 px-1" role="status" aria-live="polite">
         <div

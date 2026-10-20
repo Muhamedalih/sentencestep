@@ -56,6 +56,8 @@ export async function notifyAdminsOfPaymentReport(input: {
   userEmail: string;
   category: PaymentReportCategory;
   message: string;
+  /** Filed from a Binance Pay screen: the report is read in Admin > Binance Pay. */
+  binance: boolean;
 }): Promise<void> {
   try {
     await withinTime(
@@ -63,9 +65,9 @@ export async function notifyAdminsOfPaymentReport(input: {
         {
           email: paymentReportAlertEmail({ origin: getSiteUrl(), ...input }),
           push: {
-            title: "Payment problem reported",
+            title: input.binance ? "Binance Pay problem reported" : "Payment problem reported",
             body: paymentReportPushBody(input.userEmail, input.category),
-            url: "/admin/reports",
+            url: input.binance ? "/admin/binance-pay" : "/admin/reports",
           },
         },
         { logTag: "payment-report" },

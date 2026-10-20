@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { BinanceMark } from "@/components/billing/binance-mark";
+import { BinanceReportPrompt } from "@/components/billing/binance-report-prompt";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
@@ -521,11 +522,14 @@ export function CheckoutCard({
             )}
           </form>
 
-          {signedIn && (
-            <div className="-mt-3 flex justify-center">
-              <ReportPaymentProblem />
-            </div>
-          )}
+          {signedIn &&
+            (showMethodChoice && method === "binance" ? (
+              <BinanceReportPrompt />
+            ) : (
+              <div className="-mt-3 flex justify-center">
+                <ReportPaymentProblem />
+              </div>
+            ))}
 
           {!extend && (
             <>

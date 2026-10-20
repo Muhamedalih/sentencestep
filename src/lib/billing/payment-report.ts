@@ -14,6 +14,9 @@ export const PAYMENT_REPORT_CATEGORIES = [
   "paid_not_active",
   "payment_failed",
   "wrong_price",
+  "binance_no_note",
+  "binance_wrong_amount",
+  "binance_cant_send",
   "other",
 ] as const;
 
@@ -25,11 +28,32 @@ export function isPaymentReportCategory(value: unknown): value is PaymentReportC
   );
 }
 
+/**
+ * Which of the categories the dialog offers. A Binance Pay transfer fails in its
+ * own ways (no order code in the note, a different amount, not knowing how to
+ * send it) and a card never does, and the other way round.
+ */
+export const PAYMENT_REPORT_CATEGORIES_BY_CONTEXT = {
+  default: ["paid_not_active", "payment_failed", "wrong_price", "other"],
+  binance: [
+    "paid_not_active",
+    "binance_no_note",
+    "binance_wrong_amount",
+    "binance_cant_send",
+    "other",
+  ],
+} as const satisfies Record<string, readonly PaymentReportCategory[]>;
+
+export type PaymentReportContext = keyof typeof PAYMENT_REPORT_CATEGORIES_BY_CONTEXT;
+
 /** What the admin reads. Deliberately English and fixed: it is staff-facing, whatever language the learner used. */
 export const PAYMENT_REPORT_CATEGORY_LABELS: Record<PaymentReportCategory, string> = {
   paid_not_active: "I paid but Premium isn't active",
   payment_failed: "The payment failed or was declined",
   wrong_price: "The price looks wrong",
+  binance_no_note: "I sent the Binance transfer without the order code in the note",
+  binance_wrong_amount: "I sent a different amount by Binance",
+  binance_cant_send: "I can't send the Binance transfer or the steps aren't clear",
   other: "Something else",
 };
 
@@ -51,6 +75,18 @@ export function isPaymentReportPath(pagePath: string): boolean {
   return pagePath.startsWith(PATH_PREFIX);
 }
 
+/**
+ * A payment report filed from a Binance Pay screen: the order page
+ * (/billing/binance/...) or the upgrade page with Binance Pay chosen
+ * (/upgrade?method=binance). Admin > Binance Pay lists exactly these.
+ */
+export function isBinanceReportPath(pagePath: string): boolean {
+  return isPaymentReportPath(pagePath) && /binance/i.test(pagePath);
+}
+
+/** The page a report is filed from while Binance Pay is the chosen way to pay on /upgrade (the path is what marks it for Admin > Binance Pay). */
+export const BINANCE_UPGRADE_REPORT_PATH = "/upgrade?method=binance";
+
 /** The page the report was filed from, without the marker. */
 export function paymentReportOriginalPath(pagePath: string): string {
   return isPaymentReportPath(pagePath) ? pagePath.slice(PATH_PREFIX.length) : pagePath;
@@ -68,6 +104,8 @@ export interface PaymentReportOrder {
   tier: string;
   provider: string;
   providerEnv: string;
+  /** Whatever the provider calls this payment; for Binance Pay it is the order code (SS-XXXXX). */
+  providerPaymentId: string | null;
   failureReason: string | null;
 }
 
@@ -85,6 +123,7 @@ export function toPaymentReportOrder(order: PaymentOrder): PaymentReportOrder {
     tier: order.pricing_tier,
     provider: order.provider,
     providerEnv: order.provider_env,
+    providerPaymentId: order.provider_payment_id,
     failureReason: order.failure_reason,
   };
 }
@@ -118,6 +157,10 @@ function orderLine(order: PaymentReportOrder, index: number): string {
     `created ${utcMinute(order.createdAt)}`,
   ];
   if (order.paidAt) parts.push(`paid ${utcMinute(order.paidAt)}`);
+  // The code the learner writes in the Binance note: what the admin looks for among the incoming transfers.
+  if (order.provider === "binance_pay" && order.providerPaymentId) {
+    parts.push(`code ${order.providerPaymentId}`);
+  }
   if (order.failureReason) parts.push(`reason ${order.failureReason}`);
   return `${index + 1}. ${parts.join(" | ")}`;
 }

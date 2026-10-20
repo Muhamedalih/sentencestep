@@ -1,11 +1,14 @@
 import { BINANCE_PAY_PROVIDER } from "@/lib/billing/binance/constants";
 import { extractOrderCodes } from "@/lib/billing/binance/codes";
 import type { LedgerRow } from "@/lib/billing/binance/ledger";
+import { listVisitsByOrder } from "@/lib/billing/binance/visit-store";
+import type { VisitRecord } from "@/lib/billing/binance/visits";
 import { decideLink, SKIP_REASON_TEXT, suggestOrders } from "@/lib/billing/binance/matching";
 import type { SkipReason } from "@/lib/billing/binance/matching";
 import type { BinancePaySettings } from "@/lib/billing/binance/settings";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
 import type { RelayState } from "@/lib/billing/binance/store";
+import type { ProblemReportStatus } from "@/lib/admin/reports-queries";
 import type { FeatureState } from "@/lib/features/config";
 import { getFeatureConfig } from "@/lib/features/queries";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -14,6 +17,7 @@ const WAITING_LIMIT = 50;
 const UNLINKED_LIMIT = 100;
 const RECENT_LIMIT = 20;
 const LEDGER_LIMIT = 5_000;
+const REPORTS_LIMIT = 50;
 const UNLINKED_LOOK_BACK_MS = 14 * 24 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -27,6 +31,10 @@ export interface AdminWaitingOrder {
   status: string;
   createdAt: string;
   expiresAt: string | null;
+  /** Every time the learner opened the payment page for this order, newest first; empty when none was recorded. */
+  visits: VisitRecord[];
+  /** This learner has an unanswered problem report filed from a Binance Pay screen. */
+  hasOpenReport: boolean;
 }
 
 export interface AdminSuggestion {
@@ -62,6 +70,20 @@ export interface AdminLinkedTransfer {
   premiumDays: number | null;
   linkMethod: string | null;
   linkedAt: string | null;
+  email: string | null;
+  /** When the order was created: the payment page is opened right after. */
+  orderCreatedAt: string | null;
+  visits: VisitRecord[];
+}
+
+/** A payment problem report a learner filed from a Binance Pay screen (the order page, or /upgrade with Binance Pay chosen). */
+export interface AdminBinanceReport {
+  id: string;
+  userEmail: string;
+  message: string;
+  status: ProblemReportStatus;
+  createdAt: string;
+  pagePath: string;
 }
 
 export interface AdminBinanceOverview {
@@ -71,12 +93,19 @@ export interface AdminBinanceOverview {
   waiting: AdminWaitingOrder[];
   unlinked: AdminUnlinkedTransfer[];
   recent: AdminLinkedTransfer[];
+  reports: AdminBinanceReport[];
   stats: {
+    openReports: number;
     ordersLast24h: number;
     activatedLast24h: number;
     activatedLast7d: number;
     usdtLast7d: string;
   };
+}
+
+/** A report an admin has dealt with (resolved or dismissed) needs no more attention. */
+function isHandled(status: ProblemReportStatus): boolean {
+  return status === "resolved" || status === "dismissed";
 }
 
 function providerEnvironment(): "live" | "test" {
@@ -116,6 +145,7 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
     waitingResult,
     recentResult,
     weekResult,
+    reportsResult,
     config,
     ordersLast24h,
   ] = await Promise.all([
@@ -144,12 +174,35 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
       .eq("status", "linked")
       .gte("linked_at", weekAgo)
       .limit(2_000),
+    supabase
+      .from("problem_reports")
+      .select("id, user_email, page_path, message, status, created_at")
+      .like("page_path", "payment:%")
+      .ilike("page_path", "%binance%")
+      .order("created_at", { ascending: false })
+      .limit(REPORTS_LIMIT),
     getFeatureConfig(),
     store.countOrdersSince(new Date(now - DAY_MS), providerEnvironment()),
   ]);
   if (waitingResult.error) throw waitingResult.error;
   if (recentResult.error) throw recentResult.error;
   if (weekResult.error) throw weekResult.error;
+  if (reportsResult.error) throw reportsResult.error;
+
+  // Unanswered reports first, then the rest, each newest first.
+  const reports: AdminBinanceReport[] = (reportsResult.data ?? [])
+    .map((row) => ({
+      id: row.id,
+      userEmail: row.user_email,
+      message: row.message,
+      status: row.status,
+      createdAt: row.created_at,
+      pagePath: row.page_path,
+    }))
+    .sort((a, b) => Number(isHandled(a.status)) - Number(isHandled(b.status)));
+  const openReportEmails = new Set(
+    reports.filter((report) => !isHandled(report.status)).map((report) => report.userEmail),
+  );
 
   // Waiting orders: the code and the learner's email (the same lookup the payments page uses).
   const waitingRows = waitingResult.data ?? [];
@@ -164,23 +217,17 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
   if (codeResult.error) throw codeResult.error;
   const codeByOrder = new Map((codeResult.data ?? []).map((row) => [row.order_id, row.order_code]));
   const emailByUser = new Map<string, string>();
-  await Promise.all(
-    [...new Set(waitingRows.map((row) => row.user_id))].map(async (userId) => {
-      const { data } = await supabase.auth.admin.getUserById(userId);
-      if (data.user?.email) emailByUser.set(userId, data.user.email);
-    }),
-  );
-  const waiting: AdminWaitingOrder[] = waitingRows.map((row) => ({
-    id: row.id,
-    referenceId: row.reference_id,
-    orderCode: codeByOrder.get(row.id) ?? null,
-    email: emailByUser.get(row.user_id) ?? null,
-    premiumDays: row.premium_days,
-    chargeAmount: row.charge_amount,
-    status: row.status,
-    createdAt: row.created_at,
-    expiresAt: row.link_expires_at,
-  }));
+  const loadEmails = async (userIds: string[]) => {
+    await Promise.all(
+      [...new Set(userIds)]
+        .filter((userId) => !emailByUser.has(userId))
+        .map(async (userId) => {
+          const { data } = await supabase.auth.admin.getUserById(userId);
+          if (data.user?.email) emailByUser.set(userId, data.user.email);
+        }),
+    );
+  };
+  await loadEmails(waitingRows.map((row) => row.user_id));
 
   // Unlinked transfers, newest first, each with why it waits and which orders it might belong to.
   const unlinkedStored = [...unlinkedAscending].reverse();
@@ -223,7 +270,7 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
       : await Promise.all([
           supabase
             .from("payment_orders")
-            .select("id, reference_id, premium_days")
+            .select("id, reference_id, premium_days, user_id, created_at")
             .in("id", linkedOrderIds),
           supabase
             .from("binance_pay_intents")
@@ -231,6 +278,25 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
             .in("order_id", linkedOrderIds),
         ]);
   const orderById = new Map((recentOrders.data ?? []).map((row) => [row.id, row]));
+  await loadEmails((recentOrders.data ?? []).map((row) => row.user_id));
+  // What the learners did on the payment page, for the waiting orders and the ones just paid.
+  const visitsByOrder = await listVisitsByOrder(supabase, [...waitingIds, ...linkedOrderIds]);
+  const waiting: AdminWaitingOrder[] = waitingRows.map((row) => {
+    const email = emailByUser.get(row.user_id) ?? null;
+    return {
+      id: row.id,
+      referenceId: row.reference_id,
+      orderCode: codeByOrder.get(row.id) ?? null,
+      email,
+      premiumDays: row.premium_days,
+      chargeAmount: row.charge_amount,
+      status: row.status,
+      createdAt: row.created_at,
+      expiresAt: row.link_expires_at,
+      visits: visitsByOrder.get(row.id) ?? [],
+      hasOpenReport: email !== null && openReportEmails.has(email),
+    };
+  });
   const recentCodeByOrder = new Map(
     (recentCodes.data ?? []).map((row) => [row.order_id, row.order_code]),
   );
@@ -245,6 +311,9 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
       premiumDays: order?.premium_days ?? null,
       linkMethod: row.link_method,
       linkedAt: row.linked_at,
+      email: order ? (emailByUser.get(order.user_id) ?? null) : null,
+      orderCreatedAt: order?.created_at ?? null,
+      visits: row.linked_order_id ? (visitsByOrder.get(row.linked_order_id) ?? []) : [],
     };
   });
 
@@ -257,7 +326,9 @@ export async function getBinancePayOverview(): Promise<AdminBinanceOverview> {
     waiting,
     unlinked,
     recent,
+    reports,
     stats: {
+      openReports: reports.filter((report) => !isHandled(report.status)).length,
       ordersLast24h,
       activatedLast24h: weekRows.filter(
         (row) => row.linked_at && Date.parse(row.linked_at) >= dayAgo,

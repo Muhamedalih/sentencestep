@@ -461,6 +461,53 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["binance_pay_transactions"]["Insert"]>;
         Relationships: [];
       };
+      /** One row per load of the Binance Pay payment page (see src/lib/billing/binance/visits.ts). */
+      binance_pay_visits: {
+        Row: {
+          id: string;
+          order_id: string;
+          user_id: string;
+          opened_at: string;
+          last_seen_at: string;
+          visible_seconds: number;
+          leaves: number;
+          country: string | null;
+          region: string | null;
+          city: string | null;
+          time_zone: string | null;
+          language: string | null;
+          device: "mobile" | "tablet" | "desktop" | null;
+          os: string | null;
+          browser: string | null;
+          source: string | null;
+          copied_id: boolean;
+          copied_code: boolean;
+          opened_guide: boolean;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          user_id: string;
+          opened_at?: string;
+          last_seen_at?: string;
+          visible_seconds?: number;
+          leaves?: number;
+          country?: string | null;
+          region?: string | null;
+          city?: string | null;
+          time_zone?: string | null;
+          language?: string | null;
+          device?: "mobile" | "tablet" | "desktop" | null;
+          os?: string | null;
+          browser?: string | null;
+          source?: string | null;
+          copied_id?: boolean;
+          copied_code?: boolean;
+          opened_guide?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["binance_pay_visits"]["Insert"]>;
+        Relationships: [];
+      };
       binance_relay_state: {
         Row: {
           id: number;

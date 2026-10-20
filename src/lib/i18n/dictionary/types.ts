@@ -162,6 +162,10 @@ export interface Dictionary {
     categoryPaidNotActive: string;
     categoryFailed: string;
     categoryWrongPrice: string;
+    /** The three Binance Pay categories (the dialog offers them only for a Binance Pay payment). */
+    categoryNoNote: string;
+    categoryWrongAmount: string;
+    categoryCantSend: string;
     categoryOther: string;
     notePlaceholder: string;
     notePlaceholderOther: string;
@@ -221,6 +225,10 @@ export interface Dictionary {
     waitingBody: string;
     onlyUsdt: string;
     notConfigured: string;
+    /** The clear "report a problem" block on the order page and on the upgrade card once Binance Pay is chosen. */
+    reportHeading: string;
+    reportBody: string;
+    reportButton: string;
   };
 
   onboarding: {

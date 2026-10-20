@@ -4,9 +4,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  BINANCE_UPGRADE_REPORT_PATH,
   MAX_PAYMENT_REPORT_NOTE_LENGTH,
   PAYMENT_REPORT_CATEGORIES,
+  PAYMENT_REPORT_CATEGORIES_BY_CONTEXT,
+  PAYMENT_REPORT_CATEGORY_LABELS,
   buildPaymentReportMessage,
+  isBinanceReportPath,
   isPaymentReportCategory,
   isPaymentReportPath,
   paymentReportOriginalPath,
@@ -36,16 +40,77 @@ function order(overrides: Partial<PaymentReportOrder> = {}): PaymentReportOrder 
     tier: "A",
     provider: "wayl",
     providerEnv: "live",
+    providerPaymentId: null,
     failureReason: null,
     ...overrides,
   };
 }
 
-test("isPaymentReportCategory: accepts only the four known categories", () => {
+test("isPaymentReportCategory: accepts only the known categories", () => {
   for (const category of PAYMENT_REPORT_CATEGORIES) assert.ok(isPaymentReportCategory(category));
   for (const bad of ["", "refund", "OTHER", null, undefined, 3, {}]) {
     assert.equal(isPaymentReportCategory(bad), false, String(bad));
   }
+});
+
+test("categories by context: every offered category is a known one with an admin label, and Binance has its own", () => {
+  for (const offered of Object.values(PAYMENT_REPORT_CATEGORIES_BY_CONTEXT)) {
+    for (const category of offered) {
+      assert.ok(isPaymentReportCategory(category), category);
+      assert.ok(PAYMENT_REPORT_CATEGORY_LABELS[category].length > 0, category);
+    }
+    assert.ok(offered.includes("other"), "always a way to say something else");
+    assert.ok(offered.includes("paid_not_active"), "always a way to say the payment is not active");
+  }
+  assert.equal(
+    (PAYMENT_REPORT_CATEGORIES_BY_CONTEXT.default as readonly string[]).includes("binance_no_note"),
+    false,
+  );
+  assert.ok(PAYMENT_REPORT_CATEGORIES_BY_CONTEXT.binance.includes("binance_no_note"));
+  assert.ok(PAYMENT_REPORT_CATEGORIES_BY_CONTEXT.binance.includes("binance_wrong_amount"));
+  assert.ok(PAYMENT_REPORT_CATEGORIES_BY_CONTEXT.binance.includes("binance_cant_send"));
+  // Every category belongs to at least one dialog, so none can be filed from nowhere.
+  const offeredAnywhere = new Set<string>(
+    Object.values(PAYMENT_REPORT_CATEGORIES_BY_CONTEXT).flatMap((list) => [...list]),
+  );
+  for (const category of PAYMENT_REPORT_CATEGORIES)
+    assert.ok(offeredAnywhere.has(category), category);
+});
+
+test("isBinanceReportPath: only a payment report filed from a Binance Pay screen", () => {
+  assert.ok(
+    isBinanceReportPath(
+      paymentReportPagePath("/billing/binance/ss_0123456789abcdef0123456789abcdef"),
+    ),
+  );
+  assert.ok(isBinanceReportPath(paymentReportPagePath(BINANCE_UPGRADE_REPORT_PATH)));
+  assert.equal(isBinanceReportPath(paymentReportPagePath("/upgrade")), false);
+  assert.equal(isBinanceReportPath(paymentReportPagePath("/billing/return")), false);
+  // An ordinary "Report a problem" is never a payment report, whatever its path says.
+  assert.equal(isBinanceReportPath("/billing/binance/ss_x"), false);
+});
+
+test("message: a Binance Pay order carries its code, a card order does not", () => {
+  const message = buildPaymentReportMessage({
+    category: "binance_no_note",
+    note: "",
+    access: FREE_ACCOUNT,
+    orders: [
+      order({
+        referenceId: "ss_binance",
+        provider: "binance_pay",
+        chargeAmount: 4,
+        chargeCurrency: "USDT",
+        usdCents: 400,
+        providerPaymentId: "SS-QTY6Z",
+      }),
+      order({ referenceId: "ss_card", providerPaymentId: "wayl-123" }),
+    ],
+  });
+
+  assert.match(message, /^Payment problem: I sent the Binance transfer without the order code/);
+  assert.match(message, /1\. ss_binance \|.*binance_pay\/live.*\| code SS-QTY6Z/);
+  assert.equal(message.includes("wayl-123"), false);
 });
 
 test("page path: a payment report is marked by a prefix a regular report's path can never have", () => {
@@ -198,6 +263,7 @@ test("toPaymentReportOrder: quotes the order under the report's own names", () =
     tier: "A",
     provider: "wayl",
     providerEnv: "test",
+    providerPaymentId: "link_1",
     failureReason: null,
   });
 });

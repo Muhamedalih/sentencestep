@@ -1,6 +1,7 @@
 import {
   MAX_PAYMENT_REPORT_NOTE_LENGTH,
   buildPaymentReportMessage,
+  isBinanceReportPath,
   isPaymentReportCategory,
   paymentReportPagePath,
 } from "./payment-report";
@@ -41,6 +42,8 @@ export interface PaymentReportDeps {
     userEmail: string;
     category: PaymentReportCategory;
     message: string;
+    /** Filed from a Binance Pay screen: the alert then points at Admin > Binance Pay. */
+    binance: boolean;
   }): Promise<void>;
   now?: () => Date;
 }
@@ -102,14 +105,20 @@ export async function filePaymentReport(
   }
 
   const message = buildPaymentReportMessage({ category, note, ...context });
+  const pagePath = paymentReportPagePath(safePagePath(input.pagePath));
   const stored = await deps.insertReport({
     userId: user.id,
     userEmail: user.email,
-    pagePath: paymentReportPagePath(safePagePath(input.pagePath)),
+    pagePath,
     message,
   });
   if (!stored.ok) return { ok: false, code: "generic" };
 
-  await deps.notify({ userEmail: user.email, category, message });
+  await deps.notify({
+    userEmail: user.email,
+    category,
+    message,
+    binance: isBinanceReportPath(pagePath),
+  });
   return { ok: true };
 }

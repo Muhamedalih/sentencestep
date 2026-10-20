@@ -19,6 +19,8 @@ export interface PaymentReportAlertInput {
   category: PaymentReportCategory;
   /** The full stored report text (see buildPaymentReportMessage) — the account and order lines are already in it. */
   message: string;
+  /** Filed from a Binance Pay screen: the advice and the link are Binance Pay's, not Wayl's. */
+  binance?: boolean;
 }
 
 /**
@@ -34,10 +36,35 @@ export function paymentReportAlertEmail({
   userEmail,
   category,
   message,
+  binance = false,
 }: PaymentReportAlertInput): EmailContent {
   const label = PAYMENT_REPORT_CATEGORY_LABELS[category];
   const reportsUrl = `${origin}/admin/reports`;
   const recheckUrl = `${origin}/billing/return`;
+
+  if (binance) {
+    // A Binance Pay problem is read and answered where the transfers are: Admin > Binance Pay.
+    const binanceUrl = `${origin}/admin/binance-pay`;
+    const advice =
+      "Look for their transfer under Incoming transfers and for the order under Orders waiting; the page shows when they opened the payment page, how long they stayed and what they copied. If a transfer is there, link it to the order and Premium is activated at once.";
+    const bodyHtml = `
+    <p style="margin:0 0 12px 0;"><strong>${escapeHtml(userEmail)}</strong> reported a Binance Pay problem:</p>
+    <pre dir="auto" style="${MESSAGE_BOX_STYLE}">${escapeHtml(message)}</pre>
+    <p style="margin:0 0 8px 0;">${escapeHtml(advice)}</p>
+    <p style="margin:0;">Reply from Admin &gt; Binance Pay (or Admin &gt; Reports); the reply goes to the learner's account email.</p>
+  `;
+    return {
+      subject: truncate(`Binance Pay problem: ${label} — ${userEmail}`, SUBJECT_LENGTH),
+      html: renderEmailLayout({
+        previewText: `${userEmail}: ${label}`,
+        heading: "Binance Pay problem reported",
+        bodyHtml,
+        ctaLabel: "Open Binance Pay",
+        ctaUrl: binanceUrl,
+      }),
+      text: `${userEmail} reported a Binance Pay problem:\n\n${message}\n\n${advice}\n\nReply from Admin > Binance Pay: ${binanceUrl}`,
+    };
+  }
 
   const bodyHtml = `
     <p style="margin:0 0 12px 0;"><strong>${escapeHtml(userEmail)}</strong> reported a payment problem:</p>

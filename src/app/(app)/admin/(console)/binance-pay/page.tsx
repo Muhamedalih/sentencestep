@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BinanceVisitCell } from "@/components/admin/binance-visit-cell";
 import { NotConfiguredNotice } from "@/components/admin/not-configured-notice";
 import {
   BinancePaySettingsForm,
@@ -8,9 +9,12 @@ import {
   IgnoreTransferButton,
   LinkTransferButton,
 } from "@/components/admin/binance-pay-forms";
+import { ReportReplyForm } from "@/components/admin/report-reply-form";
+import { ReportStatusControl } from "@/components/admin/report-status-control";
 import { Badge } from "@/components/ui/badge";
 import { getBinancePayOverview } from "@/lib/admin/binance-pay-queries";
 import type { AdminSuggestion } from "@/lib/admin/binance-pay-queries";
+import type { ProblemReportStatus } from "@/lib/admin/reports-queries";
 import { RELAY_OFFLINE_AFTER_MS } from "@/lib/billing/binance/constants";
 import { SKIP_REASON_TEXT } from "@/lib/billing/binance/matching";
 import { isBinancePayConfigured } from "@/lib/billing/provider-registry";
@@ -49,6 +53,16 @@ function Tile({ label, value, hint }: { label: string; value: string; hint?: str
   );
 }
 
+const REPORT_STATUS_VARIANT: Record<
+  ProblemReportStatus,
+  "secondary" | "outline" | "success" | "muted"
+> = {
+  new: "secondary",
+  in_progress: "outline",
+  resolved: "success",
+  dismissed: "muted",
+};
+
 const FEATURE_BADGE = {
   off: { label: "Off: nobody sees the button", variant: "muted" },
   admin: { label: "Admin preview: only admins see the button", variant: "secondary" },
@@ -76,7 +90,7 @@ export default async function AdminBinancePayPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const overview = await getBinancePayOverview();
-  const { settings, relay, waiting, unlinked, recent, stats } = overview;
+  const { settings, relay, waiting, unlinked, recent, reports, stats } = overview;
   const now = Date.now();
   const relayOnline =
     relay.lastPollAt !== null && now - Date.parse(relay.lastPollAt) < RELAY_OFFLINE_AFTER_MS;
@@ -119,7 +133,12 @@ export default async function AdminBinancePayPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <Tile
+          label="Problem reports"
+          value={String(stats.openReports)}
+          hint={stats.openReports > 0 ? "Waiting for you below" : "Nothing open"}
+        />
         <Tile label="Orders waiting" value={String(waiting.length)} />
         <Tile
           label="Unlinked transfers"
@@ -137,6 +156,61 @@ export default async function AdminBinancePayPage() {
           hint={`${stats.usdtLast7d} USDT received`}
         />
       </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Problems reported by learners</h2>
+        <p className="text-muted-foreground text-sm">
+          Sent from the &quot;Report a problem&quot; box on the Binance Pay payment page and on the
+          upgrade page. You were emailed when each one arrived; the learner&apos;s order, its page
+          visits and any transfer are in the tables below. Replies go to the learner&apos;s account
+          email.
+        </p>
+        {reports.length === 0 ? (
+          <div className="text-muted-foreground rounded-xl border border-dashed px-4 py-8 text-center text-sm">
+            No problems reported.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {reports.map((report) => {
+              const handled = report.status === "resolved" || report.status === "dismissed";
+              return (
+                <div
+                  key={report.id}
+                  className={
+                    handled
+                      ? "border-border rounded-xl border p-4"
+                      : "border-danger/40 bg-danger/5 rounded-xl border p-4"
+                  }
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{report.userEmail}</span>
+                        <Badge variant={REPORT_STATUS_VARIANT[report.status]}>
+                          {report.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground mt-0.5 text-xs">
+                        {formatDate(report.createdAt)}
+                      </p>
+                    </div>
+                    <ReportStatusControl id={report.id} status={report.status} />
+                  </div>
+                  <p
+                    dir="auto"
+                    className="mt-3 font-mono text-xs leading-relaxed whitespace-pre-wrap"
+                  >
+                    {report.message}
+                  </p>
+                  <div className="mt-3">
+                    <ReportReplyForm reportId={report.id} userEmail={report.userEmail} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Incoming transfers waiting for you</h2>
@@ -226,13 +300,14 @@ export default async function AdminBinancePayPage() {
                 <th className="px-4 py-3">Learner</th>
                 <th className="px-4 py-3">Plan</th>
                 <th className="px-4 py-3">State</th>
+                <th className="px-4 py-3">Payment page</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
               {waiting.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-muted-foreground px-4 py-8 text-center">
+                  <td colSpan={7} className="text-muted-foreground px-4 py-8 text-center">
                     No order is waiting.
                   </td>
                 </tr>
@@ -242,12 +317,22 @@ export default async function AdminBinancePayPage() {
                     order.status !== "expired" &&
                     (order.expiresAt === null || Date.parse(order.expiresAt) > now);
                   return (
-                    <tr key={order.id}>
+                    <tr key={order.id} className="align-top">
                       <td className="px-4 py-3 whitespace-nowrap">{formatDate(order.createdAt)}</td>
                       <td className="px-4 py-3 font-medium tabular-nums">
                         {order.orderCode ?? "—"}
                       </td>
-                      <td className="px-4 py-3">{order.email ?? "(deleted account)"}</td>
+                      <td className="px-4 py-3">
+                        {order.email ?? "(deleted account)"}
+                        {order.hasOpenReport && (
+                          <Badge
+                            variant="muted"
+                            className="bg-danger/15 text-danger mt-1 block w-fit border-transparent"
+                          >
+                            Reported a problem
+                          </Badge>
+                        )}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap tabular-nums">
                         {order.premiumDays} days · {order.chargeAmount} USDT
                       </td>
@@ -255,6 +340,9 @@ export default async function AdminBinancePayPage() {
                         <Badge variant={open ? "secondary" : "outline"}>
                           {open ? "Waiting" : "Past its hour (a late transfer still counts)"}
                         </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <BinanceVisitCell visits={order.visits} now={now} />
                       </td>
                       <td className="px-4 py-3">
                         <CloseOrderButton orderId={order.id} />
@@ -287,7 +375,9 @@ export default async function AdminBinancePayPage() {
                 <th className="px-4 py-3">Transfer (Baghdad)</th>
                 <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3">Order code</th>
+                <th className="px-4 py-3">Learner</th>
                 <th className="px-4 py-3">Plan</th>
+                <th className="px-4 py-3">Payment page</th>
                 <th className="px-4 py-3">Linked by</th>
                 <th className="px-4 py-3">Binance transfer id</th>
               </tr>
@@ -295,18 +385,22 @@ export default async function AdminBinancePayPage() {
             <tbody className="divide-border divide-y">
               {recent.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-muted-foreground px-4 py-8 text-center">
+                  <td colSpan={8} className="text-muted-foreground px-4 py-8 text-center">
                     Nothing yet.
                   </td>
                 </tr>
               ) : (
                 recent.map((row) => (
-                  <tr key={row.transactionId}>
+                  <tr key={row.transactionId} className="align-top">
                     <td className="px-4 py-3 whitespace-nowrap">{formatDate(row.transactedAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap tabular-nums">{row.amount} USDT</td>
                     <td className="px-4 py-3 font-medium tabular-nums">{row.orderCode ?? "—"}</td>
+                    <td className="px-4 py-3">{row.email ?? "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {row.premiumDays ? `${row.premiumDays} days` : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <BinanceVisitCell visits={row.visits} now={now} paidAt={row.transactedAt} />
                     </td>
                     <td className="px-4 py-3">
                       {row.linkMethod === "manual" ? "An admin" : "The order code"}

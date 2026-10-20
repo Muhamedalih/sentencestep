@@ -6,6 +6,7 @@ import { CircleAlert, CircleCheck } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BinancePayInstructions } from "@/components/billing/binance-pay-instructions";
+import { BinanceReportPrompt } from "@/components/billing/binance-report-prompt";
 import { PaymentStatusRefresh } from "@/components/billing/payment-status-refresh";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
 import { BackButton } from "@/components/layout/back-button";
@@ -168,7 +169,11 @@ export default async function BinancePayPage({
           <CardDescription>{t.premium.paymentReviewBody}</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <ReportPaymentProblem defaultCategory="paid_not_active" variant="button" />
+          <ReportPaymentProblem
+            defaultCategory="paid_not_active"
+            variant="button"
+            context="binance"
+          />
         </CardContent>
       </>,
     );
@@ -210,6 +215,7 @@ export default async function BinancePayPage({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <BinancePayInstructions
+          reference={order.reference_id}
           binanceId={settings.binanceId}
           displayName={settings.displayName}
           amount={order.charge_amount}
@@ -217,14 +223,14 @@ export default async function BinancePayPage({
           expiresAt={order.link_expires_at}
           expired={expired}
         />
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {expired && (
+        <BinanceReportPrompt defaultCategory="paid_not_active" />
+        {expired && (
+          <div className="flex justify-center">
             <Button asChild variant="outline">
               <Link href="/upgrade">{t.binancePay.startNewOrder}</Link>
             </Button>
-          )}
-          <ReportPaymentProblem defaultCategory="paid_not_active" variant="link" />
-        </div>
+          </div>
+        )}
         <PaymentStatusRefresh {...(expired ? LATE_REFRESH : WAIT_REFRESH)} />
       </CardContent>
     </>,

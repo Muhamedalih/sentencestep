@@ -143,6 +143,9 @@ export const en: Dictionary = {
     categoryPaidNotActive: "I paid but Premium isn't active",
     categoryFailed: "My payment failed or was declined",
     categoryWrongPrice: "The price looks wrong",
+    categoryNoNote: "I sent the transfer without the order code in the note",
+    categoryWrongAmount: "I sent a different amount",
+    categoryCantSend: "I can't send it, or the steps aren't clear",
     categoryOther: "Something else",
     notePlaceholder: "Anything else we should know? (optional)",
     notePlaceholderOther: "Describe what happened",
@@ -206,6 +209,10 @@ export const en: Dictionary = {
     onlyUsdt:
       "USDT only, sent with Binance Pay. Other coins and on-chain transfers aren't detected.",
     notConfigured: "Binance Pay isn't available right now.",
+    reportHeading: "Did something go wrong with your payment?",
+    reportBody:
+      "Tell us what happened. We get an alert right away and reply to your account email.",
+    reportButton: "Report a problem",
   },
 
   onboarding: {
