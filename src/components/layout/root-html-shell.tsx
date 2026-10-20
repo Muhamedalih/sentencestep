@@ -34,11 +34,14 @@ const amiri = Amiri({
 /**
  * The Latin face for the whole interface (--font-sans and --font-arabic put it first). It has no
  * Arabic glyphs, so Arabic text still comes from the next font in those stacks, as before. One
- * variable file, preloaded: every page uses it.
+ * variable file, preloaded: every page uses it. `adjustFontFallback: false` on purpose: the
+ * generated "Inter Fallback" face is Arial, which has Arabic glyphs, so Arabic text stopped at it
+ * and drew about 18% narrower than the Segoe UI / system face it used before Inter.
  */
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+  adjustFontFallback: false,
   variable: "--font-inter",
 });
 const lora = Lora({
