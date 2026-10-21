@@ -4,7 +4,7 @@ import { SharedInputHost, SharedInputProvider } from "@/components/learning/shar
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
@@ -104,6 +104,7 @@ export function WordReviewSession({
   backHref,
   smart,
   moreWaiting = 0,
+  onFinished,
 }: {
   words: ReviewWord[];
   /** Word Lists' one global voice (see VocabularyPractice's identical prop) — a review queue can span multiple word groups, so there's no single group-level voice to prefer here either. */
@@ -134,6 +135,13 @@ export function WordReviewSession({
   smart?: SmartPracticeConfig | null;
   /** Smart review only: how many due words did not fit in this visit and are still waiting (the finish screen offers another round). */
   moreWaiting?: number;
+  /**
+   * Today's session only (a step of a longer flow, see TodayReviewRunner): called once when the
+   * queue is empty, with how many words were asked and how many were typed right the first time.
+   * The screen then shows no finish card of its own — the caller moves on — and the Daily session's
+   * once-a-day XP report is skipped.
+   */
+  onFinished?: (result: { total: number; clean: number }) => void;
 }) {
   const { t, dir } = useLocale();
   const smartConfig = variant === "wordLists" && smart ? smart : null;
@@ -163,6 +171,9 @@ export function WordReviewSession({
   // never drives a render itself, only what gets reported alongside the
   // next correct answer.
   const failedWordIdsRef = useRef<Set<string>>(new Set());
+  // Every word that was missed at least once this visit (failedWordIdsRef drops a word once it lands).
+  const everMissedRef = useRef<Set<string>>(new Set());
+  const finishedRef = useRef(false);
   const sectionFontFamily = resolveSectionFontFamily(useLessonFontSettings(), "wordLists");
   const typingSoundSettings = useTypingSoundSettings();
   const { play, playSentenceComplete } = useTypingSound({
@@ -240,12 +251,20 @@ export function WordReviewSession({
   const [sessionReward, setSessionReward] = useState<{ first: boolean; xp: number } | null>(null);
   const sessionReportedRef = useRef(false);
   useEffect(() => {
-    if (variant !== "session" || !isComplete || sessionReportedRef.current) return;
+    if (variant !== "session" || onFinished || !isComplete || sessionReportedRef.current) return;
     sessionReportedRef.current = true;
     completeDailySessionAction(todayLocalISODate(), correctedCount)
       .then(setSessionReward)
       .catch((error: unknown) => console.error("[daily-session] completion report failed", error));
-  }, [variant, isComplete, correctedCount]);
+  }, [variant, isComplete, correctedCount, onFinished]);
+
+  useEffect(() => {
+    if (!onFinished || !isComplete || finishedRef.current) return;
+    finishedRef.current = true;
+    onFinished({ total, clean: Math.max(0, total - everMissedRef.current.size) });
+    // Once, when the queue empties.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete]);
 
   const { prefetchPronunciation, registerResolvedAudio } = usePronunciationSettings();
   const nextWord = queue.length > 1 ? words[queue[1]!] : undefined;
@@ -349,6 +368,7 @@ export function WordReviewSession({
     } else {
       play("error");
       failedWordIdsRef.current.add(word.id);
+      everMissedRef.current.add(word.id);
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
@@ -388,7 +408,11 @@ export function WordReviewSession({
         </div>
 
         <AnimatePresence mode="wait">
-          {isComplete ? (
+          {isComplete && onFinished ? (
+            <motion.div key="finishing" className="flex flex-1 items-center justify-center">
+              <Loader2 className="text-muted-foreground size-6 animate-spin" aria-hidden="true" />
+            </motion.div>
+          ) : isComplete ? (
             <motion.div
               key="complete"
               className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"

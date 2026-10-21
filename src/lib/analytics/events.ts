@@ -121,6 +121,12 @@ export type AnalyticsEvent =
       category: "ENGAGEMENT";
       /** What the learner pressed on the finish screen (see SESSION_END_ACTIONS). */
       properties: { action: SessionEndAction };
+    }
+  | {
+      name: "TODAY_SESSION_COMPLETED";
+      category: "ENGAGEMENT";
+      /** A learner reached the end of Today's session (the first one of their day; a repeat is not counted again). `length`: the minutes they picked, `reviewTotal`/`reviewClean`: review words asked and typed right the first time (0/0 when the session had no review). */
+      properties: { length: number; reviewTotal: number; reviewClean: number };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

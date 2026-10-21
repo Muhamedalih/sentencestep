@@ -13,7 +13,7 @@ import type { FromMemoryItem } from "@/lib/features/from-memory";
 import type { LessonCompletion } from "@/lib/progress/types";
 import { fetchSessionEndAction } from "@/lib/session-end/actions";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
-import { pickRecallItems } from "@/lib/session-end/recall";
+import { RECALL_COUNT, pickRecallItems } from "@/lib/session-end/recall";
 import { REMINDER_HOURS, reminderTimeFor } from "@/lib/session-end/reminder";
 import { setSessionReminderAction } from "@/lib/session-end/reminder-actions";
 import {
@@ -22,6 +22,12 @@ import {
   estimateTomorrowMinutes,
 } from "@/lib/session-end/summary";
 import { trackSessionEndAction, trackSessionRecallAction } from "@/lib/session-end/track-actions";
+import { todayLocalISODate } from "@/lib/progress/streak";
+import { completeTodaySessionAction } from "@/lib/today/actions";
+import { RECALL_BY_LENGTH } from "@/lib/today/plan";
+import type { SessionLength } from "@/lib/today/plan";
+import { readTodayReview } from "@/lib/today/run-state";
+import type { TodayRun } from "@/lib/today/run-state";
 import type { NextLessonRef } from "@/types/content";
 import type { LearningMode } from "@/types/content";
 
@@ -53,6 +59,7 @@ export function SessionEndFlow({
   showFirstLetters,
   onMistakes,
   endExtras,
+  today,
 }: {
   unit: { id: string; mode: LearningMode };
   /** Every sentence of the lesson that can be asked back (buildFromMemoryItems). */
@@ -71,15 +78,27 @@ export function SessionEndFlow({
   onMistakes: (sentenceId: string, words: { word: string; errorIndexes: number[] }[]) => void;
   /** Rendered only once the finish screen is up — the one-time rating card, which must not appear over the recall round. */
   endExtras?: ReactNode;
+  /**
+   * This is the last block of Today's session ("Today's session (new Home)"): the recall asks the
+   * number of sentences that session length calls for (none in the 3-minute one), the finish screen
+   * shows the review block's result when there was one, and reaching the finish screen records the
+   * session (see completeTodaySessionAction).
+   */
+  today?: { length: SessionLength };
 }) {
   const userId = useAuthUserId();
   const { t } = useLocale();
   const features = useFeatures();
-  const recallItems = useMemo(() => pickRecallItems(items), [items]);
+  const recallItems = useMemo(
+    () => pickRecallItems(items, today ? RECALL_BY_LENGTH[today.length] : RECALL_COUNT),
+    [items, today],
+  );
   const [phase, setPhase] = useState<"recall" | "end">(recallItems.length > 0 ? "recall" : "end");
   const [recall, setRecall] = useState<{ clean: number; total: number } | null>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof fetchSessionEndAction>> | null>(null);
   const startedRef = useRef(false);
+  const [todayReview, setTodayReview] = useState<TodayRun["review"]>(null);
+  const todayRecordedRef = useRef(false);
   const [reminderHour, setReminderHour] = useState<number | null>(null);
   const [reminderStatus, setReminderStatus] = useState<SessionEndReminder["status"]>("idle");
 
@@ -110,6 +129,25 @@ export function SessionEndFlow({
     // Once per finished lesson: everything it reads is fixed by the time the lesson is over.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Today's session only: on reaching the finish screen, read the review block's result and record
+  // the session once. Read in an effect (the result lives in sessionStorage, so it is only known in
+  // the browser, after hydration).
+  useEffect(() => {
+    if (!today || phase !== "end" || todayRecordedRef.current) return;
+    todayRecordedRef.current = true;
+    const review = readTodayReview(todayLocalISODate());
+    setTodayReview(review);
+    if (!userId) return;
+    void completeTodaySessionAction({
+      todayISO: todayLocalISODate(),
+      length: today.length,
+      reviewTotal: review?.total ?? 0,
+      reviewClean: review?.clean ?? 0,
+    }).catch(() => {});
+    // Once, when the finish screen first shows.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function handleRecallFinished(summary: { total: number; clean: number }) {
     setRecall(summary);
@@ -171,7 +209,7 @@ export function SessionEndFlow({
           completions.map((entry) => entry.completedAt),
           new Date(),
         )}
-        recall={recall}
+        recall={todayReview ?? recall}
         isGuest={!userId}
         tomorrow={{
           ready: data !== null,

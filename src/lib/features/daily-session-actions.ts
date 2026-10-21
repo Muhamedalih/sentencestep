@@ -5,7 +5,7 @@ import { after } from "next/server";
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import { awardEventBadge } from "@/lib/features/badge-service";
 import { completeDailySession } from "@/lib/features/daily-session-queries";
-import { buildDailySessionWords } from "@/lib/features/daily-session-service";
+import { buildDailySessionWords, todayReviewFeatures } from "@/lib/features/daily-session-service";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -98,6 +98,29 @@ export async function fetchDailySessionWordsAction(): Promise<ReviewWord[]> {
     return await generateMissingSessionAudio(words);
   } catch (error) {
     console.error("[daily-session] fetchDailySessionWordsAction failed", error);
+    return [];
+  }
+}
+
+/**
+ * The review block of Today's session (permission "Today's session (new Home)"): up to `limit`
+ * words from the learner's own mistakes, weak words, words met in lessons and saved cards, each
+ * pointed at the Word Lists voice like the Daily session's. [] when the permission isn't open for
+ * this learner, nobody is signed in, nothing is due, or anything fails.
+ */
+export async function fetchTodayReviewWordsAction(limit: number): Promise<ReviewWord[]> {
+  try {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 20) return [];
+    const [features, userId] = await Promise.all([getEffectiveFeatures(), getSessionUserId()]);
+    if (!features.rollouts.todaySession || !userId) return [];
+    const words = await buildDailySessionWords(
+      userId,
+      todayReviewFeatures(features, limit),
+      await getLocale(),
+    );
+    return await generateMissingSessionAudio(words);
+  } catch (error) {
+    console.error("[today] fetchTodayReviewWordsAction failed", error);
     return [];
   }
 }

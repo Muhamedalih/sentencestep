@@ -396,6 +396,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       sessionEnd: false,
       sessionReminders: false,
       shortFirstRun: false,
+      todaySession: false,
     });
   }
 });

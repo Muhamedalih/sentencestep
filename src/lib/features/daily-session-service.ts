@@ -176,6 +176,51 @@ export async function buildDailySessionWords(
 }
 
 /**
+ * The sources Today's session reviews from, whatever the Daily session switches say: the
+ * learner's mistakes and weak words, the words they met in lessons, and their saved cards — never
+ * Word Lists words they have not learned yet, which is new material, not review.
+ */
+export function todayReviewFeatures(features: EffectiveFeatures, size: number): EffectiveFeatures {
+  return {
+    ...features,
+    dailySession: {
+      ...features.dailySession,
+      enabled: true,
+      size,
+      sources: {
+        mistakesAndWeakWords: true,
+        vocabularyRecall: true,
+        personalCards: true,
+        wordLists: false,
+      },
+    },
+  };
+}
+
+/**
+ * How many review words are waiting right now for Today's card — raw counts, no cap and no
+ * hydration (the plan applies the cap). The same word can sit in two sources, so this can slightly
+ * overstate; the session itself de-duplicates.
+ */
+export async function countTodayReviewCandidates(
+  userId: string,
+  knownWeakWordCount?: Promise<number>,
+): Promise<number> {
+  const counts = await Promise.all([
+    attempt("mistake count", () => fetchActiveMistakeCount(userId), 0),
+    attempt("review count", () => fetchDueReviewCount(userId), 0),
+    attempt(
+      "weak count",
+      async () => knownWeakWordCount ?? (await fetchWeakWordsAction()).length,
+      0,
+    ),
+    attempt("recall count", () => fetchDueVocabularyRecallCount(userId), 0),
+    attempt("card count", () => fetchDueCardCount(userId), 0),
+  ]);
+  return counts.reduce((sum, value) => sum + value, 0);
+}
+
+/**
  * A cheap estimate of how many words are ready, for the Home card — counts
  * only, no hydration. The same word can sit in two sources (a mistake that's
  * also a Word List entry), so this can slightly overstate; capped by the

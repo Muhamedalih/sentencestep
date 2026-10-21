@@ -1421,6 +1421,53 @@ export interface Dictionary {
     minuteCountFew: string;
     minuteCountMany: string;
   };
+  /** Home's "Today's session" card and its review step (src/components/today). `{n}` is a count, `{done}`/`{target}` the week's sessions, `{level}` a level code. */
+  today: {
+    heading: string;
+    headingComeback: string;
+    cardTitle: string;
+    cardTitleFirst: string;
+    cardTitleReviewOnly: string;
+    cardTitleComeback: string;
+    cardTitleIdle: string;
+    lengthLabel: string;
+    minutes: string;
+    whyReview: string;
+    whyNew: string;
+    whyFirst: string;
+    whyReviewOnly: string;
+    whyComeback: string;
+    whyIdle: string;
+    stepReview: string;
+    stepReviewDesc: string;
+    stepReviewDescMany: string;
+    stepReviewDescComeback: string;
+    stepNew: string;
+    stepFirst: string;
+    stepRecall: string;
+    stepRecallDesc: string;
+    kindLesson: string;
+    kindStory: string;
+    start: string;
+    startFirst: string;
+    startComeback: string;
+    chooseYourself: string;
+    weekSessions: string;
+    progressLabel: string;
+    statSentences: string;
+    statLessons: string;
+    statWords: string;
+    statWeekDelta: string;
+    pathLabel: string;
+    pathLevel: string;
+    pathDone: string;
+    tagToday: string;
+    tagLocked: string;
+    freeContent: string;
+    doneHeading: string;
+    doneBody: string;
+    moreLesson: string;
+  };
   /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
   streakCalendar: {
     heading: string;

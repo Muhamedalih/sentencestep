@@ -12,6 +12,7 @@ import { HomePlan } from "@/components/app/home-plan";
 import { HomeReviewCard } from "@/components/app/home-review-card";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { ProgressProvider } from "@/components/providers/progress-provider";
+import { TodayHomePage } from "@/components/today/today-home-page";
 import { isAdmin } from "@/lib/admin/access";
 import { getAccessState } from "@/lib/billing/access";
 import { REMINDER_WINDOW_DAYS } from "@/lib/billing/expiry-reminders";
@@ -58,9 +59,31 @@ export const dynamic = "force-dynamic";
  * nav order), and this page is purely the dashboard: nothing here scrolls
  * into a lesson catalog any more.
  */
-export default async function LearnHomePage() {
+export default async function LearnHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ classic?: string }>;
+}) {
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
+
+  // "Today's session (new Home)": a signed-in learner it is open for gets the Today card instead of
+  // everything below; ?classic=1 (the "Choose yourself" link) brings the old Home back. Decided
+  // before any of the old page's reads start, so the Today page does not pay for them.
+  const [homeFeatures, homeUser, homeParams] = await Promise.all([
+    getEffectiveFeatures(),
+    getCurrentUser(),
+    searchParams,
+  ]);
+  if (homeFeatures.rollouts.todaySession && homeUser && homeParams.classic !== "1") {
+    return (
+      <TodayHomePage
+        userId={homeUser.id}
+        locale={locale}
+        floor={homeFeatures.rollouts.levelFloor}
+      />
+    );
+  }
 
   // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
   // sentence/word counts, never the sentence bodies themselves (see that

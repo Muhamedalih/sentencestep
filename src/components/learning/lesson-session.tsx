@@ -42,6 +42,8 @@ import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-se
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
+import { isTodayRunUrl, todayLengthFromUrl } from "@/lib/today/run-state";
+import type { SessionLength } from "@/lib/today/plan";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
 import type { Lesson, NextLessonRef } from "@/types/content";
@@ -313,8 +315,19 @@ export function LessonSession({
   // The new lesson ending (admin feature "New lesson ending"): a recall round and a calm finish
   // screen in place of the stats screen. Never in the admin content preview, and Conversation
   // keeps its own screen (nothing links to it any more).
+  // A step of Today's session (?today=1, "Today's session (new Home)"): it ends on this same recall
+  // round and finish screen, whatever the "New lesson ending" switch says. Read after mount, since the
+  // address is only known in the browser.
+  const [todayRun, setTodayRun] = useState<{ length: SessionLength } | null>(null);
+  useEffect(() => {
+    if (features.rollouts.todaySession && isTodayRunUrl()) {
+      setTodayRun({ length: todayLengthFromUrl() });
+    }
+  }, [features.rollouts.todaySession]);
   const usesSessionEnd =
-    features.rollouts.sessionEnd && !previewMode && unit.mode !== "conversation";
+    (features.rollouts.sessionEnd || todayRun !== null) &&
+    !previewMode &&
+    unit.mode !== "conversation";
   const recallPool = useMemo(
     () => (usesSessionEnd ? buildFromMemoryItems(unit.sentences, locale) : []),
     [usesSessionEnd, unit.sentences, locale],
@@ -849,6 +862,7 @@ export function LessonSession({
               allowReveal={features.fromMemory.allowReveal}
               showFirstLetters={features.fromMemory.showFirstLetters}
               onMistakes={handleSentenceMistakes}
+              today={todayRun ?? undefined}
               endExtras={
                 <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
               }

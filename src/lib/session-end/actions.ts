@@ -10,6 +10,7 @@ import { withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { findCurrentLesson } from "@/lib/progress/level";
+import { REVIEW_CAP } from "@/lib/today/plan";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
 import { fetchActiveMistakeCount, fetchDueReviewCountBy } from "@/lib/supabase/queries/mistakes";
@@ -124,8 +125,9 @@ export async function fetchSessionEndAction(input: {
     const horizon = until.getTime() - Date.now();
     if (
       user &&
-      features.dailySession.enabled &&
-      features.dailySession.sources.mistakesAndWeakWords &&
+      // The words come back on Today (its own permission) or on the Daily session, whichever is open.
+      (features.rollouts.todaySession ||
+        (features.dailySession.enabled && features.dailySession.sources.mistakesAndWeakWords)) &&
       Number.isFinite(horizon) &&
       horizon > 0 &&
       horizon <= MAX_HORIZON_MS
@@ -134,7 +136,10 @@ export async function fetchSessionEndAction(input: {
         fetchActiveMistakeCount(user.id),
         fetchDueReviewCountBy(user.id, until),
       ]);
-      reviewTomorrow = Math.min(features.dailySession.size, active + due);
+      reviewTomorrow = Math.min(
+        features.rollouts.todaySession ? REVIEW_CAP[7] : features.dailySession.size,
+        active + due,
+      );
     }
 
     return {

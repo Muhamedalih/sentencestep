@@ -143,13 +143,20 @@ test("isRolloutOpen: Everyone opens for everyone, guests included", () => {
 
 test("evaluateRollouts: default config opens everything for admins only", () => {
   const config = defaultRolloutConfig();
-  assert.deepEqual(Object.values(evaluateRollouts(config, guest)), [false, false, false, false]);
-  assert.deepEqual(Object.values(evaluateRollouts(config, admin)), [true, true, true, true]);
+  assert.deepEqual(Object.values(evaluateRollouts(config, guest)), [
+    false,
+    false,
+    false,
+    false,
+    false,
+  ]);
+  assert.deepEqual(Object.values(evaluateRollouts(config, admin)), [true, true, true, true, true]);
   assert.deepEqual(closedRollouts(), {
     levelFloor: false,
     sessionEnd: false,
     sessionReminders: false,
     shortFirstRun: false,
+    todaySession: false,
   });
 });
 
