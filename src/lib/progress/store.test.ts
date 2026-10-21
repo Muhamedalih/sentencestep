@@ -5,6 +5,7 @@ import {
   clearProgress,
   readProgress,
   recordCompletion,
+  setFreshGuestWrites,
   setCountry,
   setStartingLevel,
 } from "./store";
@@ -24,10 +25,25 @@ function installFakeStorage(): Map<string, string> {
 
 beforeEach(() => {
   installFakeStorage();
+  setFreshGuestWrites(true);
 });
 
 afterEach(() => {
+  setFreshGuestWrites(false);
   Reflect.deleteProperty(globalThis, "window");
+});
+
+test("by default a write starts from the caller's own copy, as it always did", () => {
+  setFreshGuestWrites(false);
+  const levelStepCopy = readProgress();
+  const countryStepCopy = readProgress();
+
+  setStartingLevel(levelStepCopy, 2);
+  setCountry(countryStepCopy, "iq");
+
+  const saved = readProgress();
+  assert.equal(saved.startingLevel, null);
+  assert.equal(saved.country, "iq");
 });
 
 test("a copy read before the level was chosen cannot erase it when the country is saved", () => {

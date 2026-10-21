@@ -428,6 +428,7 @@ function isLibraryRoute(pathname: string): boolean {
  */
 const ADMIN_ONLY_SEGMENTS = [
   "features",
+  "permissions",
   "passages",
   "color-settings",
   "voice",

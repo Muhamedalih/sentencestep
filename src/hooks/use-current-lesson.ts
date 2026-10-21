@@ -1,5 +1,6 @@
 "use client";
 
+import { useFeatures } from "@/components/providers/feature-provider";
 import type { useProgress } from "@/hooks/use-progress";
 import { findCurrentLesson } from "@/lib/progress/level";
 import { getAnyLessonResume } from "@/lib/progress/lesson-resume";
@@ -29,6 +30,7 @@ export function useCurrentLesson(
   progress: Pick<ReturnType<typeof useProgress>, "isLoaded" | "getCompletedIds" | "startingLevel">,
 ) {
   const { isLoaded, getCompletedIds, startingLevel } = progress;
+  const { rollouts } = useFeatures();
   const completedIds = isLoaded ? getCompletedIds("normal") : [];
 
   const resume = getAnyLessonResume();
@@ -38,7 +40,8 @@ export function useCurrentLesson(
       : undefined;
 
   const currentLesson =
-    resumedLesson ?? findCurrentLesson(units, completedIds, isPremiumUser, startingLevel);
+    resumedLesson ??
+    findCurrentLesson(units, completedIds, isPremiumUser, startingLevel, rollouts.levelFloor);
   const isResumed = Boolean(resumedLesson);
 
   return { isLoaded, completedIds, currentLesson, isResumed };

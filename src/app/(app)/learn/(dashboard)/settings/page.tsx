@@ -17,6 +17,7 @@ import { TwoFactorSettings } from "@/components/settings/two-factor-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin/access";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getAccessState } from "@/lib/billing/access";
 import { getEmailPreferences } from "@/lib/email/preferences";
 import { loadLevelProgress } from "@/lib/home-plan/level";
@@ -71,6 +72,7 @@ export default async function SettingsPage() {
       ? loadLevelProgress({
           locale: locale ?? undefined,
           completedWordIds: await wordsPromise,
+          floor: (await getEffectiveFeatures()).rollouts.levelFloor,
         })
       : null,
   );

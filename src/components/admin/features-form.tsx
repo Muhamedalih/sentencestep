@@ -81,11 +81,6 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
     description:
       "A second payment button on the upgrade page: the learner sends USDT to your Binance account and writes a short order code in the transfer's note; the relay server reads your Binance Pay history and Premium is activated by itself when the code and the amount match. Needs the relay running and BINANCE_RELAY_SECRET set on the server. Admin preview shows the button to admins only on the live site; turn it On to open it to everyone. Orders per day, the account shown to learners and automatic activation are set on the Binance Pay page.",
   },
-  sessionEnd: {
-    title: "New lesson ending",
-    description:
-      "Replaces the stats-and-confetti screen when a lesson finishes: first a short recall round (three sentences from the lesson asked back in the learner's language, typed from memory), then a calm screen with how many were remembered, what is waiting tomorrow (the next lesson, and the words that come back when Daily session is on) and, once reminders are switched on at the server, a reminder to set. A guest who has just finished their first lesson is asked to save their progress instead. Works for guests too. Admin preview shows it to admins only on the live site; turn it On to roll it out to everyone.",
-  },
 };
 
 const STATE_OPTIONS: { value: FeatureState; label: string; hint: string }[] = [

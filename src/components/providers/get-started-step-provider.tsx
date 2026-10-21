@@ -12,10 +12,10 @@ import {
 import { usePathname } from "next/navigation";
 
 import { useProgress } from "@/hooks/use-progress";
-import { resolveFirstRunVariant } from "@/lib/first-run/browser";
+import { readFirstRunVariantNow, resolveFirstRunVariant } from "@/lib/first-run/browser";
 import type { FirstRunVariant } from "@/lib/first-run/variant";
 import type { Difficulty } from "@/lib/levels";
-import { clearProgress } from "@/lib/progress/store";
+import { clearProgress, setFreshGuestWrites } from "@/lib/progress/store";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { hasSupabaseAuthCookieClient } from "@/lib/supabase/has-session-cookie-client";
 
@@ -247,11 +247,32 @@ export function GetStartedStepProvider({
   const [firstRunVariant, setFirstRunVariant] = useState<FirstRunVariant | null>(null);
   const pathname = usePathname();
 
-  // A layout effect, so the variant is known before the first paint that could show any step
-  // past IntroLanding (those all wait on useProgress()'s own layout effect, which runs after this).
+  // A visitor who already has a variant (stored, or pinned by ?first_run=) is known before the
+  // first paint that could show any step past IntroLanding (those all wait on useProgress()'s own
+  // layout effect, which runs after this). A first-time visitor on a marketing page has none yet:
+  // it is decided by the "Short first run" permission — a share of new visitors, none while it is
+  // Admins only — which takes one small cached request, well inside the seconds IntroLanding is
+  // read. Until then the variant is null, and null behaves as the long first run everywhere.
+  // Signed-in visitors are never put in the test. The guest store writes the newer way only in the
+  // short first run (see setFreshGuestWrites), so the long one is exactly what it was.
   useLayoutEffect(() => {
-    setFirstRunVariant(resolveFirstRunVariant());
-  }, []);
+    const known = readFirstRunVariantNow();
+    if (known) {
+      setFirstRunVariant(known);
+      setFreshGuestWrites(known === "short");
+      return;
+    }
+    if (!localizedNavigation || hasSupabaseAuthCookieClient()) return;
+    let cancelled = false;
+    void resolveFirstRunVariant().then((variant) => {
+      if (cancelled) return;
+      setFirstRunVariant(variant);
+      setFreshGuestWrites(variant === "short");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [localizedNavigation]);
 
   // introContinued is in-memory, so a soft navigation that keeps this
   // provider mounted (e.g. signOut's redirect("/") from /learn) would carry a

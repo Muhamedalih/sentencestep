@@ -423,8 +423,13 @@ export async function migrateGuestProgressAction(
     });
   }
 
+  // A level a guest lost is read back from the opening lesson they finished only where the "Chosen
+  // level shapes the path" permission is open for this learner.
   const guestStartingLevel =
-    guest.startingLevel ?? startingLevelFromOpeningLesson(guest.completions);
+    guest.startingLevel ??
+    ((await getEffectiveFeatures()).rollouts.levelFloor
+      ? startingLevelFromOpeningLesson(guest.completions)
+      : null);
   if (existingStartingLevel === null && guestStartingLevel !== null) {
     await setStartingLevelAction(guestStartingLevel);
   }

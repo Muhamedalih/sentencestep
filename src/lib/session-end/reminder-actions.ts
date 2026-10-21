@@ -19,7 +19,7 @@ export async function setSessionReminderAction(
 ): Promise<{ ok: boolean; reason?: "unverified" }> {
   try {
     const features = await getEffectiveFeatures();
-    if (!features.sessionEnd.reminders) return { ok: false };
+    if (!features.rollouts.sessionReminders) return { ok: false };
 
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();

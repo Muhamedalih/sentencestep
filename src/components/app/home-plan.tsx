@@ -6,6 +6,7 @@ import { BookOpenText, Check, CheckCircle2, Info, Keyboard, ListChecks } from "l
 import type { LucideIcon } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
@@ -200,6 +201,7 @@ export function HomePlan({
   const c = planCopy(locale);
   const progress = useSharedProgress();
   const { isLoaded, getCompletedIds, startingLevel, completions } = progress;
+  const { rollouts } = useFeatures();
   const { currentLesson, isResumed } = useCurrentLesson(units, isPremiumUser, progress);
 
   if (!isLoaded) {
@@ -220,6 +222,7 @@ export function HomePlan({
     getCompletedIds("stories"),
     isPremiumUser,
     startingLevel,
+    rollouts.levelFloor,
   );
   const storyToday = lastCompletedToday(completions, "stories", today);
   const writeToday = lastCompletedToday(completions, "normal", today);

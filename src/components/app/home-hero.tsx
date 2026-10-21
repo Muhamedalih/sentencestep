@@ -8,6 +8,7 @@ import { HomeBookCard } from "@/components/app/home-book-card";
 import { StoryRibbon } from "@/components/app/story-cover-marks";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { useCurrentLesson } from "@/hooks/use-current-lesson";
@@ -157,6 +158,7 @@ export function HomeHero({
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
   const { isLoaded, getCompletedIds, startingLevel } = progress;
+  const { rollouts } = useFeatures();
   const { completedIds, currentLesson, isResumed } = useCurrentLesson(
     units,
     isPremiumUser,
@@ -181,7 +183,7 @@ export function HomeHero({
   // and never a mutation of the learner's real completedIds above.
   const freeFallbackLesson =
     noCurrentLesson && !isPremiumUser
-      ? findCurrentLesson(units, [], false, startingLevel)
+      ? findCurrentLesson(units, [], false, startingLevel, rollouts.levelFloor)
       : undefined;
 
   const storiesCompletedIds = isLoaded ? getCompletedIds("stories") : [];
@@ -190,6 +192,7 @@ export function HomeHero({
     storiesCompletedIds,
     isPremiumUser,
     startingLevel,
+    rollouts.levelFloor,
   );
   // The Stories box never shows a picture: its title in large type on a cover in the site's own
   // grey, with the title's first letter as a faint outline and a level-coloured ribbon, so the line

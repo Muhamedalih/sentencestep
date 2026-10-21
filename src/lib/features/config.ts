@@ -6,6 +6,8 @@ import {
   type QuestType,
 } from "@/lib/features/catalog";
 import type { LearningSection } from "@/lib/admin/learning-sections";
+import type { RolloutId } from "@/lib/rollouts/catalog";
+import { closedRollouts } from "@/lib/rollouts/config";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -37,7 +39,6 @@ export const FEATURE_IDS = [
   "wordQuiz",
   "passages",
   "binancePay",
-  "sessionEnd",
 ] as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[number];
@@ -67,7 +68,6 @@ export const FEATURE_SECTIONS: Record<FeatureId, readonly LearningSection[]> = {
   wordQuiz: [],
   passages: [],
   binancePay: [],
-  sessionEnd: [],
 };
 
 /** Features that need an account to store anything — guests see a sign-in teaser instead of the feature itself. Dictation and from-memory work for everyone. */
@@ -358,19 +358,14 @@ export interface EffectiveFeatures {
    */
   binancePay: { enabled: boolean };
   /**
-   * The new end of a lesson (see src/components/learning/session-end-flow.tsx): a short
-   * recall round (the sentences asked back from their meaning, so the number shown is what the
-   * learner really remembered), then a calm screen with that number, what comes back tomorrow
-   * and a reminder to set, in place of the stats-and-confetti completion screen. A first
-   * lesson for a guest ends with "save your progress" instead. Works for guests too (only the
-   * reminder needs an account), so it is one flag. Admin preview shows it to admins only on
-   * the live site; On shows it to everyone.
+   * What the Permissions page (/admin/permissions) gives THIS visitor: one yes/no per feature in
+   * src/lib/rollouts/catalog.ts, already worked out against who is asking (an admin, a listed
+   * email, a guest, a browser an admin switched preview on for). resolveFeatures leaves every one
+   * closed — it only knows the switches above; getEffectiveFeatures fills in the real answers.
+   * A feature shipped for first-time visitors (shortFirstRun) is decided in the browser instead
+   * and is always false here.
    */
-  sessionEnd: {
-    enabled: boolean;
-    /** The "remind me tomorrow" card on the finish screen. Never set here: resolveFeatures leaves it false and getEffectiveFeatures turns it on only while the server is allowed to send reminders (SESSION_REMINDER_MAX_PER_RUN), so the screen never offers an email that would not be sent. */
-    reminders: boolean;
-  };
+  rollouts: Record<RolloutId, boolean>;
   /** True when at least one account-only feature is switched on for this visitor's tier but they aren't signed in — the Home page shows one "sign in to unlock" card. */
   guestTeaser: boolean;
 }
@@ -452,7 +447,7 @@ export function resolveFeatures(config: FeatureConfig, viewer: FeatureViewer): E
     wordQuiz: { enabled: open("wordQuiz") },
     passages: { enabled: open("passages") },
     binancePay: { enabled: open("binancePay") },
-    sessionEnd: { enabled: open("sessionEnd"), reminders: false },
+    rollouts: closedRollouts(),
     guestTeaser,
   };
 }

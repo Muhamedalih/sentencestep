@@ -314,7 +314,7 @@ export function LessonSession({
   // screen in place of the stats screen. Never in the admin content preview, and Conversation
   // keeps its own screen (nothing links to it any more).
   const usesSessionEnd =
-    features.sessionEnd.enabled && !previewMode && unit.mode !== "conversation";
+    features.rollouts.sessionEnd && !previewMode && unit.mode !== "conversation";
   const recallPool = useMemo(
     () => (usesSessionEnd ? buildFromMemoryItems(unit.sentences, locale) : []),
     [usesSessionEnd, unit.sentences, locale],

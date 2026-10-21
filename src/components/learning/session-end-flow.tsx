@@ -182,7 +182,7 @@ export function SessionEndFlow({
         extra={extra}
         extraMinutes={LESSON_MINUTES}
         reminder={
-          userId && features.sessionEnd.reminders
+          userId && features.rollouts.sessionReminders
             ? {
                 hours: REMINDER_HOURS,
                 selected: reminderHour,

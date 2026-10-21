@@ -198,6 +198,27 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
         Relationships: [];
       };
+      rollouts: {
+        Row: {
+          feature: string;
+          mode: "admin" | "emails" | "everyone";
+          /** Only for a feature aimed at first-time visitors, in "everyone" mode: the share of them it is given to. */
+          percent: number;
+          emails: string[];
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          feature: string;
+          mode?: "admin" | "emails" | "everyone";
+          percent?: number;
+          emails?: string[];
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["rollouts"]["Insert"]>;
+        Relationships: [];
+      };
       session_reminders: {
         Row: {
           user_id: string;

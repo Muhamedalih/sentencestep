@@ -11,6 +11,7 @@ import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { getLessonsByLevel, getUnits, withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
@@ -374,12 +375,19 @@ export function LessonListView({
 }) {
   const { t } = useLocale();
   const { isCompleted, getCompletedIds, isLoaded, startingLevel } = useProgress();
+  const { rollouts } = useFeatures();
 
   const units = withOpeningLessonPlacement(rawUnits);
   const courseUnits = getUnits(mode);
   const completedIds = isLoaded ? getCompletedIds(mode) : [];
-  const currentLessonId = findCurrentLesson(units, completedIds, isPremiumUser, startingLevel)?.id;
-  const currentLevel = getCurrentLevel(units, completedIds, startingLevel);
+  const currentLessonId = findCurrentLesson(
+    units,
+    completedIds,
+    isPremiumUser,
+    startingLevel,
+    rollouts.levelFloor,
+  )?.id;
+  const currentLevel = getCurrentLevel(units, completedIds, startingLevel, rollouts.levelFloor);
   const currentUnit = courseUnits.find((unit) => unit.level === currentLevel);
   const overallPercent =
     units.length === 0 ? 0 : Math.round((completedIds.length / units.length) * 100);

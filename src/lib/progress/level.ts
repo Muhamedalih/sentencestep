@@ -2,25 +2,26 @@ import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/st
 import type { LessonUnit } from "@/types/content";
 
 /**
- * The level the learner is on: the first level with an incomplete lesson,
- * looking from their placement upward, or the highest level once all are done.
- * `startingLevel` (the tier chosen in StartingLevelOnboarding or Settings, or
- * null/0 if unset/skipped) is a floor, not a one-time nudge: a level below it
- * only counts once nothing at or above it is left. It used to apply only while
- * the learner had no completions, so the second lesson already walked someone
- * who had chosen Intermediate or Advanced back through Level 1.
+ * The level the learner is on: the first level with an incomplete lesson, or the highest level once
+ * all are done. `startingLevel` (the tier chosen in StartingLevelOnboarding or Settings, or null/0 if
+ * unset/skipped) nudges this for a learner with NO completions yet — and, with `floor` on (the
+ * "Chosen level shapes the path" permission, see src/lib/rollouts), for good: it is then a floor, and
+ * a level below it only counts once nothing at or above it is left. Without `floor` the moment even
+ * one lesson is completed ordinary "first incomplete level" progression takes back over, which sent
+ * learners who had chosen Intermediate or Advanced back through Level 1 from their second lesson.
  */
 export function getCurrentLevel(
   units: readonly Pick<LessonUnit, "id" | "level">[],
   completedIds: readonly string[],
   startingLevel?: number | null,
+  floor = false,
 ): number {
   const levels = Array.from(new Set(units.map((unit) => unit.level))).sort((a, b) => a - b);
   const hasOpenLesson = (level: number) =>
     units.some((unit) => unit.level === level && !completedIds.includes(unit.id));
 
-  const floor = startingLevel ?? 0;
-  const current = levels.find((level) => level >= floor && hasOpenLesson(level));
+  const floorLevel = startingLevel && (floor || completedIds.length === 0) ? startingLevel : 0;
+  const current = levels.find((level) => level >= floorLevel && hasOpenLesson(level));
   return current ?? levels.find(hasOpenLesson) ?? levels[levels.length - 1] ?? 1;
 }
 
@@ -31,10 +32,13 @@ export function getCurrentLevel(
  * catalog so premium/admin learners keep getting a next-lesson recommendation
  * past the point a free learner would dead-end (see HomeHero).
  *
- * `startingLevel` is a floor, exactly as in getCurrentLevel: the next lesson
- * is the first incomplete one at or above that level, and only once none is
- * left there does the pick fall back to the lessons below it, so a learner is
- * never recommended nothing while something is still open.
+ * `startingLevel` shifts the recommendation to that level's first lesson for
+ * a brand-new learner (no completions at all) — see getCurrentLevel's doc
+ * comment for the exact same guard — and, with `floor` on, keeps it a floor
+ * afterwards: the next lesson is the first incomplete one at or above that
+ * level, and only once none is left there does the pick fall back to the
+ * lessons below it, so a learner is never recommended nothing while something
+ * is still open.
  *
  * For a brand-new learner (no completions at all) that tier's dedicated
  * OPENING_LESSON_ID (the exact lesson OnboardingIntroCard's own "Start" button
@@ -64,12 +68,13 @@ export function findCurrentLesson(
   completedIds: string[],
   isPremiumUser = false,
   startingLevel?: number | null,
+  floor = false,
 ): LessonUnit | undefined {
   const eligible = isPremiumUser ? units : units.filter((unit) => unit.isFree);
   const sorted = eligible.slice().sort((a, b) => a.level - b.level || a.order - b.order);
   const isOpen = (unit: LessonUnit) => !completedIds.includes(unit.id);
 
-  if (startingLevel) {
+  if (startingLevel && (floor || completedIds.length === 0)) {
     if (completedIds.length === 0) {
       const difficulty = difficultyForStartingLevel(startingLevel);
       const openingLesson = difficulty

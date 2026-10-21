@@ -112,26 +112,35 @@ test("pickNextWordBlock: a finished group is skipped and the last block is clipp
   assert.deepEqual([second?.from, second?.to], [6, 7]);
 });
 
-test("pickNextWordBlock: the onboarding level is a floor, groups below it come last; locked groups are skipped", () => {
+test("pickNextWordBlock: with the permission the onboarding level is a floor, groups below it come last; locked groups are skipped", () => {
   const groups = [group("a", 1, 1), group("b", 2, 1, 12, false), group("c", 2, 2)];
+  const floor = { isPremiumUser: true, startingLevel: 2, floor: true };
+  assert.equal(pickNextWordBlock(groups, new Set(), floor)?.group.id, "b");
   assert.equal(
-    pickNextWordBlock(groups, new Set(), { isPremiumUser: true, startingLevel: 2 })?.group.id,
-    "b",
+    pickNextWordBlock(groups, new Set(), { ...floor, isPremiumUser: false })?.group.id,
+    "c",
   );
+  assert.equal(pickNextWordBlock(groups, new Set(["a-1"]), floor)?.group.id, "b");
+  const finishedAboveTheFloor = new Set([...groups[1]!.wordIds, ...groups[2]!.wordIds]);
+  assert.equal(pickNextWordBlock(groups, finishedAboveTheFloor, floor)?.group.id, "a");
+});
+
+test("pickNextWordBlock: without the permission the onboarding level only counts before any word is done, as before", () => {
+  const groups = [group("a", 1, 1), group("b", 2, 1, 12, false), group("c", 2, 2)];
+  const plain = { isPremiumUser: true, startingLevel: 2 };
+  assert.equal(pickNextWordBlock(groups, new Set(), plain)?.group.id, "b");
+  assert.equal(pickNextWordBlock(groups, new Set(["a-1"]), plain)?.group.id, "a");
+  assert.equal(
+    pickNextWordBlock(groups, new Set(["a-1"]), { ...plain, floor: false })?.group.id,
+    "a",
+  );
+});
+
+test("pickNextWordBlock: locked groups are skipped and a finished catalog has no next block", () => {
+  const groups = [group("a", 1, 1), group("b", 2, 1, 12, false), group("c", 2, 2)];
   assert.equal(
     pickNextWordBlock(groups, new Set(), { isPremiumUser: false, startingLevel: 2 })?.group.id,
     "c",
-  );
-  assert.equal(
-    pickNextWordBlock(groups, new Set(["a-1"]), { isPremiumUser: true, startingLevel: 2 })?.group
-      .id,
-    "b",
-  );
-  const finishedAboveTheFloor = new Set([...groups[1]!.wordIds, ...groups[2]!.wordIds]);
-  assert.equal(
-    pickNextWordBlock(groups, finishedAboveTheFloor, { isPremiumUser: true, startingLevel: 2 })
-      ?.group.id,
-    "a",
   );
   assert.equal(
     pickNextWordBlock([group("z", 1, 1, 2)], new Set(["z-1", "z-2"]), {

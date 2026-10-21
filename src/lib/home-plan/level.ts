@@ -17,6 +17,8 @@ import { levelProgress } from "./plan";
 export async function loadLevelProgress(args: {
   locale?: SupportLocale;
   completedWordIds: readonly string[];
+  /** The "Chosen level shapes the path" permission (see getCurrentLevel). */
+  floor?: boolean;
 }): Promise<ReturnType<typeof levelProgress> | null> {
   try {
     const [units, storiesUnits, groups, progress] = await Promise.all([
@@ -35,6 +37,7 @@ export async function loadLevelProgress(args: {
       storyIds: idsOf("stories"),
       completedWordIds: new Set(args.completedWordIds),
       startingLevel: progress.startingLevel,
+      floor: args.floor,
       isPremiumUser: true,
     });
   } catch (error) {

@@ -34,6 +34,8 @@ export async function loadHomePlanWords(args: {
   timeZone?: string | null;
   isPremiumUser: boolean;
   startingLevel: number | null;
+  /** The "Chosen level shapes the path" permission (see getCurrentLevel). */
+  floor?: boolean;
 }): Promise<HomePlanWords | null> {
   try {
     const [groups, rows] = await Promise.all([
@@ -50,6 +52,7 @@ export async function loadHomePlanWords(args: {
     const block = pickNextWordBlock(groups, completed, {
       isPremiumUser: args.isPremiumUser,
       startingLevel: args.startingLevel,
+      floor: args.floor,
     });
     const group = block ? await getWordGroupById(block.group.id, args.locale) : undefined;
     const next =

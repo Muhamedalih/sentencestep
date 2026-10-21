@@ -152,17 +152,22 @@ export default async function LearnHomePage() {
   const passages = startHomePassagesCard({ user: userPromise, features: getEffectiveFeatures() });
   // Admin preview of "Today's plan" (HomePlan): its Word Lists reads only run for an admin.
   const isAdminPromise = isAdmin();
-  const planWordsPromise = Promise.all([isAdminPromise, userPromise, progressPromise]).then(
-    ([admin, signedIn, progress]) =>
-      admin && signedIn
-        ? loadHomePlanWords({
-            userId: signedIn.id,
-            locale: locale ?? undefined,
-            timeZone,
-            isPremiumUser: true,
-            startingLevel: progress?.startingLevel ?? null,
-          })
-        : null,
+  const planWordsPromise = Promise.all([
+    isAdminPromise,
+    userPromise,
+    progressPromise,
+    getEffectiveFeatures(),
+  ]).then(([admin, signedIn, progress, effectiveFeatures]) =>
+    admin && signedIn
+      ? loadHomePlanWords({
+          userId: signedIn.id,
+          locale: locale ?? undefined,
+          timeZone,
+          isPremiumUser: true,
+          startingLevel: progress?.startingLevel ?? null,
+          floor: effectiveFeatures.rollouts.levelFloor,
+        })
+      : null,
   );
   const [
     { units, storiesUnits, lessonStats },

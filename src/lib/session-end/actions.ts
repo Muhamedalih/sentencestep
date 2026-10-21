@@ -116,6 +116,7 @@ export async function fetchSessionEndAction(input: {
       finished,
       premium || admin,
       startingLevel,
+      features.rollouts.levelFloor,
     );
 
     let reviewTomorrow = 0;

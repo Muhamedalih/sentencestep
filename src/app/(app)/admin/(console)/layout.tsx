@@ -138,6 +138,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
                     Features
                   </Link>
                   <Link
+                    href="/admin/permissions"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Permissions
+                  </Link>
+                  <Link
                     href="/admin/color-settings"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >

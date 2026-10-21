@@ -34,8 +34,21 @@ export function readProgress(): ProgressState {
   return readStored() ?? emptyProgressState;
 }
 
+let freshGuestWrites = false;
+
 /**
- * The copy every write below starts from: what is stored right now, not the caller's own copy.
+ * Switches the newer way guest writes work on or off (see `latest` below). Off — the default — a
+ * write starts from the caller's own copy, exactly as it always did; on, from what is stored right
+ * now. It is on only in the short first run (the "Short first run" permission), so the long one,
+ * which most visitors still get, behaves as it always has until an admin decides otherwise.
+ */
+export function setFreshGuestWrites(enabled: boolean): void {
+  freshGuestWrites = enabled;
+}
+
+/**
+ * The copy every write below starts from: what is stored right now, not the caller's own copy —
+ * when setFreshGuestWrites is on.
  * useProgress() keeps one copy per call site, and each first-run step read its own when the page
  * loaded, before the visitor had chosen anything — so a write built on that older copy put its
  * old values back over a newer choice (saving the country wrote `startingLevel: null` over the
@@ -43,7 +56,7 @@ export function readProgress(): ProgressState {
  * is the caller's copy, used only when nothing is stored, where it is the only copy there is.
  */
 function latest(fallback: ProgressState): ProgressState {
-  return readStored() ?? fallback;
+  return freshGuestWrites ? (readStored() ?? fallback) : fallback;
 }
 
 function writeProgress(state: ProgressState): void {

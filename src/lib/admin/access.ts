@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { DEV_ADMIN_COOKIE } from "@/lib/admin/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -23,9 +24,11 @@ async function getDevAdminOverride(): Promise<boolean> {
  * this see the caller's own row (plus, for an actual admin, every row via
  * the admin policy), meaning this can't be spoofed by querying for someone
  * else's role. Shared by isAdmin/isEditorOrAdmin below so a call site that
- * needs both never pays for two round trips.
+ * needs both never pays for two round trips. Memoized for the request (React
+ * cache), so every admin check made while serving it — the feature switches,
+ * the permissions, the page's own — shares one lookup.
  */
-async function getRole(): Promise<string | null> {
+const getRole = cache(async function getRole(): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
 
   const user = await getCurrentUser();
@@ -40,7 +43,7 @@ async function getRole(): Promise<string | null> {
 
   if (error) throw error;
   return data?.role ?? null;
-}
+});
 
 /**
  * The one question anything gating FULL admin functionality should ask —

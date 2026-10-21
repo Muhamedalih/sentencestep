@@ -10,6 +10,7 @@ import {
   sanitizeFeatureConfig,
 } from "@/lib/features/config";
 import type { EffectiveFeatures, FeatureConfig, FeatureId } from "@/lib/features/config";
+import { getRolloutAccess } from "@/lib/rollouts/queries";
 import { reminderSendsPerRun } from "@/lib/session-end/reminder";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -124,14 +125,18 @@ async function resolveEffectiveFeatures(): Promise<EffectiveFeatures> {
 }
 
 /**
- * What the CURRENT visitor actually gets — see resolveEffectiveFeatures above. On top of the
- * admin switches, the lesson ending's reminder card is offered only while the server is allowed to
- * send reminder emails (SESSION_REMINDER_MAX_PER_RUN), so the screen never promises an email that
- * would not be sent.
+ * What the CURRENT visitor actually gets — the admin switches (resolveEffectiveFeatures above) plus
+ * the Permissions page: `rollouts` is the yes/no per feature in src/lib/rollouts. The reminder
+ * card is offered only while the server is allowed to send reminder emails
+ * (SESSION_REMINDER_MAX_PER_RUN), and only to the people the lesson ending itself is open to, so the
+ * screen never promises an email that would not be sent.
  */
 export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> => {
   const features = await resolveEffectiveFeatures();
-  if (!features.sessionEnd.enabled) return features;
-  const reminders = reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN) > 0;
-  return reminders ? { ...features, sessionEnd: { ...features.sessionEnd, reminders } } : features;
+  const access = await getRolloutAccess();
+  const reminders =
+    access.sessionReminders &&
+    access.sessionEnd &&
+    reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN) > 0;
+  return { ...features, rollouts: { ...access, sessionReminders: reminders } };
 });
