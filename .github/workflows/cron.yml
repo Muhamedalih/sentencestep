@@ -26,6 +26,7 @@ on:
     - cron: "*/15 * * * *" # voice-sweep
     - cron: "*/10 * * * *" # payments-reconcile
     - cron: "15 7 * * *" # premium-expiry-reminders
+    - cron: "7 * * * *" # session-reminders (every hour)
   workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
 
 jobs:
@@ -123,3 +124,20 @@ jobs:
           curl --fail-with-body -sS -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://sentencestep.com/api/cron/premium-expiry-reminders
+
+  # The one "remind me tomorrow" email a learner chose on the lesson-ending screen, sent in the hour
+  # they picked, which is why this is the only job that runs hourly (src/app/api/cron/session-reminders).
+  # Sends nothing until SESSION_REMINDER_MAX_PER_RUN is set on the server. A 404 means the route is
+  # not deployed yet (this file can reach the default branch before the app does): not a failure.
+  session-reminders:
+    if: github.event.schedule == '7 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/session-reminders
+        run: |
+          code=$(curl -sS -o response.txt -w "%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://sentencestep.com/api/cron/session-reminders)
+          cat response.txt; echo
+          if [ "$code" = "404" ]; then echo "Route not deployed yet; skipping."; exit 0; fi
+          test "$code" -lt 400

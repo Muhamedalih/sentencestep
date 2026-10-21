@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
+import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
@@ -57,11 +58,15 @@ import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/st
  * satisfied right up until `pathname` actually changes), so without this
  * flag the underlying page could flash through for a frame between the
  * click and the new route mounting.
+ *
+ * Never shown in the short first run (see GetStartedStepProvider's
+ * firstRunVariant): StartingLevelOnboarding routes into the lesson itself
+ * there, so this card's step does not exist.
  */
 export function OnboardingIntroCard() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel } = useProgress();
-  const { pendingDifficulty, tutorialStepDone } = useGetStartedStep();
+  const { pendingDifficulty, tutorialStepDone, firstRunVariant } = useGetStartedStep();
   const pathname = usePathname();
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -69,12 +74,14 @@ export function OnboardingIntroCard() {
 
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const shouldShow =
+    firstRunVariant !== "short" &&
     isMarketingHomePath(pathname) &&
     !!locale &&
     isLoaded &&
     difficulty !== null &&
     tutorialStepDone &&
     completions.length === 0;
+  useOnboardingStepTracking("start", shouldShow);
 
   useEffect(() => {
     if (!shouldShow || settings) return;

@@ -21,7 +21,8 @@ export type NotificationEventType =
   | "INACTIVE_LEARNER_PUSH"
   | "PREMIUM_EXPIRY_REMINDER"
   | "DAY_ONE_NUDGE"
-  | "CHECKOUT_ABANDONED";
+  | "CHECKOUT_ABANDONED"
+  | "SESSION_REMINDER";
 
 export type NotificationEvent =
   | { type: "LESSON_COMPLETED"; totalCompleted: number }
@@ -54,7 +55,12 @@ export type NotificationEvent =
   // emailed so the effect can be measured (see src/lib/email/nudges).
   | { type: "DAY_ONE_NUDGE"; holdout?: boolean }
   // One "did something go wrong with your payment?" per learner per two-week `bucket`.
-  | { type: "CHECKOUT_ABANDONED"; bucket: number; holdout?: boolean };
+  | { type: "CHECKOUT_ABANDONED"; bucket: number; holdout?: boolean }
+  // The one "remind me tomorrow" email a learner asked for on the lesson-ending screen (see
+  // src/lib/session-end). `day` is the date (YYYY-MM-DD) the reminder was due, so a later reminder
+  // on another day is a new event while a repeated run for the same one is a duplicate. Never held out:
+  // the learner asked for it.
+  | { type: "SESSION_REMINDER"; day: string };
 
 /**
  * Whether this event clears the bar for "meaningful" — the single place
@@ -83,6 +89,7 @@ export function shouldNotify(event: NotificationEvent): boolean {
     // Who is eligible is decided by the nudge runners (src/lib/email/nudges/select.ts).
     case "DAY_ONE_NUDGE":
     case "CHECKOUT_ABANDONED":
+    case "SESSION_REMINDER":
       return true;
     default:
       return false;
@@ -156,5 +163,7 @@ export function dedupeKeyFor(event: NotificationEvent, now: Date = new Date()): 
       return "DAY_ONE_NUDGE:v1";
     case "CHECKOUT_ABANDONED":
       return `CHECKOUT_ABANDONED:${event.bucket}`;
+    case "SESSION_REMINDER":
+      return `SESSION_REMINDER:${event.day}`;
   }
 }

@@ -10,26 +10,10 @@ import { IntroReviews } from "@/components/app/intro-reviews";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
 import { cn } from "@/lib/utils";
+import { detectBrowserLocale } from "@/lib/i18n/browser-locale";
 import { setPreferredLanguageAction } from "@/lib/i18n/locale-actions";
-import { DEFAULT_LOCALE, isSupportLocale, type SupportLocale } from "@/lib/i18n/locales";
-
-/**
- * Mirrors LocaleProvider's own browser-language detection (see that
- * component's `browserLocale` doc comment) — used only by the "already have
- * an account" shortcut below, which needs a REAL SupportLocale to persist
- * (there's no such thing as a persisted "English UI" choice; English is only
- * ever a transient pre-choice rendering fallback), not just the display-only
- * detection LocaleProvider does for itself.
- */
-function detectBrowserLocale(): SupportLocale {
-  const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
-  for (const lang of candidates) {
-    const base = lang.split("-")[0]?.toLowerCase();
-    if (base && isSupportLocale(base)) return base;
-  }
-  return DEFAULT_LOCALE;
-}
 
 /**
  * story-1's ("A New Neighbor") second sentence, copied verbatim from
@@ -74,9 +58,10 @@ const RESTART_DELAY_MS = 900;
  */
 export function IntroLanding() {
   const { locale, t } = useLocale();
-  const { introContinued, setIntroContinued } = useGetStartedStep();
+  const { introContinued, setIntroContinued, firstRunVariant } = useGetStartedStep();
   const reducedMotion = useReducedMotion();
   const [signingIn, setSigningIn] = useState(false);
+  useOnboardingStepTracking("intro", !locale && !introContinued);
 
   // A returning learner landing here has no ss_locale cookie yet (a new
   // device, or cookies cleared) — same gate IntroLanding itself renders on.
@@ -207,7 +192,9 @@ export function IntroLanding() {
                 {t.introLanding.signInInstead}
               </Button>
             </div>
-            <span className="text-muted-foreground text-base">{t.introLanding.nextHint}</span>
+            <span className="text-muted-foreground text-base">
+              {firstRunVariant === "short" ? t.introLanding.nextHintLevel : t.introLanding.nextHint}
+            </span>
             {/* Under the buttons, not beside the demo card: on a phone the demo card is below the fold. */}
             <IntroReviews />
           </div>

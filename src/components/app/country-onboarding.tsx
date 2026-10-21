@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
+import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
@@ -62,6 +63,10 @@ import { difficultyForStartingLevel } from "@/lib/progress/starting-level";
  * are plain text, effectively free to render even all ~195 at once, which
  * is also why this list is a plain `.map` rather than a windowed/virtualized
  * one — there's no per-row cost left here worth optimizing around.
+ *
+ * Never shown in the short first run (see GetStartedStepProvider's
+ * firstRunVariant): the country is not asked there at all — where a visitor
+ * is, is read from the network wherever it is needed (pricing, analytics).
  */
 export function CountryOnboarding() {
   const { locale, t, dir } = useLocale();
@@ -72,9 +77,20 @@ export function CountryOnboarding() {
     pendingDifficulty,
     countryStepDone,
     setCountryStepDone,
+    firstRunVariant,
   } = useGetStartedStep();
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const pathname = usePathname();
+  const isShown =
+    firstRunVariant !== "short" &&
+    !forceLevelStep &&
+    isMarketingHomePath(pathname) &&
+    Boolean(locale) &&
+    isLoaded &&
+    completions.length === 0 &&
+    difficulty !== null &&
+    !countryStepDone;
+  useOnboardingStepTracking("country", isShown);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -118,6 +134,7 @@ export function CountryOnboarding() {
     );
   }, [countries, query]);
 
+  if (firstRunVariant === "short") return null;
   if (forceLevelStep) return null; // back button below sent them to the level step instead
   if (!isMarketingHomePath(pathname)) return null;
   if (!locale || !isLoaded || completions.length > 0) return null;

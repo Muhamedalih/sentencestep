@@ -38,6 +38,8 @@ interface FromMemorySessionProps {
   /** Called once when the learner finishes the last sentence. */
   onFinished?: (summary: { total: number; clean: number }) => void;
   onExit: () => void;
+  /** Overrides the text of the exit button above the sentence (default: "Back to results") — the lesson ending, which has no results screen yet, calls it "Skip". */
+  exitLabel?: string;
 }
 
 interface Answer {
@@ -63,6 +65,7 @@ export function FromMemorySession({
   onMistakes,
   onFinished,
   onExit,
+  exitLabel,
 }: FromMemorySessionProps) {
   const { dir, t } = useLocale();
   const sectionFontFamily = resolveSectionFontFamily(useLessonFontSettings(), mode);
@@ -186,7 +189,7 @@ export function FromMemorySession({
           className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm font-medium transition-colors"
         >
           <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-          {t.fromMemory.backToResults}
+          {exitLabel ?? t.fromMemory.backToResults}
         </button>
         <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
           {index + 1} / {total}

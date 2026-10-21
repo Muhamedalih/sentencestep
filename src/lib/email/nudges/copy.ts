@@ -126,6 +126,38 @@ const DAY_ONE: Record<NudgeLanguage, DayOne> = {
   },
 };
 
+/** The one email a learner asked for on the lesson-ending screen ("remind me tomorrow"): honest that it is the only one, with nothing else in it. */
+const SESSION_REMINDER: Record<NudgeLanguage, DayOne> = {
+  ar: {
+    subject: "جلسة الليلة بانتظارك، بضع دقائق فقط",
+    preview: "طلبت أن نذكّرك، وهذه رسالة واحدة فقط",
+    heading: "حان وقت جلسة اليوم",
+    body: "طلبت أن نذكّرك الليلة. جملك وكلماتك بانتظارك، وبضع دقائق تكفي. هذه هي الرسالة الوحيدة، ولن نرسل غيرها إلا إن طلبت ذلك مرة أخرى.",
+    cta: "ابدأ جلسة اليوم",
+  },
+  es: {
+    subject: "Tu sesión de esta noche te espera: solo unos minutos",
+    preview: "Pediste un recordatorio; este es el único mensaje",
+    heading: "Es hora de tu sesión de hoy",
+    body: "Pediste que te lo recordáramos esta noche. Tus frases y palabras te esperan, y bastan unos minutos. Este es el único mensaje: no enviaremos otro a menos que lo pidas de nuevo.",
+    cta: "Empezar la sesión de hoy",
+  },
+  tr: {
+    subject: "Bu akşamki oturumunuz sizi bekliyor: yalnızca birkaç dakika",
+    preview: "Hatırlatma istediniz; bu tek mesaj",
+    heading: "Bugünkü oturum zamanı",
+    body: "Bu akşam hatırlatmamızı istediniz. Cümleleriniz ve kelimeleriniz sizi bekliyor, birkaç dakika yeter. Bu tek mesaj: siz yeniden istemedikçe başka göndermeyeceğiz.",
+    cta: "Bugünkü oturuma başla",
+  },
+  en: {
+    subject: "Tonight's session is waiting: just a few minutes",
+    preview: "You asked for a reminder; this is the only message",
+    heading: "Time for today's session",
+    body: "You asked us to remind you tonight. Your sentences and words are waiting, and a few minutes is enough. This is the only message: we won't send another unless you ask again.",
+    cta: "Start today's session",
+  },
+};
+
 const REMINDER: Record<NudgeLanguage, Reminder> = {
   ar: {
     subject: "اشتقنا لك! درس اليوم ينتظرك",
@@ -312,6 +344,27 @@ export function dayOneNudgeEmail({
   unsubscribe,
 }: NudgeEmailInput): EmailContent {
   const c = DAY_ONE[language];
+  return render(language, {
+    subject: c.subject,
+    preview: c.preview,
+    heading: c.heading,
+    paragraphs: [c.body],
+    cta: c.cta,
+    ctaUrl: `${origin}/learn`,
+    settingsUrl: `${origin}/learn/settings`,
+    displayName,
+    unsubscribe,
+  });
+}
+
+/** "Remind me tomorrow": the single email a learner chose on the lesson-ending screen. */
+export function sessionReminderEmail({
+  origin,
+  displayName,
+  language,
+  unsubscribe,
+}: NudgeEmailInput): EmailContent {
+  const c = SESSION_REMINDER[language];
   return render(language, {
     subject: c.subject,
     preview: c.preview,

@@ -72,6 +72,9 @@ const OnboardingLessonComplete = dynamic(() =>
 const RatingPrompt = dynamic(() =>
   import("@/components/learning/rating-prompt").then((m) => m.RatingPrompt),
 );
+const SessionEndFlow = dynamic(() =>
+  import("@/components/learning/session-end-flow").then((m) => m.SessionEndFlow),
+);
 const StoryWordsPanel = dynamic(() =>
   import("@/components/learning/story-words-panel").then((m) => m.StoryWordsPanel),
 );
@@ -260,6 +263,7 @@ export function LessonSession({
     saveStatus,
     retryMarkComplete,
     completions,
+    startingLevel,
   } = useProgress();
   // The one-time "rate the app" card's own eligibility check — never the
   // opening lesson (OnboardingLessonComplete has its own dedicated pitch
@@ -305,6 +309,15 @@ export function LessonSession({
     () =>
       features.fromMemory.sections[unit.mode] ? buildFromMemoryItems(unit.sentences, locale) : [],
     [features.fromMemory.sections, unit.mode, unit.sentences, locale],
+  );
+  // The new lesson ending (admin feature "New lesson ending"): a recall round and a calm finish
+  // screen in place of the stats screen. Never in the admin content preview, and Conversation
+  // keeps its own screen (nothing links to it any more).
+  const usesSessionEnd =
+    features.sessionEnd.enabled && !previewMode && unit.mode !== "conversation";
+  const recallPool = useMemo(
+    () => (usesSessionEnd ? buildFromMemoryItems(unit.sentences, locale) : []),
+    [usesSessionEnd, unit.sentences, locale],
   );
 
   // Warms the on-demand screens above once the lesson is up, off the critical path.
@@ -746,6 +759,7 @@ export function LessonSession({
   // The plain completion screen is a black one even in the light theme; its logo bar should not be a light strip above it.
   const showsPlainCompletion =
     isComplete &&
+    !usesSessionEnd &&
     !isOpeningLesson &&
     !isFixingMistakes &&
     !(isPracticingFromMemory && fromMemoryItems.length > 0) &&
@@ -819,7 +833,28 @@ export function LessonSession({
           under it. A flex column so those screens can fill what is left under the brand
           bar (flex-1) on a phone too, where nothing here has a fixed height. */}
       <div className="flex flex-1 flex-col lg:min-h-0">
-        {isComplete && isOpeningLesson ? (
+        {isComplete && usesSessionEnd ? (
+          <div key="session-end" className="flex min-h-0 flex-1 flex-col">
+            <SessionEndFlow
+              unit={unit}
+              items={recallPool}
+              nextLesson={nextLesson}
+              nextLessonLocked={nextLessonLocked}
+              completions={completions}
+              startingLevel={startingLevel}
+              saveStatus={saveStatus}
+              onRetrySave={retryMarkComplete}
+              resolvedVoiceId={resolvedVoiceId}
+              speakerVoiceMap={speakerVoiceMap}
+              allowReveal={features.fromMemory.allowReveal}
+              showFirstLetters={features.fromMemory.showFirstLetters}
+              onMistakes={handleSentenceMistakes}
+              endExtras={
+                <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
+              }
+            />
+          </div>
+        ) : isComplete && isOpeningLesson ? (
           <OnboardingLessonComplete key="onboarding-complete" />
         ) : isComplete && isFixingMistakes ? (
           <div key="fix-mistakes" className="flex min-h-0 flex-1 flex-col">

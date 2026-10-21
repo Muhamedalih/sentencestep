@@ -3,7 +3,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { abandonedCheckoutEmail, dayOneNudgeEmail, nudgeLanguage, reminderEmail } from "./copy";
+import {
+  abandonedCheckoutEmail,
+  dayOneNudgeEmail,
+  nudgeLanguage,
+  reminderEmail,
+  sessionReminderEmail,
+} from "./copy";
 import type { NudgeLanguage } from "./copy";
 
 const LANGUAGES: NudgeLanguage[] = ["ar", "es", "tr", "en"];
@@ -186,4 +192,41 @@ test("nudge emails: with an unsubscribe link the footer uses it and the one-clic
   const without = dayOneNudgeEmail({ origin: ORIGIN, displayName: null, language: "en" });
   assert.equal(without.headers, undefined);
   assert.ok(without.html.includes(`${ORIGIN}/learn/settings`));
+});
+
+test("sessionReminderEmail: every language is complete, says it is the only message and points at /learn", () => {
+  const ONLY_MESSAGE = {
+    ar: /الوحيدة/,
+    es: /único mensaje/,
+    tr: /tek mesaj/,
+    en: /only message/,
+  } as const;
+  for (const language of LANGUAGES) {
+    const email = sessionReminderEmail({ origin: ORIGIN, displayName: "Sara", language });
+    assert.ok(email.subject.length > 5, language);
+    assert.ok(email.html.includes(`${ORIGIN}/learn"`), `${language} cta`);
+    assert.ok(email.html.includes(`${ORIGIN}/learn/settings`), `${language} preferences`);
+    assert.ok(email.html.includes("Sara"), `${language} name`);
+    assert.match(email.html, ONLY_MESSAGE[language], `${language} honest about being the only one`);
+    assert.equal(FORBIDDEN.test(email.html), false, language);
+    assert.equal(/{[a-z]+}/i.test(email.html), false, `${language} unfilled placeholder`);
+  }
+});
+
+test("sessionReminderEmail: carries the one-click unsubscribe link and headers when it has them", () => {
+  const email = sessionReminderEmail({
+    origin: ORIGIN,
+    displayName: null,
+    language: "en",
+    unsubscribe: {
+      pageUrl: `${ORIGIN}/unsubscribe?token=abc`,
+      headers: { "List-Unsubscribe": "<https://sentencestep.com/api/unsubscribe?token=abc>" },
+    },
+  });
+  assert.ok(email.html.includes(`${ORIGIN}/unsubscribe?token=abc`));
+  assert.equal(
+    email.headers?.["List-Unsubscribe"],
+    "<https://sentencestep.com/api/unsubscribe?token=abc>",
+  );
+  assert.match(email.text, /^Hi,/);
 });

@@ -3,6 +3,8 @@
 import { completedEvent, startedEvent } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { getLessonById } from "@/lib/content";
+import { isFirstRunVariant, isOnboardingStep } from "@/lib/first-run/variant";
+import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isCountryCode } from "@/lib/i18n/country-codes";
 import type { LearningMode } from "@/types/content";
@@ -74,6 +76,33 @@ export async function trackGuestLessonCompletionAction(
   const lesson = await getLessonById(mode, lessonId);
   const safeAccuracy = Math.min(1, Math.max(0, accuracy));
   await track(completedEvent(mode, lessonId, lesson?.level ?? 0, safeAccuracy), null);
+}
+
+/**
+ * Called from the first-run screens (see useOnboardingStepTracking) the first
+ * time a visitor is shown one — fire-and-forget, never awaited before they
+ * move on. Both values arrive as client input, so each is re-validated against
+ * the known ones here and the call silently no-ops otherwise.
+ */
+export async function trackOnboardingStepAction(step: string, variant: string): Promise<void> {
+  if (!isOnboardingStep(step) || !isFirstRunVariant(variant)) return;
+  const user = await getCurrentUser();
+  await track(
+    { name: "ONBOARDING_STEP_VIEWED", category: "ENGAGEMENT", properties: { step, variant } },
+    user?.id ?? null,
+  );
+}
+
+/** Called once when a visitor taps a tier on the first-run level step (see StartingLevelOnboarding); same fire-and-forget and re-validation as trackOnboardingStepAction. */
+export async function trackOnboardingLevelAction(level: number, variant: string): Promise<void> {
+  if (!STARTING_LEVEL_TIERS.some((tier) => tier.level === level) || !isFirstRunVariant(variant)) {
+    return;
+  }
+  const user = await getCurrentUser();
+  await track(
+    { name: "ONBOARDING_LEVEL_SELECTED", category: "ENGAGEMENT", properties: { level, variant } },
+    user?.id ?? null,
+  );
 }
 
 /**

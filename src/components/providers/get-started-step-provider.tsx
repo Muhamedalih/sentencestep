@@ -12,6 +12,8 @@ import {
 import { usePathname } from "next/navigation";
 
 import { useProgress } from "@/hooks/use-progress";
+import { resolveFirstRunVariant } from "@/lib/first-run/browser";
+import type { FirstRunVariant } from "@/lib/first-run/variant";
 import type { Difficulty } from "@/lib/levels";
 import { clearProgress } from "@/lib/progress/store";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
@@ -180,8 +182,18 @@ function GetStartedMaskCleanup() {
  * pendingDifficulty is null (e.g. a fresh page load resuming an
  * already-chosen-but-not-yet-started placement, where that own-instance read
  * is already correct and no cross-component signal is needed).
+ *
+ * firstRunVariant says which first run this visitor gets (see
+ * src/lib/first-run/variant.ts): "classic" is every step above, "short" is
+ * IntroLanding, the level step, and then straight into the opening lesson —
+ * the language comes from the browser, and the country, tutorial and start
+ * card steps never show. Null until it has been resolved on the client (it
+ * is stored per visitor, so it can't be known while this page is
+ * pre-rendered), which is always before any step past IntroLanding is
+ * reachable.
  */
 interface GetStartedStepContextValue {
+  firstRunVariant: FirstRunVariant | null;
   introContinued: boolean;
   setIntroContinued: (value: boolean) => void;
   forceLanguageStep: boolean;
@@ -197,6 +209,7 @@ interface GetStartedStepContextValue {
 }
 
 const GetStartedStepContext = createContext<GetStartedStepContextValue>({
+  firstRunVariant: null,
   introContinued: false,
   setIntroContinued: () => {},
   forceLanguageStep: false,
@@ -231,7 +244,14 @@ export function GetStartedStepProvider({
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   const [countryStepDone, setCountryStepDone] = useState(false);
   const [tutorialStepDone, setTutorialStepDone] = useState(false);
+  const [firstRunVariant, setFirstRunVariant] = useState<FirstRunVariant | null>(null);
   const pathname = usePathname();
+
+  // A layout effect, so the variant is known before the first paint that could show any step
+  // past IntroLanding (those all wait on useProgress()'s own layout effect, which runs after this).
+  useLayoutEffect(() => {
+    setFirstRunVariant(resolveFirstRunVariant());
+  }, []);
 
   // introContinued is in-memory, so a soft navigation that keeps this
   // provider mounted (e.g. signOut's redirect("/") from /learn) would carry a
@@ -324,6 +344,7 @@ export function GetStartedStepProvider({
   return (
     <GetStartedStepContext.Provider
       value={{
+        firstRunVariant,
         introContinued,
         setIntroContinued,
         forceLanguageStep,

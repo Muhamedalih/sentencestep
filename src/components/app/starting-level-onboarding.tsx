@@ -1,17 +1,21 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
+import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
+import { trackOnboardingLevelAction } from "@/lib/analytics/track-actions";
+import { waitForLocaleCookie } from "@/lib/i18n/browser-locale";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
 import { tierSupportLabel, type Difficulty } from "@/lib/levels";
-import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
+import { OPENING_LESSON_ID, STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 
 const TIER_BODY_KEY = {
   beginner: "beginnerBody",
@@ -57,6 +61,15 @@ const TIER_DOT_CLASS: Record<Difficulty, string> = {
  * OPENING_LESSON_ID[difficulty] once the learner confirms there. See that
  * component's own doc comment for the `isNavigating`-style loading-spinner
  * treatment this used to need itself.
+ *
+ * In the short first run (see GetStartedStepProvider's firstRunVariant) this
+ * is the last step: there is no step counter and no back button (the language
+ * step it would go back to doesn't exist there), and picking a tier routes
+ * straight into OPENING_LESSON_ID[difficulty] itself, the way
+ * OnboardingIntroCard's Start button does in the long one — behind the same
+ * spinner cover, which has to come before the `startingLevel !== null` gate
+ * below, since the tap that sets the level is also what would otherwise
+ * uncover the page for the length of the navigation.
  */
 export function StartingLevelOnboarding() {
   const { locale, t, dir } = useLocale();
@@ -68,19 +81,60 @@ export function StartingLevelOnboarding() {
     setForceLevelStep,
     setPendingDifficulty,
     setCountryStepDone,
+    firstRunVariant,
   } = useGetStartedStep();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const isShort = firstRunVariant === "short";
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
-  if (forceLanguageStep) return null; // back button below sent them to the language step instead
+  const isShown =
+    !forceLanguageStep &&
+    isMarketingHomePath(pathname) &&
+    Boolean(locale) &&
+    isLoaded &&
+    completions.length === 0 &&
+    (startingLevel === null || forceLevelStep);
+  useOnboardingStepTracking("level", isShown);
+
+  // The cover below belongs to the homepage; once the visitor is anywhere else it must be gone,
+  // so that coming back to the homepage later never starts out stuck on it.
+  useEffect(() => {
+    if (!isMarketingHomePath(pathname)) setIsNavigating(false);
+  }, [pathname]);
+
   if (!isMarketingHomePath(pathname)) return null;
+  if (isNavigating) {
+    return (
+      <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
+        <LockBodyScroll />
+        <Loader2 className="text-muted-foreground size-8 animate-spin" aria-hidden="true" />
+      </div>
+    );
+  }
+  if (forceLanguageStep) return null; // back button below sent them to the language step instead
   if (!locale || !isLoaded || completions.length > 0) return null;
   if (startingLevel !== null && !forceLevelStep) return null;
+
+  async function startOpeningLesson(difficulty: Difficulty) {
+    setIsNavigating(true);
+    // Let React apply the level the tap just set (it is written to storage as that update runs),
+    // and let the language cookie land: the lesson page is a fresh page load that reads both.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await waitForLocaleCookie();
+    router.push(`/learn/normal/${OPENING_LESSON_ID[difficulty]}`);
+  }
 
   function handleSelect(difficulty: Difficulty, level: number) {
     setStartingLevel(level);
     setPendingDifficulty(difficulty);
+    if (firstRunVariant) void trackOnboardingLevelAction(level, firstRunVariant).catch(() => {});
+    if (isShort) {
+      void startOpeningLesson(difficulty);
+      return;
+    }
     setForceLevelStep(false);
     setCountryStepDone(false);
   }
@@ -95,20 +149,24 @@ export function StartingLevelOnboarding() {
       <LockBodyScroll />
       <div className="flex items-center justify-between">
         <Logo />
-        <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          2/5
-        </span>
+        {!isShort && (
+          <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
+            2/5
+          </span>
+        )}
       </div>
 
-      <button
-        type="button"
-        dir={dir}
-        onClick={() => setForceLanguageStep(true)}
-        className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors pointer-coarse:min-h-11"
-      >
-        <BackIcon aria-hidden="true" className="size-4" />
-        {t.onboarding.back}
-      </button>
+      {!isShort && (
+        <button
+          type="button"
+          dir={dir}
+          onClick={() => setForceLanguageStep(true)}
+          className="text-muted-foreground hover:text-foreground mt-6 flex w-fit items-center gap-1 text-sm font-medium transition-colors pointer-coarse:min-h-11"
+        >
+          <BackIcon aria-hidden="true" className="size-4" />
+          {t.onboarding.back}
+        </button>
+      )}
 
       <div className="flex flex-1 items-center justify-center">
         <motion.div

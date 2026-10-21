@@ -12,7 +12,8 @@ export type MilestoneEvent = Exclude<
       | "INACTIVE_LEARNER_PUSH"
       | "PREMIUM_EXPIRY_REMINDER"
       | "DAY_ONE_NUDGE"
-      | "CHECKOUT_ABANDONED";
+      | "CHECKOUT_ABANDONED"
+      | "SESSION_REMINDER";
   }
 >;
 

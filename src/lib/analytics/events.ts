@@ -1,4 +1,6 @@
 import type { PlanId, PricingTier } from "@/lib/billing/plans";
+import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
+import type { SessionEndAction } from "@/lib/session-end/action-names";
 import type { LearningMode } from "@/types/content";
 
 // --- The analytics event catalog. ---
@@ -20,7 +22,9 @@ import type { LearningMode } from "@/types/content";
 // USER_SIGNED_UP, PAYWALL_VIEWED, UPGRADE_VIEWED and UPGRADE_CTA_CLICKED are
 // stored with a few extra properties added by track.ts (source, medium,
 // campaign, inApp, country — see attribution.ts), so the funnel can be read per
-// source and country. They are not part of the typed shapes below.
+// source and country. They are not part of the typed shapes below. USER_SIGNED_UP,
+// LESSON_STARTED and LESSON_COMPLETED also carry `firstRun` (which first-run
+// variant the visitor was given) whenever they have one.
 
 export type AnalyticsEventCategory =
   "AUTH" | "LEARNING" | "CONTENT" | "PROGRESS" | "PREMIUM" | "ENGAGEMENT";
@@ -87,6 +91,36 @@ export type AnalyticsEvent =
       category: "ENGAGEMENT";
       /** The "which country are you in?" onboarding step (CountryOnboarding) — an ISO 3166-1 alpha-2 code (see country-codes.ts), only ever fired when the guest actually picks one, never on skip. Aggregate signal only: no IP lookup, no geolocation API, self-reported. */
       properties: { countryCode: string };
+    }
+  | {
+      name: "ONBOARDING_STEP_VIEWED";
+      category: "ENGAGEMENT";
+      /** A first-run screen was shown to a visitor (see src/lib/first-run/variant.ts for the steps and the two variants). At most once per step per browser session, so the rows are visitors reaching a step, not page renders. Where the funnel leaks, per variant. */
+      properties: { step: OnboardingStep; variant: FirstRunVariant };
+    }
+  | {
+      name: "ONBOARDING_LEVEL_SELECTED";
+      category: "ENGAGEMENT";
+      /** The level a visitor tapped on the first-run level step: 1 Beginner, 2 Intermediate, 3 Advanced. */
+      properties: { level: number; variant: FirstRunVariant };
+    }
+  | {
+      name: "SESSION_END_STARTED";
+      category: "ENGAGEMENT";
+      /** The new lesson ending (src/components/learning/session-end-flow.tsx) began after a finished lesson — one row per finished lesson. `first`: it was the learner's first lesson; `recall`: a recall round is asked before the finish screen. The denominator for every other SESSION_* event. */
+      properties: { first: boolean; recall: boolean };
+    }
+  | {
+      name: "SESSION_RECALL_FINISHED";
+      category: "ENGAGEMENT";
+      /** How the recall round ended: `clean` of `total` sentences typed from memory with no help, or `skipped` when the learner left it. The share of rounds finished, and how well first recalls go, are what the stop rules of the lesson-ending test are judged on. */
+      properties: { clean: number; total: number } | { skipped: true };
+    }
+  | {
+      name: "SESSION_END_ACTION";
+      category: "ENGAGEMENT";
+      /** What the learner pressed on the finish screen (see SESSION_END_ACTIONS). */
+      properties: { action: SessionEndAction };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

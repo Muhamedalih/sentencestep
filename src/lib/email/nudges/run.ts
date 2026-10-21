@@ -15,6 +15,7 @@ import {
   dayOneNudgeEmail,
   nudgeLanguage,
   reminderEmail,
+  sessionReminderEmail,
 } from "@/lib/email/nudges/copy";
 import type { NudgeLanguage } from "@/lib/email/nudges/copy";
 import {
@@ -40,6 +41,12 @@ import type { EmailContent } from "@/lib/email/templates/layout";
 import { unsubscribeLinks } from "@/lib/email/unsubscribe-token";
 import type { UnsubscribeLinks } from "@/lib/email/nudges/copy";
 import { createSupabaseUsageStore, utcDay } from "@/lib/email/usage";
+import {
+  REMINDER_RETURNED_WINDOW_MS,
+  hasReturnedBeforeReminder,
+  reminderSendsPerRun,
+  reminderWindowBounds,
+} from "@/lib/session-end/reminder";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
@@ -71,6 +78,8 @@ export interface NudgeRunSummary {
     overLimit: number;
     /** A declined payment in the window: those learners are written to personally, never emailed. */
     failedPayment: number;
+    /** The session reminder only: the learner had already studied that day, so the reminder was not needed. */
+    returned: number;
   };
   /** While the sending domain is warming up (EMAIL_PROVIDER=hybrid): which day of sending it is, today's room for bulk email and how much of it is used. */
   warmup?: { day: number; dailyLimit: number; sentToday: number } | null;
@@ -93,6 +102,7 @@ function emptySummary(dryRun: boolean): NudgeRunSummary {
       noEmail: 0,
       overLimit: 0,
       failedPayment: 0,
+      returned: 0,
     },
   };
 }
@@ -108,6 +118,8 @@ interface Recipient {
   /** The plan and price (USD cents) of the checkout they left (the checkout reminder only). */
   plan?: PlanId | null;
   priceCents?: number | null;
+  /** The date (YYYY-MM-DD) a session reminder was due (the session reminder only). */
+  reminderDay?: string;
 }
 
 const CHUNK = 100;
@@ -177,10 +189,12 @@ async function processRecipients(args: {
   priority: "important" | "bulk";
   summary: NudgeRunSummary;
   limit: number;
+  /** True for an email the learner asked for themselves: nobody is held out of it. */
+  skipHoldout?: boolean;
 }): Promise<void> {
   const { db, origin, recipients, makeEvent, buildEmail, priority, summary, limit } = args;
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const percent = holdoutPercent(process.env.NUDGE_EMAIL_HOLDOUT_PERCENT);
+  const percent = args.skipHoldout ? 0 : holdoutPercent(process.env.NUDGE_EMAIL_HOLDOUT_PERCENT);
   const allowPassword = process.env.NUDGE_EMAIL_ALLOW_PASSWORD_ACCOUNTS === "true";
   let lookups = 0;
 
@@ -447,6 +461,121 @@ export async function runReminderNudge(options: {
 }
 
 /** The plan an order was for: the one whose price in that order's pricing tier matches what the order charged. */
+/**
+ * "Remind me tomorrow": the one email each learner chose on the lesson-ending screen, sent in the
+ * hour they picked (the scheduler runs this every hour). Sends nothing until
+ * SESSION_REMINDER_MAX_PER_RUN is a positive number (a dry run, which only counts, always works).
+ * A learner who turned reminders off is skipped, and so is one who already studied that day; an
+ * address Google has not verified is skipped like for every nudge. Nobody is held out of it (they
+ * asked for it), a premium learner is emailed like anyone else, and a reminder more than six hours
+ * late is dropped rather than sent at night. Each one is written to notification_events before it
+ * is sent, so a repeated run can never email the same reminder twice.
+ */
+export async function runSessionReminders(options: {
+  origin: string;
+  now: Date;
+  dryRun: boolean;
+}): Promise<NudgeRunSummary> {
+  const { origin, now, dryRun } = options;
+  const summary = emptySummary(dryRun);
+  const limit = reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN);
+  if (!dryRun) {
+    if (limit === 0) {
+      summary.disabled = true;
+      return summary;
+    }
+    if (!getEmailProvider()) {
+      summary.error = "No email provider is configured.";
+      return summary;
+    }
+  }
+  summary.warmup = await warmupStatus(now);
+
+  const db = createServiceRoleClient();
+  const { from, to } = reminderWindowBounds(now);
+  // Reminders more than a day old are never going to be sent: tidy them away.
+  if (!dryRun) {
+    await db
+      .from("session_reminders")
+      .delete()
+      .lt("remind_at", new Date(now.getTime() - 24 * 3_600_000).toISOString());
+  }
+  const { data: due, error } = await db
+    .from("session_reminders")
+    .select("user_id, remind_at")
+    .gte("remind_at", from.toISOString())
+    .lte("remind_at", to.toISOString())
+    .order("remind_at")
+    .limit(1000);
+  if (error) throw error;
+  const rows = due ?? [];
+  if (rows.length === 0) return summary;
+
+  const ids = rows.map((row) => row.user_id);
+  const [profiles, progress, exclusions] = await Promise.all([
+    chunked(ids, (c) =>
+      db.from("profiles").select("id, display_name, preferred_language").in("id", c),
+    ),
+    chunked(ids, (c) =>
+      db
+        .from("user_progress")
+        .select("user_id, completed_at")
+        .in("user_id", c)
+        .gte("completed_at", new Date(from.getTime() - REMINDER_RETURNED_WINDOW_MS).toISOString()),
+    ),
+    loadExclusions(db, ids, "SESSION_REMINDER", now),
+  ]);
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const finishedByUser = new Map<string, string[]>();
+  for (const entry of progress) {
+    if (!entry.completed_at) continue;
+    const list = finishedByUser.get(entry.user_id) ?? [];
+    list.push(entry.completed_at);
+    finishedByUser.set(entry.user_id, list);
+  }
+  const handled = new Set(exclusions.ledger.map((entry) => `${entry.user_id}|${entry.dedupe_key}`));
+
+  const recipients: Recipient[] = [];
+  for (const row of rows) {
+    const day = row.remind_at.slice(0, 10);
+    const profile = profileById.get(row.user_id);
+    if (exclusions.optedOut.has(row.user_id)) summary.skipped.optedOut += 1;
+    else if (hasReturnedBeforeReminder(row.remind_at, finishedByUser.get(row.user_id) ?? [])) {
+      summary.skipped.returned += 1;
+    } else if (handled.has(`${row.user_id}|SESSION_REMINDER:${day}`)) {
+      summary.skipped.alreadyHandled += 1;
+    } else {
+      recipients.push({
+        userId: row.user_id,
+        displayName: profile?.display_name ?? null,
+        language: nudgeLanguage(profile?.preferred_language),
+        reminderDay: day,
+      });
+    }
+  }
+  summary.candidates = recipients.length;
+
+  await processRecipients({
+    db,
+    recipients,
+    summary,
+    limit,
+    origin,
+    // The learner asked for this one, so it goes the way an important email does.
+    priority: "important",
+    skipHoldout: true,
+    makeEvent: (r) => ({ type: "SESSION_REMINDER", day: r.reminderDay ?? "" }),
+    buildEmail: (r, unsubscribe) =>
+      sessionReminderEmail({
+        origin,
+        displayName: r.displayName,
+        language: r.language,
+        unsubscribe,
+      }),
+  });
+  return summary;
+}
+
 function planOfOrder(tier: string, priceCents: number): PlanId | null {
   if (tier !== "A" && tier !== "B") return null;
   return PLAN_IDS.find((id) => planPriceCents(tier, id) === priceCents) ?? null;
@@ -575,7 +704,7 @@ export async function runAbandonedCheckoutNudge(options: {
  * still in its sandbox that address must be a verified one). Touches no learner, writes nothing.
  */
 export async function sendNudgePreview(options: {
-  kind: "day-one" | "abandoned" | "reminder";
+  kind: "day-one" | "abandoned" | "reminder" | "session-reminder";
   to: string;
   language: NudgeLanguage;
   origin: string;
@@ -585,24 +714,26 @@ export async function sendNudgePreview(options: {
   const content =
     kind === "day-one"
       ? dayOneNudgeEmail({ origin, displayName: null, language })
-      : kind === "reminder"
-        ? reminderEmail({
-            origin,
-            displayName: null,
-            language,
-            showOffer: isOfferActive(await getLaunchOffer(), now),
-          })
-        : abandonedCheckoutEmail({
-            origin,
-            displayName: null,
-            language,
-            plan: "3m",
-            priceCents: planPriceCents("A", "3m"),
-            offer: checkoutOffer(await getLaunchOffer(), now, "3m"),
-          });
+      : kind === "session-reminder"
+        ? sessionReminderEmail({ origin, displayName: null, language })
+        : kind === "reminder"
+          ? reminderEmail({
+              origin,
+              displayName: null,
+              language,
+              showOffer: isOfferActive(await getLaunchOffer(), now),
+            })
+          : abandonedCheckoutEmail({
+              origin,
+              displayName: null,
+              language,
+              plan: "3m",
+              priceCents: planPriceCents("A", "3m"),
+              offer: checkoutOffer(await getLaunchOffer(), now, "3m"),
+            });
   // A sample goes the same way the real one would, so a preview also proves that route works.
   const result = await sendTemplateEmail(to, content, {
-    priority: kind === "abandoned" ? "important" : "bulk",
+    priority: kind === "abandoned" || kind === "session-reminder" ? "important" : "bulk",
   });
   return result.status === "sent"
     ? { status: "sent" }

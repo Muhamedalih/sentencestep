@@ -10,6 +10,7 @@ import {
   sanitizeFeatureConfig,
 } from "@/lib/features/config";
 import type { EffectiveFeatures, FeatureConfig, FeatureId } from "@/lib/features/config";
+import { reminderSendsPerRun } from "@/lib/session-end/reminder";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -77,7 +78,7 @@ export async function isFeaturePublished(id: FeatureId): Promise<boolean> {
  * (LearnLayout for the client provider; Server Actions to re-check a feature
  * is really open before doing work for it). cache()'d per request.
  */
-export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> => {
+async function resolveEffectiveFeatures(): Promise<EffectiveFeatures> {
   if (!isSupabaseConfigured()) {
     // Local development only: with no Supabase project linked there is no
     // settings row to read, so this opt-in env var switches every feature on
@@ -120,4 +121,17 @@ export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> =
     console.error("[features] getEffectiveFeatures failed", error);
     return disabledFeatures(false);
   }
+}
+
+/**
+ * What the CURRENT visitor actually gets — see resolveEffectiveFeatures above. On top of the
+ * admin switches, the lesson ending's reminder card is offered only while the server is allowed to
+ * send reminder emails (SESSION_REMINDER_MAX_PER_RUN), so the screen never promises an email that
+ * would not be sent.
+ */
+export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> => {
+  const features = await resolveEffectiveFeatures();
+  if (!features.sessionEnd.enabled) return features;
+  const reminders = reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN) > 0;
+  return reminders ? { ...features, sessionEnd: { ...features.sessionEnd, reminders } } : features;
 });

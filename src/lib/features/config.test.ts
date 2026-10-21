@@ -386,6 +386,45 @@ test("wordQuiz: a settings document saved before the feature existed keeps it of
   assert.equal(resolveFeatures(legacy, admin).wordQuiz.enabled, false);
 });
 
+test("sessionEnd: off for everyone by default, admin preview shows it to admins only, On to everyone", () => {
+  const config = defaultFeatureConfig();
+  assert.equal(config.features.sessionEnd.state, "off");
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).sessionEnd, {
+      enabled: false,
+      reminders: false,
+    });
+  }
+
+  config.features.sessionEnd.state = "admin";
+  for (const viewer of [guest, learner, premium]) {
+    assert.deepEqual(resolveFeatures(config, viewer).sessionEnd, {
+      enabled: false,
+      reminders: false,
+    });
+  }
+  assert.deepEqual(resolveFeatures(config, admin).sessionEnd, {
+    enabled: true,
+    reminders: false,
+  });
+
+  // A guest finishing their first lesson is who it matters most to, so On reaches guests too.
+  config.features.sessionEnd.state = "on";
+  for (const viewer of [guest, learner, premium, admin]) {
+    assert.deepEqual(resolveFeatures(config, viewer).sessionEnd, {
+      enabled: true,
+      reminders: false,
+    });
+  }
+  assert.equal(resolveFeatures(config, guest).guestTeaser, false);
+});
+
+test("sessionEnd: a settings document saved before the feature existed keeps it off", () => {
+  const legacy = sanitizeFeatureConfig({ features: { wordQuiz: { state: "on" } } });
+  assert.equal(legacy.features.sessionEnd.state, "off");
+  assert.equal(resolveFeatures(legacy, admin).sessionEnd.enabled, false);
+});
+
 test("the wordQuiz seed migration puts only that feature in admin preview and never overwrites a saved choice", () => {
   const sql = readFileSync(
     join(process.cwd(), "supabase/migrations/20250331000000_feature_settings_word_quiz.sql"),

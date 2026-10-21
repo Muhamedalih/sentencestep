@@ -36,6 +36,23 @@ export async function fetchDueReviewCount(userId: string): Promise<number> {
 }
 
 /**
+ * Corrected words whose spaced review falls due by `until` — what will be waiting at the end of a
+ * given day (the finish screen's "tomorrow"), where fetchDueReviewCount only counts what is due right now.
+ */
+export async function fetchDueReviewCountBy(userId: string, until: Date): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("mistakes")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "corrected")
+    .not("next_review_at", "is", null)
+    .lte("next_review_at", until.toISOString());
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/**
  * Atomic upsert via the record_mistake() function (see its migration doc
  * comment for why this can't be a plain client-side upsert: incrementing
  * mistake_count safely needs a single `... DO UPDATE SET x = x + 1`, which

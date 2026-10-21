@@ -198,6 +198,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
         Relationships: [];
       };
+      session_reminders: {
+        Row: {
+          user_id: string;
+          /** The moment the one reminder email is due — see 20250345000000_session_reminders.sql. */
+          remind_at: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          remind_at: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["session_reminders"]["Insert"]>;
+        Relationships: [];
+      };
       email_usage: {
         Row: {
           period: string;

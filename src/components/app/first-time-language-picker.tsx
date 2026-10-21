@@ -7,6 +7,8 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
+import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
+import { detectBrowserLocale } from "@/lib/i18n/browser-locale";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
@@ -39,10 +41,26 @@ import { cn } from "@/lib/utils";
  * just to update chrome text this step already re-renders instantly from
  * `t` the moment `locale` changes. Advancing to the level step is a plain
  * synchronous state update now, same tick as the tap — nothing to mask.
+ *
+ * The short first run (see GetStartedStepProvider's firstRunVariant) has no
+ * language step at all: the instant IntroLanding's Continue is tapped this
+ * picks the browser's own language (Arabic when it has none we translate
+ * into) through that same setLocaleForOnboarding and renders nothing, so the
+ * level step follows at once. The language stays changeable later, from the
+ * header switcher and Settings, like it always was.
  */
 export function FirstTimeLanguagePicker() {
   const { locale, t, setLocaleForOnboarding } = useLocale();
-  const { introContinued, forceLanguageStep, setForceLanguageStep } = useGetStartedStep();
+  const { introContinued, forceLanguageStep, setForceLanguageStep, firstRunVariant } =
+    useGetStartedStep();
+  const isShort = firstRunVariant === "short";
+  const isShown = !isShort && (!locale || forceLanguageStep) && (Boolean(locale) || introContinued);
+  useOnboardingStepTracking("language", isShown);
+
+  useEffect(() => {
+    if (!isShort || locale || !introContinued) return;
+    setLocaleForOnboarding(detectBrowserLocale());
+  }, [isShort, locale, introContinued, setLocaleForOnboarding]);
 
   // Warms the browser's cache for every locale's "/{locale}" marketing page
   // in the background — moved here, deferred, from a static
@@ -59,7 +77,7 @@ export function FirstTimeLanguagePicker() {
   // page's own critical rendering is already done. Skipped once a locale is
   // already chosen (nothing left to warm up for).
   useEffect(() => {
-    if (locale) return;
+    if (locale || isShort) return;
     const timer = setTimeout(() => {
       for (const supportLocale of SUPPORT_LOCALES) {
         const link = document.createElement("link");
@@ -69,8 +87,13 @@ export function FirstTimeLanguagePicker() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [locale]);
+  }, [locale, isShort]);
 
+  // The effect above sets the locale in the next render; until then a plain cover keeps the page
+  // under IntroLanding from showing for a frame.
+  if (isShort) {
+    return !locale && introContinued ? <div className="bg-background fixed inset-0 z-100" /> : null;
+  }
   if (locale && !forceLanguageStep) return null;
   if (!locale && !introContinued) return null; // IntroLanding is still showing — see its own doc comment
 

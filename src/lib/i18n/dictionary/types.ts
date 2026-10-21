@@ -108,6 +108,8 @@ export interface Dictionary {
     noAccountNote: string;
     signInInstead: string;
     nextHint: string;
+    /** The same hint for the short first run, whose next step is the level, not the language. */
+    nextHintLevel: string;
     demoBadge: string;
     demoMeta: string;
     demoLiveNote: string;
@@ -1373,6 +1375,51 @@ export interface Dictionary {
     summaryHeading: string;
     summaryBody: string;
     mistakesSaved: string;
+  };
+  /** The new end of a lesson (src/components/learning/session-end.tsx): what was remembered, what comes back tomorrow, a reminder, or a guest's "save your progress". */
+  sessionEnd: {
+    headingRegular: string;
+    headingFirst: string;
+    subFirst: string;
+    /** `{done}` and `{target}` — sessions this week against the weekly rhythm. */
+    subWeek: string;
+    recallLabel: string;
+    /** `{clean}` and `{total}`. */
+    recallScore: string;
+    recallAll: string;
+    recallSome: string;
+    recallFirstNote: string;
+    tomorrowLabel: string;
+    /** `{time}` — a minute count written by formatMinuteCount. */
+    tomorrowLabelMinutes: string;
+    /** `{n}` — a bare count after a colon, so no plural agreement is needed. */
+    tomorrowReview: string;
+    /** `{title}`. */
+    tomorrowNextAfterReview: string;
+    /** `{title}`. */
+    tomorrowNextOnly: string;
+    reminderLabel: string;
+    reminderNone: string;
+    reminderNote: string;
+    /** `{time}` — the chosen hour, written by formatReminderTime. */
+    reminderSaved: string;
+    reminderError: string;
+    /** Shown when the learner's address is not one reminder emails go to (see canEmailAccount). */
+    reminderUnavailable: string;
+    /** `{time}` — a minute count written by formatMinuteCount. */
+    extraLesson: string;
+    extraLessonLocked: string;
+    finish: string;
+    /** The exit button of the recall round, which skips straight to the finish screen. */
+    skipRecall: string;
+    saveHeading: string;
+    saveFree: string;
+    saveEmail: string;
+    notNow: string;
+    minuteCountOne: string;
+    minuteCountTwo: string;
+    minuteCountFew: string;
+    minuteCountMany: string;
   };
   /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
   streakCalendar: {

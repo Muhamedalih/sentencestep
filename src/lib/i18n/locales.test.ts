@@ -1,7 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { dirFor, isSupportLocale, LOCALE_META, SUPPORT_LOCALES } from "./locales";
+import {
+  DEFAULT_LOCALE,
+  dirFor,
+  isSupportLocale,
+  LOCALE_META,
+  SUPPORT_LOCALES,
+  supportLocaleFromBrowser,
+} from "./locales";
 
 test("SUPPORT_LOCALES: the locales actually offered to learners today — Arabic, Spanish, and Turkish, English never", () => {
   // English is deliberately excluded — see SUPPORT_LOCALES' own doc
@@ -26,6 +33,18 @@ test("isSupportLocale: accepts ar/es/tr, nothing else", () => {
   assert.equal(isSupportLocale(null), false);
   assert.equal(isSupportLocale(undefined), false);
   assert.equal(isSupportLocale(""), false);
+});
+
+test("supportLocaleFromBrowser: the first preferred language we translate into wins, region ignored", () => {
+  assert.equal(supportLocaleFromBrowser(["ar-IQ", "en-US"]), "ar");
+  assert.equal(supportLocaleFromBrowser(["en-US", "es-MX", "ar"]), "es");
+  assert.equal(supportLocaleFromBrowser(["TR"]), "tr");
+});
+
+test("supportLocaleFromBrowser: nothing we translate into falls back to the default, Arabic", () => {
+  assert.equal(supportLocaleFromBrowser(["en-US", "fr-FR"]), DEFAULT_LOCALE);
+  assert.equal(supportLocaleFromBrowser([]), DEFAULT_LOCALE);
+  assert.equal(DEFAULT_LOCALE, "ar");
 });
 
 test("LOCALE_META: dir matches dirFor for every locale offered to learners today", () => {

@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
+import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
@@ -38,16 +39,35 @@ const SLIDES = [
  * simply not offered, matching the reference design this was built from. Skip
  * resolves `tutorialStepDone` exactly like finishing slide 4 does: this step
  * is purely informational and never meant to block reaching the first lesson.
+ *
+ * Never shown in the short first run (see GetStartedStepProvider's
+ * firstRunVariant), which goes from the level step straight to the lesson.
  */
 export function TutorialOnboarding() {
   const { locale, t, dir } = useLocale();
   const { isLoaded, completions, startingLevel } = useProgress();
-  const { pendingDifficulty, countryStepDone, tutorialStepDone, setTutorialStepDone } =
-    useGetStartedStep();
+  const {
+    pendingDifficulty,
+    countryStepDone,
+    tutorialStepDone,
+    setTutorialStepDone,
+    firstRunVariant,
+  } = useGetStartedStep();
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const pathname = usePathname();
   const [slide, setSlide] = useState(0);
+  const isShown =
+    firstRunVariant !== "short" &&
+    isMarketingHomePath(pathname) &&
+    Boolean(locale) &&
+    isLoaded &&
+    completions.length === 0 &&
+    difficulty !== null &&
+    countryStepDone &&
+    !tutorialStepDone;
+  useOnboardingStepTracking("tutorial", isShown);
 
+  if (firstRunVariant === "short") return null;
   if (!isMarketingHomePath(pathname)) return null;
   if (!locale || !isLoaded || completions.length > 0) return null;
   if (difficulty === null || !countryStepDone || tutorialStepDone) return null;

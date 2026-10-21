@@ -55,6 +55,19 @@ export function isSupportLocale(value: string | null | undefined): value is Supp
   return value === "ar" || value === "es" || value === "tr";
 }
 
+/**
+ * The first of a browser's preferred languages (navigator.languages, best first) that has a
+ * translation here, whatever the region ("es-MX" is Spanish), else DEFAULT_LOCALE — a phone set to
+ * English in Iraq still gets Arabic, since English is never a support language.
+ */
+export function supportLocaleFromBrowser(candidates: readonly string[]): SupportLocale {
+  for (const language of candidates) {
+    const base = language.split("-")[0]?.toLowerCase();
+    if (isSupportLocale(base)) return base;
+  }
+  return DEFAULT_LOCALE;
+}
+
 export function dirFor(locale: SupportLocale): "rtl" | "ltr" {
   return LOCALE_META[locale].dir;
 }

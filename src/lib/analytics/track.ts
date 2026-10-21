@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers";
 
 import { ATTRIBUTION_COOKIE, attributionProperties } from "@/lib/analytics/attribution";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
+import { FIRST_RUN_COOKIE, parseFirstRunCookie } from "@/lib/first-run/variant";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { AnalyticsEvent, AnalyticsEventName } from "@/lib/analytics/events";
 
@@ -18,20 +19,34 @@ const ATTRIBUTED_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
   "UPGRADE_CTA_CLICKED",
 ]);
 
+/** The events that carry `firstRun`, the first-run variant the visitor was given (see src/lib/first-run/variant.ts) — enough to read reaching the first lesson, signing up and coming back per variant. */
+const FIRST_RUN_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
+  "USER_SIGNED_UP",
+  "LESSON_STARTED",
+  "LESSON_COMPLETED",
+]);
+
 /**
  * Read from the request that is already being served, so no extra database or
  * network call. Outside a request (a webhook, a cron) there is nothing to
  * read, and the event is simply written without it.
  */
-async function attributionFor(name: AnalyticsEventName): Promise<Record<string, string>> {
-  if (!ATTRIBUTED_EVENTS.has(name)) return {};
+async function requestPropertiesFor(name: AnalyticsEventName): Promise<Record<string, string>> {
+  const attributed = ATTRIBUTED_EVENTS.has(name);
+  const firstRun = FIRST_RUN_EVENTS.has(name);
+  if (!attributed && !firstRun) return {};
   try {
     const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
-    return attributionProperties({
-      cookie: cookieStore.get(ATTRIBUTION_COOKIE)?.value,
-      userAgent: requestHeaders.get("user-agent"),
-      country: resolvePricingCountry(requestHeaders).country,
-    });
+    const properties: Record<string, string> = attributed
+      ? attributionProperties({
+          cookie: cookieStore.get(ATTRIBUTION_COOKIE)?.value,
+          userAgent: requestHeaders.get("user-agent"),
+          country: resolvePricingCountry(requestHeaders).country,
+        })
+      : {};
+    const variant = firstRun ? parseFirstRunCookie(cookieStore.get(FIRST_RUN_COOKIE)?.value) : null;
+    if (variant) properties.firstRun = variant;
+    return properties;
   } catch {
     return {};
   }
@@ -54,7 +69,7 @@ export async function track(event: AnalyticsEvent, userId: string | null): Promi
   try {
     const supabase = createServiceRoleClient();
     // The event's own fields come last, so attribution can never overwrite one.
-    const properties = { ...(await attributionFor(event.name)), ...event.properties };
+    const properties = { ...(await requestPropertiesFor(event.name)), ...event.properties };
     const { error } = await supabase.from("analytics_events").insert({
       user_id: userId,
       event_name: event.name,
