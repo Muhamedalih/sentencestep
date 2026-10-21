@@ -1,4 +1,5 @@
 import type { Difficulty } from "@/lib/levels";
+import type { LessonCompletion } from "@/lib/progress/types";
 
 /**
  * The 3 placement choices shown by both StartingLevelOnboarding (first
@@ -25,4 +26,25 @@ export const OPENING_LESSON_ID: Record<Difficulty, string> = {
 export function difficultyForStartingLevel(level: number | null): Difficulty | null {
   if (level === null) return null;
   return STARTING_LEVEL_TIERS.find((tier) => tier.level === level)?.difficulty ?? null;
+}
+
+/**
+ * The tier a guest chose, read back from the opening lesson they finished — for a guest whose saved
+ * level is missing (an older bug let the country step overwrite it with null, see store.ts's
+ * `latest`). The Intermediate and Advanced opening lessons are never listed in the catalog (see
+ * withOpeningLessonPlacement), so the only way to reach one is the tier choice that routes to it:
+ * finishing one says which tier was picked. The Beginner one is also pinned as a catalog card, so
+ * finishing it says nothing. Null when none of the other two was finished.
+ */
+export function startingLevelFromOpeningLesson(
+  completions: readonly Pick<LessonCompletion, "lessonId" | "completedAt">[],
+): number | null {
+  const tierOf = (lessonId: string) =>
+    STARTING_LEVEL_TIERS.find(
+      (tier) => tier.difficulty !== "beginner" && OPENING_LESSON_ID[tier.difficulty] === lessonId,
+    );
+  const first = [...completions]
+    .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+    .find((entry) => tierOf(entry.lessonId));
+  return first ? (tierOf(first.lessonId)?.level ?? null) : null;
 }

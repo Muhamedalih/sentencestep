@@ -112,7 +112,7 @@ test("pickNextWordBlock: a finished group is skipped and the last block is clipp
   assert.deepEqual([second?.from, second?.to], [6, 7]);
 });
 
-test("pickNextWordBlock: onboarding level applies only before any word is done; locked groups are skipped", () => {
+test("pickNextWordBlock: the onboarding level is a floor, groups below it come last; locked groups are skipped", () => {
   const groups = [group("a", 1, 1), group("b", 2, 1, 12, false), group("c", 2, 2)];
   assert.equal(
     pickNextWordBlock(groups, new Set(), { isPremiumUser: true, startingLevel: 2 })?.group.id,
@@ -125,6 +125,12 @@ test("pickNextWordBlock: onboarding level applies only before any word is done; 
   assert.equal(
     pickNextWordBlock(groups, new Set(["a-1"]), { isPremiumUser: true, startingLevel: 2 })?.group
       .id,
+    "b",
+  );
+  const finishedAboveTheFloor = new Set([...groups[1]!.wordIds, ...groups[2]!.wordIds]);
+  assert.equal(
+    pickNextWordBlock(groups, finishedAboveTheFloor, { isPremiumUser: true, startingLevel: 2 })
+      ?.group.id,
     "a",
   );
   assert.equal(

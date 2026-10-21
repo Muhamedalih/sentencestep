@@ -9,10 +9,11 @@ import type { LearningMode } from "@/types/content";
 
 const STORAGE_KEY = "looma:progress:v2";
 
-export function readProgress(): ProgressState {
+/** What is stored right now, or null when nothing is stored (or storage can't be read). */
+function readStored(): ProgressState | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyProgressState;
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<ProgressState>;
     return {
       completions: parsed.completions ?? [],
@@ -25,8 +26,24 @@ export function readProgress(): ProgressState {
       country: parsed.country ?? null,
     };
   } catch {
-    return emptyProgressState;
+    return null;
   }
+}
+
+export function readProgress(): ProgressState {
+  return readStored() ?? emptyProgressState;
+}
+
+/**
+ * The copy every write below starts from: what is stored right now, not the caller's own copy.
+ * useProgress() keeps one copy per call site, and each first-run step read its own when the page
+ * loaded, before the visitor had chosen anything — so a write built on that older copy put its
+ * old values back over a newer choice (saving the country wrote `startingLevel: null` over the
+ * level just picked, which is why almost no guest's level ever reached their account). `fallback`
+ * is the caller's copy, used only when nothing is stored, where it is the only copy there is.
+ */
+function latest(fallback: ProgressState): ProgressState {
+  return readStored() ?? fallback;
 }
 
 function writeProgress(state: ProgressState): void {
@@ -53,14 +70,24 @@ export function clearProgress(): void {
 
 /** A guest's counterpart to setStartingLevelAction — same null/0/N meaning, kept in the same localStorage blob as the rest of a guest's progress rather than a separate key. */
 export function setStartingLevel(state: ProgressState, level: number): ProgressState {
-  const next: ProgressState = { ...state, startingLevel: level };
+  const next: ProgressState = {
+    ...latest(state),
+    rewards: state.rewards,
+    xpEarned: state.xpEarned,
+    startingLevel: level,
+  };
   writeProgress(next);
   return next;
 }
 
 /** A guest's counterpart to setCountryAction — kept in the same localStorage blob as the rest of a guest's progress rather than a separate key. */
 export function setCountry(state: ProgressState, country: string): ProgressState {
-  const next: ProgressState = { ...state, country };
+  const next: ProgressState = {
+    ...latest(state),
+    rewards: state.rewards,
+    xpEarned: state.xpEarned,
+    country,
+  };
   writeProgress(next);
   return next;
 }
@@ -73,7 +100,8 @@ export function recordCompletion(
   accuracy: number,
   sentenceCount: number,
 ): ProgressState {
-  const isFirstCompletion = !state.completions.some((entry) => entry.lessonId === lessonId);
+  const base = latest(state);
+  const isFirstCompletion = !base.completions.some((entry) => entry.lessonId === lessonId);
   const todayISO = todayLocalISODate();
 
   const completion: LessonCompletion = {
@@ -82,17 +110,17 @@ export function recordCompletion(
     accuracy,
     completedAt: new Date().toISOString(),
   };
-  const withoutExisting = state.completions.filter((entry) => entry.lessonId !== lessonId);
+  const withoutExisting = base.completions.filter((entry) => entry.lessonId !== lessonId);
   const completions = [...withoutExisting, completion];
 
-  const nextStreak = updateStreak(state.streak, todayISO);
+  const nextStreak = updateStreak(base.streak, todayISO);
   const streakJustMilestoned =
-    nextStreak.currentStreak !== state.streak.currentStreak &&
+    nextStreak.currentStreak !== base.streak.currentStreak &&
     getStreakMilestone(nextStreak.currentStreak) !== null;
-  const streakGraceDayUsed = isGraceDay(state.streak.lastActiveDate, todayISO);
+  const streakGraceDayUsed = isGraceDay(base.streak.lastActiveDate, todayISO);
 
-  const dailyGoalMetBefore = isDailyGoalMet(state.dailyProgress);
-  const nextDailyProgress = updateDailyProgress(state.dailyProgress, todayISO, sentenceCount);
+  const dailyGoalMetBefore = isDailyGoalMet(base.dailyProgress);
+  const nextDailyProgress = updateDailyProgress(base.dailyProgress, todayISO, sentenceCount);
   const dailyGoalJustMet = !dailyGoalMetBefore && isDailyGoalMet(nextDailyProgress);
 
   const xpEarned = calculateLessonXp({
@@ -100,13 +128,13 @@ export function recordCompletion(
     isFirstCompletion,
     dailyGoalMet: dailyGoalJustMet,
   });
-  const nextXp = state.xp + xpEarned;
+  const nextXp = base.xp + xpEarned;
 
   const lessonCountAfter = completions.length;
   const lessonCountJustMilestoned =
     isFirstCompletion && getLessonCountMilestone(lessonCountAfter) !== null;
 
-  const levelBefore = getLearnerLevel(state.xp).level.name;
+  const levelBefore = getLearnerLevel(base.xp).level.name;
   const levelAfter = getLearnerLevel(nextXp).level.name;
 
   const rewards: RewardEvent[] = [];
@@ -125,8 +153,8 @@ export function recordCompletion(
     dailyProgress: nextDailyProgress,
     rewards,
     xpEarned,
-    startingLevel: state.startingLevel,
-    country: state.country,
+    startingLevel: base.startingLevel,
+    country: base.country,
   };
 
   writeProgress(next);

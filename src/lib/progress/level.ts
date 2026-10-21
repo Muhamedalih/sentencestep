@@ -2,12 +2,13 @@ import { OPENING_LESSON_ID, difficultyForStartingLevel } from "@/lib/progress/st
 import type { LessonUnit } from "@/types/content";
 
 /**
- * The first level with an incomplete lesson, or the highest level once all
- * are done. `startingLevel` (a learner's onboarding placement choice, or null
- * if unset/skipped — see StartingLevelOnboarding) only ever nudges this for a
- * learner with NO completions yet: the moment even one lesson is completed,
- * ordinary "first incomplete level" progression takes back over, so this
- * never re-applies to a returning learner or overrides real progress.
+ * The level the learner is on: the first level with an incomplete lesson,
+ * looking from their placement upward, or the highest level once all are done.
+ * `startingLevel` (the tier chosen in StartingLevelOnboarding or Settings, or
+ * null/0 if unset/skipped) is a floor, not a one-time nudge: a level below it
+ * only counts once nothing at or above it is left. It used to apply only while
+ * the learner had no completions, so the second lesson already walked someone
+ * who had chosen Intermediate or Advanced back through Level 1.
  */
 export function getCurrentLevel(
   units: readonly Pick<LessonUnit, "id" | "level">[],
@@ -15,19 +16,12 @@ export function getCurrentLevel(
   startingLevel?: number | null,
 ): number {
   const levels = Array.from(new Set(units.map((unit) => unit.level))).sort((a, b) => a - b);
+  const hasOpenLesson = (level: number) =>
+    units.some((unit) => unit.level === level && !completedIds.includes(unit.id));
 
-  if (completedIds.length === 0 && startingLevel) {
-    const atOrAbove = levels.filter((level) => level >= startingLevel);
-    if (atOrAbove.length > 0) return atOrAbove[0]!;
-  }
-
-  for (const level of levels) {
-    const levelUnits = units.filter((unit) => unit.level === level);
-    const allDone = levelUnits.every((unit) => completedIds.includes(unit.id));
-    if (!allDone) return level;
-  }
-
-  return levels[levels.length - 1] ?? 1;
+  const floor = startingLevel ?? 0;
+  const current = levels.find((level) => level >= floor && hasOpenLesson(level));
+  return current ?? levels.find(hasOpenLesson) ?? levels[levels.length - 1] ?? 1;
 }
 
 /**
@@ -37,13 +31,16 @@ export function getCurrentLevel(
  * catalog so premium/admin learners keep getting a next-lesson recommendation
  * past the point a free learner would dead-end (see HomeHero).
  *
- * `startingLevel` shifts the recommendation to that level's first lesson for
- * a brand-new learner (no completions at all) — see getCurrentLevel's doc
- * comment for the exact same guard. That tier's dedicated OPENING_LESSON_ID
- * (the exact lesson OnboardingIntroCard's own "Start" button routes to) is
- * preferred first, when it's actually in this eligible set: plain `order`
- * doesn't guarantee it sorts before the tier's other lessons (its
- * order_index just reflects wherever it was published in the catalog), so
+ * `startingLevel` is a floor, exactly as in getCurrentLevel: the next lesson
+ * is the first incomplete one at or above that level, and only once none is
+ * left there does the pick fall back to the lessons below it, so a learner is
+ * never recommended nothing while something is still open.
+ *
+ * For a brand-new learner (no completions at all) that tier's dedicated
+ * OPENING_LESSON_ID (the exact lesson OnboardingIntroCard's own "Start" button
+ * routes to) is preferred first, when it's actually in this eligible set:
+ * plain `order` doesn't guarantee it sorts before the tier's other lessons
+ * (its order_index just reflects wherever it was published in the catalog), so
  * without this a learner who left it mid-way (or who reached the dashboard
  * before ever tapping OnboardingIntroCard's "Start") could get recommended
  * an ordinary lesson instead of the one lesson written for this exact first
@@ -70,17 +67,20 @@ export function findCurrentLesson(
 ): LessonUnit | undefined {
   const eligible = isPremiumUser ? units : units.filter((unit) => unit.isFree);
   const sorted = eligible.slice().sort((a, b) => a.level - b.level || a.order - b.order);
+  const isOpen = (unit: LessonUnit) => !completedIds.includes(unit.id);
 
-  if (completedIds.length === 0 && startingLevel) {
-    const difficulty = difficultyForStartingLevel(startingLevel);
-    const openingLesson = difficulty
-      ? sorted.find((unit) => unit.id === OPENING_LESSON_ID[difficulty])
-      : undefined;
-    if (openingLesson) return openingLesson;
+  if (startingLevel) {
+    if (completedIds.length === 0) {
+      const difficulty = difficultyForStartingLevel(startingLevel);
+      const openingLesson = difficulty
+        ? sorted.find((unit) => unit.id === OPENING_LESSON_ID[difficulty])
+        : undefined;
+      if (openingLesson) return openingLesson;
+    }
 
-    const fromStartingLevel = sorted.find((unit) => unit.level >= startingLevel);
+    const fromStartingLevel = sorted.find((unit) => unit.level >= startingLevel && isOpen(unit));
     if (fromStartingLevel) return fromStartingLevel;
   }
 
-  return sorted.find((unit) => !completedIds.includes(unit.id));
+  return sorted.find(isOpen);
 }

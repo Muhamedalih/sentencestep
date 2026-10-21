@@ -36,6 +36,7 @@ import {
   mergeStreak,
   selectCompletionsToMigrate,
 } from "@/lib/progress/guest-migration";
+import { startingLevelFromOpeningLesson } from "@/lib/progress/starting-level";
 import { emptyProgressState } from "@/lib/progress/types";
 import { recordActivityDay, recordStreakBridgeDays } from "@/lib/features/activity-queries";
 import { disabledFeatures } from "@/lib/features/config";
@@ -422,8 +423,10 @@ export async function migrateGuestProgressAction(
     });
   }
 
-  if (existingStartingLevel === null && guest.startingLevel !== null) {
-    await setStartingLevelAction(guest.startingLevel);
+  const guestStartingLevel =
+    guest.startingLevel ?? startingLevelFromOpeningLesson(guest.completions);
+  if (existingStartingLevel === null && guestStartingLevel !== null) {
+    await setStartingLevelAction(guestStartingLevel);
   }
 
   if (existingCountry === null && guest.country !== null) {

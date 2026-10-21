@@ -137,8 +137,9 @@ export interface NextWordBlock {
 /**
  * Where today's words come from: the first group (level, then order) with an
  * unfinished word, and the block holding that word — the same block the
- * practice screen resumes at. A learner with no finished word yet starts at
- * their onboarding level, the way findCurrentLesson does for lessons.
+ * practice screen resumes at. The learner's onboarding level is a floor, the
+ * way it is in findCurrentLesson: groups below it only come up once nothing
+ * at or above it has an unfinished word left.
  */
 export function pickNextWordBlock(
   groups: readonly WordGroupSummary[],
@@ -146,9 +147,12 @@ export function pickNextWordBlock(
   options: { isPremiumUser: boolean; startingLevel: number | null },
 ): NextWordBlock | null {
   const open = openGroups(groups, options.isPremiumUser);
-  const startAt = completed.size === 0 && options.startingLevel ? options.startingLevel : 0;
-  const atOrAbove = open.filter((group) => group.level >= startAt);
-  for (const group of atOrAbove.length > 0 ? atOrAbove : open) {
+  const floor = options.startingLevel ?? 0;
+  const ordered = [
+    ...open.filter((group) => group.level >= floor),
+    ...open.filter((group) => group.level < floor),
+  ];
+  for (const group of ordered) {
     if (group.wordIds.every((id) => completed.has(id))) continue;
     const { blockIndex } = resumePoint(group.wordIds, completed, WORDS_PER_DAY);
     const from = blockIndex * WORDS_PER_DAY + 1;
