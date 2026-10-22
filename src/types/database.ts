@@ -1218,6 +1218,38 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["word_mastery"]["Insert"]>;
         Relationships: [];
       };
+      sentence_mastery: {
+        Row: {
+          user_id: string;
+          sentence_id: string;
+          /** 0 = just missed ... 5 = passed the 30-day review. */
+          strength: number;
+          /** The learner-local day this sentence is next due ("YYYY-MM-DD"). */
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews: number;
+          clean_reviews: number;
+          misses: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          sentence_id: string;
+          strength?: number;
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews?: number;
+          clean_reviews?: number;
+          misses?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["sentence_mastery"]["Insert"]>;
+        Relationships: [];
+      };
       lesson_attempts: {
         Row: {
           id: string;
@@ -1982,6 +2014,10 @@ export interface Database {
       };
       record_word_review: {
         Args: { p_word_id: string; p_outcome: string; p_today: string };
+        Returns: { out_strength: number; out_due_on: string; out_advanced: boolean }[];
+      };
+      record_sentence_review: {
+        Args: { p_sentence_id: string; p_outcome: string; p_today: string };
         Returns: { out_strength: number; out_due_on: string; out_advanced: boolean }[];
       };
       record_vocabulary_encounter: {

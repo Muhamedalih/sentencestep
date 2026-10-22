@@ -1,0 +1,173 @@
+import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
+import { localISODateInTimeZone } from "@/lib/features/learner-date";
+import { getContentTranslations, resolveScalarField } from "@/lib/i18n/content-translations";
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
+import type { SupportLocale } from "@/lib/i18n/locales";
+import { fetchStoredClips } from "@/lib/sentence-bank/clips";
+import type { ClipRequest } from "@/lib/sentence-bank/clips";
+import {
+  MAX_POOL_LESSONS,
+  finishedLessonDays,
+  recentFinishedLessons,
+  reviewedTodayCount,
+} from "@/lib/sentence-bank/finished";
+import { buildReviewItems } from "@/lib/sentence-bank/items";
+import type { ReviewScreenItem } from "@/lib/sentence-bank/items";
+import { REVIEW_SPARES } from "@/lib/sentence-bank/review";
+import { DAILY_REVIEW_COUNT, selectSentenceReview } from "@/lib/sentence-bank/select";
+import type { SentenceCandidate } from "@/lib/sentence-bank/select";
+import { fetchLessonVoices, fetchSentencePool } from "@/lib/sentence-bank/pool";
+import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
+import { fetchSentenceStates } from "@/lib/supabase/queries/sentence-mastery";
+import type { SentenceStateRow } from "@/lib/supabase/queries/sentence-mastery";
+import { isWeakWord } from "@/lib/weak-words/types";
+
+/**
+ * Sentence bank: what the server reads to decide which sentences come back today. TWO reads per
+ * call, both of them small: the learner's own sentence_mastery rows (a handful a day), then the
+ * sentences of their most recently finished lessons plus the ones already on their schedule (see
+ * pool.ts for why the second one needs the service role). Everything after that is pure
+ * (select.ts, items.ts). The review screen adds the lookups only IT needs — the learner's weak
+ * words, their language's meaning of the chosen sentences, and which of them have a stored clip.
+ *
+ * Callers treat a failure as "nothing to ask" (the table does not exist until its migration is
+ * applied): a missing optional feature must never take Home down.
+ */
+
+export interface SentenceBankContext {
+  userId: string;
+  /** The learner-local day, "YYYY-MM-DD". */
+  todayISO: string;
+  timeZone: string | undefined;
+  /** The learner's own completions (from their progress): which lessons they finished, and when. */
+  completions: readonly { lessonId: string; mode: string; completedAt: string }[];
+}
+
+export interface PoolCandidate extends SentenceCandidate {
+  /** The legacy Arabic text of the sentence. */
+  ar: string;
+}
+
+export interface SentenceBankRead {
+  candidates: PoolCandidate[];
+  states: Map<string, SentenceStateRow>;
+  /** How many sentences were already asked today. */
+  reviewedToday: number;
+}
+
+/** Due sentences looked up by id beyond the recent lessons; a learner away for months does not turn this into a big read. */
+const MAX_DUE_LOOKUPS = 150;
+
+export async function readSentenceBank(context: SentenceBankContext): Promise<SentenceBankRead> {
+  const { userId, todayISO, timeZone, completions } = context;
+  const finished = finishedLessonDays(
+    completions,
+    (iso) => localISODateInTimeZone(timeZone, new Date(iso)) ?? iso.slice(0, 10),
+  );
+  const recent = recentFinishedLessons(finished, todayISO, MAX_POOL_LESSONS);
+
+  // Read 1: the learner's own rows. If the table is not there yet this throws before the heavier read.
+  const states = await fetchSentenceStates(userId);
+  const dueIds = [...states]
+    .filter(([, state]) => state.dueOn <= todayISO)
+    .map(([id]) => id)
+    .slice(0, MAX_DUE_LOOKUPS);
+
+  // Read 2: the sentences of the recent lessons and the due ones, in one request.
+  const pool = await fetchSentencePool({ lessonIds: recent, sentenceIds: dueIds });
+  const candidates: PoolCandidate[] = [];
+  for (const row of pool) {
+    const completedOn = finished.get(row.lessonId);
+    if (completedOn === undefined) continue;
+    candidates.push({
+      id: row.id,
+      lessonId: row.lessonId,
+      orderIndex: row.orderIndex,
+      en: row.en,
+      ar: row.ar,
+      completedOn,
+    });
+  }
+  return { candidates, states, reviewedToday: reviewedTodayCount(states, todayISO) };
+}
+
+/** How many sentences are still to be asked today: the day's batch minus what was already asked. */
+export function remainingToday(reviewedToday: number): number {
+  return Math.max(0, DAILY_REVIEW_COUNT - reviewedToday);
+}
+
+/**
+ * How many sentences are ready for the learner today — what decides whether Today's tasks box gets
+ * its fourth row, and how many sentences that row asks for. The weak-word order does not change
+ * how MANY there are, so it is not read here.
+ */
+export async function countSentencesReady(context: SentenceBankContext): Promise<number> {
+  const read = await readSentenceBank(context);
+  return selectSentenceReview(read.candidates, read.states, {
+    todayISO: context.todayISO,
+    cap: remainingToday(read.reviewedToday),
+  }).items.length;
+}
+
+/**
+ * Today's sentences, ready to be drawn: chosen (due first, then the ones holding the learner's weak
+ * words, then a spread over their lessons), each with the form it is asked in, the meaning in the
+ * learner's language and the stored clip it plays. A sentence that cannot be asked in any
+ * hidden-text form (no stored clip and no meaning) is replaced by a spare one.
+ */
+export async function loadSentenceReviewScreen(
+  context: SentenceBankContext & { locale: SupportLocale | null },
+): Promise<ReviewScreenItem[]> {
+  const read = await readSentenceBank(context);
+  const limit = remainingToday(read.reviewedToday);
+  if (limit === 0) return [];
+
+  const weakRows = await fetchWeakCandidateMistakeRows(context.userId).catch(() => []);
+  const weakWords = new Set(weakRows.filter(isWeakWord).map((row) => row.word));
+  const selection = selectSentenceReview(read.candidates, read.states, {
+    todayISO: context.todayISO,
+    weakWords,
+    cap: limit + REVIEW_SPARES,
+  });
+  if (selection.items.length === 0) return [];
+
+  const chosen = selection.items.map((item) => item.sentence);
+  const locale = context.locale ?? DEFAULT_LOCALE;
+  const lessonIds = [...new Set(chosen.map((sentence) => sentence.lessonId))];
+  const [translations, voices] = await Promise.all([
+    getContentTranslations(
+      "sentence",
+      chosen.map((sentence) => sentence.id),
+      locale,
+    ).catch(() => new Map<string, unknown>()),
+    fetchLessonVoices(lessonIds).catch(() => new Map()),
+  ]);
+
+  const prompts = new Map<string, string>();
+  for (const sentence of chosen) {
+    const meaning = resolveScalarField(translations, sentence.id, "text", sentence.ar, locale);
+    if (meaning) prompts.set(sentence.id, meaning);
+  }
+
+  // A lesson with no narrator of its own uses its section's default, exactly as its page does.
+  let normalDefault: string | null | undefined;
+  let storyDefault: string | null | undefined;
+  const requests: ClipRequest[] = [];
+  for (const sentence of chosen) {
+    const lesson = voices.get(sentence.lessonId);
+    let voiceId: string | null = lesson?.voiceId ?? null;
+    if (!voiceId && lesson) {
+      if (lesson.mode === "normal") {
+        normalDefault ??= await getDefaultNormalLessonVoiceId().catch(() => null);
+        voiceId = normalDefault ?? null;
+      } else {
+        storyDefault ??= await getDefaultVoiceId().catch(() => null);
+        voiceId = storyDefault ?? null;
+      }
+    }
+    if (voiceId) requests.push({ key: sentence.id, text: sentence.en, voiceId });
+  }
+  const clips = await fetchStoredClips(requests).catch(() => new Map<string, string>());
+
+  return buildReviewItems({ selection: selection.items, prompts, clips, weakWords, limit });
+}

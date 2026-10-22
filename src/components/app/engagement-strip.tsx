@@ -133,7 +133,7 @@ export function EngagementStrip({
                     t.quests.allDone
                   ) : nextQuest.today ? (
                     <>
-                      {todayTaskTitle(t.today, nextQuest.today.kind)}
+                      {todayTaskTitle(t.today, nextQuest.today.kind, nextQuest.target)}
                       {nextQuest.today.title && (
                         <span className="text-muted-foreground ms-2 text-xs" dir="ltr">
                           {nextQuest.today.title}

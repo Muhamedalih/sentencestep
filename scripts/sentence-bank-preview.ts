@@ -218,7 +218,7 @@ async function main() {
     for (const item of picked.items) {
       const sentence = byId.get(item.sentence.id)!;
       console.log(
-        `  [${item.reason}, strength ${item.strength}, ${reviewFormFor(item.strength, hasClip(sentence))}] ${sentence.lessonId} #${sentence.orderIndex}: ${sentence.en}`,
+        `  [${item.reason}, strength ${item.strength}, ${reviewFormFor(item.strength, { audio: hasClip(sentence), prompt: true })}] ${sentence.lessonId} #${sentence.orderIndex}: ${sentence.en}`,
       );
       if (days > 0) {
         live.set(item.sentence.id, applyOutcome(live.get(item.sentence.id), "clean", date).state);

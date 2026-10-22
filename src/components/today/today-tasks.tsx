@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, Headphones, PenLine, RotateCcw, Target, Type } from "lucide-react";
+import { Check, Headphones, PenLine, Quote, RotateCcw, Target, Type } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 /** The accuracy that earns the story's star. */
 const STAR_ACCURACY = 0.9;
 
-const ICONS = { listen: Headphones, story: PenLine, words: Type } as const;
+const ICONS = { listen: Headphones, story: PenLine, words: Type, sentences: Quote } as const;
 
 const CHIP_LEVEL =
   "border-success/40 bg-success/10 text-success rounded-full border px-2 py-px text-[11px] font-semibold";
@@ -27,8 +27,20 @@ function fill(template: string, values: Record<string, string | number>): string
   );
 }
 
-/** The task's name: "Listen to a passage", "Write a story", "Write 5 words". */
-export function todayTaskTitle(copy: TodayCopy, kind: TodayQuestInfo["kind"]): string {
+/** The sentence review's name for `n` sentences: "Remember 1 sentence", "Remember 2 sentences", "Remember 3 sentences" (Arabic has its own one and two). */
+export function sentenceTaskTitle(copy: TodayCopy, n: number): string {
+  if (n === 1) return copy.taskSentencesOne;
+  if (n === 2) return copy.taskSentencesTwo;
+  return fill(copy.taskSentences, { n });
+}
+
+/** The task's name: "Listen to a passage", "Write a story", "Write 5 words", "Remember 3 sentences" (`target` is how many sentences the last one asks). */
+export function todayTaskTitle(
+  copy: TodayCopy,
+  kind: TodayQuestInfo["kind"],
+  target?: number,
+): string {
+  if (kind === "sentences") return sentenceTaskTitle(copy, target ?? 3);
   return { listen: copy.taskListen, story: copy.taskStory, words: copy.taskWords }[kind];
 }
 
@@ -93,10 +105,18 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
   const Icon = ICONS[info.kind];
   const done = quest.completed;
   const minutes = fill(copy.minutes, { n: info.minutes });
-  const start = { listen: copy.startListen, story: copy.startStory, words: copy.startWords }[
-    info.kind
-  ];
-  const why = { listen: copy.whyListen, story: copy.whyStory, words: copy.whyWords }[info.kind];
+  const start = {
+    listen: copy.startListen,
+    story: copy.startStory,
+    words: copy.startWords,
+    sentences: copy.startSentences,
+  }[info.kind];
+  const why = {
+    listen: copy.whyListen,
+    story: copy.whyStory,
+    words: copy.whyWords,
+    sentences: copy.whySentences,
+  }[info.kind];
   const accuracyLine =
     info.kind === "story" && done && info.accuracy !== null
       ? fill(info.accuracy >= STAR_ACCURACY ? copy.starEarned : copy.accuracyIs, {
@@ -137,7 +157,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-3">
               <p className={cn("text-sm font-semibold", done && "text-success")}>
-                <span dir="auto">{todayTaskTitle(copy, info.kind)}</span>
+                <span dir="auto">{todayTaskTitle(copy, info.kind, quest.target)}</span>
               </p>
               {quest.xp > 0 && (!done || info.paid) && (
                 <span
@@ -164,6 +184,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
                 )}
                 {info.supportTitle && <span dir="auto">{info.supportTitle}</span>}
                 {info.levelCode && <span className={CHIP_LEVEL}>{info.levelCode}</span>}
+                {!done && info.kind === "sentences" && <span dir="auto">{copy.sentencesFrom}</span>}
                 {!done && <span dir="auto">{minutes}</span>}
                 {accuracyLine && (
                   <span
@@ -243,7 +264,7 @@ export function TodayTasksPanel({
             <span dir="auto">
               {payload.allDone
                 ? fill(copy.rewardEarned, { xp: earnedXp })
-                : fill(copy.rewardAll, { xp: totalXp })}
+                : fill(quests.length > 3 ? copy.rewardAllMore : copy.rewardAll, { xp: totalXp })}
             </span>
           </p>
         )}

@@ -105,9 +105,11 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     description:
       "The site remembers the sentences a learner typed in lessons and stories and brings a few back with their text hidden, on the same 1 / 3 / 7 / 16 / 30-day schedule as Word Lists words: a miss comes back tomorrow, a clean answer waits longer. Inside Today's tasks box it adds a fourth row, “Remember 3 sentences”, on the days something is ready (never an empty row, and never a count of what is waiting), and once a week a ten-sentence check ends with one honest line: how many the learner still remembers.",
     notes: [
-      "Being built in stages: opening this changes nothing visible until the review screens ship.",
+      "Built in stages: the fourth row and the review screen are in; the weekly ten-sentence check and its one-line result are not built yet.",
+      "Admin note: Features → Daily quests has a row “Remember N sentences” (Today's fourth task only): its XP and target are tuned there, and switching it off removes the row.",
       "Needs Today's session to be open for the same people: it lives inside that box, and stays closed while Today is closed.",
-      "Needs the sentence_mastery table (migration 20250347000000); until it is applied no sentence is asked back and nothing is recorded.",
+      "Needs the sentence_mastery table (migration 20250347000000); until it is applied the fourth row never appears, no sentence is asked back and nothing is recorded.",
+      "A learner whose subscription ended can still review sentences from lessons they finished: the sentences are read for that learner's own finished lessons only, whatever Premium says.",
       "Three sentences a day at most, from lessons and stories finished on an earlier day, none shorter than four words and at most two from the same lesson.",
       "Sentences are asked by how well they are remembered: with the sound and one or two words missing, from the sound alone, or from the meaning in the learner's language. Sound is only ever a clip that already exists; otherwise the sentence is asked from its meaning.",
       "To test it, choose “A share of learners”: it only reaches learners who also have Today's session, so read Today's own test before opening this one.",

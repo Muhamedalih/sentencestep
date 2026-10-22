@@ -127,6 +127,26 @@ export type AnalyticsEvent =
       category: "ENGAGEMENT";
       /** A learner reached the finish screen of Today's session (the first time that day; a repeat is not counted again). `reviewTotal`/`reviewClean`: words of the words step asked and typed right the first time (0/0 when that step was skipped). */
       properties: { reviewTotal: number; reviewClean: number };
+    }
+  | {
+      name: "SENTENCE_REVIEW_STARTED";
+      category: "ENGAGEMENT";
+      /** A learner opened the sentence review (a visit, so a reload counts again): `count` sentences were asked, `partial`/`audio`/`translate` how many of them in each form. The share of visits that reach SENTENCE_REVIEW_FINISHED is what the stop rule "40% finish the block" is judged on. */
+      properties: { count: number; partial: number; audio: number; translate: number };
+    }
+  | {
+      name: "SENTENCE_REVIEW_FINISHED";
+      category: "ENGAGEMENT";
+      /** A learner finished a review visit: of `count` sentences, `clean` right with no help, `assisted` right with one help, `missed` wrong (on their first go), and how many were asked in each form. First-go accuracy (clean + assisted over count) is the other number the stop rules read. */
+      properties: {
+        count: number;
+        clean: number;
+        assisted: number;
+        missed: number;
+        partial: number;
+        audio: number;
+        translate: number;
+      };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

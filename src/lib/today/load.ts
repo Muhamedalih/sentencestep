@@ -12,6 +12,8 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import type { PassageProgress, PassageSummary } from "@/lib/passages/types";
 import { fetchProgressCached } from "@/lib/progress/cached";
+import { SENTENCE_REVIEW_HREF, SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
+import { dealSentenceQuest } from "@/lib/sentence-bank/quest";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { ProgressState } from "@/lib/progress/types";
 import { fetchLessonSentenceStats } from "@/lib/supabase/queries/content";
@@ -254,16 +256,33 @@ export async function enrichTodayQuests(args: {
       fetchProgressCached(args.todayISO),
       cookies(),
     ]);
-    const data = await loadTodaySteps({
-      userId: args.userId,
-      locale,
-      timeZone: cookieStore.get(TIMEZONE_COOKIE)?.value,
-      todayISO: args.todayISO,
-      progress,
-      isPremium: premium || admin,
-      passagesEnabled: args.features.passages.enabled,
-      quests: todayRows,
-    });
+    const timeZone = cookieStore.get(TIMEZONE_COOKIE)?.value;
+    // Today's optional fourth row, "remember N sentences", is dealt beside the steps' own reads (it
+    // reads nothing once the row exists, and never throws).
+    const [data, sentenceRow] = await Promise.all([
+      loadTodaySteps({
+        userId: args.userId,
+        locale,
+        timeZone,
+        todayISO: args.todayISO,
+        progress,
+        isPremium: premium || admin,
+        passagesEnabled: args.features.passages.enabled,
+        quests: todayRows,
+      }),
+      args.features.rollouts.sentenceBank
+        ? dealSentenceQuest({
+            context: {
+              userId: args.userId,
+              todayISO: args.todayISO,
+              timeZone,
+              completions: progress?.completions ?? [],
+            },
+            features: args.features,
+            existing: todayRows,
+          })
+        : Promise.resolve(null),
+    ]);
     const byStep = questsByStep(todayRows);
     const enriched: DailyQuest[] = [];
     for (const step of data.steps) {
@@ -285,6 +304,23 @@ export async function enrichTodayQuests(args: {
         completed: quest.completed || step.done,
         progress: step.done ? quest.target : quest.progress,
         today: info,
+      });
+    }
+    // The sentence review closes the list (the box's last row), and is done only when its own quest is.
+    if (sentenceRow) {
+      enriched.push({
+        ...sentenceRow,
+        today: {
+          kind: "sentences",
+          title: "",
+          supportTitle: null,
+          levelCode: null,
+          minutes: SENTENCE_REVIEW_MINUTES,
+          href: SENTENCE_REVIEW_HREF,
+          redoHref: null,
+          accuracy: null,
+          paid: sentenceRow.completed,
+        },
       });
     }
     return enriched.length > 0 ? enriched : null;

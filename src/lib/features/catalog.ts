@@ -19,6 +19,7 @@ export const QUEST_TYPES = [
   "dictation",
   "dailySession",
   "passages",
+  "sentenceReview",
 ] as const;
 
 export type QuestType = (typeof QUEST_TYPES)[number];
@@ -40,6 +41,8 @@ export const QUEST_DEFAULTS: Record<QuestType, QuestDefault> = {
   dailySession: { target: 1, xp: 15 },
   /** Passage parts finished (a part is a minute or two of reading plus its question). */
   passages: { target: 3, xp: 15 },
+  /** Today's fourth task, only on days sentences are ready: sentences remembered from hidden text (never dealt at random). */
+  sentenceReview: { target: 3, xp: 10 },
 };
 
 /** How many quests a learner is dealt per day. */

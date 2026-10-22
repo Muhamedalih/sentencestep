@@ -50,6 +50,38 @@ export function todayQuestRows(
   });
 }
 
+/**
+ * The sentence bank's row, Today's optional fourth slot (see src/lib/sentence-bank): "remember N
+ * sentences", dealt only on a day sentences are ready and never part of the three steps.
+ */
+export const TODAY_SENTENCE_SLOT = TODAY_QUEST_SLOT_BASE + STEP_KINDS.length;
+
+/**
+ * The row to deal for the sentence review, or null when there is nothing to ask (no empty row, ever)
+ * or the admin switched the quest type off. The target is how many sentences are ready, up to the
+ * tuned target, so the task can always be finished.
+ */
+export function sentenceQuestRow(
+  settings: Record<QuestType, { enabled: boolean; target: number; xp: number }>,
+  ready: number,
+): TodayQuestRow | null {
+  const config = settings.sentenceReview;
+  if (ready <= 0 || !config.enabled) return null;
+  return {
+    slot: TODAY_SENTENCE_SLOT,
+    type: "sentenceReview",
+    target: Math.max(1, Math.min(config.target, ready)),
+    xp: config.xp,
+  };
+}
+
+/** The day's sentence review row, if one was dealt. */
+export function sentenceQuest(quests: readonly DailyQuest[]): DailyQuest | undefined {
+  return quests.find(
+    (quest) => quest.slot === TODAY_SENTENCE_SLOT && quest.type === "sentenceReview",
+  );
+}
+
 /** Today's quests by the step they belong to (a row that is not one of Today's three is ignored). */
 export function questsByStep(quests: readonly DailyQuest[]): Partial<Record<StepKind, DailyQuest>> {
   const byStep: Partial<Record<StepKind, DailyQuest>> = {};

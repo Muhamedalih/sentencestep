@@ -59,8 +59,21 @@ test("pickDailyQuestTypes: fewer candidates than the count just returns them all
   assert.deepEqual(pickDailyQuestTypes("u", "2026-09-30", []), []);
 });
 
-test("eligibleQuestTypes: everything on and achievable -> the whole pool", () => {
-  assert.deepEqual(eligibleQuestTypes(settings(), everything), [...QUEST_TYPES]);
+test("eligibleQuestTypes: everything on and achievable -> the whole random pool", () => {
+  assert.deepEqual(
+    eligibleQuestTypes(settings(), everything),
+    QUEST_TYPES.filter((type) => type !== "sentenceReview"),
+  );
+});
+
+test("eligibleQuestTypes: the sentence review is Today's fourth task and is never dealt at random", () => {
+  assert.equal(eligibleQuestTypes(settings(), everything).includes("sentenceReview"), false);
+  assert.equal(
+    eligibleQuestTypes(settings({ sentenceReview: { enabled: true } }), everything).includes(
+      "sentenceReview",
+    ),
+    false,
+  );
 });
 
 test("eligibleQuestTypes: admin-disabled types are never dealt", () => {

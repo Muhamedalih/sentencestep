@@ -63,16 +63,25 @@ test("weak sentences are asked with the most help, strong ones with the least, a
   assert.deepEqual([...REVIEW_FORMS], ["partial", "audio", "translate"]);
   assert.equal(AUDIO_FORM_FROM_STRENGTH, 2);
   assert.equal(TRANSLATE_FORM_FROM_STRENGTH, 4);
+  const both = { audio: true, prompt: true };
   assert.deepEqual(
-    [0, 1, 2, 3, 4, 5].map((strength) => reviewFormFor(strength, true)),
+    [0, 1, 2, 3, 4, 5].map((strength) => reviewFormFor(strength, both)),
     ["partial", "partial", "audio", "audio", "translate", "translate"],
   );
-  assert.equal(reviewFormFor(-1, true), "partial");
+  assert.equal(reviewFormFor(-1, both), "partial");
 });
 
 test("a sentence with no stored clip is asked from its meaning, whatever its strength", () => {
   for (const strength of [0, 1, 2, 3, 4, 5]) {
-    assert.equal(reviewFormFor(strength, false), "translate");
+    assert.equal(reviewFormFor(strength, { audio: false, prompt: true }), "translate");
+  }
+});
+
+test("a sentence with no meaning in the learner's language is asked by sound, and with neither it is not asked", () => {
+  for (const strength of [0, 1, 2, 3, 4, 5]) {
+    const byEar = reviewFormFor(strength, { audio: true, prompt: false });
+    assert.equal(byEar, strength >= 4 ? "audio" : strength >= 2 ? "audio" : "partial");
+    assert.equal(reviewFormFor(strength, { audio: false, prompt: false }), null);
   }
 });
 

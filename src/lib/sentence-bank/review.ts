@@ -50,18 +50,39 @@ export const AUDIO_FORM_FROM_STRENGTH = 2;
 /** From this strength on it is asked from its meaning alone, the hardest way. */
 export const TRANSLATE_FORM_FROM_STRENGTH = 4;
 
+/** What a sentence can be asked with: a clip that is already stored, and its meaning in the learner's language. */
+export interface FormAvailability {
+  audio: boolean;
+  prompt: boolean;
+}
+
 /**
  * The form a sentence is asked in, from how well it is remembered: the weak ones (0-1) get the most
  * help, the middle ones (2-3) only the sound, the strong ones (4-5) only the meaning. The two
  * sound-based forms need a clip that is already stored — a sentence with none is asked from its
- * meaning instead, never from a clip made just for the occasion (nothing is generated here).
+ * meaning instead, never from a clip made just for the occasion (nothing is generated here). A
+ * sentence with no meaning in the learner's language falls back the other way, to the sound alone,
+ * and one with neither cannot be asked at all (null): the caller leaves it for another day.
  */
-export function reviewFormFor(strength: number, audioAvailable: boolean): ReviewForm {
+export function reviewFormFor(strength: number, available: FormAvailability): ReviewForm | null {
   const wanted: ReviewForm =
     strength >= TRANSLATE_FORM_FROM_STRENGTH
       ? "translate"
       : strength >= AUDIO_FORM_FROM_STRENGTH
         ? "audio"
         : "partial";
-  return wanted !== "translate" && !audioAvailable ? "translate" : wanted;
+  if (wanted === "translate") {
+    return available.prompt ? "translate" : available.audio ? "audio" : null;
+  }
+  if (available.audio) return wanted;
+  return available.prompt ? "translate" : null;
 }
+
+/** Where the sentence review lives (inside Today's tasks). */
+export const SENTENCE_REVIEW_HREF = "/learn/today/sentences";
+
+/** About a quarter of a minute a sentence for a batch of three, rounded up: what the task row says it takes. */
+export const SENTENCE_REVIEW_MINUTES = 2;
+
+/** Sentences read beyond the batch, so one that cannot be asked (no stored clip and no meaning in the learner's language) is replaced instead of shortening the batch. */
+export const REVIEW_SPARES = 3;

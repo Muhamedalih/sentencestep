@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { TIMEZONE_COOKIE } from "@/lib/features/learner-date";
+import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { todayLocalISODate } from "@/lib/progress/streak";
+import { sentenceReviewPending } from "@/lib/sentence-bank/quest";
+import { SENTENCE_REVIEW_HREF } from "@/lib/sentence-bank/review";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { loadTodayNext, loadTodayStoryDone } from "@/lib/today/load";
 import { STEP_KINDS } from "@/lib/today/plan";
@@ -27,6 +30,14 @@ export default async function TodayGoPage({
   if (!features.rollouts.todaySession || !user) redirect("/learn");
 
   const { step, redo } = await searchParams;
+  // After the words: the sentence review when the learner has one waiting today, else the finish screen.
+  if (step === "sentences") {
+    const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
+    const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
+    const waiting =
+      features.rollouts.sentenceBank && (await sentenceReviewPending(user.id, todayISO));
+    redirect(waiting ? `${SENTENCE_REVIEW_HREF}?flow=1` : "/learn/today/end");
+  }
   const wanted = STEP_KINDS.find((kind) => kind === step) ?? "listen";
   const [premium, admin, locale] = await Promise.all([hasPremiumAccess(), isAdmin(), getLocale()]);
   const next = await loadTodayNext({

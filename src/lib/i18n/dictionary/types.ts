@@ -1450,6 +1450,34 @@ export interface Dictionary {
     accuracyIs: string;
     stepDoneStar: string;
     stepDoneAccuracy: string;
+    /** The sentence review's row in the tasks box (the fourth task, only on days sentences are ready): "Remember {n} sentences" with its one and two forms, its start button, its one-line why, where the sentences come from, and the reward line when there are four tasks. */
+    taskSentences: string;
+    taskSentencesOne: string;
+    taskSentencesTwo: string;
+    startSentences: string;
+    whySentences: string;
+    sentencesFrom: string;
+    rewardAllMore: string;
+  };
+  /** The sentence review (src/components/sentence-bank): sentences the learner typed before come back with their text hidden. `{n}`/`{clean}`/`{total}` are counts. */
+  sentenceBank: {
+    title: string;
+    formPartialOne: string;
+    formPartialMany: string;
+    formAudio: string;
+    formTranslate: string;
+    secondChance: string;
+    blankLabel: string;
+    listen: string;
+    dontRemember: string;
+    missedFirst: string;
+    missedSecond: string;
+    summaryHeading: string;
+    summaryBody: string;
+    summaryMissed: string;
+    backToToday: string;
+    finishSession: string;
+    exit: string;
   };
   /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
   streakCalendar: {
@@ -1485,6 +1513,7 @@ export interface Dictionary {
     typeDictation: string;
     typeDailySession: string;
     typePassages: string;
+    typeSentenceReview: string;
     guestHeading: string;
     guestBody: string;
     guestCta: string;

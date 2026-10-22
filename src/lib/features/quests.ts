@@ -75,6 +75,9 @@ export function eligibleQuestTypes(
         return input.dailySessionAvailable;
       case "passages":
         return input.passagesAvailable;
+      case "sentenceReview":
+        // Only ever Today's fourth task (see sentence-bank/quest.ts), never part of the random mix.
+        return false;
       default:
         return true;
     }
@@ -87,7 +90,7 @@ export function eligibleQuestTypes(
  * Today quests, and only for Home — the database rows never carry it.
  */
 export interface TodayQuestInfo {
-  kind: "listen" | "story" | "words";
+  kind: "listen" | "story" | "words" | "sentences";
   /** English title of the passage or story ("" for the words task). */
   title: string;
   supportTitle: string | null;
