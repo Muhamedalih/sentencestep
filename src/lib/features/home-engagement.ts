@@ -13,6 +13,7 @@ import { dealDailyQuests } from "@/lib/features/quest-service";
 import { allQuestsCompleted } from "@/lib/features/quests";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { addDays, freezesRemaining, monthPeriod } from "@/lib/features/streak-freeze";
+import { enrichTodayQuests } from "@/lib/today/load";
 
 /**
  * Everything Home's engagement cards (today's session, daily quests and the
@@ -80,6 +81,12 @@ export async function loadDailyQuests(
   try {
     const quests = await dealDailyQuests(userId, todayISO, features, alreadyRead ?? undefined);
     if (quests.length === 0) return null;
+    // "Today's session (daily tasks)": the box shows Today's three tasks (each tied to its passage,
+    // story or words) instead of the random mix; a day without them falls through to the usual.
+    if (features.rollouts.todaySession) {
+      const todayQuests = await enrichTodayQuests({ userId, todayISO, features, quests });
+      if (todayQuests) return { quests: todayQuests, allDone: allQuestsCompleted(todayQuests) };
+    }
     return { quests, allDone: allQuestsCompleted(quests) };
   } catch (error) {
     console.error("[quests] loadDailyQuests failed", error);

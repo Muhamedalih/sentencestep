@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import { isImportantWord } from "./important-words";
 import { DEFAULT_WPM, estimateStoryMinutes, medianWpm, planToday } from "./plan";
-import { weekDates, weekDots, weekStartFor } from "./week";
+import { weekDates, weekStartFor } from "./week";
 
 const open = { available: true, done: false };
 
@@ -122,20 +122,5 @@ describe("week dots", () => {
     const dates = weekDates("2026-10-21", weekStartFor("en"));
     assert.equal(dates[0], "2026-10-19");
     assert.equal(dates[6], "2026-10-25");
-  });
-
-  it("lights active days, marks today, and never lights a future day", () => {
-    const dots = weekDots(
-      new Set(["2026-10-17", "2026-10-19", "2026-10-21", "2026-10-23"]),
-      "2026-10-21",
-      6,
-      (iso) => iso.slice(8),
-    );
-    assert.deepEqual(
-      dots.map((dot) => dot.on),
-      [true, false, true, false, true, false, false],
-    );
-    assert.equal(dots.filter((dot) => dot.today).length, 1);
-    assert.equal(dots[4]?.today, true);
   });
 });

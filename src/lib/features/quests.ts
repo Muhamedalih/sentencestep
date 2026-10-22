@@ -81,6 +81,29 @@ export function eligibleQuestTypes(
   });
 }
 
+/**
+ * What a daily quest is tied to while "Today's session (daily tasks)" is open: the specific passage,
+ * story or word round the quest sends the learner to (see src/lib/today). Present only on the three
+ * Today quests, and only for Home — the database rows never carry it.
+ */
+export interface TodayQuestInfo {
+  kind: "listen" | "story" | "words";
+  /** English title of the passage or story ("" for the words task). */
+  title: string;
+  supportTitle: string | null;
+  /** The passage's level (A1…B2) or the story's CEFR code. */
+  levelCode: string | null;
+  minutes: number;
+  /** Where the task starts. */
+  href: string;
+  /** Where "redo" goes for a task finished today (the passage or story it was), or null. */
+  redoHref: string | null;
+  /** The story's typing accuracy (0-1) when it was finished today. */
+  accuracy: number | null;
+  /** The quest itself was completed in the database (its XP is paid), not only derived from a lesson finished before it was dealt. */
+  paid: boolean;
+}
+
 export interface DailyQuest {
   slot: number;
   type: QuestType;
@@ -88,6 +111,7 @@ export interface DailyQuest {
   progress: number;
   xp: number;
   completed: boolean;
+  today?: TodayQuestInfo;
 }
 
 /** Today's quests as Home shows them (what the quests card renders). */

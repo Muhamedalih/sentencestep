@@ -5,6 +5,7 @@ import { Check, ChevronDown, Flame, Snowflake } from "lucide-react";
 
 import { QuestsCard } from "@/components/app/quests-card";
 import { StreakStrip } from "@/components/app/streak-strip";
+import { TodayGlow, TodayTasksPanel, todayTaskTitle } from "@/components/today/today-tasks";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
 import { questTitle } from "@/lib/features/quest-labels";
@@ -55,106 +56,127 @@ export function EngagementStrip({
   className?: string;
 }) {
   const { t, dir } = useLocale();
-  const [open, setOpen] = useState(false);
+  // "Today's session (daily tasks)": the quests are Today's three tasks, tied to specific lessons. The
+  // box then opens by itself while something is left, with a soft glow, so it is the first thing seen.
+  const todayMode = Boolean(quests?.quests.some((quest) => quest.today));
+  const [open, setOpen] = useState(todayMode && quests?.allDone === false);
   const panelId = useId();
 
   if (!quests && !streak) return null;
 
   const done = quests?.quests.filter((quest) => quest.completed).length ?? 0;
   const total = quests?.quests.length ?? 0;
-  const nextQuest = quests?.quests
-    .filter((quest) => !quest.completed)
-    .sort((a, b) => questProgressPercent(b) - questProgressPercent(a))[0];
+  const pendingQuests = quests?.quests.filter((quest) => !quest.completed) ?? [];
+  // Today's tasks go in their order (listen, story, words), the random mix by how far along each is.
+  const nextQuest = todayMode
+    ? pendingQuests[0]
+    : [...pendingQuests].sort((a, b) => questProgressPercent(b) - questProgressPercent(a))[0];
   const percent = total > 0 ? (done / total) * 100 : 0;
   const remaining = streak?.freezesRemaining ?? 0;
 
   return (
     <div className={className}>
-      <div className="border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors">
-        {streak && (
-          <div className="flex items-center gap-3">
-            <Flame
-              className="size-5 shrink-0 text-orange-500 dark:text-orange-400"
+      <div className="relative isolate">
+        {todayMode && quests?.allDone === false && <TodayGlow />}
+        <div className="border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors">
+          {streak && (
+            <div className="flex items-center gap-3">
+              <Flame
+                className="size-5 shrink-0 text-orange-500 dark:text-orange-400"
+                aria-hidden="true"
+              />
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs leading-none" dir={dir}>
+                  {t.streakCalendar.heading}
+                </span>
+                <WeekDots today={today} strip={streak} />
+              </div>
+              {remaining > 0 && (
+                <span
+                  className="text-muted-foreground relative z-10 flex items-center gap-1 text-xs"
+                  title={t.streakCalendar.freezesLeft.replace("{n}", String(remaining))}
+                >
+                  <Snowflake className="size-3.5 text-sky-500" aria-hidden="true" />
+                  <span dir="ltr">{remaining}</span>
+                </span>
+              )}
+            </div>
+          )}
+          {streak && quests && (
+            <span className="bg-border/70 hidden h-8 w-px sm:block" aria-hidden="true" />
+          )}
+          {quests && (
+            <div className="flex min-w-44 flex-1 items-center gap-3">
+              <span
+                className="relative flex size-10 shrink-0 items-center justify-center rounded-full"
+                style={{
+                  background: `conic-gradient(var(--primary) ${percent}%, var(--border) 0)`,
+                }}
+                aria-hidden="true"
+              >
+                <span className="bg-card flex size-8 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
+                  {quests.allDone ? (
+                    <Check className="text-success size-4" />
+                  ) : (
+                    <span dir="ltr">
+                      {done}/{total}
+                    </span>
+                  )}
+                </span>
+              </span>
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-xs leading-none" dir={dir}>
+                  {t.quests.heading}
+                </p>
+                <p className="mt-1 truncate text-sm font-medium" dir={dir}>
+                  {quests.allDone || !nextQuest ? (
+                    t.quests.allDone
+                  ) : nextQuest.today ? (
+                    <>
+                      {todayTaskTitle(t.today, nextQuest.today.kind)}
+                      {nextQuest.today.title && (
+                        <span className="text-muted-foreground ms-2 text-xs" dir="ltr">
+                          {nextQuest.today.title}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {questTitle(t, nextQuest.type)}
+                      <span className="text-muted-foreground ms-2 text-xs tabular-nums" dir="ltr">
+                        {nextQuest.progress} / {nextQuest.target}
+                      </span>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            aria-controls={panelId}
+            aria-label={t.quests.heading}
+            className="text-muted-foreground hover:text-foreground hover:bg-muted ms-auto flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors after:absolute after:inset-0 after:rounded-2xl"
+          >
+            <ChevronDown
+              className={cn("size-5 transition-transform", open && "rotate-180")}
               aria-hidden="true"
             />
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-xs leading-none" dir={dir}>
-                {t.streakCalendar.heading}
-              </span>
-              <WeekDots today={today} strip={streak} />
-            </div>
-            {remaining > 0 && (
-              <span
-                className="text-muted-foreground relative z-10 flex items-center gap-1 text-xs"
-                title={t.streakCalendar.freezesLeft.replace("{n}", String(remaining))}
-              >
-                <Snowflake className="size-3.5 text-sky-500" aria-hidden="true" />
-                <span dir="ltr">{remaining}</span>
-              </span>
-            )}
-          </div>
-        )}
-        {streak && quests && (
-          <span className="bg-border/70 hidden h-8 w-px sm:block" aria-hidden="true" />
-        )}
-        {quests && (
-          <div className="flex min-w-44 flex-1 items-center gap-3">
-            <span
-              className="relative flex size-10 shrink-0 items-center justify-center rounded-full"
-              style={{
-                background: `conic-gradient(var(--primary) ${percent}%, var(--border) 0)`,
-              }}
-              aria-hidden="true"
-            >
-              <span className="bg-card flex size-8 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
-                {quests.allDone ? (
-                  <Check className="text-success size-4" />
-                ) : (
-                  <span dir="ltr">
-                    {done}/{total}
-                  </span>
-                )}
-              </span>
-            </span>
-            <div className="min-w-0">
-              <p className="text-muted-foreground text-xs leading-none" dir={dir}>
-                {t.quests.heading}
-              </p>
-              <p className="mt-1 truncate text-sm font-medium" dir={dir}>
-                {quests.allDone || !nextQuest ? (
-                  t.quests.allDone
-                ) : (
-                  <>
-                    {questTitle(t, nextQuest.type)}
-                    <span className="text-muted-foreground ms-2 text-xs tabular-nums" dir="ltr">
-                      {nextQuest.progress} / {nextQuest.target}
-                    </span>
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          aria-expanded={open}
-          aria-controls={panelId}
-          aria-label={t.quests.heading}
-          className="text-muted-foreground hover:text-foreground hover:bg-muted ms-auto flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors after:absolute after:inset-0 after:rounded-2xl"
-        >
-          <ChevronDown
-            className={cn("size-5 transition-transform", open && "rotate-180")}
-            aria-hidden="true"
-          />
-        </button>
-      </div>
-      {open && (
-        <div id={panelId} className="mt-3 flex flex-col gap-3">
-          <QuestsCard payload={quests} />
-          <StreakStrip today={today} strip={streak} />
+          </button>
         </div>
-      )}
+        {open && (
+          <div id={panelId} className="mt-3 flex flex-col gap-3">
+            {todayMode && quests ? (
+              <TodayTasksPanel payload={quests} />
+            ) : (
+              <QuestsCard payload={quests} />
+            )}
+            <StreakStrip today={today} strip={streak} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

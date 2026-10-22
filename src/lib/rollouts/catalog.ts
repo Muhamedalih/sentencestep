@@ -82,19 +82,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
   todaySession: {
     id: "todaySession",
     audience: "learner",
-    title: "Today's session (new Home)",
+    title: "Today's session (daily tasks)",
     description:
-      "For a signed-in learner who has finished their first lesson (the first step stays as it is), Home becomes ONE card that is also the day's daily quests: a wide card with what they are on and one big button (the whole card is the button, with a soft glow breathing behind it while something is left), and beside it the three tasks with a progress ring and their XP — listen to a passage, write a story, write five words. Each task counts on its own and the learner can stop after any; a finished day offers “Redo today's lessons”. Daily Lessons are no longer on this path (they stay under Choose yourself).",
+      "Home keeps its layout; only the daily quests box changes. Its three quests become Today's session, always the same shape — listen to a passage, write a story, write five words — each tied to a specific passage, story or word round picked from the learner's own level. The box keeps the quests look (ring, XP, a progress bar per task), the task in progress opens with its own big start button, every row is a link into its lesson, a soft glow breathes around the box while something is left and it opens by itself, and a finished day offers “Redo today's lessons”. Daily Lessons are not suggested by the tasks (they stay in their section).",
     notes: [
-      "The three tasks ARE the learner's daily quests while this is open: the same quests table, XP and progress events — the passage-parts quest, “finish a lesson” (1 story) and “master words” (5) — dealt next to any random quests the day already had. The XP and targets are the ones set on the Features page for those quest types.",
+      "The three tasks ARE the learner's daily quests while this is open: the same quests table, XP and progress events — the passage-parts quest, “finish a lesson” (1 story) and “master words” (5) — dealt next to any random quests the day already had (those are hidden on Home). The XP and targets are the ones set on the Features page for those quest types, and that page's Daily quests switch must be on.",
       "A story finished with 90% accuracy or more earns a star (shown on the task and on the story's done screen; no extra XP yet).",
       "Signed-in learners only for now: a guest keeps the current Home and lesson ending.",
       "The words step is five words: important review words first (target words of their lessons and stories, weak Words-section words, typing mistakes that are real vocabulary — never “and”, “into” or contractions), the rest new words from the Words section; “5 more words” starts another round.",
-      "Anything a free learner can't open is simply skipped: Today shows no lock or wall of its own.",
+      "Anything a free learner can't open is simply skipped: Today shows no lock or wall of its own, and a task with nothing open is left out of the ring.",
       "The learner's chosen level is a floor for the passage, the story and the new words.",
       "Times are estimates: a passage from its length, a story from the learner's own typing speed.",
-      "Reaching the finish screen is recorded in daily_sessions (no XP); the week dots read it with finished lessons and passages. The reminder card on it needs the “Remind me tomorrow” email to be open too.",
-      "The old Home is still reachable at /learn?classic=1.",
+      "Reaching the finish screen after the words is recorded in daily_sessions (no XP). The reminder card on it needs the “Remind me tomorrow” email to be open too.",
     ],
   },
 };

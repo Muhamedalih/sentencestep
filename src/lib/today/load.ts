@@ -1,16 +1,19 @@
+import { cookies } from "next/headers";
+
+import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessonSummaries } from "@/lib/content";
 import type { EffectiveFeatures } from "@/lib/features/config";
-import { localISODateInTimeZone } from "@/lib/features/learner-date";
-import { dealDailyQuests } from "@/lib/features/quest-service";
-import type { DailyQuest } from "@/lib/features/quests";
+import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
+import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
 import { cefrForLevel, pickNextWordBlock } from "@/lib/home-plan/plan";
+import { getLocale } from "@/lib/i18n/get-locale";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import type { PassageProgress, PassageSummary } from "@/lib/passages/types";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { ProgressState } from "@/lib/progress/types";
-import { WEEK_TARGET_DAYS } from "@/lib/session-end/summary";
 import { fetchLessonSentenceStats } from "@/lib/supabase/queries/content";
 import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
 import { fetchDueVocabularyRecallCount } from "@/lib/supabase/queries/vocabulary-recall";
@@ -21,9 +24,8 @@ import { pickPassage, pickStory } from "./next";
 import { WORDS_MINUTES, estimateStoryMinutes, medianWpm, planToday } from "./plan";
 import type { StepKind, StepPlan } from "./plan";
 import { fetchRecentWpm, fetchSessionDatesSince } from "./queries";
-import { questsByStep } from "./quests";
-import { weekDates, weekDots, weekStartFor, weekdayInitial } from "./week";
-import type { WeekDot } from "./week";
+import { TODAY_QUEST_SLOT_BASE, questsByStep } from "./quests";
+import { weekDates, weekStartFor } from "./week";
 
 export interface TodayStepData extends StepPlan {
   /** English title of the passage or story ("" for the words step). */
@@ -36,24 +38,8 @@ export interface TodayStepData extends StepPlan {
   href: string;
   /** Where "do it again" goes for a step finished today (the passage or story it was), or null. */
   redoHref: string | null;
-  /** The day's quest behind this step (its progress and XP), or null when quests are off for this learner. */
-  quest: { progress: number; target: number; xp: number; completed: boolean } | null;
   /** The story's typing accuracy (0-1) when it was finished today, else null. */
   accuracy: number | null;
-}
-
-export interface TodayData {
-  steps: TodayStepData[];
-  current: StepKind | null;
-  remainingMinutes: number;
-  totalMinutes: number;
-  /** Every step that exists is done (or the finish screen was reached today). */
-  allDone: boolean;
-  /** XP of the day's quests: earned so far and in all (both 0 when quests are off). */
-  earnedXp: number;
-  totalXp: number;
-  week: { dots: WeekDot[]; done: number; target: number };
-  dateLabel: string;
 }
 
 async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Promise<T> {
@@ -62,21 +48,6 @@ async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Pro
   } catch (error) {
     console.error(`[today] ${label} failed`, error);
     return fallback;
-  }
-}
-
-/** "Wednesday 21 October" in the learner's language and zone; Arabic keeps Western digits like the rest of the app. */
-function formatDate(locale: SupportLocale | null, timeZone: string | undefined): string {
-  const tag = locale === "ar" ? "ar-u-nu-latn" : (locale ?? "en");
-  try {
-    return new Intl.DateTimeFormat(tag, {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      ...(timeZone ? { timeZone } : {}),
-    }).format(new Date());
-  } catch {
-    return "";
   }
 }
 
@@ -127,42 +98,43 @@ async function readPicks(args: {
   };
 }
 
+export interface TodayStepsData {
+  steps: TodayStepData[];
+  current: StepKind | null;
+  allDone: boolean;
+}
+
 /**
- * Everything Today needs for one signed-in learner. Each read is quiet on failure (a missing table
- * or a slow read leaves that part empty instead of breaking Home). The learner's finished lessons
- * come from the progress Home already loads; what is added is the passage list and progress, the
- * word groups and the learner's finished words, how many review words are due, their typing speed
- * (for an honest time estimate) and the days they finished a session.
+ * Today's three steps for one signed-in learner: which passage, story and words are open to them,
+ * what was already finished today, how long each takes and where each one goes. Each read is quiet
+ * on failure (a missing table or a slow read leaves that part empty instead of breaking Home). The
+ * learner's finished lessons come from the progress passed in; what is added is the passage list and
+ * progress, the word groups and the learner's finished words, how many review words are due, their
+ * typing speed (for an honest time estimate) and whether they reached the finish screen today. The
+ * day's quests (already dealt) are merged in: a quest completed in the database counts as done.
  */
-export async function loadToday(args: {
+export async function loadTodaySteps(args: {
   userId: string;
   locale: SupportLocale | null;
   timeZone: string | undefined;
+  todayISO: string;
   progress: ProgressState | undefined;
   isPremium: boolean;
   passagesEnabled: boolean;
-  features: EffectiveFeatures;
-  weakWordCount?: Promise<number>;
-}): Promise<TodayData> {
-  const { userId, locale, timeZone, progress } = args;
-  const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-  const weekStart = weekStartFor(locale ?? "en");
-  const thisWeek = weekDates(todayISO, weekStart);
+  quests: readonly DailyQuest[];
+}): Promise<TodayStepsData> {
+  const { userId, locale, timeZone, todayISO, progress } = args;
   const completions = progress?.completions ?? [];
   const storyCompletions = completions.filter((entry) => entry.mode === "stories");
   const dayOf = (iso: string) =>
     localISODateInTimeZone(timeZone, new Date(iso)) ?? iso.slice(0, 10);
+  const questOf = questsByStep(args.quests);
 
-  const [storiesUnits, sessionDates, wpmValues, questRows] = await Promise.all([
+  const [storiesUnits, sessionDates, wpmValues] = await Promise.all([
     quiet("stories", () => getLessonSummaries("stories", locale ?? undefined), [] as LessonUnit[]),
-    quiet("session dates", () => fetchSessionDatesSince(userId, thisWeek[0]!), [] as string[]),
+    quiet("session dates", () => fetchSessionDatesSince(userId, todayISO), [] as string[]),
     quiet("typing speed", () => fetchRecentWpm(userId), [] as (number | null)[]),
-    // The day's three steps are its quests while this is open (dealt here if nothing dealt them yet).
-    args.features.quests.enabled
-      ? quiet("quests", () => dealDailyQuests(userId, todayISO, args.features), [] as DailyQuest[])
-      : ([] as DailyQuest[]),
   ]);
-  const questOf = questsByStep(questRows);
   const picks = await readPicks({
     userId,
     locale,
@@ -171,7 +143,6 @@ export async function loadToday(args: {
     passagesEnabled: args.passagesEnabled,
     storiesUnits,
     completedStoryIds: storyCompletions.map((entry) => entry.lessonId),
-    weakWordCount: args.weakWordCount,
   });
 
   // What was finished today (the latest of each), which is what "do it again" points at.
@@ -224,12 +195,6 @@ export async function loadToday(args: {
     sessionDone,
   );
 
-  const questData = (kind: StepKind) => {
-    const quest = questOf[kind];
-    return quest
-      ? { progress: quest.progress, target: quest.target, xp: quest.xp, completed: quest.completed }
-      : null;
-  };
   const supportOf = (arabic: string | undefined) => (locale === "ar" && arabic ? arabic : null);
   const detail: Record<StepKind, Omit<TodayStepData, keyof StepPlan>> = {
     listen: {
@@ -238,7 +203,6 @@ export async function loadToday(args: {
       levelCode: listenShown?.level ?? null,
       href: picks.passage ? `/learn/passages/${picks.passage.id}?today=1` : "/learn/passages",
       redoHref: listenDoneSummary ? `/learn/passages/${listenDoneSummary.id}` : null,
-      quest: questData("listen"),
       accuracy: null,
     },
     story: {
@@ -247,7 +211,6 @@ export async function loadToday(args: {
       levelCode: storyShown ? cefrForLevel(storyShown.level) : null,
       href: picks.story ? `/learn/stories/${picks.story.id}?today=1` : "/learn/stories",
       redoHref: storyDoneUnit ? `/learn/stories/${storyDoneUnit.id}` : null,
-      quest: questData("story"),
       accuracy: storyToday?.accuracy ?? null,
     },
     words: {
@@ -256,34 +219,79 @@ export async function loadToday(args: {
       levelCode: null,
       href: "/learn/today/words",
       redoHref: "/learn/today/words",
-      quest: questData("words"),
       accuracy: null,
     },
   };
 
-  const activeDays = new Set<string>(sessionDates);
-  for (const entry of completions) activeDays.add(dayOf(entry.completedAt));
-  for (const entry of picks.passageProgress) {
-    if (entry.completedAt) activeDays.add(dayOf(entry.completedAt));
-  }
-  const dots = weekDots(activeDays, todayISO, weekStart, (iso) =>
-    weekdayInitial(iso, locale ?? "en"),
-  );
-
   return {
     steps: plan.steps.map((step) => ({ ...step, ...detail[step.kind] })),
     current: plan.current,
-    remainingMinutes: plan.remainingMinutes,
-    totalMinutes: plan.totalMinutes,
     allDone: plan.allDone,
-    earnedXp: plan.steps.reduce(
-      (sum, step) => sum + (questOf[step.kind]?.completed ? questOf[step.kind]!.xp : 0),
-      0,
-    ),
-    totalXp: plan.steps.reduce((sum, step) => sum + (questOf[step.kind]?.xp ?? 0), 0),
-    week: { dots, done: dots.filter((dot) => dot.on).length, target: WEEK_TARGET_DAYS },
-    dateLabel: formatDate(locale, timeZone),
   };
+}
+
+/**
+ * Ties the day's Today quests (the rows in slots 10-12, see quests.ts) to the specific passage,
+ * story and words they send the learner to, for Home's quests box. A quest whose lesson the learner
+ * already finished today counts as done (even when it was dealt after the lesson, so its XP was not
+ * paid — `paid` says which), and a quest with nothing open to this learner (no passage left, say) is
+ * left out so the ring only counts what can be done. Null when the day has no Today quests; the
+ * quests unchanged (without the tie) when anything fails.
+ */
+export async function enrichTodayQuests(args: {
+  userId: string;
+  todayISO: string;
+  features: EffectiveFeatures;
+  quests: readonly DailyQuest[];
+}): Promise<DailyQuest[] | null> {
+  const todayRows = args.quests.filter((quest) => quest.slot >= TODAY_QUEST_SLOT_BASE);
+  if (todayRows.length === 0) return null;
+  try {
+    const [locale, premium, admin, progress, cookieStore] = await Promise.all([
+      getLocale(),
+      hasPremiumAccess(),
+      isAdmin(),
+      fetchProgressCached(args.todayISO),
+      cookies(),
+    ]);
+    const data = await loadTodaySteps({
+      userId: args.userId,
+      locale,
+      timeZone: cookieStore.get(TIMEZONE_COOKIE)?.value,
+      todayISO: args.todayISO,
+      progress,
+      isPremium: premium || admin,
+      passagesEnabled: args.features.passages.enabled,
+      quests: todayRows,
+    });
+    const byStep = questsByStep(todayRows);
+    const enriched: DailyQuest[] = [];
+    for (const step of data.steps) {
+      const quest = byStep[step.kind];
+      if (!quest) continue;
+      const info: TodayQuestInfo = {
+        kind: step.kind,
+        title: step.title,
+        supportTitle: step.supportTitle,
+        levelCode: step.levelCode,
+        minutes: step.minutes,
+        href: step.href,
+        redoHref: step.redoHref,
+        accuracy: step.accuracy,
+        paid: quest.completed,
+      };
+      enriched.push({
+        ...quest,
+        completed: quest.completed || step.done,
+        progress: step.done ? quest.target : quest.progress,
+        today: info,
+      });
+    }
+    return enriched.length > 0 ? enriched : null;
+  } catch (error) {
+    console.error("[today] enrichTodayQuests failed", error);
+    return [...todayRows];
+  }
 }
 
 /**

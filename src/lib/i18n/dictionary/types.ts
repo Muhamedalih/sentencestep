@@ -1423,13 +1423,6 @@ export interface Dictionary {
   };
   /** Home's "Today's session" (src/components/today): the three steps, their buttons, the done card and the finish screen's extra button. `{n}` is a count, `{done}`/`{total}`/`{target}` counts of steps or days, `{steps}` step names, `{time}` a duration. */
   today: {
-    heading: string;
-    weekSessions: string;
-    stepListen: string;
-    stepStory: string;
-    stepWords: string;
-    stepOf: string;
-    titleWords: string;
     whyListen: string;
     whyStory: string;
     whyWords: string;
@@ -1437,16 +1430,8 @@ export interface Dictionary {
     startStory: string;
     startWords: string;
     minutes: string;
-    timeLeft: string;
-    timeAll: string;
-    progressToday: string;
-    nextUp: string;
-    chooseYourself: string;
     doneHeading: string;
-    doneBody: string;
     redo: string;
-    idleHeading: string;
-    idleBody: string;
     stepDoneListen: string;
     stepDoneStory: string;
     continueStory: string;
