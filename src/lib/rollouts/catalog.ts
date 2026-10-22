@@ -89,6 +89,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The three tasks ARE the learner's daily quests while this is open: the same quests table, XP and progress events — the passage-parts quest, “finish a lesson” (1 story) and “master words” (5) — dealt next to any random quests the day already had (those are hidden on Home). The XP and targets are the ones set on the Features page for those quest types, and that page's Daily quests switch must be on.",
       "A story finished with 90% accuracy or more earns a star (shown on the task and on the story's done screen; no extra XP yet).",
       "Signed-in learners only for now: a guest keeps the current Home and lesson ending.",
+      "To test it, choose “A share of learners” (say 50%): those accounts get the new box, the rest keep the usual quests, and the two groups are compared on coming back. Which group an account is in comes from the account id and this feature's name, so it never changes.",
       "The words step is five words: important review words first (target words of their lessons and stories, weak Words-section words, typing mistakes that are real vocabulary — never “and”, “into” or contractions), the rest new words from the Words section; “5 more words” starts another round.",
       "Anything a free learner can't open is simply skipped: Today shows no lock or wall of its own, and a task with nothing open is left out of the ring.",
       "The learner's chosen level is a floor for the passage, the story and the new words.",

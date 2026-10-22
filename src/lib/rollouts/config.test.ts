@@ -8,6 +8,8 @@ import {
   defaultRolloutConfig,
   evaluateRollouts,
   isRolloutOpen,
+  learnerSharePercent,
+  rolloutBucket,
   normalizeEmail,
   parseEmailList,
   sanitizeRolloutConfig,
@@ -16,11 +18,26 @@ import {
 } from "./config";
 import type { RolloutEntry, RolloutViewer } from "./config";
 
-const guest: RolloutViewer = { isAdmin: false, email: null, preview: false };
-const learner: RolloutViewer = { isAdmin: false, email: "Sara@Example.com", preview: false };
-const stranger: RolloutViewer = { isAdmin: false, email: "other@example.com", preview: false };
-const admin: RolloutViewer = { isAdmin: true, email: "boss@example.com", preview: false };
-const previewing: RolloutViewer = { isAdmin: false, email: null, preview: true };
+const guest: RolloutViewer = { isAdmin: false, userId: null, email: null, preview: false };
+const learner: RolloutViewer = {
+  isAdmin: false,
+  userId: "user-sara",
+  email: "Sara@Example.com",
+  preview: false,
+};
+const stranger: RolloutViewer = {
+  isAdmin: false,
+  userId: "user-other",
+  email: "other@example.com",
+  preview: false,
+};
+const admin: RolloutViewer = {
+  isAdmin: true,
+  userId: "user-boss",
+  email: "boss@example.com",
+  preview: false,
+};
+const previewing: RolloutViewer = { isAdmin: false, userId: null, email: null, preview: true };
 
 function entry(overrides: Partial<RolloutEntry> = {}): RolloutEntry {
   return { mode: "admin", percent: 100, emails: [], ...overrides };
@@ -115,29 +132,29 @@ test("sanitizeRolloutConfig: a feature with no row stays Admins only, unknown fe
 
 test("isRolloutOpen: Admins only opens for admins and an admin's preview browser, nobody else", () => {
   const closed = entry({ mode: "admin", emails: ["sara@example.com"] });
-  assert.equal(isRolloutOpen(closed, admin), true);
-  assert.equal(isRolloutOpen(closed, previewing), true);
+  assert.equal(isRolloutOpen(closed, admin, "sessionEnd"), true);
+  assert.equal(isRolloutOpen(closed, previewing, "sessionEnd"), true);
   assert.equal(
-    isRolloutOpen(closed, learner),
+    isRolloutOpen(closed, learner, "sessionEnd"),
     false,
     "a listed email does nothing outside the emails mode",
   );
-  assert.equal(isRolloutOpen(closed, guest), false);
+  assert.equal(isRolloutOpen(closed, guest, "sessionEnd"), false);
 });
 
 test("isRolloutOpen: Specific people opens for the listed emails (any letter case) plus admins", () => {
   const listed = entry({ mode: "emails", emails: ["sara@example.com"] });
-  assert.equal(isRolloutOpen(listed, learner), true);
-  assert.equal(isRolloutOpen(listed, stranger), false);
-  assert.equal(isRolloutOpen(listed, guest), false);
-  assert.equal(isRolloutOpen(listed, admin), true);
-  assert.equal(isRolloutOpen(listed, previewing), true);
+  assert.equal(isRolloutOpen(listed, learner, "sessionEnd"), true);
+  assert.equal(isRolloutOpen(listed, stranger, "sessionEnd"), false);
+  assert.equal(isRolloutOpen(listed, guest, "sessionEnd"), false);
+  assert.equal(isRolloutOpen(listed, admin, "sessionEnd"), true);
+  assert.equal(isRolloutOpen(listed, previewing, "sessionEnd"), true);
 });
 
 test("isRolloutOpen: Everyone opens for everyone, guests included", () => {
   const open = entry({ mode: "everyone" });
   for (const viewer of [guest, learner, stranger, admin, previewing]) {
-    assert.equal(isRolloutOpen(open, viewer), true);
+    assert.equal(isRolloutOpen(open, viewer, "sessionEnd"), true);
   }
 });
 
@@ -165,4 +182,70 @@ test("visitorShare: 0 unless open to everyone, then the chosen percent", () => {
   assert.equal(visitorShare(entry({ mode: "emails", percent: 50 })), 0);
   assert.equal(visitorShare(entry({ mode: "everyone", percent: 50 })), 50);
   assert.equal(visitorShare(entry({ mode: "everyone", percent: 100 })), 100);
+});
+
+function viewerOf(index: number): RolloutViewer {
+  return { isAdmin: false, userId: `user-${index}`, email: null, preview: false };
+}
+
+test("a share of learners: stable per account, roughly the chosen size, admins always, guests never", () => {
+  const share = entry({ mode: "everyone", percent: 30 });
+  let inside = 0;
+  for (let index = 0; index < 4000; index++) {
+    const viewer = viewerOf(index);
+    const open = isRolloutOpen(share, viewer, "todaySession");
+    assert.equal(
+      open,
+      isRolloutOpen(share, viewer, "todaySession"),
+      "the same account, the same answer",
+    );
+    assert.equal(open, rolloutBucket(viewer.userId!, "todaySession") < 30);
+    if (open) inside++;
+  }
+  assert.ok(inside > 1080 && inside < 1320, `30% of 4000 is about 1200, got ${inside}`);
+  assert.equal(isRolloutOpen(share, admin, "todaySession"), true);
+  assert.equal(isRolloutOpen(share, previewing, "todaySession"), true);
+  assert.equal(isRolloutOpen(share, guest, "todaySession"), false);
+});
+
+test("a share is nested (a bigger share keeps everyone a smaller one had) and independent between features", () => {
+  const small = entry({ mode: "everyone", percent: 20 });
+  const big = entry({ mode: "everyone", percent: 60 });
+  let both = 0;
+  let today = 0;
+  let ending = 0;
+  for (let index = 0; index < 4000; index++) {
+    const viewer = viewerOf(index);
+    if (isRolloutOpen(small, viewer, "todaySession")) {
+      assert.equal(isRolloutOpen(big, viewer, "todaySession"), true);
+    }
+    const a = rolloutBucket(viewer.userId!, "todaySession") < 50;
+    const b = rolloutBucket(viewer.userId!, "sessionEnd") < 50;
+    if (a) today++;
+    if (b) ending++;
+    if (a && b) both++;
+  }
+  const expected = (today * ending) / 4000;
+  assert.ok(
+    Math.abs(both - expected) < 120,
+    `two 50% shares overlap about ${expected}, got ${both}`,
+  );
+});
+
+test("100% is everybody, guests included, and a share is not an Admins-only setting", () => {
+  const all = entry({ mode: "everyone", percent: 100 });
+  assert.equal(learnerSharePercent("todaySession", all), null);
+  assert.equal(isRolloutOpen(all, guest, "todaySession"), true);
+  assert.equal(learnerSharePercent("todaySession", entry({ mode: "everyone", percent: 40 })), 40);
+  assert.equal(learnerSharePercent("todaySession", entry({ mode: "admin", percent: 40 })), null);
+  assert.equal(
+    isRolloutOpen(entry({ mode: "admin", percent: 40 }), viewerOf(1), "todaySession"),
+    false,
+  );
+});
+
+test("a visitor-aimed feature keeps deciding its share in the browser: the server says yes to everyone", () => {
+  const share = entry({ mode: "everyone", percent: 10 });
+  assert.equal(learnerSharePercent("shortFirstRun", share), null);
+  assert.equal(isRolloutOpen(share, guest, "shortFirstRun"), true);
 });

@@ -50,7 +50,7 @@ export async function saveRolloutAction(input: {
 
   const percent = Number(input.percent);
   if (!Number.isInteger(percent) || percent < 1 || percent > 100) {
-    return { error: "The share of visitors must be a whole number from 1 to 100." };
+    return { error: "The share must be a whole number from 1 to 100." };
   }
 
   const parsed = parseEmailList(typeof input.emailsText === "string" ? input.emailsText : "");

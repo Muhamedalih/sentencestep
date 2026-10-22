@@ -7,7 +7,9 @@ import type { RolloutId } from "@/lib/rollouts/catalog";
  *
  *   admin     only admins (and a browser an admin switched preview on for) — where every feature starts
  *   emails    admins, plus the people whose email is on the list
- *   everyone  everybody; for a feature aimed at first-time visitors, `percent` of them
+ *   everyone  everybody — or, with `percent` below 100, a SHARE: of first-time visitors for a feature
+ *             aimed at them (decided in their browser), of signed-in learners for any other (decided
+ *             by a stable hash of their account, see rolloutBucket). Admins always have it.
  */
 export type RolloutMode = "admin" | "emails" | "everyone";
 
@@ -19,7 +21,7 @@ export function isRolloutMode(value: unknown): value is RolloutMode {
 
 export interface RolloutEntry {
   mode: RolloutMode;
-  /** Only for a feature aimed at first-time visitors, and only in "everyone": the share of them (1-100) it is given to. */
+  /** Only in "everyone": the share (1-100) it is given to — of first-time visitors for a feature aimed at them, of signed-in learners for the rest. 100 is everybody, guests included. */
   percent: number;
   /** Lowercase, trimmed, unique. Only read in "emails" mode (the list is kept when the mode changes, so switching back loses nothing). */
   emails: string[];
@@ -116,16 +118,45 @@ export function sanitizeRolloutConfig(rows: unknown): RolloutConfig {
 
 export interface RolloutViewer {
   isAdmin: boolean;
+  /** The signed-in account's id, or null for a guest — what a share of learners is decided on. */
+  userId: string | null;
   /** The signed-in account's email, or null for a guest. */
   email: string | null;
   /** An admin switched preview on for this browser (see preview.ts): it sees everything, signed in or not. */
   preview: boolean;
 }
 
-/** Whether this viewer gets the feature. For a feature aimed at first-time visitors "everyone" is true here but the share is decided in their browser (see visitorShare). */
-export function isRolloutOpen(entry: RolloutEntry, viewer: RolloutViewer): boolean {
-  if (entry.mode === "everyone") return true;
+/**
+ * Which of 100 equal groups a signed-in learner falls in for one feature: FNV-1a of the feature name
+ * and the account id, modulo 100. Stable (the same learner is always in the same group), spread
+ * evenly, and independent between features, so a test of one feature never lines up with another.
+ * A share of N% is the learners in groups 0 to N-1 — which is also how a result is read later: the
+ * same formula, run on the accounts, tells which arm each one was in.
+ */
+export function rolloutBucket(userId: string, id: RolloutId): number {
+  const text = `${id}:${userId}`;
+  let value = 0x811c9dc5;
+  for (let index = 0; index < text.length; index++) {
+    value ^= text.charCodeAt(index);
+    value = Math.imul(value, 0x01000193);
+  }
+  return (value >>> 0) % 100;
+}
+
+/** The share of signed-in learners a learner-aimed feature is given to, or null when it is not a share (not "everyone", or all of them). */
+export function learnerSharePercent(id: RolloutId, entry: RolloutEntry): number | null {
+  if (ROLLOUTS[id].audience !== "learner" || entry.mode !== "everyone") return null;
+  return entry.percent < 100 ? entry.percent : null;
+}
+
+/** Whether this viewer gets the feature. For a feature aimed at first-time visitors "everyone" is true here but the share is decided in their browser (see visitorShare); for a learner-aimed one a share is decided here, on the account. */
+export function isRolloutOpen(entry: RolloutEntry, viewer: RolloutViewer, id: RolloutId): boolean {
   if (viewer.isAdmin || viewer.preview) return true;
+  if (entry.mode === "everyone") {
+    const share = learnerSharePercent(id, entry);
+    if (share === null) return true;
+    return viewer.userId !== null && rolloutBucket(viewer.userId, id) < share;
+  }
   if (entry.mode === "emails" && viewer.email) {
     const email = normalizeEmail(viewer.email);
     return email !== null && entry.emails.includes(email);
@@ -143,7 +174,7 @@ export function evaluateRollouts(
   viewer: RolloutViewer,
 ): Record<RolloutId, boolean> {
   const result = {} as Record<RolloutId, boolean>;
-  for (const id of ROLLOUT_IDS) result[id] = isRolloutOpen(config[id], viewer);
+  for (const id of ROLLOUT_IDS) result[id] = isRolloutOpen(config[id], viewer, id);
   return result;
 }
 

@@ -8,13 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { ROLLOUT_IDS, ROLLOUTS } from "@/lib/rollouts/catalog";
 import type { RolloutDef } from "@/lib/rollouts/catalog";
+import { learnerSharePercent } from "@/lib/rollouts/config";
 import type { RolloutConfig, RolloutEntry, RolloutMode } from "@/lib/rollouts/config";
 import { saveRolloutAction, setRolloutPreviewAction } from "@/lib/rollouts/actions";
 import { cn } from "@/lib/utils";
 
 type Message = { kind: "success" | "error"; text: string } | null;
 
-function modeOptions(def: RolloutDef): { value: RolloutMode; label: string; hint: string }[] {
+/** What the access buttons offer: the three stored modes, plus "share" — a percentage of learners, stored as "everyone" with a share below 100. */
+type UiMode = RolloutMode | "share";
+
+function modeOptions(def: RolloutDef): { value: UiMode; label: string; hint: string }[] {
   const visitor = def.audience === "visitor";
   return [
     { value: "admin", label: "Admins only", hint: "Nobody but admins sees it" },
@@ -26,6 +30,11 @@ function modeOptions(def: RolloutDef): { value: RolloutMode; label: string; hint
             label: "Specific people",
             hint: "Admins, plus the people whose email you list",
           },
+          {
+            value: "share" as const,
+            label: "A share of learners",
+            hint: "A percentage of signed-in learners (the same ones every time), plus admins — to test it against the rest",
+          },
         ]),
     {
       value: "everyone",
@@ -35,9 +44,10 @@ function modeOptions(def: RolloutDef): { value: RolloutMode; label: string; hint
   ];
 }
 
-function statusLabel(def: RolloutDef, mode: RolloutMode, people: number, percent: number): string {
+function statusLabel(def: RolloutDef, mode: UiMode, people: number, percent: number): string {
   if (mode === "admin") return "Admins only";
   if (mode === "emails") return `${people} ${people === 1 ? "person" : "people"}`;
+  if (mode === "share") return `${percent}% of learners`;
   return def.audience === "visitor" ? `${percent}% of new visitors` : "Everyone";
 }
 
@@ -52,19 +62,33 @@ function RolloutCard({
   serverNote?: string;
   disabled: boolean;
 }) {
-  const [mode, setMode] = useState<RolloutMode>(initial.mode);
+  const initialMode: UiMode =
+    learnerSharePercent(def.id, initial) !== null ? "share" : initial.mode;
+  const [mode, setMode] = useState<UiMode>(initialMode);
   const [percent, setPercent] = useState(initial.percent);
   const [emailsText, setEmailsText] = useState(initial.emails.join("\n"));
   const [savedStatus, setSavedStatus] = useState(
-    statusLabel(def, initial.mode, initial.emails.length, initial.percent),
+    statusLabel(def, initialMode, initial.emails.length, initial.percent),
   );
   const [message, setMessage] = useState<Message>(null);
   const [isPending, startTransition] = useTransition();
 
+  function chooseMode(next: UiMode) {
+    setMode(next);
+    // A share starts at half: 100 would be everybody.
+    if (next === "share" && percent >= 100) setPercent(50);
+  }
+
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await saveRolloutAction({ feature: def.id, mode, percent, emailsText });
+      // A share of learners is stored as "everyone" with the share; "Everyone" for learners is 100.
+      const result = await saveRolloutAction({
+        feature: def.id,
+        mode: mode === "share" ? "everyone" : mode,
+        percent: mode === "everyone" && def.audience === "learner" ? 100 : percent,
+        emailsText,
+      });
       if (result.error) {
         setMessage({ kind: "error", text: result.error });
         return;
@@ -105,7 +129,7 @@ function RolloutCard({
               role="radio"
               aria-checked={mode === option.value}
               title={option.hint}
-              onClick={() => setMode(option.value)}
+              onClick={() => chooseMode(option.value)}
               className={cn(
                 "rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors",
                 mode === option.value
@@ -136,9 +160,11 @@ function RolloutCard({
           </label>
         )}
 
-        {mode === "everyone" && def.audience === "visitor" && (
+        {((mode === "everyone" && def.audience === "visitor") || mode === "share") && (
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Share of new visitors (%)</span>
+            <span className="font-medium">
+              {mode === "share" ? "Share of learners (%)" : "Share of new visitors (%)"}
+            </span>
             <Input
               type="number"
               min={1}
@@ -150,6 +176,13 @@ function RolloutCard({
               }}
               className="w-28"
             />
+            {mode === "share" && (
+              <span className="text-muted-foreground max-w-xl text-xs">
+                Decided on the account, so it is the same learners every time: someone in a 30%
+                share stays in a 50% one. Learners outside it keep the usual Home. Admins always
+                have it.
+              </span>
+            )}
           </label>
         )}
 

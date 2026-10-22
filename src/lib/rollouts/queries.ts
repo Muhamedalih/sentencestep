@@ -105,7 +105,12 @@ export const getRolloutAccess = cache(async (): Promise<Record<RolloutId, boolea
       isAdmin().catch(() => false),
       previewActive(),
     ]);
-    return evaluateRollouts(config, { isAdmin: admin, email: user?.email || null, preview });
+    return evaluateRollouts(config, {
+      isAdmin: admin,
+      email: user?.email || null,
+      userId: user?.id ?? null,
+      preview,
+    });
   } catch (error) {
     console.error("[rollouts] getRolloutAccess failed", error);
     return closedRollouts();
