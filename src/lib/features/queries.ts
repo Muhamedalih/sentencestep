@@ -10,6 +10,7 @@ import {
   sanitizeFeatureConfig,
 } from "@/lib/features/config";
 import type { EffectiveFeatures, FeatureConfig, FeatureId } from "@/lib/features/config";
+import { withRolloutDependencies } from "@/lib/rollouts/config";
 import { getRolloutAccess } from "@/lib/rollouts/queries";
 import { reminderSendsPerRun } from "@/lib/session-end/reminder";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -133,7 +134,7 @@ async function resolveEffectiveFeatures(): Promise<EffectiveFeatures> {
  */
 export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> => {
   const features = await resolveEffectiveFeatures();
-  const access = await getRolloutAccess();
+  const access = withRolloutDependencies(await getRolloutAccess());
   const reminders =
     access.sessionReminders &&
     access.sessionEnd &&

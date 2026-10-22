@@ -11,6 +11,7 @@ export const ROLLOUT_IDS = [
   "sessionReminders",
   "shortFirstRun",
   "todaySession",
+  "sentenceBank",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -95,6 +96,21 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The learner's chosen level is a floor for the passage, the story and the new words.",
       "Times are estimates: a passage from its length, a story from the learner's own typing speed.",
       "Reaching the finish screen after the words is recorded in daily_sessions (no XP). The reminder card on it needs the “Remind me tomorrow” email to be open too.",
+    ],
+  },
+  sentenceBank: {
+    id: "sentenceBank",
+    audience: "learner",
+    title: "Sentence bank (remember what you typed)",
+    description:
+      "The site remembers the sentences a learner typed in lessons and stories and brings a few back with their text hidden, on the same 1 / 3 / 7 / 16 / 30-day schedule as Word Lists words: a miss comes back tomorrow, a clean answer waits longer. Inside Today's tasks box it adds a fourth row, “Remember 3 sentences”, on the days something is ready (never an empty row, and never a count of what is waiting), and once a week a ten-sentence check ends with one honest line: how many the learner still remembers.",
+    notes: [
+      "Being built in stages: opening this changes nothing visible until the review screens ship.",
+      "Needs Today's session to be open for the same people: it lives inside that box, and stays closed while Today is closed.",
+      "Needs the sentence_mastery table (migration 20250347000000); until it is applied no sentence is asked back and nothing is recorded.",
+      "Three sentences a day at most, from lessons and stories finished on an earlier day, none shorter than four words and at most two from the same lesson.",
+      "Sentences are asked by how well they are remembered: with the sound and one or two words missing, from the sound alone, or from the meaning in the learner's language. Sound is only ever a clip that already exists; otherwise the sentence is asked from its meaning.",
+      "To test it, choose “A share of learners”: it only reaches learners who also have Today's session, so read Today's own test before opening this one.",
     ],
   },
 };

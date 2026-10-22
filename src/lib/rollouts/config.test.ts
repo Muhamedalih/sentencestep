@@ -15,6 +15,7 @@ import {
   sanitizeRolloutConfig,
   sanitizeRolloutEntry,
   visitorShare,
+  withRolloutDependencies,
 } from "./config";
 import type { RolloutEntry, RolloutViewer } from "./config";
 
@@ -160,21 +161,37 @@ test("isRolloutOpen: Everyone opens for everyone, guests included", () => {
 
 test("evaluateRollouts: default config opens everything for admins only", () => {
   const config = defaultRolloutConfig();
-  assert.deepEqual(Object.values(evaluateRollouts(config, guest)), [
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
-  assert.deepEqual(Object.values(evaluateRollouts(config, admin)), [true, true, true, true, true]);
+  assert.deepEqual(
+    Object.values(evaluateRollouts(config, guest)),
+    ROLLOUT_IDS.map(() => false),
+  );
+  assert.deepEqual(
+    Object.values(evaluateRollouts(config, admin)),
+    ROLLOUT_IDS.map(() => true),
+  );
   assert.deepEqual(closedRollouts(), {
     levelFloor: false,
     sessionEnd: false,
     sessionReminders: false,
     shortFirstRun: false,
     todaySession: false,
+    sentenceBank: false,
   });
+});
+
+test("the sentence bank lives inside Today's box: it is never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).sentenceBank, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).sentenceBank, false);
+  assert.equal(withRolloutDependencies({ ...open, sentenceBank: false }).sentenceBank, false);
+  // Nothing else is touched, and the answer it was given is not changed.
+  const before = { ...open, todaySession: false };
+  const after = withRolloutDependencies(before);
+  assert.deepEqual({ ...after, sentenceBank: true }, { ...before, sentenceBank: true });
+  assert.equal(before.sentenceBank, true);
+  // A plain learner has neither on the default settings.
+  const learnerAccess = evaluateRollouts(defaultRolloutConfig(), learner);
+  assert.equal(withRolloutDependencies(learnerAccess).sentenceBank, false);
 });
 
 test("visitorShare: 0 unless open to everyone, then the chosen percent", () => {

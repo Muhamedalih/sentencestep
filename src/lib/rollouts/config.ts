@@ -178,6 +178,17 @@ export function evaluateRollouts(
   return result;
 }
 
+/**
+ * Features that live INSIDE another one and so are never open without it, whatever their own
+ * setting says: the sentence bank is a row in Today's box, so a learner who does not have Today's
+ * session has no sentence bank either (and a test of Today's session stays a clean test of it).
+ */
+export function withRolloutDependencies(
+  access: Record<RolloutId, boolean>,
+): Record<RolloutId, boolean> {
+  return { ...access, sentenceBank: access.sentenceBank && access.todaySession };
+}
+
 /** Everything closed — what a visitor gets when the settings can't be read. */
 export function closedRollouts(): Record<RolloutId, boolean> {
   const result = {} as Record<RolloutId, boolean>;
