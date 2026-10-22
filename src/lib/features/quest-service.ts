@@ -10,6 +10,7 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import { eligibleQuestTypes, pickDailyQuestTypes } from "@/lib/features/quests";
 import type { DailyQuest } from "@/lib/features/quests";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
+import { TODAY_QUEST_SLOT_BASE, todayQuestRows } from "@/lib/today/quests";
 import { isWeakWord } from "@/lib/weak-words/types";
 
 /**
@@ -50,6 +51,16 @@ export async function dealDailyQuests(
   if (!features.quests.enabled) return [];
 
   const existing = alreadyRead ?? (await fetchDailyQuests(userId, dateISO));
+
+  // "Today's session (new Home)": for a learner it is open for, the day's quests are its three
+  // steps (see src/lib/today/quests.ts), dealt next to whatever random quests the day already has.
+  if (features.rollouts.todaySession) {
+    if (existing.some((quest) => quest.slot >= TODAY_QUEST_SLOT_BASE)) return existing;
+    const dealt = await insertDailyQuests(userId, dateISO, todayQuestRows(features.quests.types));
+    if (dealt.length === 3) return [...existing, ...dealt];
+    return fetchDailyQuests(userId, dateISO);
+  }
+
   if (existing.length > 0) return existing;
 
   const eligible = eligibleQuestTypes(features.quests.types, {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { WordReviewSession } from "@/components/learning/word-review-session";
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import { todayLocalISODate } from "@/lib/progress/streak";
+import { recordTodayWordsAction } from "@/lib/today/actions";
 import { readTodayReview, writeTodayRun } from "@/lib/today/run-state";
 
 /**
@@ -37,6 +38,8 @@ export function TodayWordsRunner({
             total: (before?.total ?? 0) + result.total,
           },
         });
+        // The round is done: tick the day's words task (best-effort, never holds the learner up).
+        void recordTodayWordsAction(today).catch(() => {});
         router.push("/learn/today/end");
       }}
     />

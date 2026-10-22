@@ -84,8 +84,10 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Today's session (new Home)",
     description:
-      "For a signed-in learner who has finished their first lesson (the first step stays as it is), Home becomes one calm screen: three steps — listen to a passage (reading and listening together), type a story, type five words — as a row of tiles whose current icon moves gently, one big button for the step they are on and a plain “Choose yourself” button. Each step counts on its own and the learner can stop after any; a finished day offers “Redo today's lessons”. Daily Lessons are no longer on this path (they stay under Choose yourself).",
+      "For a signed-in learner who has finished their first lesson (the first step stays as it is), Home becomes ONE card that is also the day's daily quests: a wide card with what they are on and one big button (the whole card is the button, with a soft glow breathing behind it while something is left), and beside it the three tasks with a progress ring and their XP — listen to a passage, write a story, write five words. Each task counts on its own and the learner can stop after any; a finished day offers “Redo today's lessons”. Daily Lessons are no longer on this path (they stay under Choose yourself).",
     notes: [
+      "The three tasks ARE the learner's daily quests while this is open: the same quests table, XP and progress events — the passage-parts quest, “finish a lesson” (1 story) and “master words” (5) — dealt next to any random quests the day already had. The XP and targets are the ones set on the Features page for those quest types.",
+      "A story finished with 90% accuracy or more earns a star (shown on the task and on the story's done screen; no extra XP yet).",
       "Signed-in learners only for now: a guest keeps the current Home and lesson ending.",
       "The words step is five words: important review words first (target words of their lessons and stories, weak Words-section words, typing mistakes that are real vocabulary — never “and”, “into” or contractions), the rest new words from the Words section; “5 more words” starts another round.",
       "Anything a free learner can't open is simply skipped: Today shows no lock or wall of its own.",

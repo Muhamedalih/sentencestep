@@ -1453,6 +1453,18 @@ export interface Dictionary {
     continueWords: string;
     stopHere: string;
     extraWords: string;
+    questsHeading: string;
+    taskListen: string;
+    taskStory: string;
+    taskWords: string;
+    xpChip: string;
+    rewardAll: string;
+    rewardEarned: string;
+    starHint: string;
+    starEarned: string;
+    accuracyIs: string;
+    stepDoneStar: string;
+    stepDoneAccuracy: string;
   };
   /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
   streakCalendar: {

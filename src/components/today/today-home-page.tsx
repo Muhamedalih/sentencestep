@@ -58,6 +58,7 @@ export async function TodayHomePage({
       progress,
       isPremium,
       passagesEnabled: features.passages.enabled,
+      features,
       weakWordCount,
     });
     // Only a real, dated paid period can end — the sitewide free-access promotion and the dev

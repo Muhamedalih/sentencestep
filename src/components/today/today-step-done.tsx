@@ -17,10 +17,13 @@ const BUTTON =
  */
 export function TodayStepDone({
   step,
+  accuracy,
   saveStatus,
   onRetrySave,
 }: {
   step: "listen" | "story";
+  /** The story's typing accuracy (0-1): at 90% or more it earns a star. */
+  accuracy?: number;
   saveStatus: CompletionSaveStatus;
   onRetrySave?: () => void;
 }) {
@@ -37,6 +40,19 @@ export function TodayStepDone({
             <span dir="auto">{step === "story" ? copy.stepDoneStory : copy.stepDoneListen}</span>
           </h2>
         </div>
+
+        {step === "story" && accuracy !== undefined && (
+          <p
+            className={`text-sm font-medium ${accuracy >= 0.9 ? "text-success" : "text-muted-foreground"}`}
+          >
+            <span dir="auto">
+              {(accuracy >= 0.9 ? copy.stepDoneStar : copy.stepDoneAccuracy).replace(
+                "{n}",
+                String(Math.round(accuracy * 100)),
+              )}
+            </span>
+          </p>
+        )}
 
         {saveStatus === "saving" && (
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">

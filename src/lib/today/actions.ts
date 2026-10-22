@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { track } from "@/lib/analytics/track";
 import { completeDailySession } from "@/lib/features/daily-session-queries";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { fetchActiveMistakeCount, fetchDueReviewCountBy } from "@/lib/supabase/queries/mistakes";
 import { fetchDueVocabularyRecallCount } from "@/lib/supabase/queries/vocabulary-recall";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -88,5 +89,26 @@ export async function fetchTodayTomorrowAction(
   } catch (error) {
     console.error("[today] fetchTodayTomorrowAction failed", error);
     return { reviewWords: 0 };
+  }
+}
+
+/**
+ * Called once when a round of Today's words step is finished: the learner finished the round, so
+ * the day's "master words" task counts as done, whatever their first-try score was (the words
+ * review already credits each word typed right the first time; this tops it up to the round).
+ * Best-effort, silent on anything that does not check out.
+ */
+export async function recordTodayWordsAction(todayISO: string): Promise<void> {
+  try {
+    if (!ISO_DATE.test(todayISO)) return;
+    const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
+    if (!features.rollouts.todaySession || !features.quests.enabled || !user) return;
+    await recordQuestEventsAndBadges(
+      user.id,
+      [{ type: "masterWords", amount: WORDS_PER_ROUND }],
+      todayISO,
+    );
+  } catch (error) {
+    console.error("[today] recordTodayWordsAction failed", error);
   }
 }

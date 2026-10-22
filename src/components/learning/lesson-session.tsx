@@ -846,7 +846,12 @@ export function LessonSession({
       <div className="flex flex-1 flex-col lg:min-h-0">
         {isComplete && todayStep && !previewMode ? (
           <div key="today-step" className="flex min-h-0 flex-1 flex-col">
-            <TodayStepDone step="story" saveStatus={saveStatus} onRetrySave={retryMarkComplete} />
+            <TodayStepDone
+              step="story"
+              accuracy={finalAccuracy}
+              saveStatus={saveStatus}
+              onRetrySave={retryMarkComplete}
+            />
           </div>
         ) : isComplete && usesSessionEnd ? (
           <div key="session-end" className="flex min-h-0 flex-1 flex-col">
