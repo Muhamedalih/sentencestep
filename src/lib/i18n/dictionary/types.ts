@@ -1458,6 +1458,9 @@ export interface Dictionary {
     whySentences: string;
     sentencesFrom: string;
     rewardAllMore: string;
+    /** The one quiet line about the weekly sentence check at the foot of the tasks box: the check is ready (the box adds the minutes), or its result for the week after it (`{written}`, `{remembered}`, `{asked}` are counts of sentences, `{percent}` a whole percentage). */
+    weeklyDue: string;
+    weeklyResult: string;
   };
   /** The sentence review (src/components/sentence-bank): sentences the learner typed before come back with their text hidden. `{n}`/`{clean}`/`{total}` are counts. */
   sentenceBank: {
@@ -1478,6 +1481,10 @@ export interface Dictionary {
     backToToday: string;
     finishSession: string;
     exit: string;
+    /** The weekly check (ten sentences from the week, from their meaning, no help): its label and its finish screen. */
+    checkTitle: string;
+    checkSummaryHeading: string;
+    checkSummaryBody: string;
   };
   /** Streak calendar strip on Home + streak freezes (src/components/app/streak-strip.tsx). */
   streakCalendar: {

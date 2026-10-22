@@ -84,8 +84,14 @@ export async function loadDailyQuests(
     // "Today's session (daily tasks)": the box shows Today's three tasks (each tied to its passage,
     // story or words) instead of the random mix; a day without them falls through to the usual.
     if (features.rollouts.todaySession) {
-      const todayQuests = await enrichTodayQuests({ userId, todayISO, features, quests });
-      if (todayQuests) return { quests: todayQuests, allDone: allQuestsCompleted(todayQuests) };
+      const today = await enrichTodayQuests({ userId, todayISO, features, quests });
+      if (today) {
+        return {
+          quests: today.quests,
+          allDone: allQuestsCompleted(today.quests),
+          weekly: today.weekly,
+        };
+      }
     }
     return { quests, allDone: allQuestsCompleted(quests) };
   } catch (error) {

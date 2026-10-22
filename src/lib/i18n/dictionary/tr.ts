@@ -1160,6 +1160,9 @@ export const tr: Dictionary = {
       "Önceki günlerde yazdığın cümleler metni gizli olarak geri gelir, böylece kalıcı olduklarını görürsün",
     sentencesFrom: "Önceki derslerinden",
     rewardAllMore: "Hepsini bitir ve {xp} XP kazan",
+    weeklyDue: "Haftalık kontrol · bu hafta yazdığın cümleler, metin gizli",
+    weeklyResult:
+      "Bu haftanın cümleleri: {written} yazdın, {asked} içinden {remembered} tanesini bakmadan hatırladın (%{percent})",
   },
   sentenceBank: {
     title: "Yazdığını hatırla",
@@ -1179,6 +1182,10 @@ export const tr: Dictionary = {
     backToToday: "Bugünün görevlerine dön",
     finishSession: "Bugünün oturumunu bitir",
     exit: "Çık",
+    checkTitle: "Haftalık kontrol",
+    checkSummaryHeading: "Haftalık kontrol bitti",
+    checkSummaryBody:
+      "Bu haftanın cümleleri: {asked} içinden {remembered} tanesini bakmadan hatırladın",
   },
   streakCalendar: {
     heading: "Haftan",

@@ -14,7 +14,13 @@ import { Progress } from "@/components/ui/progress";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { compareDictation, firstLetterHint } from "@/lib/features/dictation";
 import type { DictationResult } from "@/lib/features/dictation";
-import { recordSentenceReviewAction, trackSentenceReviewAction } from "@/lib/sentence-bank/actions";
+import {
+  finishSentenceCheckAction,
+  recordSentenceCheckAnswerAction,
+  recordSentenceReviewAction,
+  trackSentenceCheckStartedAction,
+  trackSentenceReviewAction,
+} from "@/lib/sentence-bank/actions";
 import type { ReviewScreenItem } from "@/lib/sentence-bank/items";
 import { gradeMasked, maskedTokenIndexes, sentenceTokens } from "@/lib/sentence-bank/mask";
 import { outcomeForSentence } from "@/lib/sentence-bank/review";
@@ -41,20 +47,32 @@ const ANSWER_INPUT =
  * more at the end, for practice only. Enter checks, and then continues; one help (the first letters)
  * holds a sentence where it is, and "I don't remember" is a miss. Calm by design: one sentence on
  * the screen, no clock, no score while going.
+ *
+ * `mode="check"` is the weekly check (the /learn/today/check route) on the same screen: every
+ * sentence from its meaning, no help and no second chance, each answer moves the schedule like a
+ * review does but does not count for the day's task, and the end saves the check's own result — how
+ * many were typed right of how many were asked — which is all the finish screen says.
  */
 export function SentenceReviewRunner({
   items,
   todayISO,
   afterHref,
+  mode = "review",
+  written = 0,
 }: {
   items: ReviewScreenItem[];
   /** The learner-local day the sentences were chosen for; sent with every answer. */
   todayISO: string;
   /** Where "finish" goes: back to Home, or on to the finish screen of Today's session. */
   afterHref: string;
+  /** The weekly check instead of the day's review. */
+  mode?: "review" | "check";
+  /** The weekly check only: how many sentences the learner typed in the week it is about. */
+  written?: number;
 }) {
   const { t } = useLocale();
   const copy = t.sentenceBank;
+  const isCheck = mode === "check";
 
   const [queue, setQueue] = useState(() => startQueue(items));
   const [index, setIndex] = useState(0);
@@ -91,6 +109,10 @@ export function SentenceReviewRunner({
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
+    if (isCheck) {
+      void trackSentenceCheckStartedAction(items.length).catch(() => {});
+      return;
+    }
     const { forms } = summarizeReview(
       items.map((entryItem) => ({
         sentenceId: entryItem.id,
@@ -101,13 +123,22 @@ export function SentenceReviewRunner({
     void trackSentenceReviewAction({ event: "started", count: items.length, ...forms }).catch(
       () => {},
     );
-  }, [items]);
+  }, [items, isCheck]);
 
   // Once at the end: how the first answers went.
   useEffect(() => {
     if (!finished || finishedRef.current || results.length === 0) return;
     finishedRef.current = true;
     const summary = summarizeReview(results);
+    if (isCheck) {
+      void finishSentenceCheckAction({
+        todayISO,
+        asked: summary.total,
+        remembered: summary.clean,
+        written: Math.max(written, summary.total),
+      }).catch(() => {});
+      return;
+    }
     void trackSentenceReviewAction({
       event: "finished",
       count: summary.total,
@@ -116,7 +147,7 @@ export function SentenceReviewRunner({
       missed: summary.missed,
       ...summary.forms,
     }).catch(() => {});
-  }, [finished, results]);
+  }, [finished, results, isCheck, todayISO, written]);
 
   // The cursor is always where the next letter goes.
   useEffect(() => {
@@ -152,9 +183,11 @@ export function SentenceReviewRunner({
     // The schedule hears about the first go only; the second chance is practice.
     if (entry.attempt === 0) {
       setResults((current) => [...current, { sentenceId: item.id, form: item.form, outcome }]);
-      void recordSentenceReviewAction({ sentenceId: item.id, outcome, todayISO }).catch(() => {});
+      const record = isCheck ? recordSentenceCheckAnswerAction : recordSentenceReviewAction;
+      void record({ sentenceId: item.id, outcome, todayISO }).catch(() => {});
     }
-    setQueue((current) => queueAfterAnswer(current, index, outcome));
+    // No second chance in the weekly check: it measures, it does not teach.
+    if (!isCheck) setQueue((current) => queueAfterAnswer(current, index, outcome));
   }
 
   function next() {
@@ -175,12 +208,16 @@ export function SentenceReviewRunner({
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-5 px-6 py-16 text-center">
         <CheckCircle2 className="text-success size-12" aria-hidden="true" />
         <h2 className="text-3xl font-semibold tracking-tight" dir="auto">
-          {copy.summaryHeading}
+          {isCheck ? copy.checkSummaryHeading : copy.summaryHeading}
         </h2>
         <p className="text-muted-foreground text-lg" dir="auto">
-          {copy.summaryBody
-            .replace("{clean}", String(summary.clean))
-            .replace("{total}", String(summary.total))}
+          {isCheck
+            ? copy.checkSummaryBody
+                .replace("{remembered}", String(summary.clean))
+                .replace("{asked}", String(summary.total))
+            : copy.summaryBody
+                .replace("{clean}", String(summary.clean))
+                .replace("{total}", String(summary.total))}
         </p>
         {summary.missed > 0 && (
           <p className="text-muted-foreground text-sm" dir="auto">
@@ -229,7 +266,7 @@ export function SentenceReviewRunner({
           className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium"
         >
           <span>
-            {copy.title} · {instruction}
+            {isCheck ? copy.checkTitle : copy.title} · {instruction}
           </span>
           {entry.attempt === 1 && (
             <span className="border-border rounded-full border px-2 py-0.5 text-xs font-semibold">
@@ -343,7 +380,7 @@ export function SentenceReviewRunner({
             <Button type="button" onClick={() => check()} disabled={!filled}>
               {t.dictation.check}
             </Button>
-            {helps === 0 && (
+            {!isCheck && helps === 0 && (
               <Button type="button" variant="outline" onClick={() => setHelps(1)}>
                 <Lightbulb className="size-4" aria-hidden="true" />
                 {t.fromMemory.showFirstLetters}
@@ -374,7 +411,7 @@ export function SentenceReviewRunner({
           )}
           {graded.outcome === "missed" && (
             <p dir="auto" className="text-muted-foreground text-sm">
-              {entry.attempt === 0 ? copy.missedFirst : copy.missedSecond}
+              {entry.attempt === 0 && !isCheck ? copy.missedFirst : copy.missedSecond}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-3">

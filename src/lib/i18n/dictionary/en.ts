@@ -1158,6 +1158,9 @@ export const en: Dictionary = {
       "Sentences you typed on earlier days come back with their text hidden, so you know they stuck",
     sentencesFrom: "From your earlier lessons",
     rewardAllMore: "Finish them all and earn {xp} XP",
+    weeklyDue: "Weekly check · sentences you wrote this week, text hidden",
+    weeklyResult:
+      "Sentences this week: you wrote {written}, and remembered {remembered} of {asked} without looking ({percent}%)",
   },
   sentenceBank: {
     title: "Remember what you typed",
@@ -1177,6 +1180,10 @@ export const en: Dictionary = {
     backToToday: "Back to today's tasks",
     finishSession: "Finish today's session",
     exit: "Exit",
+    checkTitle: "Weekly check",
+    checkSummaryHeading: "Weekly check done",
+    checkSummaryBody:
+      "Sentences from this week: you remembered {remembered} of {asked} without looking",
   },
   streakCalendar: {
     heading: "Your week",

@@ -1250,6 +1250,27 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["sentence_mastery"]["Insert"]>;
         Relationships: [];
       };
+      sentence_checks: {
+        Row: {
+          user_id: string;
+          /** The learner-local day the weekly check was taken ("YYYY-MM-DD"). */
+          checked_on: string;
+          asked: number;
+          remembered: number;
+          written: number;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          checked_on: string;
+          asked: number;
+          remembered: number;
+          written: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["sentence_checks"]["Insert"]>;
+        Relationships: [];
+      };
       lesson_attempts: {
         Row: {
           id: string;

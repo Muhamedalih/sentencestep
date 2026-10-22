@@ -1176,6 +1176,9 @@ export const es: Dictionary = {
       "Las frases que escribiste en días anteriores vuelven con el texto oculto, para que veas que se quedaron",
     sentencesFrom: "De tus lecciones anteriores",
     rewardAllMore: "Termínalas todas y gana {xp} XP",
+    weeklyDue: "Prueba semanal · frases que escribiste esta semana, con el texto oculto",
+    weeklyResult:
+      "Frases de esta semana: escribiste {written} y recordaste {remembered} de {asked} sin mirar ({percent}%)",
   },
   sentenceBank: {
     title: "Recuerda lo que escribiste",
@@ -1195,6 +1198,9 @@ export const es: Dictionary = {
     backToToday: "Volver a las tareas de hoy",
     finishSession: "Terminar la sesión de hoy",
     exit: "Salir",
+    checkTitle: "Prueba semanal",
+    checkSummaryHeading: "Prueba semanal terminada",
+    checkSummaryBody: "Frases de esta semana: recordaste {remembered} de {asked} sin mirar",
   },
   streakCalendar: {
     heading: "Tu semana",

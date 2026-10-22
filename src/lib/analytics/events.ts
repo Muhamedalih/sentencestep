@@ -147,6 +147,18 @@ export type AnalyticsEvent =
         audio: number;
         translate: number;
       };
+    }
+  | {
+      name: "SENTENCE_CHECK_STARTED";
+      category: "ENGAGEMENT";
+      /** A learner opened the weekly sentence check: `asked` sentences, each from its meaning with nothing in front of them. */
+      properties: { asked: number };
+    }
+  | {
+      name: "SENTENCE_CHECK_FINISHED";
+      category: "ENGAGEMENT";
+      /** A learner finished the weekly check: of `asked` sentences, `remembered` were typed right with no help, out of `written` sentences they typed that week. The honest line on Today ("remembered M of N") is exactly these numbers; no level is ever derived from them. */
+      properties: { asked: number; remembered: number; written: number };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

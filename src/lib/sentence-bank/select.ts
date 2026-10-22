@@ -94,7 +94,7 @@ function compareRecent(a: SentenceCandidate, b: SentenceCandidate): number {
 }
 
 /** One from each lesson in turn (newest lesson first, each lesson in its own order), then the next from each, and so on — a spread over the learner's lessons. */
-function spreadAcrossLessons<T extends SentenceCandidate>(sentences: readonly T[]): T[] {
+export function spreadAcrossLessons<T extends SentenceCandidate>(sentences: readonly T[]): T[] {
   const lessons = new Map<string, T[]>();
   for (const sentence of sentences) {
     const list = lessons.get(sentence.lessonId);

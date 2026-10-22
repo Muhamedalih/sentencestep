@@ -1,5 +1,6 @@
 import { DAILY_QUEST_COUNT, QUEST_TYPES } from "@/lib/features/catalog";
 import type { QuestType } from "@/lib/features/catalog";
+import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 
 /**
  * Pure daily-quest logic: which quests a learner is dealt on a given day,
@@ -121,6 +122,8 @@ export interface DailyQuest {
 export interface DailyQuestsPayload {
   quests: DailyQuest[];
   allDone: boolean;
+  /** Today's box only, when the sentence bank is open: the one quiet line about the weekly sentence check (it is ready, or its result for the week after it). */
+  weekly?: WeeklyLine | null;
 }
 
 /** What a lesson completion contributes to each quest type. */

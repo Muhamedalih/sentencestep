@@ -14,6 +14,8 @@ import type { PassageProgress, PassageSummary } from "@/lib/passages/types";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { SENTENCE_REVIEW_HREF, SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
 import { dealSentenceQuest } from "@/lib/sentence-bank/quest";
+import { loadWeeklyLine } from "@/lib/sentence-bank/weekly-load";
+import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { ProgressState } from "@/lib/progress/types";
 import { fetchLessonSentenceStats } from "@/lib/supabase/queries/content";
@@ -245,7 +247,7 @@ export async function enrichTodayQuests(args: {
   todayISO: string;
   features: EffectiveFeatures;
   quests: readonly DailyQuest[];
-}): Promise<DailyQuest[] | null> {
+}): Promise<{ quests: DailyQuest[]; weekly: WeeklyLine | null } | null> {
   const todayRows = args.quests.filter((quest) => quest.slot >= TODAY_QUEST_SLOT_BASE);
   if (todayRows.length === 0) return null;
   try {
@@ -259,7 +261,13 @@ export async function enrichTodayQuests(args: {
     const timeZone = cookieStore.get(TIMEZONE_COOKIE)?.value;
     // Today's optional fourth row, "remember N sentences", is dealt beside the steps' own reads (it
     // reads nothing once the row exists, and never throws).
-    const [data, sentenceRow] = await Promise.all([
+    const bankContext = {
+      userId: args.userId,
+      todayISO: args.todayISO,
+      timeZone,
+      completions: progress?.completions ?? [],
+    };
+    const [data, sentenceRow, weekly] = await Promise.all([
       loadTodaySteps({
         userId: args.userId,
         locale,
@@ -272,16 +280,13 @@ export async function enrichTodayQuests(args: {
       }),
       args.features.rollouts.sentenceBank
         ? dealSentenceQuest({
-            context: {
-              userId: args.userId,
-              todayISO: args.todayISO,
-              timeZone,
-              completions: progress?.completions ?? [],
-            },
+            context: bankContext,
             features: args.features,
             existing: todayRows,
           })
         : Promise.resolve(null),
+      // And the one quiet line about the weekly check (one tiny read; never throws).
+      args.features.rollouts.sentenceBank ? loadWeeklyLine(bankContext) : Promise.resolve(null),
     ]);
     const byStep = questsByStep(todayRows);
     const enriched: DailyQuest[] = [];
@@ -323,10 +328,10 @@ export async function enrichTodayQuests(args: {
         },
       });
     }
-    return enriched.length > 0 ? enriched : null;
+    return enriched.length > 0 ? { quests: enriched, weekly } : null;
   } catch (error) {
     console.error("[today] enrichTodayQuests failed", error);
-    return [...todayRows];
+    return { quests: [...todayRows], weekly: null };
   }
 }
 

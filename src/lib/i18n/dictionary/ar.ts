@@ -1125,6 +1125,9 @@ export const ar: Dictionary = {
     whySentences: "جمل كتبتها في أيام سابقة تعود إليك بنص مخفي، لتتأكد أنها ثبتت",
     sentencesFrom: "من دروسك السابقة",
     rewardAllMore: "أنهِ كل المهام واربح {xp} XP",
+    weeklyDue: "اختبار الأسبوع · جمل كتبتها هذا الأسبوع بلا نص",
+    weeklyResult:
+      "جمل هذا الأسبوع: كتبتَ {written}، وتذكّرت {remembered} من {asked} دون نظر ({percent}%)",
   },
   sentenceBank: {
     title: "تذكّر ما كتبته",
@@ -1144,6 +1147,9 @@ export const ar: Dictionary = {
     backToToday: "العودة إلى مهام اليوم",
     finishSession: "إنهاء جلسة اليوم",
     exit: "خروج",
+    checkTitle: "اختبار الأسبوع",
+    checkSummaryHeading: "انتهى اختبار الأسبوع",
+    checkSummaryBody: "جمل هذا الأسبوع: تذكّرت {remembered} من {asked} دون نظر",
   },
   streakCalendar: {
     heading: "أسبوعك",
