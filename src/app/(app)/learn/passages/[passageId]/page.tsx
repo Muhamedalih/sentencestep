@@ -40,12 +40,22 @@ export async function generateMetadata({
   };
 }
 
+/** Where the passage's end screen carries on in Today's session, from the address it was opened with; null outside Today. */
+async function todayNextLink(
+  open: boolean,
+  searchParams: Promise<{ today?: string; redo?: string }>,
+): Promise<{ href: string } | null> {
+  const query = await searchParams;
+  if (!open || query.today !== "1") return null;
+  return { href: `/learn/today/go?step=story${query.redo === "1" ? "&redo=1" : ""}` };
+}
+
 export default async function PassageReaderPage({
   params,
   searchParams,
 }: {
   params: Promise<{ passageId: string }>;
-  searchParams: Promise<{ today?: string }>;
+  searchParams: Promise<{ today?: string; redo?: string }>;
 }) {
   const features = await getEffectiveFeatures();
   if (!features.passages.enabled) notFound();
@@ -131,11 +141,8 @@ export default async function PassageReaderPage({
         translationAvailable={locale === "ar"}
         nextPassage={next ? { id: next.id, title: next.title } : null}
         // A step of Today's session (opened from Home): the end screen carries on to the story.
-        todayNext={
-          features.rollouts.todaySession && (await searchParams).today === "1"
-            ? { href: "/learn/today/go?step=story" }
-            : null
-        }
+        // (`redo=1`, from "Redo today's lessons", keeps the story that follows today's own.)
+        todayNext={await todayNextLink(features.rollouts.todaySession, searchParams)}
         wordsLink={wordsLink}
       />
     </div>

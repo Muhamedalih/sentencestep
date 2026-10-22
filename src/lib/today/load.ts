@@ -319,3 +319,28 @@ export async function loadTodayWeekDays(args: {
   }
   return dates.filter((date) => date <= todayISO && days.has(date)).length;
 }
+
+/**
+ * The story the learner finished today (the latest one), for "Redo today's lessons" — null when
+ * they finished none today, or anything fails.
+ */
+export async function loadTodayStoryDone(args: {
+  timeZone: string | undefined;
+}): Promise<string | null> {
+  try {
+    const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
+    const progress = await fetchProgressCached(todayLocalISODate());
+    const latest = (progress?.completions ?? [])
+      .filter(
+        (entry) =>
+          entry.mode === "stories" &&
+          (localISODateInTimeZone(args.timeZone, new Date(entry.completedAt)) ??
+            entry.completedAt.slice(0, 10)) === todayISO,
+      )
+      .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
+    return latest?.lessonId ?? null;
+  } catch (error) {
+    console.error("[today] loadTodayStoryDone failed", error);
+    return null;
+  }
+}

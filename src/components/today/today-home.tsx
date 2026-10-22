@@ -159,12 +159,9 @@ function CurrentStepCard({ data, step }: { data: TodayData; step: TodayStepData 
   );
 }
 
-function DoneCard({ data }: { data: TodayData }) {
+function DoneCard({ onRedo }: { onRedo: () => void }) {
   const { t } = useLocale();
   const copy = t.today;
-  const [showRedo, setShowRedo] = useState(false);
-  const rows = data.steps.filter((step) => step.redoHref);
-  const redoLabel = { listen: copy.redoListen, story: copy.redoStory, words: copy.redoWords };
   return (
     <section className="border-success/40 bg-success/5 rounded-2xl border p-5 sm:p-6">
       <div className="flex items-center gap-3.5">
@@ -181,50 +178,12 @@ function DoneCard({ data }: { data: TodayData }) {
         </div>
       </div>
       <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-        <button
-          type="button"
-          aria-expanded={showRedo}
-          onClick={() => setShowRedo((open) => !open)}
-          className={cn(BUTTON_PRIMARY, "sm:flex-1")}
-        >
+        <button type="button" onClick={onRedo} className={cn(BUTTON_PRIMARY, "sm:flex-1")}>
           <RotateCcw aria-hidden="true" className="size-4" strokeWidth={1.8} />
           <span dir="auto">{copy.redo}</span>
         </button>
         <ChooseYourself className="sm:flex-none" />
       </div>
-      {showRedo && (
-        <ul className="border-border mt-4 divide-y border-t">
-          {rows.map((step) => {
-            const Icon = ICONS[step.kind];
-            return (
-              <li key={step.kind}>
-                <Link
-                  href={step.redoHref ?? "/learn"}
-                  className="hover:bg-muted/60 flex items-center gap-3 px-1 py-3 transition-colors"
-                >
-                  <Icon
-                    aria-hidden="true"
-                    className="text-primary size-4 shrink-0"
-                    strokeWidth={1.8}
-                  />
-                  <span className="min-w-0 flex-1 text-sm font-semibold">
-                    <span dir="auto">{redoLabel[step.kind]}</span>
-                    {step.title && (
-                      <span
-                        className="text-muted-foreground ms-2 font-normal"
-                        dir="ltr"
-                        style={{ unicodeBidi: "isolate" }}
-                      >
-                        {step.title}
-                      </span>
-                    )}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
     </section>
   );
 }
@@ -247,6 +206,32 @@ function IdleCard() {
 }
 
 /**
+ * "Redo today's lessons": the same three steps again, in the same order, on what was done today —
+ * today's passage and today's story (the carry-on link keeps `redo=1`, so the story that follows
+ * the passage is today's own, not the next one) and another round of words. A step with nothing
+ * done today to redo keeps its normal target.
+ */
+function redoView(data: TodayData): TodayData {
+  const steps = data.steps.map((step) => ({
+    ...step,
+    done: false,
+    href:
+      step.kind === "words"
+        ? step.href
+        : `${step.redoHref ?? step.href.split("?")[0]}?today=1&redo=1`,
+  }));
+  const totalMinutes = steps.reduce((sum, step) => sum + step.minutes, 0);
+  return {
+    ...data,
+    steps,
+    current: steps[0]?.kind ?? null,
+    remainingMinutes: totalMinutes,
+    totalMinutes,
+    allDone: false,
+  };
+}
+
+/**
  * Home when "Today's session (new Home)" is open: one calm column. A week rhythm at the top, the
  * three steps — listen, write a story, write words — as a row of small tiles whose current icon
  * moves gently, and under them ONE card for the step the learner is on, with one big button and a
@@ -254,7 +239,7 @@ function IdleCard() {
  * the day's lessons. The learner can stop after any step: each counts on its own.
  */
 export function TodayHome({
-  data,
+  data: loaded,
   banners,
   className,
 }: {
@@ -264,6 +249,8 @@ export function TodayHome({
 }) {
   const { t } = useLocale();
   const copy = t.today;
+  const [redo, setRedo] = useState(false);
+  const data = redo && loaded.allDone ? redoView(loaded) : loaded;
   const current = data.steps.find((step) => step.kind === data.current);
   const labels: Record<StepKind, string> = {
     listen: copy.stepListen,
@@ -314,7 +301,7 @@ export function TodayHome({
       {data.steps.length > 0 && !data.allDone && <Stepper data={data} />}
 
       {data.allDone ? (
-        <DoneCard data={data} />
+        <DoneCard onRedo={() => setRedo(true)} />
       ) : current ? (
         <CurrentStepCard data={data} step={current} />
       ) : (

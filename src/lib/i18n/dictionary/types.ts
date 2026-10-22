@@ -1445,9 +1445,6 @@ export interface Dictionary {
     doneHeading: string;
     doneBody: string;
     redo: string;
-    redoListen: string;
-    redoStory: string;
-    redoWords: string;
     idleHeading: string;
     idleBody: string;
     stepDoneListen: string;
