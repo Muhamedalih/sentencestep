@@ -20,6 +20,20 @@ export const MIN_REVIEW_WORDS = 4;
 /** At most this many from one lesson in a batch, so a batch is a spread of what the learner has done and not a replay of one story. */
 export const MAX_PER_LESSON = 2;
 
+/**
+ * How many sentences are still to be asked today. When the day's "remember N sentences" row was dealt,
+ * what it still wants (its target minus what it has counted, which only the day's review adds to);
+ * otherwise the day's batch minus the sentences already asked today. The weekly check's answers are
+ * not counted either way: they would use up the day's batch before the learner opened it.
+ */
+export function sentencesStillToAsk(
+  quest: { target: number; progress: number } | undefined,
+  reviewedToday: number,
+): number {
+  if (quest) return Math.max(0, quest.target - quest.progress);
+  return Math.max(0, DAILY_REVIEW_COUNT - reviewedToday);
+}
+
 /** One sentence the learner typed, from a lesson or story they finished. */
 export interface SentenceCandidate {
   id: string;

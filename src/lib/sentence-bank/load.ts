@@ -14,7 +14,7 @@ import {
 import { buildReviewItems } from "@/lib/sentence-bank/items";
 import type { ReviewScreenItem } from "@/lib/sentence-bank/items";
 import { REVIEW_SPARES } from "@/lib/sentence-bank/review";
-import { DAILY_REVIEW_COUNT, selectSentenceReview } from "@/lib/sentence-bank/select";
+import { selectSentenceReview, sentencesStillToAsk } from "@/lib/sentence-bank/select";
 import type { SentenceCandidate } from "@/lib/sentence-bank/select";
 import { fetchLessonVoices, fetchSentencePool } from "@/lib/sentence-bank/pool";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
@@ -91,11 +91,6 @@ export async function readSentenceBank(context: SentenceBankContext): Promise<Se
   return { candidates, states, reviewedToday: reviewedTodayCount(states, todayISO) };
 }
 
-/** How many sentences are still to be asked today: the day's batch minus what was already asked. */
-export function remainingToday(reviewedToday: number): number {
-  return Math.max(0, DAILY_REVIEW_COUNT - reviewedToday);
-}
-
 /**
  * How many sentences are ready for the learner today — what decides whether Today's tasks box gets
  * its fourth row, and how many sentences that row asks for. The weak-word order does not change
@@ -105,7 +100,7 @@ export async function countSentencesReady(context: SentenceBankContext): Promise
   const read = await readSentenceBank(context);
   return selectSentenceReview(read.candidates, read.states, {
     todayISO: context.todayISO,
-    cap: remainingToday(read.reviewedToday),
+    cap: sentencesStillToAsk(undefined, read.reviewedToday),
   }).items.length;
 }
 
@@ -116,10 +111,14 @@ export async function countSentencesReady(context: SentenceBankContext): Promise
  * hidden-text form (no stored clip and no meaning) is replaced by a spare one.
  */
 export async function loadSentenceReviewScreen(
-  context: SentenceBankContext & { locale: SupportLocale | null },
+  context: SentenceBankContext & {
+    locale: SupportLocale | null;
+    /** The day's "remember N sentences" row, when it was dealt: how many it still wants is how many to ask. */
+    quest?: { target: number; progress: number };
+  },
 ): Promise<ReviewScreenItem[]> {
   const read = await readSentenceBank(context);
-  const limit = remainingToday(read.reviewedToday);
+  const limit = sentencesStillToAsk(context.quest, read.reviewedToday);
   if (limit === 0) return [];
 
   const weakRows = await fetchWeakCandidateMistakeRows(context.userId).catch(() => []);

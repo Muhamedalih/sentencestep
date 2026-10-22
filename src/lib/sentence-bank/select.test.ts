@@ -7,6 +7,7 @@ import {
   MIN_REVIEW_WORDS,
   reviewWordCount,
   selectSentenceReview,
+  sentencesStillToAsk,
 } from "@/lib/sentence-bank/select";
 import type { SentenceCandidate } from "@/lib/sentence-bank/select";
 import { applyOutcome } from "@/lib/word-mastery/schedule";
@@ -298,4 +299,17 @@ test("a sentence listed twice is asked once", () => {
   const [a1] = lesson("a", 1);
   const picked = selectSentenceReview([a1!, { ...a1! }], new Map(), { todayISO: TODAY });
   assert.equal(picked.items.length, 1);
+});
+
+test("the batch still to ask follows the day's row when there is one, and the weekly check never uses it up", () => {
+  // The row was dealt for three and nothing counted yet: three to ask, whatever the check did today.
+  assert.equal(sentencesStillToAsk({ target: 3, progress: 0 }, 10), 3);
+  assert.equal(sentencesStillToAsk({ target: 3, progress: 1 }, 10), 2);
+  assert.equal(sentencesStillToAsk({ target: 2, progress: 0 }, 0), 2);
+  assert.equal(sentencesStillToAsk({ target: 3, progress: 3 }, 0), 0);
+  assert.equal(sentencesStillToAsk({ target: 1, progress: 5 }, 0), 0);
+  // With no row, the day's batch less the sentences already asked today.
+  assert.equal(sentencesStillToAsk(undefined, 0), DAILY_REVIEW_COUNT);
+  assert.equal(sentencesStillToAsk(undefined, 2), 1);
+  assert.equal(sentencesStillToAsk(undefined, 9), 0);
 });

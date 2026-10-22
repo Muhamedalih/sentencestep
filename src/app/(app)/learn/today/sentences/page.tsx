@@ -6,10 +6,12 @@ import { SentenceReviewRunner } from "@/components/sentence-bank/sentence-review
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { fetchDailyQuests } from "@/lib/features/quest-queries";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { loadSentenceReviewScreen } from "@/lib/sentence-bank/load";
 import { getCurrentUser } from "@/lib/supabase/auth";
+import { sentenceQuest } from "@/lib/today/quests";
 
 // What is due changes with every answer, and it is per learner.
 export const dynamic = "force-dynamic";
@@ -37,7 +39,13 @@ export default async function TodaySentencesPage({
 
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-  const [locale, progress] = await Promise.all([getLocale(), fetchProgressCached(todayISO)]);
+  const [locale, progress, quests] = await Promise.all([
+    getLocale(),
+    fetchProgressCached(todayISO),
+    fetchDailyQuests(user.id, todayISO).catch(() => []),
+  ]);
+  // How many the day's row still wants: the weekly check's answers never use up the day's batch.
+  const row = sentenceQuest(quests);
 
   let items: Awaited<ReturnType<typeof loadSentenceReviewScreen>> = [];
   try {
@@ -47,6 +55,7 @@ export default async function TodaySentencesPage({
       timeZone,
       locale,
       completions: progress?.completions ?? [],
+      quest: row ? { target: row.target, progress: row.progress } : undefined,
     });
   } catch (error) {
     console.error("[sentence-bank] the review could not be built", error);
