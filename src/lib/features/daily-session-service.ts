@@ -9,12 +9,14 @@ import { fetchDueVocabularyRecallCount } from "@/lib/supabase/queries/vocabulary
 import { fetchActiveMistakeCount, fetchDueReviewCount } from "@/lib/supabase/queries/mistakes";
 import { fetchAllVocabularyWordsFlat } from "@/lib/supabase/queries/word-lists";
 import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
+import { WORDS_PER_DAY, pickNextWordBlock } from "@/lib/home-plan/plan";
+import { isImportantWord } from "@/lib/today/important-words";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchVocabularyRecallWordsAction } from "@/lib/vocabulary-recall/actions";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { lookupWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
-import { getWordGroupById } from "@/lib/word-lists";
+import { getWordGroupById, getWordGroupSummaries } from "@/lib/word-lists";
 
 /**
  * Reads the daily session's sources and hands them to the pure assembler.
@@ -175,49 +177,88 @@ export async function buildDailySessionWords(
   return applyWordListAudio(session, urlByWord);
 }
 
-/**
- * The sources Today's session reviews from, whatever the Daily session switches say: the
- * learner's mistakes and weak words, the words they met in lessons, and their saved cards — never
- * Word Lists words they have not learned yet, which is new material, not review.
- */
-export function todayReviewFeatures(features: EffectiveFeatures, size: number): EffectiveFeatures {
-  return {
-    ...features,
-    dailySession: {
-      ...features.dailySession,
-      enabled: true,
-      size,
-      sources: {
-        mistakesAndWeakWords: true,
-        vocabularyRecall: true,
-        personalCards: true,
-        wordLists: false,
-      },
-    },
-  };
+/** Words from the first Words-section group that still has unfinished ones, for Today's words step: the next block of the learner's own level — a beginner gets the first words of the beginner list. */
+async function newWordsSource(
+  userId: string,
+  locale: SupportLocale | null,
+  startingLevel: number | null,
+  isPremium: boolean,
+  size: number,
+): Promise<SourceCandidates<ReviewWord>> {
+  const [groups, completedIds] = await Promise.all([
+    attempt("word groups", () => getWordGroupSummaries(locale ?? undefined), []),
+    attempt("word progress", () => fetchWordProgress(userId), [] as string[]),
+  ]);
+  const done = new Set(completedIds);
+  const block = pickNextWordBlock(groups, done, {
+    isPremiumUser: isPremium,
+    startingLevel,
+    floor: true,
+  });
+  if (!block) return { source: "wordList", items: [] };
+  const group = await attempt(
+    "word group",
+    () => getWordGroupById(block.group.id, locale ?? undefined),
+    undefined,
+  );
+  const words = [...(group?.words ?? [])].sort((a, b) => a.order - b.order);
+  const items = words
+    .slice(block.blockIndex * WORDS_PER_DAY)
+    .filter((word) => !done.has(word.id))
+    .slice(0, size)
+    .map((word): ReviewWord => ({ ...word, reason: "review" }));
+  return { source: "wordList", items };
 }
 
 /**
- * How many review words are waiting right now for Today's card — raw counts, no cap and no
- * hydration (the plan applies the cap). The same word can sit in two sources, so this can slightly
- * overstate; the session itself de-duplicates.
+ * Today's words step: `size` words (five), the important ones only. Review first — the target
+ * words of the learner's lessons and stories that are due, their weak Words-section words, then
+ * their own typing mistakes and saved cards — and whatever places are left go to NEW words from the
+ * Words section. Review words that are function words ("and", "into"…) or contractions are dropped
+ * (see isImportantWord); Words-section words and saved cards are the learner's own choices and
+ * are never filtered. Every word points at the Word Lists voice's clip, like the Daily session's.
  */
-export async function countTodayReviewCandidates(
-  userId: string,
-  knownWeakWordCount?: Promise<number>,
-): Promise<number> {
-  const counts = await Promise.all([
-    attempt("mistake count", () => fetchActiveMistakeCount(userId), 0),
-    attempt("review count", () => fetchDueReviewCount(userId), 0),
-    attempt(
-      "weak count",
-      async () => knownWeakWordCount ?? (await fetchWeakWordsAction()).length,
-      0,
-    ),
-    attempt("recall count", () => fetchDueVocabularyRecallCount(userId), 0),
-    attempt("card count", () => fetchDueCardCount(userId), 0),
+export async function buildTodayWords(args: {
+  userId: string;
+  locale: SupportLocale | null;
+  size: number;
+  startingLevel: number | null;
+  isPremium: boolean;
+}): Promise<ReviewWord[]> {
+  const { userId, locale, size } = args;
+  const [recall, [active, reviews], weak, cards, fresh] = await Promise.all([
+    attempt("recall", () => fetchVocabularyRecallWordsAction(), [] as ReviewWord[]),
+    mistakeSources(size * 4),
+    weakSource(locale),
+    attempt("cards", () => fetchCardReviewWordsAction("due"), [] as ReviewWord[]),
+    newWordsSource(userId, locale, args.startingLevel, args.isPremium, size),
   ]);
-  return counts.reduce((sum, value) => sum + value, 0);
+  const important = (items: ReviewWord[]) =>
+    items.filter((word) => isImportantWord(word.targetWord));
+  const session = assembleSession<ReviewWord>(
+    [
+      {
+        source: "recall",
+        // Recall words carry only the Arabic gloss (hintAr); the review screen reads supportHint.
+        items: important(recall).map((word) => ({
+          ...word,
+          supportHint: word.supportHint ?? word.hintAr,
+        })),
+      },
+      weak,
+      { source: "mistakeReview", items: important(reviews.items) },
+      { source: "mistake", items: important(active.items) },
+      { source: "card", items: cards },
+      fresh,
+    ],
+    size,
+  );
+  const urlByWord = await attempt(
+    "word-list voice audio",
+    () => lookupWordListVoiceAudio(session.map((word) => word.targetWord)),
+    new Map<string, string>(),
+  );
+  return applyWordListAudio(session, urlByWord);
 }
 
 /**

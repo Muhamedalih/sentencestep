@@ -3,9 +3,12 @@
 import { after } from "next/server";
 
 import type { ReviewWord } from "@/components/learning/word-review-session";
+import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
+import { fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
 import { awardEventBadge } from "@/lib/features/badge-service";
 import { completeDailySession } from "@/lib/features/daily-session-queries";
-import { buildDailySessionWords, todayReviewFeatures } from "@/lib/features/daily-session-service";
+import { buildDailySessionWords, buildTodayWords } from "@/lib/features/daily-session-service";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -103,24 +106,32 @@ export async function fetchDailySessionWordsAction(): Promise<ReviewWord[]> {
 }
 
 /**
- * The review block of Today's session (permission "Today's session (new Home)"): up to `limit`
- * words from the learner's own mistakes, weak words, words met in lessons and saved cards, each
- * pointed at the Word Lists voice like the Daily session's. [] when the permission isn't open for
- * this learner, nobody is signed in, nothing is due, or anything fails.
+ * Today's words step (permission "Today's session (new Home)"): `size` important words — the
+ * learner's due review words first, new words from the Words section for the rest — each pointed
+ * at the Word Lists voice like the Daily session's. [] when the permission isn't open for this
+ * learner, nobody is signed in, there is nothing to do, or anything fails.
  */
-export async function fetchTodayReviewWordsAction(limit: number): Promise<ReviewWord[]> {
+export async function fetchTodayWordsAction(size: number): Promise<ReviewWord[]> {
   try {
-    if (!Number.isInteger(limit) || limit < 1 || limit > 20) return [];
+    if (!Number.isInteger(size) || size < 1 || size > 10) return [];
     const [features, userId] = await Promise.all([getEffectiveFeatures(), getSessionUserId()]);
     if (!features.rollouts.todaySession || !userId) return [];
-    const words = await buildDailySessionWords(
+    const [startingLevel, premium, admin, locale] = await Promise.all([
+      fetchProfileStartingLevel(userId).catch(() => null),
+      hasPremiumAccess(),
+      isAdmin(),
+      getLocale(),
+    ]);
+    const words = await buildTodayWords({
       userId,
-      todayReviewFeatures(features, limit),
-      await getLocale(),
-    );
+      locale,
+      size,
+      startingLevel,
+      isPremium: premium || admin,
+    });
     return await generateMissingSessionAudio(words);
   } catch (error) {
-    console.error("[today] fetchTodayReviewWordsAction failed", error);
+    console.error("[today] fetchTodayWordsAction failed", error);
     return [];
   }
 }

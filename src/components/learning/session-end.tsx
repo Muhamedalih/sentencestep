@@ -44,6 +44,8 @@ export interface SessionEndProps {
   extra: SessionEndExtra | null;
   /** Minutes quoted on the extra-lesson button. */
   extraMinutes: number;
+  /** Replaces the "one more lesson" wording of the extra button (Today's session offers five more words instead). */
+  extraLabel?: string;
   /** Null for a guest, and while reminders are not switched on at the server. */
   reminder: SessionEndReminder | null;
   saveStatus: CompletionSaveStatus;
@@ -78,6 +80,7 @@ export function SessionEnd({
   tomorrow,
   extra,
   extraMinutes,
+  extraLabel,
   reminder,
   saveStatus,
   onRetrySave,
@@ -356,10 +359,11 @@ export function SessionEnd({
                   className={BUTTON_PRIMARY}
                 >
                   <span dir="auto">
-                    {copy.extraLesson.replace(
-                      "{time}",
-                      formatMinuteCount(copy, locale, extraMinutes),
-                    )}
+                    {extraLabel ??
+                      copy.extraLesson.replace(
+                        "{time}",
+                        formatMinuteCount(copy, locale, extraMinutes),
+                      )}
                   </span>
                 </Link>
               ))}

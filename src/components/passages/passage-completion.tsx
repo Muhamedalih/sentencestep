@@ -91,6 +91,7 @@ export function PassageCompletion({
   saveFailed,
   rewardLines,
   nextPassage,
+  todayNext,
   wordsLink,
   onReadAgain,
 }: {
@@ -104,6 +105,8 @@ export function PassageCompletion({
   /** What finishing earned in the daily quests and badges ("Quest complete: …", "New badge: …"); empty when nothing. */
   rewardLines: string[];
   nextPassage: { id: string; title: string } | null;
+  /** Today's session: the way on to the story, shown as the one big button instead of "Next passage". */
+  todayNext: { href: string } | null;
   wordsLink: { href: string; adminPreview: boolean } | null;
   onReadAgain: () => void;
 }) {
@@ -190,7 +193,16 @@ export function PassageCompletion({
         )}
 
         <div className="mt-6 flex flex-col gap-2.5">
-          {nextPassage && (
+          {todayNext ? (
+            <PassageLinkButton
+              href={todayNext.href}
+              size="lg"
+              className="w-full justify-between"
+              trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
+            >
+              {t.today.continueStory}
+            </PassageLinkButton>
+          ) : nextPassage ? (
             <PassageLinkButton
               href={`/learn/passages/${nextPassage.id}`}
               size="lg"
@@ -199,7 +211,7 @@ export function PassageCompletion({
             >
               {t.passages.nextPassage}
             </PassageLinkButton>
-          )}
+          ) : null}
           <div className="grid grid-cols-2 gap-2.5">
             <PassageButton variant="quiet" onClick={onReadAgain}>
               {t.passages.readAgain}

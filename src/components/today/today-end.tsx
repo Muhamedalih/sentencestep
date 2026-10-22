@@ -1,32 +1,85 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
-import { SessionEndFlow } from "@/components/learning/session-end-flow";
+import { SessionEnd } from "@/components/learning/session-end";
 import { Logo } from "@/components/layout/logo";
+import { useAuthUserId } from "@/components/providers/auth-user-provider";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { LessonCompletion } from "@/lib/progress/types";
-import type { SessionLength } from "@/lib/today/plan";
-import type { NextLessonRef } from "@/types/content";
+import { todayLocalISODate } from "@/lib/progress/streak";
+import type { SessionEndAction } from "@/lib/session-end/action-names";
+import { REMINDER_HOURS, reminderTimeFor } from "@/lib/session-end/reminder";
+import { setSessionReminderAction } from "@/lib/session-end/reminder-actions";
+import { trackSessionEndAction } from "@/lib/session-end/track-actions";
+import { completeTodaySessionAction, fetchTodayTomorrowAction } from "@/lib/today/actions";
+import { WORDS_MINUTES } from "@/lib/today/plan";
+import { readTodayReview } from "@/lib/today/run-state";
+import type { TodayRun } from "@/lib/today/run-state";
 
 /**
- * The finish screen of a Today session with no lesson in it (see the /learn/today/end route): the
- * lesson ending's own SessionEndFlow with nothing to recall (the review was the recall), so it
- * opens straight on the finish screen. A free learner who has run out of free lessons is offered the
- * next Premium one as a locked "extra", like after a lesson.
+ * The finish screen of Today's session (the /learn/today/end route): the lesson ending's calm
+ * SessionEnd with this session's numbers — how many of the words were typed right the first time
+ * (kept in sessionStorage by the words step), what comes back tomorrow, the reminder card when
+ * reminders are on — and five more words as the extra button. Reaching it records the day.
  */
 export function TodayEnd({
-  length,
-  completions,
-  startingLevel,
-  lockedNext,
+  weekDays,
+  nextTitle,
+  moreWords,
 }: {
-  length: SessionLength;
-  completions: LessonCompletion[];
-  startingLevel: number | null;
-  lockedNext: NextLessonRef | null;
+  weekDays: number;
+  /** The title tomorrow starts with (the next passage, else the next story), or null. */
+  nextTitle: string | null;
+  /** The words step still has something to do (new words, or review words due). */
+  moreWords: boolean;
 }) {
   const { t } = useLocale();
+  const userId = useAuthUserId();
+  const features = useFeatures();
+  const startedRef = useRef(false);
+  const [review, setReview] = useState<TodayRun["review"]>(null);
+  const [reviewWords, setReviewWords] = useState<number | null>(null);
+  const [reminderHour, setReminderHour] = useState<number | null>(null);
+  const [reminderStatus, setReminderStatus] = useState<
+    "idle" | "saving" | "saved" | "error" | "unavailable"
+  >("idle");
+
+  // Once, on the client: read the words step's result, record the day, ask what is due tomorrow.
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    const todayISO = todayLocalISODate();
+    const result = readTodayReview(todayISO);
+    setReview(result);
+    void completeTodaySessionAction({
+      todayISO,
+      reviewTotal: result?.total ?? 0,
+      reviewClean: result?.clean ?? 0,
+    }).catch(() => {});
+    const tomorrowEnd = new Date();
+    tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+    tomorrowEnd.setHours(23, 59, 59, 999);
+    fetchTodayTomorrowAction(tomorrowEnd.toISOString())
+      .then((answer) => setReviewWords(answer.reviewWords))
+      .catch(() => setReviewWords(0));
+  }, []);
+
+  function handleReminder(hour: number | null) {
+    setReminderHour(hour);
+    setReminderStatus("saving");
+    setSessionReminderAction(hour === null ? null : reminderTimeFor(hour).toISOString())
+      .then(({ ok, reason }) =>
+        setReminderStatus(ok ? "saved" : reason === "unverified" ? "unavailable" : "error"),
+      )
+      .catch(() => setReminderStatus("error"));
+  }
+
+  function handleAction(action: SessionEndAction) {
+    void trackSessionEndAction(action).catch(() => {});
+  }
+
   return (
     <div className="bg-background flex min-h-svh flex-col">
       <Link
@@ -37,18 +90,35 @@ export function TodayEnd({
         <Logo size="sm" />
       </Link>
       <div className="flex min-h-0 flex-1 flex-col">
-        <SessionEndFlow
-          unit={{ id: "", mode: "normal" }}
-          items={[]}
-          nextLesson={lockedNext ?? undefined}
-          nextLessonLocked={lockedNext !== null}
-          completions={completions}
-          startingLevel={startingLevel}
+        <SessionEnd
+          first={false}
+          weekDays={weekDays}
+          recall={review}
+          isGuest={!userId}
+          tomorrow={{
+            ready: reviewWords !== null,
+            reviewWords: reviewWords ?? 0,
+            nextTitle,
+            minutes: 0,
+          }}
+          extra={moreWords ? { href: "/learn/today/words", locked: false } : null}
+          extraMinutes={WORDS_MINUTES}
+          extraLabel={t.today.extraWords.replace(
+            "{time}",
+            t.today.minutes.replace("{n}", String(WORDS_MINUTES)),
+          )}
+          reminder={
+            userId && features.rollouts.sessionReminders
+              ? {
+                  hours: REMINDER_HOURS,
+                  selected: reminderHour,
+                  status: reminderStatus,
+                  onSelect: handleReminder,
+                }
+              : null
+          }
           saveStatus="idle"
-          allowReveal={false}
-          showFirstLetters={false}
-          onMistakes={() => {}}
-          today={{ length }}
+          onAction={handleAction}
         />
       </div>
     </div>

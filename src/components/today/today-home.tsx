@@ -1,25 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
-import { Check, ChevronRight, Info, Lock } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Check, Headphones, LayoutList, PenLine, RotateCcw, Type } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import type { TodayData } from "@/lib/today/load";
-import type { TodayItem } from "@/lib/today/next";
-import { SESSION_LENGTHS, isSessionLength, startHref } from "@/lib/today/plan";
-import type { SessionLength, TodayPlan, TodayStep, TodayVariant } from "@/lib/today/plan";
+import type { TodayData, TodayStepData } from "@/lib/today/load";
+import type { StepKind } from "@/lib/today/plan";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "looma:todayLength";
 const CARD = "border-border bg-card rounded-2xl border";
-const LABEL = "text-muted-foreground mb-3 text-[12.5px] font-semibold";
 const BUTTON =
-  "inline-flex h-12 items-center justify-center rounded-[10px] px-6 text-[15px] font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:h-11";
-const CHIP =
-  "rounded-full border px-2 py-px text-[11px] font-semibold border-border text-muted-foreground";
+  "inline-flex h-12 items-center justify-center gap-2 rounded-[10px] px-6 text-[15px] font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+const BUTTON_PRIMARY = `${BUTTON} bg-primary text-primary-foreground hover:opacity-90`;
+const BUTTON_OUTLINE = `${BUTTON} border-border text-foreground hover:bg-muted border`;
 const CHIP_LEVEL =
   "border-success/40 bg-success/10 text-success rounded-full border px-2 py-px text-[11px] font-semibold";
+
+const ICONS = { listen: Headphones, story: PenLine, words: Type } as const;
 
 function fill(template: string, values: Record<string, string | number>): string {
   return Object.entries(values).reduce(
@@ -28,289 +27,231 @@ function fill(template: string, values: Record<string, string | number>): string
   );
 }
 
-/** Reads the length the learner picked last, when it is one of the three. */
-function readStoredLength(): SessionLength | null {
-  try {
-    const value = Number(window.localStorage.getItem(STORAGE_KEY));
-    return isSessionLength(value) ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function titleKey(variant: TodayVariant) {
-  switch (variant) {
-    case "first":
-      return "cardTitleFirst";
-    case "reviewOnly":
-      return "cardTitleReviewOnly";
-    case "comeback":
-      return "cardTitleComeback";
-    case "idle":
-      return "cardTitleIdle";
-    default:
-      return "cardTitle";
-  }
-}
-
-function whyText(copy: ReturnType<typeof useLocale>["t"]["today"], plan: TodayPlan): string {
-  const review = plan.steps.find((step) => step.kind === "review");
-  switch (plan.variant) {
-    case "first":
-      return copy.whyFirst;
-    case "reviewOnly":
-      return copy.whyReviewOnly;
-    case "comeback":
-      return copy.whyComeback;
-    case "idle":
-      return copy.whyIdle;
-    default:
-      return review?.kind === "review" ? fill(copy.whyReview, { n: review.items }) : copy.whyNew;
-  }
-}
-
-function StepRow({
-  index,
-  current,
-  title,
-  time,
-  children,
-}: {
-  index: number;
-  current: boolean;
-  title: string;
-  time: string;
-  children: ReactNode;
-}) {
+/**
+ * The step's icon. The current step's moves, gently and slowly: the headphones float with two soft
+ * sound rings, the pen writes, the letters breathe. Nothing moves for a learner who asked for
+ * reduced motion, and a step that is done or still waiting stays still.
+ */
+function StepIcon({ kind, active }: { kind: StepKind; active: boolean }) {
+  const reduced = useReducedMotion();
+  const moving = active && !reduced;
+  const Icon = ICONS[kind];
+  const kindMotion =
+    kind === "listen"
+      ? { y: [0, -2, 0] }
+      : kind === "story"
+        ? { x: [0, 2.5, 0, 2.5, 0], rotate: [0, -6, 0, -6, 0] }
+        : { scale: [1, 1.12, 1] };
   return (
-    <li className="border-border grid grid-cols-[30px_1fr_auto] items-center gap-3 border-b py-2.5 sm:gap-3.5 sm:py-3">
-      <span
-        className={cn(
-          "border-primary grid size-[30px] place-items-center rounded-full border-2 text-[13px] font-bold",
-          current ? "bg-primary text-primary-foreground" : "bg-card text-primary",
-        )}
+    <span className="relative grid size-10 place-items-center" aria-hidden="true">
+      {moving &&
+        kind === "listen" &&
+        [0, 1.2].map((delay) => (
+          <motion.span
+            key={delay}
+            className="border-primary/40 absolute inset-1 rounded-full border"
+            initial={{ scale: 0.8, opacity: 0.5 }}
+            animate={{ scale: 1.5, opacity: 0 }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay }}
+          />
+        ))}
+      <motion.span
+        className="grid place-items-center"
+        animate={moving ? kindMotion : undefined}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
       >
-        {index}
-      </span>
-      <div className="min-w-0">
-        <p className="text-[15px] font-semibold">
-          <span dir="auto">{title}</span>
-        </p>
-        <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2 text-[13px]">
-          {children}
-        </div>
-      </div>
-      <span className="text-muted-foreground text-[13px] font-semibold whitespace-nowrap">
-        <span dir="auto">{time}</span>
-      </span>
-    </li>
+        <Icon className="size-5" strokeWidth={1.8} />
+      </motion.span>
+    </span>
   );
 }
 
-function ItemLine({
-  item,
-  withLevel,
-  levelCode,
-}: {
-  item: TodayItem;
-  withLevel: boolean;
-  levelCode: string;
-}) {
-  const { t } = useLocale();
-  return (
-    <>
-      <span className="text-foreground font-semibold" dir="ltr" style={{ unicodeBidi: "isolate" }}>
-        {item.title}
-      </span>
-      {item.supportTitle && item.supportTitle !== item.title && (
-        <span dir="auto">{item.supportTitle}</span>
-      )}
-      <span className={CHIP} dir="auto">
-        {item.mode === "stories" ? t.today.kindStory : t.today.kindLesson}
-      </span>
-      {withLevel && <span className={CHIP_LEVEL}>{levelCode}</span>}
-    </>
-  );
-}
-
-function PlanSteps({ plan, data }: { plan: TodayPlan; data: TodayData }) {
+function Stepper({ data }: { data: TodayData }) {
   const { t } = useLocale();
   const copy = t.today;
+  const labels: Record<StepKind, string> = {
+    listen: copy.stepListen,
+    story: copy.stepStory,
+    words: copy.stepWords,
+  };
   return (
-    <ol className="border-border border-t">
-      {plan.steps.map((step: TodayStep, index) => {
-        const time = fill(copy.minutes, { n: step.minutes });
-        if (step.kind === "review") {
-          const description =
-            plan.variant === "comeback"
-              ? copy.stepReviewDescComeback
-              : plan.variant === "reviewOnly"
-                ? copy.stepReviewDescMany
-                : copy.stepReviewDesc;
-          return (
-            <StepRow
-              key="review"
-              index={index + 1}
-              current={index === 0}
-              title={copy.stepReview}
-              time={time}
-            >
-              <span dir="auto">{fill(description, { n: step.items })}</span>
-            </StepRow>
-          );
-        }
-        if (step.kind === "new" && data.next) {
-          return (
-            <StepRow
-              key="new"
-              index={index + 1}
-              current={index === 0}
-              title={plan.variant === "first" ? copy.stepFirst : copy.stepNew}
-              time={time}
-            >
-              <ItemLine item={data.next} withLevel levelCode={data.levelCode} />
-            </StepRow>
-          );
-        }
-        if (step.kind === "recall") {
-          return (
-            <StepRow
-              key="recall"
-              index={index + 1}
-              current={false}
-              title={copy.stepRecall}
-              time={time}
-            >
-              <span dir="auto">{fill(copy.stepRecallDesc, { n: step.items })}</span>
-            </StepRow>
-          );
-        }
-        return null;
+    <ol className="mb-3 grid grid-cols-3 gap-2" aria-label={copy.heading}>
+      {data.steps.map((step) => {
+        const current = step.kind === data.current;
+        return (
+          <li
+            key={step.kind}
+            aria-current={current ? "step" : undefined}
+            className={cn(
+              "flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2.5 text-center transition-colors",
+              step.done
+                ? "border-success/40 bg-success/10 text-success"
+                : current
+                  ? "border-primary/50 bg-brand-muted text-primary"
+                  : "border-border bg-card text-muted-foreground",
+            )}
+          >
+            {step.done ? (
+              <span className="grid size-10 place-items-center" aria-hidden="true">
+                <Check className="size-5" strokeWidth={2} />
+              </span>
+            ) : (
+              <StepIcon kind={step.kind} active={current} />
+            )}
+            <span className="text-[13px] font-semibold">
+              <span dir="auto">{labels[step.kind]}</span>
+            </span>
+            <span className="text-[11.5px] opacity-80">
+              <span dir="auto">{fill(copy.minutes, { n: step.minutes })}</span>
+            </span>
+          </li>
+        );
       })}
     </ol>
   );
 }
 
-function ProgressCard({ data }: { data: TodayData }) {
+function ChooseYourself({ className }: { className?: string }) {
   const { t } = useLocale();
-  const copy = t.today;
-  const { stats } = data;
-  if (stats.sentences === 0 && stats.lessons === 0) return null;
-  const items = [
-    { value: stats.sentences, label: copy.statSentences, delta: stats.sentencesThisWeek },
-    { value: stats.lessons, label: copy.statLessons, delta: 0 },
-    ...(stats.words > 0 ? [{ value: stats.words, label: copy.statWords, delta: 0 }] : []),
-  ];
   return (
-    <div className={cn(CARD, "p-5")}>
-      <p className={LABEL}>
-        <span dir="auto">{copy.progressLabel}</span>
-      </p>
-      <div className={cn("grid gap-3", items.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
-        {items.map((item) => (
-          <div key={item.label}>
-            <p
-              className="text-2xl leading-[1.1] font-semibold tracking-[-0.01em] sm:text-[28px]"
-              dir="ltr"
-            >
-              {item.value}
-            </p>
-            <p className="text-muted-foreground mt-1 text-[12.5px] leading-normal">
-              <span dir="auto">{item.label}</span>
-            </p>
-            {item.delta > 0 && (
-              <p className="text-success mt-0.5 text-[12.5px] font-semibold">
-                <span dir="auto">{fill(copy.statWeekDelta, { n: item.delta })}</span>
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
+    <Link href="/learn?classic=1" className={cn(BUTTON_OUTLINE, className)}>
+      <LayoutList aria-hidden="true" className="size-4" strokeWidth={1.8} />
+      <span dir="auto">{t.today.chooseYourself}</span>
+    </Link>
   );
 }
 
-function PathCard({ data, todayItemShown }: { data: TodayData; todayItemShown: boolean }) {
+function CurrentStepCard({ data, step }: { data: TodayData; step: TodayStepData }) {
   const { t } = useLocale();
   const copy = t.today;
-  const upcoming = [data.next && !todayItemShown ? data.next : null, ...data.upcoming].filter(
-    (item): item is TodayItem => item !== null,
-  );
+  const index = data.steps.findIndex((entry) => entry.kind === step.kind) + 1;
+  const title = step.kind === "words" ? copy.titleWords : step.title;
+  const why = { listen: copy.whyListen, story: copy.whyStory, words: copy.whyWords }[step.kind];
+  const start = { listen: copy.startListen, story: copy.startStory, words: copy.startWords }[
+    step.kind
+  ];
   return (
-    <div className={cn(CARD, "p-5")}>
-      <p className={LABEL}>
-        <span dir="auto">{copy.pathLabel}</span>
+    <section className={cn(CARD, "p-5 sm:p-6")}>
+      <p className="text-muted-foreground text-[12.5px] font-semibold">
+        <span dir="auto">{fill(copy.stepOf, { n: index, total: data.steps.length })}</span>
       </p>
-      <p className="mb-1.5 text-[14.5px] font-semibold">
-        <span dir="auto">{fill(copy.pathLevel, { level: data.levelCode })}</span>
-      </p>
-      {data.stats.lessons > 0 && (
-        <div className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5 py-1 text-[13.5px]">
-          <span className="bg-success border-success text-primary-foreground grid size-4 place-items-center rounded-full border-[1.5px]">
-            <Check aria-hidden="true" className="size-2.5" strokeWidth={3} />
-          </span>
-          <span className="text-muted-foreground text-[12.5px]">
-            <span dir="auto">{fill(copy.pathDone, { n: data.stats.lessons })}</span>
-          </span>
-          <span />
+      <h2 className="mt-1.5 text-[22px] leading-tight font-semibold tracking-[-0.01em]">
+        <span dir={step.kind === "words" ? "auto" : "ltr"} style={{ unicodeBidi: "isolate" }}>
+          {title}
+        </span>
+      </h2>
+      {(step.supportTitle || step.levelCode) && (
+        <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-2 text-sm">
+          {step.supportTitle && <span dir="auto">{step.supportTitle}</span>}
+          {step.levelCode && <span className={CHIP_LEVEL}>{step.levelCode}</span>}
         </div>
       )}
-      {todayItemShown && data.next && (
-        <div className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5 py-1 text-[13.5px]">
-          <span className="bg-primary border-primary size-4 rounded-full border-[1.5px]" />
-          <span className="font-semibold" dir="ltr" style={{ unicodeBidi: "isolate" }}>
-            {data.next.title}
-          </span>
-          <span className="text-primary text-[11px] font-semibold">
-            <span dir="auto">{copy.tagToday}</span>
-          </span>
+      <p className="text-muted-foreground mt-3 text-sm">
+        <span dir="auto">{why}</span>
+      </p>
+      <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+        <Link href={step.href} className={cn(BUTTON_PRIMARY, "sm:flex-1")}>
+          <span dir="auto">{`${start} · ${fill(copy.minutes, { n: step.minutes })}`}</span>
+        </Link>
+        <ChooseYourself className="sm:flex-none" />
+      </div>
+    </section>
+  );
+}
+
+function DoneCard({ data }: { data: TodayData }) {
+  const { t } = useLocale();
+  const copy = t.today;
+  const [showRedo, setShowRedo] = useState(false);
+  const rows = data.steps.filter((step) => step.redoHref);
+  const redoLabel = { listen: copy.redoListen, story: copy.redoStory, words: copy.redoWords };
+  return (
+    <section className="border-success/40 bg-success/5 rounded-2xl border p-5 sm:p-6">
+      <div className="flex items-center gap-3.5">
+        <span className="border-success/40 bg-success/[0.14] text-success grid size-11 shrink-0 place-items-center rounded-full border">
+          <Check aria-hidden="true" className="size-5" strokeWidth={1.8} />
+        </span>
+        <div>
+          <h2 className="text-[19px] font-semibold tracking-[-0.01em] sm:text-[22px]">
+            <span dir="auto">{copy.doneHeading}</span>
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-sm">
+            <span dir="auto">{copy.doneBody}</span>
+          </p>
         </div>
-      )}
-      {upcoming.slice(0, todayItemShown ? 2 : 3).map((item) => (
-        <div
-          key={`${item.mode}-${item.id}`}
-          className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5 py-1 text-[13.5px]"
+      </div>
+      <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+        <button
+          type="button"
+          aria-expanded={showRedo}
+          onClick={() => setShowRedo((open) => !open)}
+          className={cn(BUTTON_PRIMARY, "sm:flex-1")}
         >
-          <span className="border-border size-4 rounded-full border-[1.5px]" />
-          <span className="font-semibold" dir="ltr" style={{ unicodeBidi: "isolate" }}>
-            {item.title}
-          </span>
-          <span className="text-muted-foreground text-[12.5px]">
-            <span dir="auto">{item.mode === "stories" ? copy.kindStory : copy.kindLesson}</span>
-          </span>
-        </div>
-      ))}
-      {data.locked && (
-        <div className="grid grid-cols-[18px_1fr_auto] items-center gap-2.5 py-1 text-[13.5px]">
-          <Lock aria-hidden="true" className="text-muted-foreground size-3.5" />
-          <span
-            className="text-muted-foreground font-medium"
-            dir="ltr"
-            style={{ unicodeBidi: "isolate" }}
-          >
-            {data.locked.title}
-          </span>
-          <span className="text-muted-foreground text-[12.5px]">
-            <span dir="auto">{copy.tagLocked}</span>
-          </span>
-        </div>
+          <RotateCcw aria-hidden="true" className="size-4" strokeWidth={1.8} />
+          <span dir="auto">{copy.redo}</span>
+        </button>
+        <ChooseYourself className="sm:flex-none" />
+      </div>
+      {showRedo && (
+        <ul className="border-border mt-4 divide-y border-t">
+          {rows.map((step) => {
+            const Icon = ICONS[step.kind];
+            return (
+              <li key={step.kind}>
+                <Link
+                  href={step.redoHref ?? "/learn"}
+                  className="hover:bg-muted/60 flex items-center gap-3 px-1 py-3 transition-colors"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className="text-primary size-4 shrink-0"
+                    strokeWidth={1.8}
+                  />
+                  <span className="min-w-0 flex-1 text-sm font-semibold">
+                    <span dir="auto">{redoLabel[step.kind]}</span>
+                    {step.title && (
+                      <span
+                        className="text-muted-foreground ms-2 font-normal"
+                        dir="ltr"
+                        style={{ unicodeBidi: "isolate" }}
+                      >
+                        {step.title}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
-      {data.freeContent && data.freeContent.total > 0 && (
-        <p className="text-muted-foreground mt-2 text-[12.5px]">
-          <span dir="auto">
-            {fill(copy.freeContent, { done: data.freeContent.done, total: data.freeContent.total })}
-          </span>
-        </p>
-      )}
-    </div>
+    </section>
+  );
+}
+
+function IdleCard() {
+  const { t } = useLocale();
+  return (
+    <section className={cn(CARD, "p-5 sm:p-6")}>
+      <h2 className="text-[19px] font-semibold tracking-[-0.01em] sm:text-[22px]">
+        <span dir="auto">{t.today.idleHeading}</span>
+      </h2>
+      <p className="text-muted-foreground mt-1.5 text-sm">
+        <span dir="auto">{t.today.idleBody}</span>
+      </p>
+      <div className="mt-5">
+        <ChooseYourself className="max-sm:w-full" />
+      </div>
+    </section>
   );
 }
 
 /**
- * Home when "Today's session (new Home)" is open: one card with one button, the week's rhythm above
- * it, and the learner's progress and path below. Laid out as the approved mockups (a 1024px column,
- * 16px cards, a 44px primary button, nothing but the site's own colours). The three plans — one per
- * session length — are worked out on the server, so switching 3 / 7 / 12 is instant.
+ * Home when "Today's session (new Home)" is open: one calm column. A week rhythm at the top, the
+ * three steps — listen, write a story, write words — as a row of small tiles whose current icon
+ * moves gently, and under them ONE card for the step the learner is on, with one big button and a
+ * plain "Choose yourself" button beside it. Finished, it turns into a done card with a way to redo
+ * the day's lessons. The learner can stop after any step: each counts on its own.
  */
 export function TodayHome({
   data,
@@ -323,166 +264,81 @@ export function TodayHome({
 }) {
   const { t } = useLocale();
   const copy = t.today;
-  const [length, setLength] = useState<SessionLength>(data.defaultLength);
-
-  // A comeback starts on the short one; everyone else on the length they picked last time.
-  useEffect(() => {
-    if (data.plans[7].variant === "comeback") return;
-    const stored = readStoredLength();
-    if (stored) setLength(stored);
-  }, [data.plans]);
-
-  function pickLength(next: SessionLength) {
-    setLength(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, String(next));
-    } catch {
-      // Not saved; the choice still holds for this visit.
-    }
-  }
-
-  const plan = data.plans[length];
-  const href = startHref(plan, data.next);
-  const comeback = plan.variant === "comeback";
-  const showSeg = plan.variant !== "first" && plan.variant !== "idle" && !data.doneToday;
-  const todayItemShown = plan.steps.some((step) => step.kind === "new") && data.next !== null;
-  const startLabel =
-    plan.variant === "first" ? copy.startFirst : comeback ? copy.startComeback : copy.start;
+  const current = data.steps.find((step) => step.kind === data.current);
+  const labels: Record<StepKind, string> = {
+    listen: copy.stepListen,
+    story: copy.stepStory,
+    words: copy.stepWords,
+  };
+  const currentIndex = data.steps.findIndex((step) => step.kind === data.current);
+  const after = currentIndex >= 0 ? data.steps.slice(currentIndex + 1) : [];
+  const doneCount = data.steps.filter((step) => step.done).length;
 
   return (
-    <div className={cn("mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16", className)}>
+    <div className={cn("mx-auto w-full max-w-[640px] px-4 pt-6 pb-12 sm:px-6 sm:pt-10", className)}>
       <div className="mb-5 flex min-h-[52px] items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl leading-[1.2] font-semibold tracking-[-0.01em] sm:text-[28px]">
-            <span dir="auto">{comeback ? copy.headingComeback : copy.heading}</span>
+            <span dir="auto">{copy.heading}</span>
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             <span dir="auto">{data.dateLabel}</span>
           </p>
         </div>
-        {plan.variant !== "first" && (
-          <div className="text-muted-foreground flex flex-col items-end gap-[7px] text-xs sm:text-[13px]">
-            <span dir="auto">
-              {fill(copy.weekSessions, { done: data.week.done, target: data.week.target })}
-            </span>
-            <div className="flex gap-[9px]" aria-hidden="true">
-              {data.week.dots.map((dot) => (
-                <div key={dot.date} className="flex flex-col items-center gap-[3px] text-[10.5px]">
-                  <span
-                    className={cn(
-                      "size-2.5 rounded-full border-[1.5px]",
-                      dot.on
-                        ? "bg-primary border-primary"
-                        : dot.today
-                          ? "border-primary"
-                          : "border-border",
-                    )}
-                  />
-                  <span dir="auto">{dot.label}</span>
-                </div>
-              ))}
-            </div>
+        <div className="text-muted-foreground flex flex-col items-end gap-[7px] text-xs sm:text-[13px]">
+          <span dir="auto">
+            {fill(copy.weekSessions, { done: data.week.done, target: data.week.target })}
+          </span>
+          <div className="flex gap-[9px]" aria-hidden="true">
+            {data.week.dots.map((dot) => (
+              <div key={dot.date} className="flex flex-col items-center gap-[3px] text-[10.5px]">
+                <span
+                  className={cn(
+                    "size-2.5 rounded-full border-[1.5px]",
+                    dot.on
+                      ? "bg-primary border-primary"
+                      : dot.today
+                        ? "border-primary"
+                        : "border-border",
+                  )}
+                />
+                <span dir="auto">{dot.label}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {banners}
 
-      {data.doneToday ? (
-        <section className="border-success/40 bg-success/5 rounded-2xl border p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <span className="border-success/40 bg-success/[0.14] text-success grid size-11 shrink-0 place-items-center rounded-full border">
-                <Check aria-hidden="true" className="size-4" strokeWidth={1.8} />
-              </span>
-              <div>
-                <h2 className="text-[19px] font-semibold tracking-[-0.01em] sm:text-[22px]">
-                  <span dir="auto">{copy.doneHeading}</span>
-                </h2>
-                <p className="text-muted-foreground mt-0.5 text-sm">
-                  <span dir="auto">{copy.doneBody}</span>
-                </p>
-              </div>
-            </div>
-            {data.next && (
-              <Link
-                href={`/learn/${data.next.mode}/${data.next.id}`}
-                className={cn(BUTTON, "border-border hover:bg-muted border max-sm:w-full")}
-              >
-                <span dir="auto">{copy.moreLesson}</span>
-              </Link>
-            )}
-          </div>
-        </section>
+      {data.steps.length > 0 && !data.allDone && <Stepper data={data} />}
+
+      {data.allDone ? (
+        <DoneCard data={data} />
+      ) : current ? (
+        <CurrentStepCard data={data} step={current} />
       ) : (
-        <section className={cn(CARD, "p-[18px] sm:p-6")} aria-label={copy[titleKey(plan.variant)]}>
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5">
-            <h2 className="text-[19px] font-semibold tracking-[-0.01em] max-sm:w-full sm:text-[22px]">
-              <span dir="auto">{copy[titleKey(plan.variant)]}</span>
-            </h2>
-            {showSeg && (
-              <div
-                role="radiogroup"
-                aria-label={copy.lengthLabel}
-                className="bg-muted inline-flex shrink-0 rounded-[10px] p-[3px]"
-              >
-                {SESSION_LENGTHS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    role="radio"
-                    aria-checked={length === option}
-                    onClick={() => pickLength(option)}
-                    className={cn(
-                      "focus-visible:ring-ring rounded-lg px-3 py-[5px] text-[12.5px] font-semibold transition-colors outline-none focus-visible:ring-2",
-                      length === option ? "bg-brand-muted text-primary" : "text-muted-foreground",
-                    )}
-                  >
-                    <span dir="auto">{fill(copy.minutes, { n: option })}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <p className="text-muted-foreground mt-2 mb-4 flex items-start gap-2 text-sm">
-            <Info
-              aria-hidden="true"
-              className="text-primary mt-[3px] size-4 shrink-0"
-              strokeWidth={1.8}
-            />
-            <span dir="auto">{whyText(copy, plan)}</span>
-          </p>
-          {plan.steps.length > 0 && <PlanSteps plan={plan} data={data} />}
-          <div className="mt-[18px] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {href ? (
-              <Link
-                href={href}
-                className={cn(
-                  BUTTON,
-                  "bg-primary text-primary-foreground hover:opacity-90 max-sm:w-full",
-                )}
-              >
-                <span dir="auto">{startLabel}</span>
-              </Link>
-            ) : (
-              <span />
-            )}
-            <Link
-              href="/learn?classic=1"
-              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm max-sm:justify-center"
-            >
-              <span dir="auto">{copy.chooseYourself}</span>
-              <ChevronRight aria-hidden="true" className="size-3.5" />
-            </Link>
-          </div>
-        </section>
+        <IdleCard />
       )}
 
-      {plan.variant !== "first" && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
-          <ProgressCard data={data} />
-          <PathCard data={data} todayItemShown={todayItemShown} />
-        </div>
+      {current && (
+        <p className="text-muted-foreground mt-3 px-1 text-[13px]">
+          <span dir="auto">
+            {[
+              doneCount > 0
+                ? fill(copy.progressToday, { done: doneCount, total: data.steps.length })
+                : null,
+              after.length > 0
+                ? fill(copy.nextUp, { steps: after.map((step) => labels[step.kind]).join(" · ") })
+                : null,
+              data.remainingMinutes === data.totalMinutes
+                ? fill(copy.timeAll, { n: data.totalMinutes })
+                : fill(copy.timeLeft, { n: data.remainingMinutes }),
+            ]
+              .filter(Boolean)
+              .join(" — ")}
+          </span>
+        </p>
       )}
     </div>
   );

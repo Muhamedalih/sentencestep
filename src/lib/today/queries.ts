@@ -15,3 +15,21 @@ export async function fetchSessionDatesSince(userId: string, fromISO: string): P
   if (error) throw error;
   return (data ?? []).map((row) => row.session_date);
 }
+
+/**
+ * The learner's last typing speeds (words per minute, newest first, up to `limit`), from their own
+ * lesson attempts — what Today's time estimate for a story is based on, so "about 4 minutes" is
+ * about THEIR speed. RLS limits the rows to the signed-in learner. Throws on a database error.
+ */
+export async function fetchRecentWpm(userId: string, limit = 10): Promise<(number | null)[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("lesson_attempts")
+    .select("wpm")
+    .eq("user_id", userId)
+    .not("wpm", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((row) => row.wpm);
+}

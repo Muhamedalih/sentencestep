@@ -1,153 +1,113 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  DEFAULT_SESSION_LENGTH,
-  REVIEW_CAP,
-  daysBetween,
-  defaultLengthFor,
-  parseSessionLength,
-  planAllLengths,
-  planToday,
-  startHref,
-} from "./plan";
+import { isImportantWord } from "./important-words";
+import { DEFAULT_WPM, estimateStoryMinutes, medianWpm, planToday } from "./plan";
 import { weekDates, weekDots, weekStartFor } from "./week";
 
-const base = { dueReview: 0, hasNew: true, hasHistory: true, daysAway: 1 } as const;
+const open = { available: true, done: false };
 
 describe("planToday", () => {
-  it("a learner with no finished lesson gets only the opening lesson", () => {
-    const plan = planToday({ ...base, length: 7, hasHistory: false, daysAway: null, dueReview: 9 });
-    assert.equal(plan.variant, "first");
+  it("lists the three steps in order, the first as current", () => {
+    const plan = planToday(
+      {
+        listen: { ...open, minutes: 5 },
+        story: { ...open, minutes: 4 },
+        words: { ...open, minutes: 2 },
+      },
+      false,
+    );
     assert.deepEqual(
       plan.steps.map((step) => step.kind),
-      ["new"],
+      ["listen", "story", "words"],
     );
+    assert.equal(plan.current, "listen");
+    assert.equal(plan.remainingMinutes, 11);
+    assert.equal(plan.totalMinutes, 11);
+    assert.equal(plan.allDone, false);
   });
 
-  it("a regular 7-minute day reviews first, then one lesson, then a 3-sentence recall", () => {
-    const plan = planToday({ ...base, length: 7, dueReview: 8 });
-    assert.equal(plan.variant, "regular");
+  it("moves on to the next step as steps are finished and counts only what is left", () => {
+    const plan = planToday(
+      {
+        listen: { available: false, done: true, minutes: 5 },
+        story: { ...open, minutes: 4 },
+        words: { ...open, minutes: 2 },
+      },
+      false,
+    );
+    assert.equal(plan.current, "story");
+    assert.equal(plan.remainingMinutes, 6);
+    assert.equal(plan.totalMinutes, 11);
+  });
+
+  it("leaves out a step with nothing open to this learner", () => {
+    const plan = planToday(
+      {
+        listen: { available: false, done: false, minutes: 0 },
+        story: { ...open, minutes: 4 },
+        words: { ...open, minutes: 2 },
+      },
+      false,
+    );
     assert.deepEqual(
       plan.steps.map((step) => step.kind),
-      ["review", "new", "recall"],
+      ["story", "words"],
     );
-    const recall = plan.steps[2];
-    assert.equal(recall?.kind === "recall" ? recall.items : 0, 3);
+    assert.equal(plan.current, "story");
   });
 
-  it("the review is capped by the session length", () => {
-    const seven = planToday({ ...base, length: 7, dueReview: 15 });
-    const twelve = planToday({ ...base, length: 12, dueReview: 20 });
-    const first7 = seven.steps[0];
-    const first12 = twelve.steps[0];
-    assert.equal(first7?.kind === "review" ? first7.items : 0, REVIEW_CAP[7]);
-    assert.equal(first12?.kind === "review" ? first12.items : 0, REVIEW_CAP[12]);
-    const recall = twelve.steps.find((step) => step.kind === "recall");
-    assert.equal(recall?.kind === "recall" ? recall.items : 0, 4);
-  });
-
-  it("skips the review when fewer than three words are due", () => {
-    const plan = planToday({ ...base, length: 7, dueReview: 2 });
-    assert.deepEqual(
-      plan.steps.map((step) => step.kind),
-      ["new", "recall"],
+  it("is all done once the finish screen was reached, whatever the steps say", () => {
+    const plan = planToday(
+      {
+        listen: { ...open, minutes: 5 },
+        story: { ...open, minutes: 4 },
+        words: { ...open, minutes: 2 },
+      },
+      true,
     );
+    assert.equal(plan.allDone, true);
+    assert.equal(plan.current, null);
+    assert.equal(plan.remainingMinutes, 0);
   });
 
-  it("the 3-minute session is review only, or one lesson when nothing is due", () => {
-    assert.deepEqual(
-      planToday({ ...base, length: 3, dueReview: 5 }).steps.map((step) => step.kind),
-      ["review"],
-    );
-    assert.deepEqual(
-      planToday({ ...base, length: 3, dueReview: 0 }).steps.map((step) => step.kind),
-      ["new"],
-    );
-  });
-
-  it("a large backlog makes a review-only day", () => {
-    const plan = planToday({ ...base, length: 7, dueReview: REVIEW_CAP[7] * 2 + 1 });
-    assert.equal(plan.variant, "reviewOnly");
-    assert.deepEqual(
-      plan.steps.map((step) => step.kind),
-      ["review"],
-    );
-  });
-
-  it("a years-old backlog does not freeze the path: review a few, then a lesson", () => {
-    const plan = planToday({ ...base, length: 7, dueReview: REVIEW_CAP[7] * 5 + 1 });
-    assert.equal(plan.variant, "regular");
-    assert.deepEqual(
-      plan.steps.map((step) => step.kind),
-      ["review", "new", "recall"],
-    );
-  });
-
-  it("days away give a light review and nothing new", () => {
-    const plan = planToday({ ...base, length: 3, daysAway: 5, dueReview: 10 });
-    assert.equal(plan.variant, "comeback");
-    assert.deepEqual(
-      plan.steps.map((step) => step.kind),
-      ["review"],
-    );
-  });
-
-  it("days away with nothing due is an ordinary day", () => {
-    const plan = planToday({ ...base, length: 7, daysAway: 9, dueReview: 0 });
-    assert.equal(plan.variant, "regular");
-  });
-
-  it("nothing due and nothing new is idle", () => {
-    const plan = planToday({ ...base, length: 7, hasNew: false, dueReview: 0 });
-    assert.equal(plan.variant, "idle");
+  it("has nothing to do when no step exists", () => {
+    const none = { available: false, done: false, minutes: 0 };
+    const plan = planToday({ listen: none, story: none, words: none }, false);
     assert.equal(plan.steps.length, 0);
-  });
-
-  it("a learner with only review left still gets a review session", () => {
-    const plan = planToday({ ...base, length: 7, hasNew: false, dueReview: 6 });
-    assert.deepEqual(
-      plan.steps.map((step) => step.kind),
-      ["review"],
-    );
-  });
-
-  it("plans all three lengths and defaults the comeback to the short one", () => {
-    const plans = planAllLengths({ ...base, dueReview: 4 });
-    assert.equal(plans[3].length, 3);
-    assert.equal(plans[12].length, 12);
-    assert.equal(defaultLengthFor("comeback"), 3);
-    assert.equal(defaultLengthFor("regular"), DEFAULT_SESSION_LENGTH);
+    assert.equal(plan.current, null);
+    assert.equal(plan.allDone, false);
   });
 });
 
-describe("startHref and helpers", () => {
-  it("starts on the review when there is one, otherwise on the lesson", () => {
-    const next = { id: "stories-3", mode: "stories" };
-    assert.equal(
-      startHref(planToday({ ...base, length: 7, dueReview: 8 }), next),
-      "/learn/session/today?length=7&then=lesson",
-    );
-    assert.equal(
-      startHref(planToday({ ...base, length: 3, dueReview: 8 }), next),
-      "/learn/session/today?length=3&then=end",
-    );
-    assert.equal(
-      startHref(planToday({ ...base, length: 7, dueReview: 0 }), next),
-      "/learn/stories/stories-3?today=1&length=7",
-    );
-    assert.equal(startHref(planToday({ ...base, length: 7, hasNew: false }), next), null);
+describe("time estimates", () => {
+  it("uses the median of recent typing speeds and falls back to a default", () => {
+    assert.equal(medianWpm([20, 30, 10]), 20);
+    assert.equal(medianWpm([20, 30]), 25);
+    assert.equal(medianWpm([null, 0, 400]), DEFAULT_WPM);
+    assert.equal(medianWpm([]), DEFAULT_WPM);
   });
 
-  it("parses a length from the address, defaulting to 7", () => {
-    assert.equal(parseSessionLength("12"), 12);
-    assert.equal(parseSessionLength("5"), 7);
-    assert.equal(parseSessionLength(undefined), 7);
+  it("a story takes longer for a slower typist", () => {
+    const base = { words: 64, sentences: 8 };
+    const slow = estimateStoryMinutes({ ...base, wpm: 10 });
+    const fast = estimateStoryMinutes({ ...base, wpm: 40 });
+    assert.ok(slow > fast);
+    assert.ok(fast >= 2);
+  });
+});
+
+describe("isImportantWord", () => {
+  it("keeps content words", () => {
+    for (const word of ["coffee", "ordered", "sandwich", "waiter", "apologized", "instead"]) {
+      assert.equal(isImportantWord(word), true, word);
+    }
   });
 
-  it("counts whole days between two dates", () => {
-    assert.equal(daysBetween("2026-10-18", "2026-10-21"), 3);
-    assert.equal(daysBetween("2026-10-21", "2026-10-21"), 0);
+  it("drops function words, contractions and tiny words", () => {
+    for (const word of ["and", "the", "into", "isn't", "He", "to", "very", "with", "a"]) {
+      assert.equal(isImportantWord(word), false, word);
+    }
   });
 });
 

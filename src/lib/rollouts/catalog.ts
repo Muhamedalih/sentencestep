@@ -84,12 +84,14 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Today's session (new Home)",
     description:
-      "Home becomes one card with one button: “Today's session”. The session reviews words from the learner's own mistakes and past lessons with the word hidden, then opens ONE new lesson or story from their path, then asks three sentences back from memory, and ends on a calm screen (what was remembered, what comes back tomorrow, and the reminder card when that is on). The learner picks 3, 7 or 12 minutes; a first session, a review-only day when a lot is due, and a gentle comeback after days away each have their own card. “Choose yourself” opens the old Home with all the lists.",
+      "For a signed-in learner who has finished their first lesson (the first step stays as it is), Home becomes one calm screen: three steps — listen to a passage (reading and listening together), type a story, type five words — as a row of tiles whose current icon moves gently, one big button for the step they are on and a plain “Choose yourself” button. Each step counts on its own and the learner can stop after any; a finished day offers “Redo today's lessons”. Daily Lessons are no longer on this path (they stay under Choose yourself).",
     notes: [
       "Signed-in learners only for now: a guest keeps the current Home and lesson ending.",
-      "Uses the new lesson ending's recall round and finish screen for the end of the session, whatever “New lesson ending” is set to.",
-      "Review words come from mistakes, weak words, words met in lessons and saved cards, each with its own schedule; nothing about them is stored by the session itself.",
-      "A finished session is recorded in daily_sessions (no XP); the week dots on Home read it together with finished lessons.",
+      "The words step is five words: important review words first (target words of their lessons and stories, weak Words-section words, typing mistakes that are real vocabulary — never “and”, “into” or contractions), the rest new words from the Words section; “5 more words” starts another round.",
+      "Anything a free learner can't open is simply skipped: Today shows no lock or wall of its own.",
+      "The learner's chosen level is a floor for the passage, the story and the new words.",
+      "Times are estimates: a passage from its length, a story from the learner's own typing speed.",
+      "Reaching the finish screen is recorded in daily_sessions (no XP); the week dots read it with finished lessons and passages. The reminder card on it needs the “Remind me tomorrow” email to be open too.",
       "The old Home is still reachable at /learn?classic=1.",
     ],
   },

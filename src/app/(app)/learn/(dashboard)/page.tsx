@@ -68,21 +68,20 @@ export default async function LearnHomePage({
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
   // "Today's session (new Home)": a signed-in learner it is open for gets the Today card instead of
-  // everything below; ?classic=1 (the "Choose yourself" link) brings the old Home back. Decided
-  // before any of the old page's reads start, so the Today page does not pay for them.
+  // everything below — but only once they have finished their first lesson (the first step stays as
+  // it is). ?classic=1 (the "Choose yourself" button) brings the old Home back. Decided before any
+  // of the old page's reads start, so the Today page does not pay for them.
   const [homeFeatures, homeUser, homeParams] = await Promise.all([
     getEffectiveFeatures(),
     getCurrentUser(),
     searchParams,
   ]);
   if (homeFeatures.rollouts.todaySession && homeUser && homeParams.classic !== "1") {
-    return (
-      <TodayHomePage
-        userId={homeUser.id}
-        locale={locale}
-        floor={homeFeatures.rollouts.levelFloor}
-      />
-    );
+    // The same cached read the classic Home makes below, so falling through costs nothing extra.
+    const homeProgress = await fetchProgressCached(todayLocalISODate());
+    if ((homeProgress?.completions.length ?? 0) > 0) {
+      return <TodayHomePage userId={homeUser.id} locale={locale} />;
+    }
   }
 
   // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson

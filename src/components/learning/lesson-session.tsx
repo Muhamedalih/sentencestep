@@ -42,8 +42,7 @@ import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-se
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
-import { isTodayRunUrl, todayLengthFromUrl } from "@/lib/today/run-state";
-import type { SessionLength } from "@/lib/today/plan";
+import { isTodayRunUrl } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
 import type { Lesson, NextLessonRef } from "@/types/content";
@@ -76,6 +75,9 @@ const RatingPrompt = dynamic(() =>
 );
 const SessionEndFlow = dynamic(() =>
   import("@/components/learning/session-end-flow").then((m) => m.SessionEndFlow),
+);
+const TodayStepDone = dynamic(() =>
+  import("@/components/today/today-step-done").then((m) => m.TodayStepDone),
 );
 const StoryWordsPanel = dynamic(() =>
   import("@/components/learning/story-words-panel").then((m) => m.StoryWordsPanel),
@@ -315,19 +317,15 @@ export function LessonSession({
   // The new lesson ending (admin feature "New lesson ending"): a recall round and a calm finish
   // screen in place of the stats screen. Never in the admin content preview, and Conversation
   // keeps its own screen (nothing links to it any more).
-  // A step of Today's session (?today=1, "Today's session (new Home)"): it ends on this same recall
-  // round and finish screen, whatever the "New lesson ending" switch says. Read after mount, since the
-  // address is only known in the browser.
-  const [todayRun, setTodayRun] = useState<{ length: SessionLength } | null>(null);
+  // A step of Today's session (?today=1, "Today's session (new Home)"): when the story is done the
+  // learner is offered the next step (the words) instead of the recall round and finish screen.
+  // Read after mount, since the address is only known in the browser.
+  const [todayStep, setTodayStep] = useState(false);
   useEffect(() => {
-    if (features.rollouts.todaySession && isTodayRunUrl()) {
-      setTodayRun({ length: todayLengthFromUrl() });
-    }
+    if (features.rollouts.todaySession && isTodayRunUrl()) setTodayStep(true);
   }, [features.rollouts.todaySession]);
   const usesSessionEnd =
-    (features.rollouts.sessionEnd || todayRun !== null) &&
-    !previewMode &&
-    unit.mode !== "conversation";
+    features.rollouts.sessionEnd && !previewMode && unit.mode !== "conversation";
   const recallPool = useMemo(
     () => (usesSessionEnd ? buildFromMemoryItems(unit.sentences, locale) : []),
     [usesSessionEnd, unit.sentences, locale],
@@ -846,7 +844,11 @@ export function LessonSession({
           under it. A flex column so those screens can fill what is left under the brand
           bar (flex-1) on a phone too, where nothing here has a fixed height. */}
       <div className="flex flex-1 flex-col lg:min-h-0">
-        {isComplete && usesSessionEnd ? (
+        {isComplete && todayStep && !previewMode ? (
+          <div key="today-step" className="flex min-h-0 flex-1 flex-col">
+            <TodayStepDone step="story" saveStatus={saveStatus} onRetrySave={retryMarkComplete} />
+          </div>
+        ) : isComplete && usesSessionEnd ? (
           <div key="session-end" className="flex min-h-0 flex-1 flex-col">
             <SessionEndFlow
               unit={unit}
@@ -862,7 +864,6 @@ export function LessonSession({
               allowReveal={features.fromMemory.allowReveal}
               showFirstLetters={features.fromMemory.showFirstLetters}
               onMistakes={handleSentenceMistakes}
-              today={todayRun ?? undefined}
               endExtras={
                 <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
               }

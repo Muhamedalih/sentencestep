@@ -42,8 +42,10 @@ export async function generateMetadata({
 
 export default async function PassageReaderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ passageId: string }>;
+  searchParams: Promise<{ today?: string }>;
 }) {
   const features = await getEffectiveFeatures();
   if (!features.passages.enabled) notFound();
@@ -128,6 +130,12 @@ export default async function PassageReaderPage({
         // Only Arabic translations are written so far (see PassageSentence.ar).
         translationAvailable={locale === "ar"}
         nextPassage={next ? { id: next.id, title: next.title } : null}
+        // A step of Today's session (opened from Home): the end screen carries on to the story.
+        todayNext={
+          features.rollouts.todaySession && (await searchParams).today === "1"
+            ? { href: "/learn/today/go?step=story" }
+            : null
+        }
         wordsLink={wordsLink}
       />
     </div>

@@ -57,6 +57,8 @@ export interface PassageReaderProps {
   translationAvailable: boolean;
   /** The next passage in the list, for the end screen; null on the last one. */
   nextPassage: { id: string; title: string } | null;
+  /** Today's session ("Today's session (new Home)"): where the end screen's one big button goes — on to the story — instead of the next passage. */
+  todayNext?: { href: string } | null;
   /** Where "Practice these words" goes, and whether it is the real Word Lists page or the admin-only preview of a lesson that is not published yet. Null when the passage has no word lesson. */
   wordsLink: { href: string; adminPreview: boolean } | null;
   /** Where the narrator will pause, by sentence id — passed only to an admin, who sees it as small dots in the text; a learner is never given it. */
@@ -70,6 +72,7 @@ export function PassageReader({
   initialSectionIndex,
   translationAvailable,
   nextPassage,
+  todayNext,
   wordsLink,
   pauseMarks,
 }: PassageReaderProps) {
@@ -451,6 +454,7 @@ export function PassageReader({
               saveFailed={saveFailed}
               rewardLines={lineForReward(rewards)}
               nextPassage={nextPassage}
+              todayNext={todayNext ?? null}
               wordsLink={wordsLink}
               onReadAgain={handleReadAgain}
             />
