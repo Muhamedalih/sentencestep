@@ -32,7 +32,7 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
     <>
       <span
         className={cn(
-          "grid size-12 shrink-0 place-items-center rounded-full ring-1",
+          "roomy:size-11 grid size-12 shrink-0 place-items-center rounded-full ring-1",
           done
             ? "bg-success/15 text-success ring-success/25"
             : "bg-primary/15 text-primary ring-primary/25",
@@ -54,7 +54,7 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
             <p className="text-muted-foreground mt-1 text-[13px] leading-relaxed">
               <span dir="auto">{copy.whySentences}</span>
             </p>
-            <p className="text-muted-foreground mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs">
+            <p className="text-muted-foreground roomy:mt-[clamp(0.25rem,0.9svh,0.625rem)] mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs">
               <span className="flex items-center gap-1" aria-hidden="true">
                 {Array.from({ length: Math.min(count, MAX_SEGMENTS) }, (_unused, index) => (
                   <span key={index} className="bg-primary/45 h-1.5 w-5 rounded-full" />
@@ -77,7 +77,7 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
   );
 
   const surface = cn(
-    "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5",
+    "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)]",
     done ? "border-success/30 bg-success/[0.06]" : "border-primary/25 bg-brand-muted/35",
     className,
   );

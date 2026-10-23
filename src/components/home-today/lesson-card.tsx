@@ -59,24 +59,24 @@ function PictureCard({
           )}
         />
         <span
-          className="roomy:start-6 roomy:top-6 roomy:px-4 roomy:py-1.5 roomy:text-sm absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
+          className="roomy:start-5 roomy:top-5 roomy:px-3.5 roomy:py-1 roomy:text-[13px] absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
           dir={dir}
         >
           {eyebrow}
         </span>
-        <div className="roomy:gap-1.5 roomy:px-8 roomy:pt-20 roomy:pb-8 relative flex flex-col gap-1 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-10 pb-5 lg:pt-16">
+        <div className="roomy:gap-1 roomy:px-7 roomy:pt-16 roomy:pb-6 relative flex flex-col gap-1 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-10 pb-5 lg:pt-16">
           <h2
-            className="roomy:text-4xl line-clamp-2 text-2xl leading-tight font-semibold tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]"
+            className="roomy:text-3xl line-clamp-2 text-2xl leading-tight font-semibold tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]"
             dir="ltr"
           >
             {lesson.title}
           </h2>
-          <p className="roomy:text-xl line-clamp-2 text-base font-medium text-white/85" dir={dir}>
+          <p className="roomy:text-lg line-clamp-2 text-base font-medium text-white/85" dir={dir}>
             {lesson.supportTitle ?? lesson.title}
           </p>
           <Link
             href={href}
-            className="focus-visible:ring-ring roomy:mt-5 roomy:h-12 roomy:px-8 roomy:text-base relative z-10 mt-3 inline-flex h-11 w-fit items-center justify-center rounded-[10px] bg-white/15 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-colors outline-none hover:bg-white/25 focus-visible:ring-2"
+            className="focus-visible:ring-ring roomy:mt-4 roomy:h-11 roomy:px-7 roomy:text-base relative z-10 mt-3 inline-flex h-11 w-fit items-center justify-center rounded-[10px] bg-white/15 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-colors outline-none hover:bg-white/25 focus-visible:ring-2"
           >
             <span dir="auto">{ctaLabel}</span>
           </Link>

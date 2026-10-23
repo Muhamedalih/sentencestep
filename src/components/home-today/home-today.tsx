@@ -43,7 +43,9 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
 async function TestCardSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
   const payload = await quests;
   const { test } = payload ? splitToday(payload.quests) : { test: null };
-  return test ? <TestYourselfCard quest={test} className="mt-5" /> : null;
+  return test ? (
+    <TestYourselfCard quest={test} className="roomy:mt-[clamp(0.75rem,2svh,1.25rem)] mt-5" />
+  ) : null;
 }
 
 /**
@@ -79,7 +81,7 @@ export function HomeToday({
     lessonStats,
     sessionCount,
     reviewCount,
-    className: "mb-6 max-sm:mb-5",
+    className: "mb-6 max-sm:mb-5 roomy:mb-[clamp(0.75rem,2svh,1.5rem)]",
   };
   return (
     <>

@@ -285,7 +285,7 @@ export default async function LearnHomePage({
   if (newHome && engagement && user) {
     return (
       <ProgressProvider initialProgress={initialProgress}>
-        <div className="roomy:max-w-7xl mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-8 sm:pb-16">
+        <div className="roomy:max-w-7xl roomy:pt-[clamp(0.75rem,2svh,2rem)] roomy:pb-[clamp(0.75rem,2svh,4rem)] mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-8 sm:pb-16">
           <h1 className="sr-only">{t.nav.home}</h1>
           <HomeToday
             stream={engagement}
