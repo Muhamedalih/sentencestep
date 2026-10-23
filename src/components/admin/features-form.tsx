@@ -97,7 +97,7 @@ const QUEST_LABELS: Record<QuestType, string> = {
   dictation: "Complete N dictation sentences",
   dailySession: "Finish today's session",
   passages: "Finish N passage parts",
-  sentenceReview: "Remember N sentences (Today's fourth task only)",
+  sentenceReview: "Today's exam (the extra row after Today's three tasks)",
 };
 
 const BADGE_LABELS: Record<BadgeId, string> = {

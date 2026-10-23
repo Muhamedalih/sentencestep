@@ -83,7 +83,7 @@ export async function dealSentenceQuest(args: {
     if (isMissingTableError(error)) {
       tableMissingUntil = Date.now() + MISSING_TABLE_BACKOFF_MS;
       console.warn(
-        "[sentence-bank] sentence_mastery not found: has supabase/migrations/20250347000000_sentence_mastery.sql been applied? The fourth row is skipped until it is.",
+        "[sentence-bank] sentence_mastery not found: has supabase/migrations/20250347000000_sentence_mastery.sql been applied? The exam row is skipped until it is.",
       );
       return null;
     }

@@ -19,8 +19,9 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today's session" };
 
 /**
- * The sentence review ("Sentence bank" permission): a few sentences the learner typed on earlier
- * days come back with their text hidden. Reached from the fourth row of Today's tasks, or — with
+ * The day's exam ("Sentence bank" permission): a few sentences the learner typed — some in lessons
+ * finished today, some on earlier days — come back with their text hidden. Reached from the exam
+ * row of Today's tasks, or — with
  * `flow=1` — from the words step, and then on to the finish screen. Nothing to ask (or the
  * permission closed, or signed out, or the table not created yet) goes straight on instead of
  * showing an empty screen. It never checks whether the learner's subscription is active: what

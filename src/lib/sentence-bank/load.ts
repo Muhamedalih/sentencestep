@@ -100,7 +100,7 @@ export async function readSentenceBank(context: SentenceBankContext): Promise<Se
 
 /**
  * How many sentences are ready for the learner today — what decides whether Today's tasks box gets
- * its fourth row, and how many sentences that row asks for: the ones from earlier days and the ones
+ * its exam row, and how many sentences that row asks for: the ones from earlier days and the ones
  * from the lessons finished today, up to the day's batch. The weak-word order does not change how
  * MANY there are, so it is not read here.
  */

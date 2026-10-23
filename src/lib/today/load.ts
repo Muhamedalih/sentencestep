@@ -259,7 +259,7 @@ export async function enrichTodayQuests(args: {
       cookies(),
     ]);
     const timeZone = cookieStore.get(TIMEZONE_COOKIE)?.value;
-    // Today's optional fourth row, "remember N sentences", is dealt beside the steps' own reads (it
+    // Today's optional extra row, the day's exam, is dealt beside the steps' own reads (it
     // reads nothing once the row exists, and never throws).
     const bankContext = {
       userId: args.userId,
