@@ -28,54 +28,73 @@ Home page — see `docs/home-today.md`; this document and the code keep saying "
 2. `20250348000000_sentence_checks.sql` — `sentence_checks`, one row per weekly check
    (asked, remembered, written). Independent of the first.
 
-Until a migration is applied the code degrades quietly: no fourth row, nothing recorded, one warning a
-minute at most per server process (`isMissingTableError`).
+Until the checks migration is applied the weekly check degrades quietly (one warning a minute at most per
+server process, `isMissingTableError`). The day's test no longer reads `sentence_mastery` to decide whether it
+exists, but a story sentence's answer needs it (the recording call fails, and with it the task's count).
 
 ## What comes back, and how it is asked
 
-- The exam has two kinds of question (`exam.ts`, `composeExam`), today's first. About half come from
-  the lessons finished **today** (`selectTodaySentences`: 4+ words, never asked yet, weak words first,
-  then a spread, at most three from one lesson) so the day ends with proof it was learned; the rest
-  from **earlier** days (`selectSentenceReview`: 4+ words, due ones oldest first, then new ones holding
-  the learner's weak words, then a spread over the finished lessons, newest first, at most two from one
-  lesson). Three questions a day by default: two about today and one from before; when one side has
-  too few the other fills the exam, so a learner's first day is all about today and a day with nothing
-  finished all about before. No counter of what waits. One constant (`ceil(limit / 2)` in `exam.ts`)
-  moves the split.
-- Today's answers go to the schedule like any other (a clean one enters at strength 1, due tomorrow;
-  a miss is due tomorrow), which also stops the same sentence being asked twice if the visit is left
-  half done. The finish screen says the score and its two halves ("from today's lesson: 2 of 2",
-  "from earlier days: 1 of 1"), and lists every sentence with how it went.
-- Form by strength (`review.ts`): 0-1 partial dictation (hear it, type the one or two missing words),
-  2-3 audio only, 4-5 meaning only (Arabic to English). A sentence of today's lesson is asked as if it
-  had strength 2 (`TODAY_FORM_STRENGTH`): heard and typed whole, or from its meaning with no clip. **Every question has its sound**, a stored clip
-  in the voice of the sentence's own lesson (`voice_audio_cache`, found by `lesson-clips.ts`; never
-  generated, never the browser's voice): a sentence with no stored clip is not asked at all, and one
-  with no meaning in the learner's language is asked by sound alone. Today all 1381 sentences of 4+
-  words in the 171 lessons have their clip. The meaning-only form keeps the clip for after the answer
-  (hearing it first would give the answer away).
+- **The day's test asks about Today's session and nothing else** (changed 2026-10-23, at the owner's
+  word: a question had come from an earlier daily lesson, outside the passage and the story). Its
+  questions are lines of the **passage** and of the **story** the learner finished today (`today-exam.ts`,
+  read by `load.ts`): a story finished today counts even when it was first finished on an earlier day
+  (Today's own "story done" counts it too), a passage counts when its `passage_progress` says it was
+  completed today. Never a sentence from an earlier day, never a normal daily lesson. The earlier-days
+  machinery (`selectSentenceReview`, `selectTodaySentences`, the schedule's "due" reads) is no longer
+  called by the day's test; it is kept, with its tests, for the day earlier sentences come back. They
+  now come back only through the weekly test.
+- `poolForToday`: 4+ words, each line once (a passage that repeats a line word for word asks it once),
+  and from each lesson the first six in the **day's own order** — a hash of the day and the line id, so
+  it varies from day to day but never at random and never depends on what the learner does or on the
+  order the lines were read in. `interleaveToday`: the passage and the story **in turn** (passage first,
+  then the story, then the passage again), at most three from one lesson. Three questions a day by
+  default (the row's target in Features), so with both lessons done it is passage, story, passage.
+- **The same list every time**, because a test left half way carries on from the answers already counted:
+  the questions drawn are the list from `quest.progress` up to `quest.target`. (The old way — leave out
+  what already had a schedule row — cannot work for passage lines, which have none.)
+- **Every question is heard and typed whole, from memory** (`buildTodayItems`, form `audio`;
+  `TODAY_FORM_STRENGTH`). The fill-in-a-word form is no longer reachable from the day's test (its code stays
+  in `mask.ts` and the runner). The meaning in the learner's language is shown after the answer; passages
+  have an Arabic meaning only, so far. **Every question has its sound**: a story sentence's stored clip in
+  the voice of its own lesson (`voice_audio_cache`, found by `lesson-clips.ts`; never generated, never
+  the browser's voice), a passage line's narrated clip; a line with no clip is not asked.
+- **A story's sentence reaches the schedule** (`record_sentence_review`: a clean answer enters at strength
+  1, due tomorrow; a miss is due tomorrow) and counts for the day's task. **A passage line is not a row of
+  the `sentences` table**, so it cannot be on the schedule (that would take a table of its own, applied by
+  pasting SQL): it only counts for the task (`recordPassageLineReviewAction`), and the screen does not say
+  "comes back tomorrow" for it. The finish screen says the score and lists every sentence with how it went
+  and where it came from ("from today's passage" / "from today's story").
+- **What the test says about an answer** (`feedback.ts`, `Verdict` in the runner; one short line, never a
+  score): typed right — a round tick that settles in, "Perfect!", and the same soft chime a right answer
+  in Passages plays (`usePassageChime`; it follows Admin → Typing sound, so switched off there it is
+  silent); one to three letters away (wrong, missing or extra letters added across the sentence) — "so
+  close" with the number of letters; further off — only "check the highlighted words"; "I don't
+  remember" — "that's fine, here is the sentence".
 - One help (the first letters) holds a sentence where it is; two helps, a wrong answer or "I don't
-  remember" is a miss. The first answer alone goes to the schedule and a miss simply comes back tomorrow: by default nothing is
-  asked twice in a visit, so the exam is exactly as long as it was said to be and nothing piles up on a
-  learner having a hard day (`MAX_SECOND_CHANCES = 0` in `session.ts`; raising it gives a miss a second
-  look at the end of the visit with other blanks, for practice only — `mask.ts`).
+  remember" is a miss. The first answer alone goes to the schedule and a miss simply comes back tomorrow
+  (a story's sentence): by default nothing is asked twice in a visit, so the test is exactly as long as it
+  was said to be and nothing piles up on a learner having a hard day (`MAX_SECOND_CHANCES = 0` in
+  `session.ts`).
+- The screen is one card in the middle of the viewport (it has no app header), the way out ("Exit") in its
+  header beside the name and the count.
 - Routes: `/learn/today/sentences` (`?flow=1` from the words step through
   `/learn/today/go?step=sentences`, then on to the finish screen) and `/learn/today/check`.
 
 ## Reads (and why the service role)
 
-Home: when the exam row is not dealt yet, two reads — the learner's own rows, then one pool read of
-the sentences of the lessons they finished today, their 40 most recent finished lessons and the due
-ones. Dealt once a day; later visits read nothing for it. A learner who goes from the story straight
-to the words never rebuilds Home, so `/learn/today/go?step=sentences` deals the row itself when it is
-missing (`sentenceReviewPending` with `deal`). The weekly line adds one tiny read (the last check) and, only when a check
-could be due, one more (their Today days). The review screen adds weak words, meanings and a batched
-clip lookup.
+Home: when the test row is not dealt yet, the learner's passage progress (one small read, shared with
+Today's own through `cache`) and, only when something was finished today, the story's sentences (one
+pool read) and the passage (share-cached). Nothing is read about earlier days, schedule rows or weak
+words any more. Dealt once a day, for as many questions as today's lessons can give (up to the row's
+target); later visits read nothing for it. A learner who goes from the story straight to the words never
+rebuilds Home, so `/learn/today/go?step=sentences` deals the row itself when it is missing
+(`sentenceReviewPending` with `deal`). The weekly line adds one tiny read (the last check) and, only when
+a check could be due, one more (their Today days). The test screen adds the story's meanings and a
+batched clip lookup.
 
 Row-level security on `sentences` hides premium lessons from a learner whose subscription ended. The
 sentence bank never locks, so the pool read (`pool.ts`) uses the service role, scoped to that learner's
-own finished lessons and own schedule rows — ids that come from their server-side progress, never from
-the browser.
+own finished lessons — ids that come from their server-side progress, never from the browser.
 
 ## Weekly check
 

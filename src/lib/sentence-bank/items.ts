@@ -1,16 +1,21 @@
-import { maskedTokenIndexes } from "@/lib/sentence-bank/mask";
 import { TODAY_FORM_STRENGTH, reviewFormFor } from "@/lib/sentence-bank/review";
 import type { ReviewForm } from "@/lib/sentence-bank/review";
-import type { ReviewItem, ReviewReason, SentenceCandidate } from "@/lib/sentence-bank/select";
+import type { ReviewReason } from "@/lib/sentence-bank/select";
+import type { TodayLine } from "@/lib/sentence-bank/today-exam";
 
 /**
  * Sentence bank: a chosen sentence turned into what the review screen draws. Pure — the loader
  * looked up each sentence's meaning in the learner's language and its stored clip; this decides
- * the form and, for the partial form, which words are hidden.
+ * the form it is asked in.
  */
+export type ReviewSource = "sentence" | "passage";
+
 export interface ReviewScreenItem {
   id: string;
+  /** The story or the passage the sentence belongs to. */
   lessonId: string;
+  /** A sentence of a lesson (a row of the sentences table: it reaches the schedule) or a line of a passage (it only counts for the day's task). */
+  source: ReviewSource;
   en: string;
   /** The sentence's meaning in the learner's language, when it has one. */
   prompt: string | null;
@@ -29,51 +34,38 @@ export interface ReviewScreenItem {
 }
 
 /**
- * The first `limit` sentences of the selection that can be asked, in the selection's own order. The
- * exam always has its sound, in the voice of the lesson the sentence is from, so a sentence with no
- * stored clip is left out (it is never read by the browser's voice and never generated here); so is
- * one with no meaning in the learner's language when its form needs the meaning. The selection
- * carries a few spare for the ones that drop out.
+ * The lines of today's lessons that can be asked, in the order they came in. Every one is typed
+ * whole — heard first and written out from memory, the way a sentence of a lesson finished today is
+ * asked (TODAY_FORM_STRENGTH) — never the fill-in-a-word form. The exam always has its sound: a
+ * story's sentence in the voice of its own lesson, a passage line in its narrated clip, so a line
+ * with no stored clip is left out (it is never read by the browser's voice and never generated here).
  */
-export function buildReviewItems(args: {
-  selection: readonly ReviewItem<SentenceCandidate>[];
-  /** Sentence id → its meaning in the learner's language. */
+export function buildTodayItems(args: {
+  lines: readonly TodayLine[];
+  /** Line id → its meaning in the learner's language. */
   prompts: ReadonlyMap<string, string>;
-  /** Sentence id → its stored clip's URL. */
+  /** Line id → its stored clip's URL. */
   clips: ReadonlyMap<string, string>;
-  weakWords: ReadonlySet<string>;
-  limit: number;
 }): ReviewScreenItem[] {
   const items: ReviewScreenItem[] = [];
-  for (const { sentence, strength, reason } of args.selection) {
-    if (items.length >= args.limit) break;
-    const prompt = args.prompts.get(sentence.id)?.trim() || null;
-    const meaning = prompt && prompt !== sentence.en ? prompt : null;
-    const audioUrl = args.clips.get(sentence.id);
+  for (const line of args.lines) {
+    const audioUrl = args.clips.get(line.id);
     if (!audioUrl) continue;
-    // A sentence of today's lesson is asked the way a middling one is, never the easy first form.
-    const form = reviewFormFor(reason === "today" ? TODAY_FORM_STRENGTH : strength, {
-      audio: true,
-      prompt: meaning !== null,
-    });
+    const prompt = args.prompts.get(line.id)?.trim() || null;
+    const meaning = prompt && prompt !== line.en ? prompt : null;
+    const form = reviewFormFor(TODAY_FORM_STRENGTH, { audio: true, prompt: meaning !== null });
     if (!form) continue;
     items.push({
-      id: sentence.id,
-      lessonId: sentence.lessonId,
-      en: sentence.en,
+      id: line.id,
+      lessonId: line.lessonId,
+      source: line.source === "passage" ? "passage" : "sentence",
+      en: line.en,
       prompt: meaning,
-      strength,
-      reason,
+      strength: 0,
+      reason: "today",
       form,
       audioUrl,
-      masked:
-        form === "partial"
-          ? maskedTokenIndexes(sentence.en, {
-              strength,
-              weakWords: args.weakWords,
-              seed: `${sentence.id}:${strength}`,
-            })
-          : [],
+      masked: [],
     });
   }
   return items;

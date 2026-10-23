@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowLeft, Check, CheckCircle2, Clock, Headphones, Lightbulb, Quote } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+import { Check, CheckCircle2, Clock, Headphones, Lightbulb, Quote, Target, X } from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
 import { NO_AUTOFILL_ATTRS } from "@/components/learning/shared-input";
@@ -11,15 +13,19 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { ReviewCorrection } from "@/components/sentence-bank/review-correction";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
+import { usePassageChime } from "@/hooks/use-passage-chime";
 import { compareDictation, firstLetterHint } from "@/lib/features/dictation";
 import type { DictationResult } from "@/lib/features/dictation";
 import {
   finishSentenceCheckAction,
+  recordPassageLineReviewAction,
   recordSentenceCheckAnswerAction,
   recordSentenceReviewAction,
   trackSentenceCheckStartedAction,
   trackSentenceReviewAction,
 } from "@/lib/sentence-bank/actions";
+import { answerFeedback } from "@/lib/sentence-bank/feedback";
+import type { AnswerFeedback } from "@/lib/sentence-bank/feedback";
 import type { ReviewScreenItem } from "@/lib/sentence-bank/items";
 import { gradeMasked, maskedTokenIndexes, sentenceTokens } from "@/lib/sentence-bank/mask";
 import { outcomeForSentence } from "@/lib/sentence-bank/review";
@@ -33,31 +39,61 @@ interface Graded {
   /** Every word typed right and the answer was not given up on. */
   exact: boolean;
   outcome: SentenceOutcome;
+  /** What the test says about the answer: right, a few letters away, further off, given up on. */
+  feedback: AnswerFeedback;
 }
 
 const ANSWER_INPUT =
-  "border-border bg-background/40 focus-visible:border-primary/60 focus-visible:ring-primary/20 w-full rounded-2xl border px-5 py-4 text-start text-xl outline-none focus-visible:ring-4";
+  "border-border bg-background/40 focus-visible:border-primary/60 focus-visible:ring-primary/20 w-full rounded-2xl border px-5 py-4 text-start text-xl outline-none focus-visible:ring-4 sm:px-6 sm:py-5 sm:text-2xl";
 
-const TAG =
-  "border-border text-muted-foreground rounded-full border px-2.5 py-0.5 text-xs font-medium";
+const TAG = "border-border text-muted-foreground rounded-full border px-3 py-1 text-xs font-medium";
 
-/** The exam's frame: one calm card, centred, with the way out under it. */
-function Shell({ children, exit }: { children: ReactNode; exit: string | null }) {
+/** The test's frame: one calm card, in the middle of the screen. */
+function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 py-6 sm:py-10 lg:py-14">
-      <section className="border-border/60 bg-card w-full rounded-3xl border shadow-sm">
+    <div className="flex min-h-svh w-full items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
+      <section className="border-border/60 bg-card w-full max-w-3xl rounded-3xl border shadow-sm">
         {children}
       </section>
-      {exit && (
-        <Link
-          href="/learn"
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm font-medium transition-colors"
-        >
-          <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-          <span dir="auto">{exit}</span>
-        </Link>
-      )}
     </div>
+  );
+}
+
+/** The card's top line: the way out on one side, the name in the middle, how far along on the other. */
+function Header({
+  Icon,
+  title,
+  position,
+  total,
+}: {
+  Icon: LucideIcon;
+  title: string;
+  position: number;
+  total: number;
+}) {
+  const { t } = useLocale();
+  return (
+    <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 pt-5 sm:px-9 sm:pt-7">
+      <Link
+        href="/learn"
+        className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring -ms-2.5 inline-flex h-9 w-fit items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2"
+      >
+        <X className="size-4" aria-hidden="true" />
+        <span dir="auto">{t.sentenceBank.exit}</span>
+      </Link>
+      <span className="text-primary inline-flex items-center gap-2">
+        <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
+        <span className="text-sm font-semibold" dir="auto">
+          {title}
+        </span>
+      </span>
+      <span
+        className="text-muted-foreground justify-self-end text-sm font-medium tabular-nums"
+        dir="ltr"
+      >
+        {position} / {total}
+      </span>
+    </header>
   );
 }
 
@@ -100,19 +136,91 @@ function OutcomeIcon({ outcome, label }: { outcome: SentenceOutcome; label: stri
 }
 
 /**
- * The day's exam (the /learn/today/sentences route): a few sentences come back with their text
- * hidden — some from the lessons finished today, so the day ends with proof that it was learned,
- * some from earlier days, the honest test of what stayed — heard with a word or two missing, heard
- * alone, or seen only by their meaning, and the learner types them. The first answer to each
- * sentence goes to the schedule (a miss comes back tomorrow); a sentence missed is shown written out
- * and asked once more at the end, for practice only. Enter checks, and then continues; one help (the
- * first letters) holds a sentence where it is, and "I don't remember" is a miss. Calm by design: one
- * sentence on the screen, no clock, no score while going — the score, split into today and before,
+ * What the test says right after an answer: one short line, and under it, when there is something
+ * to add, a second. A sentence typed right is told so with a round tick that settles into place;
+ * one a few letters away says how many ("so close — one letter"); one further off only asks for a
+ * look at the marked words. Never "wrong", never a score.
+ */
+function Verdict({ feedback }: { feedback: AnswerFeedback }) {
+  const { t } = useLocale();
+  const copy = t.sentenceBank;
+  const reduced = useReducedMotion();
+
+  let title: string;
+  let note: string | null = null;
+  if (feedback.kind === "exact") {
+    title = copy.answerExact;
+    note = copy.answerExactNote;
+  } else if (feedback.kind === "close") {
+    title =
+      feedback.letters === 1
+        ? copy.answerCloseOne
+        : feedback.letters === 2
+          ? copy.answerCloseTwo
+          : copy.answerCloseFew;
+    note =
+      feedback.letters === 1
+        ? copy.answerLettersOne
+        : feedback.letters === 2
+          ? copy.answerLettersTwo
+          : copy.answerLettersMany.replace("{n}", String(feedback.letters));
+  } else {
+    title = feedback.kind === "gaveUp" ? copy.answerGaveUp : copy.answerOff;
+  }
+
+  const Mark = feedback.kind === "exact" ? CheckCircle2 : feedback.kind === "close" ? Target : null;
+  return (
+    <div className="flex flex-col items-center gap-3">
+      {Mark && (
+        <motion.span
+          aria-hidden="true"
+          className={cn(
+            "grid size-14 place-items-center rounded-full ring-1",
+            feedback.kind === "exact"
+              ? "bg-success/15 text-success ring-success/25"
+              : "bg-primary/15 text-primary ring-primary/25",
+          )}
+          initial={reduced ? false : { scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 420, damping: 22 }}
+        >
+          <Mark className="size-7" strokeWidth={1.8} />
+        </motion.span>
+      )}
+      <div className="flex flex-col items-center gap-1">
+        <p
+          dir="auto"
+          className={cn(
+            "text-2xl font-semibold tracking-tight",
+            feedback.kind === "exact" ? "text-success" : "text-foreground",
+          )}
+        >
+          {title}
+        </p>
+        {note && (
+          <p dir="auto" className="text-muted-foreground text-base">
+            {note}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The day's test (the /learn/today/sentences route): a few sentences of the passage and the story
+ * finished today come back with their text hidden — the learner hears each one and types it whole,
+ * from memory, so the day ends with proof that it was learned. The first answer to each sentence
+ * goes to the schedule when it is a story's sentence (a miss comes back tomorrow) and to the day's
+ * task either way; the way a sentence went is told in one calm line — a soft chime and a tick when
+ * it was typed right, "so close" with the number of letters when it was a few away. Enter checks,
+ * and then continues; one help (the first letters) holds a sentence where it is, and "I don't
+ * remember" is a miss. One sentence on the screen, no clock, no score while going — the score
  * comes at the end.
  *
- * `mode="check"` is the weekly exam (the /learn/today/check route) on the same screen: every
+ * `mode="check"` is the weekly test (the /learn/today/check route) on the same screen: every
  * sentence from its meaning, no help and no second chance, each answer moves the schedule like a
- * review does but does not count for the day's task, and the end saves the exam's own result — how
+ * review does but does not count for the day's task, and the end saves the test's own result — how
  * many were typed right of how many were asked — which is all the finish screen says.
  */
 export function SentenceReviewRunner({
@@ -127,14 +235,15 @@ export function SentenceReviewRunner({
   todayISO: string;
   /** Where "finish" goes: back to Home, or on to the finish screen of Today's session. */
   afterHref: string;
-  /** The weekly exam instead of the day's. */
+  /** The weekly test instead of the day's. */
   mode?: "review" | "check";
-  /** The weekly exam only: how many sentences the learner typed in the week it is about. */
+  /** The weekly test only: how many sentences the learner typed in the week it is about. */
   written?: number;
 }) {
   const { t } = useLocale();
   const copy = t.sentenceBank;
   const isCheck = mode === "check";
+  const { playCorrect } = usePassageChime();
 
   const [queue, setQueue] = useState(() => startQueue(items));
   const [index, setIndex] = useState(0);
@@ -241,14 +350,25 @@ export function SentenceReviewRunner({
       sentence = typed;
     }
     const outcome = outcomeForSentence({ exact, helps, gaveUp });
-    setGraded({ result: compareDictation(item.en, sentence), exact: exact && !gaveUp, outcome });
+    const result = compareDictation(item.en, sentence);
+    const feedback = answerFeedback({ exact, errorChars: result.errorChars }, gaveUp);
+    setGraded({ result, exact: exact && !gaveUp, outcome, feedback });
+    // A sentence typed right is met with the soft chime (it follows the site's one sound setting).
+    if (feedback.kind === "exact") playCorrect();
     // The schedule hears about the first go only; the second chance is practice.
     if (entry.attempt === 0) {
       setResults((current) => [...current, { sentenceId: item.id, form: item.form, outcome }]);
-      const record = isCheck ? recordSentenceCheckAnswerAction : recordSentenceReviewAction;
-      void record({ sentenceId: item.id, outcome, todayISO }).catch(() => {});
+      if (isCheck) {
+        void recordSentenceCheckAnswerAction({ sentenceId: item.id, outcome, todayISO }).catch(
+          () => {},
+        );
+      } else if (item.source === "passage") {
+        void recordPassageLineReviewAction({ lineId: item.id, outcome, todayISO }).catch(() => {});
+      } else {
+        void recordSentenceReviewAction({ sentenceId: item.id, outcome, todayISO }).catch(() => {});
+      }
     }
-    // No second chance in the weekly exam: it measures, it does not teach.
+    // No second chance in the weekly test: it measures, it does not teach.
     if (!isCheck) setQueue((current) => queueAfterAnswer(current, index, outcome));
   }
 
@@ -267,22 +387,19 @@ export function SentenceReviewRunner({
   if (finished) {
     const summary = summarizeReview(results);
     const byId = new Map(items.map((entryItem) => [entryItem.id, entryItem]));
-    const fromToday = (result: ReviewResult) => byId.get(result.sentenceId)?.reason === "today";
-    const today = summarizeReview(results.filter(fromToday));
-    const earlier = summarizeReview(results.filter((result) => !fromToday(result)));
     const statusLabel: Record<SentenceOutcome, string> = {
       clean: copy.statusClean,
       assisted: copy.statusAssisted,
       missed: copy.statusMissed,
     };
     return (
-      <Shell exit={null}>
-        <div className="flex flex-col items-center gap-3 px-6 py-7 text-center sm:px-9 sm:py-8">
+      <Shell>
+        <div className="flex flex-col items-center gap-4 px-5 py-8 text-center sm:px-9 sm:py-10">
           <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight" dir="auto">
             <CheckCircle2 className="text-success size-6 shrink-0" aria-hidden="true" />
             {isCheck ? copy.checkSummaryHeading : copy.summaryHeading}
           </h2>
-          <p className="text-4xl font-semibold tabular-nums" dir="ltr">
+          <p className="text-5xl font-semibold tabular-nums" dir="ltr">
             {summary.clean} / {summary.total}
           </p>
           <p className="text-muted-foreground text-base" dir="auto">
@@ -294,44 +411,30 @@ export function SentenceReviewRunner({
                   .replace("{clean}", String(summary.clean))
                   .replace("{total}", String(summary.total))}
           </p>
-          {!isCheck && today.total > 0 && (
-            <div className="flex flex-col items-center gap-2">
-              {today.clean === today.total && (
-                <p className="text-success text-sm font-semibold" dir="auto">
-                  {copy.summaryTodayAll}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className={TAG} dir="auto">
-                  {copy.summaryTodayLine
-                    .replace("{clean}", String(today.clean))
-                    .replace("{total}", String(today.total))}
-                </span>
-                {earlier.total > 0 && (
-                  <span className={TAG} dir="auto">
-                    {copy.summaryEarlierLine
-                      .replace("{clean}", String(earlier.clean))
-                      .replace("{total}", String(earlier.total))}
-                  </span>
-                )}
-              </div>
-            </div>
+          {!isCheck && summary.total > 0 && summary.clean === summary.total && (
+            <p className="text-success text-sm font-semibold" dir="auto">
+              {copy.summaryTodayAll}
+            </p>
           )}
           {!isCheck && (
             <ul className="border-border/60 divide-border/60 mt-1 flex w-full flex-col divide-y rounded-2xl border text-start">
               {results.map((result) => {
                 const done = byId.get(result.sentenceId);
                 if (!done) return null;
+                // A passage line is not on the schedule, so a miss on it does not "come back tomorrow".
+                const status =
+                  result.outcome === "missed" && done.source === "passage"
+                    ? copy.statusReview
+                    : statusLabel[result.outcome];
                 return (
-                  <li key={result.sentenceId} className="flex items-start gap-3 px-4 py-2.5">
-                    <OutcomeIcon outcome={result.outcome} label={statusLabel[result.outcome]} />
+                  <li key={result.sentenceId} className="flex items-start gap-3 px-4 py-3">
+                    <OutcomeIcon outcome={result.outcome} label={status} />
                     <div className="min-w-0 flex-1">
-                      <p dir="ltr" className="text-[15px] leading-snug">
+                      <p dir="ltr" className="text-base leading-snug">
                         {done.en}
                       </p>
                       <p className="text-muted-foreground/80 mt-0.5 text-xs" dir="auto">
-                        {statusLabel[result.outcome]} ·{" "}
-                        {done.reason === "today" ? copy.tagToday : copy.tagEarlier}
+                        {status} · {done.source === "passage" ? copy.tagPassage : copy.tagStory}
                       </p>
                     </div>
                   </li>
@@ -346,7 +449,7 @@ export function SentenceReviewRunner({
           )}
           <Link
             href={afterHref}
-            className={cn(buttonVariants({ size: "lg" }), "mt-1 w-full max-w-xs")}
+            className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full max-w-xs")}
           >
             <span dir="auto">{afterHref === "/learn" ? copy.backToToday : copy.finishSession}</span>
           </Link>
@@ -375,30 +478,25 @@ export function SentenceReviewRunner({
   const HeaderIcon = item.form === "translate" ? Quote : Headphones;
 
   return (
-    <Shell exit={copy.exit}>
-      <header className="flex items-center justify-between gap-3 px-6 pt-5 sm:px-9">
-        <span className="text-primary inline-flex items-center gap-2">
-          <HeaderIcon className="size-4" strokeWidth={2} aria-hidden="true" />
-          <span className="text-sm font-semibold" dir="auto">
-            {isCheck ? copy.checkTitle : copy.title}
-          </span>
-        </span>
-        <span className="text-muted-foreground text-sm font-medium tabular-nums" dir="ltr">
-          {index + 1} / {queue.length}
-        </span>
-      </header>
-      <div className="mt-3 px-6 sm:px-9">
+    <Shell>
+      <Header
+        Icon={HeaderIcon}
+        title={isCheck ? copy.checkTitle : copy.title}
+        position={index + 1}
+        total={queue.length}
+      />
+      <div className="mt-4 px-5 sm:px-9">
         <Segments total={queue.length} current={index} />
       </div>
 
-      <div className="flex flex-col gap-7 px-6 pt-7 pb-7 text-center sm:px-9 sm:pb-9">
+      <div className="flex flex-col gap-8 px-5 pt-8 pb-7 text-center sm:px-9 sm:pt-10 sm:pb-9">
         {!graded && (
-          <div className="flex flex-col items-center gap-2.5">
+          <div className="flex flex-col items-center gap-3">
             {(!isCheck || entry.attempt === 1) && (
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {!isCheck && (
                   <span className={TAG} dir="auto">
-                    {item.reason === "today" ? copy.tagToday : copy.tagEarlier}
+                    {item.source === "passage" ? copy.tagPassage : copy.tagStory}
                   </span>
                 )}
                 {entry.attempt === 1 && (
@@ -408,7 +506,7 @@ export function SentenceReviewRunner({
                 )}
               </div>
             )}
-            <p className="text-muted-foreground text-sm" dir="auto">
+            <p className="text-muted-foreground text-base" dir="auto">
               {instruction}
             </p>
           </div>
@@ -417,7 +515,7 @@ export function SentenceReviewRunner({
         {!graded ? (
           <>
             {item.form === "translate" && (
-              <p className="text-2xl leading-snug font-semibold text-balance" dir="auto">
+              <p className="text-3xl leading-snug font-semibold text-balance" dir="auto">
                 {item.prompt}
               </p>
             )}
@@ -431,7 +529,7 @@ export function SentenceReviewRunner({
                   disableSpeechFallback
                   variant="outline"
                   size="icon"
-                  className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 size-16 rounded-full [&_svg]:size-7"
+                  className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 size-20 rounded-full [&_svg]:size-8"
                   inputRef={item.form === "partial" ? firstBlankRef : inputRef}
                 />
               </div>
@@ -555,24 +653,16 @@ export function SentenceReviewRunner({
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center gap-5" aria-live="polite">
-            <p
-              dir="auto"
-              className={cn(
-                "flex items-center gap-2 text-lg font-semibold",
-                graded.exact ? "text-success" : "text-foreground",
-              )}
-            >
-              {graded.exact && <CheckCircle2 className="size-5" aria-hidden="true" />}
-              {graded.exact ? t.dictation.perfect : t.dictation.almost}
-            </p>
+          <div className="flex flex-col items-center gap-6" aria-live="polite">
+            <Verdict feedback={graded.feedback} />
             <ReviewCorrection result={graded.result} sentence={item.en} />
             {item.prompt && (
-              <p dir="auto" className="text-muted-foreground text-base">
+              <p dir="auto" className="text-muted-foreground text-lg">
                 {item.prompt}
               </p>
             )}
-            {graded.outcome === "missed" && (
+            {/* "Comes back tomorrow" is only true of a sentence on the schedule, which a passage line is not. */}
+            {graded.outcome === "missed" && item.source === "sentence" && (
               <p className="text-muted-foreground flex items-center gap-1.5 text-sm" dir="auto">
                 <Clock className="size-3.5 shrink-0" aria-hidden="true" />
                 {askedAgain ? copy.missedFirst : copy.missedSecond}

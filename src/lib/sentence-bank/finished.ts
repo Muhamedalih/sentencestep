@@ -61,6 +61,27 @@ export function finishedTodayLessons(
     .slice(0, Math.max(0, max));
 }
 
+/**
+ * The stories the learner finished today — a finish today counts even when the story was first
+ * finished on an earlier day (Today's own "story done" counts it too) — in id order so the answer
+ * never depends on input order, at most `max`. The day's test asks about these and the passages
+ * finished today, nothing else.
+ */
+export function storiesFinishedToday(
+  completions: readonly Completion[],
+  dayOf: (iso: string) => string,
+  todayISO: string,
+  max: number = MAX_TODAY_LESSONS,
+): string[] {
+  const ids = new Set<string>();
+  for (const completion of completions) {
+    if (completion.mode === "stories" && dayOf(completion.completedAt) === todayISO) {
+      ids.add(completion.lessonId);
+    }
+  }
+  return [...ids].sort().slice(0, Math.max(0, max));
+}
+
 /** How many sentences the learner was already asked back today. */
 export function reviewedTodayCount(
   states: ReadonlyMap<string, { lastReviewedOn: string }>,

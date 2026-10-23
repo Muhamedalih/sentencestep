@@ -38,10 +38,22 @@ for the current Home):
   it reads as writing practice; it names no word and the caret stops for reduced motion.
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home
-  (continue / resume / start, free lessons finished, everything finished). Learners on the free plan
-  keep the "Starter lessons 3/4" counter under it.
+  (continue / resume / start, free lessons finished, everything finished). It has the **same springy
+  hover as the cards of the current Home** (it rises 8px and grows 5% with a soft overshoot, 380 ms;
+  nothing moves for reduced motion). Learners on the free plan keep the "Starter lessons 3/4" counter
+  under it.
 - **Self-test card** (`test-card.tsx`): brand-tinted surface, a round mark, one small segment per
-  question, an outline button (so the page keeps one solid button); done, it becomes a calm tick.
+  question, an outline button (so the page keeps one solid button); done, it becomes a calm tick. It is
+  about **Today's passage and story** (a line each, typed from memory), not earlier days — see
+  `docs/sentence-bank.md`; its screen is one card in the middle of the viewport.
+
+**Size** (owner, 2026-10-23: "the two boxes are small, there is a lot of empty room"): on a screen with
+room — at least 1024px wide **and** 720px tall, the `roomy` variant in `globals.css` — the page widens
+(`max-w-7xl` instead of `max-w-5xl`) and Today's box and the lesson card scale up: bigger titles, task
+names, notes, buttons, icons and ring, more padding (about 530px tall against 400px). A shorter screen
+keeps the compact layout exactly as it was, so the two boxes still fit its first screen (a 1536x864
+laptop has about 734px of viewport and fits them; the self-test card is under them). The boxes are as tall
+as their content and no taller: stretching them to the screen would only put more emptiness inside.
 
 Left out on purpose: the glow around Today's box, the passage card (the passage is Today's first
 task; Passages stay in the menu), the three-card grid, the weekly test line (held), the "Today's

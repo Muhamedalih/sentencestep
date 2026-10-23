@@ -7,6 +7,11 @@ import type { MasteryState } from "@/lib/word-mastery/schedule";
  * Sentence bank: which of the sentences a learner has typed come back today. Pure — the loader reads
  * the learner's finished lessons and their sentence_mastery rows, this only chooses.
  *
+ * Since 2026-10-23 the day's test no longer calls `selectSentenceReview` / `selectTodaySentences`: it
+ * asks only about the passage and the story finished today (see today-exam.ts). They stay here, with
+ * their tests, for the day sentences of earlier days come back; the weekly check (weekly.ts) still
+ * uses the constants and `spreadAcrossLessons`.
+ *
  * A day's batch is small on purpose (three), never a pile: the learner is not shown how many are
  * waiting, so a gap of weeks is not a debt, and a sentence left unreviewed for a long time is simply
  * asked again like any other due one — once, with its text hidden, after which the ordinary ladder

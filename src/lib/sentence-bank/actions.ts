@@ -55,6 +55,37 @@ export async function recordSentenceReviewAction(input: {
   }
 }
 
+/** A passage line's id is a readable slug ("the-quiet-hour-p1-l3", see passages/ids.ts): anything else is not one the test could have asked. */
+const LINE_ID_SHAPE = /^[a-z0-9][a-z0-9_-]{2,119}$/i;
+
+/**
+ * Records ONE passage line's first answer in the day's test. A passage line is not a row of the
+ * sentences table, so it has no place on the schedule (that would take a table of its own); what it
+ * does is the day's "remember N sentences" task, which advances by one whatever the answer was —
+ * exactly as for a sentence of a story. Client input again, so re-validated; best-effort like every
+ * action here.
+ */
+export async function recordPassageLineReviewAction(input: {
+  lineId: string;
+  outcome: string;
+  todayISO: string;
+}): Promise<{ ok: boolean }> {
+  try {
+    const { lineId, outcome, todayISO } = input;
+    if (typeof lineId !== "string" || !LINE_ID_SHAPE.test(lineId)) return { ok: false };
+    if (!isWordOutcome(outcome) || !isPlausibleDay(todayISO)) return { ok: false };
+    const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
+    if (!features.rollouts.sentenceBank || !user) return { ok: false };
+    if (features.quests.enabled) {
+      await recordQuestEventsAndBadges(user.id, [{ type: "sentenceReview", amount: 1 }], todayISO);
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[sentence-bank] recordPassageLineReviewAction failed", error);
+    return { ok: false };
+  }
+}
+
 /** How a review visit is reported: its start, and its end with how each sentence went. All counts of sentences, forms are the three review forms. */
 export type SentenceReviewReport =
   | { event: "started"; count: number; partial: number; audio: number; translate: number }

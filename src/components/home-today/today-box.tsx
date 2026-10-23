@@ -20,11 +20,11 @@ function Ring({ done, total }: { done: number; total: number }) {
   const percent = total > 0 ? (done / total) * 100 : 0;
   return (
     <span
-      className="relative flex size-10 shrink-0 items-center justify-center rounded-full"
+      className="roomy:size-14 relative flex size-10 shrink-0 items-center justify-center rounded-full"
       style={{ background: `conic-gradient(var(--primary) ${percent}%, var(--border) 0)` }}
       aria-hidden="true"
     >
-      <span className="bg-card flex size-8 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
+      <span className="bg-card roomy:size-11 roomy:text-sm flex size-8 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
         <span dir="ltr">
           {done}/{total}
         </span>
@@ -43,11 +43,11 @@ function TypingHint() {
   const { t } = useLocale();
   const reduced = useReducedMotion();
   return (
-    <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+    <div className="roomy:mt-3.5 mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
       <span
         aria-hidden="true"
         dir="ltr"
-        className="border-border bg-background/60 inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 font-mono text-sm leading-none font-semibold"
+        className="border-border bg-background/60 roomy:h-10 roomy:px-4 roomy:text-base inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 font-mono text-sm leading-none font-semibold"
       >
         <span className="text-primary">w</span>
         <span className="text-primary">r</span>
@@ -63,7 +63,7 @@ function TypingHint() {
           />
         ))}
       </span>
-      <span className="text-muted-foreground text-[12.5px]">
+      <span className="text-muted-foreground roomy:text-sm text-[12.5px]">
         <span dir="auto">{t.today.wordsTypeHint}</span>
       </span>
     </div>
@@ -99,35 +99,40 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
         href={info.href}
         aria-current={current ? "step" : undefined}
         className={cn(
-          "focus-visible:ring-ring block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
+          "focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-4 block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
           current ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50",
         )}
       >
-        <div className="flex items-start gap-3">
+        <div className="roomy:gap-4 flex items-start gap-3">
           <span
             className={cn(
-              "mt-px grid size-8 shrink-0 place-items-center",
+              "roomy:size-10 mt-px grid size-8 shrink-0 place-items-center",
               done ? "text-success" : current ? "text-primary" : "text-muted-foreground",
             )}
             aria-hidden="true"
           >
             {done ? (
-              <Check className="size-5" strokeWidth={2} />
+              <Check className="roomy:size-6 size-5" strokeWidth={2} />
             ) : current ? (
               <TaskIcon kind={info.kind} />
             ) : (
-              <Icon className="size-5" strokeWidth={1.8} />
+              <Icon className="roomy:size-6 size-5" strokeWidth={1.8} />
             )}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-3">
-              <p className={cn("text-sm font-semibold", done && "text-muted-foreground")}>
+              <p
+                className={cn(
+                  "roomy:text-lg text-sm font-semibold",
+                  done && "text-muted-foreground",
+                )}
+              >
                 <span dir="auto">{todayTaskTitle(copy, info.kind)}</span>
               </p>
               {quest.xp > 0 && (!done || info.paid) && (
                 <span
                   className={cn(
-                    "shrink-0 text-xs font-medium",
+                    "roomy:text-sm shrink-0 text-xs font-medium",
                     done ? "text-success" : current ? "text-primary" : "text-muted-foreground",
                   )}
                   dir="ltr"
@@ -137,7 +142,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
               )}
             </div>
             {hasMeta && (
-              <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px]">
+              <p className="text-muted-foreground roomy:mt-1 roomy:gap-x-3 roomy:text-base mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px]">
                 {info.title && (
                   <span
                     className={cn("font-medium", !done && "text-foreground")}
@@ -166,7 +171,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
             )}
             {info.kind === "words" && !done && <TypingHint />}
             {current && !done && (
-              <span className="bg-primary text-primary-foreground mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
+              <span className="bg-primary text-primary-foreground roomy:mt-4 roomy:h-12 roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
                 <span dir="auto">{`${start} · ${minutes}`}</span>
               </span>
             )}
@@ -200,19 +205,19 @@ export function TodayBox({
     <section
       aria-label={copy.questsHeading}
       className={cn(
-        "border-border/60 bg-card flex h-full flex-col rounded-2xl border p-4 sm:p-5",
+        "border-border/60 bg-card roomy:p-7 flex h-full flex-col rounded-2xl border p-4 sm:p-5",
         className,
       )}
     >
-      <header className="mb-3 flex items-center justify-between gap-4 px-1">
+      <header className="roomy:mb-5 roomy:px-2 mb-3 flex items-center justify-between gap-4 px-1">
         <div className="min-w-0">
-          <h2 className="text-[17px] font-semibold">
+          <h2 className="roomy:text-2xl text-[17px] font-semibold">
             <span dir="auto">{copy.questsHeading}</span>
           </h2>
           {totals.totalXp > 0 && (
             <p
               className={cn(
-                "mt-0.5 text-xs",
+                "roomy:mt-1 roomy:text-sm mt-0.5 text-xs",
                 payload.allDone ? "text-success" : "text-muted-foreground",
               )}
             >
@@ -226,20 +231,20 @@ export function TodayBox({
         </div>
         <Ring done={totals.done} total={totals.total} />
       </header>
-      <ul className="flex flex-1 flex-col gap-1">
+      <ul className="roomy:gap-2 flex flex-1 flex-col gap-1">
         {tasks.map((quest) => (
           <TaskRow key={quest.slot} quest={quest} current={quest.slot === current?.slot} />
         ))}
       </ul>
       {payload.allDone && (
-        <div className="border-border/60 mt-3 flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3">
-          <p className="text-success text-sm font-medium">
+        <div className="border-border/60 roomy:mt-5 roomy:px-2 roomy:pt-5 mt-3 flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3">
+          <p className="text-success roomy:text-base text-sm font-medium">
             <span dir="auto">{copy.doneHeading}</span>
           </p>
           {redoHref && (
             <Link
               href={redoHref}
-              className="border-border hover:bg-muted focus-visible:ring-ring inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+              className="border-border hover:bg-muted focus-visible:ring-ring roomy:h-11 roomy:px-5 roomy:text-base inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
             >
               <RotateCcw aria-hidden="true" className="size-4" strokeWidth={1.8} />
               <span dir="auto">{copy.redo}</span>

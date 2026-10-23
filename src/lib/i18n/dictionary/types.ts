@@ -1484,16 +1484,31 @@ export interface Dictionary {
     summaryHeading: string;
     summaryBody: string;
     summaryMissed: string;
-    /** Where a question comes from, on the question and on the finish screen (`{clean}` and `{total}` are counts of sentences). */
-    tagToday: string;
-    tagEarlier: string;
-    summaryTodayLine: string;
-    summaryEarlierLine: string;
+    /** Where a question comes from, on the question and on the finish screen: a line of today's passage, or a sentence of today's story. */
+    tagPassage: string;
+    tagStory: string;
     summaryTodayAll: string;
+    /**
+     * What the test says about a typed answer, under the verdict: right (title + note), a few letters
+     * away (a title for one, two and three letters, and the note counting them — `{n}` is a number of
+     * letters), further off, or given up on.
+     */
+    answerExact: string;
+    answerExactNote: string;
+    answerCloseOne: string;
+    answerCloseTwo: string;
+    answerCloseFew: string;
+    answerLettersOne: string;
+    answerLettersTwo: string;
+    answerLettersMany: string;
+    answerOff: string;
+    answerGaveUp: string;
     /** How each sentence went, as the finish screen lists them. */
     statusClean: string;
     statusAssisted: string;
     statusMissed: string;
+    /** The same, for a passage line that was missed: it is not on the schedule, so it does not "come back". */
+    statusReview: string;
     backToToday: string;
     finishSession: string;
     exit: string;

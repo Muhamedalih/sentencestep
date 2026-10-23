@@ -14,8 +14,9 @@ import { findCurrentLesson } from "@/lib/progress/level";
 import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 
+/** The same springy lift as the cards of the current Home: it rises and grows a little under the pointer and settles with a soft overshoot (nothing moves for reduced motion). */
 const CARD =
-  "group border-border bg-card relative flex min-h-[19rem] flex-col overflow-hidden rounded-2xl border";
+  "group border-border bg-card relative flex min-h-[19rem] flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]";
 
 /**
  * The learner's own lesson as a picture card (the one full-picture card of the page): the daily
@@ -58,24 +59,24 @@ function PictureCard({
           )}
         />
         <span
-          className="absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
+          className="roomy:start-6 roomy:top-6 roomy:px-4 roomy:py-1.5 roomy:text-sm absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
           dir={dir}
         >
           {eyebrow}
         </span>
-        <div className="relative flex flex-col gap-1 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-10 pb-5 lg:pt-16">
+        <div className="roomy:gap-1.5 roomy:px-8 roomy:pt-20 roomy:pb-8 relative flex flex-col gap-1 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-10 pb-5 lg:pt-16">
           <h2
-            className="line-clamp-2 text-2xl leading-tight font-semibold tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]"
+            className="roomy:text-4xl line-clamp-2 text-2xl leading-tight font-semibold tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]"
             dir="ltr"
           >
             {lesson.title}
           </h2>
-          <p className="line-clamp-2 text-base font-medium text-white/85" dir={dir}>
+          <p className="roomy:text-xl line-clamp-2 text-base font-medium text-white/85" dir={dir}>
             {lesson.supportTitle ?? lesson.title}
           </p>
           <Link
             href={href}
-            className="focus-visible:ring-ring relative z-10 mt-3 inline-flex h-11 w-fit items-center justify-center rounded-[10px] bg-white/15 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-colors outline-none hover:bg-white/25 focus-visible:ring-2"
+            className="focus-visible:ring-ring roomy:mt-5 roomy:h-12 roomy:px-8 roomy:text-base relative z-10 mt-3 inline-flex h-11 w-fit items-center justify-center rounded-[10px] bg-white/15 px-6 text-sm font-semibold text-white backdrop-blur-sm transition-colors outline-none hover:bg-white/25 focus-visible:ring-2"
           >
             <span dir="auto">{ctaLabel}</span>
           </Link>

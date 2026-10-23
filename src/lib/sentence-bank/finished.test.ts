@@ -8,6 +8,7 @@ import {
   finishedTodayLessons,
   recentFinishedLessons,
   reviewedTodayCount,
+  storiesFinishedToday,
 } from "@/lib/sentence-bank/finished";
 
 const utcDay = (iso: string) => iso.slice(0, 10);
@@ -104,4 +105,27 @@ test("it counts the sentences already asked today", () => {
   ]);
   assert.equal(reviewedTodayCount(states, "2025-06-10"), 2);
   assert.equal(reviewedTodayCount(new Map(), "2025-06-10"), 0);
+});
+
+test("the stories finished today are the day's own, a redo of an old story counts, a daily lesson never does", () => {
+  const completions = [
+    { lessonId: "story-b", mode: "stories", completedAt: "2025-06-10T08:00:00Z" },
+    { lessonId: "story-a", mode: "stories", completedAt: "2025-06-10T09:00:00Z" },
+    // Finished on an earlier day and done again today: today it is one of the day's lessons.
+    { lessonId: "story-old", mode: "stories", completedAt: "2025-06-03T09:00:00Z" },
+    { lessonId: "story-old", mode: "stories", completedAt: "2025-06-10T10:00:00Z" },
+    { lessonId: "story-yesterday", mode: "stories", completedAt: "2025-06-09T10:00:00Z" },
+    { lessonId: "normal-1", mode: "normal", completedAt: "2025-06-10T11:00:00Z" },
+    { lessonId: "chat-1", mode: "conversation", completedAt: "2025-06-10T11:30:00Z" },
+  ];
+  assert.deepEqual(storiesFinishedToday(completions, utcDay, "2025-06-10"), [
+    "story-a",
+    "story-b",
+    "story-old",
+  ]);
+  assert.deepEqual(storiesFinishedToday(completions, utcDay, "2025-06-10", 2), [
+    "story-a",
+    "story-b",
+  ]);
+  assert.deepEqual(storiesFinishedToday(completions, utcDay, "2025-06-11"), []);
 });

@@ -160,6 +160,7 @@ export function buildCheckItems(
     items.push({
       id: sentence.id,
       lessonId: sentence.lessonId,
+      source: "sentence",
       en: sentence.en,
       prompt,
       strength: 0,

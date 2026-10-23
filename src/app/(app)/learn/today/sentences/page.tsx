@@ -19,13 +19,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today's session" };
 
 /**
- * The day's exam ("Sentence bank" permission): a few sentences the learner typed — some in lessons
- * finished today, some on earlier days — come back with their text hidden. Reached from the exam
- * row of Today's tasks, or — with
- * `flow=1` — from the words step, and then on to the finish screen. Nothing to ask (or the
- * permission closed, or signed out, or the table not created yet) goes straight on instead of
- * showing an empty screen. It never checks whether the learner's subscription is active: what
- * they typed stays theirs to review.
+ * The day's test ("Sentence bank" permission): a few sentences of the passage and the story the
+ * learner finished today come back with their text hidden, each heard and typed whole from memory.
+ * Reached from the test row of Today's tasks, or — with `flow=1` — from the words step, and then on
+ * to the finish screen. Nothing to ask (or the permission closed, or signed out) goes straight on
+ * instead of showing an empty screen. It never checks whether the learner's subscription is
+ * active: what they finished today stays theirs to be asked about.
  */
 export default async function TodaySentencesPage({
   searchParams,

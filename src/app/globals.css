@@ -3,6 +3,12 @@
 @import "flag-icons/css/flag-icons.min.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* A screen with room to spare: laptop-wide and at least 720px tall. The new Home page scales its two main boxes up only here (they still fit the first screen of a 1536x864 laptop), so a short screen keeps the compact layout. */
+@custom-variant roomy {
+  @media (min-width: 1024px) and (min-height: 720px) {
+    @slot;
+  }
+}
 
 :root {
   --radius: 0.875rem;

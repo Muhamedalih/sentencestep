@@ -28,7 +28,7 @@ export function TaskIcon({ kind }: { kind: TodayQuestInfo["kind"] }) {
         ? { x: [0, 2.5, 0, 2.5, 0], rotate: [0, -6, 0, -6, 0] }
         : { scale: [1, 1.12, 1] };
   return (
-    <span className="relative grid size-9 place-items-center" aria-hidden="true">
+    <span className="roomy:size-10 relative grid size-9 place-items-center" aria-hidden="true">
       {moving &&
         kind === "listen" &&
         [0, 1.2].map((delay) => (
@@ -45,7 +45,7 @@ export function TaskIcon({ kind }: { kind: TodayQuestInfo["kind"] }) {
         animate={moving ? kindMotion : undefined}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Icon className="size-5" strokeWidth={1.8} />
+        <Icon className="roomy:size-6 size-5" strokeWidth={1.8} />
       </motion.span>
     </span>
   );
