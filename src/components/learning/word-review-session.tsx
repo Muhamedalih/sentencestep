@@ -46,6 +46,8 @@ export interface ReviewWord extends VocabularyWord {
   lessonTitle?: string;
   /** Vocabulary Recall only — how many days ago this word was first met, paired with lessonTitle in the same context line. */
   daysAgo?: number;
+  /** Today's words step only — the word is a target word of the story or the passage finished today (named by lessonTitle): the context line then says so instead of counting days. */
+  fromToday?: "story" | "passage";
   /**
    * Overrides PronunciationButton's default `contentType="word"` (which
    * looks this word up against Word Lists' own vocabulary_words catalog by
@@ -232,9 +234,14 @@ export function WordReviewSession({
   ).replace("{n}", String(correctedCount));
   const contextLabel =
     (variant === "recall" || variant === "cards" || variant === "session") && word?.lessonTitle
-      ? t.vocabularyRecall.sourceLabel
-          .replace("{title}", word.lessonTitle)
-          .replace("{n}", String(word.daysAgo ?? 1))
+      ? word.fromToday
+        ? (word.fromToday === "story" ? t.today.wordFromStory : t.today.wordFromPassage).replace(
+            "{title}",
+            word.lessonTitle,
+          )
+        : t.vocabularyRecall.sourceLabel
+            .replace("{title}", word.lessonTitle)
+            .replace("{n}", String(word.daysAgo ?? 1))
       : undefined;
 
   useEffect(() => {

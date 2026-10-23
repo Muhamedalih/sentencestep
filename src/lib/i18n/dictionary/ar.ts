@@ -1122,6 +1122,8 @@ export const ar: Dictionary = {
     startSentences: "ابدأ الامتحان",
     whySentences: "جمل من درس اليوم ومن أيام سابقة تعود إليك بلا نص، لترى ما ثبت فعلاً",
     sentencesFrom: "عمّا تعلّمته اليوم وقبله",
+    wordFromStory: "من قصة اليوم «{title}»",
+    wordFromPassage: "من نص اليوم «{title}»",
     weeklyDue: "امتحان الأسبوع · جمل كتبتها هذا الأسبوع بلا نص",
     weeklyResult:
       "جمل هذا الأسبوع: كتبتَ {written}، وتذكّرت {remembered} من {asked} دون نظر ({percent}%)",

@@ -1,16 +1,7 @@
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { recordVocabularyEncounter } from "@/lib/supabase/queries/vocabulary-recall";
+import { parseVocabularyItemId } from "@/lib/vocabulary-recall/item-id";
 import type { Lesson } from "@/types/content";
-
-/**
- * The marker VocabularyItem.id is built from (see buildStoryVocabulary in
- * src/lib/content/story-vocabulary.ts: `${sentenceId}-vocab-${wordIndex}`) —
- * parsed back apart here rather than threading a second, richer shape through
- * getLessonById, since every mode (normal and stories alike) already
- * populates `lesson.vocabulary` in exactly this id format (see
- * withLessonVocabulary/withStoryVocabulary in src/lib/content.ts).
- */
-const VOCAB_ID_MARKER = "-vocab-";
 
 /**
  * Records this lesson's target vocabulary as Vocabulary Recall encounters for
@@ -35,12 +26,11 @@ export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promi
 
   await Promise.all(
     lesson.vocabulary.map(async (item) => {
-      const cut = item.id.lastIndexOf(VOCAB_ID_MARKER);
-      if (cut === -1) return;
-      const sentenceId = item.id.slice(0, cut);
-      const wordIndex = Number(item.id.slice(cut + VOCAB_ID_MARKER.length));
+      const parsed = parseVocabularyItemId(item.id);
+      if (!parsed) return;
+      const { sentenceId, wordIndex } = parsed;
       const sentence = sentenceById.get(sentenceId);
-      if (!sentence || !Number.isInteger(wordIndex)) return;
+      if (!sentence) return;
 
       try {
         await recordVocabularyEncounter({

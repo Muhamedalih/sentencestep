@@ -1455,6 +1455,9 @@ export interface Dictionary {
     startSentences: string;
     whySentences: string;
     sentencesFrom: string;
+    /** The line under a word of Today's words step that is a target word of the story or the passage finished today (`{title}` is that story or passage). */
+    wordFromStory: string;
+    wordFromPassage: string;
     /** The one quiet line about the weekly sentence check at the foot of the tasks box: the check is ready (the box adds the minutes), or its result for the week after it (`{written}`, `{remembered}`, `{asked}` are counts of sentences, `{percent}` a whole percentage). */
     weeklyDue: string;
     weeklyResult: string;

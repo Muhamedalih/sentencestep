@@ -4,16 +4,19 @@ import Link from "next/link";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
+import { buttonVariants } from "@/components/ui/button";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
+import { cn } from "@/lib/utils";
 
-const BUTTON =
-  "inline-flex h-12 items-center justify-center rounded-[10px] px-6 text-[15px] font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+/** The accuracy that earns the story's star. */
+const STAR_ACCURACY = 0.9;
 
 /**
- * What a learner sees when a step of Today's session is done and another one follows — a calm
- * column with one big button to carry on and a quiet way to stop here (Home then shows the
+ * What a learner sees when a step of Today's session is done and another one follows — one calm
+ * card, centred, with one big button to carry on and a quiet way to stop here (Home then shows the
  * steps still waiting). Used after the story; the passage's own finish screen offers the same
- * button for the listening step.
+ * button for the listening step. The card is the same shape as the sentence exam's, and it fits a
+ * laptop screen with room to spare.
  */
 export function TodayStepDone({
   step,
@@ -29,24 +32,28 @@ export function TodayStepDone({
 }) {
   const { t } = useLocale();
   const copy = t.today;
+  const starred = accuracy !== undefined && accuracy >= STAR_ACCURACY;
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4 pt-4 pb-12 lg:px-6">
-      <div className="flex w-full max-w-[560px] flex-col gap-3">
-        <div className="mb-1 flex items-center gap-3.5">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+      <div className="border-border/60 bg-card flex w-full max-w-xl flex-col items-center gap-4 rounded-3xl border px-6 py-8 text-center shadow-sm sm:px-9 sm:py-10">
+        <h2 className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
           <span className="border-success/40 bg-success/[0.14] text-success grid size-11 shrink-0 place-items-center rounded-full border">
             <Check aria-hidden="true" className="size-5" strokeWidth={1.8} />
           </span>
-          <h2 className="text-[19px] font-semibold tracking-[-0.01em] lg:text-[22px]">
-            <span dir="auto">{step === "story" ? copy.stepDoneStory : copy.stepDoneListen}</span>
-          </h2>
-        </div>
+          <span dir="auto">{step === "story" ? copy.stepDoneStory : copy.stepDoneListen}</span>
+        </h2>
 
         {step === "story" && accuracy !== undefined && (
           <p
-            className={`text-sm font-medium ${accuracy >= 0.9 ? "text-success" : "text-muted-foreground"}`}
+            className={cn(
+              "text-sm font-medium",
+              starred
+                ? "border-success/40 bg-success/10 text-success rounded-full border px-4 py-1.5 font-semibold"
+                : "text-muted-foreground",
+            )}
           >
             <span dir="auto">
-              {(accuracy >= 0.9 ? copy.stepDoneStar : copy.stepDoneAccuracy).replace(
+              {(starred ? copy.stepDoneStar : copy.stepDoneAccuracy).replace(
                 "{n}",
                 String(Math.round(accuracy * 100)),
               )}
@@ -76,16 +83,19 @@ export function TodayStepDone({
           </div>
         )}
 
-        <div className="mt-2 flex flex-col gap-2.5 sm:flex-row">
+        <div className="mt-2 flex w-full flex-col items-stretch gap-2">
           <Link
             href={`/learn/today/go?step=${step === "story" ? "words" : "story"}`}
-            className={`${BUTTON} bg-primary text-primary-foreground hover:opacity-90 sm:flex-1`}
+            className={cn(buttonVariants({ size: "lg" }), "w-full")}
           >
             <span dir="auto">{step === "story" ? copy.continueWords : copy.continueStory}</span>
           </Link>
           <Link
             href="/learn"
-            className={`${BUTTON} border-border text-foreground hover:bg-muted border`}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-muted-foreground mx-auto",
+            )}
           >
             <span dir="auto">{copy.stopHere}</span>
           </Link>

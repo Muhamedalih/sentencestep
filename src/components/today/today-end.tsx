@@ -101,7 +101,7 @@ export function TodayEnd({
             nextTitle,
             minutes: 0,
           }}
-          extra={moreWords ? { href: "/learn/today/words", locked: false } : null}
+          extra={moreWords ? { href: "/learn/today/words?more=1", locked: false } : null}
           extraMinutes={WORDS_MINUTES}
           extraLabel={t.today.extraWords.replace(
             "{time}",

@@ -1173,6 +1173,8 @@ export const es: Dictionary = {
     whySentences:
       "Frases de la lección de hoy y de días anteriores vuelven con el texto oculto, para que veas lo que de verdad se quedó",
     sentencesFrom: "Lo que aprendiste hoy y antes",
+    wordFromStory: "De la historia de hoy «{title}»",
+    wordFromPassage: "Del texto de hoy «{title}»",
     weeklyDue: "Examen semanal · frases que escribiste esta semana, con el texto oculto",
     weeklyResult:
       "Frases de esta semana: escribiste {written} y recordaste {remembered} de {asked} sin mirar ({percent}%)",

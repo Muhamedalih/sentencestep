@@ -211,12 +211,14 @@ async function newWordsSource(
 }
 
 /**
- * Today's words step: `size` words (five), the important ones only. Review first — the target
- * words of the learner's lessons and stories that are due, their weak Words-section words, then
- * their own typing mistakes and saved cards — and whatever places are left go to NEW words from the
- * Words section. Review words that are function words ("and", "into"…) or contractions are dropped
- * (see isImportantWord); Words-section words and saved cards are the learner's own choices and
- * are never filtered. Every word points at the Word Lists voice's clip, like the Daily session's.
+ * Today's words step: `size` words (five), the important ones only. First the words of the same
+ * session — the target words of the story finished today (two or three) and then those of the
+ * passage finished today (`linked`, see session-words-load.ts); then review — the target words of
+ * the learner's lessons and stories that are due, their weak Words-section words, their own typing
+ * mistakes and saved cards — and whatever places are left go to NEW words from the Words section.
+ * Review words that are function words ("and", "into"…) or contractions are dropped (see
+ * isImportantWord); Words-section words and saved cards are the learner's own choices and are never
+ * filtered. Every word points at the Word Lists voice's clip, like the Daily session's.
  */
 export async function buildTodayWords(args: {
   userId: string;
@@ -224,8 +226,10 @@ export async function buildTodayWords(args: {
   size: number;
   startingLevel: number | null;
   isPremium: boolean;
+  /** The session's own story and passage words, when the step should start from them (the first round of the day, not "5 more words"). */
+  linked?: { story: ReviewWord[]; passage: ReviewWord[] };
 }): Promise<ReviewWord[]> {
-  const { userId, locale, size } = args;
+  const { userId, locale, size, linked } = args;
   const [recall, [active, reviews], weak, cards, fresh] = await Promise.all([
     attempt("recall", () => fetchVocabularyRecallWordsAction(), [] as ReviewWord[]),
     mistakeSources(size * 4),
@@ -237,6 +241,10 @@ export async function buildTodayWords(args: {
     items.filter((word) => isImportantWord(word.targetWord));
   const session = assembleSession<ReviewWord>(
     [
+      // The session's own words come first: the story's (they complete like Vocabulary Recall words,
+      // which they are), then the passage's (they complete as Word Lists words of its word lesson).
+      { source: "recall", items: linked?.story ?? [] },
+      { source: "wordList", items: linked?.passage ?? [] },
       {
         source: "recall",
         // Recall words carry only the Arabic gloss (hintAr); the review screen reads supportHint.

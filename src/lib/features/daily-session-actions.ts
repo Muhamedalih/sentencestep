@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { after } from "next/server";
 
 import type { ReviewWord } from "@/components/learning/word-review-session";
@@ -9,10 +10,12 @@ import { fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
 import { awardEventBadge } from "@/lib/features/badge-service";
 import { completeDailySession } from "@/lib/features/daily-session-queries";
 import { buildDailySessionWords, buildTodayWords } from "@/lib/features/daily-session-service";
+import { TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { createClient } from "@/lib/supabase/server";
+import { loadLinkedWords } from "@/lib/today/session-words-load";
 import { generateWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -107,13 +110,15 @@ export async function fetchDailySessionWordsAction(): Promise<ReviewWord[]> {
 
 /**
  * Today's words step (permission "Today's session (new Home)"): `size` important words — the
- * learner's due review words first, new words from the Words section for the rest — each pointed
- * at the Word Lists voice like the Daily session's. [] when the permission isn't open for this
- * learner, nobody is signed in, there is nothing to do, or anything fails.
+ * target words of the story and the passage finished today first (the session's own words), then
+ * the learner's due review words, new words from the Words section for the rest — each pointed at
+ * the Word Lists voice like the Daily session's. `more` is "5 more words": a further round, which
+ * leaves the session's own words out (they were just done). [] when the permission isn't open for
+ * this learner, nobody is signed in, there is nothing to do, or anything fails.
  */
-export async function fetchTodayWordsAction(size: number): Promise<ReviewWord[]> {
+export async function fetchTodayWordsAction(size: number, more = false): Promise<ReviewWord[]> {
   try {
-    if (!Number.isInteger(size) || size < 1 || size > 10) return [];
+    if (!Number.isInteger(size) || size < 1 || size > 10 || typeof more !== "boolean") return [];
     const [features, userId] = await Promise.all([getEffectiveFeatures(), getSessionUserId()]);
     if (!features.rollouts.todaySession || !userId) return [];
     const [startingLevel, premium, admin, locale] = await Promise.all([
@@ -122,12 +127,20 @@ export async function fetchTodayWordsAction(size: number): Promise<ReviewWord[]>
       isAdmin(),
       getLocale(),
     ]);
+    const linked = more
+      ? undefined
+      : await loadLinkedWords({
+          userId,
+          locale,
+          timeZone: (await cookies()).get(TIMEZONE_COOKIE)?.value,
+        });
     const words = await buildTodayWords({
       userId,
       locale,
       size,
       startingLevel,
       isPremium: premium || admin,
+      linked,
     });
     return await generateMissingSessionAudio(words);
   } catch (error) {

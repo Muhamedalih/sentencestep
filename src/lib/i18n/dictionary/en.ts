@@ -1155,6 +1155,8 @@ export const en: Dictionary = {
     whySentences:
       "Sentences from today's lesson and from earlier days come back with their text hidden, so you can see what really stuck",
     sentencesFrom: "What you learned today and before",
+    wordFromStory: 'From today\'s story "{title}"',
+    wordFromPassage: 'From today\'s passage "{title}"',
     weeklyDue: "Weekly exam · sentences you wrote this week, text hidden",
     weeklyResult:
       "Sentences this week: you wrote {written}, and remembered {remembered} of {asked} without looking ({percent}%)",

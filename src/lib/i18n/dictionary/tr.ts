@@ -1157,6 +1157,8 @@ export const tr: Dictionary = {
     whySentences:
       "Bugünün dersinden ve önceki günlerden cümleler metni gizli olarak gelir, böylece gerçekten neyin kalıcı olduğunu görürsün",
     sentencesFrom: "Bugün ve daha önce öğrendiklerin",
+    wordFromStory: 'Bugünün hikâyesinden "{title}"',
+    wordFromPassage: 'Bugünün metninden "{title}"',
     weeklyDue: "Haftalık sınav · bu hafta yazdığın cümleler, metin gizli",
     weeklyResult:
       "Bu haftanın cümleleri: {written} yazdın, {asked} içinden {remembered} tanesini bakmadan hatırladın (%{percent})",
