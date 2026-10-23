@@ -45,6 +45,22 @@ export function recentFinishedLessons(
     .map(([id]) => id);
 }
 
+/** At most this many of the lessons finished today are read for the day's exam; a learner who finished more still gets sentences from the first few. */
+export const MAX_TODAY_LESSONS = 6;
+
+/** The lessons the learner finished today (their own calendar day), in id order so the answer never depends on input order. */
+export function finishedTodayLessons(
+  finished: ReadonlyMap<string, string>,
+  todayISO: string,
+  max: number = MAX_TODAY_LESSONS,
+): string[] {
+  return [...finished]
+    .filter(([, day]) => day === todayISO)
+    .map(([id]) => id)
+    .sort()
+    .slice(0, Math.max(0, max));
+}
+
 /** How many sentences the learner was already asked back today. */
 export function reviewedTodayCount(
   states: ReadonlyMap<string, { lastReviewedOn: string }>,

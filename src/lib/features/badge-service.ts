@@ -5,6 +5,7 @@ import type { EffectiveFeatures } from "@/lib/features/config";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fetchLatestQuestDay } from "@/lib/features/quest-queries";
 import { allQuestsCompleted } from "@/lib/features/quests";
+import { requiredQuests } from "@/lib/today/quests";
 
 /**
  * Server-side badge orchestration. Best-effort by contract, like quests: a
@@ -53,7 +54,8 @@ export async function awardEventBadge(id: EventBadgeId): Promise<BadgeId[]> {
 /** Awards the "all daily quests in one day" badge if the learner's latest quest day is now fully complete. */
 export async function awardQuestDayBadgeIfDone(userId: string): Promise<BadgeId[]> {
   try {
-    const quests = await fetchLatestQuestDay(userId);
+    // The day's sentence exam is an extra: a day is "all of them" without it.
+    const quests = requiredQuests(await fetchLatestQuestDay(userId));
     // A day with a single dealt quest isn't "all of them" in any meaningful sense.
     if (quests.length < 2 || !allQuestsCompleted(quests)) return [];
     return await awardEventBadge("questDay");

@@ -7,7 +7,9 @@ import type { DailyQuest } from "@/lib/features/quests";
 import {
   TODAY_QUEST_SLOT_BASE,
   TODAY_SENTENCE_SLOT,
+  isOptionalQuest,
   questsByStep,
+  requiredQuests,
   sentenceQuest,
   sentenceQuestRow,
   todayQuestRows,
@@ -110,5 +112,21 @@ describe("the sentence review row", () => {
     assert.equal(sentenceQuest([quest(12, "sentenceReview")]), undefined);
     // The three steps never pick it up.
     assert.deepEqual(Object.keys(questsByStep(rows)).sort(), ["listen", "story", "words"]);
+  });
+
+  it("is an extra: the day is done when the three steps are, whether or not the exam was taken", () => {
+    const rows = [
+      quest(10, "passages"),
+      quest(11, "lessons"),
+      quest(12, "masterWords"),
+      quest(13, "sentenceReview"),
+    ];
+    assert.equal(isOptionalQuest(rows[3]!), true);
+    assert.equal(isOptionalQuest(rows[0]!), false);
+    assert.deepEqual(
+      requiredQuests(rows).map((row) => row.slot),
+      [10, 11, 12],
+    );
+    assert.deepEqual(requiredQuests([]), []);
   });
 });

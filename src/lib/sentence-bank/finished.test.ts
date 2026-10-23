@@ -3,7 +3,9 @@ import test from "node:test";
 
 import {
   MAX_POOL_LESSONS,
+  MAX_TODAY_LESSONS,
   finishedLessonDays,
+  finishedTodayLessons,
   recentFinishedLessons,
   reviewedTodayCount,
 } from "@/lib/sentence-bank/finished";
@@ -78,6 +80,20 @@ test("the cap keeps a long history from becoming a big read", () => {
     ]),
   );
   assert.equal(recentFinishedLessons(finished, "2025-12-31").length, MAX_POOL_LESSONS);
+});
+
+test("the lessons finished today are only today's, in id order, never more than the cap", () => {
+  const finished = new Map([
+    ["c", "2025-06-10"],
+    ["a", "2025-06-10"],
+    ["b", "2025-06-09"], // yesterday
+    ["d", "2025-06-10"],
+  ]);
+  assert.deepEqual(finishedTodayLessons(finished, "2025-06-10"), ["a", "c", "d"]);
+  assert.deepEqual(finishedTodayLessons(finished, "2025-06-10", 2), ["a", "c"]);
+  assert.deepEqual(finishedTodayLessons(finished, "2025-06-10", 0), []);
+  assert.deepEqual(finishedTodayLessons(new Map(), "2025-06-10"), []);
+  assert.equal(MAX_TODAY_LESSONS, 6);
 });
 
 test("it counts the sentences already asked today", () => {

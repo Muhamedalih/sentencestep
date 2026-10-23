@@ -2,8 +2,8 @@
 
 The site remembers the sentences a learner typed in lessons and stories and brings a few of them
 back, with their text hidden, on the schedule Word Lists words already use. It lives inside
-**Today's tasks** on Home as a fourth row, "Remember N sentences", and ends each week with a
-ten-sentence check and one honest line. Phase 2 of the strategy report
+**Today's tasks** on Home as an extra row, **the day's exam** («امتحان اليوم»), and ends each week with a
+ten-sentence exam and one honest line. Phase 2 of the strategy report
 (`reports/phase-2-3-brief.md`); nothing in it is open to learners until the owner says so.
 
 ## Switches
@@ -11,8 +11,11 @@ ten-sentence check and one honest line. Phase 2 of the strategy report
 - **Permissions → "Sentence bank"** (`sentenceBank`, `src/lib/rollouts/catalog.ts`): starts **Admins
   only**. It is closed whenever `todaySession` is (`withRolloutDependencies`), so a test of Today stays
   a clean test of Today.
-- **Features → Daily quests → "Remember N sentences"** (quest type `sentenceReview`): XP, target and
-  on/off of the fourth row. It is never dealt at random (`eligibleQuestTypes`).
+- **Features → Daily quests → "Today's exam"** (quest type `sentenceReview`): XP, target (how many
+  questions) and on/off of the row. It is never dealt at random (`eligibleQuestTypes`).
+- **The exam is an extra, not a fourth thing to finish** (`isOptionalQuest`, `requiredQuests` in
+  `src/lib/today/quests.ts`): Home's ring, "all done", the reward line and the day badge count the three
+  steps only; once they are done the exam becomes the row with the start button.
 
 ## Database (applied by pasting into the Supabase SQL editor; there is no CLI)
 
@@ -28,12 +31,22 @@ minute at most per server process (`isMissingTableError`).
 
 ## What comes back, and how it is asked
 
-- Candidates: sentences of 4+ words from daily lessons and stories finished on an **earlier** day
-  (also what was finished before launch). Order: due ones (oldest first), then new ones holding the
-  learner's weak words, then a spread over the finished lessons (newest first). Three a day, at most
-  two from one lesson, no counter of what waits (`select.ts`).
+- The exam has two kinds of question (`exam.ts`, `composeExam`), today's first. About half come from
+  the lessons finished **today** (`selectTodaySentences`: 4+ words, never asked yet, weak words first,
+  then a spread, at most three from one lesson) so the day ends with proof it was learned; the rest
+  from **earlier** days (`selectSentenceReview`: 4+ words, due ones oldest first, then new ones holding
+  the learner's weak words, then a spread over the finished lessons, newest first, at most two from one
+  lesson). Three questions a day by default: two about today and one from before; when one side has
+  too few the other fills the exam, so a learner's first day is all about today and a day with nothing
+  finished all about before. No counter of what waits. One constant (`ceil(limit / 2)` in `exam.ts`)
+  moves the split.
+- Today's answers go to the schedule like any other (a clean one enters at strength 1, due tomorrow;
+  a miss is due tomorrow), which also stops the same sentence being asked twice if the visit is left
+  half done. The finish screen says the score and its two halves ("from today's lesson: 2 of 2",
+  "from earlier days: 1 of 1"), and lists every sentence with how it went.
 - Form by strength (`review.ts`): 0-1 partial dictation (hear it, type the one or two missing words),
-  2-3 audio only, 4-5 meaning only (Arabic to English). Sound forms play **only a stored clip**
+  2-3 audio only, 4-5 meaning only (Arabic to English). A sentence of today's lesson is asked as if it
+  had strength 2 (`TODAY_FORM_STRENGTH`): heard and typed whole, or from its meaning with no clip. Sound forms play **only a stored clip**
   (`voice_audio_cache`, never generated); with no clip the sentence is asked from its meaning, with no
   meaning either it is left for another day.
 - One help (the first letters) holds a sentence where it is; two helps, a wrong answer or "I don't
@@ -44,9 +57,11 @@ minute at most per server process (`isMissingTableError`).
 
 ## Reads (and why the service role)
 
-Home: when the fourth row is not dealt yet, two reads — the learner's own rows, then one pool read of
-the sentences of their 40 most recent finished lessons plus the due ones. Dealt once a day; later
-visits read nothing for it. The weekly line adds one tiny read (the last check) and, only when a check
+Home: when the exam row is not dealt yet, two reads — the learner's own rows, then one pool read of
+the sentences of the lessons they finished today, their 40 most recent finished lessons and the due
+ones. Dealt once a day; later visits read nothing for it. A learner who goes from the story straight
+to the words never rebuilds Home, so `/learn/today/go?step=sentences` deals the row itself when it is
+missing (`sentenceReviewPending` with `deal`). The weekly line adds one tiny read (the last check) and, only when a check
 could be due, one more (their Today days). The review screen adds weak words, meanings and a batched
 clip lookup.
 

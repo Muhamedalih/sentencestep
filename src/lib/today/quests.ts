@@ -75,6 +75,19 @@ export function sentenceQuestRow(
   };
 }
 
+/**
+ * The day's exam is an extra, not a fourth thing to finish: Today's ring, its "all done" and the
+ * day's badge count the three steps only, and a learner who skips the exam has still finished the day.
+ */
+export function isOptionalQuest(quest: Pick<DailyQuest, "type">): boolean {
+  return quest.type === "sentenceReview";
+}
+
+/** The quests the day needs finished (everything but the exam). */
+export function requiredQuests<T extends Pick<DailyQuest, "type">>(quests: readonly T[]): T[] {
+  return quests.filter((quest) => !isOptionalQuest(quest));
+}
+
 /** The day's sentence review row, if one was dealt. */
 export function sentenceQuest(quests: readonly DailyQuest[]): DailyQuest | undefined {
   return quests.find(

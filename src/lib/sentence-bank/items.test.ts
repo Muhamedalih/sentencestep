@@ -51,6 +51,33 @@ test("each sentence is asked in the form its strength calls for, in the selectio
   assert.equal(items[2]!.audioUrl, "https://clips/c.mp3");
 });
 
+test("a sentence of today's lesson is asked heard and typed whole (or from its meaning), never the easy first form", () => {
+  const today = (id: string, en: string): ReviewItem<SentenceCandidate> => ({
+    sentence: { id, lessonId: "story", orderIndex: 1, en, completedOn: "2025-06-10" },
+    strength: 0,
+    reason: "today",
+  });
+  const items = buildReviewItems({
+    selection: [today("a", "She bought a red car"), today("b", "He walks to the park daily")],
+    prompts: new Map([
+      ["a", "اشترت سيارة حمراء"],
+      ["b", "يمشي إلى الحديقة يومياً"],
+    ]),
+    // Only the first has a stored clip: the second falls back to its meaning.
+    clips: new Map([["a", "https://clips/a.mp3"]]),
+    weakWords: WEAK,
+    limit: 3,
+  });
+  assert.deepEqual(
+    items.map((item) => [item.id, item.form, item.reason]),
+    [
+      ["a", "audio", "today"],
+      ["b", "translate", "today"],
+    ],
+  );
+  assert.deepEqual(items[0]!.masked, []);
+});
+
 test("a sentence with no stored clip is asked from its meaning, whatever its strength", () => {
   const [item] = buildReviewItems({
     selection: [pick("a", 0, "She bought a red car")],

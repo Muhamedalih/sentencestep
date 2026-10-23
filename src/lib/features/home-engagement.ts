@@ -14,6 +14,7 @@ import { allQuestsCompleted } from "@/lib/features/quests";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { addDays, freezesRemaining, monthPeriod } from "@/lib/features/streak-freeze";
 import { enrichTodayQuests } from "@/lib/today/load";
+import { requiredQuests } from "@/lib/today/quests";
 
 /**
  * Everything Home's engagement cards (today's session, daily quests and the
@@ -88,7 +89,8 @@ export async function loadDailyQuests(
       if (today) {
         return {
           quests: today.quests,
-          allDone: allQuestsCompleted(today.quests),
+          // The day's exam is an extra: skipping it leaves the day done.
+          allDone: allQuestsCompleted(requiredQuests(today.quests)),
           weekly: today.weekly,
         };
       }

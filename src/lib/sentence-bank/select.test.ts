@@ -4,9 +4,11 @@ import test from "node:test";
 import {
   DAILY_REVIEW_COUNT,
   MAX_PER_LESSON,
+  MAX_TODAY_PER_LESSON,
   MIN_REVIEW_WORDS,
   reviewWordCount,
   selectSentenceReview,
+  selectTodaySentences,
   sentencesStillToAsk,
 } from "@/lib/sentence-bank/select";
 import type { SentenceCandidate } from "@/lib/sentence-bank/select";
@@ -312,4 +314,71 @@ test("the batch still to ask follows the day's row when there is one, and the we
   assert.equal(sentencesStillToAsk(undefined, 0), DAILY_REVIEW_COUNT);
   assert.equal(sentencesStillToAsk(undefined, 2), 1);
   assert.equal(sentencesStillToAsk(undefined, 9), 0);
+});
+
+test("today's sentences are the ones the earlier-days selection leaves out: finished today, four words or more, never asked yet", () => {
+  assert.equal(MAX_TODAY_PER_LESSON, 3);
+  const pool = [
+    sentence("story", 1, "Hi, Tom!", TODAY),
+    sentence("story", 2, "I like tea", TODAY), // three words
+    sentence("story", 3, "She bought a red car", TODAY),
+    sentence("old", 1, "He walks to the park", YESTERDAY), // an earlier day: not today's
+    sentence("story", 4, "They played chess all evening", TODAY),
+  ];
+  const picked = selectTodaySentences(pool, new Map(), { todayISO: TODAY });
+  assert.deepEqual(
+    picked.map((item) => item.sentence.id),
+    [pool[2]!.id, pool[4]!.id],
+  );
+  assert.ok(picked.every((item) => item.reason === "today" && item.strength === 0));
+  // And the earlier-days selection still never takes them.
+  assert.deepEqual(ids(selectSentenceReview(pool, new Map(), { todayISO: TODAY })), [pool[3]!.id]);
+});
+
+test("a sentence of today's lesson already on the schedule is no longer new", () => {
+  const [a, b] = lesson("story", 2, TODAY);
+  const picked = selectTodaySentences(
+    [a!, b!],
+    states([[a!, { strength: 1, dueOn: "2025-06-11" }]]),
+    {
+      todayISO: TODAY,
+    },
+  );
+  assert.deepEqual(
+    picked.map((item) => item.sentence.id),
+    [b!.id],
+  );
+});
+
+test("today's sentences holding a weak word come first, then a spread, at most three from one lesson", () => {
+  const pool = [
+    ...lesson("a", 5, TODAY, "She bought a red car"),
+    sentence("b", 1, "He walks to the park daily", TODAY),
+    sentence("a", 6, "They fixed the broken window", TODAY),
+  ];
+  const picked = selectTodaySentences(pool, new Map(), {
+    todayISO: TODAY,
+    weakWords: new Set(["window"]),
+    cap: 10,
+  });
+  // The weak-word sentence first; then lesson a and lesson b in turn; lesson a stops at three.
+  assert.equal(picked[0]!.sentence.en, "They fixed the broken window");
+  assert.equal(picked.filter((item) => item.sentence.lessonId === "a").length, 3);
+  assert.equal(picked.length, 4);
+  assert.equal(selectTodaySentences(pool, new Map(), { todayISO: TODAY, cap: 2 }).length, 2);
+});
+
+test("choosing today's sentences changes nothing and does not depend on the input order", () => {
+  const pool = [...lesson("a", 4, TODAY), ...lesson("b", 4, TODAY)];
+  const snapshot = JSON.stringify(pool);
+  const forward = selectTodaySentences(pool, new Map(), { todayISO: TODAY, cap: 6 });
+  const backward = selectTodaySentences([...pool].reverse(), new Map(), {
+    todayISO: TODAY,
+    cap: 6,
+  });
+  assert.deepEqual(
+    forward.map((item) => item.sentence.id),
+    backward.map((item) => item.sentence.id),
+  );
+  assert.equal(JSON.stringify(pool), snapshot);
 });

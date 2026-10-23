@@ -5,16 +5,22 @@ import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchStoredClips } from "@/lib/sentence-bank/clips";
 import type { ClipRequest } from "@/lib/sentence-bank/clips";
+import { composeExam } from "@/lib/sentence-bank/exam";
 import {
   MAX_POOL_LESSONS,
   finishedLessonDays,
+  finishedTodayLessons,
   recentFinishedLessons,
   reviewedTodayCount,
 } from "@/lib/sentence-bank/finished";
 import { buildReviewItems } from "@/lib/sentence-bank/items";
 import type { ReviewScreenItem } from "@/lib/sentence-bank/items";
 import { REVIEW_SPARES } from "@/lib/sentence-bank/review";
-import { selectSentenceReview, sentencesStillToAsk } from "@/lib/sentence-bank/select";
+import {
+  selectSentenceReview,
+  selectTodaySentences,
+  sentencesStillToAsk,
+} from "@/lib/sentence-bank/select";
 import type { SentenceCandidate } from "@/lib/sentence-bank/select";
 import { fetchLessonVoices, fetchSentencePool } from "@/lib/sentence-bank/pool";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
@@ -23,12 +29,13 @@ import type { SentenceStateRow } from "@/lib/supabase/queries/sentence-mastery";
 import { isWeakWord } from "@/lib/weak-words/types";
 
 /**
- * Sentence bank: what the server reads to decide which sentences come back today. TWO reads per
+ * Sentence bank: what the server reads to decide which sentences the day's exam asks. TWO reads per
  * call, both of them small: the learner's own sentence_mastery rows (a handful a day), then the
- * sentences of their most recently finished lessons plus the ones already on their schedule (see
- * pool.ts for why the second one needs the service role). Everything after that is pure
- * (select.ts, items.ts). The review screen adds the lookups only IT needs — the learner's weak
- * words, their language's meaning of the chosen sentences, and which of them have a stored clip.
+ * sentences of the lessons they finished today and of their most recently finished ones, plus the
+ * ones already on their schedule (see pool.ts for why the second one needs the service role).
+ * Everything after that is pure (select.ts, exam.ts, items.ts). The exam screen adds the lookups
+ * only IT needs — the learner's weak words, their language's meaning of the chosen sentences, and
+ * which of them have a stored clip.
  *
  * Callers treat a failure as "nothing to ask" (the table does not exist until its migration is
  * applied): a missing optional feature must never take Home down.
@@ -65,6 +72,8 @@ export async function readSentenceBank(context: SentenceBankContext): Promise<Se
     (iso) => localISODateInTimeZone(timeZone, new Date(iso)) ?? iso.slice(0, 10),
   );
   const recent = recentFinishedLessons(finished, todayISO, MAX_POOL_LESSONS);
+  // The lessons finished today too: the day's exam asks about what was just learned as well.
+  const todays = finishedTodayLessons(finished, todayISO);
 
   // Read 1: the learner's own rows. If the table is not there yet this throws before the heavier read.
   const states = await fetchSentenceStates(userId);
@@ -74,7 +83,7 @@ export async function readSentenceBank(context: SentenceBankContext): Promise<Se
     .slice(0, MAX_DUE_LOOKUPS);
 
   // Read 2: the sentences of the recent lessons and the due ones, in one request.
-  const pool = await fetchSentencePool({ lessonIds: recent, sentenceIds: dueIds });
+  const pool = await fetchSentencePool({ lessonIds: [...todays, ...recent], sentenceIds: dueIds });
   const candidates: PoolCandidate[] = [];
   for (const row of pool) {
     const completedOn = finished.get(row.lessonId);
@@ -93,22 +102,26 @@ export async function readSentenceBank(context: SentenceBankContext): Promise<Se
 
 /**
  * How many sentences are ready for the learner today — what decides whether Today's tasks box gets
- * its fourth row, and how many sentences that row asks for. The weak-word order does not change
- * how MANY there are, so it is not read here.
+ * its fourth row, and how many sentences that row asks for: the ones from earlier days and the ones
+ * from the lessons finished today, up to the day's batch. The weak-word order does not change how
+ * MANY there are, so it is not read here.
  */
 export async function countSentencesReady(context: SentenceBankContext): Promise<number> {
   const read = await readSentenceBank(context);
-  return selectSentenceReview(read.candidates, read.states, {
-    todayISO: context.todayISO,
-    cap: sentencesStillToAsk(undefined, read.reviewedToday),
-  }).items.length;
+  const cap = sentencesStillToAsk(undefined, read.reviewedToday);
+  const options = { todayISO: context.todayISO, cap };
+  const earlier = selectSentenceReview(read.candidates, read.states, options).items.length;
+  const today = selectTodaySentences(read.candidates, read.states, options).length;
+  return Math.min(cap, earlier + today);
 }
 
 /**
- * Today's sentences, ready to be drawn: chosen (due first, then the ones holding the learner's weak
- * words, then a spread over their lessons), each with the form it is asked in, the meaning in the
- * learner's language and the stored clip it plays. A sentence that cannot be asked in any
- * hidden-text form (no stored clip and no meaning) is replaced by a spare one.
+ * The day's exam, ready to be drawn. Its sentences come from two places — the lessons the learner
+ * finished today (so the day ends with proof it was learned) and earlier days (due first, then the
+ * ones holding their weak words, then a spread over their lessons) — mixed by exam.ts, today's
+ * first. Each has the form it is asked in, the meaning in the learner's language and the stored clip
+ * it plays. A sentence that cannot be asked in any hidden-text form (no stored clip and no meaning)
+ * is replaced by a spare one.
  */
 export async function loadSentenceReviewScreen(
   context: SentenceBankContext & {
@@ -123,14 +136,12 @@ export async function loadSentenceReviewScreen(
 
   const weakRows = await fetchWeakCandidateMistakeRows(context.userId).catch(() => []);
   const weakWords = new Set(weakRows.filter(isWeakWord).map((row) => row.word));
-  const selection = selectSentenceReview(read.candidates, read.states, {
-    todayISO: context.todayISO,
-    weakWords,
-    cap: limit + REVIEW_SPARES,
-  });
-  if (selection.items.length === 0) return [];
+  const options = { todayISO: context.todayISO, weakWords, cap: limit + REVIEW_SPARES };
+  const earlierSelection = selectSentenceReview(read.candidates, read.states, options).items;
+  const todaySelection = selectTodaySentences(read.candidates, read.states, options);
+  if (earlierSelection.length === 0 && todaySelection.length === 0) return [];
 
-  const chosen = selection.items.map((item) => item.sentence);
+  const chosen = [...todaySelection, ...earlierSelection].map((item) => item.sentence);
   const locale = context.locale ?? DEFAULT_LOCALE;
   const lessonIds = [...new Set(chosen.map((sentence) => sentence.lessonId))];
   const [translations, voices] = await Promise.all([
@@ -168,5 +179,7 @@ export async function loadSentenceReviewScreen(
   }
   const clips = await fetchStoredClips(requests).catch(() => new Map<string, string>());
 
-  return buildReviewItems({ selection: selection.items, prompts, clips, weakWords, limit });
+  const build = (selection: typeof earlierSelection) =>
+    buildReviewItems({ selection, prompts, clips, weakWords, limit });
+  return composeExam({ today: build(todaySelection), earlier: build(earlierSelection), limit });
 }

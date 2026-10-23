@@ -1450,14 +1450,11 @@ export interface Dictionary {
     accuracyIs: string;
     stepDoneStar: string;
     stepDoneAccuracy: string;
-    /** The sentence review's row in the tasks box (the fourth task, only on days sentences are ready): "Remember {n} sentences" with its one and two forms, its start button, its one-line why, where the sentences come from, and the reward line when there are four tasks. */
+    /** The day's exam row in the tasks box (an extra beside the three tasks, only on days sentences are ready): its name, its start button, its one-line why and what it is about. */
     taskSentences: string;
-    taskSentencesOne: string;
-    taskSentencesTwo: string;
     startSentences: string;
     whySentences: string;
     sentencesFrom: string;
-    rewardAllMore: string;
     /** The one quiet line about the weekly sentence check at the foot of the tasks box: the check is ready (the box adds the minutes), or its result for the week after it (`{written}`, `{remembered}`, `{asked}` are counts of sentences, `{percent}` a whole percentage). */
     weeklyDue: string;
     weeklyResult: string;
@@ -1478,6 +1475,16 @@ export interface Dictionary {
     summaryHeading: string;
     summaryBody: string;
     summaryMissed: string;
+    /** Where a question comes from, on the question and on the finish screen (`{clean}` and `{total}` are counts of sentences). */
+    tagToday: string;
+    tagEarlier: string;
+    summaryTodayLine: string;
+    summaryEarlierLine: string;
+    summaryTodayAll: string;
+    /** How each sentence went, as the finish screen lists them. */
+    statusClean: string;
+    statusAssisted: string;
+    statusMissed: string;
     backToToday: string;
     finishSession: string;
     exit: string;

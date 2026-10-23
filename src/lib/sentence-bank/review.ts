@@ -50,6 +50,13 @@ export const AUDIO_FORM_FROM_STRENGTH = 2;
 /** From this strength on it is asked from its meaning alone, the hardest way. */
 export const TRANSLATE_FORM_FROM_STRENGTH = 4;
 
+/**
+ * A sentence of a lesson finished TODAY is asked as if it were this strong: heard and typed whole,
+ * or, with no stored clip, from its meaning. The day's exam is a real test of what was just learned,
+ * so it is never the easy fill-in-a-word form that a sentence never asked before would get.
+ */
+export const TODAY_FORM_STRENGTH = AUDIO_FORM_FROM_STRENGTH;
+
 /** What a sentence can be asked with: a clip that is already stored, and its meaning in the learner's language. */
 export interface FormAvailability {
   audio: boolean;
@@ -81,8 +88,8 @@ export function reviewFormFor(strength: number, available: FormAvailability): Re
 /** Where the sentence review lives (inside Today's tasks). */
 export const SENTENCE_REVIEW_HREF = "/learn/today/sentences";
 
-/** About a quarter of a minute a sentence for a batch of three, rounded up: what the task row says it takes. */
-export const SENTENCE_REVIEW_MINUTES = 2;
+/** About half a minute a sentence for an exam of three, typed whole as it often is, rounded up: what the task row says it takes. */
+export const SENTENCE_REVIEW_MINUTES = 3;
 
 /** Sentences read beyond the batch, so one that cannot be asked (no stored clip and no meaning in the learner's language) is replaced instead of shortening the batch. */
 export const REVIEW_SPARES = 3;

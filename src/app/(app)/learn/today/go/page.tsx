@@ -6,6 +6,7 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { sentenceReviewPending } from "@/lib/sentence-bank/quest";
 import { SENTENCE_REVIEW_HREF } from "@/lib/sentence-bank/review";
@@ -30,12 +31,25 @@ export default async function TodayGoPage({
   if (!features.rollouts.todaySession || !user) redirect("/learn");
 
   const { step, redo } = await searchParams;
-  // After the words: the sentence review when the learner has one waiting today, else the finish screen.
+  // After the words: the day's exam when the learner has one waiting, else the finish screen. The
+  // exam row is dealt here when it is not there yet: this route is often reached without Home being
+  // rebuilt since the story was finished, and the story's sentences are part of the exam.
   if (step === "sentences") {
     const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
     const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-    const waiting =
-      features.rollouts.sentenceBank && (await sentenceReviewPending(user.id, todayISO));
+    let waiting = false;
+    if (features.rollouts.sentenceBank) {
+      const progress = await fetchProgressCached(todayISO).catch(() => null);
+      waiting = await sentenceReviewPending(user.id, todayISO, {
+        context: {
+          userId: user.id,
+          todayISO,
+          timeZone,
+          completions: progress?.completions ?? [],
+        },
+        features,
+      });
+    }
     redirect(waiting ? `${SENTENCE_REVIEW_HREF}?flow=1` : "/learn/today/end");
   }
   const wanted = STEP_KINDS.find((kind) => kind === step) ?? "listen";

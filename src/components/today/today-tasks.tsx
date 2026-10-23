@@ -8,6 +8,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
 import { questProgressPercent } from "@/lib/features/quests";
 import type { DailyQuest, DailyQuestsPayload, TodayQuestInfo } from "@/lib/features/quests";
+import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
 /** The accuracy that earns the story's star. */
@@ -27,21 +28,14 @@ function fill(template: string, values: Record<string, string | number>): string
   );
 }
 
-/** The sentence review's name for `n` sentences: "Remember 1 sentence", "Remember 2 sentences", "Remember 3 sentences" (Arabic has its own one and two). */
-export function sentenceTaskTitle(copy: TodayCopy, n: number): string {
-  if (n === 1) return copy.taskSentencesOne;
-  if (n === 2) return copy.taskSentencesTwo;
-  return fill(copy.taskSentences, { n });
-}
-
-/** The task's name: "Listen to a passage", "Write a story", "Write 5 words", "Remember 3 sentences" (`target` is how many sentences the last one asks). */
-export function todayTaskTitle(
-  copy: TodayCopy,
-  kind: TodayQuestInfo["kind"],
-  target?: number,
-): string {
-  if (kind === "sentences") return sentenceTaskTitle(copy, target ?? 3);
-  return { listen: copy.taskListen, story: copy.taskStory, words: copy.taskWords }[kind];
+/** The task's name: "Listen to a passage", "Write a story", "Write 5 words", "Today's exam". */
+export function todayTaskTitle(copy: TodayCopy, kind: TodayQuestInfo["kind"]): string {
+  return {
+    listen: copy.taskListen,
+    story: copy.taskStory,
+    words: copy.taskWords,
+    sentences: copy.taskSentences,
+  }[kind];
 }
 
 /**
@@ -157,7 +151,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-3">
               <p className={cn("text-sm font-semibold", done && "text-success")}>
-                <span dir="auto">{todayTaskTitle(copy, info.kind, quest.target)}</span>
+                <span dir="auto">{todayTaskTitle(copy, info.kind)}</span>
               </p>
               {quest.xp > 0 && (!done || info.paid) && (
                 <span
@@ -239,8 +233,10 @@ export function TodayTasksPanel({
   const copy = t.today;
   const quests = payload.quests;
   const current = quests.find((quest) => !quest.completed);
-  const totalXp = quests.reduce((sum, quest) => sum + quest.xp, 0);
-  const earnedXp = quests.reduce(
+  // The reward line is about the three steps: the day's exam is an extra with its own XP.
+  const required = requiredQuests(quests);
+  const totalXp = required.reduce((sum, quest) => sum + quest.xp, 0);
+  const earnedXp = required.reduce(
     (sum, quest) => sum + (quest.completed && quest.today?.paid ? quest.xp : 0),
     0,
   );
@@ -264,7 +260,7 @@ export function TodayTasksPanel({
             <span dir="auto">
               {payload.allDone
                 ? fill(copy.rewardEarned, { xp: earnedXp })
-                : fill(quests.length > 3 ? copy.rewardAllMore : copy.rewardAll, { xp: totalXp })}
+                : fill(copy.rewardAll, { xp: totalXp })}
             </span>
           </p>
         )}

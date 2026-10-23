@@ -19,6 +19,8 @@ export const DAILY_REVIEW_COUNT = 3;
 export const MIN_REVIEW_WORDS = 4;
 /** At most this many from one lesson in a batch, so a batch is a spread of what the learner has done and not a replay of one story. */
 export const MAX_PER_LESSON = 2;
+/** From a lesson finished TODAY the exam may ask a little more: that lesson is what the day's exam is about. */
+export const MAX_TODAY_PER_LESSON = 3;
 
 /**
  * How many sentences are still to be asked today. When the day's "remember N sentences" row was dealt,
@@ -45,8 +47,8 @@ export interface SentenceCandidate {
   completedOn: string;
 }
 
-/** Why a sentence is in the batch: it came due on its schedule, it holds a word the learner finds hard, or it is simply one to revisit. */
-export type ReviewReason = "due" | "weak" | "spread";
+/** Why a sentence is in the batch: it came due on its schedule, it holds a word the learner finds hard, it is simply one to revisit, or it comes from a lesson the learner finished today. */
+export type ReviewReason = "due" | "weak" | "spread" | "today";
 
 export interface ReviewItem<T extends SentenceCandidate = SentenceCandidate> {
   sentence: T;
@@ -129,6 +131,50 @@ export function spreadAcrossLessons<T extends SentenceCandidate>(sentences: read
 }
 
 /**
+ * Sentences never asked back, in the order they are taken: the ones holding the learner's weak
+ * words first (the ones holding the most first), then every other one spread over their lessons.
+ */
+function orderFresh<T extends SentenceCandidate>(
+  fresh: readonly T[],
+  weakWords: ReadonlySet<string>,
+): ReviewItem<T>[] {
+  const weak: { sentence: T; held: number }[] = [];
+  const ordinary: T[] = [];
+  for (const sentence of fresh) {
+    const held = weakWords.size > 0 ? weakWordCount(sentence.en, weakWords) : 0;
+    if (held > 0) weak.push({ sentence, held });
+    else ordinary.push(sentence);
+  }
+  weak.sort((a, b) => b.held - a.held || compareRecent(a.sentence, b.sentence));
+  return [
+    ...weak.map(({ sentence }): ReviewItem<T> => ({ sentence, strength: 0, reason: "weak" })),
+    ...spreadAcrossLessons(ordinary).map((sentence): ReviewItem<T> => ({
+      sentence,
+      strength: 0,
+      reason: "spread",
+    })),
+  ];
+}
+
+/** The first `cap` of `ready`, taking no more than `maxPerLesson` from any one lesson. */
+function takeWithLessonCap<T extends SentenceCandidate>(
+  ready: readonly ReviewItem<T>[],
+  cap: number,
+  maxPerLesson: number,
+): ReviewItem<T>[] {
+  const perLesson = new Map<string, number>();
+  const items: ReviewItem<T>[] = [];
+  for (const item of ready) {
+    if (items.length >= cap) break;
+    const taken = perLesson.get(item.sentence.lessonId) ?? 0;
+    if (taken >= maxPerLesson) continue;
+    perLesson.set(item.sentence.lessonId, taken + 1);
+    items.push(item);
+  }
+  return items;
+}
+
+/**
  * Today's batch, in this order:
  *  1. sentences that came due on their schedule, the longest waiting first (a missed one is due
  *     tomorrow, so it is back at once);
@@ -172,37 +218,49 @@ export function selectSentenceReview<T extends SentenceCandidate>(
       compareRecent(a.sentence, b.sentence),
   );
 
-  const weak: { sentence: T; held: number }[] = [];
-  const ordinary: T[] = [];
-  for (const sentence of fresh) {
-    const held = weakWords.size > 0 ? weakWordCount(sentence.en, weakWords) : 0;
-    if (held > 0) weak.push({ sentence, held });
-    else ordinary.push(sentence);
-  }
-  weak.sort((a, b) => b.held - a.held || compareRecent(a.sentence, b.sentence));
-
   const ready: ReviewItem<T>[] = [
     ...due.map(({ sentence, state }): ReviewItem<T> => ({
       sentence,
       strength: state.strength,
       reason: "due",
     })),
-    ...weak.map(({ sentence }): ReviewItem<T> => ({ sentence, strength: 0, reason: "weak" })),
-    ...spreadAcrossLessons(ordinary).map((sentence): ReviewItem<T> => ({
-      sentence,
-      strength: 0,
-      reason: "spread",
-    })),
+    ...orderFresh(fresh, weakWords),
   ];
 
-  const perLesson = new Map<string, number>();
-  const items: ReviewItem<T>[] = [];
-  for (const item of ready) {
-    if (items.length >= cap) break;
-    const taken = perLesson.get(item.sentence.lessonId) ?? 0;
-    if (taken >= maxPerLesson) continue;
-    perLesson.set(item.sentence.lessonId, taken + 1);
-    items.push(item);
-  }
+  const items = takeWithLessonCap(ready, cap, maxPerLesson);
   return { items, more: ready.length > items.length };
+}
+
+/**
+ * The sentences of the lessons the learner finished TODAY that the day's exam may ask. The exam is
+ * about what they just learned as much as about what they learned before, so these are exactly the
+ * ones `selectSentenceReview` leaves out: MIN_REVIEW_WORDS words or more, never asked back yet (one
+ * already on the schedule is not new any more), the ones holding the learner's weak words first,
+ * then a spread over those lessons, no more than MAX_TODAY_PER_LESSON from one. Each comes back as
+ * reason "today" at strength 0; once answered it joins the schedule like any sentence (due tomorrow).
+ */
+export function selectTodaySentences<T extends SentenceCandidate>(
+  candidates: readonly T[],
+  states: ReadonlyMap<string, MasteryState>,
+  options: SelectOptions,
+): ReviewItem<T>[] {
+  const cap = Math.max(0, Math.trunc(options.cap ?? DAILY_REVIEW_COUNT));
+  const maxPerLesson = Math.max(1, Math.trunc(options.maxPerLesson ?? MAX_TODAY_PER_LESSON));
+  const weakWords = options.weakWords ?? NO_WORDS;
+
+  const fresh: T[] = [];
+  const seen = new Set<string>();
+  for (const sentence of candidates) {
+    if (seen.has(sentence.id) || options.exclude?.has(sentence.id)) continue;
+    seen.add(sentence.id);
+    if (sentence.completedOn !== options.todayISO) continue;
+    if (reviewWordCount(sentence.en) < MIN_REVIEW_WORDS) continue;
+    if (states.has(sentence.id)) continue;
+    fresh.push(sentence);
+  }
+  const ready = orderFresh(fresh, weakWords).map((item): ReviewItem<T> => ({
+    ...item,
+    reason: "today",
+  }));
+  return takeWithLessonCap(ready, cap, maxPerLesson);
 }

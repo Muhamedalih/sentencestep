@@ -12,6 +12,7 @@ import { questTitle } from "@/lib/features/quest-labels";
 import { questProgressPercent } from "@/lib/features/quests";
 import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { addDays } from "@/lib/features/streak-freeze";
+import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
 function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }) {
@@ -64,9 +65,11 @@ export function EngagementStrip({
 
   if (!quests && !streak) return null;
 
-  const done = quests?.quests.filter((quest) => quest.completed).length ?? 0;
-  const total = quests?.quests.length ?? 0;
-  const pendingQuests = quests?.quests.filter((quest) => !quest.completed) ?? [];
+  // The ring and "up next" are about the day's required quests: the sentence exam is an extra.
+  const required = requiredQuests(quests?.quests ?? []);
+  const done = required.filter((quest) => quest.completed).length;
+  const total = required.length;
+  const pendingQuests = required.filter((quest) => !quest.completed);
   // Today's tasks go in their order (listen, story, words), the random mix by how far along each is.
   const nextQuest = todayMode
     ? pendingQuests[0]
@@ -133,7 +136,7 @@ export function EngagementStrip({
                     t.quests.allDone
                   ) : nextQuest.today ? (
                     <>
-                      {todayTaskTitle(t.today, nextQuest.today.kind, nextQuest.target)}
+                      {todayTaskTitle(t.today, nextQuest.today.kind)}
                       {nextQuest.today.title && (
                         <span className="text-muted-foreground ms-2 text-xs" dir="ltr">
                           {nextQuest.today.title}

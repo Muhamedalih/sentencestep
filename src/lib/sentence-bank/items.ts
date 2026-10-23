@@ -1,5 +1,5 @@
 import { maskedTokenIndexes } from "@/lib/sentence-bank/mask";
-import { reviewFormFor } from "@/lib/sentence-bank/review";
+import { TODAY_FORM_STRENGTH, reviewFormFor } from "@/lib/sentence-bank/review";
 import type { ReviewForm } from "@/lib/sentence-bank/review";
 import type { ReviewItem, ReviewReason, SentenceCandidate } from "@/lib/sentence-bank/select";
 
@@ -44,7 +44,11 @@ export function buildReviewItems(args: {
     const prompt = args.prompts.get(sentence.id)?.trim() || null;
     const meaning = prompt && prompt !== sentence.en ? prompt : null;
     const audioUrl = args.clips.get(sentence.id) ?? null;
-    const form = reviewFormFor(strength, { audio: audioUrl !== null, prompt: meaning !== null });
+    // A sentence of today's lesson is asked the way a middling one is, never the easy first form.
+    const form = reviewFormFor(reason === "today" ? TODAY_FORM_STRENGTH : strength, {
+      audio: audioUrl !== null,
+      prompt: meaning !== null,
+    });
     if (!form) continue;
     items.push({
       id: sentence.id,
