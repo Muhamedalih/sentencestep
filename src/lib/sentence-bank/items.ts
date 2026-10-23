@@ -18,16 +18,22 @@ export interface ReviewScreenItem {
   strength: number;
   reason: ReviewReason;
   form: ReviewForm;
-  /** The stored clip (never a freshly generated one), or null. The sound-based forms play it before the answer; the meaning-only form offers it only after. */
-  audioUrl: string | null;
+  /**
+   * The stored clip in the sentence's own lesson's voice — always there: a sentence with no stored
+   * clip is not asked at all, so the exam never falls back to the browser's voice and never makes one.
+   * The sound-based forms play it before the answer; the meaning-only form offers it only after.
+   */
+  audioUrl: string;
   /** The pieces (indexes into sentenceTokens) the partial form hides; empty for the other forms. */
   masked: number[];
 }
 
 /**
- * The first `limit` sentences of the selection that can be asked, in the selection's own order. A
- * sentence with neither a stored clip nor a meaning in the learner's language cannot be asked in
- * any hidden-text form and is left for another day (the selection carries a few spare for that).
+ * The first `limit` sentences of the selection that can be asked, in the selection's own order. The
+ * exam always has its sound, in the voice of the lesson the sentence is from, so a sentence with no
+ * stored clip is left out (it is never read by the browser's voice and never generated here); so is
+ * one with no meaning in the learner's language when its form needs the meaning. The selection
+ * carries a few spare for the ones that drop out.
  */
 export function buildReviewItems(args: {
   selection: readonly ReviewItem<SentenceCandidate>[];
@@ -43,10 +49,11 @@ export function buildReviewItems(args: {
     if (items.length >= args.limit) break;
     const prompt = args.prompts.get(sentence.id)?.trim() || null;
     const meaning = prompt && prompt !== sentence.en ? prompt : null;
-    const audioUrl = args.clips.get(sentence.id) ?? null;
+    const audioUrl = args.clips.get(sentence.id);
+    if (!audioUrl) continue;
     // A sentence of today's lesson is asked the way a middling one is, never the easy first form.
     const form = reviewFormFor(reason === "today" ? TODAY_FORM_STRENGTH : strength, {
-      audio: audioUrl !== null,
+      audio: true,
       prompt: meaning !== null,
     });
     if (!form) continue;

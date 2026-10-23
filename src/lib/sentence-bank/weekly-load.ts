@@ -6,6 +6,7 @@ import { isMissingTableError } from "@/lib/sentence-bank/errors";
 import { finishedLessonDays } from "@/lib/sentence-bank/finished";
 import type { ReviewScreenItem } from "@/lib/sentence-bank/items";
 import type { SentenceBankContext } from "@/lib/sentence-bank/load";
+import { storedClipsFor } from "@/lib/sentence-bank/lesson-clips";
 import { fetchSentencePool } from "@/lib/sentence-bank/pool";
 import {
   WEEKLY_CHECK_MIN,
@@ -86,9 +87,10 @@ export interface WeeklyCheckScreen {
 
 /**
  * The weekly check's sentences, ready to be drawn: ten (at most) from the lessons finished in the
- * last seven days, each from its meaning in the learner's language. Fewer than five that can be
- * asked means no check (empty). Two reads: the week's sentences (service role, scoped to the
- * learner's own finished lessons — see pool.ts) and their meanings.
+ * last seven days, each from its meaning in the learner's language and with its stored clip, in its
+ * lesson's voice, for after the answer. Fewer than five that can be asked means no check (empty).
+ * Reads: the week's sentences (service role, scoped to the learner's own finished lessons — see
+ * pool.ts), then their meanings and clips together.
  */
 export async function loadWeeklyCheckScreen(
   context: SentenceBankContext & { locale: SupportLocale | null },
@@ -121,11 +123,14 @@ export async function loadWeeklyCheckScreen(
   if (selected.length < WEEKLY_CHECK_MIN) return { items: [], written };
 
   const locale = context.locale ?? DEFAULT_LOCALE;
-  const translations = await getContentTranslations(
-    "sentence",
-    selected.map((sentence) => sentence.id),
-    locale,
-  ).catch(() => new Map<string, unknown>());
+  const [translations, clips] = await Promise.all([
+    getContentTranslations(
+      "sentence",
+      selected.map((sentence) => sentence.id),
+      locale,
+    ).catch(() => new Map<string, unknown>()),
+    storedClipsFor(selected),
+  ]);
   const prompts = new Map<string, string>();
   for (const sentence of selected) {
     const meaning = resolveScalarField(
@@ -137,6 +142,6 @@ export async function loadWeeklyCheckScreen(
     );
     if (meaning) prompts.set(sentence.id, meaning);
   }
-  const items = buildCheckItems(selected, prompts);
+  const items = buildCheckItems(selected, prompts, clips);
   return { items: items.length >= WEEKLY_CHECK_MIN ? items : [], written };
 }

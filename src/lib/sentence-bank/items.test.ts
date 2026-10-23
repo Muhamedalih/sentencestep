@@ -51,7 +51,7 @@ test("each sentence is asked in the form its strength calls for, in the selectio
   assert.equal(items[2]!.audioUrl, "https://clips/c.mp3");
 });
 
-test("a sentence of today's lesson is asked heard and typed whole (or from its meaning), never the easy first form", () => {
+test("a sentence of today's lesson is asked heard and typed whole, never the easy first form", () => {
   const today = (id: string, en: string): ReviewItem<SentenceCandidate> => ({
     sentence: { id, lessonId: "story", orderIndex: 1, en, completedOn: "2025-06-10" },
     strength: 0,
@@ -63,8 +63,10 @@ test("a sentence of today's lesson is asked heard and typed whole (or from its m
       ["a", "اشترت سيارة حمراء"],
       ["b", "يمشي إلى الحديقة يومياً"],
     ]),
-    // Only the first has a stored clip: the second falls back to its meaning.
-    clips: new Map([["a", "https://clips/a.mp3"]]),
+    clips: new Map([
+      ["a", "https://clips/a.mp3"],
+      ["b", "https://clips/b.mp3"],
+    ]),
     weakWords: WEAK,
     limit: 3,
   });
@@ -72,26 +74,30 @@ test("a sentence of today's lesson is asked heard and typed whole (or from its m
     items.map((item) => [item.id, item.form, item.reason]),
     [
       ["a", "audio", "today"],
-      ["b", "translate", "today"],
+      ["b", "audio", "today"],
     ],
   );
   assert.deepEqual(items[0]!.masked, []);
 });
 
-test("a sentence with no stored clip is asked from its meaning, whatever its strength", () => {
-  const [item] = buildReviewItems({
-    selection: [pick("a", 0, "She bought a red car")],
-    prompts: new Map([["a", "اشترت سيارة حمراء"]]),
+test("a sentence with no stored clip is not asked at all: the exam always has its sound, in the lesson's voice", () => {
+  const items = buildReviewItems({
+    selection: [
+      pick("a", 0, "She bought a red car"),
+      pick("b", 4, "They played chess all evening"),
+    ],
+    prompts: new Map([
+      ["a", "اشترت سيارة حمراء"],
+      ["b", "لعبوا الشطرنج طوال المساء"],
+    ]),
     clips: new Map(),
     weakWords: WEAK,
     limit: 3,
   });
-  assert.equal(item!.form, "translate");
-  assert.equal(item!.audioUrl, null);
-  assert.deepEqual(item!.masked, []);
+  assert.deepEqual(items, []);
 });
 
-test("a sentence with no meaning is asked by sound, and one with neither is left for another day", () => {
+test("a sentence with a clip but no meaning is asked by sound, and one with no clip is left out", () => {
   const items = buildReviewItems({
     selection: [
       pick("a", 4, "They played chess all evening"),
@@ -99,28 +105,32 @@ test("a sentence with no meaning is asked by sound, and one with neither is left
       pick("c", 0, "He walks to the park daily"),
     ],
     prompts: new Map([["c", "يمشي إلى الحديقة يومياً"]]),
-    clips: new Map([["a", "https://clips/a.mp3"]]),
+    clips: new Map([
+      ["a", "https://clips/a.mp3"],
+      ["c", "https://clips/c.mp3"],
+    ]),
     weakWords: WEAK,
     limit: 5,
   });
   assert.deepEqual(
-    items.map((item) => [item.id, item.form]),
+    items.map((item) => [item.id, item.form, item.audioUrl]),
     [
-      ["a", "audio"],
-      ["c", "translate"],
+      ["a", "audio", "https://clips/a.mp3"],
+      ["c", "partial", "https://clips/c.mp3"],
     ],
   );
 });
 
-test("a meaning that is just the English again is no meaning", () => {
-  const items = buildReviewItems({
+test("a meaning that is just the English again is no meaning, so the sound form is used", () => {
+  const [item] = buildReviewItems({
     selection: [pick("a", 4, "They played chess all evening")],
     prompts: new Map([["a", "They played chess all evening"]]),
-    clips: new Map(),
+    clips: new Map([["a", "https://clips/a.mp3"]]),
     weakWords: WEAK,
     limit: 3,
   });
-  assert.deepEqual(items, []);
+  assert.equal(item!.form, "audio");
+  assert.equal(item!.prompt, null);
 });
 
 test("only `limit` come back, and the spare ones behind an unaskable sentence take its place", () => {
@@ -135,10 +145,16 @@ test("only `limit` come back, and the spare ones behind an unaskable sentence ta
     ["c", "ج"],
     ["d", "د"],
   ]);
+  // "b" has no stored clip: it cannot be asked, whatever else it has.
+  const clips = new Map([
+    ["a", "https://clips/a.mp3"],
+    ["c", "https://clips/c.mp3"],
+    ["d", "https://clips/d.mp3"],
+  ]);
   const items = buildReviewItems({
     selection,
     prompts,
-    clips: new Map(),
+    clips,
     weakWords: WEAK,
     limit: 2,
   });
@@ -146,10 +162,7 @@ test("only `limit` come back, and the spare ones behind an unaskable sentence ta
     items.map((item) => item.id),
     ["a", "c"],
   );
-  assert.deepEqual(
-    buildReviewItems({ selection, prompts, clips: new Map(), weakWords: WEAK, limit: 0 }),
-    [],
-  );
+  assert.deepEqual(buildReviewItems({ selection, prompts, clips, weakWords: WEAK, limit: 0 }), []);
 });
 
 test("the learner's weak word is the one the partial form hides", () => {

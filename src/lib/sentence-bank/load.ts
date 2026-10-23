@@ -1,10 +1,7 @@
-import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
 import { localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getContentTranslations, resolveScalarField } from "@/lib/i18n/content-translations";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import type { SupportLocale } from "@/lib/i18n/locales";
-import { fetchStoredClips } from "@/lib/sentence-bank/clips";
-import type { ClipRequest } from "@/lib/sentence-bank/clips";
 import { composeExam } from "@/lib/sentence-bank/exam";
 import {
   MAX_POOL_LESSONS,
@@ -22,7 +19,8 @@ import {
   sentencesStillToAsk,
 } from "@/lib/sentence-bank/select";
 import type { SentenceCandidate } from "@/lib/sentence-bank/select";
-import { fetchLessonVoices, fetchSentencePool } from "@/lib/sentence-bank/pool";
+import { storedClipsFor } from "@/lib/sentence-bank/lesson-clips";
+import { fetchSentencePool } from "@/lib/sentence-bank/pool";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
 import { fetchSentenceStates } from "@/lib/supabase/queries/sentence-mastery";
 import type { SentenceStateRow } from "@/lib/supabase/queries/sentence-mastery";
@@ -120,8 +118,8 @@ export async function countSentencesReady(context: SentenceBankContext): Promise
  * finished today (so the day ends with proof it was learned) and earlier days (due first, then the
  * ones holding their weak words, then a spread over their lessons) — mixed by exam.ts, today's
  * first. Each has the form it is asked in, the meaning in the learner's language and the stored clip
- * it plays. A sentence that cannot be asked in any hidden-text form (no stored clip and no meaning)
- * is replaced by a spare one.
+ * in its lesson's voice that it plays — the exam always has its sound, so a sentence with no stored
+ * clip (or none that its form needs the meaning for) is replaced by a spare one.
  */
 export async function loadSentenceReviewScreen(
   context: SentenceBankContext & {
@@ -143,14 +141,13 @@ export async function loadSentenceReviewScreen(
 
   const chosen = [...todaySelection, ...earlierSelection].map((item) => item.sentence);
   const locale = context.locale ?? DEFAULT_LOCALE;
-  const lessonIds = [...new Set(chosen.map((sentence) => sentence.lessonId))];
-  const [translations, voices] = await Promise.all([
+  const [translations, clips] = await Promise.all([
     getContentTranslations(
       "sentence",
       chosen.map((sentence) => sentence.id),
       locale,
     ).catch(() => new Map<string, unknown>()),
-    fetchLessonVoices(lessonIds).catch(() => new Map()),
+    storedClipsFor(chosen),
   ]);
 
   const prompts = new Map<string, string>();
@@ -158,26 +155,6 @@ export async function loadSentenceReviewScreen(
     const meaning = resolveScalarField(translations, sentence.id, "text", sentence.ar, locale);
     if (meaning) prompts.set(sentence.id, meaning);
   }
-
-  // A lesson with no narrator of its own uses its section's default, exactly as its page does.
-  let normalDefault: string | null | undefined;
-  let storyDefault: string | null | undefined;
-  const requests: ClipRequest[] = [];
-  for (const sentence of chosen) {
-    const lesson = voices.get(sentence.lessonId);
-    let voiceId: string | null = lesson?.voiceId ?? null;
-    if (!voiceId && lesson) {
-      if (lesson.mode === "normal") {
-        normalDefault ??= await getDefaultNormalLessonVoiceId().catch(() => null);
-        voiceId = normalDefault ?? null;
-      } else {
-        storyDefault ??= await getDefaultVoiceId().catch(() => null);
-        voiceId = storyDefault ?? null;
-      }
-    }
-    if (voiceId) requests.push({ key: sentence.id, text: sentence.en, voiceId });
-  }
-  const clips = await fetchStoredClips(requests).catch(() => new Map<string, string>());
 
   const build = (selection: typeof earlierSelection) =>
     buildReviewItems({ selection, prompts, clips, weakWords, limit });

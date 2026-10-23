@@ -196,11 +196,12 @@ test("the checks migration only adds: nothing existing is altered, dropped or re
   }
 });
 
-test("the check asks every sentence from its meaning, in order, and leaves out one that has none", () => {
+test("the check asks every sentence from its meaning, in order, and leaves out one that has none or has no clip", () => {
   const selected = [
     sentence("a", "2025-06-09", "She bought a red car today"),
     sentence("b", "2025-06-08", "He walks to the park daily"),
     sentence("c", "2025-06-07", "They played chess all evening"),
+    sentence("d", "2025-06-06", "The doctor called last night"),
   ];
   const items = buildCheckItems(
     selected,
@@ -208,13 +209,20 @@ test("the check asks every sentence from its meaning, in order, and leaves out o
       [selected[0]!.id, "اشترت سيارة حمراء اليوم"],
       [selected[2]!.id, "They played chess all evening"], // the English again is no meaning
       [selected[1]!.id, "يمشي إلى الحديقة يومياً"],
+      [selected[3]!.id, "اتصل الطبيب ليلة أمس"],
+    ]),
+    // The sound plays after the answer, in the lesson's voice: a sentence with no stored clip is not asked.
+    new Map([
+      [selected[0]!.id, "https://clips/a.mp3"],
+      [selected[1]!.id, "https://clips/b.mp3"],
+      [selected[2]!.id, "https://clips/c.mp3"],
     ]),
   );
   assert.deepEqual(
     items.map((item) => [item.id, item.form, item.audioUrl, item.masked]),
     [
-      [selected[0]!.id, "translate", null, []],
-      [selected[1]!.id, "translate", null, []],
+      [selected[0]!.id, "translate", "https://clips/a.mp3", []],
+      [selected[1]!.id, "translate", "https://clips/b.mp3", []],
     ],
   );
   assert.equal(items[0]!.prompt, "اشترت سيارة حمراء اليوم");

@@ -46,12 +46,17 @@ minute at most per server process (`isMissingTableError`).
   "from earlier days: 1 of 1"), and lists every sentence with how it went.
 - Form by strength (`review.ts`): 0-1 partial dictation (hear it, type the one or two missing words),
   2-3 audio only, 4-5 meaning only (Arabic to English). A sentence of today's lesson is asked as if it
-  had strength 2 (`TODAY_FORM_STRENGTH`): heard and typed whole, or from its meaning with no clip. Sound forms play **only a stored clip**
-  (`voice_audio_cache`, never generated); with no clip the sentence is asked from its meaning, with no
-  meaning either it is left for another day.
+  had strength 2 (`TODAY_FORM_STRENGTH`): heard and typed whole, or from its meaning with no clip. **Every question has its sound**, a stored clip
+  in the voice of the sentence's own lesson (`voice_audio_cache`, found by `lesson-clips.ts`; never
+  generated, never the browser's voice): a sentence with no stored clip is not asked at all, and one
+  with no meaning in the learner's language is asked by sound alone. Today all 1381 sentences of 4+
+  words in the 171 lessons have their clip. The meaning-only form keeps the clip for after the answer
+  (hearing it first would give the answer away).
 - One help (the first letters) holds a sentence where it is; two helps, a wrong answer or "I don't
-  remember" is a miss. The first answer alone goes to the schedule; a miss is asked once more at the
-  end of the visit with other blanks, for practice only (`session.ts`, `mask.ts`).
+  remember" is a miss. The first answer alone goes to the schedule and a miss simply comes back tomorrow: by default nothing is
+  asked twice in a visit, so the exam is exactly as long as it was said to be and nothing piles up on a
+  learner having a hard day (`MAX_SECOND_CHANCES = 0` in `session.ts`; raising it gives a miss a second
+  look at the end of the visit with other blanks, for practice only — `mask.ts`).
 - Routes: `/learn/today/sentences` (`?flow=1` from the words step through
   `/learn/today/go?step=sentences`, then on to the finish screen) and `/learn/today/check`.
 
@@ -74,8 +79,8 @@ the browser.
 
 After seven days of Today's session since the last check (and three lessons finished that week), the
 box shows one quiet line: the check is ready. The check asks up to ten sentences of the week, each
-from its meaning, no help, no second chance (a miss still comes back tomorrow), and is **not** counted
-for the day's task. For the next seven days the line is the result: "Sentences this week: you wrote N,
+from its meaning, no help, no second chance (a miss still comes back tomorrow), its clip playing after
+the answer, and is **not** counted for the day's task. For the next seven days the line is the result: "Sentences this week: you wrote N,
 and remembered M of K without looking (x%)". No level is ever derived from it; a check that asked
 fewer than five shows no number (`weekly.ts`).
 

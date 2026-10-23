@@ -17,18 +17,28 @@ export function startQueue<T>(items: readonly T[]): QueueEntry<T>[] {
 }
 
 /**
- * The queue after the learner answers the entry at `index`: a sentence missed on its first go is
- * asked once more at the end of the visit (once it has been seen written out, asked again with
- * nothing in front of it), and never a third time. Anything else leaves the queue alone. The
- * schedule is told about the FIRST answer only — the second chance is practice.
+ * How many sentences missed in a visit are asked once more at its end. None: a visit is exactly as
+ * long as it was said to be, and a miss simply comes back tomorrow — nothing piles up on a learner
+ * who is having a hard day. Raise it (it is the one place) to give a miss a second look at once.
+ */
+export const MAX_SECOND_CHANCES = 0;
+
+/**
+ * The queue after the learner answers the entry at `index`: while the visit has second chances to
+ * give (`maxSecondChances`), a sentence missed on its first go is asked once more at the end (once
+ * it has been seen written out, asked again with nothing in front of it), and never a third time.
+ * Anything else leaves the queue alone. The schedule is told about the FIRST answer only — the
+ * second chance is practice.
  */
 export function queueAfterAnswer<T>(
   queue: readonly QueueEntry<T>[],
   index: number,
   outcome: SentenceOutcome,
+  maxSecondChances: number = MAX_SECOND_CHANCES,
 ): QueueEntry<T>[] {
   const answered = queue[index];
   if (!answered || answered.attempt === 1 || outcome !== "missed") return [...queue];
+  if (queue.filter((entry) => entry.attempt === 1).length >= maxSecondChances) return [...queue];
   return [...queue, { item: answered.item, attempt: 1 }];
 }
 

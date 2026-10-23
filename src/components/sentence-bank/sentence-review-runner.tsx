@@ -366,7 +366,12 @@ export function SentenceReviewRunner({
         ? copy.formAudio
         : copy.formTranslate;
   const lastBlank = masked.length - 1;
-  const hasSound = item.form !== "translate" && item.audioUrl !== null;
+  // Every question has its clip in the lesson's voice; the meaning-only form keeps it for after the answer.
+  const hasSound = item.form !== "translate";
+  // Whether the miss on screen is going to be asked again at the end of the visit.
+  const askedAgain = queue.some(
+    (other, position) => position > index && other.attempt === 1 && other.item.id === item.id,
+  );
   const HeaderIcon = item.form === "translate" ? Quote : Headphones;
 
   return (
@@ -570,7 +575,7 @@ export function SentenceReviewRunner({
             {graded.outcome === "missed" && (
               <p className="text-muted-foreground flex items-center gap-1.5 text-sm" dir="auto">
                 <Clock className="size-3.5 shrink-0" aria-hidden="true" />
-                {entry.attempt === 0 && !isCheck ? copy.missedFirst : copy.missedSecond}
+                {askedAgain ? copy.missedFirst : copy.missedSecond}
               </p>
             )}
             <div className="mt-1 flex w-full flex-col items-stretch gap-3">
@@ -578,17 +583,15 @@ export function SentenceReviewRunner({
                 {t.dictation.continue}
               </Button>
               <div className="flex flex-wrap items-center justify-center gap-3">
-                {item.audioUrl && (
-                  <PronunciationButton
-                    text={item.en}
-                    audioUrl={item.audioUrl}
-                    resetKey={`feedback-${item.id}-${entry.attempt}`}
-                    disableSpeechFallback
-                    variant="outline"
-                    size="default"
-                    label={copy.listen}
-                  />
-                )}
+                <PronunciationButton
+                  text={item.en}
+                  audioUrl={item.audioUrl}
+                  resetKey={`feedback-${item.id}-${entry.attempt}`}
+                  disableSpeechFallback
+                  variant="outline"
+                  size="default"
+                  label={copy.listen}
+                />
                 <span className="text-muted-foreground text-xs max-sm:hidden" dir="auto">
                   {t.dictation.pressEnterContinue}
                 </span>

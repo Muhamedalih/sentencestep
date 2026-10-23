@@ -142,17 +142,21 @@ export function selectWeeklyCheck<T extends SentenceCandidate>(
 
 /**
  * The check's sentences as the review screen draws them: every one from its meaning (the check is
- * Arabic to English with no help and no sound), in the order they were selected. A sentence with no
- * meaning in the learner's language cannot be asked this way and is left out.
+ * Arabic to English with no help and no sound before the answer), in the order they were selected.
+ * Its clip, in the voice of the lesson it is from, plays after the answer — so a sentence with no
+ * stored clip is left out, like one with no meaning in the learner's language.
  */
 export function buildCheckItems(
   selected: readonly SentenceCandidate[],
   prompts: ReadonlyMap<string, string>,
+  clips: ReadonlyMap<string, string>,
 ): ReviewScreenItem[] {
   const items: ReviewScreenItem[] = [];
   for (const sentence of selected) {
     const prompt = prompts.get(sentence.id)?.trim();
     if (!prompt || prompt === sentence.en) continue;
+    const audioUrl = clips.get(sentence.id);
+    if (!audioUrl) continue;
     items.push({
       id: sentence.id,
       lessonId: sentence.lessonId,
@@ -161,7 +165,7 @@ export function buildCheckItems(
       strength: 0,
       reason: "spread",
       form: "translate",
-      audioUrl: null,
+      audioUrl,
       masked: [],
     });
   }
