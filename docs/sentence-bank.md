@@ -3,7 +3,9 @@
 The site remembers the sentences a learner typed in lessons and stories and brings a few of them
 back, with their text hidden, on the schedule Word Lists words already use. It lives inside
 **Today's tasks** on Home as an extra row, **the day's exam** («امتحان اليوم»), and ends each week with a
-ten-sentence exam and one honest line. Phase 2 of the strategy report
+ten-sentence exam and one honest line. (Renamed in the learner-facing text on 2026-10-23: the day's
+exam is now «اختبر نفسك في دروس اليوم» / "Test yourself on today's lessons", a card of its own on the new
+Home page — see `docs/home-today.md`; this document and the code keep saying "exam".) Phase 2 of the strategy report
 (`reports/phase-2-3-brief.md`); nothing in it is open to learners until the owner says so.
 
 ## Switches

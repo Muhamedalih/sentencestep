@@ -176,6 +176,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     shortFirstRun: false,
     todaySession: false,
     sentenceBank: false,
+    newHome: false,
   });
 });
 
@@ -187,11 +188,33 @@ test("the sentence bank lives inside Today's box: it is never open without Today
   // Nothing else is touched, and the answer it was given is not changed.
   const before = { ...open, todaySession: false };
   const after = withRolloutDependencies(before);
-  assert.deepEqual({ ...after, sentenceBank: true }, { ...before, sentenceBank: true });
+  assert.deepEqual(
+    { ...after, sentenceBank: true, newHome: true },
+    { ...before, sentenceBank: true, newHome: true },
+  );
   assert.equal(before.sentenceBank, true);
   // A plain learner has neither on the default settings.
   const learnerAccess = evaluateRollouts(defaultRolloutConfig(), learner);
   assert.equal(withRolloutDependencies(learnerAccess).sentenceBank, false);
+});
+
+test("the new Home page is built from Today's tasks: it is never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).newHome, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).newHome, false);
+  assert.equal(withRolloutDependencies({ ...open, newHome: false }).newHome, false);
+  // Its own setting alone does not open it for a learner whose Today's session is closed.
+  const config = defaultRolloutConfig();
+  config.newHome = entry({ mode: "everyone" });
+  const everyone = withRolloutDependencies(evaluateRollouts(config, learner));
+  assert.equal(everyone.newHome, false);
+  config.todaySession = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).newHome, true);
+  // A plain learner has it on neither default setting.
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).newHome,
+    false,
+  );
 });
 
 test("visitorShare: 0 unless open to everyone, then the chosen percent", () => {

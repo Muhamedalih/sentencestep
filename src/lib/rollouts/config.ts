@@ -182,11 +182,16 @@ export function evaluateRollouts(
  * Features that live INSIDE another one and so are never open without it, whatever their own
  * setting says: the sentence bank is a row in Today's box, so a learner who does not have Today's
  * session has no sentence bank either (and a test of Today's session stays a clean test of it).
+ * The new Home page is built from Today's tasks, so it is closed whenever Today's session is.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
 ): Record<RolloutId, boolean> {
-  return { ...access, sentenceBank: access.sentenceBank && access.todaySession };
+  return {
+    ...access,
+    sentenceBank: access.sentenceBank && access.todaySession,
+    newHome: access.newHome && access.todaySession,
+  };
 }
 
 /** Everything closed — what a visitor gets when the settings can't be read. */

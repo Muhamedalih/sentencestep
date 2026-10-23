@@ -12,6 +12,7 @@ export const ROLLOUT_IDS = [
   "shortFirstRun",
   "todaySession",
   "sentenceBank",
+  "newHome",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -101,19 +102,34 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
   sentenceBank: {
     id: "sentenceBank",
     audience: "learner",
-    title: "Sentence bank (Today's exam)",
+    title: "Sentence bank (“Test yourself on today's lessons”)",
     description:
-      "The site remembers the sentences a learner typed in lessons and stories and, once the day's three tasks are done, asks a few of them with their text hidden: some from the lessons finished today (so the day ends with proof it was learned) and some from earlier days, on the same 1 / 3 / 7 / 16 / 30-day schedule as Word Lists words (a miss comes back tomorrow, a clean answer waits longer). Inside Today's tasks box it adds an optional extra row, “Today's exam”, on the days something is ready (never an empty row, and never a count of what is waiting), and once a week a ten-sentence exam ends with one honest line: how many the learner still remembers.",
+      "The site remembers the sentences a learner typed in lessons and stories and, once the day's three tasks are done, asks a few of them with their text hidden: some from the lessons finished today (so the day ends with proof it was learned) and some from earlier days, on the same 1 / 3 / 7 / 16 / 30-day schedule as Word Lists words (a miss comes back tomorrow, a clean answer waits longer). Inside Today's tasks box it adds an optional extra row, “Test yourself on today's lessons” (a card of its own on the new Home page), on the days something is ready (never an empty row, and never a count of what is waiting), and once a week a ten-sentence test ends with one honest line: how many the learner still remembers.",
     notes: [
-      "Admin note: Features → Daily quests has a row “Today's exam” (Today's extra row only): its XP and target (how many questions) are tuned there, and switching it off removes the row.",
+      "Admin note: Features → Daily quests has a row “Test yourself on today's lessons” (Today's extra row only): its XP and target (how many questions) are tuned there, and switching it off removes the row.",
       "Needs Today's session to be open for the same people: it lives inside that box, and stays closed while Today is closed.",
-      "Needs two tables, applied by pasting the SQL: sentence_mastery (migration 20250347000000) and sentence_checks (20250348000000, for the weekly exam). Until they are applied the exam row and the weekly exam never appear and nothing is recorded.",
-      "The exam is an extra, not a fourth task: Home's ring, “all done”, the reward line and the day badge count the three tasks only, and skipping it leaves the day done.",
+      "Needs two tables, applied by pasting the SQL: sentence_mastery (migration 20250347000000) and sentence_checks (20250348000000, for the weekly test). Until they are applied the test row and the weekly test never appear and nothing is recorded.",
+      "The test is an extra, not a fourth task: Home's ring, “all done”, the reward line and the day badge count the three tasks only, and skipping it leaves the day done.",
       "Three questions a day at most: about two from the lessons finished today and one from earlier days (when one side has too few the other fills in), none from a sentence shorter than four words, at most two from the same earlier lesson. A miss comes back tomorrow; nothing is asked twice in a visit.",
       "Questions are asked by how well each sentence is remembered: heard with one or two words missing, heard alone, or from its meaning in the learner's language; a sentence of today's lesson is always heard and typed whole. Every question has its sound — a stored clip in the voice of the sentence's own lesson, never the browser's voice — and a sentence with no stored clip is not asked.",
-      "The weekly exam comes after seven days of Today's session: ten sentences from the week, each from its meaning, no help, and one honest line afterwards (how many were remembered of how many were asked). It never claims a level.",
+      "The weekly test comes after seven days of Today's session: ten sentences from the week, each from its meaning, no help, and one honest line afterwards (how many were remembered of how many were asked). It never claims a level.",
       "A learner whose subscription ended can still be asked sentences from lessons they finished: the sentences are read for that learner's own finished lessons only, whatever Premium says.",
       "To test it, choose “A share of learners”: it only reaches learners who also have Today's session, so read Today's own test before opening this one.",
+    ],
+  },
+  newHome: {
+    id: "newHome",
+    audience: "learner",
+    title: "New Home page (Today first)",
+    description:
+      "Home becomes one calm screen built around Today's session: the greeting with the three totals on one small line, a small button for the words waiting to be reviewed and the learner's week (tap it for the streak card and the month), then Today's three tasks beside the learner's daily lesson, and under them one card, “Test yourself on today's lessons”, on the days it has something to ask. The words task shows a small typing hint (the learner writes every word). It replaces, for the people it is open to, the quests strip, the streak card, the passage card, the three-card grid and (for admins) “Today's plan”. Stories and Passages stay in the menu and inside the tasks.",
+    notes: [
+      "Needs Today's session to be open for the same people: it is built from Today's tasks, and stays closed while Today is closed (a learner without it keeps the current Home).",
+      "Signed-in learners only: a guest keeps the current Home, and so does the very first visit of a browser (before it has told the server its time zone).",
+      "The self-test card needs the Sentence bank open too, and only appears on days a test is dealt (never an empty card); the weekly test line is not part of this page.",
+      "The free-lesson counter (“Starter lessons 3/4”) stays under the daily lesson card for learners on the free plan; Premium learners never saw it.",
+      "To look at the current Home while this is open for you, add ?classic=1 to the address.",
+      "To test it, choose “A share of learners”: those accounts get the new page and the rest keep the current one; the share is stable per account, like the other features.",
     ],
   },
 };

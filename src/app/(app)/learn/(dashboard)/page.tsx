@@ -11,6 +11,7 @@ import { HomeHero } from "@/components/app/home-hero";
 import { HomePlan } from "@/components/app/home-plan";
 import { HomeReviewCard } from "@/components/app/home-review-card";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
+import { HomeToday } from "@/components/home-today/home-today";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { getAccessState } from "@/lib/billing/access";
@@ -35,6 +36,7 @@ import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
+import { showsNewHome } from "@/lib/today/home-layout";
 import type { Book } from "@/types/library";
 
 export const metadata: Metadata = { title: "Home" };
@@ -58,9 +60,15 @@ export const dynamic = "force-dynamic";
  * nav order), and this page is purely the dashboard: nothing here scrolls
  * into a lesson catalog any more.
  */
-export default async function LearnHomePage() {
+export default async function LearnHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ classic?: string | string[] }>;
+}) {
   const locale = await getLocale();
   const t = locale ? getDictionary(locale) : fallbackDictionary;
+  // `?classic=1` is the way back to the current Home while the new page ("newHome") is open for you.
+  const classicRequested = (await searchParams).classic === "1";
 
   // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
   // sentence/word counts, never the sentence bodies themselves (see that
@@ -140,16 +148,38 @@ export default async function LearnHomePage() {
   // The same number the Word Lists hero shows (see countWordsWaitingForReview) —
   // only what is actually up for review, not every word that was ever weak.
   const reviewWaitingPromise = weakWordsPromise.then(countWordsWaitingForReview);
+  // Whether this visit wants the new Home page (permission "newHome", see HomeToday): decided before
+  // anything else starts, so the reads only the current Home needs — the "Today's session" card, the
+  // passage card, the admin plan's words — are not even started for a visit that will not draw them.
+  const wantsNewHome = Promise.all([userPromise, getEffectiveFeatures()])
+    .then(([signedIn, features]) =>
+      showsNewHome({
+        signedIn: signedIn !== null,
+        newHome: features.rollouts.newHome,
+        todaySession: features.rollouts.todaySession,
+        hasEngagement: true,
+        classic: classicRequested,
+      }),
+    )
+    .catch(() => false);
   const engagement = startHomeEngagement({
     todayISO: learnerToday,
     features: getEffectiveFeatures(),
     user: userPromise,
     // Swallowed here only for the count: the page's own await below still surfaces a real failure.
     weakWordCount: weakWordsPromise.then((words) => words.length).catch(() => 0),
+    skipDailySession: wantsNewHome,
   });
+  // The new page also needs the day's cards: a browser's very first visit has no time zone yet, so
+  // they were not started and the current Home is drawn that once.
+  const newHomePromise = wantsNewHome.then((wanted) => wanted && engagement !== null);
   // The Passages card needs no time zone, so unlike the cards above it starts on every visit and
   // always renders under the "Up next" heading, whichever way the other cards were loaded.
-  const passages = startHomePassagesCard({ user: userPromise, features: getEffectiveFeatures() });
+  const passages = startHomePassagesCard({
+    user: userPromise,
+    features: getEffectiveFeatures(),
+    skip: newHomePromise,
+  });
   // Admin preview of "Today's plan" (HomePlan): its Word Lists reads only run for an admin.
   const isAdminPromise = isAdmin();
   const planWordsPromise = Promise.all([
@@ -157,8 +187,9 @@ export default async function LearnHomePage() {
     userPromise,
     progressPromise,
     getEffectiveFeatures(),
-  ]).then(([admin, signedIn, progress, effectiveFeatures]) =>
-    admin && signedIn
+    newHomePromise,
+  ]).then(([admin, signedIn, progress, effectiveFeatures, newHomeVisit]) =>
+    admin && signedIn && !newHomeVisit
       ? loadHomePlanWords({
           userId: signedIn.id,
           locale: locale ?? undefined,
@@ -182,6 +213,7 @@ export default async function LearnHomePage() {
     initialProgress,
     openCheckout,
     planWords,
+    newHome,
   ] = await Promise.all([
     getHomeLessons(locale ?? undefined),
     getAccessState(),
@@ -195,6 +227,7 @@ export default async function LearnHomePage() {
     progressPromise,
     openCheckoutPromise,
     planWordsPromise,
+    newHomePromise,
   ]);
 
   // The Book recommendation card: the first featured, published book, or
@@ -246,6 +279,40 @@ export default async function LearnHomePage() {
   // The review card sits under the Stories card inside "Up next", drawn like it (HomeReviewCard) —
   // in the admin preview it stays the Word Lists page's own full-width card, under the plan.
   const reviewWords = weakWords.filter((word) => word.dueNow);
+
+  // The new Home page (permission "newHome"): Today's tasks, the learner's lesson and the self-test on
+  // one calm screen instead of the strip, the passage card, the plan and the three-card grid.
+  if (newHome && engagement && user) {
+    return (
+      <ProgressProvider initialProgress={initialProgress}>
+        <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-8 sm:pb-16">
+          <h1 className="sr-only">{t.nav.home}</h1>
+          <HomeToday
+            stream={engagement}
+            user={user}
+            lessonStats={lessonStats}
+            sessionCount={attemptCount}
+            reviewCount={reviewWaiting.count}
+            units={units}
+            isPremiumUser={isPremiumUser}
+            hasWeakWords={reviewWaiting.count > 0}
+            banners={
+              <>
+                {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
+                {openCheckout && !isPremiumUser && (
+                  <FinishPaymentBanner
+                    reference={openCheckout.reference}
+                    url={openCheckout.url}
+                    className="mb-6"
+                  />
+                )}
+              </>
+            }
+          />
+        </div>
+      </ProgressProvider>
+    );
+  }
 
   return (
     <ProgressProvider initialProgress={initialProgress}>

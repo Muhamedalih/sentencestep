@@ -1450,11 +1450,17 @@ export interface Dictionary {
     accuracyIs: string;
     stepDoneStar: string;
     stepDoneAccuracy: string;
-    /** The day's exam row in the tasks box (an extra beside the three tasks, only on days sentences are ready): its name, its start button, its one-line why and what it is about. */
+    /** The day's self-test (“Test yourself on today's lessons”): its row in the tasks box and its card on the new Home page (an extra beside the three tasks, only on days sentences are ready): its name, its start button, its one-line why and what it is about. */
     taskSentences: string;
     startSentences: string;
     whySentences: string;
     sentencesFrom: string;
+    /** The self-test card on the new Home page: said once the day's test is done, and how many questions it asks (`{n}` is the count; the singular is for one). */
+    testDone: string;
+    testOne: string;
+    testMany: string;
+    /** The small line beside the typing hint on the words task: the learner writes every word. */
+    wordsTypeHint: string;
     /** The line under a word of Today's words step that is a target word of the story or the passage finished today (`{title}` is that story or passage). */
     wordFromStory: string;
     wordFromPassage: string;

@@ -94,9 +94,13 @@ export async function loadPassagesHomeCard(
 export function startHomePassagesCard(input: {
   user: Promise<CurrentUser | null>;
   features: Promise<EffectiveFeatures>;
+  /** Resolves true when this visit draws the new Home page, which has no passage card (the passage is Today's first task): nothing is read then. */
+  skip?: Promise<boolean>;
 }): Promise<PassagesHomeData | null> {
-  return Promise.all([input.user, input.features])
-    .then(([user, features]) => (user ? loadPassagesHomeCard(user.id, features) : null))
+  return Promise.all([input.user, input.features, input.skip ?? false])
+    .then(([user, features, skip]) =>
+      user && !skip ? loadPassagesHomeCard(user.id, features) : null,
+    )
     .catch((error: unknown) => {
       console.error("[passages] startHomePassagesCard failed", error);
       return null;

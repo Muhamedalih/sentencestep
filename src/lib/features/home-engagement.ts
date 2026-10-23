@@ -206,6 +206,8 @@ export function startHomeEngagement(input: {
   features: Promise<EffectiveFeatures>;
   user: Promise<CurrentUser | null>;
   weakWordCount: Promise<number>;
+  /** Resolves true when this visit draws the new Home page, which has no "Today's session" card: its (several) reads are then not made. */
+  skipDailySession?: Promise<boolean>;
 }): HomeEngagementStream | null {
   const { todayISO } = input;
   if (!todayISO) return null;
@@ -238,8 +240,10 @@ export function startHomeEngagement(input: {
 
   return {
     todayISO,
-    dailySession: card("dailySession", (userId, features) =>
-      loadDailySessionSummary(userId, todayISO, features, input.weakWordCount),
+    dailySession: card("dailySession", async (userId, features) =>
+      (await input.skipDailySession)
+        ? null
+        : loadDailySessionSummary(userId, todayISO, features, input.weakWordCount),
     ),
     quests: card("quests", async (userId, features, started) =>
       loadDailyQuests(userId, todayISO, features, started.quests ? await started.quests : null),
