@@ -9,80 +9,168 @@ import { BLANK_TOKEN } from "@/types/word-lists";
 import type { VocabularyItem } from "@/types/content";
 
 /**
- * Today's words step is tied to the same session's story and passage: its five words are the TARGET
- * words of the story finished today (two or three) and, for the places left, those of the passage
- * finished today. Pure — session-words-load.ts finds the lessons and reads them, this turns their
- * target words into the review words the step quizzes, each with its sentence blanked out and a
- * small "from today's story" line (ReviewWord.fromToday) so the link is visible.
+ * Today's words step is the same session's own words and nothing else: the TARGET words of the story
+ * finished today (two or three) and, for the places left of the five, those of the passage finished
+ * today. Pure — session-words-load.ts finds the lessons and reads them, this turns their target
+ * words into the review words the step quizzes (each with its sentence blanked out and a small "from
+ * today's story" line, ReviewWord.fromToday, so the link is visible) and decides which of them make
+ * the five. No word of the Words section or of any other source is ever added to them.
  */
 
 /** The story gives at most this many of the five; its own target vocabulary is two or three words anyway. */
 export const STORY_WORDS_MAX = 3;
 
-/** The story's target words (its `lesson.vocabulary`), the important ones only, each with the story sentence it sits in blanked out. They are the very words the story's Vocabulary Recall encounters were made from, so finishing one advances that schedule. */
-export function storyReviewWords(lesson: {
+/** A candidate word and where it sits in its story or passage (the index of its sentence), so words that sit close together can be picked as one related group. */
+export interface PositionedWord {
+  word: ReviewWord;
+  position: number;
+}
+
+/** Every important target word of the story (its `lesson.vocabulary`), each with the story sentence it sits in blanked out. They are the very words the story's Vocabulary Recall encounters were made from, so finishing one advances that schedule. */
+export function storyWordCandidates(lesson: {
   title: string;
   sentences: readonly { id: string; en: string }[];
   vocabulary?: readonly VocabularyItem[];
-}): ReviewWord[] {
-  const sentences = new Map(lesson.sentences.map((sentence) => [sentence.id, sentence]));
-  const words: ReviewWord[] = [];
+}): PositionedWord[] {
+  const indexById = new Map(lesson.sentences.map((sentence, index) => [sentence.id, index]));
+  const candidates: PositionedWord[] = [];
   for (const item of lesson.vocabulary ?? []) {
-    if (words.length >= STORY_WORDS_MAX) break;
     const parsed = parseVocabularyItemId(item.id);
-    const sentence = parsed ? sentences.get(parsed.sentenceId) : undefined;
+    const index = parsed ? indexById.get(parsed.sentenceId) : undefined;
     const targetWord = normalizeMistakeWord(item.en);
-    if (!parsed || !sentence || !isImportantWord(targetWord)) continue;
+    if (!parsed || index === undefined || !isImportantWord(targetWord)) continue;
+    const sentence = lesson.sentences[index]!;
     const blanked = buildBlankSentence(sentence.en, parsed.wordIndex);
     if (!blanked.includes(BLANK_TOKEN)) continue;
-    words.push({
-      id: `recall-${targetWord}`,
-      groupId: "recall",
-      order: words.length,
-      targetWord,
-      sentence: blanked,
-      hintAr: item.ar,
-      supportHint: item.supportText ?? item.ar,
-      reason: "review",
-      lessonTitle: lesson.title,
-      fromToday: "story",
-      // The real, synthesized isolated-word pipeline, as for every Vocabulary Recall word.
-      pronunciationContentType: "sentence_word",
-      pronunciationContentId: `${sentence.id}::${targetWord}`,
+    candidates.push({
+      position: index,
+      word: {
+        id: `recall-${targetWord}`,
+        groupId: "recall",
+        order: 0,
+        targetWord,
+        sentence: blanked,
+        hintAr: item.ar,
+        supportHint: item.supportText ?? item.ar,
+        reason: "review",
+        lessonTitle: lesson.title,
+        fromToday: "story",
+        // The real, synthesized isolated-word pipeline, as for every Vocabulary Recall word.
+        pronunciationContentType: "sentence_word",
+        pronunciationContentId: `${sentence.id}::${targetWord}`,
+      },
     });
   }
-  return words;
+  return candidates;
 }
 
 /**
- * The passage's target words (the word lesson it hands over at its end), the important ones that
- * can be shown inside the passage line they appear in, in the passage's own order, each with that
- * line blanked out. Empty for a passage with no word lesson: there is nothing to complete them
- * against.
+ * Every important target word of the passage (the word lesson it hands over at its end) that can be
+ * shown inside the passage line it appears in, each with that line blanked out. Empty for a passage
+ * with no word lesson: there is nothing to complete them against.
  */
-export function passageReviewWords(passage: {
+export function passageWordCandidates(passage: {
   title: string;
   wordGroupId: string | null;
   words: readonly PassageWord[];
-}): ReviewWord[] {
+  sections: readonly { sentences: readonly { en: string }[] }[];
+}): PositionedWord[] {
   if (!passage.wordGroupId) return [];
-  const words: ReviewWord[] = [];
+  const lines = passage.sections.flatMap((section) => section.sentences.map((line) => line.en));
+  const candidates: PositionedWord[] = [];
   for (const entry of passage.words) {
     const parts = entry.contextEn ? splitAroundWord(entry.contextEn, entry.word) : null;
     if (!parts || !isImportantWord(entry.word)) continue;
-    words.push({
-      id: entry.id,
-      groupId: passage.wordGroupId,
-      order: words.length,
-      targetWord: entry.word,
-      sentence: `${parts[0]}${BLANK_TOKEN}${parts[2]}`,
-      hintAr: entry.hintAr,
-      supportHint: entry.hintAr,
-      reason: "review",
-      lessonTitle: passage.title,
-      fromToday: "passage",
-      audioUrl: entry.audioUrl,
+    const at = lines.indexOf(entry.contextEn ?? "");
+    candidates.push({
+      // A line that cannot be found (the clip it came from changed) counts as the end of the passage.
+      position: at === -1 ? lines.length : at,
+      word: {
+        id: entry.id,
+        groupId: passage.wordGroupId,
+        order: 0,
+        targetWord: entry.word,
+        sentence: `${parts[0]}${BLANK_TOKEN}${parts[2]}`,
+        hintAr: entry.hintAr,
+        supportHint: entry.hintAr,
+        reason: "review",
+        lessonTitle: passage.title,
+        fromToday: "passage",
+        audioUrl: entry.audioUrl,
+      },
     });
   }
-  return words;
+  return candidates;
+}
+
+/**
+ * The `count` words that sit closest together in the story (or passage): words from one stretch of
+ * the text belong to one scene, so they are the most related to each other that can be told without
+ * understanding them. The window of `count` neighbours (in text order) with the smallest spread of
+ * sentences wins, the earliest on a tie; when there are no more than `count` candidates, all of them,
+ * in text order. A word listed twice counts once.
+ */
+export function closestWords(
+  candidates: readonly PositionedWord[],
+  count: number,
+): PositionedWord[] {
+  const wanted = Math.max(0, Math.trunc(count));
+  if (wanted === 0) return [];
+  const seen = new Set<string>();
+  const unique = candidates.filter((entry) => {
+    const key = normalizeMistakeWord(entry.word.targetWord);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const sorted = unique.sort((a, b) => a.position - b.position);
+  if (sorted.length <= wanted) return sorted;
+  let best = 0;
+  let bestSpread = Number.POSITIVE_INFINITY;
+  for (let start = 0; start + wanted <= sorted.length; start++) {
+    const spread = sorted[start + wanted - 1]!.position - sorted[start]!.position;
+    if (spread < bestSpread) {
+      best = start;
+      bestSpread = spread;
+    }
+  }
+  return sorted.slice(best, best + wanted);
+}
+
+function shuffled<T>(items: readonly T[], random: () => number): T[] {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index--) {
+    const other = Math.floor(random() * (index + 1));
+    [result[index], result[other]] = [result[other]!, result[index]!];
+  }
+  return result;
+}
+
+/**
+ * The words of the round, in a random order: the story's target words (two or three: up to
+ * STORY_WORDS_MAX, the closest together) and then, for the places left of `size`, the passage's
+ * closest-together target words — so a story with two gives the passage three places, a story with
+ * three gives it two. Nothing else is ever added: with too few of either, the round is just shorter.
+ * The story's words complete as Vocabulary Recall words, the passage's as Word Lists words.
+ */
+export function sessionWords(args: {
+  story: readonly PositionedWord[];
+  passage: readonly PositionedWord[];
+  size: number;
+  random?: () => number;
+}): ReviewWord[] {
+  const size = Math.max(0, Math.trunc(args.size));
+  const fromStory = closestWords(args.story, Math.min(STORY_WORDS_MAX, size));
+  const taken = new Set(fromStory.map((entry) => normalizeMistakeWord(entry.word.targetWord)));
+  const fromPassage = closestWords(
+    args.passage.filter((entry) => !taken.has(normalizeMistakeWord(entry.word.targetWord))),
+    size - fromStory.length,
+  );
+  return shuffled(
+    [
+      ...fromStory.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "recall" })),
+      ...fromPassage.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "wordList" })),
+    ],
+    args.random ?? Math.random,
+  );
 }

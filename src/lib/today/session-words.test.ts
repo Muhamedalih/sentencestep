@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { assembleSession } from "@/lib/features/daily-session";
 import type { PassageWord } from "@/lib/passages/types";
-import { STORY_WORDS_MAX, passageReviewWords, storyReviewWords } from "@/lib/today/session-words";
+import {
+  STORY_WORDS_MAX,
+  closestWords,
+  passageWordCandidates,
+  sessionWords,
+  storyWordCandidates,
+} from "@/lib/today/session-words";
+import type { PositionedWord } from "@/lib/today/session-words";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
 const sentences = [
@@ -17,8 +23,8 @@ function item(sentenceId: string, wordIndex: number, en: string, ar: string, sup
   return { id: `${sentenceId}-vocab-${wordIndex}`, en, ar, supportText };
 }
 
-test("the story's target words come back blanked inside their own sentence, as the words that finishing the story recorded", () => {
-  const words = storyReviewWords({
+test("the story's target words are blanked inside their own sentence, with where they sit", () => {
+  const candidates = storyWordCandidates({
     title: "Half a Cookie",
     sentences,
     vocabulary: [
@@ -27,7 +33,14 @@ test("the story's target words come back blanked inside their own sentence, as t
     ],
   });
   assert.deepEqual(
-    words.map((word) => [word.id, word.targetWord, word.sentence, word.hintAr, word.supportHint]),
+    candidates.map(({ word, position }) => [
+      word.id,
+      word.targetWord,
+      word.sentence,
+      word.hintAr,
+      word.supportHint,
+      position,
+    ]),
     [
       [
         "recall-balloon",
@@ -35,149 +48,218 @@ test("the story's target words come back blanked inside their own sentence, as t
         `The ${BLANK_TOKEN} starts to fly over the hill`,
         "بالون",
         "بالون",
+        0,
       ],
-      ["recall-rain", "rain", `She waits for the ${BLANK_TOKEN} to stop`, "مطر", "lluvia"],
+      ["recall-rain", "rain", `She waits for the ${BLANK_TOKEN} to stop`, "مطر", "lluvia", 1],
     ],
   );
-  assert.ok(
-    words.every((word) => word.fromToday === "story" && word.lessonTitle === "Half a Cookie"),
-  );
-  assert.equal(words[0]!.groupId, "recall");
-  assert.equal(words[0]!.pronunciationContentType, "sentence_word");
-  assert.equal(words[0]!.pronunciationContentId, "story-9-s1::balloon");
+  const first = candidates[0]!.word;
+  assert.equal(first.fromToday, "story");
+  assert.equal(first.lessonTitle, "Half a Cookie");
+  assert.equal(first.groupId, "recall");
+  assert.equal(first.pronunciationContentType, "sentence_word");
+  assert.equal(first.pronunciationContentId, "story-9-s1::balloon");
 });
 
-test("a story gives at most three words, only important ones whose sentence is found", () => {
-  assert.equal(STORY_WORDS_MAX, 3);
-  const words = storyReviewWords({
+test("a function word, or a word whose sentence is not in the story, is no target word", () => {
+  const candidates = storyWordCandidates({
     title: "T",
     sentences,
     vocabulary: [
-      item("story-9-s3", 3, "into", "إلى"), // a function word is no word to learn
-      item("story-9-missing", 1, "ghost", "شبح"), // its sentence is not in the story
-      item("story-9-s1", 1, "balloon", "بالون"),
-      item("story-9-s2", 4, "rain", "مطر"),
+      item("story-9-s3", 3, "into", "إلى"),
+      item("story-9-missing", 1, "ghost", "شبح"),
       item("story-9-s3", 2, "box", "صندوق"),
-      item("story-9-s4", 2, "build", "يبني"),
     ],
   });
   assert.deepEqual(
-    words.map((word) => word.targetWord),
-    ["balloon", "rain", "box"],
+    candidates.map(({ word }) => word.targetWord),
+    ["box"],
   );
-  assert.deepEqual(storyReviewWords({ title: "T", sentences, vocabulary: [] }), []);
-  assert.deepEqual(storyReviewWords({ title: "T", sentences }), []);
+  assert.deepEqual(storyWordCandidates({ title: "T", sentences }), []);
 });
 
 function passageWord(id: string, word: string, contextEn: string | null): PassageWord {
   return { id, word, hintAr: `معنى ${word}`, contextEn, contextAr: null, audioUrl: null };
 }
 
-test("the passage's target words are blanked inside the passage line they appear in, in the passage's order", () => {
-  const words = passageReviewWords({
+const passageLines = [
+  "We waited in the dark kitchen.",
+  "The silence was the best part of the night.",
+  "Then we made a plan: nobody speaks.",
+  "He opened the window slowly.",
+  "The garden was quiet tonight.",
+];
+const sections = [
+  { sentences: passageLines.slice(0, 2).map((en) => ({ en })) },
+  { sentences: passageLines.slice(2).map((en) => ({ en })) },
+];
+
+test("the passage's target words are blanked inside their passage line, positioned by that line across the sections", () => {
+  const candidates = passageWordCandidates({
     title: "The Quiet Hour",
     wordGroupId: "group-1",
+    sections,
     words: [
-      passageWord("w1", "silence", "The silence was the best part of the night."),
-      passageWord("w2", "plan", "We made a plan: nobody speaks."),
+      passageWord("w1", "silence", passageLines[1]!),
+      passageWord("w2", "plan", passageLines[2]!),
     ],
   });
   assert.deepEqual(
-    words.map((word) => [word.id, word.groupId, word.targetWord, word.sentence]),
+    candidates.map(({ word, position }) => [
+      word.id,
+      word.groupId,
+      word.targetWord,
+      word.sentence,
+      position,
+    ]),
     [
-      ["w1", "group-1", "silence", `The ${BLANK_TOKEN} was the best part of the night.`],
-      ["w2", "group-1", "plan", `We made a ${BLANK_TOKEN}: nobody speaks.`],
+      ["w1", "group-1", "silence", `The ${BLANK_TOKEN} was the best part of the night.`, 1],
+      ["w2", "group-1", "plan", `Then we made a ${BLANK_TOKEN}: nobody speaks.`, 2],
     ],
   );
-  assert.ok(
-    words.every((word) => word.fromToday === "passage" && word.lessonTitle === "The Quiet Hour"),
-  );
-  assert.equal(words[0]!.hintAr, "معنى silence");
+  assert.equal(candidates[0]!.word.fromToday, "passage");
+  assert.equal(candidates[0]!.word.lessonTitle, "The Quiet Hour");
+  assert.equal(candidates[0]!.word.hintAr, "معنى silence");
 });
 
-test("a passage word with no line to sit in, or only as part of another word, is left out; a passage with no word lesson gives none", () => {
+test("a passage word with no line to sit in, or only inside another word, is left out; no word lesson gives none", () => {
   const passage = {
     title: "P",
     wordGroupId: "group-1",
+    sections,
     words: [
       passageWord("w1", "plan", null),
-      passageWord("w2", "plan", "The planet is far away."), // "plan" only inside "planet"
-      passageWord("w3", "into", "She walked into the room."), // a function word
-      passageWord("w4", "window", "He opened the window slowly."),
+      passageWord("w2", "plan", "The planet is far away."),
+      passageWord("w3", "into", "She walked into the room."),
+      passageWord("w4", "window", passageLines[3]!),
     ],
   };
   assert.deepEqual(
-    passageReviewWords(passage).map((word) => word.targetWord),
+    passageWordCandidates(passage).map(({ word }) => word.targetWord),
     ["window"],
   );
-  assert.deepEqual(passageReviewWords({ ...passage, wordGroupId: null }), []);
+  assert.deepEqual(passageWordCandidates({ ...passage, wordGroupId: null }), []);
 });
 
-test("the five words are the story's two or three and then the passage's, whichever way the split falls", () => {
-  const story3 = storyReviewWords({
-    title: "S",
-    sentences,
-    vocabulary: [
-      item("story-9-s1", 1, "balloon", "أ"),
-      item("story-9-s2", 4, "rain", "ب"),
-      item("story-9-s3", 2, "box", "ج"),
-    ],
-  });
-  const story2 = story3.slice(0, 2);
-  const passage = passageReviewWords({
-    title: "P",
-    wordGroupId: "g",
-    words: [
-      passageWord("p1", "silence", "The silence was the best part."),
-      passageWord("p2", "plan", "We made a plan today."),
-      passageWord("p3", "window", "He opened the window slowly."),
-      passageWord("p4", "garden", "The garden was quiet tonight."),
-    ],
-  });
-  const groups = (story: typeof story3) => [
-    { source: "recall" as const, items: story },
-    { source: "wordList" as const, items: passage },
-    { source: "recall" as const, items: [{ ...story3[0]!, id: "later", targetWord: "other" }] },
+function at(
+  word: string,
+  position: number,
+  source: "story" | "passage" = "passage",
+): PositionedWord {
+  return {
+    position,
+    word: {
+      id: word,
+      groupId: "g",
+      order: 0,
+      targetWord: word,
+      sentence: `x ${BLANK_TOKEN} y`,
+      hintAr: word,
+      reason: "review",
+      fromToday: source,
+    },
+  };
+}
+
+const names = (entries: readonly PositionedWord[]) => entries.map((entry) => entry.word.targetWord);
+
+test("the closest words are the neighbours with the smallest spread, the earliest on a tie", () => {
+  assert.deepEqual(names(closestWords([at("a", 0), at("b", 5), at("c", 6)], 2)), ["b", "c"]);
+  assert.deepEqual(names(closestWords([at("a", 0), at("b", 1), at("c", 8), at("d", 9)], 2)), [
+    "a",
+    "b",
+  ]);
+  assert.deepEqual(
+    names(closestWords([at("a", 0), at("b", 2), at("c", 3), at("d", 9), at("e", 20)], 3)),
+    ["a", "b", "c"],
+  );
+});
+
+test("with no more candidates than wanted, all of them come back in text order, each word once", () => {
+  assert.deepEqual(names(closestWords([at("c", 9), at("a", 1), at("b", 4)], 5)), ["a", "b", "c"]);
+  assert.deepEqual(names(closestWords([at("a", 1), at("A", 2), at("b", 3)], 3)), ["a", "b"]);
+  assert.deepEqual(closestWords([at("a", 1)], 0), []);
+  assert.deepEqual(closestWords([], 3), []);
+});
+
+// A fixed "random" so the order can be asserted.
+function counter(): () => number {
+  let step = 0;
+  return () => {
+    step += 1;
+    return (step * 0.37) % 1;
+  };
+}
+
+test("the five words are the story's two or three and the passage's closest ones for the places left", () => {
+  assert.equal(STORY_WORDS_MAX, 3);
+  const story = [at("balloon", 0, "story"), at("rain", 1, "story"), at("box", 2, "story")];
+  const passage = [at("silence", 1), at("plan", 2), at("window", 3), at("garden", 4)];
+
+  const three = sessionWords({ story, passage, size: 5, random: counter() });
+  assert.equal(three.length, 5);
+  assert.deepEqual(names(three.map((word) => ({ word, position: 0 }))).sort(), [
+    "balloon",
+    "box",
+    "plan",
+    "rain",
+    "silence",
+  ]);
+
+  const two = sessionWords({ story: story.slice(0, 2), passage, size: 5, random: counter() });
+  assert.deepEqual(names(two.map((word) => ({ word, position: 0 }))).sort(), [
+    "balloon",
+    "plan",
+    "rain",
+    "silence",
+    "window",
+  ]);
+});
+
+test("each word completes on the ledger of where it came from, and the order is random", () => {
+  const story = [at("balloon", 0, "story"), at("rain", 1, "story")];
+  const passage = [at("silence", 1), at("plan", 2), at("window", 3)];
+  const round = sessionWords({ story, passage, size: 5, random: counter() });
+  for (const word of round) {
+    assert.equal(word.sessionSource, word.fromToday === "story" ? "recall" : "wordList");
+  }
+  const order = (random: () => number) =>
+    sessionWords({ story, passage, size: 5, random }).map((word) => word.targetWord);
+  // The same random gives the same order; another one gives another order.
+  assert.deepEqual(order(counter()), order(counter()));
+  assert.notDeepEqual(
+    order(() => 0),
+    order(() => 0.999),
+  );
+});
+
+test("nothing outside the session is added: too few words make a shorter round", () => {
+  const story = [at("balloon", 0, "story"), at("rain", 1, "story")];
+  assert.deepEqual(
+    names(
+      sessionWords({ story, passage: [at("silence", 1)], size: 5, random: counter() }).map(
+        (word) => ({ word, position: 0 }),
+      ),
+    ).sort(),
+    ["balloon", "rain", "silence"],
+  );
+  assert.equal(sessionWords({ story, passage: [], size: 5 }).length, 2);
+  assert.equal(sessionWords({ story: [], passage: [at("silence", 1)], size: 5 }).length, 1);
+  assert.deepEqual(sessionWords({ story: [], passage: [], size: 5 }), []);
+  assert.deepEqual(sessionWords({ story, passage: [at("silence", 1)], size: 0 }), []);
+});
+
+test("a passage word that is also a story word is asked once, and the passage fills the place with another", () => {
+  const story = [at("rain", 1, "story")];
+  const passage = [
+    at("rain", 1),
+    at("silence", 2),
+    at("plan", 3),
+    at("window", 4),
+    at("garden", 5),
   ];
-
-  const three = assembleSession(groups(story3), 5);
-  assert.deepEqual(
-    three.map((word) => word.targetWord),
-    ["balloon", "rain", "box", "silence", "plan"],
-  );
-  const two = assembleSession(groups(story2), 5);
-  assert.deepEqual(
-    two.map((word) => word.targetWord),
-    ["balloon", "rain", "silence", "plan", "window"],
-  );
-  // Each completes on the ledger of where it came from.
-  assert.deepEqual(
-    three.map((word) => word.sessionSource),
-    ["recall", "recall", "recall", "wordList", "wordList"],
-  );
-});
-
-test("a passage that gives too few leaves the rest to the step's usual sources", () => {
-  const story = storyReviewWords({
-    title: "S",
-    sentences,
-    vocabulary: [item("story-9-s1", 1, "balloon", "أ"), item("story-9-s2", 4, "rain", "ب")],
-  });
-  const filler = ["alpha", "bravo", "charlie"].map((targetWord, order) => ({
-    ...story[0]!,
-    id: `f${order}`,
-    targetWord,
-  }));
-  const session = assembleSession(
-    [
-      { source: "recall" as const, items: story },
-      { source: "wordList" as const, items: [] },
-      { source: "weak" as const, items: filler },
-    ],
-    5,
-  );
-  assert.deepEqual(
-    session.map((word) => word.targetWord),
-    ["balloon", "rain", "alpha", "bravo", "charlie"],
-  );
+  const round = sessionWords({ story, passage, size: 5, random: counter() });
+  assert.equal(round.length, 5);
+  assert.equal(round.filter((word) => word.targetWord === "rain").length, 1);
+  assert.equal(round.find((word) => word.targetWord === "rain")?.sessionSource, "recall");
 });

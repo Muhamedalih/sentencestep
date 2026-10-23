@@ -1,18 +1,18 @@
-import type { ReviewWord } from "@/components/learning/word-review-session";
 import { getLessonById } from "@/lib/content";
 import { localISODateInTimeZone } from "@/lib/features/learner-date";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchPassage, fetchPassageProgress } from "@/lib/passages/queries";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { loadTodayStoryDone } from "@/lib/today/load";
-import { passageReviewWords, storyReviewWords } from "@/lib/today/session-words";
+import { passageWordCandidates, storyWordCandidates } from "@/lib/today/session-words";
+import type { PositionedWord } from "@/lib/today/session-words";
 
-/** The review words that tie Today's words step to the same session's story and passage. */
+/** The candidate words that tie Today's words step to the same session's story and passage. */
 export interface LinkedWords {
   /** Target words of the story finished today. */
-  story: ReviewWord[];
+  story: PositionedWord[];
   /** Target words of the passage finished today. */
-  passage: ReviewWord[];
+  passage: PositionedWord[];
 }
 
 async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Promise<T> {
@@ -26,9 +26,9 @@ async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Pro
 
 /**
  * The target words of the story and of the passage the learner finished TODAY (their own calendar
- * day; the latest of each), as review words for the words step. Nothing finished today, or anything
- * that fails, simply gives an empty list for that part — the step then falls back to its usual
- * sources, so it is never left without words.
+ * day; the latest of each), as candidate review words for the words step. Nothing finished today, or
+ * anything that fails, gives an empty list for that part; when both are empty the step falls back to
+ * its usual sources, so a learner who starts with the words is never left without any.
  */
 export async function loadLinkedWords(args: {
   userId: string;
@@ -44,9 +44,9 @@ export async function loadLinkedWords(args: {
         const storyId = await loadTodayStoryDone({ timeZone });
         if (!storyId) return [];
         const lesson = await getLessonById("stories", storyId, locale ?? undefined);
-        return lesson ? storyReviewWords(lesson) : [];
+        return lesson ? storyWordCandidates(lesson) : [];
       },
-      [] as ReviewWord[],
+      [] as PositionedWord[],
     ),
     quiet(
       "passage words",
@@ -61,9 +61,9 @@ export async function loadLinkedWords(args: {
           .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))[0];
         if (!latest) return [];
         const passage = await fetchPassage(latest.passageId);
-        return passage ? passageReviewWords(passage) : [];
+        return passage ? passageWordCandidates(passage) : [];
       },
-      [] as ReviewWord[],
+      [] as PositionedWord[],
     ),
   ]);
   return { story, passage };

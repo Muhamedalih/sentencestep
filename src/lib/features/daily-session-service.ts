@@ -11,6 +11,8 @@ import { fetchAllVocabularyWordsFlat } from "@/lib/supabase/queries/word-lists";
 import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
 import { WORDS_PER_DAY, pickNextWordBlock } from "@/lib/home-plan/plan";
 import { isImportantWord } from "@/lib/today/important-words";
+import { sessionWords } from "@/lib/today/session-words";
+import type { PositionedWord } from "@/lib/today/session-words";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchVocabularyRecallWordsAction } from "@/lib/vocabulary-recall/actions";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
@@ -211,12 +213,18 @@ async function newWordsSource(
 }
 
 /**
- * Today's words step: `size` words (five), the important ones only. First the words of the same
- * session — the target words of the story finished today (two or three) and then those of the
- * passage finished today (`linked`, see session-words-load.ts); then review — the target words of
- * the learner's lessons and stories that are due, their weak Words-section words, their own typing
- * mistakes and saved cards — and whatever places are left go to NEW words from the Words section.
- * Review words that are function words ("and", "into"…) or contractions are dropped (see
+ * Today's words step: `size` words (five), the important ones only.
+ *
+ * When the learner finished a story or a passage today (`linked`, see session-words-load.ts), the
+ * round is those lessons' own target words and NOTHING else — the story's two or three, then the
+ * passage's closest-together ones for the places left, in a random order (sessionWords) — so the
+ * words, the story and the passage are one session. With too few of them the round is just shorter:
+ * no word of the Words section or of any other source is added.
+ *
+ * Otherwise (nothing finished today, or "5 more words") the usual sources: review first — the target
+ * words of the learner's lessons and stories that are due, their weak Words-section words, their own
+ * typing mistakes and saved cards — and whatever places are left go to NEW words from the Words
+ * section. Review words that are function words ("and", "into"…) or contractions are dropped (see
  * isImportantWord); Words-section words and saved cards are the learner's own choices and are never
  * filtered. Every word points at the Word Lists voice's clip, like the Daily session's.
  */
@@ -226,10 +234,21 @@ export async function buildTodayWords(args: {
   size: number;
   startingLevel: number | null;
   isPremium: boolean;
-  /** The session's own story and passage words, when the step should start from them (the first round of the day, not "5 more words"). */
-  linked?: { story: ReviewWord[]; passage: ReviewWord[] };
+  /** The session's own story and passage words, when the step should be made of them (the first round of the day, not "5 more words"). */
+  linked?: { story: PositionedWord[]; passage: PositionedWord[] };
 }): Promise<ReviewWord[]> {
   const { userId, locale, size, linked } = args;
+  if (linked) {
+    const own = sessionWords({ story: linked.story, passage: linked.passage, size });
+    if (own.length > 0) {
+      const urlByWord = await attempt(
+        "word-list voice audio",
+        () => lookupWordListVoiceAudio(own.map((word) => word.targetWord)),
+        new Map<string, string>(),
+      );
+      return applyWordListAudio(own, urlByWord);
+    }
+  }
   const [recall, [active, reviews], weak, cards, fresh] = await Promise.all([
     attempt("recall", () => fetchVocabularyRecallWordsAction(), [] as ReviewWord[]),
     mistakeSources(size * 4),
@@ -241,10 +260,6 @@ export async function buildTodayWords(args: {
     items.filter((word) => isImportantWord(word.targetWord));
   const session = assembleSession<ReviewWord>(
     [
-      // The session's own words come first: the story's (they complete like Vocabulary Recall words,
-      // which they are), then the passage's (they complete as Word Lists words of its word lesson).
-      { source: "recall", items: linked?.story ?? [] },
-      { source: "wordList", items: linked?.passage ?? [] },
       {
         source: "recall",
         // Recall words carry only the Arabic gloss (hintAr); the review screen reads supportHint.
