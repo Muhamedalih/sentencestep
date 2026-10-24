@@ -26,6 +26,34 @@ export interface PositionedWord {
   position: number;
 }
 
+/**
+ * Where one target word sits in the story: its sentence (an index into `sentences`) and its place
+ * among that sentence's whitespace-split words. Derived vocabulary says so in its id
+ * (`<sentence>-vocab-<wordIndex>`); a curated story's ids (story-79..198, the ones in use) carry the
+ * word itself (`story-121-vocab-burnout`), so the word's first occurrence in the story's own
+ * sentences is found instead. Null when it cannot be placed.
+ */
+function locateStoryWord(
+  item: { id: string; en: string },
+  sentences: readonly { id: string; en: string }[],
+  indexById: ReadonlyMap<string, number>,
+): { index: number; wordIndex: number } | null {
+  const parsed = parseVocabularyItemId(item.id);
+  if (parsed) {
+    const index = indexById.get(parsed.sentenceId);
+    return index === undefined ? null : { index, wordIndex: parsed.wordIndex };
+  }
+  if (!item.id.includes("-vocab-")) return null;
+  const target = normalizeMistakeWord(item.en);
+  for (let index = 0; index < sentences.length; index++) {
+    const wordIndex = sentences[index]!.en.split(/\s+/).findIndex(
+      (word) => normalizeMistakeWord(word) === target,
+    );
+    if (wordIndex !== -1) return { index, wordIndex };
+  }
+  return null;
+}
+
 /** Every important target word of the story (its `lesson.vocabulary`), each with the story sentence it sits in blanked out. They are the very words the story's Vocabulary Recall encounters were made from, so finishing one advances that schedule. */
 export function storyWordCandidates(lesson: {
   title: string;
@@ -35,12 +63,12 @@ export function storyWordCandidates(lesson: {
   const indexById = new Map(lesson.sentences.map((sentence, index) => [sentence.id, index]));
   const candidates: PositionedWord[] = [];
   for (const item of lesson.vocabulary ?? []) {
-    const parsed = parseVocabularyItemId(item.id);
-    const index = parsed ? indexById.get(parsed.sentenceId) : undefined;
     const targetWord = normalizeMistakeWord(item.en);
-    if (!parsed || index === undefined || !isImportantWord(targetWord)) continue;
+    const place = locateStoryWord(item, lesson.sentences, indexById);
+    if (!place || !isImportantWord(targetWord)) continue;
+    const { index, wordIndex } = place;
     const sentence = lesson.sentences[index]!;
-    const blanked = buildBlankSentence(sentence.en, parsed.wordIndex);
+    const blanked = buildBlankSentence(sentence.en, wordIndex);
     if (!blanked.includes(BLANK_TOKEN)) continue;
     candidates.push({
       position: index,

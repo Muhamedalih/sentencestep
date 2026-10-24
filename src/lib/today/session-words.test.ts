@@ -79,6 +79,31 @@ test("a function word, or a word whose sentence is not in the story, is no targe
   assert.deepEqual(storyWordCandidates({ title: "T", sentences }), []);
 });
 
+test("a curated story's target words (ids that carry the word, not a number) are found in its sentences", () => {
+  const curated = storyWordCandidates({
+    title: "The Weekend Offline",
+    sentences: [
+      { id: "story-121-s1", en: "Mia feels total burnout after a long week." },
+      { id: "story-121-s2", en: "She decides to unplug from her phone." },
+      { id: "story-121-s3", en: "On Sunday she feels recharged." },
+    ],
+    vocabulary: [
+      { id: "story-121-vocab-burnout", en: "burnout", ar: "إرهاق تام" },
+      { id: "story-121-vocab-unplug", en: "unplug", ar: "ينقطع عن الإنترنت" },
+      // a word that is nowhere in the story is skipped, never guessed
+      { id: "story-121-vocab-ghost", en: "ghost", ar: "شبح" },
+    ],
+  });
+  assert.deepEqual(
+    curated.map(({ word, position }) => [word.targetWord, word.sentence, position]),
+    [
+      ["burnout", `Mia feels total ${BLANK_TOKEN} after a long week.`, 0],
+      ["unplug", `She decides to ${BLANK_TOKEN} from her phone.`, 1],
+    ],
+  );
+  assert.equal(curated[0]!.word.pronunciationContentId, "story-121-s1::burnout");
+});
+
 function passageWord(id: string, word: string, contextEn: string | null): PassageWord {
   return { id, word, hintAr: `معنى ${word}`, contextEn, contextAr: null, audioUrl: null };
 }
