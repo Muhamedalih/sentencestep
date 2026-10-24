@@ -1271,6 +1271,120 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["sentence_checks"]["Insert"]>;
         Relationships: [];
       };
+      redeem_agents: {
+        Row: {
+          id: string;
+          name: string;
+          /** A WhatsApp number or Telegram handle. Admin eyes only. */
+          contact: string;
+          country: string | null;
+          status: "candidate" | "active" | "paused" | "ended";
+          max_outstanding: number;
+          note: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          contact?: string;
+          country?: string | null;
+          status?: "candidate" | "active" | "paused" | "ended";
+          max_outstanding?: number;
+          note?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["redeem_agents"]["Insert"]>;
+        Relationships: [];
+      };
+      redeem_batches: {
+        Row: {
+          id: string;
+          batch_number: number;
+          agent_id: string;
+          status: "active" | "voided";
+          valid_until: string;
+          code_count: number;
+          wholesale_total_cents: number;
+          received_cents: number;
+          payment_method: string;
+          payment_reference: string;
+          note: string;
+          created_by: string | null;
+          created_at: string;
+          voided_at: string | null;
+          void_reason: string | null;
+        };
+        /** Batches are created only by create_redeem_batch; the table accepts updates for voiding, a later valid_until and the note. */
+        Insert: {
+          id?: string;
+          agent_id: string;
+          status?: "active" | "voided";
+          valid_until: string;
+          code_count: number;
+          wholesale_total_cents: number;
+          received_cents: number;
+          payment_method: string;
+          payment_reference?: string;
+          note?: string;
+          created_by?: string | null;
+          voided_at?: string | null;
+          void_reason?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["redeem_batches"]["Insert"]>;
+        Relationships: [];
+      };
+      redeem_codes: {
+        Row: {
+          id: string;
+          batch_id: string;
+          serial: number;
+          /** HMAC-SHA256 of the canonical code under REDEEM_CODE_PEPPER; the code itself is never stored. */
+          code_hash: string;
+          plan_id: "1m" | "3m" | "6m";
+          days: number;
+          wholesale_cents: number;
+          status: "unused" | "redeemed" | "voided";
+          redeemed_by: string | null;
+          redeemed_at: string | null;
+          redeemed_country: string | null;
+          premium_period_end: string | null;
+          voided_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          batch_id: string;
+          serial: number;
+          code_hash: string;
+          plan_id: "1m" | "3m" | "6m";
+          days: number;
+          wholesale_cents: number;
+          status?: "unused" | "redeemed" | "voided";
+          voided_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["redeem_codes"]["Insert"]>;
+        Relationships: [];
+      };
+      redeem_attempts: {
+        Row: {
+          id: number;
+          user_id: string;
+          ip_hash: string | null;
+          outcome: "ok" | "used_by_you" | "unlimited" | "unknown" | "used" | "voided" | "expired";
+          failed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          ip_hash?: string | null;
+          outcome: "ok" | "used_by_you" | "unlimited" | "unknown" | "used" | "voided" | "expired";
+          failed: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["redeem_attempts"]["Insert"]>;
+        Relationships: [];
+      };
       lesson_attempts: {
         Row: {
           id: string;
@@ -2129,6 +2243,68 @@ export interface Database {
             | "missing_paid_at"
             | "user_not_found";
           premium_period_end?: string | null;
+        };
+      };
+      redeem_code: {
+        Args: {
+          p_user_id: string;
+          p_code_hash: string;
+          p_country: string | null;
+          p_ip_hash: string | null;
+        };
+        Returns: {
+          result:
+            | "redeemed"
+            | "used_by_you"
+            | "unlimited"
+            | "unknown"
+            | "used"
+            | "voided"
+            | "expired"
+            | "throttled"
+            | "user_not_found"
+            | "bad_request";
+          days?: number;
+          premium_period_start?: string;
+          premium_period_end?: string | null;
+          extended_existing?: boolean;
+          retry_after_seconds?: number;
+        };
+      };
+      create_redeem_batch: {
+        Args: {
+          p_agent_id: string;
+          p_valid_until: string;
+          p_received_cents: number;
+          p_payment_method: string;
+          p_payment_reference: string;
+          p_note: string;
+          p_created_by: string | null;
+          p_codes: {
+            serial: number;
+            code_hash: string;
+            plan_id: "1m" | "3m" | "6m";
+            days: number;
+            wholesale_cents: number;
+          }[];
+        };
+        Returns: {
+          result:
+            | "created"
+            | "agent_not_found"
+            | "agent_not_active"
+            | "bad_request"
+            | "bad_size"
+            | "first_batch_too_big"
+            | "too_many_outstanding"
+            | "underpaid"
+            | "bad_validity";
+          batch_id?: string;
+          batch_number?: number;
+          code_count?: number;
+          wholesale_total_cents?: number;
+          outstanding?: number;
+          owed_cents?: number;
         };
       };
     };

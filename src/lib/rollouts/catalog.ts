@@ -13,6 +13,7 @@ export const ROLLOUT_IDS = [
   "todaySession",
   "sentenceBank",
   "newHome",
+  "redeemCodes",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -130,6 +131,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The free-lesson counter (“Starter lessons 3/4”) stays under the daily lesson card for learners on the free plan; Premium learners never saw it.",
       "To look at the current Home while this is open for you, add ?classic=1 to the address.",
       "To test it, choose “A share of learners”: those accounts get the new page and the rest keep the current one; the share is stable per account, like the other features.",
+    ],
+  },
+  redeemCodes: {
+    id: "redeemCodes",
+    audience: "learner",
+    title: "Premium codes (“I have a code”)",
+    description:
+      "A learner who bought a Premium code from a local agent types it on the plans page and gets the days: they are added on top of any Premium the learner still has, and start now otherwise. A code works once. The code is checked for typos before it counts as a try, and five wrong codes within ten minutes (twenty within a day) pause the box for that learner for a while, so the codes cannot be guessed.",
+    notes: [
+      "Needs the redeem-codes tables (migration 20250349000000, applied by pasting the SQL) and the server secret REDEEM_CODE_PEPPER on the server. Until both exist the box says it is not available.",
+      "Codes are issued by an admin to an agent who has paid; the admin sees them once. Only a hash is kept, so a copy of the database holds no usable code.",
+      "Closed, nobody can redeem a code, whoever holds one.",
     ],
   },
 };

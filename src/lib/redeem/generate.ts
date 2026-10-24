@@ -45,3 +45,18 @@ export function hashCode(code: string, pepper: string): string {
   }
   return createHmac("sha256", pepper).update(`redeem-code:v1:${code}`).digest("hex");
 }
+
+/**
+ * The address a request came from, made unreadable before it is kept: an HMAC under the same secret,
+ * so the table can answer "how many wrong codes came from this address lately" and nothing else.
+ * "unknown" (no address could be read) is no address at all: null, so it can't pause everybody who
+ * shares that unknown.
+ */
+export function hashAddress(address: string, pepper: string): string | null {
+  const trimmed = address.trim();
+  if (trimmed === "" || trimmed === "unknown") return null;
+  if (pepper.length < MIN_PEPPER_LENGTH) {
+    throw new Error(`The code pepper must be at least ${MIN_PEPPER_LENGTH} characters.`);
+  }
+  return createHmac("sha256", pepper).update(`redeem-ip:v1:${trimmed}`).digest("hex");
+}

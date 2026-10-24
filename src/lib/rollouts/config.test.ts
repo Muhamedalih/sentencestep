@@ -177,6 +177,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     todaySession: false,
     sentenceBank: false,
     newHome: false,
+    redeemCodes: false,
   });
 });
 

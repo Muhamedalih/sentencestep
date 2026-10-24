@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import { checkSymbol, formatCode, hasValidChecksum, normalizeCode } from "./code";
 import { CODE_ALPHABET, CODE_BODY_LENGTH, CODE_LENGTH } from "./constants";
-import { generateCode, generateCodes, hashCode } from "./generate";
+import { generateCode, generateCodes, hashAddress, hashCode } from "./generate";
 
 /** A fixed code for the examples: built from a body so its check symbol is the real one. */
 const BODY = "ABCDEFGHJKMNPQR";
@@ -153,5 +153,27 @@ describe("hashCode", () => {
   it("refuses a pepper too short to be a secret", () => {
     assert.throws(() => hashCode(CODE, "short"), /pepper/);
     assert.throws(() => hashCode(CODE, ""), /pepper/);
+  });
+});
+
+describe("hashAddress", () => {
+  const pepper = "p".repeat(40);
+
+  it("is a stable hex hash that is not the address", () => {
+    const hash = hashAddress("203.0.113.9", pepper);
+    assert.match(hash ?? "", /^[0-9a-f]{64}$/);
+    assert.equal(hashAddress(" 203.0.113.9 ", pepper), hash);
+    assert.notEqual(hashAddress("203.0.113.10", pepper), hash);
+    assert.notEqual(hashAddress("203.0.113.9", "q".repeat(40)), hash);
+  });
+
+  it("is different from the hash of the same text as a code", () => {
+    assert.notEqual(hashAddress("203.0.113.9", pepper), hashCode("203.0.113.9", pepper));
+  });
+
+  it("is null when no address could be read, and refuses a short secret", () => {
+    assert.equal(hashAddress("unknown", pepper), null);
+    assert.equal(hashAddress("  ", pepper), null);
+    assert.throws(() => hashAddress("203.0.113.9", "short"), /pepper/);
   });
 });

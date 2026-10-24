@@ -159,6 +159,29 @@ export type AnalyticsEvent =
       category: "ENGAGEMENT";
       /** A learner finished the weekly check: of `asked` sentences, `remembered` were typed right with no help, out of `written` sentences they typed that week. The honest line on Today ("remembered M of N") is exactly these numbers; no level is ever derived from them. */
       properties: { asked: number; remembered: number; written: number };
+    }
+  | {
+      name: "REDEEM_CODE_SUBMITTED";
+      category: "PREMIUM";
+      /** A learner typed a Premium code that looked like a code (a typo is turned away in the browser and not counted): what came of it. The share that succeed, per country, is what says whether the agent channel works. */
+      properties: {
+        outcome:
+          | "redeemed"
+          | "already_yours"
+          | "unlimited"
+          | "unknown"
+          | "used"
+          | "voided"
+          | "expired"
+          | "throttled"
+          | "unavailable";
+      };
+    }
+  | {
+      name: "REDEEM_CODE_SUCCEEDED";
+      category: "PREMIUM";
+      /** A code was redeemed: how many days it added and whether they were stacked on Premium the learner still had. Never the code. */
+      properties: { days: number; extendedExisting: boolean };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];
