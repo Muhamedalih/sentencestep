@@ -1479,6 +1479,10 @@ export interface Dictionary {
     blankLabel: string;
     listen: string;
     dontRemember: string;
+    /** Under the sound wave of a test question. */
+    replayHint: string;
+    /** Under the blank writing line. */
+    writeHint: string;
     missedFirst: string;
     missedSecond: string;
     summaryHeading: string;

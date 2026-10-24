@@ -1193,6 +1193,8 @@ export const es: Dictionary = {
     blankLabel: "Palabra que falta",
     listen: "Escuchar",
     dontRemember: "No la recuerdo",
+    replayHint: "Toca para volver a escuchar",
+    writeHint: "Escribe la frase como la oíste",
     missedFirst: "Vuelve mañana, y te la preguntaremos una vez más en un momento",
     missedSecond: "Vuelve mañana",
     summaryHeading: "Prueba terminada",

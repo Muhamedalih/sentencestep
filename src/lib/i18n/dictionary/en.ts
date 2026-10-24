@@ -1175,6 +1175,8 @@ export const en: Dictionary = {
     blankLabel: "Missing word",
     listen: "Listen",
     dontRemember: "I don't remember",
+    replayHint: "Tap to listen again",
+    writeHint: "Write the sentence as you heard it",
     missedFirst: "It comes back tomorrow, and we'll ask once more in a moment",
     missedSecond: "It comes back tomorrow",
     summaryHeading: "Test done",

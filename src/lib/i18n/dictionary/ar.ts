@@ -1142,6 +1142,8 @@ export const ar: Dictionary = {
     blankLabel: "الكلمة الناقصة",
     listen: "استمع",
     dontRemember: "لا أتذكّرها",
+    replayHint: "اضغط لإعادة الاستماع",
+    writeHint: "اكتب الجملة كما سمعتها",
     missedFirst: "تعود إليك غداً، وسنسألك عنها مرة أخرى بعد قليل",
     missedSecond: "تعود إليك غداً",
     summaryHeading: "انتهى الاختبار",

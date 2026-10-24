@@ -1177,6 +1177,8 @@ export const tr: Dictionary = {
     blankLabel: "Eksik kelime",
     listen: "Dinle",
     dontRemember: "Hatırlamıyorum",
+    replayHint: "Tekrar dinlemek için dokun",
+    writeHint: "Cümleyi duyduğun gibi yaz",
     missedFirst: "Yarın tekrar gelir, birazdan bir kez daha soracağız",
     missedSecond: "Yarın tekrar gelir",
     summaryHeading: "Test bitti",

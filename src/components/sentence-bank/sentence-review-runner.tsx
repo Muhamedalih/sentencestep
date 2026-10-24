@@ -5,9 +5,24 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { Check, CheckCircle2, Clock, Headphones, Lightbulb, Quote, Target, X } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  CircleQuestionMark,
+  Clock,
+  Headphones,
+  Lightbulb,
+  PencilLine,
+  Quote,
+  Target,
+  X,
+} from "lucide-react";
 
 import { PronunciationButton } from "@/components/learning/pronunciation-button";
+import type {
+  PronunciationButtonHandle,
+  PronunciationStatus,
+} from "@/components/learning/pronunciation-button";
 import { NO_AUTOFILL_ATTRS } from "@/components/learning/shared-input";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ReviewCorrection } from "@/components/sentence-bank/review-correction";
@@ -43,18 +58,74 @@ interface Graded {
   feedback: AnswerFeedback;
 }
 
-const ANSWER_INPUT =
-  "border-border bg-background/40 focus-visible:border-primary/60 focus-visible:ring-primary/20 w-full rounded-2xl border px-5 py-4 text-start text-xl outline-none focus-visible:ring-4 sm:px-6 sm:py-5 sm:text-2xl";
+/** The answer is a blank writing line, not a box: the sentence goes where the line is. */
+const ANSWER_LINE =
+  "caret-primary border-border focus-visible:border-primary w-full rounded-none border-0 border-b-2 bg-transparent px-1 pt-3 pb-2.5 text-start text-2xl outline-none transition-colors sm:text-3xl";
 
 const TAG = "border-border text-muted-foreground rounded-full border px-3 py-1 text-xs font-medium";
 
-/** The test's frame: one calm card, in the middle of the screen. */
+const SECONDARY_BUTTON =
+  "focus-visible:ring-ring inline-flex min-h-11 min-w-36 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-center text-sm leading-tight font-medium transition-colors outline-none focus-visible:ring-2";
+
+/** The test's frame: the site's own black page, with the test in the middle of it. */
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
-      <section className="border-border/60 bg-card w-full max-w-3xl rounded-3xl border shadow-sm">
-        {children}
-      </section>
+    <div className="lesson-shell bg-background text-foreground flex min-h-svh w-full items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
+      <section className="w-full max-w-2xl">{children}</section>
+    </div>
+  );
+}
+
+/** The resting shape of the sound wave, tallest in the middle. */
+const WAVE_BARS = [0.35, 0.6, 0.85, 0.5, 1, 0.7, 0.9, 0.55, 1, 0.75, 0.45, 0.65, 0.3];
+
+/**
+ * The question's sound, drawn as a wave that moves while the sentence plays and rests in between.
+ * It is also the way to hear it again: one press replays it.
+ */
+function SoundWave({
+  playing,
+  onReplay,
+  label,
+  hint,
+}: {
+  playing: boolean;
+  onReplay: () => void;
+  label: string;
+  hint: string;
+}) {
+  const reduceMotion = useReducedMotion() ?? false;
+  const moving = playing && !reduceMotion;
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <button
+        type="button"
+        onClick={onReplay}
+        aria-label={label}
+        className="focus-visible:ring-ring flex h-16 cursor-pointer items-center justify-center gap-[5px] rounded-xl px-6 outline-none focus-visible:ring-2"
+      >
+        {WAVE_BARS.map((height, position) => (
+          <motion.span
+            key={position}
+            aria-hidden="true"
+            className="bg-primary h-14 w-[5px] rounded-full"
+            animate={{ scaleY: moving ? [0.2, 1, 0.2] : 0.2 + height * 0.3 }}
+            transition={
+              moving
+                ? {
+                    duration: 0.6 + (position % 4) * 0.14,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: position * 0.04,
+                  }
+                : { duration: 0.3 }
+            }
+          />
+        ))}
+      </button>
+      <span className="text-muted-foreground/80 text-xs" dir="auto">
+        {hint}
+      </span>
     </div>
   );
 }
@@ -258,6 +329,12 @@ export function SentenceReviewRunner({
   const blankRefs = useRef<(HTMLInputElement | null)[]>([]);
   const startedRef = useRef(false);
   const finishedRef = useRef(false);
+  const soundRef = useRef<PronunciationButtonHandle>(null);
+  const [sound, setSound] = useState<PronunciationStatus>({
+    supported: true,
+    loading: false,
+    playing: false,
+  });
 
   const entry = queue[index];
   const item = entry?.item;
@@ -520,19 +597,28 @@ export function SentenceReviewRunner({
               </p>
             )}
             {hasSound && (
-              <div className="flex justify-center">
+              <>
+                {/* Headless: it only plays (on arrival, and again on a press of the wave). */}
                 <PronunciationButton
+                  ref={soundRef}
+                  headless
                   text={item.en}
                   audioUrl={item.audioUrl}
                   autoPlay
                   resetKey={`${item.id}-${entry.attempt}`}
                   disableSpeechFallback
-                  variant="outline"
-                  size="icon"
-                  className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 size-20 rounded-full [&_svg]:size-8"
-                  inputRef={item.form === "partial" ? firstBlankRef : inputRef}
+                  onStatusChange={setSound}
                 />
-              </div>
+                <SoundWave
+                  playing={sound.playing || sound.loading}
+                  label={copy.listen}
+                  hint={copy.replayHint}
+                  onReplay={() => {
+                    soundRef.current?.replay();
+                    (item.form === "partial" ? firstBlankRef : inputRef).current?.focus();
+                  }}
+                />
+              </>
             )}
             {item.form === "partial" ? (
               <p
@@ -596,20 +682,25 @@ export function SentenceReviewRunner({
                     check();
                   }}
                   onPaste={(event) => event.preventDefault()}
-                  placeholder={
-                    item.form === "audio" ? t.dictation.inputLabel : t.fromMemory.placeholder
-                  }
                   aria-label={
                     item.form === "audio" ? t.dictation.inputLabel : t.fromMemory.placeholder
                   }
                   {...NO_AUTOFILL_ATTRS}
                   enterKeyHint="done"
                   dir="ltr"
-                  className={ANSWER_INPUT}
+                  className={ANSWER_LINE}
                 />
-                {helps > 0 && (
+                {helps > 0 ? (
                   <p dir="ltr" className="text-muted-foreground text-lg tracking-wide">
                     {firstLetterHint(item.en)}
+                  </p>
+                ) : (
+                  <p
+                    className="text-muted-foreground/80 flex items-center justify-center gap-1.5 text-[13px]"
+                    dir="auto"
+                  >
+                    <PencilLine className="size-3.5 shrink-0" aria-hidden="true" />
+                    {copy.writeHint}
                   </p>
                 )}
               </div>
@@ -624,31 +715,31 @@ export function SentenceReviewRunner({
               >
                 {t.dictation.check}
               </Button>
-              <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1">
+              <div className="flex flex-wrap items-stretch justify-center gap-2.5">
                 {!isCheck && helps === 0 && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground"
-                      onClick={() => setHelps(1)}
-                    >
-                      <Lightbulb className="size-4" aria-hidden="true" />
-                      {t.fromMemory.showFirstLetters}
-                    </Button>
-                    <span aria-hidden="true" className="bg-border h-4 w-px" />
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => setHelps(1)}
+                    className={cn(
+                      SECONDARY_BUTTON,
+                      "border-primary/35 bg-primary/10 text-primary hover:bg-primary/15",
+                    )}
+                  >
+                    <Lightbulb className="size-4 shrink-0" aria-hidden="true" />
+                    <span dir="auto">{t.fromMemory.showFirstLetters}</span>
+                  </button>
                 )}
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
                   onClick={() => check(true)}
+                  className={cn(
+                    SECONDARY_BUTTON,
+                    "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
                 >
-                  {copy.dontRemember}
-                </Button>
+                  <CircleQuestionMark className="size-4 shrink-0" aria-hidden="true" />
+                  <span dir="auto">{copy.dontRemember}</span>
+                </button>
               </div>
             </div>
           </>
