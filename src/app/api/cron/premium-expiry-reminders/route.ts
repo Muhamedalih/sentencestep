@@ -7,6 +7,7 @@ import {
   markNotificationEventSent,
   recordNotificationEvent,
 } from "@/lib/email/notification-events";
+import { nudgeLanguage } from "@/lib/email/nudges/copy";
 import { getEmailProvider } from "@/lib/email/provider-registry";
 import { sendTemplateEmail } from "@/lib/email/send";
 import { premiumExpiryEmail } from "@/lib/email/templates/premium-expiry";
@@ -85,6 +86,15 @@ async function handlePremiumExpiryCron(request: Request): Promise<NextResponse> 
 
   const due = planExpiryReminders({ subscriptions, streaks: streaks ?? [], now });
 
+  // Each learner is written to in their own language (ar, es or tr; English otherwise).
+  const dueIds = due.map((reminder) => reminder.userId);
+  const { data: languages } = dueIds.length
+    ? await supabase.from("profiles").select("id, preferred_language").in("id", dueIds)
+    : { data: [] };
+  const languageById = new Map(
+    (languages ?? []).map((row) => [row.id, nudgeLanguage(row.preferred_language)]),
+  );
+
   let notified = 0;
   let failed = 0;
 
@@ -103,12 +113,14 @@ async function handlePremiumExpiryCron(request: Request): Promise<NextResponse> 
     if (!email) continue;
 
     const displayName = (authUser.user?.user_metadata?.display_name as string | undefined) ?? null;
+    const language = languageById.get(reminder.userId) ?? "en";
     const content = premiumExpiryEmail({
       origin,
       displayName,
-      endsOn: formatLongDate(reminder.periodEnd, null),
+      endsOn: formatLongDate(reminder.periodEnd, language === "en" ? null : language),
       daysLeft: reminder.daysLeft,
       streak: reminder.streak,
+      language,
     });
 
     // A transient provider failure for one learner must not stop everyone after them.

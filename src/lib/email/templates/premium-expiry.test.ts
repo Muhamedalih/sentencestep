@@ -45,3 +45,58 @@ test("premiumExpiryEmail: a learner's name cannot inject markup", () => {
   assert.ok(!email.html.includes("<img"));
   assert.ok(email.html.includes("&lt;img"));
 });
+
+test("premiumExpiryEmail: Arabic is right to left, names the date and keeps the same honest content", () => {
+  const email = premiumExpiryEmail({
+    ...base,
+    language: "ar",
+    endsOn: "2 فبراير 2027",
+    streak: 12,
+  });
+
+  assert.equal(email.subject, "تنتهي خطتك المميّزة في SentenceStep في 2 فبراير 2027");
+  assert.ok(email.html.includes('lang="ar" dir="rtl"'));
+  assert.ok(email.html.includes("أهلاً Sara،"));
+  assert.ok(email.html.includes("تقدّمك وتتابعك ونقاطك محفوظة"));
+  assert.ok(email.html.includes("تتابعك الحالي 12 يوماً"));
+  assert.ok(email.html.includes("https://sentencestep.example/upgrade"));
+  assert.ok(email.text.includes("أضف أياماً: https://sentencestep.example/upgrade"));
+  assert.ok(!/\$\d/.test(email.html + email.text), "no price in any language");
+});
+
+test("premiumExpiryEmail: Arabic day counts take the right shape", () => {
+  const streakLine = (streak: number) =>
+    premiumExpiryEmail({ ...base, language: "ar", streak }).text;
+  assert.ok(streakLine(1).includes("تتابعك الحالي يوم واحد"));
+  assert.ok(streakLine(2).includes("تتابعك الحالي يومان"));
+  assert.ok(streakLine(7).includes("تتابعك الحالي 7 أيام"));
+  assert.ok(streakLine(30).includes("تتابعك الحالي 30 يوماً"));
+});
+
+test("premiumExpiryEmail: Spanish and Turkish are written in their own language", () => {
+  const es = premiumExpiryEmail({
+    ...base,
+    language: "es",
+    endsOn: "2 de febrero de 2027",
+    streak: 5,
+  });
+  assert.equal(es.subject, "Tu Premium de SentenceStep termina el 2 de febrero de 2027");
+  assert.ok(es.html.includes('lang="es" dir="ltr"'));
+  assert.ok(es.html.includes("Llevas una racha de 5 días"));
+  assert.ok(es.html.includes("tu progreso, tu racha y tus XP quedan guardados"));
+
+  const tr = premiumExpiryEmail({ ...base, language: "tr", endsOn: "2 Şubat 2027", streak: 5 });
+  assert.equal(tr.subject, "SentenceStep Premium'unuz 2 Şubat 2027 tarihinde sona eriyor");
+  assert.ok(tr.html.includes('lang="tr"'));
+  assert.ok(tr.html.includes("5 günlük bir serideniz var"));
+});
+
+test("premiumExpiryEmail: every language drops the streak line when there is no streak, and escapes the name", () => {
+  for (const language of ["ar", "es", "tr", "en"] as const) {
+    const quiet = premiumExpiryEmail({ ...base, language });
+    const streaky = premiumExpiryEmail({ ...base, language, streak: 9 });
+    assert.ok(streaky.text.length > quiet.text.length, language);
+    const unsafe = premiumExpiryEmail({ ...base, language, displayName: "<b>x</b>" });
+    assert.ok(!unsafe.html.includes("<b>x"), language);
+  }
+});
