@@ -1457,6 +1457,13 @@ export interface Dictionary {
     sentencesFrom: string;
     /** The self-test card on the new Home page: said once the day's test is done, and how many questions it asks (`{n}` is the count; the singular is for one). */
     testDone: string;
+    /** The test card once every sentence was typed right. */
+    testPerfect: string;
+    /** The test card when some did not stick: {n} of {total} did. */
+    testRetryTitle: string;
+    /** The same when none stuck (no number is shown). */
+    testRetryNone: string;
+    retakeTest: string;
     testOne: string;
     testMany: string;
     /** The small line beside the typing hint on the words task: the learner writes every word. */

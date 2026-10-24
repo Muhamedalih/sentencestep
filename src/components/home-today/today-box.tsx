@@ -43,7 +43,7 @@ function TypingHint() {
   const { t } = useLocale();
   const reduced = useReducedMotion();
   return (
-    <div className="roomy:mt-[clamp(0.375rem,1.2svh,0.875rem)] mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+    <div className="roomy:mt-[clamp(0.3rem,0.9svh,0.7rem)] mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
       <span
         aria-hidden="true"
         dir="ltr"
@@ -99,7 +99,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
         href={info.href}
         aria-current={current ? "step" : undefined}
         className={cn(
-          "focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-[clamp(0.5rem,1.3svh,1rem)] block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
+          "focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
           current ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50",
         )}
       >
@@ -171,7 +171,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
             )}
             {info.kind === "words" && !done && <TypingHint />}
             {current && !done && (
-              <span className="bg-primary text-primary-foreground roomy:mt-[clamp(0.5rem,1.6svh,1rem)] roomy:h-[clamp(2.5rem,5.6svh,3rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
+              <span className="bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
                 <span dir="auto">{`${start} · ${minutes}`}</span>
               </span>
             )}
@@ -205,11 +205,13 @@ export function TodayBox({
     <section
       aria-label={copy.questsHeading}
       className={cn(
-        "border-border/60 bg-card roomy:p-[clamp(0.875rem,2.4svh,1.75rem)] flex h-full flex-col rounded-2xl border p-4 sm:p-5",
+        // `zoom` makes everything inside (type, icons, spacing, the ring) a tenth larger on a roomy screen. On the pointer the box rises a little and its edge takes the brand colour: calm, no glow.
+        "border-border/60 bg-card roomy:p-[clamp(0.75rem,2svh,1.5rem)] roomy:[zoom:1.1] flex h-full flex-col rounded-2xl border p-4 transition-[translate,border-color,box-shadow] duration-300 ease-out sm:p-5",
+        "hover:border-primary/40 hover:shadow-[0_18px_36px_-18px_rgba(0,0,0,0.6)] motion-safe:hover:-translate-y-1",
         className,
       )}
     >
-      <header className="roomy:mb-[clamp(0.5rem,1.6svh,1.25rem)] roomy:px-2 mb-3 flex items-center justify-between gap-4 px-1">
+      <header className="roomy:mb-[clamp(0.4rem,1.2svh,1rem)] roomy:px-2 mb-3 flex items-center justify-between gap-4 px-1">
         <div className="min-w-0">
           <h2 className="roomy:text-xl text-[17px] font-semibold">
             <span dir="auto">{copy.questsHeading}</span>
@@ -231,13 +233,13 @@ export function TodayBox({
         </div>
         <Ring done={totals.done} total={totals.total} />
       </header>
-      <ul className="roomy:gap-[clamp(0.125rem,0.7svh,0.5rem)] flex flex-1 flex-col gap-1">
+      <ul className="roomy:gap-[clamp(0.1rem,0.45svh,0.4rem)] flex flex-1 flex-col gap-1">
         {tasks.map((quest) => (
           <TaskRow key={quest.slot} quest={quest} current={quest.slot === current?.slot} />
         ))}
       </ul>
       {payload.allDone && (
-        <div className="border-border/60 roomy:mt-[clamp(0.5rem,1.8svh,1.25rem)] roomy:px-2 roomy:pt-[clamp(0.5rem,1.8svh,1.25rem)] mt-3 flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3">
+        <div className="border-border/60 roomy:mt-[clamp(0.4rem,1.4svh,1rem)] roomy:px-2 roomy:pt-[clamp(0.4rem,1.4svh,1rem)] mt-3 flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3">
           <p className="text-success roomy:text-base text-sm font-medium">
             <span dir="auto">{copy.doneHeading}</span>
           </p>

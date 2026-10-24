@@ -46,6 +46,59 @@ export function readTodayReview(todayISO: string): TodayRun["review"] {
   return null;
 }
 
+const TEST_KEY = "looma:today-test";
+
+export interface TodayTestResult {
+  /** Questions typed right with no help, over the questions asked. */
+  clean: number;
+  total: number;
+}
+
+/** The stored test result for `todayISO` from its raw text, or null when it is missing, another day's, or not a result. */
+export function parseTodayTest(raw: string | null, todayISO: string): TodayTestResult | null {
+  if (!raw) return null;
+  try {
+    const stored = JSON.parse(raw) as { date?: unknown; clean?: unknown; total?: unknown } | null;
+    const { date, clean, total } = stored ?? {};
+    if (
+      date === todayISO &&
+      typeof clean === "number" &&
+      typeof total === "number" &&
+      Number.isInteger(clean) &&
+      Number.isInteger(total) &&
+      total > 0 &&
+      clean >= 0 &&
+      clean <= total
+    ) {
+      return { clean, total };
+    }
+  } catch {
+    // Unreadable: treated as no result.
+  }
+  return null;
+}
+
+/**
+ * How the day's test went, kept on this device (localStorage, dated) so Home can say so and offer
+ * another round when something did not stick. Nothing is sent anywhere; a device that never took
+ * the test simply has no result, and Home then shows the plain "done" card.
+ */
+export function writeTodayTest(todayISO: string, result: TodayTestResult): void {
+  try {
+    window.localStorage.setItem(TEST_KEY, JSON.stringify({ date: todayISO, ...result }));
+  } catch {
+    // Blocked or full: Home shows the plain "done" card.
+  }
+}
+
+export function readTodayTest(todayISO: string): TodayTestResult | null {
+  try {
+    return parseTodayTest(window.localStorage.getItem(TEST_KEY), todayISO);
+  } catch {
+    return null;
+  }
+}
+
 /** Whether this page was opened as a step of Today's session (`?today=1`) — read only in the browser, after mount. */
 export function isTodayRunUrl(): boolean {
   try {

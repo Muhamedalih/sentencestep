@@ -29,12 +29,12 @@ export const metadata: Metadata = { title: "Today's session" };
 export default async function TodaySentencesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ flow?: string }>;
+  searchParams: Promise<{ flow?: string; retry?: string }>;
 }) {
   const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
   if (!features.rollouts.sentenceBank || !user) redirect("/learn");
 
-  const { flow } = await searchParams;
+  const { flow, retry } = await searchParams;
   const afterHref = flow === "1" ? "/learn/today/end" : "/learn";
 
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
@@ -55,7 +55,8 @@ export default async function TodaySentencesPage({
       timeZone,
       locale,
       completions: progress?.completions ?? [],
-      quest: row ? { target: row.target, progress: row.progress } : undefined,
+      // A retake (`retry=1`, from the card of a test that did not all stick) asks the day's whole list again.
+      quest: row ? { target: row.target, progress: retry === "1" ? 0 : row.progress } : undefined,
     });
   } catch (error) {
     console.error("[sentence-bank] the review could not be built", error);

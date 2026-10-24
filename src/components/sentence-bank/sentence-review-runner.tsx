@@ -47,6 +47,7 @@ import { outcomeForSentence } from "@/lib/sentence-bank/review";
 import type { SentenceOutcome } from "@/lib/sentence-bank/review";
 import { queueAfterAnswer, startQueue, summarizeReview } from "@/lib/sentence-bank/session";
 import type { ReviewResult } from "@/lib/sentence-bank/session";
+import { writeTodayTest } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 
 interface Graded {
@@ -387,6 +388,8 @@ export function SentenceReviewRunner({
       }).catch(() => {});
       return;
     }
+    // Kept on this device, so Home can say how it went and offer another round when something did not stick.
+    writeTodayTest(todayISO, { clean: summary.clean, total: summary.total });
     void trackSentenceReviewAction({
       event: "finished",
       count: summary.total,

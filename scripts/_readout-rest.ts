@@ -65,3 +65,15 @@ export async function readAdminIds(): Promise<Set<string>> {
   const rows = await all<{ id: string }>("profiles?select=id&role=eq.admin");
   return new Set(rows.map((row) => row.id));
 }
+
+/** One account's auth record (provider and the like, never printed), or null when it cannot be read. */
+export async function readAuthUser(
+  id: string,
+): Promise<{ app_metadata?: { provider?: string; providers?: string[] } } | null> {
+  const response = await fetch(`${url}/auth/v1/admin/users/${id}`, {
+    headers: { apikey: serviceRoleKey!, Authorization: `Bearer ${serviceRoleKey}` },
+  });
+  return response.ok
+    ? ((await response.json()) as { app_metadata?: { provider?: string; providers?: string[] } })
+    : null;
+}
