@@ -77,8 +77,9 @@ exists, but a story sentence's answer needs it (the recording call fails, and wi
   `session.ts`).
 - The screen is one card in the middle of the viewport (it has no app header), the way out ("Exit") in its
   header beside the name and the count.
-- Routes: `/learn/today/sentences` (`?flow=1` from the words step through
-  `/learn/today/go?step=sentences`, then on to the finish screen) and `/learn/today/check`.
+- Routes: `/learn/today/sentences` (`?flow=1` from the finish screen, which offers it as an OPTION above
+  its other buttons and then comes back to itself; the words step goes straight to the finish screen,
+  nothing forces the test) and `/learn/today/check`.
 
 ## Reads (and why the service role)
 
@@ -87,7 +88,7 @@ Today's own through `cache`) and, only when something was finished today, the st
 pool read) and the passage (share-cached). Nothing is read about earlier days, schedule rows or weak
 words any more. Dealt once a day, for as many questions as today's lessons can give (up to the row's
 target); later visits read nothing for it. A learner who goes from the story straight to the words never
-rebuilds Home, so `/learn/today/go?step=sentences` deals the row itself when it is missing
+rebuilds Home, so the finish screen (`/learn/today/end`) deals the row itself when it is missing
 (`sentenceReviewPending` with `deal`). The weekly line adds one tiny read (the last check) and, only when
 a check could be due, one more (their Today days). The test screen adds the story's meanings and a
 batched clip lookup.

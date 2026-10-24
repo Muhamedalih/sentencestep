@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 
 import { WordReviewSession } from "@/components/learning/word-review-session";
-import { useFeatures } from "@/components/providers/feature-provider";
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { recordTodayWordsAction } from "@/lib/today/actions";
@@ -23,7 +22,6 @@ export function TodayWordsRunner({
   defaultVoiceId: string | null;
 }) {
   const router = useRouter();
-  const features = useFeatures();
   return (
     <WordReviewSession
       words={words}
@@ -42,10 +40,8 @@ export function TodayWordsRunner({
         });
         // The round is done: tick the day's words task (best-effort, never holds the learner up).
         void recordTodayWordsAction(today).catch(() => {});
-        // The sentence review, when it is open and has a row today, comes before the finish screen.
-        router.push(
-          features.rollouts.sentenceBank ? "/learn/today/go?step=sentences" : "/learn/today/end",
-        );
+        // The finish screen offers the day's test as an option; the day does not wait for it.
+        router.push("/learn/today/end");
       }}
     />
   );

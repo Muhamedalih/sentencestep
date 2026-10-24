@@ -9,6 +9,7 @@ import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { todayLocalISODate } from "@/lib/progress/streak";
+import { SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
 import { REMINDER_HOURS, reminderTimeFor } from "@/lib/session-end/reminder";
 import { setSessionReminderAction } from "@/lib/session-end/reminder-actions";
@@ -28,12 +29,15 @@ export function TodayEnd({
   weekDays,
   nextTitle,
   moreWords,
+  testHref,
 }: {
   weekDays: number;
   /** The title tomorrow starts with (the next passage, else the next story), or null. */
   nextTitle: string | null;
   /** The words step still has something to do (new words, or review words due). */
   moreWords: boolean;
+  /** Where "Test yourself on today's lessons" goes when the learner has one waiting (it is optional: the day is finished without it), else null. */
+  testHref: string | null;
 }) {
   const { t } = useLocale();
   const userId = useAuthUserId();
@@ -107,6 +111,14 @@ export function TodayEnd({
             "{time}",
             t.today.minutes.replace("{n}", String(WORDS_MINUTES)),
           )}
+          test={
+            testHref
+              ? {
+                  href: testHref,
+                  label: `${t.today.taskSentences} · ${t.today.minutes.replace("{n}", String(SENTENCE_REVIEW_MINUTES))}`,
+                }
+              : null
+          }
           reminder={
             userId && features.rollouts.sessionReminders
               ? {

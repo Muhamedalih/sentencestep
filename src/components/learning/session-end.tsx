@@ -46,6 +46,8 @@ export interface SessionEndProps {
   extraMinutes: number;
   /** Replaces the "one more lesson" wording of the extra button (Today's session offers five more words instead). */
   extraLabel?: string;
+  /** An optional test of what was learned, offered above the other buttons (Today's session, when it has one waiting). */
+  test?: { href: string; label: string } | null;
   /** Null for a guest, and while reminders are not switched on at the server. */
   reminder: SessionEndReminder | null;
   saveStatus: CompletionSaveStatus;
@@ -81,6 +83,7 @@ export function SessionEnd({
   extra,
   extraMinutes,
   extraLabel,
+  test,
   reminder,
   saveStatus,
   onRetrySave,
@@ -340,8 +343,14 @@ export function SessionEnd({
             className={cn(
               "mt-auto flex flex-col gap-2 pt-3 lg:mt-1 lg:flex-row lg:gap-2.5 lg:pt-0",
               "max-lg:from-background max-lg:via-background max-lg:sticky max-lg:bottom-0 max-lg:-mx-4 max-lg:bg-gradient-to-t max-lg:to-transparent max-lg:px-4 max-lg:pb-4",
+              test && "lg:flex-wrap",
             )}
           >
+            {test && (
+              <Link href={test.href} className={cn(BUTTON_PRIMARY, "lg:basis-full")}>
+                <span dir="auto">{test.label}</span>
+              </Link>
+            )}
             {extra &&
               (extra.locked ? (
                 <Link
@@ -356,7 +365,7 @@ export function SessionEnd({
                 <Link
                   href={extra.href}
                   onClick={() => onAction?.("extra_lesson")}
-                  className={BUTTON_PRIMARY}
+                  className={test ? BUTTON_GHOST : BUTTON_PRIMARY}
                 >
                   <span dir="auto">
                     {extraLabel ??
@@ -370,7 +379,7 @@ export function SessionEnd({
             <Link
               href="/learn"
               onClick={() => onAction?.("finish")}
-              className={extra ? BUTTON_GHOST : BUTTON_PRIMARY}
+              className={extra || test ? BUTTON_GHOST : BUTTON_PRIMARY}
             >
               <span dir="auto">{copy.finish}</span>
             </Link>

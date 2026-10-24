@@ -150,7 +150,8 @@ function shuffled<T>(items: readonly T[], random: () => number): T[] {
  * The words of the round, in a random order: the story's target words (two or three: up to
  * STORY_WORDS_MAX, the closest together) and then, for the places left of `size`, the passage's
  * closest-together target words — so a story with two gives the passage three places, a story with
- * three gives it two. Nothing else is ever added: with too few of either, the round is just shorter.
+ * three gives it two (and when the passage has too few, the story gives more than three). Nothing
+ * else is ever added: with too few of the two together, the round is just shorter.
  * The story's words complete as Vocabulary Recall words, the passage's as Word Lists words.
  */
 export function sessionWords(args: {
@@ -160,15 +161,26 @@ export function sessionWords(args: {
   random?: () => number;
 }): ReviewWord[] {
   const size = Math.max(0, Math.trunc(args.size));
+  const key = (entry: PositionedWord) => normalizeMistakeWord(entry.word.targetWord);
   const fromStory = closestWords(args.story, Math.min(STORY_WORDS_MAX, size));
-  const taken = new Set(fromStory.map((entry) => normalizeMistakeWord(entry.word.targetWord)));
+  const taken = new Set(fromStory.map(key));
   const fromPassage = closestWords(
-    args.passage.filter((entry) => !taken.has(normalizeMistakeWord(entry.word.targetWord))),
+    args.passage.filter((entry) => !taken.has(key(entry))),
     size - fromStory.length,
+  );
+  // A passage with too few words for its places: the story fills them (still only the session's own
+  // words), so the round stays at `size` whenever the two together have that many.
+  const passageKeys = new Set(fromPassage.map(key));
+  const storyTopUp = closestWords(
+    args.story.filter((entry) => !taken.has(key(entry)) && !passageKeys.has(key(entry))),
+    size - fromStory.length - fromPassage.length,
   );
   return shuffled(
     [
-      ...fromStory.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "recall" })),
+      ...[...fromStory, ...storyTopUp].map((entry): ReviewWord => ({
+        ...entry.word,
+        sessionSource: "recall",
+      })),
       ...fromPassage.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "wordList" })),
     ],
     args.random ?? Math.random,

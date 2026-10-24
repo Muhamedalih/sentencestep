@@ -249,6 +249,22 @@ test("nothing outside the session is added: too few words make a shorter round",
   assert.deepEqual(sessionWords({ story, passage: [at("silence", 1)], size: 0 }), []);
 });
 
+test("a passage with too few words leaves its places to the story, so the round stays five", () => {
+  const story = [
+    at("balloon", 0, "story"),
+    at("rain", 1, "story"),
+    at("box", 2, "story"),
+    at("snowman", 3, "story"),
+    at("garden", 4, "story"),
+  ];
+  const round = sessionWords({ story, passage: [at("silence", 1)], size: 5, random: counter() });
+  assert.equal(round.length, 5);
+  assert.equal(round.filter((word) => word.targetWord === "silence").length, 1);
+  assert.equal(round.filter((word) => word.sessionSource === "recall").length, 4);
+  // The story alone cannot give more than it has.
+  assert.equal(sessionWords({ story: story.slice(0, 4), passage: [], size: 5 }).length, 4);
+});
+
 test("a passage word that is also a story word is asked once, and the passage fills the place with another", () => {
   const story = [at("rain", 1, "story")];
   const passage = [

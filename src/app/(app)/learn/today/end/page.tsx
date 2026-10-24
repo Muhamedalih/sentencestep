@@ -5,11 +5,13 @@ import { redirect } from "next/navigation";
 import { TodayEnd } from "@/components/today/today-end";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { TIMEZONE_COOKIE } from "@/lib/features/learner-date";
+import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
+import { sentenceReviewPending } from "@/lib/sentence-bank/quest";
+import { SENTENCE_REVIEW_HREF } from "@/lib/sentence-bank/review";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { loadTodayNext, loadTodayWeekDays } from "@/lib/today/load";
 
@@ -28,13 +30,14 @@ export default async function TodayEndPage() {
   if (!features.rollouts.todaySession || !user) redirect("/learn");
 
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
+  const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
   const [premium, admin, locale, progress] = await Promise.all([
     hasPremiumAccess(),
     isAdmin(),
     getLocale(),
     fetchProgressCached(todayLocalISODate()),
   ]);
-  const [next, weekDays] = await Promise.all([
+  const [next, weekDays, testWaiting] = await Promise.all([
     loadTodayNext({
       userId: user.id,
       locale,
@@ -47,9 +50,28 @@ export default async function TodayEndPage() {
       timeZone,
       completions: progress?.completions ?? [],
     }),
+    // The day's test is dealt here when its row is not there yet: this screen is often reached
+    // without Home being rebuilt since the story was finished, and the story's sentences are part
+    // of the test.
+    features.rollouts.sentenceBank
+      ? sentenceReviewPending(user.id, todayISO, {
+          context: {
+            userId: user.id,
+            todayISO,
+            timeZone,
+            completions: progress?.completions ?? [],
+          },
+          features,
+        }).catch(() => false)
+      : Promise.resolve(false),
   ]);
 
   return (
-    <TodayEnd weekDays={weekDays} nextTitle={next.nextTitle} moreWords={next.wordsAvailable} />
+    <TodayEnd
+      weekDays={weekDays}
+      nextTitle={next.nextTitle}
+      moreWords={next.wordsAvailable}
+      testHref={testWaiting ? `${SENTENCE_REVIEW_HREF}?flow=1` : null}
+    />
   );
 }
