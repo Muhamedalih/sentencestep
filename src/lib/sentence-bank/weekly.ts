@@ -9,11 +9,12 @@ import { addDaysISO } from "@/lib/word-mastery/schedule";
 /**
  * Sentence bank: the weekly check. Once the learner has finished three of the general stories (the
  * Stories section — the daily lessons are for writing, and one lesson alone is already twelve
- * sentences, which would make a single lesson a whole test), they are asked eight sentences of those
- * stories, each one heard and typed whole from memory — exactly the day's test, with its one help
- * (the first letters) and its calm correction after every answer — and are told ONE honest thing:
- * how many they remembered. No level is claimed from it (eight sentences are a sample of one week of
- * writing, not a measure of English), no number is shown for a check that asked fewer than five, and
+ * sentences, which would make a single lesson a whole test), they are asked up to eight sentences of
+ * those stories — the ones that hold each story's TARGET words (weekly-targets.ts), nothing padded
+ * in when there are fewer — each one heard and typed whole from memory — exactly the day's test, with
+ * its one help (the first letters) and its calm correction after every answer — and are told ONE
+ * honest thing: how many they remembered. No level is claimed from it (a few sentences are a sample
+ * of one week of writing, not a measure of English), no number is shown for a check that asked fewer than five, and
  * the result is shown for the week after the check and not longer. Until the three stories are
  * finished the check is shown locked, with how many are still missing. Pure — the loader reads the
  * learner's last check and their finished stories.
@@ -159,6 +160,8 @@ function compareText(a: string, b: string): number {
 export function selectWeeklyCheck<T extends SentenceCandidate>(
   candidates: readonly T[],
   todayISO: string,
+  /** When given, only these sentences may be asked (the target-word ones, see weekly-targets.ts); `written` still counts them all. */
+  only?: ReadonlySet<string>,
 ): WeeklySelection<T> {
   const from = addDaysISO(todayISO, -WEEKLY_DAYS);
   const week: T[] = [];
@@ -172,6 +175,7 @@ export function selectWeeklyCheck<T extends SentenceCandidate>(
   const lessons = new Map<string, T[]>();
   for (const sentence of week) {
     if (reviewWordCount(sentence.en) < MIN_REVIEW_WORDS) continue;
+    if (only && !only.has(sentence.id)) continue;
     const list = lessons.get(sentence.lessonId);
     if (list) list.push(sentence);
     else lessons.set(sentence.lessonId, [sentence]);

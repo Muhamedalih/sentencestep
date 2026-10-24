@@ -1137,7 +1137,7 @@ export const ar: Dictionary = {
     wordFromStory: "من قصة اليوم «{title}»",
     wordFromPassage: "من نص اليوم «{title}»",
     weeklyTitle: "اختبار الأسبوع",
-    weeklyBlurb: "{n} جملة من قصصك، بلا نص",
+    weeklyBlurb: "حتى {n} جمل فيها الكلمات المستهدفة من قصصك، بلا نص",
     weeklyStart: "ابدأ",
     weeklyLocked: "أكمل {need} قصص من القصص العامة لتفتح اختبار الأسبوع",
     weeklyOpensTomorrow: "يفتح غداً: جمل اليوم تُسأل بعد يوم",

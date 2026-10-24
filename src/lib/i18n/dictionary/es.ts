@@ -1188,7 +1188,7 @@ export const es: Dictionary = {
     wordFromStory: "De la historia de hoy «{title}»",
     wordFromPassage: "Del texto de hoy «{title}»",
     weeklyTitle: "Prueba semanal",
-    weeklyBlurb: "{n} frases de tus historias, con el texto oculto",
+    weeklyBlurb: "Hasta {n} frases con las palabras objetivo de tus historias, con el texto oculto",
     weeklyStart: "Empezar",
     weeklyLocked: "Termina {need} historias generales para abrir la prueba semanal",
     weeklyOpensTomorrow: "Se abre mañana: las frases de hoy se preguntan un día después",

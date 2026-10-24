@@ -103,9 +103,13 @@ writing, and one of them is already twelve sentences). It opens when the learner
 stories** on earlier days of the last seven days (`weeklyStoryCounts`, from the learner's own progress, no
 database read): until then the box shows it as a locked card (light blur, a lock, "finish 3 general stories
 to unlock", a progress bar `n/3`); a story finished today is asked a day later, so when today's would be
-enough it says it opens tomorrow. At three the same card is clear, with a start button. It asks **eight**
-sentences of those stories (one from each story in turn, the newest first, at most four from one; the lines
-are picked by the day's stable hash, so it is a spread over each story and not its opening lines), built by
+enough it says it opens tomorrow. At three the same card is clear, with a start button. It asks **up to
+eight** sentences of the week's stories, and only the ones that hold each story's **target words** (the
+curated 2-3 words of `STORY_TARGET_VOCABULARY`, `weekly-targets.ts`: one sentence per word, the first askable
+one that holds it; a story with no target words on record, or none found in its text, gives all its
+sentences instead of dropping out). Three stories give 6-9 such sentences: when there are fewer than eight,
+that is how many are asked (never padded with ordinary sentences; fewer than five means no test); when there
+are more, one from each story in turn, the newest first, at most four from one. It is built by
 the very function that builds the day's test (`buildTodayItems`): every sentence is heard and typed whole,
 with the same first-letters help, the same calm correction and the same list at the end, and the meaning in
 the learner's language shown after the answer. A miss still comes back tomorrow, and the test is **not**

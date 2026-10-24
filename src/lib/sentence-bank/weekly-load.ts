@@ -1,4 +1,5 @@
 import { localISODateInTimeZone } from "@/lib/features/learner-date";
+import { STORY_TARGET_VOCABULARY } from "@/lib/content/story-target-vocabulary";
 import { getContentTranslations, resolveScalarField } from "@/lib/i18n/content-translations";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -21,6 +22,7 @@ import {
   weeklyStoryCounts,
 } from "@/lib/sentence-bank/weekly";
 import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
+import { weeklyFocusIds } from "@/lib/sentence-bank/weekly-targets";
 import { fetchLastSentenceCheck } from "@/lib/supabase/queries/sentence-checks";
 import { addDaysISO } from "@/lib/word-mastery/schedule";
 
@@ -124,9 +126,10 @@ export interface WeeklyCheckScreen {
 }
 
 /**
- * The weekly check's sentences, ready to be drawn: eight (at most) from the general stories finished
- * in the last seven days, built the way the day's test is — each heard in its story's stored clip and
- * typed whole, its meaning in the learner's language shown after the answer. Fewer than three
+ * The weekly check's sentences, ready to be drawn: up to eight of the sentences that hold the target
+ * words of the general stories finished in the last seven days (see weekly-targets.ts; fewer when
+ * the stories have fewer, never padded), built the way the day's test is — each heard in its story's
+ * stored clip and typed whole, its meaning in the learner's language shown after the answer. Fewer than three
  * finished stories, or fewer than five sentences that can be asked, means no check (empty). Reads:
  * the week's sentences (service role, scoped to the learner's own finished stories — see pool.ts),
  * then their meanings and clips together.
@@ -141,7 +144,18 @@ export async function loadWeeklyCheckScreen(
   }
   const { candidates, legacy } = await readWeekSentences(context);
   if (candidates.length === 0) return { items: [], written: 0 };
-  const { items: selected, written } = selectWeeklyCheck(candidates, todayISO);
+  // Only what each story set out to teach: the sentences that hold its target words.
+  const targets = new Map<string, string[]>(
+    [...new Set(candidates.map((sentence) => sentence.lessonId))].map((lessonId) => [
+      lessonId,
+      (STORY_TARGET_VOCABULARY[lessonId] ?? []).map((word) => word.en),
+    ]),
+  );
+  const { items: selected, written } = selectWeeklyCheck(
+    candidates,
+    todayISO,
+    weeklyFocusIds(candidates, targets),
+  );
   if (selected.length < WEEKLY_CHECK_MIN) return { items: [], written };
 
   const locale = context.locale ?? DEFAULT_LOCALE;

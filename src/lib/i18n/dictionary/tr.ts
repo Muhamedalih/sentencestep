@@ -1172,7 +1172,7 @@ export const tr: Dictionary = {
     wordFromStory: 'Bugünün hikâyesinden "{title}"',
     wordFromPassage: 'Bugünün metninden "{title}"',
     weeklyTitle: "Haftalık test",
-    weeklyBlurb: "Hikâyelerinden {n} cümle, metin gizli",
+    weeklyBlurb: "Hikâyelerindeki hedef kelimeleri içeren en fazla {n} cümle, metin gizli",
     weeklyStart: "Başla",
     weeklyLocked: "Haftalık testi açmak için {need} genel hikâye bitir",
     weeklyOpensTomorrow: "Yarın açılır: bugünkü cümleler bir gün sonra sorulur",

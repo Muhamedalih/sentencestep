@@ -1170,7 +1170,7 @@ export const en: Dictionary = {
     wordFromStory: 'From today\'s story "{title}"',
     wordFromPassage: 'From today\'s passage "{title}"',
     weeklyTitle: "Weekly test",
-    weeklyBlurb: "{n} sentences from your stories, text hidden",
+    weeklyBlurb: "Up to {n} sentences with your stories' target words, text hidden",
     weeklyStart: "Start",
     weeklyLocked: "Finish {need} general stories to unlock the weekly test",
     weeklyOpensTomorrow: "Opens tomorrow: today's sentences are asked a day later",
