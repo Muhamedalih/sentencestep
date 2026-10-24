@@ -16,18 +16,30 @@ export function arg(name: string): string | undefined {
   return index >= 0 ? process.argv[index + 1] : undefined;
 }
 
+/** One GET, tried again a few times when the connection is reset (it happens on long readouts). */
+async function getWithRetry(path: string, from: number): Promise<Response> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fetch(`${url}/rest/v1/${path}`, {
+        headers: {
+          apikey: serviceRoleKey!,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          Range: `${from}-${from + 999}`,
+          "Range-Unit": "items",
+        },
+      });
+    } catch (error) {
+      if (attempt >= 4) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 600 * attempt));
+    }
+  }
+}
+
 /** Every row a REST query matches, 1000 at a time. */
 export async function all<R>(path: string): Promise<R[]> {
   const rows: R[] = [];
   for (let from = 0; ; from += 1000) {
-    const response = await fetch(`${url}/rest/v1/${path}`, {
-      headers: {
-        apikey: serviceRoleKey!,
-        Authorization: `Bearer ${serviceRoleKey}`,
-        Range: `${from}-${from + 999}`,
-        "Range-Unit": "items",
-      },
-    });
+    const response = await getWithRetry(path, from);
     if (!response.ok) {
       throw new Error(
         `${path.split("?")[0]}: ${response.status} ${(await response.text()).slice(0, 160)}`,
