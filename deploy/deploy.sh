@@ -5,13 +5,14 @@
 #
 # Reads the gzipped image tarball on stdin. Steps, any failure of which leaves the
 # currently live copy untouched and exits non-zero:
-#   1. load the image;
+#   1. remove the images no container uses (room for the new one) and load the image;
 #   2. start it in the IDLE slot (blue/green) next to the live one;
 #   3. wait until that copy reports healthy, and confirm it reports the expected commit;
 #   4. point Caddy at it (graceful reload — in-flight requests finish normally);
 #   5. ask the site, through Caddy, for the same commit and a 200 home page;
 #      if that fails, point Caddy straight back at the old slot.
 # The old slot keeps running afterwards, so rollback.sh is instant until the next deploy.
+# Images no container uses are removed once more at the end (see prune_unused_images).
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/sentencestep}"
@@ -19,11 +20,21 @@ cd "$APP_DIR"
 # shellcheck source=lib.sh
 . "$APP_DIR/lib.sh"
 
+# Every release image is tagged (sentencestep:<sha>), and `docker image prune` without -a only
+# removes UNTAGGED images, so none was ever removed: after ~60 deploys the disk was full, the
+# apps could not write, their health checks failed and the site went down. With -a every image
+# no container uses goes; the two slots still hold the live and the previous release (all
+# rollback.sh needs) and Caddy holds its own. stdin is closed on purpose: the tarball arrives on it.
+prune_unused_images() { docker image prune -a -f </dev/null >/dev/null 2>&1 || true; }
+
 SHA="${1:-}"
 [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || die "usage: deploy.sh <40-character git commit sha>   (image tarball on stdin)"
 
 exec 9>"$APP_DIR/.deploy.lock"
 flock -n 9 || die "another deploy is already running"
+
+log "removing images no container uses, to make room"
+prune_unused_images
 
 log "loading image for $SHA"
 gunzip -c | docker load >/dev/null
@@ -71,5 +82,5 @@ ACTIVE="$NEW"
 save_state
 printf '%s deploy %s slot=%s previous=%s(%s)\n' "$(date -u +%FT%TZ)" "$SHA" "$NEW" "$OLD" "$(slot_sha "$OLD")" >>"$APP_DIR/releases.log"
 
-docker image prune -f --filter "until=168h" >/dev/null 2>&1 || true
+prune_unused_images
 log "done — $SHA is live in slot $NEW; slot $OLD ($(slot_sha "$OLD")) is kept running for instant rollback"
