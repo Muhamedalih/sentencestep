@@ -107,7 +107,7 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
   );
 
   const surface = cn(
-    "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)]",
+    "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)] roomy:[zoom:var(--home-zoom,1.1)]",
     calm ? "border-success/30 bg-success/[0.06]" : "border-primary/25 bg-brand-muted/35",
     className,
   );

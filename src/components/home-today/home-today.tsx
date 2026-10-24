@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { ReactNode } from "react";
 
 import type { LessonStatsMap } from "@/components/app/home-hero";
+import { FitHome } from "@/components/home-today/fit-home";
 import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
@@ -89,31 +90,33 @@ export function HomeToday({
         <TopBarSlot stream={stream} {...topBar} />
       </Suspense>
       {banners}
-      <div className="grid gap-5 lg:grid-cols-[1.08fr_1fr] lg:items-stretch">
-        <Suspense
-          fallback={
-            <div
-              className="bg-muted/60 min-h-[26rem] animate-pulse rounded-2xl"
-              aria-hidden="true"
+      <FitHome>
+        <div className="grid gap-5 lg:grid-cols-[1.08fr_1fr] lg:items-stretch">
+          <Suspense
+            fallback={
+              <div
+                className="bg-muted/60 min-h-[26rem] animate-pulse rounded-2xl"
+                aria-hidden="true"
+              />
+            }
+          >
+            <TodayBoxSlot quests={stream.quests} />
+          </Suspense>
+          <div className="flex flex-col gap-3">
+            <HomeLessonCard
+              units={units}
+              isPremiumUser={isPremiumUser}
+              hasWeakWords={hasWeakWords}
+              className="flex-1"
             />
-          }
-        >
-          <TodayBoxSlot quests={stream.quests} />
-        </Suspense>
-        <div className="flex flex-col gap-3">
-          <HomeLessonCard
-            units={units}
-            isPremiumUser={isPremiumUser}
-            hasWeakWords={hasWeakWords}
-            className="flex-1"
-          />
-          {/* Learners on the free plan keep their counter of starter lessons, small, under the card. */}
-          {!isPremiumUser && <StarterPathProgress units={units} />}
+            {/* Learners on the free plan keep their counter of starter lessons, small, under the card. */}
+            {!isPremiumUser && <StarterPathProgress units={units} />}
+          </div>
         </div>
-      </div>
-      <Suspense fallback={null}>
-        <TestCardSlot quests={stream.quests} />
-      </Suspense>
+        <Suspense fallback={null}>
+          <TestCardSlot quests={stream.quests} />
+        </Suspense>
+      </FitHome>
     </>
   );
 }

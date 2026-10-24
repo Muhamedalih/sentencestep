@@ -59,12 +59,12 @@ function PictureCard({
           )}
         />
         <span
-          className="roomy:start-5 roomy:top-5 roomy:px-3.5 roomy:py-1 roomy:text-[13px] roomy:[zoom:1.1] absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
+          className="roomy:start-5 roomy:top-5 roomy:px-3.5 roomy:py-1 roomy:text-[13px] roomy:[zoom:var(--home-zoom,1.1)] absolute start-4 top-4 max-w-[80%] rounded-full bg-black/35 px-3 py-1 text-xs leading-snug font-semibold text-white backdrop-blur-sm"
           dir={dir}
         >
           {eyebrow}
         </span>
-        <div className="roomy:gap-1 roomy:px-7 roomy:pt-16 roomy:pb-6 roomy:[zoom:1.1] relative flex flex-col gap-1 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-10 pb-5 lg:pt-16">
+        <div className="roomy:gap-1 roomy:px-7 roomy:pt-16 roomy:pb-6 roomy:[zoom:var(--home-zoom,1.1)] relative flex flex-col gap-1 bg-[linear-gradient(to_top,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.86)_74%,rgba(0,0,0,0)_100%)] px-5 pt-10 pb-5 lg:pt-16">
           <h2
             className="roomy:text-3xl line-clamp-2 text-2xl leading-tight font-semibold tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]"
             dir="ltr"

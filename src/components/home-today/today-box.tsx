@@ -206,7 +206,7 @@ export function TodayBox({
       aria-label={copy.questsHeading}
       className={cn(
         // `zoom` makes everything inside (type, icons, spacing, the ring) a tenth larger on a roomy screen. On the pointer the box rises a little and its edge takes the brand colour: calm, no glow.
-        "border-border/60 bg-card roomy:p-[clamp(0.75rem,2svh,1.5rem)] roomy:[zoom:1.1] flex h-full flex-col rounded-2xl border p-4 transition-[translate,border-color,box-shadow] duration-300 ease-out sm:p-5",
+        "border-border/60 bg-card roomy:p-[clamp(0.75rem,2svh,1.5rem)] roomy:[zoom:var(--home-zoom,1.1)] flex h-full flex-col rounded-2xl border p-4 transition-[translate,border-color,box-shadow] duration-300 ease-out sm:p-5",
         "hover:border-primary/40 hover:shadow-[0_18px_36px_-18px_rgba(0,0,0,0.6)] motion-safe:hover:-translate-y-1",
         className,
       )}
