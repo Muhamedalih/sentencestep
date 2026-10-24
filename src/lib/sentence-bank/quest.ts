@@ -3,7 +3,7 @@ import { fetchDailyQuests, insertDailyQuests } from "@/lib/features/quest-querie
 import type { DailyQuest } from "@/lib/features/quests";
 import { countSentencesReady } from "@/lib/sentence-bank/load";
 import type { SentenceBankContext } from "@/lib/sentence-bank/load";
-import { sentenceQuest, sentenceQuestRow } from "@/lib/today/quests";
+import { sentenceQuest, sentenceQuestRow, sentenceTestAvailable } from "@/lib/today/quests";
 
 /**
  * Whether the day's test row exists and is not finished: where the words step leads next. With
@@ -44,8 +44,7 @@ export async function dealSentenceQuest(args: {
   const { context, features, existing } = args;
   const found = sentenceQuest(existing);
   if (found) return found;
-  if (!features.rollouts.sentenceBank || !features.quests.enabled) return null;
-  if (!features.quests.types.sentenceReview.enabled) return null;
+  if (!sentenceTestAvailable(features)) return null;
 
   try {
     // Nothing finished today reads nothing (see countSentencesReady) and gives no row.

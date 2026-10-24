@@ -9,8 +9,6 @@ import { fetchDueVocabularyRecallCount } from "@/lib/supabase/queries/vocabulary
 import { fetchActiveMistakeCount, fetchDueReviewCount } from "@/lib/supabase/queries/mistakes";
 import { fetchAllVocabularyWordsFlat } from "@/lib/supabase/queries/word-lists";
 import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
-import { WORDS_PER_DAY, pickNextWordBlock } from "@/lib/home-plan/plan";
-import { isImportantWord } from "@/lib/today/important-words";
 import { sessionWords } from "@/lib/today/session-words";
 import type { PositionedWord } from "@/lib/today/session-words";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -18,7 +16,7 @@ import { fetchVocabularyRecallWordsAction } from "@/lib/vocabulary-recall/action
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { lookupWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
-import { getWordGroupById, getWordGroupSummaries } from "@/lib/word-lists";
+import { getWordGroupById } from "@/lib/word-lists";
 
 /**
  * Reads the daily session's sources and hands them to the pure assembler.
@@ -179,109 +177,29 @@ export async function buildDailySessionWords(
   return applyWordListAudio(session, urlByWord);
 }
 
-/** Words from the first Words-section group that still has unfinished ones, for Today's words step: the next block of the learner's own level — a beginner gets the first words of the beginner list. */
-async function newWordsSource(
-  userId: string,
-  locale: SupportLocale | null,
-  startingLevel: number | null,
-  isPremium: boolean,
-  size: number,
-): Promise<SourceCandidates<ReviewWord>> {
-  const [groups, completedIds] = await Promise.all([
-    attempt("word groups", () => getWordGroupSummaries(locale ?? undefined), []),
-    attempt("word progress", () => fetchWordProgress(userId), [] as string[]),
-  ]);
-  const done = new Set(completedIds);
-  const block = pickNextWordBlock(groups, done, {
-    isPremiumUser: isPremium,
-    startingLevel,
-    floor: true,
-  });
-  if (!block) return { source: "wordList", items: [] };
-  const group = await attempt(
-    "word group",
-    () => getWordGroupById(block.group.id, locale ?? undefined),
-    undefined,
-  );
-  const words = [...(group?.words ?? [])].sort((a, b) => a.order - b.order);
-  const items = words
-    .slice(block.blockIndex * WORDS_PER_DAY)
-    .filter((word) => !done.has(word.id))
-    .slice(0, size)
-    .map((word): ReviewWord => ({ ...word, reason: "review" }));
-  return { source: "wordList", items };
-}
-
 /**
- * Today's words step: `size` words (five), the important ones only.
- *
- * When the learner finished a story or a passage today (`linked`, see session-words-load.ts), the
- * round is those lessons' own target words and NOTHING else — the story's two or three, then the
- * passage's closest-together ones for the places left, in a random order (sessionWords) — so the
- * words, the story and the passage are one session. With too few of them the round is just shorter:
- * no word of the Words section or of any other source is added.
- *
- * Otherwise (nothing finished today, or "5 more words") the usual sources: review first — the target
- * words of the learner's lessons and stories that are due, their weak Words-section words, their own
- * typing mistakes and saved cards — and whatever places are left go to NEW words from the Words
- * section. Review words that are function words ("and", "into"…) or contractions are dropped (see
- * isImportantWord); Words-section words and saved cards are the learner's own choices and are never
- * filtered. Every word points at the Word Lists voice's clip, like the Daily session's.
+ * Today's words step: up to `size` words (five) — the target words of today's story and today's
+ * passage, and NOTHING else: the story's two or three, then the passage's closest-together ones for
+ * the places left, in a random order (sessionWords), so the words, the story and the passage are one
+ * day. They are the same whether the two are read yet or not (see loadLinkedWords). No word of the
+ * Words section, a review schedule, a mistake or a saved card is ever added: with too few of the
+ * day's own words the round is just shorter, and with none it is empty. Every word points at the Word
+ * Lists voice's clip, like the Daily session's.
  */
 export async function buildTodayWords(args: {
-  userId: string;
-  locale: SupportLocale | null;
   size: number;
-  startingLevel: number | null;
-  isPremium: boolean;
-  /** The session's own story and passage words, when the step should be made of them (the first round of the day, not "5 more words"). */
-  linked?: { story: PositionedWord[]; passage: PositionedWord[] };
+  /** Today's story and passage words (for "5 more words": the ones the first round left). */
+  linked: { story: PositionedWord[]; passage: PositionedWord[] };
 }): Promise<ReviewWord[]> {
-  const { userId, locale, size, linked } = args;
-  if (linked) {
-    const own = sessionWords({ story: linked.story, passage: linked.passage, size });
-    if (own.length > 0) {
-      const urlByWord = await attempt(
-        "word-list voice audio",
-        () => lookupWordListVoiceAudio(own.map((word) => word.targetWord)),
-        new Map<string, string>(),
-      );
-      return applyWordListAudio(own, urlByWord);
-    }
-  }
-  const [recall, [active, reviews], weak, cards, fresh] = await Promise.all([
-    attempt("recall", () => fetchVocabularyRecallWordsAction(), [] as ReviewWord[]),
-    mistakeSources(size * 4),
-    weakSource(locale),
-    attempt("cards", () => fetchCardReviewWordsAction("due"), [] as ReviewWord[]),
-    newWordsSource(userId, locale, args.startingLevel, args.isPremium, size),
-  ]);
-  const important = (items: ReviewWord[]) =>
-    items.filter((word) => isImportantWord(word.targetWord));
-  const session = assembleSession<ReviewWord>(
-    [
-      {
-        source: "recall",
-        // Recall words carry only the Arabic gloss (hintAr); the review screen reads supportHint.
-        items: important(recall).map((word) => ({
-          ...word,
-          supportHint: word.supportHint ?? word.hintAr,
-        })),
-      },
-      weak,
-      { source: "mistakeReview", items: important(reviews.items) },
-      { source: "mistake", items: important(active.items) },
-      { source: "card", items: cards },
-      fresh,
-    ],
-    size,
-  );
+  const { size, linked } = args;
+  const own = sessionWords({ story: linked.story, passage: linked.passage, size });
+  if (own.length === 0) return [];
   const urlByWord = await attempt(
     "word-list voice audio",
-    () => lookupWordListVoiceAudio(session.map((word) => word.targetWord)),
+    () => lookupWordListVoiceAudio(own.map((word) => word.targetWord)),
     new Map<string, string>(),
   );
-  return applyWordListAudio(session, urlByWord);
+  return applyWordListAudio(own, urlByWord);
 }
 
 /**

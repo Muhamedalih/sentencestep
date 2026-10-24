@@ -12,8 +12,9 @@ three small cards).
 - **Permissions → "New Home page (Today first)"** (`newHome`, `src/lib/rollouts/catalog.ts`): starts
   **Admins only**; an admin can open it to specific people, a share of learners, or everyone.
 - It is closed whenever `todaySession` is closed (`withRolloutDependencies`): the page is made of
-  Today's tasks. The self-test card additionally needs the Sentence bank (`sentenceBank`) and only
-  exists on a day a test quest was dealt (never an empty card).
+  Today's tasks. The self-test card additionally needs the Sentence bank (`sentenceBank`): it is on
+  the page from the first moment, locked until the three tasks are done (see below), and opens only
+  when a test quest was dealt (never an empty open card).
 - `showsNewHome` (`src/lib/today/home-layout.ts`) is the whole decision: signed in, `newHome`,
   `todaySession`, the day's cards started (a browser's very first visit has no time zone cookie yet, so
   the current Home is drawn that once) and not `?classic=1` (the owner's way back to the current Home).
@@ -45,7 +46,14 @@ for the current Home):
 - **Self-test card** (`test-card.tsx`): brand-tinted surface, a round mark, one small segment per
   question, an outline button (so the page keeps one solid button); done, it becomes a calm tick. It is
   about **Today's passage and story** (a line each, typed from memory), not earlier days — see
-  `docs/sentence-bank.md`; its screen is one card in the middle of the viewport.
+  `docs/sentence-bank.md`; its screen is one card in the middle of the viewport. **Locked state**
+  (owner, 2026-10-24: "show it from the start, a little blurred, with a short line that says finish the
+  daily tasks and it opens, to push the learner to finish them"): until all three tasks are done the
+  card is there from the first moment — the same card and the same box (so the page fits the same),
+  slightly blurred (`blur-[2px]`, 70% opacity), not a link, with one crisp line and a lock over it
+  (`today.testLocked`, four languages). It is drawn whether or not a test row was dealt yet, as long as the
+  day can have a test (`sentenceTestAvailable`) and the page is Today's; once the tasks are done it is
+  the open card when a test was dealt, else nothing. The rule is `testCardState` in `home-layout.ts`.
 
 **Size** (owner, 2026-10-23: "the two boxes are small, there is a lot of empty room"): on a screen with
 room — at least 1024px wide **and** 720px tall, the `roomy` variant in `globals.css` — the page widens
@@ -80,3 +88,14 @@ there; the components are rendered with fixtures from a throwaway route (see the
 notes): `HomeToday` with resolved promises for the quests and the week, inside the dashboard chrome,
 in light and dark, on a laptop and a phone, in the states fresh / mid / done, test ready / done / none,
 free plan and the week opened.
+
+## Today's five words (2026-10-24)
+
+The words task is made of the day's own words and nothing else: the target words of **today's story**
+(two or three) and, for the places left of the five, those of **today's passage** — "today's" being the
+two Home's tasks box shows (the ones finished today, else the ones open next: `loadTodayLessonIds`), so
+the words are the same whether the lessons are read yet or not. Never a word of the Words section, a
+review schedule, a mistake or a saved card; too few words make a shorter round, none go on to the
+finish screen. "5 more words" on the finish screen is the same day's words the first round left
+(`sessionLeftovers`), and is offered only while there are some. Code: `src/lib/today/session-words.ts`
+(pure), `session-words-load.ts`, `buildTodayWords` in `features/daily-session-service.ts`.

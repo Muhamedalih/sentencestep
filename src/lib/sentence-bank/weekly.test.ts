@@ -13,6 +13,7 @@ import {
   daysBetweenISO,
   selectWeeklyCheck,
   weeklyLine,
+  weeklyReadiness,
 } from "@/lib/sentence-bank/weekly";
 
 const TODAY = "2025-06-10";
@@ -25,27 +26,50 @@ test("days between two calendar days, however many, either way, across months", 
   assert.equal(daysBetweenISO("2024-12-31", "2025-03-01"), 60);
 });
 
-test("the check is offered after seven days of Today's session, a week of lessons and no earlier check", () => {
-  const ready = { last: null, todayISO: TODAY, sessionDays: 7, lessonsThisWeek: 3 };
-  assert.deepEqual(weeklyLine(ready), { kind: "due", size: 10, minutes: 4 });
-  assert.equal(weeklyLine({ ...ready, sessionDays: 6 }), null);
-  assert.equal(weeklyLine({ ...ready, lessonsThisWeek: 2 }), null);
-  assert.equal(weeklyLine({ ...ready, sessionDays: 40, lessonsThisWeek: 12 })?.kind, "due");
+test("the check opens once twelve story sentences from earlier days are there, and no earlier check", () => {
+  const ready = { last: null, todayISO: TODAY, askable: 12, askableTomorrow: 12 };
+  assert.deepEqual(weeklyLine(ready), { kind: "due", size: 12, minutes: 5 });
+  assert.equal(weeklyLine({ ...ready, askable: 40, askableTomorrow: 40 })?.kind, "due");
+});
+
+test("until then the card is locked and says how many are still missing", () => {
+  const line = weeklyLine({ last: null, todayISO: TODAY, askable: 4, askableTomorrow: 4 });
+  assert.deepEqual(line, { kind: "locked", have: 4, need: 12, tomorrow: false });
+  assert.deepEqual(weeklyLine({ last: null, todayISO: TODAY, askable: 0, askableTomorrow: 0 }), {
+    kind: "locked",
+    have: 0,
+    need: 12,
+    tomorrow: false,
+  });
+  // The count never runs past the goal, whatever the caller hands in.
+  assert.equal(
+    (
+      weeklyLine({ last: null, todayISO: TODAY, askable: 11, askableTomorrow: 3 }) as {
+        have: number;
+      }
+    ).have,
+    11,
+  );
+});
+
+test("sentences written today are not asked today: the locked card says tomorrow will be enough", () => {
+  const line = weeklyLine({ last: null, todayISO: TODAY, askable: 3, askableTomorrow: 14 });
+  assert.deepEqual(line, { kind: "locked", have: 3, need: 12, tomorrow: true });
 });
 
 test("for the week after a check its result is the line, with the honest figures and no more", () => {
-  const last = { checkedOn: "2025-06-07", asked: 10, remembered: 7, written: 48 };
-  const line = weeklyLine({ last, todayISO: TODAY, sessionDays: 3, lessonsThisWeek: 5 });
-  assert.deepEqual(line, { kind: "result", written: 48, asked: 10, remembered: 7, percent: 70 });
-  // Even with the days and lessons to be due, a check taken three days ago is not repeated.
+  const last = { checkedOn: "2025-06-07", asked: 12, remembered: 9, written: 48 };
+  const line = weeklyLine({ last, todayISO: TODAY, askable: 30, askableTomorrow: 30 });
+  assert.deepEqual(line, { kind: "result", written: 48, asked: 12, remembered: 9, percent: 75 });
+  // Even with enough sentences to be due, a check taken three days ago is not repeated.
   assert.equal(
-    weeklyLine({ last, todayISO: TODAY, sessionDays: 9, lessonsThisWeek: 9 })?.kind,
+    weeklyLine({ last, todayISO: TODAY, askable: 99, askableTomorrow: 99 })?.kind,
     "result",
   );
   const five = { checkedOn: TODAY, asked: 5, remembered: 3, written: 20 };
   assert.equal(
     (
-      weeklyLine({ last: five, todayISO: TODAY, sessionDays: 0, lessonsThisWeek: 0 }) as {
+      weeklyLine({ last: five, todayISO: TODAY, askable: 0, askableTomorrow: 0 }) as {
         percent: number;
       }
     ).percent,
@@ -55,26 +79,25 @@ test("for the week after a check its result is the line, with the honest figures
 
 test("a check that asked fewer than five shows no number", () => {
   const small = { checkedOn: "2025-06-08", asked: WEEKLY_CHECK_MIN - 1, remembered: 4, written: 9 };
-  assert.equal(
-    weeklyLine({ last: small, todayISO: TODAY, sessionDays: 0, lessonsThisWeek: 0 }),
-    null,
-  );
+  assert.equal(weeklyLine({ last: small, todayISO: TODAY, askable: 0, askableTomorrow: 0 }), null);
 });
 
-test("a week later a due check takes the place of the old result, and a quiet week has no line", () => {
-  const last = { checkedOn: "2025-06-03", asked: 10, remembered: 8, written: 40 };
+test("a week later a ready check takes the place of the old result, and a quiet week is locked again", () => {
+  const last = { checkedOn: "2025-06-03", asked: 12, remembered: 8, written: 40 };
   assert.equal(
-    weeklyLine({ last, todayISO: TODAY, sessionDays: 7, lessonsThisWeek: 4 })?.kind,
+    weeklyLine({ last, todayISO: TODAY, askable: 12, askableTomorrow: 12 })?.kind,
     "due",
   );
-  // A week has passed but the learner has not been back enough: the old result is not shown as if it were new.
-  assert.equal(weeklyLine({ last, todayISO: TODAY, sessionDays: 2, lessonsThisWeek: 4 }), null);
-  // A date from the future (a clock that moved back) is no result either.
-  const future = { checkedOn: "2025-06-12", asked: 10, remembered: 8, written: 40 };
-  assert.equal(
-    weeklyLine({ last: future, todayISO: TODAY, sessionDays: 0, lessonsThisWeek: 0 }),
-    null,
-  );
+  // A week has passed but there is not enough new writing: the old result is not shown as if it were new.
+  assert.deepEqual(weeklyLine({ last, todayISO: TODAY, askable: 2, askableTomorrow: 2 }), {
+    kind: "locked",
+    have: 2,
+    need: 12,
+    tomorrow: false,
+  });
+  // A date from the future (a clock that moved back) is no result and no card either.
+  const future = { checkedOn: "2025-06-12", asked: 12, remembered: 8, written: 40 };
+  assert.equal(weeklyLine({ last: future, todayISO: TODAY, askable: 0, askableTomorrow: 0 }), null);
 });
 
 let counter = 0;
@@ -104,9 +127,9 @@ test("the check asks sentences of the last seven days only, never ones typed tod
   assert.equal(written, 3);
 });
 
-test("ten sentences, spread over the week's lessons, at most three from one", () => {
-  assert.equal(WEEKLY_CHECK_SIZE, 10);
-  assert.equal(WEEKLY_MAX_PER_LESSON, 3);
+test("twelve sentences, spread over the week's stories, at most six from one", () => {
+  assert.equal(WEEKLY_CHECK_SIZE, 12);
+  assert.equal(WEEKLY_MAX_PER_LESSON, 6);
   const pool = [
     ...lesson("a", 8, "2025-06-09"),
     ...lesson("b", 8, "2025-06-08"),
@@ -114,15 +137,46 @@ test("ten sentences, spread over the week's lessons, at most three from one", ()
     ...lesson("d", 8, "2025-06-05"),
   ];
   const { items } = selectWeeklyCheck(pool, TODAY);
-  assert.equal(items.length, 10);
+  assert.equal(items.length, 12);
   const perLesson = new Map<string, number>();
   for (const item of items) perLesson.set(item.lessonId, (perLesson.get(item.lessonId) ?? 0) + 1);
-  assert.ok([...perLesson.values()].every((count) => count <= 3));
-  // One from each lesson in turn, the newest lesson first.
+  assert.ok([...perLesson.values()].every((count) => count <= 6));
+  // One from each story in turn, the newest story first.
   assert.deepEqual(
     items.slice(0, 4).map((item) => item.lessonId),
     ["a", "b", "c", "d"],
   );
+});
+
+test("two stories are enough for a whole check, but one is not", () => {
+  const two = [...lesson("a", 8, "2025-06-09"), ...lesson("b", 8, "2025-06-08")];
+  assert.equal(selectWeeklyCheck(two, TODAY).items.length, 12);
+  const one = lesson("a", 11, "2025-06-09");
+  assert.equal(selectWeeklyCheck(one, TODAY).items.length, 6);
+});
+
+test("readiness counts what could be asked now and what could be asked tomorrow", () => {
+  const pool = [
+    ...lesson("a", 6, "2025-06-09"),
+    ...lesson("b", 6, "2025-06-08"),
+    ...lesson("today", 6, TODAY),
+  ];
+  // Today's story is not a memory yet: 12 are askable now, and the same 12 plus today's are there tomorrow.
+  assert.deepEqual(weeklyReadiness(pool, TODAY), { askable: 12, askableTomorrow: 12 });
+  const few = [
+    ...lesson("a", 5, "2025-06-09"),
+    ...lesson("t1", 6, TODAY),
+    ...lesson("t2", 4, TODAY),
+  ];
+  assert.deepEqual(weeklyReadiness(few, TODAY), { askable: 5, askableTomorrow: 12 });
+  // The oldest day leaves the week by tomorrow.
+  const aging = [
+    ...lesson("edge1", 6, "2025-06-03"),
+    ...lesson("edge2", 6, "2025-06-03"),
+    ...lesson("a", 2, "2025-06-09"),
+  ];
+  assert.deepEqual(weeklyReadiness(aging, TODAY), { askable: 12, askableTomorrow: 2 });
+  assert.deepEqual(weeklyReadiness([], TODAY), { askable: 0, askableTomorrow: 0 });
 });
 
 test("short sentences are never asked but are still part of what was written", () => {

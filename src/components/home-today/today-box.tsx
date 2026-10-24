@@ -254,11 +254,11 @@ export function TodayBox({
           )}
         </div>
       )}
-      {/* The weekly sentence check: one quiet line under the box (ready, or the last result). */}
+      {/* The weekly sentence test: its card (locked until twelve story sentences, then ready), or last week's result as one quiet line. */}
       {payload.weekly && (
         <WeeklyLineView
           line={payload.weekly}
-          className="roomy:mt-[clamp(0.4rem,1.4svh,1rem)] roomy:px-2 roomy:pt-[clamp(0.4rem,1.4svh,1rem)] roomy:text-sm mt-3 px-1"
+          className="roomy:mt-[clamp(0.4rem,1.4svh,1rem)] mt-3"
         />
       )}
     </section>

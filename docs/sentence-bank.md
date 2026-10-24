@@ -99,12 +99,18 @@ own finished lessons — ids that come from their server-side progress, never fr
 
 ## Weekly check
 
-After seven days of Today's session since the last check (and three lessons finished that week), the
-box shows one quiet line: the check is ready. The check asks up to ten sentences of the week, each
-from its meaning, no help, no second chance (a miss still comes back tomorrow), its clip playing after
-the answer, and is **not** counted for the day's task. For the next seven days the line is the result: "Sentences this week: you wrote N,
-and remembered M of K without looking (x%)". No level is ever derived from it; a check that asked
-fewer than five shows no number (`weekly.ts`).
+The weekly test draws only from the **Stories** section (the daily lessons are for writing, and one of
+them is already twelve sentences). Until the learner has twelve story sentences from earlier days in the
+last seven days, the box shows the test as a locked card (light blur, a lock, "write 12 story sentences to
+unlock", a progress bar `n/12`); sentences written today are not asked today, so when today's would be
+enough it says it opens tomorrow. At twelve the same card is clear, with a start button. It asks twelve
+sentences (at most six from one story), each from its meaning, no help, no second chance (a miss still comes
+back tomorrow), its clip playing after the answer, and is **not** counted for the day's task. After a test,
+and for the next seven days, the card is replaced by one quiet line, the result: "Story sentences this week:
+you wrote N, and remembered M of K without looking (x%)"; the next test needs seven days since the last and
+twelve new story sentences. No level is ever derived from it; a check that asked fewer than five shows no
+number (`weekly.ts`). Cost: one tiny read (the last check) inside the week after a test; otherwise one read of
+the sentences of the stories finished in the last week (none when no story was finished).
 
 ## Events (`analytics_events`)
 

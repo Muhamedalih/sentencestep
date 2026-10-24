@@ -4,28 +4,27 @@ import type { SentenceCandidate } from "@/lib/sentence-bank/select";
 import { addDaysISO } from "@/lib/word-mastery/schedule";
 
 /**
- * Sentence bank: the weekly check. After seven days of Today's session the learner is asked ten of
- * the sentences they wrote that week, each from its meaning, with nothing in front of them and no
- * help, and is told ONE honest thing: how many they remembered. No level is claimed from it (the
- * ten are a sample of one week of writing, not a measure of English), no number is shown for a
- * check that asked fewer than five, and the line is shown for the week after the check and not
- * longer. Pure — the loader reads the learner's last check, their Today days and their lessons.
+ * Sentence bank: the weekly check. Once the learner has written enough in the Stories section, they
+ * are asked twelve of those sentences, each from its meaning, with nothing in front of them and no
+ * help, and are told ONE honest thing: how many they remembered. Only stories count (the daily
+ * lessons are for writing, and one lesson alone is already twelve sentences, which would make a
+ * single lesson a whole test). No level is claimed from it (the twelve are a sample of one week of
+ * writing, not a measure of English), no number is shown for a check that asked fewer than five, and
+ * the result is shown for the week after the check and not longer. Until the sentences are there the
+ * check is shown locked, with how many are still missing. Pure — the loader reads the learner's last
+ * check and their finished stories.
  */
 
-/** Sentences a weekly check asks, at most. */
-export const WEEKLY_CHECK_SIZE = 10;
+/** Sentences a weekly check asks, at most; also how many story sentences open it. */
+export const WEEKLY_CHECK_SIZE = 12;
 /** Fewer than this is not a check, and a check that asked fewer shows no number. */
 export const WEEKLY_CHECK_MIN = 5;
-/** At most this many from one lesson, so the ten are a spread over the week. */
-export const WEEKLY_MAX_PER_LESSON = 3;
+/** At most this many from one story, so the twelve are a spread over at least two stories. */
+export const WEEKLY_MAX_PER_LESSON = 6;
 /** A check is about the last seven days of writing, and comes at most once in seven days. */
 export const WEEKLY_DAYS = 7;
-/** Days of Today's session (the finish screen reached) since the last check before the next one is offered. */
-export const WEEKLY_SESSION_DAYS = 7;
-/** Lessons finished in the week, at least, for there to be a week to ask about. */
-export const WEEKLY_MIN_LESSONS = 3;
-/** About twenty-five seconds a sentence for ten, rounded up: what the line says it takes. */
-export const WEEKLY_CHECK_MINUTES = 4;
+/** About twenty-five seconds a sentence for twelve: what the card says it takes. */
+export const WEEKLY_CHECK_MINUTES = 5;
 /** Where the check lives. */
 export const WEEKLY_CHECK_HREF = "/learn/today/check";
 
@@ -41,6 +40,13 @@ export interface LastCheck {
 
 export type WeeklyLine =
   | { kind: "due"; size: number; minutes: number }
+  | {
+      /** Not enough written yet: `have` of the `need` story sentences, and whether tomorrow is enough. */
+      kind: "locked";
+      have: number;
+      need: number;
+      tomorrow: boolean;
+    }
   | {
       kind: "result";
       written: number;
@@ -58,38 +64,35 @@ export function daysBetweenISO(fromISO: string, toISO: string): number {
 }
 
 /**
- * The one line Today's tasks box shows about the weekly check, or nothing:
- *  - the check is due when seven days of Today's session have been completed since the last one (or
- *    ever), at least a week has passed since it, and the learner finished enough lessons that week;
+ * The one card Today's box shows about the weekly check, or nothing:
+ *  - a week or more after the last check (or with none yet) it is ready when the learner has twelve
+ *    story sentences from earlier days in the last week to be asked, and locked until they have;
+ *  - locked, it says whether tomorrow will be enough (sentences written today are not asked today);
  *  - for the seven days after a check it shows its result, when the check asked at least five;
- *  - otherwise nothing: a quiet box has no line.
- * A due check wins over an old result.
+ *  - otherwise nothing.
+ * `askable` is how many sentences a check could ask now (see weeklyReadiness) and `askableTomorrow`
+ * how many it could ask tomorrow.
  */
 export function weeklyLine(input: {
   last: LastCheck | null;
   todayISO: string;
-  /** Days of Today's session completed since the last check (all of them when there was none). */
-  sessionDays: number;
-  /** Lessons finished in the last week, before today. */
-  lessonsThisWeek: number;
+  askable: number;
+  askableTomorrow: number;
 }): WeeklyLine | null {
   const { last, todayISO } = input;
   const since = last ? daysBetweenISO(last.checkedOn, todayISO) : null;
-  const weekPassed = since === null || since >= WEEKLY_DAYS;
-  if (
-    weekPassed &&
-    input.sessionDays >= WEEKLY_SESSION_DAYS &&
-    input.lessonsThisWeek >= WEEKLY_MIN_LESSONS
-  ) {
-    return { kind: "due", size: WEEKLY_CHECK_SIZE, minutes: WEEKLY_CHECK_MINUTES };
+  if (since === null || since >= WEEKLY_DAYS) {
+    if (input.askable >= WEEKLY_CHECK_SIZE) {
+      return { kind: "due", size: WEEKLY_CHECK_SIZE, minutes: WEEKLY_CHECK_MINUTES };
+    }
+    return {
+      kind: "locked",
+      have: Math.min(Math.max(0, input.askable), WEEKLY_CHECK_SIZE),
+      need: WEEKLY_CHECK_SIZE,
+      tomorrow: input.askableTomorrow >= WEEKLY_CHECK_SIZE,
+    };
   }
-  if (
-    last &&
-    since !== null &&
-    since >= 0 &&
-    since < WEEKLY_DAYS &&
-    last.asked >= WEEKLY_CHECK_MIN
-  ) {
+  if (last && since >= 0 && last.asked >= WEEKLY_CHECK_MIN) {
     return {
       kind: "result",
       written: last.written,
@@ -102,18 +105,18 @@ export function weeklyLine(input: {
 }
 
 export interface WeeklySelection<T extends SentenceCandidate> {
-  /** The sentences to ask, spread over the week's lessons (newest first), at most WEEKLY_CHECK_SIZE. */
+  /** The sentences to ask, spread over the week's stories (newest first), at most WEEKLY_CHECK_SIZE. */
   items: T[];
-  /** Every sentence of the lessons finished in the week — what "you wrote N sentences" counts. */
+  /** Every sentence of the stories finished in the week — what "you wrote N sentences" counts. */
   written: number;
 }
 
 /**
- * The sentences of the weekly check: those of lessons finished in the last seven days, before today
+ * The sentences of the weekly check: those of stories finished in the last seven days, before today
  * (what was typed an hour ago is not yet a memory), of MIN_REVIEW_WORDS words or more, at most
- * WEEKLY_MAX_PER_LESSON from one lesson, one from each lesson in turn. Whether they are on the
- * learner's schedule does not matter: the check asks what they wrote, not what is due. Fewer than
- * WEEKLY_CHECK_MIN askable sentences means there is no check (the caller offers none).
+ * WEEKLY_MAX_PER_LESSON from one story, one from each story in turn. Whether they are on the
+ * learner's schedule does not matter: the check asks what they wrote, not what is due. The caller
+ * hands in stories only. Fewer than WEEKLY_CHECK_MIN askable sentences means there is no check.
  */
 export function selectWeeklyCheck<T extends SentenceCandidate>(
   candidates: readonly T[],
@@ -138,6 +141,20 @@ export function selectWeeklyCheck<T extends SentenceCandidate>(
     items.push(sentence);
   }
   return { items, written: week.length };
+}
+
+/**
+ * How many sentences a check could ask now, and how many it could ask tomorrow (when today's
+ * stories have become memories and the oldest day has left the week): what the locked card counts.
+ */
+export function weeklyReadiness<T extends SentenceCandidate>(
+  candidates: readonly T[],
+  todayISO: string,
+): { askable: number; askableTomorrow: number } {
+  return {
+    askable: selectWeeklyCheck(candidates, todayISO).items.length,
+    askableTomorrow: selectWeeklyCheck(candidates, addDaysISO(todayISO, 1)).items.length,
+  };
 }
 
 /**

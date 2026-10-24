@@ -9,9 +9,9 @@ import { BLANK_TOKEN } from "@/types/word-lists";
 import type { VocabularyItem } from "@/types/content";
 
 /**
- * Today's words step is the same session's own words and nothing else: the TARGET words of the story
- * finished today (two or three) and, for the places left of the five, those of the passage finished
- * today. Pure — session-words-load.ts finds the lessons and reads them, this turns their target
+ * Today's words step is the same session's own words and nothing else: the TARGET words of today's
+ * story (two or three) and, for the places left of the five, those of today's passage — the ones
+ * Home shows for the day, finished or not yet. Pure — session-words-load.ts finds the lessons and reads them, this turns their target
  * words into the review words the step quizzes (each with its sentence blanked out and a small "from
  * today's story" line, ReviewWord.fromToday, so the link is visible) and decides which of them make
  * the five. No word of the Words section or of any other source is ever added to them.
@@ -146,6 +146,31 @@ function shuffled<T>(items: readonly T[], random: () => number): T[] {
   return result;
 }
 
+const wordKey = (entry: PositionedWord) => normalizeMistakeWord(entry.word.targetWord);
+
+/** Which candidates make a round of `size`, not yet shuffled: the story's (up to STORY_WORDS_MAX, then any the passage cannot fill) and the passage's. */
+function chooseSessionWords(args: {
+  story: readonly PositionedWord[];
+  passage: readonly PositionedWord[];
+  size: number;
+}): { story: PositionedWord[]; passage: PositionedWord[] } {
+  const size = Math.max(0, Math.trunc(args.size));
+  const fromStory = closestWords(args.story, Math.min(STORY_WORDS_MAX, size));
+  const taken = new Set(fromStory.map(wordKey));
+  const fromPassage = closestWords(
+    args.passage.filter((entry) => !taken.has(wordKey(entry))),
+    size - fromStory.length,
+  );
+  // A passage with too few words for its places: the story fills them (still only the session's own
+  // words), so the round stays at `size` whenever the two together have that many.
+  const passageKeys = new Set(fromPassage.map(wordKey));
+  const storyTopUp = closestWords(
+    args.story.filter((entry) => !taken.has(wordKey(entry)) && !passageKeys.has(wordKey(entry))),
+    size - fromStory.length - fromPassage.length,
+  );
+  return { story: [...fromStory, ...storyTopUp], passage: fromPassage };
+}
+
 /**
  * The words of the round, in a random order: the story's target words (two or three: up to
  * STORY_WORDS_MAX, the closest together) and then, for the places left of `size`, the passage's
@@ -160,29 +185,29 @@ export function sessionWords(args: {
   size: number;
   random?: () => number;
 }): ReviewWord[] {
-  const size = Math.max(0, Math.trunc(args.size));
-  const key = (entry: PositionedWord) => normalizeMistakeWord(entry.word.targetWord);
-  const fromStory = closestWords(args.story, Math.min(STORY_WORDS_MAX, size));
-  const taken = new Set(fromStory.map(key));
-  const fromPassage = closestWords(
-    args.passage.filter((entry) => !taken.has(key(entry))),
-    size - fromStory.length,
-  );
-  // A passage with too few words for its places: the story fills them (still only the session's own
-  // words), so the round stays at `size` whenever the two together have that many.
-  const passageKeys = new Set(fromPassage.map(key));
-  const storyTopUp = closestWords(
-    args.story.filter((entry) => !taken.has(key(entry)) && !passageKeys.has(key(entry))),
-    size - fromStory.length - fromPassage.length,
-  );
+  const chosen = chooseSessionWords(args);
   return shuffled(
     [
-      ...[...fromStory, ...storyTopUp].map((entry): ReviewWord => ({
-        ...entry.word,
-        sessionSource: "recall",
-      })),
-      ...fromPassage.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "wordList" })),
+      ...chosen.story.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "recall" })),
+      ...chosen.passage.map((entry): ReviewWord => ({ ...entry.word, sessionSource: "wordList" })),
     ],
     args.random ?? Math.random,
   );
+}
+
+/**
+ * The target words of today's story and passage that the first round of `size` did not ask — what
+ * "5 more words" is made of, so the extra round too holds only the session's own words. A word the
+ * first round asked is gone from both lists, whichever of the two it was listed in.
+ */
+export function sessionLeftovers(args: {
+  story: readonly PositionedWord[];
+  passage: readonly PositionedWord[];
+  size: number;
+}): { story: PositionedWord[]; passage: PositionedWord[] } {
+  const chosen = chooseSessionWords(args);
+  const asked = new Set([...chosen.story, ...chosen.passage].map(wordKey));
+  const rest = (entries: readonly PositionedWord[]) =>
+    entries.filter((entry) => !asked.has(wordKey(entry)));
+  return { story: rest(args.story), passage: rest(args.passage) };
 }

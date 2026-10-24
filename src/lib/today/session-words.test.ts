@@ -6,6 +6,7 @@ import {
   STORY_WORDS_MAX,
   closestWords,
   passageWordCandidates,
+  sessionLeftovers,
   sessionWords,
   storyWordCandidates,
 } from "@/lib/today/session-words";
@@ -278,4 +279,55 @@ test("a passage word that is also a story word is asked once, and the passage fi
   assert.equal(round.length, 5);
   assert.equal(round.filter((word) => word.targetWord === "rain").length, 1);
   assert.equal(round.find((word) => word.targetWord === "rain")?.sessionSource, "recall");
+});
+
+test("'5 more words' holds only the day's own words the first round left", () => {
+  const story = [
+    at("balloon", 0, "story"),
+    at("rain", 1, "story"),
+    at("box", 2, "story"),
+    at("snowman", 3, "story"),
+    at("garden", 4, "story"),
+  ];
+  const passage = [
+    at("silence", 1),
+    at("plan", 2),
+    at("window", 3),
+    at("door", 4),
+    at("stairs", 5),
+  ];
+  const first = sessionWords({ story, passage, size: 5, random: counter() }).map(
+    (word) => word.targetWord,
+  );
+  const rest = sessionLeftovers({ story, passage, size: 5 });
+  const left = [...rest.story, ...rest.passage].map((entry) => entry.word.targetWord);
+  // Nothing is asked twice, and nothing of the day is lost: the two rounds together are every candidate.
+  assert.equal(left.filter((word) => first.includes(word)).length, 0);
+  assert.deepEqual(
+    [...first, ...left].sort(),
+    [...story, ...passage].map((entry) => entry.word.targetWord).sort(),
+  );
+  // The extra round is built from them the same way, and is still only the day's words.
+  const more = sessionWords({ ...rest, size: 5, random: counter() }).map((word) => word.targetWord);
+  assert.deepEqual(more.sort(), left.sort());
+});
+
+test("a word listed in both the story and the passage is left over in neither once it was asked", () => {
+  const story = [at("rain", 1, "story"), at("box", 2, "story")];
+  const passage = [at("rain", 1), at("plan", 2), at("window", 3), at("door", 4), at("stairs", 5)];
+  const rest = sessionLeftovers({ story, passage, size: 5 });
+  assert.equal(
+    [...rest.story, ...rest.passage].some((entry) => entry.word.targetWord === "rain"),
+    false,
+  );
+});
+
+test("with few words there is nothing left for another round", () => {
+  const story = [at("balloon", 0, "story"), at("rain", 1, "story")];
+  const rest = sessionLeftovers({ story, passage: [at("silence", 1)], size: 5 });
+  assert.deepEqual(rest, { story: [], passage: [] });
+  assert.deepEqual(sessionLeftovers({ story: [], passage: [], size: 5 }), {
+    story: [],
+    passage: [],
+  });
 });

@@ -55,7 +55,36 @@ async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Pro
   }
 }
 
-/** What is open to this learner for each step, read once (the passage lists are share-cached, the rest are the learner's own rows). */
+/** The passage and the story open to this learner next (the passage lists are share-cached, the rest are the learner's own rows). */
+async function readLessonPicks(args: {
+  userId: string;
+  isPremium: boolean;
+  startingLevel: number | null;
+  passagesEnabled: boolean;
+  storiesUnits: LessonUnit[];
+  completedStoryIds: string[];
+}) {
+  const { userId, startingLevel } = args;
+  const [summaries, passageProgress] = await Promise.all([
+    args.passagesEnabled
+      ? quiet("passages", () => fetchPassageSummaries(), [] as PassageSummary[])
+      : ([] as PassageSummary[]),
+    args.passagesEnabled
+      ? quiet("passage progress", () => fetchPassageProgress(userId), [] as PassageProgress[])
+      : ([] as PassageProgress[]),
+  ]);
+
+  const passage = pickPassage(
+    summaries,
+    new Map(passageProgress.map((entry) => [entry.passageId, entry])),
+    args.isPremium,
+    startingLevel,
+  );
+  const story = pickStory(args.storiesUnits, args.completedStoryIds, args.isPremium, startingLevel);
+  return { summaries, passageProgress, passage, story };
+}
+
+/** What is open to this learner for each step, read once: the next passage and story, and whether the words step has something to do. */
 async function readPicks(args: {
   userId: string;
   locale: SupportLocale | null;
@@ -67,39 +96,40 @@ async function readPicks(args: {
   weakWordCount?: Promise<number>;
 }) {
   const { userId, locale, startingLevel } = args;
-  const [summaries, passageProgress, groups, wordIds, dueRecall, weakCount] = await Promise.all([
-    args.passagesEnabled
-      ? quiet("passages", () => fetchPassageSummaries(), [] as PassageSummary[])
-      : ([] as PassageSummary[]),
-    args.passagesEnabled
-      ? quiet("passage progress", () => fetchPassageProgress(userId), [] as PassageProgress[])
-      : ([] as PassageProgress[]),
+  const [lessons, groups, wordIds, dueRecall, weakCount] = await Promise.all([
+    readLessonPicks(args),
     quiet("word groups", () => getWordGroupSummaries(locale ?? undefined), []),
     quiet("word progress", () => fetchWordProgress(userId), [] as string[]),
     quiet("due recall", () => fetchDueVocabularyRecallCount(userId), 0),
     args.weakWordCount ?? 0,
   ]);
-
-  const passage = pickPassage(
-    summaries,
-    new Map(passageProgress.map((entry) => [entry.passageId, entry])),
-    args.isPremium,
-    startingLevel,
-  );
-  const story = pickStory(args.storiesUnits, args.completedStoryIds, args.isPremium, startingLevel);
   const block = pickNextWordBlock(groups, new Set(wordIds), {
     isPremiumUser: args.isPremium,
     startingLevel,
     floor: true,
   });
   return {
-    summaries,
-    passageProgress,
-    passage,
-    story,
+    ...lessons,
     /** There is something for the words step: new words to learn, or review words due. */
     wordsAvailable: block !== null || dueRecall > 0 || weakCount > 0,
   };
+}
+
+/** The latest passage and the latest story the learner finished today (their own calendar day), or undefined for either. */
+function finishedToday<Story extends { completedAt: string }>(args: {
+  passageProgress: readonly PassageProgress[];
+  storyCompletions: readonly Story[];
+  todayISO: string;
+  dayOf: (iso: string) => string;
+}): { listen: PassageProgress | undefined; story: Story | undefined } {
+  const { todayISO, dayOf } = args;
+  const listen = args.passageProgress
+    .filter((entry) => entry.completedAt && dayOf(entry.completedAt) === todayISO)
+    .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))[0];
+  const story = args.storyCompletions
+    .filter((entry) => dayOf(entry.completedAt) === todayISO)
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
+  return { listen, story };
 }
 
 export interface TodayStepsData {
@@ -150,12 +180,12 @@ export async function loadTodaySteps(args: {
   });
 
   // What was finished today (the latest of each), which is what "do it again" points at.
-  const listenToday = picks.passageProgress
-    .filter((entry) => entry.completedAt && dayOf(entry.completedAt) === todayISO)
-    .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))[0];
-  const storyToday = storyCompletions
-    .filter((entry) => dayOf(entry.completedAt) === todayISO)
-    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
+  const { listen: listenToday, story: storyToday } = finishedToday({
+    passageProgress: picks.passageProgress,
+    storyCompletions,
+    todayISO,
+    dayOf,
+  });
   const listenDoneSummary = picks.summaries.find((entry) => entry.id === listenToday?.passageId);
   const storyDoneUnit = storiesUnits.find((entry) => entry.id === storyToday?.lessonId);
   const sessionDone = sessionDates.includes(todayISO);
@@ -430,4 +460,50 @@ export async function loadTodayStoryDone(args: {
     console.error("[today] loadTodayStoryDone failed", error);
     return null;
   }
+}
+
+/**
+ * The passage and the story that are "today's" for this learner — the same two Home's tasks box
+ * shows: the latest of each finished today, else the one open next. Today's words step is made of
+ * their target words, so it holds the day's own words whether or not the two are read yet. A part
+ * with nothing open and nothing finished is null. Throws when a read fails (the caller decides).
+ */
+export async function loadTodayLessonIds(args: {
+  userId: string;
+  locale: SupportLocale | null;
+  timeZone: string | undefined;
+  isPremium: boolean;
+  passagesEnabled: boolean;
+}): Promise<{ passageId: string | null; storyId: string | null }> {
+  const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
+  const dayOf = (iso: string) =>
+    localISODateInTimeZone(args.timeZone, new Date(iso)) ?? iso.slice(0, 10);
+  const [storiesUnits, progress] = await Promise.all([
+    getLessonSummaries("stories", args.locale ?? undefined),
+    fetchProgressCached(todayLocalISODate()),
+  ]);
+  const storyCompletions = (progress?.completions ?? []).filter(
+    (entry) => entry.mode === "stories",
+  );
+  const picks = await readLessonPicks({
+    userId: args.userId,
+    isPremium: args.isPremium,
+    startingLevel: progress?.startingLevel ?? null,
+    passagesEnabled: args.passagesEnabled,
+    storiesUnits,
+    completedStoryIds: storyCompletions.map((entry) => entry.lessonId),
+  });
+  const done = finishedToday({
+    passageProgress: picks.passageProgress,
+    storyCompletions,
+    todayISO,
+    dayOf,
+  });
+  // As in the tasks box, a lesson finished today counts while it is still in the lists.
+  const passageDone = picks.summaries.find((entry) => entry.id === done.listen?.passageId);
+  const storyDone = storiesUnits.find((entry) => entry.id === done.story?.lessonId);
+  return {
+    passageId: (passageDone ?? picks.passage)?.id ?? null,
+    storyId: (storyDone ?? picks.story)?.id ?? null,
+  };
 }

@@ -6,7 +6,6 @@ import { after } from "next/server";
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
 import { awardEventBadge } from "@/lib/features/badge-service";
 import { completeDailySession } from "@/lib/features/daily-session-queries";
 import { buildDailySessionWords, buildTodayWords } from "@/lib/features/daily-session-service";
@@ -15,6 +14,7 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { createClient } from "@/lib/supabase/server";
+import { sessionLeftovers } from "@/lib/today/session-words";
 import { loadLinkedWords } from "@/lib/today/session-words-load";
 import { generateWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
 
@@ -109,38 +109,33 @@ export async function fetchDailySessionWordsAction(): Promise<ReviewWord[]> {
 }
 
 /**
- * Today's words step (permission "Today's session (new Home)"): `size` important words — the
- * target words of the story and the passage finished today first (the session's own words), then
- * the learner's due review words, new words from the Words section for the rest — each pointed at
- * the Word Lists voice like the Daily session's. `more` is "5 more words": a further round, which
- * leaves the session's own words out (they were just done). [] when the permission isn't open for
- * this learner, nobody is signed in, there is nothing to do, or anything fails.
+ * Today's words step (permission "Today's session (new Home)"): `size` words, the target words of
+ * today's story and today's passage and nothing else (see buildTodayWords) — the same whether the two
+ * are read yet or not, each pointed at the Word Lists voice like the Daily session's. `more` is "5
+ * more words": a further round of the day's own words that the first round left. [] when the
+ * permission isn't open for this learner, nobody is signed in, there are no words of the day, or
+ * anything fails.
  */
 export async function fetchTodayWordsAction(size: number, more = false): Promise<ReviewWord[]> {
   try {
     if (!Number.isInteger(size) || size < 1 || size > 10 || typeof more !== "boolean") return [];
     const [features, userId] = await Promise.all([getEffectiveFeatures(), getSessionUserId()]);
     if (!features.rollouts.todaySession || !userId) return [];
-    const [startingLevel, premium, admin, locale] = await Promise.all([
-      fetchProfileStartingLevel(userId).catch(() => null),
+    const [premium, admin, locale] = await Promise.all([
       hasPremiumAccess(),
       isAdmin(),
       getLocale(),
     ]);
-    const linked = more
-      ? undefined
-      : await loadLinkedWords({
-          userId,
-          locale,
-          timeZone: (await cookies()).get(TIMEZONE_COOKIE)?.value,
-        });
-    const words = await buildTodayWords({
+    const linked = await loadLinkedWords({
       userId,
       locale,
-      size,
-      startingLevel,
+      timeZone: (await cookies()).get(TIMEZONE_COOKIE)?.value,
       isPremium: premium || admin,
-      linked,
+      passagesEnabled: features.passages.enabled,
+    });
+    const words = await buildTodayWords({
+      size,
+      linked: more ? sessionLeftovers({ ...linked, size }) : linked,
     });
     return await generateMissingSessionAudio(words);
   } catch (error) {

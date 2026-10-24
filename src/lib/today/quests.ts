@@ -56,6 +56,18 @@ export function todayQuestRows(
  */
 export const TODAY_SENTENCE_SLOT = TODAY_QUEST_SLOT_BASE + STEP_KINDS.length;
 
+/** Whether the day can have a test at all for this learner: the sentence bank is open to them, quests are on, and the test's own quest type is not switched off. */
+export function sentenceTestAvailable(features: {
+  rollouts: { sentenceBank: boolean };
+  quests: { enabled: boolean; types: Record<QuestType, { enabled: boolean }> };
+}): boolean {
+  return (
+    features.rollouts.sentenceBank &&
+    features.quests.enabled &&
+    features.quests.types.sentenceReview.enabled
+  );
+}
+
 /**
  * The row to deal for the sentence review, or null when there is nothing to ask (no empty row, ever)
  * or the admin switched the quest type off. The target is how many sentences are ready, up to the

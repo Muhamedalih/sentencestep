@@ -1470,6 +1470,7 @@ export interface Dictionary {
     /** The same when none stuck (no number is shown). */
     testRetryNone: string;
     retakeTest: string;
+    testLocked: string;
     testOne: string;
     testMany: string;
     /** The small line beside the typing hint on the words task: the learner writes every word. */
@@ -1478,7 +1479,12 @@ export interface Dictionary {
     wordFromStory: string;
     wordFromPassage: string;
     /** The one quiet line about the weekly sentence check at the foot of the tasks box: the check is ready (the box adds the minutes), or its result for the week after it (`{written}`, `{remembered}`, `{asked}` are counts of sentences, `{percent}` a whole percentage). */
-    weeklyDue: string;
+    /** The weekly sentence test card (src/components/today/today-tasks.tsx): its name, what it asks (`{n}` sentences), the start button, the locked line (`{need}` story sentences open it), the line for when tomorrow will be enough, and the result line of the week after it. */
+    weeklyTitle: string;
+    weeklyBlurb: string;
+    weeklyStart: string;
+    weeklyLocked: string;
+    weeklyOpensTomorrow: string;
     weeklyResult: string;
   };
   /** The sentence review (src/components/sentence-bank): sentences the learner typed before come back with their text hidden. `{n}`/`{clean}`/`{total}` are counts. */

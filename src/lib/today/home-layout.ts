@@ -34,6 +34,27 @@ export function splitToday(quests: readonly DailyQuest[]): {
   return { tasks: requiredQuests(quests), test: sentenceQuest(quests) ?? null };
 }
 
+export type TestCardState = "hidden" | "locked" | "open";
+
+/**
+ * What the self-test card on the new Home shows. It is on the page from the first moment, so the
+ * learner sees what finishing the day's tasks earns: locked (slightly blurred, with the line that says
+ * so) until the three tasks are done, as long as the day can have a test at all; then the card itself,
+ * if a test was dealt, else nothing. A test already finished stays as it is, whatever the tasks say.
+ */
+export function testCardState(input: {
+  tasks: readonly DailyQuest[];
+  test: DailyQuest | null;
+  /** The day can have a test for this learner (see sentenceTestAvailable). */
+  available: boolean;
+}): TestCardState {
+  if (input.test?.completed) return "open";
+  if (!input.tasks.every((task) => task.completed)) {
+    return input.available || input.test ? "locked" : "hidden";
+  }
+  return input.test ? "open" : "hidden";
+}
+
 /** Whether the quests are Today's (each tied to a passage, story or word round) and not the random mix a learner without Today gets. */
 export function isTodayMode(quests: readonly DailyQuest[]): boolean {
   return quests.some((quest) => quest.today !== undefined);

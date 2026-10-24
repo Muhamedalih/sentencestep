@@ -6,12 +6,14 @@ import { FitHome } from "@/components/home-today/fit-home";
 import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
-import { TestYourselfCard } from "@/components/home-today/test-card";
+import { LockedTestCard, TestYourselfCard } from "@/components/home-today/test-card";
 import { TodayBox } from "@/components/home-today/today-box";
 import { HomeTopBar } from "@/components/home-today/top-bar";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import type { DailyQuestsPayload } from "@/lib/features/quests";
-import { isTodayMode, splitToday } from "@/lib/today/home-layout";
+import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
+import { sentenceTestAvailable } from "@/lib/today/quests";
 import type { CurrentUser } from "@/lib/supabase/auth";
 import type { LessonUnit } from "@/types/content";
 
@@ -40,13 +42,26 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
   );
 }
 
-/** The self-test card: only on a day a test was dealt — never an empty card. */
+/**
+ * The self-test card, there from the first moment: locked (slightly blurred, with the line that says
+ * what opens it) until the day's three tasks are done, then the card itself once a test was dealt —
+ * never an empty card, and no locked one for a learner the test is not open to.
+ */
 async function TestCardSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
-  const payload = await quests;
-  const { test } = payload ? splitToday(payload.quests) : { test: null };
-  return test ? (
-    <TestYourselfCard quest={test} className="roomy:mt-[clamp(0.75rem,2svh,1.25rem)] mt-5" />
-  ) : null;
+  const [payload, features] = await Promise.all([quests, getEffectiveFeatures()]);
+  if (!payload) return null;
+  const { tasks, test } = splitToday(payload.quests);
+  const spacing = "roomy:mt-[clamp(0.75rem,2svh,1.25rem)] mt-5";
+  // Locked only on Today's page; the fallback quests card (Today could not be built) has no test to wait for.
+  const available = isTodayMode(payload.quests) && sentenceTestAvailable(features);
+  switch (testCardState({ tasks, test, available })) {
+    case "locked":
+      return <LockedTestCard className={spacing} />;
+    case "open":
+      return test ? <TestYourselfCard quest={test} className={spacing} /> : null;
+    default:
+      return null;
+  }
 }
 
 /**

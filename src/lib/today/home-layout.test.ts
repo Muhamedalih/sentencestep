@@ -4,7 +4,15 @@ import { describe, it } from "node:test";
 import type { QuestType } from "@/lib/features/catalog";
 import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
 
-import { isTodayMode, showsNewHome, splitToday, todayRedoHref, todayTotals } from "./home-layout";
+import {
+  isTodayMode,
+  showsNewHome,
+  splitToday,
+  testCardState,
+  todayRedoHref,
+  todayTotals,
+} from "./home-layout";
+import { sentenceTestAvailable } from "./quests";
 
 function info(
   kind: TodayQuestInfo["kind"],
@@ -140,5 +148,58 @@ describe("todayRedoHref", () => {
       "/learn/today/go?step=words",
     );
     assert.equal(todayRedoHref([]), null);
+  });
+});
+
+describe("testCardState", () => {
+  const done = { completed: true, progress: 1 };
+  const finished = day({ listen: done, story: done }).map((entry) =>
+    entry.slot === 12 ? { ...entry, ...done } : entry,
+  );
+
+  it("is a locked card from the first moment, before any task is done, even when no test was dealt yet", () => {
+    const { tasks } = splitToday(day().filter((entry) => entry.slot !== 13));
+    assert.equal(testCardState({ tasks, test: null, available: true }), "locked");
+  });
+
+  it("stays locked while one task is left, even when a test row exists", () => {
+    const quests = day({ listen: done, story: done });
+    const { tasks, test } = splitToday(quests);
+    assert.equal(testCardState({ tasks, test, available: true }), "locked");
+  });
+
+  it("opens once all three tasks are done and a test was dealt, and is nothing when none was", () => {
+    const { tasks, test } = splitToday(finished);
+    assert.equal(testCardState({ tasks, test, available: true }), "open");
+    const without = splitToday(finished.filter((entry) => entry.slot !== 13));
+    assert.equal(testCardState({ tasks: without.tasks, test: null, available: true }), "hidden");
+  });
+
+  it("is not drawn at all for a learner the test is not open to", () => {
+    const { tasks } = splitToday(day().filter((entry) => entry.slot !== 13));
+    assert.equal(testCardState({ tasks, test: null, available: false }), "hidden");
+  });
+
+  it("keeps a test that is already finished, whatever the tasks say", () => {
+    const quests = day().map((entry) => (entry.slot === 13 ? { ...entry, ...done } : entry));
+    const { tasks, test } = splitToday(quests);
+    assert.equal(testCardState({ tasks, test, available: true }), "open");
+  });
+});
+
+describe("sentenceTestAvailable", () => {
+  const features = (sentenceBank: boolean, quests: boolean, type: boolean) => ({
+    rollouts: { sentenceBank },
+    quests: {
+      enabled: quests,
+      types: { sentenceReview: { enabled: type } } as Record<QuestType, { enabled: boolean }>,
+    },
+  });
+
+  it("needs the sentence bank, quests and the test's own quest type all on", () => {
+    assert.equal(sentenceTestAvailable(features(true, true, true)), true);
+    assert.equal(sentenceTestAvailable(features(false, true, true)), false);
+    assert.equal(sentenceTestAvailable(features(true, false, true)), false);
+    assert.equal(sentenceTestAvailable(features(true, true, false)), false);
   });
 });

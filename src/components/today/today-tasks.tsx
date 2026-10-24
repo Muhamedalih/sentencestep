@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  CalendarDays,
   Check,
-  ChevronRight,
   Headphones,
+  Lock,
   PenLine,
   Quote,
   RotateCcw,
@@ -16,7 +17,7 @@ import {
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
 import { questProgressPercent } from "@/lib/features/quests";
-import { WEEKLY_CHECK_HREF } from "@/lib/sentence-bank/weekly";
+import { WEEKLY_CHECK_HREF, WEEKLY_CHECK_MINUTES } from "@/lib/sentence-bank/weekly";
 import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 import type { DailyQuest, DailyQuestsPayload, TodayQuestInfo } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
@@ -226,9 +227,11 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
 }
 
 /**
- * The one quiet line at the foot of the box about the weekly sentence check: a link while the check
- * is ready, the honest result (what was remembered of how many were asked) for the week after it.
- * Muted small text under a hairline — never a button or a banner.
+ * The weekly sentence test at the foot of the box. Until the learner has written enough story
+ * sentences it is a card under a light blur with a lock over it, saying how many are still missing
+ * (or that tomorrow will be enough); once they have, the same card is clear, with its start button
+ * and a link into the test; for the week after a test it is one quiet line with the honest result
+ * (what was remembered of how many were asked), never a button or a banner.
  */
 export function WeeklyLineView({ line, className }: { line: WeeklyLine; className?: string }) {
   const { t } = useLocale();
@@ -252,19 +255,81 @@ export function WeeklyLineView({ line, className }: { line: WeeklyLine; classNam
       </p>
     );
   }
-  return (
-    <Link
-      href={WEEKLY_CHECK_HREF}
+  const open = line.kind === "due";
+  const size = open ? line.size : line.need;
+  const card = (
+    <div
+      aria-hidden={open ? undefined : "true"}
       className={cn(
-        "border-border/50 text-muted-foreground hover:text-foreground focus-visible:ring-ring mt-4 flex items-center justify-between gap-3 border-t pt-3 text-[13px] transition-colors outline-none focus-visible:ring-2",
-        className,
+        "border-primary/25 bg-brand-muted/35 flex items-center gap-3 rounded-2xl border px-3.5 py-3",
+        !open && "min-h-[4.75rem] opacity-70 blur-[3.5px] select-none",
       )}
     >
-      <span dir="auto">
-        {copy.weeklyDue} · {fill(copy.minutes, { n: line.minutes })}
+      <span className="bg-primary/15 text-primary grid size-9 shrink-0 place-items-center rounded-full">
+        <CalendarDays className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
       </span>
-      <ChevronRight className="size-4 shrink-0 rtl:rotate-180" aria-hidden="true" />
-    </Link>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">
+          <span dir="auto">{copy.weeklyTitle}</span>
+        </p>
+        <p className="text-muted-foreground text-xs">
+          <span dir="auto">
+            {fill(copy.weeklyBlurb, { n: size })} ·{" "}
+            {fill(copy.minutes, { n: WEEKLY_CHECK_MINUTES })}
+          </span>
+        </p>
+      </div>
+      <span className="border-primary/50 text-primary inline-flex h-8 shrink-0 items-center rounded-lg border px-3 text-xs font-semibold">
+        <span dir="auto">{copy.weeklyStart}</span>
+      </span>
+    </div>
+  );
+  if (open) {
+    return (
+      <Link
+        href={WEEKLY_CHECK_HREF}
+        className={cn(
+          "focus-visible:ring-ring mt-4 block rounded-2xl outline-none focus-visible:ring-2",
+          className,
+        )}
+      >
+        {card}
+      </Link>
+    );
+  }
+  return (
+    <div className={cn("relative mt-4 overflow-hidden rounded-2xl", className)}>
+      {card}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-3 text-center">
+        <span className="bg-card/90 border-border inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold">
+          <Lock className="text-primary size-3.5 shrink-0" aria-hidden="true" />
+          <span dir="auto">
+            {line.tomorrow
+              ? copy.weeklyOpensTomorrow
+              : fill(copy.weeklyLocked, { need: line.need })}
+          </span>
+        </span>
+        {!line.tomorrow && (
+          <span className="flex items-center gap-2">
+            <span
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={line.need}
+              aria-valuenow={line.have}
+              className="bg-border block h-[5px] w-36 overflow-hidden rounded-full"
+            >
+              <span
+                className="bg-primary block h-full rounded-full"
+                style={{ width: `${Math.round((line.have / line.need) * 100)}%` }}
+              />
+            </span>
+            <span dir="ltr" className="text-primary text-[11.5px] font-semibold tabular-nums">
+              {line.have}/{line.need}
+            </span>
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 

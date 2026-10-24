@@ -14,6 +14,7 @@ import { sentenceReviewPending } from "@/lib/sentence-bank/quest";
 import { SENTENCE_REVIEW_HREF } from "@/lib/sentence-bank/review";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { loadTodayNext, loadTodayWeekDays } from "@/lib/today/load";
+import { hasMoreTodayWords } from "@/lib/today/session-words-load";
 
 // Per learner and per moment: what is waiting tomorrow is read live.
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export default async function TodayEndPage() {
     getLocale(),
     fetchProgressCached(todayLocalISODate()),
   ]);
-  const [next, weekDays, testWaiting] = await Promise.all([
+  const [next, weekDays, testWaiting, moreWords] = await Promise.all([
     loadTodayNext({
       userId: user.id,
       locale,
@@ -64,13 +65,21 @@ export default async function TodayEndPage() {
           features,
         }).catch(() => false)
       : Promise.resolve(false),
+    // "5 more words" is offered only while today's story and passage still have words the first round left.
+    hasMoreTodayWords({
+      userId: user.id,
+      locale,
+      timeZone,
+      isPremium: premium || admin,
+      passagesEnabled: features.passages.enabled,
+    }).catch(() => false),
   ]);
 
   return (
     <TodayEnd
       weekDays={weekDays}
       nextTitle={next.nextTitle}
-      moreWords={next.wordsAvailable}
+      moreWords={moreWords}
       testHref={testWaiting ? `${SENTENCE_REVIEW_HREF}?flow=1` : null}
     />
   );

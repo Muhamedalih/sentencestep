@@ -2,18 +2,23 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, Quote, RotateCcw } from "lucide-react";
+import { Check, Lock, Quote, RotateCcw } from "lucide-react";
 
 import { fill, withXp } from "@/components/home-today/format";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { DailyQuest } from "@/lib/features/quests";
 import { todayLocalISODate } from "@/lib/progress/streak";
+import { SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
 import { readTodayTest } from "@/lib/today/run-state";
 import type { TodayTestResult } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 
 /** How many little segments stand for the questions (the count itself is written next to them). */
 const MAX_SEGMENTS = 5;
+
+/** The card's box — the open card and the locked one are the same size, so the page fits the same either way. */
+const CARD_SURFACE =
+  "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)] roomy:[zoom:var(--home-zoom,1.1)]";
 
 /**
  * "Test yourself on today's lessons": the day's sentence self-test as a card of its own on the new
@@ -107,7 +112,7 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
   );
 
   const surface = cn(
-    "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)] roomy:[zoom:var(--home-zoom,1.1)]",
+    CARD_SURFACE,
     calm ? "border-success/30 bg-success/[0.06]" : "border-primary/25 bg-brand-muted/35",
     className,
   );
@@ -130,6 +135,60 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
       >
         {body}
       </Link>
+    </section>
+  );
+}
+
+/**
+ * The self-test card before the day's three tasks are done: the card as it will look, slightly
+ * blurred and not a link, with one short line over it that says what opens it — so a learner sees
+ * from the first moment what finishing the tasks earns. Only the line is read out; the blurred card
+ * behind it is for the eye. Same box as the open card (CARD_SURFACE), so the page fits the same.
+ */
+export function LockedTestCard({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const copy = t.today;
+  const minutes = fill(copy.minutes, { n: SENTENCE_REVIEW_MINUTES });
+  return (
+    <section
+      aria-label={copy.taskSentences}
+      className={cn(
+        CARD_SURFACE,
+        "border-primary/25 bg-brand-muted/35 relative overflow-hidden",
+        className,
+      )}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none flex w-full flex-wrap items-center gap-x-5 gap-y-4 opacity-70 blur-[2px] select-none"
+      >
+        <span className="roomy:size-11 bg-primary/15 text-primary ring-primary/25 grid size-12 shrink-0 place-items-center rounded-full ring-1">
+          <Quote className="size-5" strokeWidth={1.8} />
+        </span>
+        <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-4rem)]">
+          <h3 className="text-base font-semibold">
+            <span dir="auto">{copy.taskSentences}</span>
+          </h3>
+          <p className="text-muted-foreground mt-1 text-[13px] leading-relaxed">
+            <span dir="auto">{copy.whySentences}</span>
+          </p>
+          <p className="text-muted-foreground roomy:mt-[clamp(0.25rem,0.9svh,0.625rem)] mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs">
+            <span className="flex items-center gap-1">
+              {Array.from({ length: 3 }, (_unused, index) => (
+                <span key={index} className="bg-primary/45 h-1.5 w-5 rounded-full" />
+              ))}
+            </span>
+            <span dir="auto">{minutes}</span>
+          </p>
+        </div>
+        <span className="border-primary/50 text-primary inline-flex h-11 shrink-0 items-center justify-center rounded-[10px] border px-6 text-sm font-semibold max-sm:w-full">
+          <span dir="auto">{copy.startSentences}</span>
+        </span>
+      </div>
+      <p className="absolute inset-0 flex items-center justify-center gap-2 px-4 text-center text-sm font-semibold">
+        <Lock className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+        <span dir="auto">{copy.testLocked}</span>
+      </p>
     </section>
   );
 }
