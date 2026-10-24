@@ -7,7 +7,7 @@ import { Check, RotateCcw } from "lucide-react";
 import { fill, withXp } from "@/components/home-today/format";
 import { TASK_ICONS, TaskIcon } from "@/components/home-today/task-icon";
 import { useLocale } from "@/components/providers/locale-provider";
-import { todayTaskTitle } from "@/components/today/today-tasks";
+import { WeeklyLineView, todayTaskTitle } from "@/components/today/today-tasks";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { splitToday, todayRedoHref, todayTotals } from "@/lib/today/home-layout";
 import { cn } from "@/lib/utils";
@@ -253,6 +253,13 @@ export function TodayBox({
             </Link>
           )}
         </div>
+      )}
+      {/* The weekly sentence check: one quiet line under the box (ready, or the last result). */}
+      {payload.weekly && (
+        <WeeklyLineView
+          line={payload.weekly}
+          className="roomy:mt-[clamp(0.4rem,1.4svh,1rem)] roomy:px-2 roomy:pt-[clamp(0.4rem,1.4svh,1rem)] roomy:text-sm mt-3 px-1"
+        />
       )}
     </section>
   );

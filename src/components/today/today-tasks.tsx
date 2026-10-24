@@ -2,11 +2,22 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, Headphones, PenLine, Quote, RotateCcw, Target, Type } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Headphones,
+  PenLine,
+  Quote,
+  RotateCcw,
+  Target,
+  Type,
+} from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
 import { questProgressPercent } from "@/lib/features/quests";
+import { WEEKLY_CHECK_HREF } from "@/lib/sentence-bank/weekly";
+import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 import type { DailyQuest, DailyQuestsPayload, TodayQuestInfo } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
@@ -215,6 +226,49 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
 }
 
 /**
+ * The one quiet line at the foot of the box about the weekly sentence check: a link while the check
+ * is ready, the honest result (what was remembered of how many were asked) for the week after it.
+ * Muted small text under a hairline — never a button or a banner.
+ */
+export function WeeklyLineView({ line, className }: { line: WeeklyLine; className?: string }) {
+  const { t } = useLocale();
+  const copy = t.today;
+  if (line.kind === "result") {
+    return (
+      <p
+        className={cn(
+          "border-border/50 text-muted-foreground mt-4 border-t pt-3 text-[12.5px] leading-relaxed",
+          className,
+        )}
+      >
+        <span dir="auto">
+          {fill(copy.weeklyResult, {
+            written: line.written,
+            remembered: line.remembered,
+            asked: line.asked,
+            percent: line.percent,
+          })}
+        </span>
+      </p>
+    );
+  }
+  return (
+    <Link
+      href={WEEKLY_CHECK_HREF}
+      className={cn(
+        "border-border/50 text-muted-foreground hover:text-foreground focus-visible:ring-ring mt-4 flex items-center justify-between gap-3 border-t pt-3 text-[13px] transition-colors outline-none focus-visible:ring-2",
+        className,
+      )}
+    >
+      <span dir="auto">
+        {copy.weeklyDue} · {fill(copy.minutes, { n: line.minutes })}
+      </span>
+      <ChevronRight className="size-4 shrink-0 rtl:rotate-180" aria-hidden="true" />
+    </Link>
+  );
+}
+
+/**
  * Home's daily quests box while "Today's session (daily tasks)" is open: the same card the quests
  * always had — a title, three rows with their XP and a progress bar — but the three quests are
  * Today's session: listen to a passage, write a story, write five words, each tied to the specific
@@ -286,6 +340,7 @@ export function TodayTasksPanel({
           )}
         </div>
       )}
+      {payload.weekly && <WeeklyLineView line={payload.weekly} />}
     </section>
   );
 }
