@@ -20,6 +20,9 @@ function gateStrings(dictionary: typeof en): Record<string, string> {
     "premium.gateBenefitProgress": dictionary.premium.gateBenefitProgress,
     "premium.gateCta": dictionary.premium.gateCta,
     "premium.gateTrust": dictionary.premium.gateTrust,
+    "premium.gateProgressSentences": dictionary.premium.gateProgressSentences,
+    "premium.gateProgressDays": dictionary.premium.gateProgressDays,
+    "premium.gateReviewFree": dictionary.premium.gateReviewFree,
     "wordLists.gateHeading": dictionary.wordLists.gateHeading,
     "wordLists.gateSubheading": dictionary.wordLists.gateSubheading,
     "wordLists.gateBenefitLists": dictionary.wordLists.gateBenefitLists,
@@ -46,6 +49,7 @@ test("the locked-content card fills its placeholders in every language", () => {
     );
     // The price line under the button is built from this one, so it must keep its slot.
     assert.match(dictionary.premium.fromPerMonthCaption, /\{amount\}/, `${name} price caption`);
+    assert.match(dictionary.premium.gateProgressDays, /\{days\}/, `${name} progress days`);
   }
 });
 

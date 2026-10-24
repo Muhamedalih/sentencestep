@@ -453,6 +453,9 @@ export const en: Dictionary = {
     gateBenefitProgress: "Your progress and streak are saved, so you never start over",
     gateCta: "Unlock with Premium",
     gateTrust: "One payment. No auto-renewal. Nothing to cancel.",
+    gateProgressSentences: "sentences written",
+    gateProgressDays: "Days practised: {days}",
+    gateReviewFree: "Your review stays free",
     fromPerMonthCaption: "Plans from {amount} / month",
     contentUnavailableBody:
       "This lesson isn't available right now. Nothing was lost — please try again in a moment, or pick a different lesson.",

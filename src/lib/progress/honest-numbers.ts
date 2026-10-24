@@ -146,3 +146,26 @@ export function honestLine(numbers: HonestNumbers): HonestLine | null {
   }
   return { kind: "sentences_days", sentences, days };
 }
+
+/**
+ * What the lock card says about the learner: the sentences they have written, the days they have
+ * practised (null when it is only one, which is not worth a line), and whether "your review stays
+ * free" may be said. That sentence is only true for a learner who never paid: a lapsed subscriber
+ * can lose sight of the words of Premium lists (they are hidden from an account without access), so
+ * for them the card keeps the number and leaves the promise out. null when there is no honest line.
+ */
+export interface GateProgress {
+  sentences: number;
+  days: number | null;
+  reviewFree: boolean;
+}
+
+export function gateProgress(numbers: HonestNumbers, neverPaid: boolean): GateProgress | null {
+  const line = honestLine(numbers);
+  if (!line) return null;
+  return {
+    sentences: line.sentences,
+    days: line.kind === "sentences" ? null : line.days,
+    reviewFree: neverPaid,
+  };
+}

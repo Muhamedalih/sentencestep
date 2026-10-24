@@ -6,6 +6,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { posterArtFor } from "@/lib/passages/art";
 import type { PassageTone } from "@/lib/passages/types";
 import type { GatePay } from "@/lib/billing/gate-pay";
+import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
 
 /** The passage's own poster — its picture when an admin chose one (blurred out, as on the list), else its colour — and number, standing in for artwork. What is behind the lock is never sent to the viewer, so nothing here pretends to show it. */
@@ -48,6 +49,7 @@ export function PassageLocked({
   summaryAr,
   fromPrice,
   pay,
+  progress,
   figures,
 }: {
   tone: PassageTone;
@@ -62,6 +64,8 @@ export function PassageLocked({
   fromPrice: string;
   /** The running offer (see getGatePay). */
   pay: GatePay;
+  /** What this learner has done so far (see getGateProgress): shown as one strip on the card. */
+  progress?: GateProgress | null;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
 }) {
@@ -88,6 +92,7 @@ export function PassageLocked({
       ctaHref="/upgrade"
       fromPrice={fromPrice}
       pay={pay}
+      progress={progress}
       backHref="/learn/passages"
       backLabel={t.passages.backToAll}
     />

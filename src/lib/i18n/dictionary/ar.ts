@@ -433,6 +433,9 @@ export const ar: Dictionary = {
     gateBenefitProgress: "يبقى تقدّمك وتتابعك محفوظين، فلا تبدأ من الصفر",
     gateCta: "افتح بالخطة المميّزة",
     gateTrust: "دفعة واحدة. بدون تجديد تلقائي. لا شيء تلغيه.",
+    gateProgressSentences: "جملة كتبتها",
+    gateProgressDays: "أيام التعلّم: {days}",
+    gateReviewFree: "مراجعتك تبقى مجانية",
     fromPerMonthCaption: "باقات تبدأ من {amount} / الشهر",
     contentUnavailableBody:
       "هذا الدرس غير متاح حاليًا. لم يُفقد شيء — يرجى المحاولة مرة أخرى بعد قليل، أو اختيار درس آخر.",

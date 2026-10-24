@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   MAX_PLAUSIBLE_WPM,
+  gateProgress,
   honestLine,
   honestNumbers,
   lessonTotals,
@@ -161,4 +162,26 @@ test("honestLine: words in memory are added only once there are ten", () => {
     days: 4,
     mastered: 12,
   });
+});
+
+test("gateProgress: the lock card gets the sentences and the days, or nothing for a learner who has barely started", () => {
+  assert.equal(gateProgress(numbers({ sentences: 4, activeDays: 5 }), true), null);
+  assert.deepEqual(gateProgress(numbers({ sentences: 18, activeDays: 1 }), true), {
+    sentences: 18,
+    days: null,
+    reviewFree: true,
+  });
+  assert.deepEqual(
+    gateProgress(numbers({ sentences: 124, activeDays: 6, masteredWords: 30 }), true),
+    {
+      sentences: 124,
+      days: 6,
+      reviewFree: true,
+    },
+  );
+});
+
+test("gateProgress: 'your review stays free' is promised only to a learner who never paid", () => {
+  assert.equal(gateProgress(numbers({ sentences: 32, activeDays: 2 }), false)?.reviewFree, false);
+  assert.equal(gateProgress(numbers({ sentences: 32, activeDays: 2 }), false)?.sentences, 32);
 });

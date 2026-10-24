@@ -3,6 +3,7 @@
 import { PremiumGate } from "@/components/learning/premium-gate";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { GatePay } from "@/lib/billing/gate-pay";
+import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
 
 /**
@@ -58,6 +59,7 @@ export function WordGroupLocked({
   supportDescription,
   fromPrice,
   pay,
+  progress,
   figures,
 }: {
   title: string;
@@ -69,6 +71,8 @@ export function WordGroupLocked({
   fromPrice: string;
   /** The running offer (see getGatePay). */
   pay: GatePay;
+  /** What this learner has done so far (see getGateProgress): shown as one strip on the card. */
+  progress?: GateProgress | null;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
 }) {
@@ -96,6 +100,7 @@ export function WordGroupLocked({
       ctaHref="/upgrade"
       fromPrice={fromPrice}
       pay={pay}
+      progress={progress}
       backHref="/learn/word-lists"
       backLabel={t.wordLists.backToWordLists}
     />

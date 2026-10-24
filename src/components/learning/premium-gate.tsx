@@ -9,6 +9,7 @@ import { Check, Gift, Lock, LockOpen, Sparkles } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import type { GatePay } from "@/lib/billing/gate-pay";
+import type { GateProgress } from "@/lib/progress/honest-numbers";
 import { formatDayCount } from "@/lib/i18n/format-days";
 import { popIn } from "@/lib/motion";
 
@@ -48,6 +49,8 @@ export interface PremiumGateProps {
   fromPrice: string;
   /** The running offer, as /upgrade shows it (see getGatePay). */
   pay: GatePay;
+  /** What the signed-in learner has done so far, shown as one strip above the price (see getGateProgress); absent for a visitor or a learner who has barely started. */
+  progress?: GateProgress | null;
   backHref: string;
   backLabel: string;
 }
@@ -75,6 +78,7 @@ export function PremiumGate({
   ctaHref,
   fromPrice,
   pay,
+  progress,
   backHref,
   backLabel,
 }: PremiumGateProps) {
@@ -268,6 +272,32 @@ export function PremiumGate({
         )}
 
         <div ref={ctaRef} className="flex flex-col gap-3 border-t border-white/15 pt-5">
+          {progress && (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span
+                  dir="ltr"
+                  className="text-[26px] leading-none font-semibold tracking-tight text-white tabular-nums"
+                >
+                  {progress.sentences}
+                </span>
+                <p dir="auto" className="text-xs leading-snug text-white/80">
+                  <span className="block">{t.premium.gateProgressSentences}</span>
+                  {progress.days !== null && (
+                    <span className="block">
+                      {t.premium.gateProgressDays.replace("{days}", String(progress.days))}
+                    </span>
+                  )}
+                </p>
+              </div>
+              {progress.reviewFree && (
+                <p dir="auto" className="flex items-center gap-1.5 text-[11.5px] text-white/70">
+                  <Check className="size-3.5 shrink-0" aria-hidden="true" />
+                  <span>{t.premium.gateReviewFree}</span>
+                </p>
+              )}
+            </div>
+          )}
           <p dir="auto" className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-white/70">
             {priceBefore.trim() && <span>{priceBefore.trim()}</span>}
             <span dir="ltr" className="text-3xl font-semibold tracking-tight text-white">

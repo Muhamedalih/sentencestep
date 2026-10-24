@@ -453,6 +453,9 @@ export const tr: Dictionary = {
     gateBenefitProgress: "İlerlemeniz ve seriniz kayıtlı kalır, hiç baştan başlamazsınız",
     gateCta: "Premium ile açın",
     gateTrust: "Tek ödeme. Otomatik yenileme yok. İptal edecek bir şey yok.",
+    gateProgressSentences: "yazdığınız cümle",
+    gateProgressDays: "Çalıştığınız gün: {days}",
+    gateReviewFree: "Tekrarınız ücretsiz kalır",
     fromPerMonthCaption: "Planlar {amount} / ay'dan başlıyor",
     contentUnavailableBody:
       "Bu ders şu anda kullanılamıyor. Hiçbir şey kaybolmadı: birazdan tekrar deneyin veya başka bir ders seçin.",

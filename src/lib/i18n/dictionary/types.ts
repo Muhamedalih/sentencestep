@@ -520,6 +520,12 @@ export interface Dictionary {
     gateCta: string;
     /** The reassurance under the price: one payment, no auto-renewal, nothing to cancel. Says nothing about refunds or time limits. */
     gateTrust: string;
+    /** The strip above the price on the lock card (see PremiumGate): the number of sentences the learner has written is set large beside this caption. */
+    gateProgressSentences: string;
+    /** `{days}` is the number of days the learner has practised (two or more). */
+    gateProgressDays: string;
+    /** Said only to a learner who never paid: their review does not need Premium. */
+    gateReviewFree: string;
     /** Small caption under the upgrade CTA on locked content — `{amount}` is the cheapest per-month USD price for the visitor's tier, e.g. "$1.17". It names no currency but USD and no provider. */
     fromPerMonthCaption: string;
     contentUnavailableBody: string;

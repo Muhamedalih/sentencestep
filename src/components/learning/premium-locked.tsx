@@ -4,6 +4,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { PremiumGate } from "@/components/learning/premium-gate";
 import type { GatePay } from "@/lib/billing/gate-pay";
+import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
 import type { LearningMode } from "@/types/content";
 
@@ -19,6 +20,7 @@ export function PremiumLocked({
   illustrationUrl,
   fromPrice,
   pay,
+  progress,
   figures,
 }: {
   mode: LearningMode;
@@ -36,6 +38,8 @@ export function PremiumLocked({
   fromPrice: string;
   /** The running offer (see getGatePay). */
   pay: GatePay;
+  /** What this learner has done so far (see getGateProgress): shown as one strip on the card. */
+  progress?: GateProgress | null;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
 }) {
@@ -83,6 +87,7 @@ export function PremiumLocked({
       ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${lessonId}`)}`}
       fromPrice={fromPrice}
       pay={pay}
+      progress={progress}
       backHref={`/learn/${mode}`}
       backLabel={t.premium.backToLessons}
     />

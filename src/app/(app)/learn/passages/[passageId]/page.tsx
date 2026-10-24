@@ -8,6 +8,7 @@ import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
 import { getGatePay } from "@/lib/billing/gate-pay";
+import { getGateProgress } from "@/lib/billing/gate-progress";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
@@ -80,10 +81,11 @@ export default async function PassageReaderPage({
     (passage.isFree && !summaries.some((summary) => !summary.isFree)) ||
     (await hasPremiumAccess());
   if (!canOpenPassage(passage, canOpenPremium)) {
-    const [fromPrice, figures, pay] = await Promise.all([
+    const [fromPrice, figures, pay, progress] = await Promise.all([
       getFromMonthlyPrice(),
       getGateFigures(locale),
       getGatePay(),
+      getGateProgress(),
       trackPaywallViewed({ kind: "passage", passageId: passage.id }),
     ]);
     return (
@@ -99,6 +101,7 @@ export default async function PassageReaderPage({
             summaryAr={passage.summaryAr}
             fromPrice={fromPrice}
             pay={pay}
+            progress={progress}
             figures={figures}
           />
         </div>
