@@ -114,7 +114,7 @@ async function main() {
   console.log(`Now: ${new Date(NOW).toISOString()}   Reading from: ${sinceIso} (UTC days below)`);
   console.log(
     opening.kind === "closed"
-      ? `Sentence bank: ADMINS ONLY (mode "${opening.mode}") - the figures are those of the accounts that can open it; no arms yet.`
+      ? `Sentence bank: ${opening.mode === "emails" ? "ONLY THE LISTED EMAILS (and admins)" : "ADMINS ONLY"} - the figures are those of the accounts that can open it; no arms yet.`
       : opening.kind === "everyone"
         ? "Sentence bank: open to EVERY learner in Today's session - there is no control arm, so only usage can be read."
         : `Sentence bank: a SHARE of ${opening.percent}% of Today's learners (setting saved ${savedAt ?? "?"}). Arm = rolloutBucket(userId, "sentenceBank") < ${opening.percent}.`,
