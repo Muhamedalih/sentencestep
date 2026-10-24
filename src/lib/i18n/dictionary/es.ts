@@ -1190,7 +1190,7 @@ export const es: Dictionary = {
     weeklyTitle: "Prueba semanal",
     weeklyBlurb: "{n} frases de tus historias, con el texto oculto",
     weeklyStart: "Empezar",
-    weeklyLocked: "Escribe {need} frases de historias para abrir la prueba semanal",
+    weeklyLocked: "Termina {need} historias generales para abrir la prueba semanal",
     weeklyOpensTomorrow: "Se abre mañana: las frases de hoy se preguntan un día después",
     weeklyResult:
       "Frases de tus historias esta semana: escribiste {written} y recordaste {remembered} de {asked} sin mirar ({percent}%)",

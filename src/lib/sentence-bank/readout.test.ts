@@ -14,7 +14,6 @@ import {
   visitStats,
   weeklyStates,
 } from "@/lib/sentence-bank/readout";
-import type { StorySentenceRow } from "@/lib/sentence-bank/readout";
 import { TODAY_SENTENCE_SLOT } from "@/lib/today/quests";
 import { emptyThreeTaskStats } from "@/lib/today/readout";
 import type { QuestRow } from "@/lib/today/readout";
@@ -173,17 +172,6 @@ test("the guard waits for 500 learners an arm, then flags a bank arm 2+ points b
 
 const TODAY = "2026-11-10";
 
-/** A story of `n` sentences, each long enough (five words) to be asked. */
-function story(id: string, n: number): StorySentenceRow[] {
-  return Array.from({ length: n }, (_, index) => ({
-    id: `${id}-s${index}`,
-    lesson_id: id,
-    order_index: index,
-    en: `Sentence number ${index} of ${id}`,
-  }));
-}
-const SENTENCES = [...story("st1", 8), ...story("st2", 8), ...story("st3", 8)];
-
 const done = (user: string, lesson: string, day: string) => ({
   user_id: user,
   lesson_id: lesson,
@@ -201,38 +189,40 @@ test("weekly card states: locked, opens tomorrow, ready, result, no line", () =>
   const stats = weeklyStates({
     learners: new Set(["ready", "tomorrow", "some", "nothing", "old", "result", "short", "again"]),
     completions: [
-      // two stories finished on earlier days: 6 + 6 sentences (six at most from one story) = twelve
+      // three stories finished on earlier days: the test is open
       done("ready", "st1", "2026-11-08"),
       done("ready", "st2", "2026-11-09"),
-      // the same two, finished today: nothing is askable today, twelve tomorrow
-      done("tomorrow", "st1", TODAY),
-      done("tomorrow", "st2", TODAY),
-      // one story from earlier: six of twelve
+      done("ready", "st3", "2026-11-07"),
+      // two on earlier days and the third finished today: it counts from tomorrow
+      done("tomorrow", "st1", "2026-11-08"),
+      done("tomorrow", "st2", "2026-11-09"),
+      done("tomorrow", "st3", TODAY),
+      // one story from earlier: one of three
       done("some", "st1", "2026-11-08"),
       // a story from before the week counts for nothing
       done("old", "st1", "2026-11-01"),
-      // checked three days ago: the result shows whatever was written since
+      // checked three days ago: the result shows, whatever was finished since
       done("result", "st1", "2026-11-09"),
       // checked yesterday but the check asked fewer than five: no line at all
       done("short", "st1", "2026-11-05"),
-      // checked ten days ago, and two stories finished since: ready again
+      // checked ten days ago, and three stories finished since: ready again
       done("again", "st1", "2026-11-08"),
-      done("again", "st3", "2026-11-09"),
+      done("again", "st2", "2026-11-09"),
+      done("again", "st3", "2026-11-05"),
     ],
-    sentences: SENTENCES,
     checks: [
-      check("result", "2026-11-07", 12),
+      check("result", "2026-11-07", 8),
       check("short", "2026-11-09", 4),
-      check("again", "2026-10-31", 12),
+      check("again", "2026-10-31", 8),
     ],
     todayISO: TODAY,
   });
   assert.deepEqual(stats, {
     learners: 8,
     locked: 4, // tomorrow, some, nothing, old
-    lockedNothingYet: 3, // tomorrow (today's don't count yet), nothing, old
+    lockedNothingYet: 2, // nothing, old
     lockedOpensTomorrow: 1, // tomorrow
-    lockedMedianHave: 0, // have = 0 (tomorrow), 6 (some), 0 (nothing), 0 (old) -> median of 0, 0, 0, 6
+    lockedMedianHave: 0.5, // have = 2 (tomorrow), 1 (some), 0 (nothing), 0 (old) -> median of 0, 0, 1, 2
     ready: 2, // ready, again
     resultShown: 1, // result
     noLine: 1, // short
@@ -243,7 +233,6 @@ test("weekly card states: a lesson finished twice keeps its first day, and nobod
   const empty = weeklyStates({
     learners: new Set(),
     completions: [],
-    sentences: SENTENCES,
     checks: [],
     todayISO: TODAY,
   });
@@ -256,12 +245,12 @@ test("weekly card states: a lesson finished twice keeps its first day, and nobod
       done("a", "st1", TODAY),
       done("a", "st1", "2026-11-08"),
       done("a", "st2", "2026-11-08"),
+      done("a", "st3", "2026-11-08"),
     ],
-    sentences: SENTENCES,
     checks: [],
     todayISO: TODAY,
   });
-  // st1 counts from 11-08 (the earlier finish), so 6 + 6 sentences are askable today.
+  // st1 counts from 11-08 (the earlier finish), so all three stories count today.
   assert.equal(once.ready, 1);
 });
 
@@ -269,8 +258,7 @@ test("weekly card states: the latest check decides, not the first one read", () 
   const stats = weeklyStates({
     learners: new Set(["a"]),
     completions: [],
-    sentences: SENTENCES,
-    checks: [check("a", "2026-11-09", 12), check("a", "2026-10-20", 12)],
+    checks: [check("a", "2026-11-09", 8), check("a", "2026-10-20", 8)],
     todayISO: TODAY,
   });
   assert.equal(stats.resultShown, 1);

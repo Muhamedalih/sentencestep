@@ -290,10 +290,11 @@ function Verdict({ feedback }: { feedback: AnswerFeedback }) {
  * remember" is a miss. One sentence on the screen, no clock, no score while going — the score
  * comes at the end.
  *
- * `mode="check"` is the weekly test (the /learn/today/check route) on the same screen: every
- * sentence from its meaning, no help and no second chance, each answer moves the schedule like a
- * review does but does not count for the day's task, and the end saves the test's own result — how
- * many were typed right of how many were asked — which is all the finish screen says.
+ * `mode="check"` is the weekly test (the /learn/today/check route) on the very same screen and the
+ * very same questions — heard and typed whole, the same help, the same calm correction, the same
+ * list of how each sentence went at the end. It differs only in what it keeps: each answer moves the
+ * schedule like a review does but does not count for the day's task, and the end saves the test's
+ * own result — how many were typed right of how many were asked.
  */
 export function SentenceReviewRunner({
   items,
@@ -448,8 +449,7 @@ export function SentenceReviewRunner({
         void recordSentenceReviewAction({ sentenceId: item.id, outcome, todayISO }).catch(() => {});
       }
     }
-    // No second chance in the weekly test: it measures, it does not teach.
-    if (!isCheck) setQueue((current) => queueAfterAnswer(current, index, outcome));
+    setQueue((current) => queueAfterAnswer(current, index, outcome));
   }
 
   function next() {
@@ -496,37 +496,33 @@ export function SentenceReviewRunner({
               {copy.summaryTodayAll}
             </p>
           )}
-          {!isCheck && (
-            <ul className="border-border/60 divide-border/60 mt-1 flex w-full flex-col divide-y rounded-2xl border text-start">
-              {results.map((result) => {
-                const done = byId.get(result.sentenceId);
-                if (!done) return null;
-                // A passage line is not on the schedule, so a miss on it does not "come back tomorrow".
-                const status =
-                  result.outcome === "missed" && done.source === "passage"
-                    ? copy.statusReview
-                    : statusLabel[result.outcome];
-                return (
-                  <li key={result.sentenceId} className="flex items-start gap-3 px-4 py-3">
-                    <OutcomeIcon outcome={result.outcome} label={status} />
-                    <div className="min-w-0 flex-1">
-                      <p dir="ltr" className="text-base leading-snug">
-                        {done.en}
-                      </p>
-                      <p className="text-muted-foreground/80 mt-0.5 text-xs" dir="auto">
-                        {status} · {done.source === "passage" ? copy.tagPassage : copy.tagStory}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {isCheck && summary.missed > 0 && (
-            <p className="text-muted-foreground text-sm" dir="auto">
-              {copy.summaryMissed}
-            </p>
-          )}
+          <ul className="border-border/60 divide-border/60 mt-1 flex w-full flex-col divide-y rounded-2xl border text-start">
+            {results.map((result) => {
+              const done = byId.get(result.sentenceId);
+              if (!done) return null;
+              // A passage line is not on the schedule, so a miss on it does not "come back tomorrow".
+              const status =
+                result.outcome === "missed" && done.source === "passage"
+                  ? copy.statusReview
+                  : statusLabel[result.outcome];
+              return (
+                <li key={result.sentenceId} className="flex items-start gap-3 px-4 py-3">
+                  <OutcomeIcon outcome={result.outcome} label={status} />
+                  <div className="min-w-0 flex-1">
+                    <p dir="ltr" className="text-base leading-snug">
+                      {done.en}
+                    </p>
+                    <p className="text-muted-foreground/80 mt-0.5 text-xs" dir="auto">
+                      {/* The weekly test's sentences are of the week, not of today: no "from today's" tag. */}
+                      {isCheck
+                        ? status
+                        : `${status} · ${done.source === "passage" ? copy.tagPassage : copy.tagStory}`}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
           <Link
             href={afterHref}
             className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full max-w-xs")}
@@ -719,7 +715,7 @@ export function SentenceReviewRunner({
                 {t.dictation.check}
               </Button>
               <div className="flex flex-wrap items-stretch justify-center gap-2.5">
-                {!isCheck && helps === 0 && (
+                {helps === 0 && (
                   <button
                     type="button"
                     onClick={() => setHelps(1)}

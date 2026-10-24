@@ -49,10 +49,13 @@ import type {
   CheckRow,
   EventRow,
   StoryCompletionRow,
-  StorySentenceRow,
   WeeklyCheckRow,
 } from "../src/lib/sentence-bank/readout";
-import { WEEKLY_CHECK_SIZE, WEEKLY_DAYS } from "../src/lib/sentence-bank/weekly";
+import {
+  WEEKLY_CHECK_SIZE,
+  WEEKLY_DAYS,
+  WEEKLY_STORIES_NEEDED,
+} from "../src/lib/sentence-bank/weekly";
 import { threeTaskStats } from "../src/lib/today/readout";
 import type { QuestRow } from "../src/lib/today/readout";
 import { all, allOrEmpty, arg, readAdminIds, readRollouts } from "./_readout-rest";
@@ -60,9 +63,6 @@ import { all, allOrEmpty, arg, readAdminIds, readRollouts } from "./_readout-res
 const NOW = Date.now();
 const today = utcDay(NOW);
 
-/** A list for a PostgREST `in.(...)` filter, each id quoted so nothing in an id can break the filter. */
-const inList = (ids: readonly string[]) =>
-  ids.map((id) => `"${id.replace(/["\\]/g, "")}"`).join(",");
 const chunks = <T>(items: readonly T[], size: number): T[][] =>
   Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
     items.slice(i * size, (i + 1) * size),
@@ -231,19 +231,9 @@ async function main() {
     );
     stories.push(...everyone.filter((row) => seen.has(row.user_id)));
   }
-  const storyIds = [...new Set(stories.map((row) => row.lesson_id))];
-  const storySentences: StorySentenceRow[] = [];
-  for (const part of chunks(storyIds, 40)) {
-    storySentences.push(
-      ...(await all<StorySentenceRow>(
-        `sentences?select=id,lesson_id,order_index,en&lesson_id=in.(${inList(part)})`,
-      )),
-    );
-  }
   const states = weeklyStates({
     learners: seen,
     completions: stories,
-    sentences: storySentences,
     checks: weekChecks,
     todayISO: today,
   });
@@ -256,14 +246,14 @@ async function main() {
       "LOCKED card": `${states.locked} (${pct(states.locked, states.learners)})`,
       "  nothing counted yet": states.lockedNothingYet,
       "  opens tomorrow": states.lockedOpensTomorrow,
-      [`  median of ${WEEKLY_CHECK_SIZE} counted`]: states.lockedMedianHave ?? "-",
+      [`  median of ${WEEKLY_STORIES_NEEDED} stories counted`]: states.lockedMedianHave ?? "-",
       "READY card (unlocked, not taken)": `${states.ready} (${pct(states.ready, states.learners)})`,
       "took it this week (result line)": states.resultShown,
       "took it this week (asked <5, no line)": states.noLine,
     },
   ]);
   console.log(
-    `Locked = fewer than ${WEEKLY_CHECK_SIZE} story sentences from earlier days in the last ${WEEKLY_DAYS} days (at most 6 per story; today's don't count until tomorrow). Ready = twelve or more and no test in the last ${WEEKLY_DAYS} days. A test needs ${WEEKLY_DAYS} days since the last one and twelve new story sentences. Counts are of learners, not of days.`,
+    `Locked = fewer than ${WEEKLY_STORIES_NEEDED} general stories finished on earlier days in the last ${WEEKLY_DAYS} days (a story finished today doesn't count until tomorrow). Ready = ${WEEKLY_STORIES_NEEDED} or more and no test in the last ${WEEKLY_DAYS} days. A test (${WEEKLY_CHECK_SIZE} sentences) needs ${WEEKLY_DAYS} days since the last one and ${WEEKLY_STORIES_NEEDED} stories finished since. Counts are of learners, not of days.`,
   );
 
   if (opening.kind === "closed") {

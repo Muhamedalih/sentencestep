@@ -1174,7 +1174,7 @@ export const tr: Dictionary = {
     weeklyTitle: "Haftalık test",
     weeklyBlurb: "Hikâyelerinden {n} cümle, metin gizli",
     weeklyStart: "Başla",
-    weeklyLocked: "Haftalık testi açmak için hikâyelerden {need} cümle yaz",
+    weeklyLocked: "Haftalık testi açmak için {need} genel hikâye bitir",
     weeklyOpensTomorrow: "Yarın açılır: bugünkü cümleler bir gün sonra sorulur",
     weeklyResult:
       "Bu haftaki hikâye cümlelerin: {written} yazdın, {asked} içinden {remembered} tanesini bakmadan hatırladın (%{percent})",

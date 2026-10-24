@@ -17,7 +17,11 @@ import {
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
 import { questProgressPercent } from "@/lib/features/quests";
-import { WEEKLY_CHECK_HREF, WEEKLY_CHECK_MINUTES } from "@/lib/sentence-bank/weekly";
+import {
+  WEEKLY_CHECK_HREF,
+  WEEKLY_CHECK_MINUTES,
+  WEEKLY_CHECK_SIZE,
+} from "@/lib/sentence-bank/weekly";
 import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 import type { DailyQuest, DailyQuestsPayload, TodayQuestInfo } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
@@ -233,9 +237,9 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
 export const LOCKED_CARD_BLUR = "opacity-70 blur-[1.4px] select-none";
 
 /**
- * The weekly sentence test (on the new Home, its own card under the boxes). Until the learner has written enough story
- * sentences it is a card under a light blur with a lock over it, saying how many are still missing
- * (or that tomorrow will be enough); once they have, the same card is clear, with its start button
+ * The weekly sentence test (on the new Home, its own card under the boxes). Until the learner has finished three
+ * general stories it is a card under a light blur with a lock over it, saying how many stories are still
+ * missing (or that tomorrow will be enough); once they have, the same card is clear, with its start button
  * and a link into the test; for the week after a test it is one quiet line with the honest result
  * (what was remembered of how many were asked), never a button or a banner.
  */
@@ -262,7 +266,8 @@ export function WeeklyLineView({ line, className }: { line: WeeklyLine; classNam
     );
   }
   const open = line.kind === "due";
-  const size = open ? line.size : line.need;
+  // Locked or open, the card says what the test asks: eight sentences (the lock is about stories).
+  const size = open ? line.size : WEEKLY_CHECK_SIZE;
   const card = (
     <div
       aria-hidden={open ? undefined : "true"}

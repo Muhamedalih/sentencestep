@@ -18,11 +18,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today's session" };
 
 /**
- * The weekly sentence check ("Sentence bank" permission): ten sentences from the learner's week,
- * each asked from its meaning with nothing in front of them and no help, and one honest result. Nothing
- * to ask (fewer than five sentences, the permission closed, signed out, or the table not created
- * yet) goes back to Home instead of an empty screen. Like the daily review it never checks
- * whether the subscription is active: what they typed stays theirs.
+ * The weekly sentence check ("Sentence bank" permission): eight sentences from the general stories
+ * the learner finished this week, asked exactly as the day's test asks them (heard, then typed whole
+ * from memory), and one honest result. Nothing to ask (fewer than three finished stories, fewer than
+ * five sentences, the permission closed, signed out, or the table not created yet) goes back to Home
+ * instead of an empty screen. Like the daily review it never checks whether the subscription is
+ * active: what they typed stays theirs.
  */
 export default async function TodayCheckPage() {
   const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);

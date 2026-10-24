@@ -1479,7 +1479,7 @@ export interface Dictionary {
     wordFromStory: string;
     wordFromPassage: string;
     /** The one quiet line about the weekly sentence check at the foot of the tasks box: the check is ready (the box adds the minutes), or its result for the week after it (`{written}`, `{remembered}`, `{asked}` are counts of sentences, `{percent}` a whole percentage). */
-    /** The weekly sentence test card (src/components/today/today-tasks.tsx): its name, what it asks (`{n}` sentences), the start button, the locked line (`{need}` story sentences open it), the line for when tomorrow will be enough, and the result line of the week after it. */
+    /** The weekly sentence test card (src/components/today/today-tasks.tsx): its name, what it asks (`{n}` sentences), the start button, the locked line (`{need}` finished general stories open it), the line for when tomorrow will be enough, and the result line of the week after it. */
     weeklyTitle: string;
     weeklyBlurb: string;
     weeklyStart: string;

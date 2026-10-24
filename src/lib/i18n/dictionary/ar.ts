@@ -1139,7 +1139,7 @@ export const ar: Dictionary = {
     weeklyTitle: "اختبار الأسبوع",
     weeklyBlurb: "{n} جملة من قصصك، بلا نص",
     weeklyStart: "ابدأ",
-    weeklyLocked: "اكتب {need} جملة من القصص لتفتح اختبار الأسبوع",
+    weeklyLocked: "أكمل {need} قصص من القصص العامة لتفتح اختبار الأسبوع",
     weeklyOpensTomorrow: "يفتح غداً: جمل اليوم تُسأل بعد يوم",
     weeklyResult:
       "جمل قصصك هذا الأسبوع: كتبتَ {written}، وتذكّرت {remembered} من {asked} دون نظر ({percent}%)",

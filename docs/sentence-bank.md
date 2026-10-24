@@ -89,8 +89,7 @@ pool read) and the passage (share-cached). Nothing is read about earlier days, s
 words any more. Dealt once a day, for as many questions as today's lessons can give (up to the row's
 target); later visits read nothing for it. A learner who goes from the story straight to the words never
 rebuilds Home, so the finish screen (`/learn/today/end`) deals the row itself when it is missing
-(`sentenceReviewPending` with `deal`). The weekly line adds one tiny read (the last check) and, only when
-a check could be due, one more (their Today days). The test screen adds the story's meanings and a
+(`sentenceReviewPending` with `deal`). The weekly line adds one tiny read (the last check). The test screen adds the story's meanings and a
 batched clip lookup.
 
 Row-level security on `sentences` hides premium lessons from a learner whose subscription ended. The
@@ -99,18 +98,23 @@ own finished lessons — ids that come from their server-side progress, never fr
 
 ## Weekly check
 
-The weekly test draws only from the **Stories** section (the daily lessons are for writing, and one of
-them is already twelve sentences). Until the learner has twelve story sentences from earlier days in the
-last seven days, the box shows the test as a locked card (light blur, a lock, "write 12 story sentences to
-unlock", a progress bar `n/12`); sentences written today are not asked today, so when today's would be
-enough it says it opens tomorrow. At twelve the same card is clear, with a start button. It asks twelve
-sentences (at most six from one story), each from its meaning, no help, no second chance (a miss still comes
-back tomorrow), its clip playing after the answer, and is **not** counted for the day's task. After a test,
-and for the next seven days, the card is replaced by one quiet line, the result: "Story sentences this week:
-you wrote N, and remembered M of K without looking (x%)"; the next test needs seven days since the last and
-twelve new story sentences. No level is ever derived from it; a check that asked fewer than five shows no
-number (`weekly.ts`). Cost: one tiny read (the last check) inside the week after a test; otherwise one read of
-the sentences of the stories finished in the last week (none when no story was finished).
+The weekly test draws only from the **general Stories** section (mode `stories`; the daily lessons are for
+writing, and one of them is already twelve sentences). It opens when the learner has **finished three
+stories** on earlier days of the last seven days (`weeklyStoryCounts`, from the learner's own progress, no
+database read): until then the box shows it as a locked card (light blur, a lock, "finish 3 general stories
+to unlock", a progress bar `n/3`); a story finished today is asked a day later, so when today's would be
+enough it says it opens tomorrow. At three the same card is clear, with a start button. It asks **eight**
+sentences of those stories (one from each story in turn, the newest first, at most four from one; the lines
+are picked by the day's stable hash, so it is a spread over each story and not its opening lines), built by
+the very function that builds the day's test (`buildTodayItems`): every sentence is heard and typed whole,
+with the same first-letters help, the same calm correction and the same list at the end, and the meaning in
+the learner's language shown after the answer. A miss still comes back tomorrow, and the test is **not**
+counted for the day's task. After a test, and for the next seven days, the card is replaced by one quiet
+line, the result: "Story sentences this week: you wrote N, and remembered M of K without looking (x%)"; the
+next test needs seven days since the last and three stories finished since. No level is ever derived from
+it; a check that asked fewer than five shows no number (`weekly.ts`). Cost: one tiny read (the last check)
+for Today's card; the check itself reads the sentences of the stories finished in the last week, their
+meanings and their clips.
 
 ## Events (`analytics_events`)
 

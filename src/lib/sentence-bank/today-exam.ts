@@ -32,7 +32,7 @@ export interface TodayLine {
 export const LINES_READ_PER_LESSON = MAX_TODAY_PER_LESSON + REVIEW_SPARES;
 
 /** FNV-1a: a tiny stable hash, so the pick of lines varies from day to day but never at random. */
-function hash(text: string): number {
+export function stableHash(text: string): number {
   let value = 0x811c9dc5;
   for (let index = 0; index < text.length; index++) {
     value ^= text.charCodeAt(index);
@@ -76,7 +76,7 @@ export function poolForToday<T extends TodayLine>(lines: readonly T[], todayISO:
   for (const [, list] of [...lessons.entries()].sort(([idA], [idB]) => compareText(idA, idB))) {
     list.sort(
       (a, b) =>
-        hash(`${todayISO}|${a.id}`) - hash(`${todayISO}|${b.id}`) ||
+        stableHash(`${todayISO}|${a.id}`) - stableHash(`${todayISO}|${b.id}`) ||
         a.orderIndex - b.orderIndex ||
         compareText(a.id, b.id),
     );
