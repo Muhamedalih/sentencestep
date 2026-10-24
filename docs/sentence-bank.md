@@ -123,7 +123,9 @@ assisted, missed, partial, audio, translate}`, `SENTENCE_CHECK_STARTED {asked}`,
 Read-only, run by the owner: `npx tsx --env-file=.env.local scripts/sentence-bank-readout.ts` (optional
 `--since <ISO time of the last change of the share>`). It reads the stored settings, works the arm out
 with the same hash as the site, leaves admins out, and prints the row / visits / weekly test / schedule
-figures with the stop rules, Today's three tasks per arm with the guard, and who came back per arm
+figures with the stop rules, how many learners of the group (seen in the last seven days) would be shown the
+weekly card locked, ready, or with its result line (the site records no "shown" event, so this recomputes
+it with the same functions from `weekly.ts`, in UTC days), Today's three tasks per arm with the guard, and who came back per arm
 (calendar days, so compare arm against arm, not against the report's 24-hour figures). While the bank
 is Admins-only it shows the admins' own figures. Today's own before / after readout is
 `scripts/today-readout.ts`. The pure parts are `src/lib/sentence-bank/readout.ts`,

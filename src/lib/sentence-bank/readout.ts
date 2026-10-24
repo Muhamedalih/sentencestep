@@ -1,6 +1,15 @@
 import { isRolloutOpen, learnerSharePercent } from "@/lib/rollouts/config";
 import type { RolloutConfig } from "@/lib/rollouts/config";
-import { WEEKLY_CHECK_MIN } from "@/lib/sentence-bank/weekly";
+import { finishedLessonDays } from "@/lib/sentence-bank/finished";
+import type { SentenceCandidate } from "@/lib/sentence-bank/select";
+import {
+  WEEKLY_CHECK_MIN,
+  WEEKLY_DAYS,
+  weeklyLine,
+  weeklyReadiness,
+} from "@/lib/sentence-bank/weekly";
+import type { LastCheck } from "@/lib/sentence-bank/weekly";
+import { addDaysISO } from "@/lib/word-mastery/schedule";
 import { TODAY_SENTENCE_SLOT } from "@/lib/today/quests";
 import type { QuestRow, ThreeTaskStats } from "@/lib/today/readout";
 
@@ -224,4 +233,140 @@ export function guardVerdict(bank: ThreeTaskStats, control: ThreeTaskStats): Gua
     return { status: "too few", gapPoints };
   }
   return { status: gapPoints < -STOP_RULES.guardPoints ? "below" : "ok", gapPoints };
+}
+
+export interface StoryCompletionRow {
+  user_id: string;
+  lesson_id: string;
+  completed_at: string;
+}
+
+export interface StorySentenceRow {
+  id: string;
+  lesson_id: string;
+  order_index: number;
+  en: string;
+}
+
+export interface WeeklyCheckRow extends CheckRow {
+  checked_on: string;
+}
+
+export interface WeeklyStateStats {
+  /** Learners looked at: those of the group seen in the last seven days. */
+  learners: number;
+  /** Shown the locked card (fewer than twelve story sentences from earlier days in the last week). */
+  locked: number;
+  /** Of those, learners with no sentence counting toward the twelve yet (sentences written today don't count until tomorrow). */
+  lockedNothingYet: number;
+  /** Of those, learners for whom tomorrow is enough: the card says it opens tomorrow. */
+  lockedOpensTomorrow: number;
+  /** Median sentences counted toward the twelve among the locked (null with none locked). */
+  lockedMedianHave: number | null;
+  /** Shown the clear card with its start button: unlocked and not yet taken this week. */
+  ready: number;
+  /** In the week after a check that asked enough to show a number: the quiet result line. */
+  resultShown: number;
+  /** In the week after a check that asked fewer than five: no line at all. */
+  noLine: number;
+}
+
+/**
+ * How many learners would be shown each state of the weekly card RIGHT NOW. The site does not
+ * record which card a learner saw, so this does what the site does (weeklyLine / weeklyReadiness, the
+ * same functions) from their finished stories and last check. Days are UTC days, not each learner's
+ * own calendar day, so a learner near midnight can sit in the neighbouring state. `learners` is who
+ * to count (the caller decides: seen in the last week); a learner with no story and no check is
+ * "locked, nothing yet", which is also what they would see.
+ */
+export function weeklyStates(input: {
+  learners: ReadonlySet<string>;
+  completions: readonly StoryCompletionRow[];
+  sentences: readonly StorySentenceRow[];
+  checks: readonly WeeklyCheckRow[];
+  todayISO: string;
+}): WeeklyStateStats {
+  const { todayISO } = input;
+  const from = addDaysISO(todayISO, -WEEKLY_DAYS);
+  const dayOf = (iso: string) => new Date(iso).toISOString().slice(0, 10);
+
+  const sentencesOf = new Map<string, StorySentenceRow[]>();
+  for (const sentence of input.sentences) {
+    const list = sentencesOf.get(sentence.lesson_id);
+    if (list) list.push(sentence);
+    else sentencesOf.set(sentence.lesson_id, [sentence]);
+  }
+  const completionsOf = new Map<
+    string,
+    { lessonId: string; mode: string; completedAt: string }[]
+  >();
+  for (const row of input.completions) {
+    const entry = { lessonId: row.lesson_id, mode: "stories", completedAt: row.completed_at };
+    const list = completionsOf.get(row.user_id);
+    if (list) list.push(entry);
+    else completionsOf.set(row.user_id, [entry]);
+  }
+  const lastOf = new Map<string, LastCheck>();
+  for (const row of input.checks) {
+    const known = lastOf.get(row.user_id);
+    if (known && known.checkedOn >= row.checked_on) continue;
+    lastOf.set(row.user_id, {
+      checkedOn: row.checked_on,
+      asked: row.asked,
+      remembered: row.remembered,
+      written: row.written,
+    });
+  }
+
+  const stats: WeeklyStateStats = {
+    learners: 0,
+    locked: 0,
+    lockedNothingYet: 0,
+    lockedOpensTomorrow: 0,
+    lockedMedianHave: null,
+    ready: 0,
+    resultShown: 0,
+    noLine: 0,
+  };
+  const haves: number[] = [];
+
+  for (const userId of input.learners) {
+    stats.learners += 1;
+    const finished = finishedLessonDays(completionsOf.get(userId) ?? [], dayOf);
+    const candidates: SentenceCandidate[] = [];
+    for (const [lessonId, day] of finished) {
+      if (day < from || day > todayISO) continue;
+      for (const sentence of sentencesOf.get(lessonId) ?? []) {
+        candidates.push({
+          id: sentence.id,
+          lessonId,
+          orderIndex: sentence.order_index,
+          en: sentence.en,
+          completedOn: day,
+        });
+      }
+    }
+    const line = weeklyLine({
+      last: lastOf.get(userId) ?? null,
+      todayISO,
+      ...weeklyReadiness(candidates, todayISO),
+    });
+    if (line === null) stats.noLine += 1;
+    else if (line.kind === "due") stats.ready += 1;
+    else if (line.kind === "result") stats.resultShown += 1;
+    else {
+      stats.locked += 1;
+      haves.push(line.have);
+      if (line.have === 0) stats.lockedNothingYet += 1;
+      if (line.tomorrow) stats.lockedOpensTomorrow += 1;
+    }
+  }
+
+  if (haves.length > 0) {
+    haves.sort((a, b) => a - b);
+    const middle = Math.floor(haves.length / 2);
+    stats.lockedMedianHave =
+      haves.length % 2 === 1 ? haves[middle]! : (haves[middle - 1]! + haves[middle]!) / 2;
+  }
+  return stats;
 }
