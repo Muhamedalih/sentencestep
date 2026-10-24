@@ -25,17 +25,31 @@ fail() { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; FAILURES=$((FAILURES + 1)); 
 
 status_of() { "${CURL[@]}" -o /dev/null -w '%{http_code}' "$1" 2>/dev/null || echo 000; }
 
+# json_field <name>: the string value of a top-level field of the JSON on stdin ("" when absent).
+# Uses jq when it is installed and a plain sed otherwise (a machine without jq, such as a Windows
+# PC, would otherwise fail the health checks for no reason). /api/health answers one flat object
+# with simple string values, which is all the sed form reads.
+json_field() {
+  local body
+  body="$(cat)"
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$body" | jq -r --arg field "$1" '.[$field] // empty' 2>/dev/null
+  else
+    printf '%s' "$body" | sed -n 's/.*"'"$1"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1
+  fi
+}
+
 echo "Smoke test: $BASE"
 
 # 1. liveness, and the right build
 HEALTH="$("${CURL[@]}" "$BASE/api/health" 2>/dev/null || true)"
-if [ "$(printf '%s' "$HEALTH" | jq -r '.status // empty' 2>/dev/null)" = ok ]; then
+if [ "$(printf '%s' "$HEALTH" | json_field status)" = ok ]; then
   pass "/api/health answers ok"
 else
   fail "/api/health did not answer ok (got: ${HEALTH:0:120})"
 fi
 if [ -n "$EXPECTED_SHA" ]; then
-  GOT="$(printf '%s' "$HEALTH" | jq -r '.commit // empty' 2>/dev/null)"
+  GOT="$(printf '%s' "$HEALTH" | json_field commit)"
   [ "$GOT" = "$EXPECTED_SHA" ] && pass "serving commit ${EXPECTED_SHA:0:8}" || fail "serving commit '${GOT:0:8}', expected ${EXPECTED_SHA:0:8}"
 fi
 

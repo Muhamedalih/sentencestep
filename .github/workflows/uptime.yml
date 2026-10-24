@@ -1,13 +1,14 @@
 name: Uptime check
 
-# Every five minutes, asks the live site for its home page. If it does not answer
-# correctly three times in a row (about a minute apart), the run fails and GitHub
-# e-mails the repository owner. It costs nothing (public repository) and needs no
-# account anywhere else. GitHub runs scheduled workflows on a best-effort basis (a run
-# can start a few minutes late), so this is an early warning, not a guarantee.
+# Every five minutes, asks the live site for its home page and for /api/health. If either does not
+# answer correctly three times in a row (about 25 seconds apart), the run fails and GitHub e-mails
+# the person who last edited this schedule (the repository owner). It costs nothing (public
+# repository) and needs no account anywhere else. GitHub runs scheduled workflows on a best-effort
+# basis (a run can start a few minutes late), so this is an early warning, not a guarantee.
 #
-# Once the site runs on its own server it also checks /api/health, which reports whether
-# the app process is alive; before that the route does not exist (404) and is ignored.
+# /api/health reports whether the app process is alive; it touches no database, so a Supabase bad
+# minute does not make the site look dead. The site runs on its own server, so a missing route
+# (404) is a failure like any other.
 
 on:
   schedule:
@@ -42,19 +43,23 @@ jobs:
             exit 1
           fi
 
-      - name: The app reports healthy (once /api/health exists)
+      - name: The app reports healthy
         env:
           SITE: https://sentencestep.com
         run: |
           set -u
-          code="$(curl -sS -o health.json -w '%{http_code}' --max-time 20 "$SITE/api/health" || true)"; code="${code:-000}"
-          if [ "$code" = 404 ]; then
-            echo "/api/health does not exist yet (still on the old host) - skipped"
-            exit 0
+          ok=0
+          for attempt in 1 2 3; do
+            code="$(curl -sS -o health.json -w '%{http_code}' --max-time 20 "$SITE/api/health" || true)"; code="${code:-000}"
+            if [ "$code" = 200 ] && [ "$(jq -r '.status // empty' health.json)" = ok ]; then
+              echo "health ok"
+              ok=1
+              break
+            fi
+            echo "attempt $attempt: /api/health answered HTTP $code"
+            sleep 25
+          done
+          if [ "$ok" != 1 ]; then
+            echo "::error::$SITE/api/health is not answering correctly"
+            exit 1
           fi
-          if [ "$code" = 200 ] && [ "$(jq -r '.status // empty' health.json)" = ok ]; then
-            echo "health ok"
-            exit 0
-          fi
-          echo "::error::/api/health answered HTTP $code"
-          exit 1
