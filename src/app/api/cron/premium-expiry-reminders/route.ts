@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { REMINDER_WINDOW_DAYS, planExpiryReminders } from "@/lib/billing/expiry-reminders";
+import { loadExpiryProgress } from "@/lib/billing/expiry-progress";
 import { isValidCronAuth } from "@/lib/cron/auth";
 import type { NotificationEvent } from "@/lib/email/events";
 import {
@@ -95,6 +96,9 @@ async function handlePremiumExpiryCron(request: Request): Promise<NextResponse> 
     (languages ?? []).map((row) => [row.id, nudgeLanguage(row.preferred_language)]),
   );
 
+  // One honest line about what each has done (sentences, days practised) when there is enough to say.
+  const progressById = await loadExpiryProgress(dueIds);
+
   let notified = 0;
   let failed = 0;
 
@@ -120,6 +124,7 @@ async function handlePremiumExpiryCron(request: Request): Promise<NextResponse> 
       endsOn: formatLongDate(reminder.periodEnd, language === "en" ? null : language),
       daysLeft: reminder.daysLeft,
       streak: reminder.streak,
+      progress: progressById.get(reminder.userId) ?? null,
       language,
     });
 

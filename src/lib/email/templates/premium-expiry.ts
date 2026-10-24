@@ -1,6 +1,7 @@
 import { escapeHtml, renderEmailLayout } from "@/lib/email/templates/layout";
 import type { EmailContent } from "@/lib/email/templates/layout";
 import type { NudgeLanguage } from "@/lib/email/nudges/copy";
+import type { HonestLine } from "@/lib/progress/honest-numbers";
 
 export interface PremiumExpiryInput {
   origin: string;
@@ -11,6 +12,11 @@ export interface PremiumExpiryInput {
   daysLeft: number;
   /** The learner's live streak when it is long enough to mention, otherwise 0. */
   streak: number;
+  /**
+   * What the learner has done, when there is enough to say (honestLine): sentences written and, from
+   * two days, days practised. Facts only: no level, no percentage, no price.
+   */
+  progress?: HonestLine | null;
   /** The language of the message (profiles.preferred_language: ar, es or tr; English otherwise). */
   language?: NudgeLanguage;
 }
@@ -23,6 +29,7 @@ interface Copy {
   left: (days: number) => string;
   preview: (left: string) => string;
   ends: (endsOn: string) => string;
+  progress: (line: HonestLine) => string;
   streak: (streak: number) => string;
   stack: string;
   cta: string;
@@ -36,6 +43,16 @@ function arabicDays(n: number): string {
   return n >= 3 && n <= 10 ? `${n} أيام` : `${n} يوماً`;
 }
 
+/** A learner has at least five sentences when the line is said: "5 جمل" to "10 جمل", then "11 جملة". */
+function arabicSentences(n: number): string {
+  return n <= 10 ? `${n} جمل` : `${n} جملة`;
+}
+
+/** The days practised, when the line has them (from two days); the sentences-only line has none. */
+function daysOf(line: HonestLine): number | null {
+  return line.kind === "sentences" ? null : line.days;
+}
+
 const COPY: Record<NudgeLanguage, Copy> = {
   ar: {
     greeting: (name) => (name ? `أهلاً ${name}،` : "أهلاً،"),
@@ -45,6 +62,11 @@ const COPY: Record<NudgeLanguage, Copy> = {
     preview: (left) => `${left} — أضف أياماً متى شئت.`,
     ends: (endsOn) =>
       `تنتهي خطتك المميّزة في SentenceStep في ${endsOn}. بعدها تعود إلى الخطة المجانية، ويبقى تقدّمك وتتابعك ونقاطك محفوظة.`,
+    progress: (line) => {
+      const days = daysOf(line);
+      const written = `حتى الآن كتبت ${arabicSentences(line.sentences)} في SentenceStep`;
+      return days === null ? `${written}.` : `${written}، وعدد أيام التعلّم: ${days}.`;
+    },
     streak: (streak) =>
       `تتابعك الحالي ${arabicDays(streak)}. إضافة أيام الآن تُبقي كل الدروس مفتوحة وأنت تواصل.`,
     stack: "أي أيام تضيفها تُضاف فوق الأيام المتبقية، فلا داعي لانتظار آخر يوم.",
@@ -59,6 +81,12 @@ const COPY: Record<NudgeLanguage, Copy> = {
     preview: (left) => `${left} — añade días cuando quieras.`,
     ends: (endsOn) =>
       `Tu acceso Premium a SentenceStep termina el ${endsOn}. Después vuelves al plan gratuito; tu progreso, tu racha y tus XP quedan guardados.`,
+    progress: (line) => {
+      const days = daysOf(line);
+      return days === null
+        ? `Hasta ahora has escrito ${line.sentences} frases en SentenceStep.`
+        : `Hasta ahora has escrito ${line.sentences} frases a lo largo de ${days} días de práctica.`;
+    },
     streak: (streak) =>
       `Llevas una racha de ${streak} ${streak === 1 ? "día" : "días"}. Añadir días ahora mantiene todas las lecciones abiertas mientras la sigues.`,
     stack:
@@ -74,6 +102,12 @@ const COPY: Record<NudgeLanguage, Copy> = {
     preview: (left) => `${left} — istediğiniz zaman gün ekleyin.`,
     ends: (endsOn) =>
       `SentenceStep Premium erişiminiz ${endsOn} tarihinde sona eriyor. Ardından Ücretsiz plana dönersiniz; ilerlemeniz, seriniz ve XP'niz kayıtlı kalır.`,
+    progress: (line) => {
+      const days = daysOf(line);
+      return days === null
+        ? `Şimdiye kadar SentenceStep'te ${line.sentences} cümle yazdınız.`
+        : `Şimdiye kadar ${days} günlük çalışmada ${line.sentences} cümle yazdınız.`;
+    },
     streak: (streak) =>
       `${streak} günlük bir serideniz var. Şimdi gün eklemek, serinizi sürdürürken tüm dersleri açık tutar.`,
     stack:
@@ -89,6 +123,12 @@ const COPY: Record<NudgeLanguage, Copy> = {
     preview: (left) => `${left} — add days whenever you like.`,
     ends: (endsOn) =>
       `Your SentenceStep Premium access ends on ${endsOn}. After that you go back to the Free plan — your progress, streak and XP stay saved.`,
+    progress: (line) => {
+      const days = daysOf(line);
+      return days === null
+        ? `So far you've written ${line.sentences} sentences on SentenceStep.`
+        : `So far you've written ${line.sentences} sentences over ${days} days of practice.`;
+    },
     streak: (streak) =>
       `You're on a ${streak}-day streak. Adding days now keeps every lesson open while you keep it going.`,
     stack:
@@ -102,7 +142,7 @@ const COPY: Record<NudgeLanguage, Copy> = {
  * A plain, honest heads-up that a paid period is ending: the date, what
  * happens to their progress (nothing is lost), and that days added now stack
  * on top of what is left. It states no price and no deadline pressure, and
- * quotes a streak only when there is a real one. Written once per language a
+ * quotes a streak, and what the learner has written, only when there is something real to say. Written once per language a
  * learner can have; English is the fallback.
  */
 export function premiumExpiryEmail({
@@ -111,12 +151,18 @@ export function premiumExpiryEmail({
   endsOn,
   daysLeft,
   streak,
+  progress = null,
   language = "en",
 }: PremiumExpiryInput): EmailContent {
   const copy = COPY[language];
   const upgradeUrl = `${origin}/upgrade`;
 
-  const lines = [copy.ends(endsOn), ...(streak > 0 ? [copy.streak(streak)] : []), copy.stack];
+  const lines = [
+    copy.ends(endsOn),
+    ...(progress ? [copy.progress(progress)] : []),
+    ...(streak > 0 ? [copy.streak(streak)] : []),
+    copy.stack,
+  ];
 
   const greeting = copy.greeting(displayName);
   const bodyHtml = `

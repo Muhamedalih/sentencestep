@@ -100,3 +100,77 @@ test("premiumExpiryEmail: every language drops the streak line when there is no 
     assert.ok(!unsafe.html.includes("<b>x"), language);
   }
 });
+
+test("premiumExpiryEmail: with no progress line the email is exactly what it was", () => {
+  for (const language of ["ar", "es", "tr", "en"] as const) {
+    const plain = premiumExpiryEmail({ ...base, language });
+    assert.deepEqual(premiumExpiryEmail({ ...base, language, progress: null }), plain, language);
+  }
+});
+
+test("premiumExpiryEmail: says what the learner has written, in every language, before the streak", () => {
+  const sentencesOnly = { kind: "sentences", sentences: 47 } as const;
+  const withDays = { kind: "sentences_days", sentences: 392, days: 14 } as const;
+
+  const en = premiumExpiryEmail({ ...base, streak: 5, progress: withDays });
+  assert.ok(en.text.includes("So far you've written 392 sentences over 14 days of practice."));
+  assert.ok(
+    en.text.indexOf("So far you've written") < en.text.indexOf("-day streak"),
+    "the progress line comes before the streak line",
+  );
+  assert.ok(
+    premiumExpiryEmail({ ...base, progress: sentencesOnly }).text.includes(
+      "So far you've written 47 sentences on SentenceStep.",
+    ),
+  );
+
+  const es = premiumExpiryEmail({ ...base, language: "es", progress: withDays });
+  assert.ok(
+    es.text.includes("Hasta ahora has escrito 392 frases a lo largo de 14 días de práctica."),
+  );
+  assert.ok(
+    premiumExpiryEmail({ ...base, language: "es", progress: sentencesOnly }).text.includes(
+      "Hasta ahora has escrito 47 frases en SentenceStep.",
+    ),
+  );
+
+  const tr = premiumExpiryEmail({ ...base, language: "tr", progress: withDays });
+  assert.ok(tr.text.includes("Şimdiye kadar 14 günlük çalışmada 392 cümle yazdınız."));
+  assert.ok(
+    premiumExpiryEmail({ ...base, language: "tr", progress: sentencesOnly }).text.includes(
+      "Şimdiye kadar SentenceStep'te 47 cümle yazdınız.",
+    ),
+  );
+
+  const ar = premiumExpiryEmail({ ...base, language: "ar", progress: withDays });
+  assert.ok(ar.text.includes("حتى الآن كتبت 392 جملة في SentenceStep، وعدد أيام التعلّم: 14."));
+  assert.ok(
+    premiumExpiryEmail({ ...base, language: "ar", progress: sentencesOnly }).text.includes(
+      "حتى الآن كتبت 47 جملة في SentenceStep.",
+    ),
+  );
+});
+
+test("premiumExpiryEmail: the Arabic sentence count takes the plural up to ten and the singular from eleven", () => {
+  const line = (sentences: number) =>
+    premiumExpiryEmail({ ...base, language: "ar", progress: { kind: "sentences", sentences } })
+      .text;
+  assert.ok(line(5).includes("كتبت 5 جمل في"));
+  assert.ok(line(10).includes("كتبت 10 جمل في"));
+  assert.ok(line(11).includes("كتبت 11 جملة في"));
+  assert.ok(line(100).includes("كتبت 100 جملة في"));
+});
+
+test("premiumExpiryEmail: the progress line adds no price, no deadline and no claim about level", () => {
+  for (const language of ["ar", "es", "tr", "en"] as const) {
+    const email = premiumExpiryEmail({
+      ...base,
+      language,
+      progress: { kind: "sentences_days_mastered", sentences: 392, days: 14, mastered: 30 },
+    });
+    assert.ok(!/\$\d/.test(email.html + email.text), language);
+    // The mastered-words figure is never said: no learner has one yet.
+    assert.ok(!email.text.includes("30"), language);
+    assert.ok(email.text.includes("392"), language);
+  }
+});
