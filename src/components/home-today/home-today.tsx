@@ -6,9 +6,9 @@ import { FitHome } from "@/components/home-today/fit-home";
 import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
-import { LockedTestCard, TestYourselfCard } from "@/components/home-today/test-card";
 import { TodayBox } from "@/components/home-today/today-box";
 import { HomeTopBar } from "@/components/home-today/top-bar";
+import { WeeklyLineView } from "@/components/today/today-tasks";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import type { DailyQuestsPayload } from "@/lib/features/quests";
@@ -31,43 +31,39 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
   return <HomeTopBar {...props} today={stream.todayISO} streak={streak} />;
 }
 
-/** Today's tasks (or, if Today could not be built for this visit, the usual quests card, so the page is never empty). */
+/**
+ * Today's tasks (or, if Today could not be built for this visit, the usual quests card, so the page
+ * is never empty). The day's self-test card is at the box's foot: there from the first moment,
+ * locked (slightly blurred, with the line that says what opens it) until the day's three tasks are
+ * done, then the card itself once a test was dealt — never an empty card, and no locked one for a
+ * learner the test is not open to.
+ */
 async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
-  const payload = await quests;
+  const [payload, features] = await Promise.all([quests, getEffectiveFeatures()]);
   if (!payload) return null;
-  return isTodayMode(payload.quests) ? (
-    <TodayBox payload={payload} />
-  ) : (
-    <QuestsCard payload={payload} />
+  if (!isTodayMode(payload.quests)) return <QuestsCard payload={payload} />;
+  const { tasks, test } = splitToday(payload.quests);
+  const state = testCardState({ tasks, test, available: sentenceTestAvailable(features) });
+  return (
+    <TodayBox payload={payload} test={state === "hidden" ? undefined : { state, quest: test }} />
+  );
+}
+
+/** The weekly sentence test, a card of its own under the boxes (locked until twelve story sentences, then ready; or last week's result as one quiet line). It scales with the boxes above it. */
+async function WeeklySlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
+  const payload = await quests;
+  if (!payload?.weekly || !isTodayMode(payload.quests)) return null;
+  return (
+    <div className="roomy:mt-[clamp(0.75rem,2svh,1.25rem)] roomy:[zoom:var(--home-zoom,1.1)] mt-5">
+      <WeeklyLineView line={payload.weekly} className="mt-0" />
+    </div>
   );
 }
 
 /**
- * The self-test card, there from the first moment: locked (slightly blurred, with the line that says
- * what opens it) until the day's three tasks are done, then the card itself once a test was dealt —
- * never an empty card, and no locked one for a learner the test is not open to.
- */
-async function TestCardSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
-  const [payload, features] = await Promise.all([quests, getEffectiveFeatures()]);
-  if (!payload) return null;
-  const { tasks, test } = splitToday(payload.quests);
-  const spacing = "roomy:mt-[clamp(0.75rem,2svh,1.25rem)] mt-5";
-  // Locked only on Today's page; the fallback quests card (Today could not be built) has no test to wait for.
-  const available = isTodayMode(payload.quests) && sentenceTestAvailable(features);
-  switch (testCardState({ tasks, test, available })) {
-    case "locked":
-      return <LockedTestCard className={spacing} />;
-    case "open":
-      return test ? <TestYourselfCard quest={test} className={spacing} /> : null;
-    default:
-      return null;
-  }
-}
-
-/**
  * Home for a learner who has the new page (permission `newHome`, which needs Today's session): one
- * calm screen — the greeting, Today's three tasks beside the learner's daily lesson, and under them
- * the self-test card. Each part that needs the day's data streams in by itself, like the cards of
+ * calm screen — the greeting, Today's three tasks (with the day's self-test at the foot of their
+ * box) beside the learner's daily lesson, and under them the weekly test card. Each part that needs the day's data streams in by itself, like the cards of
  * the current Home, so none of them holds back the rest. The banners (guest, subscription ending,
  * payment left open) are drawn by the page and sit between the top bar and the tasks.
  */
@@ -129,7 +125,7 @@ export function HomeToday({
           </div>
         </div>
         <Suspense fallback={null}>
-          <TestCardSlot quests={stream.quests} />
+          <WeeklySlot quests={stream.quests} />
         </Suspense>
       </FitHome>
     </>

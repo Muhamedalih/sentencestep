@@ -43,14 +43,14 @@ for the current Home):
   hover as the cards of the current Home** (it rises 8px and grows 5% with a soft overshoot, 380 ms;
   nothing moves for reduced motion). Learners on the free plan keep the "Starter lessons 3/4" counter
   under it.
-- **Self-test card** (`test-card.tsx`): brand-tinted surface, a round mark, one small segment per
+- **Self-test card** (`test-card.tsx`; since 2026-10-24 it sits at the FOOT OF TODAY'S BOX, where the weekly test used to be; the weekly test is now the card under the two boxes — owner: "swap the daily and the weekly test"): brand-tinted surface, a round mark, one small segment per
   question, an outline button (so the page keeps one solid button); done, it becomes a calm tick. It is
   about **Today's passage and story** (a line each, typed from memory), not earlier days — see
   `docs/sentence-bank.md`; its screen is one card in the middle of the viewport. **Locked state**
   (owner, 2026-10-24: "show it from the start, a little blurred, with a short line that says finish the
   daily tasks and it opens, to push the learner to finish them"): until all three tasks are done the
   card is there from the first moment — the same card and the same box (so the page fits the same),
-  slightly blurred (`blur-[2px]`, 70% opacity), not a link, with one crisp line and a lock over it
+  slightly blurred (the shared `LOCKED_CARD_BLUR` of `today-tasks.tsx`: `blur-[1.4px]`, 70% opacity — the SAME blur as the locked weekly card, which the owner cut to 40% of its old 3.5px), not a link, with one crisp line and a lock over it
   (`today.testLocked`, four languages). It is drawn whether or not a test row was dealt yet, as long as the
   day can have a test (`sentenceTestAvailable`) and the page is Today's; once the tasks are done it is
   the open card when a test was dealt, else nothing. The rule is `testCardState` in `home-layout.ts`.

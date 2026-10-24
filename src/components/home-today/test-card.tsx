@@ -6,6 +6,7 @@ import { Check, Lock, Quote, RotateCcw } from "lucide-react";
 
 import { fill, withXp } from "@/components/home-today/format";
 import { useLocale } from "@/components/providers/locale-provider";
+import { LOCKED_CARD_BLUR } from "@/components/today/today-tasks";
 import type { DailyQuest } from "@/lib/features/quests";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
@@ -16,9 +17,9 @@ import { cn } from "@/lib/utils";
 /** How many little segments stand for the questions (the count itself is written next to them). */
 const MAX_SEGMENTS = 5;
 
-/** The card's box — the open card and the locked one are the same size, so the page fits the same either way. */
+/** The card's box — the open card and the locked one are the same size, so the page fits the same either way. It sits inside Today's box and so takes that box's zoom, none of its own. */
 const CARD_SURFACE =
-  "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)] roomy:[zoom:var(--home-zoom,1.1)]";
+  "flex flex-wrap items-center gap-x-5 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 sm:py-5 roomy:py-[clamp(0.625rem,1.8svh,1.25rem)]";
 
 /**
  * "Test yourself on today's lessons": the day's sentence self-test as a card of its own on the new
@@ -160,7 +161,10 @@ export function LockedTestCard({ className }: { className?: string }) {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none flex w-full flex-wrap items-center gap-x-5 gap-y-4 opacity-70 blur-[2px] select-none"
+        className={cn(
+          "pointer-events-none flex w-full flex-wrap items-center gap-x-5 gap-y-4",
+          LOCKED_CARD_BLUR,
+        )}
       >
         <span className="roomy:size-11 bg-primary/15 text-primary ring-primary/25 grid size-12 shrink-0 place-items-center rounded-full ring-1">
           <Quote className="size-5" strokeWidth={1.8} />

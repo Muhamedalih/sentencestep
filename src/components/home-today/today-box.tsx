@@ -6,8 +6,9 @@ import { Check, RotateCcw } from "lucide-react";
 
 import { fill, withXp } from "@/components/home-today/format";
 import { TASK_ICONS, TaskIcon } from "@/components/home-today/task-icon";
+import { LockedTestCard, TestYourselfCard } from "@/components/home-today/test-card";
 import { useLocale } from "@/components/providers/locale-provider";
-import { WeeklyLineView, todayTaskTitle } from "@/components/today/today-tasks";
+import { todayTaskTitle } from "@/components/today/today-tasks";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { splitToday, todayRedoHref, todayTotals } from "@/lib/today/home-layout";
 import { cn } from "@/lib/utils";
@@ -184,15 +185,19 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
 
 /**
  * Today's tasks on the new Home page: the ring and the reward in the heading, the three tasks as
- * quiet rows (the one in progress lifted, with the only solid button of the page), and once the day
- * is done a calm line with "Redo today's lessons". The day's self-test is not here: it has a card
- * of its own (TestYourselfCard).
+ * quiet rows (the one in progress lifted, with the only solid button of the page), once the day is
+ * done a calm line with "Redo today's lessons", and at the foot the day's self-test card — locked
+ * (slightly blurred) until the three tasks are done, then open (`test`, see testCardState). The
+ * weekly test is the card under the boxes (WeeklyLineView).
  */
 export function TodayBox({
   payload,
+  test,
   className,
 }: {
   payload: DailyQuestsPayload;
+  /** What the self-test card at the foot shows; none when the day has no test for this learner. */
+  test?: { state: "locked" | "open"; quest: DailyQuest | null };
   className?: string;
 }) {
   const { t } = useLocale();
@@ -254,10 +259,13 @@ export function TodayBox({
           )}
         </div>
       )}
-      {/* The weekly sentence test: its card (locked until twelve story sentences, then ready), or last week's result as one quiet line. */}
-      {payload.weekly && (
-        <WeeklyLineView
-          line={payload.weekly}
+      {/* The day's self-test: locked until the three tasks are done, then the card itself. */}
+      {test?.state === "locked" && (
+        <LockedTestCard className="roomy:mt-[clamp(0.4rem,1.4svh,1rem)] mt-3" />
+      )}
+      {test?.state === "open" && test.quest && (
+        <TestYourselfCard
+          quest={test.quest}
           className="roomy:mt-[clamp(0.4rem,1.4svh,1rem)] mt-3"
         />
       )}

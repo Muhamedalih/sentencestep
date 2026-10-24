@@ -227,7 +227,13 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
 }
 
 /**
- * The weekly sentence test at the foot of the box. Until the learner has written enough story
+ * How out of focus a locked test card is: the weekly one and the day's one share it, so the two read
+ * as the same kind of thing (owner, 2026-10-24: 40% of the first 3.5px, a medium blur on both).
+ */
+export const LOCKED_CARD_BLUR = "opacity-70 blur-[1.4px] select-none";
+
+/**
+ * The weekly sentence test (on the new Home, its own card under the boxes). Until the learner has written enough story
  * sentences it is a card under a light blur with a lock over it, saying how many are still missing
  * (or that tomorrow will be enough); once they have, the same card is clear, with its start button
  * and a link into the test; for the week after a test it is one quiet line with the honest result
@@ -262,7 +268,7 @@ export function WeeklyLineView({ line, className }: { line: WeeklyLine; classNam
       aria-hidden={open ? undefined : "true"}
       className={cn(
         "border-primary/25 bg-brand-muted/35 flex items-center gap-3 rounded-2xl border px-3.5 py-3",
-        !open && "min-h-[4.75rem] opacity-70 blur-[3.5px] select-none",
+        !open && `min-h-[4.75rem] ${LOCKED_CARD_BLUR}`,
       )}
     >
       <span className="bg-primary/15 text-primary grid size-9 shrink-0 place-items-center rounded-full">
