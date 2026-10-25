@@ -15,6 +15,11 @@ import type { VocabularyItem } from "@/types/content";
  * words into the review words the step quizzes (each with its sentence blanked out and a small "from
  * today's story" line, ReviewWord.fromToday, so the link is visible) and decides which of them make
  * the five. No word of the Words section or of any other source is ever added to them.
+ *
+ * Every word of the step is also heard in a RECORDED voice and never the browser's: the loader hands
+ * each candidate the clip it plays (`audioUrl` — a story's word its own ElevenLabs clip, the same
+ * the Stories words screen plays) and a word with no clip is not a candidate at all (withClips,
+ * playableOnly).
  */
 
 /** The story gives at most this many of the five; its own target vocabulary is two or three words anyway. */
@@ -129,6 +134,29 @@ export function passageWordCandidates(passage: {
     });
   }
   return candidates;
+}
+
+/**
+ * Gives every candidate that has no clip yet the one `clipFor` names for it; a candidate that
+ * already carries a clip (a passage word comes with its own) keeps it. Nothing is dropped here — a
+ * word that no source could voice stays without one, and playableOnly leaves it out.
+ */
+export function withClips(
+  candidates: readonly PositionedWord[],
+  clipFor: (word: ReviewWord) => string | null | undefined,
+): PositionedWord[] {
+  return candidates.map(({ word, position }) => ({
+    position,
+    word: { ...word, audioUrl: word.audioUrl || clipFor(word) || null },
+  }));
+}
+
+/**
+ * The candidates that have a recorded clip. A word with none is not asked: a shorter round is better
+ * than a word spoken by the browser's own voice, which is what the step used to fall back to.
+ */
+export function playableOnly(candidates: readonly PositionedWord[]): PositionedWord[] {
+  return candidates.filter(({ word }) => Boolean(word.audioUrl));
 }
 
 /**

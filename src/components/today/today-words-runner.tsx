@@ -28,6 +28,7 @@ export function TodayWordsRunner({
       defaultVoiceId={defaultVoiceId}
       variant="session"
       backHref="/learn"
+      noBrowserVoice
       onFinished={(result) => {
         const today = todayLocalISODate();
         const before = readTodayReview(today);

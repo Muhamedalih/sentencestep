@@ -107,6 +107,7 @@ export function WordReviewSession({
   smart,
   moreWaiting = 0,
   onFinished,
+  noBrowserVoice = false,
 }: {
   words: ReviewWord[];
   /** Word Lists' one global voice (see VocabularyPractice's identical prop) — a review queue can span multiple word groups, so there's no single group-level voice to prefer here either. */
@@ -144,6 +145,8 @@ export function WordReviewSession({
    * once-a-day XP report is skipped.
    */
   onFinished?: (result: { total: number; clean: number }) => void;
+  /** Today's session only: every word is heard in its recorded voice and never the browser's — a word whose clip fails to play stays silent (Replay tries it again) instead of being spoken by the browser. */
+  noBrowserVoice?: boolean;
 }) {
   const { t, dir } = useLocale();
   const smartConfig = variant === "wordLists" && smart ? smart : null;
@@ -408,6 +411,7 @@ export function WordReviewSession({
                   kokoroVoiceId={word.voiceId ?? defaultVoiceId}
                   contentType={word.pronunciationContentType ?? "word"}
                   contentId={word.pronunciationContentId ?? word.id}
+                  noBrowserVoice={noBrowserVoice}
                 />
               </div>
             )}

@@ -8,13 +8,13 @@ import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { awardEventBadge } from "@/lib/features/badge-service";
 import { completeDailySession } from "@/lib/features/daily-session-queries";
-import { buildDailySessionWords, buildTodayWords } from "@/lib/features/daily-session-service";
+import { buildDailySessionWords } from "@/lib/features/daily-session-service";
 import { TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { createClient } from "@/lib/supabase/server";
-import { sessionLeftovers } from "@/lib/today/session-words";
+import { sessionLeftovers, sessionWords } from "@/lib/today/session-words";
 import { loadLinkedWords } from "@/lib/today/session-words-load";
 import { generateWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
 
@@ -110,11 +110,11 @@ export async function fetchDailySessionWordsAction(): Promise<ReviewWord[]> {
 
 /**
  * Today's words step (permission "Today's session (new Home)"): `size` words, the target words of
- * today's story and today's passage and nothing else (see buildTodayWords) — the same whether the two
- * are read yet or not, each pointed at the Word Lists voice like the Daily session's. `more` is "5
- * more words": a further round of the day's own words that the first round left. [] when the
- * permission isn't open for this learner, nobody is signed in, there are no words of the day, or
- * anything fails.
+ * today's story and today's passage and nothing else (see sessionWords) — the same whether the two
+ * are read yet or not. Each word comes with the recorded clip it plays (see loadLinkedWords), so
+ * nothing is synthesized here and none is left to the browser's own voice. `more` is "5 more words":
+ * a further round of the day's own words that the first round left. [] when the permission isn't
+ * open for this learner, nobody is signed in, there are no words of the day, or anything fails.
  */
 export async function fetchTodayWordsAction(size: number, more = false): Promise<ReviewWord[]> {
   try {
@@ -133,11 +133,8 @@ export async function fetchTodayWordsAction(size: number, more = false): Promise
       isPremium: premium || admin,
       passagesEnabled: features.passages.enabled,
     });
-    const words = await buildTodayWords({
-      size,
-      linked: more ? sessionLeftovers({ ...linked, size }) : linked,
-    });
-    return await generateMissingSessionAudio(words);
+    const { story, passage } = more ? sessionLeftovers({ ...linked, size }) : linked;
+    return sessionWords({ story, passage, size });
   } catch (error) {
     console.error("[today] fetchTodayWordsAction failed", error);
     return [];
