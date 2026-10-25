@@ -11,12 +11,15 @@ import type { WordGroup } from "@/types/word-lists";
 /**
  * What a visitor sees on a word list that is part of Premium, for each of the three pages that
  * can open one (practice, Learn and the word wall): the lock card (WordGroupLocked). Counts the
- * view in the same batch as the reads it needs, so it adds no wait.
+ * view in the same batch as the reads it needs, so it adds no wait. `returnPath` is the page it
+ * stands on, so paying leads back to it.
  */
 export async function WordGroupLockScreen({
   group,
   locale,
+  returnPath,
 }: {
+  returnPath: string;
   group: Pick<WordGroup, "id" | "title" | "supportTitle" | "description" | "supportDescription">;
   locale: SupportLocale | null;
 }) {
@@ -30,6 +33,7 @@ export async function WordGroupLockScreen({
   ]);
   return (
     <WordGroupLocked
+      returnPath={returnPath}
       title={group.title}
       supportTitle={group.supportTitle}
       description={group.description}

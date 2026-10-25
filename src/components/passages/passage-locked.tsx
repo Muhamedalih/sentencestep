@@ -41,6 +41,7 @@ export function PosterArt({
  * one-line hook — never a spoiler — beside the offer.
  */
 export function PassageLocked({
+  passageId,
   tone,
   order,
   posterUrl,
@@ -54,6 +55,8 @@ export function PassageLocked({
   figures,
   lean,
 }: {
+  /** This passage's id: the plans page is opened with its address, so after paying the learner goes straight back to it. */
+  passageId: string;
   tone: PassageTone;
   order: number;
   /** The passage's own picture, when an admin chose one (see PassageSummary.posterUrl). */
@@ -93,7 +96,7 @@ export function PassageLocked({
         t.premium.gateBenefitMethod,
         t.premium.gateBenefitProgress,
       ]}
-      ctaHref="/upgrade"
+      ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/passages/${passageId}`)}`}
       fromPrice={fromPrice}
       pay={pay}
       progress={progress}

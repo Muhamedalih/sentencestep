@@ -54,6 +54,7 @@ function WordCardsArt() {
  * words and way back.
  */
 export function WordGroupLocked({
+  returnPath,
   title,
   supportTitle,
   description,
@@ -64,6 +65,8 @@ export function WordGroupLocked({
   figures,
   lean,
 }: {
+  /** The page the learner was stopped at (practice, Learn or word wall): the plans page is opened with it, so after paying they go straight back. */
+  returnPath: string;
   title: string;
   /** Never falls back to the Arabic column for Spanish — see types/content.ts's Sentence.supportText doc comment for the same rule applied everywhere else. */
   supportTitle?: string;
@@ -101,7 +104,7 @@ export function WordGroupLocked({
         t.wordLists.gateBenefitContext,
         t.wordLists.gateBenefitReview,
       ]}
-      ctaHref="/upgrade"
+      ctaHref={`/upgrade?next=${encodeURIComponent(returnPath)}`}
       fromPrice={fromPrice}
       pay={pay}
       progress={progress}

@@ -124,6 +124,7 @@ export default async function PassageReaderPage({
             />
           ) : (
             <PassageLocked
+              passageId={passage.id}
               tone={passage.tone}
               order={passage.order}
               posterUrl={passage.posterUrl}
