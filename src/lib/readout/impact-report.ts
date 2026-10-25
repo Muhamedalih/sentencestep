@@ -234,47 +234,47 @@ const RETURN_ROWS: readonly RowSpec[] = [
 
 function subscribeRows(providers: readonly string[]): RowSpec[] {
   return [
-    { id: "lock.all", label: "% من النشِطين صادفوا قفلًا", format: "pct" },
+    { id: "lock.all", label: "صادفوا قفلًا (نسبة إلى النشِطين)", format: "pct" },
     {
       id: "lock.returning",
-      label: "— من العائدين",
+      label: "— العائدون (إلى النشِطين العائدين)",
       format: "pct",
-      short: "% من النشِطين العائدين صادفوا قفلًا",
+      short: "العائدون الذين صادفوا قفلًا (نسبة إلى النشِطين العائدين)",
     },
     {
       id: "lock.new",
-      label: "— من الجدد",
+      label: "— الجدد (إلى النشِطين الجدد)",
       format: "pct",
-      short: "% من النشِطين الجدد صادفوا قفلًا",
+      short: "الجدد الذين صادفوا قفلًا (نسبة إلى النشِطين الجدد)",
     },
     {
       id: "lock.kind.lesson",
-      label: "— قفل درس يومي",
+      label: "— قفل درس يومي (إلى النشِطين)",
       format: "pct",
-      short: "% من النشِطين صادفوا قفل درس يومي",
+      short: "صادفوا قفل درس يومي (نسبة إلى النشِطين)",
     },
     {
       id: "lock.kind.story",
-      label: "— قفل قصة",
+      label: "— قفل قصة (إلى النشِطين)",
       format: "pct",
-      short: "% من النشِطين صادفوا قفل قصة",
+      short: "صادفوا قفل قصة (نسبة إلى النشِطين)",
     },
     {
       id: "lock.kind.wordList",
-      label: "— قفل قائمة كلمات",
+      label: "— قفل قائمة كلمات (إلى النشِطين)",
       format: "pct",
-      short: "% من النشِطين صادفوا قفل قائمة كلمات",
+      short: "صادفوا قفل قائمة كلمات (نسبة إلى النشِطين)",
     },
     {
       id: "lock.kind.passage",
-      label: "— قفل نص",
+      label: "— قفل نص (إلى النشِطين)",
       format: "pct",
-      short: "% من النشِطين صادفوا قفل نص",
+      short: "صادفوا قفل نص (نسبة إلى النشِطين)",
     },
-    { id: "upgrade.all", label: "% من النشِطين فتحوا صفحة الترقية", format: "pct" },
-    { id: "press.all", label: "% من النشِطين ضغطوا الدفع", format: "pct" },
-    { id: "upgrade.perLock", label: "فتحوا الترقية، من كل من صادف قفلًا", format: "pct" },
-    { id: "press.perLock", label: "ضغطوا الدفع، من كل من صادف قفلًا", format: "pct" },
+    { id: "upgrade.all", label: "فتحوا صفحة الترقية (نسبة إلى النشِطين)", format: "pct" },
+    { id: "press.all", label: "ضغطوا الدفع (نسبة إلى النشِطين)", format: "pct" },
+    { id: "upgrade.perLock", label: "فتحوا الترقية (نسبة إلى من صادف قفلًا)", format: "pct" },
+    { id: "press.perLock", label: "ضغطوا الدفع (نسبة إلى من صادف قفلًا)", format: "pct" },
     { id: "orders.created", label: "طلبات دفع جديدة (عدد/نافذة)", format: "count" },
     ...providers.map((provider) => ({
       id: `orders.created.${provider}`,
@@ -569,7 +569,7 @@ export function renderImpactReport(result: ImpactResult, context: ReportContext)
   out.push("## 7. هل يحاول الاشتراك أكثر؟");
   out.push("");
   out.push(
-    "الطريق: يصادف قفلًا ← يفتح صفحة الترقية ← يضغط الدفع (وهذا يُنشئ طلبًا) ← يدفع. كل النسب من **المتعلمين النشِطين** في النافذة نفسها ما لم يُذكر غير ذلك.",
+    "الطريق: يصادف قفلًا ← يفتح صفحة الترقية ← يضغط الدفع (وهذا يُنشئ طلبًا) ← يدفع. كل نسبة هنا = عدد من فعل ذلك ÷ عدد **المتعلمين النشِطين** في النافذة نفسها (وقد يكون بين من فعله متعلم لم يدرس في تلك النافذة)، ما لم يُذكر غير ذلك. وكل متعلم يُحسب مرة واحدة في النافذة.",
   );
   out.push("");
   out.push(tableOf(result, subscribe));
