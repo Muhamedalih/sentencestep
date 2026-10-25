@@ -22,8 +22,9 @@ import { cn } from "@/lib/utils";
  * gets one if an admin published the lesson on purpose).
  *
  * One audio element serves every word, so pressing a second word replaces the
- * first instead of talking over it; a word with no recorded clip falls back to
- * the browser's own voice, the same fallback pronunciation buttons use.
+ * first instead of talking over it. A word is only ever heard in a recorded
+ * voice: one with no recorded clip has no speaker button at all, never the
+ * browser's own voice.
  */
 
 function useWordSpeaker() {
@@ -34,49 +35,31 @@ function useWordSpeaker() {
   useEffect(() => {
     return () => {
       audioRef.current?.pause();
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
     };
   }, []);
 
   const speak = useCallback((word: PassageWord) => {
     audioRef.current?.pause();
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    if (!word.audioUrl) return;
 
-    if (word.audioUrl) {
-      const audio = audioRef.current ?? new Audio();
-      audioRef.current = audio;
-      audio.onended = () => setPlayingId(null);
-      audio.onerror = () => {
+    const audio = audioRef.current ?? new Audio();
+    audioRef.current = audio;
+    audio.onended = () => setPlayingId(null);
+    audio.onerror = () => {
+      setPlayingId(null);
+      setLoadingId(null);
+    };
+    audio.src = word.audioUrl;
+    audio.currentTime = 0;
+    setLoadingId(word.id);
+    setPlayingId(word.id);
+    audio
+      .play()
+      .then(() => setLoadingId((current) => (current === word.id ? null : current)))
+      .catch(() => {
         setPlayingId(null);
         setLoadingId(null);
-      };
-      audio.src = word.audioUrl;
-      audio.currentTime = 0;
-      setLoadingId(word.id);
-      setPlayingId(word.id);
-      audio
-        .play()
-        .then(() => setLoadingId((current) => (current === word.id ? null : current)))
-        .catch(() => {
-          setPlayingId(null);
-          setLoadingId(null);
-        });
-      return;
-    }
-
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(word.word);
-      utterance.lang = "en-US";
-      utterance.rate = 0.85;
-      utterance.onend = () => setPlayingId(null);
-      utterance.onerror = () => setPlayingId(null);
-      setPlayingId(word.id);
-      window.speechSynthesis.speak(utterance);
-    }
+      });
   }, []);
 
   return { playingId, loadingId, speak };
@@ -257,21 +240,23 @@ export function PassageCompletion({
                     <p className="text-xl leading-tight font-semibold" dir="ltr" lang="en">
                       {word.word}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => speaker.speak(word)}
-                      aria-label={`${t.passages.listenToWord}: ${word.word}`}
-                      className={cn(
-                        "text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring -me-1.5 flex size-8 shrink-0 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 pointer-coarse:size-11",
-                        speaker.playingId === word.id && "bg-brand-muted text-primary",
-                      )}
-                    >
-                      {speaker.loadingId === word.id ? (
-                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                      ) : (
-                        <Volume2 className="size-4" aria-hidden="true" />
-                      )}
-                    </button>
+                    {word.audioUrl && (
+                      <button
+                        type="button"
+                        onClick={() => speaker.speak(word)}
+                        aria-label={`${t.passages.listenToWord}: ${word.word}`}
+                        className={cn(
+                          "text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring -me-1.5 flex size-8 shrink-0 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2 pointer-coarse:size-11",
+                          speaker.playingId === word.id && "bg-brand-muted text-primary",
+                        )}
+                      >
+                        {speaker.loadingId === word.id ? (
+                          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Volume2 className="size-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    )}
                   </div>
                   {meaningsAvailable && (
                     <p className="text-primary text-[0.95rem]" dir="rtl" lang="ar">

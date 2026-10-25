@@ -17,6 +17,7 @@ import type {
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { lookupAnyWordClips } from "@/lib/voice/recorded-word-clips";
 import { hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import type { Database } from "@/types/database";
 
@@ -153,7 +154,7 @@ export const fetchPassageSummaries = cache(async (): Promise<PassageSummary[]> =
 
 // --- One passage ----------------------------------------------------------
 
-/** The clips that already exist for these words under one voice, keyed by word — read-only, never generates. A word with no clip is simply absent (its card then uses the browser voice). */
+/** The clips that already exist for these words under one voice, keyed by word — read-only, never generates. A word with no clip is simply absent. */
 async function lookupWordClipUrls(
   words: readonly string[],
   voiceId: string,
@@ -258,12 +259,15 @@ async function loadPassage(id: string): Promise<Passage | null> {
   let clipUrls = new Map<string, string>();
   if (wordRows.length > 0) {
     try {
-      clipUrls = await lookupWordClipUrls(
-        wordRows.map((word) => word.target_word),
-        await getDefaultPronunciationVoiceId(),
-      );
+      const targetWords = wordRows.map((word) => word.target_word);
+      clipUrls = await lookupWordClipUrls(targetWords, await getDefaultPronunciationVoiceId());
+      // A word the Word Lists voice has no clip for plays another voice's recording of it, if any.
+      const unvoiced = targetWords.filter((word) => !clipUrls.has(word));
+      if (unvoiced.length > 0) {
+        for (const [word, url] of await lookupAnyWordClips(unvoiced)) clipUrls.set(word, url);
+      }
     } catch (clipError) {
-      // The words screen works without clips (browser voice) — never fail the passage over them.
+      // A word without a clip simply has no speaker — never fail the passage over them.
       console.error("[passages] word clip lookup failed", clipError);
     }
   }

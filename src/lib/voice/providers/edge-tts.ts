@@ -1,3 +1,6 @@
+import type { ClientRequest } from "node:http";
+import { Agent } from "node:https";
+
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 
 import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice/provider";
@@ -32,6 +35,47 @@ import type { SynthesizeInput, SynthesizedAudio, TTSProvider } from "@/lib/voice
 const OUTPUT_FORMAT_MP3 = OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3;
 
 /**
+ * Since about 2026-10-23 Microsoft's endpoint answers an empty HTTP 200 where the WebSocket upgrade
+ * should be (msedge-tts then reports "Unexpected server response: 200") unless the request carries
+ * the Accept-Language and Accept-Encoding headers a browser sends. msedge-tts 2.1.0 — the newest
+ * release — does not send them, and lets a caller choose only the connection's `agent`. An agent
+ * sees every request before its headers go out, so the two are put on there; nothing else about the
+ * request changes. Measured from the server and from a developer machine alike: without them every
+ * handshake got the empty 200 (and every word without a stored clip fell to the browser's voice),
+ * with them the upgrade is accepted again.
+ */
+const BROWSER_HEADERS = {
+  "Accept-Language": "en-US,en;q=0.9",
+  "Accept-Encoding": "gzip, deflate, br, zstd",
+} as const;
+
+/** The one method of http.Agent the typings leave out and this needs. */
+interface AgentWithAddRequest {
+  addRequest(request: ClientRequest, options: unknown): void;
+}
+
+/** Puts the browser's two headers on a request that has not been sent yet; one it already carries is left alone. */
+export function addBrowserHeaders(request: Pick<ClientRequest, "hasHeader" | "setHeader">): void {
+  for (const [name, value] of Object.entries(BROWSER_HEADERS)) {
+    if (!request.hasHeader(name)) request.setHeader(name, value);
+  }
+}
+
+/** An https agent whose every request goes out with the browser's two headers (see BROWSER_HEADERS). */
+export function createBrowserHeadersAgent(): Agent {
+  const agent = new Agent();
+  const internals = agent as unknown as AgentWithAddRequest;
+  const addRequest = internals.addRequest.bind(agent);
+  internals.addRequest = (request, options) => {
+    addBrowserHeaders(request);
+    addRequest(request, options);
+  };
+  return agent;
+}
+
+const EDGE_AGENT = createBrowserHeadersAgent();
+
+/**
  * This is a raw WebSocket to an unofficial, undocumented endpoint (see this
  * module's own doc comment) — unlike the ElevenLabs/Azure providers' plain
  * `fetch()` calls, a stalled TCP connection here has no guarantee of ever
@@ -53,7 +97,7 @@ export function createEdgeTtsProvider(): TTSProvider {
       // cost is just a WebSocket handshake (measured well under a second),
       // and a short-lived server action/background job has no good place to
       // keep a persistent connection alive between calls anyway.
-      const tts = new MsEdgeTTS();
+      const tts = new MsEdgeTTS({ agent: EDGE_AGENT });
       const workPromise = synthesizeOnce(tts, input);
       // If the timeout below wins the race, `tts.close()` in `finally`
       // forces this promise to settle (msedge-tts rejects any still-open
