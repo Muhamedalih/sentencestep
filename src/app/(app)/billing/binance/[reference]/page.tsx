@@ -9,6 +9,7 @@ import { BinancePayInstructions } from "@/components/billing/binance-pay-instruc
 import { BinanceReportPrompt } from "@/components/billing/binance-report-prompt";
 import { PaymentStatusRefresh } from "@/components/billing/payment-status-refresh";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
+import { PaymentConfirmedActions } from "@/components/billing/thirty-day-plan";
 import { BackButton } from "@/components/layout/back-button";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import type { PaymentOrder } from "@/lib/billing/payments/types";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { isFirstPayment } from "@/lib/progress/thirty-day-plan";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -129,6 +131,19 @@ export default async function BinancePayPage({
 
   if (outcome.outcome === "fulfilled" || outcome.outcome === "already_fulfilled") {
     const premiumUntil = outcome.premiumUntil ?? order.premium_period_end ?? null;
+    // "Your first 30 days" is for a first payment only; anything unreadable leaves the card out.
+    let firstPayment = false;
+    try {
+      firstPayment = isFirstPayment(
+        await runtime.store.listRecentOrdersForUser(user.id, 20),
+        order.reference_id,
+      );
+    } catch (error) {
+      console.error(
+        "[binance] payment page: could not tell whether this is a first payment",
+        error,
+      );
+    }
     return shell(
       <>
         <CardHeader className="items-center text-center">
@@ -147,12 +162,13 @@ export default async function BinancePayPage({
               : t.premium.thanks}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center">
-          <Button asChild size="lg">
-            <Link href={afterPaymentPath ?? "/learn"}>
-              {afterPaymentPath ? t.premium.continueLesson : t.common.startLearning}
-            </Link>
-          </Button>
+        <CardContent className="flex flex-col items-center gap-5">
+          <PaymentConfirmedActions
+            copy={t.premium}
+            common={t.common}
+            afterPaymentPath={afterPaymentPath}
+            showPlan={firstPayment}
+          />
         </CardContent>
       </>,
     );

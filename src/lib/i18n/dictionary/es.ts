@@ -556,6 +556,15 @@ export const es: Dictionary = {
     paymentReviewBody:
       "Este pago necesita una revisión manual rápida. Premium se activará en cuanto se confirme; no hace falta que vuelvas a pagar.",
     paymentNotFound: "No encontramos ese pago.",
+    planHeading: "Tus primeros {days} días",
+    planDaily:
+      "Una sesión al día: un texto para escuchar, una historia para escribir y cinco palabras",
+    planMinutes: "Unos {n} minutos",
+    planTotals: "Tras {days} sesiones: {passages} textos, {stories} historias y {words} palabras",
+    planSentences: "Unas {n} frases escritas por ti",
+    planNote:
+      "Esto es lo que ponen a tu alcance las sesiones si terminas una al día. No es una promesa de ningún nivel.",
+    planStart: "Empezar el primer día",
   },
   lesson: {
     completeHeading: "Lección completada",

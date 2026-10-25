@@ -622,6 +622,20 @@ export interface Dictionary {
     paymentReviewHeading: string;
     paymentReviewBody: string;
     paymentNotFound: string;
+    /** The card under the payment confirmation (ThirtyDayPlan): `{days}` is the number of days of the plan. */
+    planHeading: string;
+    /** What one session of Today is. */
+    planDaily: string;
+    /** How long one session takes, from Today's own estimates: `{n}` minutes. */
+    planMinutes: string;
+    /** What `{days}` sessions make available: `{passages}`, `{stories}` and `{words}` are plain counts. */
+    planTotals: string;
+    /** The sentences the learner writes over the period: `{n}`, the typical story's sentences once a day. */
+    planSentences: string;
+    /** The line that says these are quantities on offer, never a promise of a level. */
+    planNote: string;
+    /** The button to Today's first session; shown to a first-time payer instead of the generic start button. */
+    planStart: string;
   };
   lesson: {
     completeHeading: string;

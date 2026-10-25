@@ -545,6 +545,14 @@ export const tr: Dictionary = {
     paymentReviewBody:
       "Bu ödemenin hızlı bir elle kontrole ihtiyacı var. Onaylanır onaylanmaz Premium etkinleştirilecek — tekrar ödeme yapmanıza gerek yok.",
     paymentNotFound: "Bu ödemeyi bulamadık.",
+    planHeading: "İlk {days} gününüz",
+    planDaily: "Günde bir oturum: dinleyeceğiniz bir metin, yazacağınız bir hikaye ve beş kelime",
+    planMinutes: "Yaklaşık {n} dakika",
+    planTotals: "{days} oturum sonunda: {passages} metin, {stories} hikaye ve {words} kelime",
+    planSentences: "Kendi elinizle yazacağınız yaklaşık {n} cümle",
+    planNote:
+      "Günde bir oturum bitirirseniz oturumların sunduğu miktar budur; belirli bir seviye vaadi değildir.",
+    planStart: "Birinci güne başla",
   },
   lesson: {
     completeHeading: "Ders tamamlandı",

@@ -544,6 +544,14 @@ export const en: Dictionary = {
     paymentReviewBody:
       "This payment needs a quick manual check. Premium will be activated as soon as it's confirmed — there's no need to pay again.",
     paymentNotFound: "We couldn't find that payment.",
+    planHeading: "Your first {days} days",
+    planDaily: "One session a day: a passage to listen to, a story to write and five words",
+    planMinutes: "About {n} minutes",
+    planTotals: "After {days} sessions: {passages} passages, {stories} stories and {words} words",
+    planSentences: "About {n} sentences written by you",
+    planNote:
+      "This is what the sessions make available if you finish one a day. It is not a promise of any level.",
+    planStart: "Start day one",
   },
   lesson: {
     completeHeading: "Lesson complete",
