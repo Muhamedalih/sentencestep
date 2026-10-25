@@ -475,6 +475,13 @@ export const ar: Dictionary = {
     paymentReviewBody:
       "تحتاج هذه الدفعة إلى مراجعة يدوية سريعة. ستُفعَّل الخطة المميزة فور تأكيدها — ولا حاجة للدفع مرة أخرى.",
     paymentNotFound: "لم نعثر على هذه الدفعة.",
+    planHeading: "أول {days} يوماً",
+    planDaily: "كل يوم جلسة واحدة: نصّ تسمعه وقصة تكتبها وخمس كلمات",
+    planMinutes: "نحو {n} دقيقة",
+    planTotals: "بعد {days} جلسة: {passages} نصاً و{stories} قصة و{words} كلمة",
+    planSentences: "نحو {n} جملة تكتبها بيدك",
+    planNote: "هذا ما تتيحه الجلسات إن أنهيت واحدة كل يوم، وليس وعداً بمستوى معيّن.",
+    planStart: "ابدأ اليوم الأول",
   },
   lesson: {
     completeHeading: "اكتمل الدرس",

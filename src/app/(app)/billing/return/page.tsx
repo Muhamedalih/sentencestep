@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 
 import { PaymentStatusRefresh } from "@/components/billing/payment-status-refresh";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
+import { PaymentConfirmedActions } from "@/components/billing/thirty-day-plan";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import type { PaymentOrder } from "@/lib/billing/payments/types";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { isFirstPayment } from "@/lib/progress/thirty-day-plan";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -160,6 +162,21 @@ export default async function BillingReturnPage({
   // The lesson the learner was stopped at when they opened the upgrade page, if
   // any (see startCheckout); the button goes there instead of to the dashboard.
   const afterPaymentPath = safeLessonPath((await cookies()).get(AFTER_PAYMENT_COOKIE)?.value);
+  // "Your first 30 days" is for a first payment only; anything unreadable leaves the card out.
+  let firstPayment = false;
+  if (confirmed && runtime && order) {
+    try {
+      firstPayment = isFirstPayment(
+        await runtime.store.listRecentOrdersForUser(user.id, 20),
+        order.reference_id,
+      );
+    } catch (error) {
+      console.error(
+        "[payments] return page: could not tell whether this is a first payment",
+        error,
+      );
+    }
+  }
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16 sm:py-24">
@@ -185,11 +202,12 @@ export default async function BillingReturnPage({
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-center gap-3">
           {confirmed && (
-            <Button asChild size="lg">
-              <Link href={afterPaymentPath ?? "/learn"}>
-                {afterPaymentPath ? t.premium.continueLesson : t.common.startLearning}
-              </Link>
-            </Button>
+            <PaymentConfirmedActions
+              copy={t.premium}
+              common={t.common}
+              afterPaymentPath={afterPaymentPath}
+              showPlan={firstPayment}
+            />
           )}
           {content.retry && (
             <Button asChild>
