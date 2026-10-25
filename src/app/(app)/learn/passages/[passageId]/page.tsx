@@ -92,6 +92,7 @@ export default async function PassageReaderPage({
       <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
         <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
           <PassageLocked
+            passageId={passage.id}
             tone={passage.tone}
             order={passage.order}
             posterUrl={passage.posterUrl}

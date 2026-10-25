@@ -51,7 +51,11 @@ export default async function WordGroupLearnPage({
   if (!canAccess) {
     return (
       <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
-        <WordGroupLockScreen group={group} locale={locale} />
+        <WordGroupLockScreen
+          group={group}
+          locale={locale}
+          returnPath={`/learn/word-lists/${group.id}/learn`}
+        />
       </div>
     );
   }
