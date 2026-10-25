@@ -105,6 +105,14 @@ export interface PronunciationButtonProps {
    */
   disableSpeechFallback?: boolean;
   /**
+   * Today's words step only: a word is only ever heard in a recorded voice. The browser's speech
+   * synthesis is never used for it — a word whose clip is missing or fails to play stays silent (the
+   * Replay control tries it again) instead of being spoken in the browser's own, very different
+   * voice. Unlike disableSpeechFallback (Books) it changes nothing else: the page-wide audio
+   * element stays, and so does the rest of the playback. Defaults to false.
+   */
+  noBrowserVoice?: boolean;
+  /**
    * Fired at the very start of every play attempt (auto-play, Replay click,
    * or a Shift-triggered replay) — before this button resolves or plays
    * anything itself. BookSentenceReader uses this to stop its own word-click
@@ -151,6 +159,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       variant = "ghost",
       size = "icon",
       disableSpeechFallback = false,
+      noBrowserVoice = false,
       onBeforePlay,
       onEnded,
       headless = false,
@@ -160,6 +169,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
   ) {
     const reducedMotion = useReducedMotion() ?? false;
     const speech = useSpeech();
+    const browserVoiceAllowed = !disableSpeechFallback && !noBrowserVoice;
     const { t } = useLocale();
     const {
       speedMultiplier,
@@ -322,7 +332,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
-      } else if (!disableSpeechFallback) {
+      } else if (browserVoiceAllowed) {
         warnBrowserVoiceFallback("no clip could be found or made for it");
         speech.speakSentence(text, speedMultiplier);
       }
@@ -335,7 +345,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
-      } else if (!disableSpeechFallback) {
+      } else if (browserVoiceAllowed) {
         warnBrowserVoiceFallback("no clip could be found or made for it");
         speech.replaySentence(text, speedMultiplier);
       }
@@ -369,7 +379,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     // clip first, so reaching "error" here means genuinely giving up rather
     // than substituting a different voice.
     useEffect(() => {
-      if (clip.status === "error" && !disableSpeechFallback) {
+      if (clip.status === "error" && browserVoiceAllowed) {
         warnBrowserVoiceFallback("its clip failed to play (see the [audio] line above)");
         speech.speakSentence(text);
       }
@@ -411,7 +421,7 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
     }, [autoPlay, resetKey, audioUrl, kokoroVoiceId, speech.voicesReady]);
 
     const hasAudioSource = Boolean(audioUrl) || Boolean(kokoroVoiceId);
-    const isSupported = hasAudioSource || (!disableSpeechFallback && speech.isSupported);
+    const isSupported = hasAudioSource || (browserVoiceAllowed && speech.isSupported);
     const isLoading = clip.status === "loading" || isResolvingKokoro;
     const isPlaying = clip.status === "playing" || speech.isSpeaking;
 

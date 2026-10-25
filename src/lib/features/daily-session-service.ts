@@ -9,8 +9,6 @@ import { fetchDueVocabularyRecallCount } from "@/lib/supabase/queries/vocabulary
 import { fetchActiveMistakeCount, fetchDueReviewCount } from "@/lib/supabase/queries/mistakes";
 import { fetchAllVocabularyWordsFlat } from "@/lib/supabase/queries/word-lists";
 import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
-import { sessionWords } from "@/lib/today/session-words";
-import type { PositionedWord } from "@/lib/today/session-words";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchVocabularyRecallWordsAction } from "@/lib/vocabulary-recall/actions";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
@@ -175,31 +173,6 @@ export async function buildDailySessionWords(
     new Map<string, string>(),
   );
   return applyWordListAudio(session, urlByWord);
-}
-
-/**
- * Today's words step: up to `size` words (five) — the target words of today's story and today's
- * passage, and NOTHING else: the story's two or three, then the passage's closest-together ones for
- * the places left, in a random order (sessionWords), so the words, the story and the passage are one
- * day. They are the same whether the two are read yet or not (see loadLinkedWords). No word of the
- * Words section, a review schedule, a mistake or a saved card is ever added: with too few of the
- * day's own words the round is just shorter, and with none it is empty. Every word points at the Word
- * Lists voice's clip, like the Daily session's.
- */
-export async function buildTodayWords(args: {
-  size: number;
-  /** Today's story and passage words (for "5 more words": the ones the first round left). */
-  linked: { story: PositionedWord[]; passage: PositionedWord[] };
-}): Promise<ReviewWord[]> {
-  const { size, linked } = args;
-  const own = sessionWords({ story: linked.story, passage: linked.passage, size });
-  if (own.length === 0) return [];
-  const urlByWord = await attempt(
-    "word-list voice audio",
-    () => lookupWordListVoiceAudio(own.map((word) => word.targetWord)),
-    new Map<string, string>(),
-  );
-  return applyWordListAudio(own, urlByWord);
 }
 
 /**

@@ -6,9 +6,11 @@ import {
   STORY_WORDS_MAX,
   closestWords,
   passageWordCandidates,
+  playableOnly,
   sessionLeftovers,
   sessionWords,
   storyWordCandidates,
+  withClips,
 } from "@/lib/today/session-words";
 import type { PositionedWord } from "@/lib/today/session-words";
 import { BLANK_TOKEN } from "@/types/word-lists";
@@ -345,6 +347,57 @@ test("a word listed in both the story and the passage is left over in neither on
     [...rest.story, ...rest.passage].some((entry) => entry.word.targetWord === "rain"),
     false,
   );
+});
+
+test("a candidate gets the clip it plays, keeps one it already carries, and a word with none is not asked", () => {
+  const story = [at("balloon", 0, "story"), at("rain", 1, "story"), at("box", 2, "story")];
+  const clips = new Map([
+    ["balloon", "https://clips/balloon.mp3"],
+    ["rain", "https://clips/rain.mp3"],
+  ]);
+  const voiced = withClips(story, (word) => clips.get(word.targetWord));
+  assert.deepEqual(
+    voiced.map(({ word, position }) => [word.targetWord, word.audioUrl, position]),
+    [
+      ["balloon", "https://clips/balloon.mp3", 0],
+      ["rain", "https://clips/rain.mp3", 1],
+      ["box", null, 2],
+    ],
+  );
+  assert.deepEqual(names(playableOnly(voiced)), ["balloon", "rain"]);
+
+  // A passage word comes with its own clip: a clip another source names does not replace it.
+  const own = { ...at("silence", 1), word: { ...at("silence", 1).word, audioUrl: "https://own" } };
+  assert.equal(withClips([own], () => "https://other")[0]!.word.audioUrl, "https://own");
+  // Nothing is changed in place.
+  assert.equal(story[0]!.word.audioUrl, undefined);
+});
+
+test("a round is made of words that have a clip: the ones without are never asked and the passage fills their places", () => {
+  const story = [at("balloon", 0, "story"), at("rain", 1, "story"), at("box", 2, "story")];
+  const passage = [at("silence", 1), at("plan", 2), at("window", 3), at("garden", 4)];
+  const clips = new Map(
+    ["balloon", "rain", "silence", "plan", "window", "garden"].map((word) => [
+      word,
+      `https://clips/${word}.mp3`,
+    ]),
+  );
+  // "box" has no clip anywhere.
+  const voiced = {
+    story: playableOnly(withClips(story, (word) => clips.get(word.targetWord))),
+    passage: playableOnly(withClips(passage, (word) => clips.get(word.targetWord))),
+  };
+  const round = sessionWords({ ...voiced, size: 5, random: counter() });
+  assert.equal(round.length, 5);
+  assert.equal(
+    round.some((word) => word.targetWord === "box"),
+    false,
+  );
+  // Every word of the round plays its own recorded clip.
+  for (const word of round) assert.equal(word.audioUrl, `https://clips/${word.targetWord}.mp3`);
+  // And "5 more words" is built from the same voiced candidates, so it holds none without a clip either.
+  const rest = sessionLeftovers({ ...voiced, size: 5 });
+  for (const entry of [...rest.story, ...rest.passage]) assert.ok(entry.word.audioUrl);
 });
 
 test("with few words there is nothing left for another round", () => {
