@@ -587,8 +587,6 @@ export interface Dictionary {
     newWordTag: string;
     /** Stories-mode completion screen only — button on each word in the lesson-words panel (StoryWordsPanel) that hides the word and asks the learner to retype it from memory before it reveals again. */
     practiceWord: string;
-    /** StoryWordsPanel only — shown beside practiceWord once the learner is viewing the last word in the set (typically right after answering it correctly); links back to the Stories library (/learn/stories) rather than just this one lesson's own back button, since there's nothing left to practice in this lesson. */
-    backToStoriesLibrary: string;
     /** Placeholder for the retype-to-reveal input that appears after practiceWord is pressed. */
     typeToRevealPlaceholder: string;
     nextLesson: string;
@@ -617,6 +615,36 @@ export interface Dictionary {
       hintListen: string;
       /** Screen-reader label for the progress bars, e.g. "Question 1 of 3". */
       progressAria: string;
+    };
+    /** Stories mode only — the finish page that follows the story's words step (see LessonCompletion and StoryWordsPanel). */
+    storyEnd: {
+      completeHeading: string;
+      /** Label above the story's word cards. */
+      wordsHeading: string;
+      /** Legend for the tick on a word card: typed right the first time it was asked. */
+      wordFirstTry: string;
+      /** Legend for the arrows on a word card: it took more than one try. */
+      wordNeedsReview: string;
+      /** The quiet link that opens the words step again. */
+      practiceWordsAgain: string;
+      /** Caption above the main button; {title} is the next story's title. */
+      nextCaption: string;
+      nextStory: string;
+      /** The next story is Premium and this learner can't open it. */
+      nextStoryPremium: string;
+      retryStory: string;
+      /** The question of the quiet row of stars at the foot of the page. */
+      ratingQuestion: string;
+      /** The way back from the words step when it was opened again from the finish page. */
+      wordsBack: string;
+      /** What RatingModal says when a story's row of stars opened it, in place of the app-wide wording. */
+      rating: {
+        headline: string;
+        subtitle: string;
+        commentPlaceholder: string;
+        thanksTitle: string;
+        thanksBody: string;
+      };
     };
     lessonNumber: string;
     sentenceCount: string;

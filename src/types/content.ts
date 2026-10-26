@@ -113,7 +113,10 @@ export interface Lesson extends LessonUnit {
  * callers that do have a real one (e.g. the admin lesson-completion preview)
  * keep working unchanged.
  */
-export type NextLessonRef = Pick<LessonUnit, "id" | "mode">;
+export type NextLessonRef = Pick<LessonUnit, "id" | "mode"> & {
+  /** Present when the caller has it (the lesson page does): a story's finish page names the story it leads to. */
+  title?: string;
+};
 
 /** A short English→Arabic/Spanish example pair, standalone (not tied to a lesson/activity) — used for the "Start Simple" level previews below. */
 export interface PreviewSentence {

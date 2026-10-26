@@ -42,6 +42,7 @@ import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-se
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
+import { storyWordsStepApplies, type StoryWordOutcomes } from "@/lib/story-words";
 import { isTodayRunUrl } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
@@ -162,6 +163,9 @@ export function LessonSession({
   const [isComplete, setIsComplete] = useState(false);
   const [isFixingMistakes, setIsFixingMistakes] = useState(false);
   const [isViewingWords, setIsViewingWords] = useState(false);
+  // Stories only: how each of the story's words ended in the words step that follows the last
+  // sentence (see StoryWordsPanel) — null until that step is done. The finish page shows the marks.
+  const [storyWordOutcomes, setStoryWordOutcomes] = useState<StoryWordOutcomes | null>(null);
   const [finalAccuracy, setFinalAccuracy] = useState(1);
   const [finalWpm, setFinalWpm] = useState(0);
   // Stories only: the word question(s) being asked after the sentence just typed (see
@@ -326,6 +330,19 @@ export function LessonSession({
   }, [features.rollouts.todaySession]);
   const usesSessionEnd =
     features.rollouts.sessionEnd && !previewMode && unit.mode !== "conversation";
+  // Stories: the story's own words come up right after the last sentence, before the finish page,
+  // and are not skippable (see StoryWordsPanel). The lesson was already recorded by then.
+  const inWordsStep =
+    isComplete &&
+    storyWordOutcomes === null &&
+    storyWordsStepApplies({
+      mode: unit.mode,
+      vocabularyCount: unit.vocabulary?.length ?? 0,
+      previewMode,
+      isOpeningLesson,
+      todayStep,
+      usesSessionEnd,
+    });
   const recallPool = useMemo(
     () => (usesSessionEnd ? buildFromMemoryItems(unit.sentences, locale) : []),
     [usesSessionEnd, unit.sentences, locale],
@@ -354,7 +371,7 @@ export function LessonSession({
     ? "mistakes"
     : isPracticingFromMemory
       ? "memory"
-      : isViewingWords
+      : isViewingWords || inWordsStep
         ? "words"
         : null;
   const dedicatedScreenRef = useRef(dedicatedScreen);
@@ -725,6 +742,7 @@ export function LessonSession({
     setQuiz(null);
     answeredQuizRef.current.clear();
     setIsPracticingFromMemory(false);
+    setStoryWordOutcomes(null);
     setIsComplete(false);
   }
 
@@ -774,7 +792,8 @@ export function LessonSession({
     !isOpeningLesson &&
     !isFixingMistakes &&
     !(isPracticingFromMemory && fromMemoryItems.length > 0) &&
-    !(isViewingWords && Boolean(unit.vocabulary?.length));
+    !(isViewingWords && Boolean(unit.vocabulary?.length)) &&
+    !inWordsStep;
 
   const sessionLabel = (
     <>
@@ -787,7 +806,9 @@ export function LessonSession({
       <h1 className="sr-only">{unit.title}</h1>
       <p className="sr-only" aria-live="polite">
         {isComplete
-          ? t.lesson.completeHeading
+          ? unit.mode === "stories"
+            ? t.lesson.storyEnd.completeHeading
+            : t.lesson.completeHeading
           : t.lesson.sentenceProgress
               .replace("{n}", String(sentenceIndex + 1))
               .replace("{total}", String(total))}
@@ -876,6 +897,18 @@ export function LessonSession({
           </div>
         ) : isComplete && isOpeningLesson ? (
           <OnboardingLessonComplete key="onboarding-complete" />
+        ) : inWordsStep ? (
+          <div key="story-words-step" className="flex min-h-0 flex-1 flex-col">
+            <StoryWordsPanel
+              lessonId={unit.id}
+              title={unit.title}
+              vocabulary={unit.vocabulary ?? []}
+              sentences={unit.sentences}
+              defaultVoiceId={defaultVoiceId}
+              narratorVoiceId={storyNarratorVoiceId}
+              onFinished={setStoryWordOutcomes}
+            />
+          </div>
         ) : isComplete && isFixingMistakes ? (
           <div key="fix-mistakes" className="flex min-h-0 flex-1 flex-col">
             <FixYourMistakesSession
@@ -912,11 +945,16 @@ export function LessonSession({
           <div key="story-words" className="flex min-h-0 flex-1 flex-col">
             <StoryWordsPanel
               lessonId={unit.id}
+              title={unit.title}
               vocabulary={unit.vocabulary}
               sentences={unit.sentences}
               defaultVoiceId={defaultVoiceId}
               narratorVoiceId={storyNarratorVoiceId}
-              onBack={() => setIsViewingWords(false)}
+              onExit={() => setIsViewingWords(false)}
+              onFinished={(outcomes) => {
+                setStoryWordOutcomes(outcomes);
+                setIsViewingWords(false);
+              }}
             />
           </div>
         ) : isComplete ? (
@@ -934,11 +972,13 @@ export function LessonSession({
             <div className="flex-1 lg:min-h-0">
               <LessonCompletion
                 mode={unit.mode}
+                lessonId={unit.id}
                 accuracy={finalAccuracy}
                 wpm={finalWpm}
                 nextLesson={nextLesson}
                 nextLessonLocked={nextLessonLocked}
                 vocabulary={unit.vocabulary}
+                wordOutcomes={storyWordOutcomes ?? undefined}
                 streak={streak.currentStreak}
                 xp={xp}
                 xpEarned={previewMode ? 0 : xpEarned}
@@ -955,7 +995,12 @@ export function LessonSession({
                 onRetryLesson={handleRetryLesson}
               />
             </div>
-            <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
+            {/* A story's finish page asks for a rating itself, in a quiet row (see LessonCompletion), instead of this pop-up. */}
+            <RatingPrompt
+              show={eligibleForRatingPrompt && unit.mode !== "stories"}
+              lessonId={unit.id}
+              mode={unit.mode}
+            />
           </div>
         ) : (
           // Illustration/transcript stays mounted for the whole session
