@@ -174,6 +174,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     sessionEnd: false,
     sessionReminders: false,
     shortFirstRun: false,
+    inAppStrip: false,
     todaySession: false,
     sentenceBank: false,
     newHome: false,

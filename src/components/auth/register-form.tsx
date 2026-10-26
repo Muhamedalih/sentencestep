@@ -13,6 +13,8 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { signUp, signInWithGoogle } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { InAppStripSlot } from "@/components/auth/in-app-browser-strip";
+import type { StripDecision } from "@/lib/in-app-strip/strip";
 import { authPageHref } from "@/lib/supabase/safe-redirect";
 
 const initialState: AuthActionState = {};
@@ -22,10 +24,13 @@ const TURNSTILE_CALLBACK_NAME = "onSentenceStepTurnstileSuccess";
 export function RegisterForm({
   turnstileSiteKey,
   next,
+  inAppStrip,
 }: {
   turnstileSiteKey: string | null;
   /** Where to go once the account exists (see authPageHref); absent means the default, /learn. */
   next?: string;
+  /** What the open in browser strip does for this visitor (see src/lib/in-app-strip); null or absent for everyone outside Facebook's and Instagram's browsers. */
+  inAppStrip?: StripDecision | null;
 }) {
   const [state, formAction, pending] = useActionState(signUp, initialState);
   const { t } = useLocale();
@@ -72,13 +77,15 @@ export function RegisterForm({
         <CardDescription>{t.auth.registerSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={signInWithGoogle}>
-          {next && <input type="hidden" name="next" value={next} />}
-          <Button type="submit" variant="outline" className="w-full">
-            <GoogleIcon className="size-4" />
-            {t.auth.googleSignIn}
-          </Button>
-        </form>
+        <InAppStripSlot decision={inAppStrip ?? null} page="register">
+          <form action={signInWithGoogle}>
+            {next && <input type="hidden" name="next" value={next} />}
+            <Button type="submit" variant="outline" className="w-full">
+              <GoogleIcon className="size-4" />
+              {t.auth.googleSignIn}
+            </Button>
+          </form>
+        </InAppStripSlot>
 
         <div className="my-5 flex items-center gap-3">
           <div className="bg-border h-px flex-1" />

@@ -6,6 +6,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 import { Logo } from "@/components/layout/logo";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getInAppStripDecision } from "@/lib/in-app-strip/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { safeNextPath } from "@/lib/supabase/safe-redirect";
 
@@ -16,9 +17,10 @@ export const metadata: Metadata = {
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; in_app_strip?: string }>;
 }) {
-  const { next: requestedNext } = await searchParams;
+  const { next: requestedNext, in_app_strip: stripParam } = await searchParams;
+  const inAppStrip = await getInAppStripDecision(stripParam);
   // Only a real same-origin destination other than the default is carried on.
   const safeNext = safeNextPath(requestedNext ?? null);
   const next = safeNext === "/learn" ? undefined : safeNext;
@@ -38,6 +40,7 @@ export default async function RegisterPage({
         <RegisterForm
           turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null}
           next={next}
+          inAppStrip={inAppStrip}
         />
       ) : (
         <NotConfiguredNotice />

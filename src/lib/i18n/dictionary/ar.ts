@@ -336,6 +336,20 @@ export const ar: Dictionary = {
     hidePassword: "إخفاء كلمة المرور",
     termsAgreementPrefix: "بإنشاء حساب، فإنك توافق على",
     termsAgreementAnd: "و",
+    inAppStrip: {
+      title: "افتح الصفحة في المتصفح",
+      bodyAndroid:
+        "تسجيل Google لا يعمل داخل {app}. افتح الصفحة في المتصفح وأكمل بنقرة، أو سجّل بالبريد هنا.",
+      bodyIos: "تسجيل Google لا يعمل داخل {app}. أو سجّل بالبريد هنا.",
+      openButton: "افتح في المتصفح",
+      copyButton: "انسخ الرابط",
+      copiedButton: "تم النسخ",
+      stepMenu: "اضغط {menu} في أعلى الشاشة",
+      stepChoose: "اختر «فتح في المتصفح»",
+      retryHint: "لم تُفتح الصفحة؟ اضغط {menu} في أعلى الشاشة ثم اختر «فتح في المتصفح».",
+      appFacebook: "متصفح فيسبوك",
+      appInstagram: "متصفح إنستغرام",
+    },
   },
   premium: {
     lockedContentAriaLabel: "{title} — محتوى مميز، اضغط للتفاصيل",
