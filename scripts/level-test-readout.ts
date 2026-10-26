@@ -88,11 +88,15 @@ async function readSetting(): Promise<Setting> {
     mode: String(save.metadata?.mode ?? "?"),
     percent: typeof save.metadata?.percent === "number" ? save.metadata.percent : null,
   }));
-  const last = history.at(-1)?.at ?? row?.updated_at;
+  // The later of the two times: a change made outside the Permissions page leaves no audit row.
+  const saves = [history.at(-1)?.at, row?.updated_at]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => Date.parse(value))
+    .filter((ms) => !Number.isNaN(ms));
   return {
     mode: entry.mode,
     percent: entry.percent,
-    savedMs: last ? Date.parse(last) : null,
+    savedMs: saves.length > 0 ? Math.max(...saves) : null,
     history,
   };
 }
