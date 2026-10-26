@@ -48,3 +48,19 @@ export function startingLevelFromOpeningLesson(
     .find((entry) => tierOf(entry.lessonId));
   return first ? (tierOf(first.lessonId)?.level ?? null) : null;
 }
+
+/**
+ * The level to store when a signed-in learner has just finished `lessonId`, or null for nothing to
+ * store: only where the "Chosen level shapes the path" permission is open for them, and only for the
+ * Intermediate or Advanced opening lesson (the Beginner one says nothing, see above). It is the same
+ * read-back the guest migration does at sign-up, for a learner who finished the opening lesson after
+ * signing in; the caller still leaves a stored level alone, so an explicit choice (the level card,
+ * Settings) is never overwritten.
+ */
+export function levelFromFinishedOpeningLesson(input: {
+  permissionOpen: boolean;
+  lessonId: string;
+}): number | null {
+  if (!input.permissionOpen) return null;
+  return startingLevelFromOpeningLesson([{ lessonId: input.lessonId, completedAt: "" }]);
+}
