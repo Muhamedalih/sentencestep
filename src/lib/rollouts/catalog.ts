@@ -41,7 +41,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Chosen level shapes the path",
     description:
-      "The level a learner picks (Beginner, Intermediate or Advanced) becomes a floor for Home's next lesson, the Stories pick, the level card and Today's word block: lower levels only come up once nothing at or above it is left. Without this, the level only counted until the first lesson was finished, so Intermediate and Advanced learners were sent back through Level 1. It also gives back a level a guest lost, at sign-up, from the Intermediate or Advanced opening lesson they finished.",
+      "The level a learner picks (Beginner, Intermediate or Advanced) becomes a floor for Home's next lesson, the Stories pick, the level card and Today's word block: lower levels only come up once nothing at or above it is left. Without this, the level only counted until the first lesson was finished, so Intermediate and Advanced learners were sent back through Level 1. It also gives back a level nothing stored, from the Intermediate or Advanced opening lesson a learner finished: at sign-up for a guest, right after the lesson for a learner who was already signed in.",
     notes: [
       "A guest only keeps the level they chose in the short first run (see below); the long one still erases it on the way to sign-up.",
       "Learners who already have a stored level start getting lessons from it as soon as this reaches them.",

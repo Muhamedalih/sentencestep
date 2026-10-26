@@ -36,7 +36,10 @@ import {
   mergeStreak,
   selectCompletionsToMigrate,
 } from "@/lib/progress/guest-migration";
-import { startingLevelFromOpeningLesson } from "@/lib/progress/starting-level";
+import {
+  levelFromFinishedOpeningLesson,
+  startingLevelFromOpeningLesson,
+} from "@/lib/progress/starting-level";
 import { emptyProgressState } from "@/lib/progress/types";
 import { recordActivityDay, recordStreakBridgeDays } from "@/lib/features/activity-queries";
 import { disabledFeatures } from "@/lib/features/config";
@@ -290,6 +293,22 @@ export async function recordCompletionAction(
     const { individual, bulkCount } = summarizeNewBadges([...stat, ...questDay]);
     for (const badgeId of individual) rewards.push({ type: "badgeEarned", badgeId });
     if (bulkCount > 0) rewards.push({ type: "badgesBulk", count: bulkCount });
+  }
+
+  // A learner who finished the Intermediate or Advanced opening lesson while signed in has chosen
+  // that level even though nothing stored it (the guest migration reads it back the same way, at
+  // sign-up): saved here before the state below is read, where the permission is open for them and
+  // no level is stored yet.
+  const pickedLevel = levelFromFinishedOpeningLesson({
+    permissionOpen: features.rollouts.levelFloor,
+    lessonId,
+  });
+  if (pickedLevel !== null) {
+    await bestEffort("starting level from the opening lesson", async () => {
+      if ((await fetchProfileStartingLevel(userId)) === null) {
+        await setStartingLevelAction(pickedLevel);
+      }
+    });
   }
 
   const progress = await fetchProgressAction(todayISO);
