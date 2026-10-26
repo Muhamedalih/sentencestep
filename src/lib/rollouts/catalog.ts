@@ -10,6 +10,7 @@ export const ROLLOUT_IDS = [
   "sessionEnd",
   "sessionReminders",
   "shortFirstRun",
+  "inAppStrip",
   "todaySession",
   "sentenceBank",
   "newHome",
@@ -80,6 +81,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Admins only: nobody is given it; try it yourself by opening the home page with ?first_run=short (or ?first_run=classic to go back).",
       "A share of visitors: that percentage of NEW visitors get the short one, picked at random once and kept. Choosing 100 gives it to every new visitor.",
       "Every first-run screen reports which version the visitor saw, so the result can be read per version.",
+    ],
+  },
+  inAppStrip: {
+    id: "inAppStrip",
+    audience: "visitor",
+    title: "Open in browser strip (Facebook and Instagram)",
+    description:
+      "Facebook's and Instagram's built-in browsers can't sign anyone in with Google (Google refuses its sign-in page inside them), and they can't ask for notifications or install the site. On the sign-up and sign-in pages, inside those two browsers only, the “Continue with Google” button is replaced by a quiet strip: “Open the page in your browser”, with an open button and a copy-link button on Android and two steps and a copy-link button on iPhone. Signing up with email stays right below it. Everywhere else nothing changes.",
+    notes: [
+      "A share of new visitors: that percentage of the visitors who arrive in Facebook's or Instagram's browser get the strip; the rest keep the Google button, so the two can be compared on signing up and on the first day. Each visitor gets a random number from 0 to 99 once (a cookie), so it is the same visitors every time and a bigger share only adds visitors. Choosing 100 gives it to all of them.",
+      "Admins only: nobody is given it. To look at it, add ?in_app_strip=facebook-android, facebook-ios, instagram-android or instagram-ios to /register or /login; to try the real thing, open /register?in_app_strip=on inside Facebook's or Instagram's browser on a phone (for example from a link sent in a message).",
+      "The visitor's number travels in the link the strip opens, so a sign-up made in their own browser is still counted in their group: USER_SIGNED_UP, LESSON_STARTED and LESSON_COMPLETED carry it as inAppBucket (the group is that number below the share). Every view of the page by a visitor in one of those browsers (IN_APP_STRIP_SHOWN, with whether the strip was shown), every tap on “open” and every tap on “copy” is recorded.",
+      "Only the Android button is a one-tap open; there is no reliable way to do that on iPhone from inside these apps, so it gets the steps. The wording of the menu the steps name differs a little between apps and versions.",
     ],
   },
   todaySession: {

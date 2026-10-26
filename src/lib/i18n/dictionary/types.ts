@@ -391,6 +391,23 @@ export interface Dictionary {
     hidePassword: string;
     termsAgreementPrefix: string;
     termsAgreementAnd: string;
+    /** The "open in browser" strip that replaces the Google button inside Facebook's and Instagram's built-in browsers (see src/lib/in-app-strip/strip.ts). `{app}` is the browser's name (appFacebook or appInstagram) and `{menu}` is where the menu button's icon goes. */
+    inAppStrip: {
+      title: string;
+      /** Android: the open button follows. */
+      bodyAndroid: string;
+      /** iPhone: two steps and a copy button follow. */
+      bodyIos: string;
+      openButton: string;
+      copyButton: string;
+      copiedButton: string;
+      stepMenu: string;
+      stepChoose: string;
+      /** Android, when the open button was tapped and the page is still on screen a moment later. */
+      retryHint: string;
+      appFacebook: string;
+      appInstagram: string;
+    };
   };
   /**
    * The free path: the lessons a learner on the free plan can do in each level (see

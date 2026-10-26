@@ -11,6 +11,8 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { signIn, signInWithGoogle } from "@/lib/supabase/auth-actions";
 import type { AuthActionState } from "@/lib/supabase/auth-actions";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { InAppStripSlot } from "@/components/auth/in-app-browser-strip";
+import type { StripDecision } from "@/lib/in-app-strip/strip";
 import { authPageHref } from "@/lib/supabase/safe-redirect";
 
 const initialState: AuthActionState = {};
@@ -19,7 +21,10 @@ export function LoginForm({
   next,
   confirmationFailed,
   oauthFailed,
+  inAppStrip,
 }: {
+  /** What the open in browser strip does for this visitor (see src/lib/in-app-strip); null or absent for everyone outside Facebook's and Instagram's browsers. */
+  inAppStrip?: StripDecision | null;
   next?: string;
   /** Set when src/app/auth/callback/route.ts couldn't exchange the email confirmation code. */
   confirmationFailed?: boolean;
@@ -49,13 +54,15 @@ export function LoginForm({
           </p>
         )}
 
-        <form action={signInWithGoogle}>
-          <input type="hidden" name="next" value={next ?? "/learn"} />
-          <Button type="submit" variant="outline" className="w-full">
-            <GoogleIcon className="size-4" />
-            {t.auth.googleSignIn}
-          </Button>
-        </form>
+        <InAppStripSlot decision={inAppStrip ?? null} page="login">
+          <form action={signInWithGoogle}>
+            <input type="hidden" name="next" value={next ?? "/learn"} />
+            <Button type="submit" variant="outline" className="w-full">
+              <GoogleIcon className="size-4" />
+              {t.auth.googleSignIn}
+            </Button>
+          </form>
+        </InAppStripSlot>
 
         <div className="my-5 flex items-center gap-3">
           <div className="bg-border h-px flex-1" />

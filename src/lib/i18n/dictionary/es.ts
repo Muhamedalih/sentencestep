@@ -361,6 +361,22 @@ export const es: Dictionary = {
     hidePassword: "Ocultar contraseña",
     termsAgreementPrefix: "Al crear una cuenta, aceptas nuestros",
     termsAgreementAnd: "y",
+    inAppStrip: {
+      title: "Abre esta página en tu navegador",
+      bodyAndroid:
+        "El acceso con Google no funciona dentro del {app}. Abre la página en tu navegador y continúa con un toque, o regístrate aquí con tu correo.",
+      bodyIos:
+        "El acceso con Google no funciona dentro del {app}. O regístrate aquí con tu correo.",
+      openButton: "Abrir en el navegador",
+      copyButton: "Copiar enlace",
+      copiedButton: "Copiado",
+      stepMenu: "Toca {menu} en la parte superior de la pantalla",
+      stepChoose: "Elige «Abrir en el navegador»",
+      retryHint:
+        "¿No se abrió? Toca {menu} en la parte superior de la pantalla y elige «Abrir en el navegador».",
+      appFacebook: "navegador de Facebook",
+      appInstagram: "navegador de Instagram",
+    },
   },
   premium: {
     lockedContentAriaLabel: "{title} — contenido premium, toca para ver detalles",

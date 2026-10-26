@@ -1,5 +1,7 @@
+import type { InAppBrowser } from "@/lib/analytics/attribution";
 import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
+import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
 import type { LearningMode } from "@/types/content";
 
@@ -24,7 +26,9 @@ import type { LearningMode } from "@/types/content";
 // campaign, inApp, country — see attribution.ts), so the funnel can be read per
 // source and country. They are not part of the typed shapes below. USER_SIGNED_UP,
 // LESSON_STARTED and LESSON_COMPLETED also carry `firstRun` (which first-run
-// variant the visitor was given) whenever they have one.
+// variant the visitor was given) whenever they have one, and `inAppBucket` (the visitor's number
+// from 0 to 99 for the "Open in browser strip" test, see src/lib/in-app-strip/strip.ts) when the
+// browser has one.
 
 export type AnalyticsEventCategory =
   "AUTH" | "LEARNING" | "CONTENT" | "PROGRESS" | "PREMIUM" | "ENGAGEMENT";
@@ -182,6 +186,31 @@ export type AnalyticsEvent =
       category: "PREMIUM";
       /** A code was redeemed: how many days it added and whether they were stacked on Premium the learner still had. Never the code. */
       properties: { days: number; extendedExisting: boolean };
+    }
+  | {
+      name: "IN_APP_STRIP_SHOWN";
+      category: "AUTH";
+      /** A visitor in Facebook's or Instagram's built-in browser opened the sign-up or sign-in page while the "Open in browser strip" test was on: `shown` says whether they were given the strip or kept the Google button, so both groups have the same denominator. `bucket` is the visitor's number from 0 to 99 (the group is that number below the share), `forced` a page opened on purpose with ?in_app_strip=. At most one row per browser session and page. */
+      properties: {
+        app: InAppBrowser;
+        platform: StripPlatform;
+        page: StripPage;
+        shown: boolean;
+        forced: boolean;
+        bucket?: number;
+      };
+    }
+  | {
+      name: "IN_APP_STRIP_OPEN_CLICKED";
+      category: "AUTH";
+      /** The visitor tapped the strip's "open in browser" button (Android). */
+      properties: { app: InAppBrowser; platform: StripPlatform; page: StripPage; bucket?: number };
+    }
+  | {
+      name: "IN_APP_STRIP_COPY_CLICKED";
+      category: "AUTH";
+      /** The visitor tapped the strip's "copy link" button and the link was copied. */
+      properties: { app: InAppBrowser; platform: StripPlatform; page: StripPage; bucket?: number };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

@@ -6,6 +6,7 @@ import { NotConfiguredNotice } from "@/components/auth/not-configured-notice";
 import { Logo } from "@/components/layout/logo";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getInAppStripDecision } from "@/lib/in-app-strip/server";
 import { isConfirmationFailedError, isOAuthFailedError } from "@/lib/supabase/auth-errors";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -16,9 +17,10 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; in_app_strip?: string }>;
 }) {
-  const { next, error } = await searchParams;
+  const { next, error, in_app_strip: stripParam } = await searchParams;
+  const inAppStrip = await getInAppStripDecision(stripParam);
   const confirmationFailed = isConfirmationFailedError(error);
   const oauthFailed = isOAuthFailedError(error);
   const locale = await getLocale();
@@ -26,11 +28,20 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto flex min-h-svh max-w-md flex-col justify-center px-6 py-16">
-      <Link href="/" className="mb-8 inline-flex min-h-11 items-center self-start" aria-label={t.marketing.homeLinkAriaLabel}>
+      <Link
+        href="/"
+        className="mb-8 inline-flex min-h-11 items-center self-start"
+        aria-label={t.marketing.homeLinkAriaLabel}
+      >
         <Logo />
       </Link>
       {isSupabaseConfigured() ? (
-        <LoginForm next={next} confirmationFailed={confirmationFailed} oauthFailed={oauthFailed} />
+        <LoginForm
+          next={next}
+          confirmationFailed={confirmationFailed}
+          oauthFailed={oauthFailed}
+          inAppStrip={inAppStrip}
+        />
       ) : (
         <NotConfiguredNotice />
       )}

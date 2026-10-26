@@ -351,6 +351,21 @@ export const tr: Dictionary = {
     hidePassword: "Şifreyi gizle",
     termsAgreementPrefix: "Bir hesap oluşturarak şunları kabul edersiniz:",
     termsAgreementAnd: "ve",
+    inAppStrip: {
+      title: "Bu sayfayı tarayıcında aç",
+      bodyAndroid:
+        "Google ile giriş {app} içinde çalışmaz. Sayfayı tarayıcında açıp tek dokunuşla devam et ya da burada e-postayla kaydol.",
+      bodyIos: "Google ile giriş {app} içinde çalışmaz. Ya da burada e-postayla kaydol.",
+      openButton: "Tarayıcıda aç",
+      copyButton: "Bağlantıyı kopyala",
+      copiedButton: "Kopyalandı",
+      stepMenu: "Ekranın üstündeki {menu} simgesine dokun",
+      stepChoose: "“Tarayıcıda aç” seçeneğini seç",
+      retryHint:
+        "Açılmadı mı? Ekranın üstündeki {menu} simgesine dokun, sonra “Tarayıcıda aç” seçeneğini seç.",
+      appFacebook: "Facebook tarayıcısı",
+      appInstagram: "Instagram tarayıcısı",
+    },
   },
   premium: {
     lockedContentAriaLabel: "{title} — premium içerik, ayrıntılar için dokunun",

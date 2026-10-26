@@ -4,6 +4,7 @@ import { completedEvent, startedEvent } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { getLessonById } from "@/lib/content";
 import { isFirstRunVariant, isOnboardingStep } from "@/lib/first-run/variant";
+import { isInAppBrowserName, isStripPage, isStripPlatform } from "@/lib/in-app-strip/strip";
 import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isCountryCode } from "@/lib/i18n/country-codes";
@@ -121,4 +122,48 @@ export async function trackOnboardingCountryAction(countryCode: string): Promise
     { name: "ONBOARDING_COUNTRY_SELECTED", category: "ENGAGEMENT", properties: { countryCode } },
     user?.id ?? null,
   );
+}
+
+/**
+ * Called from the open in browser strip (see InAppStripSlot): the sign-up or sign-in page was seen
+ * by a visitor in Facebook's or Instagram's browser (`shown`), or the strip's open or copy button
+ * was tapped. Fire-and-forget like the onboarding ones, and every value arrives as client input, so
+ * each is re-validated against the known ones and the call silently no-ops otherwise.
+ */
+export async function trackInAppStripAction(details: {
+  kind: string;
+  app: string;
+  platform: string;
+  page: string;
+  shown?: boolean;
+  forced?: boolean;
+  bucket?: number | null;
+}): Promise<void> {
+  const { kind, app, platform, page } = details;
+  if (!isInAppBrowserName(app) || !isStripPlatform(platform) || !isStripPage(page)) return;
+  const bucket =
+    typeof details.bucket === "number" &&
+    Number.isInteger(details.bucket) &&
+    details.bucket >= 0 &&
+    details.bucket <= 99
+      ? details.bucket
+      : undefined;
+  const base = { app, platform, page, ...(bucket !== undefined ? { bucket } : {}) };
+  const user = await getCurrentUser();
+  const userId = user?.id ?? null;
+
+  if (kind === "shown") {
+    await track(
+      {
+        name: "IN_APP_STRIP_SHOWN",
+        category: "AUTH",
+        properties: { ...base, shown: details.shown === true, forced: details.forced === true },
+      },
+      userId,
+    );
+  } else if (kind === "open") {
+    await track({ name: "IN_APP_STRIP_OPEN_CLICKED", category: "AUTH", properties: base }, userId);
+  } else if (kind === "copy") {
+    await track({ name: "IN_APP_STRIP_COPY_CLICKED", category: "AUTH", properties: base }, userId);
+  }
 }

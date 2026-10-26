@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { ATTRIBUTION_COOKIE, attributionProperties } from "@/lib/analytics/attribution";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { FIRST_RUN_COOKIE, parseFirstRunCookie } from "@/lib/first-run/variant";
+import { IN_APP_BUCKET_COOKIE, parseBucket } from "@/lib/in-app-strip/strip";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { AnalyticsEvent, AnalyticsEventName } from "@/lib/analytics/events";
 
@@ -26,6 +27,13 @@ const FIRST_RUN_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
   "LESSON_COMPLETED",
 ]);
 
+/** The events that carry `inAppBucket`, the visitor's number from 0 to 99 that the "Open in browser strip" share is cut with (see src/lib/in-app-strip/strip.ts) — enough to read signing up and the first lessons per group, in whichever browser they happen. Only a browser that has the cookie (one that arrived in Facebook's or Instagram's browser, or was sent on from it by the strip) adds it. */
+const IN_APP_BUCKET_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
+  "USER_SIGNED_UP",
+  "LESSON_STARTED",
+  "LESSON_COMPLETED",
+]);
+
 /**
  * Read from the request that is already being served, so no extra database or
  * network call. Outside a request (a webhook, a cron) there is nothing to
@@ -34,7 +42,8 @@ const FIRST_RUN_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
 async function requestPropertiesFor(name: AnalyticsEventName): Promise<Record<string, string>> {
   const attributed = ATTRIBUTED_EVENTS.has(name);
   const firstRun = FIRST_RUN_EVENTS.has(name);
-  if (!attributed && !firstRun) return {};
+  const inAppBucket = IN_APP_BUCKET_EVENTS.has(name);
+  if (!attributed && !firstRun && !inAppBucket) return {};
   try {
     const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
     const properties: Record<string, string> = attributed
@@ -46,6 +55,8 @@ async function requestPropertiesFor(name: AnalyticsEventName): Promise<Record<st
       : {};
     const variant = firstRun ? parseFirstRunCookie(cookieStore.get(FIRST_RUN_COOKIE)?.value) : null;
     if (variant) properties.firstRun = variant;
+    const bucket = inAppBucket ? parseBucket(cookieStore.get(IN_APP_BUCKET_COOKIE)?.value) : null;
+    if (bucket !== null) properties.inAppBucket = String(bucket);
     return properties;
   } catch {
     return {};
