@@ -1206,6 +1206,10 @@ export const tr: Dictionary = {
     weeklyOpensTomorrow: "Yarın açılır: bugünkü cümleler bir gün sonra sorulur",
     weeklyResult:
       "Bu haftaki hikâye cümlelerin: {written} yazdın, {asked} içinden {remembered} tanesini bakmadan hatırladın (%{percent})",
+    endFreeHeading: "Başlangıç metinlerini ve hikâyelerini bitirdin",
+    endAllHeading: "Bütün metinleri ve hikâyeleri bitirdin",
+    endCounts: "{passages} metin · {stories} hikâye",
+    endAllBody: "Yeniler eklendiğinde burada görünecek. Bu arada kelime listeleriyle pratik yap.",
   },
   sentenceBank: {
     title: "Kendini sına",

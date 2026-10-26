@@ -6,7 +6,7 @@ import { getLessonSummaries } from "@/lib/content";
 import type { EffectiveFeatures } from "@/lib/features/config";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
-import { cefrForLevel, pickNextWordBlock } from "@/lib/home-plan/plan";
+import { cefrForLevel } from "@/lib/home-plan/plan";
 import { getLocale } from "@/lib/i18n/get-locale";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
@@ -19,11 +19,10 @@ import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import type { ProgressState } from "@/lib/progress/types";
 import { fetchLessonSentenceStats } from "@/lib/supabase/queries/content";
-import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
-import { fetchDueVocabularyRecallCount } from "@/lib/supabase/queries/vocabulary-recall";
-import { getWordGroupSummaries } from "@/lib/word-lists";
 import type { LessonUnit } from "@/types/content";
 
+import { finishedStoryOrPassageToday, todayEndInfo } from "./end-state";
+import type { TodayEndInfo } from "./end-state";
 import { pickPassage, pickStory } from "./next";
 import { WORDS_MINUTES, estimateStoryMinutes, medianWpm, planToday } from "./plan";
 import type { StepKind, StepPlan } from "./plan";
@@ -84,37 +83,6 @@ async function readLessonPicks(args: {
   return { summaries, passageProgress, passage, story };
 }
 
-/** What is open to this learner for each step, read once: the next passage and story, and whether the words step has something to do. */
-async function readPicks(args: {
-  userId: string;
-  locale: SupportLocale | null;
-  isPremium: boolean;
-  startingLevel: number | null;
-  passagesEnabled: boolean;
-  storiesUnits: LessonUnit[];
-  completedStoryIds: string[];
-  weakWordCount?: Promise<number>;
-}) {
-  const { userId, locale, startingLevel } = args;
-  const [lessons, groups, wordIds, dueRecall, weakCount] = await Promise.all([
-    readLessonPicks(args),
-    quiet("word groups", () => getWordGroupSummaries(locale ?? undefined), []),
-    quiet("word progress", () => fetchWordProgress(userId), [] as string[]),
-    quiet("due recall", () => fetchDueVocabularyRecallCount(userId), 0),
-    args.weakWordCount ?? 0,
-  ]);
-  const block = pickNextWordBlock(groups, new Set(wordIds), {
-    isPremiumUser: args.isPremium,
-    startingLevel,
-    floor: true,
-  });
-  return {
-    ...lessons,
-    /** There is something for the words step: new words to learn, or review words due. */
-    wordsAvailable: block !== null || dueRecall > 0 || weakCount > 0,
-  };
-}
-
 /** The latest passage and the latest story the learner finished today (their own calendar day), or undefined for either. */
 function finishedToday<Story extends { completedAt: string }>(args: {
   passageProgress: readonly PassageProgress[];
@@ -136,6 +104,8 @@ export interface TodayStepsData {
   steps: TodayStepData[];
   current: StepKind | null;
   allDone: boolean;
+  /** Set when nothing is left to open (and nothing was finished today): Home says so instead of drawing tasks. */
+  end: TodayEndInfo | null;
 }
 
 /**
@@ -169,9 +139,8 @@ export async function loadTodaySteps(args: {
     quiet("session dates", () => fetchSessionDatesSince(userId, todayISO), [] as string[]),
     quiet("typing speed", () => fetchRecentWpm(userId), [] as (number | null)[]),
   ]);
-  const picks = await readPicks({
+  const picks = await readLessonPicks({
     userId,
-    locale,
     isPremium: args.isPremium,
     startingLevel: progress?.startingLevel ?? null,
     passagesEnabled: args.passagesEnabled,
@@ -208,6 +177,9 @@ export async function loadTodaySteps(args: {
     : 0;
 
   const listenShown = listenToday && listenDoneSummary ? listenDoneSummary : picks.passage;
+  // The words step asks the target words of the day's story and passage and nothing else (see
+  // loadLinkedWords), so it exists exactly when the day has one of them: open next, or finished today.
+  const hasLessonsToday = Boolean(listenShown || storyShown);
   const plan = planToday(
     {
       listen: {
@@ -221,7 +193,7 @@ export async function loadTodaySteps(args: {
         minutes: storyMinutes,
       },
       words: {
-        available: picks.wordsAvailable,
+        available: hasLessonsToday,
         done: questOf.words?.completed === true,
         minutes: WORDS_MINUTES,
       },
@@ -261,6 +233,15 @@ export async function loadTodaySteps(args: {
     steps: plan.steps.map((step) => ({ ...step, ...detail[step.kind] })),
     current: plan.current,
     allDone: plan.allDone,
+    end: todayEndInfo({
+      isPremium: args.isPremium,
+      passagesEnabled: args.passagesEnabled,
+      passages: picks.summaries,
+      stories: storiesUnits,
+      nextPassage: picks.passage,
+      nextStory: picks.story,
+      hasLessonsToday,
+    }),
   };
 }
 
@@ -270,14 +251,15 @@ export async function loadTodaySteps(args: {
  * already finished today counts as done (even when it was dealt after the lesson, so its XP was not
  * paid — `paid` says which), and a quest with nothing open to this learner (no passage left, say) is
  * left out so the ring only counts what can be done. Null when the day has no Today quests; the
- * quests unchanged (without the tie) when anything fails.
+ * quests unchanged (without the tie) when anything fails. When nothing is left to open at all (every
+ * passage and story open to the learner is finished, none today), no quest is left and `end` says so.
  */
 export async function enrichTodayQuests(args: {
   userId: string;
   todayISO: string;
   features: EffectiveFeatures;
   quests: readonly DailyQuest[];
-}): Promise<{ quests: DailyQuest[]; weekly: WeeklyLine | null } | null> {
+}): Promise<{ quests: DailyQuest[]; weekly: WeeklyLine | null; end?: TodayEndInfo } | null> {
   const todayRows = args.quests.filter((quest) => quest.slot >= TODAY_QUEST_SLOT_BASE);
   if (todayRows.length === 0) return null;
   try {
@@ -358,7 +340,8 @@ export async function enrichTodayQuests(args: {
         },
       });
     }
-    return enriched.length > 0 ? { quests: enriched, weekly } : null;
+    if (enriched.length > 0) return { quests: enriched, weekly };
+    return data.end ? { quests: [], weekly, end: data.end } : null;
   } catch (error) {
     console.error("[today] enrichTodayQuests failed", error);
     return { quests: [...todayRows], weekly: null };
@@ -373,6 +356,7 @@ export async function enrichTodayQuests(args: {
 export async function loadTodayNext(args: {
   userId: string;
   locale: SupportLocale | null;
+  timeZone: string | undefined;
   isPremium: boolean;
   passagesEnabled: boolean;
 }): Promise<{
@@ -387,21 +371,36 @@ export async function loadTodayNext(args: {
       getLessonSummaries("stories", args.locale ?? undefined),
       fetchProgressCached(todayLocalISODate()),
     ]);
-    const picks = await readPicks({
+    const storyCompletions = (progress?.completions ?? []).filter(
+      (entry) => entry.mode === "stories",
+    );
+    const picks = await readLessonPicks({
       userId: args.userId,
-      locale: args.locale,
       isPremium: args.isPremium,
       startingLevel: progress?.startingLevel ?? null,
       passagesEnabled: args.passagesEnabled,
       storiesUnits,
-      completedStoryIds: (progress?.completions ?? [])
-        .filter((entry) => entry.mode === "stories")
-        .map((entry) => entry.lessonId),
+      completedStoryIds: storyCompletions.map((entry) => entry.lessonId),
     });
+    // The words step asks the day's passage and story words: it is there while the day has one of
+    // them — open next, or finished today (the last free story finished today still gets its words).
+    const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
+    const done = finishedToday({
+      passageProgress: picks.passageProgress,
+      storyCompletions,
+      todayISO,
+      dayOf: (iso) => localISODateInTimeZone(args.timeZone, new Date(iso)) ?? iso.slice(0, 10),
+    });
+    const hasLessonsToday = Boolean(
+      picks.passage ||
+      picks.story ||
+      picks.summaries.some((entry) => entry.id === done.listen?.passageId) ||
+      storiesUnits.some((entry) => entry.id === done.story?.lessonId),
+    );
     return {
       passageId: picks.passage?.id ?? null,
       storyId: picks.story?.id ?? null,
-      wordsAvailable: picks.wordsAvailable,
+      wordsAvailable: hasLessonsToday,
       nextTitle: picks.passage?.title ?? picks.story?.title ?? null,
     };
   } catch (error) {
@@ -412,15 +411,16 @@ export async function loadTodayNext(args: {
 
 /**
  * How many days of the learner's calendar week (today included) had a finished lesson, passage or
- * session — the finish screen's "N of 4 this week". Today always counts: the learner is finishing
- * a session right now.
+ * session — the finish screen's "N of 4 this week" — and whether a story or a passage was finished
+ * today, which is what makes a visit to the finish screen a real one. Today always counts: the
+ * learner is finishing a session right now.
  */
-export async function loadTodayWeekDays(args: {
+export async function loadTodayWeek(args: {
   userId: string;
   locale: SupportLocale | null;
   timeZone: string | undefined;
-  completions: readonly { completedAt: string }[];
-}): Promise<number> {
+  completions: readonly { mode: string; completedAt: string }[];
+}): Promise<{ days: number; workToday: boolean }> {
   const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
   const dates = weekDates(todayISO, weekStartFor(args.locale ?? "en"));
   const dayOf = (iso: string) =>
@@ -434,7 +434,15 @@ export async function loadTodayWeekDays(args: {
   for (const entry of passageProgress) {
     if (entry.completedAt) days.add(dayOf(entry.completedAt));
   }
-  return dates.filter((date) => date <= todayISO && days.has(date)).length;
+  return {
+    days: dates.filter((date) => date <= todayISO && days.has(date)).length,
+    workToday: finishedStoryOrPassageToday({
+      completions: args.completions,
+      passageProgress,
+      todayISO,
+      dayOf,
+    }),
+  };
 }
 
 /**

@@ -1223,6 +1223,11 @@ export const es: Dictionary = {
     weeklyOpensTomorrow: "Se abre mañana: las frases de hoy se preguntan un día después",
     weeklyResult:
       "Frases de tus historias esta semana: escribiste {written} y recordaste {remembered} de {asked} sin mirar ({percent}%)",
+    endFreeHeading: "Has terminado los textos y las historias de inicio",
+    endAllHeading: "Has terminado todos los textos y las historias",
+    endCounts: "{passages} textos · {stories} historias",
+    endAllBody:
+      "Aquí verás lo nuevo cuando se añada. Mientras, practica con las listas de palabras.",
   },
   sentenceBank: {
     title: "Ponte a prueba",

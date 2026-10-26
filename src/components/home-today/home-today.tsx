@@ -7,6 +7,7 @@ import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
 import { TodayBox } from "@/components/home-today/today-box";
+import { TodayEndCard } from "@/components/home-today/today-end-card";
 import { HomeTopBar } from "@/components/home-today/top-bar";
 import { WeeklyLineView } from "@/components/today/today-tasks";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
@@ -32,8 +33,9 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
 }
 
 /**
- * Today's tasks (or, if Today could not be built for this visit, the usual quests card, so the page
- * is never empty). The day's self-test card is at the box's foot: there from the first moment,
+ * Today's tasks (or, once nothing is left to open, the card that says so; or, if Today could not be
+ * built for this visit, the usual quests card, so the page is never empty). The day's self-test card
+ * is at the box's foot: there from the first moment,
  * locked (slightly blurred, with the line that says what opens it) until the day's three tasks are
  * done, then the card itself once a test was dealt — never an empty card, and no locked one for a
  * learner the test is not open to.
@@ -41,6 +43,7 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
 async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
   const [payload, features] = await Promise.all([quests, getEffectiveFeatures()]);
   if (!payload) return null;
+  if (payload.todayEnd) return <TodayEndCard end={payload.todayEnd} />;
   if (!isTodayMode(payload.quests)) return <QuestsCard payload={payload} />;
   const { tasks, test } = splitToday(payload.quests);
   const state = testCardState({ tasks, test, available: sentenceTestAvailable(features) });
@@ -52,7 +55,7 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
 /** The weekly sentence test, a card of its own under the boxes (locked until twelve story sentences, then ready; or last week's result as one quiet line). It scales with the boxes above it. */
 async function WeeklySlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
   const payload = await quests;
-  if (!payload?.weekly || !isTodayMode(payload.quests)) return null;
+  if (!payload?.weekly || !(isTodayMode(payload.quests) || payload.todayEnd)) return null;
   return (
     <div className="roomy:mt-[clamp(0.75rem,2svh,1.25rem)] roomy:[zoom:var(--home-zoom,1.1)] mt-5">
       <WeeklyLineView line={payload.weekly} className="mt-0" />

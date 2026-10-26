@@ -86,6 +86,15 @@ export async function loadDailyQuests(
     // story or words) instead of the random mix; a day without them falls through to the usual.
     if (features.rollouts.todaySession) {
       const today = await enrichTodayQuests({ userId, todayISO, features, quests });
+      if (today?.end) {
+        // Nothing is left to open: the new Home's Today box says so, the usual card keeps its rows.
+        return {
+          quests,
+          allDone: allQuestsCompleted(quests),
+          weekly: today.weekly,
+          todayEnd: today.end,
+        };
+      }
       if (today) {
         return {
           quests: today.quests,

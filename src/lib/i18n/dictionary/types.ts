@@ -1528,6 +1528,13 @@ export interface Dictionary {
     weeklyLocked: string;
     weeklyOpensTomorrow: string;
     weeklyResult: string;
+    /** Home's Today box once nothing is left to open (see TodayEndCard): a free learner finished the starter passages and stories; a Premium learner, all of them. */
+    endFreeHeading: string;
+    endAllHeading: string;
+    /** The counts under the heading, e.g. "8 passages · 8 stories"; `{passages}` and `{stories}` are numbers. */
+    endCounts: string;
+    /** The Premium version's line: nothing new yet, and where to practise meanwhile. */
+    endAllBody: string;
   };
   /** The sentence review (src/components/sentence-bank): sentences the learner typed before come back with their text hidden. `{n}`/`{clean}`/`{total}` are counts. */
   sentenceBank: {
