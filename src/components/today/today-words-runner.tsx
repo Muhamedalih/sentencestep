@@ -42,7 +42,7 @@ export function TodayWordsRunner({
         // The round is done: tick the day's words task (best-effort, never holds the learner up).
         void recordTodayWordsAction(today).catch(() => {});
         // The finish screen offers the day's test as an option; the day does not wait for it.
-        router.push("/learn/today/end");
+        router.push("/learn/today/end?words=1");
       }}
     />
   );

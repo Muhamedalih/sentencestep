@@ -1196,6 +1196,11 @@ export const en: Dictionary = {
     weeklyOpensTomorrow: "Opens tomorrow: today's sentences are asked a day later",
     weeklyResult:
       "Story sentences this week: you wrote {written}, and remembered {remembered} of {asked} without looking ({percent}%)",
+    endFreeHeading: "You've finished the starter passages and stories",
+    endAllHeading: "You've finished every passage and story",
+    endCounts: "{passages} passages · {stories} stories",
+    endAllBody:
+      "New ones will appear here when they're added. Meanwhile, practise with the word lists.",
   },
   sentenceBank: {
     title: "Test yourself",

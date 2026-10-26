@@ -13,7 +13,7 @@ import { todayLocalISODate } from "@/lib/progress/streak";
 import { sentenceReviewPending } from "@/lib/sentence-bank/quest";
 import { SENTENCE_REVIEW_HREF } from "@/lib/sentence-bank/review";
 import { getCurrentUser } from "@/lib/supabase/auth";
-import { loadTodayNext, loadTodayWeekDays } from "@/lib/today/load";
+import { loadTodayNext, loadTodayWeek } from "@/lib/today/load";
 import { hasMoreTodayWords } from "@/lib/today/session-words-load";
 
 // Per learner and per moment: what is waiting tomorrow is read live.
@@ -24,9 +24,15 @@ export const metadata: Metadata = { title: "Today's session" };
 /**
  * The finish screen of Today's session: how many of the words were remembered, what comes back
  * tomorrow, the reminder card when that is on, and five more words as the extra. Reached after the
- * words step — or straight from the carry-on route when nothing is left to do.
+ * words step (which adds ?words=1) — or straight from the carry-on route when nothing is left to do.
+ * A visit with nothing behind it (no story or passage finished today, no words round just typed) is
+ * not a finished session: it goes home instead of recording a day nobody did.
  */
-export default async function TodayEndPage() {
+export default async function TodayEndPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ words?: string }>;
+}) {
   const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
   if (!features.rollouts.todaySession || !user) redirect("/learn");
 
@@ -38,14 +44,15 @@ export default async function TodayEndPage() {
     getLocale(),
     fetchProgressCached(todayLocalISODate()),
   ]);
-  const [next, weekDays, testWaiting, moreWords] = await Promise.all([
+  const [next, week, testWaiting, moreWords] = await Promise.all([
     loadTodayNext({
       userId: user.id,
       locale,
+      timeZone,
       isPremium: premium || admin,
       passagesEnabled: features.passages.enabled,
     }),
-    loadTodayWeekDays({
+    loadTodayWeek({
       userId: user.id,
       locale,
       timeZone,
@@ -75,9 +82,12 @@ export default async function TodayEndPage() {
     }).catch(() => false),
   ]);
 
+  const { words } = await searchParams;
+  if (!week.workToday && words !== "1") redirect("/learn");
+
   return (
     <TodayEnd
-      weekDays={weekDays}
+      weekDays={week.days}
       nextTitle={next.nextTitle}
       moreWords={moreWords}
       testHref={testWaiting ? `${SENTENCE_REVIEW_HREF}?flow=1` : null}

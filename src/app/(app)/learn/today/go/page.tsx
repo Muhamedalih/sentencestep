@@ -29,17 +29,17 @@ export default async function TodayGoPage({
   const { step, redo } = await searchParams;
   const wanted = STEP_KINDS.find((kind) => kind === step) ?? "listen";
   const [premium, admin, locale] = await Promise.all([hasPremiumAccess(), isAdmin(), getLocale()]);
+  const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const next = await loadTodayNext({
     userId: user.id,
     locale,
+    timeZone,
     isPremium: premium || admin,
     passagesEnabled: features.passages.enabled,
   });
   const redoing = redo === "1";
   const storyId = redoing
-    ? ((await loadTodayStoryDone({
-        timeZone: (await cookies()).get(TIMEZONE_COOKIE)?.value,
-      })) ?? next.storyId)
+    ? ((await loadTodayStoryDone({ timeZone })) ?? next.storyId)
     : next.storyId;
   const targets = {
     listen: next.passageId ? `/learn/passages/${next.passageId}?today=1` : null,

@@ -1,6 +1,7 @@
 import { DAILY_QUEST_COUNT, QUEST_TYPES } from "@/lib/features/catalog";
 import type { QuestType } from "@/lib/features/catalog";
 import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
+import type { TodayEndInfo } from "@/lib/today/end-state";
 
 /**
  * Pure daily-quest logic: which quests a learner is dealt on a given day,
@@ -124,6 +125,8 @@ export interface DailyQuestsPayload {
   allDone: boolean;
   /** Today's box only, when the sentence bank is open: the one quiet line about the weekly sentence check (it is ready, or its result for the week after it). */
   weekly?: WeeklyLine | null;
+  /** The new Home only: nothing is left to open (every passage and story open to the learner is finished), so its Today box says so instead of listing tasks. `quests` then holds the rows the usual card draws. */
+  todayEnd?: TodayEndInfo;
 }
 
 /** What a lesson completion contributes to each quest type. */

@@ -1162,6 +1162,10 @@ export const ar: Dictionary = {
     weeklyOpensTomorrow: "يفتح غداً: جمل اليوم تُسأل بعد يوم",
     weeklyResult:
       "جمل قصصك هذا الأسبوع: كتبتَ {written}، وتذكّرت {remembered} من {asked} دون نظر ({percent}%)",
+    endFreeHeading: "أنهيت النصوص والقصص التمهيدية",
+    endAllHeading: "أنهيت كل النصوص والقصص",
+    endCounts: "{passages} نصوص · {stories} قصص",
+    endAllBody: "ستجد هنا الجديد حين يُضاف. وفي هذه الأثناء تدرّب من قوائم الكلمات.",
   },
   sentenceBank: {
     title: "اختبر نفسك",

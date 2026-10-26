@@ -99,3 +99,19 @@ review schedule, a mistake or a saved card; too few words make a shorter round, 
 finish screen. "5 more words" on the finish screen is the same day's words the first round left
 (`sessionLeftovers`), and is offered only while there are some. Code: `src/lib/today/session-words.ts`
 (pure), `session-words-load.ts`, `buildTodayWords` in `features/daily-session-service.ts`.
+
+## When nothing is left to open (2026-10-26)
+
+A free learner has exactly eight days of Today (the free passages and stories: 8 and 8 on 2026-10-26),
+a Premium one far more. Once every passage and story open to the learner is finished, and none was
+finished today, the day has no passage, no story and — because the words step asks the day's story and
+passage words only — no words step either (the plan used to keep it alive from the Word Lists, which
+sent the learner to an empty "session over" screen). The new Home then draws `TodayEndCard` in the
+tasks box's place (`payload.todayEnd`, decided by `todayEndInfo` in `src/lib/today/end-state.ts`): a
+free learner is told they finished the starter passages and stories, with the starter-lessons card's own
+line and a quiet link to the plans; a Premium learner, that new ones will appear, with a link to the word
+lists. It never says "finished" for a catalog that was not read (an empty list is a failed read). The
+weekly test card keeps its place. The current Home is unchanged (it draws the usual quests card).
+
+`/learn/today/end` is for sessions that happened: with no story or passage finished today and no words
+round just typed (the words step adds `?words=1`) it goes home instead of recording the day.
