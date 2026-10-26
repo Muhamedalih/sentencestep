@@ -8,9 +8,11 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
+  Check,
   Home,
   Loader2,
   Lock,
+  RefreshCw,
   RotateCcw,
   Wand2,
 } from "lucide-react";
@@ -33,9 +35,11 @@ import {
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import { BadgeMedal } from "@/components/app/badge-medal";
+import { StoryRatingRow } from "@/components/learning/story-rating-row";
 import { BADGE_DEFS } from "@/lib/features/catalog";
 import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
+import type { StoryWordOutcome, StoryWordOutcomes } from "@/lib/story-words";
 import type { RewardEvent } from "@/lib/progress/types";
 import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/content";
 
@@ -225,11 +229,13 @@ function formatReward(reward: RewardEvent, t: Dictionary): string {
  */
 export function LessonCompletion({
   mode,
+  lessonId,
   accuracy,
   wpm,
   nextLesson,
   nextLessonLocked = false,
   vocabulary,
+  wordOutcomes,
   streak,
   xp,
   xpEarned,
@@ -244,6 +250,8 @@ export function LessonCompletion({
   onRetryLesson,
 }: {
   mode: LearningMode;
+  /** This lesson's id — Stories only: the quiet row of stars at the foot of the page rates it. Without it (the admin theme preview) there is no row. */
+  lessonId?: string;
   /** 0–1 ratio of correct to total keystrokes across the lesson. */
   accuracy: number;
   /** Average words-per-minute across the lesson's sentences; 0 if unavailable. */
@@ -252,6 +260,8 @@ export function LessonCompletion({
   /** The next lesson is Premium and this learner can't open it: the button keeps its place but wears a lock and says "(Premium)", so tapping it is never a surprise. It still opens that lesson's page, which explains Premium calmly. */
   nextLessonLocked?: boolean;
   vocabulary?: VocabularyItem[];
+  /** Stories only: how each word ended in the words step that follows the last sentence (see StoryWordsPanel). The word cards then wear a tick or a "needs review" mark instead of the "new" tag, with a legend underneath. Absent when that step was not asked (the admin preview). */
+  wordOutcomes?: StoryWordOutcomes;
   streak: number;
   /** Running XP total (post this completion) — used only to show numeric progress toward the next level; the per-completion reward is xpEarned below. */
   xp: number;
@@ -270,7 +280,7 @@ export function LessonCompletion({
   mistakeCount?: number;
   /** Enters the Fix Your Mistakes flow (see FixYourMistakesSession) — never a Link, since it swaps this same screen's content in place rather than navigating. Ignored for Stories mode regardless of mistakeCount (see `hasMistakes` below) — Stories intentionally never surfaces this CTA, so a learner's outstanding mistakes from other modes are never framed as something to fix right after a story. */
   onFixMistakes?: () => void;
-  /** Opens StoryWordsPanel in place of this screen (see LessonSession's isViewingWords branch) — Stories mode only; every other mode keeps the plain inline vocabulary chips below since they have no per-word practice flow yet. */
+  /** Opens StoryWordsPanel again in place of this screen (see LessonSession's isViewingWords branch) — Stories mode only, as the quiet "practice the words again" link under the word cards; every other mode keeps the plain inline vocabulary chips below since they have no per-word practice flow yet. */
   onViewWords?: () => void;
   /** Opens the optional From-memory round (see FromMemorySession) in place of this screen. Undefined when the admin feature is off for this section, or the lesson has no translated sentences to ask — the button is then simply not rendered. */
   onPracticeFromMemory?: () => void;
@@ -288,11 +298,22 @@ export function LessonCompletion({
 }) {
   const reducedMotion = useReducedMotion();
   const { t, locale, dir } = useLocale();
+  // A story's finish page words itself for a story (heading, word label, next/retry buttons) and
+  // carries the extras of the words step: marks on the word cards, the next story's name, a rating row.
+  const isStory = mode === "stories";
+  const storyCopy = t.lesson.storyEnd;
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
   // The header and the stats panel read `view`; everything else (word cards, buttons) reads
   // `theme`. They are the same object unless this lesson has no target words.
   const hasVocabulary = Boolean(vocabulary && vocabulary.length > 0);
+  // The cards show at most the first three words, and the legend only the marks they wear.
+  const shownVocabulary = (vocabulary ?? []).slice(0, 3);
+  const shownOutcomes = new Set<StoryWordOutcome>();
+  for (const word of shownVocabulary) {
+    const outcome = wordOutcomes?.[word.id];
+    if (outcome) shownOutcomes.add(outcome);
+  }
   const boost = hasVocabulary ? 1 : NO_VOCABULARY_SCALE;
   const view = boost === 1 ? theme : enlargeTheme(theme, boost);
   // Read early: a new badge is one of the things that turns the celebration on.
@@ -364,6 +385,13 @@ export function LessonCompletion({
     href?: string;
     onClick?: () => void;
   };
+  const nextLabel = isStory
+    ? nextLessonLocked
+      ? storyCopy.nextStoryPremium
+      : storyCopy.nextStory
+    : nextLessonLocked
+      ? t.lesson.nextLessonPremium
+      : t.lesson.nextLesson;
   const actions: CompletionAction[] = [
     ...(hasMistakes
       ? [{ id: "fix" as const, icon: Wand2, label: t.lesson.fixMistakes, onClick: onFixMistakes }]
@@ -373,7 +401,7 @@ export function LessonCompletion({
           {
             id: "next" as const,
             icon: nextLessonLocked ? Lock : ArrowRight,
-            label: nextLessonLocked ? t.lesson.nextLessonPremium : t.lesson.nextLesson,
+            label: nextLabel,
             href: `/learn/${mode}/${nextLesson.id}`,
           },
         ]
@@ -393,7 +421,7 @@ export function LessonCompletion({
           {
             id: "retry" as const,
             icon: RotateCcw,
-            label: t.lesson.retryLesson,
+            label: isStory ? storyCopy.retryStory : t.lesson.retryLesson,
             onClick: onRetryLesson,
           },
         ]
@@ -401,6 +429,9 @@ export function LessonCompletion({
     { id: "home" as const, icon: Home, label: t.mistakes.learningHome, href: "/learn" },
   ];
   const [primaryAction, ...secondaryActions] = actions;
+  const [nextCaptionBefore = "", nextCaptionAfter = ""] = storyCopy.nextCaption
+    .split("{title}")
+    .map((part) => part.trim());
 
   // The grace-day note is intentionally split out of `rewards` before it
   // ever reaches formatReward's accent-colored join below — it isn't a
@@ -526,7 +557,8 @@ export function LessonCompletion({
               }}
               className="tracking-tight"
             >
-              {theme.headingText || t.lesson.completeHeading}
+              {theme.headingText ||
+                (isStory ? storyCopy.completeHeading : t.lesson.completeHeading)}
             </h2>
             <p
               dir="auto"
@@ -646,60 +678,115 @@ export function LessonCompletion({
                 }}
                 className="mb-2 text-center font-semibold tracking-widest uppercase"
               >
-                {theme.vocabTitle || t.lesson.vocabularyHeading}
+                {theme.vocabTitle ||
+                  (isStory ? storyCopy.wordsHeading : t.lesson.vocabularyHeading)}
               </p>
               <div style={{ gap: theme.chipSpacing }} className="flex">
-                {vocabulary.slice(0, 3).map((item) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      borderRadius: Math.min(theme.chipRadius, 20),
-                      borderColor: styles.vocabCardBorder,
-                      backgroundColor: styles.vocabCardBg,
-                      padding: `${fluid(theme.cardPadding, 8)} ${Math.round(theme.cardPadding * 0.6)}px`,
-                    }}
-                    className="flex flex-1 flex-col items-center gap-1.5 border text-center"
-                  >
-                    <span
+                {shownVocabulary.map((item) => {
+                  const outcome = wordOutcomes?.[item.id];
+                  return (
+                    <div
+                      key={item.id}
                       style={{
-                        backgroundColor: theme.colorAccent,
-                        color: ON_ACCENT_TEXT,
-                        fontSize: Math.max(8, Math.round(theme.bodySize * 0.7)),
+                        borderRadius: Math.min(theme.chipRadius, 20),
+                        borderColor: styles.vocabCardBorder,
+                        backgroundColor: styles.vocabCardBg,
+                        padding: `${fluid(theme.cardPadding, 8)} ${Math.round(theme.cardPadding * 0.6)}px`,
                       }}
-                      className="rounded-full px-2 py-0.5 font-bold"
+                      className="relative flex flex-1 flex-col items-center gap-1.5 border text-center"
                     >
-                      {t.lesson.newWordTag}
-                    </span>
-                    <span
-                      dir="ltr"
-                      style={{ color: styles.textPrimary, fontSize: fluid(theme.statSize, 16) }}
-                      className="font-extrabold"
-                    >
-                      {item.en}
-                    </span>
-                    <span
-                      style={{ color: styles.textSecondary, fontSize: theme.bodySize }}
-                      dir={dir}
-                    >
-                      {resolveVocabularySupportText(item, locale)}
-                    </span>
-                  </div>
-                ))}
+                      {outcome ? (
+                        <WordOutcomeBadge
+                          outcome={outcome}
+                          label={
+                            outcome === "first" ? storyCopy.wordFirstTry : storyCopy.wordNeedsReview
+                          }
+                          styles={styles}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            backgroundColor: theme.colorAccent,
+                            color: ON_ACCENT_TEXT,
+                            fontSize: Math.max(8, Math.round(theme.bodySize * 0.7)),
+                          }}
+                          className="rounded-full px-2 py-0.5 font-bold"
+                        >
+                          {t.lesson.newWordTag}
+                        </span>
+                      )}
+                      <span
+                        dir="ltr"
+                        style={{ color: styles.textPrimary, fontSize: fluid(theme.statSize, 16) }}
+                        className={cn("font-extrabold", outcome && "mt-2")}
+                      >
+                        {item.en}
+                      </span>
+                      <span
+                        style={{ color: styles.textSecondary, fontSize: theme.bodySize }}
+                        dir={dir}
+                      >
+                        {resolveVocabularySupportText(item, locale)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
+              {/* What the two marks mean — only the ones on the cards above. */}
+              {shownOutcomes.size > 0 && (
+                <p
+                  style={{
+                    color: styles.textSecondary,
+                    fontSize: Math.max(10, Math.round(theme.bodySize * 0.8)),
+                  }}
+                  className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1"
+                  dir={dir}
+                >
+                  {shownOutcomes.has("first") && (
+                    <span className="inline-flex items-center gap-1">
+                      <Check
+                        style={{ color: TIER_EXCELLENT }}
+                        className="size-3"
+                        aria-hidden="true"
+                      />
+                      {storyCopy.wordFirstTry}
+                    </span>
+                  )}
+                  {shownOutcomes.has("retried") && (
+                    <span className="inline-flex items-center gap-1">
+                      <RefreshCw className="size-3" aria-hidden="true" />
+                      {storyCopy.wordNeedsReview}
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
-            {/* Same PrimaryActionButton the Next Lesson/Fix Mistakes CTA below
-                uses — deliberately equal visual weight, not a quiet text
-                link, so practicing these words reads as a real next step,
-                not an afterthought (see this screen's UI feedback). */}
-            {onViewWords && (
-              <PrimaryActionButton
-                icon={BookOpen}
-                label={t.lesson.practiceWord}
-                onClick={onViewWords}
-                theme={theme}
-                reducedMotion={Boolean(reducedMotion)}
-              />
-            )}
+            {onViewWords &&
+              (isStory ? (
+                // A story's words were just asked in the words step, so asking again is a quiet
+                // link rather than a button that competes with the next story's.
+                <button
+                  type="button"
+                  onClick={onViewWords}
+                  style={{ color: styles.textSecondary, fontSize: theme.bodySize }}
+                  className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline pointer-coarse:min-h-11"
+                >
+                  <RefreshCw className="size-3.5" aria-hidden="true" />
+                  {storyCopy.practiceWordsAgain}
+                </button>
+              ) : (
+                // Same PrimaryActionButton the Next Lesson/Fix Mistakes CTA below
+                // uses — deliberately equal visual weight, not a quiet text
+                // link, so practicing these words reads as a real next step,
+                // not an afterthought (see this screen's UI feedback).
+                <PrimaryActionButton
+                  icon={BookOpen}
+                  label={t.lesson.practiceWord}
+                  onClick={onViewWords}
+                  theme={theme}
+                  reducedMotion={Boolean(reducedMotion)}
+                />
+              ))}
           </motion.div>
         )}
 
@@ -832,6 +919,22 @@ export function LessonCompletion({
           style={{ gap: fluid(theme.cardSpacing, 8), backgroundColor: styles.bg }}
           className="flex flex-col items-center max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:pt-2 max-lg:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         >
+          {/* A story's button says which story it leads to. */}
+          {isStory && primaryAction?.id === "next" && nextLesson?.title && (
+            <p
+              dir="auto"
+              style={{
+                color: styles.textSecondary,
+                fontSize: Math.max(11, Math.round(theme.bodySize * 0.85)),
+              }}
+              className="max-w-sm text-center"
+            >
+              {/* The title (English) is isolated, so the label around it keeps its own order. */}
+              {nextCaptionBefore && `${nextCaptionBefore} `}
+              <bdi>{nextLesson.title}</bdi>
+              {nextCaptionAfter && ` ${nextCaptionAfter}`}
+            </p>
+          )}
           {primaryAction && (
             <PrimaryActionButton
               icon={primaryAction.icon}
@@ -862,8 +965,50 @@ export function LessonCompletion({
             </div>
           )}
         </motion.div>
+
+        {/* A story is rated here, in a quiet row at the very end (below the pinned buttons on a
+            phone), instead of by the pop-up the other lessons show. */}
+        {isStory && lessonId && (
+          <motion.div variants={fadeInUp}>
+            <StoryRatingRow
+              lessonId={lessonId}
+              mode={mode}
+              color={styles.textSecondary}
+              accentColor={theme.colorAccent}
+            />
+          </motion.div>
+        )}
       </div>
     </motion.div>
+  );
+}
+
+/** The small tick (typed right the first time) or arrows (took more than one try) in the corner of a word card on a story's finish page. */
+function WordOutcomeBadge({
+  outcome,
+  label,
+  styles,
+}: {
+  outcome: StoryWordOutcome;
+  /** What the mark means — the same words as the legend under the cards. */
+  label: string;
+  styles: LessonCompletionStyles;
+}) {
+  const first = outcome === "first";
+  const color = first ? TIER_EXCELLENT : styles.textSecondary;
+  const Icon = first ? Check : RefreshCw;
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      style={{
+        color,
+        backgroundColor: `color-mix(in srgb, ${color} ${first ? 18 : 16}%, transparent)`,
+      }}
+      className="absolute end-2 top-2 flex size-[18px] items-center justify-center rounded-full"
+    >
+      <Icon className="size-3" aria-hidden="true" />
+    </span>
   );
 }
 

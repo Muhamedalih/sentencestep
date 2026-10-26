@@ -499,9 +499,14 @@ export interface LessonNavEntry {
   level: number;
   order: number;
   isFree: boolean;
+  /** Only so a story's finish page can name the story it leads to ("Next: ..."). */
+  title: string;
 }
 
-type LessonNavRow = Pick<LessonRow, "id" | "mode" | "order_index" | "status" | "is_free"> & {
+type LessonNavRow = Pick<
+  LessonRow,
+  "id" | "mode" | "order_index" | "status" | "is_free" | "title"
+> & {
   levels: Pick<Database["public"]["Tables"]["levels"]["Row"], "index"> | null;
 };
 
@@ -534,7 +539,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
 
   const { data, error } = await supabase
     .from("lessons")
-    .select("id, mode, order_index, status, is_free, levels(index)")
+    .select("id, mode, order_index, status, is_free, title, levels(index)")
     .eq("mode", mode)
     .eq("status", "published")
     .order("order_index");
@@ -551,6 +556,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
       level: lesson.levels?.index ?? 1,
       order: lesson.order_index,
       isFree: lesson.is_free,
+      title: lesson.title,
     }));
 }
 
@@ -571,7 +577,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
  * saveLesson/archiveLesson/restoreLesson/bulkUpdateLessonStatus, all of
  * which call revalidateTag("lesson-nav").
  */
-export const fetchLessonNav = unstable_cache(fetchLessonNavUncached, ["fetch-lesson-nav-v2"], {
+export const fetchLessonNav = unstable_cache(fetchLessonNavUncached, ["fetch-lesson-nav-v3"], {
   tags: ["lesson-nav"],
 });
 

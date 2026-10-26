@@ -183,6 +183,7 @@ export async function getLessonNav(mode: LearningMode): Promise<LessonNavEntry[]
     level: lesson.level,
     order: lesson.order,
     isFree: lesson.isFree,
+    title: lesson.title,
   }));
 }
 
