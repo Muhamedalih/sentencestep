@@ -972,7 +972,8 @@ export function LessonSession({
             <div className="flex-1 lg:min-h-0">
               <LessonCompletion
                 mode={unit.mode}
-                lessonId={unit.id}
+                // No row of stars in the admin preview: a tap there would send a real rating.
+                lessonId={previewMode ? undefined : unit.id}
                 accuracy={finalAccuracy}
                 wpm={finalWpm}
                 nextLesson={nextLesson}
