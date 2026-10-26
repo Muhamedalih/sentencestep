@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next";
 
+import { sitemapUrl } from "@/lib/seo/sitemap";
+import { getSiteUrl } from "@/lib/site-url";
+
 /**
- * No sitemap entry here yet — a sitemap needs absolute URLs (see
- * src/lib/site-url.ts's getSiteUrl(), the one place that domain lives).
- * Everything below is host-relative and needs no domain at all, so it's
- * safe to ship without one in the meantime.
+ * Everything is open to crawlers except the admin console, the API and the dev routes. The
+ * sitemap line must be an absolute URL, so it is built from src/lib/site-url.ts's getSiteUrl(),
+ * the one place that domain lives (see src/app/sitemap.ts for what it lists).
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -13,5 +15,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/admin/", "/api/", "/dev/"],
     },
+    sitemap: sitemapUrl(getSiteUrl()),
   };
 }
