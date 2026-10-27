@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isBankSource } from "@/lib/word-bank/types";
-import type { BankWordInput } from "@/lib/word-bank/types";
+import type { BankSource, BankWordInput } from "@/lib/word-bank/types";
 import type { BankWordState } from "@/lib/word-bank/select";
 
 /**
@@ -96,6 +96,31 @@ export async function fetchBankStates(userId: string): Promise<BankWordState[]> 
     if ((data?.length ?? 0) < PAGE) break;
   }
   return states;
+}
+
+/** Where one word of the learner's bank was first met, enough to find its home sentence's translation. */
+export interface BankHomeRow {
+  source: BankSource;
+  lessonId: string | null;
+  homeSentence: string | null;
+}
+
+/** The learner's own row for one word (by the primary key), or null when the word is not in their bank. */
+export async function fetchBankHome(userId: string, word: string): Promise<BankHomeRow | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("learner_words")
+    .select("source, lesson_id, home_sentence")
+    .eq("user_id", userId)
+    .eq("word", word)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    source: isBankSource(data.source) ? data.source : "lesson",
+    lessonId: data.lesson_id,
+    homeSentence: data.home_sentence,
+  };
 }
 
 /** How many of the learner's words are due on `todayISO` or before: one indexed count, for the Home button. */
