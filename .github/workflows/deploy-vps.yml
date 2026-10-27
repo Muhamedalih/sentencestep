@@ -169,7 +169,12 @@ jobs:
 
       # Only when the deploy itself succeeded but the live copy then failed its checks.
       # (If deploy.sh failed, it has already left the previous copy live — rolling back
-      # again would switch to the copy that just failed.)
+      # again would switch to the copy that just failed; the check is then skipped, so its
+      # outcome is not 'failure'.)
+      # `failure()` is what lets this step run at all: without a status function GitHub
+      # wraps the condition in `success() &&`, and once the check has failed the job is no
+      # longer successful, so the step used to be skipped and a failed check left the new
+      # copy live.
       - name: Roll back automatically if the live check failed
-        if: ${{ !inputs.rollback && steps.smoke.outcome == 'failure' }}
+        if: ${{ failure() && !inputs.rollback && steps.smoke.outcome == 'failure' }}
         run: ssh server rollback
