@@ -15,16 +15,20 @@ import type { Lesson } from "@/types/content";
  *
  * Which words, and where each sits in its sentence, is encounterTargets' job
  * (pure, tested): that includes a curated story's words, whose ids carry the
- * word instead of its place, and caps a story at its three words.
+ * word instead of its place, and caps a story at its three words. `stories` is
+ * the learner's "storyRecall" permission: closed, a story records nothing.
  */
-export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promise<void> {
+export async function recordVocabularyEncountersForLesson(
+  lesson: Lesson,
+  options: { stories: boolean },
+): Promise<void> {
   // Captured into a local const: TS narrows `lesson.mode` right after the
   // guard below, but that narrowing doesn't survive into the async closure
   // further down (an object property, not a local binding) — this does.
   const mode = lesson.mode;
   if (mode !== "normal" && mode !== "stories") return;
 
-  const targets = encounterTargets(lesson);
+  const targets = encounterTargets(lesson, options);
   if (targets.length === 0) return;
 
   await Promise.all(
