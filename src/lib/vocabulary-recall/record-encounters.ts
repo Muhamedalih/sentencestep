@@ -1,6 +1,5 @@
-import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { recordVocabularyEncounter } from "@/lib/supabase/queries/vocabulary-recall";
-import { parseVocabularyItemId } from "@/lib/vocabulary-recall/item-id";
+import { encounterTargets } from "@/lib/vocabulary-recall/encounter-targets";
 import type { Lesson } from "@/types/content";
 
 /**
@@ -13,25 +12,23 @@ import type { Lesson } from "@/types/content";
  * conversation mode, or a lesson whose sentences have no wordTranslations to
  * rank) and for any word this learner has already met before (see
  * record_vocabulary_encounter's ON CONFLICT DO NOTHING).
+ *
+ * Which words, and where each sits in its sentence, is encounterTargets' job
+ * (pure, tested): that includes a curated story's words, whose ids carry the
+ * word instead of its place, and caps a story at its three words.
  */
 export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promise<void> {
-  if (!lesson.vocabulary || lesson.vocabulary.length === 0) return;
-  if (lesson.mode !== "normal" && lesson.mode !== "stories") return;
   // Captured into a local const: TS narrows `lesson.mode` right after the
-  // guard above, but that narrowing doesn't survive into the async closure
-  // below (an object property, not a local binding) — this does.
+  // guard below, but that narrowing doesn't survive into the async closure
+  // further down (an object property, not a local binding) — this does.
   const mode = lesson.mode;
+  if (mode !== "normal" && mode !== "stories") return;
 
-  const sentenceById = new Map(lesson.sentences.map((sentence) => [sentence.id, sentence]));
+  const targets = encounterTargets(lesson);
+  if (targets.length === 0) return;
 
   await Promise.all(
-    lesson.vocabulary.map(async (item) => {
-      const parsed = parseVocabularyItemId(item.id);
-      if (!parsed) return;
-      const { sentenceId, wordIndex } = parsed;
-      const sentence = sentenceById.get(sentenceId);
-      if (!sentence) return;
-
+    targets.map(async ({ word, ar, sentenceId, sentenceEn, wordIndex }) => {
       try {
         await recordVocabularyEncounter({
           // Normalized the exact same way resolvePronunciationAudioAction's
@@ -40,13 +37,13 @@ export async function recordVocabularyEncountersForLesson(lesson: Lesson): Promi
           // the isolated-word pronunciation pipeline can never find this
           // word inside its own sentence, silently falling back to the
           // browser's speech synthesis.
-          word: normalizeMistakeWord(item.en),
-          ar: item.ar,
+          word,
+          ar,
           mode,
           lessonId: lesson.id,
           lessonTitle: lesson.title,
           sentenceId,
-          sentenceEn: sentence.en,
+          sentenceEn,
           wordIndex,
         });
       } catch (error) {

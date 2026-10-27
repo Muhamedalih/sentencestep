@@ -3,6 +3,7 @@ import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
 import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
+import type { WordsRoundSource } from "@/lib/words-round/round";
 import type { LearningMode } from "@/types/content";
 
 // --- The analytics event catalog. ---
@@ -211,6 +212,24 @@ export type AnalyticsEvent =
       category: "AUTH";
       /** The visitor tapped the strip's "copy link" button and the link was copied. */
       properties: { app: InAppBrowser; platform: StripPlatform; page: StripPage; bucket?: number };
+    }
+  | {
+      name: "WORDS_ROUND_STARTED";
+      category: "ENGAGEMENT";
+      /** The first word of a round of words was shown: a Word Lists practice (`list`), Today's five words (`today`) or the Review All Words queue (`review`). `count`: how many words the round asks (a practice that picks up where the learner left off asks only the words still open). A visit is counted again on a reload, and so is "Practice again". Counts only: no word, no word or lesson id, and guests are recorded too (no account). */
+      properties: { source: WordsRoundSource; count: number };
+    }
+  | {
+      name: "WORDS_ROUND_FINISHED";
+      category: "ENGAGEMENT";
+      /** A round of words ran to its end (every word landed): of `count` words, `clean` were typed right on the first go with no help, `assisted` right after one hint, `missed` wrong (or given up on) on the first go; count = clean + assisted + missed. A learner who leaves halfway writes only the start, so finished over started is the share who stay to the end, and (clean + assisted) over count is the first-go accuracy. */
+      properties: {
+        source: WordsRoundSource;
+        count: number;
+        clean: number;
+        assisted: number;
+        missed: number;
+      };
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

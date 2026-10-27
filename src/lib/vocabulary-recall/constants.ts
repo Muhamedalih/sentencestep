@@ -13,3 +13,6 @@ export const MAX_RECALL_SESSION_WORDS = 6;
 
 /** The two LearningModes Vocabulary Recall ever populates (see vocabulary_encounters' own `mode` check constraint) — narrower than LearningMode itself, which also has "conversation", a mode this feature never touches (see recordVocabularyEncountersForLesson's early return). */
 export type RecallMode = "normal" | "stories";
+
+/** A story hands Vocabulary Recall at most this many of its target words (a curated story has two or three): the same three words Today's words step asks per story, and the most rows one story completion can write. */
+export const MAX_STORY_ENCOUNTERS = 3;

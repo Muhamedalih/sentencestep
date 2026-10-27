@@ -19,6 +19,7 @@ import { useLessonFontSettings } from "@/components/providers/lesson-font-settin
 import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordAttempts } from "@/hooks/use-word-attempts";
 import type { WordAttemptStatus } from "@/hooks/use-word-typing-engine";
+import { useWordsRoundTracking } from "@/hooks/use-words-round-tracking";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { markCardReviewedAction } from "@/lib/cards/actions";
@@ -201,6 +202,13 @@ export function WordReviewSession({
   const word = currentIndex !== undefined ? words[currentIndex] : undefined;
   const attempt = word ? attempts.get(word.id) : { missed: false, hints: 0 };
   const total = words.length;
+  // The analytics' view of the visit as a round (counts only): the Review All Words queue is
+  // "review" and Today's five words (the session variant with its onFinished step) are "today".
+  // The recall and cards reviews, and the older Daily session page, are not measured.
+  const round = useWordsRoundTracking(
+    variant === "wordLists" ? "review" : variant === "session" && onFinished ? "today" : null,
+    total,
+  );
   const hint = word?.supportHint
     ? splitWordHint(word.supportHint)
     : { term: undefined, definition: undefined };
@@ -252,6 +260,7 @@ export function WordReviewSession({
       // Letters typed ahead after the last word belong to no word.
       typeAhead.clear();
       setIsComplete(true);
+      round.finish();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the queue changes
   }, [queue]);
@@ -325,10 +334,12 @@ export function WordReviewSession({
       const tried = attempts.get(target.id);
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       setCorrectedCount((count) => count + 1);
+      round.note(target.id, outcomeFor(tried));
       if (config.spaced) reportOutcome(target, tried.missed ? "recovered" : outcomeFor(tried));
       setQueue((prev) => prev.slice(1));
     } else {
       // Already recorded as a miss when the wrong answer landed: only the requeue is left.
+      round.note(target.id, "missed");
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
@@ -356,6 +367,7 @@ export function WordReviewSession({
       handleSmartResult(smartConfig, word, correct);
       return;
     }
+    round.note(word.id, correct ? "clean" : "missed");
     if (correct) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       setCorrectedCount((count) => count + 1);
