@@ -11,6 +11,7 @@ import {
   sessionWords,
   storyWordCandidates,
   withClips,
+  withoutBank,
 } from "@/lib/today/session-words";
 import type { PositionedWord } from "@/lib/today/session-words";
 import { BLANK_TOKEN } from "@/types/word-lists";
@@ -408,4 +409,76 @@ test("with few words there is nothing left for another round", () => {
     story: [],
     passage: [],
   });
+});
+
+test("each story word carries what the words bank remembers: where it was met, its meaning and its home sentence", () => {
+  const candidates = storyWordCandidates({
+    id: "story-9",
+    title: "Half a Cookie",
+    sentences,
+    vocabulary: [
+      item("story-9-s2", 4, "rain", "مطر", "lluvia"),
+      item("story-9-s1", 1, "balloon", "بالون"),
+    ],
+  });
+  assert.deepEqual(candidates[0]!.word.bank, {
+    source: "story",
+    lessonId: "story-9",
+    lessonTitle: "Half a Cookie",
+    ar: "lluvia",
+    homeSentence: "She waits for the rain to stop",
+  });
+  // With no support text the Arabic meaning is the one kept.
+  assert.equal(candidates[1]!.word.bank?.ar, "بالون");
+  assert.equal(candidates[1]!.word.bank?.homeSentence, "The balloon starts to fly over the hill");
+});
+
+test("each passage word carries what the words bank remembers, its home sentence being the passage line", () => {
+  const candidates = passageWordCandidates({
+    id: "the-quiet-hour",
+    title: "The Quiet Hour",
+    wordGroupId: "group-1",
+    sections,
+    words: [passageWord("w1", "silence", passageLines[1]!)],
+  });
+  assert.deepEqual(candidates[0]!.word.bank, {
+    source: "passage",
+    lessonId: "the-quiet-hour",
+    lessonTitle: "The Quiet Hour",
+    ar: "معنى silence",
+    homeSentence: passageLines[1],
+  });
+});
+
+test("the words bank context survives the choice of the five words and is taken away for a learner it is closed to", () => {
+  const story = storyWordCandidates({
+    id: "story-9",
+    title: "Half a Cookie",
+    sentences,
+    vocabulary: [item("story-9-s1", 1, "balloon", "بالون"), item("story-9-s2", 4, "rain", "مطر")],
+  });
+  const asked = sessionWords({ story, passage: [], size: 5, random: () => 0 });
+  assert.equal(asked.length, 2);
+  for (const word of asked) {
+    assert.equal((word as { bank?: { source: string } }).bank?.source, "story");
+  }
+  for (const word of asked.map(withoutBank)) assert.equal("bank" in word, false);
+  // Nothing else about the word changes, and the original is left alone.
+  assert.equal(withoutBank(asked[0]!).targetWord, asked[0]!.targetWord);
+  assert.equal("bank" in asked[0]!, true);
+});
+
+test("a word with no words bank context is returned as it is", () => {
+  const plain = storyWordCandidates({ title: "T", sentences, vocabulary: [] });
+  assert.deepEqual(plain, []);
+  const word = {
+    id: "w",
+    groupId: "g",
+    order: 0,
+    targetWord: "plan",
+    sentence: "x",
+    hintAr: "y",
+    reason: "review" as const,
+  };
+  assert.equal(withoutBank(word), word);
 });

@@ -14,6 +14,7 @@ export const ROLLOUT_IDS = [
   "todaySession",
   "sentenceBank",
   "newHome",
+  "wordBank",
   "redeemCodes",
 ] as const;
 
@@ -145,6 +146,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The free-lesson counter (“Starter lessons 3/4”) stays under the daily lesson card for learners on the free plan; Premium learners never saw it.",
       "To look at the current Home while this is open for you, add ?classic=1 to the address.",
       "To test it, choose “A share of learners”: those accounts get the new page and the rest keep the current one; the share is stable per account, like the other features.",
+    ],
+  },
+  wordBank: {
+    id: "wordBank",
+    audience: "learner",
+    title: "Words bank (“My Words”)",
+    description:
+      "A new section of the menu beside Word Lists: every word a learner meets in Today's words step (the day's story and passage) joins their own bank, with the sentence it was met in, and comes back after 1 / 3 / 7 / 16 / 30 days (a miss comes back tomorrow), in short rounds of up to five words, so what was learned is still there a week later. Word Lists itself is not touched.",
+    notes: [
+      "Needs Today's session to be open for the same people: the words come from Today's words step, so it stays closed while Today is closed.",
+      "Needs the learner_words table (migration 20250350000000, applied by pasting the SQL). Until it exists nothing is recorded and nothing is asked back.",
+      "Today's five words stay exactly the day's story and passage words: the bank only remembers them, it never adds to them or changes which words are asked.",
+      "At this stage the bank only COLLECTS words as they are answered; the menu item and its screens arrive in later changes, so opening it to learners now would gather words nobody can see yet.",
     ],
   },
   redeemCodes: {

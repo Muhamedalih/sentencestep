@@ -1250,6 +1250,54 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["sentence_mastery"]["Insert"]>;
         Relationships: [];
       };
+      /** The words bank («كلماتي»): one row per (learner, word) with its spaced-repetition state and where it was first met. Written only through record_learner_word_review(). See 20250350000000_learner_words.sql. */
+      learner_words: {
+        Row: {
+          user_id: string;
+          /** Normalized (trimmed, lower case, no edge punctuation). */
+          word: string;
+          /** 0 = new or just missed ... 5 = passed the 30-day review. */
+          strength: number;
+          /** The learner-local day this word is next due ("YYYY-MM-DD"). */
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews: number;
+          clean_reviews: number;
+          misses: number;
+          source: "story" | "passage" | "star" | "core" | "lesson";
+          lesson_id: string | null;
+          lesson_title: string | null;
+          /** The meaning as the learner saw it ("" when none was known). */
+          ar: string;
+          /** The full English sentence the word was first met in. */
+          home_sentence: string | null;
+          first_seen_on: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          word: string;
+          strength?: number;
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews?: number;
+          clean_reviews?: number;
+          misses?: number;
+          source: "story" | "passage" | "star" | "core" | "lesson";
+          lesson_id?: string | null;
+          lesson_title?: string | null;
+          ar?: string;
+          home_sentence?: string | null;
+          first_seen_on: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["learner_words"]["Insert"]>;
+        Relationships: [];
+      };
       sentence_checks: {
         Row: {
           user_id: string;
@@ -2153,6 +2201,19 @@ export interface Database {
       };
       record_sentence_review: {
         Args: { p_sentence_id: string; p_outcome: string; p_today: string };
+        Returns: { out_strength: number; out_due_on: string; out_advanced: boolean }[];
+      };
+      record_learner_word_review: {
+        Args: {
+          p_word: string;
+          p_outcome: string;
+          p_today: string;
+          p_source: string;
+          p_ar?: string;
+          p_lesson_id?: string | null;
+          p_lesson_title?: string | null;
+          p_home_sentence?: string | null;
+        };
         Returns: { out_strength: number; out_due_on: string; out_advanced: boolean }[];
       };
       record_vocabulary_encounter: {

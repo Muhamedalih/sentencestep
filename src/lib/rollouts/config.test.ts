@@ -178,6 +178,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     todaySession: false,
     sentenceBank: false,
     newHome: false,
+    wordBank: false,
     redeemCodes: false,
   });
 });
@@ -191,8 +192,8 @@ test("the sentence bank lives inside Today's box: it is never open without Today
   const before = { ...open, todaySession: false };
   const after = withRolloutDependencies(before);
   assert.deepEqual(
-    { ...after, sentenceBank: true, newHome: true },
-    { ...before, sentenceBank: true, newHome: true },
+    { ...after, sentenceBank: true, newHome: true, wordBank: true },
+    { ...before, sentenceBank: true, newHome: true, wordBank: true },
   );
   assert.equal(before.sentenceBank, true);
   // A plain learner has neither on the default settings.
@@ -215,6 +216,28 @@ test("the new Home page is built from Today's tasks: it is never open without To
   // A plain learner has it on neither default setting.
   assert.equal(
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).newHome,
+    false,
+  );
+});
+
+test("the words bank is fed by Today's words step: it is never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).wordBank, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).wordBank, false);
+  assert.equal(withRolloutDependencies({ ...open, wordBank: false }).wordBank, false);
+  // Its own setting alone does not open it for a learner whose Today's session is closed.
+  const config = defaultRolloutConfig();
+  config.wordBank = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).wordBank, false);
+  config.todaySession = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).wordBank, true);
+  // A plain learner has it on neither default setting, and a guest never does.
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).wordBank,
+    false,
+  );
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), guest)).wordBank,
     false,
   );
 });
