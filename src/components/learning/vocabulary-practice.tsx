@@ -28,6 +28,7 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordAttempts } from "@/hooks/use-word-attempts";
 import type { WordAttemptStatus } from "@/hooks/use-word-typing-engine";
 import { useWordProgress } from "@/hooks/use-word-progress";
+import { useWordsRoundTracking } from "@/hooks/use-words-round-tracking";
 import { masterMistakeWordAction, recordWordListMistakeAction } from "@/lib/mistakes/actions";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
 import { popIn } from "@/lib/motion";
@@ -41,6 +42,7 @@ import type { ResumePoint, WordOutcome } from "@/lib/word-mastery/schedule";
 import type { SmartPracticeConfig } from "@/lib/word-mastery/smart";
 import type { ReportedOutcome } from "@/lib/word-mastery/types";
 import { createTypeAheadBuffer } from "@/lib/word-typing";
+import { wordsAskedInVisit } from "@/lib/words-round/round";
 import type { VocabularyWord, WordGroup } from "@/types/word-lists";
 
 // Only reached after the first five words (summary, drill) or before any practice (caught up): split out of the first load.
@@ -282,6 +284,13 @@ function VocabularyPracticeSession({
   const [hintBusy, setHintBusy] = useState(false);
   const [typeAhead] = useState(() => createTypeAheadBuffer());
   const controlsRef = useRef<WordSentenceControls>(null);
+  // The analytics' view of the visit as a round: its start, the first outcome of each word and its
+  // end (counts only). The admin preview is never measured, and neither is a passage's word lesson
+  // (not one of the Word Lists topic lists the "list" rounds are about).
+  const round = useWordsRoundTracking(
+    previewMode || isPassageWordGroupId(group.id) ? null : "list",
+    wordsAskedInVisit(words.length, resume, BLOCK_SIZE),
+  );
 
   const currentBlock = blocks[blockIndex] ?? [];
   const currentSlot: number | undefined = queue[0];
@@ -314,6 +323,7 @@ function VocabularyPracticeSession({
       setDoneInBlock(new Set());
     } else {
       setIsComplete(true);
+      round.finish();
     }
   }
   // Owned here, not inside VocabularySentence (which remounts every word) —
@@ -382,6 +392,7 @@ function VocabularyPracticeSession({
       handleSmartResult(smart, word, correct);
       return;
     }
+    round.note(word.id, correct ? "clean" : "missed");
     if (correct) {
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       if (!previewMode && !markedWordIdsRef.current.has(word.id)) {
@@ -436,6 +447,7 @@ function VocabularyPracticeSession({
       const tried = attempts.get(target.id);
       playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
       const outcome = outcomeFor(tried);
+      round.note(target.id, outcome);
       if (!previewMode) {
         if (!markedWordIdsRef.current.has(target.id)) {
           markedWordIdsRef.current.add(target.id);
@@ -448,6 +460,7 @@ function VocabularyPracticeSession({
       setQueue((prev) => prev.slice(1));
     } else {
       // Already recorded as a miss when the wrong answer landed: only the requeue is left.
+      round.note(target.id, "missed");
       setQueue((prev) => [...prev.slice(1), prev[0]!]);
     }
   }
@@ -637,6 +650,7 @@ function VocabularyPracticeSession({
                       typeAhead.clear();
                       setShowSummary(false);
                       setIsComplete(false);
+                      round.restart(words.length);
                     }}
                   >
                     {t.wordLists.practiceAgain}

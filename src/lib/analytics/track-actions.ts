@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+
 import { completedEvent, startedEvent } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { getLessonById } from "@/lib/content";
@@ -8,6 +10,8 @@ import { isInAppBrowserName, isStripPage, isStripPlatform } from "@/lib/in-app-s
 import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isCountryCode } from "@/lib/i18n/country-codes";
+import { parseWordsRoundReport } from "@/lib/words-round/round";
+import type { WordsRoundReport } from "@/lib/words-round/round";
 import type { LearningMode } from "@/types/content";
 
 /**
@@ -165,5 +169,46 @@ export async function trackInAppStripAction(details: {
     await track({ name: "IN_APP_STRIP_OPEN_CLICKED", category: "AUTH", properties: base }, userId);
   } else if (kind === "copy") {
     await track({ name: "IN_APP_STRIP_COPY_CLICKED", category: "AUTH", properties: base }, userId);
+  }
+}
+
+/**
+ * Called from the screens that ask a round of words (see useWordsRoundTracking): once when the first
+ * word of a round is shown and once when the round runs to its end. Fire-and-forget like the
+ * onboarding ones and, like trackSentenceReviewAction, the write is left until the response is sent
+ * so a screen that moves straight on after the last word is never held up by it. The whole report
+ * arrives as client input, so it is re-validated (a known source, whole numbers in range, a finish
+ * whose outcomes add up) and the call silently no-ops otherwise. Counts only: no word, no ids. A
+ * guest's round is recorded too, with no account.
+ */
+export async function trackWordsRoundAction(report: WordsRoundReport): Promise<void> {
+  try {
+    const parsed = parseWordsRoundReport(report);
+    if (!parsed) return;
+    const user = await getCurrentUser();
+    const userId = user?.id ?? null;
+    if (parsed.event === "started") {
+      const { source, count } = parsed;
+      after(() =>
+        track(
+          { name: "WORDS_ROUND_STARTED", category: "ENGAGEMENT", properties: { source, count } },
+          userId,
+        ),
+      );
+    } else {
+      const { source, count, clean, assisted, missed } = parsed;
+      after(() =>
+        track(
+          {
+            name: "WORDS_ROUND_FINISHED",
+            category: "ENGAGEMENT",
+            properties: { source, count, clean, assisted, missed },
+          },
+          userId,
+        ),
+      );
+    }
+  } catch (error) {
+    console.error("[analytics] trackWordsRoundAction failed", error);
   }
 }
