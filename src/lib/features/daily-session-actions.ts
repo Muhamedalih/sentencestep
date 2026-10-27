@@ -14,7 +14,7 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { createClient } from "@/lib/supabase/server";
-import { sessionLeftovers, sessionWords } from "@/lib/today/session-words";
+import { sessionLeftovers, sessionWords, withoutBank } from "@/lib/today/session-words";
 import { loadLinkedWords } from "@/lib/today/session-words-load";
 import { generateWordListVoiceAudio } from "@/lib/voice/word-list-word-audio";
 
@@ -134,7 +134,10 @@ export async function fetchTodayWordsAction(size: number, more = false): Promise
       passagesEnabled: features.passages.enabled,
     });
     const { story, passage } = more ? sessionLeftovers({ ...linked, size }) : linked;
-    return sessionWords({ story, passage, size });
+    const words = sessionWords({ story, passage, size });
+    // The words bank remembers these words only for a learner it is open to ("wordBank"): for anyone
+    // else the words carry no bank context, so their screen records nothing and sends no extra call.
+    return features.rollouts.wordBank ? words : words.map(withoutBank);
   } catch (error) {
     console.error("[today] fetchTodayWordsAction failed", error);
     return [];

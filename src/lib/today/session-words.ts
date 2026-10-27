@@ -5,6 +5,7 @@ import type { PassageWord } from "@/lib/passages/types";
 import { isImportantWord } from "@/lib/today/important-words";
 import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 import { parseVocabularyItemId } from "@/lib/vocabulary-recall/item-id";
+import type { BankWordContext } from "@/lib/word-bank/types";
 import { BLANK_TOKEN } from "@/types/word-lists";
 import type { VocabularyItem } from "@/types/content";
 
@@ -26,8 +27,25 @@ import type { VocabularyItem } from "@/types/content";
 export const STORY_WORDS_MAX = 3;
 
 /** A candidate word and where it sits in its story or passage (the index of its sentence), so words that sit close together can be picked as one related group. */
+/**
+ * A review word that may also carry what the words bank («كلماتي») remembers about it: where it was
+ * met and the sentence it sat in. `bank` is added by the candidate builders below and taken away again
+ * (withoutBank) for a learner the bank is closed to, so the screen records nothing for them. It is not
+ * part of ReviewWord on purpose: the practice screen never reads it, only the recording of a finished
+ * word does (completeSessionWord).
+ */
+export type SessionReviewWord = ReviewWord & { bank?: BankWordContext };
+
+/** The word without its words-bank context (a learner the bank is closed to is never asked to record one). */
+export function withoutBank<T extends ReviewWord>(word: T): T {
+  if (!("bank" in word)) return word;
+  const copy = { ...word } as T & { bank?: BankWordContext };
+  delete copy.bank;
+  return copy;
+}
+
 export interface PositionedWord {
-  word: ReviewWord;
+  word: SessionReviewWord;
   position: number;
 }
 
@@ -61,6 +79,7 @@ function locateStoryWord(
 
 /** Every important target word of the story (its `lesson.vocabulary`), each with the story sentence it sits in blanked out. They are the very words the story's Vocabulary Recall encounters were made from, so finishing one advances that schedule. */
 export function storyWordCandidates(lesson: {
+  id?: string;
   title: string;
   sentences: readonly { id: string; en: string }[];
   vocabulary?: readonly VocabularyItem[];
@@ -91,6 +110,14 @@ export function storyWordCandidates(lesson: {
         // The real, synthesized isolated-word pipeline, as for every Vocabulary Recall word.
         pronunciationContentType: "sentence_word",
         pronunciationContentId: `${sentence.id}::${targetWord}`,
+        // What the words bank remembers: where the word was met, its meaning and its home sentence.
+        bank: {
+          source: "story",
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          ar: item.supportText ?? item.ar,
+          homeSentence: sentence.en,
+        },
       },
     });
   }
@@ -103,6 +130,7 @@ export function storyWordCandidates(lesson: {
  * with no word lesson: there is nothing to complete them against.
  */
 export function passageWordCandidates(passage: {
+  id?: string;
   title: string;
   wordGroupId: string | null;
   words: readonly PassageWord[];
@@ -130,6 +158,14 @@ export function passageWordCandidates(passage: {
         lessonTitle: passage.title,
         fromToday: "passage",
         audioUrl: entry.audioUrl,
+        // What the words bank remembers: where the word was met, its meaning and its home sentence.
+        bank: {
+          source: "passage",
+          lessonId: passage.id,
+          lessonTitle: passage.title,
+          ar: entry.hintAr,
+          homeSentence: entry.contextEn ?? undefined,
+        },
       },
     });
   }
