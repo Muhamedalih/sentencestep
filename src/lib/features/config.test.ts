@@ -402,6 +402,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       newHome: false,
       wordBank: false,
       redeemCodes: false,
+      storyRecall: false,
     });
   }
 });

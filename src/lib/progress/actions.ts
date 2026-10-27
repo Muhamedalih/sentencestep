@@ -346,7 +346,9 @@ export async function recordCompletionAction(
         );
       }
 
-      await recordVocabularyEncountersForLesson(lesson);
+      // A story's words join Recall only for a learner it is open to ("storyRecall": Admins only
+      // until the owner opens it); Normal lessons' words are recorded for everyone, as always.
+      await recordVocabularyEncountersForLesson(lesson, { stories: features.rollouts.storyRecall });
     } catch (error) {
       console.error("[progress] recordCompletionAction: post-response side effects failed", error);
     }

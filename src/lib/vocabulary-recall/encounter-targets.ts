@@ -25,13 +25,23 @@ export interface EncounterTarget {
  * A story gives at most MAX_STORY_ENCOUNTERS words (the first that can be placed, in the order of
  * its vocabulary); a Normal lesson gives all of its words, as it always did. A word that cannot be
  * placed, or that repeats one already taken, is left out.
+ *
+ * `stories` says whether a story hands over anything at all: it is the "storyRecall" permission of
+ * the learner who finished it (Admins only until the owner opens it), because the words a story adds
+ * show up for the learner (the Recall card on the Stories page). Closed, a story gives nothing, as it
+ * did before the lookup was shared; a Normal lesson is not affected either way. Required, so every
+ * caller has to decide.
  */
-export function encounterTargets(lesson: {
-  mode: Lesson["mode"];
-  vocabulary?: readonly VocabularyItem[];
-  sentences: readonly { id: string; en: string }[];
-}): EncounterTarget[] {
+export function encounterTargets(
+  lesson: {
+    mode: Lesson["mode"];
+    vocabulary?: readonly VocabularyItem[];
+    sentences: readonly { id: string; en: string }[];
+  },
+  options: { stories: boolean },
+): EncounterTarget[] {
   if (lesson.mode !== "normal" && lesson.mode !== "stories") return [];
+  if (lesson.mode === "stories" && !options.stories) return [];
   if (!lesson.vocabulary || lesson.vocabulary.length === 0) return [];
   const max = lesson.mode === "stories" ? MAX_STORY_ENCOUNTERS : Number.POSITIVE_INFINITY;
 

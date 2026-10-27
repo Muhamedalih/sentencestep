@@ -5,6 +5,9 @@ import { MAX_STORY_ENCOUNTERS } from "@/lib/vocabulary-recall/constants";
 import { encounterTargets } from "@/lib/vocabulary-recall/encounter-targets";
 import { locateVocabularyItem, parseVocabularyItemId } from "@/lib/vocabulary-recall/item-id";
 
+/** The "storyRecall" permission open for the learner (the default of these tests); the closed case is tested on its own. */
+const open = { stories: true };
+
 const sentences = [
   { id: "story-121-s1", en: "Mia feels total burnout after a long week." },
   { id: "story-121-s2", en: "She decides to unplug from her phone." },
@@ -70,14 +73,17 @@ test("a derived id is placed by its sentence, and a sentence that is not in the 
 });
 
 test("a curated story's words become encounters in the sentence they are found in (the bug: none did)", () => {
-  const targets = encounterTargets({
-    mode: "stories",
-    sentences,
-    vocabulary: [
-      { id: "story-121-vocab-burnout", en: "burnout", ar: "إرهاق تام" },
-      { id: "story-121-vocab-unplug", en: "unplug", ar: "ينقطع عن الإنترنت" },
-    ],
-  });
+  const targets = encounterTargets(
+    {
+      mode: "stories",
+      sentences,
+      vocabulary: [
+        { id: "story-121-vocab-burnout", en: "burnout", ar: "إرهاق تام" },
+        { id: "story-121-vocab-unplug", en: "unplug", ar: "ينقطع عن الإنترنت" },
+      ],
+    },
+    open,
+  );
   assert.deepEqual(targets, [
     {
       word: "burnout",
@@ -102,7 +108,7 @@ test("a derived id is still placed by its own sentence and index, in a story and
     { id: "story-121-s1-vocab-2", en: "Total", ar: "كامل" },
   ];
   for (const mode of ["stories", "normal"] as const) {
-    const targets = encounterTargets({ mode, sentences, vocabulary });
+    const targets = encounterTargets({ mode, sentences, vocabulary }, open);
     assert.deepEqual(
       targets.map(({ word, sentenceId, wordIndex }) => [word, sentenceId, wordIndex]),
       [
@@ -122,38 +128,44 @@ test("a story gives at most three words; a Normal lesson gives all of its words"
     { id: "story-121-vocab-week", en: "week", ar: "أسبوع" },
   ];
   assert.equal(MAX_STORY_ENCOUNTERS, 3);
-  const story = encounterTargets({ mode: "stories", sentences, vocabulary: many });
+  const story = encounterTargets({ mode: "stories", sentences, vocabulary: many }, open);
   assert.deepEqual(
     story.map((target) => target.word),
     ["mia", "feels", "total"],
   );
-  const normal = encounterTargets({
-    mode: "normal",
-    sentences,
-    vocabulary: [
-      { id: "story-121-s1-vocab-0", en: "Mia", ar: "ميا" },
-      { id: "story-121-s1-vocab-1", en: "feels", ar: "تشعر" },
-      { id: "story-121-s1-vocab-2", en: "total", ar: "كامل" },
-      { id: "story-121-s1-vocab-3", en: "burnout", ar: "إرهاق" },
-      { id: "story-121-s1-vocab-7", en: "week", ar: "أسبوع" },
-    ],
-  });
+  const normal = encounterTargets(
+    {
+      mode: "normal",
+      sentences,
+      vocabulary: [
+        { id: "story-121-s1-vocab-0", en: "Mia", ar: "ميا" },
+        { id: "story-121-s1-vocab-1", en: "feels", ar: "تشعر" },
+        { id: "story-121-s1-vocab-2", en: "total", ar: "كامل" },
+        { id: "story-121-s1-vocab-3", en: "burnout", ar: "إرهاق" },
+        { id: "story-121-s1-vocab-7", en: "week", ar: "أسبوع" },
+      ],
+    },
+    open,
+  );
   assert.equal(normal.length, 5);
 });
 
 test("a word that cannot be placed does not take one of a story's three places", () => {
-  const targets = encounterTargets({
-    mode: "stories",
-    sentences,
-    vocabulary: [
-      { id: "story-121-vocab-ghost", en: "ghost", ar: "شبح" }, // nowhere in the story
-      { id: "story-121-s9-vocab-1", en: "lost", ar: "ضائع" }, // a sentence that is not in the story
-      { id: "story-121-vocab-feels", en: "feels", ar: "تشعر" },
-      { id: "story-121-vocab-unplug", en: "unplug", ar: "ينقطع" },
-      { id: "story-121-vocab-phone", en: "phone", ar: "هاتف" },
-      { id: "story-121-vocab-week", en: "week", ar: "أسبوع" },
-    ],
-  });
+  const targets = encounterTargets(
+    {
+      mode: "stories",
+      sentences,
+      vocabulary: [
+        { id: "story-121-vocab-ghost", en: "ghost", ar: "شبح" }, // nowhere in the story
+        { id: "story-121-s9-vocab-1", en: "lost", ar: "ضائع" }, // a sentence that is not in the story
+        { id: "story-121-vocab-feels", en: "feels", ar: "تشعر" },
+        { id: "story-121-vocab-unplug", en: "unplug", ar: "ينقطع" },
+        { id: "story-121-vocab-phone", en: "phone", ar: "هاتف" },
+        { id: "story-121-vocab-week", en: "week", ar: "أسبوع" },
+      ],
+    },
+    open,
+  );
   assert.deepEqual(
     targets.map((target) => target.word),
     ["feels", "unplug", "phone"],
@@ -161,22 +173,58 @@ test("a word that cannot be placed does not take one of a story's three places",
 });
 
 test("a word is taken once, whichever way it is spelled in the vocabulary", () => {
-  const targets = encounterTargets({
-    mode: "normal",
-    sentences,
-    vocabulary: [
-      { id: "story-121-s1-vocab-3", en: "burnout", ar: "إرهاق" },
-      { id: "story-121-vocab-burnout", en: "Burnout", ar: "إرهاق" },
-    ],
-  });
+  const targets = encounterTargets(
+    {
+      mode: "normal",
+      sentences,
+      vocabulary: [
+        { id: "story-121-s1-vocab-3", en: "burnout", ar: "إرهاق" },
+        { id: "story-121-vocab-burnout", en: "Burnout", ar: "إرهاق" },
+      ],
+    },
+    open,
+  );
   assert.equal(targets.length, 1);
   assert.equal(targets[0]!.sentenceId, "story-121-s1");
 });
 
 test("a conversation, or a lesson with no vocabulary, hands nothing over", () => {
   const vocabulary = [{ id: "story-121-vocab-burnout", en: "burnout", ar: "إرهاق" }];
-  assert.deepEqual(encounterTargets({ mode: "conversation", sentences, vocabulary }), []);
-  assert.deepEqual(encounterTargets({ mode: "stories", sentences }), []);
-  assert.deepEqual(encounterTargets({ mode: "stories", sentences, vocabulary: [] }), []);
-  assert.deepEqual(encounterTargets({ mode: "normal", sentences: [], vocabulary }), []);
+  assert.deepEqual(encounterTargets({ mode: "conversation", sentences, vocabulary }, open), []);
+  assert.deepEqual(encounterTargets({ mode: "stories", sentences }, open), []);
+  assert.deepEqual(encounterTargets({ mode: "stories", sentences, vocabulary: [] }, open), []);
+  assert.deepEqual(encounterTargets({ mode: "normal", sentences: [], vocabulary }, open), []);
+});
+
+test("a story hands over nothing while its permission is closed; a Normal lesson does not care", () => {
+  const closed = { stories: false };
+  const curated = [{ id: "story-121-vocab-burnout", en: "burnout", ar: "إرهاق" }];
+  const derived = [{ id: "story-121-s1-vocab-3", en: "burnout", ar: "إرهاق" }];
+  // Closed: neither the curated ids (the ones in use) nor derived ones are recorded for a story.
+  assert.deepEqual(
+    encounterTargets({ mode: "stories", sentences, vocabulary: curated }, closed),
+    [],
+  );
+  assert.deepEqual(
+    encounterTargets({ mode: "stories", sentences, vocabulary: derived }, closed),
+    [],
+  );
+  // Open: both are.
+  assert.equal(
+    encounterTargets({ mode: "stories", sentences, vocabulary: curated }, open).length,
+    1,
+  );
+  assert.equal(
+    encounterTargets({ mode: "stories", sentences, vocabulary: derived }, open).length,
+    1,
+  );
+  // A Normal lesson gives the same words whichever way the story permission is set.
+  assert.deepEqual(
+    encounterTargets({ mode: "normal", sentences, vocabulary: derived }, closed),
+    encounterTargets({ mode: "normal", sentences, vocabulary: derived }, open),
+  );
+  assert.equal(
+    encounterTargets({ mode: "normal", sentences, vocabulary: derived }, closed).length,
+    1,
+  );
 });

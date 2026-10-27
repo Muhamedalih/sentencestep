@@ -180,7 +180,23 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     newHome: false,
     wordBank: false,
     redeemCodes: false,
+    storyRecall: false,
   });
+});
+
+test("story words in Recall: Admins only until opened, and independent of Today's session", () => {
+  const config = defaultRolloutConfig();
+  assert.equal(evaluateRollouts(config, admin).storyRecall, true);
+  assert.equal(evaluateRollouts(config, learner).storyRecall, false);
+  assert.equal(evaluateRollouts(config, guest).storyRecall, false);
+  // Opened for everyone it does not wait for Today's session: it is about a story's words, not Today's box.
+  config.storyRecall = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).storyRecall, true);
+  assert.equal(
+    withRolloutDependencies({ ...evaluateRollouts(config, learner), todaySession: false })
+      .storyRecall,
+    true,
+  );
 });
 
 test("the sentence bank lives inside Today's box: it is never open without Today's session", () => {

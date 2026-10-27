@@ -16,6 +16,7 @@ export const ROLLOUT_IDS = [
   "newHome",
   "wordBank",
   "redeemCodes",
+  "storyRecall",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -171,6 +172,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs the redeem-codes tables (migration 20250349000000, applied by pasting the SQL) and the server secret REDEEM_CODE_PEPPER on the server. Until both exist the box says it is not available.",
       "Codes are issued by an admin to an agent who has paid; the admin sees them once. Only a hash is kept, so a copy of the database holds no usable code.",
       "Closed, nobody can redeem a code, whoever holds one.",
+    ],
+  },
+  storyRecall: {
+    id: "storyRecall",
+    audience: "learner",
+    title: "Story words in Recall (“Words you've met”)",
+    description:
+      "A finished story's two or three target words join Vocabulary Recall, the “Words you've met” review: they come back the next day and then at growing intervals, a card on the Stories page offers them once three are waiting, and the line about words that come back tomorrow at the end of Today's session counts them. Until now a story never put a word there (its target words were skipped because their ids carry the word, not its place in the sentence), so only the words of Normal lessons came back. Normal lessons are not touched.",
+    notes: [
+      "Nothing else is needed: Recall's table (vocabulary_encounters) already exists. Closed, a finished story records nothing for the learner, exactly as it did before.",
+      "Only stories finished AFTER this is opened add words: the stories already finished are not looked back at (a one-off script could add them later).",
+      "At most three words are recorded per story, and a word the learner already has from a lesson keeps its first sentence and its schedule.",
+      "Admins have it already: finish a story, and the words appear in the card on the Stories page the next day.",
     ],
   },
 };
