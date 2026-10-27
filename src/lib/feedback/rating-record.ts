@@ -11,6 +11,16 @@ export const MAX_RATING_COMMENT_LENGTH = 2000;
  */
 export const PASSAGES_RATING_MODE = "passages";
 
+/**
+ * The `mode` of a rating given at the end of a words review («كلماتي»; its `lesson_id` is then
+ * "bank"). It is a rating of one section like Passages', so it must be kept out of the app's own
+ * figures the same way — but app_rating_distribution() still leaves out only 'passages': before
+ * «كلماتي» is opened to learners that function (and the Admin → Ratings lists) must be taught to
+ * set 'words' apart, or these ratings would count toward the quoted app average. While the section
+ * is Admins-only the only ratings are the owner's own.
+ */
+export const WORDS_RATING_MODE = "words";
+
 export type AppRatingInsert = Database["public"]["Tables"]["app_ratings"]["Insert"];
 
 export interface AppRatingSubmission {

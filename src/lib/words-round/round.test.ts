@@ -12,12 +12,13 @@ import {
 } from "@/lib/words-round/round";
 import { resumePoint } from "@/lib/word-mastery/schedule";
 
-test("the sources are the three places a round can be asked", () => {
-  assert.deepEqual([...WORDS_ROUND_SOURCES], ["list", "today", "review"]);
+test("the sources are the four places a round can be asked", () => {
+  assert.deepEqual([...WORDS_ROUND_SOURCES], ["list", "today", "review", "bank"]);
   assert.equal(isWordsRoundSource("list"), true);
   assert.equal(isWordsRoundSource("today"), true);
   assert.equal(isWordsRoundSource("review"), true);
-  assert.equal(isWordsRoundSource("bank"), false);
+  assert.equal(isWordsRoundSource("bank"), true);
+  assert.equal(isWordsRoundSource("cards"), false);
   assert.equal(isWordsRoundSource("LIST"), false);
   assert.equal(isWordsRoundSource(undefined), false);
   assert.equal(isWordsRoundSource(3), false);
@@ -64,7 +65,12 @@ test("a start report needs a known source and a count of at least one", () => {
     count: 5,
   });
   assert.equal(parseWordsRoundReport({ event: "started", source: "list", count: 0 }), null);
-  assert.equal(parseWordsRoundReport({ event: "started", source: "bank", count: 5 }), null);
+  assert.equal(parseWordsRoundReport({ event: "started", source: "cards", count: 5 }), null);
+  assert.deepEqual(parseWordsRoundReport({ event: "started", source: "bank", count: 5 }), {
+    event: "started",
+    source: "bank",
+    count: 5,
+  });
   assert.equal(parseWordsRoundReport({ event: "started", count: 5 }), null);
   assert.equal(parseWordsRoundReport({ source: "list", count: 5 }), null);
   assert.equal(parseWordsRoundReport({ event: "paused", source: "list", count: 5 }), null);

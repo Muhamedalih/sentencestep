@@ -8,8 +8,8 @@ import type { WordOutcome } from "@/lib/word-mastery/schedule";
  * id or a lesson id.
  */
 
-/** Where a round was asked: a Word Lists practice (`list`), Today's five words (`today`) or the Review All Words queue (`review`). */
-export const WORDS_ROUND_SOURCES = ["list", "today", "review"] as const;
+/** Where a round was asked: a Word Lists practice (`list`), Today's five words (`today`), the Review All Words queue (`review`) or a review round of the words bank «كلماتي» (`bank`). */
+export const WORDS_ROUND_SOURCES = ["list", "today", "review", "bank"] as const;
 export type WordsRoundSource = (typeof WORDS_ROUND_SOURCES)[number];
 
 export function isWordsRoundSource(value: unknown): value is WordsRoundSource {

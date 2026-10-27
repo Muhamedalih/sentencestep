@@ -32,6 +32,10 @@ const MAX_COMMENT_LENGTH = 2000;
  * from t.passages.rating, and a submit retires only that card's own one-time
  * gate — a learner who rated Passages still gets asked about the app itself.
  *
+ * With mode "words" it was opened by the words review's quiet row of stars (see StoryRatingRow's
+ * `question`): the question is about «كلماتي», its words come from t.myWords.rating, and a submit
+ * retires no card at all.
+ *
  * With mode "stories" it was opened by a story's quiet row of stars (see
  * StoryRatingRow): the question is about that story, and the words come from
  * t.lesson.storyEnd.rating — the app-wide wording would ask about the whole
@@ -50,7 +54,7 @@ export function RatingModal({
   onOpenChange: (open: boolean) => void;
   lessonId: string;
   /** "settings" identifies a rating given from the always-available Settings card rather than right after a real lesson; "passages" is the Passages section's own card (the lessonId is then the passage). */
-  mode: LearningMode | "settings" | "passages";
+  mode: LearningMode | "settings" | "passages" | "words";
   /** The stars already chosen when it opens — for a caller that took the first tap itself (a story's quiet row of stars, see StoryRatingRow). */
   initialRating?: number;
   /** Called with the rating once it has been sent. */
@@ -58,11 +62,14 @@ export function RatingModal({
 }) {
   const { t, locale } = useLocale();
   const forPassages = mode === "passages";
+  const forWords = mode === "words";
   const copy = forPassages
     ? { ...t.rateApp, ...t.passages.rating }
-    : mode === "stories"
-      ? { ...t.rateApp, ...t.lesson.storyEnd.rating }
-      : t.rateApp;
+    : forWords
+      ? { ...t.rateApp, ...t.myWords.rating }
+      : mode === "stories"
+        ? { ...t.rateApp, ...t.lesson.storyEnd.rating }
+        : t.rateApp;
   // A signed-in learner is answered at their account email, so only a guest is asked for one.
   const isGuest = useAuthUserId() === null;
   const prefersReducedMotion = useReducedMotion();
@@ -98,8 +105,10 @@ export function RatingModal({
       anonId: getOrCreateAnonId(),
       contactEmail: isGuest ? email : undefined,
     });
+    // A rating of one section retires only that section's own card; the words review's quiet row of
+    // stars (a rating of «كلماتي») retires nothing: a learner who rated it is still asked about the app.
     if (forPassages) markRatedPassages();
-    else markRatedApp();
+    else if (!forWords) markRatedApp();
     onSubmitted?.(rating);
     setSubmitted(true);
     window.setTimeout(() => onOpenChange(false), 1800);

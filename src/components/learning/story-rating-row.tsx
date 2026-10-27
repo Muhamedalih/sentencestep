@@ -21,13 +21,17 @@ export function StoryRatingRow({
   mode,
   color,
   accentColor,
+  question,
 }: {
   lessonId: string;
-  mode: LearningMode;
+  /** A story's mode, or "words": the same quiet row at the end of a words review (see BankReviewSession). */
+  mode: LearningMode | "words";
   /** The question's colour and the unlit stars' — the page's secondary text colour. */
   color: string;
   /** The lit stars' colour — the page's accent. */
   accentColor: string;
+  /** Replaces the story's own question ("How was the story?"). */
+  question?: string;
 }) {
   const { t } = useLocale();
   const [mounted, setMounted] = useState(false);
@@ -44,7 +48,7 @@ export function StoryRatingRow({
         style={{ color }}
         className="flex flex-wrap items-center justify-center gap-x-2 text-[11px]"
       >
-        <span dir="auto">{t.lesson.storyEnd.ratingQuestion}</span>
+        <span dir="auto">{question ?? t.lesson.storyEnd.ratingQuestion}</span>
         <span className="flex" onMouseLeave={() => setHover(0)}>
           {[1, 2, 3, 4, 5].map((n) => (
             <button

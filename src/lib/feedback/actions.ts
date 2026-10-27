@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/supabase/auth";
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import {
   PASSAGES_RATING_MODE,
+  WORDS_RATING_MODE,
   buildAppRatingRecord,
   type AppRatingInsert,
 } from "@/lib/feedback/rating-record";
@@ -28,8 +29,8 @@ export async function submitAppRatingAction(input: {
   rating: number;
   comment: string;
   lessonId: string;
-  /** "settings" identifies a rating given from Settings' always-available card rather than right after a real lesson; "passages" is the Passages section's own rating (lessonId is then the passage). */
-  mode: LearningMode | "settings" | "passages";
+  /** "settings" identifies a rating given from Settings' always-available card rather than right after a real lesson; "passages" is the Passages section's own rating (lessonId is then the passage); "words" is the words review's (lessonId is then the bank, see WORDS_RATING_MODE). */
+  mode: LearningMode | "settings" | "passages" | "words";
   /** Null means the un-prefixed English default — see useLocale()'s own doc comment. */
   locale: SupportLocale | null;
   anonId: string;
@@ -43,11 +44,13 @@ export async function submitAppRatingAction(input: {
     return;
   }
 
-  // The old sheet is a backup of the app's own ratings; a rating of one section (Passages) stays in
-  // the database, where Admin > Ratings keeps it apart from the app's figures.
+  // The old sheet is a backup of the app's own ratings; a rating of one section (Passages, the words
+  // review) stays in the database, where Admin > Ratings keeps it apart from the app's figures.
   await Promise.all([
     saveToDatabase(record),
-    input.mode === PASSAGES_RATING_MODE ? Promise.resolve() : sendToSheet(record, input),
+    input.mode === PASSAGES_RATING_MODE || input.mode === WORDS_RATING_MODE
+      ? Promise.resolve()
+      : sendToSheet(record, input),
   ]);
 }
 

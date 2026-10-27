@@ -1782,4 +1782,58 @@ export interface Dictionary {
       thanksBody: string;
     };
   };
+  /** «كلماتي» (My Words): the words a learner has met in their stories and texts, which come back to them — its review round (src/components/learning/bank-review-session.tsx). */
+  myWords: {
+    /** The section's name; the back link of its screens. */
+    title: string;
+    /** Above another sentence that holds the word, for a word asked in a new context. */
+    newSentenceChip: string;
+    /** That form's optional hint: it shows the meaning and counts as one help. */
+    hint: string;
+    /** The sound form: what to do, and the speaker's label. */
+    listenAndType: string;
+    playAgain: string;
+    /** After a miss, what the learner typed: "{word}". */
+    youTyped: string;
+    /** The label of the card that shows the sentence the word was first met in: "{title}" is the story or text, "{when}" one of the four below. */
+    homeSentenceLabel: string;
+    /** The same label for a word with no story or text to name: "{when}" only. */
+    homeSentenceLabelPlain: string;
+    tryAgain: string;
+    comesBackTomorrow: string;
+    whenToday: string;
+    whenYesterday: string;
+    /** A day within the last week: "{weekday}" is its name in the learner's language. */
+    whenLastWeekday: string;
+    /** A week or more ago: "{date}" is the day and month. */
+    whenOnDate: string;
+    /** The finish screen's heading by how many words were reviewed; "{n}" in the plural one. */
+    reviewedOne: string;
+    reviewedTwo: string;
+    reviewedMany: string;
+    firstTimeAll: string;
+    /** "{n}" of the words were right on the first try. */
+    firstTimeSome: string;
+    /** "{n}" is how many words the learner's bank holds. */
+    yourWordsNow: string;
+    /** How many of the round's words became stable: one, two, "{n}". */
+    stabilizedOne: string;
+    stabilizedTwo: string;
+    stabilizedMany: string;
+    backToMyWords: string;
+    /** Where the screen's way back leads to the Home page rather than to the section: the finish button's label. */
+    finishBackHome: string;
+    /** "{n}" more words (the finish screen's second button). */
+    moreWords: string;
+    /** The quiet row of stars on the finish screen. */
+    ratingQuestion: string;
+    /** What RatingModal says when this screen's row of stars opened it, in place of the app-wide wording. */
+    rating: {
+      headline: string;
+      subtitle: string;
+      commentPlaceholder: string;
+      thanksTitle: string;
+      thanksBody: string;
+    };
+  };
 }
