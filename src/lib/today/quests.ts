@@ -7,8 +7,9 @@ import type { StepKind } from "./plan";
 /**
  * Today's three steps ARE the learner's daily quests while "Today's session (new Home)" is open
  * for them: the same table, the same atomic progress-and-XP function, the same events — only the
- * pool is fixed instead of dealt at random. Listening to a passage is the "passage parts" quest, the
- * story is "finish a lesson", the words are "master words". The rows sit in slots 10-12, apart from
+ * pool is fixed instead of dealt at random. Listening to a passage is the "passages" quest, the
+ * story is "finish a lesson", the words are "master words", and each counts only what it is about
+ * (see eventsForAudience in features/quests.ts). The rows sit in slots 10-12, apart from
  * any random quests already dealt earlier that day, so nothing a learner has already earned is
  * disturbed. Pure: the dealing itself is in quest-service.ts.
  */
@@ -24,6 +25,27 @@ export const TODAY_QUEST_TYPE: Record<StepKind, QuestType> = {
 /** The story task is "finish ONE story", whatever the pool's "finish lessons" target is (2 by default). */
 export const TODAY_STORY_TARGET = 1;
 
+/**
+ * The listening task is "finish ONE passage": only a passage's finish counts toward it, not its
+ * parts (see passagePartQuestEvents in features/quests.ts).
+ */
+export const TODAY_PASSAGE_TARGET = 1;
+
+/**
+ * The target of each Today task. The story is always ONE story. The listening task is ONE passage
+ * once the honest ticks are open (only a passage's finish counts toward it, see
+ * passagePartQuestEvents in features/quests.ts); until then it keeps the pool's passages target.
+ */
+function todayTarget(
+  kind: StepKind,
+  settings: Record<QuestType, { target: number }>,
+  honestTicks: boolean,
+): number {
+  if (kind === "story") return TODAY_STORY_TARGET;
+  if (kind === "listen" && honestTicks) return TODAY_PASSAGE_TARGET;
+  return settings[TODAY_QUEST_TYPE[kind]].target;
+}
+
 export function todayQuestSlot(kind: StepKind): number {
   return TODAY_QUEST_SLOT_BASE + STEP_KINDS.indexOf(kind);
 }
@@ -35,16 +57,20 @@ export interface TodayQuestRow {
   xp: number;
 }
 
-/** The three rows to deal, with the admin-tuned target and XP of each quest type. */
+/**
+ * The three rows to deal, with the admin-tuned target and XP of each quest type (the targets of the
+ * story and, once the honest ticks are open, the listening task are fixed: see todayTarget).
+ */
 export function todayQuestRows(
   settings: Record<QuestType, { target: number; xp: number }>,
+  honestTicks: boolean,
 ): TodayQuestRow[] {
   return STEP_KINDS.map((kind) => {
     const type = TODAY_QUEST_TYPE[kind];
     return {
       slot: todayQuestSlot(kind),
       type,
-      target: kind === "story" ? TODAY_STORY_TARGET : settings[type].target,
+      target: todayTarget(kind, settings, honestTicks),
       xp: settings[type].xp,
     };
   });

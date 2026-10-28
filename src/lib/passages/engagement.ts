@@ -4,6 +4,7 @@ import type { BadgeId, QuestType } from "@/lib/features/catalog";
 import type { EffectiveFeatures } from "@/lib/features/config";
 import { recordActivityDay, recordStreakBridgeDays } from "@/lib/features/activity-queries";
 import { dealDailyQuests, recordQuestEvents } from "@/lib/features/quest-service";
+import { passagePartQuestEvents } from "@/lib/features/quests";
 import { bestEffort, planStreakForCompletion } from "@/lib/features/streak-service";
 import { passageBadgesFor } from "@/lib/passages/progress";
 import { emptyProgressState } from "@/lib/progress/types";
@@ -91,7 +92,7 @@ export async function recordPassagePartEngagement(input: {
           });
         }
         return recordQuestEvents(
-          [{ type: "passages", amount: 1 }],
+          passagePartQuestEvents({ passageCompleted, honestTicks: features.rollouts.honestTicks }),
           todayISO ?? undefined,
           features,
         );

@@ -131,16 +131,81 @@ export interface DailyQuestsPayload {
   tasteToday?: boolean;
 }
 
-/** What a lesson completion contributes to each quest type. */
+/**
+ * Who a quest event counts for. Two kinds of row can share one quest type: the random mix (slots
+ * 0-2) and Today's three tasks (slots 10-12), and the database advances EVERY row of a type. Without
+ * this, a regular lesson would tick Today's story, three parts of any passage would tick its
+ * listening task, and a flashcard word would tick its words task.
+ */
+export type QuestAudience = "general" | "today";
+
+export interface QuestEvent {
+  type: QuestType;
+  amount: number;
+  /** "general" when left out. Read only for the types the two kinds of row share. */
+  audience?: QuestAudience;
+}
+
+/** The types a Today task and a random quest can both be: lessons, passages and master words. */
+const SHARED_QUEST_TYPES: readonly QuestType[] = ["lessons", "passages", "masterWords"];
+
+/**
+ * The events that count for one learner: "today" ones only while Today's session is theirs, and
+ * "general" ones only while it is not. The other types have a single kind of row, so all their
+ * events count.
+ */
+export function eventsForAudience(
+  events: readonly QuestEvent[],
+  todayLearner: boolean,
+): QuestEvent[] {
+  return events.filter(
+    (event) =>
+      !SHARED_QUEST_TYPES.includes(event.type) || (event.audience === "today") === todayLearner,
+  );
+}
+
+/**
+ * What a lesson completion contributes to each quest type. A story also feeds Today's story task.
+ */
 export function questEventsForLesson(input: {
   sentenceCount: number;
   accuracy: number;
-}): { type: QuestType; amount: number }[] {
+  story?: boolean;
+}): QuestEvent[] {
   return [
     { type: "sentences", amount: input.sentenceCount },
     { type: "lessons", amount: 1 },
+    ...(input.story ? [{ type: "lessons" as const, amount: 1, audience: "today" as const }] : []),
     ...(input.accuracy >= 0.95 ? [{ type: "accuracy" as const, amount: 1 }] : []),
   ];
+}
+
+/**
+ * What one finished passage part contributes: every part counts toward the passages quest, and —
+ * once the honest ticks are open — the part that finishes the passage also counts toward Today's
+ * listening task (see eventsForAudience).
+ */
+export function passagePartQuestEvents(input: {
+  passageCompleted: boolean;
+  honestTicks: boolean;
+}): QuestEvent[] {
+  return input.passageCompleted && input.honestTicks
+    ? [
+        { type: "passages", amount: 1 },
+        { type: "passages", amount: 1, audience: "today" },
+      ]
+    : [{ type: "passages", amount: 1 }];
+}
+
+/**
+ * The events that count for one learner right now. Until the honest ticks are open every event
+ * counts, as it always did; once they are, the audience rule applies.
+ */
+export function countedQuestEvents(
+  events: readonly QuestEvent[],
+  learner: { todayLearner: boolean; honestTicks: boolean },
+): QuestEvent[] {
+  return learner.honestTicks ? eventsForAudience(events, learner.todayLearner) : [...events];
 }
 
 export function questProgressPercent(quest: Pick<DailyQuest, "progress" | "target">): number {

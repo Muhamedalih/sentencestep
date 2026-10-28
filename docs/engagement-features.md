@@ -211,7 +211,12 @@ letters` (`dictationStars`). Wrong letters alone never take the last star;
   otherwise the streak resets as before (`src/lib/features/streak-freeze.ts`).
 - **Quests** are dealt per learner per local day, deterministically, from the
   achievable part of the pool; progress + XP payout happen atomically in
-  `add_quest_progress`.
+  `add_quest_progress`, which advances every row of a type. Lessons, passages
+  and master words are shared by the random mix and Today's three tasks, so an
+  event for one of them carries an audience ("today" or general) and counts
+  only for the learners whose rows it is for (`eventsForAudience` in
+  `src/lib/features/quests.ts`). That counting is switched on by the admin-only
+  `honestTicks` permission; until it is open, every event counts as before.
 - **Badges** are retroactive: stats come from existing history via
   `badge_metrics()`, so the first evaluation awards what past progress earned
   (a flood collapses into one summary line).

@@ -12,6 +12,7 @@ export const ROLLOUT_IDS = [
   "shortFirstRun",
   "inAppStrip",
   "todaySession",
+  "honestTicks",
   "sentenceBank",
   "newHome",
   "wordBank",
@@ -119,6 +120,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The learner's chosen level is a floor for the passage, the story and the new words.",
       "Times are estimates: a passage from its length, a story from the learner's own typing speed.",
       "Reaching the finish screen after the words is recorded in daily_sessions (no XP). The reminder card on it needs the “Remind me tomorrow” email to be open too.",
+    ],
+  },
+  honestTicks: {
+    id: "honestTicks",
+    audience: "learner",
+    title: "Today's tasks tick only their own work",
+    description:
+      "Each of Today's three tasks is ticked only by what it names: the story by a story finished today, the listening by a passage finished today, the five words by the words round. Until this is open, a regular lesson can tick the story, three parts of any passage can tick the listening task, and a flashcard or mistake word can tick the words task. Only the ticks change: the tasks, their order and their XP stay as they are.",
+    notes: [
+      "Needs Today's session to be open for the same people, and stays closed while Today's session is closed.",
+      "A task dealt before this is open keeps the target it was dealt with for the rest of that day (the listening one needed three parts then); from the next day the listening task is one passage.",
+      "Ticks already made keep their XP; nothing is taken back.",
     ],
   },
   sentenceBank: {
