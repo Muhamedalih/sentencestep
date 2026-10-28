@@ -8,6 +8,7 @@ import { PremiumLocked } from "@/components/learning/premium-locked";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getGateLean } from "@/lib/billing/gate-lean-queries";
 import { getGatePay } from "@/lib/billing/gate-pay";
 import { getGateProgress } from "@/lib/billing/gate-progress";
 import { getGateFigures } from "@/lib/stats/gate-figures";
@@ -109,11 +110,12 @@ export default async function LessonPage({
   if (!canAccess) {
     // The view is counted in the same parallel batch as the lock's price and
     // figures, so recording it costs no extra wait.
-    const [fromPrice, figures, pay, progress] = await Promise.all([
+    const [fromPrice, figures, pay, progress, lean] = await Promise.all([
       getFromMonthlyPrice(),
       getGateFigures(locale),
       getGatePay(),
       getGateProgress(),
+      getGateLean(locale),
       trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id }),
     ]);
     return (
@@ -132,6 +134,7 @@ export default async function LessonPage({
             pay={pay}
             progress={progress}
             figures={figures}
+            lean={lean}
           />
         </div>
         {reportProblemButton}

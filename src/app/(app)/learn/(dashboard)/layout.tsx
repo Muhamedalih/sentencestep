@@ -5,6 +5,7 @@ import { DashboardChrome } from "@/components/app/dashboard-chrome";
 import { LearnSidebar } from "@/components/app/learn-sidebar";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { isAdmin } from "@/lib/admin/access";
+import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
@@ -56,12 +57,21 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
     getEffectiveFeatures(),
   ]);
 
+  // The Library's menu item: admins always; a subscriber once the "libraryGift" permission is open for
+  // them. The subscription is only looked up when that permission is open, so while it is closed this
+  // costs nothing (the pages check the same rule: see canOpenLibrary).
+  const libraryOpen = isAdminUser || (features.rollouts.libraryGift && (await hasPremiumAccess()));
+
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
         header={<AppHeader user={user} savedCount={savedCount} initialProgress={initialProgress} />}
         sidebar={
-          <LearnSidebar isAdminUser={isAdminUser} passagesEnabled={features.passages.enabled} />
+          <LearnSidebar
+            isAdminUser={isAdminUser}
+            libraryOpen={libraryOpen}
+            passagesEnabled={features.passages.enabled}
+          />
         }
       >
         {children}

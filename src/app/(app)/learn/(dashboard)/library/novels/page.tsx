@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
 import { NovelsHome } from "@/components/app/novels-home";
-import { isAdmin } from "@/lib/admin/access";
+import { canOpenLibrary } from "@/lib/library/access";
 import { fetchMonthlyReadingChallengeAction } from "@/lib/book-progress/actions";
 import {
   fetchAllNovels,
@@ -23,11 +23,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Novels" };
 
 export default async function NovelsHomePage() {
-  // The Library (Books and Novels) is admin-only for now — checked first,
+  // The Library (Books and Novels) is for admins, and for subscribers once the "libraryGift"
+  // permission is open for them (see canOpenLibrary) — checked first,
   // before any of this page's other queries run, so a regular learner never
   // pays for them. The Library homepage itself now gates the same way, so
   // there's no non-admin-reachable fallback to send this to but /learn.
-  if (!(await isAdmin())) redirect("/learn");
+  if (!(await canOpenLibrary())) redirect("/learn");
 
   const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
   // One shared client for every query this page fires — see library.ts's

@@ -17,6 +17,7 @@ import { getAccessState } from "@/lib/billing/access";
 import { firstParam, safeLessonPath } from "@/lib/billing/after-payment";
 import { premiumBenefits } from "@/lib/billing/benefits";
 import { devSetPlan } from "@/lib/billing/dev-actions";
+import { parseGateSource } from "@/lib/billing/gate-source";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { isOfferActive, offerBonusDaysByPlan, sharedBonusDays } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
@@ -49,7 +50,12 @@ export const dynamic = "force-dynamic";
 export default async function UpgradePage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{
+    next?: string | string[];
+    from?: string | string[];
+    at?: string | string[];
+    v?: string | string[];
+  }>;
 }) {
   const [user, access, locale, params, passagesOpen, features] = await Promise.all([
     getCurrentUser(),
@@ -82,7 +88,12 @@ export default async function UpgradePage({
   const tier = tierForCountry(country);
   const plans = buildPlanViews(tier, offer ? offerBonusDaysByPlan(offer) : 0);
 
-  await track({ name: "UPGRADE_VIEWED", category: "PREMIUM", properties: {} }, user?.id ?? null);
+  // Opened with a lock card's button (see PremiumGate)? Then the event says which lock, which button
+  // and which card, so the presses can be counted before and after a change to the card.
+  await track(
+    { name: "UPGRADE_VIEWED", category: "PREMIUM", properties: parseGateSource(params) ?? {} },
+    user?.id ?? null,
+  );
 
   // While the sitewide free-access promotion is on, a signed-out visitor is
   // covered by it like everyone else: they are told everything is open and how

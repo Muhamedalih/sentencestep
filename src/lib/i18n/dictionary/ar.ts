@@ -450,6 +450,13 @@ export const ar: Dictionary = {
     gateProgressSentences: "جملة كتبتها",
     gateProgressDays: "أيام التعلّم: {days}",
     gateReviewFree: "مراجعتك تبقى مجانية",
+    gateLeanSubheading: "دفعة واحدة تفتح كل الدروس والقصص والنصوص وقوائم الكلمات.",
+    gateTrustShort: "دفعة واحدة · بلا تجديد تلقائي",
+    gateGiftUpTo: "هدية حتى {days}",
+    gateGiftTag: "لا يظهر إلا للمشتركين",
+    gateGiftTitle: "في SentenceStep قسم لا تراه الآن",
+    gateGiftBody: "قسم جديد كليًا ينفتح لك فور الاشتراك، هدية منّا. ما بداخله؟ تكتشفه وحدك.",
+    gateLeanCtaGift: "افتح الدروس والمفاجأة",
     fromPerMonthCaption: "باقات تبدأ من {amount} / الشهر",
     contentUnavailableBody:
       "هذا الدرس غير متاح حاليًا. لم يُفقد شيء — يرجى المحاولة مرة أخرى بعد قليل، أو اختيار درس آخر.",

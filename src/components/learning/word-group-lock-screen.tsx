@@ -1,6 +1,7 @@
 import { WordGroupLocked } from "@/components/learning/word-group-locked";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
 import { getFromMonthlyPrice } from "@/lib/billing/from-price";
+import { getGateLean } from "@/lib/billing/gate-lean-queries";
 import { getGatePay } from "@/lib/billing/gate-pay";
 import { getGateProgress } from "@/lib/billing/gate-progress";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -22,11 +23,12 @@ export async function WordGroupLockScreen({
   group: Pick<WordGroup, "id" | "title" | "supportTitle" | "description" | "supportDescription">;
   locale: SupportLocale | null;
 }) {
-  const [fromPrice, figures, pay, progress] = await Promise.all([
+  const [fromPrice, figures, pay, progress, lean] = await Promise.all([
     getFromMonthlyPrice(),
     getGateFigures(locale),
     getGatePay(),
     getGateProgress(),
+    getGateLean(locale),
     trackPaywallViewed({ kind: "word_group", groupId: group.id }),
   ]);
   return (
@@ -40,6 +42,7 @@ export async function WordGroupLockScreen({
       pay={pay}
       progress={progress}
       figures={figures}
+      lean={lean}
     />
   );
 }

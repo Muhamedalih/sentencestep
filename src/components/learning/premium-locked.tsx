@@ -3,6 +3,7 @@
 import { useLocale } from "@/components/providers/locale-provider";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { PremiumGate } from "@/components/learning/premium-gate";
+import type { GateLean } from "@/lib/billing/gate-lean";
 import type { GatePay } from "@/lib/billing/gate-pay";
 import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
@@ -22,6 +23,7 @@ export function PremiumLocked({
   pay,
   progress,
   figures,
+  lean,
 }: {
   mode: LearningMode;
   /** This lesson's id: the upgrade page is opened with it, so after paying the learner can go straight back to this lesson (see AFTER_PAYMENT_COOKIE). */
@@ -42,6 +44,8 @@ export function PremiumLocked({
   progress?: GateProgress | null;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
+  /** The lean card's extras when the "leanGate" permission is open for this visitor (see getGateLean). */
+  lean?: GateLean | null;
 }) {
   const { t, locale } = useLocale();
   const resolvedSupportTitle = supportTitle ?? (locale === "ar" ? titleAr : undefined);
@@ -88,6 +92,8 @@ export function PremiumLocked({
       fromPrice={fromPrice}
       pay={pay}
       progress={progress}
+      lean={lean}
+      lockKind="lesson"
       backHref={`/learn/${mode}`}
       backLabel={t.premium.backToLessons}
     />

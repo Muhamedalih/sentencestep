@@ -58,14 +58,18 @@ import { cn } from "@/lib/utils";
  */
 export function LearnSidebar({
   isAdminUser = false,
+  libraryOpen,
   passagesEnabled = false,
 }: {
   isAdminUser?: boolean;
+  /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
+  libraryOpen?: boolean;
   /** The "passages" feature switch, resolved for this visitor — the nav item exists only while it is open to them (Admin preview: admins only). */
   passagesEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir } = useLocale();
+  const showLibrary = libraryOpen ?? isAdminUser;
   // Home is an exact match (not a prefix) — "/learn" is a short enough
   // prefix that /learn/settings, /learn/saved, and every other non-nav
   // route under it would otherwise light up Home too. Every other item
@@ -109,7 +113,7 @@ export function LearnSidebar({
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
   ].filter(
     (item) =>
-      (item.key !== "library" || isAdminUser) && (item.key !== "passages" || passagesEnabled),
+      (item.key !== "library" || showLibrary) && (item.key !== "passages" || passagesEnabled),
   );
 
   // Every route this sidebar links to, present on every /learn/* page —
@@ -128,7 +132,7 @@ export function LearnSidebar({
   const subNavHrefs =
     active === "stories"
       ? ["/learn/stories", "/learn/normal"]
-      : active === "library" && isAdminUser
+      : active === "library" && showLibrary
         ? ["/learn/library", "/learn/library/novels"]
         : [];
   useDeferredPrefetch(subNavHrefs, 0);
@@ -191,7 +195,7 @@ export function LearnSidebar({
                     isSubActive: pathname.startsWith("/learn/stories"),
                   },
                 ]
-              : item.key === "library" && isActive && isAdminUser
+              : item.key === "library" && isActive && showLibrary
                 ? [
                     {
                       key: "books",

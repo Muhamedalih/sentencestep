@@ -5,6 +5,7 @@ import { PosterPicture } from "@/components/passages/poster-picture";
 import { useLocale } from "@/components/providers/locale-provider";
 import { posterArtFor } from "@/lib/passages/art";
 import type { PassageTone } from "@/lib/passages/types";
+import type { GateLean } from "@/lib/billing/gate-lean";
 import type { GatePay } from "@/lib/billing/gate-pay";
 import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
@@ -52,6 +53,7 @@ export function PassageLocked({
   pay,
   progress,
   figures,
+  lean,
 }: {
   /** This passage's id: the plans page is opened with its address, so after paying the learner goes straight back to it. */
   passageId: string;
@@ -71,6 +73,8 @@ export function PassageLocked({
   progress?: GateProgress | null;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
+  /** The lean card's extras when the "leanGate" permission is open for this visitor (see getGateLean). */
+  lean?: GateLean | null;
 }) {
   const { t, locale } = useLocale();
   const arabic = locale === "ar";
@@ -96,6 +100,8 @@ export function PassageLocked({
       fromPrice={fromPrice}
       pay={pay}
       progress={progress}
+      lean={lean}
+      lockKind="passage"
       backHref="/learn/passages"
       backLabel={t.passages.backToAll}
     />

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { LibraryHome } from "@/components/app/library-home";
 import { LibraryMobileTabs } from "@/components/app/library-mobile-tabs";
-import { isAdmin } from "@/lib/admin/access";
+import { canOpenLibrary } from "@/lib/library/access";
 import { fetchMonthlyReadingChallengeAction } from "@/lib/book-progress/actions";
 import {
   fetchCategoriesWithBooks,
@@ -24,10 +24,11 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Library" };
 
 export default async function LibraryHomePage() {
-  // The Library (Books and Novels) is admin-only for now — checked first,
+  // The Library (Books and Novels) is for admins, and for subscribers once the "libraryGift"
+  // permission is open for them (see canOpenLibrary) — checked first,
   // before any of this page's other queries run, so a regular learner never
   // pays for them.
-  if (!(await isAdmin())) redirect("/learn");
+  if (!(await canOpenLibrary())) redirect("/learn");
 
   const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
   // One shared client for every library query this page fires — creating a

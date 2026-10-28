@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { BookOverview } from "@/components/app/book-overview";
-import { isAdmin } from "@/lib/admin/access";
+import { canOpenLibrary } from "@/lib/library/access";
 import { fetchBookProgressAction } from "@/lib/book-progress/actions";
 import { deriveChapterStates } from "@/lib/book-progress/chapter-state";
 import { fetchMyBookRatingAction } from "@/lib/book-progress/rating-actions";
@@ -30,10 +30,11 @@ export default async function BookOverviewPage({
 }: {
   params: Promise<{ bookId: string }>;
 }) {
-  // The Library (Books and Novels) is admin-only for now — checked first,
+  // The Library (Books and Novels) is for admins, and for subscribers once the "libraryGift"
+  // permission is open for them (see canOpenLibrary) — checked first,
   // before any of this page's other queries run, so a regular learner never
   // pays for them.
-  if (!(await isAdmin())) redirect("/learn");
+  if (!(await canOpenLibrary())) redirect("/learn");
 
   const { bookId } = await params;
   // One shared client for every library/book-content query this page fires —

@@ -2,6 +2,7 @@
 
 import { PremiumGate } from "@/components/learning/premium-gate";
 import { useLocale } from "@/components/providers/locale-provider";
+import type { GateLean } from "@/lib/billing/gate-lean";
 import type { GatePay } from "@/lib/billing/gate-pay";
 import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
@@ -62,6 +63,7 @@ export function WordGroupLocked({
   pay,
   progress,
   figures,
+  lean,
 }: {
   /** The page the learner was stopped at (practice, Learn or word wall): the plans page is opened with it, so after paying they go straight back. */
   returnPath: string;
@@ -78,6 +80,8 @@ export function WordGroupLocked({
   progress?: GateProgress | null;
   /** How big the library really is (see getGateFigures); a null figure is simply left out of the sentence. */
   figures: GateFigures;
+  /** The lean card's extras when the "leanGate" permission is open for this visitor (see getGateLean). */
+  lean?: GateLean | null;
 }) {
   const { t } = useLocale();
 
@@ -104,6 +108,8 @@ export function WordGroupLocked({
       fromPrice={fromPrice}
       pay={pay}
       progress={progress}
+      lean={lean}
+      lockKind="word_group"
       backHref="/learn/word-lists"
       backLabel={t.wordLists.backToWordLists}
     />

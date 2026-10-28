@@ -181,7 +181,27 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     wordBank: false,
     redeemCodes: false,
     storyRecall: false,
+    leanGate: false,
+    libraryGift: false,
   });
+});
+
+test("the lean lock card and the Library for subscribers: Admins only until opened, each on its own", () => {
+  const config = defaultRolloutConfig();
+  for (const id of ["leanGate", "libraryGift"] as const) {
+    assert.equal(evaluateRollouts(config, admin)[id], true);
+    assert.equal(evaluateRollouts(config, learner)[id], false);
+    assert.equal(evaluateRollouts(config, guest)[id], false);
+  }
+  // Opened for everyone, a guest has the lean card too (it is decided on the server, not on an account)...
+  config.leanGate = entry({ mode: "everyone" });
+  assert.equal(evaluateRollouts(config, guest).leanGate, true);
+  // ...and opening one never opens the other, nor waits for Today's session.
+  assert.equal(evaluateRollouts(config, guest).libraryGift, false);
+  assert.equal(
+    withRolloutDependencies({ ...evaluateRollouts(config, guest), todaySession: false }).leanGate,
+    true,
+  );
 });
 
 test("story words in Recall: Admins only until opened, and independent of Today's session", () => {

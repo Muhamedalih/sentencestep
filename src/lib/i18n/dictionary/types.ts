@@ -543,6 +543,18 @@ export interface Dictionary {
     gateProgressDays: string;
     /** Said only to a learner who never paid: their review does not need Premium. */
     gateReviewFree: string;
+    /** The lean lock card (see PremiumGate with `lean`): the one line under the heading, for every kind of lock. It names what one payment opens and nothing else. */
+    gateLeanSubheading: string;
+    /** The reassurance beside the price on the lean card. Says nothing about refunds or time limits. */
+    gateTrustShort: string;
+    /** The mark for the gift days of the running offer when the plans get different numbers: "up to" the largest. `{days}` is a formatted day count. */
+    gateGiftUpTo: string;
+    /** The sealed-section card on the lean lock card (only while that section really opens for subscribers). It never says what the section is: only that it is new, a gift and for subscribers. */
+    gateGiftTag: string;
+    gateGiftTitle: string;
+    gateGiftBody: string;
+    /** The button's label when the sealed-section card is shown. */
+    gateLeanCtaGift: string;
     /** Small caption under the upgrade CTA on locked content — `{amount}` is the cheapest per-month USD price for the visitor's tier, e.g. "$1.17". It names no currency but USD and no provider. */
     fromPerMonthCaption: string;
     contentUnavailableBody: string;
