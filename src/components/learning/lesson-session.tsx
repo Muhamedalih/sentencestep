@@ -872,6 +872,11 @@ export function LessonSession({
               accuracy={finalAccuracy}
               saveStatus={saveStatus}
               onRetrySave={retryMarkComplete}
+              ruleHref={
+                features.rollouts.dailyRule && unit.level === 1
+                  ? `/learn/today/rule?from=${encodeURIComponent(unit.id)}`
+                  : undefined
+              }
             />
           </div>
         ) : isComplete && usesSessionEnd ? (

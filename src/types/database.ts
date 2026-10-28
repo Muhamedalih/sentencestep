@@ -1298,6 +1298,42 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["learner_words"]["Insert"]>;
         Relationships: [];
       };
+      /** The rule of the day («قاعدة اليوم»): one row per (learner, A1 rule) with its spaced-repetition state. Written only through record_learner_rule_review(). See 20250351000000_learner_rules.sql. */
+      learner_rules: {
+        Row: {
+          user_id: string;
+          /** The ladder id, e.g. "a1-04" (src/lib/daily-rule/ladder.ts). */
+          rule_id: string;
+          /** 0 = new or just missed ... 5 = passed the 30-day review; held from 3. */
+          strength: number;
+          /** The learner-local day this rule is next due ("YYYY-MM-DD"). */
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews: number;
+          clean_reviews: number;
+          misses: number;
+          first_seen_on: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          rule_id: string;
+          strength?: number;
+          due_on: string;
+          last_outcome: "clean" | "assisted" | "missed";
+          last_reviewed_on: string;
+          reviews?: number;
+          clean_reviews?: number;
+          misses?: number;
+          first_seen_on: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["learner_rules"]["Insert"]>;
+        Relationships: [];
+      };
       sentence_checks: {
         Row: {
           user_id: string;
@@ -2202,6 +2238,14 @@ export interface Database {
       record_sentence_review: {
         Args: { p_sentence_id: string; p_outcome: string; p_today: string };
         Returns: { out_strength: number; out_due_on: string; out_advanced: boolean }[];
+      };
+      record_learner_rule_review: {
+        Args: {
+          p_rule: string;
+          p_outcome: string;
+          p_today: string;
+        };
+        Returns: { out_strength: number; out_due_on: string }[];
       };
       record_learner_word_review: {
         Args: {

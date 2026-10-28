@@ -401,6 +401,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       sentenceBank: false,
       newHome: false,
       wordBank: false,
+      dailyRule: false,
       redeemCodes: false,
       storyRecall: false,
       leanGate: false,
