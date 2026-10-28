@@ -6,7 +6,8 @@ import { Check, Volume2 } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { recordDailyRuleAction } from "@/lib/daily-rule/actions";
-import { A1_LADDER, ruleById, type RuleSpec } from "@/lib/daily-rule/ladder";
+import type { RuleSpec } from "@/lib/daily-rule/ladder";
+import { ruleById } from "@/lib/daily-rule/levels";
 import type { RuleOutcome } from "@/lib/daily-rule/schedule";
 import { fill, ruleStrings, type RuleStrings } from "@/lib/daily-rule/strings";
 import { itemOutcome, ruleOutcome, type ItemResult } from "@/lib/daily-rule/outcome";
@@ -29,6 +30,11 @@ export interface DailyRuleRunnerProps {
   locale: SupportLocale | null;
   /** Where the card carries on to: the words step of Today, or the next step when the card came first. */
   continueHref: string;
+  /** How many rules the learner's ladder has, and the level's name on the card. */
+  ladderSize: number;
+  levelLabel: string;
+  /** The daily task from Home: the card carries on to Home, and the continue button says "next". */
+  daily?: boolean;
 }
 
 type Step =
@@ -42,7 +48,15 @@ function play(url: string): void {
   void audio.play().catch(() => undefined);
 }
 
-export function DailyRuleRunner({ visit, todayISO, locale, continueHref }: DailyRuleRunnerProps) {
+export function DailyRuleRunner({
+  visit,
+  todayISO,
+  locale,
+  continueHref,
+  ladderSize,
+  levelLabel,
+  daily = false,
+}: DailyRuleRunnerProps) {
   const copy = ruleStrings(locale);
   const steps = useMemo<Step[]>(() => {
     const out: Step[] = visit.recall.map((task) => ({ kind: "recall", task }));
@@ -157,7 +171,9 @@ export function DailyRuleRunner({ visit, todayISO, locale, continueHref }: Daily
             held={visit.held}
             practised={practised.current}
             continueHref={continueHref}
-            continueLabel={visit.learn ? copy.continueWords : copy.next}
+            continueLabel={visit.learn && !daily ? copy.continueWords : copy.next}
+            ladderSize={ladderSize}
+            levelLabel={levelLabel}
           />
         )}
       </div>
@@ -449,12 +465,16 @@ function DoneCard({
   practised,
   continueHref,
   continueLabel,
+  ladderSize,
+  levelLabel,
 }: {
   copy: RuleStrings;
   held: number;
   practised: readonly string[];
   continueHref: string;
   continueLabel: string;
+  ladderSize: number;
+  levelLabel: string;
 }) {
   const titles = [...new Set(practised)]
     .map((id) => ruleById(id)?.title)
@@ -471,7 +491,7 @@ function DoneCard({
         {copy.doneSub}
       </p>
       <p className="text-sm font-medium" dir="auto">
-        {fill(copy.heldLine, { n: held, total: A1_LADDER.length })}
+        {fill(copy.heldLine, { n: held, total: ladderSize, level: levelLabel })}
       </p>
       {titles.length > 0 && (
         <ul className="flex w-full flex-col gap-1 text-start" dir="ltr">

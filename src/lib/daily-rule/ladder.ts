@@ -21,7 +21,13 @@ export type RuleFamily =
   | "preposition"
   | "quantity"
   | "modal"
-  | "frequency";
+  | "frequency"
+  | "perfect"
+  | "future"
+  | "comparison"
+  | "conditional"
+  | "passive"
+  | "verb-pattern";
 
 /** Which sentence pattern a rule looks for (see matchers.ts). */
 export type MatchKind =
@@ -48,14 +54,32 @@ export type MatchKind =
   | "there-is"
   | "time-prep"
   | "frequency"
-  | "some-any";
+  | "some-any"
+  | "present-continuous"
+  | "past-continuous"
+  | "present-perfect"
+  | "going-to"
+  | "comparative"
+  | "must"
+  | "first-conditional"
+  | "much-many"
+  | "second-conditional"
+  | "perfect-continuous"
+  | "past-perfect"
+  | "passive"
+  | "wish-past"
+  | "should-have"
+  | "gerund-after";
+
+/** The level a rule belongs to: A1, A2–B1 (level 2 in Looma) or B2 (level 3). */
+export type RuleLevel = "A1" | "A2-B1" | "B2";
 
 export interface RuleSpec {
   /** Stable id stored per learner ("a1-01" ... "a1-24"); never reused for another rule. */
   id: string;
   /** Position on the ladder (1 = taught first). */
   order: number;
-  level: "A1";
+  level: RuleLevel;
   /** The title shown on the card, exactly as written here. */
   title: string;
   family: RuleFamily;

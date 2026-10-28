@@ -4,7 +4,7 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isMissingRulesSchema, recordLearnerRuleReview } from "@/lib/supabase/queries/learner-rules";
 
-import { A1_LADDER } from "./ladder";
+import { ALL_RULES } from "./levels";
 import { isRuleOutcome } from "./schedule";
 
 /** The learner's "today" arrives from the page; anything further than this from the server's own clock is not a day they could be in. */
@@ -49,7 +49,7 @@ function parseRuleAnswer(
 ): { ruleId: string; outcome: "clean" | "assisted" | "missed"; todayISO: string } | null {
   if (typeof input !== "object" || input === null) return null;
   const { ruleId, outcome, todayISO } = input as Record<string, unknown>;
-  if (typeof ruleId !== "string" || !A1_LADDER.some((rule) => rule.id === ruleId)) return null;
+  if (typeof ruleId !== "string" || !ALL_RULES.some((rule) => rule.id === ruleId)) return null;
   if (!isRuleOutcome(outcome)) return null;
   if (typeof todayISO !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(todayISO)) return null;
   return { ruleId, outcome, todayISO };

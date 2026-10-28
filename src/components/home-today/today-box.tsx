@@ -9,9 +9,59 @@ import { TASK_ICONS, TaskIcon } from "@/components/home-today/task-icon";
 import { LockedTestCard, TestYourselfCard } from "@/components/home-today/test-card";
 import { useLocale } from "@/components/providers/locale-provider";
 import { todayTaskTitle } from "@/components/today/today-tasks";
+import { ruleStrings } from "@/lib/daily-rule/strings";
 import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { splitToday, todayRedoHref, todayTotals } from "@/lib/today/home-layout";
 import { cn } from "@/lib/utils";
+
+/** The optional rule of the day on Home's box: where its row links, its level's name, and whether today's rule is answered. */
+export interface RuleRowState {
+  href: string | null;
+  levelLabel: string;
+  answeredToday: boolean;
+}
+
+/**
+ * The rule of the day as the first row of Home's box (the dailyRule permission): a quiet row, not one of
+ * the three tasks, so it is outside the ring and the day's reward. Linked until today's rule is answered.
+ */
+function RuleRow({ href, levelLabel, answeredToday }: RuleRowState) {
+  const { locale } = useLocale();
+  const rule = ruleStrings(locale);
+  const body = (
+    <>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "size-2.5 shrink-0 rounded-full border",
+          answeredToday ? "bg-primary border-primary" : "border-muted-foreground",
+        )}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span dir="auto">{rule.title}</span>
+          <span className="text-primary border-primary/40 rounded-full border px-2 text-[11px] font-medium">
+            <span dir="ltr">{levelLabel}</span>
+          </span>
+        </div>
+        <div className="text-muted-foreground text-xs">
+          <span dir="auto">{answeredToday ? rule.doneToday : rule.buttonHint}</span>
+        </div>
+      </div>
+    </>
+  );
+  return (
+    <li>
+      {href ? (
+        <Link href={href} className="hover:bg-muted flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors">
+          {body}
+        </Link>
+      ) : (
+        <div className="flex items-center gap-3 px-3 py-2.5">{body}</div>
+      )}
+    </li>
+  );
+}
 
 /** The accuracy that earns the story's star. */
 const STAR_ACCURACY = 0.9;
@@ -209,6 +259,7 @@ export function TodayBox({
   test,
   className,
   phoneSingleAction = false,
+  ruleRow,
 }: {
   payload: DailyQuestsPayload;
   /** What the self-test card at the foot shows; none when the day has no test for this learner. */
@@ -216,6 +267,8 @@ export function TodayBox({
   className?: string;
   /** See TaskRow: the phone's next-step button is drawn above the boxes instead. */
   phoneSingleAction?: boolean;
+  /** The optional rule-of-the-day row (dailyRule permission): absent when the permission is closed. */
+  ruleRow?: RuleRowState;
 }) {
   const { t } = useLocale();
   const copy = t.today;
@@ -256,6 +309,7 @@ export function TodayBox({
         <Ring done={totals.done} total={totals.total} />
       </header>
       <ul className="roomy:gap-[clamp(0.1rem,0.45svh,0.4rem)] flex flex-1 flex-col gap-1">
+        {ruleRow && <RuleRow {...ruleRow} />}
         {tasks.map((quest) => (
           <TaskRow
             key={quest.slot}

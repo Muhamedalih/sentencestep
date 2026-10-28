@@ -35,6 +35,7 @@ import { useSavedCards } from "@/hooks/use-saved-cards";
 import { useMistakes } from "@/hooks/use-mistakes";
 import { useProgress } from "@/hooks/use-progress";
 import { useTypingSound } from "@/hooks/use-typing-sound";
+import { hasRuleLadder } from "@/lib/daily-rule/levels";
 import { advanceDictationGift, type DictationGiftState } from "@/lib/features/dictation";
 import { buildFromMemoryItems } from "@/lib/features/from-memory";
 import { recordFeatureUsageAction } from "@/lib/features/usage-actions";
@@ -873,7 +874,7 @@ export function LessonSession({
               saveStatus={saveStatus}
               onRetrySave={retryMarkComplete}
               ruleHref={
-                features.rollouts.dailyRule && unit.level === 1
+                features.rollouts.dailyRule && hasRuleLadder(unit.level)
                   ? `/learn/today/rule?from=${encodeURIComponent(unit.id)}`
                   : undefined
               }

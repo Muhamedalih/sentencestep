@@ -22,7 +22,7 @@ export function isMissingRulesSchema(error: unknown): boolean {
   );
 }
 
-/** Every rule the learner has answered, with its strength and due day (at most 24 rows). */
+/** Every rule the learner has answered, with its strength and due day (at most 21 rows). */
 export async function fetchLearnerRuleStates(userId: string): Promise<RuleStateRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -58,7 +58,7 @@ export async function recordLearnerRuleReview(input: {
   return row ? { strength: row.out_strength, dueOn: row.out_due_on } : null;
 }
 
-export interface LevelOneSentence {
+export interface LevelSentence {
   id: string;
   lessonId: string;
   en: string;
@@ -67,13 +67,14 @@ export interface LevelOneSentence {
 const CHUNK = 100;
 
 /**
- * The English sentences of the lessons and stories at level 1 (A1) among the given lesson ids: the
- * learner's own finished texts, read through RLS (a lesson the learner cannot open is not returned).
+ * The English sentences of the lessons and stories of one level (1 = A1, 2 = A2–B1, 3 = B2) among the
+ * given lesson ids: the learner's own finished texts, read through RLS (a lesson the learner cannot open
+ * is not returned).
  */
-export async function fetchLevelOneSentences(lessonIds: readonly string[]): Promise<LevelOneSentence[]> {
+export async function fetchLevelSentences(lessonIds: readonly string[], level: number): Promise<LevelSentence[]> {
   if (lessonIds.length === 0) return [];
   const supabase = await createClient();
-  const a1Ids: string[] = [];
+  const levelIds: string[] = [];
   for (let from = 0; from < lessonIds.length; from += CHUNK) {
     const { data, error } = await supabase
       .from("lessons")
@@ -82,17 +83,17 @@ export async function fetchLevelOneSentences(lessonIds: readonly string[]): Prom
       .in("mode", ["normal", "stories"]);
     if (error) throw error;
     for (const row of data ?? []) {
-      const level = row.levels as unknown as { index: number } | null;
-      if (level?.index === 1) a1Ids.push(row.id);
+      const found = row.levels as unknown as { index: number } | null;
+      if (found?.index === level) levelIds.push(row.id);
     }
   }
 
-  const sentences: LevelOneSentence[] = [];
-  for (let from = 0; from < a1Ids.length; from += CHUNK) {
+  const sentences: LevelSentence[] = [];
+  for (let from = 0; from < levelIds.length; from += CHUNK) {
     const { data, error } = await supabase
       .from("sentences")
       .select("id, lesson_id, en")
-      .in("lesson_id", a1Ids.slice(from, from + CHUNK))
+      .in("lesson_id", levelIds.slice(from, from + CHUNK))
       .order("order_index", { ascending: true });
     if (error) throw error;
     for (const row of data ?? []) sentences.push({ id: row.id, lessonId: row.lesson_id, en: row.en });

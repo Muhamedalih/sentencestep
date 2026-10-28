@@ -85,6 +85,8 @@ export interface PlanInput {
   /** Makes the choice deterministic per learner and per day. */
   seed: string;
   ladder?: readonly RuleSpec[];
+  /** The longest sentence a rule may be asked from (MAX_WORDS_BY_LEVEL in levels.ts). */
+  maxWords?: number;
 }
 
 interface Hit {
@@ -106,18 +108,18 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).length;
 }
 
-function firstHit(rule: RuleSpec, sentence: SourceSentence): Hit | null {
-  if (wordCount(sentence.text) > MAX_SENTENCE_WORDS) return null;
+function firstHit(rule: RuleSpec, sentence: SourceSentence, maxWords: number): Hit | null {
+  if (wordCount(sentence.text) > maxWords) return null;
   const tokens = tokenize(sentence.text);
   const [index] = candidatesFor(rule.match, tokens, sentence.text);
   if (index === undefined) return null;
   return { sentence, token: tokens[index]! };
 }
 
-function hitsIn(rule: RuleSpec, pool: readonly SourceSentence[]): Hit[] {
+function hitsIn(rule: RuleSpec, pool: readonly SourceSentence[], maxWords: number): Hit[] {
   const hits: Hit[] = [];
   for (const sentence of pool) {
-    const hit = firstHit(rule, sentence);
+    const hit = firstHit(rule, sentence, maxWords);
     if (hit) hits.push(hit);
   }
   return hits;
@@ -159,8 +161,9 @@ function recallItem(
   pool: readonly SourceSentence[],
   avoid: ReadonlySet<string>,
   seed: string,
+  maxWords: number,
 ): ItemSpec | null {
-  const hits = hitsIn(rule, pool);
+  const hits = hitsIn(rule, pool, maxWords);
   if (hits.length === 0) return null;
   const fresh = hits.filter((hit) => !avoid.has(hit.sentence.id));
   const list = fresh.length > 0 ? fresh : hits;
@@ -170,6 +173,7 @@ function recallItem(
 /** The visit for one learner on one day. */
 export function planRuleVisit(input: PlanInput): RuleVisit {
   const rules = [...(input.ladder ?? A1_LADDER)].sort((a, b) => a.order - b.order);
+  const maxWords = input.maxWords ?? MAX_SENTENCE_WORDS;
   const ruleById = new Map(rules.map((rule) => [rule.id, rule] as const));
   const states = new Map(input.states.map((row) => [row.ruleId, { strength: row.strength, dueOn: row.dueOn }] as const));
 
@@ -192,7 +196,7 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
       [due, "review"],
     ] as const) {
       for (const rule of pool) {
-        const hits = hitsIn(rule, input.source);
+        const hits = hitsIn(rule, input.source, maxWords);
         if (hits.length >= LEARN_ITEMS) {
           learn = learnFrom(rule, source, hits);
           break;
@@ -210,7 +214,7 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
   for (const rule of due) {
     if (recall.length >= RECALL_LIMIT) break;
     if (learn?.ruleId === rule.id) continue;
-    const item = recallItem(rule, input.recallPool, avoid, recallSeed);
+    const item = recallItem(rule, input.recallPool, avoid, recallSeed, maxWords);
     if (item) recall.push({ kind: "recall", ruleId: rule.id, item });
   }
 
@@ -225,7 +229,7 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
       ...others.filter((rule) => rule.family !== taught?.family),
     ];
     for (const rule of ordered) {
-      const item = recallItem(rule, input.recallPool, avoid, `${recallSeed}|mix`);
+      const item = recallItem(rule, input.recallPool, avoid, `${recallSeed}|mix`, maxWords);
       if (item) {
         recall.push({ kind: "interleave", ruleId: rule.id, item });
         break;
