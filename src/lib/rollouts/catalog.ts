@@ -20,6 +20,7 @@ export const ROLLOUT_IDS = [
   "storyRecall",
   "leanGate",
   "libraryGift",
+  "mobilePath",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -176,6 +177,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs the learner_rules table (migration 20250351000000, applied by pasting the SQL). Until it exists the card still teaches, nothing is recorded and nothing is asked back.",
       "Only stories at level 1 carry the rule, and only sentences with a stored recording are asked: a sentence without one is never asked, and the browser's voice is never used.",
       "Today's tasks, the words step and the finish screens are unchanged: the card is one optional step after the story, and it never blocks the three tasks.",
+    ],
+  },
+  mobilePath: {
+    id: "mobilePath",
+    audience: "learner",
+    title: "Phone: the path and the next step",
+    description:
+      "On a phone only (below 768 px): five tabs in the bottom bar (Home, Path, Stories, Passages, Words), a Path tab that lists each level's lessons in order with the one to do now, one next-step button on Home, and a calmer first screen for a guest. Tablets and laptops keep their current layout.",
+    notes: [
+      "Does not need Today's session: the Path shows the daily lessons themselves, and Home's next step falls back to the current lesson when Today is closed.",
+      "Only the phone layout changes: the desktop sidebar, the desktop Home and the lesson player's desktop controls stay as they are.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   redeemCodes: {

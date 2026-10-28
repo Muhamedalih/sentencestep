@@ -9,10 +9,12 @@ import { HomeLessonCard } from "@/components/home-today/lesson-card";
 import { TodayBox } from "@/components/home-today/today-box";
 import { TodayEndCard } from "@/components/home-today/today-end-card";
 import { HomeTopBar } from "@/components/home-today/top-bar";
+import { CoursePathStrip } from "@/components/home-today/course-strip";
+import { PhoneNextStep } from "@/components/home-today/phone-next";
 import { WeeklyLineView } from "@/components/today/today-tasks";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import { getEffectiveFeatures } from "@/lib/features/queries";
-import type { DailyQuestsPayload } from "@/lib/features/quests";
+import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
 import { sentenceTestAvailable } from "@/lib/today/quests";
 import type { CurrentUser } from "@/lib/supabase/auth";
@@ -23,6 +25,8 @@ interface TopBarProps {
   lessonStats: LessonStatsMap;
   sessionCount: number | null;
   reviewCount: number;
+  /** The phone-only layout of the mobilePath permission: the totals line is left out below md:. */
+  mobilePath?: boolean;
   className?: string;
 }
 
@@ -40,15 +44,50 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
  * done, then the card itself once a test was dealt — never an empty card, and no locked one for a
  * learner the test is not open to.
  */
-async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
+async function TodayBoxSlot({
+  quests,
+  units,
+  isPremiumUser,
+  mobilePath,
+}: {
+  quests: Promise<DailyQuestsPayload | null>;
+  units: LessonUnit[];
+  isPremiumUser: boolean;
+  mobilePath: boolean;
+}) {
   const [payload, features] = await Promise.all([quests, getEffectiveFeatures()]);
-  if (!payload) return null;
-  if (payload.todayEnd) return <TodayEndCard end={payload.todayEnd} />;
-  if (!isTodayMode(payload.quests)) return <QuestsCard payload={payload} />;
+  // On a phone (mobilePath) the one next step sits above the boxes: Today's current task, else the lesson.
+  const phoneNext = (task: DailyQuest | null) =>
+    mobilePath ? <PhoneNextStep task={task} units={units} isPremiumUser={isPremiumUser} /> : null;
+  if (!payload) return phoneNext(null);
+  if (payload.todayEnd) {
+    return (
+      <>
+        {phoneNext(null)}
+        <TodayEndCard end={payload.todayEnd} />
+      </>
+    );
+  }
+  if (!isTodayMode(payload.quests)) {
+    return (
+      <>
+        {phoneNext(null)}
+        <QuestsCard payload={payload} />
+      </>
+    );
+  }
   const { tasks, test } = splitToday(payload.quests);
   const state = testCardState({ tasks, test, available: sentenceTestAvailable(features) });
+  const current = tasks.find((quest) => !quest.completed) ?? null;
   return (
-    <TodayBox payload={payload} test={state === "hidden" ? undefined : { state, quest: test }} />
+    <>
+      {phoneNext(current)}
+      <TodayBox
+        payload={payload}
+        test={state === "hidden" ? undefined : { state, quest: test }}
+        phoneSingleAction={mobilePath}
+      />
+    </>
   );
 }
 
@@ -80,6 +119,7 @@ export function HomeToday({
   isPremiumUser,
   hasWeakWords,
   banners,
+  mobilePath = false,
 }: {
   stream: HomeEngagementStream;
   user: CurrentUser;
@@ -90,12 +130,14 @@ export function HomeToday({
   isPremiumUser: boolean;
   hasWeakWords: boolean;
   banners?: ReactNode;
+  mobilePath?: boolean;
 }) {
   const topBar: TopBarProps = {
     user,
     lessonStats,
     sessionCount,
     reviewCount,
+    mobilePath,
     className: "mb-6 max-sm:mb-5 roomy:mb-[clamp(0.75rem,2svh,1.5rem)]",
   };
   return (
@@ -114,15 +156,21 @@ export function HomeToday({
               />
             }
           >
-            <TodayBoxSlot quests={stream.quests} />
+            <TodayBoxSlot
+              quests={stream.quests}
+              units={units}
+              isPremiumUser={isPremiumUser}
+              mobilePath={mobilePath}
+            />
           </Suspense>
           <div className="flex flex-col gap-3">
             <HomeLessonCard
               units={units}
               isPremiumUser={isPremiumUser}
               hasWeakWords={hasWeakWords}
-              className="flex-1"
+              className={mobilePath ? "flex-1 max-md:hidden" : "flex-1"}
             />
+            {mobilePath && <CoursePathStrip units={units} isPremiumUser={isPremiumUser} />}
             {/* Learners on the free plan keep their counter of starter lessons, small, under the card. */}
             {!isPremiumUser && <StarterPathProgress units={units} />}
           </div>

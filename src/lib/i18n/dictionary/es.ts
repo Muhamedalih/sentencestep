@@ -9,6 +9,31 @@ import type { Dictionary } from "@/lib/i18n/dictionary/types";
  * this content went through.
  */
 export const es: Dictionary = {
+  mobilePath: {
+    navPath: "Ruta",
+    navWords: "Palabras",
+    doneOfTotal: "{done} de {total} lecciones",
+    youAreHere: "Estás aquí",
+    continueMinutes: "Seguir · {minutes} min",
+    finished: "Hecho",
+    levelFinished: "Has terminado este nivel",
+    nextStep: "Siguiente paso",
+    startNow: "Empieza ahora",
+    openPath: "Abrir la ruta",
+    headline: "Aprende inglés, letra a letra.",
+    startHere: "Empieza aquí",
+    watch: "Mira",
+    listen: "Escucha",
+    write: "Escribe",
+    progress: "Avanza",
+    signUpKeep: "Regístrate para guardar tu progreso",
+    explore: "Explora",
+    startTyping: "Empieza a escribir",
+    typeSentence: "Escribe la frase en inglés",
+    statsAfterFirst: "Tu velocidad y tu precisión aparecen tras la primera frase",
+    more: "Más",
+    lessonLength: "{minutes} min",
+  },
   common: {
     signIn: "Iniciar sesión",
     signOut: "Cerrar sesión",

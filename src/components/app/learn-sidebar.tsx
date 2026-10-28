@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Headphones, Home, Library, ListChecks, NotebookText } from "lucide-react";
+import { Headphones, Home, Library, ListChecks, NotebookText, Route } from "lucide-react";
 
 import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -60,12 +60,15 @@ export function LearnSidebar({
   isAdminUser = false,
   libraryOpen,
   passagesEnabled = false,
+  mobilePath = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
   libraryOpen?: boolean;
   /** The "passages" feature switch, resolved for this visitor — the nav item exists only while it is open to them (Admin preview: admins only). */
   passagesEnabled?: boolean;
+  /** The mobilePath permission, resolved for this visitor: below md: the bottom bar becomes Home, Path, Stories, Passages and Words (the desktop sidebar is unchanged). */
+  mobilePath?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir } = useLocale();
@@ -81,19 +84,21 @@ export function LearnSidebar({
   const active =
     pathname === "/learn"
       ? "home"
-      : pathname.startsWith("/learn/normal")
-        ? "stories"
-        : pathname.startsWith("/learn/conversation")
-          ? "conversation"
-          : pathname.startsWith("/learn/stories")
-            ? "stories"
-            : pathname.startsWith("/learn/passages")
-              ? "passages"
-              : pathname.startsWith("/learn/word-lists")
-                ? "word-lists"
-                : pathname.startsWith("/learn/library")
-                  ? "library"
-                  : null;
+      : pathname.startsWith("/learn/path")
+        ? "path"
+        : pathname.startsWith("/learn/normal")
+          ? "stories"
+          : pathname.startsWith("/learn/conversation")
+            ? "conversation"
+            : pathname.startsWith("/learn/stories")
+              ? "stories"
+              : pathname.startsWith("/learn/passages")
+                ? "passages"
+                : pathname.startsWith("/learn/word-lists")
+                  ? "word-lists"
+                  : pathname.startsWith("/learn/library")
+                    ? "library"
+                    : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
   // opens on /learn/normal (Daily Lessons) by default — see the
@@ -116,6 +121,25 @@ export function LearnSidebar({
       (item.key !== "library" || showLibrary) && (item.key !== "passages" || passagesEnabled),
   );
 
+  // The phone bar of the mobilePath permission: one tab per kind of content, with the Path in place of
+  // the Daily Lessons tab. Only drawn below md:, the desktop sidebar above keeps its own items.
+  const PHONE_ITEMS = mobilePath
+    ? [
+        { key: "home", href: "/learn", label: t.nav.home, icon: Home },
+        { key: "path", href: "/learn/path", label: t.mobilePath.navPath, icon: Route },
+        { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
+        ...(passagesEnabled
+          ? [{ key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones }]
+          : []),
+        {
+          key: "word-lists",
+          href: "/learn/word-lists",
+          label: t.mobilePath.navWords,
+          icon: ListChecks,
+        },
+      ]
+    : null;
+
   // Every route this sidebar links to, present on every /learn/* page —
   // warmed in the background instead of through each Link's own default
   // prefetch (see this file's Links below, all `prefetch={false}`) so they
@@ -136,7 +160,7 @@ export function LearnSidebar({
         ? ["/learn/library", "/learn/library/novels"]
         : [];
   useDeferredPrefetch(subNavHrefs, 0);
-  useDeferredPrefetch(NAV_ITEMS.map((item) => item.href));
+  useDeferredPrefetch([...NAV_ITEMS, ...(PHONE_ITEMS ?? [])].map((item) => item.href));
 
   return (
     <nav
@@ -164,6 +188,7 @@ export function LearnSidebar({
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium",
                 "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap pointer-coarse:md:min-h-11",
+                PHONE_ITEMS && "max-md:hidden",
                 isActive
                   ? "text-primary md:bg-brand-muted"
                   : "text-muted-foreground hover:text-foreground md:hover:bg-secondary",
@@ -238,6 +263,25 @@ export function LearnSidebar({
               ))}
             </div>,
           ];
+        })}
+        {PHONE_ITEMS?.map((item) => {
+          const Icon = item.icon;
+          const isActive = active === item.key;
+          return (
+            <SidebarLink
+              key={`phone-${item.key}`}
+              href={item.href}
+              isActive={isActive}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium md:hidden",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                "has-[[data-pending]]:text-primary",
+              )}
+            >
+              <Icon className="size-5 shrink-0" aria-hidden="true" />
+              <span dir={dir}>{item.label}</span>
+            </SidebarLink>
+          );
         })}
       </div>
     </nav>

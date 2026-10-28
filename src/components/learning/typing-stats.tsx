@@ -1,5 +1,6 @@
 import { Gauge, Target } from "lucide-react";
 
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,9 @@ export function TypingStats({
   centered?: boolean;
 }) {
   const { t } = useLocale();
+  const { rollouts } = useFeatures();
+  // On a phone with mobilePath the readout waits for the first keystroke: the sentence comes first.
+  const waitsOnPhone = rollouts.mobilePath && Math.round(wpm) === 0;
   const isPerfect = centered && Math.round(accuracy) >= 100;
 
   return (
@@ -33,6 +37,7 @@ export function TypingStats({
       className={cn(
         "text-muted-foreground mt-4 flex items-center gap-4 text-xs font-medium",
         centered && "mt-7 justify-center gap-3 text-sm",
+        waitsOnPhone && "max-md:hidden",
       )}
     >
       <span

@@ -78,6 +78,7 @@ export function HomeTopBar({
   today,
   streak,
   className,
+  mobilePath = false,
 }: {
   user: CurrentUser;
   lessonStats: LessonStatsMap;
@@ -88,6 +89,8 @@ export function HomeTopBar({
   today: string;
   streak: StreakCalendarData | null;
   className?: string;
+  /** The phone-only mobilePath layout: the totals line is left out below md:. */
+  mobilePath?: boolean;
 }) {
   const { t } = useLocale();
   const { isLoaded, completions, dailyProgress } = useSharedProgress();
@@ -145,7 +148,12 @@ export function HomeTopBar({
               {user.displayName ?? t.auth.loginHeading}
             </span>
             {isLoaded && (
-              <span className="text-muted-foreground mt-0.5 flex flex-wrap gap-x-3.5 text-xs">
+              <span
+                className={cn(
+                  "text-muted-foreground mt-0.5 flex flex-wrap gap-x-3.5 text-xs",
+                  mobilePath && "max-md:hidden",
+                )}
+              >
                 {items.map(([label, value]) => (
                   <span key={label} className="inline-flex items-baseline gap-1">
                     <b className="text-foreground text-[13px] tabular-nums" dir="ltr">

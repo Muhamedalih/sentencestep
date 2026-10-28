@@ -106,6 +106,17 @@ export function tierSupportLabel(difficulty: Difficulty, locale: SupportLocale):
  * affecting titles that don't follow this convention (code is null then,
  * and the original string renders completely unchanged).
  */
+/**
+ * The short CEFR label of a course level for chips and strips: "Beginner A1" → "A1", "Intermediate A2-B1" →
+ * "A2–B1". A title without a code is returned whole.
+ */
+export function levelCodeOf(title: string): string {
+  const { code } = splitLevelTitle(title);
+  if (code) return code;
+  const match = title.match(/[ABC][12](?:s*[-–]s*[ABC][12])?s*$/);
+  return match ? match[0].replace(/s*[-–]s*/, "–") : title;
+}
+
 export function splitLevelTitle(title: string): { label: string; code: string | null } {
   const separator = " — ";
   const index = title.lastIndexOf(separator);
@@ -122,5 +133,10 @@ export function estimateMinutes(unit: { sentences: { en: string }[] }): number {
     (total, sentence) => total + sentence.en.split(/\s+/).length,
     0,
   );
+  return minutesForWords(words);
+}
+
+/** Minutes for a lesson of this many words at the learning pace (never less than one). */
+export function minutesForWords(words: number): number {
   return Math.max(1, Math.round(words / LEARNING_WPM));
 }

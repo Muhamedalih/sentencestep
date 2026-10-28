@@ -11,6 +11,7 @@ import { HomeHero } from "@/components/app/home-hero";
 import { HomePlan } from "@/components/app/home-plan";
 import { HomeReviewCard } from "@/components/app/home-review-card";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
+import { MobileGuestHome } from "@/components/home-today/guest-home";
 import { HomeToday } from "@/components/home-today/home-today";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
@@ -18,12 +19,14 @@ import { getAccessState } from "@/lib/billing/access";
 import { REMINDER_WINDOW_DAYS } from "@/lib/billing/expiry-reminders";
 import { getOpenCheckout } from "@/lib/billing/open-checkout";
 import { getHomeLessons } from "@/lib/content";
+import { withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { startHomeEngagement } from "@/lib/features/home-engagement";
 import { loadHomePlanWords } from "@/lib/home-plan/words";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { minutesForWords } from "@/lib/levels";
 import { startHomePassagesCard } from "@/lib/passages/home-card";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -69,6 +72,9 @@ export default async function LearnHomePage({
   const t = locale ? getDictionary(locale) : fallbackDictionary;
   // `?classic=1` is the way back to the current Home while the new page ("newHome") is open for you.
   const classicRequested = (await searchParams).classic === "1";
+  // The phone-only layout of the mobilePath permission (see the Path page and HomeToday's phone pieces).
+  const features = await getEffectiveFeatures();
+  const mobilePath = features.rollouts.mobilePath;
 
   // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
   // sentence/word counts, never the sentence bodies themselves (see that
@@ -296,6 +302,7 @@ export default async function LearnHomePage({
             units={units}
             isPremiumUser={isPremiumUser}
             hasWeakWords={reviewWaiting.count > 0}
+            mobilePath={mobilePath}
             banners={
               <>
                 {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
@@ -314,80 +321,95 @@ export default async function LearnHomePage({
     );
   }
 
+  // A visitor without an account on a phone (mobilePath) gets the calmer first screen; the classic
+  // page below stays exactly as it is for tablets and laptops (and for signed-in learners).
+  const phoneGuest = mobilePath && !user;
+  const firstLesson = withOpeningLessonPlacement(units).find((unit) => unit.isFree) ?? null;
   return (
     <ProgressProvider initialProgress={initialProgress}>
-      <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
-        <h1 className="sr-only">{t.nav.home}</h1>
-        <HomeHeaderBar
-          user={user}
-          lessonStats={lessonStats}
-          sessionCount={attemptCount}
-          className="mb-10 max-sm:order-1 max-sm:mb-6"
+      {phoneGuest && (
+        <MobileGuestHome
+          firstLesson={firstLesson}
+          minutes={
+            firstLesson ? minutesForWords(lessonStats[`normal:${firstLesson.id}`]?.words ?? 0) : 1
+          }
+          passagesEnabled={features.passages.enabled}
         />
-        <div className="max-sm:order-4">
-          <GuestProgressBanner isGuest={!user} className="mb-6" />
-          {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
-          {openCheckout && !isPremiumUser && (
-            <FinishPaymentBanner
-              reference={openCheckout.reference}
-              url={openCheckout.url}
-              className="mb-6"
-            />
-          )}
-        </div>
-        {/* A direct child of the page (not nested in the wrappers around it) so that on a phone
+      )}
+      <div className={phoneGuest ? "max-md:hidden" : undefined}>
+        <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
+          <h1 className="sr-only">{t.nav.home}</h1>
+          <HomeHeaderBar
+            user={user}
+            lessonStats={lessonStats}
+            sessionCount={attemptCount}
+            className="mb-10 max-sm:order-1 max-sm:mb-6"
+          />
+          <div className="max-sm:order-4">
+            <GuestProgressBanner isGuest={!user} className="mb-6" />
+            {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
+            {openCheckout && !isPremiumUser && (
+              <FinishPaymentBanner
+                reference={openCheckout.reference}
+                url={openCheckout.url}
+                className="mb-6"
+              />
+            )}
+          </div>
+          {/* A direct child of the page (not nested in the wrappers around it) so that on a phone
             (max-sm) today's streak + quests sit right under the greeting/stats header and above
             "up next". From sm: up it stays exactly where it was in the DOM flow, between the
             banners and "up next". */}
-        <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
-        <div className="max-sm:order-3">
-          {showHomePlan ? (
-            <>
-              <HomePassages data={passages} className="mb-6" />
-              <HomePlan
-                units={units}
-                storiesUnits={storiesUnits}
-                words={planWords}
-                isPremiumUser={isPremiumUser}
+          <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
+          <div className="max-sm:order-3">
+            {showHomePlan ? (
+              <>
+                <HomePassages data={passages} className="mb-6" />
+                <HomePlan
+                  units={units}
+                  storiesUnits={storiesUnits}
+                  words={planWords}
+                  isPremiumUser={isPremiumUser}
+                />
+              </>
+            ) : (
+              <>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                  <h2 className="text-lg font-semibold tracking-tight">{t.progress.upNextLabel}</h2>
+                  {!isPremiumUser && <StarterPathProgress units={units} />}
+                </div>
+                <HomePassages data={passages} className="mb-4" />
+                <HomeHero
+                  units={units}
+                  storiesUnits={storiesUnits}
+                  book={recommendedBook}
+                  bookSectionCount={bookSectionCount}
+                  bookSentenceCount={bookSentenceCount}
+                  bookProgressPercent={bookProgressPercent}
+                  isPremiumUser={isPremiumUser}
+                  hasWeakWords={reviewWaiting.count > 0}
+                  isAdminUser={isAdminUser}
+                  review={
+                    <HomeReviewCard
+                      words={reviewWords}
+                      count={reviewWaiting.count}
+                      smart={reviewWaiting.smart}
+                    />
+                  }
+                />
+              </>
+            )}
+          </div>
+          {showHomePlan && (
+            <div className="max-sm:order-4">
+              <NeedsReviewWords
+                words={reviewWords}
+                count={reviewWaiting.count}
+                smart={reviewWaiting.smart}
               />
-            </>
-          ) : (
-            <>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <h2 className="text-lg font-semibold tracking-tight">{t.progress.upNextLabel}</h2>
-                {!isPremiumUser && <StarterPathProgress units={units} />}
-              </div>
-              <HomePassages data={passages} className="mb-4" />
-              <HomeHero
-                units={units}
-                storiesUnits={storiesUnits}
-                book={recommendedBook}
-                bookSectionCount={bookSectionCount}
-                bookSentenceCount={bookSentenceCount}
-                bookProgressPercent={bookProgressPercent}
-                isPremiumUser={isPremiumUser}
-                hasWeakWords={reviewWaiting.count > 0}
-                isAdminUser={isAdminUser}
-                review={
-                  <HomeReviewCard
-                    words={reviewWords}
-                    count={reviewWaiting.count}
-                    smart={reviewWaiting.smart}
-                  />
-                }
-              />
-            </>
+            </div>
           )}
         </div>
-        {showHomePlan && (
-          <div className="max-sm:order-4">
-            <NeedsReviewWords
-              words={reviewWords}
-              count={reviewWaiting.count}
-              smart={reviewWaiting.smart}
-            />
-          </div>
-        )}
       </div>
     </ProgressProvider>
   );
