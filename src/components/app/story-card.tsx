@@ -25,12 +25,15 @@ export function StoryCard({
   lesson,
   completed,
   isPremiumUser,
+  openToday = false,
 }: {
   lesson: Lesson;
   completed: boolean;
   isPremiumUser: boolean;
+  /** This story is today's taste of the day for a free learner (see lib/hybrid): open for the day. */
+  openToday?: boolean;
 }) {
-  const locked = !lesson.isFree && !isPremiumUser;
+  const locked = !lesson.isFree && !isPremiumUser && !openToday;
   const { locale, t } = useLocale();
   const difficulty = difficultyForLevel(lesson.level);
   const tierText = locale ? tierSupportLabel(difficulty, locale) : tierLabel(difficulty).label;

@@ -1491,7 +1491,6 @@ export const ar: Dictionary = {
 
     wallWritten: "كتبت {sentences} جملة.",
     momentBTitle: "أنهيت نص اليوم كاملاً",
-    momentStoryTitle: "أنهيت قصة اليوم كاملاً",
     momentBody: "هذا كان الطعم المجاني لليوم.",
     momentFull:
       "الخطة الكاملة تفتح لك كل النصوص الأخرى ({passages} نصاً)، وكل القصص الأخرى ({stories} قصة)، وكل قوائم الكلمات.",

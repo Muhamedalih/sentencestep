@@ -41,10 +41,13 @@ const CEFR_BY_TIER: Record<Difficulty, string> = {
 export function StoriesLibrary({
   lessons,
   isPremiumUser,
+  openTodayId = null,
   recallCount = 0,
 }: {
   lessons: Lesson[];
   isPremiumUser: boolean;
+  /** The story that is today's taste of the day for this free learner, if any (see lib/hybrid). */
+  openTodayId?: string | null;
   /** This section's own due Vocabulary Recall count (see fetchVocabularyRecallCountAction) — drives VocabularySectionRecallCard, shown right under the title. */
   recallCount?: number;
 }) {
@@ -219,6 +222,7 @@ export function StoriesLibrary({
                 lesson={lesson}
                 completed={isLoaded && isCompleted("stories", lesson.id)}
                 isPremiumUser={isPremiumUser}
+                openToday={lesson.id === openTodayId}
               />
             ))}
           </motion.div>

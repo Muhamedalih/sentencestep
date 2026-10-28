@@ -1887,8 +1887,6 @@ export interface Dictionary {
     wallWritten: string;
     /** Moment B: title after today's taste passage. */
     momentBTitle: string;
-    /** Moment B variant: title after today's taste story. */
-    momentStoryTitle: string;
     /** Moment B: the line under the title. */
     momentBody: string;
     /** What the full plan opens; {passages} and {stories} are counts from the catalog. */
