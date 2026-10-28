@@ -231,8 +231,22 @@ test("the sentence bank lives inside Today's box: it is never open without Today
   const before = { ...open, todaySession: false };
   const after = withRolloutDependencies(before);
   assert.deepEqual(
-    { ...after, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true, hybridOffers: true },
-    { ...before, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true, hybridOffers: true },
+    {
+      ...after,
+      sentenceBank: true,
+      newHome: true,
+      wordBank: true,
+      dailyRule: true,
+      hybridOffers: true,
+    },
+    {
+      ...before,
+      sentenceBank: true,
+      newHome: true,
+      wordBank: true,
+      dailyRule: true,
+      hybridOffers: true,
+    },
   );
   assert.equal(before.sentenceBank, true);
   // A plain learner has neither on the default settings.
