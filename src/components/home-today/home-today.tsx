@@ -10,7 +10,6 @@ import { HomeLessonCard } from "@/components/home-today/lesson-card";
 import { TodayBox, type RuleRowState } from "@/components/home-today/today-box";
 import { TodayEndCard } from "@/components/home-today/today-end-card";
 import { HomeTopBar } from "@/components/home-today/top-bar";
-import { CoursePathStrip } from "@/components/home-today/course-strip";
 import { WeeklyLineView } from "@/components/today/today-tasks";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import { getEffectiveFeatures } from "@/lib/features/queries";
@@ -146,7 +145,6 @@ export function HomeToday({
       {banners}
       <FitHome>
         <div className="grid gap-5 lg:grid-cols-[1.08fr_1fr] lg:items-stretch">
-          {mobilePath && <CoursePathStrip units={units} isPremiumUser={isPremiumUser} />}
           <Suspense
             fallback={
               <div
