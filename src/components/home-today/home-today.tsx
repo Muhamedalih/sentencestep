@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { ReactNode } from "react";
 
 import type { LessonStatsMap } from "@/components/app/home-hero";
+import { HybridMomentCard } from "@/components/hybrid/hybrid-moment-card";
 import { FitHome } from "@/components/home-today/fit-home";
 import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
@@ -14,7 +15,7 @@ import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
-import { sentenceTestAvailable } from "@/lib/today/quests";
+import { requiredQuests, sentenceTestAvailable } from "@/lib/today/quests";
 import type { CurrentUser } from "@/lib/supabase/auth";
 import type { LessonUnit } from "@/types/content";
 
@@ -47,8 +48,21 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
   if (!isTodayMode(payload.quests)) return <QuestsCard payload={payload} />;
   const { tasks, test } = splitToday(payload.quests);
   const state = testCardState({ tasks, test, available: sentenceTestAvailable(features) });
+  // The day's three tasks are done on the taste of the day: the moment that offers the full plan (see lib/hybrid).
+  const steps = requiredQuests(payload.quests);
   return (
-    <TodayBox payload={payload} test={state === "hidden" ? undefined : { state, quest: test }} />
+    <>
+      {payload.tasteToday && payload.allDone && features.rollouts.hybridOffers && (
+        <div className="mb-4">
+          <HybridMomentCard
+            moment="D"
+            done={steps.filter((quest) => quest.completed).length}
+            total={steps.length}
+          />
+        </div>
+      )}
+      <TodayBox payload={payload} test={state === "hidden" ? undefined : { state, quest: test }} />
+    </>
   );
 }
 

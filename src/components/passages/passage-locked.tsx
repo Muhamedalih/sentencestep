@@ -10,7 +10,7 @@ import type { GateProgress } from "@/lib/progress/honest-numbers";
 import type { GateFigures } from "@/lib/stats/content-stats";
 
 /** The passage's own poster — its picture when an admin chose one (blurred out, as on the list), else its colour — and number, standing in for artwork. What is behind the lock is never sent to the viewer, so nothing here pretends to show it. */
-function PosterArt({
+export function PosterArt({
   tone,
   order,
   posterUrl,

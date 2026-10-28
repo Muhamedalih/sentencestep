@@ -184,6 +184,7 @@ export function evaluateRollouts(
  * session has no sentence bank either (and a test of Today's session stays a clean test of it).
  * The new Home page is built from Today's tasks, so it is closed whenever Today's session is.
  * The words bank is fed by Today's words step, so it is closed whenever Today's session is too.
+ * The hybrid offers (the taste of the day and the moments) live in Today's tasks as well.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
@@ -193,6 +194,7 @@ export function withRolloutDependencies(
     sentenceBank: access.sentenceBank && access.todaySession,
     newHome: access.newHome && access.todaySession,
     wordBank: access.wordBank && access.todaySession,
+    hybridOffers: access.hybridOffers && access.todaySession,
   };
 }
 

@@ -1836,4 +1836,47 @@ export interface Dictionary {
       thanksBody: string;
     };
   };
+  /** The hybrid offers: the taste of the day, the lock screen and the moments (see src/lib/hybrid). */
+  hybrid: {
+    /** Full plan button on the lock screen. */
+    wallPrimary: string;
+    /** Secondary button on the lock screen: back to today's taste. */
+    wallBack: string;
+    /** Caption under the lock screen's buttons; the amount itself is on the plans page. */
+    wallPrice: string;
+    /** Line under the lock screen's title: {level} and {n} (minutes). */
+    wallMeta: string;
+    /** What the full plan opens, for a passage. */
+    wallPassage: string;
+    /** What the full plan opens, for a story. */
+    wallStory: string;
+    /** Strip line when a taste is open today. */
+    wallTasteTomorrow: string;
+
+    /** The lock screen's strip when the learner has written sentences and days: {sentences} and {days}. */
+
+    wallWrittenDays: string;
+
+    /** The same without days (no day counted yet). */
+
+    wallWritten: string;
+    /** Moment B: title after today's taste passage. */
+    momentBTitle: string;
+    /** Moment B variant: title after today's taste story. */
+    momentStoryTitle: string;
+    /** Moment B: the line under the title. */
+    momentBody: string;
+    /** What the full plan opens; {passages} and {stories} are counts from the catalog. */
+    momentFull: string;
+    /** Moment star: title after a story finished with 90% or more. */
+    momentStarTitle: string;
+    /** Moment D: title, {done} of {total} tasks. */
+    momentDTitle: string;
+    /** Moment D: the line under the title. */
+    momentDBody: string;
+    /** Moments: the button that opens the full plan. */
+    momentPrimary: string;
+    /** Moments: the button that closes the card for now. */
+    momentLater: string;
+  };
 }

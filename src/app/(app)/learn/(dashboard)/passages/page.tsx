@@ -5,6 +5,9 @@ import { PassagesLibrary } from "@/components/passages/passages-library";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures, getFeatureConfig } from "@/lib/features/queries";
+import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
+import { viewerTaste } from "@/lib/hybrid/viewer";
+import { getLocale } from "@/lib/i18n/get-locale";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
 import { recommendedPassageId } from "@/lib/passages/progress";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
@@ -32,8 +35,22 @@ export default async function PassagesPage() {
   // A Premium passage opens for subscribers and admins only; "Up next" never points anyone at a
   // lock. The subscription is only looked up when some passage is Premium (none is, until an
   // admin makes one so), so a list of free passages costs nothing extra.
+  const learnerView = await isLearnerViewOn();
   const canOpenPremium =
-    isAdminUser || !passages.some((passage) => !passage.isFree) || (await hasPremiumAccess());
+    (isAdminUser && !learnerView) ||
+    !passages.some((passage) => !passage.isFree) ||
+    (await hasPremiumAccess());
+
+  // A free learner with the hybrid offers open sees today's taste of the day open in the list too.
+  const tasteId =
+    user && features.rollouts.hybridOffers && !canOpenPremium
+      ? await viewerTaste({
+          userId: user.id,
+          locale: await getLocale(),
+          withPassages: true,
+          withStories: false,
+        }).then(({ picks }) => (picks.passageIsTaste ? (picks.passage?.id ?? null) : null))
+      : null;
 
   const switchState = config.features.passages.state;
   const adminState =
@@ -45,9 +62,12 @@ export default async function PassagesPage() {
     <PassagesLibrary
       passages={passages}
       progress={progress}
-      upNextId={recommendedPassageId(openablePassages(passages, canOpenPremium), progressById)}
+      upNextId={recommendedPassageId(
+        openablePassages(passages, canOpenPremium, tasteId),
+        progressById,
+      )}
       lockedIds={passages
-        .filter((passage) => !canOpenPassage(passage, canOpenPremium))
+        .filter((passage) => !canOpenPassage(passage, canOpenPremium, tasteId))
         .map((passage) => passage.id)}
       adminState={adminState}
     />

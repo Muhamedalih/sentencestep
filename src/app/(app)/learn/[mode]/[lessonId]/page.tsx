@@ -4,6 +4,8 @@ import { preload } from "react-dom";
 
 import { ContentUnavailable } from "@/components/learning/content-unavailable";
 import { LessonSession } from "@/components/learning/lesson-session";
+import { HybridWall } from "@/components/hybrid/hybrid-wall";
+import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { PremiumLocked } from "@/components/learning/premium-locked";
 import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
@@ -15,8 +17,13 @@ import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { findNextLesson, getLessonById, getLessonNav } from "@/lib/content";
 import { buildStoryWordQuiz } from "@/lib/content/story-word-quiz";
+import { cefrForLevel } from "@/lib/home-plan/plan";
+import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
+import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { fetchLessonSentenceStats } from "@/lib/supabase/queries/content";
+import { DEFAULT_WPM, estimateStoryMinutes } from "@/lib/today/plan";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -100,39 +107,81 @@ export default async function LessonPage({
   // now that Stories is open to every learner, not just admins.
   // Asked at most once per request, and still as one parallel pair (see above):
   // the finish screen also needs it, to say when the next lesson is Premium.
+  // An admin sees every lock open unless they asked for the learner's view (see learner-view.ts).
+  const learnerView = await isLearnerViewOn();
   let viewerAccess: Promise<boolean> | undefined;
   const viewerHasAccess = () =>
-    (viewerAccess ??= Promise.all([hasPremiumAccess(), isAdmin()]).then((answers) =>
-      answers.some(Boolean),
+    (viewerAccess ??= Promise.all([hasPremiumAccess(), isAdmin()]).then(
+      ([premium, admin]) => premium || (admin && !learnerView),
     ));
-  const canAccess = unit.isFree || (await viewerHasAccess());
+  const features = await getEffectiveFeatures();
+  const openForViewer = unit.isFree || (await viewerHasAccess());
+  // The hybrid offers (see lib/hybrid): a signed-in free learner's taste of the day is open today, and
+  // a locked story shows the new lock screen, with a way back to the taste.
+  const hybrid = !openForViewer && user !== null && features.rollouts.hybridOffers;
+  const taste = hybrid
+    ? await viewerTaste({ userId: user.id, locale, withPassages: true, withStories: true })
+    : null;
+  const tasteOpen = Boolean(taste?.picks.storyIsTaste && taste.picks.story?.id === unit.id);
+  const canAccess = openForViewer || tasteOpen;
   if (!canAccess) {
     // The view is counted in the same parallel batch as the lock's price and
     // figures, so recording it costs no extra wait.
-    const [fromPrice, figures, pay, progress] = await Promise.all([
+    const [fromPrice, figures, pay, progress, storyStats] = await Promise.all([
       getFromMonthlyPrice(),
       getGateFigures(locale),
       getGatePay(),
       getGateProgress(),
+      hybrid && mode === "stories"
+        ? fetchLessonSentenceStats([unit.id])
+        : Promise.resolve(new Map<string, { sentences: number; words: number }>()),
       trackPaywallViewed({ kind: "lesson", mode, lessonId: unit.id }),
     ]);
+    const counts = storyStats.get(unit.id);
+    const storyMinutes = estimateStoryMinutes({
+      words: counts?.words ?? 64,
+      sentences: counts?.sentences ?? 8,
+      wpm: DEFAULT_WPM,
+    });
     return (
       <div className="lesson-shell bg-background text-foreground min-h-svh">
         <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
-          <PremiumLocked
-            mode={mode}
-            lessonId={unit.id}
-            title={unit.title}
-            titleAr={unit.titleAr}
-            supportTitle={unit.supportTitle}
-            description={unit.description}
-            supportDescription={unit.supportDescription}
-            illustrationUrl={unit.illustrationUrl}
-            fromPrice={fromPrice}
-            pay={pay}
-            progress={progress}
-            figures={figures}
-          />
+          {hybrid && mode === "stories" ? (
+            <HybridWall
+              poster={
+                <LessonIllustration
+                  mode={mode}
+                  lessonId={unit.id}
+                  title={unit.title}
+                  illustrationUrl={unit.illustrationUrl}
+                  className="aspect-auto h-full w-full rounded-none border-0 lg:aspect-auto lg:h-full"
+                />
+              }
+              title={unit.supportTitle ?? unit.title}
+              level={cefrForLevel(unit.level)}
+              minutes={storyMinutes}
+              kind="story"
+              progress={progress}
+              tasteToday={Boolean(taste?.picks.passageIsTaste || taste?.picks.storyIsTaste)}
+              ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/${mode}/${lessonId}`)}`}
+              backHref="/learn"
+            />
+          ) : (
+            <PremiumLocked
+              mode={mode}
+              lessonId={unit.id}
+              title={unit.title}
+              titleAr={unit.titleAr}
+              supportTitle={unit.supportTitle}
+              description={unit.description}
+              supportDescription={unit.supportDescription}
+              illustrationUrl={unit.illustrationUrl}
+              fromPrice={fromPrice}
+              pay={pay}
+              progress={progress}
+              figures={figures}
+            />
+          )}
         </div>
         {reportProblemButton}
       </div>
@@ -285,6 +334,12 @@ export default async function LessonPage({
         speakerVoiceMap={speakerVoiceMap}
         firstSentenceWordAudio={firstSentenceWordAudio}
         wordQuiz={wordQuiz}
+        // Today's taste story: its completion offers the full plan at 90% or more (see lib/hybrid).
+        hybridStar={
+          tasteOpen && taste
+            ? { passages: taste.premiumPassages, stories: taste.premiumStories }
+            : null
+        }
       />
       {reportProblemButton}
     </div>

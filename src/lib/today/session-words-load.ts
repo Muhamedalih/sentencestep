@@ -50,6 +50,8 @@ export async function loadLinkedWords(args: {
   locale: SupportLocale | null;
   timeZone: string | undefined;
   isPremium: boolean;
+  admin: boolean;
+  hybridOffers: boolean;
   passagesEnabled: boolean;
 }): Promise<LinkedWords> {
   const { locale } = args;

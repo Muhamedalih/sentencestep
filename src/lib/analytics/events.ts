@@ -1,6 +1,7 @@
 import type { InAppBrowser } from "@/lib/analytics/attribution";
 import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
+import type { HybridMoment } from "@/lib/hybrid/moments";
 import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
 import type { WordsRoundSource } from "@/lib/words-round/round";
@@ -74,6 +75,10 @@ export type AnalyticsEvent =
         | { kind: "passage"; passageId: string };
     }
   | { name: "UPGRADE_VIEWED"; category: "PREMIUM"; properties: Record<string, never> }
+  /** A hybrid-offer moment (src/lib/hybrid/moments.ts) was shown, tapped or dismissed: B after the taste's passage, D when the day's tasks are done, star after a story with 90% or more. Two dismissals within a week pause them, so the three are read together. */
+  | { name: "OFFER_SHOWN"; category: "PREMIUM"; properties: { moment: HybridMoment } }
+  | { name: "OFFER_CLICKED"; category: "PREMIUM"; properties: { moment: HybridMoment } }
+  | { name: "OFFER_DISMISSED"; category: "PREMIUM"; properties: { moment: HybridMoment } }
   | {
       name: "UPGRADE_CTA_CLICKED";
       category: "PREMIUM";

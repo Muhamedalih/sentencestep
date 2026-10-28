@@ -34,7 +34,9 @@ export default async function TodayGoPage({
     userId: user.id,
     locale,
     timeZone,
-    isPremium: premium || admin,
+    isPremium: premium,
+    admin,
+    hybridOffers: features.rollouts.hybridOffers,
     passagesEnabled: features.passages.enabled,
   });
   const redoing = redo === "1";
