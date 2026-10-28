@@ -35,6 +35,7 @@ import {
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import { BadgeMedal } from "@/components/app/badge-medal";
+import { HybridMomentCard } from "@/components/hybrid/hybrid-moment-card";
 import { StoryRatingRow } from "@/components/learning/story-rating-row";
 import { BADGE_DEFS } from "@/lib/features/catalog";
 import { questTitle } from "@/lib/features/quest-labels";
@@ -248,6 +249,7 @@ export function LessonCompletion({
   saveStatus = "saved",
   onRetrySave,
   onRetryLesson,
+  hybridStar,
 }: {
   mode: LearningMode;
   /** This lesson's id — Stories only: the quiet row of stars at the foot of the page rates it. Without it (the admin theme preview) there is no row. */
@@ -295,6 +297,8 @@ export function LessonCompletion({
   onRetrySave?: () => void;
   /** Restarts this same lesson from its first sentence (see LessonSession's handleRetryLesson) — undefined for any caller that hasn't wired up a real reset (e.g. the admin theme preview), which simply omits the button rather than rendering one that does nothing. Ranked just above Home in the actions list below, so it's a secondary action alongside Home whenever Fix Mistakes or Next Lesson exists, and only becomes the primary CTA when neither does (see that list's own doc comment). */
   onRetryLesson?: () => void;
+  /** A story of today's taste (see lib/hybrid): set only for that story, and the card is offered at 90% or more. */
+  hybridStar?: { passages: number; stories: number } | null;
 }) {
   const reducedMotion = useReducedMotion();
   const { t, locale, dir } = useLocale();
@@ -965,6 +969,18 @@ export function LessonCompletion({
             </div>
           )}
         </motion.div>
+
+        {/* The taste story finished with 90% or more: the card that offers the full plan (see
+            lib/hybrid/moments.ts). It sits above the rating row, and the rating row keeps its place. */}
+        {isStory && hybridStar && accuracy >= 0.9 && (
+          <motion.div variants={fadeInUp}>
+            <HybridMomentCard
+              moment="star"
+              passages={hybridStar.passages}
+              stories={hybridStar.stories}
+            />
+          </motion.div>
+        )}
 
         {/* A story is rated here, in a quiet row at the very end (below the pinned buttons on a
             phone), instead of by the pop-up the other lessons show. */}

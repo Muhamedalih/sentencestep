@@ -21,6 +21,7 @@ export const ROLLOUT_IDS = [
   "leanGate",
   "libraryGift",
   "mobilePath",
+  "hybridOffers",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -238,6 +239,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only stories finished AFTER this is opened add words: the stories already finished are not looked back at (a one-off script could add them later).",
       "At most three words are recorded per story, and a word the learner already has from a lesson keeps its first sentence and its schedule.",
       "Admins have it already: finish a story, and the words appear in the card on the Stories page the next day.",
+    ],
+  },
+  hybridOffers: {
+    id: "hybridOffers",
+    audience: "learner",
+    title: "Hybrid offers: taste of the day and moments",
+    description:
+      "Once a free learner has finished the free passages and stories, Today's tasks keep going: each day one Premium passage and one Premium story from the learner's own level are open for that day, and the plan is offered at the moments that feel right. After the taste's passage, when the day's three tasks are done, and after a story finished with 90% or more, a calm card offers the full plan, once a day at most. Every locked passage and story shows a clearer lock screen: a preview, what the full plan opens, the price by country and a second button back to today's taste.",
+    notes: [
+      "Needs Today's session to be open for the same people: the taste lives in Today's tasks.",
+      "Nothing changes for a learner who still has free passages or stories to finish: the taste and the moments start only after those are done.",
+      "A moment never shows in the first 24 hours after sign-up, to a learner with an order still unpaid, to a subscriber or to a guest. Two dismissals within a week pause the moments for seven days.",
+      "Every shown, clicked and dismissed moment is recorded (OFFER_SHOWN, OFFER_CLICKED, OFFER_DISMISSED), so the result can be read per group. To test it, choose “A share of learners”: the accounts left out keep today's Home and lock screens.",
     ],
   },
 };

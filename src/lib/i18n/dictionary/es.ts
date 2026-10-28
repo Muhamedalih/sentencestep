@@ -1571,4 +1571,27 @@ export const es: Dictionary = {
       thanksBody: "Hemos recibido tu valoración y nos ayudará a mejorar Mis palabras.",
     },
   },
+  hybrid: {
+    wallPrimary: "Ver el plan completo",
+    wallBack: "Volver a la muestra de hoy",
+    wallPrice: "El precio de tu país, como en la página de planes",
+    wallMeta: "{level} · unos {n} min",
+    wallPassage: "El plan completo lo abre. Incluye escucha, escritura y las palabras del texto.",
+    wallStory: "El plan completo lo abre. Incluye escritura y las palabras de la historia.",
+    wallTasteTomorrow: "La muestra de mañana llega mañana.",
+
+    wallWrittenDays: "Escribiste {sentences} frases en {days} días.",
+
+    wallWritten: "Escribiste {sentences} frases.",
+    momentBTitle: "Terminaste el texto de hoy",
+    momentStoryTitle: "Terminaste la historia de hoy",
+    momentBody: "Esa fue la muestra gratuita de hoy.",
+    momentFull:
+      "El plan completo abre todos los demás textos ({passages}), todas las demás historias ({stories}) y todas las listas de palabras.",
+    momentStarTitle: "Terminaste esta historia con una estrella",
+    momentDTitle: "Tu día está completo: {done} de {total}",
+    momentDBody: "Mañana: un texto y una historia, gratis.",
+    momentPrimary: "Ver el plan completo",
+    momentLater: "Más tarde",
+  },
 };

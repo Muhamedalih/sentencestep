@@ -130,7 +130,9 @@ export async function fetchTodayWordsAction(size: number, more = false): Promise
       userId,
       locale,
       timeZone: (await cookies()).get(TIMEZONE_COOKIE)?.value,
-      isPremium: premium || admin,
+      isPremium: premium,
+      admin,
+      hybridOffers: features.rollouts.hybridOffers,
       passagesEnabled: features.passages.enabled,
     });
     const { story, passage } = more ? sessionLeftovers({ ...linked, size }) : linked;

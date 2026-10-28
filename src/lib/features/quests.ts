@@ -127,6 +127,8 @@ export interface DailyQuestsPayload {
   weekly?: WeeklyLine | null;
   /** The new Home only: nothing is left to open (every passage and story open to the learner is finished), so its Today box says so instead of listing tasks. `quests` then holds the rows the usual card draws. */
   todayEnd?: TodayEndInfo;
+  /** Today's box only: one of the three tasks is the taste of the day, a Premium passage or story open to a free learner for today (see hybrid/picks.ts). */
+  tasteToday?: boolean;
 }
 
 /** What a lesson completion contributes to each quest type. */

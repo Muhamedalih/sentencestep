@@ -1529,4 +1529,27 @@ export const tr: Dictionary = {
       thanksBody: "Puanın bize ulaştı ve Kelimelerim'e yön verecek.",
     },
   },
+  hybrid: {
+    wallPrimary: "Tam planı gör",
+    wallBack: "Bugünkü tadıma dön",
+    wallPrice: "Ülkene göre fiyat, planlar sayfasındaki gibi",
+    wallMeta: "{level} · yaklaşık {n} dk",
+    wallPassage: "Tam plan bunu açar. Dinleme, yazma ve metnin kelimelerini içerir.",
+    wallStory: "Tam plan bunu açar. Yazma ve hikâyenin kelimelerini içerir.",
+    wallTasteTomorrow: "Yarınki tadım yarın gelir.",
+
+    wallWrittenDays: "{days} günde {sentences} cümle yazdın.",
+
+    wallWritten: "{sentences} cümle yazdın.",
+    momentBTitle: "Bugünkü metni bitirdin",
+    momentStoryTitle: "Bugünkü hikâyeyi bitirdin",
+    momentBody: "Bugünün ücretsiz tadımı buydu.",
+    momentFull:
+      "Tam plan diğer tüm metinleri ({passages}), diğer tüm hikâyeleri ({stories}) ve tüm kelime listelerini açar.",
+    momentStarTitle: "Bu hikâyeyi yıldızla bitirdin",
+    momentDTitle: "Günün bitti: {done} / {total}",
+    momentDBody: "Yarın: bir metin ve bir hikâye, ücretsiz.",
+    momentPrimary: "Tam planı gör",
+    momentLater: "Daha sonra",
+  },
 };

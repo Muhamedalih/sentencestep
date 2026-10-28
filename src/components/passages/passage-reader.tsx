@@ -59,6 +59,8 @@ export interface PassageReaderProps {
   nextPassage: { id: string; title: string } | null;
   /** Today's session ("Today's session (new Home)"): where the end screen's one big button goes — on to the story — instead of the next passage. */
   todayNext?: { href: string } | null;
+  /** The taste of the day (see lib/hybrid): set when this passage is it, so the end screen offers the full plan. Counts: how many Premium passages and stories it opens. */
+  hybridMoment?: { passages: number; stories: number } | null;
   /** Where "Practice these words" goes, and whether it is the real Word Lists page or the admin-only preview of a lesson that is not published yet. Null when the passage has no word lesson. */
   wordsLink: { href: string; adminPreview: boolean } | null;
   /** Where the narrator will pause, by sentence id — passed only to an admin, who sees it as small dots in the text; a learner is never given it. */
@@ -73,6 +75,7 @@ export function PassageReader({
   translationAvailable,
   nextPassage,
   todayNext,
+  hybridMoment,
   wordsLink,
   pauseMarks,
 }: PassageReaderProps) {
@@ -455,6 +458,7 @@ export function PassageReader({
               rewardLines={lineForReward(rewards)}
               nextPassage={nextPassage}
               todayNext={todayNext ?? null}
+              hybridMoment={hybridMoment ?? null}
               wordsLink={wordsLink}
               onReadAgain={handleReadAgain}
             />

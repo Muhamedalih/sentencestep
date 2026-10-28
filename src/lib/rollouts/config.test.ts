@@ -185,6 +185,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     storyRecall: false,
     leanGate: false,
     libraryGift: false,
+    hybridOffers: false,
   });
 });
 
@@ -230,8 +231,8 @@ test("the sentence bank lives inside Today's box: it is never open without Today
   const before = { ...open, todaySession: false };
   const after = withRolloutDependencies(before);
   assert.deepEqual(
-    { ...after, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true },
-    { ...before, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true },
+    { ...after, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true, hybridOffers: true },
+    { ...before, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true, hybridOffers: true },
   );
   assert.equal(before.sentenceBank, true);
   // A plain learner has neither on the default settings.
@@ -277,6 +278,25 @@ test("the words bank is fed by Today's words step: it is never open without Toda
   assert.equal(
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), guest)).wordBank,
     false,
+  );
+});
+
+test("hybrid offers: Admins only by default, and never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(open.hybridOffers, true);
+  assert.equal(evaluateRollouts(defaultRolloutConfig(), learner).hybridOffers, false);
+  assert.equal(evaluateRollouts(defaultRolloutConfig(), guest).hybridOffers, false);
+  assert.equal(withRolloutDependencies(open).hybridOffers, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).hybridOffers, false);
+  // Its own setting alone does not open it for a learner whose Today's session is closed.
+  const config = defaultRolloutConfig();
+  config.hybridOffers = entry({ mode: "everyone", percent: 90 });
+  const share = withRolloutDependencies(evaluateRollouts(config, learner));
+  assert.equal(share.hybridOffers, false);
+  config.todaySession = entry({ mode: "everyone" });
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(config, learner)).hybridOffers,
+    rolloutBucket(learner.userId!, "hybridOffers") < 90,
   );
 });
 

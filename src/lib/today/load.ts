@@ -7,6 +7,8 @@ import type { EffectiveFeatures } from "@/lib/features/config";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
 import { cefrForLevel } from "@/lib/home-plan/plan";
+import { LEARNER_VIEW_COOKIE } from "@/lib/hybrid/learner-view";
+import { todayPicks } from "@/lib/hybrid/picks";
 import { getLocale } from "@/lib/i18n/get-locale";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
@@ -23,7 +25,6 @@ import type { LessonUnit } from "@/types/content";
 
 import { finishedStoryOrPassageToday, todayEndInfo } from "./end-state";
 import type { TodayEndInfo } from "./end-state";
-import { pickPassage, pickStory } from "./next";
 import { WORDS_MINUTES, estimateStoryMinutes, medianWpm, planToday } from "./plan";
 import type { StepKind, StepPlan } from "./plan";
 import { fetchRecentWpm, fetchSessionDatesSince } from "./queries";
@@ -54,10 +55,16 @@ async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Pro
   }
 }
 
-/** The passage and the story open to this learner next (the passage lists are share-cached, the rest are the learner's own rows). */
+/**
+ * The passage and the story open to this learner next (the passage lists are share-cached, the rest
+ * are the learner's own rows). Once a free learner's free ones are finished, each step opens its
+ * taste of the day instead (see hybrid/picks.ts), when the hybrid offers are open to them.
+ */
 async function readLessonPicks(args: {
   userId: string;
+  todayISO: string;
   isPremium: boolean;
+  hybridOffers: boolean;
   startingLevel: number | null;
   passagesEnabled: boolean;
   storiesUnits: LessonUnit[];
@@ -73,14 +80,23 @@ async function readLessonPicks(args: {
       : ([] as PassageProgress[]),
   ]);
 
-  const passage = pickPassage(
-    summaries,
-    new Map(passageProgress.map((entry) => [entry.passageId, entry])),
-    args.isPremium,
+  const picks = todayPicks({
+    userId,
+    todayISO: args.todayISO,
+    isPremium: args.isPremium,
+    taste: args.hybridOffers,
     startingLevel,
-  );
-  const story = pickStory(args.storiesUnits, args.completedStoryIds, args.isPremium, startingLevel);
-  return { summaries, passageProgress, passage, story };
+    passages: { summaries, progress: passageProgress },
+    storiesUnits: args.storiesUnits,
+    completedStoryIds: args.completedStoryIds,
+  });
+  return {
+    summaries,
+    passageProgress,
+    passage: picks.passage,
+    story: picks.story,
+    tasteToday: picks.passageIsTaste || picks.storyIsTaste,
+  };
 }
 
 /** The latest passage and the latest story the learner finished today (their own calendar day), or undefined for either. */
@@ -104,6 +120,8 @@ export interface TodayStepsData {
   steps: TodayStepData[];
   current: StepKind | null;
   allDone: boolean;
+  /** One of the day's steps is the taste of the day (a Premium item open for today, see hybrid/picks.ts). */
+  tasteToday: boolean;
   /** Set when nothing is left to open (and nothing was finished today): Home says so instead of drawing tasks. */
   end: TodayEndInfo | null;
 }
@@ -124,6 +142,7 @@ export async function loadTodaySteps(args: {
   todayISO: string;
   progress: ProgressState | undefined;
   isPremium: boolean;
+  hybridOffers: boolean;
   passagesEnabled: boolean;
   quests: readonly DailyQuest[];
 }): Promise<TodayStepsData> {
@@ -141,7 +160,9 @@ export async function loadTodaySteps(args: {
   ]);
   const picks = await readLessonPicks({
     userId,
+    todayISO,
     isPremium: args.isPremium,
+    hybridOffers: args.hybridOffers,
     startingLevel: progress?.startingLevel ?? null,
     passagesEnabled: args.passagesEnabled,
     storiesUnits,
@@ -233,6 +254,7 @@ export async function loadTodaySteps(args: {
     steps: plan.steps.map((step) => ({ ...step, ...detail[step.kind] })),
     current: plan.current,
     allDone: plan.allDone,
+    tasteToday: picks.tasteToday,
     end: todayEndInfo({
       isPremium: args.isPremium,
       passagesEnabled: args.passagesEnabled,
@@ -259,7 +281,13 @@ export async function enrichTodayQuests(args: {
   todayISO: string;
   features: EffectiveFeatures;
   quests: readonly DailyQuest[];
-}): Promise<{ quests: DailyQuest[]; weekly: WeeklyLine | null; end?: TodayEndInfo } | null> {
+}): Promise<{
+  quests: DailyQuest[];
+  weekly: WeeklyLine | null;
+  end?: TodayEndInfo;
+  /** One of the day's steps is the taste of the day (see TodayStepsData). */
+  tasteToday?: boolean;
+} | null> {
   const todayRows = args.quests.filter((quest) => quest.slot >= TODAY_QUEST_SLOT_BASE);
   if (todayRows.length === 0) return null;
   try {
@@ -271,6 +299,7 @@ export async function enrichTodayQuests(args: {
       cookies(),
     ]);
     const timeZone = cookieStore.get(TIMEZONE_COOKIE)?.value;
+    const learnerView = cookieStore.get(LEARNER_VIEW_COOKIE)?.value === "1";
     // Today's optional extra row, the day's exam, is dealt beside the steps' own reads (it
     // reads nothing once the row exists, and never throws).
     const bankContext = {
@@ -286,7 +315,9 @@ export async function enrichTodayQuests(args: {
         timeZone,
         todayISO: args.todayISO,
         progress,
-        isPremium: premium || admin,
+        // An admin who asked to see the learner's view (learner-view.ts) gets the learner's Today.
+        isPremium: premium || (admin && !learnerView),
+        hybridOffers: args.features.rollouts.hybridOffers,
         passagesEnabled: args.features.passages.enabled,
         quests: todayRows,
       }),
@@ -340,8 +371,8 @@ export async function enrichTodayQuests(args: {
         },
       });
     }
-    if (enriched.length > 0) return { quests: enriched, weekly };
-    return data.end ? { quests: [], weekly, end: data.end } : null;
+    if (enriched.length > 0) return { quests: enriched, weekly, tasteToday: data.tasteToday };
+    return data.end ? { quests: [], weekly, end: data.end, tasteToday: data.tasteToday } : null;
   } catch (error) {
     console.error("[today] enrichTodayQuests failed", error);
     return { quests: [...todayRows], weekly: null };
@@ -358,6 +389,8 @@ export async function loadTodayNext(args: {
   locale: SupportLocale | null;
   timeZone: string | undefined;
   isPremium: boolean;
+  admin: boolean;
+  hybridOffers: boolean;
   passagesEnabled: boolean;
 }): Promise<{
   passageId: string | null;
@@ -367,16 +400,21 @@ export async function loadTodayNext(args: {
 }> {
   const empty = { passageId: null, storyId: null, wordsAvailable: false, nextTitle: null };
   try {
-    const [storiesUnits, progress] = await Promise.all([
+    const [storiesUnits, progress, cookieStore] = await Promise.all([
       getLessonSummaries("stories", args.locale ?? undefined),
       fetchProgressCached(todayLocalISODate()),
+      cookies(),
     ]);
+    const learnerView = cookieStore.get(LEARNER_VIEW_COOKIE)?.value === "1";
     const storyCompletions = (progress?.completions ?? []).filter(
       (entry) => entry.mode === "stories",
     );
+    const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
     const picks = await readLessonPicks({
       userId: args.userId,
-      isPremium: args.isPremium,
+      todayISO,
+      isPremium: args.isPremium || (args.admin && !learnerView),
+      hybridOffers: args.hybridOffers,
       startingLevel: progress?.startingLevel ?? null,
       passagesEnabled: args.passagesEnabled,
       storiesUnits,
@@ -384,7 +422,6 @@ export async function loadTodayNext(args: {
     });
     // The words step asks the day's passage and story words: it is there while the day has one of
     // them — open next, or finished today (the last free story finished today still gets its words).
-    const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
     const done = finishedToday({
       passageProgress: picks.passageProgress,
       storyCompletions,
@@ -481,21 +518,27 @@ export async function loadTodayLessonIds(args: {
   locale: SupportLocale | null;
   timeZone: string | undefined;
   isPremium: boolean;
+  admin: boolean;
+  hybridOffers: boolean;
   passagesEnabled: boolean;
 }): Promise<{ passageId: string | null; storyId: string | null }> {
   const todayISO = localISODateInTimeZone(args.timeZone) ?? todayLocalISODate();
   const dayOf = (iso: string) =>
     localISODateInTimeZone(args.timeZone, new Date(iso)) ?? iso.slice(0, 10);
-  const [storiesUnits, progress] = await Promise.all([
+  const [storiesUnits, progress, cookieStore] = await Promise.all([
     getLessonSummaries("stories", args.locale ?? undefined),
     fetchProgressCached(todayLocalISODate()),
+    cookies(),
   ]);
+  const learnerView = cookieStore.get(LEARNER_VIEW_COOKIE)?.value === "1";
   const storyCompletions = (progress?.completions ?? []).filter(
     (entry) => entry.mode === "stories",
   );
   const picks = await readLessonPicks({
     userId: args.userId,
-    isPremium: args.isPremium,
+    todayISO,
+    isPremium: args.isPremium || (args.admin && !learnerView),
+    hybridOffers: args.hybridOffers,
     startingLevel: progress?.startingLevel ?? null,
     passagesEnabled: args.passagesEnabled,
     storiesUnits,

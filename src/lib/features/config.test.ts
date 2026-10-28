@@ -407,6 +407,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       storyRecall: false,
       leanGate: false,
       libraryGift: false,
+      hybridOffers: false,
     });
   }
 });

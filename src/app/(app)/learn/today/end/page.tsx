@@ -49,7 +49,9 @@ export default async function TodayEndPage({
       userId: user.id,
       locale,
       timeZone,
-      isPremium: premium || admin,
+      isPremium: premium,
+      admin,
+      hybridOffers: features.rollouts.hybridOffers,
       passagesEnabled: features.passages.enabled,
     }),
     loadTodayWeek({
@@ -77,7 +79,9 @@ export default async function TodayEndPage({
       userId: user.id,
       locale,
       timeZone,
-      isPremium: premium || admin,
+      isPremium: premium,
+      admin,
+      hybridOffers: features.rollouts.hybridOffers,
       passagesEnabled: features.passages.enabled,
     }).catch(() => false),
   ]);

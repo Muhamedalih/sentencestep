@@ -683,6 +683,16 @@ scripts/check-passage-duplicates.ts` compares them also with every Daily Lesson,
   forward; reduced motion keeps none of it. Not drawn when Passages is not open
   to the visitor, for a guest, or once every passage is finished.
 
+## Hybrid offers (taste of the day, moments, lock screen)
+
+Permission `hybridOffers` (Admins only, needs `todaySession`; the Permissions page calls it hybrid offers). For a signed-in free learner whose free passages and stories are finished:
+
+- **Taste of the day** (`src/lib/hybrid/taste.ts`, `picks.ts`): each day one Premium passage and one Premium story from the learner's level are open for that day, chosen by a per-learner shuffle walked one day at a time (no stored state, no repeats within a cycle). Today's loader, the passage and story pages and the passages list all read the same picks, so the item opens in every place it appears.
+- **Moments** (`src/lib/hybrid/moments.ts`, `actions.ts`): B after today's taste passage (the end screen), D when the three tasks are done (top of Home), star after a taste story with 90% or more. One a day in that order; not in the first 24 hours, not with an open order, not for a subscriber; two dismissals within a week pause them for seven days. The server decides on `claimHybridMoment` and records `OFFER_SHOWN`; `OFFER_CLICKED` and `OFFER_DISMISSED` follow the taps.
+- **Lock screen** (`src/components/hybrid/hybrid-wall.tsx`): for Premium stories and passages only, with a preview, the learner's own numbers and, while a taste is open, a second button back to it. Normal lessons keep their lock.
+- **Admins** see every lock open, so to look at the learner's view on an admin account open `/api/hybrid-learner-view?on=1` (`?on=0` to stop; a seven-day cookie, `ss_learner_view`). It only takes access away from that browser.
+- **Measuring**: `scripts/hybrid-offers-readout.ts --since <ISO> --share <percent>` compares the treatment and the control of the share over one window (read-only).
+
 ## Local development
 
 With no Supabase project linked there is no settings row. Set
