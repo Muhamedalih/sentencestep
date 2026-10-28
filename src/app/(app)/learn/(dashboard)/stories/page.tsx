@@ -6,6 +6,7 @@ import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessonSummaries } from "@/lib/content";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
@@ -18,6 +19,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Stories" };
 
 export default async function StoriesLibraryPage() {
+  // On a phone with the mobilePath permission the Daily Lessons are on the Path, so the switch to them is left out.
+  const mobilePath = (await getEffectiveFeatures()).rollouts.mobilePath;
   const locale = await getLocale();
   // Cards only — the story grid never reads a sentence, so don't load them
   // (see getLessonSummaries). The lesson page fetches the real body on open.
@@ -31,7 +34,7 @@ export default async function StoriesLibraryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
-      <StoriesMobileTabs active="simplified" className="mb-6" />
+      <StoriesMobileTabs active="simplified" className={mobilePath ? "hidden" : "mb-6"} />
       <StoriesLibrary
         lessons={lessons}
         isPremiumUser={hasPremium || isAdminUser}

@@ -6,6 +6,31 @@ import type { Dictionary } from "@/lib/i18n/dictionary/types";
  * dictionaries, not a literal word-for-word translation of either.
  */
 export const tr: Dictionary = {
+  mobilePath: {
+    navPath: "Yol",
+    navWords: "Kelimeler",
+    doneOfTotal: "{done} / {total} ders",
+    youAreHere: "Buradasın",
+    continueMinutes: "Devam et · {minutes} dk",
+    finished: "Tamam",
+    levelFinished: "Bu seviyeyi bitirdin",
+    nextStep: "Sonraki adım",
+    startNow: "Şimdi başla",
+    openPath: "Yolu aç",
+    headline: "İngilizceyi harf harf öğren.",
+    startHere: "Buradan başla",
+    watch: "İzle",
+    listen: "Dinle",
+    write: "Yaz",
+    progress: "İlerle",
+    signUpKeep: "İlerlemeni kaydetmek için kaydol",
+    explore: "Keşfet",
+    startTyping: "Yazmaya başla",
+    typeSentence: "İngilizce cümleyi yaz",
+    statsAfterFirst: "Hızın ve doğruluğun ilk cümleden sonra görünür",
+    more: "Daha fazla",
+    lessonLength: "{minutes} dk",
+  },
   common: {
     signIn: "Giriş yap",
     signOut: "Çıkış yap",

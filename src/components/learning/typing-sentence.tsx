@@ -8,6 +8,7 @@ import { LessonSettings } from "@/components/learning/lesson-settings";
 import { ConversationBubble, StoryHeaderRow } from "@/components/learning/sentence-chrome";
 import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
@@ -589,6 +590,8 @@ export function TapToStartOverlay({
   body: string;
   onStart: () => void;
 }) {
+  const { t } = useLocale();
+  const { rollouts } = useFeatures();
   return (
     <div
       role="button"
@@ -602,7 +605,9 @@ export function TapToStartOverlay({
       className="tap-gate bg-background/45 fixed inset-0 z-20 flex cursor-pointer items-center justify-center"
     >
       <div className="border-border/60 bg-card/95 mx-6 flex flex-col items-center gap-1.5 rounded-2xl border px-7 py-5 text-center shadow-xl shadow-black/30">
-        <span className="text-foreground text-base font-semibold">{heading}</span>
+        <span className="text-foreground text-base font-semibold">
+          {rollouts.mobilePath ? t.mobilePath.startTyping : heading}
+        </span>
         <span className="text-muted-foreground text-sm">{body}</span>
       </div>
     </div>

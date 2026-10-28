@@ -1,6 +1,31 @@
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 
 export const ar: Dictionary = {
+  mobilePath: {
+    navPath: "المسار",
+    navWords: "الكلمات",
+    doneOfTotal: "{done} من {total} دروس",
+    youAreHere: "أنت هنا",
+    continueMinutes: "تابع · {minutes} د",
+    finished: "تمّ",
+    levelFinished: "أنهيت هذا المستوى",
+    nextStep: "الخطوة التالية",
+    startNow: "ابدأ الآن",
+    openPath: "افتح المسار",
+    headline: "تعلّم الإنجليزية، حرفًا بحرف.",
+    startHere: "ابدأ من هنا",
+    watch: "شاهد",
+    listen: "استمع",
+    write: "اكتب",
+    progress: "تقدّم",
+    signUpKeep: "سجّل لتحفظ تقدّمك",
+    explore: "استكشف",
+    startTyping: "ابدأ الكتابة",
+    typeSentence: "اكتب الجملة الإنجليزية",
+    statsAfterFirst: "تظهر دقتك وسرعتك بعد الجملة الأولى",
+    more: "المزيد",
+    lessonLength: "{minutes} د",
+  },
   common: {
     signIn: "تسجيل الدخول",
     signOut: "تسجيل الخروج",

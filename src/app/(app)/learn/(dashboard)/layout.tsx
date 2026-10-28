@@ -71,6 +71,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
             isAdminUser={isAdminUser}
             libraryOpen={libraryOpen}
             passagesEnabled={features.passages.enabled}
+            mobilePath={features.rollouts.mobilePath}
           />
         }
       >

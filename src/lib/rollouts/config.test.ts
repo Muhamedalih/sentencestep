@@ -180,6 +180,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     newHome: false,
     wordBank: false,
     dailyRule: false,
+    mobilePath: false,
     redeemCodes: false,
     storyRecall: false,
     leanGate: false,

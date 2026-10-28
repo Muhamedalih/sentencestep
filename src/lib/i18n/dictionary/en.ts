@@ -9,6 +9,31 @@ import type { Dictionary } from "@/lib/i18n/dictionary/types";
  * or blank string (see getDictionary in ./index.ts).
  */
 export const en: Dictionary = {
+  mobilePath: {
+    navPath: "Path",
+    navWords: "Words",
+    doneOfTotal: "{done} of {total} lessons",
+    youAreHere: "You are here",
+    continueMinutes: "Continue · {minutes} min",
+    finished: "Done",
+    levelFinished: "You finished this level",
+    nextStep: "Next step",
+    startNow: "Start now",
+    openPath: "Open path",
+    headline: "Learn English, letter by letter.",
+    startHere: "Start here",
+    watch: "Watch",
+    listen: "Listen",
+    write: "Type",
+    progress: "Progress",
+    signUpKeep: "Sign up to keep your progress",
+    explore: "Explore",
+    startTyping: "Start typing",
+    typeSentence: "Type the English sentence",
+    statsAfterFirst: "Your speed and accuracy appear after the first sentence",
+    more: "More",
+    lessonLength: "{minutes} min",
+  },
   common: {
     signIn: "Sign in",
     signOut: "Sign out",

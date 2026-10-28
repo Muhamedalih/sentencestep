@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { difficultyForLevel, type Difficulty } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
@@ -205,6 +206,16 @@ export function WordGroupCard({
   const locked = !group.isFree && !isPremiumUser;
   const percent = group.wordCount === 0 ? 0 : Math.round((completedCount / group.wordCount) * 100);
   const { dir, t } = useLocale();
+  const { rollouts } = useFeatures();
+  // On a phone with the mobilePath permission a locked list reads with the lesson lock's own word; the desktop keeps «مميز».
+  const lockedLabel = rollouts.mobilePath ? (
+    <>
+      <span className="md:hidden">{t.premium.lockedChip}</span>
+      <span className="hidden md:inline">{t.wordLists.premiumGroup}</span>
+    </>
+  ) : (
+    t.wordLists.premiumGroup
+  );
   const supportTitle = group.supportTitle ?? group.title;
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
@@ -241,7 +252,7 @@ export function WordGroupCard({
               percent={0}
               progressLabel={progressLabel}
               left={t.wordLists.wordCount.replace("{n}", String(group.wordCount))}
-              right={t.wordLists.premiumGroup}
+              right={lockedLabel}
             />
           </div>
         </Link>

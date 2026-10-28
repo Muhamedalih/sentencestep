@@ -72,7 +72,16 @@ function TypingHint() {
 }
 
 /** One task: a quiet row without a frame of its own — only the one in progress is lifted and carries the button. */
-function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
+function TaskRow({
+  quest,
+  current,
+  phoneSingleAction = false,
+}: {
+  quest: DailyQuest;
+  current: boolean;
+  /** On a phone with mobilePath the one next-step button sits above the boxes, so this row's button steps aside below md:. */
+  phoneSingleAction?: boolean;
+}) {
   const { t } = useLocale();
   const copy = t.today;
   const info = quest.today;
@@ -172,7 +181,12 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
             )}
             {info.kind === "words" && !done && <TypingHint />}
             {current && !done && (
-              <span className="bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
+              <span
+                className={cn(
+                  "bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full",
+                  phoneSingleAction && "max-md:hidden",
+                )}
+              >
                 <span dir="auto">{`${start} · ${minutes}`}</span>
               </span>
             )}
@@ -194,11 +208,14 @@ export function TodayBox({
   payload,
   test,
   className,
+  phoneSingleAction = false,
 }: {
   payload: DailyQuestsPayload;
   /** What the self-test card at the foot shows; none when the day has no test for this learner. */
   test?: { state: "locked" | "open"; quest: DailyQuest | null };
   className?: string;
+  /** See TaskRow: the phone's next-step button is drawn above the boxes instead. */
+  phoneSingleAction?: boolean;
 }) {
   const { t } = useLocale();
   const copy = t.today;
@@ -240,7 +257,12 @@ export function TodayBox({
       </header>
       <ul className="roomy:gap-[clamp(0.1rem,0.45svh,0.4rem)] flex flex-1 flex-col gap-1">
         {tasks.map((quest) => (
-          <TaskRow key={quest.slot} quest={quest} current={quest.slot === current?.slot} />
+          <TaskRow
+            key={quest.slot}
+            quest={quest}
+            current={quest.slot === current?.slot}
+            phoneSingleAction={phoneSingleAction}
+          />
         ))}
       </ul>
       {payload.allDone && (

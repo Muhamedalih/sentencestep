@@ -17,6 +17,32 @@ import type { BadgeId } from "@/lib/features/catalog";
  * add a key here, then both dictionaries, nothing else changes shape.
  */
 export interface Dictionary {
+  /** Phone-only copy: the Path tab, the next step, the phone bar (permission mobilePath). */
+  mobilePath: {
+    navPath: string;
+    navWords: string;
+    doneOfTotal: string;
+    youAreHere: string;
+    continueMinutes: string;
+    finished: string;
+    levelFinished: string;
+    nextStep: string;
+    startNow: string;
+    openPath: string;
+    headline: string;
+    startHere: string;
+    watch: string;
+    listen: string;
+    write: string;
+    progress: string;
+    signUpKeep: string;
+    explore: string;
+    startTyping: string;
+    typeSentence: string;
+    statsAfterFirst: string;
+    more: string;
+    lessonLength: string;
+  };
   common: {
     signIn: string;
     signOut: string;
