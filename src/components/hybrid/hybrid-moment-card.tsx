@@ -16,15 +16,12 @@ import type { HybridMoment } from "@/lib/hybrid/moments";
  */
 export function HybridMomentCard({
   moment,
-  kind = "passage",
   done,
   total,
   passages,
   stories,
 }: {
   moment: HybridMoment;
-  /** For B: whether the finished taste was a passage or a story (their titles differ). */
-  kind?: "passage" | "story";
   /** For D: how many of the day's tasks are done, out of how many. */
   done?: number;
   total?: number;
@@ -56,9 +53,7 @@ export function HybridMomentCard({
           .replace("{total}", String(total ?? 0))
       : moment === "star"
         ? t.hybrid.momentStarTitle
-        : kind === "story"
-          ? t.hybrid.momentStoryTitle
-          : t.hybrid.momentBTitle;
+        : t.hybrid.momentBTitle;
   // B says the taste was free for today; D says what tomorrow brings; the star has no line of its own.
   const body = moment === "D" ? t.hybrid.momentDBody : moment === "B" ? t.hybrid.momentBody : null;
 

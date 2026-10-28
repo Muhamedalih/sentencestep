@@ -213,7 +213,6 @@ export function PassageCompletion({
           <div className="mt-5">
             <HybridMomentCard
               moment="B"
-              kind="passage"
               passages={hybridMoment.passages}
               stories={hybridMoment.stories}
             />

@@ -1549,7 +1549,6 @@ export const es: Dictionary = {
 
     wallWritten: "Escribiste {sentences} frases.",
     momentBTitle: "Terminaste el texto de hoy",
-    momentStoryTitle: "Terminaste la historia de hoy",
     momentBody: "Esa fue la muestra gratuita de hoy.",
     momentFull:
       "El plan completo abre todos los demás textos ({passages}), todas las demás historias ({stories}) y todas las listas de palabras.",

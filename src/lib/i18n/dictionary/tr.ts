@@ -1508,7 +1508,6 @@ export const tr: Dictionary = {
 
     wallWritten: "{sentences} cümle yazdın.",
     momentBTitle: "Bugünkü metni bitirdin",
-    momentStoryTitle: "Bugünkü hikâyeyi bitirdin",
     momentBody: "Bugünün ücretsiz tadımı buydu.",
     momentFull:
       "Tam plan diğer tüm metinleri ({passages}), diğer tüm hikâyeleri ({stories}) ve tüm kelime listelerini açar.",
