@@ -9,7 +9,7 @@ import { withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 
-export const metadata: Metadata = { title: "Path" };
+export const metadata: Metadata = { title: "Daily lessons" };
 
 /**
  * Reads live content and the viewer's own plan on every request, like the lesson list pages.

@@ -39,7 +39,7 @@ export function CoursePathStrip({
     >
       <span className="min-w-0 flex-1">
         <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-          <span dir="auto">{t.mobilePath.navPath}</span>
+          <span dir="auto">{t.nav.normalLessons}</span>
           {code && (
             <span dir="ltr" className="text-foreground font-semibold">
               {code}

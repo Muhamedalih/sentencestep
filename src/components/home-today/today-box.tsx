@@ -122,16 +122,7 @@ function TypingHint() {
 }
 
 /** One task: a quiet row without a frame of its own — only the one in progress is lifted and carries the button. */
-function TaskRow({
-  quest,
-  current,
-  phoneSingleAction = false,
-}: {
-  quest: DailyQuest;
-  current: boolean;
-  /** On a phone with mobilePath the one next-step button sits above the boxes, so this row's button steps aside below md:. */
-  phoneSingleAction?: boolean;
-}) {
+function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
   const { t } = useLocale();
   const copy = t.today;
   const info = quest.today;
@@ -231,12 +222,7 @@ function TaskRow({
             )}
             {info.kind === "words" && !done && <TypingHint />}
             {current && !done && (
-              <span
-                className={cn(
-                  "bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full",
-                  phoneSingleAction && "max-md:hidden",
-                )}
-              >
+              <span className="bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
                 <span dir="auto">{`${start} · ${minutes}`}</span>
               </span>
             )}
@@ -258,15 +244,12 @@ export function TodayBox({
   payload,
   test,
   className,
-  phoneSingleAction = false,
   ruleRow,
 }: {
   payload: DailyQuestsPayload;
   /** What the self-test card at the foot shows; none when the day has no test for this learner. */
   test?: { state: "locked" | "open"; quest: DailyQuest | null };
   className?: string;
-  /** See TaskRow: the phone's next-step button is drawn above the boxes instead. */
-  phoneSingleAction?: boolean;
   /** The optional rule-of-the-day row (dailyRule permission): absent when the permission is closed. */
   ruleRow?: RuleRowState;
 }) {
@@ -311,12 +294,7 @@ export function TodayBox({
       <ul className="roomy:gap-[clamp(0.1rem,0.45svh,0.4rem)] flex flex-1 flex-col gap-1">
         {ruleRow && <RuleRow {...ruleRow} />}
         {tasks.map((quest) => (
-          <TaskRow
-            key={quest.slot}
-            quest={quest}
-            current={quest.slot === current?.slot}
-            phoneSingleAction={phoneSingleAction}
-          />
+          <TaskRow key={quest.slot} quest={quest} current={quest.slot === current?.slot} />
         ))}
       </ul>
       {payload.allDone && (
