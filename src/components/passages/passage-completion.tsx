@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { ArrowRight, Check, Loader2, Trophy, Volume2 } from "lucide-react";
 
+import { HybridMomentCard } from "@/components/hybrid/hybrid-moment-card";
 import { PassageButton, PassageLinkButton } from "@/components/passages/passage-button";
 import type { PassageAnswer } from "@/components/passages/passage-question-dock";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -75,6 +76,7 @@ export function PassageCompletion({
   rewardLines,
   nextPassage,
   todayNext,
+  hybridMoment,
   wordsLink,
   onReadAgain,
 }: {
@@ -90,6 +92,8 @@ export function PassageCompletion({
   nextPassage: { id: string; title: string } | null;
   /** Today's session: the way on to the story, shown as the one big button instead of "Next passage". */
   todayNext: { href: string } | null;
+  /** The taste of the day just finished: the card that offers the full plan (see lib/hybrid/moments.ts). */
+  hybridMoment: { passages: number; stories: number } | null;
   wordsLink: { href: string; adminPreview: boolean } | null;
   onReadAgain: () => void;
 }) {
@@ -204,6 +208,17 @@ export function PassageCompletion({
             </PassageLinkButton>
           </div>
         </div>
+
+        {hybridMoment && (
+          <div className="mt-5">
+            <HybridMomentCard
+              moment="B"
+              kind="passage"
+              passages={hybridMoment.passages}
+              stories={hybridMoment.stories}
+            />
+          </div>
+        )}
 
         {!signedIn && (
           <p className="text-muted-foreground mt-4 text-sm">

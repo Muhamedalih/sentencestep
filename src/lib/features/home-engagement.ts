@@ -101,6 +101,7 @@ export async function loadDailyQuests(
           // The day's exam is an extra: skipping it leaves the day done.
           allDone: allQuestsCompleted(requiredQuests(today.quests)),
           weekly: today.weekly,
+          tasteToday: today.tasteToday,
         };
       }
     }

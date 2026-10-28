@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PassageLocked } from "@/components/passages/passage-locked";
+import { HybridWall } from "@/components/hybrid/hybrid-wall";
+import { PassageLocked, PosterArt } from "@/components/passages/passage-locked";
 import { PassageReader } from "@/components/passages/passage-reader";
 import { isAdmin } from "@/lib/admin/access";
 import { trackPaywallViewed } from "@/lib/analytics/paywall";
@@ -11,6 +12,8 @@ import { getGateLean } from "@/lib/billing/gate-lean-queries";
 import { getGatePay } from "@/lib/billing/gate-pay";
 import { getGateProgress } from "@/lib/billing/gate-progress";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
+import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
@@ -77,11 +80,19 @@ export default async function PassageReaderPage({
   // A Premium passage is for subscribers and admins; everyone else gets the lock screen. The
   // subscription is only looked up when it matters — this passage or a suggested next one is
   // Premium — so a free passage opens with no extra work.
+  const learnerView = await isLearnerViewOn();
   const canOpenPremium =
-    isAdminUser ||
+    (isAdminUser && !learnerView) ||
     (passage.isFree && !summaries.some((summary) => !summary.isFree)) ||
     (await hasPremiumAccess());
-  if (!canOpenPassage(passage, canOpenPremium)) {
+  // The hybrid offers (see lib/hybrid): a signed-in free learner's taste of the day is open today, and
+  // a locked passage shows the new lock screen, with a way back to the taste.
+  const hybrid = !canOpenPremium && user !== null && features.rollouts.hybridOffers;
+  const taste = hybrid
+    ? await viewerTaste({ userId: user.id, locale, withPassages: true, withStories: true })
+    : null;
+  const tasteOpen = Boolean(taste?.picks.passageIsTaste && taste.picks.passage?.id === passage.id);
+  if (!canOpenPassage(passage, canOpenPremium, tasteOpen ? passage.id : null)) {
     const [fromPrice, figures, pay, progress, lean] = await Promise.all([
       getFromMonthlyPrice(),
       getGateFigures(locale),
@@ -93,20 +104,40 @@ export default async function PassageReaderPage({
     return (
       <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
         <div className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-4 pt-8 pb-28 sm:px-6 sm:py-14">
-          <PassageLocked
-            tone={passage.tone}
-            order={passage.order}
-            posterUrl={passage.posterUrl}
-            title={passage.title}
-            titleAr={passage.titleAr}
-            summary={passage.summary}
-            summaryAr={passage.summaryAr}
-            fromPrice={fromPrice}
-            pay={pay}
-            progress={progress}
-            figures={figures}
-            lean={lean}
-          />
+          {hybrid ? (
+            <HybridWall
+              poster={
+                <PosterArt
+                  tone={passage.tone}
+                  order={passage.order}
+                  posterUrl={passage.posterUrl}
+                />
+              }
+              title={locale === "ar" ? passage.titleAr : passage.title}
+              level={passage.level}
+              minutes={passage.estimatedMinutes}
+              kind="passage"
+              progress={progress}
+              tasteToday={Boolean(taste?.picks.passageIsTaste || taste?.picks.storyIsTaste)}
+              ctaHref={`/upgrade?next=${encodeURIComponent(`/learn/passages/${passage.id}`)}`}
+              backHref="/learn"
+            />
+          ) : (
+            <PassageLocked
+              tone={passage.tone}
+              order={passage.order}
+              posterUrl={passage.posterUrl}
+              title={passage.title}
+              titleAr={passage.titleAr}
+              summary={passage.summary}
+              summaryAr={passage.summaryAr}
+              fromPrice={fromPrice}
+              pay={pay}
+              progress={progress}
+              figures={figures}
+              lean={lean}
+            />
+          )}
         </div>
       </div>
     );
@@ -118,7 +149,11 @@ export default async function PassageReaderPage({
 
   // The next passage in list order — a suggestion on the end screen, never a requirement, and
   // never one this viewer can't open.
-  const openable = openablePassages(summaries, canOpenPremium);
+  const openable = openablePassages(
+    summaries,
+    canOpenPremium,
+    taste?.picks.passageIsTaste ? (taste.picks.passage?.id ?? null) : null,
+  );
   const position = openable.findIndex((summary) => summary.id === passage.id);
   const next = position >= 0 ? openable[position + 1] : undefined;
 
@@ -146,6 +181,12 @@ export default async function PassageReaderPage({
         // Only Arabic translations are written so far (see PassageSentence.ar).
         translationAvailable={locale === "ar"}
         nextPassage={next ? { id: next.id, title: next.title } : null}
+        // The taste of the day finished: the end screen offers the full plan (see lib/hybrid/moments.ts).
+        hybridMoment={
+          tasteOpen && taste
+            ? { passages: taste.premiumPassages, stories: taste.premiumStories }
+            : null
+        }
         // A step of Today's session (opened from Home): the end screen carries on to the story.
         // (`redo=1`, from "Redo today's lessons", keeps the story that follows today's own.)
         todayNext={await todayNextLink(features.rollouts.todaySession, searchParams)}

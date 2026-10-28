@@ -2,6 +2,7 @@ import type { InAppBrowser } from "@/lib/analytics/attribution";
 import type { GateSource } from "@/lib/billing/gate-source";
 import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
+import type { HybridMoment } from "@/lib/hybrid/moments";
 import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
 import type { WordsRoundSource } from "@/lib/words-round/round";
@@ -80,6 +81,10 @@ export type AnalyticsEvent =
       /** Present when the plans page was opened with the button of a lock card (see gate-source.ts): which lock (`from`), the card's button or the phone's slim bar (`at`), and which card was shown (`v`, classic or lean). Absent for every other way of opening the page. Each row is one page load, so for a visitor who is not signed in it counts presses, not people. */
       properties: GateSource | Record<string, never>;
     }
+  /** A hybrid-offer moment (src/lib/hybrid/moments.ts) was shown, tapped or dismissed: B after the taste's passage, D when the day's tasks are done, star after a story with 90% or more. Two dismissals within a week pause them, so the three are read together. */
+  | { name: "OFFER_SHOWN"; category: "PREMIUM"; properties: { moment: HybridMoment } }
+  | { name: "OFFER_CLICKED"; category: "PREMIUM"; properties: { moment: HybridMoment } }
+  | { name: "OFFER_DISMISSED"; category: "PREMIUM"; properties: { moment: HybridMoment } }
   | {
       name: "UPGRADE_CTA_CLICKED";
       category: "PREMIUM";

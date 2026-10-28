@@ -1478,4 +1478,27 @@ export const ar: Dictionary = {
       thanksBody: "وصل تقييمك، وسيساعدنا على تطوير «كلماتي».",
     },
   },
+  hybrid: {
+    wallPrimary: "افتح الخطة الكاملة",
+    wallBack: "عُد إلى طعم اليوم",
+    wallPrice: "السعر حسب بلدك، كما في صفحة الاشتراك",
+    wallMeta: "{level} · {n} د تقريباً",
+    wallPassage: "تفتحه الخطة الكاملة. يشمل الاستماع، والكتابة، وكلمات النص.",
+    wallStory: "تفتحه الخطة الكاملة. يشمل الكتابة وكلمات القصة.",
+    wallTasteTomorrow: "طعم اليوم التالي يصل غداً.",
+
+    wallWrittenDays: "كتبت {sentences} جملة في {days} أيام.",
+
+    wallWritten: "كتبت {sentences} جملة.",
+    momentBTitle: "أنهيت نص اليوم كاملاً",
+    momentStoryTitle: "أنهيت قصة اليوم كاملاً",
+    momentBody: "هذا كان الطعم المجاني لليوم.",
+    momentFull:
+      "الخطة الكاملة تفتح لك كل النصوص الأخرى ({passages} نصاً)، وكل القصص الأخرى ({stories} قصة)، وكل قوائم الكلمات.",
+    momentStarTitle: "أنهيت هذه القصة بنجمة",
+    momentDTitle: "انتهى يومك: {done} من {total}",
+    momentDBody: "غداً: نص مميز وقصة مميزة مجاناً.",
+    momentPrimary: "افتح الخطة الكاملة",
+    momentLater: "لاحقاً",
+  },
 };

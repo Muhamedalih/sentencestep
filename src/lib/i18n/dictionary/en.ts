@@ -1518,4 +1518,28 @@ export const en: Dictionary = {
       thanksBody: "Your rating has reached us and will help shape My Words.",
     },
   },
+  hybrid: {
+    wallPrimary: "See the full plan",
+    wallBack: "Back to today's taste",
+    wallPrice: "The price for your country, as on the plans page",
+    wallMeta: "{level} · about {n} min",
+    wallPassage:
+      "The full plan opens it. It includes listening, writing and the words in the text.",
+    wallStory: "The full plan opens it. It includes writing and the story's words.",
+    wallTasteTomorrow: "Tomorrow's taste arrives tomorrow.",
+
+    wallWrittenDays: "You wrote {sentences} sentences in {days} days.",
+
+    wallWritten: "You wrote {sentences} sentences.",
+    momentBTitle: "You finished today's passage",
+    momentStoryTitle: "You finished today's story",
+    momentBody: "That was the free taste for today.",
+    momentFull:
+      "The full plan opens every other passage ({passages}), every other story ({stories}) and all the word lists.",
+    momentStarTitle: "You finished this story with a star",
+    momentDTitle: "Your day is done: {done} of {total}",
+    momentDBody: "Tomorrow: a featured passage and a featured story, free.",
+    momentPrimary: "See the full plan",
+    momentLater: "Later",
+  },
 };

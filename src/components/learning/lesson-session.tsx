@@ -113,6 +113,7 @@ export function LessonSession({
   unit,
   nextLesson,
   nextLessonLocked = false,
+  hybridStar = null,
   previewMode = false,
   resolvedVoiceId,
   defaultVoiceId,
@@ -139,6 +140,8 @@ export function LessonSession({
   firstSentenceWordAudio?: Record<string, string>;
   /** Stories only — the lesson's "pick the meaning" questions (see buildStoryWordQuiz), each asked right after the sentence it names; absent/empty means this lesson asks none. The lesson page only builds them while the admin "Word quiz" switch is open for this visitor (see wordQuiz in src/lib/features/config.ts). */
   wordQuiz?: StoryWordQuizQuestion[];
+  /** A story of today's taste (see lib/hybrid): the completion screen offers the full plan at 90% or more. Null for everything else. */
+  hybridStar?: { passages: number; stories: number } | null;
 }) {
   // Never true in previewMode: an admin previewing content has no
   // "get started" flow underway, so the real dashboard pitch would be a
@@ -1000,6 +1003,7 @@ export function LessonSession({
                 saveStatus={previewMode ? "saved" : saveStatus}
                 onRetrySave={previewMode ? undefined : retryMarkComplete}
                 onRetryLesson={handleRetryLesson}
+                hybridStar={previewMode ? null : hybridStar}
               />
             </div>
             {/* A story's finish page asks for a rating itself, in a quiet row (see LessonCompletion), instead of this pop-up. */}
