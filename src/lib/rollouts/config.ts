@@ -193,6 +193,7 @@ export function withRolloutDependencies(
     sentenceBank: access.sentenceBank && access.todaySession,
     newHome: access.newHome && access.todaySession,
     wordBank: access.wordBank && access.todaySession,
+    dailyRule: access.dailyRule && access.todaySession,
   };
 }
 

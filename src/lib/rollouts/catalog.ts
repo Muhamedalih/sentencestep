@@ -15,6 +15,7 @@ export const ROLLOUT_IDS = [
   "sentenceBank",
   "newHome",
   "wordBank",
+  "dailyRule",
   "redeemCodes",
   "storyRecall",
   "leanGate",
@@ -162,6 +163,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs the learner_words table (migration 20250350000000, applied by pasting the SQL). Until it exists nothing is recorded and nothing is asked back.",
       "Today's five words stay exactly the day's story and passage words: the bank only remembers them, it never adds to them or changes which words are asked.",
       "At this stage the bank only COLLECTS words as they are answered; the menu item and its screens arrive in later changes, so opening it to learners now would gather words nobody can see yet.",
+    ],
+  },
+  dailyRule: {
+    id: "dailyRule",
+    audience: "learner",
+    title: "Rule of the day (“قاعدة اليوم”)",
+    description:
+      "After Today's story, one short English grammar rule for beginners (A1), taught from that story: the form in two of its sentences, the rule in plain English with the exception learners trip on, then three sentences to type, each with its recording. A rule comes back the day after as the first question, and is held after three clean answers on three different days. Earlier rules come back as questions from the texts the learner has finished, a few at a time, never more than two on one day.",
+    notes: [
+      "Needs Today's session to be open for the same people: the rule is reached from Today's story and from Today's carry-on, so it stays closed while Today is closed.",
+      "Needs the learner_rules table (migration 20250351000000, applied by pasting the SQL). Until it exists the card still teaches, nothing is recorded and nothing is asked back.",
+      "Only stories at level 1 carry the rule, and only sentences with a stored recording are asked: a sentence without one is never asked, and the browser's voice is never used.",
+      "Today's tasks, the words step and the finish screens are unchanged: the card is one optional step after the story, and it never blocks the three tasks.",
     ],
   },
   redeemCodes: {

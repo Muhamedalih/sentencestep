@@ -179,6 +179,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     sentenceBank: false,
     newHome: false,
     wordBank: false,
+    dailyRule: false,
     redeemCodes: false,
     storyRecall: false,
     leanGate: false,
@@ -228,8 +229,8 @@ test("the sentence bank lives inside Today's box: it is never open without Today
   const before = { ...open, todaySession: false };
   const after = withRolloutDependencies(before);
   assert.deepEqual(
-    { ...after, sentenceBank: true, newHome: true, wordBank: true },
-    { ...before, sentenceBank: true, newHome: true, wordBank: true },
+    { ...after, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true },
+    { ...before, sentenceBank: true, newHome: true, wordBank: true, dailyRule: true },
   );
   assert.equal(before.sentenceBank, true);
   // A plain learner has neither on the default settings.
