@@ -33,6 +33,8 @@ export interface RuleStrings {
   doneSub: string;
   /** "{n}" held out of "{total}" rules on the ladder. */
   heldLine: string;
+  /** The row on Home for a learner whose rule of the day is answered today. */
+  doneToday: string;
   continueWords: string;
   buttonTitle: string;
   buttonHint: string;
@@ -68,7 +70,8 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     answerWas: "الإجابة الصحيحة:",
     doneTitle: "القاعدة في قائمتك",
     doneSub: "ستظهر غداً أول شيء",
-    heldLine: "تمسك {n} من {total} قواعد في A1",
+    heldLine: "تمسك {n} من {total} قواعد في {level}",
+    doneToday: "تم اليوم",
     continueWords: "متابعة إلى الكلمات",
     buttonTitle: "قاعدة اليوم من هذه القصة",
     buttonHint: "دقيقة ونصف تقريباً، اختيارية",
@@ -102,7 +105,8 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     answerWas: "La respuesta correcta:",
     doneTitle: "La regla está en tu lista",
     doneSub: "Volverá mañana, lo primero",
-    heldLine: "Dominas {n} de {total} reglas de A1",
+    heldLine: "Dominas {n} de {total} reglas de {level}",
+    doneToday: "Hecho hoy",
     continueWords: "Seguir con las palabras",
     buttonTitle: "Regla del día de esta historia",
     buttonHint: "Un minuto y medio, opcional",
@@ -136,7 +140,8 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     answerWas: "Doğru cevap:",
     doneTitle: "Kural listende",
     doneSub: "Yarın ilk iş karşına çıkacak",
-    heldLine: "A1'de {total} kuraldan {n} tanesine hâkimsin",
+    heldLine: "{level}'de {total} kuraldan {n} tanesine hâkimsin",
+    doneToday: "Bugün tamam",
     continueWords: "Kelimelere geç",
     buttonTitle: "Bu hikâyeden günün kuralı",
     buttonHint: "Yaklaşık bir buçuk dakika, isteğe bağlı",

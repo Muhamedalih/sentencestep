@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
 
@@ -6,7 +7,7 @@ import { FitHome } from "@/components/home-today/fit-home";
 import { QuestsCard } from "@/components/app/quests-card";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
-import { TodayBox } from "@/components/home-today/today-box";
+import { TodayBox, type RuleRowState } from "@/components/home-today/today-box";
 import { TodayEndCard } from "@/components/home-today/today-end-card";
 import { HomeTopBar } from "@/components/home-today/top-bar";
 import { CoursePathStrip } from "@/components/home-today/course-strip";
@@ -16,7 +17,12 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
 import { sentenceTestAvailable } from "@/lib/today/quests";
-import type { CurrentUser } from "@/lib/supabase/auth";
+import { hasRuleLadder, LEVEL_LABEL } from "@/lib/daily-rule/levels";
+import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
+import { fetchProgressCached } from "@/lib/progress/cached";
+import { todayLocalISODate } from "@/lib/progress/streak";
+import { fetchLearnerRuleStates } from "@/lib/supabase/queries/learner-rules";
+import { getCurrentUser, type CurrentUser } from "@/lib/supabase/auth";
 import type { LessonUnit } from "@/types/content";
 
 interface TopBarProps {
@@ -36,6 +42,29 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
 }
 
 /**
+ * The optional rule-of-the-day row on Home (the dailyRule permission, admins until it is opened): shown to
+ * a learner whose level has a ladder, linked until today's rule is answered. It is not one of the three
+ * tasks, so the ring and the day's reward do not count it.
+ */
+async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
+  if (!open) return undefined;
+  const user = await getCurrentUser();
+  if (!user) return undefined;
+  const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
+  const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
+  const progress = await fetchProgressCached(todayISO).catch(() => null);
+  const level = progress?.startingLevel ?? 1;
+  if (!hasRuleLadder(level)) return undefined;
+  const states = await fetchLearnerRuleStates(user.id).catch(() => []);
+  const answeredToday = states.some((row) => row.lastReviewedOn === todayISO);
+  return {
+    href: answeredToday ? null : "/learn/today/rule?daily=1",
+    levelLabel: LEVEL_LABEL[level] ?? "",
+    answeredToday,
+  };
+}
+
+/**
  * Today's tasks (or, once nothing is left to open, the card that says so; or, if Today could not be
  * built for this visit, the usual quests card, so the page is never empty). The day's self-test card
  * is at the box's foot: there from the first moment,
@@ -50,8 +79,13 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
   if (!isTodayMode(payload.quests)) return <QuestsCard payload={payload} />;
   const { tasks, test } = splitToday(payload.quests);
   const state = testCardState({ tasks, test, available: sentenceTestAvailable(features) });
+  const ruleRow = await dailyRuleRow(features.rollouts.dailyRule);
   return (
-    <TodayBox payload={payload} test={state === "hidden" ? undefined : { state, quest: test }} />
+    <TodayBox
+      payload={payload}
+      test={state === "hidden" ? undefined : { state, quest: test }}
+      ruleRow={ruleRow}
+    />
   );
 }
 

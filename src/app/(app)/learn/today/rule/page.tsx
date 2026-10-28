@@ -3,10 +3,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DailyRuleRunner } from "@/components/today/daily-rule-runner";
+import { LEVEL_LABEL, ladderForLevel } from "@/lib/daily-rule/levels";
 import { loadRuleVisit } from "@/lib/daily-rule/load";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -16,35 +18,57 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today's session" };
 
 /**
- * The rule of the day ("Rule of the day" permission). Two ways in:
- * - `from=<story id>`: from the end of Today's story. The new rule comes from that story, and an earlier
- *   rule that is due may be asked too. Then on to the words step.
+ * The rule of the day ("Rule of the day" permission). Three ways in:
+ * - `from=<story id>`: from the end of Today's story. The story's level picks the ladder, the new rule
+ *   comes from that story, and an earlier rule that is due may be asked too. Then on to the words step.
+ * - `daily=1`: the optional row on Home. The new rule comes from the learner's own finished texts at
+ *   their level, and an earlier rule that is due may be asked too. Then back to Home.
  * - `recall=1`: from the start of Today, when a rule is due and nothing was asked today yet. Only the
  *   earlier-rule question(s), then on to the next Today step.
- * Nothing to show (a story that is not A1, no text with a recording, nothing due), or the permission
+ * Nothing to show (no ladder at this level, a story with no usable text, nothing due), or the permission
  * closed, or signed out: straight on to the next step instead of an empty card.
  */
 export default async function TodayRulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; recall?: string }>;
+  searchParams: Promise<{ from?: string; recall?: string; daily?: string }>;
 }) {
   const [features, user, locale] = await Promise.all([getEffectiveFeatures(), getCurrentUser(), getLocale()]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
-  const { from, recall } = await searchParams;
+  const { from, recall, daily } = await searchParams;
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-  const fromStory = recall !== "1" && typeof from === "string" && from.length > 0;
-  const onward = fromStory ? "/learn/today/go?step=words" : "/learn/today/go?step=listen&rule=skip";
+  const progress = await fetchProgressCached(todayISO).catch(() => null);
+  const level = progress?.startingLevel ?? 1;
+  const dailyMode = daily === "1";
+  const fromStory = recall !== "1" && !dailyMode && typeof from === "string" && from.length > 0;
+  const onward = fromStory
+    ? "/learn/today/go?step=words"
+    : dailyMode
+      ? "/learn"
+      : "/learn/today/go?step=listen&rule=skip";
 
   const visit = await loadRuleVisit({
     userId: user.id,
     todayISO,
     storyId: fromStory ? from! : null,
     locale,
+    level,
+    daily: dailyMode,
   });
-  if (!visit) redirect(onward);
+  const ladder = visit ? ladderForLevel(visit.level) : null;
+  if (!visit || !ladder) redirect(onward);
 
-  return <DailyRuleRunner visit={visit} todayISO={todayISO} locale={locale} continueHref={onward} />;
+  return (
+    <DailyRuleRunner
+      visit={visit}
+      todayISO={todayISO}
+      locale={locale}
+      continueHref={onward}
+      ladderSize={ladder.length}
+      levelLabel={LEVEL_LABEL[visit.level] ?? ""}
+      daily={dailyMode}
+    />
+  );
 }

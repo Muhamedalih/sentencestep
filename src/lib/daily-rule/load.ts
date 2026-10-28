@@ -4,47 +4,57 @@ import { fetchProgressCached } from "@/lib/progress/cached";
 import { fetchLessonById } from "@/lib/supabase/queries/content";
 import {
   fetchLearnerRuleStates,
-  fetchLevelOneSentences,
+  fetchLevelSentences,
   isMissingRulesSchema,
 } from "@/lib/supabase/queries/learner-rules";
 
+import { ladderForLevel, MAX_WORDS_BY_LEVEL } from "./levels";
 import { isEmptyVisit, planRuleVisit, type RuleVisit, type SourceSentence } from "./visit";
 
 /**
- * Server side of the rule of the day: gathers what the planner needs (the story just read, with the
- * recording of each sentence; the learner's rules; the A1 sentences of what they finished) and asks
- * the pure planner for the visit. Every read that can fail degrades to "nothing" rather than breaking
- * the page: a learner is never shown an empty card.
+ * Server side of the rule of the day: gathers what the planner needs (the story just read, or the
+ * learner's own finished texts at their level, each sentence with its recording; the learner's rules;
+ * the ladder of the level) and asks the pure planner for the visit. Every read that can fail degrades
+ * to "nothing" rather than breaking the page: a learner is never shown an empty card.
  */
 
-/** Only stories at level 1 (A1) carry the A1 ladder; a story at another level has no rule of the day. */
-const A1_LEVEL = 1;
+/** The visit, and the level whose ladder it came from (the card's label and its count of rules). */
+export type LoadedRuleVisit = RuleVisit & { level: number };
 
 /**
- * The visit for one learner on one day. `storyId` is the story just finished (the new rule comes from
- * it); without one, the visit only asks earlier rules. Null when there is nothing to show.
+ * The visit for one learner on one day. A story gives the new rule from its own sentences (its level
+ * picks the ladder); the daily task gives it from the learner's finished texts at `level`; without either,
+ * the visit only asks earlier rules. Null when there is nothing to show, or no ladder at this level.
  */
 export async function loadRuleVisit(args: {
   userId: string;
   todayISO: string;
   storyId: string | null;
   locale: SupportLocale | null;
-}): Promise<RuleVisit | null> {
+  /** The learner's level (1 = A1, 2 = A2–B1, 3 = B2): the ladder when there is no story. */
+  level: number;
+  /** The daily task from Home: the new rule comes from the learner's own finished texts. */
+  daily?: boolean;
+}): Promise<LoadedRuleVisit | null> {
+  let level = args.level;
   let source: SourceSentence[] = [];
   if (args.storyId) {
     const story = await fetchLessonById("stories", args.storyId, args.locale ?? undefined);
-    if (!story || story.level !== A1_LEVEL) return null;
+    if (!story) return null;
+    level = story.level;
     source = await withRecordings(
       story.sentences.map((sentence) => ({ id: sentence.id, lessonId: story.id, en: sentence.en })),
     );
   }
+  const ladder = ladderForLevel(level);
+  if (!ladder) return null;
 
   const states = await fetchLearnerRuleStates(args.userId).catch((error: unknown) => {
     if (!isMissingRulesSchema(error)) console.error("[daily-rule] could not read the learner's rules", error);
     return [];
   });
 
-  // The earlier-rule questions come from the learner's own finished A1 texts, never from anyone else's.
+  // The earlier-rule questions come from the learner's own finished texts at this level, never from anyone else's.
   const progress = await fetchProgressCached(args.todayISO).catch(() => null);
   const lessonIds = [
     ...new Set(
@@ -53,12 +63,17 @@ export async function loadRuleVisit(args: {
         .map((done) => done.lessonId),
     ),
   ];
-  const finished = await fetchLevelOneSentences(lessonIds)
-    .then((sentences) => withRecordings(sentences.map((sentence) => ({ id: sentence.id, lessonId: sentence.lessonId, en: sentence.en }))))
+  const finished = await fetchLevelSentences(lessonIds, level)
+    .then((sentences) =>
+      withRecordings(sentences.map((sentence) => ({ id: sentence.id, lessonId: sentence.lessonId, en: sentence.en }))),
+    )
     .catch((error: unknown) => {
       console.error("[daily-rule] could not read the finished texts", error);
       return [] as SourceSentence[];
     });
+
+  // The daily task has no story: its new rule comes from the learner's own finished texts.
+  if (args.daily) source = finished;
 
   const visit = planRuleVisit({
     today: args.todayISO,
@@ -66,8 +81,10 @@ export async function loadRuleVisit(args: {
     source,
     recallPool: finished,
     seed: args.userId,
+    ladder,
+    maxWords: MAX_WORDS_BY_LEVEL[level],
   });
-  return isEmptyVisit(visit) ? null : visit;
+  return isEmptyVisit(visit) ? null : { ...visit, level };
 }
 
 /** Whether a rule is due and nothing has been asked today yet: the Today carry-on sends the learner here first. */
