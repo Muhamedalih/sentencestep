@@ -21,6 +21,7 @@ export interface Dictionary {
   mobilePath: {
     navPath: string;
     navWords: string;
+    writingFocus: string;
     doneOfTotal: string;
     youAreHere: string;
     continueMinutes: string;

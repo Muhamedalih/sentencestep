@@ -65,9 +65,12 @@ export function PathView({
 
   return (
     <div className="mx-auto max-w-xl px-5 pt-5 pb-28">
-      <h1 className="text-2xl font-bold tracking-tight">{t.mobilePath.navPath}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t.nav.normalLessons}</h1>
+      <p className="text-primary mt-1 text-base font-semibold" dir="auto">
+        {t.mobilePath.writingFocus}
+      </p>
 
-      <div role="tablist" aria-label={t.mobilePath.navPath} className="mt-4 flex flex-wrap gap-2">
+      <div role="tablist" aria-label={t.nav.normalLessons} className="mt-4 flex flex-wrap gap-2">
         {levels.map((value) => (
           <button
             key={value}

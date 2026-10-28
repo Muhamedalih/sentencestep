@@ -125,12 +125,12 @@ export function LearnSidebar({
   // the Daily Lessons tab. Only drawn below md:, the desktop sidebar above keeps its own items.
   const PHONE_ITEMS = mobilePath
     ? [
-        { key: "home", href: "/learn", label: t.nav.home, icon: Home },
-        { key: "path", href: "/learn/path", label: t.mobilePath.navPath, icon: Route },
-        { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
+        { key: "home", href: "/learn", label: t.mobilePath.navPath, icon: Home },
         ...(passagesEnabled
           ? [{ key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones }]
           : []),
+        { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
+        { key: "path", href: "/learn/path", label: t.nav.normalLessons, icon: Route },
         {
           key: "word-lists",
           href: "/learn/word-lists",
