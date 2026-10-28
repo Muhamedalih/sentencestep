@@ -482,6 +482,15 @@ export const es: Dictionary = {
     gateProgressSentences: "frases escritas",
     gateProgressDays: "Días de práctica: {days}",
     gateReviewFree: "Tu repaso sigue siendo gratis",
+    gateLeanSubheading:
+      "Un solo pago abre todas las lecciones, historias, textos y listas de palabras.",
+    gateTrustShort: "Un solo pago · Sin renovación automática",
+    gateGiftUpTo: "Hasta +{days} gratis",
+    gateGiftTag: "Solo lo ven los suscriptores",
+    gateGiftTitle: "En SentenceStep hay una sección que aún no ves",
+    gateGiftBody:
+      "Una sección totalmente nueva se abre para ti en cuanto te suscribes, un regalo nuestro. ¿Qué hay dentro? Lo descubrirás tú solo.",
+    gateLeanCtaGift: "Abre las lecciones y la sorpresa",
     fromPerMonthCaption: "Planes desde {amount} / mes",
     contentUnavailableBody:
       "Esta lección no está disponible en este momento. No se perdió nada: inténtalo de nuevo en un momento o elige otra lección.",

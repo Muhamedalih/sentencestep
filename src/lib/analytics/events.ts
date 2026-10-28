@@ -1,4 +1,5 @@
 import type { InAppBrowser } from "@/lib/analytics/attribution";
+import type { GateSource } from "@/lib/billing/gate-source";
 import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
 import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
@@ -73,7 +74,12 @@ export type AnalyticsEvent =
         | { kind: "word_group"; groupId: string }
         | { kind: "passage"; passageId: string };
     }
-  | { name: "UPGRADE_VIEWED"; category: "PREMIUM"; properties: Record<string, never> }
+  | {
+      name: "UPGRADE_VIEWED";
+      category: "PREMIUM";
+      /** Present when the plans page was opened with the button of a lock card (see gate-source.ts): which lock (`from`), the card's button or the phone's slim bar (`at`), and which card was shown (`v`, classic or lean). Absent for every other way of opening the page. Each row is one page load, so for a visitor who is not signed in it counts presses, not people. */
+      properties: GateSource | Record<string, never>;
+    }
   | {
       name: "UPGRADE_CTA_CLICKED";
       category: "PREMIUM";

@@ -17,6 +17,8 @@ export const ROLLOUT_IDS = [
   "wordBank",
   "redeemCodes",
   "storyRecall",
+  "leanGate",
+  "libraryGift",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -172,6 +174,30 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs the redeem-codes tables (migration 20250349000000, applied by pasting the SQL) and the server secret REDEEM_CODE_PEPPER on the server. Until both exist the box says it is not available.",
       "Codes are issued by an admin to an agent who has paid; the admin sees them once. Only a hash is kept, so a copy of the database holds no usable code.",
       "Closed, nobody can redeem a code, whoever holds one.",
+    ],
+  },
+  leanGate: {
+    id: "leanGate",
+    audience: "learner",
+    title: "Lean lock card (one price, fewer words)",
+    description:
+      "The card a learner or a visitor meets on a locked lesson, story, passage or word list, with the same lesson beside it: the offer half keeps only what decides a purchase. A heading and one line, a small “plans from” price with “one payment, no auto-renewal” and a small mark for the gift days of the running offer, one white button, and one line of real proof (the average rating and the number of learners, or for a signed-in learner their own sentence count above the heading). The three benefit lines, the green offer box with its plan chips, the amber button and the glows behind the panel are gone. On a phone the lesson header is compact, so the price and the button are in the first screen.",
+    notes: [
+      "Works for guests too: it is decided on the server for whoever is looking at the lock. To look at it as a guest, switch preview on for this browser (an admin never meets a lock).",
+      "The sealed-section card only shows while Library for subscribers (below) is open for the same people; without it the card has no gift and the button says what it always said.",
+      "Counting needs nothing from this: every button on every lock card (the classic one too) adds where it was pressed to the plans page link, and UPGRADE_VIEWED records it as from, at and v, so before and after can be compared per 100 lock views (PAYWALL_VIEWED).",
+    ],
+  },
+  libraryGift: {
+    id: "libraryGift",
+    audience: "learner",
+    title: "Library for subscribers (the subscription gift)",
+    description:
+      "The Library (Books and Novels, the menu item, its pages and the book recommendation on Home) opens for a learner with a running subscription, on top of admins who always had it. Closed, nothing changes: only admins can open it. While it is open the lean lock card above can tell a visitor, without naming it, that a whole new section opens when they subscribe.",
+    notes: [
+      "A learner whose subscription ended loses the Library again, like any Premium content.",
+      "The lock card never says what the section is: only that it is new, a gift and for subscribers.",
+      "Decide the rights question for the books and covers before opening this to anyone.",
     ],
   },
   storyRecall: {

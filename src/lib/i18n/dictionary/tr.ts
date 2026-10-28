@@ -471,6 +471,14 @@ export const tr: Dictionary = {
     gateProgressSentences: "yazdığınız cümle",
     gateProgressDays: "Çalıştığınız gün: {days}",
     gateReviewFree: "Tekrarınız ücretsiz kalır",
+    gateLeanSubheading: "Tek ödeme tüm dersleri, hikâyeleri, metinleri ve kelime listelerini açar.",
+    gateTrustShort: "Tek ödeme · Otomatik yenileme yok",
+    gateGiftUpTo: "En çok +{days} hediye",
+    gateGiftTag: "Yalnızca aboneler görür",
+    gateGiftTitle: "SentenceStep'te henüz göremediğiniz bir bölüm var",
+    gateGiftBody:
+      "Abone olduğunuz anda tamamen yeni bir bölüm sizin için açılır, bizden hediye. İçinde ne var? Onu kendiniz keşfedeceksiniz.",
+    gateLeanCtaGift: "Dersleri ve sürprizi açın",
     fromPerMonthCaption: "Planlar {amount} / ay'dan başlıyor",
     contentUnavailableBody:
       "Bu ders şu anda kullanılamıyor. Hiçbir şey kaybolmadı: birazdan tekrar deneyin veya başka bir ders seçin.",

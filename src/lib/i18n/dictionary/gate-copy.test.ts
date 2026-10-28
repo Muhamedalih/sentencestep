@@ -23,6 +23,13 @@ function gateStrings(dictionary: typeof en): Record<string, string> {
     "premium.gateProgressSentences": dictionary.premium.gateProgressSentences,
     "premium.gateProgressDays": dictionary.premium.gateProgressDays,
     "premium.gateReviewFree": dictionary.premium.gateReviewFree,
+    "premium.gateLeanSubheading": dictionary.premium.gateLeanSubheading,
+    "premium.gateTrustShort": dictionary.premium.gateTrustShort,
+    "premium.gateGiftUpTo": dictionary.premium.gateGiftUpTo,
+    "premium.gateGiftTag": dictionary.premium.gateGiftTag,
+    "premium.gateGiftTitle": dictionary.premium.gateGiftTitle,
+    "premium.gateGiftBody": dictionary.premium.gateGiftBody,
+    "premium.gateLeanCtaGift": dictionary.premium.gateLeanCtaGift,
     "wordLists.gateHeading": dictionary.wordLists.gateHeading,
     "wordLists.gateSubheading": dictionary.wordLists.gateSubheading,
     "wordLists.gateBenefitLists": dictionary.wordLists.gateBenefitLists,
@@ -66,6 +73,24 @@ test("the locked-content card only says things that are true: no refunds, deadli
 test("the Arabic card text has no em dash, which lands at a line edge in the left-to-right layout", () => {
   for (const [key, value] of Object.entries(gateStrings(ar))) {
     assert.equal(value.includes("—"), false, `${key}: ${value}`);
+  }
+});
+
+test("the lean card fills its placeholders and the sealed-section card never says what the section is", () => {
+  const revealing =
+    /book|novel|read|librar|libro|novela|leer|lectur|biblioteca|kitap|roman|okum|kütüphane|كتب|كتاب|رواي|قراءة|مكتب/i;
+  for (const [name, dictionary] of Object.entries(dictionaries)) {
+    assert.match(dictionary.premium.gateGiftUpTo, /\{days\}/, `${name} gift up to`);
+    for (const key of [
+      "gateGiftTag",
+      "gateGiftTitle",
+      "gateGiftBody",
+      "gateLeanCtaGift",
+    ] as const) {
+      const value = dictionary.premium[key];
+      assert.equal(revealing.test(value), false, `${name} ${key}: ${value}`);
+      assert.equal(/\{/.test(value), false, `${name} ${key} has a placeholder`);
+    }
   }
 });
 
