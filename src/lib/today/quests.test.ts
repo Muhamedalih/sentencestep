@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { QuestType } from "@/lib/features/catalog";
-import type { DailyQuest } from "@/lib/features/quests";
+import {
+  eventsForAudience,
+  passagePartQuestEvents,
+  questEventsForLesson,
+} from "@/lib/features/quests";
+import type { DailyQuest, QuestEvent } from "@/lib/features/quests";
 
 import {
   TODAY_QUEST_SLOT_BASE,
@@ -29,11 +34,23 @@ const settings = {
 
 describe("todayQuestRows", () => {
   it("deals passages, one lesson and master words in slots 10-12 with the tuned XP", () => {
-    assert.deepEqual(todayQuestRows(settings), [
-      { slot: 10, type: "passages", target: 3, xp: 15 },
+    assert.deepEqual(todayQuestRows(settings, true), [
+      { slot: 10, type: "passages", target: 1, xp: 15 },
       { slot: 11, type: "lessons", target: 1, xp: 10 },
       { slot: 12, type: "masterWords", target: 5, xp: 10 },
     ]);
+  });
+
+  it("with the honest ticks open, one passage and one story whatever the pool says; without them, the pool's targets", () => {
+    const tuned = { ...settings, passages: { target: 5, xp: 15 }, lessons: { target: 4, xp: 10 } };
+    assert.deepEqual(
+      todayQuestRows(tuned, true).map((row) => row.target),
+      [1, 1, 5],
+    );
+    assert.deepEqual(
+      todayQuestRows(tuned, false).map((row) => row.target),
+      [5, 1, 5],
+    );
   });
 
   it("keeps the slots clear of the random mix (0-2)", () => {
@@ -66,6 +83,86 @@ describe("questsByStep", () => {
 const bank = {
   sentenceReview: { enabled: true, target: 3, xp: 10 },
 } as Record<QuestType, { enabled: boolean; target: number; xp: number }>;
+
+/** What the database does with one event: every row of its type advances, capped at its target. */
+function advance(rows: readonly DailyQuest[], events: readonly QuestEvent[]): DailyQuest[] {
+  return events.reduce<DailyQuest[]>(
+    (state, event) =>
+      state.map((row) => {
+        if (row.type !== event.type) return row;
+        const progress = Math.min(row.target, row.progress + event.amount);
+        return { ...row, progress, completed: row.completed || progress >= row.target };
+      }),
+    [...rows],
+  );
+}
+
+function todayRows(): DailyQuest[] {
+  return todayQuestRows(settings, true).map((row) => ({ ...row, progress: 0, completed: false }));
+}
+
+describe("Today's three tasks count only their own activity", () => {
+  it("for a learner with Today, a regular lesson, passage parts and flashcard words tick nothing", () => {
+    const events: QuestEvent[] = [
+      ...questEventsForLesson({ sentenceCount: 9, accuracy: 0.97 }),
+      ...passagePartQuestEvents({ passageCompleted: false, honestTicks: true }),
+      ...passagePartQuestEvents({ passageCompleted: false, honestTicks: true }),
+      ...passagePartQuestEvents({ passageCompleted: false, honestTicks: true }),
+      { type: "masterWords", amount: 5 },
+    ];
+    const rows = advance(todayRows(), eventsForAudience(events, true));
+    assert.deepEqual(
+      rows.map((row) => row.progress),
+      [0, 0, 0],
+    );
+  });
+
+  it("for a learner with Today, a finished story, a finished passage and the words round each tick their own task", () => {
+    const events: QuestEvent[] = [
+      ...questEventsForLesson({ sentenceCount: 9, accuracy: 0.5, story: true }),
+      ...passagePartQuestEvents({ passageCompleted: true, honestTicks: true }),
+      { type: "masterWords", amount: 5, audience: "today" },
+    ];
+    const rows = advance(todayRows(), eventsForAudience(events, true));
+    assert.deepEqual(
+      rows.map((row) => row.completed),
+      [true, true, true],
+    );
+  });
+
+  it("for a learner without Today, the random mix counts every lesson and part, and Today's events nothing", () => {
+    const random: DailyQuest[] = [
+      { slot: 0, type: "lessons", target: 2, progress: 0, xp: 10, completed: false },
+      { slot: 1, type: "passages", target: 3, progress: 0, xp: 15, completed: false },
+    ];
+    const events: QuestEvent[] = [
+      ...questEventsForLesson({ sentenceCount: 9, accuracy: 0.5, story: true }),
+      ...passagePartQuestEvents({ passageCompleted: false, honestTicks: true }),
+      ...passagePartQuestEvents({ passageCompleted: false, honestTicks: true }),
+      ...passagePartQuestEvents({ passageCompleted: true, honestTicks: true }),
+    ];
+    const rows = advance(random, eventsForAudience(events, false));
+    // The story counts once, as a lesson of the random mix; its Today copy is not counted again.
+    assert.equal(rows[0]?.progress, 1);
+    assert.equal(rows[0]?.completed, false);
+    assert.equal(rows[1]?.completed, true);
+  });
+});
+
+describe("passagePartQuestEvents", () => {
+  it("every part counts toward the passages quest; the finish also counts for Today with the honest ticks open", () => {
+    assert.deepEqual(passagePartQuestEvents({ passageCompleted: false, honestTicks: true }), [
+      { type: "passages", amount: 1 },
+    ]);
+    assert.deepEqual(passagePartQuestEvents({ passageCompleted: true, honestTicks: false }), [
+      { type: "passages", amount: 1 },
+    ]);
+    assert.deepEqual(passagePartQuestEvents({ passageCompleted: true, honestTicks: true }), [
+      { type: "passages", amount: 1 },
+      { type: "passages", amount: 1, audience: "today" },
+    ]);
+  });
+});
 
 describe("the sentence review row", () => {
   it("is Today's optional fourth slot, right after the three steps", () => {

@@ -103,9 +103,11 @@ export async function recordTodayWordsAction(todayISO: string): Promise<void> {
     if (!ISO_DATE.test(todayISO)) return;
     const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
     if (!features.rollouts.todaySession || !features.quests.enabled || !user) return;
+    // With the honest ticks open, only this round ticks the day's words task.
+    const audience = features.rollouts.honestTicks ? "today" : undefined;
     await recordQuestEventsAndBadges(
       user.id,
-      [{ type: "masterWords", amount: WORDS_PER_ROUND }],
+      [{ type: "masterWords", amount: WORDS_PER_ROUND, audience }],
       todayISO,
     );
   } catch (error) {

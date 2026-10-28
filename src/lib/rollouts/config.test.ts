@@ -176,6 +176,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     shortFirstRun: false,
     inAppStrip: false,
     todaySession: false,
+    honestTicks: false,
     sentenceBank: false,
     newHome: false,
     wordBank: false,
@@ -238,6 +239,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       wordBank: true,
       dailyRule: true,
       hybridOffers: true,
+      honestTicks: true,
     },
     {
       ...before,
@@ -246,6 +248,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       wordBank: true,
       dailyRule: true,
       hybridOffers: true,
+      honestTicks: true,
     },
   );
   assert.equal(before.sentenceBank, true);
@@ -271,6 +274,13 @@ test("the new Home page is built from Today's tasks: it is never open without To
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).newHome,
     false,
   );
+});
+
+test("honest task ticks: never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).honestTicks, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).honestTicks, false);
+  assert.equal(withRolloutDependencies({ ...open, honestTicks: false }).honestTicks, false);
 });
 
 test("the words bank is fed by Today's words step: it is never open without Today's session", () => {

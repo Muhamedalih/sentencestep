@@ -5,12 +5,14 @@ import { QUEST_DEFAULTS, QUEST_TYPES } from "@/lib/features/catalog";
 import type { QuestType } from "@/lib/features/catalog";
 import {
   allQuestsCompleted,
+  countedQuestEvents,
   eligibleQuestTypes,
+  eventsForAudience,
   pickDailyQuestTypes,
   questEventsForLesson,
   questProgressPercent,
 } from "@/lib/features/quests";
-import type { QuestTypeSettings } from "@/lib/features/quests";
+import type { QuestEvent, QuestTypeSettings } from "@/lib/features/quests";
 
 function settings(overrides: Partial<Record<QuestType, Partial<QuestTypeSettings>>> = {}) {
   const out = {} as Record<QuestType, QuestTypeSettings>;
@@ -116,6 +118,67 @@ test("questEventsForLesson: sentences, one lesson, and accuracy only at 95%+", (
     questEventsForLesson({ sentenceCount: 9, accuracy: 0.94 }).some((e) => e.type === "accuracy"),
     false,
   );
+});
+
+test("questEventsForLesson: a story also feeds Today's story task; a regular lesson does not", () => {
+  const story = questEventsForLesson({ sentenceCount: 9, accuracy: 0.5, story: true });
+  assert.deepEqual(
+    story.filter((event) => event.audience === "today"),
+    [{ type: "lessons", amount: 1, audience: "today" }],
+  );
+  // The random "finish lessons" quest still counts the story, as it always did.
+  assert.ok(story.some((event) => event.type === "lessons" && event.audience === undefined));
+  assert.equal(
+    questEventsForLesson({ sentenceCount: 9, accuracy: 0.5 }).some((event) => event.audience),
+    false,
+  );
+});
+
+test("eventsForAudience: a learner with Today's session counts only the Today events of the shared types", () => {
+  const events: QuestEvent[] = [
+    { type: "lessons", amount: 1 },
+    { type: "lessons", amount: 1, audience: "today" },
+    { type: "passages", amount: 1 },
+    { type: "passages", amount: 1, audience: "today" },
+    { type: "masterWords", amount: 1 },
+    { type: "masterWords", amount: 5, audience: "today" },
+  ];
+  assert.deepEqual(eventsForAudience(events, true), [
+    { type: "lessons", amount: 1, audience: "today" },
+    { type: "passages", amount: 1, audience: "today" },
+    { type: "masterWords", amount: 5, audience: "today" },
+  ]);
+  assert.deepEqual(eventsForAudience(events, false), [
+    { type: "lessons", amount: 1 },
+    { type: "passages", amount: 1 },
+    { type: "masterWords", amount: 1 },
+  ]);
+});
+
+test("eventsForAudience: the other types have one kind of row, so their events count for everyone", () => {
+  const events: QuestEvent[] = [
+    { type: "sentences", amount: 9 },
+    { type: "accuracy", amount: 1 },
+    { type: "dictation", amount: 3 },
+    { type: "dailySession", amount: 1 },
+    { type: "sentenceReview", amount: 1 },
+  ];
+  assert.deepEqual(eventsForAudience(events, true), events);
+  assert.deepEqual(eventsForAudience(events, false), events);
+});
+
+test("countedQuestEvents: until the honest ticks are open every event counts, as before", () => {
+  const events: QuestEvent[] = [
+    { type: "lessons", amount: 1 },
+    { type: "lessons", amount: 1, audience: "today" },
+    { type: "masterWords", amount: 1 },
+  ];
+  assert.deepEqual(countedQuestEvents(events, { todayLearner: true, honestTicks: false }), events);
+  assert.deepEqual(countedQuestEvents(events, { todayLearner: false, honestTicks: false }), events);
+  // A general masterWords event is a flashcard word: a Today learner's words task does not take it.
+  assert.deepEqual(countedQuestEvents(events, { todayLearner: true, honestTicks: true }), [
+    { type: "lessons", amount: 1, audience: "today" },
+  ]);
 });
 
 test("questProgressPercent / allQuestsCompleted", () => {

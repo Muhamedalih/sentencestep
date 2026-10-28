@@ -398,6 +398,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       shortFirstRun: false,
       inAppStrip: false,
       todaySession: false,
+      honestTicks: false,
       sentenceBank: false,
       newHome: false,
       wordBank: false,

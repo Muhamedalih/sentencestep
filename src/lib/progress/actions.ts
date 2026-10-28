@@ -234,7 +234,11 @@ export async function recordCompletionAction(
   }
   const completedQuests = features.quests.enabled
     ? await recordQuestEvents(
-        questEventsForLesson({ sentenceCount, accuracy: safeAccuracy }),
+        questEventsForLesson({
+          sentenceCount,
+          accuracy: safeAccuracy,
+          story: features.rollouts.honestTicks && mode === "stories",
+        }),
         todayISO,
         features,
       )

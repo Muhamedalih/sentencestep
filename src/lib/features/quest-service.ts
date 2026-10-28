@@ -7,8 +7,8 @@ import {
 import type { QuestType } from "@/lib/features/catalog";
 import type { EffectiveFeatures } from "@/lib/features/config";
 import { getEffectiveFeatures } from "@/lib/features/queries";
-import { eligibleQuestTypes, pickDailyQuestTypes } from "@/lib/features/quests";
-import type { DailyQuest } from "@/lib/features/quests";
+import { countedQuestEvents, eligibleQuestTypes, pickDailyQuestTypes } from "@/lib/features/quests";
+import type { DailyQuest, QuestEvent } from "@/lib/features/quests";
 import { fetchWeakCandidateMistakeRows } from "@/lib/supabase/queries/mistakes";
 import { TODAY_QUEST_SLOT_BASE, todayQuestRows } from "@/lib/today/quests";
 import { isWeakWord } from "@/lib/weak-words/types";
@@ -56,7 +56,11 @@ export async function dealDailyQuests(
   // steps (see src/lib/today/quests.ts), dealt next to whatever random quests the day already has.
   if (features.rollouts.todaySession) {
     if (existing.some((quest) => quest.slot >= TODAY_QUEST_SLOT_BASE)) return existing;
-    const dealt = await insertDailyQuests(userId, dateISO, todayQuestRows(features.quests.types));
+    const dealt = await insertDailyQuests(
+      userId,
+      dateISO,
+      todayQuestRows(features.quests.types, features.rollouts.honestTicks),
+    );
     if (dealt.length === 3) return [...existing, ...dealt];
     return fetchDailyQuests(userId, dateISO);
   }
@@ -97,7 +101,7 @@ export async function dealDailyQuests(
  * add_quest_progress).
  */
 export async function recordQuestEvents(
-  events: { type: QuestType; amount: number }[],
+  events: readonly QuestEvent[],
   dateISO?: string,
   /** Pass the caller's already-resolved features to skip a second lookup. */
   knownFeatures?: EffectiveFeatures,
@@ -106,7 +110,12 @@ export async function recordQuestEvents(
   try {
     const features = knownFeatures ?? (await getEffectiveFeatures());
     if (!features.quests.enabled) return completed;
-    for (const event of events) {
+    // The events that count for this learner now (see countedQuestEvents).
+    const counted = countedQuestEvents(events, {
+      todayLearner: features.rollouts.todaySession,
+      honestTicks: features.rollouts.honestTicks,
+    });
+    for (const event of counted) {
       if (event.amount <= 0) continue;
       const results = await addQuestProgress(event.type, event.amount, dateISO);
       for (const result of results) {
@@ -127,7 +136,7 @@ export async function recordQuestEvents(
  */
 export async function recordQuestEventsAndBadges(
   userId: string,
-  events: { type: QuestType; amount: number }[],
+  events: readonly QuestEvent[],
   dateISO?: string,
 ): Promise<CompletedQuest[]> {
   const completed = await recordQuestEvents(events, dateISO);

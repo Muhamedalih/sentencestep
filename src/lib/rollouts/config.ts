@@ -185,6 +185,7 @@ export function evaluateRollouts(
  * The new Home page is built from Today's tasks, so it is closed whenever Today's session is.
  * The words bank is fed by Today's words step, so it is closed whenever Today's session is too.
  * The hybrid offers (the taste of the day and the moments) live in Today's tasks as well.
+ * The honest ticks change how Today's tasks count, so they are closed whenever Today's session is.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
@@ -196,6 +197,7 @@ export function withRolloutDependencies(
     wordBank: access.wordBank && access.todaySession,
     dailyRule: access.dailyRule && access.todaySession,
     hybridOffers: access.hybridOffers && access.todaySession,
+    honestTicks: access.honestTicks && access.todaySession,
   };
 }
 
