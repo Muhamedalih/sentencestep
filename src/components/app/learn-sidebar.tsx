@@ -3,12 +3,21 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Headphones, Home, Library, ListChecks, NotebookText, Route } from "lucide-react";
+import {
+  Headphones,
+  Home,
+  Library,
+  Lightbulb,
+  ListChecks,
+  NotebookText,
+  Route,
+} from "lucide-react";
 
 import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
+import { ruleStrings } from "@/lib/daily-rule/strings";
 import { cn } from "@/lib/utils";
 
 /**
@@ -61,6 +70,7 @@ export function LearnSidebar({
   libraryOpen,
   passagesEnabled = false,
   mobilePath = false,
+  rulesEnabled = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -69,9 +79,11 @@ export function LearnSidebar({
   passagesEnabled?: boolean;
   /** The mobilePath permission, resolved for this visitor: below md: the bottom bar becomes Home, Path, Stories, Passages and Words (the desktop sidebar is unchanged). */
   mobilePath?: boolean;
+  /** The "dailyRule" permission, resolved for this visitor (and signed in): the rule library, «قواعدي», is a menu item from md: up (a phone reaches it from Home's rule row). */
+  rulesEnabled?: boolean;
 }) {
   const pathname = usePathname();
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const showLibrary = libraryOpen ?? isAdminUser;
   // Home is an exact match (not a prefix) — "/learn" is a short enough
   // prefix that /learn/settings, /learn/saved, and every other non-nav
@@ -98,7 +110,9 @@ export function LearnSidebar({
                   ? "word-lists"
                   : pathname.startsWith("/learn/library")
                     ? "library"
-                    : null;
+                    : pathname.startsWith("/learn/rules")
+                      ? "rules"
+                      : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
   // opens on /learn/normal (Daily Lessons) by default — see the
@@ -116,9 +130,12 @@ export function LearnSidebar({
     { key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
+    { key: "rules", href: "/learn/rules", label: ruleStrings(locale).myRules, icon: Lightbulb },
   ].filter(
     (item) =>
-      (item.key !== "library" || showLibrary) && (item.key !== "passages" || passagesEnabled),
+      (item.key !== "library" || showLibrary) &&
+      (item.key !== "passages" || passagesEnabled) &&
+      (item.key !== "rules" || rulesEnabled),
   );
 
   // The phone bar of the mobilePath permission: one tab per kind of content, with the Path in place of
@@ -188,7 +205,7 @@ export function LearnSidebar({
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium",
                 "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap pointer-coarse:md:min-h-11",
-                PHONE_ITEMS && "max-md:hidden",
+                (PHONE_ITEMS || item.key === "rules") && "max-md:hidden",
                 isActive
                   ? "text-primary md:bg-brand-muted"
                   : "text-muted-foreground hover:text-foreground md:hover:bg-secondary",

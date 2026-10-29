@@ -18,6 +18,7 @@ import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
 import { requiredQuests, sentenceTestAvailable } from "@/lib/today/quests";
 import { ruleRowLinks, ruleRowTarget } from "@/lib/daily-rule/home-row";
+import { ruleById } from "@/lib/daily-rule/levels";
 import { getLessonSummaries } from "@/lib/content";
 import { loadTodayStoryDone } from "@/lib/today/load";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
@@ -69,7 +70,13 @@ async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
   if (!target) return undefined;
   const states = await fetchLearnerRuleStates(user.id).catch(() => []);
   const answeredToday = states.some((row) => row.lastReviewedOn === todayISO);
-  return { ...ruleRowLinks(target, answeredToday), levelLabel: target.levelLabel, answeredToday };
+  return {
+    ...ruleRowLinks(target, answeredToday),
+    levelLabel: target.levelLabel,
+    answeredToday,
+    libraryCount: states.filter((row) => ruleById(row.ruleId) !== undefined).length,
+    libraryHref: "/learn/rules",
+  };
 }
 
 /**

@@ -193,6 +193,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs the learner_rules table (migration 20250351000000, applied by pasting the SQL). Until it exists the card still teaches, nothing is recorded and nothing is asked back.",
       "Only sentences with a stored recording are asked: a sentence without one is never asked, and the browser's voice is never used.",
       "Today's three tasks and the story's finish screen are unchanged: the rule is one optional row after the words, and it never blocks the three tasks.",
+      "The same permission opens the rule library («قواعدي»): a menu item (from md: up) and a small button on the rule row with the number of rules met, a page that lists every rule the learner has met (the ones due today first), a page for each rule (the same two pages that taught it, then a practice of three sentences from their own finished texts, which records nothing), and a second button at the end of a rule session. It reads only the learner's own learner_rules rows and writes nothing.",
     ],
   },
   todayCover: {

@@ -282,6 +282,39 @@ export function planRedoVisit(input: PlanInput): RuleVisit {
   return { recall, learn, held, pause: null };
 }
 
+/**
+ * A practice of one rule the learner has met, chosen from the rule library: three sentences of their own
+ * finished texts that show the rule, typed one after the other. Pure, like the other planners. The three
+ * are the same for the same learner on the same day and differ from day to day when the texts hold more;
+ * a rule that fewer than three sentences show is not practised (null), exactly as a new rule is not taught
+ * from fewer. The runner records nothing in this mode, so the schedule stays as the day left it.
+ */
+export function planPracticeVisit(input: {
+  rule: RuleSpec;
+  /** The learner's finished texts at the rule's level, each with a stored recording. */
+  pool: readonly SourceSentence[];
+  /** Makes the choice deterministic per learner, rule and day. */
+  seed: string;
+  maxWords?: number;
+}): RuleVisit | null {
+  const hits = hitsIn(input.rule, input.pool, input.maxWords ?? MAX_SENTENCE_WORDS);
+  if (hits.length < LEARN_ITEMS) return null;
+  const items = [...hits]
+    .sort(
+      (a, b) =>
+        hash(`${input.seed}|${a.sentence.id}`) - hash(`${input.seed}|${b.sentence.id}`) ||
+        a.sentence.id.localeCompare(b.sentence.id),
+    )
+    .slice(0, LEARN_ITEMS)
+    .map((hit) => itemFor(input.rule, hit));
+  return {
+    recall: [],
+    learn: { ruleId: input.rule.id, source: "review", notice: [], items },
+    held: 0,
+    pause: null,
+  };
+}
+
 /** True when there is nothing to show: no new card and no question. */
 export function isEmptyVisit(visit: RuleVisit): boolean {
   return visit.learn === null && visit.recall.length === 0;

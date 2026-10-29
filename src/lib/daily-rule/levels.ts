@@ -5,15 +5,22 @@
  * no ladder has no rule of the day yet.
  */
 
-import { A1_LADDER, type RuleSpec } from "./ladder";
+import { A1_LADDER, type RuleLevel, type RuleSpec } from "./ladder";
 import { A2_LADDER, B2_LADDER } from "./ladder-higher";
 
-const LADDERS: Partial<Record<number, readonly RuleSpec[]>> = { 1: A1_LADDER, 2: A2_LADDER, 3: B2_LADDER };
+const LADDERS: Partial<Record<number, readonly RuleSpec[]>> = {
+  1: A1_LADDER,
+  2: A2_LADDER,
+  3: B2_LADDER,
+};
 
 /** The short level name on the card and on Home's row. */
 export const LEVEL_LABEL: Partial<Record<number, string>> = { 1: "A1", 2: "A2–B1", 3: "B2" };
 
 export const MAX_WORDS_BY_LEVEL: Partial<Record<number, number>> = { 1: 14, 2: 18, 3: 22 };
+
+/** The learner's level (1 = A1, 2 = A2–B1, 3 = B2) that a rule's own level belongs to. */
+export const LEVEL_NUMBER: Record<RuleLevel, number> = { A1: 1, "A2-B1": 2, B2: 3 };
 
 export function ladderForLevel(level: number): readonly RuleSpec[] | null {
   return LADDERS[level] ?? null;

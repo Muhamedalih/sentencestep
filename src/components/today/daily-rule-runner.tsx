@@ -1,31 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Fragment,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type RefObject,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { Check, Volume2 } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
 import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
+import { Form, RulePageOne, RulePageTwo } from "@/components/today/rule-pages";
 import { buttonVariants } from "@/components/ui/button";
 import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { recordDailyRuleAction } from "@/lib/daily-rule/actions";
 import type { RuleSpec } from "@/lib/daily-rule/ladder";
 import { ruleById } from "@/lib/daily-rule/levels";
-import { glueEndings, parseMarked, splitMark } from "@/lib/daily-rule/marks";
+import { glueEndings } from "@/lib/daily-rule/marks";
 import type { RuleOutcome } from "@/lib/daily-rule/schedule";
 import { fill, ruleStrings, type RuleStrings } from "@/lib/daily-rule/strings";
-import { inLocale, teachFor, type RuleTeach } from "@/lib/daily-rule/teach";
+import { teachFor } from "@/lib/daily-rule/teach";
 import { itemOutcome, ruleOutcome, type ItemResult } from "@/lib/daily-rule/outcome";
 import { diagnose, type Diagnosis } from "@/lib/daily-rule/tokens";
 import type { ItemSpec, LearnTask, RecallTask, RuleVisit } from "@/lib/daily-rule/visit";
@@ -45,6 +38,10 @@ import { cn } from "@/lib/utils";
  * under the field says only the missing word. The grammar letters of the rule (the -ing of reading, the
  * is of she is) are shown in colour wherever the rule's forms appear. Each card's outcome is recorded
  * once it is final; leaving early records only what was finished.
+ *
+ * The same runner carries the practice of one rule from the rule library (`practice`): the three typed
+ * sentences and a last card with the score, and nothing recorded, since the learner chose to practise
+ * and the schedule is the day's.
  */
 
 export interface DailyRuleRunnerProps {
@@ -60,6 +57,10 @@ export interface DailyRuleRunnerProps {
   daily?: boolean;
   /** The repeat of the day's session (redo=1): the same kind of cards, and nothing is recorded. */
   redo?: boolean;
+  /** A practice of one rule chosen in the rule library: the typed sentences only, nothing recorded, back to the library after. */
+  practice?: boolean;
+  /** The rule library, offered under the last card of a day's session (not of a practice, which goes back to it). */
+  libraryHref?: string;
 }
 
 type Step =
@@ -68,16 +69,6 @@ type Step =
   | { kind: "notes"; learn: LearnTask }
   | { kind: "use"; learn: LearnTask; index: number }
   | { kind: "done" };
-
-function play(url: string): void {
-  const audio = new Audio(url);
-  void audio.play().catch(() => undefined);
-}
-
-/** The colours of a form the rule is about: its letters tinted in the page's colour. */
-const MARK_CLASS = "text-primary bg-primary/15 rounded-sm px-[0.12em] font-semibold";
-/** The part of a wrong sentence that is wrong: struck through and quiet. */
-const WRONG_CLASS = "text-muted-foreground bg-transparent line-through decoration-2";
 
 export function DailyRuleRunner({
   visit,
@@ -88,14 +79,19 @@ export function DailyRuleRunner({
   levelLabel,
   daily = false,
   redo = false,
+  practice = false,
+  libraryHref,
 }: DailyRuleRunnerProps) {
   const copy = ruleStrings(locale);
   const steps = useMemo<Step[]>(() => {
     const out: Step[] = visit.recall.map((task) => ({ kind: "recall", task }));
     if (visit.learn) {
-      out.push({ kind: "notice", learn: visit.learn });
-      if ((teachFor(visit.learn.ruleId)?.notes.length ?? 0) > 0) {
-        out.push({ kind: "notes", learn: visit.learn });
+      // A practice comes from the library, where the learner has just read the rule: the sentences only.
+      if (!practice) {
+        out.push({ kind: "notice", learn: visit.learn });
+        if ((teachFor(visit.learn.ruleId)?.notes.length ?? 0) > 0) {
+          out.push({ kind: "notes", learn: visit.learn });
+        }
       }
       visit.learn.items.forEach((_, index) =>
         out.push({ kind: "use", learn: visit.learn!, index }),
@@ -103,10 +99,11 @@ export function DailyRuleRunner({
     }
     out.push({ kind: "done" });
     return out;
-  }, [visit]);
+  }, [visit, practice]);
   const [at, setAt] = useState(0);
   const learnOutcomes = useRef<RuleOutcome[]>([]);
   const practised = useRef<string[]>([]);
+  const rightInPractice = useRef(0);
   const soundRef = useRef<PronunciationButtonHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const step = steps[at] ?? { kind: "done" as const };
@@ -120,7 +117,7 @@ export function DailyRuleRunner({
         : undefined;
 
   function record(ruleId: string, outcome: RuleOutcome): void {
-    if (redo) return;
+    if (redo || practice) return;
     void recordDailyRuleAction({ ruleId, outcome, todayISO }).catch(() => undefined);
   }
 
@@ -140,6 +137,7 @@ export function DailyRuleRunner({
   }
 
   function finishUse(learn: LearnTask, result: ItemResult): void {
+    if (result.correct) rightInPractice.current += 1;
     learnOutcomes.current.push(itemOutcome(result));
     if (learnOutcomes.current.length === learn.items.length) {
       practised.current.push(learn.ruleId);
@@ -165,10 +163,10 @@ export function DailyRuleRunner({
       {typed && <ShiftReplayHint />}
       <div className="flex min-h-9 items-center justify-between gap-3">
         <p className="text-muted-foreground text-xs font-medium" dir="auto">
-          {copy.title}
+          {practice ? copy.myRules : copy.title}
         </p>
         <div className="flex items-center gap-3">
-          {visit.learn?.source === "review" && step.kind !== "done" && (
+          {visit.learn?.source === "review" && !practice && step.kind !== "done" && (
             <span className="text-muted-foreground text-xs" dir="auto">
               {copy.review}
             </span>
@@ -213,26 +211,50 @@ export function DailyRuleRunner({
           )}
 
           {step.kind === "notice" && (
-            <NoticeCard
+            <RulePageOne
               key={`notice-${at}`}
               rule={ruleById(step.learn.ruleId)}
-              learn={step.learn}
+              notice={step.learn.notice}
               copy={copy}
               locale={locale}
-              nextLabel={steps[at + 1]?.kind === "notes" ? copy.next : copy.startPractice}
-              onNext={next}
-            />
+              kicker={copy.noticeTitle}
+            >
+              <button
+                type="button"
+                onClick={next}
+                className={cn(buttonVariants({ size: "lg" }), "mt-1 w-full max-w-md")}
+              >
+                <span dir="auto">
+                  {steps[at + 1]?.kind === "notes" ? copy.next : copy.startPractice}
+                </span>
+              </button>
+            </RulePageOne>
           )}
 
           {step.kind === "notes" && (
-            <NotesCard
+            <RulePageTwo
               key={`notes-${at}`}
               rule={ruleById(step.learn.ruleId)}
               copy={copy}
               locale={locale}
-              onNext={next}
-              onBack={back}
-            />
+            >
+              <div className="flex w-full max-w-md flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={next}
+                  className={cn(buttonVariants({ size: "lg" }), "w-full")}
+                >
+                  <span dir="auto">{copy.startPractice}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={back}
+                  className="text-muted-foreground hover:text-foreground text-sm"
+                >
+                  <span dir="auto">{copy.back}</span>
+                </button>
+              </div>
+            </RulePageTwo>
           )}
 
           {step.kind === "use" && (
@@ -255,9 +277,15 @@ export function DailyRuleRunner({
               held={visit.held}
               practised={practised.current}
               continueHref={continueHref}
-              continueLabel={visit.learn && !daily ? copy.continueWords : copy.next}
+              continueLabel={
+                practice ? copy.backToRules : visit.learn && !daily ? copy.continueWords : copy.next
+              }
               ladderSize={ladderSize}
               levelLabel={levelLabel}
+              practice={practice}
+              right={rightInPractice.current}
+              total={visit.learn?.items.length ?? 0}
+              libraryHref={practice ? undefined : libraryHref}
             />
           )}
         </div>
@@ -331,38 +359,6 @@ function UseCard({
       soundRef={soundRef}
       onDone={onDone}
     />
-  );
-}
-
-/**
- * A word with the letters its rule is about in colour: the -ing of reading, the s of works, or the whole
- * word when the rule is about the word itself (is, an, can). The rest of the word stays as it is.
- */
-function Form({ rule, word }: { rule: RuleSpec | undefined; word: string }) {
-  if (!rule) return <>{word}</>;
-  const { stem, mark } = splitMark(rule.match, word);
-  return (
-    <>
-      {stem}
-      <mark className={MARK_CLASS}>{mark}</mark>
-    </>
-  );
-}
-
-/** A sentence of the card written with its marked part in [brackets]: tinted when right, struck through when wrong. */
-function Marked({ text, tone }: { text: string; tone: "right" | "wrong" }) {
-  return (
-    <>
-      {parseMarked(text).map((part, index) =>
-        part.marked ? (
-          <mark key={index} className={tone === "right" ? MARK_CLASS : WRONG_CLASS}>
-            {part.text}
-          </mark>
-        ) : (
-          <Fragment key={index}>{part.text}</Fragment>
-        ),
-      )}
-    </>
   );
 }
 
@@ -570,242 +566,10 @@ function Question({
 }
 
 /**
- * An Arabic line that names English words (the lines of a rule do): each run of English keeps its own
- * direction inside the Arabic sentence, so "-ing", "go → goes" and "to:" read in order instead of swapping
- * places. The punctuation and brackets at either end of a run stay outside it, with the Arabic, so a
- * full stop lands where the Arabic sentence ends and not between the English and the Arabic.
+ * The last card: where the rule now stands, and that it comes back tomorrow first thing. After a practice
+ * from the library it says how many of the sentences were right and that the schedule did not change, and
+ * goes back to the library; after a day's session the library is offered under the main button.
  */
-function MixedLine({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/([\x21-\x7E→]+(?: [\x21-\x7E→]+)*)/).map((part, index) => {
-        if (index % 2 === 0) return part;
-        const found = /^([\s.,:;!?()]*)(.*?)([\s.,:;!?()]*)$/.exec(part)!;
-        return (
-          <Fragment key={index}>
-            {found[1]}
-            <bdi>{glueEndings(found[2]!)}</bdi>
-            {found[3]}
-          </Fragment>
-        );
-      })}
-    </>
-  );
-}
-
-/** One line of a rule in the learner's language: Arabic keeps its English words in order, Spanish and Turkish read as they are. */
-function Say({ text, locale }: { text: string; locale: SupportLocale | null }) {
-  return (locale ?? "ar") === "ar" ? <MixedLine text={text} /> : <>{glueEndings(text)}</>;
-}
-
-const textDir = (locale: SupportLocale | null): "rtl" | "ltr" =>
-  (locale ?? "ar") === "ar" ? "rtl" : "ltr";
-
-/** The rule's title and its accent line, the head of both pages of the card. */
-function RuleHead({ kicker, title, dir }: { kicker: string; title: string; dir: "ltr" | "auto" }) {
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="text-muted-foreground text-sm" dir="auto">
-        {kicker}
-      </p>
-      <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl" dir={dir}>
-        {glueEndings(title)}
-      </h2>
-      <span aria-hidden="true" className="bg-primary h-1 w-12 rounded-full" />
-    </div>
-  );
-}
-
-/**
- * Page one of the new rule: the rule's name, large; the idea in the learner's own language and in simple
- * English (with the verbs it names, when it names some); the right and the wrong sentence with the grammar
- * letters in colour; and the two sentences from the learner's story with the same letters. What to watch
- * for (the exceptions) is the next page, so this one stays clear.
- */
-function NoticeCard({
-  rule,
-  learn,
-  copy,
-  locale,
-  nextLabel,
-  onNext,
-}: {
-  rule: RuleSpec | undefined;
-  learn: LearnTask;
-  copy: RuleStrings;
-  locale: SupportLocale | null;
-  nextLabel: string;
-  onNext: () => void;
-}) {
-  const teach: RuleTeach | undefined = rule ? teachFor(rule.id) : undefined;
-  return (
-    <div className="flex flex-col items-center gap-6 text-center">
-      <RuleHead kicker={copy.noticeTitle} title={rule?.title ?? ""} dir="ltr" />
-
-      {rule && teach && (
-        <div className="flex max-w-2xl flex-col items-center gap-3">
-          <p
-            className="text-foreground text-xl leading-relaxed font-medium text-balance sm:text-2xl"
-            dir={textDir(locale)}
-          >
-            <Say text={inLocale(teach.idea, locale)} locale={locale} />
-          </p>
-          <p
-            className="text-muted-foreground text-base leading-relaxed text-balance sm:text-lg"
-            dir="ltr"
-          >
-            {glueEndings(teach.idea.en)}
-          </p>
-          {rule.words && (
-            <p
-              className="text-primary pt-1 text-lg font-semibold text-balance sm:text-xl"
-              dir="ltr"
-            >
-              {rule.words.join(" · ")}
-            </p>
-          )}
-        </div>
-      )}
-
-      <div className="flex flex-col items-center gap-4">
-        {teach && (
-          <div className="flex flex-col items-center gap-1.5 text-xl sm:text-2xl" dir="ltr">
-            <p className="text-foreground">
-              <span className="text-success" role="img" aria-label={copy.rightSentence}>
-                ✓
-              </span>{" "}
-              <Marked text={teach.right} tone="right" />
-            </p>
-            <p className="text-muted-foreground">
-              <span role="img" aria-label={copy.wrongSentence}>
-                ✗
-              </span>{" "}
-              <Marked text={teach.wrong} tone="wrong" />
-            </p>
-          </div>
-        )}
-
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-muted-foreground text-sm" dir="auto">
-            {copy.fromYourStory}
-          </p>
-          <ul className="flex flex-col items-center gap-2">
-            {learn.notice.map((item) => (
-              <li key={item.sentenceId} className="flex items-center gap-3">
-                <p className="text-lg leading-relaxed text-balance sm:text-xl" dir="ltr">
-                  {item.before}
-                  <span className="font-semibold">
-                    <Form rule={rule} word={item.answer} />
-                  </span>
-                  {item.after}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => play(item.audioUrl)}
-                  aria-label={copy.listen}
-                  className="text-muted-foreground hover:text-foreground shrink-0"
-                >
-                  <Volume2 aria-hidden="true" className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onNext}
-        className={cn(buttonVariants({ size: "lg" }), "mt-1 w-full max-w-md")}
-      >
-        <span dir="auto">{nextLabel}</span>
-      </button>
-    </div>
-  );
-}
-
-/**
- * Page two of the new rule: what to watch for. Each note says in its own chip whether it is an exception
- * or more detail, then the line in the learner's language and in simple English, then the sentences that
- * show it with the letters in colour. Back goes to page one; the button starts the typed sentences.
- */
-function NotesCard({
-  rule,
-  copy,
-  locale,
-  onNext,
-  onBack,
-}: {
-  rule: RuleSpec | undefined;
-  copy: RuleStrings;
-  locale: SupportLocale | null;
-  onNext: () => void;
-  onBack: () => void;
-}) {
-  const teach = rule ? teachFor(rule.id) : undefined;
-  return (
-    <div className="flex flex-col items-center gap-7 text-center">
-      <RuleHead kicker={rule?.title ?? ""} title={copy.watchOut} dir="auto" />
-
-      <ul
-        className={cn(
-          "grid w-full gap-x-10 gap-y-7",
-          // Two notes sit side by side on a wide screen, so the page still fits one screen.
-          (teach?.notes.length ?? 0) > 1 ? "max-w-4xl md:grid-cols-2" : "max-w-xl",
-        )}
-      >
-        {teach?.notes.map((note, index) => (
-          <li key={index} className="flex flex-col items-center gap-2.5">
-            <span
-              className="border-border text-muted-foreground rounded-full border px-3 py-0.5 text-xs font-medium"
-              dir="auto"
-            >
-              {note.kind === "exception" ? copy.exception : copy.detail}
-            </span>
-            <p
-              className="text-foreground text-xl leading-relaxed font-medium text-balance sm:text-2xl"
-              dir={textDir(locale)}
-            >
-              <Say text={inLocale(note.say, locale)} locale={locale} />
-            </p>
-            <p
-              className="text-muted-foreground text-base leading-relaxed text-balance sm:text-lg"
-              dir="ltr"
-            >
-              {glueEndings(note.say.en)}
-            </p>
-            <div className="flex flex-col items-center gap-1 pt-1 text-xl sm:text-2xl" dir="ltr">
-              {note.examples.map((example) => (
-                <p key={example}>
-                  <Marked text={example} tone="right" />
-                </p>
-              ))}
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="flex w-full max-w-md flex-col items-center gap-3">
-        <button
-          type="button"
-          onClick={onNext}
-          className={cn(buttonVariants({ size: "lg" }), "w-full")}
-        >
-          <span dir="auto">{copy.startPractice}</span>
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-muted-foreground hover:text-foreground text-sm"
-        >
-          <span dir="auto">{copy.back}</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/** The last card: where the rule now stands, and that it comes back tomorrow first thing. */
 function DoneCard({
   copy,
   held,
@@ -814,6 +578,10 @@ function DoneCard({
   continueLabel,
   ladderSize,
   levelLabel,
+  practice,
+  right,
+  total,
+  libraryHref,
 }: {
   copy: RuleStrings;
   held: number;
@@ -822,6 +590,10 @@ function DoneCard({
   continueLabel: string;
   ladderSize: number;
   levelLabel: string;
+  practice: boolean;
+  right: number;
+  total: number;
+  libraryHref: string | undefined;
 }) {
   const titles = [...new Set(practised)]
     .map((id) => ruleById(id)?.title)
@@ -832,13 +604,15 @@ function DoneCard({
         <Check aria-hidden="true" className="size-5" strokeWidth={1.8} />
       </span>
       <h2 className="text-3xl font-semibold tracking-tight" dir="auto">
-        {copy.doneTitle}
+        {practice ? copy.practiceDone : copy.doneTitle}
       </h2>
       <p className="text-muted-foreground text-sm" dir="auto">
-        {copy.doneSub}
+        {practice ? copy.practiceNote : copy.doneSub}
       </p>
       <p className="text-sm font-medium" dir="auto">
-        {fill(copy.heldLine, { n: held, total: ladderSize, level: levelLabel })}
+        {practice
+          ? fill(copy.practiceScore, { n: right, total })
+          : fill(copy.heldLine, { n: held, total: ladderSize, level: levelLabel })}
       </p>
       {titles.length > 0 && (
         <ul className="flex flex-col items-center gap-1.5 text-base" dir="ltr">
@@ -847,13 +621,24 @@ function DoneCard({
           ))}
         </ul>
       )}
-      <Link
-        href={continueHref}
-        prefetch={false}
-        className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full max-w-md")}
-      >
-        <span dir="auto">{continueLabel}</span>
-      </Link>
+      <div className="mt-2 flex w-full max-w-md flex-col gap-3">
+        <Link
+          href={continueHref}
+          prefetch={false}
+          className={cn(buttonVariants({ size: "lg" }), "w-full")}
+        >
+          <span dir="auto">{continueLabel}</span>
+        </Link>
+        {libraryHref && (
+          <Link
+            href={libraryHref}
+            prefetch={false}
+            className={cn(buttonVariants({ size: "lg", variant: "outline" }), "w-full")}
+          >
+            <span dir="auto">{copy.openMyRules}</span>
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

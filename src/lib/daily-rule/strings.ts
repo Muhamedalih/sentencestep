@@ -55,6 +55,46 @@ export interface RuleStrings {
   /** What a screen reader says of the right and the wrong sentence of the card. */
   rightSentence: string;
   wrongSentence: string;
+  /** The rule library: its name in the menu, on its page and on the way back to it. */
+  myRules: string;
+  /** The small button on Home's rule row: the library with the number of rules in it ({n}). */
+  myRulesPill: string;
+  /** The library's count: {n} of the {total} rules of the learner's level ({level}). */
+  libraryLevel: string;
+  /** The library's first group: the rules whose day has come. */
+  dueSection: string;
+  /** The library's second group: the other rules the learner has met. */
+  keptSection: string;
+  /** The rules of the level still ahead ({n}), folded under the list. */
+  upcoming: string;
+  /** A due rule's tag in the library. */
+  statusDue: string;
+  /** A held rule's tag in the library. */
+  statusHeld: string;
+  /** The tag of a rule that is not held yet. */
+  statusLearning: string;
+  /** The button that practises one rule on {n} sentences of the learner's own texts. */
+  practiceRule: string;
+  /** The button from a rule's first page to its second. */
+  exceptionsButton: string;
+  /** The second button at the end of a rule session. */
+  openMyRules: string;
+  /** The title when a practice is finished. */
+  practiceDone: string;
+  /** How many of the {total} sentences were typed right ({n}). */
+  practiceScore: string;
+  /** Said after a practice: it changes nothing in the learner's schedule. */
+  practiceNote: string;
+  /** The button back to the library after a practice. */
+  backToRules: string;
+  /** Said on a rule's page when the learner's texts do not hold three sentences of it yet. */
+  noSentences: string;
+  /** The empty library: its title. */
+  emptyTitle: string;
+  /** The empty library: what fills it. */
+  emptySub: string;
+  /** The empty library: the way on. */
+  emptyAction: string;
 }
 
 export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
@@ -100,6 +140,26 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     detail: "تفصيل",
     rightSentence: "جملة صحيحة",
     wrongSentence: "جملة خاطئة",
+    myRules: "قواعدي",
+    myRulesPill: "قواعدي · {n}",
+    libraryLevel: "{n} من {total} قاعدة في {level}",
+    dueSection: "تحتاج مراجعة اليوم",
+    keptSection: "في قائمتك",
+    upcoming: "{n} قاعدة قادمة",
+    statusDue: "راجعها",
+    statusHeld: "ثابتة",
+    statusLearning: "قيد التثبيت",
+    practiceRule: "تمرّن عليها · {n} جمل",
+    exceptionsButton: "الاستثناءات",
+    openMyRules: "افتح قواعدي",
+    practiceDone: "انتهى التمرين",
+    practiceScore: "{n} من {total} صحيحة",
+    practiceNote: "لم يتغير شيء في جدول مراجعتك",
+    backToRules: "العودة إلى قواعدي",
+    noSentences: "لا توجد بعد جمل كافية من قصصك لهذه القاعدة.",
+    emptyTitle: "ستظهر هنا قواعدك",
+    emptySub: "كل قاعدة تتعلمها في قاعدة اليوم تُحفظ هنا لتراجعها متى شئت.",
+    emptyAction: "ابدأ من الرئيسية",
   },
   es: {
     title: "Regla del día",
@@ -143,6 +203,27 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     detail: "Detalle",
     rightSentence: "Frase correcta",
     wrongSentence: "Frase incorrecta",
+    myRules: "Mis reglas",
+    myRulesPill: "Mis reglas · {n}",
+    libraryLevel: "{n} de {total} reglas de {level}",
+    dueSection: "Para repasar hoy",
+    keptSection: "En tu lista",
+    upcoming: "{n} reglas por venir",
+    statusDue: "Repásala",
+    statusHeld: "Dominada",
+    statusLearning: "Afianzándose",
+    practiceRule: "Practícala · {n} frases",
+    exceptionsButton: "Excepciones",
+    openMyRules: "Abre Mis reglas",
+    practiceDone: "Ejercicio terminado",
+    practiceScore: "{n} de {total} correctas",
+    practiceNote: "Tu calendario de repaso no ha cambiado",
+    backToRules: "Volver a Mis reglas",
+    noSentences: "Aún no hay suficientes frases de tus historias para esta regla.",
+    emptyTitle: "Aquí verás tus reglas",
+    emptySub:
+      "Cada regla que aprendes en la regla del día se guarda aquí para que la repases cuando quieras.",
+    emptyAction: "Empezar desde Inicio",
   },
   tr: {
     title: "Günün kuralı",
@@ -186,12 +267,41 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     detail: "Ayrıntı",
     rightSentence: "Doğru cümle",
     wrongSentence: "Yanlış cümle",
+    myRules: "Kurallarım",
+    myRulesPill: "Kurallarım · {n}",
+    libraryLevel: "{level}: {total} kuraldan {n} tanesi",
+    dueSection: "Bugün tekrar edilecekler",
+    keptSection: "Listende",
+    upcoming: "Sıradaki {n} kural",
+    statusDue: "Tekrar et",
+    statusHeld: "Pekişti",
+    statusLearning: "Pekişiyor",
+    practiceRule: "Alıştırma yap · {n} cümle",
+    exceptionsButton: "İstisnalar",
+    openMyRules: "Kurallarım'ı aç",
+    practiceDone: "Alıştırma bitti",
+    practiceScore: "{total} cümlenin {n} tanesi doğru",
+    practiceNote: "Tekrar takvimin değişmedi",
+    backToRules: "Kurallarım'a dön",
+    noSentences: "Hikâyelerinde bu kural için henüz yeterli cümle yok.",
+    emptyTitle: "Kuralların burada görünecek",
+    emptySub:
+      "Günün kuralında öğrendiğin her kural burada saklanır; istediğin zaman tekrar edebilirsin.",
+    emptyAction: "Ana sayfadan başla",
   },
 };
 
 /** The strings for a locale; Arabic when the locale is not set yet. */
 export function ruleStrings(locale: SupportLocale | null): RuleStrings {
   return RULE_STRINGS[locale ?? "ar"];
+}
+
+/**
+ * The direction of a line of a rule in the learner's language: Arabic reads right to left, even when the line
+ * starts with an English word (dir="auto" would take the English for the direction of the whole line).
+ */
+export function ruleTextDir(locale: SupportLocale | null): "rtl" | "ltr" {
+  return (locale ?? "ar") === "ar" ? "rtl" : "ltr";
 }
 
 /** Fills the {n} and {total} placeholders of a line. */
