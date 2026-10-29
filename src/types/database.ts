@@ -2205,7 +2205,11 @@ export interface Database {
           p_total: number;
           p_completed: boolean;
         };
-        Returns: undefined;
+        Returns: {
+          stored_sections: number;
+          parts_added: number;
+          newly_completed: boolean;
+        }[];
       };
       complete_daily_session: {
         Args: { p_date: string; p_xp: number };

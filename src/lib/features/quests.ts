@@ -181,20 +181,24 @@ export function questEventsForLesson(input: {
 }
 
 /**
- * What one finished passage part contributes: every part counts toward the passages quest, and —
- * once the honest ticks are open — the part that finishes the passage also counts toward Today's
- * listening task (see eventsForAudience).
+ * What the passage parts a save newly finished contribute: every part counts toward the passages
+ * quest, and — once the honest ticks are open — the part that finishes the passage also counts
+ * toward Today's listening task (see eventsForAudience). The counts are the database's (what
+ * record_passage_progress found new), so a replay or a retry counts nothing twice.
  */
 export function passagePartQuestEvents(input: {
+  /** Parts this save newly finished (one when not given). */
+  parts?: number;
   passageCompleted: boolean;
   honestTicks: boolean;
 }): QuestEvent[] {
-  return input.passageCompleted && input.honestTicks
-    ? [
-        { type: "passages", amount: 1 },
-        { type: "passages", amount: 1, audience: "today" },
-      ]
-    : [{ type: "passages", amount: 1 }];
+  const parts = input.parts ?? 1;
+  const events: QuestEvent[] = [];
+  for (let i = 0; i < parts; i++) events.push({ type: "passages", amount: 1 });
+  if (input.passageCompleted && input.honestTicks) {
+    events.push({ type: "passages", amount: 1, audience: "today" });
+  }
+  return events;
 }
 
 /**

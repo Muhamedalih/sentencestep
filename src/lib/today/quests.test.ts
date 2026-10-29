@@ -162,6 +162,17 @@ describe("passagePartQuestEvents", () => {
       { type: "passages", amount: 1, audience: "today" },
     ]);
   });
+
+  it("one passage event per part the database says is new; nothing new, nothing counted", () => {
+    const two = passagePartQuestEvents({ parts: 2, passageCompleted: true, honestTicks: true });
+    assert.deepEqual(two, [
+      { type: "passages", amount: 1 },
+      { type: "passages", amount: 1 },
+      { type: "passages", amount: 1, audience: "today" },
+    ]);
+    const none = passagePartQuestEvents({ parts: 0, passageCompleted: false, honestTicks: true });
+    assert.deepEqual(none, []);
+  });
 });
 
 describe("the sentence review row", () => {

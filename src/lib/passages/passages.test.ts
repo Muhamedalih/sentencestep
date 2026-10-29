@@ -55,6 +55,7 @@ import {
   homeCardPick,
   parsePassageProgressInput,
   passageBadgesFor,
+  passageSaveOutcome,
   passageStatus,
   plausibleLearnerDate,
   recommendedPassageId,
@@ -461,6 +462,18 @@ test("a progress save is validated before it reaches the database", () => {
   assert.equal(parsePassageProgressInput({ ...good, sectionsDone: 1000 }), null);
   assert.equal(parsePassageProgressInput({ ...good, sectionsDone: 1.5 }), null);
   assert.equal(parsePassageProgressInput({ ...good, completed: "yes" }), null);
+});
+
+test("a save counts only what the database row says; no row counts nothing", () => {
+  const row = { stored_sections: 3, parts_added: 1, newly_completed: true };
+  assert.deepEqual(passageSaveOutcome([row]), { partsAdded: 1, newlyCompleted: true });
+  const replay = { stored_sections: 3, parts_added: 0, newly_completed: false };
+  assert.deepEqual(passageSaveOutcome(replay), { partsAdded: 0, newlyCompleted: false });
+  // The function before this change returns nothing, and a row that cannot be right is not trusted.
+  assert.equal(passageSaveOutcome(null), null);
+  assert.equal(passageSaveOutcome([]), null);
+  assert.equal(passageSaveOutcome([{ parts_added: -1, newly_completed: true }]), null);
+  assert.equal(passageSaveOutcome([{ parts_added: 1, newly_completed: "yes" }]), null);
 });
 
 // --- Reading stored questions back ------------------------------------------------
