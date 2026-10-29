@@ -17,7 +17,9 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
 import { requiredQuests, sentenceTestAvailable } from "@/lib/today/quests";
-import { hasRuleLadder, LEVEL_LABEL } from "@/lib/daily-rule/levels";
+import { ruleRowTarget } from "@/lib/daily-rule/home-row";
+import { getLessonSummaries } from "@/lib/content";
+import { loadTodayStoryDone } from "@/lib/today/load";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
@@ -42,8 +44,9 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
 }
 
 /**
- * The optional rule-of-the-day row on Home (the dailyRule permission, admins until it is opened): shown to
- * a learner whose level has a ladder, as the last row of Today's box, linked until today's rule is
+ * The optional rule-of-the-day row on Home (the dailyRule permission, admins until it is opened): the
+ * day's last row, after the words. It teaches the rule from the story finished today when there is one
+ * with a ladder (see ruleRowTarget), and is shown only when some ladder fits; linked until today's rule is
  * answered. It is not one of the three tasks, so the ring and the day's reward do not count it.
  */
 async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
@@ -52,14 +55,23 @@ async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
   if (!user) return undefined;
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-  const progress = await fetchProgressCached(todayISO).catch(() => null);
+  const [progress, storyId] = await Promise.all([
+    fetchProgressCached(todayISO).catch(() => null),
+    loadTodayStoryDone({ timeZone }),
+  ]);
   const level = progress?.startingLevel ?? 1;
-  if (!hasRuleLadder(level)) return undefined;
+  const stories: LessonUnit[] = storyId ? await getLessonSummaries("stories").catch(() => []) : [];
+  const story = stories.find((unit) => unit.id === storyId);
+  const target = ruleRowTarget({
+    story: story ? { id: story.id, level: story.level } : null,
+    level,
+  });
+  if (!target) return undefined;
   const states = await fetchLearnerRuleStates(user.id).catch(() => []);
   const answeredToday = states.some((row) => row.lastReviewedOn === todayISO);
   return {
-    href: answeredToday ? null : "/learn/today/rule?daily=1",
-    levelLabel: LEVEL_LABEL[level] ?? "",
+    href: answeredToday ? null : target.href,
+    levelLabel: target.levelLabel,
     answeredToday,
   };
 }
