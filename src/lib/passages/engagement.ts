@@ -45,12 +45,15 @@ export async function recordPassagePartEngagement(input: {
   userId: string;
   /** The learner's own date; null when the browser did not send a believable one (the day-keyed parts are then skipped). */
   todayISO: string | null;
-  /** This save finished the whole passage. */
+  /** Parts this save newly finished, as the database counted them. Zero means nothing new, so nothing is counted. */
+  parts: number;
+  /** This save newly finished the whole passage, as the database counted it (only the first finish). */
   passageCompleted: boolean;
   features: EffectiveFeatures;
 }): Promise<PassageRewards> {
-  const { userId, todayISO, passageCompleted, features } = input;
+  const { userId, todayISO, parts, passageCompleted, features } = input;
   const rewards: PassageRewards = { quests: [], badges: [] };
+  if (parts <= 0) return rewards;
 
   // The streak and the daily quest don't depend on each other, so they run side by side.
   //
@@ -92,7 +95,11 @@ export async function recordPassagePartEngagement(input: {
           });
         }
         return recordQuestEvents(
-          passagePartQuestEvents({ passageCompleted, honestTicks: features.rollouts.honestTicks }),
+          passagePartQuestEvents({
+            parts,
+            passageCompleted,
+            honestTicks: features.rollouts.honestTicks,
+          }),
           todayISO ?? undefined,
           features,
         );

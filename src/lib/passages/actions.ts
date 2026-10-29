@@ -9,7 +9,7 @@ import { sanitizeFeatureConfig } from "@/lib/features/config";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { NO_PASSAGE_REWARDS, recordPassagePartEngagement } from "@/lib/passages/engagement";
 import type { PassageRewards } from "@/lib/passages/engagement";
-import { parsePassageProgressInput } from "@/lib/passages/progress";
+import { parsePassageProgressInput, passageSaveOutcome } from "@/lib/passages/progress";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,6 +32,8 @@ export interface SavePassageProgressResult {
  * Once the place is saved, the finished part is also counted toward the daily
  * quest, the streak and the badges (see recordPassagePartEngagement) — after
  * the save and best-effort, so none of it can cost a learner their progress.
+ * What is counted is what the database says is new (the parts it added, and a
+ * first finish), so a replay or a retry counts nothing twice.
  */
 export async function savePassageProgressAction(
   input: unknown,
@@ -44,7 +46,7 @@ export async function savePassageProgressAction(
   if (!user) return { ok: false, reason: "signed-out" };
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("record_passage_progress", {
+  const { data, error } = await supabase.rpc("record_passage_progress", {
     p_passage_id: parsed.passageId,
     p_sections_done: parsed.sectionsDone,
     p_correct: parsed.correct,
@@ -56,10 +58,17 @@ export async function savePassageProgressAction(
     return { ok: false, reason: "failed" };
   }
 
+  // What the database counted as new from this save: the browser's own claims never reach the quests.
+  const outcome = passageSaveOutcome(data);
+  if (!outcome) {
+    console.error("[passages] record_passage_progress returned no outcome; nothing counted");
+  }
+
   const rewards = await recordPassagePartEngagement({
     userId: user.id,
     todayISO: parsed.todayISO,
-    passageCompleted: parsed.completed,
+    parts: outcome?.partsAdded ?? 0,
+    passageCompleted: outcome?.newlyCompleted ?? false,
     features,
   }).catch((engagementError: unknown) => {
     console.error("[passages] recordPassagePartEngagement failed", engagementError);
