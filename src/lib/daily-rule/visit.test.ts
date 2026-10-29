@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isEmptyVisit, planRuleVisit, type RuleStateRow, type SourceSentence } from "@/lib/daily-rule/visit";
+import {
+  isEmptyVisit,
+  planRedoVisit,
+  planRuleVisit,
+  type RuleStateRow,
+  type SourceSentence,
+} from "@/lib/daily-rule/visit";
 
 const TODAY = "2026-10-28";
 
@@ -27,7 +33,13 @@ function state(ruleId: string, strength: number, dueOn: string): RuleStateRow {
 }
 
 test("a rule the story shows is taught from that story: notice two sentences, type three", () => {
-  const visit = planRuleVisit({ today: TODAY, states: [], source: STORY_S_FORM, recallPool: [], seed: "u1" });
+  const visit = planRuleVisit({
+    today: TODAY,
+    states: [],
+    source: STORY_S_FORM,
+    recallPool: [],
+    seed: "u1",
+  });
   assert.equal(visit.learn?.ruleId, "a1-04");
   assert.equal(visit.learn?.source, "story");
   assert.equal(visit.learn?.notice.length, 2);
@@ -37,7 +49,10 @@ test("a rule the story shows is taught from that story: notice two sentences, ty
   assert.equal(visit.pause, null);
   for (const item of visit.learn!.items) {
     assert.equal(item.ruleId, "a1-04");
-    assert.ok(item.before + item.answer + item.after === item.text, "the blank rebuilds the sentence");
+    assert.ok(
+      item.before + item.answer + item.after === item.text,
+      "the blank rebuilds the sentence",
+    );
   }
 });
 
@@ -149,7 +164,11 @@ test("the same learner on the same day gets the same questions; another day, pos
     today: TODAY,
     states: [state("a1-01", 1, "2026-10-27")],
     source: [] as SourceSentence[],
-    recallPool: [sentence("p1", "I am happy."), sentence("p2", "They are here."), sentence("p3", "It is cold.")],
+    recallPool: [
+      sentence("p1", "I am happy."),
+      sentence("p2", "They are here."),
+      sentence("p3", "It is cold."),
+    ],
     seed: "user-7",
   };
   const first = planRuleVisit(input).recall[0]!.item.sentenceId;
@@ -161,4 +180,92 @@ test("a learner with nothing due and no text gets an empty visit", () => {
   const visit = planRuleVisit({ today: TODAY, states: [], source: [], recallPool: [], seed: "u1" });
   assert.ok(isEmptyVisit(visit));
   assert.equal(visit.pause, "no-text");
+});
+
+test("the repeat of today's session shows the card of the rule first seen today, from the text that shows it", () => {
+  const states: RuleStateRow[] = [
+    {
+      ruleId: "a1-04",
+      strength: 0,
+      dueOn: "2026-10-29",
+      lastReviewedOn: TODAY,
+      firstSeenOn: TODAY,
+    },
+  ];
+  const visit = planRedoVisit({
+    today: TODAY,
+    states,
+    source: STORY_S_FORM,
+    recallPool: [],
+    seed: "u1",
+  });
+  assert.equal(visit.learn?.ruleId, "a1-04");
+  assert.equal(visit.learn?.source, "story");
+  assert.equal(visit.learn?.items.length, 3);
+  assert.equal(visit.recall.length, 0);
+  assert.equal(visit.pause, null);
+});
+
+test("the repeat asks again the rules reviewed today, and teaches nothing that was not new today", () => {
+  const states: RuleStateRow[] = [
+    {
+      ruleId: "a1-01",
+      strength: 2,
+      dueOn: "2026-11-01",
+      lastReviewedOn: TODAY,
+      firstSeenOn: "2026-10-20",
+    },
+  ];
+  const visit = planRedoVisit({
+    today: TODAY,
+    states,
+    source: [],
+    recallPool: POOL_BE,
+    seed: "u1",
+  });
+  assert.equal(visit.learn, null);
+  assert.deepEqual(
+    visit.recall.map((task) => task.ruleId),
+    ["a1-01"],
+  );
+});
+
+test("nothing answered today means nothing to repeat", () => {
+  const states: RuleStateRow[] = [
+    {
+      ruleId: "a1-01",
+      strength: 2,
+      dueOn: "2026-11-01",
+      lastReviewedOn: "2026-10-27",
+      firstSeenOn: "2026-10-20",
+    },
+  ];
+  const visit = planRedoVisit({
+    today: TODAY,
+    states,
+    source: STORY_S_FORM,
+    recallPool: POOL_BE,
+    seed: "u1",
+  });
+  assert.ok(isEmptyVisit(visit));
+});
+
+test("a rule first seen today is not repeated as a card when its text no longer shows it", () => {
+  const states: RuleStateRow[] = [
+    {
+      ruleId: "a1-04",
+      strength: 0,
+      dueOn: "2026-10-29",
+      lastReviewedOn: TODAY,
+      firstSeenOn: TODAY,
+    },
+  ];
+  const visit = planRedoVisit({
+    today: TODAY,
+    states,
+    source: STORY_S_FORM.slice(0, 2),
+    recallPool: [],
+    seed: "u1",
+  });
+  assert.equal(visit.learn, null);
 });

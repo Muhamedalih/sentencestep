@@ -26,13 +26,15 @@ export const metadata: Metadata = { title: "Today's session" };
  *   texts at their level, and an earlier rule that is due may be asked too. Then back to Home.
  * - `recall=1`: from the end of Today, after the last step, when a rule is due and nothing was asked today
  *   yet. Only the earlier-rule question(s), then on to the finish screen.
+ * - `redo=1` (with `daily=1`): the repeat button of the day's row once it is answered: what was taught and
+ *   asked today, again, from the same texts. Nothing is recorded; then back to Home.
  * Nothing to show (no ladder at this level, a story with no usable text, nothing due), or the permission
  * closed, or signed out: straight on to where the card would have gone, instead of an empty card.
  */
 export default async function TodayRulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; recall?: string; daily?: string }>;
+  searchParams: Promise<{ from?: string; recall?: string; daily?: string; redo?: string }>;
 }) {
   const [features, user, locale] = await Promise.all([
     getEffectiveFeatures(),
@@ -41,12 +43,13 @@ export default async function TodayRulePage({
   ]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
-  const { from, recall, daily } = await searchParams;
+  const { from, recall, daily, redo } = await searchParams;
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
   const progress = await fetchProgressCached(todayISO).catch(() => null);
   const level = progress?.startingLevel ?? 1;
   const dailyMode = daily === "1";
+  const redoMode = redo === "1";
   const fromStory = recall !== "1" && typeof from === "string" && from.length > 0;
   const onward = dailyMode
     ? "/learn"
@@ -61,6 +64,7 @@ export default async function TodayRulePage({
     locale,
     level,
     daily: dailyMode && !fromStory,
+    redo: redoMode,
   });
   // The day's row names the story finished today, whose sentences may not be askable (no stored
   // recording): then the day's rule comes from the learner's own finished texts, as the row does without one.
@@ -72,6 +76,7 @@ export default async function TodayRulePage({
       locale,
       level,
       daily: true,
+      redo: redoMode,
     });
   }
   const ladder = visit ? ladderForLevel(visit.level) : null;
@@ -86,6 +91,7 @@ export default async function TodayRulePage({
       ladderSize={ladder.length}
       levelLabel={LEVEL_LABEL[visit.level] ?? ""}
       daily={dailyMode}
+      redo={redoMode}
     />
   );
 }

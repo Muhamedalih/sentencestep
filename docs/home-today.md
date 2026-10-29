@@ -45,7 +45,9 @@ for the current Home):
   finish screen has no rule button any more. `todayCover` draws the listening task with its passage's poster
   (the same colours and picture as the Passages list) in place of the headphones. `todayRepeat` gives each
   task a small repeat button (it opens that lesson again, in redo mode once the task is finished today) and
-  lifts and presses the rows like buttons. A due earlier-rule question also comes at the END of Today (after
+  lifts and presses the rows like buttons. The rule row has the same button: once today's rule is answered it
+  runs today's rule session again (the card of the rule first seen today, the questions on the rules reviewed
+  today; nothing is recorded). A due earlier-rule question also comes at the END of Today (after
   the words, from `/learn/today/go`), never before the first task.
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home

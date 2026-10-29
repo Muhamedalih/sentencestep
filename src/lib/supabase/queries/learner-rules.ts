@@ -27,7 +27,7 @@ export async function fetchLearnerRuleStates(userId: string): Promise<RuleStateR
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("learner_rules")
-    .select("rule_id, strength, due_on, last_reviewed_on")
+    .select("rule_id, strength, due_on, last_reviewed_on, first_seen_on")
     .eq("user_id", userId);
   if (error) throw error;
   return (data ?? []).map((row) => ({
@@ -35,6 +35,7 @@ export async function fetchLearnerRuleStates(userId: string): Promise<RuleStateR
     strength: row.strength,
     dueOn: row.due_on,
     lastReviewedOn: row.last_reviewed_on,
+    firstSeenOn: row.first_seen_on,
   }));
 }
 
@@ -71,7 +72,10 @@ const CHUNK = 100;
  * given lesson ids: the learner's own finished texts, read through RLS (a lesson the learner cannot open
  * is not returned).
  */
-export async function fetchLevelSentences(lessonIds: readonly string[], level: number): Promise<LevelSentence[]> {
+export async function fetchLevelSentences(
+  lessonIds: readonly string[],
+  level: number,
+): Promise<LevelSentence[]> {
   if (lessonIds.length === 0) return [];
   const supabase = await createClient();
   const levelIds: string[] = [];
@@ -96,7 +100,8 @@ export async function fetchLevelSentences(lessonIds: readonly string[], level: n
       .in("lesson_id", levelIds.slice(from, from + CHUNK))
       .order("order_index", { ascending: true });
     if (error) throw error;
-    for (const row of data ?? []) sentences.push({ id: row.id, lessonId: row.lesson_id, en: row.en });
+    for (const row of data ?? [])
+      sentences.push({ id: row.id, lessonId: row.lesson_id, en: row.en });
   }
   return sentences;
 }

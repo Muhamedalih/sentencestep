@@ -8,12 +8,7 @@
 
 import { A1_LADDER, type RuleSpec } from "./ladder";
 import { candidatesFor } from "./matchers";
-import {
-  RULE_CATCH_UP_DUE,
-  RULE_INTERLEAVE_AFTER,
-  isRuleDue,
-  isRuleHeld,
-} from "./schedule";
+import { RULE_CATCH_UP_DUE, RULE_INTERLEAVE_AFTER, isRuleDue, isRuleHeld } from "./schedule";
 import { aroundToken, tokenize, type Token } from "./tokens";
 
 /** The sentences the learner sees on the new rule's card: two to notice, three to type. */
@@ -37,6 +32,8 @@ export interface RuleStateRow {
   dueOn: string;
   /** The learner-local day the rule was last answered (used to ask at most one earlier-rule visit a day). */
   lastReviewedOn?: string;
+  /** The learner-local day the rule was answered for the first time: a rule first seen today is the day's new card. */
+  firstSeenOn?: string;
 }
 
 /** One sentence with its blank: the answer is `answer`, the rest of the sentence is shown around it. */
@@ -175,12 +172,16 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
   const rules = [...(input.ladder ?? A1_LADDER)].sort((a, b) => a.order - b.order);
   const maxWords = input.maxWords ?? MAX_SENTENCE_WORDS;
   const ruleById = new Map(rules.map((rule) => [rule.id, rule] as const));
-  const states = new Map(input.states.map((row) => [row.ruleId, { strength: row.strength, dueOn: row.dueOn }] as const));
+  const states = new Map(
+    input.states.map((row) => [row.ruleId, { strength: row.strength, dueOn: row.dueOn }] as const),
+  );
 
   const held = rules.filter((rule) => isRuleHeld(states.get(rule.id)?.strength ?? -1));
   const due = rules
     .filter((rule) => isRuleDue(states.get(rule.id), input.today))
-    .sort((a, b) => states.get(a.id)!.dueOn.localeCompare(states.get(b.id)!.dueOn) || a.order - b.order);
+    .sort(
+      (a, b) => states.get(a.id)!.dueOn.localeCompare(states.get(b.id)!.dueOn) || a.order - b.order,
+    );
   const fresh = rules.filter((rule) => !states.has(rule.id));
 
   // The new rule: the first rule (in ladder order) that the story just read shows. A rule that has not
@@ -238,6 +239,42 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
   }
 
   return { recall, learn, held: held.length, pause };
+}
+
+/**
+ * The day's session again, for the repeat button on Home's rule row once today's rule is answered: the card of
+ * the rule first seen today (from the text the row names, when that text still shows it) and the questions on
+ * the rules reviewed today, from the learner's own finished texts. Pure, like planRuleVisit; the runner records
+ * nothing in this mode, so the schedule stays as the day left it.
+ */
+export function planRedoVisit(input: PlanInput): RuleVisit {
+  const rules = [...(input.ladder ?? A1_LADDER)].sort((a, b) => a.order - b.order);
+  const maxWords = input.maxWords ?? MAX_SENTENCE_WORDS;
+  const states = new Map(input.states.map((row) => [row.ruleId, row] as const));
+
+  let learn: LearnTask | null = null;
+  for (const rule of rules) {
+    if (states.get(rule.id)?.firstSeenOn !== input.today) continue;
+    const hits = hitsIn(rule, input.source, maxWords);
+    if (hits.length >= LEARN_ITEMS) {
+      learn = learnFrom(rule, "story", hits);
+      break;
+    }
+  }
+
+  const avoid = new Set(input.source.map((sentence) => sentence.id));
+  const recallSeed = `${input.seed}|${input.today}|again`;
+  const recall: RecallTask[] = [];
+  for (const rule of rules) {
+    if (recall.length >= RECALL_LIMIT) break;
+    const row = states.get(rule.id);
+    if (!row || row.lastReviewedOn !== input.today || row.firstSeenOn === input.today) continue;
+    const item = recallItem(rule, input.recallPool, avoid, recallSeed, maxWords);
+    if (item) recall.push({ kind: "recall", ruleId: rule.id, item });
+  }
+
+  const held = rules.filter((rule) => isRuleHeld(states.get(rule.id)?.strength ?? -1)).length;
+  return { recall, learn, held, pause: null };
 }
 
 /** True when there is nothing to show: no new card and no question. */
