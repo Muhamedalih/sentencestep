@@ -6,7 +6,6 @@ import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { buttonVariants } from "@/components/ui/button";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
-import { ruleStrings } from "@/lib/daily-rule/strings";
 import { cn } from "@/lib/utils";
 
 /** The accuracy that earns the story's star. */
@@ -24,19 +23,15 @@ export function TodayStepDone({
   accuracy,
   saveStatus,
   onRetrySave,
-  ruleHref,
 }: {
   step: "listen" | "story";
   /** The story's typing accuracy (0-1): at 90% or more it earns a star. */
   accuracy?: number;
   saveStatus: CompletionSaveStatus;
   onRetrySave?: () => void;
-  /** The rule of the day from this story: offered only for a story at level 1 while the permission is open. */
-  ruleHref?: string;
 }) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const copy = t.today;
-  const rule = ruleStrings(locale);
   const starred = accuracy !== undefined && accuracy >= STAR_ACCURACY;
   return (
     <section className="flex flex-1 flex-col items-center justify-center px-4 py-8">
@@ -89,18 +84,6 @@ export function TodayStepDone({
         )}
 
         <div className="mt-2 flex w-full flex-col items-stretch gap-2">
-          {ruleHref && step === "story" && (
-            <Link
-              href={ruleHref}
-              prefetch={false}
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-auto w-full flex-col gap-0.5 py-3")}
-            >
-              <span dir="auto">{rule.buttonTitle}</span>
-              <span className="text-muted-foreground text-xs font-normal" dir="auto">
-                {rule.buttonHint}
-              </span>
-            </Link>
-          )}
           <Link
             href={`/learn/today/go?step=${step === "story" ? "words" : "story"}`}
             className={cn(buttonVariants({ size: "lg" }), "w-full")}

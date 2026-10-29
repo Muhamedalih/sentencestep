@@ -19,10 +19,11 @@ export const metadata: Metadata = { title: "Today's session" };
 
 /**
  * The rule of the day ("Rule of the day" permission). Three ways in:
- * - `from=<story id>`: from the end of Today's story. The story's level picks the ladder, the new rule
- *   comes from that story, and an earlier rule that is due may be asked too. Then on to the words step.
- * - `daily=1`: the optional row on Home. The new rule comes from the learner's own finished texts at
- *   their level, and an earlier rule that is due may be asked too. Then back to Home.
+ * - `from=<story id>`: the new rule comes from that story (its level picks the ladder), and an earlier
+ *   rule that is due may be asked too. Alone, on to the words step; with `daily=1` (the day's last row on
+ *   Home, after the words) back to Home.
+ * - `daily=1`: the optional row on Home. Without `from=` the new rule comes from the learner's own finished
+ *   texts at their level, and an earlier rule that is due may be asked too. Then back to Home.
  * - `recall=1`: from the end of Today, after the last step, when a rule is due and nothing was asked today
  *   yet. Only the earlier-rule question(s), then on to the finish screen.
  * Nothing to show (no ladder at this level, a story with no usable text, nothing due), or the permission
@@ -46,21 +47,33 @@ export default async function TodayRulePage({
   const progress = await fetchProgressCached(todayISO).catch(() => null);
   const level = progress?.startingLevel ?? 1;
   const dailyMode = daily === "1";
-  const fromStory = recall !== "1" && !dailyMode && typeof from === "string" && from.length > 0;
-  const onward = fromStory
-    ? "/learn/today/go?step=words"
-    : dailyMode
-      ? "/learn"
+  const fromStory = recall !== "1" && typeof from === "string" && from.length > 0;
+  const onward = dailyMode
+    ? "/learn"
+    : fromStory
+      ? "/learn/today/go?step=words"
       : "/learn/today/end";
 
-  const visit = await loadRuleVisit({
+  let visit = await loadRuleVisit({
     userId: user.id,
     todayISO,
     storyId: fromStory ? from! : null,
     locale,
     level,
-    daily: dailyMode,
+    daily: dailyMode && !fromStory,
   });
+  // The day's row names the story finished today, whose sentences may not be askable (no stored
+  // recording): then the day's rule comes from the learner's own finished texts, as the row does without one.
+  if (!visit && dailyMode && fromStory) {
+    visit = await loadRuleVisit({
+      userId: user.id,
+      todayISO,
+      storyId: null,
+      locale,
+      level,
+      daily: true,
+    });
+  }
   const ladder = visit ? ladderForLevel(visit.level) : null;
   if (!visit || !ladder) redirect(onward);
 

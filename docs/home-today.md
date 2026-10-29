@@ -40,9 +40,11 @@ for the current Home):
   Two permissions shape the box (both Admins only until opened): `dailyRule` adds the rule of the day as
   the LAST row, after the words, titled «اختم اليوم بالقواعد» (end the day with the rules) and drawn like
   the tasks (its meta: «قاعدة اليوم», the level, the minutes; lifted with «ابدأ القاعدة» once the three
-  tasks are done). `todayCover` draws the listening task with its passage's poster (the same colours and
-  picture as the Passages list) in place of the headphones. A due earlier-rule question also comes at the
-  END of Today (after the words, from `/learn/today/go`), never before the first task.
+  tasks are done). The row teaches the rule from the story finished today when that story has a ladder
+  (`ruleRowTarget` in `lib/daily-rule/home-row.ts`), else from the learner's own finished texts; the story's
+  finish screen has no rule button any more. `todayCover` draws the listening task with its passage's poster
+  (the same colours and picture as the Passages list) in place of the headphones. A due earlier-rule question
+  also comes at the END of Today (after the words, from `/learn/today/go`), never before the first task.
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home
   (continue / resume / start, free lessons finished, everything finished). It has the **same springy

@@ -36,7 +36,6 @@ export interface RuleStrings {
   /** The row on Home for a learner whose rule of the day is answered today. */
   doneToday: string;
   continueWords: string;
-  buttonTitle: string;
   buttonHint: string;
   /** The label above the rule's row on Home: the rule closes the day, after the words step. */
   endDay: string;
@@ -77,7 +76,6 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     heldLine: "تمسك {n} من {total} قواعد في {level}",
     doneToday: "تم اليوم",
     continueWords: "متابعة إلى الكلمات",
-    buttonTitle: "قاعدة اليوم من هذه القصة",
     buttonHint: "دقيقة ونصف تقريباً، اختيارية",
     endDay: "اختم اليوم بالقواعد",
     startRule: "ابدأ القاعدة",
@@ -114,7 +112,6 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     heldLine: "Dominas {n} de {total} reglas de {level}",
     doneToday: "Hecho hoy",
     continueWords: "Seguir con las palabras",
-    buttonTitle: "Regla del día de esta historia",
     buttonHint: "Un minuto y medio, opcional",
     endDay: "Termina el día con las reglas",
     startRule: "Empieza la regla",
@@ -151,7 +148,6 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     heldLine: "{level}'de {total} kuraldan {n} tanesine hâkimsin",
     doneToday: "Bugün tamam",
     continueWords: "Kelimelere geç",
-    buttonTitle: "Bu hikâyeden günün kuralı",
     buttonHint: "Yaklaşık bir buçuk dakika, isteğe bağlı",
     endDay: "Günü kurallarla bitir",
     startRule: "Kurala başla",
