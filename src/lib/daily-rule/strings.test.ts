@@ -31,12 +31,9 @@ test("a label that carries a number or a name carries it in every language", () 
 test("the library's lines fill in their numbers", () => {
   const ar = ruleStrings("ar");
   assert.equal(fill(ar.myRulesPill, { n: 3 }), "قواعدي · 3");
-  assert.equal(fill(ar.libraryLevel, { n: 5, total: 24, level: "A1" }), "5 من 24 قاعدة في A1");
+  assert.equal(fill(ar.youAreIn, { level: "A1" }), "أنت في A1");
   assert.equal(fill(ruleStrings("es").practiceScore, { n: 2, total: 3 }), "2 de 3 correctas");
-  assert.equal(
-    fill(ruleStrings("tr").libraryLevel, { n: 0, total: 24, level: "A1" }),
-    "A1: 24 kuraldan 0 tanesi",
-  );
+  assert.equal(fill(ruleStrings("tr").youAreIn, { level: "A2–B1" }), "Şu an A2–B1 seviyesindesin");
 });
 
 test("a line of a rule reads right to left in Arabic, and left to right in the other languages", () => {

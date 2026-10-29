@@ -51,9 +51,11 @@ for the current Home):
   the words, from `/learn/today/go`), never before the first task.
   The rule row also carries the rule library's pill («قواعدي · N», from the first rule met): it opens
   `/learn/rules` (under the same `dailyRule` permission; a menu item from md: up too), the whole course as a
-  map: the levels the learner is on (A1, A2–B1, B2), each split into units that fold open, the rules due today
-  first, the rule that opens next marked and the ones ahead as titles only; each rule met opens as the same two
-  pages, with a practice of three sentences (`/learn/today/rule?practice=<id>`, nothing recorded).
+  page of cards like the Stories section (`rule-tile.tsx`, up to four across on a wide screen, a row on a phone):
+  one tab per level the learner is on (A1, A2–B1, B2; an admin has all three), each split into units, the rules
+  due today first; a rule met has a green ribbon, the rule that opens next is marked and the ones ahead have no
+  idea and no link; each rule met opens as the same two pages (on the dashboard's black background), with a
+  practice of three sentences (`/learn/today/rule?practice=<id>`, nothing recorded).
   The course is `lib/daily-rule/syllabus.ts` (150 rules in the order they open: A1 45, A2–B1 60, B2 45; the
   units are `units.ts`; what each rule teaches is `teach.ts` and the files of its level, with six prepared
   sentences each). One new rule a day: the next one in order, but one of the next three comes first when the

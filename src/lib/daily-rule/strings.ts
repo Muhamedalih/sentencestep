@@ -64,12 +64,19 @@ export interface RuleStrings {
   myRules: string;
   /** The small button on Home's rule row: the library with the number of rules in it ({n}). */
   myRulesPill: string;
-  /** The library's count: {n} of the {total} rules of the learner's level ({level}). */
-  libraryLevel: string;
+  /** The library page's heading, and the line under it. */
+  libraryTitle: string;
+  librarySubtitle: string;
+  /** The line over the library's bar: the level the course is on ({level}). */
+  youAreIn: string;
+  /** What a screen reader says of the library's row of level tabs. */
+  levelTabsLabel: string;
   /** The library's first group: the rules whose day has come. */
   dueSection: string;
   /** The tag of the rule that opens next on the library's map. */
   statusNext: string;
+  /** The tag of a rule further on than the next one. */
+  statusAhead: string;
   /** The admin preview of a rule the learner has not met yet (a small note on its page; the arrows have names for screen readers). */
   previewNote: string;
   previousRule: string;
@@ -151,9 +158,13 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     wrongSentence: "جملة خاطئة",
     myRules: "قواعدي",
     myRulesPill: "قواعدي · {n}",
-    libraryLevel: "{n} من {total} قاعدة في {level}",
+    libraryTitle: "قواعدي (مسارك من A1 إلى B2)",
+    librarySubtitle: "اقرأ القاعدة بلغتك، شوف أمثلتها، ثم تمرّن عليها.",
+    youAreIn: "أنت في {level}",
+    levelTabsLabel: "مستويات المسار",
     dueSection: "تحتاج مراجعة اليوم",
     statusNext: "التالية",
+    statusAhead: "قادمة",
     previewNote: "معاينة للأدمن",
     previousRule: "القاعدة السابقة",
     nextRule: "القاعدة التالية",
@@ -218,9 +229,13 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     wrongSentence: "Frase incorrecta",
     myRules: "Mis reglas",
     myRulesPill: "Mis reglas · {n}",
-    libraryLevel: "{n} de {total} reglas de {level}",
+    libraryTitle: "Mis reglas (tu camino de A1 a B2)",
+    librarySubtitle: "Lee la regla en tu idioma, mira sus ejemplos y luego practícala.",
+    youAreIn: "Estás en {level}",
+    levelTabsLabel: "Niveles del camino",
     dueSection: "Para repasar hoy",
     statusNext: "Siguiente",
+    statusAhead: "Por venir",
     previewNote: "Vista previa (admin)",
     previousRule: "Regla anterior",
     nextRule: "Regla siguiente",
@@ -286,9 +301,13 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     wrongSentence: "Yanlış cümle",
     myRules: "Kurallarım",
     myRulesPill: "Kurallarım · {n}",
-    libraryLevel: "{level}: {total} kuraldan {n} tanesi",
+    libraryTitle: "Kurallarım (A1'den B2'ye yolun)",
+    librarySubtitle: "Kuralı kendi dilinde oku, örneklerine bak, sonra üzerinde çalış.",
+    youAreIn: "Şu an {level} seviyesindesin",
+    levelTabsLabel: "Yolun seviyeleri",
     dueSection: "Bugün tekrar edilecekler",
     statusNext: "Sıradaki",
+    statusAhead: "İleride",
     previewNote: "Yönetici önizlemesi",
     previousRule: "Önceki kural",
     nextRule: "Sonraki kural",

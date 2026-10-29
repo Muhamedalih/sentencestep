@@ -49,8 +49,11 @@ test("the units of a level are in the order of the syllabus, and their rules add
     "a2-09",
     "a2-10",
   ]);
-  assert.equal(level.units[0]!.open, true, "the unit with the next rule is open");
-  assert.equal(level.units[1]!.open, false);
+  assert.deepEqual(
+    level.units.flatMap((unit) => unit.rules.map((rule) => rule.order)),
+    Array.from({ length: 60 }, (_, index) => index + 1),
+    "the rules are numbered 1 to 60 across the units, in the order they open",
+  );
 });
 
 test("a rule whose day has come is listed first; the others keep their place on the map", () => {
@@ -168,10 +171,14 @@ test("a level the learner has met a rule of stays on the map, and the course lev
     ],
   );
   assert.deepEqual(library.current, { label: "B2", met: 1, total: 45 });
-  const open = library.levels
+  const rules = library.levels
     .find((level) => level.label === "A1")!
-    .units.some((unit) => unit.open);
-  assert.equal(open, false, "only the level the course is on opens its units by itself");
+    .units.flatMap((unit) => unit.rules);
+  assert.equal(
+    rules.filter((rule) => rule.state === "next").length,
+    0,
+    "the next rule is only on the level the course is on",
+  );
 });
 
 test("a learner who has met every rule of A1 is on A2–B1, with A1 still on the map", () => {
@@ -217,4 +224,33 @@ test("the idea and the unit's name are in the learner's language, Arabic until o
     buildLibrary({ states, today: TODAY, level: 1, locale }).levels[0]!.units[0]!.title;
   assert.equal(title(null), "الأساسيات");
   assert.equal(title("es"), "Lo básico");
+});
+
+test("a preview has every level on the map and the idea of every rule, met or not", () => {
+  const states = [row("a1-01", 1, "2026-11-02")];
+  const learner = buildLibrary({ states, today: TODAY, level: 1, locale: "ar" });
+  const preview = buildLibrary({ states, today: TODAY, level: 1, locale: "ar", preview: true });
+  assert.deepEqual(
+    learner.levels.map((level) => level.label),
+    ["A1"],
+  );
+  assert.deepEqual(
+    preview.levels.map((level) => [level.label, level.current, level.total]),
+    [
+      ["A1", true, 45],
+      ["A2–B1", false, 60],
+      ["B2", false, 45],
+    ],
+  );
+  const ideas = (library: ReturnType<typeof buildLibrary>) =>
+    library.levels.flatMap((level) =>
+      level.units.flatMap((unit) => unit.rules.map((rule) => rule.idea)),
+    );
+  assert.equal(
+    ideas(learner).filter((idea) => idea === "").length,
+    44,
+    "a learner sees the idea of the one rule met only",
+  );
+  assert.equal(ideas(preview).filter((idea) => idea === "").length, 0, "a preview has every idea");
+  assert.equal(preview.met, 1, "the count of rules met does not change");
 });
