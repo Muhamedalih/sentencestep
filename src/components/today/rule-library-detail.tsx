@@ -6,9 +6,10 @@ import { ArrowLeft } from "lucide-react";
 
 import { RulePageOne, RulePageTwo } from "@/components/today/rule-pages";
 import { buttonVariants } from "@/components/ui/button";
-import { LEVEL_LABEL, LEVEL_NUMBER, ruleById } from "@/lib/daily-rule/levels";
+import { ladderForLevel, LEVEL_LABEL, LEVEL_NUMBER, ruleById } from "@/lib/daily-rule/levels";
 import { fill, ruleStrings } from "@/lib/daily-rule/strings";
-import { teachFor } from "@/lib/daily-rule/teach";
+import type { RuleTeach } from "@/lib/daily-rule/teach-types";
+import { unitTitle } from "@/lib/daily-rule/units";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
  */
 export function RuleLibraryDetail({
   ruleId,
+  teach,
   locale,
   backHref,
   practiceHref,
@@ -27,6 +29,8 @@ export function RuleLibraryDetail({
   noSentences = false,
 }: {
   ruleId: string;
+  /** What the rule teaches, read on the server (see RulePageOne). */
+  teach: RuleTeach | undefined;
   locale: SupportLocale | null;
   /** The library. */
   backHref: string;
@@ -39,9 +43,16 @@ export function RuleLibraryDetail({
 }) {
   const copy = ruleStrings(locale);
   const rule = ruleById(ruleId);
-  const hasNotes = (teachFor(ruleId)?.notes.length ?? 0) > 0;
+  const hasNotes = (teach?.notes.length ?? 0) > 0;
   const [page, setPage] = useState<1 | 2>(1);
   const levelLabel = rule ? (LEVEL_LABEL[LEVEL_NUMBER[rule.level]] ?? "") : "";
+  // Above the rule's name: its place on its level and the unit it belongs to.
+  const kicker = rule
+    ? `${fill(copy.ruleNumber, {
+        n: rule.order,
+        total: ladderForLevel(LEVEL_NUMBER[rule.level])?.length ?? 0,
+      })} · ${unitTitle(rule.unit, locale)}`
+    : copy.ruleTitle;
 
   const practice = (
     <Link
@@ -75,10 +86,11 @@ export function RuleLibraryDetail({
             <RulePageOne
               key="one"
               rule={rule}
+              teach={teach}
               notice={[]}
               copy={copy}
               locale={locale}
-              kicker={`${copy.ruleTitle} · ${levelLabel}`}
+              kicker={kicker}
             >
               <div className="mt-1 flex w-full max-w-md flex-col items-center gap-3 self-center">
                 {practice}
@@ -99,7 +111,7 @@ export function RuleLibraryDetail({
               </div>
             </RulePageOne>
           ) : (
-            <RulePageTwo key="two" rule={rule} copy={copy} locale={locale}>
+            <RulePageTwo key="two" rule={rule} teach={teach} copy={copy} locale={locale}>
               <div className="flex w-full max-w-md flex-col items-center gap-3 self-center">
                 {practice}
                 <button

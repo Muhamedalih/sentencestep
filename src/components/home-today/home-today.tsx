@@ -18,7 +18,7 @@ import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
 import { requiredQuests, sentenceTestAvailable } from "@/lib/today/quests";
 import { ruleRowLinks, ruleRowTarget } from "@/lib/daily-rule/home-row";
-import { ruleById } from "@/lib/daily-rule/levels";
+import { hasRuleLadder, hasRuleToTeach, ruleById } from "@/lib/daily-rule/levels";
 import { getLessonSummaries } from "@/lib/content";
 import { loadTodayStoryDone } from "@/lib/today/load";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
@@ -70,6 +70,11 @@ async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
   if (!target) return undefined;
   const states = await fetchLearnerRuleStates(user.id).catch(() => []);
   const answeredToday = states.some((row) => row.lastReviewedOn === todayISO);
+  // A row with nothing behind it (every rule of the course met, none due) is left out rather than shown dead.
+  const dueNow = states.some((row) => row.dueOn <= todayISO);
+  const teachLevel = story && hasRuleLadder(story.level) ? story.level : level;
+  const toTeach = hasRuleToTeach(teachLevel, new Set(states.map((row) => row.ruleId)));
+  if (!answeredToday && !dueNow && !toTeach) return undefined;
   return {
     ...ruleRowLinks(target, answeredToday),
     levelLabel: target.levelLabel,

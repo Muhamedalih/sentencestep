@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { glueEndings, parseMarked, splitMark, stripMarks } from "@/lib/daily-rule/marks";
+import {
+  glueEndings,
+  markStyleOf,
+  parseMarked,
+  splitByStyle,
+  splitMark,
+  stripMarks,
+} from "@/lib/daily-rule/marks";
 
 test("an -ing form shows its ending apart; a word with no -ing is all mark", () => {
   assert.deepEqual(splitMark("gerund-after", "going"), { stem: "go", mark: "ing" });
@@ -80,4 +87,33 @@ test("an ending written with its hyphen is kept whole at the end of a line, and 
   assert.equal(glueEndings("verb + -ing"), "verb + -" + joiner + "ing");
   assert.equal(glueEndings("well-known words, 5 - 3"), "well-known words, 5 - 3");
   assert.equal(glueEndings("no endings"), "no endings");
+});
+
+test("a rule can choose the ending that is shown apart, whatever its matcher looks for", () => {
+  assert.deepEqual(splitByStyle("ly", "carefully"), { stem: "careful", mark: "ly" });
+  assert.deepEqual(splitByStyle("ly", "happily"), { stem: "happ", mark: "ily" });
+  assert.deepEqual(splitByStyle("ly", "well"), { stem: "", mark: "well" });
+  assert.deepEqual(splitByStyle("est", "tallest"), { stem: "tall", mark: "est" });
+  assert.deepEqual(splitByStyle("est", "funniest"), { stem: "funn", mark: "iest" });
+  assert.deepEqual(splitByStyle("est", "best"), { stem: "", mark: "best" });
+  assert.deepEqual(splitByStyle("ed-ing", "boring"), { stem: "bor", mark: "ing" });
+  assert.deepEqual(splitByStyle("ed-ing", "bored"), { stem: "bor", mark: "ed" });
+  assert.deepEqual(splitByStyle("possessive", "Tom's"), { stem: "Tom", mark: "'s" });
+  assert.deepEqual(splitByStyle("whole", "will have"), { stem: "", mark: "will have" });
+});
+
+test("an answer of several words shows the ending it ends with, or is all mark", () => {
+  assert.deepEqual(splitByStyle("ing", "am meeting"), { stem: "am meet", mark: "ing" });
+  assert.deepEqual(splitByStyle("ed", "has been sold"), { stem: "", mark: "has been sold" });
+  assert.deepEqual(splitByStyle("est", "most expensive"), { stem: "", mark: "most expensive" });
+});
+
+test("a rule without a mark style takes the style of its matcher", () => {
+  assert.equal(markStyleOf("present-continuous"), "ing");
+  assert.equal(markStyleOf("he-she-it-s"), "s");
+  assert.equal(markStyleOf("regular-past"), "ed");
+  assert.equal(markStyleOf("comparative"), "er");
+  assert.equal(markStyleOf("possessive-s"), "possessive");
+  assert.equal(markStyleOf("can"), "whole");
+  assert.equal(markStyleOf("none"), "whole");
 });

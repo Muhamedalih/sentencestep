@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { RuleLibraryDetail } from "@/components/today/rule-library-detail";
 import { ruleById } from "@/lib/daily-rule/levels";
+import { teachFor } from "@/lib/daily-rule/teach";
 import { LEARN_ITEMS } from "@/lib/daily-rule/visit";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -43,6 +44,7 @@ export default async function RuleLibraryPage({
   return (
     <RuleLibraryDetail
       ruleId={ruleId}
+      teach={teachFor(ruleId)}
       locale={locale}
       backHref="/learn/rules"
       practiceHref={`/learn/today/rule?practice=${encodeURIComponent(ruleId)}`}

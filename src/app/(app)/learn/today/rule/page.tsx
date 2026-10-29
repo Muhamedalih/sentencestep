@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { DailyRuleRunner } from "@/components/today/daily-rule-runner";
 import { LEVEL_LABEL, ladderForLevel } from "@/lib/daily-rule/levels";
 import { loadPracticeVisit, loadRuleVisit } from "@/lib/daily-rule/load";
+import { teachFor } from "@/lib/daily-rule/teach";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -29,8 +30,9 @@ export const metadata: Metadata = { title: "Today's session" };
  * - `redo=1` (with `daily=1`): the repeat button of the day's row once it is answered: what was taught and
  *   asked today, again, from the same texts. Nothing is recorded; then back to Home.
  * - `practice=<rule id>`: from the rule library, a practice of one rule the learner has met: three sentences of
- *   their own finished texts that show it, typed one after the other. Nothing is recorded; then back to the
- *   library. With fewer than three such sentences it goes back to the rule's page, which says so.
+ *   their own finished texts that show it (or three of the rule's prepared sentences when those texts hold fewer),
+ *   typed one after the other. Nothing is recorded; then back to the library. A rule with neither goes back to
+ *   the rule's page, which says so.
  * Nothing to show (no ladder at this level, a story with no usable text, nothing due), or the permission
  * closed, or signed out: straight on to where the card would have gone, instead of an empty card.
  */
@@ -121,6 +123,7 @@ export default async function TodayRulePage({
       todayISO={todayISO}
       locale={locale}
       continueHref={onward}
+      learnTeach={visit.learn ? teachFor(visit.learn.ruleId) : undefined}
       ladderSize={ladder.length}
       levelLabel={LEVEL_LABEL[visit.level] ?? ""}
       daily={dailyMode}

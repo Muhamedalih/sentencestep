@@ -5,41 +5,26 @@
  * left out). The learner's language comes first on the card because the English of a rule is hard to read
  * for someone who is still learning the language the rule is about.
  *
- * The right and wrong sentences are the ladder's own (ladder.ts, ladder-higher.ts), written here with the
- * part the rule is about in [brackets]: the card shows it in colour, so the learner sees the grammar
+ * The right and wrong sentences are written with the part the rule is about in [brackets]: the card shows it in colour, so the learner sees the grammar
  * letters ("read[ing]") and not just a whole sentence. In the wrong sentence the brackets hold the part
  * that is wrong. The sentences of a learner's own story are marked by marks.ts instead.
  *
- * Text only: which sentences show a rule is decided by the matchers (matchers.ts). Keyed by rule id, and
- * the ids never change (they are stored per learner).
+ * Text and prepared sentences only: which sentences of a story show a rule is decided by the matchers
+ * (matchers.ts, matchers-more.ts). The rules added after the first 39 live in teach-a1.ts, teach-a2.ts and
+ * teach-b2.ts, one file per level. Keyed by rule id, and the ids never change (they are stored per learner).
  */
 
-import type { SupportLocale } from "@/lib/i18n/locales";
+import { TEACH_A1 } from "./teach-a1";
+import { TEACH_A2 } from "./teach-a2";
+import { TEACH_B2 } from "./teach-b2";
+import { ITEMS_FIRST_39 } from "./teach-items";
+import { inLocale, lines, type Lines, type RuleNote, type RuleTeach } from "./teach-types";
 
-/** One line in simple English and in each language the site supports. */
-export type Lines = { en: string } & Record<SupportLocale, string>;
+export { inLocale };
+export type { Lines, RuleNote, RuleTeach };
 
-export interface RuleNote {
-  /** "exception": the rule does not apply, or changes. "detail": more to know to use the rule. */
-  kind: "exception" | "detail";
-  say: Lines;
-  /** Sentences that show it, with the part to look at in [brackets]. */
-  examples: readonly string[];
-}
-
-export interface RuleTeach {
-  /** Page one: the rule in a line or two. */
-  idea: Lines;
-  /** The right and the wrong sentence of the ladder, with the part to look at in [brackets]. */
-  right: string;
-  wrong: string;
-  /** Page two: none means the card has one page. */
-  notes: readonly RuleNote[];
-}
-
-const lines = (en: string, ar: string, es: string, tr: string): Lines => ({ en, ar, es, tr });
-
-export const TEACH: Readonly<Record<string, RuleTeach>> = {
+/** The first 39 rules (a1-01 ... a1-24, a2-01 ... a2-08, b2-01 ... b2-07), written before the syllabus grew. */
+const FIRST_39: Readonly<Record<string, RuleTeach>> = {
   // ---------------------------------------------------------------- A1
   "a1-01": {
     idea: lines(
@@ -945,12 +930,20 @@ export const TEACH: Readonly<Record<string, RuleTeach>> = {
   },
 };
 
+/** The first 39 rules with their prepared sentences (teach-items.ts), so every rule has both. */
+const FIRST_39_WITH_ITEMS: Readonly<Record<string, RuleTeach>> = Object.fromEntries(
+  Object.entries(FIRST_39).map(([id, teach]) => [id, { ...teach, items: ITEMS_FIRST_39[id] }]),
+);
+
+/** What every rule of the syllabus teaches, by rule id: the first 39 and the rules of each level added to the syllabus. */
+export const TEACH: Readonly<Record<string, RuleTeach>> = {
+  ...FIRST_39_WITH_ITEMS,
+  ...TEACH_A1,
+  ...TEACH_A2,
+  ...TEACH_B2,
+};
+
 /** What a rule card teaches, by rule id; undefined for an id the ladders do not have. */
 export function teachFor(ruleId: string): RuleTeach | undefined {
   return TEACH[ruleId];
-}
-
-/** A line in the learner's language (Arabic while the language is not chosen yet). */
-export function inLocale(lines: Lines, locale: SupportLocale | null): string {
-  return lines[locale ?? "ar"];
 }

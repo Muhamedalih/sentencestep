@@ -1,3 +1,4 @@
+import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { fetchStoredClips } from "@/lib/sentence-bank/clips";
 import { clipRequestsFor } from "@/lib/sentence-bank/lesson-clips";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -9,12 +10,21 @@ import {
   isMissingRulesSchema,
 } from "@/lib/supabase/queries/learner-rules";
 
-import { ladderForLevel, LEVEL_NUMBER, MAX_WORDS_BY_LEVEL, ruleById } from "./levels";
+import {
+  ALL_RULES,
+  ladderForLevel,
+  LEVEL_NUMBER,
+  MAX_WORDS_BY_LEVEL,
+  ruleById,
+  teachingLevel,
+} from "./levels";
+import { isPreparedId } from "./prepared";
 import {
   isEmptyVisit,
   planPracticeVisit,
   planRedoVisit,
   planRuleVisit,
+  type ItemSpec,
   type PlanInput,
   type RuleVisit,
   type SourceSentence,
@@ -33,7 +43,9 @@ export type LoadedRuleVisit = RuleVisit & { level: number };
 /**
  * The visit for one learner on one day. A story gives the new rule from its own sentences (its level
  * picks the ladder); the daily task gives it from the learner's finished texts at `level`; without either,
- * the visit only asks earlier rules. Null when there is nothing to show, or no ladder at this level.
+ * the visit only asks earlier rules. The ladder is the learner's level, or the next one once they have met every
+ * rule of it (levels.ts, teachingLevel); rules of other levels that they have met are still asked when due.
+ * Null when there is nothing to show, or no ladder at this level.
  */
 export async function loadRuleVisit(args: {
   userId: string;
@@ -57,14 +69,19 @@ export async function loadRuleVisit(args: {
       story.sentences.map((sentence) => ({ id: sentence.id, lessonId: story.id, en: sentence.en })),
     );
   }
-  const ladder = ladderForLevel(level);
-  if (!ladder) return null;
+  if (!ladderForLevel(level)) return null;
 
   const states = await fetchLearnerRuleStates(args.userId).catch((error: unknown) => {
     if (!isMissingRulesSchema(error))
       console.error("[daily-rule] could not read the learner's rules", error);
     return [];
   });
+  const met = new Set(states.map((row) => row.ruleId));
+  level = teachingLevel(level, met);
+  const ladder = ladderForLevel(level);
+  if (!ladder) return null;
+  const inLadder = new Set(ladder.map((rule) => rule.id));
+  const extra = ALL_RULES.filter((rule) => met.has(rule.id) && !inLadder.has(rule.id));
 
   // The earlier-rule questions come from the learner's own finished texts at this level, never from anyone else's.
   const finished = await loadFinishedSentences(args.todayISO, level);
@@ -79,18 +96,19 @@ export async function loadRuleVisit(args: {
     recallPool: finished,
     seed: args.userId,
     ladder,
+    extra,
     maxWords: MAX_WORDS_BY_LEVEL[level],
   };
   // The repeat of the day's session plans what was taught and asked today, and the runner records nothing.
   const visit = args.redo ? planRedoVisit(input) : planRuleVisit(input);
-  return isEmptyVisit(visit) ? null : { ...visit, level };
+  return isEmptyVisit(visit) ? null : { ...(await withPreparedClips(visit)), level };
 }
 
 /**
  * The practice of one rule from the rule library: three sentences of the learner's own finished texts at the
- * rule's level that show it. Null for a rule that is on no ladder, or when the texts do not hold three
- * sentences of it (with a stored recording); the learner's rule rows are not read, since a practice records
- * nothing.
+ * rule's level that show it, or three of the rule's prepared sentences when those texts do not hold three.
+ * Null for a rule that is on no ladder or has neither; the learner's rule rows are not read, since a practice
+ * records nothing.
  */
 export async function loadPracticeVisit(args: {
   userId: string;
@@ -107,7 +125,7 @@ export async function loadPracticeVisit(args: {
     seed: `${args.userId}|${args.todayISO}|${rule.id}`,
     maxWords: MAX_WORDS_BY_LEVEL[level],
   });
-  return visit ? { ...visit, level } : null;
+  return visit ? { ...(await withPreparedClips(visit)), level } : null;
 }
 
 /**
@@ -165,4 +183,42 @@ async function withRecordings(
       out.push({ id: sentence.id, text: sentence.en, audioUrl, ...(voiceId ? { voiceId } : {}) });
   }
   return out;
+}
+
+/**
+ * Gives the prepared sentences of a visit the recording stored for them, when there is one: looked up in the
+ * clip cache under the default pronunciation voice (the voice of the word lists), never made here. A prepared
+ * sentence with no recording keeps none, and its question is silent. One batched read, and only when the visit
+ * has prepared sentences.
+ */
+async function withPreparedClips(visit: RuleVisit): Promise<RuleVisit> {
+  const prepared = [
+    ...visit.recall.map((task) => task.item),
+    ...(visit.learn?.notice ?? []),
+    ...(visit.learn?.items ?? []),
+  ].filter((item) => isPreparedId(item.sentenceId));
+  if (prepared.length === 0) return visit;
+
+  const voiceId = await getDefaultPronunciationVoiceId().catch(() => null);
+  if (!voiceId) return visit;
+  const clips = await fetchStoredClips(
+    prepared.map((item) => ({ key: item.sentenceId, text: item.text, voiceId })),
+  ).catch(() => new Map<string, string>());
+  if (clips.size === 0) return visit;
+
+  const sound = (item: ItemSpec): ItemSpec => {
+    const audioUrl = clips.get(item.sentenceId);
+    return audioUrl ? { ...item, audioUrl, voiceId } : item;
+  };
+  return {
+    ...visit,
+    recall: visit.recall.map((task) => ({ ...task, item: sound(task.item) })),
+    learn: visit.learn
+      ? {
+          ...visit.learn,
+          notice: visit.learn.notice.map(sound),
+          items: visit.learn.items.map(sound),
+        }
+      : null,
+  };
 }
