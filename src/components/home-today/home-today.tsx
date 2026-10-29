@@ -43,8 +43,8 @@ async function TopBarSlot({ stream, ...props }: TopBarProps & { stream: HomeEnga
 
 /**
  * The optional rule-of-the-day row on Home (the dailyRule permission, admins until it is opened): shown to
- * a learner whose level has a ladder, linked until today's rule is answered. It is not one of the three
- * tasks, so the ring and the day's reward do not count it.
+ * a learner whose level has a ladder, as the last row of Today's box, linked until today's rule is
+ * answered. It is not one of the three tasks, so the ring and the day's reward do not count it.
  */
 async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
   if (!open) return undefined;
@@ -97,6 +97,7 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
         payload={payload}
         test={state === "hidden" ? undefined : { state, quest: test }}
         ruleRow={ruleRow}
+        cover={features.rollouts.todayCover}
       />
     </>
   );

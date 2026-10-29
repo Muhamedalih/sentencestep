@@ -23,6 +23,7 @@ export const ROLLOUT_IDS = [
   "libraryGift",
   "mobilePath",
   "hybridOffers",
+  "todayCover",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -185,12 +186,23 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Rule of the day (“قاعدة اليوم”)",
     description:
-      "After Today's story, one short English grammar rule for beginners (A1), taught from that story: the form in two of its sentences, the rule in plain English with the exception learners trip on, then three sentences to type, each with its recording. A rule comes back the day after as the first question, and is held after three clean answers on three different days. Earlier rules come back as questions from the texts the learner has finished, a few at a time, never more than two on one day.",
+      "One short English grammar rule a day, at the learner's level (A1 to B2): the rule's name and the rule in plain English first, then its examples, then the exception learners trip on, then three sentences to type, each with its recording. It is the last row of Today's list, after the words, and a finished story can offer it too. A rule comes back the day after as the last question of Today, and is held after three clean answers on three different days. Earlier rules come back as questions from the texts the learner has finished, a few at a time, never more than two on one day.",
     notes: [
-      "Needs Today's session to be open for the same people: the rule is reached from Today's story and from Today's carry-on, so it stays closed while Today is closed.",
+      "Needs Today's session to be open for the same people: the rule is reached from Today's list and from Today's carry-on, so it stays closed while Today is closed.",
       "Needs the learner_rules table (migration 20250351000000, applied by pasting the SQL). Until it exists the card still teaches, nothing is recorded and nothing is asked back.",
-      "Only stories at level 1 carry the rule, and only sentences with a stored recording are asked: a sentence without one is never asked, and the browser's voice is never used.",
-      "Today's tasks, the words step and the finish screens are unchanged: the card is one optional step after the story, and it never blocks the three tasks.",
+      "Only sentences with a stored recording are asked: a sentence without one is never asked, and the browser's voice is never used.",
+      "Today's three tasks and the finish screen are unchanged: the rule is one optional row after the words (or one optional card after a story), and it never blocks the three tasks.",
+    ],
+  },
+  todayCover: {
+    id: "todayCover",
+    audience: "learner",
+    title: "Today: the passage as a poster",
+    description:
+      "The listening task, the first of Today's tasks, is drawn with its passage's poster at its left (the colours and the picture the Passages list shows) instead of the headphones.",
+    notes: [
+      "Needs Today's session to be open for the same people, and stays closed while Today's session is closed.",
+      "Only the picture changes: the task, its passage, its XP and its place in the list are the same.",
     ],
   },
   mobilePath: {

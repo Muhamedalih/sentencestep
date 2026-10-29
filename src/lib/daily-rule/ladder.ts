@@ -88,6 +88,8 @@ export interface RuleSpec {
   rule: string;
   /** The same rule in Arabic, for Arabic speakers. */
   gloss: string;
+  /** The words the rule names (the verbs a verb pattern takes), shown in a row of their own; absent when it names none. */
+  words?: readonly string[];
   right: string;
   wrong: string;
   /** The exception learners trip on, in English. */
@@ -149,7 +151,8 @@ export const A1_LADDER: readonly RuleSpec[] = [
     gloss: "مع he وshe وit نضيف -s للفعل في المضارع.",
     right: "She works here.",
     wrong: "She work here.",
-    exception: "Verbs ending in o, s, sh, ch or x add -es (goes, watches). Consonant + y becomes -ies (study, studies).",
+    exception:
+      "Verbs ending in o, s, sh, ch or x add -es (goes, watches). Consonant + y becomes -ies (study, studies).",
     exceptionGloss: "المنتهي بـ o أو s أو sh أو ch أو x يأخذ es، والمنتهي بساكن + y يصير ies.",
   },
   {
@@ -174,7 +177,8 @@ export const A1_LADDER: readonly RuleSpec[] = [
     family: "determiner",
     match: "this-that",
     rule: "This and that are for one thing, these and those for more than one. This and these are near; that and those are far.",
-    gloss: "this وthat للشيء الواحد، وthese وthose للأكثر. this وthese قريبان، وthat وthose بعيدان.",
+    gloss:
+      "this وthat للشيء الواحد، وthese وthose للأكثر. this وthese قريبان، وthat وthose بعيدان.",
     right: "These shoes are new.",
     wrong: "This shoes are new.",
     exception: "Alone they are pronouns: This is my pen. These are mine.",
@@ -233,7 +237,8 @@ export const A1_LADDER: readonly RuleSpec[] = [
     gloss: "نضيف -s لأغلب الأسماء بعد two وthree وsome وmany.",
     right: "Two cars are here.",
     wrong: "Two car are here.",
-    exception: "Some plurals change: child becomes children, man becomes men, person becomes people.",
+    exception:
+      "Some plurals change: child becomes children, man becomes men, person becomes people.",
     exceptionGloss: "بعض الجموع تتغير: child تصير children، و man تصير men.",
   },
   {
@@ -275,7 +280,8 @@ export const A1_LADDER: readonly RuleSpec[] = [
     gloss: "لأغلب الأفعال نضيف -ed لفعل انتهى في الماضي: I worked yesterday.",
     right: "I worked yesterday.",
     wrong: "I work yesterday.",
-    exception: "A verb that ends in e adds only -d (like, liked). Consonant + y becomes -ied (study, studied).",
+    exception:
+      "A verb that ends in e adds only -d (like, liked). Consonant + y becomes -ied (study, studied).",
     exceptionGloss: "المنتهي بـ e يأخذ d فقط، والمنتهي بساكن + y يصير ied.",
   },
   {

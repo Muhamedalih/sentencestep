@@ -22,7 +22,8 @@ export const A2_LADDER: readonly RuleSpec[] = [
     right: "She is working now.",
     wrong: "She is work now.",
     exception: "Some verbs do not take -ing for now: I know it, not I am knowing it.",
-    exceptionGloss: "بعض الأفعال لا تأخذ -ing للحاضر، مثل know وlike وwant: I know it، لا I am knowing it.",
+    exceptionGloss:
+      "بعض الأفعال لا تأخذ -ing للحاضر، مثل know وlike وwant: I know it، لا I am knowing it.",
   },
   {
     id: "a2-02",
@@ -35,7 +36,8 @@ export const A2_LADDER: readonly RuleSpec[] = [
     gloss: "للفعل الذي كان مستمراً في الماضي نستعمل was أو were مع -ing.",
     right: "I was reading when you called.",
     wrong: "I was read when you called.",
-    exception: "For a short action that is finished, use the simple past: I read the message at nine.",
+    exception:
+      "For a short action that is finished, use the simple past: I read the message at nine.",
     exceptionGloss: "للفعل القصير المنتهي نستعمل الماضي البسيط: I read the message at nine.",
   },
   {
@@ -46,7 +48,8 @@ export const A2_LADDER: readonly RuleSpec[] = [
     family: "perfect",
     match: "present-perfect",
     rule: "For an experience in life, or something that started in the past and still matters now, use have or has with the past participle: I have never been to Japan.",
-    gloss: "للتجربة في الحياة، أو لشيء بدأ في الماضي ومازال مهماً الآن، نستعمل have أو has مع التصريف الثالث.",
+    gloss:
+      "للتجربة في الحياة، أو لشيء بدأ في الماضي ومازال مهماً الآن، نستعمل have أو has مع التصريف الثالث.",
     right: "I have never been to Japan.",
     wrong: "I have never go to Japan.",
     exception: "When a finished time is given, use the simple past: I went to Japan in 2019.",
@@ -105,7 +108,8 @@ export const A2_LADDER: readonly RuleSpec[] = [
     gloss: "للاحتمال الحقيقي في المستقبل: if مع المضارع، ثم will مع الفعل.",
     right: "If it rains, we will stay home.",
     wrong: "If it will rain, we stay home.",
-    exception: "In the if-part we use the present, even for the future: if it rains, not if it will rain.",
+    exception:
+      "In the if-part we use the present, even for the future: if it rains, not if it will rain.",
     exceptionGloss: "في جملة if نستعمل المضارع حتى لو كان الحدث في المستقبل.",
   },
   {
@@ -116,7 +120,8 @@ export const A2_LADDER: readonly RuleSpec[] = [
     family: "quantity",
     match: "much-many",
     rule: "Use many with countable nouns (people, cars) and much with uncountable nouns (water, money): There are many cars here. There is much water here.",
-    gloss: "نستعمل many مع الأسماء المعدودة مثل people وcars، و much مع الأسماء غير المعدودة مثل water وmoney.",
+    gloss:
+      "نستعمل many مع الأسماء المعدودة مثل people وcars، و much مع الأسماء غير المعدودة مثل water وmoney.",
     right: "There are many cars here.",
     wrong: "There are much cars here.",
     exception: "A lot of works with both: a lot of cars, a lot of water.",
@@ -133,7 +138,8 @@ export const B2_LADDER: readonly RuleSpec[] = [
     family: "conditional",
     match: "second-conditional",
     rule: "For an unreal or unlikely situation now or later, use if with the past simple, and would with the verb: If I had more time, I would learn Spanish.",
-    gloss: "للموقف غير الواقعي أو غير المرجح الآن أو لاحقاً: if مع الماضي البسيط، ثم would مع الفعل.",
+    gloss:
+      "للموقف غير الواقعي أو غير المرجح الآن أو لاحقاً: if مع الماضي البسيط، ثم would مع الفعل.",
     right: "If I had more time, I would travel.",
     wrong: "If I would have more time, I travel.",
     exception: "After I, he, she or it, many speakers say were: If I were you, I would wait.",
@@ -150,8 +156,10 @@ export const B2_LADDER: readonly RuleSpec[] = [
     gloss: "للفعل الذي بدأ في الماضي ومازال مستمراً، أو توقف للتو: have been مع -ing.",
     right: "I have been waiting for an hour.",
     wrong: "I have been wait for an hour.",
-    exception: "With state verbs (know, like, live) use the simple form: I have known him for years.",
-    exceptionGloss: "مع أفعال الحالة مثل know وlike وlive نستعمل الصيغة البسيطة: I have known him for years.",
+    exception:
+      "With state verbs (know, like, live) use the simple form: I have known him for years.",
+    exceptionGloss:
+      "مع أفعال الحالة مثل know وlike وlive نستعمل الصيغة البسيطة: I have known him for years.",
   },
   {
     id: "b2-03",
@@ -164,8 +172,10 @@ export const B2_LADDER: readonly RuleSpec[] = [
     gloss: "نستعمل had مع التصريف الثالث لحدث انتهى قبل حدث آخر في الماضي.",
     right: "When I arrived, the film had already started.",
     wrong: "When I arrived, the film had start.",
-    exception: "When the order is clear from the words around it, the simple past is enough: I ate after I finished work.",
-    exceptionGloss: "إذا كان الترتيب واضحاً من الكلمات حولها يكفي الماضي البسيط: I ate after I finished work.",
+    exception:
+      "When the order is clear from the words around it, the simple past is enough: I ate after I finished work.",
+    exceptionGloss:
+      "إذا كان الترتيب واضحاً من الكلمات حولها يكفي الماضي البسيط: I ate after I finished work.",
   },
   {
     id: "b2-04",
@@ -175,7 +185,8 @@ export const B2_LADDER: readonly RuleSpec[] = [
     family: "passive",
     match: "passive",
     rule: "Use be with the past participle when the action matters more than who does it: The bridge was built in 1932.",
-    gloss: "نستعمل be مع التصريف الثالث حين يهمنا الفعل أكثر من فاعله: The bridge was built in 1932.",
+    gloss:
+      "نستعمل be مع التصريف الثالث حين يهمنا الفعل أكثر من فاعله: The bridge was built in 1932.",
     right: "The bridge was built in 1932.",
     wrong: "The bridge was build in 1932.",
     exception: "Add by only when the doer matters: The novel was written by a famous writer.",
@@ -216,8 +227,9 @@ export const B2_LADDER: readonly RuleSpec[] = [
     title: "verb + -ing",
     family: "verb-pattern",
     match: "gerund-after",
-    rule: "Some verbs are followed by the -ing form, not to: enjoy, avoid, finish, mind, suggest, consider: I enjoy reading in the evening.",
-    gloss: "بعض الأفعال تأتي بعدها صيغة -ing لا to: enjoy وavoid وfinish وmind وsuggest وconsider.",
+    rule: "Some verbs are followed by the -ing form, not to:",
+    gloss: "بعض الأفعال تأتي بعدها صيغة -ing لا to:",
+    words: ["enjoy", "avoid", "finish", "mind", "suggest", "consider", "keep", "practice"],
     right: "I enjoy reading in the evening.",
     wrong: "I enjoy to read in the evening.",
     exception: "After want, decide, hope and plan, use to: I decided to leave.",

@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, RotateCcw } from "lucide-react";
+import { Check, Lightbulb, RotateCcw } from "lucide-react";
 
+import { PosterPicture } from "@/components/passages/poster-picture";
 import { fill, withXp } from "@/components/home-today/format";
 import { TASK_ICONS, TaskIcon } from "@/components/home-today/task-icon";
 import { LockedTestCard, TestYourselfCard } from "@/components/home-today/test-card";
 import { useLocale } from "@/components/providers/locale-provider";
 import { todayTaskTitle } from "@/components/today/today-tasks";
 import { ruleStrings } from "@/lib/daily-rule/strings";
-import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
+import type { DailyQuest, DailyQuestsPayload, TodayPoster } from "@/lib/features/quests";
+import { posterArtFor } from "@/lib/passages/art";
 import { splitToday, todayRedoHref, todayTotals } from "@/lib/today/home-layout";
 import { cn } from "@/lib/utils";
 
@@ -22,42 +24,78 @@ export interface RuleRowState {
 }
 
 /**
- * The rule of the day as the first row of Home's box (the dailyRule permission): a quiet row, not one of
- * the three tasks, so it is outside the ring and the day's reward. Linked until today's rule is answered.
+ * The rule of the day as the last row of Home's box (the dailyRule permission), after the three tasks:
+ * the day ends with the rules, so the row's title is that phrase. It is drawn like the tasks, with the
+ * same icon, title and meta line (the rule, its level and its minutes). It is not one of the three tasks,
+ * so the ring and the day's reward do not count it. Once the three are done it is the step in progress:
+ * lifted, with the solid button. Linked until today's rule is answered, then a quiet "done today" line.
  */
-function RuleRow({ href, levelLabel, answeredToday }: RuleRowState) {
+function RuleRow({
+  href,
+  levelLabel,
+  answeredToday,
+  inProgress,
+}: RuleRowState & { inProgress: boolean }) {
   const { locale } = useLocale();
   const rule = ruleStrings(locale);
+  const lifted = inProgress && !answeredToday;
   const body = (
-    <>
+    <div className="roomy:gap-4 flex items-start gap-3">
       <span
-        aria-hidden="true"
         className={cn(
-          "size-2.5 shrink-0 rounded-full border",
-          answeredToday ? "bg-primary border-primary" : "border-muted-foreground",
+          "roomy:size-10 mt-px grid size-8 shrink-0 place-items-center",
+          answeredToday ? "text-success" : lifted ? "text-primary" : "text-muted-foreground",
         )}
-      />
+        aria-hidden="true"
+      >
+        {answeredToday ? (
+          <Check className="roomy:size-6 size-5" strokeWidth={2} />
+        ) : (
+          <Lightbulb className="roomy:size-6 size-5" strokeWidth={1.8} />
+        )}
+      </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <span dir="auto">{rule.title}</span>
-          <span className="text-primary border-primary/40 rounded-full border px-2 text-[11px] font-medium">
-            <span dir="ltr">{levelLabel}</span>
+        <p
+          className={cn(
+            "roomy:text-base text-sm font-semibold",
+            answeredToday && "text-muted-foreground",
+          )}
+        >
+          <span dir="auto">{rule.endDay}</span>
+        </p>
+        <p className="text-muted-foreground roomy:mt-0.5 roomy:gap-x-3 roomy:text-sm mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px]">
+          <span className={cn("font-medium", !answeredToday && "text-foreground")} dir="auto">
+            {rule.title}
           </span>
-        </div>
-        <div className="text-muted-foreground text-xs">
+          <span className="text-muted-foreground/80" dir="ltr">
+            {levelLabel}
+          </span>
           <span dir="auto">{answeredToday ? rule.doneToday : rule.buttonHint}</span>
-        </div>
+        </p>
+        {lifted && (
+          <span className="bg-primary text-primary-foreground roomy:mt-[clamp(0.4rem,1.2svh,0.85rem)] roomy:h-[clamp(2.25rem,5svh,2.75rem)] roomy:px-8 roomy:text-base mt-3 inline-flex h-11 items-center justify-center rounded-[10px] px-6 text-sm font-semibold max-sm:w-full">
+            <span dir="auto">{rule.startRule}</span>
+          </span>
+        )}
       </div>
-    </>
+    </div>
   );
   return (
     <li>
       {href ? (
-        <Link href={href} className="hover:bg-muted flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors">
+        <Link
+          href={href}
+          className={cn(
+            "focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
+            lifted ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50",
+          )}
+        >
           {body}
         </Link>
       ) : (
-        <div className="flex items-center gap-3 px-3 py-2.5">{body}</div>
+        <div className="roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] px-3.5 py-3">
+          {body}
+        </div>
       )}
     </li>
   );
@@ -79,6 +117,27 @@ function Ring({ done, total }: { done: number; total: number }) {
         <span dir="ltr">
           {done}/{total}
         </span>
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The passage's poster in miniature, in place of the headphones on the listening task: the same colours
+ * and picture as the Passages list, so the first thing of the day looks like the passages a learner
+ * already knows. Its number sits small at the bottom, as on the poster.
+ */
+function PassageCover({ poster }: { poster: TodayPoster }) {
+  const art = posterArtFor(poster.tone, poster.order);
+  return (
+    <span
+      className="roomy:w-12 relative block aspect-[3/4] w-10 shrink-0 overflow-hidden rounded-md"
+      style={{ backgroundImage: art.backgroundImage }}
+      aria-hidden="true"
+    >
+      <PosterPicture src={poster.posterUrl} />
+      <span className="absolute start-1 bottom-0.5 text-[9px] font-semibold tracking-wider text-white/80 tabular-nums">
+        {String(poster.order).padStart(2, "0")}
       </span>
     </span>
   );
@@ -122,7 +181,16 @@ function TypingHint() {
 }
 
 /** One task: a quiet row without a frame of its own — only the one in progress is lifted and carries the button. */
-function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
+function TaskRow({
+  quest,
+  current,
+  cover,
+}: {
+  quest: DailyQuest;
+  current: boolean;
+  /** The passage's poster stands in for the headphones on the listening task (the todayCover permission). */
+  cover: boolean;
+}) {
   const { t } = useLocale();
   const copy = t.today;
   const info = quest.today;
@@ -144,6 +212,7 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
       : null;
   const supportTitle = current && !done ? info.supportTitle : null;
   const hasMeta = Boolean(info.title || supportTitle || info.levelCode || !done || accuracyLine);
+  const poster = cover && !done && info.kind === "listen" && info.poster ? info.poster : null;
   return (
     <li>
       <Link
@@ -155,21 +224,25 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
         )}
       >
         <div className="roomy:gap-4 flex items-start gap-3">
-          <span
-            className={cn(
-              "roomy:size-10 mt-px grid size-8 shrink-0 place-items-center",
-              done ? "text-success" : current ? "text-primary" : "text-muted-foreground",
-            )}
-            aria-hidden="true"
-          >
-            {done ? (
-              <Check className="roomy:size-6 size-5" strokeWidth={2} />
-            ) : current ? (
-              <TaskIcon kind={info.kind} />
-            ) : (
-              <Icon className="roomy:size-6 size-5" strokeWidth={1.8} />
-            )}
-          </span>
+          {poster ? (
+            <PassageCover poster={poster} />
+          ) : (
+            <span
+              className={cn(
+                "roomy:size-10 mt-px grid size-8 shrink-0 place-items-center",
+                done ? "text-success" : current ? "text-primary" : "text-muted-foreground",
+              )}
+              aria-hidden="true"
+            >
+              {done ? (
+                <Check className="roomy:size-6 size-5" strokeWidth={2} />
+              ) : current ? (
+                <TaskIcon kind={info.kind} />
+              ) : (
+                <Icon className="roomy:size-6 size-5" strokeWidth={1.8} />
+              )}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-3">
               <p
@@ -236,15 +309,16 @@ function TaskRow({ quest, current }: { quest: DailyQuest; current: boolean }) {
 /**
  * Today's tasks on the new Home page: the ring and the reward in the heading, the three tasks as
  * quiet rows (the one in progress lifted, with the only solid button of the page), once the day is
- * done a calm line with "Redo today's lessons", and at the foot the day's self-test card — locked
- * (slightly blurred) until the three tasks are done, then open (`test`, see testCardState). The
- * weekly test is the card under the boxes (WeeklyLineView).
+ * done a calm line with "Redo today's lessons", the rule of the day after the tasks (`ruleRow`), and at
+ * the foot the day's self-test card — locked (slightly blurred) until the three tasks are done, then
+ * open (`test`, see testCardState). The weekly test is the card under the boxes (WeeklyLineView).
  */
 export function TodayBox({
   payload,
   test,
   className,
   ruleRow,
+  cover = false,
 }: {
   payload: DailyQuestsPayload;
   /** What the self-test card at the foot shows; none when the day has no test for this learner. */
@@ -252,6 +326,8 @@ export function TodayBox({
   className?: string;
   /** The optional rule-of-the-day row (dailyRule permission): absent when the permission is closed. */
   ruleRow?: RuleRowState;
+  /** The listening task is drawn with its passage's poster (todayCover permission). */
+  cover?: boolean;
 }) {
   const { t } = useLocale();
   const copy = t.today;
@@ -292,10 +368,15 @@ export function TodayBox({
         <Ring done={totals.done} total={totals.total} />
       </header>
       <ul className="roomy:gap-[clamp(0.1rem,0.45svh,0.4rem)] flex flex-1 flex-col gap-1">
-        {ruleRow && <RuleRow {...ruleRow} />}
         {tasks.map((quest) => (
-          <TaskRow key={quest.slot} quest={quest} current={quest.slot === current?.slot} />
+          <TaskRow
+            key={quest.slot}
+            quest={quest}
+            current={quest.slot === current?.slot}
+            cover={cover}
+          />
         ))}
+        {ruleRow && <RuleRow {...ruleRow} inProgress={current === undefined} />}
       </ul>
       {payload.allDone && (
         <div className="border-border/60 roomy:mt-[clamp(0.4rem,1.4svh,1rem)] roomy:px-2 roomy:pt-[clamp(0.4rem,1.4svh,1rem)] mt-3 flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3">

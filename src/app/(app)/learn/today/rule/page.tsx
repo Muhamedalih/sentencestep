@@ -23,17 +23,21 @@ export const metadata: Metadata = { title: "Today's session" };
  *   comes from that story, and an earlier rule that is due may be asked too. Then on to the words step.
  * - `daily=1`: the optional row on Home. The new rule comes from the learner's own finished texts at
  *   their level, and an earlier rule that is due may be asked too. Then back to Home.
- * - `recall=1`: from the start of Today, when a rule is due and nothing was asked today yet. Only the
- *   earlier-rule question(s), then on to the next Today step.
+ * - `recall=1`: from the end of Today, after the last step, when a rule is due and nothing was asked today
+ *   yet. Only the earlier-rule question(s), then on to the finish screen.
  * Nothing to show (no ladder at this level, a story with no usable text, nothing due), or the permission
- * closed, or signed out: straight on to the next step instead of an empty card.
+ * closed, or signed out: straight on to where the card would have gone, instead of an empty card.
  */
 export default async function TodayRulePage({
   searchParams,
 }: {
   searchParams: Promise<{ from?: string; recall?: string; daily?: string }>;
 }) {
-  const [features, user, locale] = await Promise.all([getEffectiveFeatures(), getCurrentUser(), getLocale()]);
+  const [features, user, locale] = await Promise.all([
+    getEffectiveFeatures(),
+    getCurrentUser(),
+    getLocale(),
+  ]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
   const { from, recall, daily } = await searchParams;
@@ -47,7 +51,7 @@ export default async function TodayRulePage({
     ? "/learn/today/go?step=words"
     : dailyMode
       ? "/learn"
-      : "/learn/today/go?step=listen&rule=skip";
+      : "/learn/today/end";
 
   const visit = await loadRuleVisit({
     userId: user.id,
