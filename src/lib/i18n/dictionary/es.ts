@@ -579,6 +579,8 @@ export const es: Dictionary = {
     sentencesUnit: "oraciones",
     wordReadyToReview: "palabra lista para repasar",
     wordsReadyToReview: "palabras listas para repasar",
+    reviewVisitNow: "Repasa {n} palabras ahora",
+    reviewVisitOf: "de {total} listas",
     vocabularyHeading: "Palabras de esta lección",
     newWordTag: "Nuevo",
     practiceWord: "Practicar",

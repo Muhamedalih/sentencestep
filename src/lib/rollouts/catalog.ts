@@ -25,6 +25,7 @@ export const ROLLOUT_IDS = [
   "hybridOffers",
   "todayCover",
   "todayRepeat",
+  "homePolish",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -217,6 +218,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs Today's session to be open for the same people, and stays closed while Today's session is closed.",
       "Only the buttons and the motion change: the tasks, their order, their XP and what each one opens stay the same.",
       "A learner who asked for reduced motion gets the buttons without the lift, the press and the turn of the icon.",
+    ],
+  },
+  homePolish: {
+    id: "homePolish",
+    audience: "learner",
+    title: "Home: big totals, one accent colour, one clear step",
+    description:
+      "Four small changes to the new Home page and the header. The three totals (words, lines, sessions) leave the small grey line under the name and sit in the empty middle of the top row as big numbers with their label under each (from xl up, 1280 px; below it the small line stays). The goal ring round the avatar, the saved-sentences bookmark in the header and its count badge change from amber to the site's own indigo, so the page has one accent colour (the streak flames stay orange). Once the day's three tasks are done, the self-test card carries the page's one solid button instead of an outline one. And where one short review visit holds fewer words than are waiting, the review button says what the visit is (“Review 12 words now”) with the number waiting beside it.",
+    notes: [
+      "Needs Today's session to be open for the same people, and stays closed while Today's session is closed: the changes belong to the new Home page, and the header colours follow the same switch.",
+      "Only looks and the review button's wording change: the same pages open, with the same words, tasks and XP.",
+      "The review wording appears only where Smart word practice caps a visit (12 words); without it the button keeps saying how many words are ready.",
     ],
   },
   mobilePath: {

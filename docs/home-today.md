@@ -145,3 +145,14 @@ weekly test card keeps its place. The current Home is unchanged (it draws the us
 
 `/learn/today/end` is for sessions that happened: with no story or passage finished today and no words
 round just typed (the words step adds `?words=1`) it goes home instead of recording the day.
+
+## Home polish (2026-10-30)
+
+Permission **`homePolish`** ("Home: big totals, one accent colour, one clear step"; Admins only by default, closed whenever `todaySession` is closed). It came out of a side-by-side of this Home with another learning site's Home: ours was the clearer, calmer one, but its three totals were the smallest text on the page, three places still used the amber accent, and once the day was done nothing on it was the one solid next step. Four changes, all behind this one switch:
+
+- **The totals as numbers** (`top-bar.tsx`): from `xl` up (1280 px; below it the small line stays, so the row never wraps) the three totals (words, lines, sessions) leave the small grey line under the name and sit in the empty middle of the top row: number 22px bold, label 12.5px muted, 40px between them, 66px after the name. The row is 54px tall instead of 66px (measured at 1534 wide). `mobilePath` still hides the small line below `md`.
+- **One accent colour**: the goal ring round the avatar (`InitialsAvatar` `ringTone="primary"`), the saved-sentences bookmark in the header and its count badge (`app-header.tsx`, every page under /learn) use the site's brand colour instead of the amber accent; the bookmark is a grey outline, the badge indigo. The streak flames stay orange.
+- **One clear step** (`test-card.tsx`): the open self-test card (all three tasks done, test not taken yet) carries the page's one solid button (`bg-primary`); the locked card, the retake button and the done card keep the outline.
+- **The review button names the visit** (`ReviewPill`, `reviewVisitSize` in `src/lib/today/home-layout.ts`): where Smart word practice caps a visit (`REVIEW_SESSION_WORDS`, 12) and more words wait than that, the button reads "Review 12 words now | of 160 ready" (`lesson.reviewVisitNow`, `lesson.reviewVisitOf`, four locales); otherwise it keeps the chip with the count. It opens the same page with the same words.
+
+Checked with a throwaway fixture page (the real top bar, review button, self-test card and header, with the permission off and on): computed colours, sizes and the 1280 / 1534 / 1100 px behaviour as above.

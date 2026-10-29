@@ -189,6 +189,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     hybridOffers: false,
     todayCover: false,
     todayRepeat: false,
+    homePolish: false,
   });
 });
 
@@ -244,6 +245,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       honestTicks: true,
       todayCover: true,
       todayRepeat: true,
+      homePolish: true,
     },
     {
       ...before,
@@ -255,6 +257,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       honestTicks: true,
       todayCover: true,
       todayRepeat: true,
+      homePolish: true,
     },
   );
   assert.equal(before.sentenceBank, true);
@@ -269,6 +272,16 @@ test("the passage cover lives inside Today's tasks: it is never open without Tod
   assert.equal(withRolloutDependencies({ ...open, todaySession: false }).todayCover, false);
   assert.equal(
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).todayCover,
+    false,
+  );
+});
+
+test("the Home polish lives inside the new Home: Admins only, and never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).homePolish, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).homePolish, false);
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).homePolish,
     false,
   );
 });

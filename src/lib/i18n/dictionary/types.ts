@@ -652,6 +652,10 @@ export interface Dictionary {
     sentencesUnit: string;
     wordReadyToReview: string;
     wordsReadyToReview: string;
+    /** Home's review button when one short visit holds fewer words than wait (the Home polish permission): "Review {n} words now". */
+    reviewVisitNow: string;
+    /** The number waiting, beside it: "of {total} ready". */
+    reviewVisitOf: string;
     vocabularyHeading: string;
     /** Small tag on each word card in the lesson-completion screen's promoted vocabulary section (see lesson-completion.tsx) — marks a word as newly learned this lesson. */
     newWordTag: string;

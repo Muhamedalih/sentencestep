@@ -67,6 +67,8 @@ export function AppHeader({
 }) {
   const { t } = useLocale();
   const features = useFeatures();
+  // The Home polish permission: the saved-items bookmark and its badge use the brand colour, not the amber accent.
+  const polish = features.rollouts.homePolish;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -111,7 +113,7 @@ export function AppHeader({
               <Bookmark
                 className={cn(
                   "size-4",
-                  savedCount ? "fill-accent text-accent" : "text-muted-foreground",
+                  savedCount && !polish ? "fill-accent text-accent" : "text-muted-foreground",
                 )}
                 aria-hidden="true"
               />
@@ -119,7 +121,10 @@ export function AppHeader({
           </Button>
           {Boolean(savedCount) && (
             <span
-              className="bg-accent text-accent-foreground ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2"
+              className={cn(
+                "ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2",
+                polish ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground",
+              )}
               aria-hidden="true"
             >
               {savedCount! > 9 ? "9+" : savedCount}

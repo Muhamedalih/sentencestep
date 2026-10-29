@@ -7,12 +7,15 @@ import { ChevronDown, Flame, RotateCcw, Snowflake } from "lucide-react";
 import type { LessonStatsMap } from "@/components/app/home-hero";
 import { InitialsAvatar } from "@/components/app/initials-avatar";
 import { StreakStrip } from "@/components/app/streak-strip";
+import { fill } from "@/components/home-today/format";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import type { StreakCalendarData } from "@/lib/features/calendar-actions";
 import { addDays } from "@/lib/features/streak-freeze";
 import { isDailyGoalMet } from "@/lib/progress/daily-goal";
 import type { CurrentUser } from "@/lib/supabase/auth";
+import { reviewVisitSize } from "@/lib/today/home-layout";
 import { cn } from "@/lib/utils";
 
 /** The last seven days as dots: practised, forgiven, covered by a freeze, or still to do (today dashed). */
@@ -40,8 +43,12 @@ function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }
   );
 }
 
-/** The small button for the words waiting to be reviewed: where Home still says so (the review itself is in Word Lists). */
-function ReviewPill({ count }: { count: number }) {
+/**
+ * The small button for the words waiting to be reviewed: where Home still says so (the review itself is in Word
+ * Lists). With `visit` (the Home polish permission, when one short visit holds fewer words than wait) it names
+ * the visit first and shows how many wait beside it.
+ */
+function ReviewPill({ count, visit }: { count: number; visit: number | null }) {
   const { t } = useLocale();
   return (
     <Link
@@ -49,15 +56,29 @@ function ReviewPill({ count }: { count: number }) {
       className="border-border bg-card hover:bg-muted/50 focus-visible:ring-ring inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 pointer-coarse:h-11"
     >
       <RotateCcw className="text-primary size-4" aria-hidden="true" strokeWidth={1.8} />
-      <span
-        className="bg-primary/15 text-primary rounded-full px-2 text-xs font-semibold tabular-nums"
-        dir="ltr"
-      >
-        {count}
-      </span>
-      <span dir="auto">
-        {count === 1 ? t.lesson.wordReadyToReview : t.lesson.wordsReadyToReview}
-      </span>
+      {visit === null ? (
+        <>
+          <span
+            className="bg-primary/15 text-primary rounded-full px-2 text-xs font-semibold tabular-nums"
+            dir="ltr"
+          >
+            {count}
+          </span>
+          <span dir="auto">
+            {count === 1 ? t.lesson.wordReadyToReview : t.lesson.wordsReadyToReview}
+          </span>
+        </>
+      ) : (
+        <>
+          <span dir="auto">{fill(t.lesson.reviewVisitNow, { n: visit })}</span>
+          <span
+            className="text-muted-foreground border-border border-s ps-2 font-normal"
+            dir="auto"
+          >
+            {fill(t.lesson.reviewVisitOf, { total: count })}
+          </span>
+        </>
+      )}
     </Link>
   );
 }
@@ -69,6 +90,8 @@ function ReviewPill({ count }: { count: number }) {
  * Home — the same one, with its freezes and the month — so nothing is lost by it leaving the top
  * of the page. The totals come from the progress and the lessons Home already holds; the streak
  * arrives with the page (null when the feature is not open: the week is simply not drawn).
+ * With the Home polish permission (homePolish) the three totals are big numbers in the middle of the row from
+ * xl up, the goal ring is the site's brand colour, and the review button names its short visit.
  */
 export function HomeTopBar({
   user,
@@ -96,6 +119,12 @@ export function HomeTopBar({
   const { isLoaded, completions, dailyProgress } = useSharedProgress();
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const { rollouts, smartWords } = useFeatures();
+  const polish = rollouts.homePolish;
+  // One review visit holds a few words when Smart word practice caps it: the button then names the visit.
+  const visit = polish
+    ? reviewVisitSize(reviewCount, smartWords.enabled && smartWords.spaced)
+    : null;
 
   const ringPercent =
     dailyProgress.goal > 0
@@ -131,6 +160,7 @@ export function HomeTopBar({
               email={user.email}
               className="size-12 text-lg"
               ringPercent={isDailyGoalMet(dailyProgress) ? 100 : ringPercent}
+              ringTone={polish ? "primary" : "accent"}
             />
           ) : (
             <span className="bg-muted size-12 animate-pulse rounded-full" aria-hidden="true" />
@@ -152,6 +182,7 @@ export function HomeTopBar({
                 className={cn(
                   "text-muted-foreground mt-0.5 flex flex-wrap gap-x-3.5 text-xs",
                   mobilePath && "max-md:hidden",
+                  polish && "xl:hidden",
                 )}
               >
                 {items.map(([label, value]) => (
@@ -165,10 +196,25 @@ export function HomeTopBar({
               </span>
             )}
           </div>
+          {isLoaded && polish && (
+            <div className="ms-[52px] hidden items-center gap-10 xl:flex">
+              {items.map(([label, value]) => (
+                <span key={label} className="flex flex-col gap-px">
+                  <b
+                    className="text-foreground text-[22px] leading-[1.15] font-bold tabular-nums"
+                    dir="ltr"
+                  >
+                    {value}
+                  </b>
+                  <span className="text-muted-foreground text-[12.5px]">{label}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
-          {reviewCount > 0 && <ReviewPill count={reviewCount} />}
+          {reviewCount > 0 && <ReviewPill count={reviewCount} visit={visit} />}
           {streak && (
             <button
               type="button"

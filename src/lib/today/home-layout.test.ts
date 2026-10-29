@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 
 import type { QuestType } from "@/lib/features/catalog";
 import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
+import { REVIEW_SESSION_WORDS } from "@/lib/word-mastery/schedule";
 
 import {
   isTodayMode,
+  reviewVisitSize,
   showsNewHome,
   splitToday,
   testCardState,
@@ -227,5 +229,22 @@ describe("sentenceTestAvailable", () => {
     assert.equal(sentenceTestAvailable(features(false, true, true)), false);
     assert.equal(sentenceTestAvailable(features(true, false, true)), false);
     assert.equal(sentenceTestAvailable(features(true, true, false)), false);
+  });
+});
+
+describe("reviewVisitSize", () => {
+  it("names the visit where Smart word practice caps it and more words wait than it holds", () => {
+    assert.equal(reviewVisitSize(160, true), REVIEW_SESSION_WORDS);
+    assert.equal(reviewVisitSize(REVIEW_SESSION_WORDS + 1, true), REVIEW_SESSION_WORDS);
+  });
+
+  it("leaves the plain count when everything that waits fits in one visit", () => {
+    assert.equal(reviewVisitSize(REVIEW_SESSION_WORDS, true), null);
+    assert.equal(reviewVisitSize(5, true), null);
+    assert.equal(reviewVisitSize(0, true), null);
+  });
+
+  it("leaves the plain count where a visit is not capped", () => {
+    assert.equal(reviewVisitSize(160, false), null);
   });
 });

@@ -543,6 +543,8 @@ export const ar: Dictionary = {
     sentencesUnit: "جمل",
     wordReadyToReview: "كلمة جاهزة للمراجعة",
     wordsReadyToReview: "كلمات جاهزة للمراجعة",
+    reviewVisitNow: "راجع {n} من كلماتك الآن",
+    reviewVisitOf: "من {total} جاهزة",
     vocabularyHeading: "كلمات من هذا الدرس",
     newWordTag: "جديدة",
     practiceWord: "تدرب",

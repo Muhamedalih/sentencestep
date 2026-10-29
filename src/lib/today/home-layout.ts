@@ -1,4 +1,5 @@
 import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
+import { REVIEW_SESSION_WORDS } from "@/lib/word-mastery/schedule";
 
 import { requiredQuests, sentenceQuest } from "./quests";
 
@@ -100,4 +101,14 @@ export function todayRedoHref(quests: readonly DailyQuest[]): string | null {
 export function todayTaskRepeatHref(info: TodayQuestInfo, done: boolean): string {
   if (done && info.redoHref && info.kind !== "words") return `${info.redoHref}?today=1&redo=1`;
   return info.href;
+}
+
+/**
+ * What the Home review button says when it can name the visit: with Smart word practice a visit takes
+ * REVIEW_SESSION_WORDS words at most, so when more than that wait the button reads "Review 12 words now,
+ * of 160 ready". Null when a visit is not capped or everything that waits fits in one (the button then
+ * only says how many words are ready).
+ */
+export function reviewVisitSize(waiting: number, capped: boolean): number | null {
+  return capped && waiting > REVIEW_SESSION_WORDS ? REVIEW_SESSION_WORDS : null;
 }

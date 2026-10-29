@@ -567,6 +567,8 @@ export const tr: Dictionary = {
     sentencesUnit: "cümle",
     wordReadyToReview: "gözden geçirilecek kelime",
     wordsReadyToReview: "gözden geçirilecek kelimeler",
+    reviewVisitNow: "Şimdi {n} kelime tekrar et",
+    reviewVisitOf: "{total} hazır kelimeden",
     vocabularyHeading: "Bu dersteki kelimeler",
     newWordTag: "Yeni",
     practiceWord: "Alıştır",

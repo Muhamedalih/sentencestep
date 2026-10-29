@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Check, Lock, Quote, RotateCcw } from "lucide-react";
 
 import { fill, withXp } from "@/components/home-today/format";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { LOCKED_CARD_BLUR } from "@/components/today/today-tasks";
 import type { DailyQuest } from "@/lib/features/quests";
@@ -30,11 +31,14 @@ const CARD_SURFACE =
  * kept on this device), it says how many did and offers another round — in the tone of "one short
  * round locks in the rest", never of a failing mark. A device with no stored result shows the plain
  * "done" card with the same way back in. The parent draws it only on a day a test was dealt.
+ * With the Home polish permission the open card's button is solid: it is the last task of the day, and nothing
+ * else on the page is left to press.
  */
 export function TestYourselfCard({ quest, className }: { quest: DailyQuest; className?: string }) {
   const { t } = useLocale();
   const copy = t.today;
   const done = quest.completed;
+  const solid = useFeatures().rollouts.homePolish && !done;
   // Read after mount (it lives in this browser only), so the first paint matches the server's.
   const [stored, setStored] = useState<TodayTestResult | null>(null);
   useEffect(() => {
@@ -105,7 +109,14 @@ export function TestYourselfCard({ quest, className }: { quest: DailyQuest; clas
         )}
       </div>
       {(!done || again) && (
-        <span className="border-primary/50 text-primary group-hover:bg-primary/10 inline-flex h-11 shrink-0 items-center justify-center rounded-[10px] border px-6 text-sm font-semibold transition-colors max-sm:w-full">
+        <span
+          className={cn(
+            "inline-flex h-11 shrink-0 items-center justify-center rounded-[10px] border px-6 text-sm font-semibold transition-colors max-sm:w-full",
+            solid
+              ? "border-primary bg-primary text-primary-foreground group-hover:bg-primary/90"
+              : "border-primary/50 text-primary group-hover:bg-primary/10",
+          )}
+        >
           <span dir="auto">{done ? copy.retakeTest : copy.startSentences}</span>
         </span>
       )}

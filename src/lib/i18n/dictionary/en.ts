@@ -566,6 +566,8 @@ export const en: Dictionary = {
     sentencesUnit: "sentences",
     wordReadyToReview: "word ready to review",
     wordsReadyToReview: "words ready to review",
+    reviewVisitNow: "Review {n} words now",
+    reviewVisitOf: "of {total} ready",
     vocabularyHeading: "Words from this lesson",
     newWordTag: "New",
     practiceWord: "Practice",

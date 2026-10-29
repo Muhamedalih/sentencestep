@@ -40,6 +40,8 @@ export function InitialsAvatar({
   className,
   /** 0-100 — when set, draws a thin ring around the avatar filled to this percent (the daily goal, see AccountMenu/AppHeader) instead of a plain flat circle. Omitted entirely (not a 0% ring) when there's nothing meaningful to show yet. */
   ringPercent,
+  /** The ring's colour: the amber accent (default) or the site's own brand colour (the Home polish permission). */
+  ringTone = "accent",
 }: {
   /** Stable identity to hash for the background color — the user id, never the (editable) display name, so the color never changes just because someone updates their name. */
   seed: string;
@@ -47,6 +49,7 @@ export function InitialsAvatar({
   email: string;
   className?: string;
   ringPercent?: number;
+  ringTone?: "accent" | "primary";
 }) {
   const initial = initialFor(displayName, email);
   const bg = colorFor(seed);
@@ -93,7 +96,10 @@ export function InitialsAvatar({
           fill="none"
           strokeWidth="6"
           strokeLinecap="round"
-          className="stroke-accent transition-[stroke-dashoffset] duration-500 ease-out"
+          className={cn(
+            "transition-[stroke-dashoffset] duration-500 ease-out",
+            ringTone === "primary" ? "stroke-primary" : "stroke-accent",
+          )}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
         />
