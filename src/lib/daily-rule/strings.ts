@@ -70,6 +70,10 @@ export interface RuleStrings {
   dueSection: string;
   /** The tag of the rule that opens next on the library's map. */
   statusNext: string;
+  /** The admin preview of a rule the learner has not met yet (a small note on its page; the arrows have names for screen readers). */
+  previewNote: string;
+  previousRule: string;
+  nextRule: string;
   /** A due rule's tag in the library. */
   statusDue: string;
   /** A held rule's tag in the library. */
@@ -150,6 +154,9 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     libraryLevel: "{n} من {total} قاعدة في {level}",
     dueSection: "تحتاج مراجعة اليوم",
     statusNext: "التالية",
+    previewNote: "معاينة للأدمن",
+    previousRule: "القاعدة السابقة",
+    nextRule: "القاعدة التالية",
     statusDue: "راجعها",
     statusHeld: "ثابتة",
     statusLearning: "قيد التثبيت",
@@ -214,6 +221,9 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     libraryLevel: "{n} de {total} reglas de {level}",
     dueSection: "Para repasar hoy",
     statusNext: "Siguiente",
+    previewNote: "Vista previa (admin)",
+    previousRule: "Regla anterior",
+    nextRule: "Regla siguiente",
     statusDue: "Repásala",
     statusHeld: "Dominada",
     statusLearning: "Afianzándose",
@@ -279,6 +289,9 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     libraryLevel: "{level}: {total} kuraldan {n} tanesi",
     dueSection: "Bugün tekrar edilecekler",
     statusNext: "Sıradaki",
+    previewNote: "Yönetici önizlemesi",
+    previousRule: "Önceki kural",
+    nextRule: "Sonraki kural",
     statusDue: "Tekrar et",
     statusHeld: "Pekişti",
     statusLearning: "Pekişiyor",

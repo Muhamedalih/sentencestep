@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { RulesLibrary } from "@/components/today/rules-library";
+import { isAdmin } from "@/lib/admin/access";
 import { buildLibrary } from "@/lib/daily-rule/library";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
@@ -19,8 +20,9 @@ export const metadata: Metadata = { title: "My rules" };
 
 /**
  * The rule library («قواعدي»), part of the rule of the day (the dailyRule permission, Admins only until
- * it is opened): every rule the learner has met, the ones due today first. Closed, or signed out: back to
- * Home. A missing learner_rules table (the migration not applied yet) reads as "no rules yet".
+ * it is opened): the whole course as a map, the rules due today first, every rule the learner has met opening
+ * its pages. For an admin every rule of the course opens (a preview). Closed, or signed out: back to Home. A
+ * missing learner_rules table (the migration not applied yet) reads as "no rules yet".
  */
 export default async function RulesPage() {
   const [features, user, locale] = await Promise.all([
@@ -32,13 +34,15 @@ export default async function RulesPage() {
 
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-  const [states, progress] = await Promise.all([
+  // The admin check is the one the permissions already made for this request (it is read once per request).
+  const [states, progress, admin] = await Promise.all([
     fetchLearnerRuleStates(user.id).catch((error: unknown) => {
       if (!isMissingRulesSchema(error))
         console.error("[daily-rule] could not read the learner's rules", error);
       return [];
     }),
     fetchProgressCached(todayISO).catch(() => null),
+    isAdmin().catch(() => false),
   ]);
 
   return (
@@ -50,6 +54,7 @@ export default async function RulesPage() {
         locale,
       })}
       locale={locale}
+      preview={admin}
     />
   );
 }

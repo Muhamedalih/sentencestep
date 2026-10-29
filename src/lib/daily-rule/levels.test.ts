@@ -10,6 +10,7 @@ import {
   hasRuleLadder,
   hasRuleToTeach,
   ladderForLevel,
+  neighbourRules,
   ruleById,
   teachingLevel,
 } from "./levels";
@@ -160,4 +161,21 @@ test("should have: the participle after should have", () => {
 test("verb + -ing: the -ing after enjoy, avoid and the like, not after want", () => {
   assert.deepEqual(blanks("gerund-after", "I enjoy reading in the evening."), ["reading"]);
   assert.deepEqual(blanks("gerund-after", "I enjoy to read in the evening."), []);
+});
+
+test("the arrows of the admin preview follow the course: A1, then A2–B1, then B2", () => {
+  assert.deepEqual(
+    neighbourRules("a1-25"),
+    { next: ruleById("a1-01") },
+    "the first rule has no rule before it",
+  );
+  assert.equal(neighbourRules("a1-01").previous?.id, "a1-25");
+  assert.equal(
+    neighbourRules("a1-45").next?.id,
+    "a2-01",
+    "the last rule of a level leads to the first of the next",
+  );
+  assert.equal(neighbourRules("a2-01").previous?.id, "a1-45");
+  assert.equal(neighbourRules("b2-45").next, undefined);
+  assert.deepEqual(neighbourRules("zz-99"), {});
 });
