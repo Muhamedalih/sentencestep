@@ -42,6 +42,19 @@ export interface RuleStrings {
   /** The row's button, shown once the day's three tasks are done. */
   startRule: string;
   recallOnly: string;
+  /** The label above the two sentences of the learner's own story on the rule's first page. */
+  fromYourStory: string;
+  /** The button on the last page of the rule's card: it starts the typed sentences. */
+  startPractice: string;
+  /** Back from the exceptions page to the first. */
+  back: string;
+  /** The heading of the second page: what to watch for. */
+  watchOut: string;
+  /** The label of a note on the second page that is more to know, not an exception (see "exception"). */
+  detail: string;
+  /** What a screen reader says of the right and the wrong sentence of the card. */
+  rightSentence: string;
+  wrongSentence: string;
 }
 
 export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
@@ -80,6 +93,13 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     endDay: "اختم اليوم بالقواعد",
     startRule: "ابدأ القاعدة",
     recallOnly: "سؤال من قواعدك السابقة",
+    fromYourStory: "من قصتك",
+    startPractice: "ابدأ التمرين",
+    back: "رجوع",
+    watchOut: "انتبه",
+    detail: "تفصيل",
+    rightSentence: "جملة صحيحة",
+    wrongSentence: "جملة خاطئة",
   },
   es: {
     title: "Regla del día",
@@ -116,6 +136,13 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     endDay: "Termina el día con las reglas",
     startRule: "Empieza la regla",
     recallOnly: "Pregunta de tus reglas anteriores",
+    fromYourStory: "De tu historia",
+    startPractice: "Empezar el ejercicio",
+    back: "Atrás",
+    watchOut: "Ojo",
+    detail: "Detalle",
+    rightSentence: "Frase correcta",
+    wrongSentence: "Frase incorrecta",
   },
   tr: {
     title: "Günün kuralı",
@@ -152,6 +179,13 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     endDay: "Günü kurallarla bitir",
     startRule: "Kurala başla",
     recallOnly: "Önceki kurallarından bir soru",
+    fromYourStory: "Hikâyenden",
+    startPractice: "Alıştırmaya başla",
+    back: "Geri",
+    watchOut: "Dikkat",
+    detail: "Ayrıntı",
+    rightSentence: "Doğru cümle",
+    wrongSentence: "Yanlış cümle",
   },
 };
 

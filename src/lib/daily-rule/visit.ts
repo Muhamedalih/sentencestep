@@ -24,6 +24,8 @@ export interface SourceSentence {
   id: string;
   text: string;
   audioUrl: string;
+  /** The narrator of the clip: what a single word of the sentence is looked up under (absent when unknown). */
+  voiceId?: string;
 }
 
 export interface RuleStateRow {
@@ -46,6 +48,8 @@ export interface ItemSpec {
   answer: string;
   after: string;
   audioUrl: string;
+  /** The sentence clip's narrator, for the sound of the missing word alone (see SourceSentence). */
+  voiceId?: string;
 }
 
 export interface RecallTask {
@@ -132,6 +136,7 @@ function itemFor(rule: RuleSpec, hit: Hit): ItemSpec {
     answer: hit.token.text,
     after,
     audioUrl: hit.sentence.audioUrl,
+    ...(hit.sentence.voiceId ? { voiceId: hit.sentence.voiceId } : {}),
   };
 }
 
