@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { RulePageOne, RulePageTwo } from "@/components/today/rule-pages";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { ladderForLevel, LEVEL_LABEL, LEVEL_NUMBER, ruleById } from "@/lib/daily
 import { fill, ruleStrings } from "@/lib/daily-rule/strings";
 import type { RuleTeach } from "@/lib/daily-rule/teach-types";
 import { unitTitle } from "@/lib/daily-rule/units";
+import type { ItemSpec } from "@/lib/daily-rule/visit";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,18 @@ import { cn } from "@/lib/utils";
  * watch for), without the learner's story (that was the day it came), and under them the way on to a
  * practice of three sentences from the learner's own texts. It is a page to read at any time, so it needs
  * nothing from the database: the practice is where the texts are read, one press later.
+ *
+ * An admin can open every rule of the course, met or not (a preview, to read the cards before the learners reach
+ * them): a rule not met yet says so in a small note and shows the examples it is taught with, and every page has
+ * arrows to the rules around it.
  */
+export interface RulePreview {
+  /** The learner has not met this rule yet: the page says it is a preview. */
+  unmet: boolean;
+  previous?: { href: string; title: string };
+  next?: { href: string; title: string };
+}
+
 export function RuleLibraryDetail({
   ruleId,
   teach,
@@ -27,6 +39,9 @@ export function RuleLibraryDetail({
   practiceHref,
   practiceCount,
   noSentences = false,
+  notice = [],
+  noticeFrom = "examples",
+  preview,
 }: {
   ruleId: string;
   /** What the rule teaches, read on the server (see RulePageOne). */
@@ -40,6 +55,11 @@ export function RuleLibraryDetail({
   practiceCount: number;
   /** The learner pressed practice and their texts do not hold three sentences of this rule yet. */
   noSentences?: boolean;
+  /** The sentences the rule is taught with, shown on its first page (an admin preview of a rule not met yet). */
+  notice?: readonly ItemSpec[];
+  noticeFrom?: "story" | "examples";
+  /** Set for an admin: the note on a rule not met yet, and the arrows to the rules around it. */
+  preview?: RulePreview | undefined;
 }) {
   const copy = ruleStrings(locale);
   const rule = ruleById(ruleId);
@@ -75,8 +95,18 @@ export function RuleLibraryDetail({
           <ArrowLeft className="size-4" aria-hidden="true" />
           <span dir="auto">{copy.myRules}</span>
         </Link>
-        <span className="text-muted-foreground text-xs" dir="ltr">
-          {levelLabel}
+        <span className="flex items-center gap-3">
+          {preview?.unmet && (
+            <span
+              className="border-border text-muted-foreground rounded-full border px-2.5 py-0.5 text-xs"
+              dir="auto"
+            >
+              {copy.previewNote}
+            </span>
+          )}
+          <span className="text-muted-foreground text-xs" dir="ltr">
+            {levelLabel}
+          </span>
         </span>
       </div>
 
@@ -87,7 +117,8 @@ export function RuleLibraryDetail({
               key="one"
               rule={rule}
               teach={teach}
-              notice={[]}
+              notice={notice}
+              noticeFrom={noticeFrom}
               copy={copy}
               locale={locale}
               kicker={kicker}
@@ -126,6 +157,40 @@ export function RuleLibraryDetail({
           )}
         </div>
       </div>
+
+      {preview && (preview.previous || preview.next) && (
+        <nav
+          className="text-muted-foreground mx-auto mt-2 flex w-full max-w-4xl items-center justify-between gap-6 text-sm"
+          dir="ltr"
+        >
+          {preview.previous ? (
+            <Link
+              href={preview.previous.href}
+              prefetch={false}
+              aria-label={`${copy.previousRule}: ${preview.previous.title}`}
+              className="hover:text-foreground inline-flex min-w-0 items-center gap-1.5"
+            >
+              <ChevronLeft aria-hidden="true" className="size-4 shrink-0" />
+              <span className="truncate">{preview.previous.title}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {preview.next ? (
+            <Link
+              href={preview.next.href}
+              prefetch={false}
+              aria-label={`${copy.nextRule}: ${preview.next.title}`}
+              className="hover:text-foreground inline-flex min-w-0 items-center gap-1.5"
+            >
+              <span className="truncate">{preview.next.title}</span>
+              <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
     </section>
   );
 }

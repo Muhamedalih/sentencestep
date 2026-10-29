@@ -57,3 +57,12 @@ export const ALL_RULES: readonly RuleSpec[] = [...A1_LADDER, ...A2_LADDER, ...B2
 export function ruleById(id: string): RuleSpec | undefined {
   return ALL_RULES.find((rule) => rule.id === id);
 }
+
+/** The rule before and the rule after one in the order of the whole course (A1, then A2–B1, then B2): the admin preview's arrows. */
+export function neighbourRules(id: string): { previous?: RuleSpec; next?: RuleSpec } {
+  const index = ALL_RULES.findIndex((rule) => rule.id === id);
+  if (index < 0) return {};
+  const previous = ALL_RULES[index - 1];
+  const next = ALL_RULES[index + 1];
+  return { ...(previous ? { previous } : {}), ...(next ? { next } : {}) };
+}

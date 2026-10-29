@@ -21,14 +21,18 @@ import { cn } from "@/lib/utils";
  * practised now). Under them the map: a section for the level the course is on (and for any other level the
  * learner has met a rule of), each split into units that fold open. A rule the learner has met is a row with
  * its idea and how it stands, and opens the rule's own pages; the rule that opens next is marked; the others
- * are titles only, in the order they will open: a rule is taught when its day comes, not read ahead.
+ * are titles only, in the order they will open: a rule is taught when its day comes, not read ahead. For an admin
+ * (`preview`) every title is a link too, so the whole course can be read before the learners reach it.
  */
 export function RulesLibrary({
   library,
   locale,
+  preview = false,
 }: {
   library: Library;
   locale: SupportLocale | null;
+  /** The viewer is an admin: the rules not met yet open their pages too. */
+  preview?: boolean;
 }) {
   const copy = ruleStrings(locale);
   const { current } = library;
@@ -81,7 +85,13 @@ export function RulesLibrary({
 
       <div className="divide-border/60 mt-10 divide-y">
         {library.levels.map((level) => (
-          <LevelSection key={level.label} level={level} locale={locale} copy={copy} />
+          <LevelSection
+            key={level.label}
+            level={level}
+            locale={locale}
+            copy={copy}
+            preview={preview}
+          />
         ))}
       </div>
     </div>
@@ -129,10 +139,12 @@ function LevelSection({
   level,
   locale,
   copy,
+  preview,
 }: {
   level: LibraryLevel;
   locale: SupportLocale | null;
   copy: RuleStrings;
+  preview: boolean;
 }) {
   const percent = level.total > 0 ? (level.met / level.total) * 100 : 0;
   return (
@@ -154,7 +166,7 @@ function LevelSection({
       </summary>
       <div className="flex flex-col gap-1 pb-3">
         {level.units.map((unit) => (
-          <UnitSection key={unit.id} unit={unit} locale={locale} copy={copy} />
+          <UnitSection key={unit.id} unit={unit} locale={locale} copy={copy} preview={preview} />
         ))}
       </div>
     </details>
@@ -166,10 +178,12 @@ function UnitSection({
   unit,
   locale,
   copy,
+  preview,
 }: {
   unit: LibraryUnit;
   locale: SupportLocale | null;
   copy: RuleStrings;
+  preview: boolean;
 }) {
   return (
     <details open={unit.open} className="group/unit">
@@ -190,7 +204,7 @@ function UnitSection({
       <ul className="divide-border/60 mt-1 mb-2 divide-y">
         {unit.rules.map((rule) => (
           <li key={rule.id}>
-            <MapRow rule={rule} locale={locale} copy={copy} />
+            <MapRow rule={rule} locale={locale} copy={copy} preview={preview} />
           </li>
         ))}
       </ul>
@@ -202,15 +216,17 @@ function MapRow({
   rule,
   locale,
   copy,
+  preview,
 }: {
   rule: MapRule;
   locale: SupportLocale | null;
   copy: RuleStrings;
+  preview: boolean;
 }) {
   if (rule.state === "next" || rule.state === "ahead") {
     const next = rule.state === "next";
-    return (
-      <div className="flex items-center gap-4 px-0 py-2.5">
+    const row = (
+      <>
         <span
           className={cn(
             "min-w-0 flex-1 text-sm",
@@ -228,7 +244,19 @@ function MapRow({
             {copy.statusNext}
           </span>
         )}
-      </div>
+      </>
+    );
+    // For an admin the rule opens as a preview of its pages; for anyone else it is a title only.
+    return preview ? (
+      <Link
+        href={`/learn/rules/${rule.id}`}
+        prefetch={false}
+        className="hover:bg-muted/40 focus-visible:ring-ring -mx-3 flex items-center gap-4 rounded-xl px-3 py-2.5 transition-colors outline-none focus-visible:ring-2"
+      >
+        {row}
+      </Link>
+    ) : (
+      <div className="flex items-center gap-4 px-0 py-2.5">{row}</div>
     );
   }
   return (
