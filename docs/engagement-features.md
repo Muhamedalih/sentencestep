@@ -432,6 +432,9 @@ Passages are about understanding it. Arabic support language only for now.
   a passage a picture of their choice instead (see "Background picture" under Admin →
   Passages): the poster, Home's card and the lock screen then show it, and the reading
   page gets it as a faint backdrop at the top.
+- **Progress and quests.** A save records the parts and the finish that the database
+  says are new (`record_passage_progress` returns them), so a replay or a retry counts
+  nothing twice, and the quests move only on what the database returns.
 - **Listen first and speed** (header controls). **Listen without text** replaces
   a part's text with a play stage until its question has been answered, then
   reveals the text; it is only offered when the part has a clip for every line.

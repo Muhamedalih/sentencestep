@@ -162,6 +162,29 @@ export function parsePassageProgressInput(
   };
 }
 
+/** What record_passage_progress counted as new from one save. Only the database can say this. */
+export interface PassageSaveOutcome {
+  /** Parts this save finished that the database had not stored before. */
+  partsAdded: number;
+  /** True only on the save that first finishes the whole passage. */
+  newlyCompleted: boolean;
+}
+
+/**
+ * Reads the row record_passage_progress returns. Null when there is no row (the function
+ * still returns nothing) or the row is malformed: the caller then counts nothing toward
+ * quests, rather than trusting the browser's flags.
+ */
+export function passageSaveOutcome(data: unknown): PassageSaveOutcome | null {
+  const row: unknown = Array.isArray(data) ? data[0] : data;
+  if (typeof row !== "object" || row === null) return null;
+  const fields = row as Record<string, unknown>;
+  const partsAdded = fields.parts_added;
+  const newlyCompleted = fields.newly_completed;
+  if (!isCount(partsAdded) || typeof newlyCompleted !== "boolean") return null;
+  return { partsAdded, newlyCompleted };
+}
+
 /** Whole-number percentage, 0 when nothing was asked. */
 export function scorePercent(correct: number, total: number): number {
   if (total <= 0) return 0;
