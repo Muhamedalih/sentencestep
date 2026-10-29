@@ -4,10 +4,12 @@
  * rule stands. A rule is "due" when its day has come (it is asked again at the end of Today), "held" once
  * it stands at three clean answers on three different days, and "learning" before that. The rules the
  * learner has not met yet are on the map too, in the order they will open: the next one is marked, the
- * others are titles only (a rule is taught when its day comes, not read ahead).
+ * others are titles only (a rule is taught when its day comes, not read ahead). For an admin (`preview`)
+ * every level is on the map and every rule carries its idea, so the whole course can be read.
  */
 
 import type { SupportLocale } from "@/lib/i18n/locales";
+import { difficultyForLevel, type Difficulty } from "@/lib/levels";
 
 import type { RuleSpec } from "./ladder";
 import { LEVEL_LABEL, LEVEL_NUMBER, ladderForLevel, teachingLevel } from "./levels";
@@ -24,6 +26,8 @@ export interface LibraryRule {
   title: string;
   /** The level's name ("A1", "A2–B1", "B2"). */
   levelLabel: string;
+  /** The rule's number on its level, from 1. */
+  order: number;
   /** The rule's idea in the learner's language (Arabic until one is chosen); empty for a rule with no teaching. */
   idea: string;
   status: LibraryStatus;
@@ -31,13 +35,15 @@ export interface LibraryRule {
   dots: number;
 }
 
-/** One row of the map: a rule met (it opens its page), the next rule to open, or one still ahead (title only). */
+/** One tile of the map: a rule met (it opens its page), the next rule to open, or one still ahead (title only). */
 export interface MapRule {
   id: string;
   title: string;
+  /** The rule's number on its level, from 1: the order the course opens them in. */
+  order: number;
   state: LibraryStatus | "next" | "ahead";
   dots: number;
-  /** The idea in the learner's language; empty for a rule not met yet. */
+  /** The idea in the learner's language; empty for a rule not met yet (a preview has it for every rule). */
   idea: string;
 }
 
@@ -47,13 +53,13 @@ export interface LibraryUnit {
   title: string;
   met: number;
   total: number;
-  /** Shown open when it holds the next rule or a rule due today (on the level the course is on). */
-  open: boolean;
   rules: MapRule[];
 }
 
 export interface LibraryLevel {
   label: string;
+  /** The colour the app gives the level everywhere (green, blue, purple). */
+  tier: Difficulty;
   /** The level the course is on now. */
   current: boolean;
   met: number;
@@ -66,7 +72,7 @@ export interface Library {
   due: LibraryRule[];
   /** Every rule the learner has met. */
   met: number;
-  /** The levels of the map: the one the course is on, and every other level the learner has met a rule of, A1 first. */
+  /** The levels of the map: the one the course is on, and every other level the learner has met a rule of (all three in a preview), A1 first. */
   levels: LibraryLevel[];
   /** The level the course is on: how many of its rules are met and how many it has. Null when the level has no ladder. */
   current: { label: string; met: number; total: number } | null;
@@ -82,7 +88,10 @@ export function buildLibrary(input: {
   /** The learner's level (1 = A1, 2 = A2–B1, 3 = B2). */
   level: number;
   locale: SupportLocale | null;
+  /** An admin's view: every level is on the map, and every rule carries its idea whether it is met or not. */
+  preview?: boolean;
 }): Library {
+  const preview = input.preview === true;
   const states = new Map(input.states.map((row) => [row.ruleId, row] as const));
   const teaching = teachingLevel(input.level, new Set(states.keys()));
 
@@ -112,19 +121,21 @@ export function buildLibrary(input: {
           id: rule.id,
           title: rule.title,
           levelLabel: LEVEL_LABEL[LEVEL_NUMBER[rule.level]] ?? rule.level,
+          order: ladder.indexOf(rule) + 1,
           idea: idea(rule),
           status: "due",
           dots: dots(rule),
         });
       }
     }
-    // The map shows the level the course is on, and any other level the learner has met a rule of.
-    if (number !== teaching && metHere.length === 0) continue;
+    // The map shows the level the course is on, and any other level the learner has met a rule of (a preview shows them all).
+    if (number !== teaching && metHere.length === 0 && !preview) continue;
 
     const current = number === teaching;
-    const next = ladder.find((rule) => !states.has(rule.id));
+    // Only the level the course is on has a rule that opens next.
+    const next = current ? ladder.find((rule) => !states.has(rule.id)) : undefined;
     const units: LibraryUnit[] = [];
-    for (const rule of ladder) {
+    for (const [index, rule] of ladder.entries()) {
       let unit = units.find((candidate) => candidate.id === rule.unit);
       if (!unit) {
         unit = {
@@ -132,7 +143,6 @@ export function buildLibrary(input: {
           title: unitTitle(rule.unit, input.locale),
           met: 0,
           total: 0,
-          open: false,
           rules: [],
         };
         units.push(unit);
@@ -145,17 +155,18 @@ export function buildLibrary(input: {
           : "ahead";
       unit.total += 1;
       if (isMet) unit.met += 1;
-      if (current && (state === "next" || state === "due")) unit.open = true;
       unit.rules.push({
         id: rule.id,
         title: rule.title,
+        order: index + 1,
         state,
         dots: isMet ? dots(rule) : 0,
-        idea: isMet ? idea(rule) : "",
+        idea: isMet || preview ? idea(rule) : "",
       });
     }
     levels.push({
       label: LEVEL_LABEL[number] ?? "",
+      tier: difficultyForLevel(number),
       current,
       met: metHere.length,
       total: ladder.length,

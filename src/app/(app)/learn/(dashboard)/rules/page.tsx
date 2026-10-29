@@ -20,8 +20,8 @@ export const metadata: Metadata = { title: "My rules" };
 
 /**
  * The rule library («قواعدي»), part of the rule of the day (the dailyRule permission, Admins only until
- * it is opened): the whole course as a map, the rules due today first, every rule the learner has met opening
- * its pages. For an admin every rule of the course opens (a preview). Closed, or signed out: back to Home. A
+ * it is opened): the whole course as a page of cards, the rules due today first, every rule the learner has met
+ * opening its pages. For an admin every level has a tab and every rule of the course opens (a preview). Closed, or signed out: back to Home. A
  * missing learner_rules table (the migration not applied yet) reads as "no rules yet".
  */
 export default async function RulesPage() {
@@ -52,6 +52,7 @@ export default async function RulesPage() {
         today: todayISO,
         level: progress?.startingLevel ?? 1,
         locale,
+        preview: admin,
       })}
       locale={locale}
       preview={admin}

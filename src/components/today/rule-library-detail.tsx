@@ -85,7 +85,7 @@ export function RuleLibraryDetail({
   );
 
   return (
-    <section className="flex min-h-svh flex-col px-5 pt-5 pb-6 sm:px-8">
+    <section className="app-shell bg-background flex min-h-svh flex-col px-5 pt-5 pb-6 sm:px-8">
       <div className="flex min-h-9 items-center justify-between gap-3">
         <Link
           href={backHref}
