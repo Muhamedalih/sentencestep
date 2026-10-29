@@ -2,12 +2,17 @@
  * Plans one visit to the rule of the day, from what the learner has just read and what they have
  * already learned. Pure: the server gathers the texts, the recordings and the schedule; this decides.
  *
- * A visit is at most one new rule (the card, taught from the story just read) and at most two
- * questions on earlier rules. It never stacks more: the rule waits for its day rather than piling up.
+ * A visit is at most one new rule (the card) and a few questions on earlier rules (RECALL_LIMIT). It never
+ * stacks more: the rule waits for its day rather than piling up. The new rule is the next one of the syllabus
+ * (syllabus.ts); one of the next few may come first when the learner's own text shows it (it is then taught
+ * from their own sentences), and when no text does, the rule is taught from its prepared sentences (teach.ts),
+ * so the course goes on whatever was read today.
  */
 
 import { A1_LADDER, type RuleSpec } from "./ladder";
+import { LEVEL_NUMBER } from "./levels";
 import { candidatesFor } from "./matchers";
+import { preparedItems, preparedItemsForCard } from "./prepared";
 import { RULE_CATCH_UP_DUE, RULE_INTERLEAVE_AFTER, isRuleDue, isRuleHeld } from "./schedule";
 import { aroundToken, tokenize, type Token } from "./tokens";
 
@@ -15,9 +20,13 @@ import { aroundToken, tokenize, type Token } from "./tokens";
 export const NOTICE_SENTENCES = 2;
 export const LEARN_ITEMS = 3;
 /** At most this many questions on earlier rules in one visit. */
-export const RECALL_LIMIT = 2;
+export const RECALL_LIMIT = 4;
 /** A1 sentences are short: a longer one is not a first grammar example. */
 export const MAX_SENTENCE_WORDS = 14;
+/** The new rule may come from the next few rules that are not met yet, when the learner's text shows it... */
+export const NEW_RULE_WINDOW = 3;
+/** ...but never while this many later rules are already met: the first rule not met comes next, whatever was read. */
+export const MAX_AHEAD = 2;
 
 /** A sentence with a recording the learner can hear (the stored clip, never the browser's voice). */
 export interface SourceSentence {
@@ -46,8 +55,13 @@ export interface ItemSpec {
   text: string;
   before: string;
   answer: string;
+  /** Every answer that is right, the shown one first (a prepared sentence may accept more than one); absent: only `answer`. */
+  answers?: string[];
   after: string;
-  audioUrl: string;
+  /** A small word shown beside the blank (the base verb), for a prepared sentence. */
+  hint?: string;
+  /** The recording; absent for a prepared sentence that has none stored yet: its question is then silent. */
+  audioUrl?: string;
   /** The sentence clip's narrator, for the sound of the missing word alone (see SourceSentence). */
   voiceId?: string;
 }
@@ -60,8 +74,10 @@ export interface RecallTask {
 
 export interface LearnTask {
   ruleId: string;
-  /** "story": the rule shows in the story just read; "review": a rule due for review, shown in that story. */
+  /** "story": a rule met for the first time today; "review": a rule due for review, taught again. */
   source: "story" | "review";
+  /** Where the sentences shown with the rule come from: the learner's own text, or the rule's prepared sentences. */
+  noticeFrom: "story" | "examples";
   notice: ItemSpec[];
   items: ItemSpec[];
 }
@@ -69,7 +85,7 @@ export interface LearnTask {
 export interface RuleVisit {
   recall: RecallTask[];
   learn: LearnTask | null;
-  /** How many rules are held before this visit. */
+  /** How many rules of the ladder are held before this visit. */
   held: number;
   /** Why no new rule is taught today when one could have been: "catch-up" or "no-text". */
   pause: "catch-up" | "no-text" | null;
@@ -81,11 +97,14 @@ export interface PlanInput {
   states: readonly RuleStateRow[];
   /** The text the learner has just read: the story's sentences that have a recording. */
   source: readonly SourceSentence[];
-  /** The learner's finished A1 sentences with recordings: where earlier rules are asked from. */
+  /** The learner's finished sentences with recordings: where earlier rules are asked from. */
   recallPool: readonly SourceSentence[];
   /** Makes the choice deterministic per learner and per day. */
   seed: string;
+  /** The rules that are taught, in the order of their level (the A1 ladder when absent). */
   ladder?: readonly RuleSpec[];
+  /** Rules of other levels the learner has met: asked again when due, never taught. */
+  extra?: readonly RuleSpec[];
   /** The longest sentence a rule may be asked from (MAX_WORDS_BY_LEVEL in levels.ts). */
   maxWords?: number;
 }
@@ -107,6 +126,11 @@ function hash(text: string): number {
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).length;
+}
+
+/** The order rules are opened in: level by level, then the place on the level's ladder. */
+function byOrder(a: RuleSpec, b: RuleSpec): number {
+  return LEVEL_NUMBER[a.level] - LEVEL_NUMBER[b.level] || a.order - b.order;
 }
 
 function firstHit(rule: RuleSpec, sentence: SourceSentence, maxWords: number): Hit | null {
@@ -152,12 +176,32 @@ function learnFrom(rule: RuleSpec, source: "story" | "review", hits: readonly Hi
   return {
     ruleId: rule.id,
     source,
+    noticeFrom: "story",
     notice: notice.map((hit) => itemFor(rule, hit)),
     items: typed.map((hit) => itemFor(rule, hit)),
   };
 }
 
-/** One earlier-rule question from the learner's own finished texts, avoiding today's sentences when it can. */
+/**
+ * The same card from the rule's prepared sentences: the first two show the form, the next three are typed
+ * (the sixth stays for the questions on the rule that come back later). Null for a rule with too few.
+ */
+function learnFromPrepared(rule: RuleSpec, source: "story" | "review"): LearnTask | null {
+  const all = preparedItemsForCard(rule);
+  if (all.length < NOTICE_SENTENCES + LEARN_ITEMS) return null;
+  return {
+    ruleId: rule.id,
+    source,
+    noticeFrom: "examples",
+    notice: all.slice(0, NOTICE_SENTENCES),
+    items: all.slice(NOTICE_SENTENCES, NOTICE_SENTENCES + LEARN_ITEMS),
+  };
+}
+
+/**
+ * One earlier-rule question: from the learner's own finished texts when they show the rule (avoiding today's
+ * sentences when it can), otherwise one of the rule's prepared sentences, a different one on a different day.
+ */
 function recallItem(
   rule: RuleSpec,
   pool: readonly SourceSentence[],
@@ -166,50 +210,76 @@ function recallItem(
   maxWords: number,
 ): ItemSpec | null {
   const hits = hitsIn(rule, pool, maxWords);
-  if (hits.length === 0) return null;
-  const fresh = hits.filter((hit) => !avoid.has(hit.sentence.id));
-  const list = fresh.length > 0 ? fresh : hits;
-  return itemFor(rule, list[hash(`${seed}|${rule.id}`) % list.length]!);
+  if (hits.length > 0) {
+    const fresh = hits.filter((hit) => !avoid.has(hit.sentence.id));
+    const list = fresh.length > 0 ? fresh : hits;
+    return itemFor(rule, list[hash(`${seed}|${rule.id}`) % list.length]!);
+  }
+  const prepared = preparedItems(rule);
+  if (prepared.length === 0) return null;
+  return prepared[hash(`${seed}|${rule.id}`) % prepared.length]!;
+}
+
+/**
+ * The new rule for today. The next rules of the syllabus that are not met yet (the first few) are looked at
+ * first: one that today's text shows is taught from the learner's own sentences. If none is, the next rule in
+ * order is taught from its prepared sentences. A rule due for review that the text shows is the last resort
+ * (a learner who has met every rule of the ladder).
+ */
+function newRule(
+  rules: readonly RuleSpec[],
+  met: ReadonlySet<string>,
+  due: readonly RuleSpec[],
+  source: readonly SourceSentence[],
+  maxWords: number,
+): LearnTask | null {
+  const fresh = rules.filter((rule) => !met.has(rule.id));
+  const first = fresh[0];
+  if (first) {
+    const ahead = rules.filter((rule) => met.has(rule.id) && rule.order > first.order).length;
+    const window = ahead >= MAX_AHEAD ? [first] : fresh.slice(0, NEW_RULE_WINDOW);
+    for (const rule of window) {
+      const hits = hitsIn(rule, source, maxWords);
+      if (hits.length >= LEARN_ITEMS) return learnFrom(rule, "story", hits);
+    }
+    for (const rule of fresh) {
+      const prepared = learnFromPrepared(rule, "story");
+      if (prepared) return prepared;
+    }
+  }
+  for (const rule of due) {
+    const hits = hitsIn(rule, source, maxWords);
+    if (hits.length >= LEARN_ITEMS) return learnFrom(rule, "review", hits);
+  }
+  return null;
 }
 
 /** The visit for one learner on one day. */
 export function planRuleVisit(input: PlanInput): RuleVisit {
-  const rules = [...(input.ladder ?? A1_LADDER)].sort((a, b) => a.order - b.order);
+  const rules = [...(input.ladder ?? A1_LADDER)].sort(byOrder);
+  const asked = [...rules, ...(input.extra ?? [])].sort(byOrder);
   const maxWords = input.maxWords ?? MAX_SENTENCE_WORDS;
-  const ruleById = new Map(rules.map((rule) => [rule.id, rule] as const));
+  const ruleById = new Map(asked.map((rule) => [rule.id, rule] as const));
   const states = new Map(
     input.states.map((row) => [row.ruleId, { strength: row.strength, dueOn: row.dueOn }] as const),
   );
 
-  const held = rules.filter((rule) => isRuleHeld(states.get(rule.id)?.strength ?? -1));
-  const due = rules
+  const isHeld = (rule: RuleSpec): boolean => isRuleHeld(states.get(rule.id)?.strength ?? -1);
+  const held = rules.filter(isHeld);
+  const heldAll = asked.filter(isHeld);
+  const due = asked
     .filter((rule) => isRuleDue(states.get(rule.id), input.today))
     .sort(
-      (a, b) => states.get(a.id)!.dueOn.localeCompare(states.get(b.id)!.dueOn) || a.order - b.order,
+      (a, b) => states.get(a.id)!.dueOn.localeCompare(states.get(b.id)!.dueOn) || byOrder(a, b),
     );
-  const fresh = rules.filter((rule) => !states.has(rule.id));
 
-  // The new rule: the first rule (in ladder order) that the story just read shows. A rule that has not
-  // been met yet comes first; a rule due for review is the fallback. Nothing new while three or more
-  // rules are due: the learner catches up first.
+  // The new rule: nothing new while RULE_CATCH_UP_DUE or more rules are due, the learner catches up first.
   let learn: LearnTask | null = null;
   let pause: RuleVisit["pause"] = null;
   if (due.length >= RULE_CATCH_UP_DUE) {
     pause = "catch-up";
   } else {
-    for (const [pool, source] of [
-      [fresh, "story"],
-      [due, "review"],
-    ] as const) {
-      for (const rule of pool) {
-        const hits = hitsIn(rule, input.source, maxWords);
-        if (hits.length >= LEARN_ITEMS) {
-          learn = learnFrom(rule, source, hits);
-          break;
-        }
-      }
-      if (learn) break;
-    }
+    learn = newRule(rules, new Set(states.keys()), due, input.source, maxWords);
     if (!learn) pause = "no-text";
   }
 
@@ -226,10 +296,10 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
 
   // Interleaving: once enough rules are held, a held rule of the same family is asked too, after the
   // new card. The family matters: past simple against present perfect is where learners mix rules up.
-  if (learn && held.length >= RULE_INTERLEAVE_AFTER && recall.length < RECALL_LIMIT) {
+  if (learn && heldAll.length >= RULE_INTERLEAVE_AFTER && recall.length < RECALL_LIMIT) {
     const taught = ruleById.get(learn.ruleId);
     const used = new Set([learn.ruleId, ...recall.map((task) => task.ruleId)]);
-    const others = held.filter((rule) => !used.has(rule.id));
+    const others = heldAll.filter((rule) => !used.has(rule.id));
     const ordered = [
       ...others.filter((rule) => rule.family === taught?.family),
       ...others.filter((rule) => rule.family !== taught?.family),
@@ -248,29 +318,31 @@ export function planRuleVisit(input: PlanInput): RuleVisit {
 
 /**
  * The day's session again, for the repeat button on Home's rule row once today's rule is answered: the card of
- * the rule first seen today (from the text the row names, when that text still shows it) and the questions on
- * the rules reviewed today, from the learner's own finished texts. Pure, like planRuleVisit; the runner records
- * nothing in this mode, so the schedule stays as the day left it.
+ * the rule first seen today (from the text the row names, when that text still shows it, else from the rule's
+ * prepared sentences) and the questions on the rules reviewed today, from the learner's own finished texts.
+ * Pure, like planRuleVisit; the runner records nothing in this mode, so the schedule stays as the day left it.
  */
 export function planRedoVisit(input: PlanInput): RuleVisit {
-  const rules = [...(input.ladder ?? A1_LADDER)].sort((a, b) => a.order - b.order);
+  const rules = [...(input.ladder ?? A1_LADDER)].sort(byOrder);
+  const asked = [...rules, ...(input.extra ?? [])].sort(byOrder);
   const maxWords = input.maxWords ?? MAX_SENTENCE_WORDS;
   const states = new Map(input.states.map((row) => [row.ruleId, row] as const));
 
   let learn: LearnTask | null = null;
-  for (const rule of rules) {
+  for (const rule of asked) {
     if (states.get(rule.id)?.firstSeenOn !== input.today) continue;
     const hits = hitsIn(rule, input.source, maxWords);
-    if (hits.length >= LEARN_ITEMS) {
-      learn = learnFrom(rule, "story", hits);
-      break;
-    }
+    learn =
+      hits.length >= LEARN_ITEMS
+        ? learnFrom(rule, "story", hits)
+        : learnFromPrepared(rule, "story");
+    if (learn) break;
   }
 
   const avoid = new Set(input.source.map((sentence) => sentence.id));
   const recallSeed = `${input.seed}|${input.today}|again`;
   const recall: RecallTask[] = [];
-  for (const rule of rules) {
+  for (const rule of asked) {
     if (recall.length >= RECALL_LIMIT) break;
     const row = states.get(rule.id);
     if (!row || row.lastReviewedOn !== input.today || row.firstSeenOn === input.today) continue;
@@ -283,11 +355,11 @@ export function planRedoVisit(input: PlanInput): RuleVisit {
 }
 
 /**
- * A practice of one rule the learner has met, chosen from the rule library: three sentences of their own
- * finished texts that show the rule, typed one after the other. Pure, like the other planners. The three
- * are the same for the same learner on the same day and differ from day to day when the texts hold more;
- * a rule that fewer than three sentences show is not practised (null), exactly as a new rule is not taught
- * from fewer. The runner records nothing in this mode, so the schedule stays as the day left it.
+ * A practice of one rule the learner has met, chosen from the rule library: three sentences typed one after
+ * the other. They are the learner's own finished texts when those hold three that show the rule, and the rule's
+ * prepared sentences otherwise (a rule no word shows is always practised from them). Pure, like the other
+ * planners. The three are the same for the same learner on the same day and differ from day to day when more
+ * are to choose from. The runner records nothing in this mode, so the schedule stays as the day left it.
  */
 export function planPracticeVisit(input: {
   rule: RuleSpec;
@@ -298,18 +370,27 @@ export function planPracticeVisit(input: {
   maxWords?: number;
 }): RuleVisit | null {
   const hits = hitsIn(input.rule, input.pool, input.maxWords ?? MAX_SENTENCE_WORDS);
-  if (hits.length < LEARN_ITEMS) return null;
-  const items = [...hits]
+  const own = hits.length >= LEARN_ITEMS;
+  const items = own
+    ? hits.map((hit) => ({ id: hit.sentence.id, spec: itemFor(input.rule, hit) }))
+    : preparedItems(input.rule).map((spec) => ({ id: spec.sentenceId, spec }));
+  if (items.length < LEARN_ITEMS) return null;
+  const chosen = [...items]
     .sort(
       (a, b) =>
-        hash(`${input.seed}|${a.sentence.id}`) - hash(`${input.seed}|${b.sentence.id}`) ||
-        a.sentence.id.localeCompare(b.sentence.id),
+        hash(`${input.seed}|${a.id}`) - hash(`${input.seed}|${b.id}`) || a.id.localeCompare(b.id),
     )
     .slice(0, LEARN_ITEMS)
-    .map((hit) => itemFor(input.rule, hit));
+    .map((item) => item.spec);
   return {
     recall: [],
-    learn: { ruleId: input.rule.id, source: "review", notice: [], items },
+    learn: {
+      ruleId: input.rule.id,
+      source: "review",
+      noticeFrom: own ? "story" : "examples",
+      notice: [],
+      items: chosen,
+    },
     held: 0,
     pause: null,
   };

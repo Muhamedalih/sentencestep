@@ -14,13 +14,14 @@ import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
 import { recordDailyRuleAction } from "@/lib/daily-rule/actions";
 import type { RuleSpec } from "@/lib/daily-rule/ladder";
-import { ruleById } from "@/lib/daily-rule/levels";
+import { ladderForLevel, LEVEL_NUMBER, ruleById } from "@/lib/daily-rule/levels";
 import { glueEndings } from "@/lib/daily-rule/marks";
 import type { RuleOutcome } from "@/lib/daily-rule/schedule";
 import { fill, ruleStrings, type RuleStrings } from "@/lib/daily-rule/strings";
-import { teachFor } from "@/lib/daily-rule/teach";
+import type { RuleTeach } from "@/lib/daily-rule/teach-types";
 import { itemOutcome, ruleOutcome, type ItemResult } from "@/lib/daily-rule/outcome";
-import { diagnose, type Diagnosis } from "@/lib/daily-rule/tokens";
+import { diagnoseAny, type Diagnosis } from "@/lib/daily-rule/tokens";
+import { unitTitle } from "@/lib/daily-rule/units";
 import type { ItemSpec, LearnTask, RecallTask, RuleVisit } from "@/lib/daily-rule/visit";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { normalizeMistakeWord } from "@/lib/mistakes/normalize";
@@ -35,7 +36,9 @@ import { cn } from "@/lib/utils";
  *
  * Every sound is a stored recording of the sentence, never the browser's voice. A sentence to type is
  * read once as it appears; Shift (or the replay control, on a phone) reads it again; the "listen" link
- * under the field says only the missing word. The grammar letters of the rule (the -ing of reading, the
+ * under the field says only the missing word. A prepared sentence (one written for the rule, used when the
+ * learner's story does not show it) has a recording only once one is stored: until then its card has no
+ * sound, and none of the sound controls. The grammar letters of the rule (the -ing of reading, the
  * is of she is) are shown in colour wherever the rule's forms appear. Each card's outcome is recorded
  * once it is final; leaving early records only what was finished.
  *
@@ -50,6 +53,8 @@ export interface DailyRuleRunnerProps {
   locale: SupportLocale | null;
   /** Where the card carries on to: the words step of Today, or the next step when the card came first. */
   continueHref: string;
+  /** What the new rule teaches (teach.ts), read on the server: the browser is sent this rule only, not the whole course. */
+  learnTeach?: RuleTeach;
   /** How many rules the learner's ladder has, and the level's name on the card. */
   ladderSize: number;
   levelLabel: string;
@@ -75,6 +80,7 @@ export function DailyRuleRunner({
   todayISO,
   locale,
   continueHref,
+  learnTeach,
   ladderSize,
   levelLabel,
   daily = false,
@@ -89,7 +95,7 @@ export function DailyRuleRunner({
       // A practice comes from the library, where the learner has just read the rule: the sentences only.
       if (!practice) {
         out.push({ kind: "notice", learn: visit.learn });
-        if ((teachFor(visit.learn.ruleId)?.notes.length ?? 0) > 0) {
+        if ((learnTeach?.notes.length ?? 0) > 0) {
           out.push({ kind: "notes", learn: visit.learn });
         }
       }
@@ -99,7 +105,7 @@ export function DailyRuleRunner({
     }
     out.push({ kind: "done" });
     return out;
-  }, [visit, practice]);
+  }, [visit, practice, learnTeach]);
   const [at, setAt] = useState(0);
   const learnOutcomes = useRef<RuleOutcome[]>([]);
   const practised = useRef<string[]>([]);
@@ -115,6 +121,14 @@ export function DailyRuleRunner({
       : step.kind === "use"
         ? step.learn.items[step.index]
         : undefined;
+
+  /** Above a rule's name: its place on its level and the unit it belongs to. */
+  function kickerOf(ruleId: string): string {
+    const rule = ruleById(ruleId);
+    if (!rule) return "";
+    const total = ladderForLevel(LEVEL_NUMBER[rule.level])?.length ?? ladderSize;
+    return `${fill(copy.ruleNumber, { n: rule.order, total })} · ${unitTitle(rule.unit, locale)}`;
+  }
 
   function record(ruleId: string, outcome: RuleOutcome): void {
     if (redo || practice) return;
@@ -160,7 +174,7 @@ export function DailyRuleRunner({
 
   return (
     <section className="flex min-h-svh flex-col px-5 pt-5 pb-6 sm:px-8">
-      {typed && <ShiftReplayHint />}
+      {typed?.audioUrl && <ShiftReplayHint />}
       <div className="flex min-h-9 items-center justify-between gap-3">
         <p className="text-muted-foreground text-xs font-medium" dir="auto">
           {practice ? copy.myRules : copy.title}
@@ -171,7 +185,7 @@ export function DailyRuleRunner({
               {copy.review}
             </span>
           )}
-          {typed && (
+          {typed?.audioUrl && (
             <LessonSettings
               ref={soundRef}
               text={typed.text}
@@ -214,10 +228,12 @@ export function DailyRuleRunner({
             <RulePageOne
               key={`notice-${at}`}
               rule={ruleById(step.learn.ruleId)}
+              teach={learnTeach}
               notice={step.learn.notice}
+              noticeFrom={step.learn.noticeFrom}
               copy={copy}
               locale={locale}
-              kicker={copy.noticeTitle}
+              kicker={kickerOf(step.learn.ruleId)}
             >
               <button
                 type="button"
@@ -235,6 +251,7 @@ export function DailyRuleRunner({
             <RulePageTwo
               key={`notes-${at}`}
               rule={ruleById(step.learn.ruleId)}
+              teach={learnTeach}
               copy={copy}
               locale={locale}
             >
@@ -402,9 +419,13 @@ function Question({
   // Enter carries on from the answer, wherever the focus is (the field is gone by then).
   useEnterToContinue(final, finish);
 
+  // The answers that are right: a prepared sentence may accept more than one ("isn't" and "is not").
+  const answers = item.answers ?? [item.answer];
+
   function check(): void {
     if (final || value.trim() === "") return;
-    if (diagnose(value, item.answer) === "correct") {
+    const result = diagnoseAny(value, answers);
+    if (result === "correct") {
       setPhase("right");
       return;
     }
@@ -414,7 +435,7 @@ function Question({
       setPhase("missed");
       return;
     }
-    setHint(diagnose(value, item.answer));
+    setHint(result);
     setPhase("wrong");
   }
 
@@ -444,7 +465,8 @@ function Question({
     else soundRef.current?.replay();
   }
 
-  const listen = (
+  // A prepared sentence with no stored recording has no sound at all, so there is nothing to listen to.
+  const listen = item.audioUrl ? (
     <button
       type="button"
       onMouseDown={(event) => event.preventDefault()}
@@ -453,7 +475,7 @@ function Question({
     >
       <Volume2 aria-hidden="true" className="size-4" /> <span dir="auto">{copy.listen}</span>
     </button>
-  );
+  ) : null;
 
   return (
     <div className="flex flex-col items-center gap-9 text-center">
@@ -481,9 +503,21 @@ function Question({
         ) : (
           <>
             {item.before}
-            <span className="border-primary text-primary mx-1 inline-block min-w-[2.5em] border-b-2 text-center font-semibold">
+            <span
+              className="border-primary text-primary mx-1 inline-block min-w-[2.5em] border-b-2 text-center font-semibold"
+              style={
+                item.answer.includes(" ")
+                  ? { minWidth: `${Math.min(9, item.answer.length * 0.5)}em` }
+                  : undefined
+              }
+            >
               {hinted ? `${item.answer.charAt(0)}…` : " "}
             </span>
+            {item.hint && (
+              <span className="text-muted-foreground ms-0.5 align-middle text-[0.5em] font-medium">
+                ({item.hint})
+              </span>
+            )}
             {item.after}
           </>
         )}
@@ -519,7 +553,7 @@ function Question({
           <p className="text-muted-foreground text-sm" dir="auto">
             {copy.answerWas}{" "}
             <span className="text-foreground font-semibold" dir="ltr">
-              {item.answer}
+              {answers.slice(0, 2).join(" / ")}
             </span>
           </p>
         )}

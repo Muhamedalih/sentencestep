@@ -23,8 +23,12 @@ export const RULE_MAX_STRENGTH = 5;
 export const RULE_HELD_STRENGTH = 3;
 /** Once this many rules are held, a rule of the same family is asked again as a contrast question. */
 export const RULE_INTERLEAVE_AFTER = 5;
-/** This many rules due at once: catch up on them before a new rule is taught (the Anki rule). */
-export const RULE_CATCH_UP_DUE = 3;
+/**
+ * This many rules due at once: catch up on them before a new rule is taught (the Anki rule). A visit asks up to
+ * four earlier rules (RECALL_LIMIT in visit.ts), so a backlog of this size is cleared in a day or two and the
+ * new rule is only ever one day late; with one new rule a day the reviews due reach about five by day 60.
+ */
+export const RULE_CATCH_UP_DUE = 5;
 
 export interface RuleSchedule {
   strength: number;

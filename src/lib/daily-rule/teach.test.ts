@@ -25,11 +25,14 @@ test("every rule on every ladder has its teaching, and nothing else is taught", 
   assert.equal(teachFor("nope"), undefined);
 });
 
-test("the marked right and wrong sentences are the ladder's own sentences", () => {
+test("the right and the wrong sentence of every rule differ, and each shows its part", () => {
   for (const rule of ALL_RULES) {
     const teach = TEACH[rule.id]!;
-    assert.equal(stripMarks(teach.right), rule.right, `${rule.id} right`);
-    assert.equal(stripMarks(teach.wrong), rule.wrong, `${rule.id} wrong`);
+    assert.notEqual(
+      stripMarks(teach.right),
+      stripMarks(teach.wrong),
+      `${rule.id}: right and wrong differ`,
+    );
     assert.ok(
       parseMarked(teach.right).some((part) => part.marked),
       `${rule.id}: right shows its part`,

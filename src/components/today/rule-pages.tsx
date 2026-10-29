@@ -5,9 +5,9 @@ import { Volume2 } from "lucide-react";
 
 import { Say } from "@/components/today/rule-text";
 import type { RuleSpec } from "@/lib/daily-rule/ladder";
-import { glueEndings, parseMarked, splitMark } from "@/lib/daily-rule/marks";
+import { glueEndings, markStyleOf, parseMarked, splitByStyle } from "@/lib/daily-rule/marks";
 import { ruleTextDir, type RuleStrings } from "@/lib/daily-rule/strings";
-import { inLocale, teachFor } from "@/lib/daily-rule/teach";
+import { inLocale, type RuleTeach } from "@/lib/daily-rule/teach-types";
 import type { ItemSpec } from "@/lib/daily-rule/visit";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ function play(url: string): void {
  */
 export function Form({ rule, word }: { rule: RuleSpec | undefined; word: string }) {
   if (!rule) return <>{word}</>;
-  const { stem, mark } = splitMark(rule.match, word);
+  const { stem, mark } = splitByStyle(rule.mark ?? markStyleOf(rule.match), word);
   return (
     <>
       {stem}
@@ -89,26 +89,32 @@ export function RuleHead({
 /**
  * Page one of a rule: the rule's name, large; the idea in the learner's own language and in simple English
  * (with the verbs it names, when it names some); the right and the wrong sentence with the grammar letters
- * in colour; and the sentences from the learner's story with the same letters, when there are some. What to
- * watch for (the exceptions) is the next page, so this one stays clear. `children` is the button row.
+ * in colour; and the sentences that show the rule with the same letters, when there are some: the learner's own
+ * story, or the rule's prepared examples when no story shows it. What to watch for (the exceptions) is the next
+ * page, so this one stays clear. `children` is the button row.
  */
 export function RulePageOne({
   rule,
+  teach,
   notice,
+  noticeFrom = "story",
   copy,
   locale,
   kicker,
   children,
 }: {
   rule: RuleSpec | undefined;
-  /** The sentences of the learner's story that show the rule; none hides that block. */
+  /** What the rule teaches (teach.ts), read on the server: the browser is sent this rule only, not the whole course. */
+  teach: RuleTeach | undefined;
+  /** The sentences that show the rule; none hides that block. */
   notice: readonly ItemSpec[];
+  /** Where those sentences come from: the learner's story, or the rule's prepared examples. */
+  noticeFrom?: "story" | "examples";
   copy: RuleStrings;
   locale: SupportLocale | null;
   kicker: string;
   children: ReactNode;
 }) {
-  const teach = rule ? teachFor(rule.id) : undefined;
   return (
     <div className="flex flex-col items-center gap-6 text-center">
       <RuleHead kicker={kicker} title={rule?.title ?? ""} dir="ltr" />
@@ -159,7 +165,7 @@ export function RulePageOne({
         {notice.length > 0 && (
           <div className="flex flex-col items-center gap-2">
             <p className="text-muted-foreground text-sm" dir="auto">
-              {copy.fromYourStory}
+              {noticeFrom === "story" ? copy.fromYourStory : copy.examples}
             </p>
             <ul className="flex flex-col items-center gap-2">
               {notice.map((item) => (
@@ -171,14 +177,16 @@ export function RulePageOne({
                     </span>
                     {item.after}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => play(item.audioUrl)}
-                    aria-label={copy.listen}
-                    className="text-muted-foreground hover:text-foreground shrink-0"
-                  >
-                    <Volume2 aria-hidden="true" className="size-4" />
-                  </button>
+                  {item.audioUrl && (
+                    <button
+                      type="button"
+                      onClick={() => play(item.audioUrl!)}
+                      aria-label={copy.listen}
+                      className="text-muted-foreground hover:text-foreground shrink-0"
+                    >
+                      <Volume2 aria-hidden="true" className="size-4" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -192,23 +200,24 @@ export function RulePageOne({
 }
 
 /**
- * Page two of a rule: what to watch for. Each note says in its own chip whether it is an exception or more
- * detail, then the line in the learner's language and in simple English, then the sentences that show it
+ * Page two of a rule: what to watch for. Each note says in its own chip whether it is an exception, a slip that
+ * is easy to make or more detail, then the line in the learner's language and in simple English, then the sentences that show it
  * with the letters in colour. Two notes sit side by side on a wide screen, so the page still fits one
  * screen. `children` is the button row.
  */
 export function RulePageTwo({
   rule,
+  teach,
   copy,
   locale,
   children,
 }: {
   rule: RuleSpec | undefined;
+  teach: RuleTeach | undefined;
   copy: RuleStrings;
   locale: SupportLocale | null;
   children: ReactNode;
 }) {
-  const teach = rule ? teachFor(rule.id) : undefined;
   return (
     <div className="flex flex-col items-center gap-7 text-center">
       <RuleHead kicker={rule?.title ?? ""} title={copy.watchOut} dir="auto" />
@@ -225,7 +234,11 @@ export function RulePageTwo({
               className="border-border text-muted-foreground rounded-full border px-3 py-0.5 text-xs font-medium"
               dir="auto"
             >
-              {note.kind === "exception" ? copy.exception : copy.detail}
+              {note.kind === "exception"
+                ? copy.exception
+                : note.kind === "mistake"
+                  ? copy.mistake
+                  : copy.detail}
             </span>
             <p
               className="text-foreground text-xl leading-relaxed font-medium text-balance sm:text-2xl"

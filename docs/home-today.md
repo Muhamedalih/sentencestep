@@ -50,9 +50,21 @@ for the current Home):
   today; nothing is recorded). A due earlier-rule question also comes at the END of Today (after
   the words, from `/learn/today/go`), never before the first task.
   The rule row also carries the rule library's pill («قواعدي · N», from the first rule met): it opens
-  `/learn/rules` (under the same `dailyRule` permission; a menu item from md: up too), which lists every
-  rule met (the due ones first) and opens each as the same two pages, with a practice of three sentences
-  from the learner's own texts (`/learn/today/rule?practice=<id>`, nothing recorded).
+  `/learn/rules` (under the same `dailyRule` permission; a menu item from md: up too), the whole course as a
+  map: the levels the learner is on (A1, A2–B1, B2), each split into units that fold open, the rules due today
+  first, the rule that opens next marked and the ones ahead as titles only; each rule met opens as the same two
+  pages, with a practice of three sentences (`/learn/today/rule?practice=<id>`, nothing recorded).
+  The course is `lib/daily-rule/syllabus.ts` (150 rules in the order they open: A1 45, A2–B1 60, B2 45; the
+  units are `units.ts`; what each rule teaches is `teach.ts` and the files of its level, with six prepared
+  sentences each). One new rule a day: the next one in order, but one of the next three comes first when the
+  learner's own text shows it (three sentences or more; never more than two rules may stand ahead of the first
+  one not met), and otherwise the next rule is taught from its prepared sentences, so the course goes on whatever
+  was read. Once every rule of a level is met the course goes on to the next level (`teachingLevel` in
+  `levels.ts`); the rules of other levels that were met are still asked when due. A visit asks up to four
+  earlier rules (`RECALL_LIMIT`), from the learner's finished texts or, when they do not show the rule, from
+  its prepared sentences; five rules due at once pause the new rule for a day (`RULE_CATCH_UP_DUE`). A prepared
+  sentence has a recording only once one is stored under the default pronunciation voice (`withPreparedClips`
+  in `load.ts` only looks it up); until then its question is silent and shows none of the sound controls.
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home
   (continue / resume / start, free lessons finished, everything finished). It has the **same springy

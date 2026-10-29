@@ -3,7 +3,13 @@ import test from "node:test";
 
 import { A1_LADDER, ruleById, type MatchKind } from "@/lib/daily-rule/ladder";
 import { candidatesFor } from "@/lib/daily-rule/matchers";
-import { aroundToken, diagnose, normalizeAnswer, tokenize } from "@/lib/daily-rule/tokens";
+import {
+  aroundToken,
+  diagnose,
+  diagnoseAny,
+  normalizeAnswer,
+  tokenize,
+} from "@/lib/daily-rule/tokens";
 
 /** The words a matcher picked, in order, so an assertion reads as English. */
 function picked(kind: MatchKind, sentence: string): string[] {
@@ -12,19 +18,26 @@ function picked(kind: MatchKind, sentence: string): string[] {
 }
 
 test("every rule on the ladder has a matcher, an id and a title", () => {
-  assert.equal(A1_LADDER.length, 24);
+  assert.equal(A1_LADDER.length, 45);
   assert.deepEqual(
     A1_LADDER.map((rule) => rule.order),
-    Array.from({ length: 24 }, (_, index) => index + 1),
+    Array.from({ length: 45 }, (_, index) => index + 1),
   );
-  assert.equal(new Set(A1_LADDER.map((rule) => rule.id)).size, 24);
+  assert.equal(new Set(A1_LADDER.map((rule) => rule.id)).size, 45);
   for (const rule of A1_LADDER) {
     assert.match(rule.id, /^a1-\d{2}$/);
-    assert.ok(rule.title.length > 0 && rule.rule.length > 0 && rule.gloss.length > 0);
-    assert.ok(rule.right !== rule.wrong, `${rule.id}: right and wrong must differ`);
+    assert.ok(rule.title.length > 0 && rule.unit.length > 0);
   }
   assert.equal(ruleById("a1-04")?.title, "he / she / it + -s");
   assert.equal(ruleById("a1-99"), undefined);
+});
+
+test("a typed answer is right when it is any of the answers a sentence accepts", () => {
+  assert.equal(diagnoseAny("is not", ["isn't", "is not"]), "correct");
+  assert.equal(diagnoseAny("Isn't", ["isn't", "is not"]), "correct");
+  assert.equal(diagnoseAny("work", ["works"]), "missing-s");
+  assert.equal(diagnoseAny("walk", ["walked", "did walk"]), "missing-ed");
+  assert.equal(diagnoseAny("banana", ["isn't", "is not"]), "other");
 });
 
 test("the be-verb, articles and possessives are found where they stand", () => {

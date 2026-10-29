@@ -30,6 +30,27 @@ export function hasRuleLadder(level: number): boolean {
   return ladderForLevel(level) !== null;
 }
 
+/**
+ * The level whose rules a learner is taught now: their own, or the next one once they have met every rule of it
+ * (the course goes on to A2–B1 after A1, and to B2 after A2–B1; B2 is the last). `met` holds the ids of the
+ * rules the learner has met.
+ */
+export function teachingLevel(level: number, met: ReadonlySet<string>): number {
+  let current = level;
+  while (current < 3) {
+    const ladder = ladderForLevel(current);
+    if (!ladder || ladder.some((rule) => !met.has(rule.id))) break;
+    current += 1;
+  }
+  return current;
+}
+
+/** Whether a learner at this level still has a rule to be taught (some rule of their teaching level is not met). */
+export function hasRuleToTeach(level: number, met: ReadonlySet<string>): boolean {
+  const ladder = ladderForLevel(teachingLevel(level, met));
+  return ladder !== null && ladder.some((rule) => !met.has(rule.id));
+}
+
 /** Every rule of every level: a stored answer is checked against this list. */
 export const ALL_RULES: readonly RuleSpec[] = [...A1_LADDER, ...A2_LADDER, ...B2_LADDER];
 

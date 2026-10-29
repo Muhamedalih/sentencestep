@@ -3,16 +3,16 @@
  * the learner sees WHAT the rule changes ("read" + "ing", "work" + "ed", or the whole word when the
  * rule is about the word itself: is, are, the, can). Two ways in:
  *
- * - splitMark: for a word a matcher picked (the blank of a question, a word of a story sentence). The
- *   rule's match kind says which ending it is about, so the same word is split differently by
- *   different rules.
+ * - splitMark / splitByStyle: for a word a matcher picked or a prepared sentence blanked (the blank of a
+ *   question, a word of a story sentence). The rule's mark style says which ending it is about (a rule that
+ *   does not say takes the style of its matcher), so the same word is split differently by different rules.
  * - parseMarked: for the rule's own sentences, written by hand with the part in square brackets
  *   ("She read[s] it."), because there the part to show is a teaching choice, not a computation.
  *
  * Only the learner's eyes use this: a typed answer is still compared whole (tokens.ts).
  */
 
-import type { MatchKind } from "./ladder";
+import type { MarkStyle, MatchKind } from "./ladder";
 
 /** A word split into the letters that stay and the grammar letters (the whole word when the rule is about the word). */
 export interface MarkedWord {
@@ -59,42 +59,69 @@ function endsWith(word: string, ending: string): MarkedWord {
   return { stem: word.slice(0, cut), mark: word.slice(cut) };
 }
 
+/** The style of a rule's marks when the rule does not choose one: the ending its matcher looks for, else the whole word. */
+export function markStyleOf(kind: MatchKind): MarkStyle {
+  if (ING_KINDS.has(kind)) return "ing";
+  if (S_KINDS.has(kind)) return "s";
+  if (ED_KINDS.has(kind)) return "ed";
+  if (kind === "comparative") return "er";
+  if (kind === "possessive-s") return "possessive";
+  return "whole";
+}
+
 /**
- * The word split for the rule that picked it. A word that does not carry the rule's ending (an
- * irregular past, a plural like "children", better and worse) is all mark: the whole word is the form.
+ * The word split for a style. A word that does not carry the style's ending (an irregular past, a plural like
+ * "children", better and worse, well) is all mark: the whole word is the form.
  */
-export function splitMark(kind: MatchKind, word: string): MarkedWord {
+export function splitByStyle(style: MarkStyle, word: string): MarkedWord {
   const lower = word.toLowerCase();
 
-  if (ING_KINDS.has(kind)) {
-    return lower.length > 4 && lower.endsWith("ing") ? endsWith(word, "ing") : whole(word);
-  }
+  switch (style) {
+    case "ing":
+      return lower.length > 4 && lower.endsWith("ing") ? endsWith(word, "ing") : whole(word);
 
-  if (S_KINDS.has(kind)) {
-    if (lower.length > 4 && lower.endsWith("ies")) return endsWith(word, "ies");
-    if (/(?:ss|x|zz|ch|sh)es$/.test(lower) || O_ES.has(lower)) return endsWith(word, "es");
-    if (lower.length > 2 && lower.endsWith("s") && !lower.endsWith("ss"))
-      return endsWith(word, "s");
-    return whole(word);
-  }
+    case "s":
+      if (lower.length > 4 && lower.endsWith("ies")) return endsWith(word, "ies");
+      if (/(?:ss|x|zz|ch|sh)es$/.test(lower) || O_ES.has(lower)) return endsWith(word, "es");
+      if (lower.length > 2 && lower.endsWith("s") && !lower.endsWith("ss"))
+        return endsWith(word, "s");
+      return whole(word);
 
-  if (ED_KINDS.has(kind)) {
-    if (lower.length > 4 && lower.endsWith("ied")) return endsWith(word, "ied");
-    if (lower.length > 3 && lower.endsWith("ed")) return endsWith(word, "ed");
-    return whole(word);
-  }
+    case "ed":
+      if (lower.length > 4 && lower.endsWith("ied")) return endsWith(word, "ied");
+      if (lower.length > 3 && lower.endsWith("ed")) return endsWith(word, "ed");
+      return whole(word);
 
-  if (kind === "comparative") {
-    if (lower === "better" || lower === "worse") return whole(word);
-    return lower.length > 3 && lower.endsWith("er") ? endsWith(word, "er") : whole(word);
-  }
+    case "er":
+      if (lower === "better" || lower === "worse") return whole(word);
+      return lower.length > 3 && lower.endsWith("er") ? endsWith(word, "er") : whole(word);
 
-  if (kind === "possessive-s") {
-    const found = /^(.+?)(['’]s)$/i.exec(word);
-    if (found) return { stem: found[1]!, mark: found[2]! };
-  }
+    case "est":
+      if (lower === "best" || lower === "worst") return whole(word);
+      if (lower.length > 5 && lower.endsWith("iest")) return endsWith(word, "iest");
+      return lower.length > 4 && lower.endsWith("est") ? endsWith(word, "est") : whole(word);
 
-  return whole(word);
+    case "ly":
+      if (lower.length > 4 && lower.endsWith("ily")) return endsWith(word, "ily");
+      return lower.length > 3 && lower.endsWith("ly") ? endsWith(word, "ly") : whole(word);
+
+    case "ed-ing":
+      if (lower.length > 4 && lower.endsWith("ing")) return endsWith(word, "ing");
+      return lower.length > 3 && lower.endsWith("ed") ? endsWith(word, "ed") : whole(word);
+
+    case "possessive": {
+      const found = /^(.+?)(['’]s)$/i.exec(word);
+      return found ? { stem: found[1]!, mark: found[2]! } : whole(word);
+    }
+
+    case "whole":
+      return whole(word);
+  }
+}
+
+/** The word split for the rule that picked it (a rule without a mark style of its own: see markStyleOf). */
+export function splitMark(kind: MatchKind, word: string): MarkedWord {
+  return splitByStyle(markStyleOf(kind), word);
 }
 
 /** A sentence written with its marked parts in square brackets, as runs: "She read[s] it." -> She read | s | it. */

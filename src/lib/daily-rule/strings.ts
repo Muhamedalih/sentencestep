@@ -20,7 +20,6 @@ export interface RuleStrings {
   skip: string;
   next: string;
   listen: string;
-  noticeTitle: string;
   ruleTitle: string;
   exception: string;
   useTitle: string;
@@ -52,6 +51,12 @@ export interface RuleStrings {
   watchOut: string;
   /** The label of a note on the second page that is more to know, not an exception (see "exception"). */
   detail: string;
+  /** The label of a note on the second page about a slip that is easy to make (the rule differs from the learner's own language). */
+  mistake: string;
+  /** The label above the rule's prepared example sentences on its first page (the sentences of the learner's story have «fromYourStory»). */
+  examples: string;
+  /** A rule's place on its level, above its name: "{n}" of "{total}". */
+  ruleNumber: string;
   /** What a screen reader says of the right and the wrong sentence of the card. */
   rightSentence: string;
   wrongSentence: string;
@@ -63,10 +68,8 @@ export interface RuleStrings {
   libraryLevel: string;
   /** The library's first group: the rules whose day has come. */
   dueSection: string;
-  /** The library's second group: the other rules the learner has met. */
-  keptSection: string;
-  /** The rules of the level still ahead ({n}), folded under the list. */
-  upcoming: string;
+  /** The tag of the rule that opens next on the library's map. */
+  statusNext: string;
   /** A due rule's tag in the library. */
   statusDue: string;
   /** A held rule's tag in the library. */
@@ -110,7 +113,6 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     skip: "تخطَّ",
     next: "متابعة",
     listen: "استمع",
-    noticeTitle: "لاحظ الصيغة في قصتك",
     ruleTitle: "القاعدة",
     exception: "استثناء",
     useTitle: "استعمل القاعدة",
@@ -138,14 +140,16 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     back: "رجوع",
     watchOut: "انتبه",
     detail: "تفصيل",
+    mistake: "خطأ شائع",
+    examples: "أمثلة",
+    ruleNumber: "القاعدة {n} من {total}",
     rightSentence: "جملة صحيحة",
     wrongSentence: "جملة خاطئة",
     myRules: "قواعدي",
     myRulesPill: "قواعدي · {n}",
     libraryLevel: "{n} من {total} قاعدة في {level}",
     dueSection: "تحتاج مراجعة اليوم",
-    keptSection: "في قائمتك",
-    upcoming: "{n} قاعدة قادمة",
+    statusNext: "التالية",
     statusDue: "راجعها",
     statusHeld: "ثابتة",
     statusLearning: "قيد التثبيت",
@@ -173,7 +177,6 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     skip: "Omitir",
     next: "Continuar",
     listen: "Escuchar",
-    noticeTitle: "Fíjate en esta forma en tu historia",
     ruleTitle: "La regla",
     exception: "Excepción",
     useTitle: "Usa la regla",
@@ -201,14 +204,16 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     back: "Atrás",
     watchOut: "Ojo",
     detail: "Detalle",
+    mistake: "Error común",
+    examples: "Ejemplos",
+    ruleNumber: "Regla {n} de {total}",
     rightSentence: "Frase correcta",
     wrongSentence: "Frase incorrecta",
     myRules: "Mis reglas",
     myRulesPill: "Mis reglas · {n}",
     libraryLevel: "{n} de {total} reglas de {level}",
     dueSection: "Para repasar hoy",
-    keptSection: "En tu lista",
-    upcoming: "{n} reglas por venir",
+    statusNext: "Siguiente",
     statusDue: "Repásala",
     statusHeld: "Dominada",
     statusLearning: "Afianzándose",
@@ -237,7 +242,6 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     skip: "Atla",
     next: "Devam",
     listen: "Dinle",
-    noticeTitle: "Hikâyendeki bu biçime dikkat et",
     ruleTitle: "Kural",
     exception: "İstisna",
     useTitle: "Kuralı kullan",
@@ -265,14 +269,16 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     back: "Geri",
     watchOut: "Dikkat",
     detail: "Ayrıntı",
+    mistake: "Sık yapılan hata",
+    examples: "Örnekler",
+    ruleNumber: "Kural {n} / {total}",
     rightSentence: "Doğru cümle",
     wrongSentence: "Yanlış cümle",
     myRules: "Kurallarım",
     myRulesPill: "Kurallarım · {n}",
     libraryLevel: "{level}: {total} kuraldan {n} tanesi",
     dueSection: "Bugün tekrar edilecekler",
-    keptSection: "Listende",
-    upcoming: "Sıradaki {n} kural",
+    statusNext: "Sıradaki",
     statusDue: "Tekrar et",
     statusHeld: "Pekişti",
     statusLearning: "Pekişiyor",

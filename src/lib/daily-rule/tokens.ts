@@ -24,7 +24,12 @@ export function tokenize(sentence: string): Token[] {
   for (const match of sentence.matchAll(WORD)) {
     const text = match[0];
     const start = match.index ?? 0;
-    tokens.push({ text, lower: text.replace(/’/g, "'").toLowerCase(), start, end: start + text.length });
+    tokens.push({
+      text,
+      lower: text.replace(/’/g, "'").toLowerCase(),
+      start,
+      end: start + text.length,
+    });
   }
   return tokens;
 }
@@ -52,9 +57,24 @@ export function diagnose(typed: string, target: string): Diagnosis {
   const got = normalizeAnswer(typed);
   const want = target.toLowerCase();
   if (got === want) return "correct";
-  if (want.endsWith("ed") && (got === want.slice(0, -2) || got === want.slice(0, -1))) return "missing-ed";
+  if (want.endsWith("ed") && (got === want.slice(0, -2) || got === want.slice(0, -1)))
+    return "missing-ed";
   if (want.endsWith("s") && got === want.slice(0, -1)) return "missing-s";
   if (got === `${want}s`) return "extra-s";
   if ((want === "an" && got === "a") || (want === "a" && got === "an")) return "a-an";
   return "other";
+}
+
+/**
+ * The same, against every answer that is right (a prepared sentence may accept more than one: "isn't" and
+ * "is not"): correct when any of them matches, otherwise the first hint any of them gives, "other" if none.
+ */
+export function diagnoseAny(typed: string, answers: readonly string[]): Diagnosis {
+  let hint: Diagnosis = "other";
+  for (const answer of answers) {
+    const result = diagnose(typed, answer);
+    if (result === "correct") return "correct";
+    if (hint === "other") hint = result;
+  }
+  return hint;
 }

@@ -3,8 +3,19 @@ import { test } from "node:test";
 
 import { A1_LADDER, type MatchKind } from "./ladder";
 import { A2_LADDER, B2_LADDER } from "./ladder-higher";
-import { ALL_RULES, LEVEL_LABEL, MAX_WORDS_BY_LEVEL, hasRuleLadder, ladderForLevel, ruleById } from "./levels";
+import {
+  ALL_RULES,
+  LEVEL_LABEL,
+  MAX_WORDS_BY_LEVEL,
+  hasRuleLadder,
+  hasRuleToTeach,
+  ladderForLevel,
+  ruleById,
+  teachingLevel,
+} from "./levels";
 import { candidatesFor } from "./matchers";
+import { stripMarks } from "./marks";
+import { teachFor } from "./teach";
 import { tokenize } from "./tokens";
 
 /** The words a rule would blank in a sentence, in reading order (the first one is what a learner types). */
@@ -22,14 +33,30 @@ test("the ladders: ids are unique, each ladder starts at 1, each rule carries it
   assert.ok(A1_LADDER.every((rule) => rule.level === "A1"));
   assert.ok(A2_LADDER.every((rule) => rule.level === "A2-B1"));
   assert.ok(B2_LADDER.every((rule) => rule.level === "B2"));
-  assert.equal(A2_LADDER.length, 8);
-  assert.equal(B2_LADDER.length, 7);
+  assert.equal(A1_LADDER.length, 45);
+  assert.equal(A2_LADDER.length, 60);
+  assert.equal(B2_LADDER.length, 45);
 });
 
-test("every rule's right sentence shows its own form, so the card's example is a real example", () => {
+test("every rule that has a matcher finds its own right sentence, so the card's example is a real example", () => {
   for (const rule of ALL_RULES) {
-    assert.ok(blanks(rule.match, rule.right).length > 0, `${rule.id}: ${rule.right}`);
+    if (rule.match === "none") continue;
+    const right = stripMarks(teachFor(rule.id)!.right);
+    assert.ok(blanks(rule.match, right).length > 0, `${rule.id}: ${right}`);
   }
+});
+
+test("the course goes on to the next level once every rule of a level is met", () => {
+  const all = (ladder: readonly { id: string }[]) => new Set(ladder.map((rule) => rule.id));
+  assert.equal(teachingLevel(1, new Set()), 1);
+  assert.equal(teachingLevel(1, all(A1_LADDER.slice(0, 44))), 1, "one rule short");
+  assert.equal(teachingLevel(1, all(A1_LADDER)), 2);
+  assert.equal(teachingLevel(1, all([...A1_LADDER, ...A2_LADDER])), 3);
+  assert.equal(teachingLevel(3, all(ALL_RULES)), 3, "B2 is the last level");
+  assert.equal(teachingLevel(2, all(A1_LADDER)), 2, "a learner who started at A2–B1 stays there");
+  assert.equal(hasRuleToTeach(1, all(A1_LADDER.slice(0, 44))), true);
+  assert.equal(hasRuleToTeach(1, all(A1_LADDER)), true, "the A2–B1 rules are next");
+  assert.equal(hasRuleToTeach(3, all(ALL_RULES)), false, "nothing is left to teach");
 });
 
 test("levels map to ladders, labels and sentence lengths", () => {
@@ -106,7 +133,9 @@ test("perfect continuous: have been with an -ing verb", () => {
 });
 
 test("past perfect: had with a participle, the adverb allowed", () => {
-  assert.deepEqual(blanks("past-perfect", "When I arrived, the film had already started."), ["started"]);
+  assert.deepEqual(blanks("past-perfect", "When I arrived, the film had already started."), [
+    "started",
+  ]);
   assert.deepEqual(blanks("past-perfect", "She had worked there for years."), ["worked"]);
   assert.deepEqual(blanks("past-perfect", "I had a dog."), []);
 });
