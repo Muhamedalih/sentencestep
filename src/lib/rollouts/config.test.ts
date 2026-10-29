@@ -187,6 +187,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     leanGate: false,
     libraryGift: false,
     hybridOffers: false,
+    todayCover: false,
   });
 });
 
@@ -240,6 +241,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       dailyRule: true,
       hybridOffers: true,
       honestTicks: true,
+      todayCover: true,
     },
     {
       ...before,
@@ -249,12 +251,20 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       dailyRule: true,
       hybridOffers: true,
       honestTicks: true,
+      todayCover: true,
     },
   );
   assert.equal(before.sentenceBank, true);
   // A plain learner has neither on the default settings.
   const learnerAccess = evaluateRollouts(defaultRolloutConfig(), learner);
   assert.equal(withRolloutDependencies(learnerAccess).sentenceBank, false);
+});
+
+test("the passage cover lives inside Today's tasks: it is never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).todayCover, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).todayCover, false);
+  assert.equal(withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).todayCover, false);
 });
 
 test("the new Home page is built from Today's tasks: it is never open without Today's session", () => {

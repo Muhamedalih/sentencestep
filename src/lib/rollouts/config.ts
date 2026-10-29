@@ -186,6 +186,7 @@ export function evaluateRollouts(
  * The words bank is fed by Today's words step, so it is closed whenever Today's session is too.
  * The hybrid offers (the taste of the day and the moments) live in Today's tasks as well.
  * The honest ticks change how Today's tasks count, so they are closed whenever Today's session is.
+ * The passage poster on the listening task is part of Today's tasks too.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
@@ -198,6 +199,7 @@ export function withRolloutDependencies(
     dailyRule: access.dailyRule && access.todaySession,
     hybridOffers: access.hybridOffers && access.todaySession,
     honestTicks: access.honestTicks && access.todaySession,
+    todayCover: access.todayCover && access.todaySession,
   };
 }
 

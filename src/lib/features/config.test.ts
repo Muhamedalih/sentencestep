@@ -409,6 +409,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       leanGate: false,
       libraryGift: false,
       hybridOffers: false,
+      todayCover: false,
     });
   }
 });

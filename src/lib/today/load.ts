@@ -5,7 +5,7 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { getLessonSummaries } from "@/lib/content";
 import type { EffectiveFeatures } from "@/lib/features/config";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
-import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
+import type { DailyQuest, TodayPoster, TodayQuestInfo } from "@/lib/features/quests";
 import { cefrForLevel } from "@/lib/home-plan/plan";
 import { LEARNER_VIEW_COOKIE } from "@/lib/hybrid/learner-view";
 import { todayPicks } from "@/lib/hybrid/picks";
@@ -44,6 +44,8 @@ export interface TodayStepData extends StepPlan {
   redoHref: string | null;
   /** The story's typing accuracy (0-1) when it was finished today, else null. */
   accuracy: number | null;
+  /** The listening step's passage, as its poster is drawn; null for the other steps and when there is no passage. */
+  poster: TodayPoster | null;
 }
 
 async function quiet<T>(label: string, read: () => Promise<T>, fallback: T): Promise<T> {
@@ -231,6 +233,9 @@ export async function loadTodaySteps(args: {
       href: picks.passage ? `/learn/passages/${picks.passage.id}?today=1` : "/learn/passages",
       redoHref: listenDoneSummary ? `/learn/passages/${listenDoneSummary.id}` : null,
       accuracy: null,
+      poster: listenShown
+        ? { tone: listenShown.tone, order: listenShown.order, posterUrl: listenShown.posterUrl }
+        : null,
     },
     story: {
       title: storyShown?.title ?? "",
@@ -239,6 +244,7 @@ export async function loadTodaySteps(args: {
       href: picks.story ? `/learn/stories/${picks.story.id}?today=1` : "/learn/stories",
       redoHref: storyDoneUnit ? `/learn/stories/${storyDoneUnit.id}` : null,
       accuracy: storyToday?.accuracy ?? null,
+      poster: null,
     },
     words: {
       title: "",
@@ -247,6 +253,7 @@ export async function loadTodaySteps(args: {
       href: "/learn/today/words",
       redoHref: "/learn/today/words",
       accuracy: null,
+      poster: null,
     },
   };
 
@@ -346,6 +353,7 @@ export async function enrichTodayQuests(args: {
         redoHref: step.redoHref,
         accuracy: step.accuracy,
         paid: quest.completed,
+        poster: step.poster,
       };
       enriched.push({
         ...quest,

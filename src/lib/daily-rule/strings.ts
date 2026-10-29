@@ -38,6 +38,10 @@ export interface RuleStrings {
   continueWords: string;
   buttonTitle: string;
   buttonHint: string;
+  /** The label above the rule's row on Home: the rule closes the day, after the words step. */
+  endDay: string;
+  /** The row's button, shown once the day's three tasks are done. */
+  startRule: string;
   recallOnly: string;
 }
 
@@ -75,6 +79,8 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     continueWords: "متابعة إلى الكلمات",
     buttonTitle: "قاعدة اليوم من هذه القصة",
     buttonHint: "دقيقة ونصف تقريباً، اختيارية",
+    endDay: "اختم اليوم بالقواعد",
+    startRule: "ابدأ القاعدة",
     recallOnly: "سؤال من قواعدك السابقة",
   },
   es: {
@@ -110,6 +116,8 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     continueWords: "Seguir con las palabras",
     buttonTitle: "Regla del día de esta historia",
     buttonHint: "Un minuto y medio, opcional",
+    endDay: "Termina el día con las reglas",
+    startRule: "Empieza la regla",
     recallOnly: "Pregunta de tus reglas anteriores",
   },
   tr: {
@@ -145,6 +153,8 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     continueWords: "Kelimelere geç",
     buttonTitle: "Bu hikâyeden günün kuralı",
     buttonHint: "Yaklaşık bir buçuk dakika, isteğe bağlı",
+    endDay: "Günü kurallarla bitir",
+    startRule: "Kurala başla",
     recallOnly: "Önceki kurallarından bir soru",
   },
 };

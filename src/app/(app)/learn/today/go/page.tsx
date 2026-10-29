@@ -41,18 +41,6 @@ export default async function TodayGoPage({
     hybridOffers: features.rollouts.hybridOffers,
     passagesEnabled: features.passages.enabled,
   });
-  // A rule that is due and nothing asked today yet: the rule of the day comes first, once a day, and
-  // `rule=skip` (the card's own "skip") lets the learner on to the step they asked for.
-  const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
-  if (
-    features.rollouts.dailyRule &&
-    redo !== "1" &&
-    rule !== "skip" &&
-    (await hasRuleDueToday(user.id, todayISO).catch(() => false))
-  ) {
-    redirect("/learn/today/rule?recall=1");
-  }
-
   const redoing = redo === "1";
   const storyId = redoing
     ? ((await loadTodayStoryDone({ timeZone })) ?? next.storyId)
@@ -65,6 +53,17 @@ export default async function TodayGoPage({
   for (const kind of STEP_KINDS.slice(STEP_KINDS.indexOf(wanted))) {
     const href = targets[kind];
     if (href) redirect(href);
+  }
+  // The day ends with the rules: a rule that is due and nothing asked today yet comes after the last
+  // step, once a day, and `rule=skip` (the card's own "skip") goes straight to the finish screen.
+  const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
+  if (
+    features.rollouts.dailyRule &&
+    !redoing &&
+    rule !== "skip" &&
+    (await hasRuleDueToday(user.id, todayISO).catch(() => false))
+  ) {
+    redirect("/learn/today/rule?recall=1");
   }
   redirect("/learn/today/end");
 }

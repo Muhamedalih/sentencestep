@@ -37,6 +37,12 @@ for the current Home):
   calm "Redo today's lessons" line once the day is done. The words task carries a small **typing hint**
   (a field with two letters typed, a blinking caret, three still to type, and «تكتب كل كلمة بنفسك») so
   it reads as writing practice; it names no word and the caret stops for reduced motion.
+  Two permissions shape the box (both Admins only until opened): `dailyRule` adds the rule of the day as
+  the LAST row, after the words, titled «اختم اليوم بالقواعد» (end the day with the rules) and drawn like
+  the tasks (its meta: «قاعدة اليوم», the level, the minutes; lifted with «ابدأ القاعدة» once the three
+  tasks are done). `todayCover` draws the listening task with its passage's poster (the same colours and
+  picture as the Passages list) in place of the headphones. A due earlier-rule question also comes at the
+  END of Today (after the words, from `/learn/today/go`), never before the first task.
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home
   (continue / resume / start, free lessons finished, everything finished). It has the **same springy

@@ -17,11 +17,12 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
 /**
- * The rule of the day, as a short sequence of cards: a question on an earlier rule (if one is due), the
- * new rule taught from the story just read (the form in two of its sentences, the rule in plain English,
- * the contrast and the exception), three sentences to type, and a last card that says where the rule
- * now stands. Every sound is a stored recording of the sentence, never the browser's voice. Each card's
- * outcome is recorded once it is final; leaving early records only what was finished.
+ * The rule of the day, as a short sequence of cards on a bare screen: no frames, the card in the middle
+ * of what is left under the progress bars. A question on an earlier rule (if one is due), the new rule
+ * taught from the story just read (the rule itself first and largest, then its examples, then the
+ * exception), three sentences to type, and a last card that says where the rule now stands. Every sound
+ * is a stored recording of the sentence, never the browser's voice. Each card's outcome is recorded once
+ * it is final; leaving early records only what was finished.
  */
 
 export interface DailyRuleRunnerProps {
@@ -62,7 +63,9 @@ export function DailyRuleRunner({
     const out: Step[] = visit.recall.map((task) => ({ kind: "recall", task }));
     if (visit.learn) {
       out.push({ kind: "notice", learn: visit.learn });
-      visit.learn.items.forEach((_, index) => out.push({ kind: "use", learn: visit.learn!, index }));
+      visit.learn.items.forEach((_, index) =>
+        out.push({ kind: "use", learn: visit.learn!, index }),
+      );
     }
     out.push({ kind: "done" });
     return out;
@@ -110,72 +113,78 @@ export function DailyRuleRunner({
   );
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4 py-4">
-      <div className="border-border/60 bg-card flex w-full max-w-xl flex-col gap-3 rounded-3xl border px-5 py-5 shadow-sm sm:px-7">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-muted-foreground text-xs font-medium" dir="auto">
-            {copy.title}
-          </p>
-          <div className="flex items-center gap-2">
-            {visit.learn?.source === "review" && step.kind !== "done" && (
-              <span className="border-border text-muted-foreground rounded-full border px-2.5 py-0.5 text-xs" dir="auto">
-                {copy.review}
-              </span>
-            )}
-            {step.kind !== "done" && (
-              <Link href={continueHref} prefetch={false} className="text-muted-foreground text-xs underline-offset-4 hover:underline">
-                <span dir="auto">{copy.skip}</span>
-              </Link>
-            )}
-          </div>
+    <section className="flex min-h-svh flex-col px-5 pt-5 pb-6 sm:px-8">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-muted-foreground text-xs font-medium" dir="auto">
+          {copy.title}
+        </p>
+        <div className="flex items-center gap-3">
+          {visit.learn?.source === "review" && step.kind !== "done" && (
+            <span className="text-muted-foreground text-xs" dir="auto">
+              {copy.review}
+            </span>
+          )}
+          {step.kind !== "done" && (
+            <Link
+              href={continueHref}
+              prefetch={false}
+              className="text-muted-foreground text-xs underline-offset-4 hover:underline"
+            >
+              <span dir="auto">{copy.skip}</span>
+            </Link>
+          )}
         </div>
-        {cards > 0 && progress}
+      </div>
+      {cards > 0 && <div className="mt-3">{progress}</div>}
 
-        {step.kind === "recall" && (
-          <RecallCard
-            key={`recall-${at}`}
-            rule={ruleById(step.task.ruleId)}
-            item={step.task.item}
-            label={step.task.kind === "interleave" ? copy.interleave : copy.yesterday}
-            copy={copy}
-            onDone={(result) => finishRecall(step.task, result)}
-          />
-        )}
+      <div className="flex flex-1 items-center justify-center py-4">
+        <div className="flex w-full max-w-xl flex-col">
+          {step.kind === "recall" && (
+            <RecallCard
+              key={`recall-${at}`}
+              rule={ruleById(step.task.ruleId)}
+              item={step.task.item}
+              label={step.task.kind === "interleave" ? copy.interleave : copy.yesterday}
+              copy={copy}
+              onDone={(result) => finishRecall(step.task, result)}
+            />
+          )}
 
-        {step.kind === "notice" && (
-          <NoticeCard
-            key={`notice-${at}`}
-            rule={ruleById(step.learn.ruleId)}
-            learn={step.learn}
-            copy={copy}
-            locale={locale}
-            onNext={next}
-          />
-        )}
+          {step.kind === "notice" && (
+            <NoticeCard
+              key={`notice-${at}`}
+              rule={ruleById(step.learn.ruleId)}
+              learn={step.learn}
+              copy={copy}
+              locale={locale}
+              onNext={next}
+            />
+          )}
 
-        {step.kind === "use" && (
-          <UseCard
-            key={`use-${at}`}
-            rule={ruleById(step.learn.ruleId)}
-            item={step.learn.items[step.index]!}
-            index={step.index}
-            total={step.learn.items.length}
-            copy={copy}
-            onDone={(result) => finishUse(step.learn, result)}
-          />
-        )}
+          {step.kind === "use" && (
+            <UseCard
+              key={`use-${at}`}
+              rule={ruleById(step.learn.ruleId)}
+              item={step.learn.items[step.index]!}
+              index={step.index}
+              total={step.learn.items.length}
+              copy={copy}
+              onDone={(result) => finishUse(step.learn, result)}
+            />
+          )}
 
-        {step.kind === "done" && (
-          <DoneCard
-            copy={copy}
-            held={visit.held}
-            practised={practised.current}
-            continueHref={continueHref}
-            continueLabel={visit.learn && !daily ? copy.continueWords : copy.next}
-            ladderSize={ladderSize}
-            levelLabel={levelLabel}
-          />
-        )}
+          {step.kind === "done" && (
+            <DoneCard
+              copy={copy}
+              held={visit.held}
+              practised={practised.current}
+              continueHref={continueHref}
+              continueLabel={visit.learn && !daily ? copy.continueWords : copy.next}
+              ladderSize={ladderSize}
+              levelLabel={levelLabel}
+            />
+          )}
+        </div>
       </div>
     </section>
   );
@@ -282,35 +291,35 @@ function Question({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
+    <div className="flex flex-col items-center gap-7 text-center">
+      <div className="flex flex-col items-center gap-2">
         <p className="text-muted-foreground text-sm" dir="auto">
           {label}
         </p>
-        <h2 className="mt-1 text-2xl font-semibold tracking-tight" dir="ltr">
+        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl" dir="ltr">
           {rule?.title ?? ""}
         </h2>
       </div>
 
-      <div className="bg-muted/60 rounded-2xl p-3">
-        <p className="text-left text-lg leading-relaxed" dir="ltr">
-          {final ? (
-            <>
-              {item.before}
-              <mark className="text-primary bg-transparent font-semibold underline underline-offset-4">{item.answer}</mark>
-              {item.after}
-            </>
-          ) : (
-            <>
-              {item.before}
-              <span className="border-primary text-primary mx-1 inline-block min-w-16 border-b-2 text-center font-semibold">
-                {hinted ? `${item.answer.charAt(0)}…` : " "}
-              </span>
-              {item.after}
-            </>
-          )}
-        </p>
-      </div>
+      <p className="text-2xl leading-relaxed sm:text-3xl" dir="ltr">
+        {final ? (
+          <>
+            {item.before}
+            <mark className="text-primary bg-transparent font-semibold underline underline-offset-4">
+              {item.answer}
+            </mark>
+            {item.after}
+          </>
+        ) : (
+          <>
+            {item.before}
+            <span className="border-primary text-primary mx-1 inline-block min-w-16 border-b-2 text-center font-semibold">
+              {hinted ? `${item.answer.charAt(0)}…` : " "}
+            </span>
+            {item.after}
+          </>
+        )}
+      </p>
 
       {!final && (
         <input
@@ -323,7 +332,7 @@ function Question({
           spellCheck={false}
           aria-label={heading}
           placeholder={heading}
-          className="border-border bg-background focus:border-primary w-full rounded-xl border px-4 py-3 text-lg outline-none"
+          className="border-border focus:border-primary placeholder:text-muted-foreground/70 w-full max-w-md border-b-2 bg-transparent px-2 py-2 text-center text-2xl outline-none"
         />
       )}
 
@@ -346,7 +355,7 @@ function Question({
         </p>
       )}
 
-      <div className="mt-1 flex flex-col gap-2">
+      <div className="flex w-full max-w-md flex-col items-center gap-3">
         {!final ? (
           <>
             <button
@@ -357,12 +366,21 @@ function Question({
             >
               <span dir="auto">{copy.check}</span>
             </button>
-            <div className="flex items-center justify-between">
-              <button type="button" onClick={() => play(item.audioUrl)} className="text-muted-foreground inline-flex items-center gap-1.5 text-sm">
-                <Volume2 aria-hidden="true" className="size-4" /> <span dir="auto">{copy.listen}</span>
+            <div className="flex items-center justify-center gap-6">
+              <button
+                type="button"
+                onClick={() => play(item.audioUrl)}
+                className="text-muted-foreground inline-flex items-center gap-1.5 text-sm"
+              >
+                <Volume2 aria-hidden="true" className="size-4" />{" "}
+                <span dir="auto">{copy.listen}</span>
               </button>
               {!hinted && (
-                <button type="button" onClick={() => setHinted(true)} className="text-muted-foreground text-sm">
+                <button
+                  type="button"
+                  onClick={() => setHinted(true)}
+                  className="text-muted-foreground text-sm"
+                >
                   <span dir="auto">{copy.hint}</span>
                 </button>
               )}
@@ -377,8 +395,13 @@ function Question({
             >
               <span dir="auto">{copy.next}</span>
             </button>
-            <button type="button" onClick={() => play(item.audioUrl)} className="text-muted-foreground inline-flex items-center justify-center gap-1.5 text-sm">
-              <Volume2 aria-hidden="true" className="size-4" /> <span dir="auto">{copy.listen}</span>
+            <button
+              type="button"
+              onClick={() => play(item.audioUrl)}
+              className="text-muted-foreground inline-flex items-center justify-center gap-1.5 text-sm"
+            >
+              <Volume2 aria-hidden="true" className="size-4" />{" "}
+              <span dir="auto">{copy.listen}</span>
             </button>
           </>
         )}
@@ -387,7 +410,25 @@ function Question({
   );
 }
 
-/** The new rule: the form in the story, the rule in plain English, the contrast and the exception. */
+/**
+ * An Arabic line that names English words (the glosses do): each run of English keeps its own direction
+ * inside the Arabic sentence, so "-ing" and "to:" read in order instead of swapping places.
+ */
+function MixedLine({ text }: { text: string }) {
+  return (
+    <>
+      {text
+        .split(/([\x21-\x7E]+(?: [\x21-\x7E]+)*)/)
+        .map((part, index) => (index % 2 === 1 ? <bdi key={index}>{part}</bdi> : part))}
+    </>
+  );
+}
+
+/**
+ * The new rule, in the order a learner should take it in: the rule's name, large; the rule itself in
+ * plain English with its verbs (when it names some) and the Arabic gloss; the examples, the right and
+ * the wrong sentence and the two sentences from the story; then the exception, quieter, and the button.
+ */
 function NoticeCard({
   rule,
   learn,
@@ -402,56 +443,84 @@ function NoticeCard({
   onNext: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-4">
-      <div>
+    <div className="flex flex-col items-center gap-6 text-center">
+      <div className="flex flex-col items-center gap-3">
         <p className="text-muted-foreground text-sm" dir="auto">
           {copy.noticeTitle}
         </p>
-        <h2 className="mt-1 text-2xl font-semibold tracking-tight" dir="ltr">
+        <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl" dir="ltr">
           {rule?.title ?? ""}
         </h2>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {learn.notice.map((item) => (
-          <div key={item.sentenceId} className="bg-muted/60 flex items-center gap-3 rounded-2xl p-3">
-            <p className="flex-1 text-left text-base leading-relaxed" dir="ltr">
-              {item.before}
-              <mark className="text-primary bg-transparent font-semibold underline underline-offset-4">{item.answer}</mark>
-              {item.after}
-            </p>
-            <button type="button" onClick={() => play(item.audioUrl)} aria-label={copy.listen} className="text-muted-foreground shrink-0">
-              <Volume2 aria-hidden="true" className="size-4" />
-            </button>
-          </div>
-        ))}
+        <span aria-hidden="true" className="bg-primary h-1 w-12 rounded-full" />
       </div>
 
       {rule && (
-        <div className="flex flex-col gap-2">
-          <p className="text-base" dir="ltr">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xl leading-relaxed font-medium sm:text-2xl" dir="ltr">
             {rule.rule}
           </p>
-          {locale === "ar" && (
-            <p className="text-muted-foreground text-sm" dir="auto">
-              {rule.gloss}
+          {rule.words && (
+            <p className="text-primary text-lg font-semibold text-balance sm:text-xl" dir="ltr">
+              {rule.words.join(" · ")}
             </p>
           )}
-          <div className="bg-muted/60 mt-1 flex flex-col gap-1 rounded-2xl p-3 text-lg" dir="ltr">
-            <p className="text-success">✓ {rule.right}</p>
-            <p className="text-muted-foreground">✗ {rule.wrong}</p>
-          </div>
-          <div className="text-muted-foreground mt-1 flex flex-col gap-0.5 text-xs leading-relaxed">
-            <p className="text-foreground font-medium" dir="auto">
-              {copy.exception}
+          {locale === "ar" && (
+            <p className="text-muted-foreground pt-1 text-base" dir="auto">
+              <MixedLine text={rule.gloss} />
             </p>
-            <p dir="ltr">{rule.exception}</p>
-            {locale === "ar" && <p dir="auto">{rule.exceptionGloss}</p>}
-          </div>
+          )}
         </div>
       )}
 
-      <button type="button" onClick={onNext} className={cn(buttonVariants({ size: "lg" }), "mt-1 w-full")}>
+      <div className="flex flex-col items-center gap-4">
+        {rule && (
+          <div className="flex flex-col items-center gap-1 text-lg sm:text-xl" dir="ltr">
+            <p className="text-success font-medium">✓ {rule.right}</p>
+            <p className="text-muted-foreground">✗ {rule.wrong}</p>
+          </div>
+        )}
+        <ul className="flex flex-col items-center gap-2">
+          {learn.notice.map((item) => (
+            <li key={item.sentenceId} className="flex items-center gap-3">
+              <p className="text-base leading-relaxed text-balance sm:text-lg" dir="ltr">
+                {item.before}
+                <mark className="text-primary bg-transparent font-semibold underline underline-offset-4">
+                  {item.answer}
+                </mark>
+                {item.after}
+              </p>
+              <button
+                type="button"
+                onClick={() => play(item.audioUrl)}
+                aria-label={copy.listen}
+                className="text-muted-foreground shrink-0"
+              >
+                <Volume2 aria-hidden="true" className="size-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {rule && (
+        <div className="text-muted-foreground flex flex-col items-center gap-1 text-sm leading-relaxed">
+          <p className="text-foreground font-medium" dir="auto">
+            {copy.exception}
+          </p>
+          <p dir="ltr">{rule.exception}</p>
+          {locale === "ar" && (
+            <p dir="auto">
+              <MixedLine text={rule.exceptionGloss} />
+            </p>
+          )}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={onNext}
+        className={cn(buttonVariants({ size: "lg" }), "mt-1 w-full max-w-md")}
+      >
         <span dir="auto">{copy.next}</span>
       </button>
     </div>
@@ -480,11 +549,11 @@ function DoneCard({
     .map((id) => ruleById(id)?.title)
     .filter((title): title is string => title !== undefined);
   return (
-    <div className="flex flex-col items-center gap-4 text-center">
+    <div className="flex flex-col items-center gap-5 text-center">
       <span className="border-success/40 bg-success/[0.14] text-success grid size-11 place-items-center rounded-full border">
         <Check aria-hidden="true" className="size-5" strokeWidth={1.8} />
       </span>
-      <h2 className="text-2xl font-semibold tracking-tight" dir="auto">
+      <h2 className="text-3xl font-semibold tracking-tight" dir="auto">
         {copy.doneTitle}
       </h2>
       <p className="text-muted-foreground text-sm" dir="auto">
@@ -494,15 +563,17 @@ function DoneCard({
         {fill(copy.heldLine, { n: held, total: ladderSize, level: levelLabel })}
       </p>
       {titles.length > 0 && (
-        <ul className="flex w-full flex-col gap-1 text-start" dir="ltr">
+        <ul className="flex flex-col items-center gap-1.5 text-base" dir="ltr">
           {titles.map((title) => (
-            <li key={title} className="border-border/60 border-b py-2 text-sm">
-              {title}
-            </li>
+            <li key={title}>{title}</li>
           ))}
         </ul>
       )}
-      <Link href={continueHref} prefetch={false} className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full")}>
+      <Link
+        href={continueHref}
+        prefetch={false}
+        className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full max-w-md")}
+      >
         <span dir="auto">{continueLabel}</span>
       </Link>
     </div>

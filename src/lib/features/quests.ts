@@ -1,5 +1,6 @@
 import { DAILY_QUEST_COUNT, QUEST_TYPES } from "@/lib/features/catalog";
 import type { QuestType } from "@/lib/features/catalog";
+import type { PassageTone } from "@/lib/passages/types";
 import type { WeeklyLine } from "@/lib/sentence-bank/weekly";
 import type { TodayEndInfo } from "@/lib/today/end-state";
 
@@ -107,6 +108,15 @@ export interface TodayQuestInfo {
   accuracy: number | null;
   /** The quest itself was completed in the database (its XP is paid), not only derived from a lesson finished before it was dealt. */
   paid: boolean;
+  /** The listening task's passage, as its poster is drawn on Home (the todayCover permission decides whether it is shown). */
+  poster?: TodayPoster | null;
+}
+
+/** What a passage's poster is drawn from: the same tone and number as the Passages list, and the picture an admin chose (if any). */
+export interface TodayPoster {
+  tone: PassageTone;
+  order: number;
+  posterUrl: string | null;
 }
 
 export interface DailyQuest {
