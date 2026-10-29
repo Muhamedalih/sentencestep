@@ -36,6 +36,8 @@ export interface DailyRuleRunnerProps {
   levelLabel: string;
   /** The daily task from Home: the card carries on to Home, and the continue button says "next". */
   daily?: boolean;
+  /** The repeat of the day's session (redo=1): the same kind of cards, and nothing is recorded. */
+  redo?: boolean;
 }
 
 type Step =
@@ -57,6 +59,7 @@ export function DailyRuleRunner({
   ladderSize,
   levelLabel,
   daily = false,
+  redo = false,
 }: DailyRuleRunnerProps) {
   const copy = ruleStrings(locale);
   const steps = useMemo<Step[]>(() => {
@@ -77,6 +80,7 @@ export function DailyRuleRunner({
   const cards = steps.length - 1;
 
   function record(ruleId: string, outcome: RuleOutcome): void {
+    if (redo) return;
     void recordDailyRuleAction({ ruleId, outcome, todayISO }).catch(() => undefined);
   }
 

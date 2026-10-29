@@ -9,7 +9,14 @@ import {
 } from "@/lib/supabase/queries/learner-rules";
 
 import { ladderForLevel, MAX_WORDS_BY_LEVEL } from "./levels";
-import { isEmptyVisit, planRuleVisit, type RuleVisit, type SourceSentence } from "./visit";
+import {
+  isEmptyVisit,
+  planRedoVisit,
+  planRuleVisit,
+  type PlanInput,
+  type RuleVisit,
+  type SourceSentence,
+} from "./visit";
 
 /**
  * Server side of the rule of the day: gathers what the planner needs (the story just read, or the
@@ -35,6 +42,8 @@ export async function loadRuleVisit(args: {
   level: number;
   /** The daily task from Home: the new rule comes from the learner's own finished texts. */
   daily?: boolean;
+  /** The repeat of the day's session (the row's button once answered): what was taught and asked today. */
+  redo?: boolean;
 }): Promise<LoadedRuleVisit | null> {
   let level = args.level;
   let source: SourceSentence[] = [];
@@ -50,7 +59,8 @@ export async function loadRuleVisit(args: {
   if (!ladder) return null;
 
   const states = await fetchLearnerRuleStates(args.userId).catch((error: unknown) => {
-    if (!isMissingRulesSchema(error)) console.error("[daily-rule] could not read the learner's rules", error);
+    if (!isMissingRulesSchema(error))
+      console.error("[daily-rule] could not read the learner's rules", error);
     return [];
   });
 
@@ -65,7 +75,13 @@ export async function loadRuleVisit(args: {
   ];
   const finished = await fetchLevelSentences(lessonIds, level)
     .then((sentences) =>
-      withRecordings(sentences.map((sentence) => ({ id: sentence.id, lessonId: sentence.lessonId, en: sentence.en }))),
+      withRecordings(
+        sentences.map((sentence) => ({
+          id: sentence.id,
+          lessonId: sentence.lessonId,
+          en: sentence.en,
+        })),
+      ),
     )
     .catch((error: unknown) => {
       console.error("[daily-rule] could not read the finished texts", error);
@@ -75,7 +91,7 @@ export async function loadRuleVisit(args: {
   // The daily task has no story: its new rule comes from the learner's own finished texts.
   if (args.daily) source = finished;
 
-  const visit = planRuleVisit({
+  const input: PlanInput = {
     today: args.todayISO,
     states,
     source,
@@ -83,7 +99,9 @@ export async function loadRuleVisit(args: {
     seed: args.userId,
     ladder,
     maxWords: MAX_WORDS_BY_LEVEL[level],
-  });
+  };
+  // The repeat of the day's session plans what was taught and asked today, and the runner records nothing.
+  const visit = args.redo ? planRedoVisit(input) : planRuleVisit(input);
   return isEmptyVisit(visit) ? null : { ...visit, level };
 }
 

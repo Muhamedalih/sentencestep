@@ -30,3 +30,17 @@ export function ruleRowTarget(input: {
   }
   return null;
 }
+
+/**
+ * The row's links: where it goes until today's rule is answered (once it is, the row is done and is no longer
+ * a link), and where its repeat button goes: the same page, in redo mode once answered (today's session again).
+ */
+export function ruleRowLinks(
+  target: RuleRowTarget,
+  answeredToday: boolean,
+): { href: string | null; repeatHref: string } {
+  return {
+    href: answeredToday ? null : target.href,
+    repeatHref: answeredToday ? `${target.href}&redo=1` : target.href,
+  };
+}
