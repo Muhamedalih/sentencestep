@@ -410,6 +410,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       libraryGift: false,
       hybridOffers: false,
       todayCover: false,
+      todayRepeat: false,
     });
   }
 });

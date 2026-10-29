@@ -1176,6 +1176,7 @@ export const ar: Dictionary = {
     minutes: "{n} د",
     doneHeading: "أنهيت جلسة اليوم",
     redo: "إعادة دروس اليوم",
+    repeatTask: "أعد هذا الدرس",
     stepDoneListen: "أنهيت الاستماع",
     stepDoneStory: "أنهيت القصة",
     continueStory: "تابع إلى القصة",

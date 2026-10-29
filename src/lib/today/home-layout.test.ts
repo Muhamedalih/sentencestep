@@ -10,6 +10,7 @@ import {
   splitToday,
   testCardState,
   todayRedoHref,
+  todayTaskRepeatHref,
   todayTotals,
 } from "./home-layout";
 import { sentenceTestAvailable } from "./quests";
@@ -148,6 +149,31 @@ describe("todayRedoHref", () => {
       "/learn/today/go?step=words",
     );
     assert.equal(todayRedoHref([]), null);
+  });
+});
+
+describe("todayTaskRepeatHref", () => {
+  it("opens a task finished today in redo mode, as the day's redo does", () => {
+    const listen = info("listen", { redoHref: "/learn/passages/p1" });
+    const story = info("story", { redoHref: "/learn/stories/s1" });
+    assert.equal(todayTaskRepeatHref(listen, true), "/learn/passages/p1?today=1&redo=1");
+    assert.equal(todayTaskRepeatHref(story, true), "/learn/stories/s1?today=1&redo=1");
+  });
+
+  it("opens an unfinished task's lesson as the row does, without redo", () => {
+    const story = info("story", { href: "/learn/stories/s1?today=1" });
+    assert.equal(todayTaskRepeatHref(story, false), "/learn/stories/s1?today=1");
+  });
+
+  it("opens the words round again, finished or not", () => {
+    const words = info("words", { href: "/learn/today/words", redoHref: "/learn/today/words" });
+    assert.equal(todayTaskRepeatHref(words, true), "/learn/today/words");
+    assert.equal(todayTaskRepeatHref(words, false), "/learn/today/words");
+  });
+
+  it("falls back to the row's lesson when a finished task has no lesson to redo", () => {
+    const listen = info("listen", { href: "/learn/passages/p2?today=1" });
+    assert.equal(todayTaskRepeatHref(listen, true), "/learn/passages/p2?today=1");
   });
 });
 

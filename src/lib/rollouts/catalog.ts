@@ -24,6 +24,7 @@ export const ROLLOUT_IDS = [
   "mobilePath",
   "hybridOffers",
   "todayCover",
+  "todayRepeat",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -203,6 +204,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Needs Today's session to be open for the same people, and stays closed while Today's session is closed.",
       "Only the picture changes: the task, its passage, its XP and its place in the list are the same.",
+    ],
+  },
+  todayRepeat: {
+    id: "todayRepeat",
+    audience: "learner",
+    title: "Today: repeat buttons and pressable rows",
+    description:
+      "Each of Today's three tasks gets a small button that opens its lesson again: once the task is finished today it opens the lesson in redo mode, as “Redo today's lessons” does for the whole day; until then it opens the same lesson as the row. The rows lift a little under the pointer and press in like a real button, and so does the rule of the day's row while it is open.",
+    notes: [
+      "Needs Today's session to be open for the same people, and stays closed while Today's session is closed.",
+      "Only the buttons and the motion change: the tasks, their order, their XP and what each one opens stay the same.",
+      "A learner who asked for reduced motion gets the buttons without the lift, the press and the turn of the icon.",
     ],
   },
   mobilePath: {

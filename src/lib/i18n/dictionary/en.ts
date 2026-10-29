@@ -1212,6 +1212,7 @@ export const en: Dictionary = {
     minutes: "{n} min",
     doneHeading: "Today's session is done",
     redo: "Redo today's lessons",
+    repeatTask: "Repeat this lesson",
     stepDoneListen: "Listening done",
     stepDoneStory: "Story done",
     continueStory: "Continue to the story",

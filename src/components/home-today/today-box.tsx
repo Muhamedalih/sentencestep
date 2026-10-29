@@ -13,7 +13,12 @@ import { todayTaskTitle } from "@/components/today/today-tasks";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import type { DailyQuest, DailyQuestsPayload, TodayPoster } from "@/lib/features/quests";
 import { posterArtFor } from "@/lib/passages/art";
-import { splitToday, todayRedoHref, todayTotals } from "@/lib/today/home-layout";
+import {
+  splitToday,
+  todayRedoHref,
+  todayTaskRepeatHref,
+  todayTotals,
+} from "@/lib/today/home-layout";
 import { cn } from "@/lib/utils";
 
 /** The optional rule of the day on Home's box: where its row links, its level's name, and whether today's rule is answered. */
@@ -29,13 +34,16 @@ export interface RuleRowState {
  * same icon, title and meta line (the rule, its level and its minutes). It is not one of the three tasks,
  * so the ring and the day's reward do not count it. Once the three are done it is the step in progress:
  * lifted, with the solid button. Linked until today's rule is answered, then a quiet "done today" line.
+ * With the todayRepeat permission a linked row presses like the tasks do; it has no repeat button, since
+ * its one action is the rule itself.
  */
 function RuleRow({
   href,
   levelLabel,
   answeredToday,
   inProgress,
-}: RuleRowState & { inProgress: boolean }) {
+  repeat,
+}: RuleRowState & { inProgress: boolean; repeat: boolean }) {
   const { locale } = useLocale();
   const rule = ruleStrings(locale);
   const lifted = inProgress && !answeredToday;
@@ -81,7 +89,13 @@ function RuleRow({
     </div>
   );
   return (
-    <li>
+    <li
+      className={
+        repeat && href
+          ? "transition-[translate,scale] duration-200 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98]"
+          : undefined
+      }
+    >
       {href ? (
         <Link
           href={href}
@@ -185,11 +199,14 @@ function TaskRow({
   quest,
   current,
   cover,
+  repeat,
 }: {
   quest: DailyQuest;
   current: boolean;
   /** The passage's poster stands in for the headphones on the listening task (the todayCover permission). */
   cover: boolean;
+  /** The row's repeat button and its pressable motion (the todayRepeat permission). */
+  repeat: boolean;
 }) {
   const { t } = useLocale();
   const copy = t.today;
@@ -213,15 +230,21 @@ function TaskRow({
   const supportTitle = current && !done ? info.supportTitle : null;
   const hasMeta = Boolean(info.title || supportTitle || info.levelCode || !done || accuracyLine);
   const poster = cover && !done && info.kind === "listen" && info.poster ? info.poster : null;
+  const repeatHref = repeat ? todayTaskRepeatHref(info, done) : null;
   return (
-    <li>
+    <li
+      className={cn(
+        "roomy:rounded-2xl rounded-xl",
+        repeat
+          ? "flex items-stretch transition-[background-color,translate,scale] duration-200 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98]"
+          : "transition-colors",
+        current ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50",
+      )}
+    >
       <Link
         href={info.href}
         aria-current={current ? "step" : undefined}
-        className={cn(
-          "focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
-          current ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50",
-        )}
+        className="focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] block min-w-0 flex-1 rounded-xl px-3.5 py-3 outline-none focus-visible:ring-2"
       >
         <div className="roomy:gap-4 flex items-start gap-3">
           {poster ? (
@@ -302,6 +325,20 @@ function TaskRow({
           </div>
         </div>
       </Link>
+      {repeatHref && (
+        <Link
+          href={repeatHref}
+          aria-label={`${copy.repeatTask}: ${todayTaskTitle(copy, info.kind)}`}
+          title={copy.repeatTask}
+          className="group/repeat border-border bg-background/60 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring roomy:mt-1 me-2.5 mt-1.5 flex size-8 shrink-0 items-center justify-center self-start rounded-lg border transition-[background-color,color,scale] duration-200 ease-out outline-none focus-visible:ring-2 motion-safe:active:scale-90"
+        >
+          <RotateCcw
+            aria-hidden="true"
+            className="size-4 transition-transform duration-500 ease-out motion-safe:group-hover/repeat:-rotate-180"
+            strokeWidth={1.8}
+          />
+        </Link>
+      )}
     </li>
   );
 }
@@ -319,6 +356,7 @@ export function TodayBox({
   className,
   ruleRow,
   cover = false,
+  repeat = false,
 }: {
   payload: DailyQuestsPayload;
   /** What the self-test card at the foot shows; none when the day has no test for this learner. */
@@ -328,6 +366,8 @@ export function TodayBox({
   ruleRow?: RuleRowState;
   /** The listening task is drawn with its passage's poster (todayCover permission). */
   cover?: boolean;
+  /** Each task gets its repeat button, and the rows their pressable motion (todayRepeat permission). */
+  repeat?: boolean;
 }) {
   const { t } = useLocale();
   const copy = t.today;
@@ -374,9 +414,10 @@ export function TodayBox({
             quest={quest}
             current={quest.slot === current?.slot}
             cover={cover}
+            repeat={repeat}
           />
         ))}
-        {ruleRow && <RuleRow {...ruleRow} inProgress={current === undefined} />}
+        {ruleRow && <RuleRow {...ruleRow} inProgress={current === undefined} repeat={repeat} />}
       </ul>
       {payload.allDone && (
         <div className="border-border/60 roomy:mt-[clamp(0.4rem,1.4svh,1rem)] roomy:px-2 roomy:pt-[clamp(0.4rem,1.4svh,1rem)] mt-3 flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3">
