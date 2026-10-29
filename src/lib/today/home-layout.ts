@@ -1,4 +1,4 @@
-import type { DailyQuest } from "@/lib/features/quests";
+import type { DailyQuest, TodayQuestInfo } from "@/lib/features/quests";
 
 import { requiredQuests, sentenceQuest } from "./quests";
 
@@ -90,4 +90,14 @@ export function todayRedoHref(quests: readonly DailyQuest[]): string | null {
   const redo = quests.find((quest) => quest.today?.redoHref && quest.today.kind !== "words");
   if (redo?.today?.redoHref) return `${redo.today.redoHref}?today=1&redo=1`;
   return quests.find((quest) => quest.today?.kind === "words")?.today?.href ?? null;
+}
+
+/**
+ * Where a task's repeat button goes: its own lesson again. Once the task is finished today that is the
+ * lesson in redo mode (the link «Redo today's lessons» takes for it, see todayRedoHref); until then it is
+ * the lesson the row opens. The words round is one page either way.
+ */
+export function todayTaskRepeatHref(info: TodayQuestInfo, done: boolean): string {
+  if (done && info.redoHref && info.kind !== "words") return `${info.redoHref}?today=1&redo=1`;
+  return info.href;
 }

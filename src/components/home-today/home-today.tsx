@@ -110,6 +110,7 @@ async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | n
         test={state === "hidden" ? undefined : { state, quest: test }}
         ruleRow={ruleRow}
         cover={features.rollouts.todayCover}
+        repeat={features.rollouts.todayRepeat}
       />
     </>
   );

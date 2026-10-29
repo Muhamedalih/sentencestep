@@ -188,6 +188,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     libraryGift: false,
     hybridOffers: false,
     todayCover: false,
+    todayRepeat: false,
   });
 });
 
@@ -242,6 +243,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       hybridOffers: true,
       honestTicks: true,
       todayCover: true,
+      todayRepeat: true,
     },
     {
       ...before,
@@ -252,6 +254,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       hybridOffers: true,
       honestTicks: true,
       todayCover: true,
+      todayRepeat: true,
     },
   );
   assert.equal(before.sentenceBank, true);
@@ -264,7 +267,20 @@ test("the passage cover lives inside Today's tasks: it is never open without Tod
   const open = evaluateRollouts(defaultRolloutConfig(), admin);
   assert.equal(withRolloutDependencies(open).todayCover, true);
   assert.equal(withRolloutDependencies({ ...open, todaySession: false }).todayCover, false);
-  assert.equal(withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).todayCover, false);
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).todayCover,
+    false,
+  );
+});
+
+test("the repeat buttons live inside Today's tasks: Admins only, and never open without Today's session", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).todayRepeat, true);
+  assert.equal(withRolloutDependencies({ ...open, todaySession: false }).todayRepeat, false);
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).todayRepeat,
+    false,
+  );
 });
 
 test("the new Home page is built from Today's tasks: it is never open without Today's session", () => {

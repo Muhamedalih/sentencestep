@@ -1522,6 +1522,7 @@ export interface Dictionary {
     minutes: string;
     doneHeading: string;
     redo: string;
+    repeatTask: string;
     stepDoneListen: string;
     stepDoneStory: string;
     continueStory: string;

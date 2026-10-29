@@ -1206,6 +1206,7 @@ export const tr: Dictionary = {
     minutes: "{n} dk",
     doneHeading: "Bugünün oturumunu bitirdin",
     redo: "Bugünün derslerini tekrarla",
+    repeatTask: "Bu dersi tekrarla",
     stepDoneListen: "Dinlemeyi bitirdin",
     stepDoneStory: "Hikâyeyi bitirdin",
     continueStory: "Hikâyeye geç",
