@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { DailyRuleRunner } from "@/components/today/daily-rule-runner";
 import { LEVEL_LABEL, ladderForLevel } from "@/lib/daily-rule/levels";
-import { loadRuleVisit } from "@/lib/daily-rule/load";
+import { loadPracticeVisit, loadRuleVisit } from "@/lib/daily-rule/load";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -28,13 +28,22 @@ export const metadata: Metadata = { title: "Today's session" };
  *   yet. Only the earlier-rule question(s), then on to the finish screen.
  * - `redo=1` (with `daily=1`): the repeat button of the day's row once it is answered: what was taught and
  *   asked today, again, from the same texts. Nothing is recorded; then back to Home.
+ * - `practice=<rule id>`: from the rule library, a practice of one rule the learner has met: three sentences of
+ *   their own finished texts that show it, typed one after the other. Nothing is recorded; then back to the
+ *   library. With fewer than three such sentences it goes back to the rule's page, which says so.
  * Nothing to show (no ladder at this level, a story with no usable text, nothing due), or the permission
  * closed, or signed out: straight on to where the card would have gone, instead of an empty card.
  */
 export default async function TodayRulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; recall?: string; daily?: string; redo?: string }>;
+  searchParams: Promise<{
+    from?: string;
+    recall?: string;
+    daily?: string;
+    redo?: string;
+    practice?: string;
+  }>;
 }) {
   const [features, user, locale] = await Promise.all([
     getEffectiveFeatures(),
@@ -43,9 +52,33 @@ export default async function TodayRulePage({
   ]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
-  const { from, recall, daily, redo } = await searchParams;
+  const { from, recall, daily, redo, practice } = await searchParams;
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
+
+  if (typeof practice === "string" && practice.length > 0) {
+    const practiceVisit = await loadPracticeVisit({
+      userId: user.id,
+      todayISO,
+      ruleId: practice,
+    });
+    const practiceLadder = practiceVisit ? ladderForLevel(practiceVisit.level) : null;
+    if (!practiceVisit || !practiceLadder) {
+      redirect(`/learn/rules/${encodeURIComponent(practice)}?practice=none`);
+    }
+    return (
+      <DailyRuleRunner
+        visit={practiceVisit}
+        todayISO={todayISO}
+        locale={locale}
+        continueHref="/learn/rules"
+        ladderSize={practiceLadder.length}
+        levelLabel={LEVEL_LABEL[practiceVisit.level] ?? ""}
+        practice
+      />
+    );
+  }
+
   const progress = await fetchProgressCached(todayISO).catch(() => null);
   const level = progress?.startingLevel ?? 1;
   const dailyMode = daily === "1";
@@ -92,6 +125,7 @@ export default async function TodayRulePage({
       levelLabel={LEVEL_LABEL[visit.level] ?? ""}
       daily={dailyMode}
       redo={redoMode}
+      libraryHref="/learn/rules"
     />
   );
 }

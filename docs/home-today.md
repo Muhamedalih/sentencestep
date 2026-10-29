@@ -49,6 +49,10 @@ for the current Home):
   runs today's rule session again (the card of the rule first seen today, the questions on the rules reviewed
   today; nothing is recorded). A due earlier-rule question also comes at the END of Today (after
   the words, from `/learn/today/go`), never before the first task.
+  The rule row also carries the rule library's pill («قواعدي · N», from the first rule met): it opens
+  `/learn/rules` (under the same `dailyRule` permission; a menu item from md: up too), which lists every
+  rule met (the due ones first) and opens each as the same two pages, with a practice of three sentences
+  from the learner's own texts (`/learn/today/rule?practice=<id>`, nothing recorded).
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home
   (continue / resume / start, free lessons finished, everything finished). It has the **same springy

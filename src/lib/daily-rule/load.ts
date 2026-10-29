@@ -9,9 +9,10 @@ import {
   isMissingRulesSchema,
 } from "@/lib/supabase/queries/learner-rules";
 
-import { ladderForLevel, MAX_WORDS_BY_LEVEL } from "./levels";
+import { ladderForLevel, LEVEL_NUMBER, MAX_WORDS_BY_LEVEL, ruleById } from "./levels";
 import {
   isEmptyVisit,
+  planPracticeVisit,
   planRedoVisit,
   planRuleVisit,
   type PlanInput,
@@ -66,28 +67,7 @@ export async function loadRuleVisit(args: {
   });
 
   // The earlier-rule questions come from the learner's own finished texts at this level, never from anyone else's.
-  const progress = await fetchProgressCached(args.todayISO).catch(() => null);
-  const lessonIds = [
-    ...new Set(
-      (progress?.completions ?? [])
-        .filter((done) => done.mode === "stories" || done.mode === "normal")
-        .map((done) => done.lessonId),
-    ),
-  ];
-  const finished = await fetchLevelSentences(lessonIds, level)
-    .then((sentences) =>
-      withRecordings(
-        sentences.map((sentence) => ({
-          id: sentence.id,
-          lessonId: sentence.lessonId,
-          en: sentence.en,
-        })),
-      ),
-    )
-    .catch((error: unknown) => {
-      console.error("[daily-rule] could not read the finished texts", error);
-      return [] as SourceSentence[];
-    });
+  const finished = await loadFinishedSentences(args.todayISO, level);
 
   // The daily task has no story: its new rule comes from the learner's own finished texts.
   if (args.daily) source = finished;
@@ -104,6 +84,59 @@ export async function loadRuleVisit(args: {
   // The repeat of the day's session plans what was taught and asked today, and the runner records nothing.
   const visit = args.redo ? planRedoVisit(input) : planRuleVisit(input);
   return isEmptyVisit(visit) ? null : { ...visit, level };
+}
+
+/**
+ * The practice of one rule from the rule library: three sentences of the learner's own finished texts at the
+ * rule's level that show it. Null for a rule that is on no ladder, or when the texts do not hold three
+ * sentences of it (with a stored recording); the learner's rule rows are not read, since a practice records
+ * nothing.
+ */
+export async function loadPracticeVisit(args: {
+  userId: string;
+  todayISO: string;
+  ruleId: string;
+}): Promise<LoadedRuleVisit | null> {
+  const rule = ruleById(args.ruleId);
+  if (!rule) return null;
+  const level = LEVEL_NUMBER[rule.level];
+  const finished = await loadFinishedSentences(args.todayISO, level);
+  const visit = planPracticeVisit({
+    rule,
+    pool: finished,
+    seed: `${args.userId}|${args.todayISO}|${rule.id}`,
+    maxWords: MAX_WORDS_BY_LEVEL[level],
+  });
+  return visit ? { ...visit, level } : null;
+}
+
+/**
+ * The learner's own finished texts at one level (stories and daily lessons), each sentence with its stored
+ * recording. A read that fails answers "no texts": the card then teaches without asking from them.
+ */
+async function loadFinishedSentences(todayISO: string, level: number): Promise<SourceSentence[]> {
+  const progress = await fetchProgressCached(todayISO).catch(() => null);
+  const lessonIds = [
+    ...new Set(
+      (progress?.completions ?? [])
+        .filter((done) => done.mode === "stories" || done.mode === "normal")
+        .map((done) => done.lessonId),
+    ),
+  ];
+  return fetchLevelSentences(lessonIds, level)
+    .then((sentences) =>
+      withRecordings(
+        sentences.map((sentence) => ({
+          id: sentence.id,
+          lessonId: sentence.lessonId,
+          en: sentence.en,
+        })),
+      ),
+    )
+    .catch((error: unknown) => {
+      console.error("[daily-rule] could not read the finished texts", error);
+      return [] as SourceSentence[];
+    });
 }
 
 /** Whether a rule is due and nothing has been asked today yet: the Today carry-on sends the learner here first. */

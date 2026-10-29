@@ -29,6 +29,10 @@ export interface RuleRowState {
   repeatHref: string;
   levelLabel: string;
   answeredToday: boolean;
+  /** How many rules the learner has met: the rule library's pill carries the number, and is not drawn at 0. */
+  libraryCount: number;
+  /** Where the rule library is. */
+  libraryHref: string;
 }
 
 /**
@@ -39,18 +43,23 @@ export interface RuleRowState {
  * lifted, with the solid button. Linked until today's rule is answered, then a quiet "done today" line.
  * With the todayRepeat permission the row is drawn like the tasks: its own box, pressing like a button, and
  * the repeat button at its end, which runs today's rule session again once the rule is answered (redo).
+ * From the first rule the learner has met, a small pill beside it opens the rule library («قواعدي»), with the
+ * number of rules in it: the way back to yesterday's rule and the ones before.
  */
 function RuleRow({
   href,
   repeatHref,
   levelLabel,
   answeredToday,
+  libraryCount,
+  libraryHref,
   inProgress,
   repeat,
 }: RuleRowState & { inProgress: boolean; repeat: boolean }) {
   const { locale } = useLocale();
   const rule = ruleStrings(locale);
   const lifted = inProgress && !answeredToday;
+  const pill = libraryCount > 0 ? <LibraryPill href={libraryHref} count={libraryCount} /> : null;
   const body = (
     <div className="roomy:gap-4 flex items-start gap-3">
       <span
@@ -106,28 +115,57 @@ function RuleRow({
         >
           {body}
         </Link>
+        {pill}
         <RepeatButton href={repeatHref} name={rule.endDay} />
       </li>
     );
   }
+  // With the library's pill the row is one box (the highlight is the row's, the pill sits inside it).
+  const highlight = lifted ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50";
   return (
-    <li>
+    <li
+      className={cn(
+        pill && "roomy:rounded-2xl flex items-start rounded-xl transition-colors",
+        pill && highlight,
+      )}
+    >
       {href ? (
         <Link
           href={href}
           className={cn(
             "focus-visible:ring-ring roomy:rounded-2xl roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] block rounded-xl px-3.5 py-3 transition-colors outline-none focus-visible:ring-2",
-            lifted ? "bg-brand-muted/70 ring-primary/30 ring-1" : "hover:bg-muted/50",
+            pill ? "min-w-0 flex-1" : highlight,
           )}
         >
           {body}
         </Link>
       ) : (
-        <div className="roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] px-3.5 py-3">
+        <div
+          className={cn(
+            "roomy:px-5 roomy:py-[clamp(0.4rem,1.05svh,0.85rem)] px-3.5 py-3",
+            pill && "min-w-0 flex-1",
+          )}
+        >
           {body}
         </div>
       )}
+      {pill}
     </li>
+  );
+}
+
+/** The rule library's button on the rule row: its name and how many rules are in it. */
+function LibraryPill({ href, count }: { href: string; count: number }) {
+  const { locale } = useLocale();
+  const rule = ruleStrings(locale);
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      className="bg-brand-muted text-primary hover:bg-brand-muted/60 focus-visible:ring-ring roomy:mt-1 me-2 mt-1.5 inline-flex h-8 shrink-0 items-center self-start rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2"
+    >
+      <span dir="auto">{rule.myRulesPill.replace("{n}", String(count))}</span>
+    </Link>
   );
 }
 
