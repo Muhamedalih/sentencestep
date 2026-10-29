@@ -1,4 +1,5 @@
-import { storedClipsFor } from "@/lib/sentence-bank/lesson-clips";
+import { fetchStoredClips } from "@/lib/sentence-bank/clips";
+import { clipRequestsFor } from "@/lib/sentence-bank/lesson-clips";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { fetchLessonById } from "@/lib/supabase/queries/content";
@@ -113,15 +114,22 @@ export async function hasRuleDueToday(userId: string, todayISO: string): Promise
   return due && !askedToday;
 }
 
-/** Keeps the sentences that have a stored recording, with its address: a sentence without one is never asked. */
+/**
+ * Keeps the sentences that have a stored recording, with its address and the narrator's voice: a sentence
+ * without a recording is never asked, and the voice is what the sound of a single word is looked up under.
+ */
 async function withRecordings(
   sentences: readonly { id: string; lessonId: string; en: string }[],
 ): Promise<SourceSentence[]> {
-  const clips = await storedClipsFor(sentences);
+  const requests = await clipRequestsFor(sentences);
+  const clips = await fetchStoredClips(requests).catch(() => new Map<string, string>());
+  const voices = new Map(requests.map((request) => [request.key, request.voiceId] as const));
   const out: SourceSentence[] = [];
   for (const sentence of sentences) {
     const audioUrl = clips.get(sentence.id);
-    if (audioUrl) out.push({ id: sentence.id, text: sentence.en, audioUrl });
+    const voiceId = voices.get(sentence.id);
+    if (audioUrl)
+      out.push({ id: sentence.id, text: sentence.en, audioUrl, ...(voiceId ? { voiceId } : {}) });
   }
   return out;
 }

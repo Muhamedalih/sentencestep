@@ -16,6 +16,18 @@ export async function storedClipsFor(
   sentences: readonly Pick<SentenceCandidate, "id" | "lessonId" | "en">[],
 ): Promise<Map<string, string>> {
   if (sentences.length === 0) return new Map();
+  return fetchStoredClips(await clipRequestsFor(sentences)).catch(() => new Map<string, string>());
+}
+
+/**
+ * The clip each sentence is heard in, asked for: its text and the voice of ITS OWN lesson (see above),
+ * keyed by the sentence's id. A sentence whose lesson has no voice at all is left out. The rule of the
+ * day reads the voice too, because the sound of one word of a sentence is looked up under it.
+ */
+export async function clipRequestsFor(
+  sentences: readonly Pick<SentenceCandidate, "id" | "lessonId" | "en">[],
+): Promise<ClipRequest[]> {
+  if (sentences.length === 0) return [];
   const lessonIds = [...new Set(sentences.map((sentence) => sentence.lessonId))];
   const voices = await fetchLessonVoices(lessonIds).catch(() => new Map());
 
@@ -36,5 +48,5 @@ export async function storedClipsFor(
     }
     if (voiceId) requests.push({ key: sentence.id, text: sentence.en, voiceId });
   }
-  return fetchStoredClips(requests).catch(() => new Map<string, string>());
+  return requests;
 }
