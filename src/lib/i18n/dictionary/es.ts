@@ -12,6 +12,9 @@ export const es: Dictionary = {
   mobilePath: {
     navPath: "Ruta",
     navWords: "Palabras",
+    navLessons: "Lecciones",
+    navMore: "Más",
+    moreSubscribers: "Premium",
     writingFocus: "Más enfocadas en la escritura",
     doneOfTotal: "{done} de {total} lecciones",
     youAreHere: "Estás aquí",

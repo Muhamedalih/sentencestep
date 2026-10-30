@@ -9,6 +9,9 @@ export const tr: Dictionary = {
   mobilePath: {
     navPath: "Yol",
     navWords: "Kelimeler",
+    navLessons: "Dersler",
+    navMore: "Diğer",
+    moreSubscribers: "Premium",
     writingFocus: "Yazmaya daha odaklı",
     doneOfTotal: "{done} / {total} ders",
     youAreHere: "Buradasın",

@@ -4,6 +4,9 @@ export const ar: Dictionary = {
   mobilePath: {
     navPath: "المسار",
     navWords: "الكلمات",
+    navLessons: "الدروس",
+    navMore: "المزيد",
+    moreSubscribers: "للمشتركين",
     writingFocus: "مركّزة أكثر على الكتابة",
     doneOfTotal: "{done} من {total} دروس",
     youAreHere: "أنت هنا",

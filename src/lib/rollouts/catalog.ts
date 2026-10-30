@@ -238,7 +238,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Phone: the path and the next step",
     description:
-      "On a phone only (below 768 px): five tabs in the bottom bar (Home, Path, Stories, Passages, Words), a Path tab that lists each level's lessons in order with the one to do now, one next-step button on Home, and a calmer first screen for a guest. Tablets and laptops keep their current layout.",
+      "On a phone only (below 768 px): five tabs in the bottom bar (Path, Passages, Stories, Lessons and More, whose sheet holds Words, the rule library, the Library and Video), a Path tab that lists each level's lessons in order with the one to do now, one next-step button on Home, and a calmer first screen for a guest. Tablets and laptops keep their current layout.",
     notes: [
       "Does not need Today's session: the Path shows the daily lessons themselves, and Home's next step falls back to the current lesson when Today is closed.",
       "Only the phone layout changes: the desktop sidebar, the desktop Home and the lesson player's desktop controls stay as they are.",
