@@ -101,12 +101,13 @@ export default async function AdminConsoleLayout({ children }: { children: React
                   >
                     Passages
                   </Link>
-                  <Link
+                  {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- a full page load on purpose: only /admin/video is served with YouTube in its CSP (see SidebarLink's fullLoad) */}
+                  <a
                     href="/admin/video"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Video
-                  </Link>
+                  </a>
                   <Link
                     href="/admin/lesson-completion"
                     className="text-muted-foreground hover:text-foreground transition-colors"
