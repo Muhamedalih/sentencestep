@@ -21,6 +21,12 @@ export interface Dictionary {
   mobilePath: {
     navPath: string;
     navWords: string;
+    /** The phone bar's short name for the Daily lessons tab; the page itself keeps the full title (nav.normalLessons). */
+    navLessons: string;
+    /** The phone bar's last tab, which opens the sheet of the other sections. */
+    navMore: string;
+    /** The small tag under the Library in that sheet. */
+    moreSubscribers: string;
     writingFocus: string;
     doneOfTotal: string;
     youAreHere: string;

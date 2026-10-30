@@ -1,23 +1,26 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Headphones,
   Home,
+  LayoutGrid,
   Library,
   Lightbulb,
   ListChecks,
   NotebookText,
   Play,
   Route,
+  type LucideIcon,
 } from "lucide-react";
 
 import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
+import { usePhoneMoreSeen } from "@/hooks/use-phone-more-seen";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import { videoStrings } from "@/lib/video-dictation/strings";
 import { cn } from "@/lib/utils";
@@ -80,11 +83,11 @@ export function LearnSidebar({
   libraryOpen?: boolean;
   /** The "passages" feature switch, resolved for this visitor — the nav item exists only while it is open to them (Admin preview: admins only). */
   passagesEnabled?: boolean;
-  /** The mobilePath permission, resolved for this visitor: below md: the bottom bar becomes Home, Path, Stories, Passages and Words (the desktop sidebar is unchanged). */
+  /** The mobilePath permission, resolved for this visitor: below md: the bottom bar becomes Path, Passages, Stories, Lessons and More, whose sheet holds Words, the rule library, the Library and Video (the desktop sidebar is unchanged). */
   mobilePath?: boolean;
-  /** The "dailyRule" permission, resolved for this visitor (and signed in): the rule library, «قواعدي», is a menu item from md: up (a phone reaches it from Home's rule row). */
+  /** The "dailyRule" permission, resolved for this visitor (and signed in): the rule library, «قواعدي», is a menu item from md: up, and a tile in the phone's More sheet. */
   rulesEnabled?: boolean;
-  /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up (the phone bar is unchanged for now). */
+  /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up, and a tile in the phone's More sheet. */
   videoEnabled?: boolean;
 }) {
   const pathname = usePathname();
@@ -147,24 +150,68 @@ export function LearnSidebar({
       (item.key !== "rules" || rulesEnabled),
   );
 
-  // The phone bar of the mobilePath permission: one tab per kind of content, with the Path in place of
-  // the Daily Lessons tab. Only drawn below md:, the desktop sidebar above keeps its own items.
-  const PHONE_ITEMS = mobilePath
+  // The phone bar of the mobilePath permission: one tab per kind of content (Path, Passages, Stories and
+  // the daily Lessons, named short here: the page it opens carries the full title) and «More», which
+  // holds the sections that are not content tabs. Only drawn below md:, the desktop sidebar above keeps
+  // its own items.
+  const PHONE_ITEMS: PhoneMoreItem[] | null = mobilePath
     ? [
         { key: "home", href: "/learn", label: t.mobilePath.navPath, icon: Home },
         ...(passagesEnabled
           ? [{ key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones }]
           : []),
         { key: "stories", href: "/learn/stories", label: t.nav.stories, icon: NotebookText },
-        { key: "path", href: "/learn/path", label: t.nav.normalLessons, icon: Route },
+        { key: "path", href: "/learn/path", label: t.mobilePath.navLessons, icon: Route },
+      ]
+    : null;
+
+  // What «More» holds, in this order: the rule library (a signed-in learner with dailyRule open), Words,
+  // the Library (admins, and subscribers once libraryGift is open) and Video dictation (while its
+  // permission is open). A visitor with only Words left (a guest) gets it as a plain tab instead.
+  const MORE_ITEMS: PhoneMoreItem[] = mobilePath
+    ? [
+        ...(rulesEnabled
+          ? [
+              {
+                key: "rules",
+                href: "/learn/rules",
+                label: ruleStrings(locale).myRules,
+                icon: Lightbulb,
+              },
+            ]
+          : []),
         {
           key: "word-lists",
           href: "/learn/word-lists",
           label: t.mobilePath.navWords,
           icon: ListChecks,
         },
+        ...(showLibrary
+          ? [
+              {
+                key: "library",
+                href: "/learn/library",
+                label: t.nav.library,
+                icon: Library,
+                tag: t.mobilePath.moreSubscribers,
+              },
+            ]
+          : []),
+        ...(videoEnabled
+          ? [
+              {
+                key: "video",
+                href: "/learn/video",
+                label: videoStrings(locale).navLabel,
+                icon: Play,
+                fullLoad: true,
+              },
+            ]
+          : []),
       ]
-    : null;
+    : [];
+  const showMore = MORE_ITEMS.length > 1;
+  const phoneTabs = PHONE_ITEMS && !showMore ? [...PHONE_ITEMS, ...MORE_ITEMS] : PHONE_ITEMS;
 
   // Every route this sidebar links to, present on every /learn/* page —
   // warmed in the background instead of through each Link's own default
@@ -204,7 +251,7 @@ export function LearnSidebar({
     >
       <div
         className={cn(
-          "flex items-stretch justify-around px-1 py-1.5",
+          "group/bar flex items-stretch justify-around px-1 py-1.5",
           "md:h-full md:flex-col md:items-stretch md:justify-start md:gap-1 md:px-3 md:py-6",
         )}
       >
@@ -296,17 +343,20 @@ export function LearnSidebar({
             </div>,
           ];
         })}
-        {PHONE_ITEMS?.map((item) => {
+        {phoneTabs?.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.key;
           return (
             <SidebarLink
               key={`phone-${item.key}`}
+              fullLoad={item.fullLoad}
               href={item.href}
               isActive={isActive}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium md:hidden",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                isActive
+                  ? "text-primary group-has-[[data-more-open]]/bar:text-muted-foreground"
+                  : "text-muted-foreground hover:text-foreground",
                 "has-[[data-pending]]:text-primary",
               )}
             >
@@ -315,8 +365,151 @@ export function LearnSidebar({
             </SidebarLink>
           );
         })}
+        {PHONE_ITEMS && showMore && (
+          <PhoneMore
+            key={pathname}
+            items={MORE_ITEMS}
+            active={active}
+            label={t.mobilePath.navMore}
+            dir={dir}
+          />
+        )}
       </div>
     </nav>
+  );
+}
+
+/** One section of the phone bar: a plain tab, or a tile in the «More» sheet. */
+interface PhoneMoreItem {
+  key: string;
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** A small line under the name in the sheet (the Library's «for subscribers»). */
+  tag?: string;
+  /** Loads as a new page, see SidebarLink. */
+  fullLoad?: boolean;
+}
+
+/**
+ * The phone bar's last tab, «More» (below md: only): the sections that are not content tabs (the rule
+ * library, Words, the Library, Video dictation) sit in a small sheet above the bar, so a phone reaches
+ * them without a sixth tab. The sheet closes on a tap outside it, on Escape and when the page changes
+ * (LearnSidebar keys this component by the path, so it starts closed on every page); a tapped section
+ * stays in view, pulsing like a bar tab, until its page arrives. While one of these sections is the
+ * current page the tab takes its name and icon and stays lit, so the learner always sees where they
+ * are, and a dot marks the tab until the sheet has been opened once on this device. The sheet hangs
+ * from the bar's top edge (inside the fixed nav, whose backdrop blur would make a fixed child size
+ * itself to the bar) and, while it is open, the page's own current tab steps back so only «More» is lit.
+ */
+function PhoneMore({
+  items,
+  active,
+  label,
+  dir,
+}: {
+  items: readonly PhoneMoreItem[];
+  active: string | null;
+  label: string;
+  dir: "ltr" | "rtl";
+}) {
+  const [open, setOpen] = useState(false);
+  const { seen, markSeen } = usePhoneMoreSeen();
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  const current = items.find((item) => item.key === active);
+  const Icon = current?.icon ?? LayoutGrid;
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-expanded={open}
+        data-more-open={open ? "" : undefined}
+        onClick={() => {
+          setOpen((value) => !value);
+          markSeen();
+        }}
+        className={cn(
+          "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium md:hidden",
+          "focus-visible:ring-ring focus-visible:ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          open || current ? "text-primary" : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <span className="relative flex">
+          <Icon className="size-5 shrink-0" aria-hidden="true" />
+          {!seen && !current && (
+            <span
+              aria-hidden="true"
+              className="bg-primary absolute -top-0.5 -right-1 size-2 rounded-full"
+            />
+          )}
+        </span>
+        <span dir={dir}>{current?.label ?? label}</span>
+      </button>
+      {open && (
+        <>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={() => setOpen(false)}
+            className="motion-safe:animate-in motion-safe:fade-in absolute inset-x-0 bottom-full h-svh cursor-default bg-black/30 duration-150 md:hidden"
+          />
+          <div
+            role="group"
+            aria-label={label}
+            className="border-border/60 bg-background motion-safe:animate-in motion-safe:fade-in absolute inset-x-0 bottom-full grid grid-cols-2 gap-2 rounded-t-2xl border border-b-0 p-3 duration-150 md:hidden"
+          >
+            {items.map((item) => {
+              const ItemIcon = item.icon;
+              const isCurrent = item.key === active;
+              return (
+                <SidebarLink
+                  key={item.key}
+                  href={item.href}
+                  isActive={isCurrent}
+                  fullLoad={item.fullLoad}
+                  onClick={isCurrent ? () => setOpen(false) : undefined}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-xl border p-2.5 text-sm font-medium",
+                    isCurrent
+                      ? "border-primary/30 bg-brand-muted text-primary"
+                      : "border-border/60 text-foreground active:bg-secondary",
+                    "has-[[data-pending]]:border-primary/30 has-[[data-pending]]:bg-brand-muted",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "text-primary flex size-9 shrink-0 items-center justify-center rounded-[10px]",
+                      isCurrent ? "bg-background/70" : "bg-brand-muted",
+                    )}
+                  >
+                    <ItemIcon className="size-5" aria-hidden="true" />
+                  </span>
+                  <span dir={dir} className="min-w-0">
+                    {item.label}
+                    {item.tag && (
+                      <span className="text-muted-foreground block text-[11px] font-normal">
+                        {item.tag}
+                      </span>
+                    )}
+                  </span>
+                </SidebarLink>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -337,12 +530,14 @@ function SidebarLink({
   isActive,
   className,
   fullLoad = false,
+  onClick,
   children,
 }: {
   href: string;
   isActive: boolean;
   className: string;
   fullLoad?: boolean;
+  onClick?: () => void;
   children: ReactNode;
 }) {
   const intent = useIntentPrefetch(href);
@@ -351,6 +546,7 @@ function SidebarLink({
     return (
       <a
         href={href}
+        onClick={onClick}
         aria-current={isActive ? "page" : undefined}
         className={cn(
           "focus-visible:ring-ring focus-visible:ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
@@ -366,6 +562,7 @@ function SidebarLink({
     <Link
       href={href}
       prefetch={false}
+      onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       {...intent}
       className={cn(
