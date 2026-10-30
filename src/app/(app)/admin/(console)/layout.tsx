@@ -102,6 +102,12 @@ export default async function AdminConsoleLayout({ children }: { children: React
                     Passages
                   </Link>
                   <Link
+                    href="/admin/video"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Video
+                  </Link>
+                  <Link
                     href="/admin/lesson-completion"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
