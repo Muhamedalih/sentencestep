@@ -212,7 +212,7 @@ export const startFromScratch: VideoLesson = {
     {
       "id": "start-from-scratch-s5",
       "startSeconds": 25.24,
-      "endSeconds": 31.14,
+      "endSeconds": 27.67,
       "en": "No problem, that is easy to fix.",
       "ar": "لا مشكلة، هذا سهل الإصلاح.",
       "wordTranslations": [
@@ -248,6 +248,39 @@ export const startFromScratch: VideoLesson = {
     },
     {
       "id": "start-from-scratch-s6",
+      "startSeconds": 28.46,
+      "endSeconds": 30.96,
+      "en": "Oh, and no new meeting rooms.",
+      "ar": "أوه، ولا توجد غرف اجتماعات جديدة.",
+      "wordTranslations": [
+        {
+          "en": "Oh",
+          "ar": "أوه"
+        },
+        {
+          "en": "and",
+          "ar": "و"
+        },
+        {
+          "en": "no",
+          "ar": "لا توجد"
+        },
+        {
+          "en": "new",
+          "ar": "جديدة"
+        },
+        {
+          "en": "meeting",
+          "ar": "اجتماعات"
+        },
+        {
+          "en": "rooms",
+          "ar": "غرف"
+        }
+      ]
+    },
+    {
+      "id": "start-from-scratch-s7",
       "startSeconds": 31.56,
       "endSeconds": 34.78,
       "en": "Okay, I'll just move this wall over here.",
@@ -288,7 +321,7 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s7",
+      "id": "start-from-scratch-s8",
       "startSeconds": 35.16,
       "endSeconds": 38.66,
       "en": "Oh, and the library? Yeah, that's not happening.",
@@ -329,7 +362,7 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s8",
+      "id": "start-from-scratch-s9",
       "startSeconds": 39.44,
       "endSeconds": 42.05,
       "en": "You know what? I'm starting from scratch.",
@@ -366,7 +399,7 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s9",
+      "id": "start-from-scratch-s10",
       "startSeconds": 42.12,
       "endSeconds": 47.5,
       "en": "To start from scratch means to start from the beginning.",
@@ -415,7 +448,7 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s10",
+      "id": "start-from-scratch-s11",
       "startSeconds": 47.68,
       "endSeconds": 51.18,
       "en": "Sometimes this means you lose the work you have already done.",
@@ -468,7 +501,7 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s11",
+      "id": "start-from-scratch-s12",
       "startSeconds": 51.34,
       "endSeconds": 55.07,
       "en": "But starting from scratch can be easier",
@@ -505,7 +538,7 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s12",
+      "id": "start-from-scratch-s13",
       "startSeconds": 55.14,
       "endSeconds": 57.49,
       "en": "and smarter than trying to fix something.",
