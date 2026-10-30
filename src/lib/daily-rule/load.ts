@@ -1,4 +1,3 @@
-import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { fetchStoredClips } from "@/lib/sentence-bank/clips";
 import { clipRequestsFor } from "@/lib/sentence-bank/lesson-clips";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -19,6 +18,7 @@ import {
   teachingLevel,
 } from "./levels";
 import { isPreparedId } from "./prepared";
+import { preparedVoiceIdFor } from "./prepared-voice";
 import {
   isEmptyVisit,
   planPracticeVisit,
@@ -187,9 +187,9 @@ async function withRecordings(
 
 /**
  * Gives the prepared sentences of a visit the recording stored for them, when there is one: looked up in the
- * clip cache under the default pronunciation voice (the voice of the word lists), never made here. A prepared
- * sentence with no recording keeps none, and its question is silent. One batched read, and only when the visit
- * has prepared sentences.
+ * clip cache under the voice that reads the sentence (prepared-voice.ts: half of a rule's sentences are read by the
+ * Stories narrator, the others by Emma), never made here. A prepared sentence with no recording keeps none, and
+ * its question is silent. One batched read, and only when the visit has prepared sentences.
  */
 async function withPreparedClips(visit: RuleVisit): Promise<RuleVisit> {
   const prepared = [
@@ -199,16 +199,18 @@ async function withPreparedClips(visit: RuleVisit): Promise<RuleVisit> {
   ].filter((item) => isPreparedId(item.sentenceId));
   if (prepared.length === 0) return visit;
 
-  const voiceId = await getDefaultPronunciationVoiceId().catch(() => null);
-  if (!voiceId) return visit;
   const clips = await fetchStoredClips(
-    prepared.map((item) => ({ key: item.sentenceId, text: item.text, voiceId })),
+    prepared.map((item) => ({
+      key: item.sentenceId,
+      text: item.text,
+      voiceId: preparedVoiceIdFor(item.sentenceId),
+    })),
   ).catch(() => new Map<string, string>());
   if (clips.size === 0) return visit;
 
   const sound = (item: ItemSpec): ItemSpec => {
     const audioUrl = clips.get(item.sentenceId);
-    return audioUrl ? { ...item, audioUrl, voiceId } : item;
+    return audioUrl ? { ...item, audioUrl, voiceId: preparedVoiceIdFor(item.sentenceId) } : item;
   };
   return {
     ...visit,

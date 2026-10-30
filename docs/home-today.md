@@ -65,8 +65,11 @@ for the current Home):
   `levels.ts`); the rules of other levels that were met are still asked when due. A visit asks up to four
   earlier rules (`RECALL_LIMIT`), from the learner's finished texts or, when they do not show the rule, from
   its prepared sentences; five rules due at once pause the new rule for a day (`RULE_CATCH_UP_DUE`). A prepared
-  sentence has a recording only once one is stored under the default pronunciation voice (`withPreparedClips`
-  in `load.ts` only looks it up); until then its question is silent and shows none of the sound controls.
+  sentence is read by one of two voices (`prepared-voice.ts`: the 1st, 3rd and 5th sentence of a rule by the
+  Stories narrator, ElevenLabs «The Pharaoh 4», the others by Emma, Edge-TTS), pinned there so a change of the
+  site's voice settings never silences them. The recordings are made by `scripts/generate-rule-sentence-audio.ts`
+  (resumable, it only fills the gaps); `withPreparedClips` in `load.ts` only looks them up, and a sentence without
+  one is silent and shows none of the sound controls.
 - **Lesson card** (`lesson-card.tsx`): the learner's daily lesson as the page's one full-picture card,
   with a quiet glass button; same lesson logic and states as the lessons card of the current Home
   (continue / resume / start, free lessons finished, everything finished). It has the **same springy
