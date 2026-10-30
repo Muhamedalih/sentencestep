@@ -186,7 +186,12 @@ export function LearnSidebar({
         ? ["/learn/library", "/learn/library/novels"]
         : [];
   useDeferredPrefetch(subNavHrefs, 0);
-  useDeferredPrefetch([...NAV_ITEMS, ...(PHONE_ITEMS ?? [])].map((item) => item.href));
+  // «فيديو» is entered with a full page load (see SidebarLink's fullLoad), so there is nothing to warm for it.
+  useDeferredPrefetch(
+    [...NAV_ITEMS, ...(PHONE_ITEMS ?? [])]
+      .filter((item) => item.key !== "video")
+      .map((item) => item.href),
+  );
 
   return (
     <nav
@@ -211,6 +216,7 @@ export function LearnSidebar({
               key={item.key}
               href={item.href}
               isActive={isActive}
+              fullLoad={item.key === "video"}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium",
                 "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap pointer-coarse:md:min-h-11",
@@ -320,19 +326,41 @@ export function LearnSidebar({
  * prefetch — so warm the route on intent here instead — and the link lights up
  * the instant it is pressed (see LinkPendingMarker) rather than sitting
  * unchanged until the next page arrives.
+ *
+ * `fullLoad` renders a plain link, so the browser loads the page anew. Video dictation needs it: its
+ * routes alone are served with YouTube in the Content-Security-Policy (src/middleware.ts, needsYouTube),
+ * and a policy belongs to the document that was loaded, not to the route shown in it. A soft
+ * navigation from another page keeps that page's policy, which blocks the thumbnails and the player.
  */
 function SidebarLink({
   href,
   isActive,
   className,
+  fullLoad = false,
   children,
 }: {
   href: string;
   isActive: boolean;
   className: string;
+  fullLoad?: boolean;
   children: ReactNode;
 }) {
   const intent = useIntentPrefetch(href);
+
+  if (fullLoad) {
+    return (
+      <a
+        href={href}
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "focus-visible:ring-ring focus-visible:ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          className,
+        )}
+      >
+        {children}
+      </a>
+    );
+  }
 
   return (
     <Link
