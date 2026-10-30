@@ -11,12 +11,45 @@ export const startFromScratch: VideoLesson = {
   "clipStartSeconds": 3.5,
   "clipEndSeconds": 57.5,
   "textSource": "public-domain",
-  "sourceNote": "Made by VOA Learning English (Voice of America, a U.S. government broadcaster whose own productions are in the public domain). Text: the video's own burned-in captions, read frame by frame (VOA publishes no script for this one). Pause points measured from the audio on 2026-10-30; the first 3.5 s are the theme music.",
+  "sourceNote": "Made by VOA Learning English (Voice of America, a U.S. government broadcaster whose own productions are in the public domain). Text: the video's own burned-in captions, read frame by frame (VOA publishes no script for this one). Pause points: the median of four measurements of the audio (waveform, Whisper, a voice detector, forced alignment) on 2026-10-30; the first 3.5 s are the theme music.",
   "sentences": [
     {
       "id": "start-from-scratch-s1",
-      "startSeconds": 4.26,
-      "endSeconds": 12.88,
+      "startSeconds": 4.2,
+      "endSeconds": 6.05,
+      "en": "Welcome to English in a Minute!",
+      "ar": "أهلاً بكم في «الإنجليزية في دقيقة»!",
+      "wordTranslations": [
+        {
+          "en": "Welcome",
+          "ar": "أهلاً بكم"
+        },
+        {
+          "en": "to",
+          "ar": "في"
+        },
+        {
+          "en": "English",
+          "ar": "الإنجليزية"
+        },
+        {
+          "en": "in",
+          "ar": "في"
+        },
+        {
+          "en": "a",
+          "ar": "واحدة"
+        },
+        {
+          "en": "Minute",
+          "ar": "دقيقة"
+        }
+      ]
+    },
+    {
+      "id": "start-from-scratch-s2",
+      "startSeconds": 6.38,
+      "endSeconds": 12.72,
       "en": "If you make a meal from scratch, with basic and fresh foods.",
       "ar": "إذا أعددت وجبة من الصفر، بأطعمة أساسية وطازجة.",
       "wordTranslations": [
@@ -71,9 +104,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s2",
-      "startSeconds": 13.24,
-      "endSeconds": 16.48,
+      "id": "start-from-scratch-s3",
+      "startSeconds": 13.14,
+      "endSeconds": 16.05,
       "en": "But what does start from scratch mean?",
       "ar": "لكن ماذا تعني عبارة «ابدأ من الصفر»؟",
       "wordTranslations": [
@@ -108,9 +141,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s3",
-      "startSeconds": 16.72,
-      "endSeconds": 20.2,
+      "id": "start-from-scratch-s4",
+      "startSeconds": 16.75,
+      "endSeconds": 20.35,
       "en": "My design for our new office is done!",
       "ar": "انتهى تصميمي لمكتبنا الجديد!",
       "wordTranslations": [
@@ -149,9 +182,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s4",
-      "startSeconds": 21.3,
-      "endSeconds": 24.62,
+      "id": "start-from-scratch-s5",
+      "startSeconds": 21.35,
+      "endSeconds": 25.05,
       "en": "Oh, did you hear? We don't have the money for a new kitchen.",
       "ar": "أوه، هل سمعت؟ ليس لدينا المال لمطبخ جديد.",
       "wordTranslations": [
@@ -210,9 +243,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s5",
-      "startSeconds": 25.24,
-      "endSeconds": 27.67,
+      "id": "start-from-scratch-s6",
+      "startSeconds": 25.22,
+      "endSeconds": 28,
       "en": "No problem, that is easy to fix.",
       "ar": "لا مشكلة، هذا سهل الإصلاح.",
       "wordTranslations": [
@@ -247,9 +280,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s6",
+      "id": "start-from-scratch-s7",
       "startSeconds": 28.46,
-      "endSeconds": 30.96,
+      "endSeconds": 31.3,
       "en": "Oh, and no new meeting rooms.",
       "ar": "أوه، ولا توجد غرف اجتماعات جديدة.",
       "wordTranslations": [
@@ -280,9 +313,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s7",
-      "startSeconds": 31.56,
-      "endSeconds": 34.78,
+      "id": "start-from-scratch-s8",
+      "startSeconds": 31.5,
+      "endSeconds": 34.95,
       "en": "Okay, I'll just move this wall over here.",
       "ar": "حسناً، سأنقل هذا الجدار إلى هنا فقط.",
       "wordTranslations": [
@@ -321,9 +354,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s8",
-      "startSeconds": 35.16,
-      "endSeconds": 38.66,
+      "id": "start-from-scratch-s9",
+      "startSeconds": 35.15,
+      "endSeconds": 38.35,
       "en": "Oh, and the library? Yeah, that's not happening.",
       "ar": "أوه، والمكتبة؟ نعم، هذا لن يحدث.",
       "wordTranslations": [
@@ -362,9 +395,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s9",
-      "startSeconds": 39.44,
-      "endSeconds": 42.05,
+      "id": "start-from-scratch-s10",
+      "startSeconds": 39.41,
+      "endSeconds": 42.55,
       "en": "You know what? I'm starting from scratch.",
       "ar": "أتعرف ماذا؟ سأبدأ من الصفر.",
       "wordTranslations": [
@@ -399,9 +432,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s10",
-      "startSeconds": 42.12,
-      "endSeconds": 47.5,
+      "id": "start-from-scratch-s11",
+      "startSeconds": 42.82,
+      "endSeconds": 47.05,
       "en": "To start from scratch means to start from the beginning.",
       "ar": "أن تبدأ من الصفر يعني أن تبدأ من البداية.",
       "wordTranslations": [
@@ -448,9 +481,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s11",
-      "startSeconds": 47.68,
-      "endSeconds": 51.18,
+      "id": "start-from-scratch-s12",
+      "startSeconds": 47.7,
+      "endSeconds": 51.47,
       "en": "Sometimes this means you lose the work you have already done.",
       "ar": "أحياناً يعني هذا أنك تخسر العمل الذي أنجزته بالفعل.",
       "wordTranslations": [
@@ -501,9 +534,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s12",
-      "startSeconds": 51.34,
-      "endSeconds": 55.07,
+      "id": "start-from-scratch-s13",
+      "startSeconds": 51.75,
+      "endSeconds": 54.72,
       "en": "But starting from scratch can be easier",
       "ar": "لكن البدء من الصفر قد يكون أسهل",
       "wordTranslations": [
@@ -538,9 +571,9 @@ export const startFromScratch: VideoLesson = {
       ]
     },
     {
-      "id": "start-from-scratch-s13",
-      "startSeconds": 55.14,
-      "endSeconds": 57.49,
+      "id": "start-from-scratch-s14",
+      "startSeconds": 54.75,
+      "endSeconds": 57.35,
       "en": "and smarter than trying to fix something.",
       "ar": "وأذكى من محاولة إصلاح شيء ما.",
       "wordTranslations": [

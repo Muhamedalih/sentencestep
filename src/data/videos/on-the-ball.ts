@@ -11,12 +11,12 @@ export const onTheBall: VideoLesson = {
   "clipStartSeconds": 3.5,
   "clipEndSeconds": 57.9,
   "textSource": "public-domain",
-  "sourceNote": "Made by VOA Learning English (Voice of America, a U.S. government broadcaster whose own productions are in the public domain). Text: the script VOA publishes in the video's description, checked frame by frame against the burned-in captions (the captions win where they differ: faster or better). Pause points measured from the audio on 2026-10-30; the first 3.5 s are the theme music.",
+  "sourceNote": "Made by VOA Learning English (Voice of America, a U.S. government broadcaster whose own productions are in the public domain). Text: the script VOA publishes in the video's description, checked frame by frame against the burned-in captions (the captions win where they differ: faster or better). Pause points: the median of four measurements of the audio (waveform, Whisper, a voice detector, forced alignment) on 2026-10-30; the first 3.5 s are the theme music.",
   "sentences": [
     {
       "id": "on-the-ball-s1",
-      "startSeconds": 4.32,
-      "endSeconds": 6.7,
+      "startSeconds": 4.26,
+      "endSeconds": 6.65,
       "en": "Welcome to English in a Minute!",
       "ar": "أهلاً بكم في «الإنجليزية في دقيقة»!",
       "wordTranslations": [
@@ -48,8 +48,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s2",
-      "startSeconds": 7.2,
-      "endSeconds": 11.44,
+      "startSeconds": 7.4,
+      "endSeconds": 11.4,
       "en": "Some people use a large ball for exercise.",
       "ar": "بعض الناس يستخدمون كرة كبيرة لممارسة الرياضة.",
       "wordTranslations": [
@@ -89,8 +89,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s3",
-      "startSeconds": 12.32,
-      "endSeconds": 15.69,
+      "startSeconds": 12.34,
+      "endSeconds": 15.58,
       "en": "Is that what to get on the ball means?",
       "ar": "هل هذا ما تعنيه عبارة «الصعود على الكرة»؟",
       "wordTranslations": [
@@ -134,8 +134,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s4",
-      "startSeconds": 15.76,
-      "endSeconds": 19.13,
+      "startSeconds": 16.62,
+      "endSeconds": 18.55,
       "en": "Hi Anna! How has your day been?",
       "ar": "مرحباً آنا! كيف كان يومك؟",
       "wordTranslations": [
@@ -171,8 +171,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s5",
-      "startSeconds": 19.2,
-      "endSeconds": 21.25,
+      "startSeconds": 18.61,
+      "endSeconds": 20.8,
       "en": "Great! Very great! Very productive!",
       "ar": "رائع! رائع جداً! منتجة جداً!",
       "wordTranslations": [
@@ -200,8 +200,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s6",
-      "startSeconds": 21.32,
-      "endSeconds": 24.37,
+      "startSeconds": 20.78,
+      "endSeconds": 23.55,
       "en": "I finished three reports and have only one more to do!",
       "ar": "أنهيت ثلاثة تقارير ولم يتبقَّ لدي سوى تقرير واحد!",
       "wordTranslations": [
@@ -253,8 +253,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s7",
-      "startSeconds": 24.44,
-      "endSeconds": 26.28,
+      "startSeconds": 23.71,
+      "endSeconds": 26.25,
       "en": "Wow, you are on the ball!",
       "ar": "واو، أنتِ «على الكرة»!",
       "wordTranslations": [
@@ -286,8 +286,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s8",
-      "startSeconds": 26.68,
-      "endSeconds": 28.46,
+      "startSeconds": 26.59,
+      "endSeconds": 28.4,
       "en": "How did you do them so fast?",
       "ar": "كيف أنجزتِها بهذه السرعة؟",
       "wordTranslations": [
@@ -323,8 +323,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s9",
-      "startSeconds": 29.32,
-      "endSeconds": 32.01,
+      "startSeconds": 29.2,
+      "endSeconds": 31.78,
       "en": "Coffee! Lots of coffee. Do you want some?",
       "ar": "قهوة! الكثير من القهوة. هل تريد بعضاً منها؟",
       "wordTranslations": [
@@ -364,8 +364,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s10",
-      "startSeconds": 32.08,
-      "endSeconds": 34.84,
+      "startSeconds": 31.79,
+      "endSeconds": 34.5,
       "en": "I'll get it. I'd love more coffee. Thank you!",
       "ar": "سأحضرها. أودّ المزيد من القهوة. شكراً لك!",
       "wordTranslations": [
@@ -409,8 +409,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s11",
-      "startSeconds": 34.92,
-      "endSeconds": 38.94,
+      "startSeconds": 34.85,
+      "endSeconds": 39.1,
       "en": "Uh, sure. But maybe not that much coffee.",
       "ar": "آه، بالتأكيد. لكن ربما ليس بهذا القدر من القهوة.",
       "wordTranslations": [
@@ -450,8 +450,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s12",
-      "startSeconds": 39.04,
-      "endSeconds": 47.02,
+      "startSeconds": 40.91,
+      "endSeconds": 47.25,
       "en": "Someone who is on the ball finishes work quickly and ahead of time.",
       "ar": "الشخص الذي هو «على الكرة» ينهي عمله بسرعة وقبل موعده.",
       "wordTranslations": [
@@ -511,8 +511,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s13",
-      "startSeconds": 47.76,
-      "endSeconds": 51.54,
+      "startSeconds": 47.7,
+      "endSeconds": 51.5,
       "en": "We can also say a person should get on the ball",
       "ar": "يمكننا أيضاً أن نقول إن على الشخص أن «يكون على الكرة»",
       "wordTranslations": [
@@ -564,8 +564,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s14",
-      "startSeconds": 51.68,
-      "endSeconds": 54.86,
+      "startSeconds": 51.6,
+      "endSeconds": 54.8,
       "en": "when they need to work faster or better.",
       "ar": "عندما يحتاجون إلى العمل بشكل أسرع أو أفضل.",
       "wordTranslations": [
@@ -605,8 +605,8 @@ export const onTheBall: VideoLesson = {
     },
     {
       "id": "on-the-ball-s15",
-      "startSeconds": 55.4,
-      "endSeconds": 57.84,
+      "startSeconds": 55.6,
+      "endSeconds": 57.75,
       "en": "And that's English in a Minute!",
       "ar": "وهذه هي «الإنجليزية في دقيقة»!",
       "wordTranslations": [

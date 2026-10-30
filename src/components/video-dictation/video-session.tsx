@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useReducedMotion } from "framer-motion";
 import {
   ArrowLeft,
@@ -21,15 +29,18 @@ import { buttonVariants } from "@/components/ui/button";
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { isMistakeWorthTracking, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { solveFitZoom } from "@/lib/today/fit-zoom";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import { watchUrl } from "@/lib/video-dictation/content";
 import {
   isSameVideo,
+  nextLead,
   nextRate,
   POLL_MS,
   replayPosition,
   segmentTick,
+  START_LEAD_SECONDS,
 } from "@/lib/video-dictation/segments";
 import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
@@ -83,6 +94,10 @@ export function VideoSession({
   const controlsRef = useRef<PlayerControls | null>(null);
   const pollRef = useRef<number | null>(null);
   const resumeRef = useRef<number | null>(null);
+  // How much earlier than a sentence's end the stop is asked for, learned from this device's own delay
+  // (see nextLead), and the end of the sentence the page has just stopped at, until the pause is measured.
+  const leadRef = useRef(START_LEAD_SECONDS);
+  const stopEndRef = useRef<number | null>(null);
   const stats = useRef({ correct: 0, total: 0, words: new Set<string>() });
 
   const move = useCallback((next: { index?: number; phase?: Phase }) => {
@@ -114,10 +129,11 @@ export function VideoSession({
           return;
         }
         setAdPlaying(false);
-        const tick = segmentTick(sawBefore, player.getTime(), endSeconds);
+        const tick = segmentTick(sawBefore, player.getTime(), endSeconds - leadRef.current);
         sawBefore = tick.sawBefore;
         if (!tick.stop) return;
         stopPolling();
+        stopEndRef.current = endSeconds;
         player.pause();
         move({ phase: "typing" });
         setFocusTick((n) => n + 1);
@@ -141,6 +157,14 @@ export function VideoSession({
 
   const handleState = useCallback(
     (state: number) => {
+      if (state === PLAYER_STATE.PAUSED && stopEndRef.current !== null) {
+        // The page's own stop: where the video really paused tells how late this device answers.
+        const end = stopEndRef.current;
+        stopEndRef.current = null;
+        const stoppedAt = controlsRef.current?.getTime();
+        if (stoppedAt !== undefined) leadRef.current = nextLead(leadRef.current, stoppedAt, end);
+        return;
+      }
       if (state !== PLAYER_STATE.PLAYING) return;
       const { phase: current, index: at } = live.current;
       const sentence = sentences[at];
@@ -265,8 +289,8 @@ export function VideoSession({
   }
 
   return (
-    <Shell>
-      <header className="mx-auto flex w-full max-w-[640px] items-center gap-3 px-4 pt-3 pb-2">
+    <Shell stage={phase !== "done"}>
+      <header className="mx-auto flex w-full max-w-[640px] items-center gap-3 px-4 pt-3 pb-2 lg:max-w-[1000px]">
         <Link href="/learn/video" aria-label={strings.back} className={ICON_BUTTON}>
           <ArrowLeft className="size-4" aria-hidden="true" />
         </Link>
@@ -330,33 +354,41 @@ export function VideoSession({
         />
       </div>
 
-      <main className="mx-auto flex w-full max-w-[640px] flex-1 flex-col px-4 pt-3 pb-8">
+      <main
+        className={cn(
+          "mx-auto flex w-full max-w-[640px] flex-1 flex-col px-4 pt-3 pb-8",
+          // Laptop and wider: one screen without scrolling (see FitArea): the video is sized from the window's height and the sentence fills what is left.
+          phase !== "done" && "lg:min-h-0 lg:max-w-[1000px] lg:items-center lg:pt-2 lg:pb-3",
+        )}
+      >
         {/* The player stays mounted on the finish screen too, only hidden, so the video is never reloaded. */}
-        <div className={cn(phase === "done" && "hidden")}>
-          <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-            <div ref={hostRef} className="absolute inset-0 [&_iframe]:size-full" />
-          </div>
-          <div
-            className="text-muted-foreground mt-2 flex items-center justify-between gap-2 text-xs"
-            dir="ltr"
-          >
-            <a
-              href={lesson.channelUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate hover:underline"
+        <div className={cn(phase === "done" ? "hidden" : "lg:flex lg:justify-center")}>
+          <div className="lg:w-fit lg:max-w-full">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black lg:h-[max(11rem,min(48svh,calc(100svh-340px)))] lg:w-auto">
+              <div ref={hostRef} className="absolute inset-0 [&_iframe]:size-full" />
+            </div>
+            <div
+              className="text-muted-foreground mt-2 flex items-center justify-between gap-2 text-xs"
+              dir="ltr"
             >
-              {lesson.channel}
-            </a>
-            <a
-              href={watchUrl(lesson.youtubeId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary inline-flex shrink-0 items-center gap-1 hover:underline"
-            >
-              {strings.watchOnYouTube}
-              <ExternalLink className="size-3" aria-hidden="true" />
-            </a>
+              <a
+                href={lesson.channelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate hover:underline"
+              >
+                {lesson.channel}
+              </a>
+              <a
+                href={watchUrl(lesson.youtubeId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary inline-flex shrink-0 items-center gap-1 hover:underline"
+              >
+                {strings.watchOnYouTube}
+                <ExternalLink className="size-3" aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -369,48 +401,79 @@ export function VideoSession({
           />
         ) : (
           sentence && (
-            <div className="mt-4 flex-1">
-              {phase === "armed" && (
-                <p className="mb-3 text-center text-[15px]" dir="auto">
-                  {strings.pressPlay}
-                  <span className="text-muted-foreground mt-1 block text-[13px]">
-                    {strings.pressPlayHint}
+            <>
+              <FitArea watch={sentence.id}>
+                <div className="lg:hidden">
+                  {phase === "armed" && (
+                    <p className="mb-3 text-center text-[15px]" dir="auto">
+                      {strings.pressPlay}
+                      <span className="text-muted-foreground mt-1 block text-[13px]">
+                        {strings.pressPlayHint}
+                      </span>
+                    </p>
+                  )}
+                  {adPlaying && (
+                    <p className="text-muted-foreground mb-3 text-center text-[13px]" dir="auto">
+                      {strings.adPlaying}
+                    </p>
+                  )}
+                </div>
+                <SentenceTyper
+                  key={sentence.id}
+                  sentence={sentence}
+                  hideWords={hideWords}
+                  dim={phase === "armed"}
+                  focusTick={focusTick}
+                  onKeystroke={handleKeystroke}
+                  onMistakeWord={handleMistakeWord}
+                  onComplete={handleSentenceDone}
+                />
+                <div className="lg:hidden">
+                  {phase === "listening" && !needsTap && !adPlaying && index > 0 && (
+                    <p className="text-muted-foreground mt-3 text-center text-[13px]" dir="auto">
+                      {strings.resumingSoon}
+                    </p>
+                  )}
+                  {needsTap && (
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={tapToContinue}
+                        className={buttonVariants({ variant: "outline" })}
+                      >
+                        <Play className="size-4" aria-hidden="true" />
+                        <span dir="auto">{strings.continueNow}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </FitArea>
+              {/* Laptop and wider: the one-line hints live in a strip of their own, so they never change the size of the sentence above. */}
+              <div
+                className="hidden h-9 shrink-0 items-center justify-center gap-2 text-center text-[13px] lg:flex"
+                dir="auto"
+              >
+                {phase === "armed" ? (
+                  <span>
+                    <span className="text-[15px]">{strings.pressPlay}</span>
+                    <span className="text-muted-foreground"> · {strings.pressPlayHint}</span>
                   </span>
-                </p>
-              )}
-              {adPlaying && (
-                <p className="text-muted-foreground mb-3 text-center text-[13px]" dir="auto">
-                  {strings.adPlaying}
-                </p>
-              )}
-              <SentenceTyper
-                key={sentence.id}
-                sentence={sentence}
-                hideWords={hideWords}
-                dim={phase === "armed"}
-                focusTick={focusTick}
-                onKeystroke={handleKeystroke}
-                onMistakeWord={handleMistakeWord}
-                onComplete={handleSentenceDone}
-              />
-              {phase === "listening" && !needsTap && !adPlaying && index > 0 && (
-                <p className="text-muted-foreground mt-3 text-center text-[13px]" dir="auto">
-                  {strings.resumingSoon}
-                </p>
-              )}
-              {needsTap && (
-                <div className="mt-4 flex justify-center">
+                ) : adPlaying ? (
+                  <span className="text-muted-foreground">{strings.adPlaying}</span>
+                ) : needsTap ? (
                   <button
                     type="button"
                     onClick={tapToContinue}
-                    className={buttonVariants({ variant: "outline" })}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
                   >
                     <Play className="size-4" aria-hidden="true" />
                     <span dir="auto">{strings.continueNow}</span>
                   </button>
-                </div>
-              )}
-            </div>
+                ) : phase === "listening" && index > 0 ? (
+                  <span className="text-muted-foreground">{strings.resumingSoon}</span>
+                ) : null}
+              </div>
+            </>
           )
         )}
       </main>
@@ -418,9 +481,77 @@ export function VideoSession({
   );
 }
 
-function Shell({ children }: { children: ReactNode }) {
+/**
+ * Where the typed sentence sits. Below laptop width it is a plain block (nothing changes). From laptop width
+ * up it takes all the height the video leaves and sets one number, `--stage-zoom`, the largest at which the
+ * sentence and its translation (their font sizes are multiplied by it) still fit, so a long sentence gets a
+ * smaller type and a short one a bigger type and nothing ever scrolls. It is a font size, not CSS `zoom`: the
+ * typing underline is placed from the letters' measured positions, which a zoomed parent would throw off.
+ * It measures again when the sentence or the window changes.
+ */
+function FitArea({ children, watch }: { children: ReactNode; watch: string }) {
+  const blockRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const block = blockRef.current;
+    const measure = measureRef.current;
+    if (!block || !measure) return;
+    const wide = window.matchMedia("(min-width: 1024px)");
+    let frame = 0;
+
+    const fit = () => {
+      if (!wide.matches) {
+        block.style.removeProperty("--stage-zoom");
+        return;
+      }
+      const zoom = solveFitZoom(
+        (candidate) => {
+          block.style.setProperty("--stage-zoom", String(candidate));
+          return measure.getBoundingClientRect().height;
+        },
+        block.clientHeight,
+        { min: 0.5, max: 1.25 },
+      );
+      block.style.setProperty("--stage-zoom", String(zoom));
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fit);
+    };
+
+    fit();
+    const observer = new ResizeObserver(schedule);
+    observer.observe(block);
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", schedule);
+    };
+  }, [watch]);
+
   return (
-    <div className="lesson-shell bg-background text-foreground flex min-h-svh flex-col">
+    <div
+      ref={blockRef}
+      className="mt-4 flex-1 lg:mt-1 lg:flex lg:min-h-0 lg:w-full lg:items-center lg:justify-center"
+    >
+      <div ref={measureRef} className="lg:w-full">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Shell({ children, stage = false }: { children: ReactNode; stage?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "lesson-shell bg-background text-foreground flex min-h-svh flex-col",
+        // The practice screen on a laptop is one screen: exactly the window's height, nothing scrolls.
+        stage && "lg:h-svh lg:overflow-hidden",
+      )}
+    >
       {children}
     </div>
   );
@@ -483,7 +614,7 @@ function SentenceTyper({
 
   return (
     <div className={cn("transition-opacity", dim && "opacity-60")}>
-      <div className="mb-1 min-h-[3.25rem]">
+      <div className="mb-1 min-h-[3.25rem] lg:flex lg:justify-center">
         <CurrentWordLabel word={label} dir="rtl" />
       </div>
       <TypingText
@@ -494,7 +625,7 @@ function SentenceTyper({
         onChange={engine.handleChange}
         onPaste={engine.handlePaste}
         reducedMotion={reducedMotion}
-        textClassName="font-serif text-[1.75rem] sm:text-[2.5rem] lesson-sentence"
+        textClassName="font-serif text-[1.75rem] sm:text-[2.5rem] lg:text-[calc(3.3rem*var(--stage-zoom,1))] lg:leading-[1.2] lg:text-center lesson-sentence"
         onWordClick={(word) => speakWord(word.replace(/[^\p{L}\p{N}']/gu, ""))}
         wordTranslations={glosses}
         translationDir="rtl"
@@ -502,7 +633,10 @@ function SentenceTyper({
         errorChar={engine.errorChar}
         autoFocus={false}
       />
-      <p className="mt-4 text-lg text-[var(--lesson-subtitle)] select-none sm:text-xl" dir="rtl">
+      <p
+        className="mt-4 text-lg text-[var(--lesson-subtitle)] select-none sm:text-xl lg:text-center lg:text-[calc(1.7rem*var(--stage-zoom,1))]"
+        dir="rtl"
+      >
         {sentence.ar}
       </p>
     </div>
