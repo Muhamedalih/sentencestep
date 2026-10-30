@@ -98,6 +98,11 @@ const THEME_SCRIPT_HASH = "sha256-wsUdzDaf48DVgowQHlmZS5LH85z4u/iIq9XHllJtjn4=";
  */
 const CLARITY_SCRIPT_HASH = "sha256-7JNj9S49KK1i24bKN7OMCz4StI+SOY2k8zKGm6ZfCsU=";
 
+/** True for the routes that play a video from YouTube (Video dictation and its admin tool): the only ones whose CSP lists YouTube. */
+function needsYouTube(pathname: string): boolean {
+  return /^\/(learn|admin)\/video(\/|$)/.test(pathname);
+}
+
 /**
  * True for "/", "/privacy", "/terms" and every one of their locale-prefixed
  * static siblings ("/ar", "/es/privacy", "/tr/terms", ...) — see
@@ -113,7 +118,7 @@ function isStaticMarketingPath(pathname: string): boolean {
   );
 }
 
-function buildCsp(nonce: string, isStaticRoute: boolean): string {
+function buildCsp(nonce: string, isStaticRoute: boolean, withYouTube = false): string {
   const isProd = process.env.NODE_ENV === "production";
   // A per-request nonce cannot work on a statically-generated page: the
   // HTML is rendered ONCE at build time with no request to attach a nonce
@@ -148,13 +153,16 @@ function buildCsp(nonce: string, isStaticRoute: boolean): string {
     : `script-src 'self' 'nonce-${nonce}' '${THEME_SCRIPT_HASH}' '${CLARITY_SCRIPT_HASH}'${devEval} https://challenges.cloudflare.com https://*.clarity.ms`;
   return [
     "default-src 'self'",
-    scriptSrc,
+    // withYouTube (Video dictation's routes only, see needsYouTube): YouTube's player script, its
+    // iframe (the privacy-enhanced domain) and the video thumbnails. Measured against a copy of
+    // this policy: these three sources are all the player needs, and without them it never loads.
+    scriptSrc + (withYouTube ? " https://www.youtube.com" : ""),
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
-    "img-src 'self' data: blob: https://*.supabase.co https://*.clarity.ms",
+    `img-src 'self' data: blob: https://*.supabase.co https://*.clarity.ms${withYouTube ? " https://i.ytimg.com" : ""}`,
     "media-src 'self' blob: https://*.supabase.co",
     `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://*.clarity.ms${sentryConnectSrc()}`,
-    "frame-src https://challenges.cloudflare.com",
+    `frame-src https://challenges.cloudflare.com${withYouTube ? " https://www.youtube-nocookie.com" : ""}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -430,6 +438,7 @@ const ADMIN_ONLY_SEGMENTS = [
   "features",
   "permissions",
   "passages",
+  "video",
   "color-settings",
   "voice",
   "typing-sound",
@@ -584,7 +593,11 @@ export async function middleware(request: NextRequest) {
   // NextResponse.next({ request })" pattern that function already uses for
   // cookies.
   const nonce = generateNonce();
-  const csp = buildCsp(nonce, isStaticMarketingPath(request.nextUrl.pathname));
+  const csp = buildCsp(
+    nonce,
+    isStaticMarketingPath(request.nextUrl.pathname),
+    needsYouTube(request.nextUrl.pathname),
+  );
   // Both set as REQUEST headers (not just the response header every branch
   // below adds via withCsp) — Next's own App Router build pipeline detects
   // this exact x-nonce/Content-Security-Policy request-header pair to

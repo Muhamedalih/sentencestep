@@ -10,6 +10,7 @@ import {
   Lightbulb,
   ListChecks,
   NotebookText,
+  Play,
   Route,
 } from "lucide-react";
 
@@ -18,6 +19,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { ruleStrings } from "@/lib/daily-rule/strings";
+import { videoStrings } from "@/lib/video-dictation/strings";
 import { cn } from "@/lib/utils";
 
 /**
@@ -71,6 +73,7 @@ export function LearnSidebar({
   passagesEnabled = false,
   mobilePath = false,
   rulesEnabled = false,
+  videoEnabled = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -81,6 +84,8 @@ export function LearnSidebar({
   mobilePath?: boolean;
   /** The "dailyRule" permission, resolved for this visitor (and signed in): the rule library, «قواعدي», is a menu item from md: up (a phone reaches it from Home's rule row). */
   rulesEnabled?: boolean;
+  /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up (the phone bar is unchanged for now). */
+  videoEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
@@ -106,13 +111,15 @@ export function LearnSidebar({
               ? "stories"
               : pathname.startsWith("/learn/passages")
                 ? "passages"
-                : pathname.startsWith("/learn/word-lists")
-                  ? "word-lists"
-                  : pathname.startsWith("/learn/library")
-                    ? "library"
-                    : pathname.startsWith("/learn/rules")
-                      ? "rules"
-                      : null;
+                : pathname.startsWith("/learn/video")
+                  ? "video"
+                  : pathname.startsWith("/learn/word-lists")
+                    ? "word-lists"
+                    : pathname.startsWith("/learn/library")
+                      ? "library"
+                      : pathname.startsWith("/learn/rules")
+                        ? "rules"
+                        : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
   // opens on /learn/normal (Daily Lessons) by default — see the
@@ -128,6 +135,7 @@ export function LearnSidebar({
     { key: "home", href: "/learn", label: t.nav.home, icon: Home },
     { key: "stories", href: "/learn/normal", label: t.nav.stories, icon: NotebookText },
     { key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones },
+    { key: "video", href: "/learn/video", label: videoStrings(locale).navLabel, icon: Play },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
     { key: "rules", href: "/learn/rules", label: ruleStrings(locale).myRules, icon: Lightbulb },
@@ -135,6 +143,7 @@ export function LearnSidebar({
     (item) =>
       (item.key !== "library" || showLibrary) &&
       (item.key !== "passages" || passagesEnabled) &&
+      (item.key !== "video" || videoEnabled) &&
       (item.key !== "rules" || rulesEnabled),
   );
 

@@ -25,6 +25,7 @@ export const ROLLOUT_IDS = [
   "hybridOffers",
   "todayCover",
   "todayRepeat",
+  "videoDictation",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -217,6 +218,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs Today's session to be open for the same people, and stays closed while Today's session is closed.",
       "Only the buttons and the motion change: the tasks, their order, their XP and what each one opens stay the same.",
       "A learner who asked for reduced motion gets the buttons without the lift, the press and the turn of the icon.",
+    ],
+  },
+  videoDictation: {
+    id: "videoDictation",
+    audience: "learner",
+    title: "Video dictation (“فيديو”)",
+    description:
+      "A new section of the menu: short public-domain videos played from YouTube itself (the official player, with the channel's name and a link to the video) and stopped by the page at the end of every sentence, while the learner types the sentence the way Stories are typed: the whole sentence shown faded and turning white as it is typed, the word being typed with its Arabic meaning above it, a tap on any word for its meaning, and an optional switch that hides the words. When the sentence is finished the video carries on by itself. Arabic only, for the videos the team prepares.",
+    notes: [
+      "Admins only for now, and nothing else on the site changes: the menu item, the library page and the practice page exist only while this is open for you.",
+      "Needs no table: the videos are files in the code for now (src/data/videos), so there is nothing to apply in Supabase.",
+      "The player and the videos come from YouTube: the Content-Security-Policy lists three YouTube sources, only on this section's routes (/learn/video and /admin/video).",
+      "Before opening it to learners: test a phone and Facebook's and Instagram's built-in browsers, link YouTube's Terms of Service and Google's Privacy Policy from the Terms and Privacy pages, and decide where the text of every video comes from (public domain, a licence, or the creator's permission).",
     ],
   },
   mobilePath: {
