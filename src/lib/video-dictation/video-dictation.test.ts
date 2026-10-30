@@ -3,7 +3,15 @@ import test from "node:test";
 
 import { videoLessons } from "@/data/videos";
 
-import { isSameVideo, nextRate, replayPosition, segmentTick } from "./segments";
+import {
+  isSameVideo,
+  MAX_LEAD_SECONDS,
+  nextLead,
+  nextRate,
+  replayPosition,
+  segmentTick,
+  START_LEAD_SECONDS,
+} from "./segments";
 import {
   cuesToSentences,
   parseTimestamp,
@@ -181,6 +189,25 @@ test("replay, slow button and the ad check", () => {
   assert.equal(isSameVideo(15, 60), false);
   assert.equal(isSameVideo(0, 60), false);
   assert.equal(isSameVideo(Number.NaN, 60), false);
+});
+
+test("nextLead: a late stop asks for an earlier one, an early stop for a later one, and it settles", () => {
+  // A device that always stops 0.12 s after the time it is asked for.
+  let lead = START_LEAD_SECONDS;
+  for (let i = 0; i < 12; i++) {
+    const stoppedAt = 10 - lead + 0.12;
+    lead = nextLead(lead, stoppedAt, 10);
+  }
+  assert.ok(Math.abs(lead - 0.12) < 0.005, `settled at ${lead}`);
+  // A stop that came 0.1 s early gives the lead back.
+  assert.ok(nextLead(0.12, 9.9, 10) < 0.12);
+  // Never negative, never more than the cap.
+  assert.equal(nextLead(0, 9.5, 10), 0);
+  assert.equal(nextLead(0.2, 10.6, 10), MAX_LEAD_SECONDS);
+  assert.equal(nextLead(0.24, 10.9, 10), MAX_LEAD_SECONDS);
+  // A reading far from the end (an ad, a seek) changes nothing.
+  assert.equal(nextLead(0.1, 14, 10), 0.1);
+  assert.equal(nextLead(0.1, Number.NaN, 10), 0.1);
 });
 
 const sample: VideoLesson = {

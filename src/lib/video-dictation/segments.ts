@@ -7,7 +7,25 @@
  */
 
 /** How often the playhead is read while a sentence plays. */
-export const POLL_MS = 50;
+export const POLL_MS = 30;
+
+/** The stop is asked for this much earlier before any stop has been measured. */
+export const START_LEAD_SECONDS = 0.03;
+
+/** The most the stop is ever moved earlier to make up for a slow device. */
+export const MAX_LEAD_SECONDS = 0.25;
+
+/**
+ * Every stop lands a little after the end it was asked for (the player answers late, more so on a phone).
+ * After each stop the page reads where the video really paused and moves the next stop earlier or later by
+ * half of the error, so it settles on the device's own delay: a stop that was late asks for a bigger lead,
+ * one that was early for a smaller one. A reading far from the end (an ad, a seek) is ignored.
+ */
+export function nextLead(lead: number, stoppedAt: number, endSeconds: number): number {
+  const error = stoppedAt - endSeconds;
+  if (!Number.isFinite(error) || Math.abs(error) > 1) return lead;
+  return Math.min(MAX_LEAD_SECONDS, Math.max(0, lead + 0.5 * error));
+}
 
 /** A replay starts this far before the sentence, so its first sound is not cut. */
 export const REPLAY_LEAD_SECONDS = 0.2;
@@ -31,9 +49,10 @@ export function nextRate(rate: number): number {
 }
 
 /**
- * One reading of the playhead while a sentence plays. `sawBefore` remembers that the playhead has
- * been seen clearly before the end, so the sentence is not stopped at once by a time read that still
- * belongs to where the video was before a seek.
+ * One reading of the playhead while a sentence plays. `endSeconds` is the time to stop at (the sentence's
+ * end minus the device's lead, see nextLead). `sawBefore` remembers that the playhead has been seen
+ * clearly before it, so the sentence is not stopped at once by a time read that still belongs to where the
+ * video was before a seek.
  */
 export function segmentTick(
   sawBefore: boolean,
