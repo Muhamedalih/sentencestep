@@ -7,7 +7,7 @@ description: Turn a YouTube video into a SentenceStep "Video dictation" lesson (
 
 Produces `src/data/videos/<slug>.ts` (plus its line in `index.ts`) through the repo's own `scripts/video-prep/build.mjs`, and the proof that each sentence stops in the right place. It never edits the page, `types.ts`, `validate.ts`, the CSP, rollouts or the database: a lesson is a static data file (about 13 KB). Facts of the current system: `references/project-audit.md`.
 
-`Y="node .claude/skills/youtube-video-lessons/scripts/yvl.mjs"`, run from your own worktree. Working files: `C:/Looma-tools/video-prep/drafts/<slug>.*` (outside the repo). Every command prints a short readout; read that, not the files.
+`Y="node .claude/skills/youtube-video-lessons/scripts/yvl.mjs"`, run from your own worktree (every Bash call restarts in `C:\Looma`: prefix `cd C:/Looma-yvl &&`, or the worktree you made, or add `--repo <worktree>`). Working files: `C:/Looma-tools/video-prep/drafts/<slug>.*` (outside the repo). Every command prints a short readout; read that, not the files.
 
 ## The owner's standing orders (2026-10-31, every chat)
 - **A YouTube link plus anything like «سوي هذا الفيديو» is the whole request.** Start at once: no questions about the skill, options or rights. Ask only if truly blocked (embedding off, no usable text) or if his choice would change what is built.
