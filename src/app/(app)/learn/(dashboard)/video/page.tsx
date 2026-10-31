@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { VideoLibrary } from "@/components/video-dictation/video-library";
+import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getVideoLessons } from "@/lib/video-dictation/content";
+import { getVideoLessons, isTrialVideo, visibleVideoLessons } from "@/lib/video-dictation/content";
 
 export const metadata: Metadata = { title: "Video" };
 
@@ -15,5 +16,7 @@ export const metadata: Metadata = { title: "Video" };
 export default async function VideoLibraryPage() {
   const [features, locale] = await Promise.all([getEffectiveFeatures(), getLocale()]);
   if (!features.rollouts.videoDictation) redirect("/learn");
-  return <VideoLibrary lessons={getVideoLessons()} locale={locale} />;
+  // A trial video (a creator's text with no permission) is for an Admin only; ask who is looking only when one exists.
+  const admin = getVideoLessons().some(isTrialVideo) ? await isAdmin() : false;
+  return <VideoLibrary lessons={visibleVideoLessons(admin)} locale={locale} />;
 }

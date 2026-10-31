@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { VideoSession } from "@/components/video-dictation/video-session";
+import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
-import { getVideoLesson, getVideoLessons } from "@/lib/video-dictation/content";
+import { getVideoLessons, isTrialVideo, visibleVideoLessons } from "@/lib/video-dictation/content";
 
 export const metadata: Metadata = { title: "Video" };
 
@@ -17,10 +18,12 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
   if (!features.rollouts.videoDictation) redirect("/learn");
 
   const { id } = await params;
-  const lesson = getVideoLesson(id);
+  // A trial video (a creator's text with no permission) is for an Admin only: for anyone else it is a 404.
+  const admin = getVideoLessons().some(isTrialVideo) ? await isAdmin() : false;
+  const lessons = visibleVideoLessons(admin);
+  const lesson = lessons.find((candidate) => candidate.id === id);
   if (!lesson) notFound();
 
-  const lessons = getVideoLessons();
-  const next = lessons[lessons.findIndex((candidate) => candidate.id === id) + 1];
+  const next = lessons[lessons.indexOf(lesson) + 1];
   return <VideoSession lesson={lesson} nextLessonId={next?.id ?? null} />;
 }
