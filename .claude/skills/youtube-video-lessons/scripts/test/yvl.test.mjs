@@ -16,7 +16,7 @@ import {
   splitLong,
   typingProblems,
 } from "../lib/text.mjs";
-import { assignBoundaries, atPictureEnd, gapsOf, lastStopLimit, otsu, pictureEnd, placeStops, surroundings, voicedIntervals } from "../lib/envelope.mjs";
+import { assignBoundaries, atPictureEnd, firstPass, gapsOf, lastStopLimit, otsu, pictureEnd, placeStops, surroundings, voicedIntervals } from "../lib/envelope.mjs";
 import {
   anchorsHint,
   groupByRuns,
@@ -248,6 +248,19 @@ test("checkLesson --update does not count the lesson being rebuilt as another le
   // another lesson with the same video is still refused when updating
   const other = { file: "x.ts", lesson: { id: "other", youtubeId: "msnOHuPep9I" } };
   assert.ok(checkLesson(goodLesson(), { others: [own, other], update: true }).errors.some((e) => /already lesson other/.test(e)));
+});
+
+test("firstPass keeps the first pass of a looped capture (samples and caption rows alike) and a capture that never wrapped whole", () => {
+  const samples = [[0, 0, 0], [26, 0.1, 0.1], [52.1, 0, 0], [0.02, 0, 0], [0.04, 0.1, 0.1], [20, 0.1, 0.1], [52.1, 0, 0], [0.02, 0, 0]];
+  assert.deepEqual(firstPass(samples), samples.slice(0, 3)); // cut at the first wrap, later passes go with it
+  const caps = [[0, ""], [0.2, "word"], [51.9, "last words"], [0, ""], [0.3, "word"]];
+  assert.deepEqual(firstPass(caps), caps.slice(0, 3));
+  const whole = [[0, 0, 0], [10, 0, 0], [52, 0, 0]];
+  assert.equal(firstPass(whole), whole); // nothing wrapped: the same rows come back
+  assert.deepEqual(firstPass([[10, 0, 0], [9.5, 0, 0], [11, 0, 0]]), [[10, 0, 0], [9.5, 0, 0], [11, 0, 0]]); // jitter under 1 s is not a wrap
+  assert.deepEqual(firstPass([[10, 0, 0], [8.9, 0, 0]]), [[10, 0, 0]]); // just over 1 s back is
+  assert.deepEqual(firstPass([[3, 0, 0], [1.5, 0, 0]], 2), [[3, 0, 0], [1.5, 0, 0]]); // a wider limit
+  assert.deepEqual(firstPass([]), []);
 });
 
 test("pictureEnd is where a capture that ran to the end stopped; atPictureEnd takes a stop near or past it as the end of the video", () => {

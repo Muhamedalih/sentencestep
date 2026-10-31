@@ -29,6 +29,16 @@ export function cleanSamples(samples) {
 }
 
 /**
+ * The first pass of a capture of a video that YouTube loops: the rows (samples [t, ...] or caps [t, text]) up to the first
+ * moment the media time jumps back by more than `jump` seconds. A capture that never wrapped comes back whole, and jitter
+ * under `jump` is not a wrap.
+ */
+export function firstPass(rows, jump = 1) {
+  for (let i = 1; i < rows.length; i++) if (rows[i][0] < rows[i - 1][0] - jump) return rows.slice(0, i);
+  return rows;
+}
+
+/**
  * Otsu's threshold on a list of dB values: the level that best splits "quiet" from "loud". `separability`
  * is the share of the variance the split explains (0..1): above ~0.6 the two groups are clearly apart
  * (speech over a quiet bed); below ~0.4 a music bed or noise covers the pauses and the stops are shaky.

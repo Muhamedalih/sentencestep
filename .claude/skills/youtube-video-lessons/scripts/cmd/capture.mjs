@@ -1,9 +1,11 @@
 /**
- * yvl capture --id <slug> [--yt <youtubeId>] [--from 0] [--to 75] [--no-captions] [--headful]
+ * yvl capture --id <slug> [--yt <youtubeId>] [--from 0] [--to 75] [--no-captions] [--loop] [--headful]
  * Step 2: plays the video ONCE, muted, in YouTube's official embedded player (a local test page) and records
  * numbers only: the loudness every ~20 ms and the caption words the player shows. Nothing of the video or its
  * sound is stored. Writes <slug>.capture.json (same shape as scripts/video-prep/yt-capture.mjs: samples, caps).
  * An ad plays first sometimes: it is waited out and never stored. About one clip-length of real time.
+ * A Short that YouTube loops (random per session) starts again at its end without ever reporting ENDED: the capture stops
+ * at that wrap and keeps the first pass, so no --to is needed; --loop makes the player loop on purpose, to test that.
  */
 import {
   draftPath,
@@ -19,7 +21,7 @@ import {
 } from "../lib/util.mjs";
 import { PLAYER_ERRORS, installProbe, startHarness } from "../lib/harness.mjs";
 import { capsToCues, mergeContinuations, rollUpShare } from "../lib/text.mjs";
-import { dB, voicedIntervals } from "../lib/envelope.mjs";
+import { dB, firstPass, voicedIntervals } from "../lib/envelope.mjs";
 
 export async function run(args) {
   const repo = resolveRepo(args);
@@ -35,7 +37,7 @@ export async function run(args) {
   console.log(`capturing ${videoId}${to ? ` ${from}-${to} s` : ""} in the official embed (real time) ...`);
   const h = await startHarness({
     repo,
-    config: { videoId, start: from, captions: args["no-captions"] !== true },
+    config: { videoId, start: from, captions: args["no-captions"] !== true, loop: Boolean(args.loop) },
     headful: Boolean(args.headful),
   });
   try {
@@ -47,6 +49,8 @@ export async function run(args) {
     let last = 0;
     let tracks = null;
     let tracksTried = false;
+    let prevT = null;
+    let seenDuration = 0; // the player reports 0 for a moment after a wrap
     for (;;) {
       await sleep(500);
       const st = await h.page.evaluate(
@@ -54,6 +58,7 @@ export async function run(args) {
       );
       const ad = await frameNow().evaluate(() => window.__yvl.adNow);
       if (st.e !== null) throw new Error(`player error ${st.e}: ${PLAYER_ERRORS[st.e] || ""}`);
+      if (st.d > 0) seenDuration = st.d;
       if (!tracksTried && st.s === 1 && !ad && st.t > from + 2) {
         tracksTried = true;
         tracks = await h.page.evaluate(`(() => {
@@ -63,6 +68,13 @@ export async function run(args) {
             return Array.isArray(list) ? list.map((x) => ({ lang: x.languageCode, name: x.languageName || x.displayName, kind: x.kind || 'manual' })) : null;
           } catch (e) { return 'unavailable: ' + e.message; }
         })()`);
+      }
+      if (!ad) {
+        if (prevT !== null && st.t < prevT - 1) {
+          console.log("\nthe video started again (YouTube loops this Short): the first pass is kept");
+          break;
+        }
+        prevT = st.t;
       }
       const elapsed = (Date.now() - t0) / 1000;
       if (elapsed - last >= 10) {
@@ -88,6 +100,10 @@ export async function run(args) {
     );
     await h.page.evaluate("yvl.player.pauseVideo()");
 
+    // A looped Short leaves the start of a second pass behind (a poll's worth, or every pass when the loop is not noticed): keep the first.
+    const samples = firstPass(data.samples);
+    const caps = firstPass(data.caps);
+
     const out = {
       v: 1,
       id,
@@ -98,25 +114,25 @@ export async function run(args) {
       details: {
         title: details.data.title,
         author: details.data.author,
-        duration: round2(details.duration),
+        duration: round2(details.duration > 0 ? details.duration : seenDuration),
         tracks,
       },
       adSeconds: round2(data.adTicks * 0.02),
       audio: data.audio,
-      samples: data.samples,
-      caps: data.caps,
+      samples,
+      caps,
     };
     writeJson(draftPath(args, id, "capture"), out);
 
     // A short readout so nobody has to open the file.
     const window_ = { from: from, to: to || Infinity };
-    const v = voicedIntervals(data.samples, window_);
-    const cues = mergeContinuations(capsToCues(data.caps));
-    const spanT = data.samples.length ? data.samples[data.samples.length - 1][0] - data.samples[0][0] : 0;
-    const rate = spanT > 0 ? data.samples.length / spanT : 0;
-    const peak = Math.max(...data.samples.map((s) => dB(s[2])));
+    const v = voicedIntervals(samples, window_);
+    const cues = mergeContinuations(capsToCues(caps));
+    const spanT = samples.length ? samples[samples.length - 1][0] - samples[0][0] : 0;
+    const rate = spanT > 0 ? samples.length / spanT : 0;
+    const peak = Math.max(...samples.map((s) => dB(s[2])));
     console.log(
-      `captured ${data.samples.length} samples over ${spanT.toFixed(1)} s (${rate.toFixed(0)}/s), video length ${out.details.duration} s, ads waited ${out.adSeconds} s`,
+      `captured ${samples.length} samples over ${spanT.toFixed(1)} s (${rate.toFixed(0)}/s), video length ${out.details.duration} s, ads waited ${out.adSeconds} s`,
     );
     console.log(
       `voice: ${v.intervals.length} voiced intervals, threshold ${v.threshold == null ? "?" : v.threshold.toFixed(1)} dB, separability ${v.separability == null ? "?" : v.separability.toFixed(2)}, peak ${peak.toFixed(1)} dB`,

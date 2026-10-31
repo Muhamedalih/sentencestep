@@ -29,7 +29,7 @@ Produces `src/data/videos/<slug>.ts` (plus its line in `index.ts`) through the r
 | # | Command | What you get |
 | - | - | - |
 | 1 | `$Y inspect <link> --id <slug>` | id, title, channel, embeddable (oEmbed 200/401/404), duplicate lesson?, suggested slug; saves the job. Decide `textSource` now |
-| 2 | `$Y capture --id <slug> [--to 80]` | plays the clip once, muted, in the official embed (real time, an ad is waited out): loudness + caption cues -> `.capture.json`. Warns: no captions, automatic captions, music bed, slow sampler |
+| 2 | `$Y capture --id <slug> [--to 80]` | plays the clip once, muted, in the official embed (real time, an ad is waited out): loudness + caption cues -> `.capture.json`. A Short that YouTube loops is stopped at its wrap and the first pass is kept (no `--to` needed; `--loop` forces the loop to test it). Warns: no captions, automatic captions, music bed, slow sampler |
 | 3 | `$Y split --id <slug> [--fix f.txt] [--source file.srt]` | short sentences, punctuation kept, numbers spelled, NOTEs for every change. Read the table: wrong caption words go in `f.txt` (`old => new`), then re-run |
 | 4 | `$Y plan --id <slug>` | start/end of every sentence from the audio, `spec.json`, the **LISTEN list** (uncertain spots). Fails with "no increasing choice of pauses" (roll-up auto captions, two voices, noise, a Short)? `plan --anchors [--threshold -27]` places the sentences by the caption word times, joins what has no pause, puts every join and uncaptioned sound on LISTEN (`references/timing-and-evidence.md`) |
 | 5 | `$Y fill --id <slug> --list`, write `<slug>.ar.txt`, `$Y fill --id <slug>` | Arabic and one meaning per word, checked against the sentence (format: `references/authoring-and-traps.md`) |
