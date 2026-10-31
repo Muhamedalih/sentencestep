@@ -9,10 +9,10 @@ export const ducksInTheRain: VideoLesson = {
   level: "A2",
   durationSeconds: 43,
   clipStartSeconds: 0,
-  clipEndSeconds: 33.4,
+  clipEndSeconds: 42.9,
   textSource: "trial",
   sourceNote:
-    'TRIAL ONLY (Admins only, hidden from learners): a Short by Natural Habitat Shorts (https://www.youtube.com/@NaturalHabitatShorts, video https://www.youtube.com/shorts/Sni7G5IXU30). No licence or permission is established for its text, so it must be cleared with the creator or removed before the section opens to learners. Text: YouTube\'s automatic English captions as the player shows them (read on 2026-10-31; repeated roll-up lines removed; wording not yet checked by ear). Pause points: measured from the audio loudness in the official embedded player on 2026-10-31 with the youtube-video-lessons skill; each sound run was assigned to its sentence by the caption word times; sentences with no pause between them, and two lines whose sound the speech-rate gate could not accept alone (a long held "Dad?" and a very fast "I don\'t know."), were joined across a clear pause; a first version, to be checked by ear.',
+    'TRIAL ONLY (Admins only, hidden from learners): a Short by Natural Habitat Shorts (https://www.youtube.com/@NaturalHabitatShorts, video https://www.youtube.com/shorts/Sni7G5IXU30). No licence or permission is established for its text, so it must be cleared with the creator or removed before the section opens to learners. Text: YouTube\'s automatic English captions as the player shows them (read on 2026-10-31; repeated roll-up lines removed), checked against the video\'s own burned-in captions at frames across the whole video on 2026-10-31 (every line matches; the duckling\'s "Hmm." that the automatic captions missed was added; the closing chant, which the automatic captions heard as "God, praise God", is taken from the burned-in captions; the held scream and the thunder before the chant are not in the text); wording not yet checked by ear. Pause points: measured from the audio loudness in the official embedded player on 2026-10-31 with the youtube-video-lessons skill; each sound run was assigned to its sentence by the caption word times; sentences with no pause between them, and two lines whose sound the speech-rate gate could not accept alone (a long held "Dad?" and a very fast "I don\'t know."), were joined across a clear pause; the closing chant has no pause inside, so it is one sentence that ends with the video; a first version, to be checked by ear.',
   sentences: [
     {
       id: "ducks-in-the-rain-s1",
@@ -255,8 +255,8 @@ export const ducksInTheRain: VideoLesson = {
       id: "ducks-in-the-rain-s6",
       startSeconds: 24.59,
       endSeconds: 29.27,
-      en: "I don't know. No, it's not, Dad.",
-      ar: "لا أعرف. لا، ليس كذلك يا أبي.",
+      en: "I don't know. Hmm. No, it's not, Dad.",
+      ar: "لا أعرف. همم. لا، ليس كذلك يا أبي.",
       wordTranslations: [
         {
           en: "I",
@@ -269,6 +269,10 @@ export const ducksInTheRain: VideoLesson = {
         {
           en: "know",
           ar: "أعرف",
+        },
+        {
+          en: "Hmm",
+          ar: "همم",
         },
         {
           en: "No",
@@ -343,6 +347,75 @@ export const ducksInTheRain: VideoLesson = {
         {
           en: "Dad",
           ar: "يا أبي",
+        },
+      ],
+    },
+    {
+      id: "ducks-in-the-rain-s9",
+      startSeconds: 33.94,
+      endSeconds: 42.86,
+      en: "Duck gods, praise the duck gods! Praise the duck gods, almighty duck gods, duck gods!",
+      ar: "آلهة البط، مجّدوا آلهة البط! مجّدوا آلهة البط، آلهة البط القديرة، آلهة البط!",
+      wordTranslations: [
+        {
+          en: "Duck",
+          ar: "بط",
+        },
+        {
+          en: "gods",
+          ar: "آلهة",
+        },
+        {
+          en: "praise",
+          ar: "مجّدوا",
+        },
+        {
+          en: "the",
+          ar: "الـ",
+        },
+        {
+          en: "duck",
+          ar: "البط",
+        },
+        {
+          en: "gods",
+          ar: "آلهة",
+        },
+        {
+          en: "Praise",
+          ar: "مجّدوا",
+        },
+        {
+          en: "the",
+          ar: "الـ",
+        },
+        {
+          en: "duck",
+          ar: "البط",
+        },
+        {
+          en: "gods",
+          ar: "آلهة",
+        },
+        {
+          en: "almighty",
+          ar: "القديرة",
+        },
+        {
+          en: "duck",
+          ar: "البط",
+        },
+        {
+          en: "gods",
+          ar: "آلهة",
+        },
+        {
+          en: "duck",
+          ar: "البط",
+        },
+        {
+          en: "gods",
+          ar: "آلهة",
         },
       ],
     },
