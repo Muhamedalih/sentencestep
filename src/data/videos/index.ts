@@ -4,6 +4,7 @@ import { usualSuspects } from "./usual-suspects";
 import { missionToEarth } from "./mission-to-earth";
 import { onTheBall } from "./on-the-ball";
 import { startFromScratch } from "./start-from-scratch";
+import { ducksInTheRain } from "./ducks-in-the-rain";
 
 /** The prepared videos, in the order the library lists them. */
 export const videoLessons: readonly VideoLesson[] = [
@@ -12,4 +13,5 @@ export const videoLessons: readonly VideoLesson[] = [
   missionToEarth,
   usualSuspects,
   urnsForTrueLove,
+  ducksInTheRain,
 ];
