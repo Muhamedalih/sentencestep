@@ -165,6 +165,18 @@ export function VideoSession({
         if (stoppedAt !== undefined) leadRef.current = nextLead(leadRef.current, stoppedAt, end);
         return;
       }
+      if (state === PLAYER_STATE.ENDED && live.current.phase === "listening") {
+        // The video itself ended while a sentence played: the last sentence can run to the very end of a video
+        // (YouTube may even report a whole second more than the picture lasts), so the playhead never reaches
+        // its stop. The end of the video is the stop. An ad's end is not.
+        const player = controlsRef.current;
+        if (!player || !isSameVideo(player.getDuration(), lesson.durationSeconds)) return;
+        stopPolling();
+        stopEndRef.current = null;
+        move({ phase: "typing" });
+        setFocusTick((n) => n + 1);
+        return;
+      }
       if (state !== PLAYER_STATE.PLAYING) return;
       const { phase: current, index: at } = live.current;
       const sentence = sentences[at];
@@ -176,7 +188,7 @@ export function VideoSession({
         replay();
       }
     },
-    [move, replay, sentences, startPolling],
+    [lesson.durationSeconds, move, replay, sentences, startPolling, stopPolling],
   );
 
   const { hostRef, failure, controls } = useYouTubePlayer({
