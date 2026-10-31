@@ -1,5 +1,5 @@
 /**
- * yvl verify --id <slug> [--spec <file>] [--capture <file>] [--rate 1] [--type-ms 500] [--replays 3] [--loop] [--headful]
+ * yvl verify --id <slug> [--spec <file>] [--capture <file>] [--rate 1] [--type-ms 500] [--replays 3] [--loop] [--threshold dB] [--headful]
  * Step 8: plays the lesson in YouTube's OFFICIAL embedded player (IFrame API) the way the practice page does,
  * with the app's own stop rules (src/lib/video-dictation/segments.ts): one sentence at a time, a stop at every
  * end, a pause for typing, a resume without a seek, then replays of the first, middle and last sentence.
@@ -98,7 +98,8 @@ export async function run(args) {
   let videoEnd = Infinity;
   if (fs.existsSync(capFile)) {
     const cap = readJson(capFile);
-    V = voicedIntervals(cap.samples, { from: Math.max(0, L.clipStart - 2), to: L.clipEnd + 2 }).intervals;
+    const threshold = args.threshold === undefined ? null : Number(args.threshold);
+    V = voicedIntervals(cap.samples, { from: Math.max(0, L.clipStart - 2), to: L.clipEnd + 2, threshold }).intervals;
     videoEnd = pictureEnd(cap);
   }
 

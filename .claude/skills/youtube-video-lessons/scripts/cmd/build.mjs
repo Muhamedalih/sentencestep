@@ -1,5 +1,5 @@
 /**
- * yvl build --id <slug> [--spec <file>] [--update]
+ * yvl build --id <slug> [--spec <file>] [--update] [--threshold dB]
  * Step 7: spec -> src/data/videos/<slug>.ts, with the project's OWN generator (scripts/video-prep/build.mjs), after
  * `check` passes. Then Prettier formats the new file and index.ts the way a commit would, and `npm run test:video`
  * runs the repo's validation over every lesson. Nothing here publishes anything: a lesson reaches learners only
@@ -22,7 +22,17 @@ export async function run(args) {
   if (!fs.existsSync(generator)) fail(`${generator} is missing: this checkout is too old (use a worktree of origin/master)`);
 
   const yvl = path.resolve(HERE, "..", "yvl.mjs");
-  const checkArgs = [yvl, "check", "--id", id, "--repo", repo, ...(args.spec ? ["--spec", specFile] : []), ...(args.update ? ["--update"] : [])];
+  const checkArgs = [
+    yvl,
+    "check",
+    "--id",
+    id,
+    "--repo",
+    repo,
+    ...(args.spec ? ["--spec", specFile] : []),
+    ...(args.update ? ["--update"] : []),
+    ...(args.threshold === undefined ? [] : ["--threshold", String(args.threshold)]),
+  ];
   const check = spawnSync(process.execPath, checkArgs, { encoding: "utf8" });
   process.stdout.write(check.stdout ?? "");
   if (check.status !== 0) fail("check failed: fix the errors above first (nothing was built)");
