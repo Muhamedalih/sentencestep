@@ -29,8 +29,12 @@ export interface VideoSentence {
 
 export type VideoLevel = "A1" | "A2" | "B1" | "B2";
 
-/** Where the TEXT of a video comes from: what lets the site show it. */
-export type VideoTextSource = "public-domain" | "creative-commons" | "permission" | "own";
+/**
+ * Where the TEXT of a video comes from: what lets the site show it. "trial" means a creator's text
+ * with no permission, kept only so an Admin can try it: it is hidden from everyone else and must be
+ * cleared or removed before the section opens to learners.
+ */
+export type VideoTextSource = "public-domain" | "creative-commons" | "permission" | "own" | "trial";
 
 export interface VideoLesson {
   /** The slug used in the address: /learn/video/<id>. */

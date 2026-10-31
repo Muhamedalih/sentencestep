@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { videoLessons } from "@/data/videos";
 
+import { getVideoLessons, isTrialVideo, visibleVideoLessons } from "./content";
 import {
   isSameVideo,
   MAX_LEAD_SECONDS,
@@ -289,4 +290,13 @@ test("every video listed in src/data/videos is sound", () => {
     assert.equal(ids.has(lesson.id), false, `${lesson.id} is listed twice`);
     ids.add(lesson.id);
   }
+});
+
+test("a trial video (a creator's text with no permission) is hidden from everyone but an Admin", () => {
+  assert.equal(visibleVideoLessons(true).length, getVideoLessons().length);
+  assert.equal(visibleVideoLessons(false).some(isTrialVideo), false);
+  assert.equal(
+    visibleVideoLessons(false).length,
+    getVideoLessons().filter((lesson) => !isTrialVideo(lesson)).length,
+  );
 });

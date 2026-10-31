@@ -64,10 +64,14 @@ function updateIndex(id) {
   let text = fs.readFileSync(indexFile, "utf8");
   if (!text.includes(`from "./${id}"`)) {
     text = text.replace(/(import type [^\n]+\n)/, `$1import { ${exportName} } from "./${id}";\n`);
-    text = text.replace(
-      /\[([^\]]*)\];/,
-      (_all, list) => `[${list.trim() ? `${list.trim()}, ` : ""}${exportName}];`,
-    );
+    // The list may already be formatted over several lines with a trailing comma: split it, never append to it.
+    text = text.replace(/\[([^\]]*)\];/, (_all, list) => {
+      const items = list
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return `[${[...items, exportName].join(", ")}];`;
+    });
     fs.writeFileSync(indexFile, text);
   }
   return exportName;

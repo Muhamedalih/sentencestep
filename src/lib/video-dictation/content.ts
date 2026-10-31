@@ -11,6 +11,16 @@ export function getVideoLesson(id: string): VideoLesson | undefined {
   return videoLessons.find((lesson) => lesson.id === id);
 }
 
+/** A trial video carries a creator's text with no permission (see VideoTextSource). */
+export function isTrialVideo(lesson: VideoLesson): boolean {
+  return lesson.textSource === "trial";
+}
+
+/** The videos a viewer may open: a trial video is only for an Admin. */
+export function visibleVideoLessons(adminViewer: boolean): readonly VideoLesson[] {
+  return adminViewer ? videoLessons : videoLessons.filter((lesson) => !isTrialVideo(lesson));
+}
+
 /** The part of the video the learner works through, in seconds. */
 export function clipSeconds(lesson: VideoLesson): number {
   return Math.max(0, lesson.clipEndSeconds - lesson.clipStartSeconds);
