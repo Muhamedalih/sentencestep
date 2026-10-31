@@ -15,7 +15,7 @@ const COMMANDS = {
   inspect: ["inspect.mjs", "link/id -> title, channel, embeddable?, duplicate?, slug (step 1)"],
   capture: ["capture.mjs", "play once in the official embed: loudness + caption words, numbers only (step 2)"],
   split: ["split.mjs", "captions/transcript/text -> short sentences, punctuation kept (step 3)"],
-  plan: ["plan.mjs", "sentences + loudness -> start/end of every sentence, spec.json, listen list (step 4)"],
+  plan: ["plan.mjs", "sentences + loudness -> start/end of every sentence, spec.json, listen list (step 4; --anchors: by the caption word times)"],
   fill: ["fill.mjs", "<slug>.ar.txt (Arabic + meanings + metadata) -> spec.json (step 5)"],
   check: ["check.mjs", "static gates: schema, timeline, text, meanings, coverage, audio consistency (step 6)"],
   build: ["build.mjs", "spec -> src/data/videos/<slug>.ts through the repo's own build.mjs, then the repo tests (step 7)"],

@@ -26,7 +26,7 @@ import {
   writeJson,
 } from "../lib/util.mjs";
 import { surroundings, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
-import { syllables, typingProblems } from "../lib/text.mjs";
+import { SPEECH_RATE, syllables, typingProblems } from "../lib/text.mjs";
 
 const SOURCES = ["public-domain", "creative-commons", "permission", "own", "trial"];
 const T = {
@@ -35,10 +35,10 @@ const T = {
   maxSentence: 14,
   wordsWarn: 12,
   wordsError: 24,
-  spsErrLow: 1.8,
-  spsErrHigh: 11,
-  spsWarnLow: 3,
-  spsWarnHigh: 8.5,
+  spsErrLow: SPEECH_RATE.errLow,
+  spsErrHigh: SPEECH_RATE.errHigh,
+  spsWarnLow: SPEECH_RATE.warnLow,
+  spsWarnHigh: SPEECH_RATE.warnHigh,
   afterSoundWarn: 0.04,
   beforeNextWarn: 0.08,
   beforeNextError: 0.03,
@@ -187,7 +187,7 @@ export function checkLesson(L, ctx = {}) {
       const voiced = voicedWithin(V, s.start, s.end);
       const wps = voiced > 0 ? syl / voiced : 0;
       rates.push(wps);
-      if (voiced < 0.2) E(w, `almost no speech inside ${s.start}-${s.end} s: the sentence is misplaced`);
+      if (voiced < SPEECH_RATE.minVoiced) E(w, `almost no speech inside ${s.start}-${s.end} s: the sentence is misplaced`);
       else if (wps < T.spsErrLow) E(w, `${voiced.toFixed(1)} s of speech for ${words} words (${wps.toFixed(1)} syllables/s): speech is missing from the text`);
       else if (wps > T.spsErrHigh) E(w, `${words} words for ${voiced.toFixed(1)} s of speech (${wps.toFixed(1)} syllables/s): the text is longer than the speech`);
       else if (wps < T.spsWarnLow || wps > T.spsWarnHigh) W(w, `${wps.toFixed(1)} syllables/s is unusual: read it against the audio`);

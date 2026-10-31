@@ -140,6 +140,9 @@ export function syllables(word) {
   return Math.max(1, groups);
 }
 
+/** Syllables per second `check` refuses (err*) and finds unusual (warn*), and the least speech it accepts in a sentence; `plan` judges with the same numbers. */
+export const SPEECH_RATE = { errLow: 1.8, errHigh: 11, warnLow: 3, warnHigh: 8.5, minVoiced: 0.2 };
+
 /** How long a text takes to say, in comparable units: its syllables plus a little for every word boundary. */
 export function unitWeight(text) {
   const tokens = splitWords(text);

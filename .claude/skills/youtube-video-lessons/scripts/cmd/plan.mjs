@@ -1,5 +1,5 @@
 /**
- * yvl plan --id <slug> [--clip-start N] [--clip-end N] [--threshold dB] [--min-pause 0.45] [--window a-b]
+ * yvl plan --id <slug> [--clip-start N] [--clip-end N] [--threshold dB] [--min-pause 0.45] [--window a-b] [--anchors]
  * Step 4: where every sentence starts (the replay point) and ends (the stop). Measured, not guessed:
  *   1. the voice is found in the recorded loudness (threshold chosen from the data, Otsu);
  *   2. the ends of real sentences (. ! ?) go into pauses: increasing pauses, inside the caption cue window when the
@@ -9,6 +9,8 @@
  *   4. the stop goes 0.30 s after the last sound but never nearer than 0.10 s to the next one.
  * Writes <slug>.spec.json (Arabic and meanings still empty: `fill` adds them) and <slug>.plan.json (the evidence),
  * and lists the boundaries a person should listen to once.
+ * --anchors places the sentences by the caption word times instead of by the pauses alone (roll-up captions, several
+ * voices, noise): plan-anchors.mjs. A plan that fails for lack of clear pauses suggests it.
  */
 import {
   draftPath,
@@ -25,7 +27,9 @@ import {
   writeJson,
 } from "../lib/util.mjs";
 import { assignBoundaries, gapsOf, placeStops, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
-import { syllables, unitWeight } from "../lib/text.mjs";
+import { SPEECH_RATE, syllables, unitWeight } from "../lib/text.mjs";
+import { anchorsHint } from "../lib/anchors.mjs";
+import { run as runAnchored } from "./plan-anchors.mjs";
 
 const words = (text) => splitWords(text).length;
 
@@ -97,6 +101,7 @@ function cutInside(pieces, intervals, minPause) {
 }
 
 export async function run(args) {
+  if (args.anchors) return runAnchored(args);
   const id = requireId(args);
   const { units: baseUnits, maxWords = 12 } = readJson(draftPath(args, id, "units"));
   const cap = readJson(draftPath(args, id, "capture"));
@@ -119,7 +124,7 @@ export async function run(args) {
     v.intervals,
     { windows, pausePenalty: 3 },
   );
-  if (top.error) fail(`${top.error}. Sentences: ${sentences.length}. Try --threshold, --window, or check the captions.`);
+  if (top.error) fail(`${top.error}. Sentences: ${sentences.length}. Try --threshold, --window, or check the captions.${anchorsHint(cap.caps, id)}`);
 
   const finalUnits = [];
   const bounds = [];
@@ -191,7 +196,7 @@ export async function run(args) {
       if (b.miss) flags.push("no-cue-window");
       if (flags.length) listen.push({ after: i + 1, at: round2(end), pause: round2(b.gap.d), flags: [...flags] });
     }
-    if (wps && (wps < 3 || wps > 8.5)) flags.push(`rate ${wps.toFixed(1)}`);
+    if (wps && (wps < SPEECH_RATE.warnLow || wps > SPEECH_RATE.warnHigh)) flags.push(`rate ${wps.toFixed(1)}`);
     if (words(u.en) > maxWords) flags.push(`${words(u.en)} words`);
     console.log(
       `${String(i + 1).padStart(2)} ${fmt(start, 7)} ${fmt(end, 7)} ${b ? fmt(b.gap.d, 5) : "    -"}${b ? (b.kind === "cut" ? "c" : " ") : " "} ${String(words(u.en)).padStart(3)}  ${wps ? wps.toFixed(1) : " - "}  ${flags.join(",").padEnd(19)} ${u.en.length > 50 ? `${u.en.slice(0, 49)}…` : u.en}`,
