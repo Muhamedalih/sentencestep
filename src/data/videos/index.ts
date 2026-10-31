@@ -9,6 +9,7 @@ import { missionToEarth } from "./mission-to-earth";
 import { onTheBall } from "./on-the-ball";
 import { startFromScratch } from "./start-from-scratch";
 import { ducksInTheRain } from "./ducks-in-the-rain";
+import { antingBirdsAndAnts } from "./anting-birds-and-ants";
 
 /** The prepared videos, in the order the library lists them. */
 export const videoLessons: readonly VideoLesson[] = [
@@ -22,4 +23,5 @@ export const videoLessons: readonly VideoLesson[] = [
   whyDobermansHaveCroppedEars,
   joeysInThePouch,
   whatSheReallyMeans,
+  antingBirdsAndAnts,
 ];
