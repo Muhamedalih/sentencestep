@@ -8,7 +8,7 @@
  */
 import { bareWord, round2, splitWords } from "./util.mjs";
 import { SPEECH_RATE, normalizeText, syllables } from "./text.mjs";
-import { placeStops, voicedIntervals, voicedWithin } from "./envelope.mjs";
+import { lastStopLimit, placeStops, voicedIntervals, voicedWithin } from "./envelope.mjs";
 
 /** A sentence owns the runs that overlap [first word - lead, last word + tail] by `minOverlap` s (or half of a shorter run). */
 export const OWNERSHIP = { lead: 0.2, tail: 0.5, minOverlap: 0.1 };
@@ -298,11 +298,13 @@ function listenList(sentences) {
 
 /**
  * The whole anchored plan. In: the capture's `caps` and `samples`, the caption sentences `texts` (the units, one
- * each), the video length, the voice `threshold` in dB (null = automatic), a `voiceWindow` [from, to] to look for voice in
+ * each), the video length `duration` and where its picture really ends (`pictureEnd`, see envelope.mjs: no stop and
+ * no clip end go beyond the smaller), the voice `threshold` in dB (null = automatic), a `voiceWindow` [from, to] to look for voice in
  * (null = around the caption words), `clipStart` / `clipEnd` overrides. Out: the sentences with their stops
  * and flags, the clip, the LISTEN list, the voiced runs no sentence owns, and the NOTE / WARN lines.
  */
-export function planAnchored({ caps, samples, texts, duration = Infinity, threshold = null, voiceWindow = null, captureFrom = 0, clipStart, clipEnd, maxWords = 12 }) {
+export function planAnchored({ caps, samples, texts, duration = Infinity, pictureEnd = Infinity, threshold = null, voiceWindow = null, captureFrom = 0, clipStart, clipEnd, maxWords = 12 }) {
+  const limit = Math.min(duration, lastStopLimit(pictureEnd)); // no stop and no clip end after the last frame
   const onsets = wordOnsets(caps);
   if (!onsets.length) throw new Error("the capture has no caption words: --anchors needs the player's captions, each word with its time");
   const { spans, matched, total } = sentenceSpans(onsets, texts);
@@ -328,7 +330,7 @@ export function planAnchored({ caps, samples, texts, duration = Infinity, thresh
   // The speech rate is judged the way `check` will judge it: its voice threshold over the clip +- 2 s.
   const clipOf = (timed) => ({
     start: clipStart ?? Math.max(0, Math.floor(timed[0].start - 0.15)),
-    end: clipEnd ?? Math.min(Math.ceil(timed[timed.length - 1].end * 10) / 10, duration),
+    end: clipEnd ?? Math.min(Math.ceil(timed[timed.length - 1].end * 10) / 10, limit),
   });
   const gateOf = (lay) => {
     const clip = clipOf(lay.timed);
@@ -339,7 +341,7 @@ export function planAnchored({ caps, samples, texts, duration = Infinity, thresh
     const gate = gateOf(lay);
     return lay.timed.map((t) => speechRate(t.group.en, t.start, t.end, gate.intervals));
   };
-  const joined = joinByRate(shared, runs, { layout: (gs) => layoutGroups(gs, runs, { duration }), measure });
+  const joined = joinByRate(shared, runs, { layout: (gs) => layoutGroups(gs, runs, { duration: limit }), measure });
   const { lay } = joined;
   const rates = measure(lay);
   const gate = gateOf(lay);
@@ -366,6 +368,10 @@ export function planAnchored({ caps, samples, texts, duration = Infinity, thresh
   listen.sort((x, y) => x.at - y.at);
   if (unowned.length)
     notes.push(`voiced runs no sentence owns (a sound the captions do not know: laughter, a noise, an uncaptioned word): ${unowned.map((u) => `${u.s.toFixed(2)}-${u.e.toFixed(2)} (${placeText(u)})`).join(" ")}`);
+  // The voice is searched only up to 3 s after the last caption word: a closing chant that goes on would be cut short without a word.
+  const sampleEnd = samples.length ? samples[samples.length - 1][0] : 0;
+  if (lay.timed[lay.timed.length - 1].group.e >= to - 0.05 && sampleEnd > to + 0.1)
+    warns.push(`the voice is still going where the search for it stops (${to.toFixed(1)} s) and the capture runs to ${sampleEnd.toFixed(1)} s: the last sentence may be cut short, pass --window ${Math.floor(from)}-${Math.ceil(sampleEnd)}`);
   if (unowned.some((u) => u.s < lay.timed[0].start - 0.05))
     warns.push(`sound between the clip start (${clip.start} s) and the first sentence (${lay.timed[0].start} s): adjust --clip-start or accept the lead-in`);
   if (voice.separability != null && voice.separability < 0.5) warns.push("voice and background are not clearly apart: every stop below needs a human listen");

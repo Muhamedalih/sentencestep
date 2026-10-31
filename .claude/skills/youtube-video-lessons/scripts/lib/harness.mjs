@@ -57,6 +57,7 @@ const y = (window.yvl = { seg, cfg, ready: false, error: null, states: [], playe
 window.onYouTubeIframeAPIReady = () => {
   const vars = { playsinline: 1, rel: 0, disablekb: 1, iv_load_policy: 3, fs: 0, start: Math.floor(cfg.start || 0), origin: location.origin };
   if (cfg.captions) Object.assign(vars, { cc_load_policy: 1, cc_lang_pref: "en", hl: "en" });
+  if (cfg.loop) Object.assign(vars, { loop: 1, playlist: cfg.videoId });
   y.player = new YT.Player("host", {
     host: "https://www.youtube-nocookie.com", width: "100%", height: "100%", videoId: cfg.videoId, playerVars: vars,
     events: {
@@ -99,9 +100,9 @@ y.runLesson = async (lesson, opts) => {
     throw new Error("the video never started (" + label + ")");
   };
   await waitFor(() => y.ready, 45000, "player ready");
-  out.duration = p.getDuration();
   p.playVideo();
   await waitContent("first play");
+  out.duration = p.getDuration(); // read once the video itself plays: before that the player may still report 0 (or an ad's length)
   if (opts.rate && opts.rate !== 1) p.setPlaybackRate(opts.rate);
   out.firstPlayAt = p.getCurrentTime();
   if (Math.abs(out.firstPlayAt - Math.floor(lesson.clipStartSeconds)) > 2)
@@ -111,10 +112,21 @@ y.runLesson = async (lesson, opts) => {
   const stopAt = (endSeconds, timeoutMs) => new Promise((resolve, reject) => {
     let sawBefore = false;
     let adSeen = false;
+    let top = 0;
     const t0 = performance.now();
     const iv = setInterval(() => {
       if (y.error !== null) { clearInterval(iv); reject(new Error("player error " + y.error)); return; }
       if (!seg.isSameVideo(p.getDuration(), lesson.durationSeconds)) { adSeen = true; return; }
+      // A Short that YouTube loops wraps round to 0 at its end without ever reporting ENDED: a stop after the last frame is never reached.
+      const now = p.getCurrentTime();
+      if (now < top - 1) { clearInterval(iv); reject(new Error("the video wrapped round to " + now.toFixed(1) + " s after " + top.toFixed(1) + " s without ending (YouTube loops this Short): the stop asked for at " + endSeconds + " s lies after its last frame and is never reached")); return; }
+      if (now > top) top = now;
+      // The video itself ended while the sentence played (the last sentence can run to the last frame): like the page, take its end as the stop.
+      if (p.getPlayerState() === 0) {
+        clearInterval(iv);
+        resolve({ polledAt: p.getCurrentTime(), adSeen, ms: performance.now() - t0, ended: true });
+        return;
+      }
       const tick = seg.segmentTick(sawBefore, p.getCurrentTime(), endSeconds - lead);
       sawBefore = tick.sawBefore;
       if (tick.stop) {
@@ -134,10 +146,15 @@ y.runLesson = async (lesson, opts) => {
     const budgetMs = ((s.endSeconds - Math.min(s.startSeconds, p.getCurrentTime())) / (opts.rate || 1) + 25) * 1000;
     const leadUsed = lead;
     const stop = await stopAt(s.endSeconds, Math.max(30000, budgetMs));
-    await waitFor(() => p.getPlayerState() === 2, 5000, "PAUSED after the stop of sentence " + (i + 1));
+    if (!stop.ended) await waitFor(() => p.getPlayerState() === 2, 5000, "PAUSED after the stop of sentence " + (i + 1));
     const stoppedAt = p.getCurrentTime();
-    lead = seg.nextLead(lead, stoppedAt, s.endSeconds);
-    const row = { n: i + 1, end: s.endSeconds, polledAt: stop.polledAt, stoppedAt, overshoot: stoppedAt - s.endSeconds, leadUsed, adSeen: stop.adSeen, resumeMs: null, resumeAdvance: null, resumeElapsed: null };
+    if (!stop.ended) lead = seg.nextLead(lead, stoppedAt, s.endSeconds);
+    const row = { n: i + 1, end: s.endSeconds, polledAt: stop.polledAt, stoppedAt, overshoot: stoppedAt - s.endSeconds, leadUsed, adSeen: stop.adSeen, ended: Boolean(stop.ended), resumeMs: null, resumeAdvance: null, resumeElapsed: null };
+    if (stop.ended && i + 1 < lesson.sentences.length) {
+      out.sentences.push(row);
+      out.problems.push("the video ended during sentence " + (i + 1) + " of " + lesson.sentences.length + ": the later sentences lie past its end");
+      return out;
+    }
     if (i + 1 < lesson.sentences.length) {
       await sleep(typeMs);
       const before = p.getCurrentTime();
@@ -161,9 +178,9 @@ y.runLesson = async (lesson, opts) => {
     await waitFor(() => p.getPlayerState() === 1, 12000, "replay of sentence " + (i + 1));
     const landedAt = p.getCurrentTime();
     const stop = await stopAt(s.endSeconds, 40000);
-    await waitFor(() => p.getPlayerState() === 2, 5000, "PAUSED after the replay of sentence " + (i + 1));
+    if (!stop.ended) await waitFor(() => p.getPlayerState() === 2, 5000, "PAUSED after the replay of sentence " + (i + 1));
     const stoppedAt = p.getCurrentTime();
-    out.replays.push({ n: i + 1, target, landedAt, seekError: landedAt - target, end: s.endSeconds, stoppedAt, overshoot: stoppedAt - s.endSeconds, ms: stop.ms });
+    out.replays.push({ n: i + 1, target, landedAt, seekError: landedAt - target, end: s.endSeconds, stoppedAt, overshoot: stoppedAt - s.endSeconds, ms: stop.ms, ended: Boolean(stop.ended) });
   }
   return out;
 };
@@ -171,7 +188,7 @@ y.runLesson = async (lesson, opts) => {
 
 /**
  * Starts the local page and Chrome. Returns { page, frame(), config, logs, close }.
- * `config` = { videoId, start, captions }.
+ * `config` = { videoId, start, captions, loop } (loop: the player starts the video again at its end, as YouTube does in some sessions).
  */
 export async function startHarness({ repo, config, headful = false }) {
   const segFile = path.join(repo, "src", "lib", "video-dictation", "segments.ts");

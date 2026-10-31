@@ -15,6 +15,7 @@
 import fs from "node:fs";
 
 import { draftPath, fail, fmt, loadJob, num, parseRange, readJson, requireId, round2, splitWords, writeJson } from "../lib/util.mjs";
+import { pictureEnd } from "../lib/envelope.mjs";
 import { placeText, planAnchored } from "../lib/anchors.mjs";
 
 export async function run(args) {
@@ -34,6 +35,7 @@ export async function run(args) {
     samples: cap.samples,
     texts: units.map((u) => u.en),
     duration: cap.details?.duration ?? Infinity,
+    pictureEnd: pictureEnd(cap),
     threshold: args.threshold === undefined ? null : num(args.threshold, null),
     voiceWindow: win,
     captureFrom: cap.from ?? 0,

@@ -16,7 +16,7 @@ import {
   splitLong,
   typingProblems,
 } from "../lib/text.mjs";
-import { assignBoundaries, gapsOf, otsu, placeStops, surroundings, voicedIntervals } from "../lib/envelope.mjs";
+import { assignBoundaries, atPictureEnd, gapsOf, lastStopLimit, otsu, pictureEnd, placeStops, surroundings, voicedIntervals } from "../lib/envelope.mjs";
 import {
   anchorsHint,
   groupByRuns,
@@ -32,6 +32,7 @@ import {
 } from "../lib/anchors.mjs";
 import { checkPairs, parseAuthoring } from "../cmd/fill.mjs";
 import { checkLesson, diffWords } from "../cmd/check.mjs";
+import { stopFlags } from "../cmd/verify.mjs";
 
 test("youtubeIdFrom reads links and bare ids", () => {
   const id = "msnOHuPep9I";
@@ -239,6 +240,68 @@ test("checkLesson compares the stops with the recorded speech", () => {
   assert.ok(tooMuch.errors.some((e) => e.includes("syllables/s")));
 });
 
+test("checkLesson --update does not count the lesson being rebuilt as another lesson with the same video", () => {
+  const own = { file: "demo-lesson.ts", lesson: { id: "demo-lesson", youtubeId: "msnOHuPep9I" } };
+  const refused = checkLesson(goodLesson(), { others: [own] });
+  assert.ok(refused.errors.some((e) => /already used by demo-lesson\.ts/.test(e)));
+  assert.deepEqual(checkLesson(goodLesson(), { others: [own], update: true }).errors, []);
+  // another lesson with the same video is still refused when updating
+  const other = { file: "x.ts", lesson: { id: "other", youtubeId: "msnOHuPep9I" } };
+  assert.ok(checkLesson(goodLesson(), { others: [own, other], update: true }).errors.some((e) => /already lesson other/.test(e)));
+});
+
+test("pictureEnd is where a capture that ran to the end stopped; atPictureEnd takes a stop near or past it as the end of the video", () => {
+  const ran = { details: { duration: 43 }, to: null, samples: [[0, 0, 0], [30, 0.1, 0.1], [42.541, 0, 0]] };
+  assert.equal(pictureEnd(ran), 42.54);
+  assert.equal(pictureEnd({ ...ran, to: 80 }), Infinity); // cut short on purpose
+  assert.equal(pictureEnd({ ...ran, samples: [[0, 0, 0], [30, 0.1, 0.1]] }), Infinity); // stopped long before the reported length
+  assert.equal(pictureEnd({ ...ran, samples: [[0, 0, 0], [40, 0, 0]] }), Infinity); // 3 s short: a time limit, not the end
+  assert.equal(pictureEnd({ ...ran, samples: [[0, 0, 0], [43.2, 0, 0]] }), Infinity); // the picture is not shorter than reported
+  assert.equal(pictureEnd({ samples: ran.samples, to: null }), Infinity); // no reported length
+  assert.equal(atPictureEnd(42.86, 42.54), true);
+  assert.equal(atPictureEnd(42.44, 42.54), true); // the last stop plan asks for (0.10 s before the last frame)
+  assert.equal(atPictureEnd(42.3, 42.54), false);
+  assert.equal(lastStopLimit(42.54), 42.44);
+  assert.equal(lastStopLimit(Infinity), Infinity);
+  assert.equal(atPictureEnd(42.86, Infinity), false);
+});
+
+test("checkLesson takes a last stop at the end of the picture as the end of the video, not as a cut", () => {
+  const lesson = goodLesson(); // sentences 0.5-3 and 3.4-6
+  const toTheEnd = [{ s: 0.6, e: 1.8 }, { s: 5, e: 6.02 }]; // the last speech runs to the last frame
+  assert.ok(checkLesson(lesson, { others: [], intervals: toTheEnd }).errors.some((e) => /s2: the stop at 6 s is INSIDE speech/.test(e)));
+  const atEnd = checkLesson(lesson, { others: [], intervals: toTheEnd, pictureEnd: 6.01 });
+  assert.deepEqual(atEnd.errors, []);
+  assert.ok(atEnd.infos.some((i) => /s2: the stop is the end of the video/.test(i)));
+  // only the last stop is exempt
+  lesson.sentences[0].end = 1;
+  assert.ok(checkLesson(lesson, { others: [], intervals: toTheEnd, pictureEnd: 6.01 }).errors.some((e) => /s1: the stop at 1 s is INSIDE speech/.test(e)));
+});
+
+test("stopFlags: a stop that is the end of the video has no time to be late for, an end before the last sentence is an error", () => {
+  const V = [{ s: 40, e: 42.56 }];
+  const row = (changes) => ({ n: 9, end: 42.86, stoppedAt: 42.54, overshoot: -0.32, adSeen: false, resumeMs: null, resumeAdvance: null, resumeElapsed: null, ...changes });
+  const hard = (r, ctx) => stopFlags(r, ctx).flags.filter((f) => /^(LATE|EARLY|CUT|LEAK|clipped|jumped|ENDED)/.test(f));
+  // the player reached ENDED: no overshoot, no cut
+  const ended = stopFlags(row({ ended: true }), { V, total: 9, videoEnd: 42.54 });
+  assert.equal(ended.atEnd, true);
+  assert.deepEqual(hard(row({ ended: true }), { V, total: 9, videoEnd: 42.54 }), []);
+  assert.ok(ended.flags.some((f) => /^ends with the video/.test(f)));
+  // the player's ENDED is the end of the video even when the capture says nothing about where the picture ends
+  assert.equal(stopFlags(row({ ended: true }), { V, total: 9 }).atEnd, true);
+  assert.deepEqual(hard(row({ ended: true }), { V, total: 9 }), []);
+  // the same row with the video still playing and no known end is 0.32 s early inside speech
+  const early = hard(row({}), { V, total: 9 });
+  assert.ok(early.some((f) => /^EARLY/.test(f)) && early.some((f) => /^CUT/.test(f)));
+  // a stop asked for at the end of the picture and polled normally is the end of the video too
+  assert.deepEqual(hard(row({ end: 42.54, stoppedAt: 42.52, overshoot: -0.02 }), { V, total: 9, videoEnd: 42.54 }), []);
+  // the video ending before the last sentence is an error, ended or not
+  assert.ok(hard(row({ n: 4, ended: true }), { V, total: 9 }).some((f) => /^ENDED/.test(f)));
+  // an ordinary stop keeps its flags
+  assert.deepEqual(stopFlags(row({ n: 3, end: 10, stoppedAt: 10.02, overshoot: 0.02 }), { V: [{ s: 8, e: 9.6 }, { s: 11, e: 12 }], total: 9, videoEnd: 42.54 }).flags, []);
+  assert.ok(hard(row({ n: 3, end: 10, stoppedAt: 10.4, overshoot: 0.4 }), { V: [], total: 9 }).some((f) => /^LATE/.test(f)));
+});
+
 test("bareWord matches a word and its meaning key the way the repo does", () => {
   assert.equal(bareWord("world."), "world");
   assert.equal(bareWord("It’s"), "it's");
@@ -386,12 +449,17 @@ test("whereIn says if a moment is inside a sentence or in the pause between a st
   assert.deepEqual(whereIn(timed, 0.5), { during: 1 });
 });
 
-test("planAnchored joins sentences that share sound or speak at a rate check refuses, and lists what only an ear can judge", () => {
+/** Six caption sentences: 3 and 4 run on without a pause, 5 is a 0.3 s mumble (13 syllables a second), a laugh nobody captioned sits between 2 and 3. */
+function demoSpeech() {
   const texts = ["Hello there my friend.", "How are you today?", "Fine thanks.", "And you?", "I do not know.", "Yes I do know."];
   const words = texts.flatMap((t) => t.split(" "));
   const caps = rollUp(words, [1.1, 1.5, 1.9, 2.3, 3.5, 3.9, 4.3, 4.7, 6.1, 6.4, 6.9, 7.2, 10, 10.08, 10.16, 10.24, 12.1, 12.4, 12.7, 13]);
-  // 3 and 4 run on without a pause; 5 is a 0.3 s mumble (13 syllables a second); a laugh nobody captioned sits between 2 and 3
   const samples = envelope([[1, 2.6], [3.4, 5], [5.5, 5.8], [6, 7.6], [10, 10.3], [12, 13.2]], 16);
+  return { texts, caps, samples };
+}
+
+test("planAnchored joins sentences that share sound or speak at a rate check refuses, and lists what only an ear can judge", () => {
+  const { texts, caps, samples } = demoSpeech();
   for (const threshold of [-40, null]) {
     const plan = planAnchored({ caps, samples, texts, duration: 16, threshold });
     assert.deepEqual(plan.sentences.map((s) => s.text), ["Hello there my friend.", "How are you today?", "Fine thanks. And you?", "I do not know. Yes I do know."]);
@@ -416,4 +484,25 @@ test("planAnchored joins sentences that share sound or speak at a rate check ref
   assert.ok(planAnchored({ caps: whole, samples, texts, duration: 16, threshold: -40 }).warns.some((w) => /one word at a time/.test(w)));
   assert.throws(() => planAnchored({ caps: [[0, ""]], samples, texts }), /no caption words/);
   assert.throws(() => planAnchored({ caps, samples: envelope([[1, 2.6]], 16), texts }), /fewer than two voiced intervals/);
+});
+
+test("planAnchored keeps the last stop and the clip end 0.10 s before the last frame", () => {
+  const { texts, caps, samples } = demoSpeech();
+  // the speech runs to 13.2 s and would be stopped at 13.5 s; the picture ends at 13.25 s
+  const open = planAnchored({ caps, samples, texts, duration: 16, threshold: -40 });
+  assert.ok(near(open.sentences[3].end, 13.5) && open.clip.end >= 13.5);
+  const capped = planAnchored({ caps, samples, texts, duration: 16, pictureEnd: 13.25, threshold: -40 });
+  assert.equal(capped.sentences[3].end, 13.15);
+  assert.ok(capped.clip.end <= 13.15);
+  // the earlier stops are where they were
+  assert.deepEqual(capped.sentences.slice(0, 3).map((x) => [x.start, x.end]), open.sentences.slice(0, 3).map((x) => [x.start, x.end]));
+});
+
+test("planAnchored warns when the voice is still going where its search stops (a closing chant)", () => {
+  const { texts, caps } = demoSpeech();
+  const chant = envelope([[1, 2.6], [3.4, 5], [5.5, 5.8], [6, 7.6], [10, 10.3], [12, 15.99]], 20); // the last words go on for four seconds
+  const warned = planAnchored({ caps, samples: chant, texts, duration: 20, threshold: -40 }).warns;
+  assert.ok(warned.some((w) => /still going where the search for it stops \(16\.0 s\).*--window 0-20/.test(w)), warned.join(" | "));
+  const { samples } = demoSpeech();
+  assert.ok(!planAnchored({ caps, samples, texts, duration: 16, threshold: -40 }).warns.some((w) => /still going/.test(w)));
 });

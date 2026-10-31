@@ -26,7 +26,7 @@ import {
   splitWords,
   writeJson,
 } from "../lib/util.mjs";
-import { assignBoundaries, gapsOf, placeStops, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
+import { assignBoundaries, gapsOf, lastStopLimit, pictureEnd, placeStops, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
 import { SPEECH_RATE, syllables, unitWeight } from "../lib/text.mjs";
 import { anchorsHint } from "../lib/anchors.mjs";
 import { run as runAnchored } from "./plan-anchors.mjs";
@@ -144,7 +144,8 @@ export async function run(args) {
   const placed = bounds.map((b) => placeStops(b.gap));
   const firstSound = v.intervals[0].s;
   const lastSound = v.intervals[v.intervals.length - 1].e;
-  const durationLimit = cap.details?.duration ?? Infinity;
+  // A stop after the last frame is never reached: no later than just before the picture's end when the capture saw it.
+  const durationLimit = Math.min(cap.details?.duration ?? Infinity, lastStopLimit(pictureEnd(cap)));
   const timed = finalUnits.map((u, i) => ({
     u,
     start: round2(i === 0 ? Math.max(0, firstSound - 0.1) : placed[i - 1].start),

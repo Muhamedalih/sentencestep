@@ -1,14 +1,16 @@
 /**
  * yvl flow --id <slug> [--port 3047] [--type-delay 90] [--headful] [--max-sentences N]
  * Step 9: the REAL practice page, end to end. Starts the repo's dev server (no Supabase, FEATURES_DEV_ALL_ON, the
- * dev-admin cookie: the project's own local-testing switches), enters the section the way a learner does (the library
- * page, then the lesson's link), presses YouTube's own play button, and for every sentence waits for the page to stop
- * the video, types the sentence with real key presses (letters, digits and spaces: punctuation is skipped by the
- * typing screen), and checks that the video carries on by itself. Ends on the finish screen. Reports where each stop
+ * dev-admin cookie: the project's own local-testing switches) and compiles the two pages first with a plain request,
+ * enters the section the way a learner does (the library page, then the lesson's link), presses YouTube's own play
+ * button, and for every sentence waits for the page to stop the video and to give the keyboard to the sentence, types
+ * it with real key presses (letters, digits and spaces: punctuation is skipped by the typing screen), and checks that
+ * the video carries on by itself. Ends on the finish screen. Reports where each stop
  * landed in the page's own run, the time to resume, CSP violations, console errors and a "tap to continue" fallback.
  * The lesson must be built (src/data/videos/<slug>.ts). Writes <slug>.flow.json. Exit 1 on failure.
  */
 import fs from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 
@@ -28,12 +30,32 @@ import {
 } from "../lib/util.mjs";
 import { chromePath, loadPuppeteer } from "../lib/harness.mjs";
 
-async function isUp(base) {
-  try {
-    await fetch(base, { signal: AbortSignal.timeout(3000) });
-    return true;
-  } catch {
-    return false;
+/** Is something listening on the port? Asking a page is no test: a dev server that has not compiled its home page yet takes longer than any short timeout to answer, and a second server on its port never starts. */
+function isUp(port) {
+  return new Promise((resolve) => {
+    const socket = net.connect({ port, host: "localhost" });
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once("error", () => resolve(false));
+  });
+}
+
+/**
+ * Asks the dev server for the pages the test opens, with the cookies the browser will send, so each is compiled before
+ * the browser's first navigation: a first compile takes 30-90 s and a navigation that waits that long can time out.
+ */
+async function warmUp(base, paths) {
+  for (const p of paths) {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(`${base}${p}`, { headers: { cookie: "sentencestep-dev-admin=true; ss_locale=ar" }, signal: AbortSignal.timeout(300000) });
+      await res.arrayBuffer();
+      console.log(`warmed ${p}: ${res.status} in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+    } catch (error) {
+      console.log(`WARN warming ${p} failed (${error.message}): the first navigation may be slow`);
+    }
   }
 }
 
@@ -53,7 +75,7 @@ export async function run(args) {
   const stopServer = () => {
     if (server?.pid) spawnSync("taskkill", ["/PID", String(server.pid), "/T", "/F"], { shell: true });
   };
-  if (!(await isUp(base))) {
+  if (!(await isUp(port))) {
     console.log(`starting next dev on ${port} (first page compiles in 30-90 s) ...`);
     server = spawn("npx", ["next", "dev", "-p", String(port)], {
       cwd: repo,
@@ -65,12 +87,14 @@ export async function run(args) {
     server.stdout.on("data", (d) => {
       if (/Ready|ready in|Local:/.test(String(d))) ready = true;
     });
+    server.stderr.on("data", () => {}); // an unread pipe fills up (64 KB) and stalls the server
     for (let i = 0; i < 240 && !ready; i++) await sleep(500);
     if (!ready) {
       stopServer();
       fail("the dev server did not report ready in 120 s");
     }
   } else console.log(`using the server already on ${port}`);
+  await warmUp(base, ["/learn/video", `/learn/video/${id}`]);
 
   const puppeteer = loadPuppeteer();
   const browser = await puppeteer.launch({
@@ -166,12 +190,17 @@ export async function run(args) {
       const s = sentences[i];
       const t0 = Date.now();
       let stop = null;
+      let top = 0;
       while (Date.now() - t0 < (s.end + 40) * 1000) {
         const st = await probe();
         if (st && !st.ad && st.paused && st.t >= s.end - 0.6) {
           stop = st;
           break;
         }
+        // A Short that YouTube loops wraps round to 0 at its end without a word (no ENDED): the page then waits for a stop that is never reached.
+        if (st && !st.ad && st.t < top - 1)
+          throw new Error(`sentence ${i + 1}: the video wrapped round to ${st.t.toFixed(1)} s after ${top.toFixed(1)} s and played on (YouTube loops this Short) but the page did not stop it: its stop (${s.end} s) lies after the last frame`);
+        if (st && !st.ad && st.t > top) top = st.t;
         await sleep(100);
       }
       if (!stop) throw new Error(`sentence ${i + 1}: the page never stopped the video near ${s.end} s`);
@@ -185,7 +214,16 @@ export async function run(args) {
           )
           .catch(() => "") ?? "";
       }
-      const row = { n: i + 1, end: s.end, stoppedAt: stop.t, overshoot: stop.t - s.end, resumeMs: null, tap: false, flags: [] };
+      // A last sentence that runs to the last frame ends with the video (state ENDED): the page takes that as the stop.
+      const row = { n: i + 1, end: s.end, stoppedAt: stop.t, overshoot: stop.t - s.end, ended: Boolean(stop.ended), resumeMs: null, tap: false, flags: [] };
+      // The page gives the keyboard to the sentence a moment after the stop (dev mode: sometimes a few hundred ms). A key typed
+      // before that goes to the player's frame and is lost, and the typing engine then takes whatever letters happen to match:
+      // the first "D" lost left the input at "dad, " for ever and the video never resumed. Wait for the page's own focus.
+      await page
+        .waitForFunction(() => document.activeElement?.tagName === "INPUT", { timeout: 15000 })
+        .catch(() => {
+          throw new Error(`sentence ${i + 1}: the page did not give the keyboard to the sentence within 15 s of the stop`);
+        });
       await page.keyboard.type(keystrokes(s.en), { delay: typeDelay });
       if (i + 1 < sentences.length) {
         const t1 = Date.now();
@@ -214,7 +252,7 @@ export async function run(args) {
             await sleep(80);
           }
         }
-        if (!resumed) throw new Error(`sentence ${i + 1}: typed in full but the video did not carry on`);
+        if (!resumed) throw new Error(`sentence ${i + 1}: typed in full but the video did not carry on (the inputs below show what the page kept; if it is only the first words, keys were lost: raise --type-delay from ${typeDelay} ms)`);
         row.resumeMs = Date.now() - t1 - adMs;
         if (adMs > 0) row.flags.push(`an ad played for ${(adMs / 1000).toFixed(0)} s (waited out)`);
       } else {
@@ -223,8 +261,8 @@ export async function run(args) {
           if (!finished) await sleep(250);
         }
       }
-      if (row.overshoot > 0.2) row.flags.push(`late ${row.overshoot.toFixed(2)}`);
-      if (row.overshoot < -0.15) row.flags.push(`early ${row.overshoot.toFixed(2)}`);
+      if (!row.ended && row.overshoot > 0.2) row.flags.push(`late ${row.overshoot.toFixed(2)}`);
+      if (!row.ended && row.overshoot < -0.15) row.flags.push(`early ${row.overshoot.toFixed(2)}`);
       if (row.tap) row.flags.push("needed the tap-to-continue button");
       rows.push(row);
       const progress = await page.evaluate(() => (document.body.innerText.match(/(\d+)\s*\/\s*(\d+)/) || [])[0] || "");
@@ -270,9 +308,11 @@ export async function run(args) {
   if (!finished) errors.push("the finish screen (أنهيت الفيديو) was not reached");
   warns.forEach((w) => console.log(`WARN  ${w}`));
   errors.forEach((e) => console.log(`ERROR ${e}`));
-  const over = rows.map((r) => r.overshoot);
+  const endedRows = rows.filter((r) => r.ended);
+  endedRows.forEach((r) => console.log(`INFO  s${r.n}: ends with the video (the page took ENDED as the stop)`));
+  const over = rows.filter((r) => !r.ended).map((r) => r.overshoot);
   if (over.length)
-    console.log(`page stops: ${rows.length}, overshoot mean ${round2(over.reduce((a, b) => a + b, 0) / over.length)} s, min ${round2(Math.min(...over))}, max ${round2(Math.max(...over))}`);
+    console.log(`page stops: ${rows.length}${endedRows.length ? ` (${endedRows.length} ends with the video)` : ""}, overshoot mean ${round2(over.reduce((a, b) => a + b, 0) / over.length)} s, min ${round2(Math.min(...over))}, max ${round2(Math.max(...over))}`);
   // A run in which the page itself was starved for 1.5 s or more proves nothing about the lesson: say so, do not blame it.
   const stalled = worstLag >= 1500;
   const verdict = errors.length ? (stalled ? "INCONCLUSIVE" : "FAIL") : "PASS";

@@ -128,6 +128,34 @@ export function voicedIntervals(samples, options = {}) {
   };
 }
 
+/**
+ * Where the picture really ends, read from a capture that ran to the end of the video: the last moment the sampler
+ * saw. YouTube can report up to a second more than the picture lasts (a Short whose last frame is at 42.54 s says 43),
+ * and a stop after the last frame is never reached by the playhead. Infinity when the capture was cut short (--to) or
+ * does not end within a second of the reported length: then nothing is known about the end.
+ */
+export function pictureEnd(capture) {
+  const duration = capture?.details?.duration;
+  const samples = capture?.samples;
+  if (capture?.to || !(duration > 0) || !samples?.length) return Infinity;
+  let last = 0;
+  for (const [t] of samples) if (t > last) last = t;
+  return last < duration && last >= duration - 1 ? Math.floor(last * 100) / 100 : Infinity;
+}
+
+/**
+ * The last stop keeps this far from the last frame, so the page's 30 ms polling sees the playhead there before the video
+ * ends: a stop asked for later is reached only if the player reports ENDED, and a Short that YouTube loops wraps round to
+ * 0 without ever reporting it.
+ */
+export const END_MARGIN = 0.1;
+
+/** The latest a stop may be asked for in a video whose picture ends at `end` (Infinity when that is not known). */
+export const lastStopLimit = (end) => end - END_MARGIN;
+
+/** A stop this near the end of the picture, or beyond it, is the end of the video itself, not a cut in the speech. */
+export const atPictureEnd = (stopSeconds, end) => Number.isFinite(end) && stopSeconds >= lastStopLimit(end) - 1e-6;
+
 /** The pauses between neighbouring voiced intervals, with the voiced time spent before each one. */
 export function gapsOf(intervals) {
   const gaps = [];

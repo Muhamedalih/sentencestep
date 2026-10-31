@@ -25,7 +25,7 @@ import {
   splitWords,
   writeJson,
 } from "../lib/util.mjs";
-import { surroundings, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
+import { atPictureEnd, pictureEnd, surroundings, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
 import { SPEECH_RATE, syllables, typingProblems } from "../lib/text.mjs";
 
 const SOURCES = ["public-domain", "creative-commons", "permission", "own", "trial"];
@@ -160,8 +160,10 @@ export function checkLesson(L, ctx = {}) {
   // Other lessons
   for (const other of ctx.others ?? []) {
     if (ctx.selfFile && path.resolve(other.file) === path.resolve(ctx.selfFile)) continue;
-    if (other.lesson.id === L.id && !ctx.update) E("lesson", `the id ${L.id} is already used by ${path.basename(other.file)} (building would overwrite it; --update to allow)`);
-    if (other.lesson.youtubeId === L.youtubeId) E("lesson", `the video ${L.youtubeId} is already lesson ${other.lesson.id}`);
+    const rebuilt = other.lesson.id === L.id;
+    if (rebuilt && !ctx.update) E("lesson", `the id ${L.id} is already used by ${path.basename(other.file)} (building would overwrite it; --update to allow)`);
+    // With --update the lesson of the same id is the one being rebuilt: its video is this video.
+    if (other.lesson.youtubeId === L.youtubeId && !(rebuilt && ctx.update)) E("lesson", `the video ${L.youtubeId} is already lesson ${other.lesson.id}`);
   }
 
   // Text against the source text (deleted or added words)
@@ -194,7 +196,9 @@ export function checkLesson(L, ctx = {}) {
 
       const here = surroundings(V, s.end);
       const last = i === L.sentences.length - 1;
-      if (here.inside) E(w, `the stop at ${s.end} s is INSIDE speech (cuts a word)`);
+      // The last sentence can run to the last frame: the page takes the end of the video as its stop, so speech up to there is no cut.
+      if (last && atPictureEnd(s.end, ctx.pictureEnd)) infos.push(`${w}: the stop is the end of the video (the picture ends at ${ctx.pictureEnd} s)`);
+      else if (here.inside) E(w, `the stop at ${s.end} s is INSIDE speech (cuts a word)`);
       else {
         if (here.sinceSound < T.afterSoundWarn) W(w, `the stop is only ${here.sinceSound.toFixed(2)} s after the last sound (the end of the word may be cut)`);
         if (!last) {
@@ -261,6 +265,7 @@ export async function run(args) {
       threshold: args.threshold === undefined ? null : Number(args.threshold),
     });
     ctx.intervals = v.intervals;
+    ctx.pictureEnd = pictureEnd(cap);
     separability = v.separability;
   }
   const unitsFile = draftPath(args, id, "units");
