@@ -8,15 +8,15 @@ import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getVideoArrangement } from "@/lib/video-dictation/arrangement-store";
-import { arrangeVideoLessons, videoCard, visibleVideoLessons } from "@/lib/video-dictation/content";
+import { arrangeVideoLessons, getVideoLessons, videoCard } from "@/lib/video-dictation/content";
 
 export const metadata: Metadata = { title: "Video" };
 
 /**
  * The library of Video dictation: the videos prepared for it, in sections by kind (comedy first until an
- * Admin arranges them), behind the "videoDictation" permission (Admins only until the owner opens it).
- * Anyone else goes back to Home, where nothing about the section shows. An Admin also sees the trial
- * videos (a creator's text with no permission) and gets the arrange mode; the saved arrangement is one
+ * Admin arranges them), behind the "videoDictation" permission (open to everyone).
+ * Anyone it is closed for goes back to Home. Every prepared video is open to every viewer, in the same
+ * order; an Admin also gets the arrange mode; the saved arrangement is one
  * cached read shared by every visitor. Opening the library is what "seen" means for the «جديد» line on
  * Home (see MarkVideoNewsSeen).
  */
@@ -25,7 +25,7 @@ export default async function VideoLibraryPage() {
   if (!features.rollouts.videoDictation) redirect("/learn");
   // The dashboard layout already resolved who is looking for this request, so this costs nothing.
   const [admin, saved] = await Promise.all([isAdmin(), getVideoArrangement()]);
-  const lessons = visibleVideoLessons(admin);
+  const lessons = getVideoLessons();
   const sections = arrangeVideoLessons(lessons, saved);
   // Slim card data only: a card needs none of the sentences, and an Admin's page runs in the browser.
   const cards = Object.fromEntries(lessons.map((lesson) => [lesson.id, videoCard(lesson)]));

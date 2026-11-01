@@ -46,8 +46,9 @@ export type VideoKind = (typeof VIDEO_KINDS)[number];
 
 /**
  * Where the TEXT of a video comes from: what lets the site show it. "trial" means a creator's text
- * with no permission, kept only so an Admin can try it: it is hidden from everyone else and must be
- * cleared or removed before the section opens to learners.
+ * with no written permission; the owner decided on 2026-11-02 to show every video to every viewer anyway
+ * (played only by YouTube's own player, free, with the creator and the video link shown), so the
+ * value only records the rights status and hides nothing.
  */
 export type VideoTextSource = "public-domain" | "creative-commons" | "permission" | "own" | "trial";
 

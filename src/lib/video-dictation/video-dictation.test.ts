@@ -14,7 +14,7 @@ import {
   shiftVideo,
 } from "./arrange";
 import type { VideoSection } from "./arrange";
-import { arrangeVideoLessons, getVideoLessons, isTrialVideo, visibleVideoLessons } from "./content";
+import { arrangeVideoLessons } from "./content";
 import {
   documentCookieHasVideoNewsSeen,
   isVideoNewsSeen,
@@ -309,15 +309,6 @@ test("every video listed in src/data/videos is sound", () => {
     assert.equal(ids.has(lesson.id), false, `${lesson.id} is listed twice`);
     ids.add(lesson.id);
   }
-});
-
-test("a trial video (a creator's text with no permission) is hidden from everyone but an Admin", () => {
-  assert.equal(visibleVideoLessons(true).length, getVideoLessons().length);
-  assert.equal(visibleVideoLessons(false).some(isTrialVideo), false);
-  assert.equal(
-    visibleVideoLessons(false).length,
-    getVideoLessons().filter((lesson) => !isTrialVideo(lesson)).length,
-  );
 });
 
 // ---- The library's arrangement: sections by kind (comedy first), and what an Admin saved ----
