@@ -13,6 +13,7 @@ import { HomeReviewCard } from "@/components/app/home-review-card";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { MobileGuestHome } from "@/components/home-today/guest-home";
 import { HomeToday } from "@/components/home-today/home-today";
+import { VideoNewsLine } from "@/components/home-today/video-news-line";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { isAdmin } from "@/lib/admin/access";
 import { getAccessState } from "@/lib/billing/access";
@@ -40,6 +41,7 @@ import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { showsNewHome } from "@/lib/today/home-layout";
+import { VIDEO_NEWS_COOKIE, isVideoNewsSeen } from "@/lib/video-dictation/news";
 import type { Book } from "@/types/library";
 
 export const metadata: Metadata = { title: "Home" };
@@ -289,6 +291,12 @@ export default async function LearnHomePage({
   // The new Home page (permission "newHome"): Today's tasks, the learner's lesson and the self-test on
   // one calm screen instead of the strip, the passage card, the plan and the three-card grid.
   if (newHome && engagement && user) {
+    // The «جديد» line that announces Video dictation (the "videoNews" permission): only for a learner who
+    // has not closed it or opened the section yet, decided here from one cookie so it is never drawn and
+    // taken back after the page loads.
+    const videoNewsOpen =
+      features.rollouts.videoNews &&
+      !isVideoNewsSeen((await cookies()).get(VIDEO_NEWS_COOKIE)?.value);
     return (
       <ProgressProvider initialProgress={initialProgress}>
         <div className="roomy:max-w-7xl roomy:pt-[clamp(0.75rem,2svh,2rem)] roomy:pb-[clamp(0.75rem,2svh,4rem)] mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-8 sm:pb-16">
@@ -312,6 +320,9 @@ export default async function LearnHomePage({
                     url={openCheckout.url}
                     className="mb-6"
                   />
+                )}
+                {videoNewsOpen && (
+                  <VideoNewsLine className="roomy:mb-[clamp(0.75rem,2svh,1.5rem)] mb-6 max-sm:mb-5" />
                 )}
               </>
             }

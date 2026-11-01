@@ -44,6 +44,11 @@ export interface VideoStrings {
   unavailableTitle: string;
   unavailableBody: string;
   blockedBody: string;
+  /** The «جديد» line on Home (the "videoNews" permission). */
+  newsTitle: string;
+  newsBody: string;
+  newsOpen: string;
+  newsDismiss: string;
   /** The names of the sections of the library, one per kind of video. */
   kinds: Record<VideoKind, string>;
   /** The Admin's arrange mode of the library. */
@@ -120,6 +125,10 @@ const ar: VideoStrings = {
   unavailableTitle: "الفيديو غير متاح حالياً",
   unavailableBody: "صاحب الفيديو منع عرضه هنا أو حذفه. جرّب فيديو آخر.",
   blockedBody: "تعذّر تحميل مشغّل يوتيوب. تأكد من الاتصال وجرّب مرة ثانية.",
+  newsTitle: "جديد: قسم «فيديو»",
+  newsBody: "اسمع الجملة من مقطع حقيقي واكتبها",
+  newsOpen: "جرّب الآن",
+  newsDismiss: "إغلاق",
   kinds: {
     comedy: "كوميدي",
     english: "تعلّم الإنجليزية",

@@ -148,3 +148,17 @@ weekly test card keeps its place. The current Home is unchanged (it draws the us
 
 `/learn/today/end` is for sessions that happened: with no story or passage finished today and no words
 round just typed (the words step adds `?words=1`) it goes home instead of recording the day.
+
+## The «جديد» line for Video (2026-11-02)
+
+Permission **`videoNews`** ("Video: the «جديد» line on Home"; Admins only by default, closed whenever `videoDictation`, `newHome` or `todaySession` is closed). When the Video section was opened to everyone, the owner chose a one-time announcement over a permanent block (the three drawn options are in `reports/home-video-entry-2026-11-01.html`; he picked option C, the line). It is drawn for the Arabic interface only, because the section is Arabic only.
+
+**The line** (`video-news-line.tsx`, drawn by the page through `HomeToday`'s `banners`, after the payment and expiry banners): under the top bar, 44px tall (one row, also on a phone, where the sentence is left out), 12px radius, the brand colour at 30% for the border and 7% for the fill, a 26px disc with a play mark, the bold title «جديد: قسم «فيديو»» and the muted sentence, a «جرّب الآن» link and a close button. It sits outside the boxes, so `FitHome` gives it its room: on a 1534 x 781 screen the boxes' zoom goes from 1.41 to 1.27 (about 10% smaller) and nothing scrolls; on the compact layout (under 720px tall) the page scrolls by the line's 60px like with any other banner.
+
+The small «new» word that the Video menu item wears until it is opened (`useVideoNew`, `NewWord` in `learn-sidebar.tsx`, localStorage) is a separate piece and is not behind this permission; the line draws no second tag.
+
+The line leaves for good, on that browser, when the learner closes it or opens the Video library by any road (`MarkVideoNewsSeen` on the library page). The mark is ONE cookie, `ss_video_news=1` (a year, `SameSite=Lax`), see `lib/video-dictation/news.ts`: a cookie rather than localStorage because the server draws the line (the page reads the cookie), so a learner who has seen it never gets it drawn and taken back after loading, which would push the boxes down and up. Nothing is stored on our side and no read is added (`cookies()` is a header read). `useVideoNewsSeen` makes the line leave at once when the learner closes it. To look at it again, delete the cookie.
+
+The link is a plain `<a>` (a full page load), because only the Video routes are served with YouTube in the Content-Security-Policy; no YouTube picture is drawn on Home (the thumbnails' host is allowed on those routes only, and loading it would send the learner's address to Google before any click). The classic Home (`?classic=1`), the guest Home and the phone Path draw nothing of it.
+
+Checked with a throwaway page that put the real sidebar, the real `FitHome` and the real line inside the dashboard chrome (placeholders for the boxes): the line's measured size, spacing, colours and type against the mock, the zoom with and without the line, and a 375px phone.
