@@ -207,9 +207,12 @@ export function VideoSession({
       if (current === "armed" && sentence) {
         move({ phase: "listening" });
         startPolling(sentence.endSeconds);
+        // Started with the mouse on YouTube's own button: the keyboard belongs to the sentence again.
+        setFocusTick((n) => n + 1);
       } else if (current === "typing") {
         // The learner pressed YouTube's own play button while typing: hear this sentence again, then stop.
         replay();
+        setFocusTick((n) => n + 1);
       }
     },
     [lesson.durationSeconds, move, replay, sentences, startPolling, stopPolling],
@@ -229,6 +232,32 @@ export function VideoSession({
     },
     [],
   );
+
+  // Shift pressed alone (not as part of a capital letter) plays the sentence, and again replays it from its start.
+  useEffect(() => {
+    let lone = false;
+    const onDown = (event: KeyboardEvent) => {
+      if (event.key === "Shift") {
+        if (!event.repeat) lone = true;
+      } else {
+        lone = false;
+      }
+    };
+    const onUp = (event: KeyboardEvent) => {
+      if (event.key !== "Shift" || !lone) return;
+      lone = false;
+      const { phase: current } = live.current;
+      if (current === "done") return;
+      if (current === "armed") controlsRef.current?.play();
+      else replay();
+    };
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
+    return () => {
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
+    };
+  }, [replay]);
 
   useEffect(() => {
     try {
@@ -658,7 +687,12 @@ function SentenceTyper({
 
   // After the video stops, or a button was pressed, the keyboard goes back to the sentence.
   useEffect(() => {
-    if (focusTick > 0) inputRef.current?.focus();
+    if (focusTick === 0) return;
+    // After a click on YouTube's player the keyboard sits inside its iframe: take it back first.
+    const active = document.activeElement;
+    if (active instanceof HTMLIFrameElement) active.blur();
+    window.focus();
+    inputRef.current?.focus();
   }, [focusTick, inputRef]);
 
   // A word with a wrong letter is remembered once per letter hit, to be offered again at the end.
