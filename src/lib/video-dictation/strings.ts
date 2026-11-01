@@ -6,6 +6,8 @@
 
 import type { SupportLocale } from "@/lib/i18n/locales";
 
+import type { VideoKind } from "./types";
+
 export interface VideoStrings {
   navLabel: string;
   libraryTitle: string;
@@ -42,6 +44,29 @@ export interface VideoStrings {
   unavailableTitle: string;
   unavailableBody: string;
   blockedBody: string;
+  /** The names of the sections of the library, one per kind of video. */
+  kinds: Record<VideoKind, string>;
+  /** The Admin's arrange mode of the library. */
+  arrange: string;
+  arrangeHint: string;
+  arrangeSave: string;
+  arrangeSaving: string;
+  arrangeCancel: string;
+  arrangeReset: string;
+  arrangeResetConfirm: string;
+  arrangeEmptySection: string;
+  moveUp: string;
+  moveDown: string;
+  moveSectionUp: string;
+  moveSectionDown: string;
+  /** The label of the list that moves a video to another section: "{title}". */
+  sectionOf: string;
+  arrangeSaved: string;
+  arrangeResetDone: string;
+  arrangeFailed: string;
+  arrangeNotAllowed: string;
+  arrangeInvalid: string;
+  arrangeNoTable: string;
 }
 
 const ar: VideoStrings = {
@@ -76,6 +101,34 @@ const ar: VideoStrings = {
   unavailableTitle: "الفيديو غير متاح حالياً",
   unavailableBody: "صاحب الفيديو منع عرضه هنا أو حذفه. جرّب فيديو آخر.",
   blockedBody: "تعذّر تحميل مشغّل يوتيوب. تأكد من الاتصال وجرّب مرة ثانية.",
+  kinds: {
+    comedy: "كوميدي",
+    english: "تعلّم الإنجليزية",
+    science: "علوم وبيئة",
+    animals: "حيوانات",
+    motivation: "تحفيزي",
+    other: "أخرى",
+  },
+  arrange: "ترتيب الفيديوهات",
+  arrangeHint: "اسحب الفيديو لتغيير مكانه، أو استعمل الأسهم والقائمة.",
+  arrangeSave: "حفظ الترتيب",
+  arrangeSaving: "جارٍ الحفظ…",
+  arrangeCancel: "إلغاء",
+  arrangeReset: "العودة للترتيب الافتراضي",
+  arrangeResetConfirm: "ترجع الأقسام والفيديوهات إلى ترتيبها الافتراضي، ويُحذف ترتيبك المحفوظ؟",
+  arrangeEmptySection: "لا توجد فيديوهات هنا. انقل فيديو إليه من قائمة القسم.",
+  moveUp: "أعلى",
+  moveDown: "أسفل",
+  moveSectionUp: "نقل القسم للأعلى",
+  moveSectionDown: "نقل القسم للأسفل",
+  sectionOf: "قسم الفيديو: {title}",
+  arrangeSaved: "تم حفظ الترتيب.",
+  arrangeResetDone: "رجع الترتيب إلى الافتراضي.",
+  arrangeFailed: "تعذّر الحفظ. جرّب مرة ثانية.",
+  arrangeNotAllowed: "هذا الخيار للأدمن فقط.",
+  arrangeInvalid: "الترتيب غير صالح، لم يُحفظ شيء.",
+  arrangeNoTable:
+    "تعذّر الحفظ: جدول الترتيب غير موجود بعد في قاعدة البيانات (الملف 20250353000000).",
 };
 
 export function videoStrings(locale: SupportLocale | null): VideoStrings {

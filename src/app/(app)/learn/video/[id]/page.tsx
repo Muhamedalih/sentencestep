@@ -4,7 +4,14 @@ import { notFound, redirect } from "next/navigation";
 import { VideoSession } from "@/components/video-dictation/video-session";
 import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
-import { getVideoLessons, isTrialVideo, visibleVideoLessons } from "@/lib/video-dictation/content";
+import { flattenSections } from "@/lib/video-dictation/arrange";
+import { getVideoArrangement } from "@/lib/video-dictation/arrangement-store";
+import {
+  arrangeVideoLessons,
+  getVideoLessons,
+  isTrialVideo,
+  visibleVideoLessons,
+} from "@/lib/video-dictation/content";
 
 export const metadata: Metadata = { title: "Video" };
 
@@ -24,6 +31,8 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
   const lesson = lessons.find((candidate) => candidate.id === id);
   if (!lesson) notFound();
 
-  const next = lessons[lessons.indexOf(lesson) + 1];
-  return <VideoSession lesson={lesson} nextLessonId={next?.id ?? null} />;
+  // "Next video" follows the order the library shows, section after section (and an Admin's arrangement).
+  const order = flattenSections(arrangeVideoLessons(lessons, await getVideoArrangement()));
+  const next = order[order.indexOf(lesson.id) + 1];
+  return <VideoSession lesson={lesson} nextLessonId={next ?? null} />;
 }

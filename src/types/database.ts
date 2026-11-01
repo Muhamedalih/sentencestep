@@ -219,6 +219,24 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["rollouts"]["Insert"]>;
         Relationships: [];
       };
+      video_arrangement: {
+        Row: {
+          /** Always "library": there is one arrangement. */
+          id: string;
+          /** [{ kind, ids }] — checked again on read by sanitizeArrangement (src/lib/video-dictation/arrange.ts), never trusted as-is. */
+          sections: unknown;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          sections?: unknown;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["video_arrangement"]["Insert"]>;
+        Relationships: [];
+      };
       session_reminders: {
         Row: {
           user_id: string;

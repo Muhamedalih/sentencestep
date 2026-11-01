@@ -30,6 +30,21 @@ export interface VideoSentence {
 export type VideoLevel = "A1" | "A2" | "B1" | "B2";
 
 /**
+ * What a video is about or how it feels: the sections of the library. The order here is the order the
+ * sections are listed in until an Admin arranges them (comedy first, the owner's choice); "other" is where
+ * a video with no entry in src/data/videos/kinds.ts lands.
+ */
+export const VIDEO_KINDS = [
+  "comedy",
+  "english",
+  "science",
+  "animals",
+  "motivation",
+  "other",
+] as const;
+export type VideoKind = (typeof VIDEO_KINDS)[number];
+
+/**
  * Where the TEXT of a video comes from: what lets the site show it. "trial" means a creator's text
  * with no permission, kept only so an Admin can try it: it is hidden from everyone else and must be
  * cleared or removed before the section opens to learners.
