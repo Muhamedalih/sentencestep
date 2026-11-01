@@ -12,6 +12,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "what-she-really-means": "comedy",
   "urns-for-true-love": "comedy",
   "empath-animatic": "comedy",
+  "gibbons-howls": "comedy",
   "we-all-have-that-one-friend": "comedy",
 
   "on-the-ball": "english",
