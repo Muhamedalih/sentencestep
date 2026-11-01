@@ -136,7 +136,7 @@ y.runLesson = async (lesson, opts) => {
         resolve({ polledAt, adSeen, ms: performance.now() - t0 });
       } else if (performance.now() - t0 > timeoutMs) {
         clearInterval(iv);
-        reject(new Error("sentence did not reach its end in " + (timeoutMs / 1000) + " s"));
+        reject(new Error("sentence did not reach its end in " + (timeoutMs / 1000) + " s (stop " + endSeconds + ", now " + p.getCurrentTime() + ", state " + p.getPlayerState() + ", duration " + p.getDuration() + ", ad " + adSeen + ")"));
       }
     }, seg.POLL_MS);
   });

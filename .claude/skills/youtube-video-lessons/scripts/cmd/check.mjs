@@ -210,7 +210,8 @@ export function checkLesson(L, ctx = {}) {
       }
       if (!last) {
         const hole = voicedWithin(V, s.end + 0.02, L.sentences[i + 1].start - 0.02);
-        if (hole > T.uncoveredError) E(w, `${hole.toFixed(2)} s of speech between this sentence and the next belongs to no sentence (deleted words?)`);
+        if (hole > T.uncoveredError && ctx.allowUnowned) W(w, `${hole.toFixed(2)} s of sound between this sentence and the next belongs to no sentence (allowed: laughter, screaming or uncaptioned noise)`);
+        else if (hole > T.uncoveredError) E(w, `${hole.toFixed(2)} s of speech between this sentence and the next belongs to no sentence (deleted words?)`);
         else if (hole > T.uncoveredWarn) W(w, `${hole.toFixed(2)} s of speech between this sentence and the next belongs to no sentence`);
       }
     });
@@ -256,7 +257,7 @@ export async function run(args) {
   }
   const L = normalizeLesson(raw);
 
-  const ctx = { others: listLessons(repo), selfFile, update: Boolean(args.update) };
+  const ctx = { others: listLessons(repo), selfFile, update: Boolean(args.update), allowUnowned: Boolean(args["allow-unowned-sound"]) };
   const capFile = args.capture ? String(args.capture) : draftPath(args, id, "capture");
   let separability = null;
   if (fs.existsSync(capFile) && L.sentences.length) {

@@ -35,6 +35,7 @@ export async function run(args) {
     repo,
     ...(args.spec ? ["--spec", specFile] : []),
     ...(args.update ? ["--update"] : []),
+    ...(args["allow-unowned-sound"] ? ["--allow-unowned-sound"] : []),
     ...(args.threshold === undefined ? [] : ["--threshold", String(args.threshold)]),
   ];
   const check = spawnSync(process.execPath, checkArgs, { encoding: "utf8" });
