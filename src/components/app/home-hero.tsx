@@ -19,6 +19,9 @@ import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 import type { Book } from "@/types/library";
 
+/** The Library section is hidden from everyone, so its home card is not drawn. */
+const LIBRARY_HIDDEN = true as boolean;
+
 /** Sentence/word totals for one lesson, keyed by `${mode}:${lessonId}` — see (dashboard)/[mode]/page.tsx, which derives this once from the same lesson content it already fetches for the lesson list, no extra queries. Also consumed by HomeHeaderBar for its Sessions/Lines/Words tiles (see that component's own doc comment). */
 export type LessonStatsMap = Record<string, { sentences: number; words: number }>;
 
@@ -347,14 +350,17 @@ export function HomeHero({
 
       {/* The stacked column (left from lg up) — book recommendation above, then Stories and the review card, which take half of the column's height each (Stories takes it all when there is no review card). */}
       <div className="flex flex-col gap-4 lg:order-1">
-        {book && isAdminUser && (
-          <HomeBookCard
-            book={book}
-            sectionCount={bookSectionCount}
-            sentenceCount={bookSentenceCount}
-            progressPercent={bookProgressPercent}
-          />
-        )}
+        {LIBRARY_HIDDEN
+          ? null
+          : book &&
+            isAdminUser && (
+              <HomeBookCard
+                book={book}
+                sectionCount={bookSectionCount}
+                sentenceCount={bookSentenceCount}
+                progressPercent={bookProgressPercent}
+              />
+            )}
 
         <Link
           href="/learn/stories"
