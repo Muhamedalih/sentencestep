@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { empathAnimatic } from "./empath-animatic";
 import { howHorsefliesBiteYou } from "./how-horseflies-bite-you";
 import { babyBirdsGape } from "./baby-birds-gape";
 import { rabbitCourtshipChase } from "./rabbit-courtship-chase";
@@ -36,4 +37,5 @@ export const videoLessons: readonly VideoLesson[] = [
   rabbitCourtshipChase,
   babyBirdsGape,
   howHorsefliesBiteYou,
+  empathAnimatic,
 ];
