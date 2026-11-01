@@ -41,9 +41,39 @@ export function legalHomeHref(locale: string | null | undefined): string {
 
 export const SUPPORT_EMAIL = "support@sentencestep.com";
 
+/**
+ * The two addresses YouTube's API Services rules make us show (III.A of its Developer Policies): its
+ * Terms of Service in our terms, the Google Privacy Policy in our privacy policy. They are written out
+ * in the text, and the page turns them into links, like the support address.
+ */
+export const YOUTUBE_TERMS_URL = "https://www.youtube.com/t/terms";
+export const GOOGLE_PRIVACY_URL = "https://policies.google.com/privacy";
+
+/** A piece of a paragraph: plain text, or an address the page shows as a link (`href`). */
+export interface LegalTextPart {
+  text: string;
+  href?: string;
+}
+
+const LINK_TEXTS = [SUPPORT_EMAIL, YOUTUBE_TERMS_URL, GOOGLE_PRIVACY_URL];
+const LINK_PATTERN = new RegExp(
+  `(${LINK_TEXTS.map((text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+);
+
+/** Cuts a paragraph into plain text and the addresses it mentions (the support address and the two YouTube-rule addresses), which the page shows as links. */
+export function splitLegalLinks(text: string): LegalTextPart[] {
+  return text
+    .split(LINK_PATTERN)
+    .map((piece, index): LegalTextPart => {
+      if (index % 2 === 0) return { text: piece };
+      return { text: piece, href: piece === SUPPORT_EMAIL ? `mailto:${piece}` : piece };
+    })
+    .filter((part) => part.text.length > 0);
+}
+
 const TERMS_EN: LegalDocument = {
   title: "Terms of Service",
-  updated: "Last updated: 18 October 2026",
+  updated: "Last updated: 1 November 2026",
   intro:
     "These terms are the agreement between you and SentenceStep when you use sentencestep.com. By creating an account or using the site you agree to them. If you don't agree, please don't use SentenceStep.",
   sections: [
@@ -98,6 +128,12 @@ const TERMS_EN: LegalDocument = {
       ],
     },
     {
+      heading: "Videos from YouTube",
+      paragraphs: [
+        `The Video section plays videos from YouTube in YouTube's own player, using YouTube API Services. By using that section you also agree to be bound by the YouTube Terms of Service (${YOUTUBE_TERMS_URL}). The videos are not ours: they stay on YouTube and remain the property of their owners.`,
+      ],
+    },
+    {
       heading: "Our content and your data",
       paragraphs: [
         "The lessons, audio, translations and design are ours or used with permission. You may use them to learn, not to republish them. Your progress and settings are yours, and how we handle them is described in the Privacy Policy.",
@@ -134,7 +170,7 @@ const TERMS_EN: LegalDocument = {
 
 const TERMS_AR: LegalDocument = {
   title: "شروط الاستخدام",
-  updated: "آخر تحديث: 18 أكتوبر 2026",
+  updated: "آخر تحديث: 1 نوفمبر 2026",
   intro:
     "هذه الشروط هي الاتفاق بينك وبين SentenceStep عند استخدامك موقع sentencestep.com. بإنشاء حساب أو باستخدام الموقع فإنك توافق عليها. إن لم توافق، فنرجو ألا تستخدم SentenceStep.",
   sections: [
@@ -189,6 +225,12 @@ const TERMS_AR: LegalDocument = {
       ],
     },
     {
+      heading: "فيديوهات YouTube",
+      paragraphs: [
+        `يعرض قسم «فيديو» مقاطع من YouTube في مشغّل YouTube نفسه، باستخدام خدمات YouTube API Services. وباستخدامك هذا القسم فإنك توافق أيضًا على الالتزام بشروط خدمة YouTube (${YOUTUBE_TERMS_URL}). المقاطع ليست لنا: تبقى على YouTube وتظل ملكًا لأصحابها.`,
+      ],
+    },
+    {
       heading: "محتوانا وبياناتك",
       paragraphs: [
         "الدروس والصوتيات والترجمات والتصميم ملك لنا أو مستخدمة بإذن. يمكنك استخدامها للتعلّم لا لإعادة نشرها. تقدّمك وإعداداتك لك، وطريقة تعاملنا معها موضّحة في سياسة الخصوصية.",
@@ -225,7 +267,7 @@ const TERMS_AR: LegalDocument = {
 
 const PRIVACY_EN: LegalDocument = {
   title: "Privacy Policy",
-  updated: "Last updated: 18 October 2026",
+  updated: "Last updated: 1 November 2026",
   intro:
     "This page explains what SentenceStep collects, why, and who helps us run it. We don't sell your data and we don't share it with advertisers.",
   sections: [
@@ -262,6 +304,7 @@ const PRIVACY_EN: LegalDocument = {
         "Resend: sending emails.",
         "Where enabled: Sentry for error monitoring, and Cloudflare Turnstile to check that sign-ups come from a person.",
         "Google: only if you choose “Continue with Google”. If you rate the app, your rating and comment are saved in our database and, as a backup, in a spreadsheet we control.",
+        `YouTube (Google): only if you open the Video section. Its videos are played by YouTube's own player through YouTube API Services, so while a video plays YouTube and Google may collect data about your viewing, as described in the Google Privacy Policy (${GOOGLE_PRIVACY_URL}). We don't ask YouTube for any information about you, and SentenceStep does not keep a record of which videos you watch.`,
         "Your browser's push service: only if you turn on notifications.",
       ],
     },
@@ -302,7 +345,7 @@ const PRIVACY_EN: LegalDocument = {
 
 const PRIVACY_AR: LegalDocument = {
   title: "سياسة الخصوصية",
-  updated: "آخر تحديث: 18 أكتوبر 2026",
+  updated: "آخر تحديث: 1 نوفمبر 2026",
   intro:
     "توضّح هذه الصفحة ما الذي تجمعه SentenceStep ولماذا ومن يساعدنا في تشغيلها. لا نبيع بياناتك ولا نشاركها مع المعلنين.",
   sections: [
@@ -339,6 +382,7 @@ const PRIVACY_AR: LegalDocument = {
         "Resend: إرسال رسائل البريد الإلكتروني.",
         "حيثما كانت مفعّلة: Sentry لمراقبة الأخطاء، وCloudflare Turnstile للتحقق من أن التسجيل يتم من شخص حقيقي.",
         "Google: فقط إذا اخترت «المتابعة عبر Google». وإذا قيّمت التطبيق تُحفظ درجتك وملاحظتك في قاعدة بياناتنا، ونسخة احتياطية منها في جدول بيانات نملكه.",
+        `YouTube (Google): فقط إذا فتحت قسم «فيديو». تُشغَّل مقاطعه بمشغّل YouTube نفسه عبر YouTube API Services، لذا قد تجمع YouTube وGoogle بيانات عن مشاهدتك أثناء تشغيل المقطع كما توضحها سياسة خصوصية Google (${GOOGLE_PRIVACY_URL}). لا نطلب من YouTube أي معلومات عنك، ولا تحتفظ SentenceStep بسجل للمقاطع التي تشاهدها.`,
         "خدمة الإشعارات في متصفحك: فقط إذا فعّلت الإشعارات.",
       ],
     },
