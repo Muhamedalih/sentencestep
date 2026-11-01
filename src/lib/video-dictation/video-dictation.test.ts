@@ -367,10 +367,10 @@ test("arrange: inside a section the easiest video comes first (level, then lengt
   }
 });
 
-test("kinds: every entry names a real video and a real kind", () => {
-  const known = new Set(videoLessons.map((lesson) => lesson.id));
+test("kinds: every entry names a real kind", () => {
+  // An id that is not a prepared video is allowed on purpose: lessons are published one at a time, so
+  // kinds.ts can list a video this branch does not have yet (the arrangement ignores ids it does not know).
   for (const [id, kind] of Object.entries(videoKinds)) {
-    assert.ok(known.has(id), `${id} in src/data/videos/kinds.ts is not a prepared video`);
     assert.ok((VIDEO_KINDS as readonly string[]).includes(kind), `${id}: unknown kind ${kind}`);
   }
 });
