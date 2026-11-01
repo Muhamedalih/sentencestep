@@ -26,7 +26,7 @@ import {
   writeJson,
 } from "../lib/util.mjs";
 import { atPictureEnd, pictureEnd, surroundings, voicedIntervals, voicedWithin } from "../lib/envelope.mjs";
-import { SPEECH_RATE, syllables, typingProblems } from "../lib/text.mjs";
+import { SPEECH_RATE, rateOff, syllables, typingProblems } from "../lib/text.mjs";
 
 const SOURCES = ["public-domain", "creative-commons", "permission", "own", "trial"];
 const T = {
@@ -194,12 +194,14 @@ export function checkLesson(L, ctx = {}) {
       else if (wps > T.spsErrHigh) E(w, `${words} words for ${voiced.toFixed(1)} s of speech (${wps.toFixed(1)} syllables/s): the text is longer than the speech`);
       else if (wps < T.spsWarnLow || wps > T.spsWarnHigh) W(w, `${wps.toFixed(1)} syllables/s is unusual: read it against the audio`);
 
-      const here = surroundings(V, s.end);
+      const here = surroundings(V, s.end, ctx.dips);
       const last = i === L.sentences.length - 1;
       // The last sentence can run to the last frame: the page takes the end of the video as its stop, so speech up to there is no cut.
       if (last && atPictureEnd(s.end, ctx.pictureEnd)) infos.push(`${w}: the stop is the end of the video (the picture ends at ${ctx.pictureEnd} s)`);
       else if (here.inside) E(w, `the stop at ${s.end} s is INSIDE speech (cuts a word)`);
       else {
+        // The speech detector merges dips under 0.12 s: a stop in one that is silent in every band sits in a real gap (two words, or a consonant closing), not in a word.
+        if (here.dip) W(w, `the stop at ${s.end} s is in a ${here.dipLength.toFixed(2)} s gap that the speech detector merges (silent in every band: a gap between two words, or a consonant closing inside one): listen to it once`);
         if (here.sinceSound < T.afterSoundWarn) W(w, `the stop is only ${here.sinceSound.toFixed(2)} s after the last sound (the end of the word may be cut)`);
         if (!last) {
           if (here.untilSound < T.beforeNextError) E(w, `the next sound starts ${here.untilSound.toFixed(2)} s after the stop: the learner will hear the next sentence begin`);
@@ -220,7 +222,7 @@ export function checkLesson(L, ctx = {}) {
     const median = live[live.length >> 1] || 0;
     if (median)
       rates.forEach((r, i) => {
-        if (r && (r < median * 0.55 || r > median * 1.6)) W(`s${i + 1}`, `speaking rate ${r.toFixed(1)} syllables/s against a typical ${median.toFixed(1)}: a boundary may sit in the wrong pause`);
+        if (rateOff(r, median)) W(`s${i + 1}`, `speaking rate ${r.toFixed(1)} syllables/s against a typical ${median.toFixed(1)}: a boundary may sit in the wrong pause`);
       });
     infos.push(`audio: ${V.length} voiced intervals, median ${median ? median.toFixed(1) : "?"} syllables/s`);
   } else infos.push("no recorded loudness: the stops are NOT checked against the audio (run capture)");
@@ -265,6 +267,7 @@ export async function run(args) {
       threshold: args.threshold === undefined ? null : Number(args.threshold),
     });
     ctx.intervals = v.intervals;
+    ctx.dips = v.dips;
     ctx.pictureEnd = pictureEnd(cap);
     separability = v.separability;
   }

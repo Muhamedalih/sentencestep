@@ -33,10 +33,11 @@ const TOL = { late: 0.15, early: -0.12, seek: 1.0 };
  * The flags of one stop as the player landed it (`r` = a row of the harness), and the text for the "next sound" column.
  * The last sentence can run to the last frame: when the video itself ended (state ENDED, which the page takes as the
  * stop) or the lesson asks for the stop at the picture's end, there is no time to be late or early for and speech up to
- * there is no cut. An end before the last sentence is an error. `V` = the voiced intervals (null: no capture), `total`
+ * there is no cut. An end before the last sentence is an error. `V` = the voiced intervals (null: no capture), `dips` =
+ * the dips merged into them (a stop in a silent one is in a short gap, as `check` judges it, not inside speech), `total`
  * = the lesson's sentences, `videoEnd` = where the picture ends (Infinity: unknown).
  */
-export function stopFlags(r, { V, total, videoEnd = Infinity }) {
+export function stopFlags(r, { V, dips = [], total, videoEnd = Infinity }) {
   const flags = [];
   const atEnd = r.ended || (r.n === total && atPictureEnd(r.end, videoEnd));
   if (r.ended && r.n < total) flags.push("ENDED: the video ended before the last sentence");
@@ -54,7 +55,7 @@ export function stopFlags(r, { V, total, videoEnd = Infinity }) {
   let next = "   -";
   if (atEnd) next = "   end";
   else if (V) {
-    const around = surroundings(V, r.stoppedAt);
+    const around = surroundings(V, r.stoppedAt, dips);
     if (around.inside) {
       flags.push("CUT: stop inside speech");
       next = "inside";
@@ -95,11 +96,14 @@ export async function run(args) {
 
   const capFile = args.capture ? String(args.capture) : draftPath(args, id, "capture");
   let V = null;
+  let dips = [];
   let videoEnd = Infinity;
   if (fs.existsSync(capFile)) {
     const cap = readJson(capFile);
     const threshold = args.threshold === undefined ? null : Number(args.threshold);
-    V = voicedIntervals(cap.samples, { from: Math.max(0, L.clipStart - 2), to: L.clipEnd + 2, threshold }).intervals;
+    const voiced = voicedIntervals(cap.samples, { from: Math.max(0, L.clipStart - 2), to: L.clipEnd + 2, threshold });
+    V = voiced.intervals;
+    dips = voiced.dips;
     videoEnd = pictureEnd(cap);
   }
 
@@ -137,7 +141,7 @@ export async function run(args) {
   const total = L.sentences.length;
   const timed = []; // the stops that were asked for a time (not the end of the video): their overshoot is what the statistics are about
   const rows = result.sentences.map((r) => {
-    const { flags, next, atEnd } = stopFlags(r, { V, total, videoEnd });
+    const { flags, next, atEnd } = stopFlags(r, { V, dips, total, videoEnd });
     if (!atEnd) timed.push(r.overshoot);
     const hard = flags.filter((f) => /^(LATE|EARLY|CUT|LEAK|jumped|ENDED)/.test(f));
     if (hard.length) errors.push(`s${r.n}: ${hard.join("; ")}`);

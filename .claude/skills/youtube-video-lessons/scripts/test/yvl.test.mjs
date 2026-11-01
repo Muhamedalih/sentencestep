@@ -12,11 +12,26 @@ import {
   capsToCues,
   mergeContinuations,
   normalizeText,
+  rateOff,
   repairCueEnds,
   splitLong,
   typingProblems,
 } from "../lib/text.mjs";
-import { assignBoundaries, atPictureEnd, firstPass, gapsOf, lastStopLimit, otsu, pictureEnd, placeStops, surroundings, voicedIntervals } from "../lib/envelope.mjs";
+import {
+  assignBoundaries,
+  atPictureEnd,
+  cutSupport,
+  firstPass,
+  gapsOf,
+  lastStopLimit,
+  otsu,
+  pictureEnd,
+  placeStops,
+  quietStop,
+  soundLevel,
+  surroundings,
+  voicedIntervals,
+} from "../lib/envelope.mjs";
 import {
   anchorsHint,
   groupByRuns,
@@ -32,6 +47,7 @@ import {
 } from "../lib/anchors.mjs";
 import { checkPairs, parseAuthoring } from "../cmd/fill.mjs";
 import { checkLesson, diffWords } from "../cmd/check.mjs";
+import { cutInside, describePlan, lowerPauseHint, planSentences } from "../cmd/plan.mjs";
 import { stopFlags } from "../cmd/verify.mjs";
 
 test("youtubeIdFrom reads links and bare ids", () => {
@@ -531,4 +547,205 @@ test("planAnchored warns when the voice is still going where its search stops (a
 test("isSharedWorktree names the three standing folders and not a worktree of one's own", () => {
   for (const dir of ["C:/Looma", "C:/Looma-yvl", "C:/Looma-ytdict/", "c:/looma-yvl"]) assert.equal(isSharedWorktree(dir), true, dir);
   for (const dir of ["C:/Looma-yvl-EQnMnvqP5kc", "C:/Looma-yvl-skill", "C:/Users/G5/AppData/Local/Temp/rwsh", "C:/Looma-passage"]) assert.equal(isSharedWorktree(dir), false, dir);
+});
+
+// ---------------------------------------------------------------- the planner on a fast narrator (Zack D. Films' «The Tigers And The Strawberry», 2026-11-01)
+
+/** Samples [t, whole sound, voice band] at 20 ms: loud in both inside `voice`, only in the whole sound (a breath, a hiss, a burst) inside `hiss`. */
+function bands(voice, hiss, end, { loud = 0.1, quiet = 0.001, breath = 0.04 } = {}) {
+  const samples = [];
+  for (let t = 0; t <= end + 1e-9; t += 0.02) {
+    const at = Math.round(t * 1000) / 1000;
+    const heard = voice.some(([s, e]) => at >= s && at <= e);
+    const hissed = hiss.some(([s, e]) => at >= s && at <= e);
+    samples.push([at, heard ? loud : hissed ? breath : quiet, heard ? loud : quiet]);
+  }
+  return samples;
+}
+
+/** A piece of a real sentence as `split` makes it. */
+const piece = (en, cutAfter = "clause") => ({ en, approx: [0, 1], exact: false, cutAfter, long: false });
+const unit = (en, approx, cutAfter = "sentence") => ({ en, approx, exact: false, cutAfter, long: false });
+
+test("voicedIntervals lists the dips it merges and says which are silent in every band", () => {
+  const voice = [[0.5, 2.0], [2.1, 3.0], [4.0, 5.5]];
+  const plain = voicedIntervals(bands(voice, [], 7));
+  assert.equal(plain.intervals.length, 2);
+  assert.equal(plain.dips.length, 1);
+  assert.ok(plain.dips[0].silent && near(plain.dips[0].s, 2.02, 0.03) && near(plain.dips[0].e, 2.1, 0.03));
+  // the voice band dips but a hiss holds in the whole sound: a fricative inside a word, not a gap
+  assert.equal(voicedIntervals(bands(voice, [[2.02, 2.08]], 7)).dips[0].silent, false);
+  // a gap the detector is told to keep is a pause like any other
+  assert.equal(voicedIntervals(bands(voice, [], 7), { mergeDip: 0.05 }).intervals.length, 3);
+});
+
+test("surroundings puts a moment in a silent dip between two words, not inside speech", () => {
+  const run = [{ s: 1, e: 3 }];
+  const gap = [{ s: 1.9, e: 2.0, silent: true }];
+  const here = surroundings(run, 1.95, gap);
+  assert.deepEqual([here.inside, here.dip], [false, true]);
+  assert.ok(near(here.sinceSound, 0.05, 1e-9) && near(here.untilSound, 0.05, 1e-9));
+  assert.equal(surroundings(run, 1.95, [{ s: 1.9, e: 2.0, silent: false }]).inside, true); // a hiss is speech
+  assert.equal(surroundings(run, 1.5, gap).inside, true); // outside the dip it is inside the word
+  assert.equal(surroundings(run, 1.95).inside, true); // the dips are optional
+});
+
+test("checkLesson takes a stop in a silent gap that the speech detector merged for a warning, a stop in a hiss for an error", () => {
+  const lesson = goodLesson();
+  // one run through the first stop (3.0 s), as the detector makes of a 0.09 s gap between two words
+  const intervals = [{ s: 0.6, e: 3.2 }, { s: 3.5, e: 4.5 }];
+  const dips = (silent) => [{ s: 2.95, e: 3.04, silent }];
+  const gap = checkLesson(lesson, { others: [], intervals, dips: dips(true) });
+  assert.ok(!gap.errors.some((e) => /INSIDE speech/.test(e)));
+  assert.ok(gap.warns.some((w) => /^s1: the stop at 3 s is in a 0\.09 s gap/.test(w)), gap.warns.join(" | "));
+  assert.ok(checkLesson(lesson, { others: [], intervals, dips: dips(false) }).errors.some((e) => /INSIDE speech/.test(e)));
+  assert.ok(checkLesson(lesson, { others: [], intervals }).errors.some((e) => /INSIDE speech/.test(e)));
+});
+
+test("stopFlags: a stop in a silent dip that the speech detector merged is tight, not a cut", () => {
+  const V = [{ s: 8, e: 12 }];
+  const row = { n: 3, end: 9.05, stoppedAt: 9.05, overshoot: 0, adSeen: false, resumeMs: null, resumeAdvance: null, resumeElapsed: null };
+  assert.ok(stopFlags(row, { V, total: 9 }).flags.some((f) => /^CUT/.test(f)));
+  const flags = stopFlags(row, { V, dips: [{ s: 9, e: 9.1, silent: true }], total: 9 }).flags;
+  assert.ok(!flags.some((f) => /^CUT/.test(f)) && flags.some((f) => /^tight/.test(f)), flags.join("; "));
+});
+
+test("assignBoundaries judges the last sentence too, and cutSupport finds the cut with no pause near where its words put it", () => {
+  // 7.5 s of voice with one 0.4 s pause 2.2 s into it; the words (7.75, 9.1 and 9.45 units) put the cuts at 2.2 s and 4.8 s of voice
+  const intervals = voicedIntervals(bands([[0.5, 2.7], [3.1, 8.4]], [], 10)).intervals;
+  const weights = [7.75, 9.1, 9.45];
+  const [first, second] = cutSupport(weights, intervals, { minGap: 0.17 });
+  assert.ok(near(first.at, 2.2, 0.05) && first.support > 0.3, `${first.at} ${first.support}`);
+  assert.equal(second.support, 0);
+  // two pauses, the second too late: one error for every sentence, the last included
+  const late = assignBoundaries([8.1, 8.1, 4.05], voicedIntervals(bands([[0.5, 3.7], [4.2, 8.2], [8.6, 9.4]], [], 11)).intervals, { minGap: 0.17 });
+  assert.equal(late.errs.length, 3);
+  assert.ok(late.errs[2] < -0.7, late.errs.join(" "));
+});
+
+test("cutInside undoes the cut with no pause near it, not the smallest pair (the Tigers Short: «him,» was backed by 0.28 s, «edge,» by none)", () => {
+  const pieces = [piece("The tiger ran toward him,"), piece("forcing him to the cliff's edge,"), piece("so he grabbed a vine and jumped.", "sentence")];
+  // nothing separates «edge» from «so»; the smallest pair (5 + 6 words) is the first two, which the old rule joined
+  const intervals = voicedIntervals(bands([[0.5, 2.7], [3.1, 8.4]], [], 10)).intervals;
+  const inner = cutInside(pieces, intervals, 0.17);
+  assert.deepEqual(inner.pieces.map((p) => p.en), ["The tiger ran toward him,", "forcing him to the cliff's edge, so he grabbed a vine and jumped."]);
+  assert.ok(near(inner.res.chosen[0].a, 2.7, 0.05));
+  assert.deepEqual(inner.refused, []);
+});
+
+test("cutInside keeps a cut whose pause dwarfs a word gap beside it, undoes one that has a rival of its size and says so", () => {
+  const pieces = [piece("But when he noticed a wild strawberry,"), piece("he picked it and ate it.", "sentence")];
+  // a 0.52 s pause and, 0.4 s on, a 0.14 s gap between two words
+  const strong = cutInside(pieces, voicedIntervals(bands([[0.5, 3.08], [3.6, 3.66], [3.82, 5.2]], [], 7)).intervals, 0.12);
+  assert.equal(strong.pieces.length, 2);
+  assert.deepEqual(strong.refused, []);
+  // two pauses of 0.30 s, 0.3 s apart: the cut could be one word off
+  const rivals = cutInside(pieces, voicedIntervals(bands([[0.5, 3.08], [3.38, 3.46], [3.76, 5.2]], [], 7)).intervals, 0.12);
+  assert.deepEqual(rivals.pieces.map((p) => p.en), ["But when he noticed a wild strawberry, he picked it and ate it."]);
+  assert.equal(rivals.refused.length, 1);
+  assert.match(rivals.refused[0].why, /rivals it/);
+});
+
+test("cutInside undoes a cut that leaves the last piece far too little speech (the late cut that gave 7.7 syllables a second)", () => {
+  const go = (n, end) => piece(`${Array(n).fill("go").join(" ")}${end}`, end === "." ? "sentence" : "clause");
+  const pieces = [go(6, ","), go(6, ","), go(3, ".")];
+  // pauses after 3.2 s and 7.2 s of voice: the second falls 0.8 s late, so the last piece has 0.8 s of speech for 1.6 s of words
+  const intervals = voicedIntervals(bands([[0.5, 3.7], [4.2, 8.2], [8.6, 9.4]], [], 11)).intervals;
+  const inner = cutInside(pieces, intervals, 0.17);
+  assert.deepEqual(inner.pieces.map((p) => p.en), ["go go go go go go,", "go go go go go go, go go go."]);
+  assert.deepEqual(inner.refused, []); // the speech is the evidence against that pause: nothing for a person to decide
+});
+
+test("rateOff: a speaking rate under 0.55 or over 1.6 times the clip's typical one", () => {
+  assert.equal(rateOff(7.7, 4), true);
+  assert.equal(rateOff(1.9, 4), true);
+  assert.equal(rateOff(6.3, 4), false);
+  assert.equal(rateOff(2.3, 4), false);
+  assert.equal(rateOff(0, 4), false);
+  assert.equal(rateOff(5, 0), false);
+});
+
+test("plan lists both boundaries of a sentence that speaks far faster than the others, though its error is under 1.2 s", () => {
+  const go = "go go go go go go go.";
+  const spans = [[0.5, 3.1], [3.9, 4.9], [5.7, 8.3]];
+  const units = spans.map((span) => unit(go, span));
+  const crowded = planSentences(units, { samples: bands([[0.5, 3.1], [3.9, 4.9], [5.7, 8.3]], [], 10), from: 0 });
+  assert.ok(crowded.bounds.every((b) => Math.abs(b.err) < 1.2));
+  const { rows, listen } = describePlan({ ...crowded, intervals: crowded.v.intervals });
+  assert.deepEqual(rows.map((r) => Math.round(r.wps)), [3, 7, 3]);
+  assert.deepEqual(listen.map((l) => [l.after, l.flags]), [[1, ["rate-off"]], [2, ["rate-off"]]]);
+  // the same words at one rate: nothing to listen to
+  const even = planSentences(units, { samples: bands([[0.5, 2.5], [3.3, 5.3], [6.1, 8.1]], [], 10), from: 0 });
+  assert.deepEqual(describePlan({ ...even, intervals: even.v.intervals }).listen, []);
+});
+
+test("plan lists a cut it undid for a rival pause, with the stop it would have had", () => {
+  const units = [unit("But when he noticed a wild strawberry,", [0.5, 3], "clause"), unit("he picked it and ate it.", [3.4, 5])];
+  const plan = planSentences(units, { samples: bands([[0.5, 3.08], [3.38, 3.46], [3.76, 5.2]], [], 7), from: 0 }, { minPause: 0.12 });
+  assert.equal(plan.error, undefined);
+  assert.equal(plan.timed.length, 1);
+  const { listen } = describePlan({ ...plan, intervals: plan.v.intervals });
+  assert.equal(listen.length, 1);
+  assert.deepEqual([listen[0].inside, listen[0].flags.length], [1, 1]);
+  assert.match(listen[0].flags[0], /^cut-refused: a 0\.28 s pause at 3\.\d+ s rivals it/);
+  assert.ok(near(listen[0].at, 3.3, 0.06), `would have stopped at ${listen[0].at}`);
+});
+
+test("plan sees a 0.1 s gap between two words once --min-pause asks for it, and not before", () => {
+  const units = [unit("go go go go go go,", [0.5, 2.5], "clause"), unit("go go go go go go.", [2.6, 4.6]), unit("go go go go go go.", [5.4, 7.4])];
+  const samples = bands([[0.5, 2.5], [2.61, 4.6], [5.4, 7.4]], [], 9);
+  const usual = planSentences(units, { samples, from: 0 }, { minPause: 0.45 });
+  assert.equal(usual.timed.length, 2);
+  const asked = planSentences(units, { samples, from: 0 }, { minPause: 0.08 });
+  assert.equal(asked.timed.length, 3);
+  assert.equal(asked.placed[0].noRoom, true); // 0.1 s has no room: the stop goes to its middle, flagged
+  assert.ok(near(asked.timed[0].end, 2.57, 0.02) && near(asked.timed[1].start, 2.57, 0.02));
+  // the same dip with a hiss in the whole sound (a fricative inside a word, «edge so») is no gap, whatever --min-pause says
+  const hissed = bands([[0.5, 2.5], [2.61, 4.6], [5.4, 7.4]], [[2.52, 2.6]], 9);
+  assert.equal(planSentences(units, { samples: hissed, from: 0 }, { minPause: 0.08 }).timed.length, 2);
+});
+
+test("plan tells a fast narrator which --min-pause would keep the cuts it undid, and stays quiet when none would be kept", () => {
+  const units = [unit("go go go go go go,", [0.5, 2.5], "clause"), unit("go go go go go go.", [2.7, 4.7]), unit("go go go go go go.", [5.5, 7.5])];
+  const cap = { samples: bands([[0.5, 2.5], [2.7, 4.7], [5.5, 7.5]], [], 9), from: 0 };
+  const plan = planSentences(units, cap);
+  assert.equal(plan.timed.length, 2); // a 0.2 s pause is under the default 0.45 s
+  assert.deepEqual(lowerPauseHint(units, cap, plan, { minPause: 0.45 }), { minPause: 0.15, sentences: 3 });
+  // already asked for, nothing undone, or a gap no lower value reaches: no hint
+  assert.equal(lowerPauseHint(units, cap, planSentences(units, cap, { minPause: 0.15 }), { minPause: 0.15 }), null);
+  const whole = [unit("go go go go go go go go go go go go.", [0.5, 4.7]), units[2]];
+  assert.equal(lowerPauseHint(whole, cap, planSentences(whole, cap), { minPause: 0.45 }), null);
+  const narrow = { samples: bands([[0.5, 2.5], [2.61, 4.6], [5.5, 7.5]], [], 9), from: 0 };
+  assert.equal(lowerPauseHint(units, narrow, planSentences(units, narrow), { minPause: 0.45 }), null);
+});
+
+test("quietStop moves a stop off a breath the voice band cannot hear, and leaves a quiet one or a pause full of sound alone", () => {
+  // voice 0.5-2.0 s and 2.46-4.0 s; a breath, loud only in the whole sound, 2.24-2.44 s: the usual stop (2.32 s) is inside it
+  const samples = bands([[0.5, 2.0], [2.45, 4.0]], [[2.24, 2.44]], 5);
+  const voice = voicedIntervals(samples);
+  const gap = gapsOf(voice.intervals)[0];
+  const planned = placeStops(gap).end;
+  assert.ok(near(planned, 2.32, 0.011));
+  const audible = voice.threshold - 8;
+  const moved = quietStop(soundLevel(samples), gap, planned, { audible });
+  assert.ok(moved, "the stop should move");
+  assert.ok(moved.t + 0.06 < 2.24 && moved.t >= gap.a + 0.1 - 1e-9, `moved to ${moved.t}`); // its landing window ends before the breath begins
+  assert.ok(moved.plannedW - moved.w > 5);
+  // a breath that begins after the landing window, a pause with sound all through it, and a quiet pause: the planned stop stays
+  for (const hiss of [[[2.4, 2.44]], [[2.04, 2.44]], []]) assert.equal(quietStop(soundLevel(bands([[0.5, 2.0], [2.45, 4.0]], hiss, 5)), gap, planned, { audible }), null);
+  // it never wanders: a quiet place further than 0.2 s away is not taken
+  assert.equal(quietStop(soundLevel(samples), gap, planned, { audible, reach: 0.1 }), null);
+});
+
+test("plan puts the stop before a breath and lists it; the replay start stays just before the voice", () => {
+  const units = [unit("Hello there my good friend.", [0.5, 2]), unit("How are you doing today?", [2.5, 4])];
+  const plain = planSentences(units, { samples: bands([[0.5, 2.0], [2.45, 4.0]], [], 6), from: 0 });
+  assert.ok(near(plain.timed[0].end, 2.32, 0.011) && plain.placed[0].movedFrom === undefined);
+  const breathy = planSentences(units, { samples: bands([[0.5, 2.0], [2.45, 4.0]], [[2.24, 2.44]], 6), from: 0 });
+  assert.ok(breathy.timed[0].end + 0.06 < 2.24, `stop at ${breathy.timed[0].end}`);
+  assert.ok(near(breathy.timed[1].start, 2.36, 0.011)); // 0.10 s before the voice, as before: a replay begins 0.2 s earlier still
+  assert.ok(near(breathy.placed[0].movedFrom, 2.32, 0.011));
+  const { listen, rows } = describePlan({ ...breathy, intervals: breathy.v.intervals });
+  assert.deepEqual(listen.map((l) => [l.after, l.flags]), [[1, ["moved-quiet"]]]);
+  assert.ok(rows[0].flags.includes("moved-quiet"));
 });

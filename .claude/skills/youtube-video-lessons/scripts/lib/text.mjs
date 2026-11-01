@@ -140,8 +140,17 @@ export function syllables(word) {
   return Math.max(1, groups);
 }
 
-/** Syllables per second `check` refuses (err*) and finds unusual (warn*), and the least speech it accepts in a sentence; `plan` judges with the same numbers. */
-export const SPEECH_RATE = { errLow: 1.8, errHigh: 11, warnLow: 3, warnHigh: 8.5, minVoiced: 0.2 };
+/**
+ * Syllables per second `check` refuses (err*) and finds unusual (warn*), and the least speech it accepts in a sentence;
+ * `plan` judges with the same numbers. off*: a sentence this far below or above the clip's typical (median) rate.
+ */
+export const SPEECH_RATE = { errLow: 1.8, errHigh: 11, warnLow: 3, warnHigh: 8.5, minVoiced: 0.2, offLow: 0.55, offHigh: 1.6 };
+
+/**
+ * Is a sentence's speaking rate far from the clip's typical one? Then a boundary around it may sit in the wrong pause (a
+ * cut one word late leaves the next sentence with too few words for its speech, or too many): `check` warns, `plan` lists it.
+ */
+export const rateOff = (rate, median) => Boolean(rate && median && (rate < median * SPEECH_RATE.offLow || rate > median * SPEECH_RATE.offHigh));
 
 /** How long a text takes to say, in comparable units: its syllables plus a little for every word boundary. */
 export function unitWeight(text) {

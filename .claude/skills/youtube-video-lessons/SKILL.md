@@ -45,7 +45,7 @@ A lesson is **done** only when: check PASS (0 errors), build + `test:video` pass
 
 ## Decisions you make
 - **Text source**, in order: creator's script/`.srt` (best, ask for it) > manual captions shown by the player (`capture` reports `en:manual`) > the description > typed by hand. Automatic captions (`en:asr`) mishear: correct them against the audio or mark `trial`.
-- **Long sentences** stay whole when the speech has no clear pause (0.45 s) inside; `plan --min-pause 0.35` allows more cuts at more risk (listed on LISTEN).
+- **Long sentences** stay whole when the speech has no clear pause (0.45 s) inside; `plan --min-pause 0.35` allows more cuts at more risk (listed on LISTEN); a fast narrator (0.15-0.3 s between phrases) needs `--min-pause 0.15` (a NOTE says so when it would keep more cuts). A cut it refuses because a rival pause stands beside it is listed `cut-refused` with the stop it would have had.
 - **Clip**: skip theme music and outros (`--clip-start`, `--clip-end`, or capture `--to`); about a minute is the owner's wish, a bit more is fine.
 - **Level** A1-B2 by the text. **Slug** from the title (`inspect` suggests one).
 - Several videos in one session: do steps 2 and 4 for all, then batch the Arabic.

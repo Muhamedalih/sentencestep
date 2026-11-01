@@ -8,7 +8,7 @@
  */
 import { bareWord, round2, splitWords } from "./util.mjs";
 import { SPEECH_RATE, normalizeText, syllables } from "./text.mjs";
-import { lastStopLimit, placeStops, voicedIntervals, voicedWithin } from "./envelope.mjs";
+import { lastStopLimit, placeStops, quietStop, soundLevel, voicedIntervals, voicedWithin } from "./envelope.mjs";
 
 /** A sentence owns the runs that overlap [first word - lead, last word + tail] by `minOverlap` s (or half of a shorter run). */
 export const OWNERSHIP = { lead: 0.2, tail: 0.5, minOverlap: 0.1 };
@@ -222,6 +222,25 @@ export function layoutGroups(groups, runs, { duration = Infinity } = {}) {
   return { placed, timed };
 }
 
+/**
+ * Moves each stop off a breath, hiss or burst that the voice band cannot hear (`quietStop`, as `plan` does): the stop of
+ * `lay.placed[i]` and the end of `lay.timed[i]` move to a quieter moment of the pause, the next sentence's start stays.
+ * `placed[i].movedFrom` keeps the stop `placeStops` chose. `level` is `soundLevel(samples)`, `audible` the dB above which a
+ * stop's landing window counts as sound (the voice threshold - 8).
+ */
+export function quietLayout(lay, level, audible) {
+  lay.placed.forEach((p, i) => {
+    const q = quietStop(level, p.gap, p.end, { audible });
+    if (!q) return;
+    p.movedFrom = p.end;
+    p.end = q.t;
+    p.start = Math.max(p.start, q.t);
+    lay.timed[i].end = round2(q.t);
+    lay.timed[i + 1].start = round2(p.start);
+  });
+  return lay;
+}
+
 // ---------------------------------------------------------------- speech rate
 
 /** Syllables per second of voice inside [start, end], and the seconds of voice (rate 0 with none). */
@@ -277,6 +296,7 @@ function describeSentences(lay, rates, spans, maxWords) {
     const flags = [];
     if (placed?.noRoom) flags.push("NO-ROOM");
     else if (placed?.tight) flags.push("tight");
+    if (placed?.movedFrom !== undefined) flags.push("moved-quiet");
     if (group.members.length > 1) flags.push(`joined${group.members.length}`);
     if (rate && (rate < SPEECH_RATE.warnLow || rate > SPEECH_RATE.warnHigh)) flags.push(`rate ${rate.toFixed(1)}`);
     if (words > maxWords) flags.push(`${words} words`);
@@ -286,11 +306,11 @@ function describeSentences(lay, rates, spans, maxWords) {
   });
 }
 
-/** What only a pair of ears can judge: joined sentences, tight pauses, odd speech rates, a sound far from where its caption was shown. */
+/** What only a pair of ears can judge: joined sentences, tight pauses, a stop moved off a breath, odd speech rates, a sound far from where its caption was shown. */
 function listenList(sentences) {
   const listen = [];
   for (const s of sentences) {
-    const hot = s.flags.filter((f) => /NO-ROOM|tight|joined|rate|offset/.test(f));
+    const hot = s.flags.filter((f) => /NO-ROOM|tight|moved|joined|rate|offset/.test(f));
     if (hot.length) listen.push({ after: s.n, at: s.end, pause: s.pause, flags: hot });
   }
   return listen;
@@ -343,6 +363,7 @@ export function planAnchored({ caps, samples, texts, duration = Infinity, pictur
   };
   const joined = joinByRate(shared, runs, { layout: (gs) => layoutGroups(gs, runs, { duration: limit }), measure });
   const { lay } = joined;
+  quietLayout(lay, soundLevel(samples), voice.threshold - 8);
   const rates = measure(lay);
   const gate = gateOf(lay);
   joined.joins.forEach((j) =>

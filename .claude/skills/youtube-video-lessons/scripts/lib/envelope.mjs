@@ -88,15 +88,19 @@ export function otsu(values, lo = -90, hi = -5, bins = 85) {
 /**
  * Where the voice is: [{ s, e }] in media seconds. The level is the voice band (300-3400 Hz). A run starts above
  * the threshold and ends 3 dB below it (so it does not chatter), runs split by a dip shorter than `mergeDip`
- * become one, and a blip shorter than `minLen` is dropped.
+ * become one, and a blip shorter than `minLen` is dropped. `dips` lists the dips that were merged away, [{ s, e, silent }]:
+ * `silent` says the whole sound (all frequencies) is as quiet there as the voice band, so the dip is a real 0.05-0.12 s
+ * gap between two words (or a consonant closing inside one); a dip whose whole-sound level holds is a hiss or a burst,
+ * which is speech. `gapDip` (default `mergeDip`: none) keeps a silent dip of at least that length as a gap, so a 0.09 s
+ * pause can take a cut while the 0.11 s hiss between «edge» and «so» still merges.
  */
 export function voicedIntervals(samples, options = {}) {
-  const { from = -Infinity, to = Infinity, threshold = null, hysteresis = 3, mergeDip = 0.12, minLen = 0.06 } = options;
+  const { from = -Infinity, to = Infinity, threshold = null, hysteresis = 3, mergeDip = 0.12, gapDip = mergeDip, minLen = 0.06 } = options;
   const pts = cleanSamples(samples).filter(([t]) => t >= from && t <= to);
-  if (pts.length < 20) return { intervals: [], threshold: null, separability: 0, hop: 0 };
+  if (pts.length < 20) return { intervals: [], dips: [], threshold: null, separability: 0, hop: 0 };
   const level = pts.map(([, , voice]) => dB(voice));
   const split = threshold == null ? otsu(level) : { threshold, separability: null };
-  if (split.threshold == null) return { intervals: [], threshold: null, separability: 0, hop: 0 };
+  if (split.threshold == null) return { intervals: [], dips: [], threshold: null, separability: 0, hop: 0 };
   const on = split.threshold;
   const off = on - hysteresis;
   const hops = [];
@@ -124,18 +128,25 @@ export function voicedIntervals(samples, options = {}) {
   }
   if (cur) raw.push(cur);
 
+  // A dip is silent when the middle of both its levels (whole sound and voice band) is below the point where a run ends.
+  const middle = (values) => values.sort((a, b) => a - b)[values.length >> 1];
+  const silent = (s, e) => {
+    const inside = pts.filter(([t]) => t >= s - 1e-9 && t < e - 1e-9);
+    return inside.length > 0 && middle(inside.map(([, all]) => dB(all))) <= off && middle(inside.map(([, , voice]) => dB(voice))) <= off;
+  };
   const merged = [];
+  const gone = [];
   for (const run of raw) {
     const last = merged[merged.length - 1];
-    if (last && run.s - last.e < mergeDip) last.e = run.e;
-    else merged.push({ s: run.s, e: run.e });
+    const dip = last ? run.s - last.e : Infinity;
+    if (last && dip < mergeDip && !(dip >= gapDip && silent(last.e, run.s))) {
+      gone.push({ s: last.e, e: run.s });
+      last.e = run.e;
+    } else merged.push({ s: run.s, e: run.e });
   }
-  return {
-    intervals: merged.filter((r) => r.e - r.s >= minLen),
-    threshold: on,
-    separability: split.separability,
-    hop,
-  };
+  const intervals = merged.filter((r) => r.e - r.s >= minLen);
+  const dips = gone.filter((d) => intervals.some((r) => r.s <= d.s && d.e <= r.e)).map((d) => ({ s: d.s, e: d.e, silent: silent(d.s, d.e) }));
+  return { intervals, dips, threshold: on, separability: split.separability, hop };
 }
 
 /** The reported length is rounded to 0.01 s, the sampler's media time to 0.001 s, and the player's length can differ from the media's by a few ms: a last sample this far past the reported length still counts as the end. */
@@ -193,12 +204,20 @@ export function voicedWithin(intervals, a, b) {
   return sum;
 }
 
-/** What surrounds a moment: is it inside speech, and how far to the last sound before it and the next one after it. */
-export function surroundings(intervals, t) {
+/**
+ * What surrounds a moment: is it inside speech, and how far to the last sound before it and the next one after it.
+ * A moment inside a run but also inside a silent dip of `dips` (see `voicedIntervals`) is not inside speech: it is in a
+ * short gap, and the distances are those to the two sides of the dip (`dip: true`).
+ */
+export function surroundings(intervals, t, dips = []) {
   let before = null;
   let after = null;
   for (const r of intervals) {
-    if (r.s <= t && t <= r.e) return { inside: true, before: r.e, after: r.s, sinceSound: 0, untilSound: 0 };
+    if (r.s <= t && t <= r.e) {
+      const dip = dips.find((d) => d.silent && d.s <= t && t <= d.e);
+      if (dip) return { inside: false, dip: true, before: dip.s, after: dip.e, sinceSound: t - dip.s, untilSound: dip.e - t, dipLength: dip.e - dip.s };
+      return { inside: true, before: r.e, after: r.s, sinceSound: 0, untilSound: 0 };
+    }
     if (r.e < t) before = r.e;
     if (r.s > t && after === null) after = r.s;
   }
@@ -217,8 +236,9 @@ export function surroundings(intervals, t) {
  * Boundaries are increasing pauses. Each sentence is judged on its own: the voice between its two boundaries should
  * last about as long as its words take at the speaking rate of the whole clip (so a slow stretch early on does not push
  * every later boundary), and a boundary prefers the pause that stands out in its window. Returns the chosen pauses, per
- * boundary how much worse the best alternative is (small = shaky), and `errs`: seconds of voice by which the sentence
- * before the boundary is longer (+) or shorter (-) than expected.
+ * boundary how much worse the best alternative is (small = shaky), and `errs`: seconds of voice by which each sentence is
+ * longer (+) or shorter (-) than expected (one more than there are boundaries: the last sentence is judged too, since
+ * a boundary that falls late takes its voice from the sentence after it).
  */
 export function assignBoundaries(weights, intervals, options = {}) {
   const { minGap = 0.1, sigmaRel = 0.25, sigmaAbs = 0.35, pausePenalty = 3, windows = [] } = options;
@@ -302,8 +322,32 @@ export function assignBoundaries(weights, intervals, options = {}) {
     for (let j = lo; j <= hi; j++) if (j !== jc) alt = Math.min(alt, here(j));
     return alt - here(jc);
   });
-  const errs = picked.map((_, i) => vAt(i) - vAt(i - 1) - expDur[i]);
+  const errs = expDur.map((e, i) => vAt(i) - vAt(i - 1) - e);
   return { chosen: picked.map((j) => cands[j]), margins, errs, expected: expDur, anchorMisses, cands };
+}
+
+/**
+ * For each of the `weights.length - 1` cuts of a sentence: `at`, the seconds of voice from its start at which the words
+ * put the cut (the speaking rate of the whole stretch), and `support`, how well a pause of `minGap` or more backs it: the
+ * longest such pause within reach of `at` (about half the shorter neighbouring piece plus 0.35 s), nearer counting more;
+ * 0 when there is none. A cut with no pause near where its words put it cannot be kept, whatever the other cuts have.
+ */
+export function cutSupport(weights, intervals, { minGap = 0.1 } = {}) {
+  const total = intervals.reduce((sum, r) => sum + (r.e - r.s), 0);
+  const rate = weights.reduce((a, b) => a + b, 0) / total;
+  const expDur = weights.map((w) => w / rate);
+  const cands = gapsOf(intervals).filter((g) => g.d >= minGap);
+  let acc = 0;
+  return weights.slice(0, -1).map((w, i) => {
+    const at = (acc += w) / rate;
+    const reach = 0.5 * Math.min(expDur[i], expDur[i + 1]) + 0.35;
+    let support = 0;
+    for (const g of cands) {
+      const near = Math.abs(g.cum - at);
+      if (near <= reach) support = Math.max(support, g.d * (1 - near / reach));
+    }
+    return { at, support };
+  });
 }
 
 /**
@@ -319,4 +363,51 @@ export function placeStops(gap, { after = 0.3, before = 0.1, floor = 0.05 } = {}
   }
   const end = Math.min(a + after, b - before);
   return { end, start: Math.max(b - before, end), tight: d < 0.25, noRoom: false };
+}
+
+/**
+ * The whole-sound level (all frequencies, dB) smoothed over three samples, as `worst(a, b)`: the loudest smoothed level
+ * in [a, b]. The voice band (300-3400 Hz) does not see a breath, a hiss or the burst of a consonant; this does.
+ */
+export function soundLevel(samples) {
+  const pts = cleanSamples(samples).map(([t, all]) => [t, dB(all)]);
+  const smooth = pts.map(([t], i) => [t, (pts[Math.max(0, i - 1)][1] + pts[i][1] + pts[Math.min(pts.length - 1, i + 1)][1]) / 3]);
+  return {
+    worst(a, b) {
+      let loudest = -Infinity;
+      for (const [t, level] of smooth) {
+        if (t > b) break;
+        if (t >= a && level > loudest) loudest = level;
+      }
+      return loudest;
+    },
+  };
+}
+
+/**
+ * Moves a stop off a sound the voice band cannot hear (the rule of yvl-extras/refine-stops.mjs, used on the Medieval
+ * lesson, now part of the planner). `placeStops` puts the stop 0.30 s after the last voice sound but never nearer than
+ * 0.10 s to the next one; a breath, a hiss or the burst of the next word begins 0.1-0.15 s before its voice and a stop
+ * there lets the learner hear it. The stop lands within -0.03 s / +0.06 s of the time asked, so a time is judged by the
+ * loudest whole-sound level in that window. A stop whose window is audible (above `audible` dB) moves to the nearest time
+ * in [a + 0.10, b - 0.08] and within `reach` s of the planned one whose window is not audible; when every time there is
+ * audible, to the nearest of those within `tie` dB of the quietest. It moves only if that is at least `gain` dB quieter than
+ * the planned one and at least `minMove` s away (a long pause with sound all through it, music or effects, keeps its stop).
+ * Returns { t, w, plannedW } or null (keep the planned stop). Only the stop moves: the next sentence's replay start
+ * stays 0.10 s before its voice (a replay begins 0.2 s before it, so a breath is replayed whole).
+ */
+export function quietStop(level, gap, planned, { audible, gain = 5, tie = 1.5, minMove = 0.03, reach = 0.2, from = 0.1, until = 0.08, lead = 0.03, lag = 0.06 } = {}) {
+  const lo = Math.max(gap.a + from, planned - reach);
+  const hi = Math.min(gap.b - until, planned + reach);
+  if (!(hi >= lo) || !Number.isFinite(audible)) return null;
+  const plannedW = level.worst(planned - lead, planned + lag);
+  if (!(plannedW > audible)) return null;
+  const cands = [];
+  for (let k = Math.ceil(lo * 100 - 1e-9); k <= Math.floor(hi * 100 + 1e-9); k++) cands.push({ t: k / 100, w: level.worst(k / 100 - lead, k / 100 + lag) });
+  if (!cands.length) return null;
+  const best = Math.min(...cands.map((c) => c.w));
+  const quiet = cands.filter((c) => c.w <= audible);
+  const pool = quiet.length ? quiet : cands.filter((c) => c.w <= best + tie);
+  const near = pool.sort((x, y) => Math.abs(x.t - planned) - Math.abs(y.t - planned))[0];
+  return plannedW - near.w >= gain && Math.abs(near.t - planned) >= minMove ? { t: near.t, w: near.w, plannedW } : null;
 }
