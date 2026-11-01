@@ -33,4 +33,5 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "army-ants-build-bridges": "animals",
 
   "someone-elses-dream": "motivation",
+  "the-tigers-and-the-strawberry-parable": "motivation",
 };
