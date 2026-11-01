@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "Video" };
  * Anyone else goes back to Home, where nothing about the section shows. An Admin also sees the trial
  * videos (a creator's text with no permission) and gets the arrange mode; the saved arrangement is one
  * cached read shared by every visitor. Opening the library is what "seen" means for the «جديد» line on
- * Home and the tag on the menu item (see MarkVideoNewsSeen).
+ * Home (see MarkVideoNewsSeen).
  */
 export default async function VideoLibraryPage() {
   const [features, locale] = await Promise.all([getEffectiveFeatures(), getLocale()]);

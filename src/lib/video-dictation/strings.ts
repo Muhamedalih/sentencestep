@@ -44,6 +44,11 @@ export interface VideoStrings {
   unavailableTitle: string;
   unavailableBody: string;
   blockedBody: string;
+  /** The «جديد» line on Home (the "videoNews" permission). */
+  newsTitle: string;
+  newsBody: string;
+  newsOpen: string;
+  newsDismiss: string;
   /** The names of the sections of the library, one per kind of video. */
   kinds: Record<VideoKind, string>;
   /** The Admin's arrange mode of the library. */
@@ -67,12 +72,6 @@ export interface VideoStrings {
   arrangeNotAllowed: string;
   arrangeInvalid: string;
   arrangeNoTable: string;
-  /** The «جديد» line on Home and the tag on the menu item (the "videoNews" permission). */
-  newsTitle: string;
-  newsBody: string;
-  newsOpen: string;
-  newsDismiss: string;
-  newTag: string;
   /** The Admin's editor of where each sentence starts and where the video stops. */
   stopsOpen: string;
   stopsTitle: string;
@@ -126,6 +125,10 @@ const ar: VideoStrings = {
   unavailableTitle: "الفيديو غير متاح حالياً",
   unavailableBody: "صاحب الفيديو منع عرضه هنا أو حذفه. جرّب فيديو آخر.",
   blockedBody: "تعذّر تحميل مشغّل يوتيوب. تأكد من الاتصال وجرّب مرة ثانية.",
+  newsTitle: "جديد: قسم «فيديو»",
+  newsBody: "اسمع الجملة من مقطع حقيقي واكتبها",
+  newsOpen: "جرّب الآن",
+  newsDismiss: "إغلاق",
   kinds: {
     comedy: "كوميدي",
     english: "تعلّم الإنجليزية",
@@ -154,11 +157,6 @@ const ar: VideoStrings = {
   arrangeInvalid: "الترتيب غير صالح، لم يُحفظ شيء.",
   arrangeNoTable:
     "تعذّر الحفظ: جدول الترتيب غير موجود بعد في قاعدة البيانات (الملف 20250353000000).",
-  newsTitle: "جديد: قسم «فيديو»",
-  newsBody: "اسمع الجملة من مقطع حقيقي واكتبها",
-  newsOpen: "جرّب الآن",
-  newsDismiss: "إغلاق",
-  newTag: "جديد",
   stopsOpen: "ضبط التوقف",
   stopsTitle: "ضبط توقف الفيديو",
   stopsHint:

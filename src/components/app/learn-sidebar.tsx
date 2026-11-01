@@ -21,7 +21,6 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { usePhoneMoreSeen } from "@/hooks/use-phone-more-seen";
-import { useVideoNewsSeen } from "@/hooks/use-video-news-seen";
 import { useVideoNew } from "@/hooks/use-video-new";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import { videoNewLabel, videoStrings } from "@/lib/video-dictation/strings";
@@ -79,7 +78,6 @@ export function LearnSidebar({
   mobilePath = false,
   rulesEnabled = false,
   videoEnabled = false,
-  videoNewTag = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -92,8 +90,6 @@ export function LearnSidebar({
   rulesEnabled?: boolean;
   /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up, and a tile in the phone's More sheet. */
   videoEnabled?: boolean;
-  /** The "videoNews" permission, resolved for this visitor and not yet answered by a cookie: «فيديو» carries a small «جديد» tag (md: up) until the learner closes the line on Home or opens the section. */
-  videoNewTag?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
@@ -101,9 +97,6 @@ export function LearnSidebar({
   const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled;
   const newLabel = videoNewLabel(locale);
   const showLibrary = libraryOpen ?? isAdminUser;
-  // The tag is drawn for the Arabic interface only (the section is Arabic only) and leaves at once when the learner closes the line or opens the section.
-  const { seen: videoNewsSeen } = useVideoNewsSeen();
-  const showVideoTag = videoNewTag && !videoNewsSeen && locale === "ar";
   // Home is an exact match (not a prefix) — "/learn" is a short enough
   // prefix that /learn/settings, /learn/saved, and every other non-nav
   // route under it would otherwise light up Home too. Every other item
@@ -288,14 +281,7 @@ export function LearnSidebar({
             >
               <Icon className="size-5 shrink-0 md:size-4" aria-hidden="true" />
               <span dir={dir}>{item.label}</span>
-              {item.key === "video" && showVideoTag && (
-                <span className="bg-primary text-primary-foreground ms-auto hidden rounded-full px-2 py-px text-[11px] font-semibold md:inline">
-                  {videoStrings(locale).newTag}
-                </span>
-              )}
-              {item.key === "video" && !showVideoTag && videoIsNew && (
-                <NewWord label={newLabel} dir={dir} />
-              )}
+              {item.key === "video" && videoIsNew && <NewWord label={newLabel} dir={dir} />}
             </SidebarLink>
           );
 

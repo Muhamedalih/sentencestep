@@ -252,7 +252,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Video: the “جديد” line on Home",
     description:
-      "One quiet line under the top bar of the new Home page, “جديد: قسم «فيديو»” with a short sentence and a “try it now” link that opens the section, and a small “جديد” tag on the section's menu item. A learner who closes the line, or opens the section by any road, never sees either again (remembered in a cookie of their own browser). Nothing else on the page changes: the boxes below it take a little less room for as long as the line is there. Arabic interface only, because the section is Arabic only.",
+      "One quiet line under the top bar of the new Home page, “جديد: قسم «فيديو»” with a short sentence, a “try it now” link that opens the section and a close button. A learner who closes the line, or opens the section by any road, never sees it again (remembered in a cookie of their own browser). Nothing else on the page changes: the boxes below it take a little less room for as long as the line is there. Arabic interface only, because the section is Arabic only.",
     notes: [
       "Needs Video dictation and the new Home page to be open for the same people, and stays closed while either is closed (and while Today's session is closed).",
       "Nothing is stored on our side: the “seen” mark is a cookie (ss_video_news) in the learner's own browser, so there is no extra load. Clearing it brings the line back, which is how an admin can look at it again.",

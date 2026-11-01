@@ -1,7 +1,7 @@
 /**
- * The «جديد» line that announces Video dictation on Home (the "videoNews" permission) and the tag on the
- * section's menu item. Whether a learner has already closed the line, or opened the section, is one
- * cookie in their own browser. It is a cookie, not localStorage, because the server draws the line: it
+ * The «جديد» line that announces Video dictation on Home (the "videoNews" permission). Whether a learner
+ * has already closed the line, or opened the section, is one cookie in their own browser. It is a
+ * cookie, not localStorage, because the server draws the line: it
  * can leave it out for a learner who has seen it, instead of drawing it and hiding it after the page
  * loads, which would push the boxes down and back up. Nothing about it is stored on our side.
  */
