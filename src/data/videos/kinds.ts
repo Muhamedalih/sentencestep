@@ -4,7 +4,8 @@ import type { VideoKind } from "@/lib/video-dictation/types";
  * The section each prepared video is listed under by default, by its id (an Admin can move any video
  * to another section from the library page, and that choice is stored in the database, not here). The
  * video files themselves are generated, so the type lives in this one place instead of inside them. A
- * video with no entry lands in "other" until it gets one.
+ * video with no entry lands in "other" until it gets one. An entry for a video that is not in this
+ * branch yet is harmless (lessons are published one at a time, so release can lack a video master has).
  */
 export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "if-street-interviews-were-not-staged": "comedy",
