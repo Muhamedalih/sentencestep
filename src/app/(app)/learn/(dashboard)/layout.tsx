@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/app/app-header";
@@ -11,6 +12,7 @@ import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
+import { VIDEO_NEWS_COOKIE, isVideoNewsSeen } from "@/lib/video-dictation/news";
 
 /**
  * The dashboard chrome (header + sidebar) for every /learn/* page except
@@ -62,6 +64,12 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
   // costs nothing (the pages check the same rule: see canOpenLibrary).
   const libraryOpen = isAdminUser || (features.rollouts.libraryGift && (await hasPremiumAccess()));
 
+  // The «جديد» tag on the Video menu item (the "videoNews" permission): only for a learner who has not
+  // closed the line on Home or opened the section yet. One cookie read, nothing stored on our side.
+  const videoNewTag =
+    features.rollouts.videoNews &&
+    !isVideoNewsSeen((await cookies()).get(VIDEO_NEWS_COOKIE)?.value);
+
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
@@ -74,6 +82,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
             mobilePath={features.rollouts.mobilePath}
             rulesEnabled={Boolean(user) && features.rollouts.dailyRule}
             videoEnabled={features.rollouts.videoDictation}
+            videoNewTag={videoNewTag}
           />
         }
       >

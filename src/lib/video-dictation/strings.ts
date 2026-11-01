@@ -67,6 +67,12 @@ export interface VideoStrings {
   arrangeNotAllowed: string;
   arrangeInvalid: string;
   arrangeNoTable: string;
+  /** The «جديد» line on Home and the tag on the menu item (the "videoNews" permission). */
+  newsTitle: string;
+  newsBody: string;
+  newsOpen: string;
+  newsDismiss: string;
+  newTag: string;
 }
 
 const ar: VideoStrings = {
@@ -129,6 +135,11 @@ const ar: VideoStrings = {
   arrangeInvalid: "الترتيب غير صالح، لم يُحفظ شيء.",
   arrangeNoTable:
     "تعذّر الحفظ: جدول الترتيب غير موجود بعد في قاعدة البيانات (الملف 20250353000000).",
+  newsTitle: "جديد: قسم «فيديو»",
+  newsBody: "اسمع الجملة من مقطع حقيقي واكتبها",
+  newsOpen: "جرّب الآن",
+  newsDismiss: "إغلاق",
+  newTag: "جديد",
 };
 
 export function videoStrings(locale: SupportLocale | null): VideoStrings {

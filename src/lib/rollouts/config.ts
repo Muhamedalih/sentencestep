@@ -189,6 +189,8 @@ export function evaluateRollouts(
  * The passage poster on the listening task and the repeat buttons are part of Today's tasks too.
  * The Home polish (big totals, one accent colour, one clear step) is made of the new Home page's parts,
  * so it is closed with Today's session as well.
+ * The video news line is a line of the new Home page that points at Video dictation, so it is closed
+ * with either of them.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
@@ -204,6 +206,7 @@ export function withRolloutDependencies(
     todayCover: access.todayCover && access.todaySession,
     todayRepeat: access.todayRepeat && access.todaySession,
     homePolish: access.homePolish && access.todaySession,
+    videoNews: access.videoNews && access.videoDictation && access.newHome && access.todaySession,
   };
 }
 

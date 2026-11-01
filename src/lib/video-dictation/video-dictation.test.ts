@@ -16,6 +16,12 @@ import {
 import type { VideoSection } from "./arrange";
 import { arrangeVideoLessons, getVideoLessons, isTrialVideo, visibleVideoLessons } from "./content";
 import {
+  documentCookieHasVideoNewsSeen,
+  isVideoNewsSeen,
+  VIDEO_NEWS_COOKIE,
+  videoNewsCookie,
+} from "./news";
+import {
   isSameVideo,
   MAX_LEAD_SECONDS,
   nextLead,
@@ -556,4 +562,25 @@ test("arrange: two lists of sections are the same arrangement only when nothing 
   assert.equal(sameSections(a, [{ kind: "comedy", ids: ["x", "y"] }]), true);
   assert.equal(sameSections(a, [{ kind: "comedy", ids: ["y", "x"] }]), false);
   assert.equal(sameSections(a, [{ kind: "animals", ids: ["x", "y"] }]), false);
+});
+
+test("news: the «جديد» line is remembered by one cookie of a year, read back from document.cookie, Secure only on https", () => {
+  assert.equal(VIDEO_NEWS_COOKIE, "ss_video_news");
+  assert.equal(isVideoNewsSeen("1"), true);
+  for (const other of [undefined, null, "", "0", "true"]) {
+    assert.equal(isVideoNewsSeen(other), false, String(other));
+  }
+
+  const plain = videoNewsCookie(false);
+  assert.match(plain, /^ss_video_news=1; /);
+  assert.match(plain, /Max-Age=31536000/);
+  assert.match(plain, /Path=\//);
+  assert.match(plain, /SameSite=Lax/);
+  assert.equal(/Secure/.test(plain), false);
+  assert.match(videoNewsCookie(true), /; Secure$/);
+
+  assert.equal(documentCookieHasVideoNewsSeen("a=1; ss_video_news=1; b=2"), true);
+  assert.equal(documentCookieHasVideoNewsSeen("ss_video_news=1"), true);
+  assert.equal(documentCookieHasVideoNewsSeen("xss_video_news=1; ss_video_news=0"), false);
+  assert.equal(documentCookieHasVideoNewsSeen(""), false);
 });

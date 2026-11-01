@@ -27,6 +27,7 @@ export const ROLLOUT_IDS = [
   "todayRepeat",
   "homePolish",
   "videoDictation",
+  "videoNews",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -244,6 +245,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs no table: the videos are files in the code for now (src/data/videos), so there is nothing to apply in Supabase.",
       "The player and the videos come from YouTube: the Content-Security-Policy lists three YouTube sources, only on this section's routes (/learn/video and /admin/video).",
       "Before opening it to learners: test a phone and Facebook's and Instagram's built-in browsers, link YouTube's Terms of Service and Google's Privacy Policy from the Terms and Privacy pages, and decide where the text of every video comes from (public domain, a licence, or the creator's permission).",
+    ],
+  },
+  videoNews: {
+    id: "videoNews",
+    audience: "learner",
+    title: "Video: the “جديد” line on Home",
+    description:
+      "One quiet line under the top bar of the new Home page, “جديد: قسم «فيديو»” with a short sentence and a “try it now” link that opens the section, and a small “جديد” tag on the section's menu item. A learner who closes the line, or opens the section by any road, never sees either again (remembered in a cookie of their own browser). Nothing else on the page changes: the boxes below it take a little less room for as long as the line is there. Arabic interface only, because the section is Arabic only.",
+    notes: [
+      "Needs Video dictation and the new Home page to be open for the same people, and stays closed while either is closed (and while Today's session is closed).",
+      "Nothing is stored on our side: the “seen” mark is a cookie (ss_video_news) in the learner's own browser, so there is no extra load. Clearing it brings the line back, which is how an admin can look at it again.",
+      "The link is a full page load, like the menu item, because the section's pages alone are served with YouTube in the Content-Security-Policy. No picture from YouTube is drawn on Home.",
     ],
   },
   mobilePath: {

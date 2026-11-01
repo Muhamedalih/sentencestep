@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { MarkVideoNewsSeen } from "@/components/video-dictation/mark-news-seen";
 import { VideoLibrary } from "@/components/video-dictation/video-library";
 import { VideoLibraryAdmin } from "@/components/video-dictation/video-library-admin";
 import { isAdmin } from "@/lib/admin/access";
@@ -16,7 +17,8 @@ export const metadata: Metadata = { title: "Video" };
  * Admin arranges them), behind the "videoDictation" permission (Admins only until the owner opens it).
  * Anyone else goes back to Home, where nothing about the section shows. An Admin also sees the trial
  * videos (a creator's text with no permission) and gets the arrange mode; the saved arrangement is one
- * cached read shared by every visitor.
+ * cached read shared by every visitor. Opening the library is what "seen" means for the «جديد» line on
+ * Home and the tag on the menu item (see MarkVideoNewsSeen).
  */
 export default async function VideoLibraryPage() {
   const [features, locale] = await Promise.all([getEffectiveFeatures(), getLocale()]);
@@ -28,13 +30,19 @@ export default async function VideoLibraryPage() {
   // Slim card data only: a card needs none of the sentences, and an Admin's page runs in the browser.
   const cards = Object.fromEntries(lessons.map((lesson) => [lesson.id, videoCard(lesson)]));
 
-  if (!admin) return <VideoLibrary sections={sections} cards={cards} locale={locale} />;
   return (
-    <VideoLibraryAdmin
-      sections={sections}
-      defaultSections={arrangeVideoLessons(lessons, null)}
-      cards={cards}
-      locale={locale}
-    />
+    <>
+      <MarkVideoNewsSeen />
+      {admin ? (
+        <VideoLibraryAdmin
+          sections={sections}
+          defaultSections={arrangeVideoLessons(lessons, null)}
+          cards={cards}
+          locale={locale}
+        />
+      ) : (
+        <VideoLibrary sections={sections} cards={cards} locale={locale} />
+      )}
+    </>
   );
 }

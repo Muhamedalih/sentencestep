@@ -191,6 +191,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     todayRepeat: false,
     homePolish: false,
     videoDictation: false,
+    videoNews: false,
   });
 });
 
@@ -247,6 +248,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       todayCover: true,
       todayRepeat: true,
       homePolish: true,
+      videoNews: true,
     },
     {
       ...before,
@@ -259,6 +261,7 @@ test("the sentence bank lives inside Today's box: it is never open without Today
       todayCover: true,
       todayRepeat: true,
       homePolish: true,
+      videoNews: true,
     },
   );
   assert.equal(before.sentenceBank, true);
@@ -283,6 +286,18 @@ test("the Home polish lives inside the new Home: Admins only, and never open wit
   assert.equal(withRolloutDependencies({ ...open, todaySession: false }).homePolish, false);
   assert.equal(
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).homePolish,
+    false,
+  );
+});
+
+test("the video news line points at Video dictation from the new Home: Admins only, and closed whenever any of the three is closed", () => {
+  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  assert.equal(withRolloutDependencies(open).videoNews, true);
+  for (const closed of ["videoDictation", "newHome", "todaySession"] as const) {
+    assert.equal(withRolloutDependencies({ ...open, [closed]: false }).videoNews, false, closed);
+  }
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).videoNews,
     false,
   );
 });
