@@ -15,10 +15,11 @@ export const RATINGS_PAGE_SIZE = 25;
 
 /**
  * Where a rating was given. "app" is everything about SentenceStep itself (the rating pop-up
- * and Settings); "passages" is the one-time card after a learner's first finished passage.
+ * and Settings); "passages" is the one-time card after a learner's first finished passage, "video"
+ * the one-time card after a learner's first finished video.
  * They are listed and counted apart, and only the app's own ratings make the site's average.
  */
-export type RatingsSource = "app" | "passages";
+export type RatingsSource = "app" | "passages" | "video";
 
 export interface RatingsFilter {
   source: RatingsSource;
@@ -37,6 +38,10 @@ function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function parseSource(value: string | undefined): RatingsSource {
+  return value === "passages" || value === "video" ? value : "app";
+}
+
 /** Reads Admin > Ratings' query string; anything unrecognised falls back to the default view. */
 export function parseRatingsFilter(params: RawParams): RatingsFilter {
   const view = first(params.view);
@@ -45,7 +50,7 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
   const page = Number(first(params.page));
 
   return {
-    source: first(params.source) === "passages" ? "passages" : "app",
+    source: parseSource(first(params.source)),
     view: view === "archived" || view === "public" ? view : "active",
     stars:
       Number.isInteger(stars) && stars >= 1 && stars <= 5 ? (stars as 1 | 2 | 3 | 4 | 5) : null,

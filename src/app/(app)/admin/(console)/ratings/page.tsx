@@ -100,6 +100,7 @@ export default async function AdminRatingsPage({
     countNewRatingsBySource(),
   ]);
   const forPassages = filter.source === "passages";
+  const forVideo = filter.source === "video";
   const biggestStar = Math.max(1, ...overview.perStar);
   const proof = buildRatingsProof(overview.perStar);
   const proofPreview = proof
@@ -116,12 +117,14 @@ export default async function AdminRatingsPage({
         <p className="text-muted-foreground mt-1">
           {forPassages
             ? "What learners said about the Passages section, from the one-time card shown after their first finished passage (the passage is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
-            : "What learners gave the app from the rating pop-up and Settings, newest first. "}
+            : forVideo
+              ? "What learners said about the Video section and how to develop the site, from the one-time card shown after their first finished video (the video is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
+              : "What learners gave the app from the rating pop-up and Settings, newest first. "}
           Reply by email to anyone who left an address (signed-in members always have one), and
           approve the best ones to show on the site. Archiving a rating takes it out of the figures
           below
-          {forPassages ? "" : " and out of the average quoted on the site"}. Times are Baghdad time
-          (UTC+3), like the old sheet.
+          {forPassages || forVideo ? "" : " and out of the average quoted on the site"}. Times are
+          Baghdad time (UTC+3), like the old sheet.
         </p>
       </div>
 
@@ -142,9 +145,17 @@ export default async function AdminRatingsPage({
             </Badge>
           )}
         </Chip>
+        <Chip href={hrefWith(filter, { source: "video" })} active={forVideo}>
+          Video
+          {newBySource.video > 0 && (
+            <Badge variant="secondary" className="ms-2">
+              {newBySource.video} new
+            </Badge>
+          )}
+        </Chip>
       </div>
 
-      {!forPassages && (
+      {filter.source === "app" && (
         <RatingsDisplaySettings
           initial={settings}
           proofPreview={proofPreview}

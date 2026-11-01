@@ -8,9 +8,15 @@ import { Button } from "@/components/ui/button";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitAppRatingAction } from "@/lib/feedback/actions";
-import { getOrCreateAnonId, markRatedApp, markRatedPassages } from "@/lib/feedback/rating-storage";
+import {
+  getOrCreateAnonId,
+  markRatedApp,
+  markRatedPassages,
+  markRatedVideo,
+} from "@/lib/feedback/rating-storage";
 import { popIn, transitions } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { videoRatingCopy } from "@/lib/video-dictation/strings";
 import type { LearningMode } from "@/types/content";
 
 const MAX_COMMENT_LENGTH = 2000;
@@ -54,7 +60,7 @@ export function RatingModal({
   onOpenChange: (open: boolean) => void;
   lessonId: string;
   /** "settings" identifies a rating given from the always-available Settings card rather than right after a real lesson; "passages" is the Passages section's own card (the lessonId is then the passage). */
-  mode: LearningMode | "settings" | "passages" | "words";
+  mode: LearningMode | "settings" | "passages" | "words" | "video";
   /** The stars already chosen when it opens — for a caller that took the first tap itself (a story's quiet row of stars, see StoryRatingRow). */
   initialRating?: number;
   /** Called with the rating once it has been sent. */
@@ -63,13 +69,16 @@ export function RatingModal({
   const { t, locale } = useLocale();
   const forPassages = mode === "passages";
   const forWords = mode === "words";
+  const forVideo = mode === "video";
   const copy = forPassages
     ? { ...t.rateApp, ...t.passages.rating }
     : forWords
       ? { ...t.rateApp, ...t.myWords.rating }
-      : mode === "stories"
-        ? { ...t.rateApp, ...t.lesson.storyEnd.rating }
-        : t.rateApp;
+      : forVideo
+        ? { ...t.rateApp, ...videoRatingCopy(locale) }
+        : mode === "stories"
+          ? { ...t.rateApp, ...t.lesson.storyEnd.rating }
+          : t.rateApp;
   // A signed-in learner is answered at their account email, so only a guest is asked for one.
   const isGuest = useAuthUserId() === null;
   const prefersReducedMotion = useReducedMotion();
@@ -108,6 +117,7 @@ export function RatingModal({
     // A rating of one section retires only that section's own card; the words review's quiet row of
     // stars (a rating of «كلماتي») retires nothing: a learner who rated it is still asked about the app.
     if (forPassages) markRatedPassages();
+    else if (forVideo) markRatedVideo();
     else if (!forWords) markRatedApp();
     onSubmitted?.(rating);
     setSubmitted(true);

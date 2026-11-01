@@ -7,8 +7,15 @@ import {
   type RatingsSummary,
   type RatingUserType,
 } from "@/lib/admin/ratings-domain";
-import { PASSAGES_RATING_MODE } from "@/lib/feedback/rating-record";
+import { PASSAGES_RATING_MODE, VIDEO_RATING_MODE } from "@/lib/feedback/rating-record";
 import { createClient } from "@/lib/supabase/server";
+
+/** The sections whose ratings are listed on their own tab, so the App tab leaves them out. */
+const APP_EXCLUDED_MODES = `(${PASSAGES_RATING_MODE},${VIDEO_RATING_MODE})`;
+
+function sourceMode(source: Exclude<RatingsSource, "app">): string {
+  return source === "video" ? VIDEO_RATING_MODE : PASSAGES_RATING_MODE;
+}
 
 export interface AdminAppRating {
   id: string;
@@ -45,9 +52,9 @@ export async function listAppRatings(
     .order("created_at", { ascending: false });
 
   query =
-    filter.source === "passages"
-      ? query.eq("mode", PASSAGES_RATING_MODE)
-      : query.neq("mode", PASSAGES_RATING_MODE);
+    filter.source === "app"
+      ? query.not("mode", "in", APP_EXCLUDED_MODES)
+      : query.eq("mode", sourceMode(filter.source));
   if (filter.view === "archived") query = query.eq("status", "archived");
   else if (filter.view === "public") query = query.eq("is_public", true);
   else query = query.neq("status", "archived");
@@ -97,15 +104,17 @@ export async function getAppRatingsOverview(source: RatingsSource): Promise<
   const supabase = await createClient();
   const head = () => {
     const query = supabase.from("app_ratings").select("id", { count: "exact", head: true });
-    return source === "passages"
-      ? query.eq("mode", PASSAGES_RATING_MODE)
-      : query.neq("mode", PASSAGES_RATING_MODE);
+    return source === "app"
+      ? query.not("mode", "in", APP_EXCLUDED_MODES)
+      : query.eq("mode", sourceMode(source));
   };
 
   const [distribution, isNew, withComment, isPublic, isPublicWithComment] = await Promise.all([
     source === "passages"
       ? supabase.rpc("passage_rating_distribution")
-      : supabase.rpc("app_rating_distribution"),
+      : source === "video"
+        ? supabase.rpc("video_rating_distribution")
+        : supabase.rpc("app_rating_distribution"),
     head().eq("status", "new"),
     head().neq("status", "archived").neq("comment", ""),
     head().neq("status", "archived").eq("is_public", true),
@@ -130,13 +139,15 @@ export async function countNewRatingsBySource(): Promise<Record<RatingsSource, n
   const unread = () =>
     supabase.from("app_ratings").select("id", { count: "exact", head: true }).eq("status", "new");
 
-  const [passages, app] = await Promise.all([
+  const [passages, video, app] = await Promise.all([
     unread().eq("mode", PASSAGES_RATING_MODE),
-    unread().neq("mode", PASSAGES_RATING_MODE),
+    unread().eq("mode", VIDEO_RATING_MODE),
+    unread().not("mode", "in", APP_EXCLUDED_MODES),
   ]);
   if (passages.error) throw passages.error;
+  if (video.error) throw video.error;
   if (app.error) throw app.error;
-  return { app: app.count ?? 0, passages: passages.count ?? 0 };
+  return { app: app.count ?? 0, passages: passages.count ?? 0, video: video.count ?? 0 };
 }
 
 /** Powers the admin nav badge — ratings nobody has opened yet (from every source). */

@@ -12,6 +12,7 @@
 
 const RATED_KEY = "looma:rated-app:v1";
 const RATED_PASSAGES_KEY = "looma:rated-passages:v1";
+const RATED_VIDEO_KEY = "looma:rated-video:v1";
 const ANON_ID_KEY = "looma:rating-anon-id:v1";
 
 export function hasRatedApp(): boolean {
@@ -51,6 +52,25 @@ export function markRatedPassages(): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(RATED_PASSAGES_KEY, "1");
+  } catch {
+    // Best-effort only — worst case the card can show again later.
+  }
+}
+
+/** The same one-time gate for the Video section's own rating card (see VideoRatingPrompt), apart from the app's and Passages'. */
+export function hasRatedVideo(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(RATED_VIDEO_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+
+export function markRatedVideo(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(RATED_VIDEO_KEY, "1");
   } catch {
     // Best-effort only — worst case the card can show again later.
   }
