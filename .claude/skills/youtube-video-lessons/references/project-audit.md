@@ -5,7 +5,7 @@ Read this instead of re-auditing. Nothing here may be changed by a lesson job.
 ## Files
 | Path | Role |
 | --- | --- |
-| `src/data/videos/<id>.ts` + `index.ts` | one static lesson per file (about 13 KB), listed in `index.ts` in library order. No Supabase, no storage |
+| `src/data/videos/<id>.ts` + `index.ts` | one static lesson per file (about 13 KB), listed in `index.ts`. The library groups the videos in sections by the type in `src/data/videos/kinds.ts` (comedy first), and an Admin can rearrange them from the library page (stored in the `video_arrangement` table, one row; a video the arrangement does not mention goes to the end of its section). No Supabase for the lesson itself, no storage |
 | `src/lib/video-dictation/types.ts` | `VideoLesson`, `VideoSentence`, `VideoWord`, `VideoTextSource` |
 | `.../validate.ts` | `validateVideoLesson`: id slug, 11-char youtubeId, clip inside video, sentences sorted (overlap tolerance 0.05 s), one meaning per whitespace token in order |
 | `.../segments.ts` | the stop rules: `POLL_MS` 30, `segmentTick`, `nextLead` (the page learns each device's stop delay), `replayPosition` (start - 0.2 s), `isSameVideo` (ad check, tolerance 1.5 s), speeds 1 / 0.75 / 0.5 |

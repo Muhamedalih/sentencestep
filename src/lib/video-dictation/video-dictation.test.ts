@@ -2,8 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { videoLessons } from "@/data/videos";
+import { videoKinds } from "@/data/videos/kinds";
 
-import { getVideoLessons, isTrialVideo, visibleVideoLessons } from "./content";
+import {
+  arrangeLessons,
+  flattenSections,
+  moveVideo,
+  sameSections,
+  sanitizeArrangement,
+  shiftSection,
+  shiftVideo,
+} from "./arrange";
+import type { VideoSection } from "./arrange";
+import { arrangeVideoLessons, getVideoLessons, isTrialVideo, visibleVideoLessons } from "./content";
 import {
   isSameVideo,
   MAX_LEAD_SECONDS,
@@ -19,7 +30,8 @@ import {
   parseTranscript,
   splitSentences,
 } from "./transcript-import";
-import type { VideoLesson } from "./types";
+import { VIDEO_KINDS } from "./types";
+import type { VideoKind, VideoLesson, VideoLevel } from "./types";
 import { validateVideoLesson } from "./validate";
 import { bareWord, splitWords } from "./words";
 
@@ -299,4 +311,249 @@ test("a trial video (a creator's text with no permission) is hidden from everyon
     visibleVideoLessons(false).length,
     getVideoLessons().filter((lesson) => !isTrialVideo(lesson)).length,
   );
+});
+
+// ---- The library's arrangement: sections by kind (comedy first), and what an Admin saved ----
+
+/** A bare video for the arrangement tests: only what arrangeLessons reads. */
+function bare(id: string, level: VideoLevel, clipSeconds: number): VideoLesson {
+  return {
+    id,
+    youtubeId: "aaaaaaaaaaa",
+    title: id,
+    channel: "channel",
+    channelUrl: "https://www.youtube.com/@channel",
+    level,
+    durationSeconds: 100,
+    clipStartSeconds: 0,
+    clipEndSeconds: clipSeconds,
+    textSource: "public-domain",
+    sourceNote: "",
+    sentences: [],
+  };
+}
+
+const idsOf = (sections: readonly VideoSection[], kind: VideoKind): string[] =>
+  sections.find((section) => section.kind === kind)?.ids ?? [];
+
+test("arrange: with nothing saved the sections follow the default order, comedy first", () => {
+  const sections = arrangeVideoLessons(videoLessons, null);
+  assert.deepEqual(
+    sections.map((section) => section.kind),
+    [...VIDEO_KINDS],
+  );
+  assert.equal(sections[0]?.kind, "comedy");
+  // Every video appears exactly once.
+  const all = flattenSections(sections);
+  assert.equal(all.length, videoLessons.length);
+  assert.equal(new Set(all).size, videoLessons.length);
+});
+
+test("arrange: inside a section the easiest video comes first (level, then length)", () => {
+  const rank = { A1: 0, A2: 1, B1: 2, B2: 3 } as const;
+  const byId = new Map(videoLessons.map((lesson) => [lesson.id, lesson]));
+  const length = (lesson: VideoLesson) => lesson.clipEndSeconds - lesson.clipStartSeconds;
+  for (const section of arrangeVideoLessons(videoLessons, null)) {
+    const lessons = section.ids.map((id) => byId.get(id) as VideoLesson);
+    for (let index = 1; index < lessons.length; index += 1) {
+      const before = lessons[index - 1] as VideoLesson;
+      const after = lessons[index] as VideoLesson;
+      assert.ok(
+        rank[before.level] < rank[after.level] ||
+          (rank[before.level] === rank[after.level] && length(before) <= length(after)),
+        `${before.id} should not come before ${after.id} in ${section.kind}`,
+      );
+    }
+  }
+});
+
+test("kinds: every entry names a real video and a real kind", () => {
+  const known = new Set(videoLessons.map((lesson) => lesson.id));
+  for (const [id, kind] of Object.entries(videoKinds)) {
+    assert.ok(known.has(id), `${id} in src/data/videos/kinds.ts is not a prepared video`);
+    assert.ok((VIDEO_KINDS as readonly string[]).includes(kind), `${id}: unknown kind ${kind}`);
+  }
+});
+
+test("arrange: a video with no entry in the kinds lands in the other section", () => {
+  const lessons = [bare("a", "A2", 30), bare("b", "B1", 40)];
+  const sections = arrangeLessons(lessons, { a: "comedy" }, null);
+  assert.deepEqual(idsOf(sections, "comedy"), ["a"]);
+  assert.deepEqual(idsOf(sections, "other"), ["b"]);
+});
+
+test("arrange: a saved arrangement sets the order of the sections and of the videos", () => {
+  const lessons = [
+    bare("a", "A2", 30),
+    bare("b", "B1", 40),
+    bare("c", "B1", 20),
+    bare("d", "B2", 50),
+  ];
+  const kinds = { a: "comedy", b: "comedy", c: "animals", d: "animals" } as const;
+  const sections = arrangeLessons(lessons, kinds, {
+    sections: [
+      { kind: "animals", ids: ["d", "c", "a"] },
+      { kind: "comedy", ids: ["b"] },
+    ],
+  });
+  // The saved sections come first in the saved order, the other kinds follow in the default order.
+  assert.deepEqual(
+    sections.map((section) => section.kind),
+    ["animals", "comedy", "english", "science", "motivation", "other"],
+  );
+  assert.deepEqual(idsOf(sections, "animals"), ["d", "c", "a"]);
+  assert.deepEqual(idsOf(sections, "comedy"), ["b"]);
+});
+
+test("arrange: a video the saved arrangement does not mention goes to the end of its own section", () => {
+  const lessons = [
+    bare("old", "B1", 30),
+    bare("fresh-easy", "A2", 10),
+    bare("fresh-hard", "B2", 10),
+  ];
+  const kinds = { old: "comedy", "fresh-easy": "comedy", "fresh-hard": "comedy" } as const;
+  const sections = arrangeLessons(lessons, kinds, {
+    sections: [{ kind: "comedy", ids: ["old"] }],
+  });
+  assert.deepEqual(idsOf(sections, "comedy"), ["old", "fresh-easy", "fresh-hard"]);
+});
+
+test("arrange: a saved id this viewer cannot open, an unknown id and a repeated id are skipped", () => {
+  const lessons = [bare("a", "A2", 30), bare("b", "B1", 30)];
+  const sections = arrangeLessons(
+    lessons,
+    {},
+    {
+      sections: [
+        { kind: "comedy", ids: ["hidden-trial", "b", "b"] },
+        { kind: "animals", ids: ["b", "a"] },
+      ],
+    },
+  );
+  assert.deepEqual(idsOf(sections, "comedy"), ["b"]);
+  assert.deepEqual(idsOf(sections, "animals"), ["a"]);
+});
+
+test("arrange: an empty saved section keeps its place", () => {
+  const lessons = [bare("a", "A2", 30)];
+  const sections = arrangeLessons(
+    lessons,
+    { a: "comedy" },
+    {
+      sections: [
+        { kind: "science", ids: [] },
+        { kind: "comedy", ids: ["a"] },
+      ],
+    },
+  );
+  assert.deepEqual(
+    sections.slice(0, 2).map((section) => section.kind),
+    ["science", "comedy"],
+  );
+});
+
+test("arrange: the next video follows the sections, then the next section", () => {
+  const sections: VideoSection[] = [
+    { kind: "comedy", ids: ["x", "y"] },
+    { kind: "english", ids: [] },
+    { kind: "animals", ids: ["z"] },
+  ];
+  assert.deepEqual(flattenSections(sections), ["x", "y", "z"]);
+});
+
+test("arrange: what a browser sends is checked, and what is wrong is refused whole", () => {
+  const known = new Set(["a", "b", "c"]);
+  assert.deepEqual(
+    sanitizeArrangement({ sections: [{ kind: "comedy", ids: ["a", "gone", "b", "a"] }] }, known),
+    { sections: [{ kind: "comedy", ids: ["a", "b"] }] },
+  );
+  // A video listed in two sections stays in the first.
+  assert.deepEqual(
+    sanitizeArrangement(
+      {
+        sections: [
+          { kind: "comedy", ids: ["a"] },
+          { kind: "animals", ids: ["a", "c"] },
+        ],
+      },
+      known,
+    ),
+    {
+      sections: [
+        { kind: "comedy", ids: ["a"] },
+        { kind: "animals", ids: ["c"] },
+      ],
+    },
+  );
+  for (const bad of [
+    null,
+    "comedy",
+    {},
+    { sections: "comedy" },
+    { sections: [null] },
+    { sections: [{ kind: "nonsense", ids: [] }] },
+    { sections: [{ kind: "comedy", ids: "a" }] },
+    { sections: [{ kind: "comedy", ids: [1] }] },
+    // The same kind twice.
+    {
+      sections: [
+        { kind: "comedy", ids: [] },
+        { kind: "comedy", ids: [] },
+      ],
+    },
+    // More sections than there are kinds.
+    { sections: [...VIDEO_KINDS, "comedy"].map((kind) => ({ kind, ids: [] })) },
+    // An absurd list of ids.
+    { sections: [{ kind: "comedy", ids: Array.from({ length: 1001 }, () => "a") }] },
+  ]) {
+    assert.equal(sanitizeArrangement(bad, known), null, JSON.stringify(bad).slice(0, 80));
+  }
+});
+
+test("arrange: moving a video changes only that video's place", () => {
+  const start: VideoSection[] = [
+    { kind: "comedy", ids: ["a", "b", "c"] },
+    { kind: "animals", ids: ["d", "e"] },
+  ];
+  // To another section, at a place among ITS videos, and to the end.
+  assert.deepEqual(moveVideo(start, "a", "animals", 1), [
+    { kind: "comedy", ids: ["b", "c"] },
+    { kind: "animals", ids: ["d", "a", "e"] },
+  ]);
+  assert.deepEqual(moveVideo(start, "a", "animals"), [
+    { kind: "comedy", ids: ["b", "c"] },
+    { kind: "animals", ids: ["d", "e", "a"] },
+  ]);
+  // Inside its own section the place counts the OTHER videos: a to the end, c to the front.
+  assert.deepEqual(moveVideo(start, "a", "comedy", 2)[0]?.ids, ["b", "c", "a"]);
+  assert.deepEqual(moveVideo(start, "c", "comedy", 0)[0]?.ids, ["c", "a", "b"]);
+  // A place past the end is the end; a kind that is not there changes nothing; the input is never touched.
+  assert.deepEqual(moveVideo(start, "d", "comedy", 99)[0]?.ids, ["a", "b", "c", "d"]);
+  assert.deepEqual(moveVideo(start, "d", "other"), start);
+  assert.deepEqual(start[0]?.ids, ["a", "b", "c"]);
+});
+
+test("arrange: the arrows move a video or a section one step, and stop at the ends", () => {
+  const start: VideoSection[] = [
+    { kind: "comedy", ids: ["a", "b", "c"] },
+    { kind: "animals", ids: ["d"] },
+  ];
+  assert.deepEqual(shiftVideo(start, "b", -1)[0]?.ids, ["b", "a", "c"]);
+  assert.deepEqual(shiftVideo(start, "b", 1)[0]?.ids, ["a", "c", "b"]);
+  assert.deepEqual(shiftVideo(start, "a", -1), start);
+  assert.deepEqual(shiftVideo(start, "c", 1), start);
+  assert.deepEqual(shiftVideo(start, "d", 1), start);
+  assert.deepEqual(
+    shiftSection(start, "animals", -1).map((section) => section.kind),
+    ["animals", "comedy"],
+  );
+  assert.deepEqual(shiftSection(start, "comedy", -1), start);
+  assert.deepEqual(shiftSection(start, "animals", 1), start);
+});
+
+test("arrange: two lists of sections are the same arrangement only when nothing differs", () => {
+  const a: VideoSection[] = [{ kind: "comedy", ids: ["x", "y"] }];
+  assert.equal(sameSections(a, [{ kind: "comedy", ids: ["x", "y"] }]), true);
+  assert.equal(sameSections(a, [{ kind: "comedy", ids: ["y", "x"] }]), false);
+  assert.equal(sameSections(a, [{ kind: "animals", ids: ["x", "y"] }]), false);
 });
