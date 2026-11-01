@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { theMedievalMetaWeapon } from "./the-medieval-meta-weapon";
 import { theTigersAndTheStrawberryParable } from "./the-tigers-and-the-strawberry-parable";
 import { howCoconutsFillThemselvesWithWater } from "./how-coconuts-fill-themselves-with-water";
 import { armyAntsBuildBridges } from "./army-ants-build-bridges";
@@ -46,4 +47,5 @@ export const videoLessons: readonly VideoLesson[] = [
   armyAntsBuildBridges,
   howCoconutsFillThemselvesWithWater,
   theTigersAndTheStrawberryParable,
+  theMedievalMetaWeapon,
 ];
