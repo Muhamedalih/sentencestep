@@ -271,6 +271,14 @@ test("pictureEnd is where a capture that ran to the end stopped; atPictureEnd ta
   assert.equal(pictureEnd({ ...ran, samples: [[0, 0, 0], [40, 0, 0]] }), Infinity); // 3 s short: a time limit, not the end
   assert.equal(pictureEnd({ ...ran, samples: [[0, 0, 0], [43.2, 0, 0]] }), Infinity); // the picture is not shorter than reported
   assert.equal(pictureEnd({ samples: ran.samples, to: null }), Infinity); // no reported length
+  // A Short that reports its real length (not rounded up): the sampler's last media time reads a thousandth MORE (21.54 s against 21.541)
+  const exact = { details: { duration: 21.54 }, to: null, samples: [[0, 0, 0], [10, 0.1, 0.1], [21.541, 0, 0]] };
+  assert.equal(pictureEnd(exact), 21.54, "a last sample equal to the reported length within rounding is the end of the picture");
+  assert.equal(pictureEnd({ ...exact, samples: [[0, 0, 0], [21.58, 0, 0]] }), 21.54, "never later than the reported length");
+  assert.equal(pictureEnd({ ...exact, samples: [[0, 0, 0], [21.6, 0, 0]] }), Infinity, "0.06 s past the reported length is more than rounding");
+  assert.equal(pictureEnd({ ...exact, samples: [[0, 0, 0], [21.509, 0.0025, 0.0028]] }), 21.5, "a last sample just before the reported length still works");
+  assert.equal(Math.round(lastStopLimit(pictureEnd(exact)) * 100) / 100, 21.44, "so plan keeps its last stop 0.10 s before the last frame");
+  assert.equal(atPictureEnd(21.44, pictureEnd(exact)), true);
   assert.equal(atPictureEnd(42.86, 42.54), true);
   assert.equal(atPictureEnd(42.44, 42.54), true); // the last stop plan asks for (0.10 s before the last frame)
   assert.equal(atPictureEnd(42.3, 42.54), false);

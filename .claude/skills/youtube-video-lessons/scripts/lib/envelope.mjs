@@ -138,11 +138,16 @@ export function voicedIntervals(samples, options = {}) {
   };
 }
 
+/** The reported length is rounded to 0.01 s, the sampler's media time to 0.001 s, and the player's length can differ from the media's by a few ms: a last sample this far past the reported length still counts as the end. */
+export const END_ROUNDING = 0.05;
+
 /**
  * Where the picture really ends, read from a capture that ran to the end of the video: the last moment the sampler
  * saw. YouTube can report up to a second more than the picture lasts (a Short whose last frame is at 42.54 s says 43),
- * and a stop after the last frame is never reached by the playhead. Infinity when the capture was cut short (--to) or
- * does not end within a second of the reported length: then nothing is known about the end.
+ * or exactly as much, where the sampler's last media time can read a few thousandths MORE than the reported length
+ * (a Short that says 21.54 s and whose last sample is 21.541: see END_ROUNDING), and a stop after the last frame is never
+ * reached by the playhead. Infinity when the capture was cut short (--to) or does not end within a second of the
+ * reported length: then nothing is known about the end.
  */
 export function pictureEnd(capture) {
   const duration = capture?.details?.duration;
@@ -150,7 +155,7 @@ export function pictureEnd(capture) {
   if (capture?.to || !(duration > 0) || !samples?.length) return Infinity;
   let last = 0;
   for (const [t] of samples) if (t > last) last = t;
-  return last < duration && last >= duration - 1 ? Math.floor(last * 100) / 100 : Infinity;
+  return last <= duration + END_ROUNDING && last >= duration - 1 ? Math.min(Math.floor(last * 100) / 100, duration) : Infinity;
 }
 
 /**
