@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { howCoconutsFillThemselvesWithWater } from "./how-coconuts-fill-themselves-with-water";
 import { armyAntsBuildBridges } from "./army-ants-build-bridges";
 import { weAllHaveThatOneFriend } from "./we-all-have-that-one-friend";
 import { empathAnimatic } from "./empath-animatic";
@@ -38,4 +39,5 @@ export const videoLessons: readonly VideoLesson[] = [
   empathAnimatic,
   weAllHaveThatOneFriend,
   armyAntsBuildBridges,
+  howCoconutsFillThemselvesWithWater,
 ];
