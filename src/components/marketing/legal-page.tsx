@@ -1,27 +1,32 @@
 import type { ReactNode } from "react";
 
 import { LegalBackButton } from "./legal-back-button";
-import { LEGAL_BACK_LABEL, SUPPORT_EMAIL } from "./legal-documents";
+import { LEGAL_BACK_LABEL, splitLegalLinks } from "./legal-documents";
 import type { LegalDocument, LegalLanguage } from "./legal-documents";
 
-/** The support address is shown as a mail link wherever the text mentions it. */
-function withMailLink(text: string): ReactNode {
-  const parts = text.split(SUPPORT_EMAIL);
-  if (parts.length === 1) return text;
-  return parts.flatMap((part, index) =>
-    index === 0
-      ? [part]
-      : [
-          <a
-            key={index}
-            href={`mailto:${SUPPORT_EMAIL}`}
-            className="text-foreground underline underline-offset-4"
-            dir="ltr"
-          >
-            {SUPPORT_EMAIL}
-          </a>,
-          part,
-        ],
+/**
+ * The support address is shown as a mail link wherever the text mentions it, and so are YouTube's
+ * Terms of Service and the Google Privacy Policy (its rules make us show them), which open in a new tab.
+ */
+function withLinks(text: string): ReactNode {
+  const parts = splitLegalLinks(text);
+  if (parts.length === 1 && parts[0]!.href === undefined) return text;
+  return parts.map((part, index) =>
+    part.href === undefined ? (
+      part.text
+    ) : (
+      <a
+        key={index}
+        href={part.href}
+        className="text-foreground underline underline-offset-4"
+        dir="ltr"
+        {...(part.href.startsWith("mailto:")
+          ? {}
+          : { target: "_blank", rel: "noopener noreferrer" })}
+      >
+        {part.text}
+      </a>
+    ),
   );
 }
 
@@ -65,13 +70,13 @@ export function LegalPage({
               <h2 className="text-lg font-semibold tracking-tight">{section.heading}</h2>
               {section.paragraphs?.map((paragraph) => (
                 <p key={paragraph} className="text-muted-foreground mt-3 text-sm leading-relaxed">
-                  {withMailLink(paragraph)}
+                  {withLinks(paragraph)}
                 </p>
               ))}
               {section.bullets && (
                 <ul className="text-muted-foreground mt-3 flex list-disc flex-col gap-2.5 ps-5 text-sm leading-relaxed">
                   {section.bullets.map((bullet) => (
-                    <li key={bullet}>{withMailLink(bullet)}</li>
+                    <li key={bullet}>{withLinks(bullet)}</li>
                   ))}
                 </ul>
               )}

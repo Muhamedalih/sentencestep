@@ -4,12 +4,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  GOOGLE_PRIVACY_URL,
   LEGAL_BACK_LABEL,
   PRIVACY,
   SUPPORT_EMAIL,
   TERMS,
   legalHomeHref,
   legalLanguage,
+  splitLegalLinks,
+  YOUTUBE_TERMS_URL,
 } from "./legal-documents";
 import type { LegalDocument } from "./legal-documents";
 
@@ -228,4 +231,32 @@ test("the terms no longer say that every payment is made on Wayl's page", () => 
     false,
   );
   assert.equal(/الدفع يتم عبر Wayl/.test(fullText(TERMS.ar)), false);
+});
+
+test("the terms show YouTube's Terms of Service, and the privacy policy says the Video section uses YouTube API Services and links the Google Privacy Policy, in both languages", () => {
+  for (const document of [TERMS.en, TERMS.ar]) {
+    const text = fullText(document);
+    assert.ok(text.includes(YOUTUBE_TERMS_URL), "the address of the YouTube Terms of Service");
+    assert.match(text, /YouTube API Services/);
+  }
+  for (const document of [PRIVACY.en, PRIVACY.ar]) {
+    const text = fullText(document);
+    assert.ok(text.includes(GOOGLE_PRIVACY_URL), "the address of the Google Privacy Policy");
+    assert.match(text, /YouTube API Services/);
+  }
+});
+
+test("splitLegalLinks: the support address and the two YouTube-rule addresses become links, the rest stays text", () => {
+  assert.deepEqual(splitLegalLinks("Nothing to link."), [{ text: "Nothing to link." }]);
+  assert.deepEqual(splitLegalLinks(`Write to ${SUPPORT_EMAIL}.`), [
+    { text: "Write to " },
+    { text: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },
+    { text: "." },
+  ]);
+  assert.deepEqual(splitLegalLinks(`(${YOUTUBE_TERMS_URL}) and ${GOOGLE_PRIVACY_URL}`), [
+    { text: "(" },
+    { text: YOUTUBE_TERMS_URL, href: YOUTUBE_TERMS_URL },
+    { text: ") and " },
+    { text: GOOGLE_PRIVACY_URL, href: GOOGLE_PRIVACY_URL },
+  ]);
 });
