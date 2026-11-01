@@ -21,8 +21,9 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { usePhoneMoreSeen } from "@/hooks/use-phone-more-seen";
+import { useVideoNew } from "@/hooks/use-video-new";
 import { ruleStrings } from "@/lib/daily-rule/strings";
-import { videoStrings } from "@/lib/video-dictation/strings";
+import { videoNewLabel, videoStrings } from "@/lib/video-dictation/strings";
 import { cn } from "@/lib/utils";
 
 /**
@@ -92,6 +93,9 @@ export function LearnSidebar({
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
+  // Until the learner has opened «فيديو» once, its button wears a small «new» word (see useVideoNew).
+  const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled;
+  const newLabel = videoNewLabel(locale);
   const showLibrary = libraryOpen ?? isAdminUser;
   // Home is an exact match (not a prefix) — "/learn" is a short enough
   // prefix that /learn/settings, /learn/saved, and every other non-nav
@@ -205,6 +209,7 @@ export function LearnSidebar({
                 label: videoStrings(locale).navLabel,
                 icon: Play,
                 fullLoad: true,
+                ...(videoIsNew ? { tag: newLabel } : {}),
               },
             ]
           : []),
@@ -276,6 +281,7 @@ export function LearnSidebar({
             >
               <Icon className="size-5 shrink-0 md:size-4" aria-hidden="true" />
               <span dir={dir}>{item.label}</span>
+              {item.key === "video" && videoIsNew && <NewWord label={newLabel} dir={dir} />}
             </SidebarLink>
           );
 
@@ -510,6 +516,25 @@ function PhoneMore({
         </>
       )}
     </>
+  );
+}
+
+/**
+ * The small «new» word on the Video button: the brand colour, a soft dot that breathes beside it (still
+ * when the visitor asks for less motion), gone for good once Video has been opened. Desktop sidebar only.
+ */
+function NewWord({ label, dir }: { label: string; dir: "ltr" | "rtl" }) {
+  return (
+    <span
+      dir={dir}
+      className="bg-brand-muted text-primary ms-auto hidden items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none font-semibold md:inline-flex"
+    >
+      <span
+        aria-hidden="true"
+        className="bg-primary size-1.5 rounded-full motion-safe:animate-pulse"
+      />
+      {label}
+    </span>
   );
 }
 

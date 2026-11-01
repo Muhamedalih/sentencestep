@@ -20,6 +20,7 @@ import {
   Gauge,
   Play,
   RotateCcw,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
@@ -46,6 +47,8 @@ import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
 
 import { useYouTubePlayer, type PlayerControls } from "./use-youtube-player";
+import { VideoRatingPrompt } from "./video-rating-prompt";
+import { VideoStopsEditor } from "./video-stops-editor";
 import { PLAYER_STATE } from "./youtube-api";
 
 /** The learner's choice to hide the words, remembered per browser: a convenience, never the source of truth for anything. */
@@ -72,13 +75,18 @@ const ICON_BUTTON =
 export function VideoSession({
   lesson,
   nextLessonId,
+  canEditStops = false,
 }: {
   lesson: VideoLesson;
   nextLessonId: string | null;
+  /** An Admin can move where each sentence starts and where the video stops (see VideoStopsEditor). */
+  canEditStops?: boolean;
 }) {
   const { locale } = useLocale();
   const strings = videoStrings(locale);
-  const sentences = lesson.sentences;
+  // The sentences' times are state only so an Admin can move them by hand and test them at once.
+  const [sentences, setSentences] = useState<VideoSentence[]>(lesson.sentences);
+  const [editingStops, setEditingStops] = useState(false);
 
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("armed");
@@ -154,6 +162,22 @@ export function VideoSession({
     move({ phase: "listening" });
     startPolling(sentence.endSeconds);
   }, [move, sentences, startPolling, stopPolling]);
+
+  /** The Admin's "Test": plays one sentence from its replay start to its stop with the times as they are now. */
+  const previewSentence = useCallback(
+    (at: number) => {
+      const player = controlsRef.current;
+      const target = sentences[at];
+      if (!player || !target) return;
+      stopPolling();
+      setNeedsTap(false);
+      move({ index: at, phase: "listening" });
+      player.seekTo(replayPosition(target.startSeconds));
+      player.play();
+      startPolling(target.endSeconds);
+    },
+    [move, sentences, startPolling, stopPolling],
+  );
 
   const handleState = useCallback(
     (state: number) => {
@@ -301,7 +325,7 @@ export function VideoSession({
   }
 
   return (
-    <Shell stage={phase !== "done"}>
+    <Shell stage={phase !== "done"} makeRoom={canEditStops && editingStops && phase !== "done"}>
       <header className="mx-auto flex w-full max-w-[640px] items-center gap-3 px-4 pt-3 pb-2 lg:max-w-[1000px]">
         <Link href="/learn/video" aria-label={strings.back} className={ICON_BUTTON}>
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -319,6 +343,18 @@ export function VideoSession({
         </div>
         {phase !== "done" && (
           <div className="flex gap-1.5">
+            {canEditStops && (
+              <button
+                type="button"
+                onClick={() => setEditingStops((open) => !open)}
+                aria-pressed={editingStops}
+                aria-label={strings.stopsOpen}
+                title={strings.stopsOpen}
+                className={cn(ICON_BUTTON, editingStops && "bg-brand-muted border-transparent")}
+              >
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+              </button>
+            )}
             <button
               type="button"
               onClick={replay}
@@ -489,6 +525,17 @@ export function VideoSession({
           )
         )}
       </main>
+      {canEditStops && editingStops && phase !== "done" && (
+        <VideoStopsEditor
+          videoId={lesson.id}
+          sentences={sentences}
+          current={index}
+          getTime={() => controlsRef.current?.getTime()}
+          onChange={setSentences}
+          onTest={previewSentence}
+          onClose={() => setEditingStops(false)}
+        />
+      )}
     </Shell>
   );
 }
@@ -555,13 +602,23 @@ function FitArea({ children, watch }: { children: ReactNode; watch: string }) {
   );
 }
 
-function Shell({ children, stage = false }: { children: ReactNode; stage?: boolean }) {
+function Shell({
+  children,
+  stage = false,
+  makeRoom = false,
+}: {
+  children: ReactNode;
+  stage?: boolean;
+  /** The Admin's stops editor is open at the right edge (laptop and wider): the screen leaves its width free. */
+  makeRoom?: boolean;
+}) {
   return (
     <div
       className={cn(
         "lesson-shell bg-background text-foreground flex min-h-svh flex-col",
         // The practice screen on a laptop is one screen: exactly the window's height, nothing scrolls.
         stage && "lg:h-svh lg:overflow-hidden",
+        makeRoom && "lg:pr-[410px]",
       )}
     >
       {children}
@@ -670,6 +727,7 @@ function Finish({
   const strings = videoStrings(locale);
   return (
     <div className="flex flex-1 flex-col gap-5 pt-4">
+      <VideoRatingPrompt videoId={lesson.id} />
       <div>
         <h1 className="text-2xl font-bold" dir="auto">
           {strings.finishTitle}

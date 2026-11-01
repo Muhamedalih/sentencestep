@@ -67,6 +67,25 @@ export interface VideoStrings {
   arrangeNotAllowed: string;
   arrangeInvalid: string;
   arrangeNoTable: string;
+  /** The Admin's editor of where each sentence starts and where the video stops. */
+  stopsOpen: string;
+  stopsTitle: string;
+  stopsHint: string;
+  stopsStart: string;
+  stopsEnd: string;
+  stopsNow: string;
+  stopsTest: string;
+  stopsSave: string;
+  stopsSaving: string;
+  stopsReset: string;
+  stopsResetConfirm: string;
+  stopsClose: string;
+  stopsSaved: string;
+  stopsResetDone: string;
+  stopsFailed: string;
+  stopsNotAllowed: string;
+  stopsInvalid: string;
+  stopsNoTable: string;
 }
 
 const ar: VideoStrings = {
@@ -129,7 +148,88 @@ const ar: VideoStrings = {
   arrangeInvalid: "الترتيب غير صالح، لم يُحفظ شيء.",
   arrangeNoTable:
     "تعذّر الحفظ: جدول الترتيب غير موجود بعد في قاعدة البيانات (الملف 20250353000000).",
+  stopsOpen: "ضبط التوقف",
+  stopsTitle: "ضبط توقف الفيديو",
+  stopsHint:
+    "البداية: من أين تُعاد الجملة. التوقف: أين يقف الفيديو بعدها. حرّك بالأزرار أو قف بالفيديو على اللحظة واضغط «الآن»، ثم جرّب واحفظ.",
+  stopsStart: "البداية",
+  stopsEnd: "التوقف",
+  stopsNow: "الآن",
+  stopsTest: "جرّب",
+  stopsSave: "حفظ التوقف",
+  stopsSaving: "جارٍ الحفظ…",
+  stopsReset: "الرجوع للأصلي",
+  stopsResetConfirm: "ترجع كل أوقات هذا الفيديو إلى الأصلية ويُحذف ما حفظته؟",
+  stopsClose: "إغلاق",
+  stopsSaved: "تم حفظ التوقف، ويظهر للجميع.",
+  stopsResetDone: "رجعت الأوقات إلى الأصلية.",
+  stopsFailed: "تعذّر الحفظ. جرّب مرة ثانية.",
+  stopsNotAllowed: "هذا الخيار للأدمن فقط.",
+  stopsInvalid: "الأوقات غير صالحة (جملة أقصر من 0.3 ثانية أو توقفات غير مرتبة)، لم يُحفظ شيء.",
+  stopsNoTable: "تعذّر الحفظ: جدول الأوقات غير موجود بعد في قاعدة البيانات (الملف 20250354000000).",
 };
+
+/** What the one-time rating card after a finished video asks, in the learner's own language (null is English). */
+export interface VideoRatingCopy {
+  headline: string;
+  subtitle: string;
+  commentPlaceholder: string;
+  thanksTitle: string;
+  thanksBody: string;
+}
+
+const ratingAr: VideoRatingCopy = {
+  headline: "ما رأيك في قسم الفيديو الجديد؟",
+  subtitle:
+    "أضفنا هذا القسم ليكون تعلّم الإنجليزية من مقاطع حقيقية أمتع وأقرب إلى الواقع، ورأيك الصادق هو ما يهدينا إلى تحسينه. اختر عدد النجوم، وأخبرنا بما أعجبك وبما ينبغي أن نطوّره في الموقع. التقييم اختياري ولا يستغرق سوى ثوانٍ، ولن تظهر لك هذه الرسالة مرة أخرى.",
+  commentPlaceholder: "ما رأيك في قسم الفيديو، وكيف نطوّر الموقع ليكون أفضل لك؟ (اختياري)",
+  thanksTitle: "شكرًا لك على مشاركتنا رأيك",
+  thanksBody: "وصل تقييمك، وسيكون جزءًا من مسيرة تطوير قسم الفيديو والموقع.",
+};
+
+const ratingEn: VideoRatingCopy = {
+  headline: "What do you think of the new Video section?",
+  subtitle:
+    "We added it to make learning English from real clips more enjoyable, and your honest opinion is what guides us in improving it. Choose a star rating and tell us what you liked and how we should develop the site. It is optional, takes only seconds, and this message will not appear again.",
+  commentPlaceholder:
+    "What do you think of Video, and how can we make the site better for you? (optional)",
+  thanksTitle: "Thank you for sharing your opinion",
+  thanksBody: "Your rating has arrived and will shape how we develop Video and the site.",
+};
+
+const ratingEs: VideoRatingCopy = {
+  headline: "¿Qué te parece la nueva sección de Video?",
+  subtitle:
+    "La añadimos para que aprender inglés con clips reales sea más ameno, y tu opinión sincera es lo que nos guía para mejorarla. Elige las estrellas y cuéntanos qué te gustó y cómo debemos desarrollar el sitio. Es opcional, solo lleva unos segundos y este mensaje no volverá a aparecer.",
+  commentPlaceholder: "¿Qué opinas del Video y cómo podemos mejorar el sitio para ti? (opcional)",
+  thanksTitle: "Gracias por compartir tu opinión",
+  thanksBody: "Tu valoración llegó y nos ayudará a desarrollar Video y el sitio.",
+};
+
+const ratingTr: VideoRatingCopy = {
+  headline: "Yeni Video bölümü hakkında ne düşünüyorsun?",
+  subtitle:
+    "Gerçek kliplerle İngilizce öğrenmeyi daha keyifli hale getirmek için ekledik; içten görüşün onu geliştirmemizde bize yol gösteriyor. Yıldız ver, neyi beğendiğini ve siteyi nasıl geliştirmemiz gerektiğini yaz. İsteğe bağlıdır, yalnızca birkaç saniye sürer ve bu mesaj bir daha görünmez.",
+  commentPlaceholder:
+    "Video bölümü hakkında ne düşünüyorsun, siteyi senin için nasıl geliştirelim? (isteğe bağlı)",
+  thanksTitle: "Görüşünü paylaştığın için teşekkürler",
+  thanksBody: "Değerlendirmen ulaştı; Video bölümünü ve siteyi geliştirmemize katkı sağlayacak.",
+};
+
+export function videoRatingCopy(locale: SupportLocale | null): VideoRatingCopy {
+  if (locale === "ar") return ratingAr;
+  if (locale === "es") return ratingEs;
+  if (locale === "tr") return ratingTr;
+  return ratingEn;
+}
+
+/** The little «new» word on the Video button, in the learner's own language (null is English). */
+export function videoNewLabel(locale: SupportLocale | null): string {
+  if (locale === "ar") return "جديد";
+  if (locale === "es") return "Nuevo";
+  if (locale === "tr") return "Yeni";
+  return "New";
+}
 
 export function videoStrings(locale: SupportLocale | null): VideoStrings {
   void locale;

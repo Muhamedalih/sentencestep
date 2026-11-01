@@ -21,6 +21,13 @@ export const PASSAGES_RATING_MODE = "passages";
  */
 export const WORDS_RATING_MODE = "words";
 
+/**
+ * The `mode` of a rating given at the end of a Video lesson (its `lesson_id` is then the video).
+ * Kept out of the app's own figures like Passages': app_rating_distribution() leaves out 'video' and
+ * video_rating_distribution() counts it (20250354000000_video_timings_and_ratings.sql).
+ */
+export const VIDEO_RATING_MODE = "video";
+
 export type AppRatingInsert = Database["public"]["Tables"]["app_ratings"]["Insert"];
 
 export interface AppRatingSubmission {

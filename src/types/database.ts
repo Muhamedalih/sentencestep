@@ -237,6 +237,23 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["video_arrangement"]["Insert"]>;
         Relationships: [];
       };
+      video_timings: {
+        Row: {
+          video_id: string;
+          /** [{ id, startSeconds, endSeconds }] — checked again on read by sanitizeTimings (src/lib/video-dictation/timings.ts), never trusted as-is. */
+          sentences: unknown;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          video_id: string;
+          sentences: unknown;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["video_timings"]["Insert"]>;
+        Relationships: [];
+      };
       session_reminders: {
         Row: {
           user_id: string;
@@ -2317,6 +2334,10 @@ export interface Database {
         Returns: { rating: number; rating_count: number }[];
       };
       passage_rating_distribution: {
+        Args: Record<string, never>;
+        Returns: { rating: number; rating_count: number }[];
+      };
+      video_rating_distribution: {
         Args: Record<string, never>;
         Returns: { rating: number; rating_count: number }[];
       };

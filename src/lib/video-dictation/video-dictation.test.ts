@@ -15,6 +15,7 @@ import {
 } from "./arrange";
 import type { VideoSection } from "./arrange";
 import { arrangeVideoLessons, getVideoLessons, isTrialVideo, visibleVideoLessons } from "./content";
+import { applyTimings, sanitizeTimings, timingsOf } from "./timings";
 import {
   isSameVideo,
   MAX_LEAD_SECONDS,
@@ -556,4 +557,46 @@ test("arrange: two lists of sections are the same arrangement only when nothing 
   assert.equal(sameSections(a, [{ kind: "comedy", ids: ["x", "y"] }]), true);
   assert.equal(sameSections(a, [{ kind: "comedy", ids: ["y", "x"] }]), false);
   assert.equal(sameSections(a, [{ kind: "animals", ids: ["x", "y"] }]), false);
+});
+
+test("timings: what an Admin moved by hand replaces the file's times, and a bad row changes nothing", () => {
+  const lesson = videoLessons[0]!;
+  const same = timingsOf(lesson.sentences);
+  assert.deepEqual(sanitizeTimings(same, lesson), same);
+
+  const moved = same.map((timing, at) =>
+    at === 0 ? { ...timing, endSeconds: timing.endSeconds + 0.126 } : timing,
+  );
+  const applied = applyTimings(lesson, moved);
+  assert.equal(
+    applied.sentences[0]!.endSeconds,
+    Math.round((same[0]!.endSeconds + 0.126) * 100) / 100,
+  );
+  assert.equal(applied.sentences[0]!.en, lesson.sentences[0]!.en);
+
+  // Nothing saved, a different video's row, a shorter list, a sentence under 0.3 s, stops out of order.
+  assert.equal(applyTimings(lesson, null), lesson);
+  assert.equal(applyTimings(lesson, same.slice(1)), lesson);
+  assert.equal(
+    applyTimings(
+      lesson,
+      same.map((t) => ({ ...t, id: "other" })),
+    ),
+    lesson,
+  );
+  assert.equal(
+    applyTimings(
+      lesson,
+      same.map((t, at) => (at === 0 ? { ...t, endSeconds: t.startSeconds + 0.1 } : t)),
+    ),
+    lesson,
+  );
+  if (same.length > 1)
+    assert.equal(
+      applyTimings(
+        lesson,
+        same.map((t, at) => (at === 1 ? { ...t, endSeconds: same[0]!.endSeconds } : t)),
+      ),
+      lesson,
+    );
 });
