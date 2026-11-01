@@ -20,6 +20,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "mission-to-earth": "science",
   "sea-level-rise": "science",
   "usual-suspects": "science",
+  "how-coconuts-fill-themselves-with-water": "science",
 
   "ducks-in-the-rain": "animals",
   "joeys-in-the-pouch": "animals",
