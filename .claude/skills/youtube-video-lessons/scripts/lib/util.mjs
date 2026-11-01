@@ -139,6 +139,13 @@ export function findRepo(start) {
   }
 }
 
+/**
+ * The standing folders that several sessions use at once: each switches the branch and commits index.ts, which takes
+ * another session's uncommitted lesson along. A lesson is built in a worktree of its own, never in these.
+ */
+const SHARED_WORKTREES = ["looma", "looma-yvl", "looma-ytdict"];
+export const isSharedWorktree = (dir) => SHARED_WORKTREES.includes(path.basename(path.resolve(String(dir))).toLowerCase());
+
 /** The checkout to read the video code from: --repo, YVL_REPO, the current folder, or the folder holding the skill. */
 export function resolveRepo(args) {
   const explicit = args.repo || process.env.YVL_REPO;

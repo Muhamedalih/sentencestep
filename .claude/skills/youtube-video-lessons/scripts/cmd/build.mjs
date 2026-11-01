@@ -1,5 +1,5 @@
 /**
- * yvl build --id <slug> [--spec <file>] [--update] [--threshold dB]
+ * yvl build --id <slug> [--spec <file>] [--update] [--threshold dB] [--shared-worktree]
  * Step 7: spec -> src/data/videos/<slug>.ts, with the project's OWN generator (scripts/video-prep/build.mjs), after
  * `check` passes. Then Prettier formats the new file and index.ts the way a commit would, and `npm run test:video`
  * runs the repo's validation over every lesson. Nothing here publishes anything: a lesson reaches learners only
@@ -9,12 +9,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-import { HERE, draftPath, fail, requireId, resolveRepo } from "../lib/util.mjs";
+import { HERE, draftPath, fail, isSharedWorktree, requireId, resolveRepo } from "../lib/util.mjs";
 
 const sh = (cmd, args, cwd) => spawnSync(cmd, args, { cwd, encoding: "utf8", shell: process.platform === "win32" });
 
 export async function run(args) {
   const repo = resolveRepo(args);
+  if (isSharedWorktree(repo) && !args["shared-worktree"])
+    fail(
+      `${repo} is a folder other sessions work in: their branch switches and their commits of index.ts take your uncommitted lesson with them. Build in your own worktree (SKILL.md step 0: git fetch && git worktree add C:/Looma-yvl-<videoId> -b lesson-<videoId> origin/master, then a node_modules junction), or pass --shared-worktree if nobody else is using this folder`,
+    );
   const id = requireId(args);
   const specFile = args.spec ? String(args.spec) : draftPath(args, id, "spec");
   if (!fs.existsSync(specFile)) fail(`no ${specFile}`);

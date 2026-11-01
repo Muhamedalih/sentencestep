@@ -37,6 +37,6 @@ Keystrokes are letters (`\p{L}`), digits and spaces only. Everything else (. , !
 - Each lesson is code: a new lesson reaches learners only through a release publish (push to `release`, only on the owner's «انشر»).
 - `npm run type-check` (tsc) and `npm run lint` (eslint .) cover the whole repo: do not add `.ts` files outside the app; the skill's scripts are `.mjs`. `.claude` is in `.prettierignore`.
 - Committed data files are Prettier-formatted: keys are unquoted, so they are NOT valid JSON. Read them by evaluating the object literal (`readLessonFile` in `scripts/lib/util.mjs`). **Known defect:** `scripts/video-prep/prepare.mjs --units-from/--apply` still uses `JSON.parse` and fails on a committed file.
-- `C:\Looma` is stale (92+ commits behind, other sessions' uncommitted files): never work or switch branches there. Make your own worktree from `origin/master`; `C:/Looma-ytdict` belongs to the video session.
+- `C:\Looma` is stale (92+ commits behind, other sessions' uncommitted files): never work or switch branches there. Make your own worktree from `origin/master` (step 0 of `SKILL.md`); `C:/Looma-ytdict`, `C:/Looma-yvl` and the `C:/Looma-yvl-*` folders of other sessions belong to them.
 - Local testing switches (no Supabase needed): `FEATURES_DEV_ALL_ON=true` turns every rollout on, cookie `sentencestep-dev-admin=true` makes the visitor an Admin, both non-production only.
 - No YouTube Data API key exists; oEmbed (`https://www.youtube.com/oembed`) tells embeddable (200) / embedding off or private (401) / gone (404).

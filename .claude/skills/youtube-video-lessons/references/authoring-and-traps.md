@@ -26,7 +26,7 @@ Straight apostrophes and quotes; sound tags `[Music]`, notes and `>>` removed; l
 By the text: A1 short present-tense lines; A2 everyday past/future and common words; B1 connected sentences with because/when/if and some abstract words (the NASA explainers); B2 idiom, long sentences, low-frequency words.
 
 ## Traps
-- **Wrong worktree.** `C:\Looma` lacks the video code; `C:/Looma-ytdict` may be in use. Work in your own worktree; every command reads `--repo` / the current folder.
+- **Wrong or shared worktree.** `C:\Looma` lacks the video code and holds other sessions' files; `C:/Looma-yvl`, `C:/Looma-ytdict` and other sessions' `C:/Looma-yvl-*` are in use by them (2026-11-01: a shared folder had its branch switched under a lesson in progress, and another session's commit of `index.ts` swept up the lesson's uncommitted import and list lines, so master briefly pointed at a file it did not have). Work in your own worktree from step 0 (`SKILL.md` rule 7); every command reads `--repo` / the current folder, and `build` refuses in the three standing folders unless `--shared-worktree`.
 - **Channel default.** The repo generator fills "VOA Learning English" when channel is missing: `check` makes channel and a youtube.com channelUrl mandatory.
 - **Prettier-formatted data files are not JSON** (see project-audit.md): never `JSON.parse` a committed lesson.
 - **Ads.** A pre-roll ad is possible; capture and verify wait it out (the page treats a different player length as an ad). Never skip or block it.

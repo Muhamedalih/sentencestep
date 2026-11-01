@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { bareWord, normalizeLesson, slugify, youtubeIdFrom } from "../lib/util.mjs";
+import { bareWord, isSharedWorktree, normalizeLesson, slugify, youtubeIdFrom } from "../lib/util.mjs";
 import { spellNumbers } from "../lib/numbers.mjs";
 import {
   attachLonePunct,
@@ -518,4 +518,9 @@ test("planAnchored warns when the voice is still going where its search stops (a
   assert.ok(warned.some((w) => /still going where the search for it stops \(16\.0 s\).*--window 0-20/.test(w)), warned.join(" | "));
   const { samples } = demoSpeech();
   assert.ok(!planAnchored({ caps, samples, texts, duration: 16, threshold: -40 }).warns.some((w) => /still going/.test(w)));
+});
+
+test("isSharedWorktree names the three standing folders and not a worktree of one's own", () => {
+  for (const dir of ["C:/Looma", "C:/Looma-yvl", "C:/Looma-ytdict/", "c:/looma-yvl"]) assert.equal(isSharedWorktree(dir), true, dir);
+  for (const dir of ["C:/Looma-yvl-EQnMnvqP5kc", "C:/Looma-yvl-skill", "C:/Users/G5/AppData/Local/Temp/rwsh", "C:/Looma-passage"]) assert.equal(isSharedWorktree(dir), false, dir);
 });
