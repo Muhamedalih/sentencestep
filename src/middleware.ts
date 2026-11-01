@@ -345,6 +345,8 @@ function isAdminRoute(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+const LIBRARY_HIDDEN_FROM_ALL = true;
+
 /**
  * Gates the entire /learn/library route tree (Books and Novels, including
  * the [bookId]/read route that deliberately lives outside the (dashboard)
@@ -369,6 +371,14 @@ function isAdminRoute(pathname: string): boolean {
  * force a guest through sign-in just to be sent away again.
  */
 async function handleLibraryRoute(request: NextRequest, csp: string): Promise<NextResponse> {
+  // The Library section is hidden from everyone, admins included.
+  if (LIBRARY_HIDDEN_FROM_ALL) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/learn";
+    url.search = "";
+    return withCsp(NextResponse.redirect(url), csp);
+  }
+
   const devAdminOverride =
     process.env.NODE_ENV !== "production" &&
     request.cookies.get(DEV_ADMIN_COOKIE)?.value === "true";

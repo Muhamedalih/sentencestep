@@ -96,7 +96,7 @@ export function LearnSidebar({
   // Until the learner has opened «فيديو» once, its button wears a small «new» word (see useVideoNew).
   const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled;
   const newLabel = videoNewLabel(locale);
-  const showLibrary = libraryOpen ?? isAdminUser;
+  const showLibrary = false; // the Library section is hidden from everyone
   // Home is an exact match (not a prefix) — "/learn" is a short enough
   // prefix that /learn/settings, /learn/saved, and every other non-nav
   // route under it would otherwise light up Home too. Every other item
