@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { rabbitCourtshipChase } from "./rabbit-courtship-chase";
 import { slothsAreGreatSwimmers } from "./sloths-are-great-swimmers";
 import { whatSheReallyMeans } from "./what-she-really-means";
 import { joeysInThePouch } from "./joeys-in-the-pouch";
@@ -26,4 +27,5 @@ export const videoLessons: readonly VideoLesson[] = [
   whatSheReallyMeans,
   antingBirdsAndAnts,
   slothsAreGreatSwimmers,
+  rabbitCourtshipChase,
 ];
