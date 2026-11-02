@@ -3,9 +3,11 @@
 import { cookies } from "next/headers";
 
 import { track } from "@/lib/analytics/track";
+import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { LEARNER_VIEW_COOKIE } from "@/lib/hybrid/learner-view";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -16,6 +18,7 @@ import {
   isUpgradeMoment,
   momentBlock,
   pickMoment,
+  previewMoment,
   storiesFinishedOn,
   weekFigures,
 } from "./rules";
@@ -48,10 +51,24 @@ export async function claimUpgradeMoment(
       hasPremiumAccess(),
       cookies(),
     ]);
-    if (!features.rollouts.upgradeMoments || premium) return null;
+    if (!features.rollouts.upgradeMoments) return null;
 
     const timeZone = cookieStore.get(TIMEZONE_COOKIE)?.value;
     const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
+
+    // An admin who looks at the site as a learner (the learner view, see hybrid/learner-view.ts) is
+    // shown the card whatever the account holds and whatever was shown before, so each card can be
+    // checked; nothing is recorded for such a look.
+    if (await isPreview(cookieStore.get(LEARNER_VIEW_COOKIE)?.value)) {
+      const progress = await fetchProgressCached(todayISO);
+      if (!progress) return null;
+      return {
+        moment: previewMoment(listed),
+        streak: progress.streak.currentStreak,
+        ...weekFigures(progress.completions, Date.now()),
+      };
+    }
+    if (premium) return null;
     const dayOf = (iso: string) =>
       localISODateInTimeZone(timeZone, new Date(iso)) ?? iso.slice(0, 10);
     const now = Date.now();
@@ -120,6 +137,11 @@ export async function claimUpgradeMoment(
   }
 }
 
+/** Whether this request is an admin's own look at the learner's side (the learner view cookie, and only for an admin). */
+async function isPreview(learnerViewCookie: string | undefined): Promise<boolean> {
+  return learnerViewCookie === "1" && (await isAdmin());
+}
+
 /** Records what the learner did with a card they were shown: pressed its button, or closed it. */
 export async function trackUpgradeMoment(
   moment: UpgradeMoment,
@@ -128,6 +150,7 @@ export async function trackUpgradeMoment(
   if (!isUpgradeMoment(moment)) return;
   const user = await getCurrentUser();
   if (!user) return;
+  if (await isPreview((await cookies()).get(LEARNER_VIEW_COOKIE)?.value)) return;
   const name = action === "clicked" ? "GATE_MOMENT_CLICKED" : "GATE_MOMENT_DISMISSED";
   await track({ name, category: "PREMIUM", properties: { moment } }, user.id);
 }

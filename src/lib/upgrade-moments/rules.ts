@@ -83,6 +83,11 @@ export function pickMoment(
   return candidates.find((moment) => momentApplies(moment, facts)) ?? null;
 }
 
+/** The card an admin's preview shows: the day's tasks one when it is listed (Home with every task done), else the first listed. */
+export function previewMoment(candidates: readonly UpgradeMoment[]): UpgradeMoment {
+  return candidates.includes("tasks") ? "tasks" : (candidates[0] ?? "tasks");
+}
+
 interface CompletionLike {
   mode: string;
   completedAt: string;
