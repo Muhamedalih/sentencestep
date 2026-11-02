@@ -10,6 +10,8 @@ import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeLessonCard } from "@/components/home-today/lesson-card";
 import { TodayBox, type RuleRowState } from "@/components/home-today/today-box";
 import { TodayEndCard } from "@/components/home-today/today-end-card";
+import { UpgradeMomentDialog } from "@/components/upgrade-moments/upgrade-moment-dialog";
+import type { UpgradeMoment } from "@/lib/upgrade-moments/rules";
 import { HomeTopBar } from "@/components/home-today/top-bar";
 import { WeeklyLineView } from "@/components/today/today-tasks";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
@@ -95,15 +97,35 @@ async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
 async function TodayBoxSlot({ quests }: { quests: Promise<DailyQuestsPayload | null> }) {
   const [payload, features] = await Promise.all([quests, getEffectiveFeatures()]);
   if (!payload) return null;
-  if (payload.todayEnd) return <TodayEndCard end={payload.todayEnd} />;
+  if (payload.todayEnd) {
+    return (
+      <>
+        <TodayEndCard end={payload.todayEnd} />
+        {features.rollouts.upgradeMoments && !payload.todayEnd.premium && (
+          <UpgradeMomentDialog candidates={["streak3", "tasks"]} />
+        )}
+      </>
+    );
+  }
   if (!isTodayMode(payload.quests)) return <QuestsCard payload={payload} />;
   const { tasks, test } = splitToday(payload.quests);
   const state = testCardState({ tasks, test, available: sentenceTestAvailable(features) });
   const ruleRow = await dailyRuleRow(features.rollouts.dailyRule);
   // The day's three tasks are done on the taste of the day: the moment that offers the full plan (see lib/hybrid).
   const steps = requiredQuests(payload.quests);
+  // The upgrade card at a moment of progress (permission upgradeMoments): the third day in a row once
+  // something was done today, and the day's tasks when all of them are. Where the taste's own card
+  // already speaks for the day's end (moment D), the tasks card stays out of its way.
+  const momentCandidates: UpgradeMoment[] = [];
+  if (steps.some((quest) => quest.completed)) momentCandidates.push("streak3");
+  if (payload.allDone && !(payload.tasteToday && features.rollouts.hybridOffers)) {
+    momentCandidates.push("tasks");
+  }
   return (
     <>
+      {features.rollouts.upgradeMoments && momentCandidates.length > 0 && (
+        <UpgradeMomentDialog candidates={momentCandidates} />
+      )}
       {payload.tasteToday && payload.allDone && features.rollouts.hybridOffers && (
         <div className="mb-4">
           <HybridMomentCard

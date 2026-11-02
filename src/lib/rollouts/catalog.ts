@@ -28,6 +28,7 @@ export const ROLLOUT_IDS = [
   "homePolish",
   "videoDictation",
   "videoNews",
+  "upgradeMoments",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -257,6 +258,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Needs Video dictation and the new Home page to be open for the same people, and stays closed while either is closed (and while Today's session is closed).",
       "Nothing is stored on our side: the “seen” mark is a cookie (ss_video_news) in the learner's own browser, so there is no extra load. Clearing it brings the line back, which is how an admin can look at it again.",
       "The link is a full page load, like the menu item, because the section's pages alone are served with YouTube in the Content-Security-Policy. No picture from YouTube is drawn on Home.",
+    ],
+  },
+  upgradeMoments: {
+    id: "upgradeMoments",
+    audience: "learner",
+    title: "Upgrade cards at moments of progress",
+    description:
+      "A calm card over the page, in the look of the lock screen, that offers the full plan at three moments of satisfaction: when the day's three tasks are done, on the third day in a row, and after a story finished outside the day's tasks (the learner's second story of the day or later). Each one says what the learner has just achieved and nudges them to keep the pace. The button opens the plans page and «لاحقاً» closes the card. For a free learner only.",
+    notes: [
+      "At most one card a day, never in an account's first 24 hours, never with an open order or for a subscriber, and a card that was closed stays away for three days.",
+      "Every shown, clicked and closed card is recorded (GATE_MOMENT_SHOWN, GATE_MOMENT_CLICKED, GATE_MOMENT_DISMISSED) with its moment, so each can be read apart.",
+      "The lock screens on lessons are not touched: they look and read exactly as before.",
+      "Arabic, English, Spanish and Turkish. An admin's own account counts as a free learner unless it holds a subscription.",
     ],
   },
   mobilePath: {

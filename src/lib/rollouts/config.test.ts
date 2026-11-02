@@ -192,6 +192,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     homePolish: false,
     videoDictation: false,
     videoNews: false,
+    upgradeMoments: false,
   });
 });
 
