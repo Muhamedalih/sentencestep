@@ -85,6 +85,10 @@ export type AnalyticsEvent =
   | { name: "OFFER_SHOWN"; category: "PREMIUM"; properties: { moment: HybridMoment } }
   | { name: "OFFER_CLICKED"; category: "PREMIUM"; properties: { moment: HybridMoment } }
   | { name: "OFFER_DISMISSED"; category: "PREMIUM"; properties: { moment: HybridMoment } }
+  /** An upgrade card of the "upgradeMoments" permission (src/lib/upgrade-moments): `moment` says which one — the day's tasks done, a three-day streak, or a story finished outside the tasks. */
+  | { name: "GATE_MOMENT_SHOWN"; category: "PREMIUM"; properties: { moment: string } }
+  | { name: "GATE_MOMENT_CLICKED"; category: "PREMIUM"; properties: { moment: string } }
+  | { name: "GATE_MOMENT_DISMISSED"; category: "PREMIUM"; properties: { moment: string } }
   | {
       name: "UPGRADE_CTA_CLICKED";
       category: "PREMIUM";

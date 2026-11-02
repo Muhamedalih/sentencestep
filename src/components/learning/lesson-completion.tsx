@@ -37,6 +37,7 @@ import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import { BadgeMedal } from "@/components/app/badge-medal";
 import { HybridMomentCard } from "@/components/hybrid/hybrid-moment-card";
 import { StoryRatingRow } from "@/components/learning/story-rating-row";
+import { UpgradeMomentDialog } from "@/components/upgrade-moments/upgrade-moment-dialog";
 import { BADGE_DEFS } from "@/lib/features/catalog";
 import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
@@ -981,6 +982,10 @@ export function LessonCompletion({
             />
           </motion.div>
         )}
+
+        {/* A story finished outside the day's tasks (the learner's second of the day or later): the
+            upgrade card at a moment of progress (permission upgradeMoments), over the page, once. */}
+        {isStory && lessonId && <UpgradeMomentDialog candidates={["story"]} storyId={lessonId} />}
 
         {/* A story is rated here, in a quiet row at the very end (below the pinned buttons on a
             phone), instead of by the pop-up the other lessons show. */}
