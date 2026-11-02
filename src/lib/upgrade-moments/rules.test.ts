@@ -6,6 +6,7 @@ import {
   NEW_ACCOUNT_MS,
   momentBlock,
   pickMoment,
+  previewMoment,
   storiesFinishedOn,
   weekFigures,
 } from "./rules";
@@ -85,4 +86,11 @@ test("stories finished today are counted on the learner's own day", () => {
     ),
     2,
   );
+});
+
+test("an admin's preview shows the tasks card when it is listed, else the first one", () => {
+  assert.equal(previewMoment(["streak3", "tasks"]), "tasks");
+  assert.equal(previewMoment(["streak3"]), "streak3");
+  assert.equal(previewMoment(["story"]), "story");
+  assert.equal(previewMoment([]), "tasks");
 });
