@@ -133,3 +133,46 @@ export async function setRolloutPreviewAction(enabled: boolean): Promise<ActionR
   revalidatePath("/admin/permissions");
   return { success: `Preview is on in this browser for ${ROLLOUT_PREVIEW_DAYS} days.` };
 }
+
+/**
+ * The admin-only switch on the classic Home page: opens the classic Home ("classicHome") to every
+ * learner, or puts it back to Admins only (everyone else then gets the new Home page again). Only the
+ * mode changes; the stored share and email list stay as they were, so the Permissions page shows the
+ * same entry with just its access level moved. Logged like a save from the Permissions page.
+ */
+export async function setClassicHomeForEveryoneAction(everyone: boolean): Promise<ActionResult> {
+  const forbidden = await requireAdmin();
+  if (forbidden) return { error: forbidden };
+  if (!isServiceRoleConfigured()) return { error: "No Supabase project is linked." };
+
+  const id: RolloutId = "classicHome";
+  const mode = everyone ? "everyone" : "admin";
+  const user = await getCurrentUser();
+  const supabase = createServiceRoleClient();
+  const { data: row } = await supabase
+    .from("rollouts")
+    .select("percent, emails")
+    .eq("feature", id)
+    .maybeSingle();
+  const { error } = await supabase.from("rollouts").upsert(
+    {
+      feature: id,
+      mode,
+      percent: everyone ? 100 : (row?.percent ?? 100),
+      emails: row?.emails ?? [],
+      updated_at: new Date().toISOString(),
+      updated_by: user?.id ?? null,
+    },
+    { onConflict: "feature" },
+  );
+  if (error) {
+    console.error("[rollouts] setClassicHomeForEveryoneAction failed", error);
+    return { error: "Couldn't save." };
+  }
+
+  void logAdminAction("rollout.updated", "rollout", id, { mode, percent: 100, people: 0 });
+  revalidateTag(ROLLOUT_CACHE_TAG);
+  revalidatePath("/learn", "layout");
+  revalidatePath("/admin/permissions");
+  return { success: `${ROLLOUTS[id].title} saved.` };
+}
