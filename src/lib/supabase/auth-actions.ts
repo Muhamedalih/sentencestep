@@ -19,6 +19,7 @@ import { friendlyAuthError } from "@/lib/supabase/friendly-auth-error";
 import { isLoginLockedOut, recordLoginAttempt } from "@/lib/supabase/login-rate-limit";
 import { isTurnstileConfigured, verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { OAUTH_FAILED_ERROR } from "@/lib/supabase/auth-errors";
+import { angleBracketsError, hasAngleBrackets } from "@/lib/supabase/display-name";
 
 export interface AuthActionState {
   error?: string;
@@ -146,6 +147,7 @@ export async function signUp(
 
   if (!email || !password) return { error: t.auth.errors.missingFields };
   if (password.length < 6) return { error: t.auth.errors.passwordTooShort };
+  if (hasAngleBrackets(displayName)) return { error: angleBracketsError(locale) };
 
   // Bot-signup protection — see verify.ts's own doc comment for why this
   // fails CLOSED (unlike most optional integrations here) and why
@@ -343,6 +345,7 @@ export async function updateDisplayNameAction(
   if (displayName.length === 0 || displayName.length > 50) {
     return { error: t.settings.displayNameInvalid };
   }
+  if (hasAngleBrackets(displayName)) return { error: angleBracketsError(locale) };
 
   try {
     const supabase = await createClient();
