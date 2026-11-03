@@ -1681,6 +1681,16 @@ export interface Dictionary {
     heading: string;
     xpReward: string;
     allDone: string;
+    /** The classic Home strip once the day is done: an invitation to keep exploring. */
+    allDoneExplore: string;
+    /** The strip's small repeat button once the day is done, and its menu of the day's lessons. */
+    repeatPick: string;
+    /** Admin-only switch on the classic Home: who gets this page. {state} is one of the two below. */
+    classicSwitchLabel: string;
+    classicSwitchEveryone: string;
+    classicSwitchAdmins: string;
+    classicSwitchToEveryone: string;
+    classicSwitchToAdmins: string;
     loadError: string;
     rewardCompleted: string;
     typeSentences: string;

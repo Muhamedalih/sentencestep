@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
+import { ClassicHomeSwitch } from "@/components/app/classic-home-switch";
 import { FinishPaymentBanner } from "@/components/app/finish-payment-banner";
 import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { PremiumExpiryBanner } from "@/components/app/premium-expiry-banner";
@@ -29,6 +30,7 @@ import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { minutesForWords } from "@/lib/levels";
 import { startHomePassagesCard } from "@/lib/passages/home-card";
+import { getRolloutConfig } from "@/lib/rollouts/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/public-client";
@@ -42,6 +44,7 @@ import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { showsNewHome } from "@/lib/today/home-layout";
 import { VIDEO_NEWS_COOKIE, isVideoNewsSeen } from "@/lib/video-dictation/news";
+import { cn } from "@/lib/utils";
 import type { Book } from "@/types/library";
 
 export const metadata: Metadata = { title: "Home" };
@@ -336,6 +339,10 @@ export default async function LearnHomePage({
   // A visitor without an account on a phone (mobilePath) gets the calmer first screen; the classic
   // page below stays exactly as it is for tablets and laptops (and for signed-in learners).
   const phoneGuest = mobilePath && !user;
+  const classicHome = features.rollouts.classicHome;
+  // The admin's switch at the foot of the classic Home needs who has it now (a cached read, admins only).
+  const classicForEveryone =
+    classicHome && isAdminUser ? (await getRolloutConfig()).classicHome.mode === "everyone" : false;
   const firstLesson = withOpeningLessonPlacement(units).find((unit) => unit.isFree) ?? null;
   return (
     <ProgressProvider initialProgress={initialProgress}>
@@ -349,7 +356,14 @@ export default async function LearnHomePage({
         />
       )}
       <div className={phoneGuest ? "max-md:hidden" : undefined}>
-        <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16">
+        {/* The classic Home uses the width a wide screen has (from 1280 px) instead of leaving it empty
+          beside the content, so its strip and lesson cards grow into it. */}
+        <div
+          className={cn(
+            "mx-auto max-w-5xl px-6 pt-4 pb-12 max-sm:flex max-sm:flex-col sm:pt-6 sm:pb-16",
+            classicHome && "xl:max-w-7xl",
+          )}
+        >
           <h1 className="sr-only">{t.nav.home}</h1>
           <HomeHeaderBar
             user={user}
@@ -374,7 +388,7 @@ export default async function LearnHomePage({
             banners and "up next". */}
           <HomeEngagementSection
             stream={engagement}
-            quiet={features.rollouts.classicHome}
+            quiet={classicHome}
             className="mb-6 max-sm:order-2"
           />
           <div className="max-sm:order-3">
@@ -416,6 +430,11 @@ export default async function LearnHomePage({
               </>
             )}
           </div>
+          {classicHome && isAdminUser && (
+            <div className="max-sm:order-5">
+              <ClassicHomeSwitch everyone={classicForEveryone} />
+            </div>
+          )}
           {showHomePlan && (
             <div className="max-sm:order-4">
               <NeedsReviewWords
