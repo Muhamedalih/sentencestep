@@ -254,7 +254,8 @@ export default async function LearnHomePage({
   // for now — skip its extra queries for a regular learner, who'd never see
   // the card HomeHero renders from them anyway. Admins now see the plan instead
   // of HomeHero (admin preview), so they skip these queries too.
-  const showHomePlan = isAdminUser;
+  // The classic Home permission shows an admin the page exactly as a learner gets it, without the plan preview.
+  const showHomePlan = isAdminUser && !features.rollouts.classicHome;
   if (recommendedBook && isAdminUser && !showHomePlan) {
     // countsPromise is shared with fetchBookProgressAction below (instead of
     // each independently calling fetchBookContentCounts) — see that
@@ -371,7 +372,11 @@ export default async function LearnHomePage({
             (max-sm) today's streak + quests sit right under the greeting/stats header and above
             "up next". From sm: up it stays exactly where it was in the DOM flow, between the
             banners and "up next". */}
-          <HomeEngagementSection stream={engagement} className="mb-6 max-sm:order-2" />
+          <HomeEngagementSection
+            stream={engagement}
+            quiet={features.rollouts.classicHome}
+            className="mb-6 max-sm:order-2"
+          />
           <div className="max-sm:order-3">
             {showHomePlan ? (
               <>

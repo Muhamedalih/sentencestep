@@ -192,6 +192,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     videoDictation: false,
     videoNews: false,
     upgradeMoments: false,
+    classicHome: false,
   });
 });
 
@@ -279,7 +280,7 @@ test("the passage cover lives inside Today's tasks: it is never open without Tod
 });
 
 test("the video news line points at Video dictation from the new Home: Admins only, and closed whenever any of the three is closed", () => {
-  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  const open = { ...evaluateRollouts(defaultRolloutConfig(), admin), classicHome: false };
   assert.equal(withRolloutDependencies(open).videoNews, true);
   for (const closed of ["videoDictation", "newHome", "todaySession"] as const) {
     assert.equal(withRolloutDependencies({ ...open, [closed]: false }).videoNews, false, closed);
@@ -301,7 +302,7 @@ test("the repeat buttons live inside Today's tasks: Admins only, and never open 
 });
 
 test("the new Home page is built from Today's tasks: it is never open without Today's session", () => {
-  const open = evaluateRollouts(defaultRolloutConfig(), admin);
+  const open = { ...evaluateRollouts(defaultRolloutConfig(), admin), classicHome: false };
   assert.equal(withRolloutDependencies(open).newHome, true);
   assert.equal(withRolloutDependencies({ ...open, todaySession: false }).newHome, false);
   assert.equal(withRolloutDependencies({ ...open, newHome: false }).newHome, false);
@@ -438,4 +439,18 @@ test("a visitor-aimed feature keeps deciding its share in the browser: the serve
   const share = entry({ mode: "everyone", percent: 10 });
   assert.equal(learnerSharePercent("shortFirstRun", share), null);
   assert.equal(isRolloutOpen(share, guest, "shortFirstRun"), true);
+});
+
+test("the classic Home: Admins only, and it closes the new Home page and its «جديد» line", () => {
+  const admins = withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), admin));
+  assert.equal(admins.classicHome, true);
+  assert.equal(admins.newHome, false);
+  assert.equal(admins.videoNews, false);
+  // A learner keeps the new Home page while the classic one is not open for them.
+  const config = defaultRolloutConfig();
+  config.todaySession = entry({ mode: "everyone" });
+  config.newHome = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).newHome, true);
+  config.classicHome = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, learner)).newHome, false);
 });

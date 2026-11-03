@@ -189,21 +189,23 @@ export function evaluateRollouts(
  * The passage poster on the listening task and the repeat buttons are part of Today's tasks too.
  * The video news line is a line of the new Home page that points at Video dictation, so it is closed
  * with either of them.
+ * The classic Home wins over the new Home page: whoever has it gets the classic page.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
 ): Record<RolloutId, boolean> {
+  const newHome = access.newHome && access.todaySession && !access.classicHome;
   return {
     ...access,
     sentenceBank: access.sentenceBank && access.todaySession,
-    newHome: access.newHome && access.todaySession,
+    newHome,
     wordBank: access.wordBank && access.todaySession,
     dailyRule: access.dailyRule && access.todaySession,
     hybridOffers: access.hybridOffers && access.todaySession,
     honestTicks: access.honestTicks && access.todaySession,
     todayCover: access.todayCover && access.todaySession,
     todayRepeat: access.todayRepeat && access.todaySession,
-    videoNews: access.videoNews && access.videoDictation && access.newHome && access.todaySession,
+    videoNews: access.videoNews && access.videoDictation && newHome,
   };
 }
 

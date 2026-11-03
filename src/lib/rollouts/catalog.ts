@@ -28,6 +28,7 @@ export const ROLLOUT_IDS = [
   "videoDictation",
   "videoNews",
   "upgradeMoments",
+  "classicHome",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -258,6 +259,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Every shown, clicked and closed card is recorded (GATE_MOMENT_SHOWN, GATE_MOMENT_CLICKED, GATE_MOMENT_DISMISSED) with its moment, so each can be read apart.",
       "The lock screens on lessons are not touched: they look and read exactly as before.",
       "Arabic, English, Spanish and Turkish. An admin's own account counts as a free learner unless it holds a subscription.",
+    ],
+  },
+  classicHome: {
+    id: "classicHome",
+    audience: "learner",
+    title: "Home: back to the classic page, daily tasks in a small strip",
+    description:
+      "Home is the classic page again (the header, the lessons, stories and review cards under “Up next”) instead of the new Home page, so the lessons come first. Today's tasks stay, folded into the one-line strip at the top of the page: it no longer opens by itself or glows, and a learner who wants the daily habit taps it to see the tasks. Nothing else changes: Today's tasks deal and count exactly as before.",
+    notes: [
+      "Wins over the new Home page: for anyone who has this, the new Home page (and the “جديد” line that lives on it) is closed.",
+      "For an admin it also hides the admin-only “Today's plan” preview, so an admin sees Home exactly as a learner will.",
+      "Closing it brings the new Home page back for whoever has that open.",
     ],
   },
   mobilePath: {
