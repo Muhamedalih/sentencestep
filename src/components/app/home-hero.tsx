@@ -139,6 +139,8 @@ export function HomeHero({
   hasWeakWords,
   isAdminUser,
   review,
+  passage,
+  video,
 }: {
   units: LessonUnit[];
   /** Stories-mode lessons — same shape as `units` (lesson cards without sentence bodies, from getHomeLessons). Used only to find the learner's real current/next Stories lesson for the bottom-right card. */
@@ -157,7 +159,16 @@ export function HomeHero({
   isAdminUser: boolean;
   /** Home's "review all words" card (NeedsReviewWords, null when nothing is waiting). It sits under the Stories card, so the two together are as tall as the lesson card beside them. */
   review?: ReactNode;
+  /**
+   * The classic Home's wide layout: the Passages card becomes the grid's first row (from lg it spans both
+   * columns, as it did above the grid), and from xl the grid has three columns — the passage over the
+   * Stories card and the Video box, the lesson card down the third column, the review as a bar under
+   * them. Below xl the order and look are the usual ones, and the Video box is not drawn.
+   */
+  passage?: ReactNode;
+  video?: ReactNode;
 }) {
+  const wide = passage !== undefined;
   const { t, dir } = useLocale();
   const progress = useSharedProgress();
   const { isLoaded, getCompletedIds, startingLevel } = progress;
@@ -208,24 +219,39 @@ export function HomeHero({
 
   if (!isLoaded) {
     return (
-      <div className="mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch">
-        <div
-          className="bg-muted h-72 w-full animate-pulse rounded-2xl lg:order-2 lg:h-full"
-          aria-hidden="true"
-        />
-        <div className="flex flex-col gap-4 lg:order-1">
+      <>
+        {wide && <div className="mb-4">{passage}</div>}
+        <div className="mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch">
           <div
-            className="bg-muted h-32 w-full flex-1 animate-pulse rounded-2xl"
+            className="bg-muted h-72 w-full animate-pulse rounded-2xl lg:order-2 lg:h-full"
             aria-hidden="true"
           />
-          <div className="flex flex-1 flex-col empty:hidden">{review}</div>
+          <div className="flex flex-col gap-4 lg:order-1">
+            <div
+              className="bg-muted h-32 w-full flex-1 animate-pulse rounded-2xl"
+              aria-hidden="true"
+            />
+            <div className="flex flex-1 flex-col empty:hidden">{review}</div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch">
+    <div
+      className={cn(
+        "mb-10 grid gap-4 lg:grid-cols-2 lg:items-stretch",
+        // Without a passage card (none open, or a visitor) the lesson card takes one row, so nothing is left empty above the Stories and Video boxes.
+        wide &&
+          "xl:grid-cols-[1fr_1fr_1.08fr] xl:grid-rows-[auto_1fr] xl:[&:not(:has(>[data-passage]>*))>[data-lesson]]:row-span-1",
+      )}
+    >
+      {wide && (
+        <div data-passage className="flex flex-col empty:hidden lg:col-span-2 xl:col-start-1">
+          {passage}
+        </div>
+      )}
       {/*
         The large primary card — it fills one column on its own (the right one from lg up, via
         order, while on a phone it still comes first) and is a 4:5 picture card from lg up; the
@@ -233,7 +259,13 @@ export function HomeHero({
         columns to the same height, so the two stacked cards together are exactly as tall as
         this one.
       */}
-      <div className="group border-border bg-card relative flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] lg:order-2 lg:aspect-[4/5] lg:min-h-0">
+      <div
+        data-lesson
+        className={cn(
+          "group border-border bg-card relative flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05] lg:order-2 lg:aspect-[4/5] lg:min-h-0",
+          wide && "xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:aspect-auto xl:min-h-[34rem]",
+        )}
+      >
         {currentLesson && (
           <MainLessonCardBody
             lesson={currentLesson}
@@ -349,7 +381,7 @@ export function HomeHero({
       </div>
 
       {/* The stacked column (left from lg up) — book recommendation above, then Stories and the review card, which take half of the column's height each (Stories takes it all when there is no review card). */}
-      <div className="flex flex-col gap-4 lg:order-1">
+      <div className={cn("flex flex-col gap-4 lg:order-1", wide && "xl:contents")}>
         {LIBRARY_HIDDEN
           ? null
           : book &&
@@ -364,7 +396,10 @@ export function HomeHero({
 
         <Link
           href="/learn/stories"
-          className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
+          className={cn(
+            "group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]",
+            wide && "xl:col-start-1",
+          )}
         >
           <div className="bg-muted relative h-28 w-full shrink-0 overflow-hidden sm:h-32 lg:h-auto lg:min-h-24 lg:flex-1">
             {/* No picture here: a cover in the site's own grey (the one the review card beside it
@@ -416,7 +451,11 @@ export function HomeHero({
           </div>
         </Link>
 
-        <div className="flex flex-1 flex-col empty:hidden">{review}</div>
+        {wide && video && <div className="hidden xl:col-start-2 xl:flex xl:flex-col">{video}</div>}
+
+        <div className={cn("flex flex-1 flex-col empty:hidden", wide && "xl:col-span-3")}>
+          {review}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Check, ChevronDown, Flame, RotateCcw, Snowflake } from "lucide-react";
 
@@ -117,6 +118,8 @@ export function EngagementStrip({
   quests,
   streak,
   quiet = false,
+  lead,
+  trail,
   className,
 }: {
   today: string;
@@ -124,6 +127,9 @@ export function EngagementStrip({
   streak: StreakCalendarData | null;
   /** Folded and without the glow until tapped, for a learner who opens the daily tasks by choice. */
   quiet?: boolean;
+  /** The classic Home's merged strip, from xl up: the greeting at its start and the totals at its end (the header above is then hidden there). */
+  lead?: ReactNode;
+  trail?: ReactNode;
   className?: string;
 }) {
   const { t, dir } = useLocale();
@@ -133,7 +139,7 @@ export function EngagementStrip({
   const [open, setOpen] = useState(!quiet && todayMode && quests?.allDone === false);
   const panelId = useId();
 
-  if (!quests && !streak) return null;
+  if (!quests && !streak && !lead) return null;
 
   // The ring and "up next" are about the day's required quests: the sentence exam is an extra.
   const required = requiredQuests(quests?.quests ?? []);
@@ -151,7 +157,21 @@ export function EngagementStrip({
     <div className={className}>
       <div className="relative isolate">
         {!quiet && todayMode && quests?.allDone === false && <TodayGlow />}
-        <div className="border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors">
+        <div
+          className={cn(
+            "border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors",
+            lead && "xl:flex-nowrap xl:gap-x-6 xl:px-5 xl:py-4",
+          )}
+        >
+          {lead && (
+            <>
+              <div className="hidden xl:block">{lead}</div>
+              <span
+                className="bg-border/70 hidden h-10 w-px shrink-0 xl:block"
+                aria-hidden="true"
+              />
+            </>
+          )}
           {streak && (
             <div className="flex items-center gap-3">
               <Flame
@@ -234,6 +254,7 @@ export function EngagementStrip({
               <RepeatLessonMenu quests={quests.quests} />
             </div>
           )}
+          {trail && <div className="hidden shrink-0 xl:block">{trail}</div>}
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}

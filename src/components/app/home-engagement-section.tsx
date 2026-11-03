@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { ReactNode } from "react";
 
 import { DailySessionCard } from "@/components/app/daily-session-card";
 import {
@@ -30,14 +31,27 @@ async function EngagementStripSlot({
   quests,
   streak,
   quiet,
+  lead,
+  trail,
 }: {
   today: string;
   quests: HomeEngagementStream["quests"];
   streak: HomeEngagementStream["streak"];
   quiet?: boolean;
+  lead?: ReactNode;
+  trail?: ReactNode;
 }) {
   const [questsPayload, streakData] = await Promise.all([quests, streak]);
-  return <EngagementStrip today={today} quests={questsPayload} streak={streakData} quiet={quiet} />;
+  return (
+    <EngagementStrip
+      today={today}
+      quests={questsPayload}
+      streak={streakData}
+      quiet={quiet}
+      lead={lead}
+      trail={trail}
+    />
+  );
 }
 
 /**
@@ -52,11 +66,16 @@ async function EngagementStripSlot({
 export function HomeEngagementSection({
   stream,
   quiet,
+  lead,
+  trail,
   className,
 }: {
   stream: HomeEngagementStream | null;
   /** The classic Home permission: the strip stays folded and does not glow until the learner taps it. */
   quiet?: boolean;
+  /** The classic Home's merged strip (see EngagementStrip): only drawn with a stream, so the header it replaces is hidden only then. */
+  lead?: ReactNode;
+  trail?: ReactNode;
   className?: string;
 }) {
   if (!stream) return <HomeEngagement className={className} />;
@@ -71,6 +90,8 @@ export function HomeEngagementSection({
           quests={stream.quests}
           streak={stream.streak}
           quiet={quiet}
+          lead={lead}
+          trail={trail}
         />
       </Suspense>
     </HomeEngagementFrame>

@@ -240,6 +240,14 @@ export function videoNewLabel(locale: SupportLocale | null): string {
   return "New";
 }
 
+/** The classic Home's Video box: its quiet tag ("type what you hear") and its button, in the learner's own language. */
+export function videoHomeCopy(locale: SupportLocale | null): { tag: string; cta: string } {
+  if (locale === "ar") return { tag: "اكتب ما تسمع", cta: "شاهد واكتب" };
+  if (locale === "es") return { tag: "Escribe lo que oyes", cta: "Mira y escribe" };
+  if (locale === "tr") return { tag: "Duyduğunu yaz", cta: "İzle ve yaz" };
+  return { tag: "Type what you hear", cta: "Watch and type" };
+}
+
 export function videoStrings(locale: SupportLocale | null): VideoStrings {
   void locale;
   return ar;

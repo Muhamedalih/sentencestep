@@ -7,10 +7,15 @@ import { GuestProgressBanner } from "@/components/app/guest-progress-banner";
 import { PremiumExpiryBanner } from "@/components/app/premium-expiry-banner";
 import { StarterPathProgress } from "@/components/app/starter-path-progress";
 import { HomeEngagementSection, HomePassages } from "@/components/app/home-engagement-section";
-import { HomeHeaderBar } from "@/components/app/home-header-bar";
+import {
+  HomeHeaderBar,
+  HomeHeaderIdentity,
+  HomeHeaderStats,
+} from "@/components/app/home-header-bar";
 import { HomeHero } from "@/components/app/home-hero";
 import { HomePlan } from "@/components/app/home-plan";
 import { HomeReviewCard } from "@/components/app/home-review-card";
+import { HomeVideoCard } from "@/components/app/home-video-card";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { MobileGuestHome } from "@/components/home-today/guest-home";
 import { HomeToday } from "@/components/home-today/home-today";
@@ -43,7 +48,15 @@ import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { showsNewHome } from "@/lib/today/home-layout";
+import { getVideoArrangement } from "@/lib/video-dictation/arrangement-store";
+import {
+  arrangeVideoLessons,
+  getVideoLesson,
+  getVideoLessons,
+  videoCard,
+} from "@/lib/video-dictation/content";
 import { VIDEO_NEWS_COOKIE, isVideoNewsSeen } from "@/lib/video-dictation/news";
+import { videoHomeCopy, videoStrings } from "@/lib/video-dictation/strings";
 import { cn } from "@/lib/utils";
 import type { Book } from "@/types/library";
 
@@ -343,6 +356,15 @@ export default async function LearnHomePage({
   // The admin's switch at the foot of the classic Home needs who has it now (a cached read, admins only).
   const classicForEveryone =
     classicHome && isAdminUser ? (await getRolloutConfig()).classicHome.mode === "everyone" : false;
+  // The classic Home's merged strip: from xl up the greeting and the totals move into the daily-tasks
+  // strip and the header above is hidden there. Only with a stream, so the strip is surely drawn.
+  const mergedHeader = classicHome && engagement !== null;
+  // Its Video box: the first video of the library as it is arranged (one cached read shared by everyone).
+  const firstVideoId =
+    classicHome && features.rollouts.videoDictation
+      ? arrangeVideoLessons(getVideoLessons(), await getVideoArrangement())[0]?.ids[0]
+      : undefined;
+  const homeVideo = firstVideoId ? getVideoLesson(firstVideoId) : undefined;
   const firstLesson = withOpeningLessonPlacement(units).find((unit) => unit.isFree) ?? null;
   return (
     <ProgressProvider initialProgress={initialProgress}>
@@ -369,7 +391,7 @@ export default async function LearnHomePage({
             user={user}
             lessonStats={lessonStats}
             sessionCount={attemptCount}
-            className="mb-10 max-sm:order-1 max-sm:mb-6"
+            className={cn("mb-10 max-sm:order-1 max-sm:mb-6", mergedHeader && "xl:hidden")}
           />
           <div className="max-sm:order-4">
             <GuestProgressBanner isGuest={!user} className="mb-6" />
@@ -389,6 +411,12 @@ export default async function LearnHomePage({
           <HomeEngagementSection
             stream={engagement}
             quiet={classicHome}
+            lead={mergedHeader ? <HomeHeaderIdentity user={user} /> : undefined}
+            trail={
+              mergedHeader ? (
+                <HomeHeaderStats lessonStats={lessonStats} sessionCount={attemptCount} />
+              ) : undefined
+            }
             className="mb-6 max-sm:order-2"
           />
           <div className="max-sm:order-3">
@@ -408,7 +436,7 @@ export default async function LearnHomePage({
                   <h2 className="text-lg font-semibold tracking-tight">{t.progress.upNextLabel}</h2>
                   {!isPremiumUser && <StarterPathProgress units={units} />}
                 </div>
-                <HomePassages data={passages} className="mb-4" />
+                {!classicHome && <HomePassages data={passages} className="mb-4" />}
                 <HomeHero
                   units={units}
                   storiesUnits={storiesUnits}
@@ -424,7 +452,18 @@ export default async function LearnHomePage({
                       words={reviewWords}
                       count={reviewWaiting.count}
                       smart={reviewWaiting.smart}
+                      bar={classicHome}
                     />
+                  }
+                  passage={classicHome ? <HomePassages data={passages} /> : undefined}
+                  video={
+                    homeVideo ? (
+                      <HomeVideoCard
+                        card={videoCard(homeVideo)}
+                        heading={videoStrings(locale).navLabel}
+                        {...videoHomeCopy(locale)}
+                      />
+                    ) : undefined
                   }
                 />
               </>

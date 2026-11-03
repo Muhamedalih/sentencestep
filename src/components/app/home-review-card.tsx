@@ -21,12 +21,15 @@ export function HomeReviewCard({
   words,
   count,
   smart = false,
+  bar = false,
 }: {
   words: WeakWordItem[];
   /** Everything waiting for review (see NeedsReviewWords) — shown instead of the weak-word count alone. */
   count?: number;
   /** Smart word practice is on: the line says the review time has come. */
   smart?: boolean;
+  /** The classic Home's wide layout: from xl up the card is one short bar under the grid (no cover). */
+  bar?: boolean;
 }) {
   const { t, dir } = useLocale();
   const total = count ?? words.length;
@@ -35,9 +38,23 @@ export function HomeReviewCard({
   return (
     <Link
       href="/learn/word-lists/review"
-      className="group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]"
+      className={cn(
+        "group border-border bg-card focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border transition-[scale,translate,box-shadow] duration-[380ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none hover:shadow-[0_22px_40px_-12px_rgba(0,0,0,0.5)] focus-visible:ring-2 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.05]",
+        bar &&
+          "xl:flex-row xl:items-center xl:gap-4 xl:px-5 xl:py-3.5 xl:motion-safe:hover:-translate-y-0.5 xl:motion-safe:hover:scale-100",
+      )}
     >
-      <div className="relative min-h-28 flex-1 overflow-hidden bg-[linear-gradient(180deg,var(--muted),var(--card))] sm:min-h-32">
+      {bar && (
+        <span className="bg-muted text-primary hidden size-10 shrink-0 items-center justify-center rounded-xl xl:flex">
+          <RotateCcw className="size-5" strokeWidth={1.8} aria-hidden="true" />
+        </span>
+      )}
+      <div
+        className={cn(
+          "relative min-h-28 flex-1 overflow-hidden bg-[linear-gradient(180deg,var(--muted),var(--card))] sm:min-h-32",
+          bar && "xl:hidden",
+        )}
+      >
         <RotateCcw
           aria-hidden="true"
           strokeWidth={1.5}
@@ -55,14 +72,29 @@ export function HomeReviewCard({
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 flex-col gap-0.5 p-4">
-        <h3 className="truncate text-sm font-semibold" dir={dir}>
-          {t.wordLists.needsReviewHeading}
-        </h3>
-        <p className="text-muted-foreground line-clamp-2 text-xs" dir={dir}>
-          {smart ? t.wordLists.smart.reviewDueSubtitle : t.wordLists.needsReviewSubtitle}
-        </p>
-        <span className={cn(buttonVariants({ size: "sm" }), "mt-2 w-fit")}>
+      <div
+        className={cn(
+          "flex shrink-0 flex-col gap-0.5 p-4",
+          bar && "xl:min-w-0 xl:flex-1 xl:flex-row xl:items-center xl:gap-4 xl:p-0",
+        )}
+      >
+        <div className="flex min-w-0 flex-col gap-0.5 xl:flex-1">
+          <h3 className="truncate text-sm font-semibold" dir={dir}>
+            {t.wordLists.needsReviewHeading}
+            {bar && (
+              <span className="text-primary ms-2 hidden text-xs font-medium xl:inline">
+                <span dir="ltr">{total}</span>{" "}
+                {total === 1 ? t.lesson.wordReadyToReview : t.lesson.wordsReadyToReview}
+              </span>
+            )}
+          </h3>
+          <p className="text-muted-foreground line-clamp-2 text-xs" dir={dir}>
+            {smart ? t.wordLists.smart.reviewDueSubtitle : t.wordLists.needsReviewSubtitle}
+          </p>
+        </div>
+        <span
+          className={cn(buttonVariants({ size: "sm" }), "mt-2 w-fit", bar && "xl:mt-0 xl:shrink-0")}
+        >
           {t.wordLists.needsReviewAction}
         </span>
       </div>
