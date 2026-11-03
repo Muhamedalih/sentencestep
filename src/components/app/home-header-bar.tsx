@@ -8,15 +8,114 @@ import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/supabase/auth";
 import type { LessonStatsMap } from "@/components/app/home-hero";
 
-function BigStat({ value, label }: { value: number; label: string }) {
+function BigStat({
+  value,
+  label,
+  compact = false,
+}: {
+  value: number;
+  label: string;
+  compact?: boolean;
+}) {
   return (
     <div className="text-center">
-      <div className="text-3xl leading-none font-extrabold tabular-nums" dir="ltr">
+      <div
+        className={cn(
+          "leading-none font-extrabold tabular-nums",
+          compact ? "text-2xl" : "text-3xl",
+        )}
+        dir="ltr"
+      >
         {value}
       </div>
-      <div className="text-muted-foreground mt-2 text-xs font-bold tracking-wide uppercase">
+      <div
+        className={cn(
+          "text-muted-foreground text-xs font-bold tracking-wide uppercase",
+          compact ? "mt-1" : "mt-2",
+        )}
+      >
         {label}
       </div>
+    </div>
+  );
+}
+
+/** The learner's totals the header shows: sentences and words of every finished lesson, and the sessions. */
+function useHeaderTotals(lessonStats: LessonStatsMap, sessionCount: number | null) {
+  const { completions } = useSharedProgress();
+  const totals = completions.reduce(
+    (acc, completion) => {
+      const stat = lessonStats[`${completion.mode}:${completion.lessonId}`];
+      if (stat) {
+        acc.sentences += stat.sentences;
+        acc.words += stat.words;
+      }
+      return acc;
+    },
+    { sentences: 0, words: 0 },
+  );
+  return { ...totals, sessions: sessionCount ?? completions.length };
+}
+
+/** The avatar with its daily-goal ring and the greeting, alone (the classic Home's merged strip puts it at its start). */
+export function HomeHeaderIdentity({ user }: { user: CurrentUser | null }) {
+  const { t } = useLocale();
+  const { isLoaded, dailyProgress } = useSharedProgress();
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center gap-3" aria-hidden="true">
+        <div className="bg-muted size-12 animate-pulse rounded-full" />
+        <div className="bg-muted h-9 w-28 animate-pulse rounded" />
+      </div>
+    );
+  }
+  const ringPercent =
+    dailyProgress.goal > 0
+      ? Math.min(100, Math.round((dailyProgress.sentencesCompleted / dailyProgress.goal) * 100))
+      : undefined;
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      {user && (
+        <InitialsAvatar
+          seed={user.id}
+          displayName={user.displayName}
+          email={user.email}
+          className="size-12 shrink-0 text-base"
+          ringPercent={isDailyGoalMet(dailyProgress) ? 100 : ringPercent}
+        />
+      )}
+      <div className="flex min-w-0 flex-col gap-0.5">
+        {user?.displayName && (
+          <span className="text-muted-foreground text-xs font-medium">
+            {t.progress.welcomeBackLabel}
+          </span>
+        )}
+        <span dir="ltr" className="truncate text-base font-extrabold tracking-tight">
+          {user?.displayName ?? t.auth.loginHeading}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** The three totals alone, a size smaller (the end of the classic Home's merged strip). */
+export function HomeHeaderStats({
+  lessonStats,
+  sessionCount,
+}: {
+  lessonStats: LessonStatsMap;
+  sessionCount: number | null;
+}) {
+  const { t } = useLocale();
+  const { isLoaded } = useSharedProgress();
+  const totals = useHeaderTotals(lessonStats, sessionCount);
+  if (!isLoaded)
+    return <div className="bg-muted h-10 w-48 animate-pulse rounded" aria-hidden="true" />;
+  return (
+    <div className="flex gap-6">
+      <BigStat compact value={totals.words} label={t.stats.wordsLabel} />
+      <BigStat compact value={totals.sentences} label={t.stats.linesLabel} />
+      <BigStat compact value={totals.sessions} label={t.stats.sessionsLabel} />
     </div>
   );
 }
@@ -48,7 +147,8 @@ export function HomeHeaderBar({
   className?: string;
 }) {
   const { t } = useLocale();
-  const { isLoaded, completions, dailyProgress } = useSharedProgress();
+  const { isLoaded, dailyProgress } = useSharedProgress();
+  const totals = useHeaderTotals(lessonStats, sessionCount);
 
   if (!isLoaded) {
     return (
@@ -78,18 +178,7 @@ export function HomeHeaderBar({
       : undefined;
   const goalMet = isDailyGoalMet(dailyProgress);
 
-  const totals = completions.reduce(
-    (acc, completion) => {
-      const stat = lessonStats[`${completion.mode}:${completion.lessonId}`];
-      if (stat) {
-        acc.sentences += stat.sentences;
-        acc.words += stat.words;
-      }
-      return acc;
-    },
-    { sentences: 0, words: 0 },
-  );
-  const sessions = sessionCount ?? completions.length;
+  const sessions = totals.sessions;
 
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-x-6 gap-y-3", className)}>
