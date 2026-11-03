@@ -1,5 +1,6 @@
 import { Play } from "lucide-react";
 
+import { HomeVideoNew } from "@/components/app/home-video-new";
 import { buttonVariants } from "@/components/ui/button";
 import type { VideoCardData } from "@/lib/video-dictation/content";
 import { formatClipLength } from "@/lib/video-dictation/format";
@@ -37,8 +38,11 @@ export function HomeVideoCard({
         <span className="absolute top-3 left-3 rounded-[6px] bg-black/60 px-1.5 py-0.5 text-xs font-medium text-white tabular-nums">
           {formatClipLength(card.clipSeconds)}
         </span>
-        <span className="text-primary absolute top-3 right-3.5 text-xs font-semibold" dir="auto">
-          {tag}
+        <span className="absolute top-3 right-3.5 flex items-center gap-2">
+          <HomeVideoNew />
+          <span className="text-primary text-xs font-semibold" dir="auto">
+            {tag}
+          </span>
         </span>
         <span className="absolute inset-0 flex items-center justify-center pb-8">
           <span className="flex size-14 items-center justify-center rounded-full border border-white/30 transition-colors group-hover:border-white/60">
