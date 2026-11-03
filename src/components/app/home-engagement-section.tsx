@@ -29,13 +29,15 @@ async function EngagementStripSlot({
   today,
   quests,
   streak,
+  quiet,
 }: {
   today: string;
   quests: HomeEngagementStream["quests"];
   streak: HomeEngagementStream["streak"];
+  quiet?: boolean;
 }) {
   const [questsPayload, streakData] = await Promise.all([quests, streak]);
-  return <EngagementStrip today={today} quests={questsPayload} streak={streakData} />;
+  return <EngagementStrip today={today} quests={questsPayload} streak={streakData} quiet={quiet} />;
 }
 
 /**
@@ -49,9 +51,12 @@ async function EngagementStripSlot({
  */
 export function HomeEngagementSection({
   stream,
+  quiet,
   className,
 }: {
   stream: HomeEngagementStream | null;
+  /** The classic Home permission: the strip stays folded and does not glow until the learner taps it. */
+  quiet?: boolean;
   className?: string;
 }) {
   if (!stream) return <HomeEngagement className={className} />;
@@ -65,6 +70,7 @@ export function HomeEngagementSection({
           today={stream.todayISO}
           quests={stream.quests}
           streak={stream.streak}
+          quiet={quiet}
         />
       </Suspense>
     </HomeEngagementFrame>

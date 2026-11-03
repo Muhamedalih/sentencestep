@@ -49,18 +49,21 @@ export function EngagementStrip({
   today,
   quests,
   streak,
+  quiet = false,
   className,
 }: {
   today: string;
   quests: DailyQuestsPayload | null;
   streak: StreakCalendarData | null;
+  /** Folded and without the glow until tapped, for a learner who opens the daily tasks by choice. */
+  quiet?: boolean;
   className?: string;
 }) {
   const { t, dir } = useLocale();
   // "Today's session (daily tasks)": the quests are Today's three tasks, tied to specific lessons. The
   // box then opens by itself while something is left, with a soft glow, so it is the first thing seen.
   const todayMode = Boolean(quests?.quests.some((quest) => quest.today));
-  const [open, setOpen] = useState(todayMode && quests?.allDone === false);
+  const [open, setOpen] = useState(!quiet && todayMode && quests?.allDone === false);
   const panelId = useId();
 
   if (!quests && !streak) return null;
@@ -80,7 +83,7 @@ export function EngagementStrip({
   return (
     <div className={className}>
       <div className="relative isolate">
-        {todayMode && quests?.allDone === false && <TodayGlow />}
+        {!quiet && todayMode && quests?.allDone === false && <TodayGlow />}
         <div className="border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors">
           {streak && (
             <div className="flex items-center gap-3">
