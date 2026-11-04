@@ -1,49 +1,124 @@
 /**
  * The colours of the Home cards (permission "homeCards"), all in this one file so they can be changed
- * without touching a layout. Each card is one diagonal gradient of two or three neighbouring hues,
- * dark at the corner where the title sits and bright at the opposite one, read with white text. The
- * `accent` of a card is a light tone of its own hue, used for the small art on it (lines, ribbon, ring).
+ * without touching a layout.
+ *
+ * A card is nearly the page colour: one dark base, a single soft wash of its section's hue in the top
+ * corner and a hairline of the same hue, so nothing on the page hits the eye. The bright colours live
+ * in the art on the card (white paper sheets with real shadows, a story page, an audio orb, a video
+ * frame, white word cards), which is drawn from the `PAPER`, `ORB`, `STORY_PAGE` and `VIDEO_SCENE`
+ * groups below. `TINT` scales the wash and the hairline of every card at once (1 = near the page
+ * colour, about 2 = clearly tinted).
  */
 export interface CardColors {
-  /** The card's background: a CSS gradient. */
+  /** The card's flat base colour (the colour a shade has to fade into). */
+  base: string;
+  /** The card's background: the wash of its hue over the base (a CSS `background` value). */
   background: string;
   /** The hairline round the card. */
   edge: string;
+  /** The small tag in the card's corner: its fill and its hairline. */
+  chip: string;
+  chipEdge: string;
   /** Small print on the card (the line under the title, the «next» label). */
   soft: string;
-  /** A light tone of the card's hue, for the art on it. */
+  /** A light tone of the card's hue, for dots, the tag's text and small marks. */
   accent: string;
 }
 
+/** How strongly a card is tinted (see above). */
+const TINT = 1;
+
+function alpha(value: number): number {
+  return Math.round(value * TINT * 1000) / 1000;
+}
+
+function tone(hue: string, base: string, accent: string): CardColors {
+  return {
+    base,
+    background: `radial-gradient(110% 125% at 0% 0%,rgba(${hue},${alpha(0.14)}) 0%,rgba(${hue},0) 62%),${base}`,
+    edge: `rgba(${hue},${alpha(0.17)})`,
+    chip: `rgba(${hue},0.12)`,
+    chipEdge: `rgba(${hue},0.34)`,
+    soft: "rgba(255,255,255,0.62)",
+    accent,
+  };
+}
+
 export const HOME_CARD_COLORS = {
-  /** Passages: deep navy, royal blue, sky. */
-  passages: {
-    background: "linear-gradient(135deg,#0b1d4a 0%,#1d4ed8 52%,#38bdf8 100%)",
-    edge: "rgba(147,197,253,0.35)",
-    soft: "rgba(255,255,255,0.74)",
-    accent: "#bfe0ff",
-  },
-  /** Stories: deep violet, purple, raspberry. */
-  stories: {
-    background: "linear-gradient(135deg,#2a0a5e 0%,#7c3aed 50%,#db2777 100%)",
-    edge: "rgba(216,180,254,0.38)",
-    soft: "rgba(255,255,255,0.76)",
-    accent: "#fbcfe8",
-  },
-  /** Video: deep pine, teal, mint. */
-  video: {
-    background: "linear-gradient(135deg,#04302c 0%,#0f766e 48%,#34d399 100%)",
-    edge: "rgba(110,231,183,0.38)",
-    soft: "rgba(255,255,255,0.76)",
-    accent: "#a7f3d0",
-  },
-  /** Words: deep indigo into the site's own brand hue. */
-  words: {
-    background: "linear-gradient(145deg,#1b1744 0%,#3b36a8 55%,#6366f1 100%)",
-    edge: "rgba(165,180,252,0.38)",
-    soft: "rgba(255,255,255,0.74)",
-    accent: "#c7d2fe",
-  },
+  /** Passages: navy. */
+  passages: tone("96,140,240", "#0e1730", "#9fbdff"),
+  /** Stories: plum. */
+  stories: tone("178,104,204", "#170f1e", "#e2a6f0"),
+  /** Video: deep pine. */
+  video: tone("46,190,164", "#0a1c1d", "#8be8d4"),
+  /** Words: indigo, the site's own brand hue. */
+  words: tone("124,131,240", "#12132f", "#b9bdff"),
+  /** The daily lesson side of the «keep learning» card. */
+  lesson: tone("124,131,240", "#101124", "#b9bdff"),
 } as const satisfies Record<string, CardColors>;
 
 export type HomeCardColorKey = keyof typeof HOME_CARD_COLORS;
+
+/** The white paper of the art: sheets, the word cards, the question box and the marks drawn on them. */
+export const PAPER = {
+  /** A sheet's face, and the two sheets stacked behind it. */
+  sheet: "linear-gradient(180deg,#fcfbf7 0%,#f2f0e9 100%)",
+  back1: "#e3e0d7",
+  back2: "#cdc9be",
+  /** The shadow of the top sheet, and of the ones behind it. */
+  shadow: "0 26px 44px -16px rgba(0,0,0,0.78),0 2px 6px rgba(0,0,0,0.4)",
+  stackShadow: "0 14px 26px -10px rgba(0,0,0,0.6)",
+  /** Ink for titles and words on paper. */
+  ink: "#1a2236",
+  /** The short rule under a sheet's title. */
+  rule: "#5b7cfa",
+  /** A line of text, and the same line when it is the highlighted one. */
+  line: "#cfd4de",
+  lineMarked: "#aab5cc",
+  /** The highlighter (pale blue, never yellow). */
+  highlight: "#c3d6ff",
+  /** The question box on the sheet. */
+  box: "#f8f6ef",
+  boxEdge: "#e1ded4",
+  boxLabel: "#8a90a3",
+  boxTick: "#b7bdcc",
+  boxRight: "#26a269",
+  boxOption: "#d7dbe4",
+  boxOptionRight: "#a9dcc2",
+  /** A word card: the translation lines under the word (the first one tinted). */
+  wordLine: "#aab1fb",
+  wordLineSoft: "#d9dce6",
+  wordShadow: "0 14px 22px -10px rgba(0,0,0,0.75),0 2px 4px rgba(0,0,0,0.35)",
+} as const;
+
+/** The round audio mark on the Passages sheet. */
+export const ORB = {
+  background: "radial-gradient(circle at 32% 26%,#6c94ff,#3058dc 58%,#2241b0)",
+  shadow: "0 0 0 7px rgba(80,120,255,0.16),0 16px 30px -6px rgba(20,40,150,0.75)",
+  bar: "#ffffff",
+} as const;
+
+/** The story's page: the big letter's ink, the ribbon, and the page's face (shaded at the spine). */
+export const STORY_PAGE = {
+  face: "linear-gradient(90deg,#e8e5dc 0,#fbfaf6 7%,#f5f3ec 100%)",
+  ink: "#2b1a3d",
+  ribbon: "linear-gradient(180deg,#ea5a82,#c43b65)",
+  line: "#d0ccc2",
+  back1: "#e2ded4",
+  back2: "#c9c4b8",
+  shadow: "0 30px 50px -18px rgba(0,0,0,0.8),0 2px 7px rgba(0,0,0,0.4)",
+  stackShadow: "0 18px 30px -12px rgba(0,0,0,0.65)",
+} as const;
+
+/** The Video card's frame: a quiet shot (sky, hills, water), the glass play button and the player bar. */
+export const VIDEO_SCENE = {
+  scene:
+    "linear-gradient(180deg,#19505b 0%,#348a92 30%,#86cbc9 50%,#cdeee4 58%,#379099 58.4%,#1b6169 100%)",
+  hillNear: "#0f3f3c",
+  hillFar: "#14554c",
+  rain: "repeating-linear-gradient(105deg,rgba(255,255,255,0.065) 0 1px,transparent 1px 11px)",
+  water: "repeating-linear-gradient(180deg,rgba(255,255,255,0.08) 0 2px,transparent 2px 8px)",
+  bar: "rgba(6,22,24,0.55)",
+  progress: "#4fe0b5",
+  shadow: "0 26px 44px -16px rgba(0,0,0,0.85),0 0 0 1px rgba(255,255,255,0.13)",
+} as const;

@@ -15,13 +15,14 @@ import { findCurrentLesson } from "@/lib/progress/level";
 import { storyMonogram } from "@/lib/story-monogram";
 import type { LessonUnit } from "@/types/content";
 
-import { HOME_CARD_COLORS } from "./palette";
+import { HOME_CARD_COLORS, STORY_PAGE } from "./palette";
 import { homeCardsStrings } from "./strings";
 
 type Choice = "lesson" | "story";
 
-const LESSON_SHADE =
-  "linear-gradient(90deg,#0e0e10 0%,#0e0e10 36%,rgba(14,14,16,0.86) 54%,rgba(14,14,16,0) 100%)";
+/** The shade that lets the lesson's picture fade into the card's own colour. */
+const LESSON_BASE = HOME_CARD_COLORS.lesson.base;
+const LESSON_SHADE = `linear-gradient(90deg,${LESSON_BASE} 0%,${LESSON_BASE} 36%,color-mix(in srgb,${LESSON_BASE} 86%,transparent) 54%,transparent 100%)`;
 
 /** The white button of the story choice (the lesson choice keeps the site's own button, like every lesson card). */
 const WHITE_BUTTON =
@@ -95,6 +96,7 @@ export function ContinueCard({
   );
   const [choice, setChoice] = useState<Choice>("lesson");
   const stories = HOME_CARD_COLORS.stories;
+  const lessonColors = HOME_CARD_COLORS.lesson;
 
   const noCurrentLesson = units.length > 0 && !currentLesson;
   // A free learner who has done every free lesson still gets a real lesson to show (as the old card did).
@@ -130,10 +132,11 @@ export function ContinueCard({
   return (
     <section
       aria-label={s.continueTitle}
-      className="hc-card hc-rise relative isolate min-h-[22rem] overflow-hidden rounded-2xl border bg-[#0e0e10] text-white transition-[border-color] duration-300 xl:h-[19.75rem] xl:min-h-0"
+      className="hc-card hc-rise relative isolate min-h-[22rem] overflow-hidden rounded-2xl border text-white transition-[border-color] duration-300 xl:h-[19.75rem] xl:min-h-0"
       style={
         {
-          borderColor: onStory ? stories.edge : "rgba(255,255,255,0.12)",
+          background: lessonColors.background,
+          borderColor: onStory ? stories.edge : lessonColors.edge,
           "--hc-i": 1,
         } as CSSProperties
       }
@@ -262,7 +265,7 @@ export function ContinueCard({
         )}
       </div>
 
-      {/* The story: the Stories colour all over, the story's first letter large on a tilted cover. */}
+      {/* The story: the Stories colour all over, the story's first letter large on a white page. */}
       <div
         id="home-continue-pane-story"
         role="tabpanel"
@@ -272,25 +275,56 @@ export function ContinueCard({
         data-on={onStory}
         inert={!onStory}
       >
-        <div className="absolute inset-0" style={{ backgroundImage: stories.background }} />
+        <div className="absolute inset-0" style={{ background: stories.background }} />
         <div
           aria-hidden="true"
-          className="absolute end-14 top-11 hidden h-[21rem] w-60 rotate-[4deg] overflow-hidden rounded-[1.1rem] border sm:block"
-          style={{
-            background: "linear-gradient(180deg,rgba(0,0,0,0.2),rgba(0,0,0,0.38))",
-            borderColor: "rgba(255,255,255,0.28)",
-          }}
+          className="hc-tilt-r absolute end-20 top-12 hidden h-[21.5rem] w-[15.6rem] sm:block"
         >
-          <span className="font-quote pointer-events-none absolute start-8 -top-8 text-[20rem] leading-none text-transparent select-none [-webkit-text-stroke:1.5px_rgba(251,207,232,0.75)]">
-            {storyMonogram(story?.title ?? t.nav.stories)}
-          </span>
-          <span
-            className="hc-ribbon absolute end-6 top-0 h-14 w-[30px]"
+          <i
+            className="absolute inset-0 rounded-[10px]"
             style={{
-              background: stories.accent,
-              clipPath: "polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)",
+              background: STORY_PAGE.back2,
+              transform: "translate(-28px,6px) rotate(-6.5deg)",
+              boxShadow: STORY_PAGE.stackShadow,
             }}
           />
+          <i
+            className="absolute inset-0 rounded-[10px]"
+            style={{
+              background: STORY_PAGE.back1,
+              transform: "translate(-14px,3px) rotate(-3.2deg)",
+              boxShadow: STORY_PAGE.stackShadow,
+            }}
+          />
+          <div
+            className="absolute inset-0 overflow-hidden rounded-[10px]"
+            style={{ background: STORY_PAGE.face, boxShadow: STORY_PAGE.shadow }}
+          >
+            <span
+              className="font-quote pointer-events-none absolute start-9 top-[26px] text-[13.6rem] leading-[0.82] font-bold tracking-[-0.02em] select-none"
+              style={{ color: STORY_PAGE.ink }}
+            >
+              {storyMonogram(story?.title ?? t.nav.stories)}
+            </span>
+            <span
+              className="hc-ribbon absolute end-[26px] top-0 h-[62px] w-[30px]"
+              style={{
+                background: STORY_PAGE.ribbon,
+                clipPath: "polygon(0 0,100% 0,100% 100%,50% 80%,0 100%)",
+              }}
+            />
+            <span className="absolute inset-x-9 top-[222px] flex flex-col gap-[9px]">
+              <i className="block h-1.5 rounded-[3px]" style={{ background: STORY_PAGE.line }} />
+              <i
+                className="block h-1.5 w-[88%] rounded-[3px]"
+                style={{ background: STORY_PAGE.line }}
+              />
+              <i
+                className="block h-1.5 w-[64%] rounded-[3px]"
+                style={{ background: STORY_PAGE.line }}
+              />
+            </span>
+          </div>
         </div>
         {story ? (
           <Texts

@@ -9,7 +9,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 
-import { HOME_CARD_COLORS } from "./palette";
+import { HOME_CARD_COLORS, PAPER } from "./palette";
 import { fillCount, homeCardsStrings } from "./strings";
 import { useCountUp } from "./use-count-up";
 
@@ -47,7 +47,7 @@ export function WordsPanel({
       className="hc-card hc-rise relative isolate flex min-h-[19.75rem] flex-col justify-between gap-4 overflow-hidden rounded-2xl border p-5 text-white"
       style={
         {
-          backgroundImage: colors.background,
+          background: colors.background,
           borderColor: colors.edge,
           "--hc-i": 2,
         } as CSSProperties
@@ -79,15 +79,30 @@ export function WordsPanel({
 
       {cards.length > 0 && (
         <div className="hc-fan flex" aria-hidden="true">
-          {cards.map((word) => (
+          {cards.map((word, i) => (
             <span
               key={word.wordId}
-              className="-ms-2 flex h-[5.25rem] w-[6.4rem] min-w-0 flex-col justify-between rounded-xl border border-white/25 bg-white/10 p-3 first:ms-0"
+              className="-ms-2.5 flex h-[5.4rem] w-[6.5rem] min-w-0 flex-col justify-between rounded-[11px] p-3 first:ms-0"
+              style={{
+                background: PAPER.sheet,
+                boxShadow: PAPER.wordShadow,
+                color: PAPER.ink,
+                rotate: ["-2deg", "1deg", "3deg"][i],
+              }}
             >
               <span dir="ltr" className="truncate text-base font-bold tracking-tight">
                 {word.targetWord}
               </span>
-              <span className="block h-1.5 w-2/3 rounded-full bg-white/25" />
+              <span className="flex flex-col gap-[5px]">
+                <i
+                  className="block h-1.5 w-[62%] rounded-[3px]"
+                  style={{ background: PAPER.wordLine }}
+                />
+                <i
+                  className="block h-1.5 w-[38%] rounded-[3px]"
+                  style={{ background: PAPER.wordLineSoft }}
+                />
+              </span>
             </span>
           ))}
         </div>

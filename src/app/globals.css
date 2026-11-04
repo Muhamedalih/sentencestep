@@ -858,6 +858,19 @@ html[data-keyboard] .kb-hide {
 .hc-card:has(:focus-visible) .hc-go svg {
   transform: translateX(5px);
 }
+/* The bars of the audio mark on the Passages sheet move while the card is under the pointer. */
+@keyframes hc-wave {
+  from {
+    transform: scaleY(0.55);
+  }
+  to {
+    transform: scaleY(1.12);
+  }
+}
+.hc-card:hover .hc-wave,
+.hc-card:has(:focus-visible) .hc-wave {
+  animation: hc-wave 800ms ease-in-out infinite alternate;
+}
 /* The three word cards of the words panel spread like a hand of cards. */
 .hc-fan > * {
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -925,5 +938,9 @@ html[data-keyboard] .kb-hide {
   .hc-card:hover .hc-go svg,
   .hc-card:hover .hc-fan > * {
     transform: none;
+  }
+  .hc-card:hover .hc-wave,
+  .hc-card:has(:focus-visible) .hc-wave {
+    animation: none;
   }
 }

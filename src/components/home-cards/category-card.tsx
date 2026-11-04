@@ -7,66 +7,211 @@ import { ArrowRight } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 
+import { ORB, PAPER, VIDEO_SCENE } from "./palette";
 import type { CardColors } from "./palette";
 
-/** The small picture that peeks out of the card's foot: a page of lines, or a video frame. */
+/** The picture that rises from the card's foot: a stack of paper sheets, or a video frame. */
 export type CategoryArt = "sheet" | "frame";
 
-const ART_BOX = {
-  background: "rgba(0,0,0,0.28)",
-  borderColor: "rgba(255,255,255,0.28)",
-} as const;
-
-function SheetArt() {
+/** A short stripe of the paper: a line of text, or one of the answers in the question box. */
+function Stripe({
+  color,
+  width,
+  className,
+}: {
+  color: string;
+  width?: string;
+  className?: string;
+}) {
   return (
-    <div
-      className="hc-tilt-l flex size-full flex-col gap-[0.55rem] rounded-2xl border p-[1.1rem]"
-      style={ART_BOX}
-    >
-      <i
-        className="block h-2 w-[52%] rounded"
-        style={{ background: "var(--hc-accent)", opacity: 0.85 }}
-      />
-      <i className="block h-[7px] rounded bg-white/20" />
-      <i className="hc-type relative block h-[7px] overflow-hidden rounded bg-white/20" />
-      <i className="block h-[7px] rounded bg-white/20" />
-      <i className="block h-[7px] w-[70%] rounded bg-white/20" />
-    </div>
+    <i
+      className={cn("block h-1.5 rounded-[3px]", className)}
+      style={{ background: color, width }}
+    />
   );
 }
 
+/**
+ * Passages: three white sheets with a real shadow, the next passage's title in a serif face, one line
+ * highlighted in pale blue (it fills under the pointer), a small question with its answers, and the
+ * round audio mark over the sheet's corner.
+ */
+function SheetArt({ title }: { title: string }) {
+  return (
+    <>
+      <i
+        className="absolute inset-0 rounded-lg"
+        style={{
+          background: PAPER.back2,
+          transform: "translate(26px,-4px) rotate(6.5deg)",
+          boxShadow: PAPER.stackShadow,
+        }}
+      />
+      <i
+        className="absolute inset-0 rounded-lg"
+        style={{
+          background: PAPER.back1,
+          transform: "translate(13px,-2px) rotate(3.2deg)",
+          boxShadow: PAPER.stackShadow,
+        }}
+      />
+      <div
+        className="hc-tilt-l absolute inset-0 rounded-lg px-[22px] py-5"
+        style={{ background: PAPER.sheet, boxShadow: PAPER.shadow, color: PAPER.ink }}
+      >
+        <p dir="ltr" className="font-quote truncate text-lg leading-tight font-bold tracking-tight">
+          {title}
+        </p>
+        <span
+          className="mt-[7px] mb-3 block h-[3px] w-[34px] rounded-sm"
+          style={{ background: PAPER.rule }}
+        />
+        <Stripe color={PAPER.line} className="mb-2" />
+        <span
+          className="hc-type relative -mt-1 mb-1 block h-3.5 overflow-hidden rounded-[3px]"
+          style={{ "--hc-accent": PAPER.highlight } as CSSProperties}
+        >
+          <i
+            className="absolute inset-x-0 top-1/2 z-10 block h-1.5 -translate-y-1/2 rounded-[3px]"
+            style={{ background: PAPER.lineMarked }}
+          />
+        </span>
+        <Stripe color={PAPER.line} className="mb-2" />
+        <Stripe color={PAPER.line} width="72%" className="mb-2" />
+        <div
+          className="mt-[11px] rounded-[7px] border px-2.5 py-2"
+          style={{ background: PAPER.box, borderColor: PAPER.boxEdge }}
+        >
+          <small
+            className="mb-[7px] block text-[8.5px] leading-none font-bold tracking-[0.09em]"
+            style={{ color: PAPER.boxLabel }}
+          >
+            QUESTION 3
+          </small>
+          <span className="mb-1.5 flex items-center gap-[7px]">
+            <span
+              className="size-[11px] shrink-0 rounded-[3px] border-[1.5px]"
+              style={{ borderColor: PAPER.boxTick }}
+            />
+            <i
+              className="block h-[5px] flex-1 rounded-[3px]"
+              style={{ background: PAPER.boxOption }}
+            />
+          </span>
+          <span className="flex items-center gap-[7px]">
+            <span
+              className="grid size-[11px] shrink-0 place-items-center rounded-[3px]"
+              style={{ background: PAPER.boxRight }}
+            >
+              <svg viewBox="0 0 12 12" className="size-[8px]" fill="none" aria-hidden="true">
+                <path
+                  d="M2.5 6.3l2.3 2.3 4.7-5"
+                  stroke="#fff"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <i
+              className="block h-[5px] flex-1 rounded-[3px]"
+              style={{ background: PAPER.boxOptionRight }}
+            />
+          </span>
+        </div>
+      </div>
+      <span
+        className="absolute -start-[2.9rem] bottom-[4.4rem] flex size-16 items-center justify-center gap-[3.5px] rounded-full"
+        style={{ background: ORB.background, boxShadow: ORB.shadow }}
+      >
+        {[13, 24, 34, 20, 11].map((height, i) => (
+          <i
+            key={i}
+            className="hc-wave block w-1 rounded-sm"
+            style={{
+              height,
+              background: ORB.bar,
+              animationDelay: `${[0, 120, 240, 80, 200][i]}ms`,
+            }}
+          />
+        ))}
+      </span>
+    </>
+  );
+}
+
+/**
+ * Video: a frame with a quiet shot (sky, hills, rain on the water), a glass play button, and a player
+ * bar whose progress line fills under the pointer.
+ */
 function FrameArt() {
   return (
     <div
-      className="hc-tilt-l relative grid size-full place-items-center overflow-hidden rounded-2xl border"
-      style={ART_BOX}
+      className="hc-tilt-l absolute inset-0 overflow-hidden rounded-xl"
+      style={{ boxShadow: VIDEO_SCENE.shadow }}
     >
-      <span
-        className="hc-play mb-6 flex size-[3.1rem] items-center justify-center rounded-full border-[1.5px]"
-        style={{ borderColor: "var(--hc-accent)" }}
-      >
+      <div className="absolute inset-0" style={{ background: VIDEO_SCENE.scene }} />
+      <div
+        className="absolute rounded-t-[50%]"
+        style={{
+          bottom: "42%",
+          insetInlineStart: "-14%",
+          width: "72%",
+          height: "44%",
+          background: VIDEO_SCENE.hillNear,
+        }}
+      />
+      <div
+        className="absolute rounded-t-[50%]"
+        style={{
+          bottom: "42%",
+          insetInlineStart: "38%",
+          width: "84%",
+          height: "32%",
+          background: VIDEO_SCENE.hillFar,
+        }}
+      />
+      <div
+        className="absolute inset-x-0 top-0 bottom-[42%]"
+        style={{ background: VIDEO_SCENE.rain }}
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 h-[40%]"
+        style={{ background: VIDEO_SCENE.water }}
+      />
+      <span className="hc-play absolute start-1/2 top-[40%] -ms-[26px] -mt-[26px] grid size-[52px] place-items-center rounded-full border-[1.5px] border-white/80 bg-white/20 backdrop-blur-[6px]">
         <svg viewBox="0 0 24 24" className="ms-0.5 size-5 fill-white" aria-hidden="true">
           <path d="M6 4l14 8-14 8z" />
         </svg>
       </span>
-      <span className="absolute inset-x-4 bottom-4 flex flex-col gap-[7px]">
-        <i className="hc-type relative block h-2 overflow-hidden rounded bg-white/20" />
-        <i className="block h-2 w-[70%] rounded bg-white/20" />
+      <span
+        dir="ltr"
+        className="absolute inset-x-3 bottom-9 flex items-center gap-[9px] rounded-[9px] px-[11px] py-[7px] text-[9.5px] font-semibold text-white backdrop-blur-[5px]"
+        style={{ background: VIDEO_SCENE.bar }}
+      >
+        <span>0:09</span>
+        <span
+          className="hc-type relative h-[3px] flex-1 overflow-hidden rounded-sm bg-white/30"
+          style={{ "--hc-accent": VIDEO_SCENE.progress } as CSSProperties}
+        />
+        <span>0:25</span>
       </span>
     </div>
   );
 }
 
 /**
- * One of the Home cards that lead into a section (Passages, Video): a card of its own colour with
- * the section's name large, one line about it, the section's next item and a link, and a small
- * picture of the section peeking out of its foot. The whole card is the link. Under the pointer it
- * lifts, the picture rises and straightens and the little line in it types itself (see globals.css,
- * `hc-*`). `plain` makes the link a real page load (Video's pages carry YouTube in their own policy).
+ * One of the Home cards that lead into a section (Passages, Video): a card nearly the page's colour,
+ * the section's name large, one line about it, the section's next item and a link, and the section's
+ * picture rising from its foot. The whole card is the link. Under the pointer it lifts, the picture
+ * rises and straightens and the little line in it fills (see globals.css, `hc-*`). On a narrower
+ * card the picture is drawn smaller and the «next» line gives it room. `plain` makes the link a real
+ * page load (Video's pages carry YouTube in their own policy).
  */
 export function CategoryCard({
   colors,
   art,
+  artTitle,
   kind,
   title,
   line,
@@ -81,6 +226,8 @@ export function CategoryCard({
 }: {
   colors: CardColors;
   art: CategoryArt;
+  /** The title written on the Passages sheet (the item the card leads to). */
+  artTitle?: string;
   kind: string;
   title: string;
   line: string;
@@ -101,7 +248,7 @@ export function CategoryCard({
     "hc-card hc-rise group relative isolate flex min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] flex-col overflow-hidden rounded-2xl border p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70",
   );
   const style = {
-    backgroundImage: colors.background,
+    background: colors.background,
     borderColor: colors.edge,
     "--hc-accent": colors.accent,
     "--hc-i": index,
@@ -112,7 +259,8 @@ export function CategoryCard({
       <span className="absolute end-4 top-4 z-10 flex items-center gap-2">
         {badge}
         <span
-          className="rounded-lg bg-white/15 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm"
+          className="rounded-lg border px-2.5 py-1 text-xs font-semibold"
+          style={{ background: colors.chip, borderColor: colors.chipEdge, color: colors.accent }}
           dir={dir}
         >
           {kind}
@@ -124,7 +272,7 @@ export function CategoryCard({
       <p className="relative z-10 mt-1 text-sm" style={{ color: colors.soft }} dir={dir}>
         {line}
       </p>
-      <p className="relative z-10 mt-3 flex min-w-0 items-baseline gap-2 text-sm">
+      <p className="relative z-10 mt-3 flex max-w-[calc(100%-12.5rem)] min-w-0 items-baseline gap-2 text-sm xl:max-w-[calc(100%-18.25rem)]">
         <span
           aria-hidden="true"
           className="size-1.5 shrink-0 self-center rounded-full"
@@ -148,9 +296,14 @@ export function CategoryCard({
       </span>
       <div
         aria-hidden="true"
-        className="hc-peek pointer-events-none absolute end-5 -bottom-10 h-[8.2rem] w-[10.5rem] xl:h-[9.4rem] xl:w-[14.4rem]"
+        className={cn(
+          "hc-peek pointer-events-none absolute end-5 w-[16.75rem] xl:end-[1.9rem]",
+          art === "sheet" ? "-bottom-14 h-[13.4rem]" : "-bottom-[1.9rem] h-[11.4rem]",
+        )}
       >
-        {art === "sheet" ? <SheetArt /> : <FrameArt />}
+        <div className="relative size-full origin-bottom-right max-xl:scale-[0.66]">
+          {art === "sheet" ? <SheetArt title={artTitle ?? nextTitle} /> : <FrameArt />}
+        </div>
       </div>
     </>
   );
