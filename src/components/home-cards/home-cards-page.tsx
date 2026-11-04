@@ -13,7 +13,8 @@ import type { LessonUnit } from "@/types/content";
 
 import { ContinueCard } from "./continue-card";
 import { PassagesSectionCard, VideoSectionCard } from "./section-cards";
-import { WordsPanel } from "./words-panel";
+import { StatsPanel } from "./stats-panel";
+import { WordsSection } from "./words-section";
 
 async function PassagesSlot({ data }: { data: Promise<PassagesHomeData | null> }) {
   const resolved = await data;
@@ -22,10 +23,12 @@ async function PassagesSlot({ data }: { data: Promise<PassagesHomeData | null> }
 
 /**
  * The classic Home page in its new look (permission "homeCards"; see the card files beside this one):
- * the daily-tasks strip, then «up next» as one «keep learning» card (the daily lesson or the story)
- * beside the words panel, then the Passages and Video cards. Everything on it is data the classic
- * page already loaded, so it adds no read. The page around it (banners, the admin's switch) is
- * passed in by the route, so it stays the route's.
+ * the daily-tasks strip, then «up next» as one «keep learning» card (the story or the daily lesson)
+ * beside the achievements panel (level and counts), then the Passages and Video cards, then the words
+ * section at the foot. Nearly everything on it is data the classic page already loaded; the route adds
+ * two small reads for the homeCards visitor only (the videos finished, the meanings on the word
+ * cards). The page around it (banners, the admin's switch) is passed in by the route, so it stays the
+ * route's.
  */
 export function HomeCardsPage({
   engagement,
@@ -41,6 +44,8 @@ export function HomeCardsPage({
   dueWords,
   passages,
   video,
+  videosFinished,
+  wordHints,
 }: {
   engagement: HomeEngagementStream | null;
   /** «Up next». */
@@ -56,6 +61,10 @@ export function HomeCardsPage({
   dueWords: WeakWordItem[];
   passages: Promise<PassagesHomeData | null>;
   video?: { card: VideoCardData; heading: string; cta: string };
+  /** Videos the learner has finished, or null when it cannot be read (the tile is then left out). */
+  videosFinished: number | null;
+  /** The Arabic meaning of the due words' cards, by word id. */
+  wordHints: Record<string, string>;
 }) {
   return (
     <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl">
@@ -72,11 +81,10 @@ export function HomeCardsPage({
           isPremiumUser={isPremiumUser}
           hasWeakWords={reviewCount > 0}
         />
-        <WordsPanel
+        <StatsPanel
           lessonStats={lessonStats}
           sessionCount={sessionCount}
-          reviewCount={reviewCount}
-          words={dueWords}
+          videosFinished={videosFinished}
         />
       </div>
       <div className="mt-4 flex flex-wrap gap-4 empty:hidden">
@@ -91,6 +99,7 @@ export function HomeCardsPage({
           <VideoSectionCard card={video.card} heading={video.heading} cta={video.cta} index={4} />
         )}
       </div>
+      <WordsSection reviewCount={reviewCount} words={dueWords} hints={wordHints} />
       {footer}
     </div>
   );

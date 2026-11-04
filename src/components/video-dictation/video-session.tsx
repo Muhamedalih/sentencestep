@@ -47,6 +47,7 @@ import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
 
 import { useYouTubePlayer, type PlayerControls } from "./use-youtube-player";
+import { VideoFinishRecorder } from "./video-finish-recorder";
 import { VideoRatingPrompt } from "./video-rating-prompt";
 import { VideoStopsEditor } from "./video-stops-editor";
 import { PLAYER_STATE } from "./youtube-api";
@@ -761,6 +762,7 @@ function Finish({
   const strings = videoStrings(locale);
   return (
     <div className="flex flex-1 flex-col gap-5 pt-4">
+      <VideoFinishRecorder videoId={lesson.id} />
       <VideoRatingPrompt videoId={lesson.id} />
       <div>
         <h1 className="text-2xl font-bold" dir="auto">

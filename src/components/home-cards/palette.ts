@@ -86,7 +86,8 @@ export const PAPER = {
   boxRight: "#26a269",
   boxOption: "#d7dbe4",
   boxOptionRight: "#a9dcc2",
-  /** A word card: the translation lines under the word (the first one tinted). */
+  /** A word card: the Arabic meaning under the word, and (with no meaning) the two lines in its place (the first one tinted). */
+  wordMeaning: "#56607a",
   wordLine: "#aab1fb",
   wordLineSoft: "#d9dce6",
   wordShadow: "0 14px 22px -10px rgba(0,0,0,0.75),0 2px 4px rgba(0,0,0,0.35)",
@@ -99,16 +100,41 @@ export const ORB = {
   bar: "#ffffff",
 } as const;
 
-/** The story's page: the big letter's ink, the ribbon, and the page's face (shaded at the spine). */
-export const STORY_PAGE = {
-  face: "linear-gradient(90deg,#e8e5dc 0,#fbfaf6 7%,#f5f3ec 100%)",
-  ink: "#2b1a3d",
-  ribbon: "linear-gradient(180deg,#ea5a82,#c43b65)",
-  line: "#d0ccc2",
-  back1: "#e2ded4",
-  back2: "#c9c4b8",
-  shadow: "0 30px 50px -18px rgba(0,0,0,0.8),0 2px 7px rgba(0,0,0,0.4)",
-  stackShadow: "0 18px 30px -12px rgba(0,0,0,0.65)",
+/**
+ * The story's picture: a hardcover book standing on the Stories card (the Passages card keeps white
+ * paper sheets, so the two cards no longer share a silhouette). A dusty-raspberry cover shaded
+ * towards the spine, a cream frame, the story's first letter in cream, two cream lines, and the
+ * block of pages showing at the edge and the foot.
+ */
+export const STORY_BOOK = {
+  cover: "linear-gradient(135deg,#ac4e73 0%,#933f64 55%,#7c3454 100%)",
+  coverEdge: "inset 0 0 0 1px rgba(255,255,255,0.07)",
+  /** The spine's shading, from the binding out. */
+  spine: "linear-gradient(90deg,rgba(0,0,0,0.3),rgba(255,255,255,0.1) 55%,rgba(0,0,0,0.12))",
+  /** The cream of the letter, the frame and the lines on the cover. */
+  ink: "#f6ead6",
+  frame: "rgba(246,234,214,0.5)",
+  line: "rgba(246,234,214,0.5)",
+  /** The page block under the cover (thin alternating leaves) and the book's shadow. */
+  pages: "repeating-linear-gradient(90deg,#f1ebde 0 2px,#d8d1c2 2px 3px)",
+  shadow: "0 26px 44px -16px rgba(0,0,0,0.85)",
+} as const;
+
+/**
+ * The achievements panel: one small tile per number, tinted with the hue of the section it counts
+ * (Stories plum, Video YouTube red, sentences the Passages blue, words the brand indigo). `rgb` is
+ * the tint, `ink` the icon's colour on it.
+ */
+export const STATS = {
+  hairline: "rgba(255,255,255,0.08)",
+  /** The bar toward the next level: its track (the fill is the site's own primary colour). */
+  track: "rgba(255,255,255,0.1)",
+  tiles: {
+    stories: { rgb: "180,130,200", ink: "#dcb8ea" },
+    videos: { rgb: "255,82,72", ink: "#ff8d85" },
+    lines: { rgb: "120,150,230", ink: "#a9c0ff" },
+    words: { rgb: "124,131,240", ink: "#bfc2ff" },
+  },
 } as const;
 
 /**

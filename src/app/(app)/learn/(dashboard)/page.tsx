@@ -44,6 +44,8 @@ import { fetchBookProgressAction } from "@/lib/book-progress/actions";
 import { fetchFeaturedBooks, fetchFirstPublishedBook } from "@/lib/supabase/queries/library";
 import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
+import { fetchFinishedVideoCount } from "@/lib/supabase/queries/video-finishes";
+import { fetchWordCardHints } from "@/lib/supabase/queries/word-hints";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
@@ -369,6 +371,15 @@ export default async function LearnHomePage({
   // The Home cards (permission "homeCards", Admins only, open only while the classic Home is): the classic
   // page in its new look. It uses the data loaded above, so it adds no read.
   if (features.rollouts.homeCards && user) {
+    // The two small reads only this page needs: the videos the learner has finished (a count) and the
+    // Arabic meanings on the first four word cards (an Arabic learner only). Either one failing just
+    // leaves its piece out; neither can take the page down.
+    const [videosFinished, wordHints] = await Promise.all([
+      fetchFinishedVideoCount(user.id),
+      locale === "ar"
+        ? fetchWordCardHints(reviewWords.slice(0, 4).map((word) => word.wordId))
+        : Promise.resolve({}),
+    ]);
     return (
       <ProgressProvider initialProgress={initialProgress}>
         <h1 className="sr-only">{t.nav.home}</h1>
@@ -411,6 +422,8 @@ export default async function LearnHomePage({
                 }
               : undefined
           }
+          videosFinished={videosFinished}
+          wordHints={wordHints}
         />
       </ProgressProvider>
     );

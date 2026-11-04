@@ -1,7 +1,7 @@
 /**
  * The words the Home cards add (permission "homeCards"). They live here, in four languages, instead of
  * the shared dictionaries, the way the rule of the day and Video dictation keep theirs; everything the
- * dictionaries already say (Stories, Passages, the totals, "Review now") is read from them.
+ * dictionaries already say (Stories, Passages, the level names, "Review now") is read from them.
  */
 
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -18,11 +18,23 @@ export interface HomeCardsStrings {
   storyLine: string;
   /** The Stories choice when the learner has nothing left in Stories. */
   storiesAllDone: string;
-  /** The label of the words panel and the line under its big number. */
-  yourWords: string;
+  /** The tags that tell the Stories card (the language) from the words section (the writing). */
+  languageCenter: string;
+  writingCenter: string;
+  /** The achievements panel: its label, the line under the level's bar, and the four counts. */
+  statsLabel: string;
+  levelLabel: string;
+  /** "{n}" percent of the way to "{level}". */
+  levelToNext: string;
+  levelTop: string;
+  storiesFinished: string;
+  videosFinished: string;
+  linesTyped: string;
   wordsTyped: string;
-  /** "{n}" words are waiting for review. */
-  readyToReview: string;
+  /** The words section: its label, the line after the big number, and the line beside the button. */
+  yourWords: string;
+  wordsReady: string;
+  wordsHint: string;
   /** The Passages and Video cards: the kind, the line under the title, and the «next» label. */
   passagesKind: string;
   passagesLine: string;
@@ -39,9 +51,19 @@ const ar: HomeCardsStrings = {
   storyContinue: "متابعة القصة",
   storyLine: "قصة قصيرة تكتبها جملة بجملة",
   storiesAllDone: "أنهيت قصص مستواك. تصفّح بقية القصص.",
-  yourWords: "كلماتك",
+  languageCenter: "مركز تعلّم اللغة",
+  writingCenter: "مركز تعلّم الكتابة",
+  statsLabel: "إنجازاتك",
+  levelLabel: "مستواك",
+  levelToNext: "{n}% نحو {level}",
+  levelTop: "أعلى مستوى",
+  storiesFinished: "قصص أنهيتها",
+  videosFinished: "فيديوهات أنهيتها",
+  linesTyped: "جملة كتبتها",
   wordsTyped: "كلمة كتبتها",
-  readyToReview: "{n} جاهزة للمراجعة",
+  yourWords: "كلماتك",
+  wordsReady: "كلمة جاهزة للمراجعة",
+  wordsHint: "مراجعة قصيرة تثبّت الكلمات في ذاكرتك",
   passagesKind: "استماع",
   passagesLine: "نصوص تستمع إليها وتقرؤها",
   videoKind: "إملاء",
@@ -57,9 +79,19 @@ const en: HomeCardsStrings = {
   storyContinue: "Continue the story",
   storyLine: "A short story you type line by line",
   storiesAllDone: "You have finished the stories at your level. Browse the rest.",
-  yourWords: "Your words",
+  languageCenter: "Language learning hub",
+  writingCenter: "Writing learning hub",
+  statsLabel: "Your achievements",
+  levelLabel: "Your level",
+  levelToNext: "{n}% to {level}",
+  levelTop: "Top level",
+  storiesFinished: "stories finished",
+  videosFinished: "videos finished",
+  linesTyped: "sentences typed",
   wordsTyped: "words typed",
-  readyToReview: "{n} ready to review",
+  yourWords: "Your words",
+  wordsReady: "words ready to review",
+  wordsHint: "A short review keeps your words in memory",
   passagesKind: "Listening",
   passagesLine: "Texts you listen to and read",
   videoKind: "Dictation",
@@ -75,9 +107,19 @@ const es: HomeCardsStrings = {
   storyContinue: "Continuar la historia",
   storyLine: "Una historia corta que escribes línea a línea",
   storiesAllDone: "Terminaste las historias de tu nivel. Mira el resto.",
-  yourWords: "Tus palabras",
+  languageCenter: "Centro de idioma",
+  writingCenter: "Centro de escritura",
+  statsLabel: "Tus logros",
+  levelLabel: "Tu nivel",
+  levelToNext: "{n}% hacia {level}",
+  levelTop: "Nivel máximo",
+  storiesFinished: "historias terminadas",
+  videosFinished: "videos terminados",
+  linesTyped: "frases escritas",
   wordsTyped: "palabras escritas",
-  readyToReview: "{n} listas para repasar",
+  yourWords: "Tus palabras",
+  wordsReady: "palabras listas para repasar",
+  wordsHint: "Un repaso corto fija tus palabras en la memoria",
   passagesKind: "Escucha",
   passagesLine: "Textos que escuchas y lees",
   videoKind: "Dictado",
@@ -93,9 +135,19 @@ const tr: HomeCardsStrings = {
   storyContinue: "Hikâyeye devam et",
   storyLine: "Satır satır yazdığın kısa bir hikâye",
   storiesAllDone: "Seviyendeki hikâyeleri bitirdin. Diğerlerine göz at.",
-  yourWords: "Kelimelerin",
+  languageCenter: "Dil merkezi",
+  writingCenter: "Yazma merkezi",
+  statsLabel: "Başarıların",
+  levelLabel: "Seviyen",
+  levelToNext: "{level} için %{n}",
+  levelTop: "En üst seviye",
+  storiesFinished: "biten hikâye",
+  videosFinished: "biten video",
+  linesTyped: "yazılan cümle",
   wordsTyped: "yazılan kelime",
-  readyToReview: "{n} tekrara hazır",
+  yourWords: "Kelimelerin",
+  wordsReady: "tekrara hazır kelime",
+  wordsHint: "Kısa bir tekrar kelimelerini aklında tutar",
   passagesKind: "Dinleme",
   passagesLine: "Dinleyip okuduğun metinler",
   videoKind: "Dikte",
@@ -110,7 +162,9 @@ export function homeCardsStrings(locale: SupportLocale | null | undefined): Home
   return locale ? BY_LOCALE[locale] : en;
 }
 
-/** Fills the "{n}" hole of one of the strings above. */
-export function fillCount(text: string, n: number): string {
-  return text.replace("{n}", String(n));
+/** Fills the "{name}" holes of one of the strings above. */
+export function fillText(text: string, values: Record<string, string | number>): string {
+  return text.replace(/\{(\w+)\}/g, (hole, name: string) =>
+    name in values ? String(values[name]) : hole,
+  );
 }

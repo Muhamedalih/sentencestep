@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
 import { useFeatures } from "@/components/providers/feature-provider";
@@ -15,7 +15,7 @@ import { findCurrentLesson } from "@/lib/progress/level";
 import { storyMonogram } from "@/lib/story-monogram";
 import type { LessonUnit } from "@/types/content";
 
-import { HOME_CARD_COLORS, STORY_PAGE } from "./palette";
+import { HOME_CARD_COLORS, STORY_BOOK } from "./palette";
 import { homeCardsStrings } from "./strings";
 
 type Choice = "lesson" | "story";
@@ -65,13 +65,15 @@ function Texts({
 }
 
 /**
- * The merged «keep learning» card of the Home cards: the daily lessons and the stories share one
- * card with two choices inside it, the lesson being the default, so the lesson is still one click
- * away and the story one tap on the choice. The choices swap with a short slide (see `hc-pane` in
- * globals.css) and the card's own colour follows: the lesson is the picture of the lesson, the story
- * is the Stories colour with the story's first letter large. The lesson side is exactly what the
- * old lesson card showed (same lesson, same label, same link); the story side is the story the
- * old Stories card pointed at, but it opens that story directly.
+ * The merged «keep learning» card of the Home cards: the stories and the daily lessons share one
+ * card with two choices inside it, the stories first and chosen by default (the lesson is still one
+ * tap on the other choice; a learner with no story left in their level starts on the lesson). The
+ * choices swap with a short slide (see `hc-pane` in globals.css) and the card's own colour follows:
+ * the lesson is the picture of the lesson, the story is the Stories colour with a standing book
+ * (the story's first letter on its cover) and a «language learning hub» tag that tells this card from
+ * the words section below, the «writing» side. The lesson side is exactly what the old lesson card
+ * showed (same lesson, same label, same link); the story side is the story the old Stories card
+ * pointed at, but it opens that story directly.
  */
 export function ContinueCard({
   units,
@@ -94,7 +96,7 @@ export function ContinueCard({
     isPremiumUser,
     progress,
   );
-  const [choice, setChoice] = useState<Choice>("lesson");
+  const [picked, setPicked] = useState<Choice | null>(null);
   const stories = HOME_CARD_COLORS.stories;
   const lessonColors = HOME_CARD_COLORS.lesson;
 
@@ -127,6 +129,8 @@ export function ContinueCard({
       ? t.common.continueLearning
       : t.common.startLearning;
   const rtl = locale === "ar";
+  // The stories come first; only a learner with no story left but a lesson to do starts on the lesson.
+  const choice: Choice = picked ?? (story || !lesson ? "story" : "lesson");
   const onStory = choice === "story";
 
   return (
@@ -155,13 +159,13 @@ export function ContinueCard({
             aria-hidden="true"
             className="hc-knob absolute inset-y-1 start-1 w-[calc(50%-0.25rem)] rounded-[9px] bg-white/15"
             style={{
-              transform: `translateX(${onStory ? (rtl ? "-100%" : "100%") : "0"})`,
+              transform: `translateX(${onStory ? "0" : rtl ? "-100%" : "100%"})`,
             }}
           />
           {(
             [
-              ["lesson", s.tabLessons],
               ["story", s.tabStories],
+              ["lesson", s.tabLessons],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -171,7 +175,7 @@ export function ContinueCard({
               id={`home-continue-tab-${id}`}
               aria-selected={choice === id}
               aria-controls={`home-continue-pane-${id}`}
-              onClick={() => setChoice(id)}
+              onClick={() => setPicked(id)}
               className={`relative z-10 cursor-pointer rounded-[9px] px-4 py-1.5 text-[13.5px] font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
                 choice === id ? "text-white" : "text-white/70 hover:text-white"
               }`}
@@ -265,7 +269,7 @@ export function ContinueCard({
         )}
       </div>
 
-      {/* The story: the Stories colour all over, the story's first letter large on a white page. */}
+      {/* The story: the Stories colour all over, a standing book with the story's first letter on its cover, and the «language» tag. */}
       <div
         id="home-continue-pane-story"
         role="tabpanel"
@@ -276,52 +280,55 @@ export function ContinueCard({
         inert={!onStory}
       >
         <div className="absolute inset-0" style={{ background: stories.background }} />
+        <span className="absolute end-4 top-4 z-10">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold"
+            style={{
+              background: stories.chip,
+              borderColor: stories.chipEdge,
+              color: stories.accent,
+            }}
+            dir={dir}
+          >
+            <BookOpen className="size-3.5" aria-hidden="true" />
+            {s.languageCenter}
+          </span>
+        </span>
         <div
           aria-hidden="true"
-          className="hc-tilt-r absolute end-20 top-12 hidden h-[21.5rem] w-[15.6rem] sm:block"
+          className="hc-tilt-r absolute end-24 top-14 hidden h-[21.6rem] w-[15.6rem] sm:block"
         >
           <i
-            className="absolute inset-0 rounded-[10px]"
+            className="absolute rounded-[4px_10px_10px_4px]"
             style={{
-              background: STORY_PAGE.back2,
-              transform: "translate(-28px,6px) rotate(-6.5deg)",
-              boxShadow: STORY_PAGE.stackShadow,
-            }}
-          />
-          <i
-            className="absolute inset-0 rounded-[10px]"
-            style={{
-              background: STORY_PAGE.back1,
-              transform: "translate(-14px,3px) rotate(-3.2deg)",
-              boxShadow: STORY_PAGE.stackShadow,
+              inset: "7px -8px -8px 9px",
+              background: STORY_BOOK.pages,
+              boxShadow: STORY_BOOK.shadow,
             }}
           />
           <div
-            className="absolute inset-0 overflow-hidden rounded-[10px]"
-            style={{ background: STORY_PAGE.face, boxShadow: STORY_PAGE.shadow }}
+            className="absolute inset-0 overflow-hidden rounded-[5px_12px_12px_5px]"
+            style={{ background: STORY_BOOK.cover, boxShadow: STORY_BOOK.coverEdge }}
           >
             <span
-              className="font-quote pointer-events-none absolute start-9 top-[26px] text-[13.6rem] leading-[0.82] font-bold tracking-[-0.02em] select-none"
-              style={{ color: STORY_PAGE.ink }}
+              className="absolute inset-y-0 left-0 w-[22px]"
+              style={{ background: STORY_BOOK.spine }}
+            />
+            <span
+              className="absolute rounded-[3px] border-[1.5px]"
+              style={{ inset: "22px 22px 22px 40px", borderColor: STORY_BOOK.frame }}
+            />
+            <span
+              className="font-quote pointer-events-none absolute top-[46px] left-[66px] text-[11.9rem] leading-[0.85] font-bold tracking-[-0.02em] select-none"
+              style={{ color: STORY_BOOK.ink }}
             >
               {storyMonogram(story?.title ?? t.nav.stories)}
             </span>
-            <span
-              className="hc-ribbon absolute end-[26px] top-0 h-[62px] w-[30px]"
-              style={{
-                background: STORY_PAGE.ribbon,
-                clipPath: "polygon(0 0,100% 0,100% 100%,50% 80%,0 100%)",
-              }}
-            />
-            <span className="absolute inset-x-9 top-[222px] flex flex-col gap-[9px]">
-              <i className="block h-1.5 rounded-[3px]" style={{ background: STORY_PAGE.line }} />
+            <span className="absolute right-[46px] bottom-[62px] left-[66px] flex flex-col gap-[9px]">
+              <i className="block h-1.5 rounded-[3px]" style={{ background: STORY_BOOK.line }} />
               <i
-                className="block h-1.5 w-[88%] rounded-[3px]"
-                style={{ background: STORY_PAGE.line }}
-              />
-              <i
-                className="block h-1.5 w-[64%] rounded-[3px]"
-                style={{ background: STORY_PAGE.line }}
+                className="block h-1.5 w-[72%] rounded-[3px]"
+                style={{ background: STORY_BOOK.line }}
               />
             </span>
           </div>

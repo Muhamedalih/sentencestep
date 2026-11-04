@@ -254,6 +254,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["video_timings"]["Insert"]>;
         Relationships: [];
       };
+      /** Videos a learner has finished (the finish screen of Video dictation was reached): one row per learner and video. See 20250355000000_video_finishes.sql. */
+      video_finishes: {
+        Row: {
+          user_id: string;
+          video_id: string;
+          finished_at: string;
+        };
+        Insert: {
+          user_id: string;
+          video_id: string;
+          finished_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["video_finishes"]["Insert"]>;
+        Relationships: [];
+      };
       session_reminders: {
         Row: {
           user_id: string;

@@ -837,13 +837,6 @@ html[data-keyboard] .kb-hide {
 .hc-card:has(:focus-visible) .hc-type::after {
   width: 88%;
 }
-.hc-ribbon {
-  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.hc-card:hover .hc-ribbon,
-.hc-card:has(:focus-visible) .hc-ribbon {
-  transform: translateY(10px);
-}
 .hc-play {
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -871,21 +864,37 @@ html[data-keyboard] .kb-hide {
 .hc-card:has(:focus-visible) .hc-wave {
   animation: hc-wave 800ms ease-in-out infinite alternate;
 }
-/* The three word cards of the words panel spread like a hand of cards. */
+/* The four word cards of the words section spread like a hand of cards. */
 .hc-fan > * {
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .hc-card:hover .hc-fan > :nth-child(1),
 .hc-card:has(:focus-visible) .hc-fan > :nth-child(1) {
-  transform: translate(-5px, 2px) rotate(-6deg);
+  transform: translate(-14px, 6px) rotate(-3deg);
 }
 .hc-card:hover .hc-fan > :nth-child(2),
 .hc-card:has(:focus-visible) .hc-fan > :nth-child(2) {
-  transform: translateY(-8px);
+  transform: translate(-4px, -10px);
 }
 .hc-card:hover .hc-fan > :nth-child(3),
 .hc-card:has(:focus-visible) .hc-fan > :nth-child(3) {
-  transform: translate(5px, 2px) rotate(6deg);
+  transform: translate(4px, -8px) rotate(1deg);
+}
+.hc-card:hover .hc-fan > :nth-child(4),
+.hc-card:has(:focus-visible) .hc-fan > :nth-child(4) {
+  transform: translate(14px, 8px) rotate(2.5deg);
+}
+/* The bar toward the next level fills from the start the first time it is drawn. */
+@keyframes hc-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+.hc-fill {
+  animation: hc-fill 1000ms cubic-bezier(0.3, 0.7, 0.2, 1) 250ms backwards;
 }
 /* The merged card's two choices: the one being left goes out, the other comes in a moment later. */
 .hc-pane {
@@ -895,10 +904,10 @@ html[data-keyboard] .kb-hide {
     opacity 150ms ease,
     transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.hc-pane[data-side="lesson"] {
+.hc-pane[data-side="story"] {
   transform: translateX(-22px);
 }
-.hc-pane[data-side="story"] {
+.hc-pane[data-side="lesson"] {
   transform: translateX(22px);
 }
 .hc-pane[data-on="true"] {
@@ -913,7 +922,8 @@ html[data-keyboard] .kb-hide {
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .hc-rise {
+  .hc-rise,
+  .hc-fill {
     animation: none;
   }
   .hc-card,
@@ -921,7 +931,6 @@ html[data-keyboard] .kb-hide {
   .hc-tilt-l,
   .hc-tilt-r,
   .hc-type::after,
-  .hc-ribbon,
   .hc-play,
   .hc-go svg,
   .hc-fan > *,
@@ -933,7 +942,6 @@ html[data-keyboard] .kb-hide {
   .hc-card:hover,
   .hc-card:has(:focus-visible),
   .hc-card:hover .hc-peek,
-  .hc-card:hover .hc-ribbon,
   .hc-card:hover .hc-play,
   .hc-card:hover .hc-go svg,
   .hc-card:hover .hc-fan > * {
