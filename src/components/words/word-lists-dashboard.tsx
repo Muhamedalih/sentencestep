@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Search, X } from "lucide-react";
 
+import { WordsSection } from "@/components/home-cards/words-section";
 import { CountUp } from "@/components/words/count-up";
 import { MasteryRing } from "@/components/words/mastery-ring";
 import { WordTopicCard } from "@/components/words/word-topic-card";
@@ -56,12 +57,19 @@ export function WordListsDashboard({
   isPremiumUser,
   weakWords,
   mastery = null,
+  homeCardWords = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
   weakWords: WeakWordItem[];
   /** The learner's schedule summary per topic, or null for a guest / when Smart word practice is off. */
   mastery?: LibraryMastery | null;
+  /**
+   * The Arabic meanings of the first words due (by word id) while the Home cards are open for the learner
+   * (permission "homeCards"): the review call to action is then Home's words section, the same card the
+   * library shows, instead of the button in the overview. Null keeps the button.
+   */
+  homeCardWords?: Record<string, string> | null;
 }) {
   const { locale, dir, t } = useLocale();
   const copy = t.wordLists.redesign;
@@ -91,7 +99,9 @@ export function WordListsDashboard({
 
   const unlocked = rows.filter((row) => !row.locked);
   const totals = sumBands(unlocked.map((row) => row.bands));
-  const reviewCount = mastery?.reviewCount ?? weakWords.filter((word) => word.dueNow).length;
+  const reviewWords = weakWords.filter((word) => word.dueNow);
+  const reviewCount = mastery?.reviewCount ?? reviewWords.length;
+  const wordsSection = homeCardWords !== null;
   const percent = masteredPercent(totals);
 
   const visibleRows = rows.filter((row) => matchesQuery(row.group, query));
@@ -106,6 +116,16 @@ export function WordListsDashboard({
           {t.library.wordListsDescription}
         </p>
       </div>
+
+      {wordsSection && reviewCount > 0 && (
+        <WordsSection
+          reviewCount={reviewCount}
+          words={reviewWords}
+          hints={homeCardWords}
+          className="mb-6 sm:mb-8"
+          index={0}
+        />
+      )}
 
       {groups.length > 0 && (
         <section
@@ -151,7 +171,7 @@ export function WordListsDashboard({
             </dl>
           </div>
 
-          {reviewCount > 0 && (
+          {reviewCount > 0 && !wordsSection && (
             <div className="flex shrink-0 flex-col gap-1.5 sm:items-end" dir={dir}>
               <Button asChild>
                 <Link href="/learn/word-lists/review">

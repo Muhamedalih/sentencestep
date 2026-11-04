@@ -76,6 +76,7 @@ export default async function WordListsPage() {
           isPremiumUser={hasPremium || isAdminUser}
           weakWords={weakWords}
           mastery={mastery}
+          homeCardWords={homeCardWords}
         />
       ) : (
         <WordListsLibrary
