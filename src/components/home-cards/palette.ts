@@ -122,3 +122,60 @@ export const VIDEO_SCENE = {
   progress: "#4fe0b5",
   shadow: "0 26px 44px -16px rgba(0,0,0,0.85),0 0 0 1px rgba(255,255,255,0.13)",
 } as const;
+
+/**
+ * The daily-tasks box (the strip and the card that opens under it): indigo like the lesson card, with
+ * the next task's tile, the three-part tracker, the freeze pill, and, once opened, the step rail
+ * (a green disc for a finished step, an indigo ring for the current one, a grey ring for the rest).
+ */
+export const TASKS = {
+  /** The hairline between the strip's groups, and the one under each row of the opened card. */
+  hairline: "rgba(255,255,255,0.08)",
+  rowLine: "rgba(255,255,255,0.07)",
+  /** The tile with the next task's icon (green with a tick once the day is done). */
+  tile: {
+    background: "linear-gradient(160deg,rgba(124,131,240,0.26),rgba(124,131,240,0.1))",
+    border: "rgba(124,131,240,0.34)",
+    ink: "#c3c6ff",
+  },
+  tileDone: {
+    background: "linear-gradient(160deg,rgba(62,194,122,0.24),rgba(62,194,122,0.08))",
+    border: "rgba(62,194,122,0.38)",
+    ink: "#6fe6a4",
+  },
+  /** The tracker: one part per task. */
+  segment: {
+    idle: "rgba(255,255,255,0.12)",
+    fill: "var(--primary)",
+    current: "rgba(124,131,240,0.55)",
+  },
+  /** The «streak freezes left» pill. */
+  freeze: { background: "rgba(56,189,248,0.1)", border: "rgba(56,189,248,0.28)", ink: "#7dd3fc" },
+  /** The round button that opens the box. */
+  chevron: { border: "rgba(255,255,255,0.12)", hover: "rgba(255,255,255,0.06)" },
+  /** The step rail of the opened card. */
+  disc: {
+    idle: { border: "rgba(255,255,255,0.16)", background: "transparent", ink: "#8e8e99" },
+    current: {
+      border: "var(--primary)",
+      background: "rgba(124,131,240,0.2)",
+      ink: "#d3d5ff",
+      halo: "rgba(124,131,240,0.1)",
+    },
+    done: { border: "rgba(62,194,122,0.5)", background: "rgba(62,194,122,0.16)", ink: "#6fe6a4" },
+  },
+  rail: { idle: "rgba(255,255,255,0.1)", done: "rgba(62,194,122,0.5)" },
+  /** The XP pill at a row's end. */
+  xp: {
+    idle: { background: "rgba(255,255,255,0.06)", ink: "#9a9aa3" },
+    current: { background: "rgba(124,131,240,0.16)", ink: "#c9cbff" },
+    done: { background: "rgba(62,194,122,0.14)", ink: "#6fe6a4" },
+  },
+  /** The level mark («A2») in a row's detail line. */
+  level: { border: "rgba(255,255,255,0.16)", ink: "#c8c8cf" },
+  /** A finished row's title, and the line saying why the current step matters. */
+  doneTitle: "#b7bac6",
+  why: "#b9bbd6",
+  /** The small print of the opened card's heading line. */
+  reward: "#a3a6d6",
+} as const;

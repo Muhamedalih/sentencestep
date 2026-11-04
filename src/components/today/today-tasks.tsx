@@ -28,16 +28,16 @@ import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
 /** The accuracy that earns the story's star. */
-const STAR_ACCURACY = 0.9;
+export const STAR_ACCURACY = 0.9;
 
-const ICONS = { listen: Headphones, story: PenLine, words: Type, sentences: Quote } as const;
+export const ICONS = { listen: Headphones, story: PenLine, words: Type, sentences: Quote } as const;
 
 const CHIP_LEVEL =
   "border-success/40 bg-success/10 text-success rounded-full border px-2 py-px text-[11px] font-semibold";
 
 type TodayCopy = ReturnType<typeof useLocale>["t"]["today"];
 
-function fill(template: string, values: Record<string, string | number>): string {
+export function fill(template: string, values: Record<string, string | number>): string {
   return Object.entries(values).reduce(
     (text, [key, value]) => text.replace(`{${key}}`, String(value)),
     template,
@@ -59,7 +59,7 @@ export function todayTaskTitle(copy: TodayCopy, kind: TodayQuestInfo["kind"]): s
  * sound rings, the pen writes, the letters breathe. Nothing moves for a learner who asked for
  * reduced motion, and a task that is done or still waiting stays still.
  */
-function TaskIcon({ kind, active }: { kind: TodayQuestInfo["kind"]; active: boolean }) {
+export function TaskIcon({ kind, active }: { kind: TodayQuestInfo["kind"]; active: boolean }) {
   const reduced = useReducedMotion();
   const moving = active && !reduced;
   const Icon = ICONS[kind];

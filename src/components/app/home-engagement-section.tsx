@@ -9,6 +9,7 @@ import {
 } from "@/components/app/home-engagement";
 import { EngagementStrip } from "@/components/app/engagement-strip";
 import { PassagesCard } from "@/components/app/passages-card";
+import { TasksBox } from "@/components/home-cards/tasks-box";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import type { PassagesHomeData } from "@/lib/passages/home-card";
 
@@ -44,13 +45,13 @@ async function EngagementStripSlot({
   trail?: ReactNode;
 }) {
   const [questsPayload, streakData] = await Promise.all([quests, streak]);
+  if (cards) return <TasksBox today={today} quests={questsPayload} streak={streakData} />;
   return (
     <EngagementStrip
       today={today}
       quests={questsPayload}
       streak={streakData}
       quiet={quiet}
-      cards={cards}
       lead={lead}
       trail={trail}
     />
@@ -77,7 +78,7 @@ export function HomeEngagementSection({
   stream: HomeEngagementStream | null;
   /** The classic Home permission: the strip stays folded and does not glow until the learner taps it. */
   quiet?: boolean;
-  /** The Home cards permission: the strip is one slim line, the tasks first and the week at its end (see EngagementStrip). */
+  /** The Home cards permission: the daily-tasks box of the new look replaces the strip (see TasksBox). */
   cards?: boolean;
   /** The classic Home's merged strip (see EngagementStrip): only drawn with a stream, so the header it replaces is hidden only then. */
   lead?: ReactNode;
@@ -90,7 +91,9 @@ export function HomeEngagementSection({
       <Suspense fallback={<CardSkeleton feature="dailySession" />}>
         <DailySessionSlot data={stream.dailySession} />
       </Suspense>
-      <Suspense fallback={<CardSkeleton feature="strip" />}>
+      <Suspense
+        fallback={<CardSkeleton feature="strip" className={cards ? "xl:h-[4.4rem]" : undefined} />}
+      >
         <EngagementStripSlot
           today={stream.todayISO}
           quests={stream.quests}

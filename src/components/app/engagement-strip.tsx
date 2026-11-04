@@ -18,7 +18,7 @@ import { todayTaskRepeatHref } from "@/lib/today/home-layout";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
-function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }) {
+export function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }) {
   const days = Array.from({ length: 7 }, (_unused, index) => addDays(today, index - 6));
   return (
     <div className="flex items-center gap-1.5" dir="ltr" aria-hidden="true">
@@ -46,7 +46,7 @@ function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }
  * The classic Home strip's small repeat button once the day is done: it opens a short menu of the
  * day's lessons, each one started again (todayTaskRepeatHref), so a learner who wants more picks one.
  */
-function RepeatLessonMenu({ quests }: { quests: DailyQuestsPayload["quests"] }) {
+export function RepeatLessonMenu({ quests }: { quests: DailyQuestsPayload["quests"] }) {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -118,7 +118,6 @@ export function EngagementStrip({
   quests,
   streak,
   quiet = false,
-  cards = false,
   lead,
   trail,
   className,
@@ -128,8 +127,6 @@ export function EngagementStrip({
   streak: StreakCalendarData | null;
   /** Folded and without the glow until tapped, for a learner who opens the daily tasks by choice. */
   quiet?: boolean;
-  /** The Home cards permission: one slim line, the day's tasks first and the week at its end (no flame, the header has one). */
-  cards?: boolean;
   /** The classic Home's merged strip, from xl up: the greeting at its start and the totals at its end (the header above is then hidden there). */
   lead?: ReactNode;
   trail?: ReactNode;
@@ -164,7 +161,6 @@ export function EngagementStrip({
           className={cn(
             "border-border bg-card hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border px-4 py-3 transition-colors",
             lead && "xl:flex-nowrap xl:gap-x-6 xl:px-5 xl:py-4",
-            cards && "xl:flex-nowrap xl:gap-x-6 xl:py-2.5",
           )}
         >
           {lead && (
@@ -177,15 +173,12 @@ export function EngagementStrip({
             </>
           )}
           {streak && (
-            <div className={cn("flex items-center gap-3", cards && "order-2 ms-auto")}>
+            <div className="flex items-center gap-3">
               <Flame
-                className={cn(
-                  "size-5 shrink-0 text-orange-500 dark:text-orange-400",
-                  cards && "hidden",
-                )}
+                className="size-5 shrink-0 text-orange-500 dark:text-orange-400"
                 aria-hidden="true"
               />
-              <div className={cn("flex flex-col gap-1", cards && "flex-row items-center gap-2.5")}>
+              <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs leading-none" dir={dir}>
                   {t.streakCalendar.heading}
                 </span>
@@ -203,29 +196,18 @@ export function EngagementStrip({
             </div>
           )}
           {streak && quests && (
-            <span
-              className={cn("bg-border/70 hidden h-8 w-px sm:block", cards && "sm:hidden")}
-              aria-hidden="true"
-            />
+            <span className="bg-border/70 hidden h-8 w-px sm:block" aria-hidden="true" />
           )}
           {quests && (
-            <div className={cn("flex min-w-44 flex-1 items-center gap-3", cards && "order-1")}>
+            <div className="flex min-w-44 flex-1 items-center gap-3">
               <span
-                className={cn(
-                  "relative flex size-10 shrink-0 items-center justify-center rounded-full",
-                  cards && "size-9",
-                )}
+                className="relative flex size-10 shrink-0 items-center justify-center rounded-full"
                 style={{
                   background: `conic-gradient(var(--primary) ${percent}%, var(--border) 0)`,
                 }}
                 aria-hidden="true"
               >
-                <span
-                  className={cn(
-                    "bg-card flex size-8 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",
-                    cards && "size-7 text-[10.5px]",
-                  )}
-                >
+                <span className="bg-card flex size-8 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
                   {quests.allDone ? (
                     <Check className="text-success size-4" />
                   ) : (
@@ -235,11 +217,11 @@ export function EngagementStrip({
                   )}
                 </span>
               </span>
-              <div className={cn("min-w-0", cards && "flex min-w-0 items-center gap-3")}>
-                <p className="text-muted-foreground shrink-0 text-xs leading-none" dir={dir}>
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-xs leading-none" dir={dir}>
                   {t.quests.heading}
                 </p>
-                <p className={cn("mt-1 truncate text-sm font-medium", cards && "mt-0")} dir={dir}>
+                <p className="mt-1 truncate text-sm font-medium" dir={dir}>
                   {quests.allDone || !nextQuest ? (
                     quiet ? (
                       t.quests.allDoneExplore
@@ -268,7 +250,7 @@ export function EngagementStrip({
             </div>
           )}
           {quiet && todayMode && quests?.allDone && (
-            <div className={cn("ms-auto", cards && "order-1 ms-0")}>
+            <div className="ms-auto">
               <RepeatLessonMenu quests={quests.quests} />
             </div>
           )}
@@ -279,10 +261,7 @@ export function EngagementStrip({
             aria-expanded={open}
             aria-controls={panelId}
             aria-label={t.quests.heading}
-            className={cn(
-              "text-muted-foreground hover:text-foreground hover:bg-muted ms-auto flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors after:absolute after:inset-0 after:rounded-2xl",
-              cards && "order-3 ms-0",
-            )}
+            className="text-muted-foreground hover:text-foreground hover:bg-muted ms-auto flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors after:absolute after:inset-0 after:rounded-2xl"
           >
             <ChevronDown
               className={cn("size-5 transition-transform", open && "rotate-180")}
