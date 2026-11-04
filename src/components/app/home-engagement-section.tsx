@@ -31,6 +31,7 @@ async function EngagementStripSlot({
   quests,
   streak,
   quiet,
+  cards,
   lead,
   trail,
 }: {
@@ -38,6 +39,7 @@ async function EngagementStripSlot({
   quests: HomeEngagementStream["quests"];
   streak: HomeEngagementStream["streak"];
   quiet?: boolean;
+  cards?: boolean;
   lead?: ReactNode;
   trail?: ReactNode;
 }) {
@@ -48,6 +50,7 @@ async function EngagementStripSlot({
       quests={questsPayload}
       streak={streakData}
       quiet={quiet}
+      cards={cards}
       lead={lead}
       trail={trail}
     />
@@ -66,6 +69,7 @@ async function EngagementStripSlot({
 export function HomeEngagementSection({
   stream,
   quiet,
+  cards,
   lead,
   trail,
   className,
@@ -73,6 +77,8 @@ export function HomeEngagementSection({
   stream: HomeEngagementStream | null;
   /** The classic Home permission: the strip stays folded and does not glow until the learner taps it. */
   quiet?: boolean;
+  /** The Home cards permission: the strip is one slim line, the tasks first and the week at its end (see EngagementStrip). */
+  cards?: boolean;
   /** The classic Home's merged strip (see EngagementStrip): only drawn with a stream, so the header it replaces is hidden only then. */
   lead?: ReactNode;
   trail?: ReactNode;
@@ -90,6 +96,7 @@ export function HomeEngagementSection({
           quests={stream.quests}
           streak={stream.streak}
           quiet={quiet}
+          cards={cards}
           lead={lead}
           trail={trail}
         />

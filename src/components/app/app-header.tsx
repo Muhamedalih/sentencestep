@@ -135,7 +135,7 @@ export function AppHeader({
         <ThemeToggle />
       </div>
       <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
-      <AccountMenu />
+      <AccountMenu user={user} />
     </>
   ) : (
     <>

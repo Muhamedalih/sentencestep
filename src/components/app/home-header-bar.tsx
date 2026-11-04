@@ -41,7 +41,7 @@ function BigStat({
 }
 
 /** The learner's totals the header shows: sentences and words of every finished lesson, and the sessions. */
-function useHeaderTotals(lessonStats: LessonStatsMap, sessionCount: number | null) {
+export function useHeaderTotals(lessonStats: LessonStatsMap, sessionCount: number | null) {
   const { completions } = useSharedProgress();
   const totals = completions.reduce(
     (acc, completion) => {

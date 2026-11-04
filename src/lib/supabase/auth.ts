@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { googleAvatarUrl } from "@/lib/supabase/avatar-url";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { hasSupabaseAuthCookie } from "@/lib/supabase/has-session-cookie";
@@ -8,6 +9,8 @@ export interface CurrentUser {
   id: string;
   email: string;
   displayName: string | null;
+  /** The Google profile picture of a learner who signed in with Google (it is in the sign-in token already), null otherwise. */
+  avatarUrl: string | null;
 }
 
 /**
@@ -59,5 +62,6 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Cur
     id: claims.sub,
     email: claims.email ?? "",
     displayName: (claims.user_metadata?.display_name as string | undefined) ?? null,
+    avatarUrl: googleAvatarUrl(claims.user_metadata as Record<string, unknown> | undefined),
   };
 });

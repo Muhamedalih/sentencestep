@@ -16,6 +16,7 @@ import { HomeHero } from "@/components/app/home-hero";
 import { HomePlan } from "@/components/app/home-plan";
 import { HomeReviewCard } from "@/components/app/home-review-card";
 import { HomeVideoCard } from "@/components/app/home-video-card";
+import { HomeCardsPage } from "@/components/home-cards/home-cards-page";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { MobileGuestHome } from "@/components/home-today/guest-home";
 import { HomeToday } from "@/components/home-today/home-today";
@@ -365,6 +366,55 @@ export default async function LearnHomePage({
       ? arrangeVideoLessons(getVideoLessons(), await getVideoArrangement())[0]?.ids[0]
       : undefined;
   const homeVideo = firstVideoId ? getVideoLesson(firstVideoId) : undefined;
+  // The Home cards (permission "homeCards", Admins only, open only while the classic Home is): the classic
+  // page in its new look. It uses the data loaded above, so it adds no read.
+  if (features.rollouts.homeCards && user) {
+    return (
+      <ProgressProvider initialProgress={initialProgress}>
+        <h1 className="sr-only">{t.nav.home}</h1>
+        <HomeCardsPage
+          engagement={engagement}
+          heading={t.progress.upNextLabel}
+          banners={
+            <>
+              {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}
+              {openCheckout && !isPremiumUser && (
+                <FinishPaymentBanner
+                  reference={openCheckout.reference}
+                  url={openCheckout.url}
+                  className="mb-6"
+                />
+              )}
+            </>
+          }
+          footer={
+            isAdminUser ? (
+              <div className="mt-6">
+                <ClassicHomeSwitch everyone={classicForEveryone} />
+              </div>
+            ) : undefined
+          }
+          units={units}
+          storiesUnits={storiesUnits}
+          isPremiumUser={isPremiumUser}
+          lessonStats={lessonStats}
+          sessionCount={attemptCount}
+          reviewCount={reviewWaiting.count}
+          dueWords={reviewWords}
+          passages={passages}
+          video={
+            homeVideo
+              ? {
+                  card: videoCard(homeVideo),
+                  heading: videoStrings(locale).navLabel,
+                  cta: videoHomeCopy(locale).cta,
+                }
+              : undefined
+          }
+        />
+      </ProgressProvider>
+    );
+  }
   const firstLesson = withOpeningLessonPlacement(units).find((unit) => unit.isFree) ?? null;
   return (
     <ProgressProvider initialProgress={initialProgress}>

@@ -30,6 +30,7 @@ export const ROLLOUT_IDS = [
   "videoNews",
   "upgradeMoments",
   "classicHome",
+  "homeCards",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -284,6 +285,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Wins over the new Home page: for anyone who has this, the new Home page (and the “جديد” line that lives on it) is closed.",
       "For an admin it also hides the admin-only “Today's plan” preview, so an admin sees Home exactly as a learner will.",
       "Closing it brings the new Home page back for whoever has that open.",
+    ],
+  },
+  homeCards: {
+    id: "homeCards",
+    audience: "learner",
+    title: "Home: colourful cards, one “keep learning” card, a words panel",
+    description:
+      "A new look for the classic Home page. The daily lessons and the stories share one “keep learning” card with two choices inside it (the lesson stays the default, so it is still one click away); next to it a words panel gathers the three totals and the words ready for review; below, the Passages and Video cards each carry their own colour. The header's account button becomes the learner's Google photo (or their letter on a colour) beside their name, and the cards lift and settle when the pointer is over them. The daily-tasks strip, the lessons, the review and every link keep working exactly as before.",
+    notes: [
+      "Lives on the classic Home page: it stays closed whenever the classic Home (above) is closed, whatever its own setting says.",
+      "The Google photo is the picture already in the sign-in token, so it costs no extra read; the browser loads it from Google, which the page's security policy now allows for images. A learner without a photo (email sign-up) keeps the letter on a colour.",
+      "The colours live in one file (src/components/home-cards/palette.ts), so they can be changed without touching the layout.",
+      "Movement is made of transforms and opacity only and stops for a learner whose device asks for reduced motion.",
     ],
   },
   mobilePath: {

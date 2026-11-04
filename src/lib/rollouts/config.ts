@@ -192,6 +192,7 @@ export function evaluateRollouts(
  * The video news line is a line of the new Home page that points at Video dictation, so it is closed
  * with either of them.
  * The classic Home wins over the new Home page: whoever has it gets the classic page.
+ * The Home cards are a new look of the classic page, so they are closed whenever the classic Home is.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
@@ -209,6 +210,7 @@ export function withRolloutDependencies(
     todayRepeat: access.todayRepeat && access.todaySession,
     homePolish: access.homePolish && access.todaySession,
     videoNews: access.videoNews && access.videoDictation && newHome,
+    homeCards: access.homeCards && access.classicHome,
   };
 }
 

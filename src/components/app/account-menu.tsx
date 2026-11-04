@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
+import { AccountChip } from "@/components/home-cards/account-chip";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import type { CurrentUser } from "@/lib/supabase/auth";
 
 /**
  * Header account trigger — a plain link straight to /learn/settings, not a
@@ -19,8 +22,12 @@ import { useLocale } from "@/components/providers/locale-provider";
  * the corner") — just the label, a bordered box, and a light hover lift +
  * shadow + sliding chevron for a premium feel without any bouncy motion.
  */
-export function AccountMenu() {
+export function AccountMenu({ user }: { user?: CurrentUser | null }) {
   const { t } = useLocale();
+  const { rollouts } = useFeatures();
+
+  // The Home cards permission: the learner's Google picture (or letter) beside their name replaces the plain button.
+  if (rollouts.homeCards && user) return <AccountChip user={user} />;
 
   return (
     <Link

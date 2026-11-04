@@ -30,7 +30,7 @@
     "test:readout": "tsx --test src/lib/readout/returns.test.ts src/lib/readout/impact.test.ts src/lib/today/readout.test.ts src/lib/sentence-bank/readout.test.ts src/lib/readout/spelling.test.ts src/lib/readout/level-test.test.ts src/lib/readout/words.test.ts",
     "test:redeem": "tsx --test src/lib/redeem/code.test.ts src/lib/redeem/redemption.test.ts src/lib/redeem/attempts.test.ts src/lib/redeem/batch.test.ts src/lib/redeem/ledger.test.ts src/lib/redeem/sql-parity.test.ts src/lib/redeem/service.test.ts src/lib/redeem/input.test.ts",
     "test:feedback": "tsx --test src/lib/feedback/rating-record.test.ts src/lib/feedback/sheet-import.test.ts src/lib/feedback/ratings-settings.test.ts src/lib/feedback/reviews-display.test.ts",
-    "test:auth": "tsx --test src/lib/supabase/auth-errors.test.ts src/lib/supabase/safe-redirect.test.ts src/lib/supabase/friendly-auth-error.test.ts src/lib/supabase/auth-cookie-pattern.test.ts src/lib/supabase/display-name.test.ts src/lib/request-origin.test.ts",
+    "test:auth": "tsx --test src/lib/supabase/auth-errors.test.ts src/lib/supabase/safe-redirect.test.ts src/lib/supabase/friendly-auth-error.test.ts src/lib/supabase/auth-cookie-pattern.test.ts src/lib/supabase/display-name.test.ts src/lib/supabase/avatar-url.test.ts src/lib/request-origin.test.ts",
     "test:cron": "tsx --test src/lib/cron/auth.test.ts",
     "test:seo": "tsx --test src/lib/seo/sitemap.test.ts",
     "test:library-open": "tsx --test src/lib/library/open-rule.test.ts",

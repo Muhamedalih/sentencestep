@@ -159,7 +159,8 @@ function buildCsp(nonce: string, isStaticRoute: boolean, withYouTube = false): s
     scriptSrc + (withYouTube ? " https://www.youtube.com" : ""),
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
-    `img-src 'self' data: blob: https://*.supabase.co https://*.clarity.ms${withYouTube ? " https://i.ytimg.com" : ""}`,
+    // https://*.googleusercontent.com: the profile picture of a learner who signed in with Google (the Home cards' header).
+    `img-src 'self' data: blob: https://*.supabase.co https://*.clarity.ms https://*.googleusercontent.com${withYouTube ? " https://i.ytimg.com" : ""}`,
     "media-src 'self' blob: https://*.supabase.co",
     `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://*.clarity.ms${sentryConnectSrc()}`,
     `frame-src https://challenges.cloudflare.com${withYouTube ? " https://www.youtube-nocookie.com" : ""}`,

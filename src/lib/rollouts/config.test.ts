@@ -194,6 +194,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     videoNews: false,
     upgradeMoments: false,
     classicHome: false,
+    homeCards: false,
   });
 });
 
@@ -452,6 +453,16 @@ test("a visitor-aimed feature keeps deciding its share in the browser: the serve
   const share = entry({ mode: "everyone", percent: 10 });
   assert.equal(learnerSharePercent("shortFirstRun", share), null);
   assert.equal(isRolloutOpen(share, guest, "shortFirstRun"), true);
+});
+
+test("the Home cards are a look of the classic Home: Admins only, and closed whenever the classic Home is", () => {
+  const admins = withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), admin));
+  assert.equal(admins.homeCards, true);
+  assert.equal(withRolloutDependencies({ ...admins, classicHome: false }).homeCards, false);
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).homeCards,
+    false,
+  );
 });
 
 test("the classic Home: Admins only, and it closes the new Home page and its «جديد» line", () => {
