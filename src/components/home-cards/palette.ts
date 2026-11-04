@@ -2,12 +2,12 @@
  * The colours of the Home cards (permission "homeCards"), all in this one file so they can be changed
  * without touching a layout.
  *
- * A card is nearly the page colour: one dark base, a single soft wash of its section's hue in the top
- * corner and a hairline of the same hue, so nothing on the page hits the eye. The bright colours live
- * in the art on the card (white paper sheets with real shadows, a story page, an audio orb, a video
- * frame, white word cards), which is drawn from the `PAPER`, `ORB`, `STORY_PAGE` and `VIDEO_SCENE`
- * groups below. `TINT` scales the wash and the hairline of every card at once (1 = near the page
- * colour, about 2 = clearly tinted).
+ * A card is nearly black like the page: one very dark, almost neutral base (a hair of its section's
+ * hue), a wash of that hue in the top corner that is barely there, and a neutral white hairline, so
+ * nothing on the page glows. The bright colours live in the art on the card (white paper sheets with
+ * real shadows, a story page, an audio orb, the YouTube player), which is drawn from the `PAPER`,
+ * `ORB`, `STORY_PAGE` and `VIDEO_SCENE` groups below. `TINT` scales the wash of every card at once
+ * (1 = as built, 0 = flat dark).
  */
 export interface CardColors {
   /** The card's flat base colour (the colour a shade has to fade into). */
@@ -25,36 +25,37 @@ export interface CardColors {
   accent: string;
 }
 
-/** How strongly a card is tinted (see above). */
+/** How strongly a card's corner wash shows (see above). */
 const TINT = 1;
 
 function alpha(value: number): number {
   return Math.round(value * TINT * 1000) / 1000;
 }
 
-function tone(hue: string, base: string, accent: string): CardColors {
+/** A card: its near-black base, the hue of its corner wash and how much of it shows (a few percent), and a muted light tone for the tag's text and the small dot. */
+function tone(hue: string, base: string, accent: string, wash = 0.045): CardColors {
   return {
     base,
-    background: `radial-gradient(110% 125% at 0% 0%,rgba(${hue},${alpha(0.14)}) 0%,rgba(${hue},0) 62%),${base}`,
-    edge: `rgba(${hue},${alpha(0.17)})`,
-    chip: `rgba(${hue},0.12)`,
-    chipEdge: `rgba(${hue},0.34)`,
-    soft: "rgba(255,255,255,0.62)",
+    background: `radial-gradient(110% 125% at 0% 0%,rgba(${hue},${alpha(wash)}) 0%,rgba(${hue},0) 62%),${base}`,
+    edge: "rgba(255,255,255,0.085)",
+    chip: "rgba(255,255,255,0.055)",
+    chipEdge: "rgba(255,255,255,0.11)",
+    soft: "rgba(255,255,255,0.58)",
     accent,
   };
 }
 
 export const HOME_CARD_COLORS = {
-  /** Passages: navy. */
-  passages: tone("96,140,240", "#0e1730", "#9fbdff"),
-  /** Stories: plum. */
-  stories: tone("178,104,204", "#170f1e", "#e2a6f0"),
-  /** Video: deep pine. */
-  video: tone("46,190,164", "#0a1c1d", "#8be8d4"),
-  /** Words: indigo, the site's own brand hue. */
-  words: tone("124,131,240", "#12132f", "#b9bdff"),
-  /** The daily lesson side of the «keep learning» card. */
-  lesson: tone("124,131,240", "#101124", "#b9bdff"),
+  /** Passages: black with a trace of blue. */
+  passages: tone("120,150,230", "#0c0d10", "#a7b0c6"),
+  /** Stories: black with a trace of plum. */
+  stories: tone("180,130,200", "#0e0c0f", "#b9a7c4"),
+  /** Video: YouTube's own dark grey, no wash. */
+  video: tone("255,255,255", "#0e0e0e", "#c4c4c4", 0.025),
+  /** Words: black with a trace of indigo, the site's own brand hue. */
+  words: tone("124,131,240", "#0d0d11", "#b0b3d3"),
+  /** The daily lesson side of the «keep learning» card, and the daily-tasks box. */
+  lesson: tone("124,131,240", "#0c0c0f", "#b0b3d3"),
 } as const satisfies Record<string, CardColors>;
 
 export type HomeCardColorKey = keyof typeof HOME_CARD_COLORS;
@@ -110,7 +111,11 @@ export const STORY_PAGE = {
   stackShadow: "0 18px 30px -12px rgba(0,0,0,0.65)",
 } as const;
 
-/** The Video card's frame: a quiet shot (sky, hills, water), the glass play button and the player bar. */
+/**
+ * The Video card's frame, drawn as a YouTube player: a quiet shot (sky, hills, water), the title strip
+ * on top, the dark play button that turns red under the pointer, the red progress line with its dot
+ * and the control row. The red is YouTube's own and is the only saturated colour on the card.
+ */
 export const VIDEO_SCENE = {
   scene:
     "linear-gradient(180deg,#19505b 0%,#348a92 30%,#86cbc9 50%,#cdeee4 58%,#379099 58.4%,#1b6169 100%)",
@@ -118,9 +123,18 @@ export const VIDEO_SCENE = {
   hillFar: "#14554c",
   rain: "repeating-linear-gradient(105deg,rgba(255,255,255,0.065) 0 1px,transparent 1px 11px)",
   water: "repeating-linear-gradient(180deg,rgba(255,255,255,0.08) 0 2px,transparent 2px 8px)",
-  bar: "rgba(6,22,24,0.55)",
-  progress: "#4fe0b5",
-  shadow: "0 26px 44px -16px rgba(0,0,0,0.85),0 0 0 1px rgba(255,255,255,0.13)",
+  /** The fades that carry the title strip (top) and the controls (bottom). */
+  fadeTop: "linear-gradient(180deg,rgba(0,0,0,0.62),transparent)",
+  fadeBottom: "linear-gradient(0deg,rgba(0,0,0,0.7),transparent)",
+  /** YouTube's red: the progress line, its dot, the big play button under the pointer, the logo. */
+  red: "#ff0000",
+  /** The big play button at rest (YouTube's dark rounded rectangle). */
+  playRest: "rgba(33,33,33,0.82)",
+  /** The line under the played part of the progress line. */
+  track: "rgba(255,255,255,0.3)",
+  /** The round mark beside the title (the channel's picture). */
+  avatar: "linear-gradient(135deg,#5b6770,#2f373d)",
+  shadow: "0 26px 44px -16px rgba(0,0,0,0.85),0 0 0 1px rgba(255,255,255,0.1)",
 } as const;
 
 /**

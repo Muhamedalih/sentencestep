@@ -45,7 +45,7 @@ const ar: HomeCardsStrings = {
   passagesKind: "استماع",
   passagesLine: "نصوص تستمع إليها وتقرؤها",
   videoKind: "إملاء",
-  videoLine: "مقاطع قصيرة تكتب ما تسمعه فيها",
+  videoLine: "مقاطع يوتيوب قصيرة تكتب فيها ما تسمعه",
   next: "التالي",
 };
 
@@ -63,7 +63,7 @@ const en: HomeCardsStrings = {
   passagesKind: "Listening",
   passagesLine: "Texts you listen to and read",
   videoKind: "Dictation",
-  videoLine: "Short clips where you type what you hear",
+  videoLine: "Short YouTube clips where you type what you hear",
   next: "Next",
 };
 
@@ -81,7 +81,7 @@ const es: HomeCardsStrings = {
   passagesKind: "Escucha",
   passagesLine: "Textos que escuchas y lees",
   videoKind: "Dictado",
-  videoLine: "Clips cortos donde escribes lo que oyes",
+  videoLine: "Clips cortos de YouTube donde escribes lo que oyes",
   next: "Siguiente",
 };
 
@@ -99,7 +99,7 @@ const tr: HomeCardsStrings = {
   passagesKind: "Dinleme",
   passagesLine: "Dinleyip okuduğun metinler",
   videoKind: "Dikte",
-  videoLine: "Duyduğunu yazdığın kısa klipler",
+  videoLine: "Duyduğunu yazdığın kısa YouTube klipleri",
   next: "Sonraki",
 };
 

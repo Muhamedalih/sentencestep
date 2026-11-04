@@ -8,6 +8,7 @@ import type { VideoCardData } from "@/lib/video-dictation/content";
 import { CategoryCard } from "./category-card";
 import { HOME_CARD_COLORS } from "./palette";
 import { homeCardsStrings } from "./strings";
+import { YouTubeTag } from "./youtube-mark";
 
 /** The Passages card of the Home cards: the passage to read next (the one in progress, or the first not started). */
 export function PassagesSectionCard({ data, index }: { data: PassagesHomeData; index: number }) {
@@ -57,7 +58,12 @@ export function VideoSectionCard({
       cta={cta}
       href={`/learn/video/${card.id}`}
       plain
-      badge={<HomeVideoNew />}
+      badge={
+        <>
+          <HomeVideoNew />
+          <YouTubeTag />
+        </>
+      }
       index={index}
     />
   );

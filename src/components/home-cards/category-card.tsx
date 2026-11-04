@@ -2,13 +2,14 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Maximize, Play, Settings, Subtitles, Volume2 } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 
 import { ORB, PAPER, VIDEO_SCENE } from "./palette";
 import type { CardColors } from "./palette";
+import { YouTubeIcon } from "./youtube-mark";
 
 /** The picture that rises from the card's foot: a stack of paper sheets, or a video frame. */
 export type CategoryArt = "sheet" | "frame";
@@ -141,14 +142,23 @@ function SheetArt({ title }: { title: string }) {
 }
 
 /**
- * Video: a frame with a quiet shot (sky, hills, rain on the water), a glass play button, and a player
- * bar whose progress line fills under the pointer.
+ * Video: the frame drawn as a YouTube player. A quiet shot (sky, hills, rain on the water), the title
+ * strip on top with the channel's round picture, YouTube's dark play button in the middle (it turns
+ * red and grows under the pointer), and the control row at the foot: the red progress line with its
+ * dot (both move forward under the pointer), play, volume, the time, and captions, settings and full
+ * screen on the far side.
  */
-function FrameArt() {
+function FrameArt({ title }: { title: string }) {
   return (
     <div
       className="hc-tilt-l absolute inset-0 overflow-hidden rounded-xl"
-      style={{ boxShadow: VIDEO_SCENE.shadow }}
+      style={
+        {
+          boxShadow: VIDEO_SCENE.shadow,
+          "--yt-red": VIDEO_SCENE.red,
+          "--yt-rest": VIDEO_SCENE.playRest,
+        } as CSSProperties
+      }
     >
       <div className="absolute inset-0" style={{ background: VIDEO_SCENE.scene }} />
       <div
@@ -179,23 +189,54 @@ function FrameArt() {
         className="absolute inset-x-0 bottom-0 h-[40%]"
         style={{ background: VIDEO_SCENE.water }}
       />
-      <span className="hc-play absolute start-1/2 top-[40%] -ms-[26px] -mt-[26px] grid size-[52px] place-items-center rounded-full border-[1.5px] border-white/80 bg-white/20 backdrop-blur-[6px]">
-        <svg viewBox="0 0 24 24" className="ms-0.5 size-5 fill-white" aria-hidden="true">
-          <path d="M6 4l14 8-14 8z" />
-        </svg>
-      </span>
-      <span
+
+      <div
         dir="ltr"
-        className="absolute inset-x-3 bottom-9 flex items-center gap-[9px] rounded-[9px] px-[11px] py-[7px] text-[9.5px] font-semibold text-white backdrop-blur-[5px]"
-        style={{ background: VIDEO_SCENE.bar }}
+        className="absolute inset-x-0 top-0 flex items-center gap-2 px-3 pt-2.5 pb-7"
+        style={{ background: VIDEO_SCENE.fadeTop }}
       >
-        <span>0:09</span>
-        <span
-          className="hc-type relative h-[3px] flex-1 overflow-hidden rounded-sm bg-white/30"
-          style={{ "--hc-accent": VIDEO_SCENE.progress } as CSSProperties}
+        <i
+          className="block size-[22px] shrink-0 rounded-full"
+          style={{ background: VIDEO_SCENE.avatar }}
         />
-        <span>0:25</span>
-      </span>
+        <span className="truncate text-[11px] font-medium text-white">{title}</span>
+      </div>
+
+      <YouTubeIcon
+        className="hc-play absolute start-1/2 top-[40%] -ms-[27px] -mt-[19px] h-auto w-[54px]"
+        bodyClassName="fill-(--yt-rest) transition-[fill] duration-300 group-hover:fill-(--yt-red) group-focus-visible:fill-(--yt-red)"
+      />
+
+      <div
+        dir="ltr"
+        className="absolute inset-x-0 bottom-0 px-3 pt-8 pb-[46px] text-white"
+        style={{ background: VIDEO_SCENE.fadeBottom }}
+      >
+        <div className="relative flex h-[11px] items-center">
+          <span
+            className="hc-type relative block h-[3px] w-full overflow-hidden rounded-sm"
+            style={
+              { background: VIDEO_SCENE.track, "--hc-accent": VIDEO_SCENE.red } as CSSProperties
+            }
+          />
+          <i
+            className="absolute top-0 left-[calc(36%-5.5px)] block size-[11px] rounded-full transition-[left] duration-[800ms] ease-[cubic-bezier(0.3,0.7,0.2,1)] group-hover:left-[calc(88%-5.5px)] group-focus-visible:left-[calc(88%-5.5px)] motion-reduce:transition-none"
+            style={{ background: VIDEO_SCENE.red }}
+          />
+        </div>
+        <div className="mt-1.5 flex items-center gap-2.5 text-[10px] font-medium tabular-nums">
+          <Play className="size-3 fill-white" aria-hidden="true" />
+          <Volume2 className="size-3.5" aria-hidden="true" />
+          <span>
+            0:09 <span className="text-white/70">/ 0:25</span>
+          </span>
+          <span className="ms-auto flex items-center gap-2.5">
+            <Subtitles className="size-3.5" aria-hidden="true" />
+            <Settings className="size-3.5" aria-hidden="true" />
+            <Maximize className="size-3.5" aria-hidden="true" />
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -226,7 +267,7 @@ export function CategoryCard({
 }: {
   colors: CardColors;
   art: CategoryArt;
-  /** The title written on the Passages sheet (the item the card leads to). */
+  /** The title written on the Passages sheet and on the Video player (the item the card leads to). */
   artTitle?: string;
   kind: string;
   title: string;
@@ -302,7 +343,11 @@ export function CategoryCard({
         )}
       >
         <div className="relative size-full origin-bottom-right max-xl:scale-[0.66]">
-          {art === "sheet" ? <SheetArt title={artTitle ?? nextTitle} /> : <FrameArt />}
+          {art === "sheet" ? (
+            <SheetArt title={artTitle ?? nextTitle} />
+          ) : (
+            <FrameArt title={artTitle ?? nextTitle} />
+          )}
         </div>
       </div>
     </>
