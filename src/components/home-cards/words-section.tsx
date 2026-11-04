@@ -31,6 +31,8 @@ export function WordsSection({
   reviewCount,
   words,
   hints,
+  className = "mt-4",
+  index = 5,
 }: {
   /** Everything waiting for review. */
   reviewCount: number;
@@ -38,6 +40,10 @@ export function WordsSection({
   words: WeakWordItem[];
   /** The Arabic meaning of a word card, by word id (an Arabic learner only). */
   hints: Record<string, string>;
+  /** Where the section sits on its page (its outer spacing): Home puts it under the other cards, the Word Lists page above its lists. */
+  className?: string;
+  /** Its place in the page's entrance order (the delay before it rises, 70 ms a step). */
+  index?: number;
 }) {
   const { t, dir, locale } = useLocale();
   const s = homeCardsStrings(locale);
@@ -48,12 +54,12 @@ export function WordsSection({
   return (
     <section
       aria-label={s.yourWords}
-      className="hc-card hc-rise relative isolate mt-4 flex min-h-[14.75rem] overflow-hidden rounded-2xl border px-8 py-6 text-white"
+      className={`hc-card hc-rise relative isolate flex min-h-[14.75rem] overflow-hidden rounded-2xl border px-8 py-6 text-white ${className}`}
       style={
         {
           background: colors.background,
           borderColor: colors.edge,
-          "--hc-i": 5,
+          "--hc-i": index,
         } as CSSProperties
       }
     >

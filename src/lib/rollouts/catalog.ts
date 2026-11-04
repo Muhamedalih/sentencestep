@@ -290,9 +290,9 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
   homeCards: {
     id: "homeCards",
     audience: "learner",
-    title: "Home: colourful cards, one “keep learning” card, a words panel",
+    title: "Home: colourful cards, one “keep learning” card, achievements, a words section",
     description:
-      "A new look for the classic Home page. The daily lessons and the stories share one “keep learning” card with two choices inside it (the lesson stays the default, so it is still one click away); next to it a words panel gathers the three totals and the words ready for review; below, the Passages and Video cards each carry their own colour. The header's account button becomes the learner's Google photo (or their letter on a colour) beside their name, and the cards lift and settle when the pointer is over them. The daily-tasks strip, the lessons, the review and every link keep working exactly as before.",
+      "A new look for the classic Home page. The daily lessons and the stories share one “keep learning” card with two choices inside it (the stories come first); next to it an achievements panel shows the learner's level and four counts; below, the Passages and Video cards each carry their own colour, and a wide words section at the foot holds the words ready for review with a button to review them. The Word Lists page shows that same words section in place of its “Review all words” card. The header's account button becomes the learner's Google photo (or their letter on a colour) beside their name, and the cards lift and settle when the pointer is over them. The daily-tasks strip, the lessons, the review and every link keep working exactly as before.",
     notes: [
       "Lives on the classic Home page: it stays closed whenever the classic Home (above) is closed, whatever its own setting says.",
       "The Google photo is the picture already in the sign-in token, so it costs no extra read; the browser loads it from Google, which the page's security policy now allows for images. A learner without a photo (email sign-up) keeps the letter on a colour.",

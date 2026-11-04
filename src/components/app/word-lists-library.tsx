@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { WordGroupCard } from "@/components/app/word-group-card";
+import { WordsSection } from "@/components/home-cards/words-section";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
@@ -53,15 +54,21 @@ export function WordListsLibrary({
   isPremiumUser,
   weakWords,
   mastery = null,
+  homeCardWords = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
   weakWords: WeakWordItem[];
   /** Smart word practice for a signed-in learner: each group's mastery and how many words wait for review. Null for a guest or when the schedule could not be read — the library is then exactly what it always was. */
   mastery?: LibraryMastery | null;
+  /** Present while the Home cards are open for the learner (permission "homeCards"): the review card is then drawn exactly like Home's words section, and this is the Arabic meaning of its word cards by word id (empty for other languages). Null keeps the card the page always had. */
+  homeCardWords?: Record<string, string> | null;
 }) {
   const { isLoaded, completedCountIn } = useWordProgress();
   const { locale, dir, t } = useLocale();
+  // What waits for review: the words due now, and — with Smart word practice — the schedule's own count.
+  const reviewWords = weakWords.filter((word) => word.dueNow);
+  const reviewCount = mastery?.reviewCount ?? reviewWords.length;
 
   return (
     <div>
@@ -74,11 +81,21 @@ export function WordListsLibrary({
         </p>
       </div>
 
-      <NeedsReviewWords
-        words={weakWords.filter((word) => word.dueNow)}
-        count={mastery?.reviewCount}
-        smart={!!mastery}
-      />
+      {homeCardWords ? (
+        // The same section Home ends with, with the same words and meanings; like the classic card it is
+        // left out when nothing waits (its button would only lead back here).
+        reviewCount > 0 ? (
+          <WordsSection
+            reviewCount={reviewCount}
+            words={reviewWords}
+            hints={homeCardWords}
+            className="mb-6 sm:mb-10"
+            index={0}
+          />
+        ) : null
+      ) : (
+        <NeedsReviewWords words={reviewWords} count={mastery?.reviewCount} smart={!!mastery} />
+      )}
 
       {groups.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
