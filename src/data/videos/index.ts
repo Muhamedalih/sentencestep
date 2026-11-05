@@ -1,5 +1,6 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
 import { nitwitVillager } from "./nitwit-villager";
+import { heGrew40FruitsOnOneTree } from "./he-grew-40-fruits-on-one-tree";
 import { pistolShrimp } from "./pistol-shrimp";
 import { chicagoFishpocalypse } from "./chicago-fishpocalypse";
 import { gibbonsHowls } from "./gibbons-howls";
@@ -56,4 +57,5 @@ export const videoLessons: readonly VideoLesson[] = [
   chicagoFishpocalypse,
   pistolShrimp,
   nitwitVillager,
+  heGrew40FruitsOnOneTree,
 ];
