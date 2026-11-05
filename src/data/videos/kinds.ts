@@ -11,6 +11,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "if-street-interviews-were-not-staged": "comedy",
   "what-she-really-means": "comedy",
   "urns-for-true-love": "comedy",
+  "nitwit-villager": "comedy",
   "empath-animatic": "comedy",
   "gibbons-howls": "comedy",
   "we-all-have-that-one-friend": "comedy",
