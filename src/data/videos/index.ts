@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { pistolShrimp } from "./pistol-shrimp";
 import { chicagoFishpocalypse } from "./chicago-fishpocalypse";
 import { gibbonsHowls } from "./gibbons-howls";
 import { theMedievalMetaWeapon } from "./the-medieval-meta-weapon";
@@ -52,4 +53,5 @@ export const videoLessons: readonly VideoLesson[] = [
   theMedievalMetaWeapon,
   gibbonsHowls,
   chicagoFishpocalypse,
+  pistolShrimp,
 ];

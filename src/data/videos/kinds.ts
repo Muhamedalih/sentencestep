@@ -27,6 +27,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "ducks-in-the-rain": "animals",
   "joeys-in-the-pouch": "animals",
   "anting-birds-and-ants": "animals",
+  "pistol-shrimp": "animals",
   "sloths-are-great-swimmers": "animals",
   "rabbit-courtship-chase": "animals",
   "baby-birds-gape": "animals",
