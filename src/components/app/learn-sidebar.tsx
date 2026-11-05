@@ -22,6 +22,12 @@ import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { usePhoneMoreSeen } from "@/hooks/use-phone-more-seen";
 import { useVideoNew } from "@/hooks/use-video-new";
+import {
+  INSTAGRAM_DM_URL,
+  INSTAGRAM_HANDLE,
+  contactStrings,
+  type ContactStrings,
+} from "@/lib/contact/instagram";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import { videoNewLabel, videoStrings } from "@/lib/video-dictation/strings";
 import { cn } from "@/lib/utils";
@@ -78,6 +84,7 @@ export function LearnSidebar({
   mobilePath = false,
   rulesEnabled = false,
   videoEnabled = false,
+  contactInstagram = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -90,6 +97,8 @@ export function LearnSidebar({
   rulesEnabled?: boolean;
   /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up, and a tile in the phone's More sheet. */
   videoEnabled?: boolean;
+  /** The "contactInstagram" permission, resolved for this visitor: the «تواصل معنا» box at the foot of the md: sidebar, and the last tile of the phone's More sheet. */
+  contactInstagram?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
@@ -378,8 +387,10 @@ export function LearnSidebar({
             active={active}
             label={t.mobilePath.navMore}
             dir={dir}
+            contact={contactInstagram ? contactStrings(locale) : null}
           />
         )}
+        {contactInstagram && <ContactBox dir={dir} strings={contactStrings(locale)} />}
       </div>
     </nav>
   );
@@ -413,11 +424,14 @@ function PhoneMore({
   active,
   label,
   dir,
+  contact,
 }: {
   items: readonly PhoneMoreItem[];
   active: string | null;
   label: string;
   dir: "ltr" | "rtl";
+  /** The «تواصل معنا» tile, last in the sheet (permission contactInstagram), or null. */
+  contact: ContactStrings | null;
 }) {
   const [open, setOpen] = useState(false);
   const { seen, markSeen } = usePhoneMoreSeen();
@@ -512,10 +526,81 @@ function PhoneMore({
                 </SidebarLink>
               );
             })}
+            {contact && (
+              <a
+                href={INSTAGRAM_DM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={contact.linkLabel}
+                onClick={() => setOpen(false)}
+                className="border-border/60 text-foreground active:bg-secondary focus-visible:ring-ring focus-visible:ring-offset-background col-span-2 flex items-center gap-2.5 rounded-xl border p-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              >
+                <span className="bg-brand-muted text-primary flex size-9 shrink-0 items-center justify-center rounded-[10px]">
+                  <InstagramMark className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span dir={dir} className="block">
+                    {contact.title}
+                  </span>
+                  <span
+                    dir="ltr"
+                    className="text-muted-foreground block truncate text-[11px] font-normal"
+                  >
+                    @{INSTAGRAM_HANDLE}
+                  </span>
+                </span>
+              </a>
+            )}
           </div>
         </>
       )}
     </>
+  );
+}
+
+/**
+ * «تواصل معنا» at the foot of the md: sidebar (permission contactInstagram): pushed to the bottom by
+ * mt-auto, the Instagram mark and the title on one line, the account name under them. A tap opens a chat
+ * with the account on Instagram in a new tab. Desktop sidebar only: phones get the More sheet's tile.
+ */
+function ContactBox({ dir, strings }: { dir: "ltr" | "rtl"; strings: ContactStrings }) {
+  return (
+    <a
+      href={INSTAGRAM_DM_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={strings.linkLabel}
+      title={strings.linkLabel}
+      className="border-primary/30 hover:bg-brand-muted focus-visible:ring-ring focus-visible:ring-offset-background group mt-auto hidden flex-col gap-0.5 rounded-xl border px-3 py-2.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 md:flex"
+    >
+      <span className="flex items-center gap-2.5 text-sm font-medium">
+        <InstagramMark className="text-primary size-4 shrink-0" />
+        <span dir={dir}>{strings.title}</span>
+      </span>
+      <span dir="ltr" className="text-muted-foreground ps-[26px] text-xs">
+        @{INSTAGRAM_HANDLE}
+      </span>
+    </a>
+  );
+}
+
+/** The Instagram mark as a line icon in the current colour (this lucide-react has no brand icons). */
+function InstagramMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" />
+    </svg>
   );
 }
 
