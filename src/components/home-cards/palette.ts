@@ -191,6 +191,8 @@ export const TASKS = {
   },
   /** The «streak freezes left» pill. */
   freeze: { background: "rgba(56,189,248,0.1)", border: "rgba(56,189,248,0.28)", ink: "#7dd3fc" },
+  /** The same count as plain text, with no pill (the daily tasks as three steps). */
+  freezeQuiet: "rgba(125,211,252,0.78)",
   /** The round button that opens the box. */
   chevron: { border: "rgba(255,255,255,0.12)", hover: "rgba(255,255,255,0.06)" },
   /** The step rail of the opened card. */

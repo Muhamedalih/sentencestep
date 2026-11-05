@@ -57,9 +57,18 @@ export function todayTaskTitle(copy: TodayCopy, kind: TodayQuestInfo["kind"]): s
 /**
  * The task's icon. The one in progress moves, gently and slowly: the headphones float with two soft
  * sound rings, the pen writes, the letters breathe. Nothing moves for a learner who asked for
- * reduced motion, and a task that is done or still waiting stays still.
+ * reduced motion, and a task that is done or still waiting stays still. `small` is the one for a
+ * 32 px disc (the daily tasks as three steps): a 28 px frame and a 17 px icon instead of 36 and 20.
  */
-export function TaskIcon({ kind, active }: { kind: TodayQuestInfo["kind"]; active: boolean }) {
+export function TaskIcon({
+  kind,
+  active,
+  small = false,
+}: {
+  kind: TodayQuestInfo["kind"];
+  active: boolean;
+  small?: boolean;
+}) {
   const reduced = useReducedMotion();
   const moving = active && !reduced;
   const Icon = ICONS[kind];
@@ -70,7 +79,10 @@ export function TaskIcon({ kind, active }: { kind: TodayQuestInfo["kind"]; activ
         ? { x: [0, 2.5, 0, 2.5, 0], rotate: [0, -6, 0, -6, 0] }
         : { scale: [1, 1.12, 1] };
   return (
-    <span className="relative grid size-9 place-items-center" aria-hidden="true">
+    <span
+      className={cn("relative grid place-items-center", small ? "size-7" : "size-9")}
+      aria-hidden="true"
+    >
       {moving &&
         kind === "listen" &&
         [0, 1.2].map((delay) => (
@@ -87,7 +99,7 @@ export function TaskIcon({ kind, active }: { kind: TodayQuestInfo["kind"]; activ
         animate={moving ? kindMotion : undefined}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Icon className="size-5" strokeWidth={1.8} />
+        <Icon className={small ? "size-[17px]" : "size-5"} strokeWidth={1.8} />
       </motion.span>
     </span>
   );

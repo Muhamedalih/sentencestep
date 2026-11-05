@@ -18,22 +18,43 @@ import { todayTaskRepeatHref } from "@/lib/today/home-layout";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
-export function WeekDots({ today, strip }: { today: string; strip: StreakCalendarData }) {
+/**
+ * The last seven days as dots. `quiet` (the daily tasks as three steps) draws them smaller, 10 px with a
+ * 1.5 px edge and 5 px between, and a fainter edge for a day still to do.
+ */
+export function WeekDots({
+  today,
+  strip,
+  quiet = false,
+}: {
+  today: string;
+  strip: StreakCalendarData;
+  quiet?: boolean;
+}) {
   const days = Array.from({ length: 7 }, (_unused, index) => addDays(today, index - 6));
   return (
-    <div className="flex items-center gap-1.5" dir="ltr" aria-hidden="true">
+    <div
+      className={cn("flex items-center", quiet ? "gap-[5px]" : "gap-1.5")}
+      dir="ltr"
+      aria-hidden="true"
+    >
       {days.map((iso) => {
         const kind = strip.days.find((day) => day.day === iso)?.kind ?? "none";
         return (
           <span
             key={iso}
             className={cn(
-              "size-3.5 rounded-full border-2",
+              "rounded-full",
+              quiet ? "size-2.5 border-[1.5px]" : "size-3.5 border-2",
               kind === "active" && "border-primary bg-primary",
               kind === "grace" && "border-primary/50",
               kind === "frozen" && "border-sky-400 bg-sky-400/15",
               kind === "none" &&
-                (iso === today ? "border-primary/60 border-dashed" : "border-border"),
+                (iso === today
+                  ? "border-primary/60 border-dashed"
+                  : quiet
+                    ? "border-[rgba(255,255,255,0.16)]"
+                    : "border-border"),
             )}
           />
         );

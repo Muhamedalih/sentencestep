@@ -7,6 +7,7 @@ import { ArrowRight, Check, ChevronDown, RotateCcw, Snowflake, Target } from "lu
 
 import { QuestsCard } from "@/components/app/quests-card";
 import { RepeatLessonMenu, WeekDots } from "@/components/app/engagement-strip";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -25,6 +26,7 @@ import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
 import { HOME_CARD_COLORS, TASKS } from "./palette";
+import { TasksStepsBox } from "./tasks-steps";
 
 type RowState = "done" | "current" | "idle";
 
@@ -286,7 +288,8 @@ function TasksPanel({ payload }: { payload: DailyQuestsPayload }) {
  * as a small pill, and the round button that opens the card under it. Opened, the card lists the
  * day's steps on one rail; only the current step is open, with the one white button. When the day is
  * done the tile turns green and the repeat menu appears. The same data as the classic strip and the
- * same links; only how it is drawn changed.
+ * same links; only how it is drawn changed. With the permission "taskSteps", on a day of Today's tasks,
+ * it is drawn as three steps instead (TasksStepsBox in tasks-steps.tsx).
  */
 export function TasksBox({
   today,
@@ -303,12 +306,16 @@ export function TasksBox({
   const colors = HOME_CARD_COLORS.lesson;
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const { rollouts } = useFeatures();
 
   if (!quests && !streak) return null;
 
   // Today's tasks are the quests tied to specific lessons; the tracker and the next task are about
   // the day's required ones (the sentence exam is an extra).
   const todayMode = Boolean(quests?.quests.some((quest) => quest.today));
+  if (rollouts.taskSteps && todayMode && quests) {
+    return <TasksStepsBox today={today} quests={quests} streak={streak} className={className} />;
+  }
   const required = requiredQuests(quests?.quests ?? []);
   const done = required.filter((quest) => quest.completed).length;
   const total = required.length;

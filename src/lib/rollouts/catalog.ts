@@ -31,6 +31,7 @@ export const ROLLOUT_IDS = [
   "upgradeMoments",
   "classicHome",
   "homeCards",
+  "taskSteps",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -298,6 +299,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The Google photo is the picture already in the sign-in token, so it costs no extra read; the browser loads it from Google, which the page's security policy now allows for images. A learner without a photo (email sign-up) keeps the letter on a colour.",
       "The colours live in one file (src/components/home-cards/palette.ts), so they can be changed without touching the layout.",
       "Movement is made of transforms and opacity only and stops for a learner whose device asks for reduced motion.",
+    ],
+  },
+  taskSteps: {
+    id: "taskSteps",
+    audience: "learner",
+    title: "Home: the daily tasks as three steps",
+    description:
+      "The daily-tasks strip on Home shows the day's three tasks as three small circles joined by lines (listen, story, words): a green tick for a finished one, a ring for the one in progress, grey for the rest, with the next task's name beside them and the week's dots made smaller. Tapping the strip makes the same box grow downward with the three tasks listed inside it (instead of a second card under it), and the «start» button sits at the end of the current task's row. The tasks, their order, their links and their rewards are exactly as before.",
+    notes: [
+      "A look of the daily-tasks strip of the Home cards: it stays closed whenever the Home cards (above) are closed, whatever its own setting says.",
+      "Only for the days when the strip shows Today's tasks; the random daily quests keep the strip they had.",
+      "The three tasks' icons are the same ones the opened card already uses; there are no new words, so every language is covered.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   mobilePath: {

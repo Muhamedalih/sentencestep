@@ -195,6 +195,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     upgradeMoments: false,
     classicHome: false,
     homeCards: false,
+    taskSteps: false,
   });
 });
 
@@ -461,6 +462,17 @@ test("the Home cards are a look of the classic Home: Admins only, and closed whe
   assert.equal(withRolloutDependencies({ ...admins, classicHome: false }).homeCards, false);
   assert.equal(
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).homeCards,
+    false,
+  );
+});
+
+test("the daily tasks as three steps: Admins only, and closed whenever the Home cards are", () => {
+  const admins = withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), admin));
+  assert.equal(admins.taskSteps, true);
+  assert.equal(withRolloutDependencies({ ...admins, homeCards: false }).taskSteps, false);
+  assert.equal(withRolloutDependencies({ ...admins, classicHome: false }).taskSteps, false);
+  assert.equal(
+    withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).taskSteps,
     false,
   );
 });
