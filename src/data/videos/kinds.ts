@@ -35,6 +35,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "sloths-are-great-swimmers": "animals",
   "rabbit-courtship-chase": "animals",
   "baby-birds-gape": "animals",
+  "murre-chicks-leap": "animals",
   "why-dobermans-have-cropped-ears": "animals",
   "how-horseflies-bite-you": "animals",
   "army-ants-build-bridges": "animals",

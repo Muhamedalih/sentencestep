@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { murreChicksLeap } from "./murre-chicks-leap";
 import { microwavingTwoGrapesCreatesPlasma } from "./microwaving-two-grapes-creates-plasma";
 import { lyrebirdMimic } from "./lyrebird-mimic";
 import { heGrew40FruitsOnOneTree } from "./he-grew-40-fruits-on-one-tree";
@@ -62,4 +63,5 @@ export const videoLessons: readonly VideoLesson[] = [
   heGrew40FruitsOnOneTree,
   lyrebirdMimic,
   microwavingTwoGrapesCreatesPlasma,
+  murreChicksLeap,
 ];
