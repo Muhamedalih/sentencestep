@@ -32,6 +32,7 @@ export const ROLLOUT_IDS = [
   "classicHome",
   "homeCards",
   "taskSteps",
+  "contactInstagram",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -312,6 +313,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only for the days when the strip shows Today's tasks; the random daily quests keep the strip they had.",
       "The three tasks' icons are the same ones the opened card already uses; there are no new words, so every language is covered.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  contactInstagram: {
+    id: "contactInstagram",
+    audience: "learner",
+    title: "“Contact us” on Instagram in the side menu",
+    description:
+      "A small “تواصل معنا” box pinned to the foot of the side menu, under the last section, with the Instagram mark and the account name (@sentencestep_arabic). A tap opens a chat with the account on Instagram in a new tab. On a phone with the “More” sheet, the same line is the sheet's last tile.",
+    notes: [
+      "The link is Instagram's own message link (ig.me/m/sentencestep_arabic), so the learner lands in the chat, not only on the profile.",
+      "Nothing is stored or counted on our side: it is a plain link, so there is no extra load.",
+      "Phones without the “More” sheet (the Phone: the path and the next step permission closed) do not show it yet.",
     ],
   },
   mobilePath: {
