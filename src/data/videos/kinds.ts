@@ -13,6 +13,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "urns-for-true-love": "comedy",
   "nitwit-villager": "comedy",
   "empath-animatic": "comedy",
+  "bees-know-when-youre-scared": "comedy",
   "gibbons-howls": "comedy",
   "we-all-have-that-one-friend": "comedy",
   "chicago-fishpocalypse": "comedy",
