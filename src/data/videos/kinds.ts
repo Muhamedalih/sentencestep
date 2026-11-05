@@ -25,6 +25,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "usual-suspects": "science",
   "how-coconuts-fill-themselves-with-water": "science",
   "he-grew-40-fruits-on-one-tree": "science",
+  "microwaving-two-grapes-creates-plasma": "science",
 
   "ducks-in-the-rain": "animals",
   "joeys-in-the-pouch": "animals",
