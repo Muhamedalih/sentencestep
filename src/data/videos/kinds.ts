@@ -46,4 +46,5 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "the-tigers-and-the-strawberry-parable": "motivation",
 
   "the-medieval-meta-weapon": "other",
+  "spear-vs-shield": "other",
 };
