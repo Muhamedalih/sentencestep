@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { squirrelBrainsGrow } from "./squirrel-brains-grow";
 import { howThis1800sMovieMachineWorked } from "./how-this-1800s-movie-machine-worked";
 import { spearVsShield } from "./spear-vs-shield";
 import { beesKnowWhenYoureScared } from "./bees-know-when-youre-scared";
@@ -72,4 +73,5 @@ export const videoLessons: readonly VideoLesson[] = [
   beesKnowWhenYoureScared,
   spearVsShield,
   howThis1800sMovieMachineWorked,
+  squirrelBrainsGrow,
 ];
