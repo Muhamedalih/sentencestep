@@ -7,8 +7,9 @@
  *    link carried utm_* tags. It holds nothing personal and nothing about what
  *    the visitor does.
  *  - The server adds it, with the visitor's country and whether they were in
- *    Facebook's or Instagram's built-in browser, to the few funnel events that
- *    are already written (see track.ts), so it costs no extra database call.
+ *    Facebook's, Instagram's or TikTok's built-in browser, to the few funnel
+ *    events that are already written (see track.ts), so it costs no extra
+ *    database call.
  *
  * Pure and free of server-only imports: the browser and the server both use it.
  */
@@ -48,6 +49,19 @@ export function detectInAppBrowser(userAgent: string | null | undefined): InAppB
   return null;
 }
 
+/**
+ * TikTok's built-in browser names the app in the user agent: musical_ly, or
+ * trill where TikTok runs under that name. It usually sends no referrer, so
+ * without this a visitor who tapped a link inside TikTok is counted as "direct".
+ * Kept apart from detectInAppBrowser on purpose: that one also decides who sees
+ * the "Open in browser" strip and gets its bucket cookie (Facebook and Instagram
+ * only), while this only names the source and changes nothing a visitor sees.
+ */
+export function isTikTokBrowser(userAgent: string | null | undefined): boolean {
+  if (!userAgent) return false;
+  return /\bmusical_ly|\btrill_|AppName\/(?:musical_ly|trill)\b|\bTikTok\b/i.test(userAgent);
+}
+
 /** Hosts (suffix match) and their tag, most common first. */
 const REFERRER_HOSTS: ReadonlyArray<readonly [RegExp, string]> = [
   [/(^|\.)(facebook\.com|fb\.com|fb\.me)$/, "facebook"],
@@ -73,6 +87,9 @@ function sourceFromAndroidPackage(pkg: string): string {
   if (pkg.startsWith("com.instagram.")) return "instagram";
   if (pkg.startsWith("com.whatsapp")) return "whatsapp";
   if (pkg.startsWith("org.telegram.")) return "telegram";
+  if (pkg.startsWith("com.zhiliaoapp.musically") || pkg.startsWith("com.ss.android.ugc.trill")) {
+    return "tiktok";
+  }
   return "android-app";
 }
 
@@ -108,7 +125,8 @@ export function sourceFromReferrer(referrer: string, ownHost: string): string | 
 /**
  * The first touch for a page load: a link's own utm_source wins (it is how a
  * post or group is named on purpose), then the referrer, then the built-in
- * browser the visitor is in, and "direct" when nothing says.
+ * browser the visitor is in (Facebook, Instagram or TikTok), and "direct" when
+ * nothing says.
  */
 export function firstTouchFrom(input: {
   search: string;
@@ -122,6 +140,7 @@ export function firstTouchFrom(input: {
     taggedSource ??
     sourceFromReferrer(input.referrer, input.ownHost) ??
     detectInAppBrowser(input.userAgent) ??
+    (isTikTokBrowser(input.userAgent) ? "tiktok" : null) ??
     "direct";
   return {
     source,
@@ -162,7 +181,8 @@ export function attributionProperties(input: {
     if (touch.medium) properties.medium = touch.medium;
     if (touch.campaign) properties.campaign = touch.campaign;
   }
-  const inApp = detectInAppBrowser(input.userAgent);
+  const inApp =
+    detectInAppBrowser(input.userAgent) ?? (isTikTokBrowser(input.userAgent) ? "tiktok" : null);
   if (inApp) properties.inApp = inApp;
   if (input.country && /^[a-z]{2}$/.test(input.country)) properties.country = input.country;
   return properties;

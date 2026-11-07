@@ -9,7 +9,7 @@ import type { AnalyticsEvent, AnalyticsEventName } from "@/lib/analytics/events"
 
 /**
  * The funnel events that carry where the visitor came from, their country and
- * whether they were in Facebook's or Instagram's built-in browser (see
+ * whether they were in Facebook's, Instagram's or TikTok's built-in browser (see
  * attribution.ts): signing up, being stopped at a lock, opening the upgrade
  * page and choosing a plan. Every other event is written exactly as before.
  */
