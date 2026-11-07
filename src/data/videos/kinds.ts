@@ -32,6 +32,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "baby-birds-gape": "comedy",
   "murre-chicks-leap": "comedy",
   "squirrel-brains-grow": "comedy",
+  "rats-memory-map": "comedy",
 
   "how-coconuts-fill-themselves-with-water": "science",
   "he-grew-40-fruits-on-one-tree": "science",
