@@ -27,7 +27,7 @@ export default async function LoginPage({
   const t = locale ? getDictionary(locale) : fallbackDictionary;
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col justify-center px-6 py-16">
+    <div className="mx-auto flex min-h-svh max-w-lg flex-col justify-center px-6 py-16">
       <Link
         href="/"
         className="mb-8 inline-flex min-h-11 items-center self-start"
