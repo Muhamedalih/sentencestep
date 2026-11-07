@@ -36,6 +36,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "he-grew-40-fruits-on-one-tree": "science",
   "microwaving-two-grapes-creates-plasma": "science",
   "why-dobermans-have-cropped-ears": "science",
+  "how-this-1800s-movie-machine-worked": "science",
   "how-horseflies-bite-you": "science",
   "army-ants-build-bridges": "science",
 
