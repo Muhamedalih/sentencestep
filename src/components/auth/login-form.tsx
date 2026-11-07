@@ -57,7 +57,12 @@ export function LoginForm({
         <InAppStripSlot decision={inAppStrip ?? null} page="login">
           <form action={signInWithGoogle}>
             <input type="hidden" name="next" value={next ?? "/learn"} />
-            <Button type="submit" variant="outline" className="w-full">
+            {/* Google's own "neutral" sign-in button colours (#F2F2F2 fill, #1F1F1F text), so it stands apart from the black page without breaking Google's branding rules. */}
+            <Button
+              type="submit"
+              variant="outline"
+              className="w-full border-[#dadce0] bg-[#f2f2f2] text-[#1f1f1f] hover:bg-[#e9e9e9] dark:border-transparent dark:hover:bg-white"
+            >
               <GoogleIcon className="size-4" />
               {t.auth.googleSignIn}
             </Button>
