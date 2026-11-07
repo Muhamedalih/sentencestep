@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { goldfishInTheFilterTank } from "./goldfish-in-the-filter-tank";
 import { ratsMemoryMap } from "./rats-memory-map";
 import { squirrelBrainsGrow } from "./squirrel-brains-grow";
 import { howThis1800sMovieMachineWorked } from "./how-this-1800s-movie-machine-worked";
@@ -76,4 +77,5 @@ export const videoLessons: readonly VideoLesson[] = [
   howThis1800sMovieMachineWorked,
   squirrelBrainsGrow,
   ratsMemoryMap,
+  goldfishInTheFilterTank,
 ];
