@@ -156,7 +156,15 @@ export async function run(args) {
     await page.waitForSelector(link, { timeout: 120000 }).catch(() => {
       throw new Error(`the library does not list ${id} (is the section on? the page is ${page.url()})`);
     });
-    await page.click(link);
+    // The library's shelves are horizontal rows: a card past the edge of its row is not clickable until scrolled to.
+    // The page may also hold a hidden copy of the link (zero size), so the visible one is the one clicked.
+    const clicked = await page.$$eval(link, (els) => {
+      const el = els.find((e) => e.getClientRects().length > 0) || els[0];
+      el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+      el.click();
+      return els.length;
+    });
+    if (!clicked) throw new Error(`the library does not list ${id}`);
     await page.waitForSelector('iframe[src*="youtube"]', { timeout: 240000 });
     const frame = () => page.frames().find((f) => /youtube(-nocookie)?\.com\/embed\//.test(f.url()));
     for (let i = 0; i < 100 && !frame(); i++) await sleep(300);
