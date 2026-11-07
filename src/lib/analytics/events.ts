@@ -235,6 +235,18 @@ export type AnalyticsEvent =
       properties: { source: WordsRoundSource; count: number };
     }
   | {
+      name: "VIDEO_STARTED";
+      category: "ENGAGEMENT";
+      /** A video of Video dictation («فيديو») was opened: its practice screen was shown (a visit, so a reload counts again). `sentences`: how many sentences the video asks, read on the server. Guests are recorded too (no account). Read with VIDEO_FINISHED: how many who open a video reach its end, and how long that takes. */
+      properties: { videoId: string; sentences: number };
+    }
+  | {
+      name: "VIDEO_FINISHED";
+      category: "ENGAGEMENT";
+      /** A video's finish screen was reached, every time (a repeat too, unlike `video_finishes`, which keeps one row per learner and video and only for signed-in learners): `accuracy` is the share of letters typed right, 0–1, as the finish screen shows it. Guests are recorded too. */
+      properties: { videoId: string; sentences: number; accuracy: number };
+    }
+  | {
       name: "WORDS_ROUND_FINISHED";
       category: "ENGAGEMENT";
       /** A round of words ran to its end (every word landed): of `count` words, `clean` were typed right on the first go with no help, `assisted` right after one hint, `missed` wrong (or given up on) on the first go; count = clean + assisted + missed. A learner who leaves halfway writes only the start, so finished over started is the share who stay to the end, and (clean + assisted) over count is the first-go accuracy. */

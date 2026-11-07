@@ -29,6 +29,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
+import { trackVideoAction } from "@/lib/analytics/track-actions";
 import { isMistakeWorthTracking, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { solveFitZoom } from "@/lib/today/fit-zoom";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
@@ -108,6 +109,14 @@ export function VideoSession({
   const leadRef = useRef(START_LEAD_SECONDS);
   const stopEndRef = useRef<number | null>(null);
   const stats = useRef({ correct: 0, total: 0, words: new Set<string>() });
+
+  // Analytics: the video was opened (VIDEO_STARTED), once per video shown; a reload counts again.
+  const reportedOpen = useRef<string | null>(null);
+  useEffect(() => {
+    if (reportedOpen.current === lesson.id) return;
+    reportedOpen.current = lesson.id;
+    trackVideoAction({ event: "started", videoId: lesson.id }).catch(() => undefined);
+  }, [lesson.id]);
 
   const move = useCallback((next: { index?: number; phase?: Phase }) => {
     if (next.index !== undefined) {
@@ -760,6 +769,17 @@ function Finish({
 }) {
   const { locale } = useLocale();
   const strings = videoStrings(locale);
+  // Analytics: this finish screen was reached (VIDEO_FINISHED), every time, a repeat too.
+  const reportedFinish = useRef(false);
+  useEffect(() => {
+    if (reportedFinish.current) return;
+    reportedFinish.current = true;
+    trackVideoAction({
+      event: "finished",
+      videoId: lesson.id,
+      accuracy: summary.accuracy / 100,
+    }).catch(() => undefined);
+  }, [lesson.id, summary.accuracy]);
   return (
     <div className="flex flex-1 flex-col gap-5 pt-4">
       <VideoFinishRecorder videoId={lesson.id} />

@@ -267,7 +267,7 @@ const TERMS_AR: LegalDocument = {
 
 const PRIVACY_EN: LegalDocument = {
   title: "Privacy Policy",
-  updated: "Last updated: 1 November 2026",
+  updated: "Last updated: 7 November 2026",
   intro:
     "This page explains what SentenceStep collects, why, and who helps us run it. We don't sell your data and we don't share it with advertisers.",
   sections: [
@@ -304,7 +304,7 @@ const PRIVACY_EN: LegalDocument = {
         "Resend: sending emails.",
         "Where enabled: Sentry for error monitoring, and Cloudflare Turnstile to check that sign-ups come from a person.",
         "Google: only if you choose “Continue with Google”. If you rate the app, your rating and comment are saved in our database and, as a backup, in a spreadsheet we control.",
-        `YouTube (Google): only if you open the Video section. Its videos are played by YouTube's own player through YouTube API Services, so while a video plays YouTube and Google may collect data about your viewing, as described in the Google Privacy Policy (${GOOGLE_PRIVACY_URL}). We don't ask YouTube for any information about you, and SentenceStep does not keep a record of which videos you watch.`,
+        `YouTube (Google): only if you open the Video section. Its videos are played by YouTube's own player through YouTube API Services, so while a video plays YouTube and Google may collect data about your viewing, as described in the Google Privacy Policy (${GOOGLE_PRIVACY_URL}). We don't ask YouTube for any information about you. SentenceStep itself records only which of its videos you open and finish there, and how accurately you typed them, like the rest of your learning.`,
         "Your browser's push service: only if you turn on notifications.",
       ],
     },
@@ -345,7 +345,7 @@ const PRIVACY_EN: LegalDocument = {
 
 const PRIVACY_AR: LegalDocument = {
   title: "سياسة الخصوصية",
-  updated: "آخر تحديث: 1 نوفمبر 2026",
+  updated: "آخر تحديث: 7 نوفمبر 2026",
   intro:
     "توضّح هذه الصفحة ما الذي تجمعه SentenceStep ولماذا ومن يساعدنا في تشغيلها. لا نبيع بياناتك ولا نشاركها مع المعلنين.",
   sections: [
@@ -382,7 +382,7 @@ const PRIVACY_AR: LegalDocument = {
         "Resend: إرسال رسائل البريد الإلكتروني.",
         "حيثما كانت مفعّلة: Sentry لمراقبة الأخطاء، وCloudflare Turnstile للتحقق من أن التسجيل يتم من شخص حقيقي.",
         "Google: فقط إذا اخترت «المتابعة عبر Google». وإذا قيّمت التطبيق تُحفظ درجتك وملاحظتك في قاعدة بياناتنا، ونسخة احتياطية منها في جدول بيانات نملكه.",
-        `YouTube (Google): فقط إذا فتحت قسم «فيديو». تُشغَّل مقاطعه بمشغّل YouTube نفسه عبر YouTube API Services، لذا قد تجمع YouTube وGoogle بيانات عن مشاهدتك أثناء تشغيل المقطع كما توضحها سياسة خصوصية Google (${GOOGLE_PRIVACY_URL}). لا نطلب من YouTube أي معلومات عنك، ولا تحتفظ SentenceStep بسجل للمقاطع التي تشاهدها.`,
+        `YouTube (Google): فقط إذا فتحت قسم «فيديو». تُشغَّل مقاطعه بمشغّل YouTube نفسه عبر YouTube API Services، لذا قد تجمع YouTube وGoogle بيانات عن مشاهدتك أثناء تشغيل المقطع كما توضحها سياسة خصوصية Google (${GOOGLE_PRIVACY_URL}). لا نطلب من YouTube أي معلومات عنك. وتسجّل SentenceStep نفسها فقط أيّ مقاطع القسم تفتحها وتُكملها ودقّة كتابتك فيها، مثل بقية تعلّمك.`,
         "خدمة الإشعارات في متصفحك: فقط إذا فعّلت الإشعارات.",
       ],
     },

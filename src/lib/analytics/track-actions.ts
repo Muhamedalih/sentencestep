@@ -10,6 +10,8 @@ import { isInAppBrowserName, isStripPage, isStripPlatform } from "@/lib/in-app-s
 import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isCountryCode } from "@/lib/i18n/country-codes";
+import { getVideoLessons } from "@/lib/video-dictation/content";
+import { parseVideoTrackReport } from "@/lib/video-dictation/tracking";
 import { parseWordsRoundReport } from "@/lib/words-round/round";
 import type { WordsRoundReport } from "@/lib/words-round/round";
 import type { LearningMode } from "@/types/content";
@@ -210,5 +212,47 @@ export async function trackWordsRoundAction(report: WordsRoundReport): Promise<v
     }
   } catch (error) {
     console.error("[analytics] trackWordsRoundAction failed", error);
+  }
+}
+
+/**
+ * Called from Video dictation's practice screen (see VideoSession): once when a video is opened and
+ * once each time its finish screen is reached. Fire-and-forget, and the write is left until the
+ * response is sent, like trackWordsRoundAction. The report arrives as client input, so the video id
+ * is checked against the library and the accuracy against 0–1 (see parseVideoTrackReport); the
+ * number of sentences is read here, never taken from the browser. A guest's video is recorded too,
+ * with no account. Nothing else is sent: no typed text, no YouTube data.
+ */
+export async function trackVideoAction(report: unknown): Promise<void> {
+  try {
+    const lessons = getVideoLessons();
+    const parsed = parseVideoTrackReport(report, new Set(lessons.map((lesson) => lesson.id)));
+    if (!parsed) return;
+    const { videoId } = parsed;
+    const sentences = lessons.find((lesson) => lesson.id === videoId)?.sentences.length ?? 0;
+    const user = await getCurrentUser();
+    const userId = user?.id ?? null;
+    if (parsed.event === "started") {
+      after(() =>
+        track(
+          { name: "VIDEO_STARTED", category: "ENGAGEMENT", properties: { videoId, sentences } },
+          userId,
+        ),
+      );
+    } else {
+      const { accuracy } = parsed;
+      after(() =>
+        track(
+          {
+            name: "VIDEO_FINISHED",
+            category: "ENGAGEMENT",
+            properties: { videoId, sentences, accuracy },
+          },
+          userId,
+        ),
+      );
+    }
+  } catch (error) {
+    console.error("[analytics] trackVideoAction failed", error);
   }
 }

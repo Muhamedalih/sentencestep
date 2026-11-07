@@ -618,3 +618,39 @@ test("timings: what an Admin moved by hand replaces the file's times, and a bad 
       lesson,
     );
 });
+
+test("parseVideoTrackReport: a known video opened or finished is kept, anything else is dropped", async () => {
+  const { parseVideoTrackReport } = await import("./tracking");
+  const known = new Set(["ducks-in-the-rain"]);
+  assert.deepEqual(
+    parseVideoTrackReport({ event: "started", videoId: "ducks-in-the-rain" }, known),
+    {
+      event: "started",
+      videoId: "ducks-in-the-rain",
+    },
+  );
+  assert.deepEqual(
+    parseVideoTrackReport(
+      { event: "finished", videoId: "ducks-in-the-rain", accuracy: 0.9349 },
+      known,
+    ),
+    { event: "finished", videoId: "ducks-in-the-rain", accuracy: 0.93 },
+  );
+  assert.equal(parseVideoTrackReport({ event: "started", videoId: "not-a-video" }, known), null);
+  assert.equal(
+    parseVideoTrackReport({ event: "watched", videoId: "ducks-in-the-rain" }, known),
+    null,
+  );
+  assert.equal(
+    parseVideoTrackReport({ event: "finished", videoId: "ducks-in-the-rain" }, known),
+    null,
+  );
+  for (const accuracy of [-0.1, 1.5, Number.NaN, "0.9"]) {
+    assert.equal(
+      parseVideoTrackReport({ event: "finished", videoId: "ducks-in-the-rain", accuracy }, known),
+      null,
+    );
+  }
+  assert.equal(parseVideoTrackReport(null, known), null);
+  assert.equal(parseVideoTrackReport("started", known), null);
+});
