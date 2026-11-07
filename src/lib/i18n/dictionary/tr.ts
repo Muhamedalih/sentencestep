@@ -277,6 +277,19 @@ export const tr: Dictionary = {
     startCta: "Başla",
     skip: "Atla",
   },
+  firstRunTips: {
+    eyebrow: "Burada nasıl öğrenilir",
+    tip1Title: "Her kelimeyi kendin yaz",
+    tip1Body: "Her şeyi anlamasan da olur; anlamak tekrarla gelir.",
+    tip2Title: "Birden fazla dinle",
+    tip2Body: "Cümleyi istediğin zaman tekrar çal, ses hızını değiştir.",
+    tip3Title: "Yazarken sesli söyle",
+    tip3Body: "Telaffuzu sesli taklit et; her gün biraz daha iyileşir.",
+    tip4Title: "Hikayeleri tekrarla",
+    tip4Body: "Her tekrar kelimeleri pekiştirir ve sana yeni anlamlar gösterir.",
+    startCta: "Derse başla",
+    skip: "Atla",
+  },
   onboardingComplete: {
     eyebrow: "İlk dersini tamamladın",
     headline: "İngilizce yolculuğun artık başladı",
@@ -293,6 +306,18 @@ export const tr: Dictionary = {
     ctaSignup: "Ücretsiz hesabını oluştur",
     ctaSignupHelper: "Bugün kazandığın seriyi ve XP'yi kaydet — bir dakikadan az sürer.",
     ctaGuestContinue: "Hayır, misafir olarak devam et",
+  },
+  signupPrompt: {
+    eyebrow: "İlk dersini bitirdin",
+    headline: "İlerlemeni kaydet, yarın devam et",
+    result: "Bugün {words} kelime yazdın · %{accuracy} doğruluk",
+    point1: "İlerlemen ve serin her cihazda kayıtlı",
+    point2: "Günlük görevler ve haftalık test açılır",
+    point3: "Ücretsiz, bir dakikadan kısa sürer",
+    emailCta: "E-posta ile hesap oluştur",
+    haveAccount: "Hesabın var mı?",
+    signIn: "Giriş yap",
+    later: "Şimdi değil",
   },
   guestBanner: {
     titleSingular: "1 günlük serin var",
@@ -1352,6 +1377,7 @@ export const tr: Dictionary = {
     guestBody:
       "Günlük görevlerden ekstra XP kazanmak ve serini dondurmayla korumak için ücretsiz hesap oluştur.",
     guestCta: "Ücretsiz hesap oluştur",
+    guestLine: "Açmak ve serini korumak için kaydol",
   },
   badges: {
     heading: "Başarılar",

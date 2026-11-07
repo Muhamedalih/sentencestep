@@ -15,7 +15,7 @@ export default function manifest(): MetadataRoute.Manifest {
       "Hear a sentence, type it letter by letter, and build fluency through Normal and Stories lessons.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f5f3fa",
+    background_color: "#020202",
     theme_color: "#4F3FE0",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

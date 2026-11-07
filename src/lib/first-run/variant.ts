@@ -1,7 +1,8 @@
 /**
- * The first-run test: part of the brand-new visitors get the short first run (start, level, then
- * straight into the first lesson — language taken from the browser, no country, tutorial or start
- * card), the rest keep the long one. How many get it is the "Short first run" permission
+ * The first-run test: part of the brand-new visitors get the short first run (the start page with
+ * the language chips, the level, one page of tips, then the first lesson — no language page,
+ * country, four-slide tutorial or start card — and after that lesson the sign-up page, then Home),
+ * the rest keep the long one. How many get it is the "Short first run" permission
  * (/admin/permissions): none until an admin opens it to a share of visitors. The two are told apart in every funnel event (see
  * src/lib/analytics/track.ts), so what the shorter path does to "reached the first lesson",
  * sign-ups and next-day return is read from a split instead of guessed from before and after.
@@ -24,7 +25,7 @@ export const FIRST_RUN_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 /** `?first_run=short` or `?first_run=classic` on any page pins that visitor to that variant, so either flow can be opened on purpose. */
 export const FIRST_RUN_SEARCH_PARAM = "first_run";
 
-/** The screens of the first run, in the order the long variant shows them (the short one shows intro, level and then the lesson). */
+/** The screens of the first run, in the order the long variant shows them (the short one shows intro, level and tutorial — its one-page tips — and then the lesson). */
 export const ONBOARDING_STEPS = [
   "intro",
   "language",

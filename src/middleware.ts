@@ -89,7 +89,7 @@ function sentryConnectSrc(): string {
  * cacheable. See THEME_INIT_SCRIPT's own doc comment for why the script
  * itself is safe to authorize this way (100% static, zero interpolation).
  */
-const THEME_SCRIPT_HASH = "sha256-wsUdzDaf48DVgowQHlmZS5LH85z4u/iIq9XHllJtjn4=";
+const THEME_SCRIPT_HASH = "sha256-eMnT6u/htAYO86nQ+hAR//CUPdlq6rU0w11ln7nVAFc=";
 
 /**
  * The exact SHA-256 hash of root-html-shell.tsx's CLARITY_INIT_SCRIPT

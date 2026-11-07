@@ -34,6 +34,7 @@ export const ROLLOUT_IDS = [
   "taskSteps",
   "contactInstagram",
   "videoShelves",
+  "guestCards",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -95,7 +96,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "visitor",
     title: "Short first run",
     description:
-      "A first-time visitor goes from the start page to the level question and straight into the first lesson. The language comes from the browser (Arabic when it has none we translate into), and the country, tutorial and start-card steps are skipped. Visitors are split between this and the current first run, so the two can be compared on reaching the first lesson, signing up and coming back.",
+      "A first-time visitor goes from the start page (where the language is picked on three chips at the top) to the level question, then one page of four short tips, and into the first lesson; the language page, the country, the four-slide tutorial and the start card are gone. After that lesson a visitor without an account sees one page asking them to save their progress (Google, email, sign in, or later), and every choice leads straight to Home. Visitors are split between this and the current first run, so the two can be compared on reaching the first lesson, signing up and coming back.",
     notes: [
       "Admins only: nobody is given it; try it yourself by opening the home page with ?first_run=short (or ?first_run=classic to go back).",
       "A share of visitors: that percentage of NEW visitors get the short one, picked at random once and kept. Choosing 100 gives it to every new visitor.",
@@ -326,6 +327,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The link is Instagram's own message link (ig.me/m/sentencestep_arabic), so the learner lands in the chat, not only on the profile.",
       "Nothing is stored or counted on our side: it is a plain link, so there is no extra load.",
       "Phones without the “More” sheet (the Phone: the path and the next step permission closed) do not show it yet.",
+    ],
+  },
+  guestCards: {
+    id: "guestCards",
+    audience: "learner",
+    title: "Home for visitors without an account: the same cards page",
+    description:
+      "A visitor without an account gets the same Home as a signed-in learner (the cards page: the “keep learning” card, the achievements panel, Passages and Video, the words section) instead of the old classic page. Where a learner has the daily-tasks strip, the visitor has the same box with one line, “Today's tasks · sign up to turn them on and keep your streak”, and the free-account button; the separate “you have a 1-day streak” banner of the old page is not on it.",
+    notes: [
+      "A look of the Home cards (above): it stays closed whenever they are, whatever its own setting says.",
+      "Only visitors without an account change; signed-in learners already have this page.",
+      "To look at it as a visitor before opening it: switch preview on for your browser, sign out, and open Home.",
+      "It adds no read: the page uses what Home already loads for a visitor.",
     ],
   },
   videoShelves: {

@@ -43,10 +43,8 @@ export const SITE_METADATA: Metadata = {
 };
 
 export const SITE_VIEWPORT: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f3fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#15131f" },
-  ],
+  // The browser bar takes the page colour: black, the site's look for everyone (see THEME_INIT_SCRIPT).
+  themeColor: "#020202",
   width: "device-width",
   initialScale: 1,
   // Android Chrome: the on-screen keyboard shrinks the page instead of covering it (iOS is handled by KeyboardViewport).

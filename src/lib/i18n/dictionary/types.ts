@@ -318,6 +318,20 @@ export interface Dictionary {
     startCta: string;
     skip: string;
   };
+  /** The short first run's one-page tips (src/components/app/first-run-tips.tsx): the four habits of the long run's tutorial, cut to one line each, then the opening lesson. */
+  firstRunTips: {
+    eyebrow: string;
+    tip1Title: string;
+    tip1Body: string;
+    tip2Title: string;
+    tip2Body: string;
+    tip3Title: string;
+    tip3Body: string;
+    tip4Title: string;
+    tip4Body: string;
+    startCta: string;
+    skip: string;
+  };
   /** The premium "pitch" screen shown instead of the ordinary LessonCompletion when a first-time learner finishes their opening lesson (src/components/learning/onboarding-lesson-complete.tsx) — the get-started flow's real final step, bookending onboarding.heading/onboardingIntroCard's startCta. Four fixed benefit points, not a dynamic list. */
   onboardingComplete: {
     eyebrow: string;
@@ -336,6 +350,22 @@ export interface Dictionary {
     ctaSignupHelper: string;
     /** The low-pressure secondary link next to ctaSignup — guests are never blocked from moving on without an account. */
     ctaGuestContinue: string;
+  };
+  /**
+   * The page after the opening lesson in the short first run (src/components/learning/signup-prompt.tsx):
+   * save your progress with an account, or later. `result` takes {words} and {accuracy} (0-100).
+   */
+  signupPrompt: {
+    eyebrow: string;
+    headline: string;
+    result: string;
+    point1: string;
+    point2: string;
+    point3: string;
+    emailCta: string;
+    haveAccount: string;
+    signIn: string;
+    later: string;
   };
   /**
    * The dismissible "you're browsing as a guest" reminder on the Home
@@ -1704,6 +1734,8 @@ export interface Dictionary {
     guestHeading: string;
     guestBody: string;
     guestCta: string;
+    /** The guest's line in the Home cards' tasks strip (GuestTasksLine), after `heading`: why to sign up, in a few words. */
+    guestLine: string;
   };
   /** Achievements page + badge celebration (src/app/(app)/learn/(dashboard)/achievements). */
   badges: {
