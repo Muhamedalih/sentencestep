@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Amiri, Inter, Lora } from "next/font/google";
 
 import { CountryOnboarding } from "@/components/app/country-onboarding";
+import { FirstRunTips } from "@/components/app/first-run-tips";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
 import { FirstTouchCookie } from "@/components/app/first-touch-cookie";
 import { InAppBucketCookie } from "@/components/app/in-app-bucket-cookie";
@@ -56,8 +57,11 @@ const lora = Lora({
 
 /**
  * Applies the `dark` class (see globals.css's `.dark` token overrides)
- * before the page paints, so a learner whose stored/system preference is
- * dark never sees a flash of the light theme first. This has to run as a
+ * before the page paints. Black is the site's look, so it is the default for
+ * everyone — whatever the device's own light/dark setting says — and only a
+ * learner who picked light with the sun/moon toggle (stored "light") gets the
+ * light theme. Running before paint means nobody sees a flash of the other
+ * theme first. This has to run as a
  * plain, synchronous inline script — a useEffect in a Client Component
  * would only run after React's first paint, which is exactly the flash
  * this exists to prevent. The <html> tag's suppressHydrationWarning below
@@ -73,11 +77,11 @@ const lora = Lora({
  */
 export const THEME_INIT_SCRIPT = `
 (function () {
+  var stored = null;
   try {
-    var stored = localStorage.getItem("sentencestep-theme");
-    var isDark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (isDark) document.documentElement.classList.add("dark");
+    stored = localStorage.getItem("sentencestep-theme");
   } catch (e) {}
+  if (stored !== "light") document.documentElement.classList.add("dark");
 })();
 `;
 
@@ -307,6 +311,7 @@ export function RootHtmlShell({
             <StartingLevelOnboarding />
             <CountryOnboarding />
             <TutorialOnboarding />
+            <FirstRunTips />
             <OnboardingIntroCard />
           </GetStartedStepProvider>
           {children}

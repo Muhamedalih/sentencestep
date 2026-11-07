@@ -368,15 +368,16 @@ export default async function LearnHomePage({
       ? arrangeVideoLessons(getVideoLessons(), await getVideoArrangement())[0]?.ids[0]
       : undefined;
   const homeVideo = firstVideoId ? getVideoLesson(firstVideoId) : undefined;
-  // The Home cards (permission "homeCards", Admins only, open only while the classic Home is): the classic
-  // page in its new look. It uses the data loaded above, so it adds no read.
-  if (features.rollouts.homeCards && user) {
-    // The two small reads only this page needs: the videos the learner has finished (a count) and the
+  // The Home cards (permission "homeCards", open only while the classic Home is): the classic page in its
+  // new look, for a signed-in learner — and for a visitor without an account once "guestCards" is open,
+  // instead of the classic page. It uses the data loaded above, so it adds no read.
+  if (features.rollouts.homeCards && (user || features.rollouts.guestCards)) {
+    // The two small reads only a learner's page needs: the videos they have finished (a count) and the
     // Arabic meanings on the first four word cards (an Arabic learner only). Either one failing just
-    // leaves its piece out; neither can take the page down.
+    // leaves its piece out; neither can take the page down. A visitor has neither.
     const [videosFinished, wordHints] = await Promise.all([
-      fetchFinishedVideoCount(user.id),
-      locale === "ar"
+      user ? fetchFinishedVideoCount(user.id) : Promise.resolve(null),
+      user && locale === "ar"
         ? fetchWordCardHints(reviewWords.slice(0, 4).map((word) => word.wordId))
         : Promise.resolve({}),
     ]);

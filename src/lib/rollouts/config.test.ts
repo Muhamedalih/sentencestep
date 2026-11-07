@@ -198,6 +198,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     taskSteps: false,
     contactInstagram: false,
     videoShelves: false,
+    guestCards: false,
   });
 });
 
@@ -466,6 +467,19 @@ test("the Home cards are a look of the classic Home: Admins only, and closed whe
     withRolloutDependencies(evaluateRollouts(defaultRolloutConfig(), learner)).homeCards,
     false,
   );
+});
+
+test("the Home cards for visitors: Admins only, open for a guest once opened, closed whenever the Home cards are", () => {
+  const config = defaultRolloutConfig();
+  const admins = withRolloutDependencies(evaluateRollouts(config, admin));
+  assert.equal(admins.guestCards, true);
+  assert.equal(withRolloutDependencies({ ...admins, homeCards: false }).guestCards, false);
+  assert.equal(withRolloutDependencies({ ...admins, classicHome: false }).guestCards, false);
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, guest)).guestCards, false);
+  config.classicHome = entry({ mode: "everyone" });
+  config.homeCards = entry({ mode: "everyone" });
+  config.guestCards = entry({ mode: "everyone" });
+  assert.equal(withRolloutDependencies(evaluateRollouts(config, guest)).guestCards, true);
 });
 
 test("the daily tasks as three steps: Admins only, and closed whenever the Home cards are", () => {

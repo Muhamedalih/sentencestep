@@ -85,9 +85,9 @@ export function HomeEngagementSection({
   trail?: ReactNode;
   className?: string;
 }) {
-  if (!stream) return <HomeEngagement className={className} />;
+  if (!stream) return <HomeEngagement cards={cards} className={className} />;
   return (
-    <HomeEngagementFrame className={className}>
+    <HomeEngagementFrame cards={cards} className={className}>
       <Suspense fallback={<CardSkeleton feature="dailySession" />}>
         <DailySessionSlot data={stream.dailySession} />
       </Suspense>

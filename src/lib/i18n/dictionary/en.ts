@@ -280,6 +280,19 @@ export const en: Dictionary = {
     startCta: "Start",
     skip: "Skip",
   },
+  firstRunTips: {
+    eyebrow: "How you learn here",
+    tip1Title: "Type every word yourself",
+    tip1Body: "It's fine not to understand everything — understanding comes with repetition.",
+    tip2Title: "Listen more than once",
+    tip2Body: "Replay the sentence whenever you like and change the audio speed.",
+    tip3Title: "Say it as you type",
+    tip3Body: "Copy the pronunciation out loud, and it gets better day by day.",
+    tip4Title: "Redo the stories",
+    tip4Body: "Every repeat locks in the words and shows you new meanings.",
+    startCta: "Start the lesson",
+    skip: "Skip",
+  },
   onboardingComplete: {
     eyebrow: "You did it — your first lesson is complete",
     headline: "Your English journey has begun",
@@ -297,6 +310,18 @@ export const en: Dictionary = {
     ctaSignup: "Create your free account",
     ctaSignupHelper: "Save the streak and XP you just earned — takes less than a minute.",
     ctaGuestContinue: "No thanks, continue as a guest",
+  },
+  signupPrompt: {
+    eyebrow: "You finished your first lesson",
+    headline: "Save your progress and keep going tomorrow",
+    result: "Today you typed {words} words · {accuracy}% accuracy",
+    point1: "Your progress and streak, saved on any device",
+    point2: "Today's tasks and the weekly test open for you",
+    point3: "Free, and it takes less than a minute",
+    emailCta: "Create an account with email",
+    haveAccount: "Have an account?",
+    signIn: "Sign in",
+    later: "Later",
   },
   guestBanner: {
     titleSingular: "You're on a 1-day streak",
@@ -1351,6 +1376,7 @@ export const en: Dictionary = {
     guestBody:
       "Create a free account to earn bonus XP from daily quests and protect your streak with freezes.",
     guestCta: "Create a free account",
+    guestLine: "Sign up to turn them on and keep your streak",
   },
   badges: {
     heading: "Achievements",

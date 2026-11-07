@@ -194,7 +194,7 @@ export function evaluateRollouts(
  * The classic Home wins over the new Home page: whoever has it gets the classic page.
  * The Home cards are a new look of the classic page, so they are closed whenever the classic Home is.
  * The daily tasks as three steps are a look of the Home cards' tasks strip, so they are closed whenever
- * the Home cards are.
+ * the Home cards are. The Home cards for visitors without an account are a look of the Home cards too.
  */
 export function withRolloutDependencies(
   access: Record<RolloutId, boolean>,
@@ -215,6 +215,7 @@ export function withRolloutDependencies(
     videoNews: access.videoNews && access.videoDictation && newHome,
     homeCards,
     taskSteps: access.taskSteps && homeCards,
+    guestCards: access.guestCards && homeCards,
   };
 }
 

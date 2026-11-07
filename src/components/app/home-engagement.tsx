@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { DailySessionCard } from "@/components/app/daily-session-card";
 import { GuestFeatureTeaser } from "@/components/app/guest-feature-teaser";
 import { EngagementStrip } from "@/components/app/engagement-strip";
+import { GuestTasksLine } from "@/components/home-cards/guest-tasks-line";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { fetchHomeEngagementAction } from "@/lib/features/home-engagement-actions";
 import type { HomeEngagementData } from "@/lib/features/home-engagement";
@@ -18,14 +19,17 @@ import { cn } from "@/lib/utils";
  */
 export function HomeEngagementFrame({
   children,
+  cards,
   className,
 }: {
   children?: ReactNode;
+  /** The Home cards page: a guest gets the tasks-strip-shaped GuestTasksLine instead of the classic teaser card. */
+  cards?: boolean;
   className?: string;
 }) {
   return (
     <div className={cn("flex flex-col gap-4 empty:hidden", className)}>
-      <GuestFeatureTeaser />
+      {cards ? <GuestTasksLine /> : <GuestFeatureTeaser />}
       {children}
     </div>
   );
@@ -70,7 +74,7 @@ export function CardSkeleton({
  * request (fetchHomeEngagementAction) rather than one each. In the normal case
  * the server renders them itself (see HomeEngagementSection) and this never runs.
  */
-export function HomeEngagement({ className }: { className?: string }) {
+export function HomeEngagement({ cards, className }: { cards?: boolean; className?: string }) {
   const { dailySession, quests, streakCalendar } = useFeatures();
   const anyEnabled = dailySession.enabled || quests.enabled || streakCalendar.enabled;
   // undefined = still loading; null = loaded but nothing to show.
@@ -88,7 +92,7 @@ export function HomeEngagement({ className }: { className?: string }) {
   }, [anyEnabled]);
 
   return (
-    <HomeEngagementFrame className={className}>
+    <HomeEngagementFrame cards={cards} className={className}>
       {anyEnabled && data === undefined ? (
         <>
           <CardSkeleton feature="dailySession" />

@@ -26,6 +26,14 @@ interface LocaleContextValue {
   setLocale: (locale: SupportLocale) => void;
   /** See its own doc comment just above where it's built, in LocaleProvider. */
   setLocaleForOnboarding: (locale: SupportLocale) => void;
+  /**
+   * The language the screens before a choice are shown in while `locale` is still null: the
+   * browser's own language once detected, or the one tapped on the start page's language chips
+   * (short first run). Null until either happens (the screens then read English). Showing a
+   * language never saves it — the visitor's choice is saved with setLocaleForOnboarding.
+   */
+  displayLocale: SupportLocale | null;
+  setDisplayLocale: (locale: SupportLocale) => void;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -159,6 +167,13 @@ export function LocaleProvider({
     });
   }, []);
 
+  // The start page's language chips: only what the screens before a choice read changes (and
+  // <html lang>, for the right font); nothing is saved until the visitor continues.
+  const setDisplayLocale = useCallback((next: SupportLocale) => {
+    document.documentElement.lang = next;
+    setBrowserLocale(next);
+  }, []);
+
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
@@ -177,8 +192,10 @@ export function LocaleProvider({
           : fallbackDictionary,
       setLocale,
       setLocaleForOnboarding,
+      displayLocale: browserLocale,
+      setDisplayLocale,
     }),
-    [locale, browserLocale, setLocale, setLocaleForOnboarding],
+    [locale, browserLocale, setLocale, setLocaleForOnboarding, setDisplayLocale],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

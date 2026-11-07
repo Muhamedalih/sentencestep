@@ -66,10 +66,8 @@ const FromMemorySession = dynamic(() =>
 const LessonCompletion = dynamic(() =>
   import("@/components/learning/lesson-completion").then((m) => m.LessonCompletion),
 );
-const OnboardingLessonComplete = dynamic(() =>
-  import("@/components/learning/onboarding-lesson-complete").then(
-    (m) => m.OnboardingLessonComplete,
-  ),
+const OpeningLessonEnd = dynamic(() =>
+  import("@/components/learning/opening-lesson-end").then((m) => m.OpeningLessonEnd),
 );
 const RatingPrompt = dynamic(() =>
   import("@/components/learning/rating-prompt").then((m) => m.RatingPrompt),
@@ -277,7 +275,7 @@ export function LessonSession({
     startingLevel,
   } = useProgress();
   // The one-time "rate the app" card's own eligibility check — never the
-  // opening lesson (OnboardingLessonComplete has its own dedicated pitch
+  // opening lesson (OpeningLessonEnd has its own dedicated pitch
   // screen instead), never mid fix-your-mistakes, and only once `saveStatus`
   // has actually settled to "saved": for a signed-in learner `completions`
   // only updates once recordCompletionAction resolves (see useProgress's own
@@ -899,7 +897,15 @@ export function LessonSession({
             />
           </div>
         ) : isComplete && isOpeningLesson ? (
-          <OnboardingLessonComplete key="onboarding-complete" />
+          <OpeningLessonEnd
+            key="onboarding-complete"
+            // The lesson's words, counted the way Home's words stat counts them (countWords).
+            words={unit.sentences.reduce(
+              (sum, sentence) => sum + sentence.en.trim().split(/\s+/).filter(Boolean).length,
+              0,
+            )}
+            accuracy={finalAccuracy}
+          />
         ) : inWordsStep ? (
           <div key="story-words-step" className="flex min-h-0 flex-1 flex-col">
             <StoryWordsPanel

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
 import { cn } from "@/lib/utils";
 import { detectBrowserLocale } from "@/lib/i18n/browser-locale";
+import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { setPreferredLanguageAction } from "@/lib/i18n/locale-actions";
 
 /**
@@ -57,11 +58,24 @@ const RESTART_DELAY_MS = 900;
  * visual language once they reach a real lesson.
  */
 export function IntroLanding() {
-  const { locale, t } = useLocale();
+  const { locale, t, displayLocale, setDisplayLocale, setLocaleForOnboarding } = useLocale();
   const { introContinued, setIntroContinued, firstRunVariant } = useGetStartedStep();
   const reducedMotion = useReducedMotion();
   const [signingIn, setSigningIn] = useState(false);
   useOnboardingStepTracking("intro", !locale && !introContinued);
+  const isShort = firstRunVariant === "short";
+
+  // The short first run has no language page: the language is chosen here, on the chips at the top.
+  // They start on the browser's language (Arabic when it has none we translate into), a tap shows
+  // the page in the one tapped, and continuing (or signing in) saves the one showing.
+  useEffect(() => {
+    if (isShort && !locale && displayLocale === null) setDisplayLocale(detectBrowserLocale());
+  }, [isShort, locale, displayLocale, setDisplayLocale]);
+
+  function handleContinue() {
+    if (isShort) setLocaleForOnboarding(displayLocale ?? detectBrowserLocale());
+    setIntroContinued(true);
+  }
 
   // A returning learner landing here has no ss_locale cookie yet (a new
   // device, or cookies cleared) — same gate IntroLanding itself renders on.
@@ -79,7 +93,9 @@ export function IntroLanding() {
   async function handleSignIn() {
     setSigningIn(true);
     try {
-      await setPreferredLanguageAction(detectBrowserLocale());
+      await setPreferredLanguageAction(
+        isShort && displayLocale ? displayLocale : detectBrowserLocale(),
+      );
     } catch (error) {
       console.error("[intro-landing] setPreferredLanguageAction failed", error);
     }
@@ -137,11 +153,38 @@ export function IntroLanding() {
       aria-label={`${t.hero.headingPrefix} ${t.hero.headingEmphasis}`}
     >
       <LockBodyScroll />
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Logo />
-        <span className="text-muted-foreground min-w-0 text-end text-sm font-medium">
-          {t.introLanding.noAccountNote}
-        </span>
+        {isShort ? (
+          <div
+            role="group"
+            aria-label={t.localeSwitcher.ariaLabel}
+            className="ms-auto flex gap-1.5"
+            dir="ltr"
+          >
+            {SUPPORT_LOCALES.map((option) => (
+              <button
+                key={option}
+                type="button"
+                lang={option}
+                aria-pressed={option === displayLocale}
+                onClick={() => setDisplayLocale(option)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-sm font-medium transition-colors pointer-coarse:min-h-9",
+                  option === displayLocale
+                    ? "border-primary text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {LOCALE_META[option].nativeLabel}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted-foreground min-w-0 text-end text-sm font-medium">
+            {t.introLanding.noAccountNote}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 items-center justify-center">
@@ -175,11 +218,7 @@ export function IntroLanding() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-4">
-              <Button
-                size="lg"
-                className="h-14 px-10 text-lg"
-                onClick={() => setIntroContinued(true)}
-              >
+              <Button size="lg" className="h-14 px-10 text-lg" onClick={handleContinue}>
                 {t.firstTimePicker.confirm}
               </Button>
               <Button
@@ -193,7 +232,9 @@ export function IntroLanding() {
               </Button>
             </div>
             <span className="text-muted-foreground text-base">
-              {firstRunVariant === "short" ? t.introLanding.nextHintLevel : t.introLanding.nextHint}
+              {isShort
+                ? `${t.introLanding.noAccountNote} · ${t.introLanding.nextHintLevel}`
+                : t.introLanding.nextHint}
             </span>
             {/* Under the buttons, not beside the demo card: on a phone the demo card is below the fold. */}
             <IntroReviews />

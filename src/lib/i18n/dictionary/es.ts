@@ -283,6 +283,19 @@ export const es: Dictionary = {
     startCta: "Empezar",
     skip: "Omitir",
   },
+  firstRunTips: {
+    eyebrow: "Cómo se aprende aquí",
+    tip1Title: "Escribe cada palabra tú mismo",
+    tip1Body: "No importa si no lo entiendes todo: la comprensión llega con la repetición.",
+    tip2Title: "Escucha más de una vez",
+    tip2Body: "Repite la frase cuando quieras y cambia la velocidad del audio.",
+    tip3Title: "Pronuncia mientras escribes",
+    tip3Body: "Imita la pronunciación en voz alta y mejorará día a día.",
+    tip4Title: "Repite las historias",
+    tip4Body: "Cada repaso fija las palabras y te descubre nuevos significados.",
+    startCta: "Empezar la lección",
+    skip: "Omitir",
+  },
   onboardingComplete: {
     eyebrow: "Lo lograste — tu primera lección está completa",
     headline: "Tu viaje con el inglés ya comenzó",
@@ -299,6 +312,18 @@ export const es: Dictionary = {
     ctaSignup: "Crea tu cuenta gratis",
     ctaSignupHelper: "Guarda la racha y los XP que acabas de ganar — toma menos de un minuto.",
     ctaGuestContinue: "No, gracias, continuar como invitado",
+  },
+  signupPrompt: {
+    eyebrow: "Terminaste tu primera lección",
+    headline: "Guarda tu progreso y sigue mañana",
+    result: "Hoy escribiste {words} palabras · {accuracy} % de precisión",
+    point1: "Tu progreso y tu racha, guardados en cualquier dispositivo",
+    point2: "Se abren las tareas diarias y la prueba semanal",
+    point3: "Gratis y en menos de un minuto",
+    emailCta: "Crear cuenta con correo",
+    haveAccount: "¿Ya tienes cuenta?",
+    signIn: "Iniciar sesión",
+    later: "Ahora no",
   },
   guestBanner: {
     titleSingular: "Llevas 1 día de racha",
@@ -1371,6 +1396,7 @@ export const es: Dictionary = {
     guestBody:
       "Crea una cuenta gratis para ganar XP extra con las misiones diarias y proteger tu racha con congelaciones.",
     guestCta: "Crear una cuenta gratis",
+    guestLine: "Regístrate para activarlas y guardar tu racha",
   },
   badges: {
     heading: "Logros",
