@@ -1,5 +1,5 @@
 import { videoLessons } from "@/data/videos";
-import { videoKinds } from "@/data/videos/kinds";
+import { videoKinds, wideVideoIds } from "@/data/videos/kinds";
 
 import { arrangeLessons } from "./arrange";
 import type { VideoArrangement, VideoSection } from "./arrange";
@@ -41,6 +41,8 @@ export interface VideoCardData {
   level: VideoLevel;
   clipSeconds: number;
   sentenceCount: number;
+  /** A vertical Short (most videos), not a wide 16:9 one: its shelf card is tall. See wideVideoIds. */
+  vertical: boolean;
 }
 
 export function videoCard(lesson: VideoLesson): VideoCardData {
@@ -52,6 +54,7 @@ export function videoCard(lesson: VideoLesson): VideoCardData {
     level: lesson.level,
     clipSeconds: clipSeconds(lesson),
     sentenceCount: lesson.sentences.length,
+    vertical: !wideVideoIds.has(lesson.id),
   };
 }
 

@@ -5,6 +5,7 @@ import { videoStrings } from "@/lib/video-dictation/strings";
 
 import { VideoCard } from "./video-card";
 import { LibraryHeader, SectionBlock, VideoGrid } from "./video-library-parts";
+import { ShelvesLibrary } from "./video-shelves";
 
 /**
  * The videos prepared for Video dictation, in sections by kind (comedy first until an Admin arranges
@@ -16,12 +17,16 @@ export function VideoLibrary({
   sections,
   cards,
   locale,
+  shelves = false,
 }: {
   sections: readonly VideoSection[];
   cards: Readonly<Record<string, VideoCardData>>;
   locale: SupportLocale | null;
+  /** The "videoShelves" permission: the shelves look (see ShelvesLibrary). */
+  shelves?: boolean;
 }) {
   const strings = videoStrings(locale);
+  if (shelves) return <ShelvesLibrary sections={sections} cards={cards} strings={strings} />;
   const shown = sections.filter((section) => section.ids.length > 0);
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">

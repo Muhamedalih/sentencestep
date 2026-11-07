@@ -197,6 +197,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     homeCards: false,
     taskSteps: false,
     contactInstagram: false,
+    videoShelves: false,
   });
 });
 

@@ -51,6 +51,15 @@ export interface VideoStrings {
   newsDismiss: string;
   /** The names of the sections of the library, one per kind of video. */
   kinds: Record<VideoKind, string>;
+  /** The shelves look of the library (the "videoShelves" permission): its header, its section names with one line each, and the shelf controls. */
+  shelfEyebrow: string;
+  shelfTitle: string;
+  shelfSubtitle: string;
+  shelfKinds: Record<VideoKind, { name: string; line: string }>;
+  shelfShowAll: string;
+  shelfShowLess: string;
+  shelfPrevious: string;
+  shelfNext: string;
   /** The Admin's arrange mode of the library. */
   arrange: string;
   arrangeHint: string;
@@ -137,6 +146,21 @@ const ar: VideoStrings = {
     motivation: "تحفيزي",
     other: "أخرى",
   },
+  shelfEyebrow: "فيديو",
+  shelfTitle: "الإنجليزي كما يتكلّمه أهله",
+  shelfSubtitle: "مقاطع قصيرة من يوتيوب، وكل رفّ مرتّب من الأسهل إلى الأصعب.",
+  shelfKinds: {
+    comedy: { name: "مواقف تضحك", line: "حوارات قصيرة ومضحكة بالإنجليزي اليومي" },
+    science: { name: "حقائق في دقيقة", line: "راوٍ واحد بصوت واضح، ومعلومة غريبة في كل مقطع" },
+    motivation: { name: "حكايات قصيرة", line: "قصة كاملة لها بداية ونهاية، في أقل من دقيقة" },
+    english: { name: "إنجليزي واضح", line: "نطق هادئ وواضح من دروس ونشرات حقيقية" },
+    animals: { name: "عالم الحيوان", line: "حقائق عن الحيوانات بصوت راوٍ واضح" },
+    other: { name: "منوّعات", line: "مقاطع من كل نوع" },
+  },
+  shelfShowAll: "عرض الكل",
+  shelfShowLess: "عرض أقل",
+  shelfPrevious: "السابق",
+  shelfNext: "التالي",
   arrange: "ترتيب الفيديوهات",
   arrangeHint: "اسحب الفيديو لتغيير مكانه، أو استعمل الأسهم والقائمة.",
   arrangeSave: "حفظ الترتيب",

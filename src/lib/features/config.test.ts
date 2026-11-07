@@ -419,6 +419,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       homeCards: false,
       taskSteps: false,
       contactInstagram: false,
+      videoShelves: false,
     });
   }
 });

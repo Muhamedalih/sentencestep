@@ -15,3 +15,13 @@ export function formatClipLength(seconds: number): string {
 export function thumbnailUrl(youtubeId: string): string {
   return `https://i.ytimg.com/vi/${youtubeId}/mqdefault.jpg`;
 }
+
+/**
+ * The picture of a shelf card (the "videoShelves" look). A vertical Short gets hqdefault (480x360, about
+ * 10 KB): its middle 202x360 is the Short's own frame, so a tall 9:16 card cropped to the middle shows
+ * just that frame (mqdefault is too small for that, and oar2, the real vertical picture, is about 220
+ * KB). A wide video keeps mqdefault, already 16:9.
+ */
+export function shelfThumbnailUrl(youtubeId: string, vertical: boolean): string {
+  return `https://i.ytimg.com/vi/${youtubeId}/${vertical ? "hqdefault" : "mqdefault"}.jpg`;
+}

@@ -31,15 +31,18 @@ export type VideoLevel = "A1" | "A2" | "B1" | "B2";
 
 /**
  * What a video is about or how it feels: the sections of the library. The order here is the order the
- * sections are listed in until an Admin arranges them (comedy first, the owner's choice); "other" is where
- * a video with no entry in src/data/videos/kinds.ts lands.
+ * sections are listed in until an Admin arranges them (comedy first, the owner's choice, then the facts,
+ * the short stories and clear English, as the approved shelves mock-up of 2026-11-07 lists them); "other"
+ * is where a video with no entry in src/data/videos/kinds.ts lands. "animals" holds no video today (the
+ * owner moved every talking-animal cartoon to comedy on 2026-11-07) and stays for a future animal video
+ * that is not a comedy; an empty section is not shown.
  */
 export const VIDEO_KINDS = [
   "comedy",
-  "english",
   "science",
-  "animals",
   "motivation",
+  "english",
+  "animals",
   "other",
 ] as const;
 export type VideoKind = (typeof VIDEO_KINDS)[number];

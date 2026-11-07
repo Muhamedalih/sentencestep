@@ -418,7 +418,7 @@ test("arrange: a saved arrangement sets the order of the sections and of the vid
   // The saved sections come first in the saved order, the other kinds follow in the default order.
   assert.deepEqual(
     sections.map((section) => section.kind),
-    ["animals", "comedy", "english", "science", "motivation", "other"],
+    ["animals", "comedy", "science", "motivation", "english", "other"],
   );
   assert.deepEqual(idsOf(sections, "animals"), ["d", "c", "a"]);
   assert.deepEqual(idsOf(sections, "comedy"), ["b"]);

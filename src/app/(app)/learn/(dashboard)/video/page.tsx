@@ -14,7 +14,8 @@ export const metadata: Metadata = { title: "Video" };
 
 /**
  * The library of Video dictation: the videos prepared for it, in sections by kind (comedy first until an
- * Admin arranges them), behind the "videoDictation" permission (open to everyone).
+ * Admin arranges them), behind the "videoDictation" permission (open to everyone). The "videoShelves"
+ * permission swaps the grid for one sliding row per section (see ShelvesLibrary).
  * Anyone it is closed for goes back to Home. Every prepared video is open to every viewer, in the same
  * order; an Admin also gets the arrange mode; the saved arrangement is one
  * cached read shared by every visitor. Opening the library is what "seen" means for the «جديد» line on
@@ -39,9 +40,15 @@ export default async function VideoLibraryPage() {
           defaultSections={arrangeVideoLessons(lessons, null)}
           cards={cards}
           locale={locale}
+          shelves={features.rollouts.videoShelves}
         />
       ) : (
-        <VideoLibrary sections={sections} cards={cards} locale={locale} />
+        <VideoLibrary
+          sections={sections}
+          cards={cards}
+          locale={locale}
+          shelves={features.rollouts.videoShelves}
+        />
       )}
     </>
   );

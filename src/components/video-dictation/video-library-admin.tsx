@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 import { VideoCard } from "./video-card";
 import { LibraryHeader, SectionBlock, VideoGrid } from "./video-library-parts";
+import { ShelvesLibrary } from "./video-shelves";
 
 type Message = { kind: "success" | "error"; text: string };
 
@@ -47,6 +48,8 @@ interface LibraryProps {
   defaultSections: readonly VideoSection[];
   cards: Readonly<Record<string, VideoCardData>>;
   locale: SupportLocale | null;
+  /** The "videoShelves" permission: the shelves look, and its section names in the arrange mode too. */
+  shelves?: boolean;
 }
 
 /** What the arrange mode asks of the server (both are Admin-only there): kept apart so the screen can be tried without a database. */
@@ -70,9 +73,12 @@ export function VideoLibraryArranger({
   defaultSections,
   cards,
   locale,
+  shelves = false,
   actions,
 }: LibraryProps & { actions: ArrangeActions }) {
   const strings = videoStrings(locale);
+  const kindName = (kind: VideoKind) =>
+    shelves ? strings.shelfKinds[kind].name : strings.kinds[kind];
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [arranging, setArranging] = useState(false);
@@ -176,19 +182,30 @@ export function VideoLibraryArranger({
     endDrag();
   }
 
+  const arrangeButton = (
+    <Button variant="outline" size="sm" className="max-sm:w-full" onClick={startArranging}>
+      <ArrowUpDown aria-hidden="true" />
+      <span dir="auto">{strings.arrange}</span>
+    </Button>
+  );
+
+  if (!arranging && shelves) {
+    return (
+      <ShelvesLibrary
+        sections={shown}
+        cards={cards}
+        strings={strings}
+        action={arrangeButton}
+        status={message && <StatusLine message={message} className="-mt-2 mb-6" />}
+      />
+    );
+  }
+
   if (!arranging) {
     const visible = shown.filter((section) => section.ids.length > 0);
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
-        <LibraryHeader
-          strings={strings}
-          action={
-            <Button variant="outline" size="sm" className="max-sm:w-full" onClick={startArranging}>
-              <ArrowUpDown aria-hidden="true" />
-              <span dir="auto">{strings.arrange}</span>
-            </Button>
-          }
-        />
+        <LibraryHeader strings={strings} action={arrangeButton} />
         {message && <StatusLine message={message} className="-mt-2 mb-6" />}
         {visible.length === 0 ? (
           <p className="text-muted-foreground" dir="auto">
@@ -199,7 +216,7 @@ export function VideoLibraryArranger({
             {visible.map((section) => (
               <SectionBlock
                 key={section.kind}
-                title={strings.kinds[section.kind]}
+                title={kindName(section.kind)}
                 count={section.ids.length}
               >
                 <VideoGrid>
@@ -250,19 +267,19 @@ export function VideoLibraryArranger({
         {draft.map((section, sectionIndex) => (
           <SectionBlock
             key={section.kind}
-            title={strings.kinds[section.kind]}
+            title={kindName(section.kind)}
             count={section.ids.length}
             actions={
               <div className="flex gap-1.5">
                 <ArrowButton
                   direction="up"
-                  label={`${strings.moveSectionUp}: ${strings.kinds[section.kind]}`}
+                  label={`${strings.moveSectionUp}: ${kindName(section.kind)}`}
                   disabled={sectionIndex === 0}
                   onClick={() => setDraft((current) => shiftSection(current, section.kind, -1))}
                 />
                 <ArrowButton
                   direction="down"
-                  label={`${strings.moveSectionDown}: ${strings.kinds[section.kind]}`}
+                  label={`${strings.moveSectionDown}: ${kindName(section.kind)}`}
                   disabled={sectionIndex === draft.length - 1}
                   onClick={() => setDraft((current) => shiftSection(current, section.kind, 1))}
                 />
@@ -285,7 +302,7 @@ export function VideoLibraryArranger({
                   {strings.arrangeEmptySection}
                 </div>
               )}
-              {renderRows(section, cards, strings, dragId, dropAt, {
+              {renderRows(section, cards, strings, kindName, dragId, dropAt, {
                 onDragStart: startDrag,
                 onDragEnd: endDrag,
                 onShift: (id, delta) => setDraft((current) => shiftVideo(current, id, delta)),
@@ -311,6 +328,7 @@ function renderRows(
   section: VideoSection,
   cards: Readonly<Record<string, VideoCardData>>,
   strings: VideoStrings,
+  kindName: (kind: VideoKind) => string,
   dragId: string | null,
   dropAt: DropAt | null,
   handlers: RowHandlers,
@@ -332,6 +350,7 @@ function renderRows(
         key={id}
         card={card}
         strings={strings}
+        kindName={kindName}
         kind={section.kind}
         first={position === 0}
         last={position === section.ids.length - 1}
@@ -358,6 +377,7 @@ function DropLine() {
 function ArrangeRow({
   card,
   strings,
+  kindName,
   kind,
   first,
   last,
@@ -366,6 +386,7 @@ function ArrangeRow({
 }: {
   card: VideoCardData;
   strings: VideoStrings;
+  kindName: (kind: VideoKind) => string;
   kind: VideoKind;
   first: boolean;
   last: boolean;
@@ -424,7 +445,7 @@ function ArrangeRow({
         >
           {VIDEO_KINDS.map((option) => (
             <option key={option} value={option}>
-              {strings.kinds[option]}
+              {kindName(option)}
             </option>
           ))}
         </select>

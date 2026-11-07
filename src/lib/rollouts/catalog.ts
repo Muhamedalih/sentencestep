@@ -33,6 +33,7 @@ export const ROLLOUT_IDS = [
   "homeCards",
   "taskSteps",
   "contactInstagram",
+  "videoShelves",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -325,6 +326,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The link is Instagram's own message link (ig.me/m/sentencestep_arabic), so the learner lands in the chat, not only on the profile.",
       "Nothing is stored or counted on our side: it is a plain link, so there is no extra load.",
       "Phones without the “More” sheet (the Phone: the path and the next step permission closed) do not show it yet.",
+    ],
+  },
+  videoShelves: {
+    id: "videoShelves",
+    audience: "learner",
+    title: "Video: the library as shelves",
+    description:
+      "The «فيديو» library looks like YouTube's shelves: a header with a short line on top («الإنجليزي كما يتكلّمه أهله»), and each section is one row of tall cards (the Short's own frame, its level and length on the picture, the title and channel under it) with arrows to slide it and «عرض الكل» to open the whole section in place. The sections get new names with one line each (مواقف تضحك، حقائق في دقيقة، حكايات قصيرة، إنجليزي واضح). On a phone (below 640 px) the library keeps its list of rows, with the new header and names.",
+    notes: [
+      "Only the look changes: the videos, their order (the Admin's saved arrangement, or easiest first) and the arrange mode stay as they are.",
+      "The pictures still come from YouTube (i.ytimg.com): a Short uses YouTube's 480x360 picture (about 10 KB) instead of the 320x180 one; nothing is stored on our side.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   mobilePath: {
