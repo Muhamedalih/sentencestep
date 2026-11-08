@@ -36,6 +36,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "ticklish-rats": "comedy",
 
   "how-coconuts-fill-themselves-with-water": "science",
+  "what-if-humans-had-hummingbird-hearts": "science",
   "he-grew-40-fruits-on-one-tree": "science",
   "microwaving-two-grapes-creates-plasma": "science",
   "why-dobermans-have-cropped-ears": "science",
