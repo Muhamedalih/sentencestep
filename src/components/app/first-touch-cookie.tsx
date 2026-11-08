@@ -7,6 +7,7 @@ import {
   ATTRIBUTION_COOKIE_MAX_AGE,
   encodeFirstTouch,
   firstTouchFrom,
+  isTikTokBrowser,
 } from "@/lib/analytics/attribution";
 
 /**
@@ -15,9 +16,25 @@ import {
  * brought them. It writes only when there is no such cookie yet, so it costs
  * nothing after the first page, and it makes no request of its own. Renders
  * nothing; if cookies are blocked the visitor sees no difference.
+ *
+ * It also gives every page opened inside TikTok's built-in browser the
+ * Microsoft Clarity custom tag `inApp` = `tiktok`. That browser usually sends
+ * no referrer, so Clarity files those visits under "Direct" and has no TikTok
+ * browser of its own; with the tag, all visitors from TikTok can be counted
+ * (Filters / Custom filters / Custom tags: inApp = tiktok), not only those
+ * who sign up. It runs on each full page load, so every page of such a visit
+ * carries the tag, and it talks only to Clarity: no Supabase or server load.
  */
 export function FirstTouchCookie() {
   useEffect(() => {
+    try {
+      if (isTikTokBrowser(navigator.userAgent)) {
+        const clarity = (window as unknown as { clarity?: (...params: string[]) => void }).clarity;
+        if (typeof clarity === "function") clarity("set", "inApp", "tiktok");
+      }
+    } catch {
+      // Clarity missing or blocked: nothing else is affected.
+    }
     try {
       const present = document.cookie
         .split("; ")
