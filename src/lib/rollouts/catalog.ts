@@ -35,6 +35,7 @@ export const ROLLOUT_IDS = [
   "contactInstagram",
   "videoShelves",
   "guestCards",
+  "videoFinish",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -351,6 +352,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Only the look changes: the videos, their order (the Admin's saved arrangement, or easiest first) and the arrange mode stay as they are.",
       "The pictures still come from YouTube (i.ytimg.com): a Short uses YouTube's 480x360 picture (about 10 KB) instead of the 320x180 one; nothing is stored on our side.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  videoFinish: {
+    id: "videoFinish",
+    audience: "learner",
+    title: "Video: the new finish screen",
+    description:
+      "The screen after the last sentence of a «فيديو» video is drawn like the lesson finish screen, in one centred column: the accuracy on the left and «أنهيت الفيديو» on the right, with a bar of one segment per sentence under them (a sentence typed with a mistake is dimmer), up to four words the learner mistyped as cards with their meaning (a tap says the word), a panel with the sentences typed, how many had no mistake and the words typed, then the name of the next video above «الفيديو التالي» and two small buttons (watch on YouTube, back to the videos). No falling dots.",
+    notes: [
+      "Only the finish screen changes: the practice screen, what is recorded when a video is finished and the rating card stay as they are.",
+      "It gives no points or rewards for watching (YouTube's rules): every number on it is about the typing.",
+      "It adds no read or write: everything on it comes from the video's own text and what the learner typed on this visit.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

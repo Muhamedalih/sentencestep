@@ -32,5 +32,17 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
   const next = order[order.indexOf(lesson.id) + 1];
   // The times an Admin saved by hand replace the ones written in the video's file (one cached read, shared).
   const timed = await withSavedTimings(lesson);
-  return <VideoSession lesson={timed} nextLessonId={next ?? null} canEditStops={admin} />;
+  // The new finish screen ("videoFinish", Admins only until opened) names the next video.
+  const nextTitle = next
+    ? (lessons.find((candidate) => candidate.id === next)?.title ?? null)
+    : null;
+  return (
+    <VideoSession
+      lesson={timed}
+      nextLessonId={next ?? null}
+      nextLessonTitle={nextTitle}
+      newFinish={features.rollouts.videoFinish}
+      canEditStops={admin}
+    />
+  );
 }
