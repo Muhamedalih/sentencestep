@@ -54,7 +54,9 @@ export default async function WordListsPage() {
   // card is Home's words section, so the two pages show the same thing. It needs what Home reads for it:
   // the Arabic meaning of the first four due words (one small read by id, an Arabic learner only; a failed
   // read just leaves the meanings out). A learner without it keeps the card the page always had.
-  const homeCards = features.rollouts.homeCards && !!access.userId;
+  // "Signed in" is the session the features were resolved for, NOT Smart word practice's account: that
+  // feature is admin-controlled, so tying the card to it showed the new card to admins only.
+  const homeCards = features.rollouts.homeCards && features.signedIn;
   const homeCardWords = homeCards
     ? locale === "ar"
       ? await fetchWordCardHints(
