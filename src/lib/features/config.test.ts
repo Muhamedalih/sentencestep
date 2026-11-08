@@ -421,6 +421,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       contactInstagram: false,
       videoShelves: false,
       guestCards: false,
+      videoFinish: false,
     });
   }
 });

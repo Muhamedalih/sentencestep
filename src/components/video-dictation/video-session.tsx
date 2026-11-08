@@ -43,11 +43,19 @@ import {
   segmentTick,
   START_LEAD_SECONDS,
 } from "@/lib/video-dictation/segments";
+import {
+  meaningInSentence,
+  pickReviewWords,
+  recordMissedWord,
+  wordsInVideo,
+  type MissedWord,
+} from "@/lib/video-dictation/finish-summary";
 import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
 
 import { useYouTubePlayer, type PlayerControls } from "./use-youtube-player";
 import { VideoFinishRecorder } from "./video-finish-recorder";
+import { VideoFinishScreen } from "./video-finish-screen";
 import { VideoRatingPrompt } from "./video-rating-prompt";
 import { VideoStopsEditor } from "./video-stops-editor";
 import { PLAYER_STATE } from "./youtube-api";
@@ -61,6 +69,10 @@ type Phase = "armed" | "listening" | "typing" | "done";
 interface Summary {
   accuracy: number;
   words: string[];
+  /** For the new finish screen ("videoFinish"): one entry per sentence, true when a wrong letter was typed in it. */
+  sentenceMistakes: boolean[];
+  /** For the new finish screen: up to four mistyped words with their meaning (see pickReviewWords). */
+  reviewWords: MissedWord[];
 }
 
 const ICON_BUTTON =
@@ -76,10 +88,16 @@ const ICON_BUTTON =
 export function VideoSession({
   lesson,
   nextLessonId,
+  nextLessonTitle = null,
+  newFinish = false,
   canEditStops = false,
 }: {
   lesson: VideoLesson;
   nextLessonId: string | null;
+  /** The next video's title, named above "Next video" on the new finish screen. */
+  nextLessonTitle?: string | null;
+  /** The "videoFinish" permission: the finish screen in the lesson finish screen's look (VideoFinishScreen). */
+  newFinish?: boolean;
   /** An Admin can move where each sentence starts and where the video stops (see VideoStopsEditor). */
   canEditStops?: boolean;
 }) {
@@ -107,7 +125,14 @@ export function VideoSession({
   // (see nextLead), and the end of the sentence the page has just stopped at, until the pause is measured.
   const leadRef = useRef(START_LEAD_SECONDS);
   const stopEndRef = useRef<number | null>(null);
-  const stats = useRef({ correct: 0, total: 0, words: new Set<string>() });
+  const stats = useRef({
+    correct: 0,
+    total: 0,
+    words: new Set<string>(),
+    // For the new finish screen: each mistyped word with its meaning, and the sentences typed with a wrong letter.
+    missed: new Map<string, MissedWord>(),
+    mistakeSentences: new Set<number>(),
+  });
 
   const move = useCallback((next: { index?: number; phase?: Phase }) => {
     if (next.index !== undefined) {
@@ -295,10 +320,12 @@ export function VideoSession({
     if (next >= sentences.length) {
       stopPolling();
       player?.pause();
-      const { correct, total, words } = stats.current;
+      const { correct, total, words, missed, mistakeSentences } = stats.current;
       setSummary({
         accuracy: total > 0 ? Math.round((correct / total) * 100) : 100,
         words: [...words].slice(0, 8),
+        sentenceMistakes: sentences.map((_, at) => mistakeSentences.has(at)),
+        reviewWords: pickReviewWords(missed.values()),
       });
       move({ phase: "done" });
       return;
@@ -322,10 +349,12 @@ export function VideoSession({
   const handleKeystroke = useCallback((correct: boolean) => {
     stats.current.total += 1;
     if (correct) stats.current.correct += 1;
+    else stats.current.mistakeSentences.add(live.current.index);
   }, []);
 
-  const handleMistakeWord = useCallback((word: string) => {
+  const handleMistakeWord = useCallback((word: string, meaning: string) => {
     stats.current.words.add(word);
+    recordMissedWord(stats.current.missed, word, meaning);
   }, []);
 
   const tapToContinue = () => {
@@ -475,6 +504,9 @@ export function VideoSession({
             lesson={lesson}
             summary={summary}
             nextLessonId={nextLessonId}
+            nextLessonTitle={nextLessonTitle}
+            newFinish={newFinish}
+            wordsTyped={wordsInVideo(sentences)}
             count={sentences.length}
           />
         ) : (
@@ -672,7 +704,8 @@ function SentenceTyper({
   dim: boolean;
   focusTick: number;
   onKeystroke: (correct: boolean) => void;
-  onMistakeWord: (word: string) => void;
+  /** A mistyped word (normalised) and its meaning in this sentence ("" when the file has none). */
+  onMistakeWord: (word: string, meaning: string) => void;
   onComplete: () => void;
 }) {
   const reducedMotion = useReducedMotion() ?? false;
@@ -700,9 +733,11 @@ function SentenceTyper({
   useEffect(() => {
     if (errorIndex === null) return;
     const located = locateWordAtCharIndex(sentence.en, errorIndex);
-    if (located && isMistakeWorthTracking(located.word))
-      onMistakeWord(normalizeMistakeWord(located.word));
-  }, [errorIndex, onMistakeWord, sentence.en]);
+    if (located && isMistakeWorthTracking(located.word)) {
+      const word = normalizeMistakeWord(located.word);
+      onMistakeWord(word, meaningInSentence(sentence, word));
+    }
+  }, [errorIndex, onMistakeWord, sentence]);
 
   const glosses = useMemo(
     () => sentence.wordTranslations.map((word) => ({ en: word.en, text: word.ar })),
@@ -751,15 +786,40 @@ function Finish({
   lesson,
   summary,
   nextLessonId,
+  nextLessonTitle,
+  newFinish,
+  wordsTyped,
   count,
 }: {
   lesson: VideoLesson;
   summary: Summary;
   nextLessonId: string | null;
+  nextLessonTitle: string | null;
+  newFinish: boolean;
+  wordsTyped: number;
   count: number;
 }) {
   const { locale } = useLocale();
   const strings = videoStrings(locale);
+  // The "videoFinish" permission: the same recording and rating card, in the lesson finish screen's look.
+  if (newFinish)
+    return (
+      <>
+        <VideoFinishRecorder videoId={lesson.id} />
+        <VideoRatingPrompt videoId={lesson.id} />
+        <VideoFinishScreen
+          summary={{
+            accuracy: summary.accuracy,
+            sentenceMistakes: summary.sentenceMistakes,
+            reviewWords: summary.reviewWords,
+            wordsTyped,
+          }}
+          youtubeId={lesson.youtubeId}
+          nextLessonId={nextLessonId}
+          nextLessonTitle={nextLessonTitle}
+        />
+      </>
+    );
   return (
     <div className="flex flex-1 flex-col gap-5 pt-4">
       <VideoFinishRecorder videoId={lesson.id} />

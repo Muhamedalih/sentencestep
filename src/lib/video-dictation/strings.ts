@@ -38,6 +38,17 @@ export interface VideoStrings {
   nextVideo: string;
   watchFull: string;
   backToLibrary: string;
+  /** The new finish screen (the "videoFinish" permission). "{clean}" of "{total}" sentences without a mistake. */
+  finishCleanLine: string;
+  /** The same line when every sentence was typed without a mistake. */
+  finishAllClean: string;
+  finishWordsLabel: string;
+  finishStatSentences: string;
+  finishStatClean: string;
+  finishStatWords: string;
+  /** Put before the next video's title (the title follows in its own element). */
+  finishNext: string;
+  finishWatch: string;
   /** "{channel}" */
   videoFrom: string;
   watchOnYouTube: string;
@@ -129,6 +140,14 @@ const ar: VideoStrings = {
   nextVideo: "الفيديو التالي",
   watchFull: "شاهد الفيديو كاملاً على يوتيوب",
   backToLibrary: "العودة إلى الفيديوهات",
+  finishCleanLine: "دقة الكتابة · {clean} من {total} جمل بلا أخطاء",
+  finishAllClean: "دقة الكتابة · كل الجمل بلا أخطاء",
+  finishWordsLabel: "كلمات أخطأت فيها · اضغط الكلمة لتسمعها",
+  finishStatSentences: "جمل كتبتها",
+  finishStatClean: "بلا أخطاء",
+  finishStatWords: "كلمة كتبتها",
+  finishNext: "التالي:",
+  finishWatch: "شاهده على يوتيوب",
   videoFrom: "الفيديو من قناة {channel}، ويُعرض من يوتيوب",
   watchOnYouTube: "Watch on YouTube",
   unavailableTitle: "الفيديو غير متاح حالياً",

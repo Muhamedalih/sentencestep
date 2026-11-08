@@ -15,6 +15,14 @@ import {
 } from "./arrange";
 import type { VideoSection } from "./arrange";
 import { arrangeVideoLessons } from "./content";
+import {
+  meaningInSentence,
+  pickReviewWords,
+  recordMissedWord,
+  REVIEW_WORDS_MAX,
+  wordsInVideo,
+} from "./finish-summary";
+import type { MissedWord } from "./finish-summary";
 import { applyTimings, sanitizeTimings, timingsOf } from "./timings";
 import {
   documentCookieHasVideoNewsSeen,
@@ -617,4 +625,57 @@ test("timings: what an Admin moved by hand replaces the file's times, and a bad 
       ),
       lesson,
     );
+});
+
+test("finish screen: a mistyped word keeps its first meaning and counts every wrong letter", () => {
+  const missed = new Map<string, MissedWord>();
+  recordMissedWord(missed, "breaking", "اقتحام");
+  recordMissedWord(missed, "got", "لدينا");
+  recordMissedWord(missed, "breaking", "كسر");
+  recordMissedWord(missed, "exit", "");
+  recordMissedWord(missed, "exit", "خروج");
+  assert.deepEqual(missed.get("breaking"), {
+    word: "breaking",
+    meaning: "اقتحام",
+    hits: 2,
+    order: 0,
+  });
+  assert.deepEqual(missed.get("exit"), { word: "exit", meaning: "خروج", hits: 2, order: 2 });
+  assert.equal(missed.get("got")?.order, 1);
+});
+
+test("finish screen: at most four words, most wrong letters first, then longer, then earlier", () => {
+  const word = (w: string, hits: number, order: number): MissedWord => ({
+    word: w,
+    meaning: "",
+    hits,
+    order,
+  });
+  const picked = pickReviewWords([
+    word("talk", 1, 0),
+    word("got", 1, 1),
+    word("like", 1, 2),
+    word("breaking", 1, 3),
+    word("entering", 1, 4),
+    word("wrong", 1, 5),
+    word("exit", 3, 6),
+    word("wounds", 1, 7),
+  ]);
+  assert.equal(REVIEW_WORDS_MAX, 4);
+  assert.deepEqual(
+    picked.map((item) => item.word),
+    ["exit", "breaking", "entering", "wounds"],
+  );
+  assert.deepEqual(pickReviewWords([], 4), []);
+  assert.deepEqual(pickReviewWords([word("one", 1, 0)], 0), []);
+});
+
+test("finish screen: a word's meaning comes from its own sentence, and the words typed are counted", () => {
+  const gibbons = videoLessons.find((lesson) => lesson.id === "gibbons-howls");
+  assert.ok(gibbons);
+  const second = gibbons.sentences[1]!;
+  assert.equal(meaningInSentence(second, "breaking"), "اقتحام");
+  assert.equal(meaningInSentence(second, "looks"), "يبدو");
+  assert.equal(meaningInSentence(second, "absent"), "");
+  assert.equal(wordsInVideo(gibbons.sentences), 53);
 });
