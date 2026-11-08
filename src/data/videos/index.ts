@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { whatIfHumansHadHummingbirdHearts } from "./what-if-humans-had-hummingbird-hearts";
 import { ticklishRats } from "./ticklish-rats";
 import { goldfishInTheFilterTank } from "./goldfish-in-the-filter-tank";
 import { ratsMemoryMap } from "./rats-memory-map";
@@ -80,4 +81,5 @@ export const videoLessons: readonly VideoLesson[] = [
   ratsMemoryMap,
   goldfishInTheFilterTank,
   ticklishRats,
+  whatIfHumansHadHummingbirdHearts,
 ];
