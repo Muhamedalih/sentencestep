@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { thisBirdUsesVibrationsToFindWorms } from "./this-bird-uses-vibrations-to-find-worms";
 import { whatIfHumansHadHummingbirdHearts } from "./what-if-humans-had-hummingbird-hearts";
 import { ticklishRats } from "./ticklish-rats";
 import { goldfishInTheFilterTank } from "./goldfish-in-the-filter-tank";
@@ -82,4 +83,5 @@ export const videoLessons: readonly VideoLesson[] = [
   goldfishInTheFilterTank,
   ticklishRats,
   whatIfHumansHadHummingbirdHearts,
+  thisBirdUsesVibrationsToFindWorms,
 ];
