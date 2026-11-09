@@ -34,6 +34,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "squirrel-brains-grow": "comedy",
   "rats-memory-map": "comedy",
   "ticklish-rats": "comedy",
+  "happy-rats-boggling": "comedy",
 
   "how-coconuts-fill-themselves-with-water": "science",
   "what-if-humans-had-hummingbird-hearts": "science",
