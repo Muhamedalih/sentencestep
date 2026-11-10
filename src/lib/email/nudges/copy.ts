@@ -275,9 +275,9 @@ const CHECKOUT: Record<NudgeLanguage, Checkout> = {
 };
 
 /** A paragraph of plain text, optionally ending in a link (the offer line points at the upgrade page). */
-type Paragraph = string | { text: string; linkLabel: string; linkUrl: string };
+export type Paragraph = string | { text: string; linkLabel: string; linkUrl: string };
 
-function render(
+export function render(
   language: NudgeLanguage,
   parts: {
     subject: string;

@@ -2,41 +2,34 @@
 
 import { after } from "next/server";
 
-import { isAdmin } from "@/lib/admin/access";
 import { track } from "@/lib/analytics/track";
-import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessonSummaries } from "@/lib/content";
-import { withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { getEffectiveFeatures } from "@/lib/features/queries";
-import { getLocale } from "@/lib/i18n/get-locale";
-import { findCurrentLesson } from "@/lib/progress/level";
-import { getCurrentUser } from "@/lib/supabase/auth";
-import { fetchProfileStartingLevel } from "@/lib/supabase/queries/profile";
+import { canEmailAccount } from "@/lib/email/nudges/select";
 import { fetchActiveMistakeCount, fetchDueReviewCountBy } from "@/lib/supabase/queries/mistakes";
-import { fetchUserProgress } from "@/lib/supabase/queries/progress";
+import {
+  isModeWithPath,
+  resolveNextLesson,
+  type SessionEndNextLesson,
+} from "@/lib/session-end/next-lesson";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
 import type { LearningMode } from "@/types/content";
 
-/** The lesson the finish screen offers next, already checked against what this learner can open. */
-export interface SessionEndNextLesson {
-  id: string;
-  mode: LearningMode;
-  title: string;
-}
+export type { SessionEndNextLesson };
 
 export interface SessionEndData {
   /** The recommended next lesson, or null when nothing is left that this learner can open. */
   next: SessionEndNextLesson | null;
   /** Words waiting at the end of tomorrow (corrected words whose review falls due, plus mistakes not yet fixed), capped at the Daily session's size. Only counted for a signed-in learner while the Daily session — the screen those words come back on — is open for them; 0 otherwise. */
   reviewTomorrow: number;
+  /** A signed-in learner with a Google-verified address, so a reminder EMAIL can reach them (the return loop's card offers that channel only then). Absent for a guest and on failure. */
+  canEmail?: boolean;
+  /** The Web Push public key (read at run time on the server, like Settings does), or null when push is not configured: the return loop's card offers notifications only when it is there. Absent for a guest. */
+  vapidPublicKey?: string | null;
 }
 
 const NOTHING: SessionEndData = { next: null, reviewTomorrow: 0 };
-const MAX_GUEST_IDS = 500;
 const MAX_HORIZON_MS = 72 * 60 * 60 * 1000;
-
-function isModeWithPath(mode: unknown): mode is Exclude<LearningMode, "conversation"> {
-  return mode === "normal" || mode === "stories";
-}
 
 /**
  * What the finish screen needs that the lesson page didn't already know: the recommended next
@@ -77,47 +70,11 @@ export async function fetchSessionEndAction(input: {
         user?.id ?? null,
       ),
     );
-    const locale = await getLocale();
-    const [units, features, premium, admin] = await Promise.all([
-      getLessonSummaries(mode, locale ?? undefined),
+    const [next, features, canEmail] = await Promise.all([
+      resolveNextLesson({ user, mode, lessonId, guestCompletedIds, guestStartingLevel }),
       getEffectiveFeatures(),
-      hasPremiumAccess(),
-      isAdmin(),
+      user ? readCanEmail() : Promise.resolve(undefined),
     ]);
-
-    let completedIds: string[];
-    let startingLevel: number | null;
-    if (user) {
-      const [rows, level] = await Promise.all([
-        fetchUserProgress(user.id),
-        fetchProfileStartingLevel(user.id),
-      ]);
-      completedIds = rows
-        .filter((row) => row.completed_at && row.mode === mode)
-        .map((row) => row.lesson_id);
-      startingLevel = level;
-    } else {
-      completedIds = Array.isArray(guestCompletedIds)
-        ? guestCompletedIds
-            .filter((id): id is string => typeof id === "string" && id.length <= 200)
-            .slice(0, MAX_GUEST_IDS)
-        : [];
-      startingLevel =
-        Number.isInteger(guestStartingLevel) &&
-        guestStartingLevel! >= 0 &&
-        guestStartingLevel! <= 10
-          ? guestStartingLevel
-          : null;
-    }
-
-    const finished = [...new Set([...completedIds, lessonId])];
-    const next = findCurrentLesson(
-      withOpeningLessonPlacement(units),
-      finished,
-      premium || admin,
-      startingLevel,
-      features.rollouts.levelFloor,
-    );
 
     let reviewTomorrow = 0;
     const until = new Date(tomorrowEndISO);
@@ -138,11 +95,29 @@ export async function fetchSessionEndAction(input: {
     }
 
     return {
-      next: next ? { id: next.id, mode: next.mode, title: next.title } : null,
+      next,
       reviewTomorrow,
+      ...(canEmail === undefined
+        ? {}
+        : { canEmail, vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null }),
     };
   } catch (error) {
     console.error("[session-end] fetchSessionEndAction failed", error);
     return NOTHING;
+  }
+}
+
+/** Whether the signed-in account has an address a reminder email may go to (Google-verified, unless the server allows password accounts): read from the sign-in token, no database read. */
+async function readCanEmail(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getClaims();
+    if (!data?.claims) return false;
+    return canEmailAccount(
+      { app_metadata: data.claims.app_metadata },
+      process.env.NUDGE_EMAIL_ALLOW_PASSWORD_ACCOUNTS === "true",
+    );
+  } catch {
+    return false;
   }
 }

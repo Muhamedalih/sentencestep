@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { ReturnCard } from "@/components/learning/return-card";
+import { useReturnPlan } from "@/components/learning/use-return-plan";
+import type { ReturnPlanData } from "@/components/learning/use-return-plan";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import { fetchReturnHookAction } from "@/lib/return-loop/actions";
+import { lessonFromPath, writeReturnMarker } from "@/lib/return-loop/marker";
+import { LESSON_MINUTES } from "@/lib/session-end/summary";
 import { signInWithGoogle } from "@/lib/supabase/auth-actions";
 
 /**
@@ -21,6 +30,10 @@ import { signInWithGoogle } from "@/lib/supabase/auth-actions";
  * A learner who is already signed in has nothing to save, so they get the same top half with the
  * long run's headline and one button to Home.
  *
+ * The return loop (the returnLoop permission): a learner who is signed in also gets tomorrow's lesson
+ * by name and the "remind me" ask on this page; a visitor without an account leaves a note in their own
+ * browser (nothing is sent) so that, if they sign up, Home shows the same card once (see ReturnWelcome).
+ *
  * The Google button is the same form as on the sign-up page. Inside Facebook's and Instagram's own
  * browsers that page can swap it for the "open in your browser" strip (the inAppStrip permission);
  * that strip opens the CURRENT page in the outside browser, which here would be the lesson without
@@ -30,6 +43,40 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
   const { t } = useLocale();
   const userId = useAuthUserId();
   const s = t.signupPrompt;
+  const features = useFeatures();
+  const pathname = usePathname();
+  const [hook, setHook] = useState<(ReturnPlanData & { minutes: number }) | null>(null);
+  const plan = useReturnPlan("opener", hook);
+  const returnLoop = features.rollouts.returnLoop;
+
+  useEffect(() => {
+    if (!returnLoop) return;
+    const lesson = lessonFromPath(pathname);
+    if (!lesson) return;
+    if (!userId) {
+      try {
+        writeReturnMarker(window.localStorage, lesson, Date.now());
+      } catch {
+        // No storage: the card is simply not shown after sign-up.
+      }
+      return;
+    }
+    let cancelled = false;
+    fetchReturnHookAction({ mode: lesson.mode, lessonId: lesson.lessonId })
+      .then((answer) => {
+        if (cancelled || !answer.enabled) return;
+        setHook({
+          canEmail: answer.canEmail,
+          vapidPublicKey: answer.vapidPublicKey,
+          next: answer.next,
+          minutes: answer.minutes,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [returnLoop, userId, pathname]);
   const result = s.result
     .replace("{words}", String(words))
     .replace("{accuracy}", String(Math.round(accuracy * 100)));
@@ -66,9 +113,19 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
           </p>
 
           {userId ? (
-            <Button size="lg" asChild className="mt-8 h-12 w-full">
-              <Link href="/learn">{t.onboardingComplete.cta}</Link>
-            </Button>
+            <>
+              {plan && (
+                <ReturnCard
+                  plan={plan}
+                  nextTitle={hook?.next?.title ?? null}
+                  minutes={hook?.minutes ?? LESSON_MINUTES}
+                  className="mt-6"
+                />
+              )}
+              <Button size="lg" asChild className="mt-8 h-12 w-full">
+                <Link href="/learn">{t.onboardingComplete.cta}</Link>
+              </Button>
+            </>
           ) : (
             <>
               <ul className="border-border bg-card mt-6 flex w-full flex-col gap-3 rounded-2xl border p-4 text-sm">

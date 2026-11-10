@@ -34,6 +34,18 @@ import {
   reminderWindow,
 } from "@/lib/email/nudges/select";
 import { NoEmailRouteError } from "@/lib/email/providers/routed";
+import { PushSubscriptionGoneError, isPushConfigured, sendPushNotification } from "@/lib/push/send";
+import {
+  deletePushSubscriptionByEndpoint,
+  getPushSubscriptionsForUsers,
+} from "@/lib/push/subscriptions";
+import {
+  DEFAULT_MINUTES,
+  personalPush,
+  personalReminderEmail,
+  reminderPath,
+} from "@/lib/return-loop/message";
+import type { PersonalReminder } from "@/lib/return-loop/message";
 import { warmupDay, warmupLimit } from "@/lib/email/providers/warmup";
 import { getEmailProvider, isSesRouteEnabled } from "@/lib/email/provider-registry";
 import { sendTemplateEmail } from "@/lib/email/send";
@@ -81,6 +93,8 @@ export interface NudgeRunSummary {
     /** The session reminder only: the learner had already studied that day, so the reminder was not needed. */
     returned: number;
   };
+  /** The session reminder only: how many of the sends (`sent`) were browser notifications, and how many learners had no working subscription left and were handed to the email. */
+  push?: { sent: number; fellBackToEmail: number };
   /** While the sending domain is warming up (EMAIL_PROVIDER=hybrid): which day of sending it is, today's room for bulk email and how much of it is used. */
   warmup?: { day: number; dailyLimit: number; sentToday: number } | null;
   error?: string;
@@ -120,6 +134,9 @@ interface Recipient {
   priceCents?: number | null;
   /** The date (YYYY-MM-DD) a session reminder was due (the session reminder only). */
   reminderDay?: string;
+  /** The session reminder only: what the learner's chosen reminder names (null for a plain one, set before the return loop) and the channel they chose. */
+  personal?: (PersonalReminder & { path: string }) | null;
+  channel?: "email" | "push";
 }
 
 const CHUNK = 100;
@@ -293,6 +310,22 @@ function gate(summary: NudgeRunSummary): number | null {
   return limit;
 }
 
+/** Learners who chose a reminder on the return loop's card: one waiting to be sent, or one already sent (by email or notification). */
+async function loadReminderChoosers(db: Db, ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const [waiting, sent] = await Promise.all([
+    chunked(ids, (c) => db.from("session_reminders").select("user_id").in("user_id", c)),
+    chunked(ids, (c) =>
+      db
+        .from("notification_events")
+        .select("user_id")
+        .in("type", ["SESSION_REMINDER", "SESSION_REMINDER_PUSH"])
+        .in("user_id", c),
+    ),
+  ]);
+  return new Set([...waiting, ...sent].map((row) => row.user_id));
+}
+
 /** "Your next lesson is ready": new learners who did a lesson and have been quiet for about a day. */
 export async function runDayOneNudge(options: {
   origin: string;
@@ -336,11 +369,16 @@ export async function runDayOneNudge(options: {
     now,
   );
   const handled = new Set(exclusions.ledger.map((row) => row.user_id));
+  // A learner who chose a reminder on the return loop's card gets that ONE message and not this one.
+  const chose = await loadReminderChoosers(
+    db,
+    eligible.map((p) => p.id),
+  );
   const recipients: Recipient[] = [];
   for (const p of eligible) {
     if (exclusions.optedOut.has(p.id)) summary.skipped.optedOut += 1;
     else if (exclusions.premium.has(p.id)) summary.skipped.premium += 1;
-    else if (handled.has(p.id)) summary.skipped.alreadyHandled += 1;
+    else if (handled.has(p.id) || chose.has(p.id)) summary.skipped.alreadyHandled += 1;
     else {
       recipients.push({
         userId: p.id,
@@ -484,10 +522,9 @@ export async function runSessionReminders(options: {
       summary.disabled = true;
       return summary;
     }
-    if (!getEmailProvider()) {
-      summary.error = "No email provider is configured.";
-      return summary;
-    }
+    // A notification needs no email provider; an email does. With none configured the notifications
+    // still go and the emails are reported, so one missing key never silences the other channel.
+    if (!getEmailProvider()) summary.error = "No email provider is configured.";
   }
   summary.warmup = await warmupStatus(now);
 
@@ -500,19 +537,11 @@ export async function runSessionReminders(options: {
       .delete()
       .lt("remind_at", new Date(now.getTime() - 24 * 3_600_000).toISOString());
   }
-  const { data: due, error } = await db
-    .from("session_reminders")
-    .select("user_id, remind_at")
-    .gte("remind_at", from.toISOString())
-    .lte("remind_at", to.toISOString())
-    .order("remind_at")
-    .limit(1000);
-  if (error) throw error;
-  const rows = due ?? [];
+  const rows = await loadDueReminders(db, from, to);
   if (rows.length === 0) return summary;
 
   const ids = rows.map((row) => row.user_id);
-  const [profiles, progress, exclusions] = await Promise.all([
+  const [profiles, progress, exclusions, pushLedger] = await Promise.all([
     chunked(ids, (c) =>
       db.from("profiles").select("id, display_name, preferred_language").in("id", c),
     ),
@@ -524,6 +553,13 @@ export async function runSessionReminders(options: {
         .gte("completed_at", new Date(from.getTime() - REMINDER_RETURNED_WINDOW_MS).toISOString()),
     ),
     loadExclusions(db, ids, "SESSION_REMINDER", now),
+    chunked(ids, (c) =>
+      db
+        .from("notification_events")
+        .select("user_id, dedupe_key")
+        .eq("type", "SESSION_REMINDER_PUSH")
+        .in("user_id", c),
+    ),
   ]);
   const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
   const finishedByUser = new Map<string, string[]>();
@@ -533,16 +569,23 @@ export async function runSessionReminders(options: {
     list.push(entry.completed_at);
     finishedByUser.set(entry.user_id, list);
   }
-  const handled = new Set(exclusions.ledger.map((entry) => `${entry.user_id}|${entry.dedupe_key}`));
+  const handled = new Set(
+    [...exclusions.ledger, ...pushLedger].map((entry) => `${entry.user_id}|${entry.dedupe_key}`),
+  );
+  const handledToday = (userId: string, day: string) =>
+    handled.has(`${userId}|SESSION_REMINDER:${day}`) ||
+    handled.has(`${userId}|SESSION_REMINDER_PUSH:${day}`);
 
   const recipients: Recipient[] = [];
   for (const row of rows) {
     const day = row.remind_at.slice(0, 10);
     const profile = profileById.get(row.user_id);
-    if (exclusions.optedOut.has(row.user_id)) summary.skipped.optedOut += 1;
+    const channel = row.channel === "push" ? "push" : "email";
+    // The email opt-out ("learning reminders") stops emails only: a notification is its own choice.
+    if (channel === "email" && exclusions.optedOut.has(row.user_id)) summary.skipped.optedOut += 1;
     else if (hasReturnedBeforeReminder(row.remind_at, finishedByUser.get(row.user_id) ?? [])) {
       summary.skipped.returned += 1;
-    } else if (handled.has(`${row.user_id}|SESSION_REMINDER:${day}`)) {
+    } else if (handledToday(row.user_id, day)) {
       summary.skipped.alreadyHandled += 1;
     } else {
       recipients.push({
@@ -550,30 +593,166 @@ export async function runSessionReminders(options: {
         displayName: profile?.display_name ?? null,
         language: nudgeLanguage(profile?.preferred_language),
         reminderDay: day,
+        channel,
+        personal: personalOf(row),
       });
     }
   }
   summary.candidates = recipients.length;
 
-  await processRecipients({
-    db,
-    recipients,
-    summary,
-    limit,
-    origin,
-    // The learner asked for this one, so it goes the way an important email does.
-    priority: "important",
-    skipHoldout: true,
-    makeEvent: (r) => ({ type: "SESSION_REMINDER", day: r.reminderDay ?? "" }),
-    buildEmail: (r, unsubscribe) =>
-      sessionReminderEmail({
-        origin,
-        displayName: r.displayName,
-        language: r.language,
-        unsubscribe,
-      }),
-  });
+  // 1. Notifications first: free, with no daily room to spend. A learner whose notification cannot be
+  // delivered (no subscription left, or the push service says the device is gone) is handed to the email.
+  const emailRecipients: Recipient[] = [];
+  const pushStats = { sent: 0, fellBackToEmail: 0 };
+  summary.push = pushStats;
+  type Devices = { endpoint: string; p256dh: string; auth: string }[];
+  const pushRecipients = recipients.filter((r) => r.channel === "push");
+  const subscriptions: Map<string, Devices> =
+    pushRecipients.length > 0 && isPushConfigured()
+      ? await getPushSubscriptionsForUsers(pushRecipients.map((r) => r.userId)).catch(
+          () => new Map<string, Devices>(),
+        )
+      : new Map<string, Devices>();
+  for (const recipient of recipients) {
+    if (recipient.channel !== "push") {
+      emailRecipients.push(recipient);
+      continue;
+    }
+    const devices = subscriptions.get(recipient.userId) ?? [];
+    if (dryRun) {
+      if (devices.length > 0) summary.sent += 1;
+      else emailRecipients.push(recipient);
+      continue;
+    }
+    if (summary.sent + summary.failed >= limit) {
+      summary.skipped.overLimit += 1;
+      continue;
+    }
+    if (devices.length === 0) {
+      pushStats.fellBackToEmail += 1;
+      emailRecipients.push(recipient);
+      continue;
+    }
+    const event: NotificationEvent = {
+      type: "SESSION_REMINDER_PUSH",
+      day: recipient.reminderDay ?? "",
+    };
+    const record = await recordNotificationEvent(recipient.userId, event, "queued");
+    if (record.status === "duplicate") {
+      summary.skipped.alreadyHandled += 1;
+      continue;
+    }
+    const text = personalPush(
+      recipient.language,
+      recipient.personal ?? { title: null, word: null, minutes: DEFAULT_MINUTES },
+    );
+    const url = recipient.personal?.path ?? "/learn";
+    let delivered = false;
+    for (const device of devices) {
+      try {
+        await sendPushNotification(device, { title: text.title, body: text.body, url });
+        delivered = true;
+      } catch (error) {
+        if (error instanceof PushSubscriptionGoneError) {
+          await deletePushSubscriptionByEndpoint(device.endpoint).catch(() => undefined);
+          continue;
+        }
+        console.error("[session-reminder] push failed", { userId: recipient.userId, error });
+      }
+    }
+    if (delivered) {
+      await markNotificationEventSent(record.id);
+      summary.sent += 1;
+      pushStats.sent += 1;
+    } else {
+      // Nothing was delivered: give the day back to the email, which has its own ledger row.
+      await discardQueuedNotificationEvent(record.id).catch(() => undefined);
+      pushStats.fellBackToEmail += 1;
+      emailRecipients.push(recipient);
+    }
+  }
+
+  // 2. Emails: the ones chosen as emails, and the notifications that could not be delivered.
+  if (emailRecipients.length > 0 && (dryRun || getEmailProvider())) {
+    await processRecipients({
+      db,
+      recipients: emailRecipients,
+      summary,
+      limit,
+      origin,
+      // The learner asked for this one, so it goes the way an important email does.
+      priority: "important",
+      skipHoldout: true,
+      makeEvent: (r) => ({ type: "SESSION_REMINDER", day: r.reminderDay ?? "" }),
+      buildEmail: (r, unsubscribe) =>
+        r.personal
+          ? personalReminderEmail({
+              origin,
+              displayName: r.displayName,
+              language: r.language,
+              reminder: r.personal,
+              path: r.personal.path,
+              unsubscribe,
+            })
+          : sessionReminderEmail({
+              origin,
+              displayName: r.displayName,
+              language: r.language,
+              unsubscribe,
+            }),
+    });
+  }
   return summary;
+}
+
+interface DueReminderRow {
+  user_id: string;
+  remind_at: string;
+  channel: string | null;
+  lesson_mode: string | null;
+  lesson_id: string | null;
+  lesson_title: string | null;
+  word: string | null;
+}
+
+/** The reminders due now. If the columns of migration 20250356 are not there yet (the code went out first), the plain ones are read and sent as plain emails, as before. */
+async function loadDueReminders(db: Db, from: Date, to: Date): Promise<DueReminderRow[]> {
+  const full = await db
+    .from("session_reminders")
+    .select("user_id, remind_at, channel, lesson_mode, lesson_id, lesson_title, word")
+    .gte("remind_at", from.toISOString())
+    .lte("remind_at", to.toISOString())
+    .order("remind_at")
+    .limit(1000);
+  if (!full.error) return full.data ?? [];
+  if (full.error.code !== "42703") throw full.error;
+  const plain = await db
+    .from("session_reminders")
+    .select("user_id, remind_at")
+    .gte("remind_at", from.toISOString())
+    .lte("remind_at", to.toISOString())
+    .order("remind_at")
+    .limit(1000);
+  if (plain.error) throw plain.error;
+  return (plain.data ?? []).map((row) => ({
+    ...row,
+    channel: null,
+    lesson_mode: null,
+    lesson_id: null,
+    lesson_title: null,
+    word: null,
+  }));
+}
+
+/** What a chosen reminder names: its lesson and word, or null for a reminder set before the return loop (it is sent as the plain one). */
+function personalOf(row: DueReminderRow): (PersonalReminder & { path: string }) | null {
+  if (!row.lesson_id && !row.word) return null;
+  return {
+    title: row.lesson_title,
+    word: row.word,
+    minutes: DEFAULT_MINUTES,
+    path: reminderPath(row.lesson_mode, row.lesson_id),
+  };
 }
 
 function planOfOrder(tier: string, priceCents: number): PlanId | null {

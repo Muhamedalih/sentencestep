@@ -139,5 +139,8 @@ export const getEffectiveFeatures = cache(async (): Promise<EffectiveFeatures> =
     access.sessionReminders &&
     access.sessionEnd &&
     reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN) > 0;
-  return { ...features, rollouts: { ...access, sessionReminders: reminders } };
+  // The return loop's card, likewise, only while the server may send reminders: it promises one.
+  const returnLoop =
+    access.returnLoop && reminderSendsPerRun(process.env.SESSION_REMINDER_MAX_PER_RUN) > 0;
+  return { ...features, rollouts: { ...access, sessionReminders: reminders, returnLoop } };
 });

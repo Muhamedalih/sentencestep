@@ -39,6 +39,7 @@ export const ROLLOUT_IDS = [
   "shortOpener",
   "openerSkip",
   "openerHelp",
+  "returnLoop",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -480,6 +481,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Nothing changes for a learner who still has free passages or stories to finish: the taste and the moments start only after those are done.",
       "A moment never shows in the first 24 hours after sign-up, to a learner with an order still unpaid, to a subscriber or to a guest. Two dismissals within a week pause the moments for seven days.",
       "Every shown, clicked and dismissed moment is recorded (OFFER_SHOWN, OFFER_CLICKED, OFFER_DISMISSED), so the result can be read per group. To test it, choose “A share of learners”: the accounts left out keep today's Home and lock screens.",
+    ],
+  },
+  returnLoop: {
+    id: "returnLoop",
+    audience: "learner",
+    title: "Return loop: “tomorrow” and a reminder at the learner's own time",
+    description:
+      "A calm card at the end of the first lesson, on the “your progress is saved” page a guest sees once after signing up, and on the end of every session: tomorrow's lesson by name, and one reminder the learner chooses by pressing a time (the same hour as today's session, 8 pm, or none). It arrives ONCE, as a browser notification when the browser supports it and the learner allows it (asked only when they press a time) and as an email to a Google-verified address otherwise, in the hour they chose, naming their next lesson and a word they stumbled on, and opening that lesson directly. Nothing is sent unless the learner pressed a time. On the end of a session the card replaces the “Tomorrow” and “Remind me” cards with one.",
+    notes: [
+      "Replaces the “Remind me tomorrow” card (the Remind-me email permission) wherever both would show; that permission can stay as it is.",
+      "Needs the session_reminders columns (migration 20250356000000) and SESSION_REMINDER_MAX_PER_RUN set on the server; until both exist the card is not offered at all.",
+      "A learner who chose a reminder is not sent the generic “your next lesson is ready” email afterwards.",
+      "Opened for everyone it also reaches guests: they see the “tomorrow” line on the sign-up page's results and the one-time page after they sign up. Read the effect as before/after on the return rate of learners who sign up (see scripts/return-loop-readout.ts).",
     ],
   },
 };

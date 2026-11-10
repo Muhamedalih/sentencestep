@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { SessionEnd } from "@/components/learning/session-end";
+import { useReturnPlan } from "@/components/learning/use-return-plan";
+import type { ReturnPlanData } from "@/components/learning/use-return-plan";
 import { Logo } from "@/components/layout/logo";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { fetchReturnHookAction } from "@/lib/return-loop/actions";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { SENTENCE_REVIEW_MINUTES } from "@/lib/sentence-bank/review";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
@@ -45,6 +48,8 @@ export function TodayEnd({
   const startedRef = useRef(false);
   const [review, setReview] = useState<TodayRun["review"]>(null);
   const [reviewWords, setReviewWords] = useState<number | null>(null);
+  const [returnData, setReturnData] = useState<ReturnPlanData | null>(null);
+  const returnPlan = useReturnPlan("session", returnData);
   const [reminderHour, setReminderHour] = useState<number | null>(null);
   const [reminderStatus, setReminderStatus] = useState<
     "idle" | "saving" | "saved" | "error" | "unavailable"
@@ -68,6 +73,20 @@ export function TodayEnd({
     fetchTodayTomorrowAction(tomorrowEnd.toISOString())
       .then((answer) => setReviewWords(answer.reviewWords))
       .catch(() => setReviewWords(0));
+    // The return loop's card: one more answer (can an email reach this learner, is push set up), only while it is open.
+    if (userId && features.rollouts.returnLoop) {
+      fetchReturnHookAction({})
+        .then((hook) =>
+          setReturnData(
+            hook.enabled
+              ? { canEmail: hook.canEmail, vapidPublicKey: hook.vapidPublicKey, next: null }
+              : null,
+          ),
+        )
+        .catch(() => {});
+    }
+    // Once per finished session, like the rest of this effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleReminder(hour: number | null) {
@@ -119,6 +138,7 @@ export function TodayEnd({
                 }
               : null
           }
+          returnPlan={returnPlan}
           reminder={
             userId && features.rollouts.sessionReminders
               ? {

@@ -123,6 +123,23 @@ export const fetchWeakCandidateMistakeRows = cache(async function fetchWeakCandi
   }));
 });
 
+/** The words the learner most recently stumbled on and has not fixed yet, newest first (the return loop names one of them in the reminder). */
+export async function fetchRecentActiveMistakeWords(
+  userId: string,
+  limit: number,
+): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("mistakes")
+    .select("word")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((row) => row.word);
+}
+
 export interface ActiveMistakeRow {
   word: string;
   /** Null for a Word-List-originated mistake — see recordMistake's doc comment. */

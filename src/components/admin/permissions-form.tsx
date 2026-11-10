@@ -285,10 +285,10 @@ export function PermissionsForm({
           initial={initial[id]}
           disabled={!tableReady}
           serverNote={
-            id === "sessionReminders"
+            id === "sessionReminders" || id === "returnLoop"
               ? remindersServerOn
-                ? "Server: reminder emails are switched ON (SESSION_REMINDER_MAX_PER_RUN is set)."
-                : "Server: reminder emails are OFF (SESSION_REMINDER_MAX_PER_RUN is not set), so the card is not offered to anyone yet."
+                ? "Server: reminders are switched ON (SESSION_REMINDER_MAX_PER_RUN is set)."
+                : "Server: reminders are OFF (SESSION_REMINDER_MAX_PER_RUN is not set), so the card is not offered to anyone yet."
               : undefined
           }
         />

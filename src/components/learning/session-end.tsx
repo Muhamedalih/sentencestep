@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { AlertCircle, BookOpen, Check, Loader2, Lock, Mail, Repeat } from "lucide-react";
 
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { ReturnPlanBody } from "@/components/learning/return-card";
+import type { ReturnPlan } from "@/components/learning/use-return-plan";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import { formatMinuteCount } from "@/lib/i18n/format-minutes";
@@ -50,6 +52,8 @@ export interface SessionEndProps {
   test?: { href: string; label: string } | null;
   /** Null for a guest, and while reminders are not switched on at the server. */
   reminder: SessionEndReminder | null;
+  /** The return loop's card (see ReturnPlanBody): when given for a signed-in learner it replaces the "Tomorrow" and "Remind me" cards with one. */
+  returnPlan?: ReturnPlan | null;
   saveStatus: CompletionSaveStatus;
   onRetrySave?: () => void;
   onAction?: (action: SessionEndAction) => void;
@@ -85,6 +89,7 @@ export function SessionEnd({
   extraLabel,
   test,
   reminder,
+  returnPlan,
   saveStatus,
   onRetrySave,
   onAction,
@@ -101,6 +106,14 @@ export function SessionEnd({
 
   const hasTomorrowRows = tomorrow.reviewWords > 0 || tomorrow.nextTitle !== null;
   const showTomorrow = !tomorrow.ready || hasTomorrowRows;
+  // With the return loop's card, the "Tomorrow" card carries the ask under its rows (one card, not two).
+  const withReturn = !isGuest && !!returnPlan;
+  const showAsk =
+    withReturn &&
+    tomorrow.ready &&
+    hasTomorrowRows &&
+    !!returnPlan &&
+    !(returnPlan.channel === "none" && returnPlan.status === "idle");
   const minutes = tomorrow.minutes > 0 ? formatMinuteCount(copy, locale, tomorrow.minutes) : null;
 
   return (
@@ -200,6 +213,12 @@ export function SessionEnd({
                 )}
               </>
             )}
+            {showAsk && returnPlan && (
+              <>
+                <div className="bg-border my-3 h-px" />
+                <ReturnPlanBody plan={returnPlan} />
+              </>
+            )}
           </div>
         )}
 
@@ -233,6 +252,7 @@ export function SessionEnd({
             </div>
           </div>
         ) : (
+          !withReturn &&
           reminder &&
           tomorrow.ready &&
           hasTomorrowRows && (

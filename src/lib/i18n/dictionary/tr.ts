@@ -1240,6 +1240,31 @@ export const tr: Dictionary = {
     minuteCountFew: "{minutes} dakika",
     minuteCountMany: "{minutes} dakika",
   },
+  returnLoop: {
+    title: "Bugün yazdıklarınızı pekiştirin",
+    sub: "Cümleler yarın tekrar karşılaşınca kalıcı olur. Bir saat seçin, size yalnızca bir kez hatırlatalım.",
+    sameTime: "bugünkü saatiniz",
+    midday: "öğle",
+    evening: "akşam",
+    none: "Hayır, teşekkürler",
+    notePush:
+      "Geri dönenlerin yaklaşık yarısı çalıştıkları saate yakın bir saatte döner. Bu cihazda tek bir bildirim.",
+    noteEmail:
+      "Geri dönenlerin yaklaşık yarısı çalıştıkları saate yakın bir saatte döner. Adresinize tek bir e-posta.",
+    notePushPlain: "Bu cihazda tek bir bildirim, istediğiniz zaman durdurabilirsiniz.",
+    noteEmailPlain: "Adresinize tek bir e-posta, tek tıkla durdurabilirsiniz.",
+    savedPush: "Tamam. Yarın saat {time}'de tek bir bildirim, dersinizi doğrudan açar.",
+    savedEmail: "Tamam. Yarın saat {time}'de tek bir e-posta, dersinizi doğrudan açar.",
+    fallbackEmail:
+      "Bu tarayıcıda bildirimler açık değil, bu yüzden yarın saat {time}'de adresinize bir e-posta gönderiyoruz.",
+    savedNone: "Tamam, size hiçbir şey göndermeyeceğiz.",
+    error: "Hatırlatma kaydedilemedi. Tekrar deneyin.",
+    blocked:
+      "Bu tarayıcıda bildirimler açık değil ve e-posta gönderebileceğimiz bir Google adresi yok.",
+    welcomeEyebrow: "İlerlemeniz kaydedildi",
+    welcomeHeadline: "Yarın kaldığınız yerden devam edin",
+    welcomeContinue: "Devam",
+  },
   today: {
     whyListen: "İngilizceyi hem duyar hem okursun; cümleleri yazmadan önce kulağın onlara alışır",
     whyStory: "Hikâyeyi cümle cümle yazarsın, böylece az önce duyduklarını pekiştirirsin",
