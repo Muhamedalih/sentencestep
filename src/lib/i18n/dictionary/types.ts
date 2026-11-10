@@ -762,6 +762,15 @@ export interface Dictionary {
     lineCount: string;
     /** Screen-reader-only session progress announcement, e.g. "Sentence 3 of 9". */
     sentenceProgress: string;
+    /** The opening lesson's skip button (permission openerSkip, top right of the logo row): leaves for Home without finishing the lesson. */
+    skipOpener: string;
+    /** The opening lesson's keyboard-language hint (permission openerHelp), shown after two wrong Arabic letters in a row: its title, then how to switch on a phone ({icon} is where the globe icon is drawn) and on a laptop. */
+    keyboardHintTitle: string;
+    keyboardHintPhone: string;
+    keyboardHintDesktop: string;
+    /** The opening lesson's audio-failed note and its try-again button (permission openerHelp). */
+    audioFailedNote: string;
+    audioRetry: string;
     /** Screen-reader-only alt text for a lesson's illustration, e.g. `Illustration for the "The Wrong Order" lesson`. */
     illustrationAlt: string;
     /** Normal-mode lesson screen — label/title for the toggle button that shows the topic illustration (the default view). */

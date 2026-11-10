@@ -35,6 +35,7 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { minutesForWords } from "@/lib/levels";
+import { OPENER_SKIP_COOKIE, parseSkippedOpeners } from "@/lib/opener/shared";
 import { startHomePassagesCard } from "@/lib/passages/home-card";
 import { getRolloutConfig } from "@/lib/rollouts/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -429,7 +430,13 @@ export default async function LearnHomePage({
       </ProgressProvider>
     );
   }
-  const firstLesson = withOpeningLessonPlacement(units).find((unit) => unit.isFree) ?? null;
+  // An opening lesson this browser skipped (the «تخطّي الدرس» button, see lib/opener) is not the
+  // first lesson any more: the card points at the first real free lesson instead.
+  const skippedOpeners = parseSkippedOpeners((await cookies()).get(OPENER_SKIP_COOKIE)?.value);
+  const firstLesson =
+    withOpeningLessonPlacement(units).find(
+      (unit) => unit.isFree && !skippedOpeners.includes(unit.id),
+    ) ?? null;
   return (
     <ProgressProvider initialProgress={initialProgress}>
       {phoneGuest && (

@@ -2,6 +2,7 @@
 
 import { useFeatures } from "@/components/providers/feature-provider";
 import type { useProgress } from "@/hooks/use-progress";
+import { useSkippedOpeners } from "@/hooks/use-skipped-openers";
 import { findCurrentLesson } from "@/lib/progress/level";
 import { getAnyLessonResume } from "@/lib/progress/lesson-resume";
 import type { LessonUnit } from "@/types/content";
@@ -32,16 +33,27 @@ export function useCurrentLesson(
   const { isLoaded, getCompletedIds, startingLevel } = progress;
   const { rollouts } = useFeatures();
   const completedIds = isLoaded ? getCompletedIds("normal") : [];
+  // An opening lesson the learner skipped is neither done nor recommended again.
+  const skippedOpeners = useSkippedOpeners();
 
   const resume = getAnyLessonResume();
   const resumedLesson =
-    resume?.mode === "normal" && !completedIds.includes(resume.lessonId)
+    resume?.mode === "normal" &&
+    !completedIds.includes(resume.lessonId) &&
+    !skippedOpeners.includes(resume.lessonId)
       ? units.find((unit) => unit.id === resume.lessonId)
       : undefined;
 
   const currentLesson =
     resumedLesson ??
-    findCurrentLesson(units, completedIds, isPremiumUser, startingLevel, rollouts.levelFloor);
+    findCurrentLesson(
+      units,
+      completedIds,
+      isPremiumUser,
+      startingLevel,
+      rollouts.levelFloor,
+      skippedOpeners,
+    );
   const isResumed = Boolean(resumedLesson);
 
   return { isLoaded, completedIds, currentLesson, isResumed };

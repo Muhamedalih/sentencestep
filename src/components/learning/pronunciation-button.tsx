@@ -16,6 +16,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
 import { useSpeech } from "@/hooks/use-speech";
+import { isSpeechFailure } from "@/lib/opener/help";
 import { cn } from "@/lib/utils";
 import type { VoiceAudioContentType } from "@/lib/voice/voice-audio";
 
@@ -140,6 +141,13 @@ export interface PronunciationButtonProps {
   headless?: boolean;
   /** Called whenever `supported`/`loading`/`playing` change (and once on mount). Optional. */
   onStatusChange?: (status: PronunciationStatus) => void;
+  /**
+   * Fired when EVERY existing way of hearing this sentence has failed: no clip could be found or
+   * made, or the clip would not play, and then the browser's voice was not allowed or not available
+   * or reported an error of its own (a cut-off utterance or one blocked until a tap is not a failure).
+   * Only the opening lesson passes it (its audio-failed note); absent, nothing changes anywhere.
+   */
+  onAllAudioFailed?: () => void;
 }
 
 export const PronunciationButton = forwardRef<PronunciationButtonHandle, PronunciationButtonProps>(
@@ -164,11 +172,20 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       onEnded,
       headless = false,
       onStatusChange,
+      onAllAudioFailed,
     },
     ref,
   ) {
     const reducedMotion = useReducedMotion() ?? false;
-    const speech = useSpeech();
+    // The latest callback via a ref, so the browser voice's own error handler (set when an utterance
+    // starts) always reaches the current one.
+    const onAllAudioFailedRef = useRef(onAllAudioFailed);
+    onAllAudioFailedRef.current = onAllAudioFailed;
+    const speech = useSpeech({
+      onError: (error) => {
+        if (isSpeechFailure(error)) onAllAudioFailedRef.current?.();
+      },
+    });
     const browserVoiceAllowed = !disableSpeechFallback && !noBrowserVoice;
     const { t } = useLocale();
     const {
@@ -332,9 +349,13 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
-      } else if (browserVoiceAllowed) {
-        warnBrowserVoiceFallback("no clip could be found or made for it");
-        speech.speakSentence(text, speedMultiplier);
+      } else {
+        if (browserVoiceAllowed) {
+          warnBrowserVoiceFallback("no clip could be found or made for it");
+          speech.speakSentence(text, speedMultiplier);
+        }
+        // Neither a clip nor the browser voice can be used here: every way has failed.
+        if (!browserVoiceAllowed || !speech.isSupported) onAllAudioFailed?.();
       }
       onPlay?.();
     }
@@ -345,9 +366,12 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (!mountedRef.current || currentKeyRef.current !== resetKey) return;
       if (url) {
         clip.play(url, speedMultiplier);
-      } else if (browserVoiceAllowed) {
-        warnBrowserVoiceFallback("no clip could be found or made for it");
-        speech.replaySentence(text, speedMultiplier);
+      } else {
+        if (browserVoiceAllowed) {
+          warnBrowserVoiceFallback("no clip could be found or made for it");
+          speech.replaySentence(text, speedMultiplier);
+        }
+        if (!browserVoiceAllowed || !speech.isSupported) onAllAudioFailed?.();
       }
       onPlay?.();
     }
@@ -382,6 +406,10 @@ export const PronunciationButton = forwardRef<PronunciationButtonHandle, Pronunc
       if (clip.status === "error" && browserVoiceAllowed) {
         warnBrowserVoiceFallback("its clip failed to play (see the [audio] line above)");
         speech.speakSentence(text);
+      }
+      // The clip would not play and the browser voice cannot be used either: every way has failed.
+      if (clip.status === "error" && (!browserVoiceAllowed || !speech.isSupported)) {
+        onAllAudioFailed?.();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the clip's own status changes
     }, [clip.status]);

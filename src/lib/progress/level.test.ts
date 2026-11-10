@@ -167,3 +167,43 @@ test("findCurrentLesson: Stories have no opening lesson, so the floor alone deci
   assert.equal(findCurrentLesson(stories, ["story-99"], true, 2, true)?.id, "story-100");
   assert.equal(findCurrentLesson(stories, ["story-99"], false, 2)?.id, "story-81");
 });
+
+// A skipped opening lesson is not a completion (so completedIds stays empty), but it is never the
+// recommendation again: Home goes straight to the first real lesson.
+test("findCurrentLesson: a skipped opening lesson is not recommended again, for every tier", () => {
+  assert.equal(
+    findCurrentLesson(catalog, [], false, 1, false, ["onboarding-beginner"])?.id,
+    "normal-1",
+  );
+  assert.equal(
+    findCurrentLesson(catalog, [], false, 2, false, ["onboarding-intermediate"])?.id,
+    "normal-5",
+  );
+  assert.equal(
+    findCurrentLesson(catalog, [], true, 3, true, ["onboarding-advanced"])?.id,
+    "normal-11",
+  );
+  // Without a chosen level the first open lesson is the plain first one anyway.
+  assert.equal(
+    findCurrentLesson(catalog, [], false, null, false, ["onboarding-beginner"])?.id,
+    "normal-1",
+  );
+});
+
+test("findCurrentLesson: skipping one tier's opening lesson leaves the others alone, and an empty list changes nothing", () => {
+  assert.equal(
+    findCurrentLesson(catalog, [], false, 2, false, ["onboarding-beginner"])?.id,
+    "onboarding-intermediate",
+  );
+  assert.equal(findCurrentLesson(catalog, [], false, 2, false, [])?.id, "onboarding-intermediate");
+  assert.equal(findCurrentLesson(catalog, [], false, 2, false)?.id, "onboarding-intermediate");
+});
+
+test("findCurrentLesson: when the only open lesson was skipped nothing is recommended, never the skipped one", () => {
+  const onlyOpener = [unit("onboarding-beginner", 1, 37, true)];
+  assert.equal(
+    findCurrentLesson(onlyOpener, [], false, 1, false, ["onboarding-beginner"]),
+    undefined,
+  );
+  assert.equal(findCurrentLesson(onlyOpener, [], false, 1, false)?.id, "onboarding-beginner");
+});

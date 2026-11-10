@@ -6,6 +6,7 @@ import { FirstRunTips } from "@/components/app/first-run-tips";
 import { FirstTimeLanguagePicker } from "@/components/app/first-time-language-picker";
 import { FirstTouchCookie } from "@/components/app/first-touch-cookie";
 import { InAppBucketCookie } from "@/components/app/in-app-bucket-cookie";
+import { VisitorTokenCookie } from "@/components/app/visitor-token-cookie";
 import { IntroLanding } from "@/components/app/intro-landing";
 import { OnboardingIntroCard } from "@/components/app/onboarding-intro-card";
 import { StartingLevelOnboarding } from "@/components/app/starting-level-onboarding";
@@ -304,6 +305,8 @@ export function RootHtmlShell({
         <FirstTouchCookie />
         {/* Gives a visitor in Facebook's or Instagram's browser their number for the open in browser strip test, once, and keeps the one the strip sends along — see InAppBucketCookie. Also reads nothing from the server. */}
         <InAppBucketCookie />
+        {/* Gives every browser a random token, once, which the opening-lesson tests cut "a share of new visitors" with — see VisitorTokenCookie. Reads nothing from the server and makes no request. */}
+        <VisitorTokenCookie />
         <LocaleProvider initialLocale={locale} localizedNavigation={localizedNavigation}>
           <GetStartedStepProvider localizedNavigation={localizedNavigation}>
             <IntroLanding />

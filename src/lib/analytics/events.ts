@@ -4,6 +4,7 @@ import type { PlanId, PricingTier } from "@/lib/billing/plans";
 import type { FirstRunVariant, OnboardingStep } from "@/lib/first-run/variant";
 import type { HybridMoment } from "@/lib/hybrid/moments";
 import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
+import type { OpenerStep, OpenerVariant } from "@/lib/opener/shared";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
 import type { WordsRoundSource } from "@/lib/words-round/round";
 import type { LearningMode } from "@/types/content";
@@ -227,6 +228,12 @@ export type AnalyticsEvent =
       category: "AUTH";
       /** The visitor tapped the strip's "copy link" button and the link was copied. */
       properties: { app: InAppBrowser; platform: StripPlatform; page: StripPage; bucket?: number };
+    }
+  | {
+      name: "OPENER_STEP";
+      category: "ENGAGEMENT";
+      /** One step of the opening lesson («First Steps», the first lesson a visitor types), counts only — never what was typed: `tap` the phone's «tap to start» card was pressed, `key` the first letter was typed, `sentence` sentence `n` (1 to 5) was finished, `skipped` the «تخطّي الدرس» button was pressed while on sentence `n`, `keyboard_hint` two wrong Arabic letters in a row were typed on sentence `n` (the keyboard is still on Arabic; recorded whether or not the hint is shown to this learner), `audio_failed` the sound of a sentence could not be played by any of the existing ways (once per lesson, no `n`). `variant` is which text was shown (short or classic), `lessonId` which tier's opening lesson. Each is written at most once per visit and, for `sentence`, once per sentence, so the rows are visitors reaching a step. Where the first lesson is lost, and whether the shorter text or the button changes it. */
+      properties: { step: OpenerStep; variant: OpenerVariant; lessonId: string; n?: number };
     }
   | {
       name: "WORDS_ROUND_STARTED";

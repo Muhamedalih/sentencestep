@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { createPublicClient } from "@/lib/supabase/public-client";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { isLearnerVisibleStatus, tallySentenceStats } from "@/lib/content-helpers";
 import {
   getContentTranslations,
@@ -580,6 +581,39 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
 export const fetchLessonNav = unstable_cache(fetchLessonNavUncached, ["fetch-lesson-nav-v3"], {
   tags: ["lesson-nav"],
 });
+
+/**
+ * The sentences of the short opening lesson (the "Opening lesson: the short text" permission, see
+ * src/lib/opener/shared.ts): the rows of `onboarding-short-<tier>`, which are DRAFT lessons on
+ * purpose so no list, catalog or sweep ever sees them. A draft is invisible to a guest through the
+ * row-level policies, so they are read here with the service role — only ever for the three known ids
+ * (the caller passes the id through shortOpenerRowId), and only their sentences: it is the same public
+ * "First Steps" text every first-time visitor is shown. Resolved against `locale` exactly like
+ * fetchLessonById, so the support-language line and the word glosses come out the same way. Empty
+ * when the rows are missing or cannot be read, and the caller then keeps the ordinary text.
+ */
+export async function fetchOpenerShortSentences(
+  shortRowId: string,
+  locale?: SupportLocale,
+): Promise<Sentence[]> {
+  if (!/^onboarding-short-(beginner|intermediate|advanced)$/.test(shortRowId)) return [];
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from("sentences")
+    .select("*")
+    .eq("lesson_id", shortRowId)
+    .order("order_index");
+  if (error) throw error;
+  const rows = data ?? [];
+  const translations = locale
+    ? await getContentTranslations(
+        "sentence",
+        rows.map((row) => row.id),
+        locale,
+      )
+    : undefined;
+  return rows.map((row) => toSentence(row, locale, translations));
+}
 
 /**
  * Unlike fetchLessons (list views, and generateStaticParams which has no
