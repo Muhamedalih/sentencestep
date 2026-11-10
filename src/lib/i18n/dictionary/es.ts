@@ -294,7 +294,6 @@ export const es: Dictionary = {
     tip4Title: "Repite las historias",
     tip4Body: "Cada repaso fija las palabras y te descubre nuevos significados.",
     startCta: "Empezar la lección",
-    skip: "Omitir",
   },
   onboardingComplete: {
     eyebrow: "Lo lograste — tu primera lección está completa",
@@ -316,7 +315,8 @@ export const es: Dictionary = {
   signupPrompt: {
     eyebrow: "Terminaste tu primera lección",
     headline: "Guarda tu progreso y sigue mañana",
-    result: "Hoy escribiste {words} palabras · {accuracy} % de precisión",
+    statWords: "palabras escritas hoy",
+    statAccuracy: "precisión",
     point1: "Tu progreso y tu racha, guardados en cualquier dispositivo",
     point2: "Se abren las tareas diarias y la prueba semanal",
     point3: "Gratis y en menos de un minuto",
