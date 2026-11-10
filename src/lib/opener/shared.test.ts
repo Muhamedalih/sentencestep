@@ -61,6 +61,8 @@ test("a share of visitors: in only below the share, never without a token, never
   assert.equal(inVisitorShare("shortOpener", everyone(bucket + 1), token), true);
   assert.equal(inVisitorShare("shortOpener", everyone(bucket), token), false);
   assert.equal(inVisitorShare("shortOpener", everyone(100), token), true);
+  assert.equal(inVisitorShare("shortOpener", everyone(100), null), true);
+  assert.equal(inVisitorShare("shortOpener", everyone(99), null), false);
   assert.equal(inVisitorShare("shortOpener", everyone(50), null), false);
   assert.equal(inVisitorShare("shortOpener", defaultRolloutEntry("shortOpener"), token), false);
   assert.equal(
