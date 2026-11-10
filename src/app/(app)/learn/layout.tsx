@@ -4,6 +4,7 @@ import { KeyboardViewport } from "@/components/app/keyboard-viewport";
 import { LearnerProviders } from "@/components/app/learner-providers";
 import { SectionTimeTracker } from "@/components/app/section-time-tracker";
 import { TimezoneCookie } from "@/components/app/timezone-cookie";
+import { ReturnWelcome } from "@/components/learning/return-welcome";
 
 /**
  * Shared across every /learn/* route, including the full-screen lesson
@@ -24,7 +25,11 @@ export default function LearnLayout({ children }: { children: ReactNode }) {
       {/* Per-section (Stories / Daily Lessons / Word Lists / Passages) active time, reported to Clarity — see SectionTimeTracker. */}
       <SectionTimeTracker />
       <KeyboardViewport />
-      <LearnerProviders>{children}</LearnerProviders>
+      <LearnerProviders>
+        {children}
+        {/* The one-time "your progress is saved" page after a guest signs up (the returnLoop permission); renders nothing otherwise. */}
+        <ReturnWelcome />
+      </LearnerProviders>
     </>
   );
 }

@@ -12,3 +12,19 @@ export function formatReminderTime(hour: number, locale: SupportLocale | null): 
   const marker = locale === "ar" ? (evening ? "م" : "ص") : evening ? "PM" : "AM";
   return `${twelve}:00 ${marker}`;
 }
+
+/**
+ * The same clock time split for display: the digits ("3:00") and the morning/evening marker ("م", "PM"; empty on a 24-hour clock),
+ * so a screen can set the number large and the marker small.
+ */
+export function reminderTimeParts(
+  hour: number,
+  locale: SupportLocale | null,
+): { digits: string; marker: string } {
+  if (locale === "es" || locale === "tr")
+    return { digits: `${String(hour).padStart(2, "0")}:00`, marker: "" };
+  const twelve = hour % 12 === 0 ? 12 : hour % 12;
+  const evening = hour >= 12;
+  const marker = locale === "ar" ? (evening ? "م" : "ص") : evening ? "PM" : "AM";
+  return { digits: `${twelve}:00`, marker };
+}

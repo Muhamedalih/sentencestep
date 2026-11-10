@@ -22,7 +22,8 @@ export type NotificationEventType =
   | "PREMIUM_EXPIRY_REMINDER"
   | "DAY_ONE_NUDGE"
   | "CHECKOUT_ABANDONED"
-  | "SESSION_REMINDER";
+  | "SESSION_REMINDER"
+  | "SESSION_REMINDER_PUSH";
 
 export type NotificationEvent =
   | { type: "LESSON_COMPLETED"; totalCompleted: number }
@@ -60,7 +61,11 @@ export type NotificationEvent =
   // src/lib/session-end). `day` is the date (YYYY-MM-DD) the reminder was due, so a later reminder
   // on another day is a new event while a repeated run for the same one is a duplicate. Never held out:
   // the learner asked for it.
-  | { type: "SESSION_REMINDER"; day: string };
+  | { type: "SESSION_REMINDER"; day: string }
+  // The same reminder delivered as a browser notification (the return loop). A distinct type, like
+  // INACTIVE_LEARNER_PUSH, so a learner whose notification could not be delivered can still get the
+  // email for that day, and so a readout can tell the two channels apart.
+  | { type: "SESSION_REMINDER_PUSH"; day: string };
 
 /**
  * Whether this event clears the bar for "meaningful" — the single place
@@ -90,6 +95,7 @@ export function shouldNotify(event: NotificationEvent): boolean {
     case "DAY_ONE_NUDGE":
     case "CHECKOUT_ABANDONED":
     case "SESSION_REMINDER":
+    case "SESSION_REMINDER_PUSH":
       return true;
     default:
       return false;
@@ -165,5 +171,7 @@ export function dedupeKeyFor(event: NotificationEvent, now: Date = new Date()): 
       return `CHECKOUT_ABANDONED:${event.bucket}`;
     case "SESSION_REMINDER":
       return `SESSION_REMINDER:${event.day}`;
+    case "SESSION_REMINDER_PUSH":
+      return `SESSION_REMINDER_PUSH:${event.day}`;
   }
 }

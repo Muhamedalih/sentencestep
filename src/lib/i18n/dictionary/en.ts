@@ -1238,6 +1238,31 @@ export const en: Dictionary = {
     minuteCountFew: "{minutes} minutes",
     minuteCountMany: "{minutes} minutes",
   },
+  returnLoop: {
+    title: "Lock in what you typed today",
+    sub: "Sentences stick when you come back to them tomorrow. Pick a time and we remind you once.",
+    sameTime: "your time today",
+    midday: "midday",
+    evening: "evening",
+    none: "No thanks",
+    notePush:
+      "About half of the learners who return come back around the time they studied. One notification on this device.",
+    noteEmail:
+      "About half of the learners who return come back around the time they studied. One email to your address.",
+    notePushPlain: "One notification on this device, and you can stop it any time.",
+    noteEmailPlain: "One email to your address, and you can stop it in one click.",
+    savedPush: "Done. One notification tomorrow at {time}, opening your lesson directly.",
+    savedEmail: "Done. One email tomorrow at {time}, opening your lesson directly.",
+    fallbackEmail:
+      "Notifications are not enabled in this browser, so we send one email to your address instead, tomorrow at {time}.",
+    savedNone: "Okay, we will not send you anything.",
+    error: "The reminder could not be saved. Try again.",
+    blocked:
+      "Notifications are not enabled in this browser, and there is no Google address to email instead.",
+    welcomeEyebrow: "Your progress is saved",
+    welcomeHeadline: "Pick up tomorrow where you stopped",
+    welcomeContinue: "Continue",
+  },
   today: {
     whyListen:
       "You hear the English and read it at the same time, so your ear knows the sentences before you write them",

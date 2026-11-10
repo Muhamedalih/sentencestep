@@ -1574,6 +1574,30 @@ export interface Dictionary {
     minuteCountFew: string;
     minuteCountMany: string;
   };
+  /** The return loop's card (src/components/learning/return-card.tsx): "remind me tomorrow" with times to press. `{time}` is a clock time such as "3:00 PM". */
+  returnLoop: {
+    title: string;
+    sub: string;
+    /** The small line under the first time: it is the hour of today's session. */
+    sameTime: string;
+    midday: string;
+    evening: string;
+    none: string;
+    /** Shown while no time is pressed, per channel; the "Plain" ones when "the same time as today" is not offered (it is night). */
+    notePush: string;
+    noteEmail: string;
+    notePushPlain: string;
+    noteEmailPlain: string;
+    savedPush: string;
+    savedEmail: string;
+    fallbackEmail: string;
+    savedNone: string;
+    error: string;
+    blocked: string;
+    welcomeEyebrow: string;
+    welcomeHeadline: string;
+    welcomeContinue: string;
+  };
   /** Home's "Today's session" (src/components/today): the three steps, their buttons, the done card and the finish screen's extra button. `{n}` is a count, `{done}`/`{total}`/`{target}` counts of steps or days, `{steps}` step names, `{time}` a duration. */
   today: {
     whyListen: string;

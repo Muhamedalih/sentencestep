@@ -275,11 +275,24 @@ export interface Database {
           /** The moment the one reminder email is due — see 20250345000000_session_reminders.sql. */
           remind_at: string;
           created_at: string;
+          /** How the reminder is delivered: a browser notification or an email (migration 20250356000000, the return loop). */
+          channel: "email" | "push";
+          /** The lesson the reminder opens and its title, worked out on the server when the time was pressed; null for a plain reminder. */
+          lesson_mode: "normal" | "stories" | null;
+          lesson_id: string | null;
+          lesson_title: string | null;
+          /** One word the learner stumbled on, named in the message; null when there was none. */
+          word: string | null;
         };
         Insert: {
           user_id: string;
           remind_at: string;
           created_at?: string;
+          channel?: "email" | "push";
+          lesson_mode?: "normal" | "stories" | null;
+          lesson_id?: string | null;
+          lesson_title?: string | null;
+          word?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["session_reminders"]["Insert"]>;
         Relationships: [];

@@ -132,6 +132,15 @@ export type AnalyticsEvent =
       properties: { first: boolean; recall: boolean };
     }
   | {
+      name: "RETURN_LOOP_STEP";
+      category: "ENGAGEMENT";
+      /** The return loop's card (src/components/learning/return-card.tsx): `door` is where it was shown (the end of the first lesson, the page after a guest signs up, or the end of a session), `step` what happened: shown, a time pressed (push / email / fallback_email when notifications were blocked), none (no thanks) or error. The denominator for adoption is `shown`; sends are in notification_events. */
+      properties: {
+        door: "opener" | "welcome" | "session";
+        step: "shown" | "push" | "email" | "fallback_email" | "none" | "error";
+      };
+    }
+  | {
       name: "SESSION_RECALL_FINISHED";
       category: "ENGAGEMENT";
       /** How the recall round ended: `clean` of `total` sentences typed from memory with no help, or `skipped` when the learner left it. The share of rounds finished, and how well first recalls go, are what the stop rules of the lesson-ending test are judged on. */

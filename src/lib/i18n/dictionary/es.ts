@@ -1258,6 +1258,31 @@ export const es: Dictionary = {
     minuteCountFew: "{minutes} minutos",
     minuteCountMany: "{minutes} minutos",
   },
+  returnLoop: {
+    title: "Afianza lo que escribiste hoy",
+    sub: "Las frases se quedan cuando vuelves a ellas mañana. Elige una hora y te avisamos una sola vez.",
+    sameTime: "tu hora de hoy",
+    midday: "mediodía",
+    evening: "tarde",
+    none: "No, gracias",
+    notePush:
+      "Cerca de la mitad de quienes vuelven lo hace cerca de la hora a la que estudió. Una notificación en este dispositivo.",
+    noteEmail:
+      "Cerca de la mitad de quienes vuelven lo hace cerca de la hora a la que estudió. Un correo a tu dirección.",
+    notePushPlain: "Una notificación en este dispositivo, y puedes pararla cuando quieras.",
+    noteEmailPlain: "Un correo a tu dirección, y lo paras con un clic.",
+    savedPush: "Hecho. Una notificación mañana a las {time}, que abre tu lección directamente.",
+    savedEmail: "Hecho. Un correo mañana a las {time}, que abre tu lección directamente.",
+    fallbackEmail:
+      "Las notificaciones no están activadas en este navegador, así que enviamos un correo a tu dirección, mañana a las {time}.",
+    savedNone: "De acuerdo, no te enviaremos nada.",
+    error: "No se pudo guardar el recordatorio. Inténtalo de nuevo.",
+    blocked:
+      "Las notificaciones no están activadas en este navegador y no hay una dirección de Google a la que escribirte.",
+    welcomeEyebrow: "Tu progreso está guardado",
+    welcomeHeadline: "Sigue mañana donde lo dejaste",
+    welcomeContinue: "Continuar",
+  },
   today: {
     whyListen:
       "Oyes el inglés y lo lees a la vez, así tu oído conoce las frases antes de que las escribas",

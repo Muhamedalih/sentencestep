@@ -203,6 +203,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     shortOpener: false,
     openerSkip: false,
     openerHelp: false,
+    returnLoop: false,
   });
 });
 

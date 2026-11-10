@@ -140,3 +140,14 @@ test("isEmailableMilestone: off sends nothing, all keeps the old behavior", () =
   assert.equal(isEmailableMilestone(story, "off"), false);
   assert.equal(isEmailableMilestone(story, "all"), true);
 });
+
+test("dedupeKeyFor: a reminder notification has its own key per day, apart from the email's", () => {
+  assert.equal(
+    dedupeKeyFor({ type: "SESSION_REMINDER_PUSH", day: "2026-11-11" }),
+    "SESSION_REMINDER_PUSH:2026-11-11",
+  );
+  assert.notEqual(
+    dedupeKeyFor({ type: "SESSION_REMINDER_PUSH", day: "2026-11-11" }),
+    dedupeKeyFor({ type: "SESSION_REMINDER", day: "2026-11-11" }),
+  );
+});

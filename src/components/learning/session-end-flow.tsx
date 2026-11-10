@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { FromMemorySession } from "@/components/learning/from-memory-session";
 import { SessionEnd } from "@/components/learning/session-end";
+import { useReturnPlan } from "@/components/learning/use-return-plan";
 import type { SessionEndExtra, SessionEndReminder } from "@/components/learning/session-end";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
 import { useFeatures } from "@/components/providers/feature-provider";
@@ -82,6 +83,17 @@ export function SessionEndFlow({
   const startedRef = useRef(false);
   const [reminderHour, setReminderHour] = useState<number | null>(null);
   const [reminderStatus, setReminderStatus] = useState<SessionEndReminder["status"]>("idle");
+  // The return loop's card (replaces the "Remind me" card while that permission is open for this learner).
+  const returnPlan = useReturnPlan(
+    "session",
+    userId && features.rollouts.returnLoop && data
+      ? {
+          canEmail: data.canEmail ?? false,
+          vapidPublicKey: data.vapidPublicKey ?? null,
+          next: data.next,
+        }
+      : null,
+  );
 
   // The learner's first lesson ever. A signed-in learner's list only gains this lesson once it is
   // saved, so 0 counts too.
@@ -181,6 +193,7 @@ export function SessionEndFlow({
         }}
         extra={extra}
         extraMinutes={LESSON_MINUTES}
+        returnPlan={returnPlan}
         reminder={
           userId && features.rollouts.sessionReminders
             ? {
