@@ -51,11 +51,15 @@ export function newVisitorToken(random: () => number): string {
 /**
  * Whether a visitor is inside the share a visitor-aimed feature is given to (see visitorShare in
  * rollouts/config.ts): their number for this feature — from their token, independent between
- * features — is below the share. No token (cookies blocked, a first request) or a share of 0 is out.
+ * features — is below the share. A share of 0 is out; so is no token (cookies blocked, a first
+ * request) when the share is below 100. At 100 everybody is in, token or not: "everyone" must reach
+ * a visitor who lands straight on the opening lesson, before the browser has set its token.
  */
 export function inVisitorShare(id: RolloutId, entry: RolloutEntry, token: string | null): boolean {
   const share = visitorShare(entry);
-  if (share <= 0 || token === null) return false;
+  if (share <= 0) return false;
+  if (share >= 100) return true;
+  if (token === null) return false;
   return rolloutBucket(token, id) < share;
 }
 
