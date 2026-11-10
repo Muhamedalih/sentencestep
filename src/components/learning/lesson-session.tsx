@@ -929,9 +929,9 @@ export function LessonSession({
           still just above the illustration/sentence grid below. */}
       {showsSkipButton ? (
         // The opening lesson's «تخطّي الدرس» (permission openerSkip): the logo row with the button at
-        // its top right. 14px on a phone and 16px from lg, muted, a 44px-tall touch target whose
-        // negative margins keep the row exactly as tall as the plain logo row (and run the target to
-        // the screen's edge on a phone); the text sits 12px from the edge on a phone, 30px on a laptop.
+        // its top right, a real button: a 40px-tall bordered pill on the card colour (14px text on a
+        // phone, 16px from lg) whose negative vertical margins keep the row exactly as tall as the
+        // plain logo row; 12px from the screen's edge on a phone, 30px on a laptop.
         <div className="land-kb-hide flex shrink-0 items-center justify-between px-3 pt-2.5 pb-2">
           <Link href="/learn" aria-label={t.marketing.dashboardLinkAriaLabel} className="flex">
             <Logo size="sm" />
@@ -940,7 +940,7 @@ export function LessonSession({
             type="button"
             onClick={handleSkipOpener}
             dir="auto"
-            className="text-muted-foreground -my-[9px] -mr-3 flex h-11 items-center px-3 text-[14px] font-medium whitespace-nowrap lg:mr-[18px] lg:px-0 lg:text-base"
+            className="border-border bg-card text-foreground hover:bg-accent focus-visible:ring-ring -my-[7px] flex h-10 items-center rounded-full border px-4 text-[14px] font-medium whitespace-nowrap shadow-sm transition-[background-color,transform] duration-150 outline-none focus-visible:ring-2 active:scale-[0.97] lg:mr-[18px] lg:px-5 lg:text-base"
           >
             {t.lesson.skipOpener}
           </button>
