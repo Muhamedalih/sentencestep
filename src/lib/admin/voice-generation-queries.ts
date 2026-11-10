@@ -355,14 +355,16 @@ export interface LessonVoiceDetail {
 export async function getLessonVoiceDetail(lessonId: string): Promise<LessonVoiceDetail | null> {
   if (!isSupabaseConfigured()) return null;
 
-  const publicClient = createPublicClient();
+  // The service role, not the public client: this page is admin-only, and the public client cannot
+  // see a draft lesson, so a draft (a lesson whose audio is made before it is published) was a 404
+  // here and its audio could never be generated from this page.
+  const serviceClient = createServiceRoleClient();
   const [{ data: lesson }, { data: sentences }] = await Promise.all([
-    publicClient.from("lessons").select("id, title").eq("id", lessonId).maybeSingle(),
-    publicClient.from("sentences").select("id, en").eq("lesson_id", lessonId).order("order_index"),
+    serviceClient.from("lessons").select("id, title").eq("id", lessonId).maybeSingle(),
+    serviceClient.from("sentences").select("id, en").eq("lesson_id", lessonId).order("order_index"),
   ]);
   if (!lesson) return null;
 
-  const serviceClient = createServiceRoleClient();
   const { statuses } = await getLessonVoiceStatus(serviceClient, lessonId);
 
   return {
