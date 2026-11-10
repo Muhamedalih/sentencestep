@@ -288,7 +288,6 @@ export const tr: Dictionary = {
     tip4Title: "Hikayeleri tekrarla",
     tip4Body: "Her tekrar kelimeleri pekiştirir ve sana yeni anlamlar gösterir.",
     startCta: "Derse başla",
-    skip: "Atla",
   },
   onboardingComplete: {
     eyebrow: "İlk dersini tamamladın",
@@ -310,7 +309,8 @@ export const tr: Dictionary = {
   signupPrompt: {
     eyebrow: "İlk dersini bitirdin",
     headline: "İlerlemeni kaydet, yarın devam et",
-    result: "Bugün {words} kelime yazdın · %{accuracy} doğruluk",
+    statWords: "bugün yazılan kelime",
+    statAccuracy: "doğruluk",
     point1: "İlerlemen ve serin her cihazda kayıtlı",
     point2: "Günlük görevler ve haftalık test açılır",
     point3: "Ücretsiz, bir dakikadan kısa sürer",

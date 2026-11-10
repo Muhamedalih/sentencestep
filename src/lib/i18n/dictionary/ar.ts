@@ -277,7 +277,6 @@ export const ar: Dictionary = {
     tip4Title: "أعد القصص",
     tip4Body: "كل إعادة تثبّت الكلمات وتكشف لك معاني جديدة.",
     startCta: "ابدأ الدرس",
-    skip: "تخطي",
   },
   onboardingComplete: {
     eyebrow: "خلّصت درسك الأول",
@@ -298,7 +297,8 @@ export const ar: Dictionary = {
   signupPrompt: {
     eyebrow: "أنهيت درسك الأول",
     headline: "احفظ تقدّمك وتابع غدًا",
-    result: "كتبت اليوم {words} كلمة · دقة {accuracy}%",
+    statWords: "كلمة كتبتها اليوم",
+    statAccuracy: "دقة",
     point1: "تقدّمك وسلسلة أيامك محفوظة على أي جهاز",
     point2: "تُفتح لك مهام اليوم واختبار الأسبوع",
     point3: "مجاني، ويأخذ أقل من دقيقة",

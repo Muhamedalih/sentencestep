@@ -40,7 +40,7 @@ import { signInWithGoogle } from "@/lib/supabase/auth-actions";
  * the visitor's progress (it lives in this browser), so it is not used on this page.
  */
 export function SignupPrompt({ words, accuracy }: { words: number; accuracy: number }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const userId = useAuthUserId();
   const s = t.signupPrompt;
   const features = useFeatures();
@@ -77,9 +77,10 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
       cancelled = true;
     };
   }, [returnLoop, userId, pathname]);
-  const result = s.result
-    .replace("{words}", String(words))
-    .replace("{accuracy}", String(Math.round(accuracy * 100)));
+  const stats = [
+    { value: String(words), label: s.statWords },
+    { value: `${Math.round(accuracy * 100)}%`, label: s.statAccuracy },
+  ];
 
   return (
     <div
@@ -99,18 +100,30 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="flex w-full max-w-sm flex-col items-center text-center"
         >
-          <span className="border-primary/40 text-primary flex size-12 items-center justify-center rounded-full border">
-            <Check aria-hidden="true" className="size-6" />
-          </span>
-          <p dir="auto" className="text-primary mt-4 text-sm font-medium">
+          <p dir="auto" className="text-primary text-sm font-medium">
             {s.eyebrow}
           </p>
           <h1 dir="auto" className="mt-1.5 text-2xl font-semibold tracking-tight text-balance">
             {userId ? t.onboardingComplete.headline : s.headline}
           </h1>
-          <p dir="auto" className="text-muted-foreground mt-2 text-sm">
-            {result}
-          </p>
+          <ul
+            dir={locale === "ar" ? "rtl" : "ltr"}
+            className="mt-[22px] grid w-full grid-cols-2 gap-3"
+          >
+            {stats.map(({ value, label }) => (
+              <li
+                key={label}
+                className="border-border bg-card rounded-2xl border px-3 py-4 text-center"
+              >
+                <span dir="ltr" className="block text-3xl leading-tight font-semibold tabular-nums">
+                  {value}
+                </span>
+                <span dir="auto" className="text-muted-foreground mt-0.5 block text-[13px]">
+                  {label}
+                </span>
+              </li>
+            ))}
+          </ul>
 
           {userId ? (
             <>
@@ -128,7 +141,7 @@ export function SignupPrompt({ words, accuracy }: { words: number; accuracy: num
             </>
           ) : (
             <>
-              <ul className="border-border bg-card mt-6 flex w-full flex-col gap-3 rounded-2xl border p-4 text-sm">
+              <ul className="mt-[22px] flex w-full flex-col gap-3 px-1 text-sm">
                 {[s.point1, s.point2, s.point3].map((point) => (
                   <li key={point} dir="auto" className="flex items-center gap-2.5 text-start">
                     <Check aria-hidden="true" className="text-primary size-4 shrink-0" />

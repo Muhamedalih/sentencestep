@@ -330,7 +330,6 @@ export interface Dictionary {
     tip4Title: string;
     tip4Body: string;
     startCta: string;
-    skip: string;
   };
   /** The premium "pitch" screen shown instead of the ordinary LessonCompletion when a first-time learner finishes their opening lesson (src/components/learning/onboarding-lesson-complete.tsx) — the get-started flow's real final step, bookending onboarding.heading/onboardingIntroCard's startCta. Four fixed benefit points, not a dynamic list. */
   onboardingComplete: {
@@ -358,7 +357,10 @@ export interface Dictionary {
   signupPrompt: {
     eyebrow: string;
     headline: string;
-    result: string;
+    /** Label under the big words number (the "25" tile). */
+    statWords: string;
+    /** Label under the big accuracy number (the "92%" tile). */
+    statAccuracy: string;
     point1: string;
     point2: string;
     point3: string;

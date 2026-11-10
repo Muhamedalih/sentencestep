@@ -26,8 +26,8 @@ const TIPS = [
 /**
  * The short first run's last step before the opening lesson (start page with the language chips ->
  * level -> this -> lesson): the four habits the long run's TutorialOnboarding spreads over four
- * slides, one short line each on a single page. "Start the lesson" and "Skip" both open the lesson
- * at once — skipping only skips the reading — so there is no start card after it either.
+ * slides, one short line each on a single page as four squares (2x2). "Start the lesson" is the
+ * only button (there is no Skip), and it opens the lesson at once — no start card after it either.
  *
  * Same gates as the long run's tutorial (homepage only, a language saved, no lesson finished yet, a
  * level picked), without the country step it waits for there. Opening the lesson waits for the level
@@ -101,36 +101,31 @@ export function FirstRunTips() {
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="flex w-full max-w-md flex-col"
         >
-          <h1 dir="auto" className="text-muted-foreground text-center text-sm font-medium">
+          <h1 dir="auto" className="text-center text-2xl font-semibold tracking-tight">
             {t.firstRunTips.eyebrow}
           </h1>
 
-          <ul className="mt-7 flex flex-col gap-5">
+          <ul dir={locale === "ar" ? "rtl" : "ltr"} className="mt-6 grid grid-cols-2 gap-3">
             {TIPS.map(({ icon: Icon, title, body }) => (
-              <li key={title} className="flex items-start gap-4">
-                <span className="border-border bg-card text-primary flex size-11 shrink-0 items-center justify-center rounded-xl border">
-                  <Icon aria-hidden="true" className="size-5" />
+              <li
+                key={title}
+                dir="auto"
+                className="border-border bg-card flex flex-col items-start rounded-2xl border p-4 text-start"
+              >
+                <Icon aria-hidden="true" className="text-primary size-[22px]" />
+                <span className="mt-2.5 block text-[15px] leading-snug font-semibold">
+                  {t.firstRunTips[title]}
                 </span>
-                <span dir="auto" className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">{t.firstRunTips[title]}</span>
-                  <span className="text-muted-foreground mt-0.5 block text-sm leading-relaxed">
-                    {t.firstRunTips[body]}
-                  </span>
+                <span className="text-muted-foreground mt-1 block text-[13px] leading-relaxed">
+                  {t.firstRunTips[body]}
                 </span>
               </li>
             ))}
           </ul>
 
-          <Button size="lg" className="mt-9 w-full" onClick={openLesson}>
+          <Button size="lg" className="mt-7 w-full" onClick={openLesson}>
             {t.firstRunTips.startCta}
           </Button>
-          <button
-            type="button"
-            onClick={openLesson}
-            className="text-muted-foreground hover:text-foreground mx-auto mt-3 min-h-10 px-4 text-sm font-medium transition-colors"
-          >
-            {t.firstRunTips.skip}
-          </button>
         </motion.div>
       </div>
     </div>
