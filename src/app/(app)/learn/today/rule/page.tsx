@@ -45,6 +45,7 @@ export default async function TodayRulePage({
     daily?: string;
     redo?: string;
     practice?: string;
+    back?: string;
   }>;
 }) {
   const [features, user, locale] = await Promise.all([
@@ -54,7 +55,7 @@ export default async function TodayRulePage({
   ]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
-  const { from, recall, daily, redo, practice } = await searchParams;
+  const { from, recall, daily, redo, practice, back } = await searchParams;
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const todayISO = localISODateInTimeZone(timeZone) ?? todayLocalISODate();
 
@@ -86,8 +87,11 @@ export default async function TodayRulePage({
   const dailyMode = daily === "1";
   const redoMode = redo === "1";
   const fromStory = recall !== "1" && typeof from === "string" && from.length > 0;
+  // `back=rules`: the lesson was started from the rule library («التالية» card), so it ends there.
   const onward = dailyMode
-    ? "/learn"
+    ? back === "rules"
+      ? "/learn/rules"
+      : "/learn"
     : fromStory
       ? "/learn/today/go?step=words"
       : "/learn/today/end";
