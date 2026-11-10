@@ -16,6 +16,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { getLessonsByLevel, getUnits, withOpeningLessonPlacement } from "@/lib/content-helpers";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useProgress } from "@/hooks/use-progress";
+import { useSkippedOpeners } from "@/hooks/use-skipped-openers";
 import {
   difficultyForLevel,
   estimateMinutes,
@@ -380,12 +381,15 @@ export function LessonListView({
   const units = withOpeningLessonPlacement(rawUnits);
   const courseUnits = getUnits(mode);
   const completedIds = isLoaded ? getCompletedIds(mode) : [];
+  // An opening lesson the learner skipped is neither done nor the lesson to do now.
+  const skippedOpeners = useSkippedOpeners();
   const currentLessonId = findCurrentLesson(
     units,
     completedIds,
     isPremiumUser,
     startingLevel,
     rollouts.levelFloor,
+    skippedOpeners,
   )?.id;
   const currentLevel = getCurrentLevel(units, completedIds, startingLevel, rollouts.levelFloor);
   const currentUnit = courseUnits.find((unit) => unit.level === currentLevel);

@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { useOnboardingStepTracking } from "@/hooks/use-onboarding-step-tracking";
+import { useSkippedOpeners } from "@/hooks/use-skipped-openers";
 import { useGetStartedStep } from "@/components/providers/get-started-step-provider";
 import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
@@ -72,6 +73,9 @@ export function OnboardingIntroCard() {
   const [isNavigating, setIsNavigating] = useState(false);
   const [settings, setSettings] = useState<OnboardingCardSettings | null>(null);
 
+  // A learner who skipped the opening lesson (the «تخطّي الدرس» button) is not asked to start it again.
+  const skippedOpeners = useSkippedOpeners();
+
   const difficulty = pendingDifficulty ?? difficultyForStartingLevel(startingLevel);
   const shouldShow =
     firstRunVariant !== "short" &&
@@ -80,7 +84,8 @@ export function OnboardingIntroCard() {
     isLoaded &&
     difficulty !== null &&
     tutorialStepDone &&
-    completions.length === 0;
+    completions.length === 0 &&
+    !skippedOpeners.includes(OPENING_LESSON_ID[difficulty]);
   useOnboardingStepTracking("start", shouldShow);
 
   useEffect(() => {

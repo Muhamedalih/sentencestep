@@ -7,6 +7,13 @@ import { track } from "@/lib/analytics/track";
 import { getLessonById } from "@/lib/content";
 import { isFirstRunVariant, isOnboardingStep } from "@/lib/first-run/variant";
 import { isInAppBrowserName, isStripPage, isStripPlatform } from "@/lib/in-app-strip/strip";
+import {
+  isOpenerLessonId,
+  isOpenerStep,
+  isOpenerVariant,
+  openerStepNeedsSentence,
+  parseSentenceNumber,
+} from "@/lib/opener/shared";
 import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { isCountryCode } from "@/lib/i18n/country-codes";
@@ -126,6 +133,48 @@ export async function trackOnboardingCountryAction(countryCode: string): Promise
     { name: "ONBOARDING_COUNTRY_SELECTED", category: "ENGAGEMENT", properties: { countryCode } },
     user?.id ?? null,
   );
+}
+
+/**
+ * Called from the opening lesson (see LessonSession): a phone's «tap to start» card was pressed, the
+ * first letter was typed, a sentence was finished (`n`), or the «تخطّي الدرس» button was pressed on
+ * sentence `n`. Fire-and-forget like the onboarding ones; the write is left until the response is sent
+ * (after()), so a keystroke's screen is never held up by it. Everything arrives as client input, so
+ * each value is re-validated (a known step, a known variant, one of the three opening lesson ids, a
+ * whole sentence number in range, a sentence number only where one belongs) and the call silently
+ * no-ops otherwise. Counts only: nothing typed ever reaches this. A guest is recorded too, with no
+ * account.
+ */
+export async function trackOpenerStepAction(
+  step: string,
+  variant: string,
+  lessonId: string,
+  n?: number,
+): Promise<void> {
+  try {
+    if (!isOpenerStep(step) || !isOpenerVariant(variant) || !isOpenerLessonId(lessonId)) return;
+    const sentenceNumber = n === undefined ? null : parseSentenceNumber(n);
+    if (openerStepNeedsSentence(step) ? sentenceNumber === null : n !== undefined) return;
+    const user = await getCurrentUser();
+    const userId = user?.id ?? null;
+    after(() =>
+      track(
+        {
+          name: "OPENER_STEP",
+          category: "ENGAGEMENT",
+          properties: {
+            step,
+            variant,
+            lessonId,
+            ...(sentenceNumber !== null ? { n: sentenceNumber } : {}),
+          },
+        },
+        userId,
+      ),
+    );
+  } catch (error) {
+    console.error("[analytics] trackOpenerStepAction failed", error);
+  }
 }
 
 /**

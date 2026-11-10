@@ -36,6 +36,9 @@ export const ROLLOUT_IDS = [
   "videoShelves",
   "guestCards",
   "videoFinish",
+  "shortOpener",
+  "openerSkip",
+  "openerHelp",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -366,6 +369,43 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "It gives no points or rewards for watching (YouTube's rules): every number on it is about the typing.",
       "It adds no read or write: everything on it comes from the video's own text and what the learner typed on this visit.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  shortOpener: {
+    id: "shortOpener",
+    audience: "visitor",
+    title: "Opening lesson: the short text",
+    description:
+      "The very first lesson («First Steps», the one a first-time visitor types after choosing a level) keeps its voice and its five sentences but is about half as long: 25 words instead of 46 (“Learning English can be simple / You listen, you type, you learn / Make a mistake, try again / English starts to feel natural / Take your first step”), so the first win comes in about a minute and a half instead of nearly three. The short text lives in three new draft lessons (onboarding-short-beginner, -intermediate, -advanced) that are never listed anywhere; the lesson page reads their sentences and the learner is still on the same opening lesson, so progress, the level read back at sign-up and the next-lesson pick are untouched. The old lessons and their recordings are not changed.",
+    notes: [
+      "A share of new visitors: that percentage of visitors get the short text, cut by a random token kept in a cookie (ss_vt), so it is the same visitors every time and a bigger share only adds visitors. Choosing 100 gives it to all of them. Admins (and a browser an admin switched preview on for) always have it.",
+      "Before opening it to anyone: press Generate once on Admin → Voice → onboarding-short-beginner (the sentences are the same in the three, so the other two find the clips ready). Until a sentence has its recording the lesson plays the browser voice for it.",
+      "To compare: every opening-lesson event carries which text was shown (OPENER_STEP.variant, LESSON_STARTED and LESSON_COMPLETED by lesson id are the same for both). Read finished over started, time to finish, sign-ups and the first real lesson finished, per group.",
+      "The three draft lessons are never published: the catalog, the lesson list and the cron sweep only see published lessons, which is why this permission does not need them to be.",
+    ],
+  },
+  openerSkip: {
+    id: "openerSkip",
+    audience: "visitor",
+    title: "Opening lesson: «تخطّي الدرس» button",
+    description:
+      "A quiet «تخطّي الدرس» (skip the lesson) button at the top right of the opening lesson's logo row (14px on a phone, 16px on a laptop, grey, a 44px touch target), with no confirmation. It goes straight to Home and is not a finished lesson: no XP, no streak, no rating card, no starter lesson used, and Home recommends the first real lesson, not the opening lesson again. Which sentence the learner was on is recorded (OPENER_STEP, step skipped).",
+    notes: [
+      "Skipping bypasses the sign-up screen that the finished opening lesson shows, so this is meant to be tested at a share (say 50%) and read on sign-ups and on the first real lesson finished, per group, before it is given to everyone.",
+      "A share of new visitors, cut by the same random token as the short text but independently of it (ss_vt). Admins and a previewing browser always have it.",
+      "What a skip remembers is a cookie in the learner's own browser (ss_osk), so the opening lesson is not recommended again there, signed in or not; on another device a signed-in learner who has not finished it is offered it once more and can skip it again.",
+    ],
+  },
+  openerHelp: {
+    id: "openerHelp",
+    audience: "learner",
+    title: "Opening lesson: keyboard hint and audio note",
+    description:
+      "Two quiet helps in the very first lesson (First Steps), under the translation, that never cover the sentence or stop the typing. The keyboard hint: after two wrong keystrokes in a row that are both Arabic letters (the keyboard is still on Arabic, so every letter flashes red with no reason today) a small box says so and how to switch to English (the globe key on a phone, Alt + Shift on a laptop); it goes away at the next right letter and shows at most twice in a lesson. The audio note: when a sentence's sound cannot be played by any of the existing ways (the recorded clip, then the clip made on demand, then the browser's voice), a calm line says so with a «جرّب مرة ثانية» button, and typing carries on.",
+    notes: [
+      "Only the opening lesson, for now: no other lesson shows either help. The two helps are decided together by this one permission.",
+      "Counting needs nothing from this: OPENER_STEP records, for everyone and with counts only, each time the keyboard hint is shown (keyboard_hint, with the sentence number) and, once per lesson, that the sound failed (audio_failed), so the size of each problem can be read whatever this permission says.",
+      "Works for guests too once it is opened to everyone (a share of learners decides on signed-in accounts only, so open it to everyone, or look at it as an admin or with preview on for a browser).",
     ],
   },
   mobilePath: {

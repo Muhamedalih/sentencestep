@@ -646,6 +646,13 @@ export const en: Dictionary = {
     sentenceCount: "{n} sentences",
     lineCount: "{n} lines",
     sentenceProgress: "Sentence {n} of {total}",
+    skipOpener: "Skip lesson",
+    keyboardHintTitle: "Your keyboard is set to Arabic",
+    keyboardHintPhone:
+      "Switch it to English and carry on: tap the globe icon {icon} on your keyboard.",
+    keyboardHintDesktop: "Switch it to English with Alt + Shift, and carry on.",
+    audioFailedNote: "The sound couldn't play. You can carry on typing.",
+    audioRetry: "Try again",
     illustrationAlt: 'Illustration for the "{title}" lesson',
     illustrationViewImage: "Illustration",
     illustrationViewList: "Previous sentences",

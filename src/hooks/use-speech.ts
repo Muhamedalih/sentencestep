@@ -55,10 +55,15 @@ interface SpeakOverrides {
  * one admin-configured default with automatic per-device fallback, is the
  * whole strategy.
  */
-export function useSpeech() {
+export function useSpeech(options?: {
+  /** Called with the browser's own error code when an utterance fails (see SpeechSynthesisErrorEvent.error) — only for a caller that wants to know, such as the opening lesson's audio-failed note. Absent, nothing changes. */
+  onError?: (error: string | undefined) => void;
+}) {
   const voiceSettings = useVoiceSettings();
   const voiceSettingsRef = useRef(voiceSettings);
   voiceSettingsRef.current = voiceSettings;
+  const onErrorRef = useRef(options?.onError);
+  onErrorRef.current = options?.onError;
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -141,7 +146,10 @@ export function useSpeech() {
       if (voice) utterance.voice = voice;
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onerror = (event) => {
+        setIsSpeaking(false);
+        onErrorRef.current?.(event.error);
+      };
 
       window.speechSynthesis.speak(utterance);
     } catch {

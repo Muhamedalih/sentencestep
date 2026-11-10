@@ -200,6 +200,9 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     videoShelves: false,
     guestCards: false,
     videoFinish: false,
+    shortOpener: false,
+    openerSkip: false,
+    openerHelp: false,
   });
 });
 

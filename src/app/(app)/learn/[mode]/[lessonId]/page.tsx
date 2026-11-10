@@ -23,7 +23,14 @@ import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
 import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { fetchLessonSentenceStats } from "@/lib/supabase/queries/content";
+import type { SupportLocale } from "@/lib/i18n/locales";
+import { getOpenerArms } from "@/lib/opener/arms";
+import { shortOpenerRowId } from "@/lib/opener/shared";
+import {
+  fetchLessonSentenceStats,
+  fetchOpenerShortSentences,
+} from "@/lib/supabase/queries/content";
+import type { Sentence } from "@/types/content";
 import { DEFAULT_WPM, estimateStoryMinutes } from "@/lib/today/plan";
 import { isLearningMode, modeMeta } from "@/lib/learning-modes";
 import { getDefaultNormalLessonVoiceId, getDefaultVoiceId } from "@/lib/admin/voices-queries";
@@ -65,6 +72,30 @@ export async function generateMetadata({
   return { title: unit?.title ?? modeMeta[mode].title };
 }
 
+/**
+ * For an opening lesson only (null for every other lesson, with no extra work): which opening-lesson
+ * tests this visitor is in, and the short text's sentences when they get it. A short text that cannot
+ * be read (rows missing, a database error) quietly leaves the ordinary text in place.
+ */
+async function loadOpenerVariant(
+  lessonId: string,
+  locale: SupportLocale | undefined,
+): Promise<{ skip: boolean; sentences: Sentence[] | null } | null> {
+  const shortRowId = shortOpenerRowId(lessonId);
+  if (!shortRowId) return null;
+  const arms = await getOpenerArms();
+  let sentences: Sentence[] | null = null;
+  if (arms.short) {
+    try {
+      const rows = await fetchOpenerShortSentences(shortRowId, locale);
+      if (rows.length > 0) sentences = rows;
+    } catch (error) {
+      console.error("[opener] couldn't read the short opening text; ordinary text served", error);
+    }
+  }
+  return { skip: arms.skip, sentences };
+}
+
 export default async function LessonPage({
   params,
 }: {
@@ -79,12 +110,18 @@ export default async function LessonPage({
   // see fetchLessonNav's doc comment for why the previous full-list fetch
   // here was the single most expensive call on this page after
   // fetchLessonById's own.
-  const [lessonNav, unit, user] = await Promise.all([
+  const [lessonNav, baseUnit, user, opener] = await Promise.all([
     getLessonNav(mode),
     getLessonById(mode, lessonId, locale ?? undefined),
     getCurrentUser(),
+    // Only the three opening lessons (First Steps) ever ask: which of the two opening-lesson tests this
+    // visitor is in (the short text, the skip button) and, for the short text, its sentences.
+    mode === "normal" ? loadOpenerVariant(lessonId, locale ?? undefined) : Promise.resolve(null),
   ]);
-  if (!unit) notFound();
+  if (!baseUnit) notFound();
+  // The short opening text swaps only the sentences: the lesson keeps its own id, so everything keyed
+  // on it (progress, the resume point, the level read back at sign-up) is exactly as before.
+  const unit = opener?.sentences ? { ...baseUnit, sentences: opener.sentences } : baseUnit;
 
   // This route sits outside the (dashboard) layout (see this file's own
   // doc comment) on purpose, so it never gets that layout's default-size
@@ -337,6 +374,8 @@ export default async function LessonPage({
         speakerVoiceMap={speakerVoiceMap}
         firstSentenceWordAudio={firstSentenceWordAudio}
         wordQuiz={wordQuiz}
+        openerVariant={opener ? (opener.sentences ? "short" : "classic") : undefined}
+        openerSkip={opener?.skip === true}
         // Today's taste story: its completion offers the full plan at 90% or more (see lib/hybrid).
         hybridStar={
           tasteOpen && taste

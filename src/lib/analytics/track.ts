@@ -4,6 +4,8 @@ import { ATTRIBUTION_COOKIE, attributionProperties } from "@/lib/analytics/attri
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { FIRST_RUN_COOKIE, parseFirstRunCookie } from "@/lib/first-run/variant";
 import { IN_APP_BUCKET_COOKIE, parseBucket } from "@/lib/in-app-strip/strip";
+import { VISITOR_TOKEN_COOKIE, parseVisitorToken } from "@/lib/opener/shared";
+import { rolloutBucket } from "@/lib/rollouts/config";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { AnalyticsEvent, AnalyticsEventName } from "@/lib/analytics/events";
 
@@ -34,6 +36,13 @@ const IN_APP_BUCKET_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
   "LESSON_COMPLETED",
 ]);
 
+/** The events that carry `shortBucket` and `skipBucket`: the visitor's number from 0 to 99 for each of the two opening-lesson tests (see src/lib/opener/shared.ts). A visitor is in a test's group when that number is below the share the permission was opened at, so sign-ups and the first real lessons can be read per group whatever the opening lesson itself recorded. Only a browser that has the visitor token adds them. */
+const OPENER_BUCKET_EVENTS: ReadonlySet<AnalyticsEventName> = new Set([
+  "USER_SIGNED_UP",
+  "LESSON_STARTED",
+  "LESSON_COMPLETED",
+]);
+
 /**
  * Read from the request that is already being served, so no extra database or
  * network call. Outside a request (a webhook, a cron) there is nothing to
@@ -43,7 +52,8 @@ async function requestPropertiesFor(name: AnalyticsEventName): Promise<Record<st
   const attributed = ATTRIBUTED_EVENTS.has(name);
   const firstRun = FIRST_RUN_EVENTS.has(name);
   const inAppBucket = IN_APP_BUCKET_EVENTS.has(name);
-  if (!attributed && !firstRun && !inAppBucket) return {};
+  const openerBucket = OPENER_BUCKET_EVENTS.has(name);
+  if (!attributed && !firstRun && !inAppBucket && !openerBucket) return {};
   try {
     const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
     const properties: Record<string, string> = attributed
@@ -57,6 +67,13 @@ async function requestPropertiesFor(name: AnalyticsEventName): Promise<Record<st
     if (variant) properties.firstRun = variant;
     const bucket = inAppBucket ? parseBucket(cookieStore.get(IN_APP_BUCKET_COOKIE)?.value) : null;
     if (bucket !== null) properties.inAppBucket = String(bucket);
+    if (openerBucket) {
+      const token = parseVisitorToken(cookieStore.get(VISITOR_TOKEN_COOKIE)?.value);
+      if (token) {
+        properties.shortBucket = String(rolloutBucket(token, "shortOpener"));
+        properties.skipBucket = String(rolloutBucket(token, "openerSkip"));
+      }
+    }
     return properties;
   } catch {
     return {};

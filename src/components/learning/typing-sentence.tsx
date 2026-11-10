@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CurrentWordLabel } from "@/components/learning/current-word-label";
@@ -32,7 +32,8 @@ interface TypingSentenceProps {
   /** Called with this sentence's final WPM once its completion delay elapses. */
   onComplete: (wpm: number) => void;
   onCorrectLetter: () => void;
-  onErrorLetter?: () => void;
+  /** Called with the wrong character the learner's keyboard produced. */
+  onErrorLetter?: (char: string) => void;
   onAudioPlay?: () => void;
   /**
    * Fired once, right before onComplete, only when at least one word in
@@ -101,6 +102,10 @@ interface TypingSentenceProps {
   onGoBack?: () => void;
   /** Stories mode only — steps forward again, one sentence. LessonSession only ever passes this when sentenceNumber is still behind maxSentenceIndexReached (see its own doc comment) — undefined otherwise, which is what hides the button entirely rather than this component re-deriving that condition itself. */
   onGoForward?: () => void;
+  /** Normal mode only (the opening lesson's helps, permission openerHelp): drawn right under the translation line, never over the sentence. */
+  belowTranslation?: ReactNode;
+  /** Normal mode only: every existing way of hearing this sentence failed (see PronunciationButton's onAllAudioFailed). */
+  onAudioFailed?: () => void;
   /** Dictation handing a half-typed sentence back (the learner gave up, or switched Dictation off): the part already typed correctly, as the keystroke engine's own buffer. Read once, when this sentence mounts. */
   initialTyped?: string;
   /** The words that already had wrong letters in that dictation attempt, folded into this sentence's own mistakes so Fix Your Mistakes hears about them once, when the sentence is finished. Read once, on mount. */
@@ -128,6 +133,8 @@ export function TypingSentence({
   onGoBack,
   onGoForward,
   wordCards,
+  belowTranslation,
+  onAudioFailed,
   initialTyped,
   initialMistakes,
 }: TypingSentenceProps) {
@@ -519,6 +526,7 @@ export function TypingSentence({
           kokoroVoiceId={sentenceVoiceId}
           contentType="sentence"
           contentId={sentence.id}
+          onAllAudioFailed={onAudioFailed}
         />
       </div>
       {/* The current-word translation now lives INSIDE this centered group,
@@ -547,6 +555,7 @@ export function TypingSentence({
         <p className="mt-6 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
+        {belowTranslation}
         <div className="compact-hide">
           <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
         </div>

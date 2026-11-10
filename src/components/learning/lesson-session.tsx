@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -14,6 +15,7 @@ import {
 
 import type { DictationOutcome, DictationProgress } from "@/components/learning/dictation-sentence";
 import { LessonIllustration } from "@/components/learning/lesson-illustration";
+import { AudioFailedNote, KeyboardHint } from "@/components/learning/opener-notes";
 import { Logo } from "@/components/layout/logo";
 import {
   StoryPreviousSentences,
@@ -28,7 +30,19 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { transitions } from "@/lib/motion";
-import { trackAudioPlayedAction, trackLessonViewAction } from "@/lib/analytics/track-actions";
+import {
+  trackAudioPlayedAction,
+  trackLessonViewAction,
+  trackOpenerStepAction,
+} from "@/lib/analytics/track-actions";
+import { rememberSkippedOpener } from "@/hooks/use-skipped-openers";
+import {
+  INITIAL_KEYBOARD_HINT,
+  advanceKeyboardHint,
+  type KeyboardHintKey,
+  type KeyboardHintState,
+} from "@/lib/opener/help";
+import type { OpenerStep, OpenerVariant } from "@/lib/opener/shared";
 import { MOBILE_MEDIA_QUERY, useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useSavedCards } from "@/hooks/use-saved-cards";
@@ -118,6 +132,8 @@ export function LessonSession({
   speakerVoiceMap,
   firstSentenceWordAudio,
   wordQuiz,
+  openerVariant,
+  openerSkip = false,
 }: {
   unit: Lesson;
   nextLesson?: NextLessonRef;
@@ -139,6 +155,10 @@ export function LessonSession({
   wordQuiz?: StoryWordQuizQuestion[];
   /** A story of today's taste (see lib/hybrid): the completion screen offers the full plan at 90% or more. Null for everything else. */
   hybridStar?: { passages: number; stories: number } | null;
+  /** The three opening lessons only: which text this visitor was shown (the short one or the classic one) — what every opening-lesson measurement event carries. Undefined for every other lesson. */
+  openerVariant?: OpenerVariant;
+  /** The three opening lessons only: this visitor is in the group that gets the «تخطّي الدرس» button (permission openerSkip, decided on the server). */
+  openerSkip?: boolean;
 }) {
   // Never true in previewMode: an admin previewing content has no
   // "get started" flow underway, so the real dashboard pitch would be a
@@ -308,8 +328,76 @@ export function LessonSession({
   const errorCountRef = useRef(0);
   const wpmSamplesRef = useRef<number[]>([]);
   const hasTrackedAudioRef = useRef(false);
-  const { prefetchPronunciation, setWordWindow } = usePronunciationSettings();
+  const { prefetchPronunciation, setWordWindow, replayCurrent } = usePronunciationSettings();
   const { t, locale } = useLocale();
+  const router = useRouter();
+
+  // The opening lesson's measurement (counts only, never what was typed): the phone's "tap to start"
+  // card, the first letter, each finished sentence, and a skip. Each is written at most once per
+  // visit (per sentence for the last two), through one narrow server action that defers its write
+  // until the response is sent. Never in the admin preview, never for any other lesson.
+  const openerTracking = isOpeningLesson && !previewMode;
+  const openerTrackedRef = useRef(new Set<string>());
+  function trackOpener(step: OpenerStep, n?: number) {
+    if (!openerTracking) return;
+    const key = n === undefined ? step : `${step}:${n}`;
+    if (openerTrackedRef.current.has(key)) return;
+    openerTrackedRef.current.add(key);
+    trackOpenerStepAction(step, openerVariant ?? "classic", unit.id, n).catch((error: unknown) => {
+      console.error("[analytics] trackOpenerStepAction failed", error);
+    });
+  }
+  // The learner pressed "tap to start" on a phone (the only way this fires).
+  function handleStart() {
+    setTapped(true);
+    trackOpener("tap");
+  }
+
+  // The opening lesson's two quiet helps (permission openerHelp), under the translation: a keyboard
+  // hint after two wrong Arabic letters in a row, and a note when no way of hearing the sentence
+  // worked. What each one WOULD do is worked out for every visitor and counted (keyboard_hint,
+  // audio_failed: counts only); only a learner who has the permission is shown them.
+  const showsOpenerHelp = openerTracking && features.rollouts.openerHelp;
+  const keyboardHintRef = useRef<KeyboardHintState>(INITIAL_KEYBOARD_HINT);
+  const [keyboardHint, setKeyboardHint] = useState<KeyboardHintState>(INITIAL_KEYBOARD_HINT);
+  function noteHelpKey(key: KeyboardHintKey) {
+    if (!openerTracking) return;
+    const before = keyboardHintRef.current;
+    const after = advanceKeyboardHint(before, key);
+    if (after === before) return;
+    keyboardHintRef.current = after;
+    if (after.shown > before.shown) trackOpener("keyboard_hint", sentenceIndex + 1);
+    // Only a change in what is drawn re-renders; the run counter alone does not.
+    setKeyboardHint((current) => (current.visible === after.visible ? current : after));
+  }
+  const [audioFailed, setAudioFailed] = useState(false);
+  function handleAudioFailed() {
+    if (!openerTracking) return;
+    trackOpener("audio_failed");
+    setAudioFailed(true);
+  }
+  function handleRetryAudio() {
+    setAudioFailed(false);
+    replayCurrent();
+  }
+  // A new sentence starts with no note: it plays its own sound, which may or may not work.
+  useEffect(() => {
+    setAudioFailed(false);
+  }, [sentenceIndex]);
+  // «تخطّي الدرس»: leaves for Home. Not a finished lesson — markComplete is never called, so no XP,
+  // no streak, no rating card and no starter lesson used — and the opening lesson is remembered as
+  // skipped (a cookie the Home pick reads, signed in or not) and its resume point dropped, so Home
+  // recommends the first real lesson instead of this one again.
+  const openerSkippedRef = useRef(false);
+  const showsSkipButton = openerSkip && isOpeningLesson && !isComplete;
+  function handleSkipOpener() {
+    if (openerSkippedRef.current) return;
+    openerSkippedRef.current = true;
+    trackOpener("skipped", sentenceIndex + 1);
+    rememberSkippedOpener(unit.id);
+    clearLessonResume(unit.mode, unit.id);
+    router.push("/learn");
+  }
 
   // From-memory (admin feature): an optional round offered on the completion
   // screen, asking this lesson's sentences back in the learner's own language.
@@ -621,6 +709,7 @@ export function LessonSession({
   }
 
   function handleSentenceComplete(wpm: number, silent = false) {
+    trackOpener("sentence", sentenceIndex + 1);
     setCarryOver(null);
     dictationProgressRef.current = null;
     if (wpm > 0) wpmSamplesRef.current.push(wpm);
@@ -838,16 +927,36 @@ export function LessonSession({
           than bottom (pt-2.5 vs pb-2), so it reads as nudged down slightly
           from the viewport's true corner rather than pinned flush to it —
           still just above the illustration/sentence grid below. */}
-      <Link
-        href="/learn"
-        aria-label={t.marketing.dashboardLinkAriaLabel}
-        className={cn(
-          "land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2",
-          showsPlainCompletion && "bg-black text-white",
-        )}
-      >
-        <Logo size="sm" />
-      </Link>
+      {showsSkipButton ? (
+        // The opening lesson's «تخطّي الدرس» (permission openerSkip): the logo row with the button at
+        // its top right. 14px on a phone and 16px from lg, muted, a 44px-tall touch target whose
+        // negative margins keep the row exactly as tall as the plain logo row (and run the target to
+        // the screen's edge on a phone); the text sits 12px from the edge on a phone, 30px on a laptop.
+        <div className="land-kb-hide flex shrink-0 items-center justify-between px-3 pt-2.5 pb-2">
+          <Link href="/learn" aria-label={t.marketing.dashboardLinkAriaLabel} className="flex">
+            <Logo size="sm" />
+          </Link>
+          <button
+            type="button"
+            onClick={handleSkipOpener}
+            dir="auto"
+            className="text-muted-foreground -my-[9px] -mr-3 flex h-11 items-center px-3 text-[14px] font-medium whitespace-nowrap lg:mr-[18px] lg:px-0 lg:text-base"
+          >
+            {t.lesson.skipOpener}
+          </button>
+        </div>
+      ) : (
+        <Link
+          href="/learn"
+          aria-label={t.marketing.dashboardLinkAriaLabel}
+          className={cn(
+            "land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2",
+            showsPlainCompletion && "bg-black text-white",
+          )}
+        >
+          <Logo size="sm" />
+        </Link>
+      )}
 
       {/* isComplete switches the ENTIRE content region, not just the
           sentence side — completion is a full state transition (lesson
@@ -1317,9 +1426,10 @@ export function LessonSession({
                             playIntro={dictationIntroFor === sentence.id}
                             wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
                             hasStarted={hasStarted}
-                            onStart={() => setTapped(true)}
+                            onStart={handleStart}
                             onAudioPlay={handleAudioPlay}
                             onKeystroke={() => {
+                              trackOpener("key");
                               play("letter");
                               vibrateLightly();
                             }}
@@ -1329,11 +1439,13 @@ export function LessonSession({
                             // A practice try (the retry button) sounds like any other but
                             // only the first try goes into the lesson's tallies.
                             onCorrectLetter={(counted) => {
+                              trackOpener("key");
                               if (counted) correctCountRef.current += 1;
                               play("letter");
                               vibrateLightly();
                             }}
                             onErrorLetter={(counted) => {
+                              trackOpener("key");
                               if (counted) errorCountRef.current += 1;
                               play("error");
                               vibrateLightly();
@@ -1366,11 +1478,15 @@ export function LessonSession({
                             wordAudioUrls={sentenceIndex === 0 ? firstSentenceWordAudio : undefined}
                             onComplete={handleSentenceComplete}
                             onCorrectLetter={() => {
+                              trackOpener("key");
+                              noteHelpKey({ type: "correct" });
                               correctCountRef.current += 1;
                               play("letter");
                               vibrateLightly();
                             }}
-                            onErrorLetter={() => {
+                            onErrorLetter={(char) => {
+                              trackOpener("key");
+                              noteHelpKey({ type: "wrong", char });
                               errorCountRef.current += 1;
                               play("error");
                               vibrateLightly();
@@ -1383,7 +1499,18 @@ export function LessonSession({
                             storyTimeRemainingLabel={storyTimeRemainingLabel}
                             hasStarted={hasStarted}
                             showTapToStart={!tapped}
-                            onStart={() => setTapped(true)}
+                            onStart={handleStart}
+                            onAudioFailed={openerTracking ? handleAudioFailed : undefined}
+                            belowTranslation={
+                              showsOpenerHelp && (keyboardHint.visible || audioFailed) ? (
+                                <>
+                                  {keyboardHint.visible && (
+                                    <KeyboardHint phone={isMobileViewport} />
+                                  )}
+                                  {audioFailed && <AudioFailedNote onRetry={handleRetryAudio} />}
+                                </>
+                              ) : null
+                            }
                             wordCards={wordCards}
                             initialTyped={handedOver?.typed}
                             initialMistakes={handedOver?.mistakes}

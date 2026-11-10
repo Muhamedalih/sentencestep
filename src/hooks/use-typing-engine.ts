@@ -32,7 +32,8 @@ interface UseTypingEngineOptions {
   /** Called with this sentence's final WPM, computed from the same refs `wpm` below reads live — never a stale render-cycle value, since it fires from a timeout after `completeDelayMs`. */
   onComplete?: (wpm: number) => void;
   onCorrectChar?: () => void;
-  onErrorChar?: () => void;
+  /** Called with the wrong character that was typed (what the learner's keyboard produced), so a caller can tell a typo from a keyboard still on another language. */
+  onErrorChar?: (char: string) => void;
   /** Delay before onComplete fires, so the final correct character is visible first. */
   completeDelayMs?: number;
   /** How long a wrong character stays visible (as `errorIndex`/`errorChar`) before the engine clears it and the learner can try again. */
@@ -246,7 +247,7 @@ export function useTypingEngine({
           setErrorIndex(null);
           setErrorChar(null);
         }, errorDelayMs);
-        onErrorChar?.();
+        onErrorChar?.(nextChar);
       }
     },
     [typed, target, onCorrectChar, onErrorChar, onComplete, completeDelayMs, errorDelayMs],

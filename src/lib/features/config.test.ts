@@ -422,6 +422,9 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       videoShelves: false,
       guestCards: false,
       videoFinish: false,
+      shortOpener: false,
+      openerSkip: false,
+      openerHelp: false,
     });
   }
 });

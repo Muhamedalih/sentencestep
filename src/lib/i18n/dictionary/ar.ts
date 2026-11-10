@@ -622,6 +622,13 @@ export const ar: Dictionary = {
     sentenceCount: "{n} جمل",
     lineCount: "{n} سطر",
     sentenceProgress: "الجملة {n} من {total}",
+    skipOpener: "تخطّي الدرس",
+    keyboardHintTitle: "لوحة المفاتيح عندك عربية",
+    keyboardHintPhone:
+      "بدّلها إلى English وكمّل: اضغط أيقونة الكرة الأرضية {icon} على لوحة المفاتيح.",
+    keyboardHintDesktop: "بدّلها إلى English بالضغط على Alt + Shift، وكمّل.",
+    audioFailedNote: "تعذّر تشغيل الصوت. تقدر تكمل بالكتابة.",
+    audioRetry: "جرّب مرة ثانية",
     illustrationAlt: 'رسم توضيحي لدرس "{title}"',
     illustrationViewImage: "الصورة",
     illustrationViewList: "الجمل السابقة",

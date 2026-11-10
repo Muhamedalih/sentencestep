@@ -69,10 +69,17 @@ export function findCurrentLesson(
   isPremiumUser = false,
   startingLevel?: number | null,
   floor = false,
+  /**
+   * Opening lessons the learner skipped (the «تخطّي الدرس» button): not a completion — nothing was
+   * earned, nothing counts as finished — but never recommended again either. Only ever ids of the
+   * three opening lessons; empty (the default) changes nothing.
+   */
+  skippedIds: readonly string[] = [],
 ): LessonUnit | undefined {
   const eligible = isPremiumUser ? units : units.filter((unit) => unit.isFree);
   const sorted = eligible.slice().sort((a, b) => a.level - b.level || a.order - b.order);
-  const isOpen = (unit: LessonUnit) => !completedIds.includes(unit.id);
+  const isOpen = (unit: LessonUnit) =>
+    !completedIds.includes(unit.id) && !skippedIds.includes(unit.id);
 
   if (startingLevel && (floor || completedIds.length === 0)) {
     if (completedIds.length === 0) {
@@ -80,7 +87,7 @@ export function findCurrentLesson(
       const openingLesson = difficulty
         ? sorted.find((unit) => unit.id === OPENING_LESSON_ID[difficulty])
         : undefined;
-      if (openingLesson) return openingLesson;
+      if (openingLesson && isOpen(openingLesson)) return openingLesson;
     }
 
     const fromStartingLevel = sorted.find((unit) => unit.level >= startingLevel && isOpen(unit));
