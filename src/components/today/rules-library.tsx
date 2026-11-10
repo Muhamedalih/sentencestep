@@ -9,6 +9,9 @@ import { fill, ruleStrings, ruleTextDir, type RuleStrings } from "@/lib/daily-ru
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
+/** The lesson of the day's new rule, started from the library; it comes back to the library when it ends. */
+const START_NEXT_RULE_HREF = "/learn/today/rule?daily=1&back=rules";
+
 /** The cards of a unit: one column on a phone, up to four on a wide screen (the Stories grid has fewer, narrower ones). */
 const TILE_GRID = "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4";
 
@@ -199,7 +202,10 @@ function UnitSection({
             rule={rule}
             locale={locale}
             copy={copy}
-            openable={preview || (rule.state !== "next" && rule.state !== "ahead")}
+            // The rule that is next starts its lesson (a learner has no other way in once Home no longer
+            // carries the rule row); later rules stay closed. An admin opens every rule's page.
+            openable={preview || rule.state !== "ahead"}
+            href={!preview && rule.state === "next" ? START_NEXT_RULE_HREF : undefined}
           />
         ))}
       </div>

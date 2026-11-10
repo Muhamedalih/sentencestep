@@ -25,13 +25,16 @@ export function RuleTile({
   locale,
   copy,
   openable,
+  href,
   levelLabel,
 }: {
   rule: TileRule;
   locale: SupportLocale | null;
   copy: RuleStrings;
-  /** The card opens the rule's page (a rule the learner has met, or any rule for an admin). */
+  /** The card opens the rule's page (a rule the learner has met, or any rule for an admin), or starts the rule that is next. */
   openable: boolean;
+  /** Where the card goes when it is not the rule's own page: the next rule of a learner starts its lesson. */
+  href?: string | undefined;
   /** The level's name, for a card shown outside its level (today's reviews, with more than one level on the map). */
   levelLabel?: string | undefined;
 }) {
@@ -120,7 +123,7 @@ export function RuleTile({
   return (
     <div className="group h-full">
       <Link
-        href={`/learn/rules/${rule.id}`}
+        href={href ?? `/learn/rules/${rule.id}`}
         prefetch={false}
         className="focus-visible:ring-ring focus-visible:ring-offset-background block h-full rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       >
