@@ -32,6 +32,25 @@ export interface StoryWordsStepGate {
   usesSessionEnd: boolean;
 }
 
+/**
+ * Whether the "New lesson ending" (a three-sentence recall round, then its own finish screen) takes
+ * over the end of a lesson. Never in the admin preview, never in Conversation (it keeps its own
+ * screen), and never in Stories: a story ends with its own words step (see StoryWordsPanel) and
+ * the story finish page, and the typed-from-memory sentence round belongs to Today's test only.
+ */
+export function lessonUsesSessionEnd(options: {
+  enabled: boolean;
+  previewMode: boolean;
+  mode: LearningMode;
+}): boolean {
+  return (
+    options.enabled &&
+    !options.previewMode &&
+    options.mode !== "conversation" &&
+    options.mode !== "stories"
+  );
+}
+
 /** True when the learner must go through the story's words before the completion page. */
 export function storyWordsStepApplies(gate: StoryWordsStepGate): boolean {
   return (

@@ -58,7 +58,11 @@ import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-se
 import { clearLessonResume, getLessonResume, saveLessonResume } from "@/lib/progress/lesson-resume";
 import { OPENING_LESSON_ID } from "@/lib/progress/starting-level";
 import type { StoryWordQuizQuestion } from "@/lib/content/story-word-quiz";
-import { storyWordsStepApplies, type StoryWordOutcomes } from "@/lib/story-words";
+import {
+  lessonUsesSessionEnd,
+  storyWordsStepApplies,
+  type StoryWordOutcomes,
+} from "@/lib/story-words";
 import { isTodayRunUrl } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
@@ -419,8 +423,12 @@ export function LessonSession({
   useEffect(() => {
     if (features.rollouts.todaySession && isTodayRunUrl()) setTodayStep(true);
   }, [features.rollouts.todaySession]);
-  const usesSessionEnd =
-    features.rollouts.sessionEnd && !previewMode && unit.mode !== "conversation";
+  // Stories never get its recall round: they end with their own words step and finish page.
+  const usesSessionEnd = lessonUsesSessionEnd({
+    enabled: features.rollouts.sessionEnd,
+    previewMode,
+    mode: unit.mode,
+  });
   // Stories: the story's own words come up right after the last sentence, before the finish page,
   // and are not skippable (see StoryWordsPanel). The lesson was already recorded by then.
   const inWordsStep =
