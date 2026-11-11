@@ -16,9 +16,9 @@ export const metadata: Metadata = { title: "Review · My Words" };
  * A review round of the learner's words bank («كلماتي»): up to five of their words that are due, each
  * asked in the form its strength calls for (see BankReviewSession). Behind the "wordBank" permission
  * (Admins only until the owner opens it), and for a signed-in learner only: anyone else, a learner
- * with nothing due and a project that cannot be read all go back to Home, where nothing about the
- * bank shows for them either. The section's own page does not exist yet, so the screen's way back
- * is Home for now.
+ * with the permission closed goes back to Home, where nothing about the bank shows for them either;
+ * a learner with nothing left today (or a project that cannot be read) goes to the section's own
+ * page, which says so.
  */
 export default async function WordBankReviewPage() {
   const [features, user] = await Promise.all([getEffectiveFeatures(), getCurrentUser()]);
@@ -29,7 +29,7 @@ export default async function WordBankReviewPage() {
     console.error("[word-bank] building the review round failed", error);
     return null;
   });
-  if (!round || round.words.length === 0) redirect("/learn");
+  if (!round || round.words.length === 0) redirect("/learn/words");
 
   return (
     <BankReviewSession
@@ -37,7 +37,7 @@ export default async function WordBankReviewPage() {
       bankTotal={round.bankTotal}
       more={round.more}
       todayISO={todayISO}
-      backTo="home"
+      backTo="words"
     />
   );
 }

@@ -191,12 +191,13 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Words bank (“My Words”)",
     description:
-      "A new section of the menu beside Word Lists: every word a learner meets in Today's words step (the day's story and passage) joins their own bank, with the sentence it was met in, and comes back after 1 / 3 / 7 / 16 / 30 days (a miss comes back tomorrow), in short rounds of up to five words, so what was learned is still there a week later. Word Lists itself is not touched.",
+      "A new section of the menu right before Word Lists (a tile in the phone's More sheet): the target words a learner meets in Today's words step and at the end of a story join their own bank, with the sentence each was met in, and come back after 1 / 3 / 7 / 16 days (a miss comes back tomorrow). The section's page shows today's words, where the learner's words stand, and the list of every word under its lesson's name. Words never pile up: a day asks five at most, twenty are being learned at once and the rest wait their turn, and a stable word leaves the daily round. Word Lists itself is not touched.",
     notes: [
-      "Needs Today's session to be open for the same people: the words come from Today's words step, so it stays closed while Today is closed.",
+      "Needs Today's session to be open for the same people: most words come from Today's words step, so it stays closed while Today is closed.",
       "Needs the learner_words table (migration 20250350000000, applied by pasting the SQL). Until it exists nothing is recorded and nothing is asked back.",
       "Today's five words stay exactly the day's story and passage words: the bank only remembers them, it never adds to them or changes which words are asked.",
-      "At this stage the bank only COLLECTS words as they are answered; the menu item and its screens arrive in later changes, so opening it to learners now would gather words nobody can see yet.",
+      "The three shelves (stable, being learned, waiting) are worked out from the rows each time, never stored, so the caps (five a day, twenty at once) can change without touching a learner's words.",
+      "Not here yet: a passage's own word lesson and the Daily lessons do not add words, and the Home card and the lesson finish screen do not mention the bank.",
     ],
   },
   dailyRule: {
