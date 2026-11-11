@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { WordListsLibrary } from "@/components/app/word-lists-library";
+import { CoreWordsShelf } from "@/components/words/core-words-shelf";
 import { WordListsDashboard } from "@/components/words/word-lists-dashboard";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -9,7 +10,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { fetchWordCardHints } from "@/lib/supabase/queries/word-hints";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
-import { loadBankCard } from "@/lib/word-bank/card-load";
+import { loadBankWordLists } from "@/lib/word-bank/card-load";
 import { getWordGroupSummaries } from "@/lib/word-lists";
 import {
   getLearnerToday,
@@ -70,10 +71,15 @@ export default async function WordListsPage() {
       : {}
     : null;
 
-  // The same card shows today's words of the learner's words bank («كلماتي») on a day it has some,
-  // exactly as on Home (one read of the learner's own rows, only while "wordBank" is open to them).
-  const user = homeCards && features.rollouts.wordBank ? await getCurrentUser() : null;
-  const homeCardBank = user ? await loadBankCard(user.id, await getLearnerToday()) : null;
+  // For a learner the words bank («كلماتي») is open to, ONE read of their own rows gives both: the card
+  // shows today's words of the bank on a day it has some (exactly as on Home), and the core-words shelf
+  // under it shows where they stand on the site's most frequent words.
+  const user = features.rollouts.wordBank ? await getCurrentUser() : null;
+  const bankLists = user ? await loadBankWordLists(user.id, await getLearnerToday()) : null;
+  const homeCardBank = homeCards ? (bankLists?.card ?? null) : null;
+  const coreShelf = bankLists ? (
+    <CoreWordsShelf data={bankLists.shelf} isPremiumUser={hasPremium || isAdminUser} />
+  ) : null;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
@@ -95,6 +101,7 @@ export default async function WordListsPage() {
           mastery={mastery}
           homeCardWords={homeCardWords}
           homeCardBank={homeCardBank}
+          shelf={coreShelf}
         />
       )}
     </div>

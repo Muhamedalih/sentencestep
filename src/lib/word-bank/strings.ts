@@ -68,6 +68,20 @@ export interface BankStrings {
   knowLine: string;
   /** A story card: how many of its words are new to the learner. */
   freshWords: (n: number) => string;
+  /** The shelf on Word Lists: its title. */
+  shelfTitle: string;
+  /** Under the title: "{n}" words in sets of "{size}". */
+  shelfSub: string;
+  /** Top right of the shelf: "{k}" of the "{n}" core words are in the learner's bank. */
+  shelfCover: string;
+  /** A set's foot while it is the one to carry on with: "{k}" of "{size}". */
+  setContinue: string;
+  /** A set's foot otherwise: "{k}" of "{size}" words in the bank. */
+  setProgress: string;
+  /** A set's name for a screen reader: "{n}". */
+  setAria: string;
+  /** A set that needs Premium. */
+  setPremium: string;
   emptyTitle: string;
   emptyBody: string;
   emptyAction: string;
@@ -123,6 +137,13 @@ const AR: BankStrings = {
   cardHintNoStable: "{minutes} · في كلماتك {total}",
   knowLine: "تعرف {p} من كلماتها",
   freshWords: (n) => `${n} جديدة`,
+  shelfTitle: "كلمات الموقع الأساسية",
+  shelfSub: "أكثر {n} كلمة تكراراً في قصص ونصوص الموقع، في مجموعات من {size}.",
+  shelfCover: "في كلماتك {k} من {n}",
+  setContinue: "تابع · {k} من {size}",
+  setProgress: "{k} من {size}",
+  setAria: "المجموعة {n}",
+  setPremium: "مميز",
   emptyTitle: "لا كلمات بعد",
   emptyBody: "أكمل قصة أو كلمات اليوم، وستدخل كلماتها المستهدفة هنا وحدها.",
   emptyAction: "إلى القصص",
@@ -179,6 +200,13 @@ const EN: BankStrings = {
   cardHintNoStable: "{minutes} · {total} in your words",
   knowLine: "You know {p} of its words",
   freshWords: (n) => `${n} new`,
+  shelfTitle: "The site's core words",
+  shelfSub: "The {n} most frequent words of the site's stories and passages, in sets of {size}.",
+  shelfCover: "{k} of {n} are in your words",
+  setContinue: "Continue · {k} of {size}",
+  setProgress: "{k} of {size}",
+  setAria: "Set {n}",
+  setPremium: "Premium",
   emptyTitle: "No words yet",
   emptyBody:
     "Finish a story or Today's words, and their target words will arrive here by themselves.",
@@ -236,6 +264,14 @@ const ES: BankStrings = {
   cardHintNoStable: "{minutes} · {total} en tus palabras",
   knowLine: "Conoces el {p} de sus palabras",
   freshWords: (n) => (n === 1 ? "1 nueva" : `${n} nuevas`),
+  shelfTitle: "Las palabras clave del sitio",
+  shelfSub:
+    "Las {n} palabras más frecuentes de las historias y textos del sitio, en grupos de {size}.",
+  shelfCover: "{k} de {n} están en tus palabras",
+  setContinue: "Sigue · {k} de {size}",
+  setProgress: "{k} de {size}",
+  setAria: "Grupo {n}",
+  setPremium: "Premium",
   emptyTitle: "Aún no hay palabras",
   emptyBody:
     "Termina una historia o las palabras de hoy, y sus palabras clave llegarán aquí solas.",
@@ -293,6 +329,14 @@ const TR: BankStrings = {
   cardHintNoStable: "{minutes} · kelimelerinde {total}",
   knowLine: "Kelimelerinin {p} kadarını biliyorsun",
   freshWords: (n) => `${n} yeni`,
+  shelfTitle: "Sitenin temel kelimeleri",
+  shelfSub:
+    "Sitenin hikâye ve metinlerindeki en sık geçen {n} kelime, {size}'erli gruplar hâlinde.",
+  shelfCover: "{n} kelimeden {k} tanesi kelimelerinde",
+  setContinue: "Devam et · {k}/{size}",
+  setProgress: "{k}/{size}",
+  setAria: "{n}. grup",
+  setPremium: "Premium",
   emptyTitle: "Henüz kelime yok",
   emptyBody:
     "Bir hikâyeyi ya da bugünün kelimelerini bitir; hedef kelimeleri buraya kendiliğinden gelir.",

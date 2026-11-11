@@ -42,7 +42,7 @@ import { BLANK_TOKEN } from "@/types/word-lists";
 type Phase = "ask" | "learn" | "retry";
 
 /** The finish screen's way back: to the section's own page («كلماتي»), or, until that page exists, to Home. */
-export type BankBackTo = "words" | "home";
+export type BankBackTo = "words" | "home" | "lists";
 
 /** The quiet colours the row of stars wears: the page's own tokens. */
 const RATING_COLOR = "var(--muted-foreground)";
@@ -135,8 +135,14 @@ export function BankReviewSession({
   });
   const round = useWordsRoundTracking("bank", total);
 
-  const backHref = backTo === "words" ? "/learn/words" : "/learn";
-  const backLabel = backTo === "words" ? copy.title : t.mistakes.learningHome;
+  const backHref =
+    backTo === "words" ? "/learn/words" : backTo === "lists" ? "/learn/word-lists" : "/learn";
+  const backLabel =
+    backTo === "words"
+      ? copy.title
+      : backTo === "lists"
+        ? t.nav.wordLists
+        : t.mistakes.learningHome;
 
   useEffect(() => {
     if (finished) round.finish();
@@ -337,7 +343,11 @@ export function BankReviewSession({
                   <Button asChild className="flex-1">
                     <Link href={backHref}>
                       <span dir="auto">
-                        {backTo === "words" ? copy.backToMyWords : copy.finishBackHome}
+                        {backTo === "words"
+                          ? copy.backToMyWords
+                          : backTo === "lists"
+                            ? t.nav.wordLists
+                            : copy.finishBackHome}
                       </span>
                     </Link>
                   </Button>

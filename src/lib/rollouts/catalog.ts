@@ -199,6 +199,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Today's five words stay exactly the day's story and passage words: the bank only remembers them, it never adds to them or changes which words are asked.",
       "The three shelves (stable, being learned, waiting) are worked out from the rows each time, never stored, so the caps (five a day, twenty at once) can change without touching a learner's words.",
       "It also shows in three places the learner already is: a finished story's words say they joined the bank, the Home words card (and the same card on Word Lists) shows today's words on a day the bank has some, and each unfinished story's card says how much of its words the learner has typed before (from five finished lessons on; an index of the lessons' words is kept for an hour for everyone).",
+      "The shelf «كلمات الموقع الأساسية» sits under the review card on Word Lists: the 296 most frequent content words of the site's own lessons, stories and passages (a fixed, hand-checked list in src/lib/word-bank/core-words.ts), in 37 sets of eight in three levels. A set opens the bank's review screen with its words typed into their home sentences; the first answer to each word puts it in the learner's bank, where it waits its turn under the same caps, so a set can never pile words up. The first set of each level is free, the others need Premium (an admin sees them all). The meanings are Arabic only for now.",
       "Not here yet: a passage's own word lesson and the Daily lessons do not add words.",
     ],
   },
