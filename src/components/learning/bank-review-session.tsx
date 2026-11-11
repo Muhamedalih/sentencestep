@@ -77,7 +77,7 @@ function HomeSentence({ sentence, word }: { sentence: string; word: string }) {
  * tomorrow) — and the second go is never sent. The finish screen adds the round up, says how many
  * words the bank holds, and ends with the quiet row of stars.
  *
- * Today the section's own page does not exist yet, so the screen's way back is Home (`backTo`).
+ * The way back is the section's own page («كلماتي», `backTo`).
  */
 export function BankReviewSession({
   words: initialWords,

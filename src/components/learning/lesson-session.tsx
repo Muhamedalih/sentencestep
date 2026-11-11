@@ -63,6 +63,9 @@ import {
   storyWordsStepApplies,
   type StoryWordOutcomes,
 } from "@/lib/story-words";
+import { todayLocalISODate } from "@/lib/progress/streak";
+import { recordBankWordAction } from "@/lib/word-bank/actions";
+import { storyBankAnswers } from "@/lib/word-bank/feed";
 import { isTodayRunUrl } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
@@ -1094,7 +1097,25 @@ export function LessonSession({
               sentences={unit.sentences}
               defaultVoiceId={defaultVoiceId}
               narratorVoiceId={storyNarratorVoiceId}
-              onFinished={setStoryWordOutcomes}
+              onFinished={(outcomes) => {
+                setStoryWordOutcomes(outcomes);
+                // The story's target words join the learner's words bank («كلماتي»), each with how its first
+                // answer went. Only this step records (opening it again from the finish page is practice),
+                // only while the bank is open to this learner, and it never holds the finish page up.
+                if (features.rollouts.wordBank) {
+                  const todayISO = todayLocalISODate();
+                  for (const answer of storyBankAnswers({
+                    lessonId: unit.id,
+                    title: unit.title,
+                    vocabulary: unit.vocabulary ?? [],
+                    sentences: unit.sentences,
+                    outcomes,
+                    locale,
+                  })) {
+                    void recordBankWordAction({ ...answer, todayISO }).catch(() => {});
+                  }
+                }
+              }}
             />
           </div>
         ) : isComplete && isFixingMistakes ? (

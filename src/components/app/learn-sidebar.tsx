@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookMarked,
   Headphones,
   Home,
   LayoutGrid,
@@ -85,6 +86,7 @@ export function LearnSidebar({
   rulesEnabled = false,
   videoEnabled = false,
   contactInstagram = false,
+  wordBankEnabled = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -99,6 +101,8 @@ export function LearnSidebar({
   videoEnabled?: boolean;
   /** The "contactInstagram" permission, resolved for this visitor: the «تواصل معنا» box at the foot of the md: sidebar, and the last tile of the phone's More sheet. */
   contactInstagram?: boolean;
+  /** The "wordBank" permission, resolved for this visitor (and signed in): «كلماتي» is a menu item right before Word Lists from md: up, and a tile in the phone's More sheet. */
+  wordBankEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
@@ -131,11 +135,13 @@ export function LearnSidebar({
                   ? "video"
                   : pathname.startsWith("/learn/word-lists")
                     ? "word-lists"
-                    : pathname.startsWith("/learn/library")
-                      ? "library"
-                      : pathname.startsWith("/learn/rules")
-                        ? "rules"
-                        : null;
+                    : pathname.startsWith("/learn/words")
+                      ? "words"
+                      : pathname.startsWith("/learn/library")
+                        ? "library"
+                        : pathname.startsWith("/learn/rules")
+                          ? "rules"
+                          : null;
 
   // Stories and Ordinary Lessons collapse into one "Stories" nav item, which
   // opens on /learn/normal (Daily Lessons) by default — see the
@@ -153,6 +159,7 @@ export function LearnSidebar({
     { key: "passages", href: "/learn/passages", label: t.nav.passages, icon: Headphones },
     { key: "video", href: "/learn/video", label: videoStrings(locale).navLabel, icon: Play },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
+    { key: "words", href: "/learn/words", label: t.myWords.title, icon: BookMarked },
     { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
     { key: "rules", href: "/learn/rules", label: ruleStrings(locale).myRules, icon: Lightbulb },
   ].filter(
@@ -160,7 +167,8 @@ export function LearnSidebar({
       (item.key !== "library" || showLibrary) &&
       (item.key !== "passages" || passagesEnabled) &&
       (item.key !== "video" || videoEnabled) &&
-      (item.key !== "rules" || rulesEnabled),
+      (item.key !== "rules" || rulesEnabled) &&
+      (item.key !== "words" || wordBankEnabled),
   );
 
   // The phone bar of the mobilePath permission: one tab per kind of content (Path, Passages, Stories and
@@ -192,6 +200,9 @@ export function LearnSidebar({
                 icon: Lightbulb,
               },
             ]
+          : []),
+        ...(wordBankEnabled
+          ? [{ key: "words", href: "/learn/words", label: t.myWords.title, icon: BookMarked }]
           : []),
         {
           key: "word-lists",
