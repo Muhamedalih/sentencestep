@@ -195,6 +195,9 @@ function WordsLearn({
             kokoroVoiceId={voiceId}
             contentType="story_vocab_word"
             contentId={`${lessonId}::${item.en}`}
+            // Only ever the story's own recorded word clip: a word that has none stays silent
+            // rather than being spoken in the browser's own, very different voice.
+            noBrowserVoice
             label={t.wordLists.replayAction}
             variant="outline"
             size="sm"
@@ -363,6 +366,7 @@ function WordsTest({
                   kokoroVoiceId={voiceId}
                   contentType="story_vocab_word"
                   contentId={`${lessonId}::${item.en}`}
+                  noBrowserVoice
                 />
               </div>
             )}

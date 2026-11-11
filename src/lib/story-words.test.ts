@@ -8,6 +8,7 @@ import {
   blankSentenceFor,
   findWordInSentences,
   isRunFinished,
+  lessonUsesSessionEnd,
   startWordsRun,
   stripWordPunctuation,
   storyWordsStepApplies,
@@ -37,6 +38,24 @@ test("storyWordsStepApplies: never for another section, a story without words, o
   assert.equal(storyWordsStepApplies(gate({ isOpeningLesson: true })), false);
   assert.equal(storyWordsStepApplies(gate({ todayStep: true })), false);
   assert.equal(storyWordsStepApplies(gate({ usesSessionEnd: true })), false);
+});
+
+test("lessonUsesSessionEnd: the recall-round ending never takes a story, a conversation or the preview", () => {
+  const open = { enabled: true, previewMode: false };
+  assert.equal(lessonUsesSessionEnd({ ...open, mode: "normal" }), true);
+  assert.equal(lessonUsesSessionEnd({ ...open, mode: "stories" }), false);
+  assert.equal(lessonUsesSessionEnd({ ...open, mode: "conversation" }), false);
+  assert.equal(lessonUsesSessionEnd({ ...open, mode: "normal", previewMode: true }), false);
+  assert.equal(lessonUsesSessionEnd({ ...open, mode: "normal", enabled: false }), false);
+});
+
+test("a story always gets its words step, even for a learner the new lesson ending is open to", () => {
+  const usesSessionEnd = lessonUsesSessionEnd({
+    enabled: true,
+    previewMode: false,
+    mode: "stories",
+  });
+  assert.equal(storyWordsStepApplies(gate({ usesSessionEnd })), true);
 });
 
 test("stripWordPunctuation: takes the marks off both ends and keeps apostrophes inside", () => {

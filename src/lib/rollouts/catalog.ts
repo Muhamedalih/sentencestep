@@ -83,6 +83,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "The line “words that come back tomorrow” only appears while Daily session (Features page) is open for the learner, because that is where those words come back.",
       "Dropped from the finish screen: XP, accuracy and WPM, the fix-mistakes, retry and story-words buttons.",
+      "Never in Stories: a story always ends with its own words step (the story's 2–3 target words, as in Word Lists) and the story finish page, whoever this switch is open for.",
     ],
   },
   sessionReminders: {
