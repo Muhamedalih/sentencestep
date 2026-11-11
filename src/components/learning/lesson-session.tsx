@@ -11,6 +11,7 @@ import {
   Headphones,
   Image as ImageIcon,
   List as ListIcon,
+  X as CloseIcon,
 } from "lucide-react";
 
 import type { DictationOutcome, DictationProgress } from "@/components/learning/dictation-sentence";
@@ -21,6 +22,7 @@ import {
   StoryPreviousSentences,
   type CompletedStorySentence,
 } from "@/components/learning/story-previous-sentences";
+import { PhoneToolsLeadProvider } from "@/components/learning/phone-tools-lead";
 import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
 import { TypingSentence } from "@/components/learning/typing-sentence";
@@ -885,6 +887,44 @@ export function LessonSession({
     !(isViewingWords && Boolean(unit.vocabulary?.length)) &&
     !inWordsStep;
 
+  // The phone lesson screen (permission mobilePhoneUx, below md: only): one slim top bar with the
+  // exit cross, the progress bar and the count, and the Dictation switch moved into the tools row.
+  const phoneBar =
+    features.rollouts.mobilePhoneUx && !isComplete && !previewMode && !showsSkipButton;
+  const phoneToggle =
+    phoneBar && dictationAvailable ? (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={dictationOn}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={handleToggleDictation}
+        title={dictationOn ? t.dictation.toggleTitleOn : t.dictation.toggleTitleOff}
+        className={cn(
+          "flex h-11 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors duration-200 active:scale-[0.97]",
+          dictationOn
+            ? "border-[var(--lesson-primary)] bg-[var(--lesson-secondary)] text-[var(--lesson-icon)]"
+            : "border-border text-foreground/80",
+        )}
+      >
+        <span>{t.dictation.toggleLabel}</span>
+        <span
+          aria-hidden="true"
+          className={cn(
+            "relative h-5 w-[34px] shrink-0 rounded-full transition-colors duration-200",
+            dictationOn ? "bg-[var(--lesson-primary)]" : "bg-foreground/25",
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 size-4 rounded-full bg-white shadow transition-all duration-200",
+              dictationOn ? "left-[16px]" : "left-0.5",
+            )}
+          />
+        </span>
+      </button>
+    ) : null;
+
   const sessionLabel = (
     <>
       {/* No visible back/exit link here by design — the browser's own Back
@@ -952,10 +992,32 @@ export function LessonSession({
           className={cn(
             "land-kb-hide flex shrink-0 items-center px-3 pt-2.5 pb-2",
             showsPlainCompletion && "bg-black text-white",
+            phoneBar && "max-md:hidden",
           )}
         >
           <Logo size="sm" />
         </Link>
+      )}
+
+      {phoneBar && (
+        <div className="flex h-[52px] shrink-0 items-center gap-2 ps-1 pe-4 md:hidden">
+          <Link
+            href="/learn"
+            aria-label={t.marketing.dashboardLinkAriaLabel}
+            className="text-muted-foreground hover:text-foreground flex size-11 shrink-0 items-center justify-center rounded-full transition-colors"
+          >
+            <CloseIcon className="size-5" aria-hidden="true" />
+          </Link>
+          <Progress value={(sentenceIndex / total) * 100} className="h-1 flex-1" />
+          {unit.mode !== "stories" && (
+            <span
+              dir="ltr"
+              className="text-muted-foreground shrink-0 text-sm font-medium tabular-nums"
+            >
+              {Math.min(sentenceIndex + 1, total)} / {total}
+            </span>
+          )}
+        </div>
       )}
 
       {/* isComplete switches the ENTIRE content region, not just the
@@ -1258,6 +1320,7 @@ export function LessonSession({
                 current line starts right under the lesson counter instead of
                 drifting toward the middle of the row. */}
             <SharedInputProvider>
+              <PhoneToolsLeadProvider value={phoneToggle}>
               <div
                 className={cn(
                   "flex flex-col lg:h-full lg:overflow-y-auto",
@@ -1284,11 +1347,12 @@ export function LessonSession({
                   />
                 )}
                 <div
-                  className={
+                  className={cn(
                     unit.mode === "stories"
                       ? "shrink-0 px-6 pt-4 lg:px-12 lg:pt-5"
-                      : "shrink-0 px-6 pt-4 lg:px-16 lg:pt-5"
-                  }
+                      : "shrink-0 px-6 pt-4 lg:px-16 lg:pt-5",
+                    phoneBar && "max-md:pt-0",
+                  )}
                 >
                   {previewMode && (
                     <div className="border-accent/40 bg-accent/10 text-accent-foreground mb-4 rounded-lg border px-4 py-2.5 text-sm font-medium">
@@ -1303,11 +1367,14 @@ export function LessonSession({
                       (sessionLabel, above) already gives assistive tech. */}
                   <div
                     aria-hidden="true"
-                    className="compact-hide mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg"
+                    className={cn(
+                      "compact-hide mb-1.5 text-center text-base font-semibold tracking-wide text-balance text-[var(--lesson-title)] sm:text-lg",
+                      phoneBar && "max-md:hidden",
+                    )}
                   >
                     {unit.title}
                   </div>
-                  <div className="land-kb-hide mb-3 flex flex-col gap-1.5">
+                  <div className={cn("land-kb-hide mb-3 flex flex-col gap-1.5", phoneBar && "max-md:hidden")}>
                     {unit.mode !== "stories" && (
                       <div className="flex items-center justify-end gap-1" dir="ltr">
                         {sentenceIndex > 0 && (
@@ -1387,7 +1454,7 @@ export function LessonSession({
                   </div>
                 </div>
                 <div
-                  className={
+                  className={cn(
                     unit.mode === "stories"
                       ? // justify-start (not justify-center, unlike every
                         // other mode here): Stories' own header row (story
@@ -1405,8 +1472,9 @@ export function LessonSession({
                         "relative flex flex-1 flex-col justify-start px-6 pb-8 lg:px-12"
                       : unit.mode === "normal"
                         ? "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-center lg:px-16"
-                        : "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16"
-                  }
+                        : "relative flex flex-1 flex-col justify-center px-6 pb-8 lg:justify-start lg:px-16",
+                    phoneBar && "max-md:justify-start max-md:pt-2 max-md:pb-4",
+                  )}
                 >
                   {/* The one typing input for every sentence (see shared-input.tsx). Before the sentences so it is attached first. */}
                   <SharedInputHost />
@@ -1571,6 +1639,7 @@ export function LessonSession({
                     })()}
                 </div>
               </div>
+              </PhoneToolsLeadProvider>
             </SharedInputProvider>
           </div>
         )}

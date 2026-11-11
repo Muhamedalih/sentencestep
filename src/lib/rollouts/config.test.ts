@@ -204,6 +204,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     openerSkip: false,
     openerHelp: false,
     returnLoop: false,
+    mobilePhoneUx: false,
   });
 });
 

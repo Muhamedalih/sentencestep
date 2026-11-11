@@ -21,10 +21,13 @@ export function TypingStats({
   wpm,
   accuracy,
   centered = false,
+  phoneRow = false,
 }: {
   wpm: number;
   accuracy: number;
   centered?: boolean;
+  /** The phone lesson screen (permission mobilePhoneUx): below md: the two numbers are one plain line, accuracy first, spread across the width. */
+  phoneRow?: boolean;
 }) {
   const { t } = useLocale();
   const { rollouts } = useFeatures();
@@ -37,6 +40,7 @@ export function TypingStats({
       className={cn(
         "text-muted-foreground mt-4 flex items-center gap-4 text-xs font-medium",
         centered && "mt-7 justify-center gap-3 text-sm",
+        phoneRow && "max-md:mt-3 max-md:justify-between max-md:gap-3 max-md:text-[13px]",
         waitsOnPhone && "max-md:hidden",
       )}
     >
@@ -45,6 +49,8 @@ export function TypingStats({
           "inline-flex items-center gap-1.5",
           centered &&
             "border-foreground/10 bg-foreground/5 gap-2 rounded-full border px-4 py-2 font-semibold",
+          phoneRow &&
+            "max-md:gap-1.5 max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:font-medium",
         )}
       >
         <Gauge className={cn("size-3.5", centered && "size-4")} aria-hidden="true" />
@@ -57,6 +63,8 @@ export function TypingStats({
             "border-foreground/10 bg-foreground/5 gap-2 rounded-full border px-4 py-2 font-semibold",
           isPerfect &&
             "border-[var(--lesson-primary)]/40 bg-[var(--lesson-primary)]/10 text-[var(--lesson-primary)] shadow-[0_0_16px_-2px_var(--lesson-primary)]",
+          phoneRow &&
+            "max-md:-order-1 max-md:gap-1.5 max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:font-medium max-md:shadow-none",
         )}
       >
         <Target className={cn("size-3.5", centered && "size-4")} aria-hidden="true" />
