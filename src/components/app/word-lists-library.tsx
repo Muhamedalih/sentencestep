@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -57,6 +58,7 @@ export function WordListsLibrary({
   mastery = null,
   homeCardWords = null,
   homeCardBank = null,
+  shelf = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
@@ -67,6 +69,8 @@ export function WordListsLibrary({
   homeCardWords?: Record<string, string> | null;
   /** Today’s words of the learner’s words bank, or null: the card then shows the review queue (and is left out when nothing waits). */
   homeCardBank?: BankCardData | null;
+  /** The core-words shelf («كلمات الموقع الأساسية») of the words bank, drawn under the review card; null for everyone the bank is closed to. */
+  shelf?: ReactNode;
 }) {
   const { isLoaded, completedCountIn } = useWordProgress();
   const { locale, dir, t } = useLocale();
@@ -101,6 +105,8 @@ export function WordListsLibrary({
       ) : (
         <NeedsReviewWords words={reviewWords} count={mastery?.reviewCount} smart={!!mastery} />
       )}
+
+      {shelf && <div className="mb-6 sm:mb-10">{shelf}</div>}
 
       {groups.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
