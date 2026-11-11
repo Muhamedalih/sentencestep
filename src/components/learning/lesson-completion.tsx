@@ -42,6 +42,7 @@ import { BADGE_DEFS } from "@/lib/features/catalog";
 import { questTitle } from "@/lib/features/quest-labels";
 import type { Dictionary } from "@/lib/i18n/dictionary/types";
 import type { StoryWordOutcome, StoryWordOutcomes } from "@/lib/story-words";
+import { bankStrings } from "@/lib/word-bank/strings";
 import type { RewardEvent } from "@/lib/progress/types";
 import type { LearningMode, NextLessonRef, VocabularyItem } from "@/types/content";
 
@@ -238,6 +239,7 @@ export function LessonCompletion({
   nextLessonLocked = false,
   vocabulary,
   wordOutcomes,
+  wordsJoinedBank = false,
   streak,
   xp,
   xpEarned,
@@ -265,6 +267,8 @@ export function LessonCompletion({
   vocabulary?: VocabularyItem[];
   /** Stories only: how each word ended in the words step that follows the last sentence (see StoryWordsPanel). The word cards then wear a tick or a "needs review" mark instead of the "new" tag, with a legend underneath. Absent when that step was not asked (the admin preview). */
   wordOutcomes?: StoryWordOutcomes;
+  /** Stories, for a learner the words bank («كلماتي») is open to: the story's words were just recorded there, so their block says so and where they come back. */
+  wordsJoinedBank?: boolean;
   streak: number;
   /** Running XP total (post this completion) — used only to show numeric progress toward the next level; the per-completion reward is xpEarned below. */
   xp: number;
@@ -307,6 +311,7 @@ export function LessonCompletion({
   // carries the extras of the words step: marks on the word cards, the next story's name, a rating row.
   const isStory = mode === "stories";
   const storyCopy = t.lesson.storyEnd;
+  const bankCopy = bankStrings(locale);
   const theme = useLessonCompletionTheme();
   const styles = deriveLessonCompletionStyles(theme);
   // The header and the stats panel read `view`; everything else (word cards, buttons) reads
@@ -683,8 +688,10 @@ export function LessonCompletion({
                 }}
                 className="mb-2 text-center font-semibold tracking-widest uppercase"
               >
-                {theme.vocabTitle ||
-                  (isStory ? storyCopy.wordsHeading : t.lesson.vocabularyHeading)}
+                {wordsJoinedBank && shownOutcomes.size > 0
+                  ? `${bankCopy.joined} · ${shownVocabulary.length}`
+                  : theme.vocabTitle ||
+                    (isStory ? storyCopy.wordsHeading : t.lesson.vocabularyHeading)}
               </p>
               <div style={{ gap: theme.chipSpacing }} className="flex">
                 {shownVocabulary.map((item) => {
@@ -766,6 +773,20 @@ export function LessonCompletion({
                 </p>
               )}
             </div>
+            {wordsJoinedBank && shownOutcomes.size > 0 && (
+              <Link
+                href="/learn/words"
+                prefetch={false}
+                style={{
+                  color: styles.textSecondary,
+                  fontSize: Math.max(10, Math.round(theme.bodySize * 0.85)),
+                }}
+                className="text-center underline-offset-4 hover:underline"
+                dir={dir}
+              >
+                {bankCopy.comesBack}
+              </Link>
+            )}
             {onViewWords &&
               (isStory ? (
                 // A story's words were just asked in the words step, so asking again is a quiet

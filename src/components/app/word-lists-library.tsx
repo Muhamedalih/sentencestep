@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { WordGroupCard } from "@/components/app/word-group-card";
 import { WordsSection } from "@/components/home-cards/words-section";
+import type { BankCardData } from "@/lib/word-bank/shelves";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
@@ -55,6 +56,7 @@ export function WordListsLibrary({
   weakWords,
   mastery = null,
   homeCardWords = null,
+  homeCardBank = null,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
@@ -63,6 +65,8 @@ export function WordListsLibrary({
   mastery?: LibraryMastery | null;
   /** Present while the Home cards are open for the learner (permission "homeCards"): the review card is then drawn exactly like Home's words section, and this is the Arabic meaning of its word cards by word id (empty for other languages). Null keeps the card the page always had. */
   homeCardWords?: Record<string, string> | null;
+  /** Today’s words of the learner’s words bank, or null: the card then shows the review queue (and is left out when nothing waits). */
+  homeCardBank?: BankCardData | null;
 }) {
   const { isLoaded, completedCountIn } = useWordProgress();
   const { locale, dir, t } = useLocale();
@@ -84,11 +88,12 @@ export function WordListsLibrary({
       {homeCardWords ? (
         // The same section Home ends with, with the same words and meanings; like the classic card it is
         // left out when nothing waits (its button would only lead back here).
-        reviewCount > 0 ? (
+        reviewCount > 0 || homeCardBank ? (
           <WordsSection
             reviewCount={reviewCount}
             words={reviewWords}
             hints={homeCardWords}
+            bank={homeCardBank}
             className="mb-6 sm:mb-10"
             index={0}
           />

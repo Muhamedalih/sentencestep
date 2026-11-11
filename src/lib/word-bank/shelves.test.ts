@@ -5,6 +5,7 @@ import type { BankWordState } from "@/lib/word-bank/select";
 import {
   BANK_ACTIVE_CAP,
   BANK_DAILY_CAP,
+  bankCardData,
   bankDay,
   bankOverview,
   reviewedToday,
@@ -210,4 +211,21 @@ test("with nothing left today the next round is named: tomorrow when a due word 
   const later = [word("a", { dueOn: "2026-11-15" }), word("b", { dueOn: "2026-11-13" })];
   assert.equal(bankOverview(later, TODAY).nextDueOn, "2026-11-13");
   assert.equal(bankOverview([word("k", { strength: 4 })], TODAY).nextDueOn, null);
+});
+
+test("the Home card: today's words with their lesson's name, or nothing on a day without words", () => {
+  const states = [
+    word("neighbor", { ar: "جار", lessonTitle: "The Quiet Neighbor", source: "passage" }),
+    word("hurry", { ar: "يستعجل" }),
+    word("known", { strength: 4 }),
+  ];
+  const card = bankCardData(bankOverview(states, TODAY));
+  assert.equal(card?.count, 2);
+  assert.equal(card?.total, 3);
+  assert.equal(card?.stable, 1);
+  assert.deepEqual(
+    card?.words.map((w) => `${w.word}:${w.ar}:${w.title}`),
+    ["hurry:يستعجل:Too Slow", "neighbor:جار:The Quiet Neighbor"],
+  );
+  assert.equal(bankCardData(bankOverview([word("k", { strength: 4 })], TODAY)), null);
 });

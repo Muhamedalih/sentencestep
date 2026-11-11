@@ -10,9 +10,13 @@ import { getEffectiveFeatures } from "@/lib/features/queries";
 import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
 import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { fetchProgressCached } from "@/lib/progress/cached";
+import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { cn } from "@/lib/utils";
 import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
+import { loadLessonWords } from "@/lib/word-bank/lesson-words";
+import { readinessByLesson } from "@/lib/word-bank/readiness";
 
 // Same reasoning as the generic [mode]/page.tsx this route sits beside: live
 // admin-authored content and the viewer's real premium status must never be
@@ -48,6 +52,21 @@ export default async function StoriesLibraryPage() {
         )
       : null;
 
+  // For a learner the words bank («كلماتي») is open to: how much of each story they have typed before,
+  // counted from the lessons they have finished (the layout already read those for this request) and an
+  // index of every lesson's words that is kept for an hour for everyone. Empty until five are finished.
+  const readiness =
+    user && features.rollouts.wordBank
+      ? await Promise.all([loadLessonWords(), fetchProgressCached(todayLocalISODate())])
+          .then(([index, progress]) =>
+            readinessByLesson(
+              index,
+              (progress?.completions ?? []).map((completion) => completion.lessonId),
+            ),
+          )
+          .catch(() => ({}))
+      : {};
+
   return (
     <div
       className={cn(
@@ -61,6 +80,7 @@ export default async function StoriesLibraryPage() {
         isPremiumUser={isPremiumUser}
         openTodayId={openTodayId}
         recallCount={recallCount}
+        readiness={readiness}
       />
       {/* The dashboard layout's floating pill covers this page on desktop
           already (max-sm:hidden) — this is only the mobile fallback, same

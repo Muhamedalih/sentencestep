@@ -47,6 +47,8 @@ import { fetchBookContentCounts } from "@/lib/supabase/queries/book-content";
 import { fetchAttemptCount } from "@/lib/supabase/queries/progress";
 import { fetchFinishedVideoCount } from "@/lib/supabase/queries/video-finishes";
 import { fetchWordCardHints } from "@/lib/supabase/queries/word-hints";
+import { loadBankCard } from "@/lib/word-bank/card-load";
+import { getLearnerToday } from "@/lib/word-mastery/access";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { countWordsWaitingForReview } from "@/lib/word-mastery/queue";
 import { fetchProgressCached } from "@/lib/progress/cached";
@@ -376,11 +378,16 @@ export default async function LearnHomePage({
     // The two small reads only a learner's page needs: the videos they have finished (a count) and the
     // Arabic meanings on the first four word cards (an Arabic learner only). Either one failing just
     // leaves its piece out; neither can take the page down. A visitor has neither.
-    const [videosFinished, wordHints] = await Promise.all([
+    // A third read for a learner the words bank («كلماتي») is open to: their own words, so the words
+    // card can show today's round instead of the review queue (null on a day with none, or closed).
+    const [videosFinished, wordHints, wordsBank] = await Promise.all([
       user ? fetchFinishedVideoCount(user.id) : Promise.resolve(null),
       user && locale === "ar"
         ? fetchWordCardHints(reviewWords.slice(0, 4).map((word) => word.wordId))
         : Promise.resolve({}),
+      user && features.rollouts.wordBank
+        ? getLearnerToday().then((today) => loadBankCard(user.id, today))
+        : Promise.resolve(null),
     ]);
     return (
       <ProgressProvider initialProgress={initialProgress}>
@@ -426,6 +433,7 @@ export default async function LearnHomePage({
           }
           videosFinished={videosFinished}
           wordHints={wordHints}
+          wordsBank={wordsBank}
         />
       </ProgressProvider>
     );

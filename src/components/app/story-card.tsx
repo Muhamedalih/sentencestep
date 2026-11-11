@@ -10,6 +10,8 @@ import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
 import { TIER_CHIP_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
+import type { Readiness } from "@/lib/word-bank/readiness";
+import { bankStrings } from "@/lib/word-bank/strings";
 import type { Lesson } from "@/types/content";
 
 /**
@@ -26,12 +28,15 @@ export function StoryCard({
   completed,
   isPremiumUser,
   openToday = false,
+  readiness,
 }: {
   lesson: Lesson;
   completed: boolean;
   isPremiumUser: boolean;
   /** This story is today's taste of the day for a free learner (see lib/hybrid): open for the day. */
   openToday?: boolean;
+  /** How much of this story the learner has typed before: a thin bar and one line under the card's text. Left out on a finished story. */
+  readiness?: Readiness;
 }) {
   const locked = !lesson.isFree && !isPremiumUser && !openToday;
   const { locale, t } = useLocale();
@@ -40,6 +45,8 @@ export function StoryCard({
   const supportTitle = lesson.supportTitle ?? lesson.title;
   const hook = lesson.supportDescription ?? lesson.description;
   const status = locked ? "locked" : completed ? "completed" : null;
+  const bank = bankStrings(locale);
+  const [knowBefore = "", knowAfter = ""] = bank.knowLine.split("{p}");
 
   return (
     <motion.div variants={fadeInUp} className="group h-full">
@@ -111,6 +118,33 @@ export function StoryCard({
               >
                 {hook}
               </p>
+            )}
+            {readiness && !completed && (
+              <div className="mt-2 max-sm:mt-0.5">
+                <div
+                  className="bg-foreground/[0.09] h-1 overflow-hidden rounded-full max-sm:hidden"
+                  aria-hidden="true"
+                >
+                  <i
+                    className="bg-primary block h-full rounded-full"
+                    style={{ width: `${readiness.percent}%` }}
+                  />
+                </div>
+                <p className="text-muted-foreground mt-[7px] flex justify-between gap-2.5 text-[12.5px] max-sm:mt-0 max-sm:text-xs">
+                  <span dir="auto">
+                    {knowBefore}
+                    <bdi dir="ltr" className="text-foreground font-semibold tabular-nums">
+                      {readiness.percent}%
+                    </bdi>
+                    {knowAfter}
+                  </span>
+                  {readiness.fresh > 0 && (
+                    <span className="shrink-0 max-sm:hidden" dir="auto">
+                      {bank.freshWords(readiness.fresh)}
+                    </span>
+                  )}
+                </p>
+              </div>
             )}
           </div>
 
