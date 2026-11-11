@@ -10,6 +10,7 @@ import { TypingStats } from "@/components/learning/typing-stats";
 import { TypingText } from "@/components/learning/typing-text";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { cn } from "@/lib/utils";
 import { useLessonFontSettings } from "@/components/providers/lesson-font-settings-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useAudioClip } from "@/hooks/use-audio-clip";
@@ -150,6 +151,8 @@ export function TypingSentence({
     resolvedVoiceId;
   const reducedMotion = useReducedMotion() ?? false;
   const { dir, t } = useLocale();
+  // The phone lesson screen (permission mobilePhoneUx): tools row at the start, a 32px sentence, the numbers kept in view above the keyboard.
+  const phoneUx = useFeatures().rollouts.mobilePhoneUx && mode === "normal";
   // Admin -> Fonts' per-section override (see resolveSectionFontFamily) —
   // `mode` is exactly a LearningSection value ("normal"/"stories"/
   // "conversation"), so this reads directly off it. undefined (no admin
@@ -514,7 +517,12 @@ export function TypingSentence({
           }}
         />
       )}
-      <div className="mb-4 flex items-center justify-end gap-2">
+      <div
+        className={cn(
+          "mb-4 flex items-center justify-end gap-2",
+          phoneUx && "max-md:mb-3 max-md:justify-start",
+        )}
+      >
         {/* autoPlay gated on hasStarted — see the Stories branch's identical comment above. */}
         <LessonSettings
           text={sentence.en}
@@ -551,13 +559,19 @@ export function TypingSentence({
             other viewport uses, which sat at a flat 44px floor on any phone
             width and read as oversized/inconsistent from one phone to the
             next. sm:+ keeps the exact original clamp, untouched. */}
-        {renderText("text-3xl sm:text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]", true)}
+        {renderText(
+          cn(
+            "text-3xl sm:text-[clamp(2.75rem,1.5rem+3.7vw,6rem)]",
+            phoneUx && "max-md:text-[2rem] max-md:leading-[1.2]",
+          ),
+          true,
+        )}
         <p className="mt-6 text-lg text-[var(--lesson-subtitle)] select-none" dir={dir}>
           {supportText}
         </p>
         {belowTranslation}
-        <div className="compact-hide">
-          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered />
+        <div className={phoneUx ? "md-compact-hide" : "compact-hide"}>
+          <TypingStats wpm={engine.wpm} accuracy={engine.accuracy} centered phoneRow={phoneUx} />
         </div>
       </div>
     </motion.div>

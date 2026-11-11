@@ -11,6 +11,7 @@ import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
 import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getCurrentUser } from "@/lib/supabase/auth";
+import { cn } from "@/lib/utils";
 import { fetchVocabularyRecallCountAction } from "@/lib/vocabulary-recall/actions";
 
 // Same reasoning as the generic [mode]/page.tsx this route sits beside: live
@@ -22,7 +23,8 @@ export const metadata: Metadata = { title: "Stories" };
 
 export default async function StoriesLibraryPage() {
   // On a phone with the mobilePath permission the Daily Lessons are on the Path, so the switch to them is left out.
-  const mobilePath = (await getEffectiveFeatures()).rollouts.mobilePath;
+  const phoneRollouts = (await getEffectiveFeatures()).rollouts;
+  const mobilePath = phoneRollouts.mobilePath;
   const locale = await getLocale();
   // Cards only — the story grid never reads a sentence, so don't load them
   // (see getLessonSummaries). The lesson page fetches the real body on open.
@@ -47,7 +49,12 @@ export default async function StoriesLibraryPage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
+    <div
+      className={cn(
+        "mx-auto max-w-6xl px-6 py-8 sm:py-10",
+        phoneRollouts.mobilePhoneUx && "max-md:pt-4",
+      )}
+    >
       <StoriesMobileTabs active="simplified" className={mobilePath ? "hidden" : "mb-6"} />
       <StoriesLibrary
         lessons={lessons}

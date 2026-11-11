@@ -8,6 +8,7 @@ import { StoryCard } from "@/components/app/story-card";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { difficultyForLevel, tierSupportLabel, type Difficulty } from "@/lib/levels";
@@ -53,6 +54,8 @@ export function StoriesLibrary({
 }) {
   const { isCompleted, isLoaded } = useProgress();
   const { locale, dir, t } = useLocale();
+  // The phone list header of the mobilePhoneUx permission (below md: only): one title line, no icon tile or intro, one-line level tabs.
+  const phoneUx = useFeatures().rollouts.mobilePhoneUx;
   const [activeTier, setActiveTier] = useState<Difficulty>("beginner");
   const [page, setPage] = useState(1);
 
@@ -86,10 +89,13 @@ export function StoriesLibrary({
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-4">
+      <div className={cn("mb-6 flex items-center gap-4", phoneUx && "max-md:mb-3")}>
         <div
           aria-hidden="true"
-          className="from-primary/15 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br to-transparent sm:size-14"
+          className={cn(
+            "from-primary/15 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br to-transparent sm:size-14",
+            phoneUx && "max-md:hidden",
+          )}
         >
           <BookOpen className="size-6 sm:size-7" />
         </div>
@@ -101,12 +107,18 @@ export function StoriesLibrary({
               than this line-height would normally need for Latin text —
               tight enough that the bottom of "القصص" was visibly clipped. */}
           <h1
-            className="from-foreground to-foreground/70 bg-gradient-to-r bg-clip-text py-1 text-3xl leading-[1.4] font-semibold tracking-tight text-transparent sm:text-4xl"
+            className={cn(
+              "from-foreground to-foreground/70 bg-gradient-to-r bg-clip-text py-1 text-3xl leading-[1.4] font-semibold tracking-tight text-transparent sm:text-4xl",
+              phoneUx && "max-md:text-xl",
+            )}
             dir={dir}
           >
             {t.library.storiesHeading}
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg" dir={dir}>
+          <p
+            className={cn("text-muted-foreground mt-2 text-lg", phoneUx && "max-md:hidden")}
+            dir={dir}
+          >
             {t.library.storiesSubtitle}
           </p>
         </div>
@@ -136,6 +148,8 @@ export function StoriesLibrary({
               onClick={() => selectTier(tier)}
               className={cn(
                 "focus-visible:ring-ring focus-visible:ring-offset-background relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-4 sm:py-3",
+                phoneUx &&
+                  "max-md:h-11 max-md:flex-row max-md:justify-center max-md:gap-1 max-md:px-1 max-md:py-0 max-md:whitespace-nowrap",
                 isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -146,6 +160,7 @@ export function StoriesLibrary({
                 dir="ltr"
                 className={cn(
                   "text-xs",
+                  phoneUx && "max-md:text-[11px]",
                   TIER_TEXT_CLASS[tier],
                   isActive ? "font-semibold" : "opacity-80",
                 )}
@@ -169,7 +184,7 @@ export function StoriesLibrary({
 
       {filtered.length > 0 &&
         (isLoaded ? (
-          <div className="mt-6 mb-2 flex flex-col gap-2">
+          <div className={cn("mt-6 mb-2 flex flex-col gap-2", phoneUx && "max-md:mt-3")}>
             <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm font-medium">
               <span>
                 {tierCompletedCount > 0
@@ -185,13 +200,13 @@ export function StoriesLibrary({
                   .replace("{total}", String(filtered.length))}
               </span>
             </div>
-            <Progress value={tierPercent} />
+            <Progress value={tierPercent} className={cn(phoneUx && "max-md:h-1")} />
           </div>
         ) : (
           // Progress hasn't loaded yet — same neutral pulse as LessonListView's
           // own skeleton, for the same reason: avoids a flash of "Ready to
           // start" / 0% before a returning learner's real tier progress loads.
-          <div className="mt-6 mb-2 flex flex-col gap-2" aria-hidden="true">
+          <div className={cn("mt-6 mb-2 flex flex-col gap-2", phoneUx && "max-md:mt-3")} aria-hidden="true">
             <div className="bg-muted h-5 w-40 animate-pulse rounded" />
             <div className="bg-muted h-2 w-full animate-pulse rounded-full" />
           </div>
@@ -214,7 +229,10 @@ export function StoriesLibrary({
             initial="hidden"
             animate="visible"
             variants={staggerChildren}
-            className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
+            className={cn(
+              "mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4",
+              phoneUx && "max-md:mt-4",
+            )}
           >
             {pageItems.map((lesson) => (
               <StoryCard

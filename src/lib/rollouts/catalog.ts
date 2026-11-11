@@ -40,6 +40,7 @@ export const ROLLOUT_IDS = [
   "openerSkip",
   "openerHelp",
   "returnLoop",
+  "mobilePhoneUx",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -407,6 +408,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the opening lesson, for now: no other lesson shows either help. The two helps are decided together by this one permission.",
       "Counting needs nothing from this: OPENER_STEP records, for everyone and with counts only, each time the keyboard hint is shown (keyboard_hint, with the sentence number) and, once per lesson, that the sound failed (audio_failed), so the size of each problem can be read whatever this permission says.",
       "Works for guests too once it is opened to everyone (a share of learners decides on signed-in accounts only, so open it to everyone, or look at it as an admin or with preview on for a browser).",
+    ],
+  },
+  mobilePhoneUx: {
+    id: "mobilePhoneUx",
+    audience: "learner",
+    title: "Phone: lesson screen and lesson list",
+    description:
+      "On a phone only (below 768 px): the lesson screen gets one slim top bar (an exit cross, the progress bar and the sentence count) and one row of tools (sound, speed, Dictation, settings) so the sentence starts high and the translation and the typing numbers stay above the keyboard, and the Daily Lessons list gets a shorter header and compact lesson rows so seven lessons show on the first screen. Tablets and laptops keep their current layout.",
+    notes: [
+      "Only the phone layout changes: nothing at 768 px and wider, and no lesson audio or lesson content is touched.",
+      "Needs no extra reads or writes: it only changes how the same data is laid out.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   mobilePath: {

@@ -32,6 +32,8 @@ import {
   PRONUNCIATION_SPEED_STEPS,
   usePronunciationSettings,
 } from "@/components/providers/pronunciation-settings-provider";
+import { usePhoneToolsLead } from "@/components/learning/phone-tools-lead";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
 import { useKeySoundMuted } from "@/hooks/use-key-sound-muted";
@@ -99,6 +101,8 @@ export const LessonSettings = forwardRef<
     keystrokesMuted: false,
   });
 
+  const phoneUx = useFeatures().rollouts.mobilePhoneUx;
+  const phoneToolsLead = usePhoneToolsLead();
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<PronunciationStatus>({
     supported: true,
@@ -229,7 +233,10 @@ export const LessonSettings = forwardRef<
           disabled={status.loading}
           aria-label={t.lessonSettings.replayTitle}
           title={t.lessonSettings.replayTitle}
-          className="hidden size-14 shrink-0 items-center justify-center rounded-full bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-sm transition-[transform,opacity] outline-none active:scale-95 disabled:opacity-60 pointer-coarse:flex"
+          className={cn(
+            "hidden size-14 shrink-0 items-center justify-center rounded-full bg-[var(--lesson-secondary)] text-[var(--lesson-icon)] shadow-sm transition-[transform,opacity] outline-none active:scale-95 disabled:opacity-60 pointer-coarse:flex",
+            phoneUx && "max-md:size-11",
+          )}
         >
           {status.loading ? (
             <Loader2
@@ -252,12 +259,17 @@ export const LessonSettings = forwardRef<
           aria-label={`${t.lessonSettings.speedTitle}: ${speedOptions[speedIndex]?.label}`}
           title={t.lessonSettings.speedTitle}
           dir="ltr"
-          className="hidden h-12 min-w-14 shrink-0 items-center justify-center gap-1 rounded-full border border-[var(--lesson-primary)]/40 px-3 text-sm font-bold text-[var(--lesson-icon)] tabular-nums outline-none active:scale-95 pointer-coarse:flex"
+          className={cn(
+            "hidden h-12 min-w-14 shrink-0 items-center justify-center gap-1 rounded-full border border-[var(--lesson-primary)]/40 px-3 text-sm font-bold text-[var(--lesson-icon)] tabular-nums outline-none active:scale-95 pointer-coarse:flex",
+            phoneUx && "max-md:h-11",
+          )}
         >
           <SpeedIcon className="size-4" aria-hidden="true" />
           {PRONUNCIATION_SPEED_STEPS[speedIndex]?.multiplier}×
         </button>
       )}
+
+      {phoneUx && phoneToolsLead && <div className="md:hidden">{phoneToolsLead}</div>}
 
       {hasAnyRow && (
         <button
@@ -271,6 +283,7 @@ export const LessonSettings = forwardRef<
           title={t.lessonSettings.buttonLabel}
           className={cn(
             "border-border/60 bg-background/85 text-muted-foreground relative flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-sm backdrop-blur-md pointer-coarse:size-12",
+            phoneUx && "max-md:size-11 max-md:pointer-coarse:size-11",
             !showKeySounds && "pointer-coarse:hidden",
             "transition-[transform,box-shadow,border-color,color] duration-200 ease-out",
             "hover:border-border hover:text-foreground hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.97]",

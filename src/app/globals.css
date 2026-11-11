@@ -428,6 +428,17 @@ html[data-keyboard] .kb-hide {
     display: none;
   }
 }
+/* The phone lesson screen (permission mobilePhoneUx) keeps its typing numbers in view above the keyboard: this hides them like .compact-hide, but only from md: up and on short landscape screens. */
+@media (min-width: 768px) {
+  html[data-keyboard] .md-compact-hide {
+    display: none;
+  }
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .md-compact-hide {
+    display: none;
+  }
+}
 
 /*
  * A phone held sideways is wider than the 640px "tablet" cutoff but only
