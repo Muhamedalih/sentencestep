@@ -8,6 +8,7 @@ import { parseRatingsFilter, ratingsFilterParams, summarizeDistribution } from "
 test("no query string means the default view: the app's ratings, active, every star, everyone, page 1", () => {
   assert.deepEqual(parseRatingsFilter({}), {
     source: "app",
+    section: "all",
     view: "active",
     stars: null,
     userType: null,
@@ -21,6 +22,7 @@ test("each filter is read from its query parameter", () => {
     parseRatingsFilter({ view: "public", stars: "4", type: "guest", comments: "1", page: "3" }),
     {
       source: "app",
+      section: "all",
       view: "public",
       stars: 4,
       userType: "guest",
@@ -44,6 +46,7 @@ test("nonsense in the query string falls back to the default instead of failing"
   });
   assert.deepEqual(filter, {
     source: "app",
+    section: "all",
     view: "active",
     stars: null,
     userType: null,
@@ -61,6 +64,7 @@ test("a repeated parameter uses its first value", () => {
 test("the filter round-trips through its query-string form, leaving defaults out", () => {
   assert.deepEqual(ratingsFilterParams(parseRatingsFilter({})), {
     source: undefined,
+    section: undefined,
     view: undefined,
     stars: undefined,
     type: undefined,
@@ -75,6 +79,7 @@ test("the filter round-trips through its query-string form, leaving defaults out
   });
   assert.deepEqual(ratingsFilterParams(filter), {
     source: "passages",
+    section: undefined,
     view: "archived",
     stars: "1",
     type: "member",
@@ -115,4 +120,20 @@ test("a row outside 1 to 5 is ignored rather than corrupting the figures", () =>
   ]);
   assert.equal(summary.count, 2);
   assert.equal(summary.average, 3);
+});
+
+test("the words ratings have their own source, like passages and video", () => {
+  assert.equal(parseRatingsFilter({ source: "words" }).source, "words");
+  assert.equal(ratingsFilterParams(parseRatingsFilter({ source: "words" })).source, "words");
+});
+
+test("a section is a closer look at the app's ratings: read for the app source only, and kept out of the link when it is every section", () => {
+  assert.equal(parseRatingsFilter({ section: "stories" }).section, "stories");
+  assert.equal(parseRatingsFilter({ section: "normal" }).section, "normal");
+  assert.equal(parseRatingsFilter({ section: "settings" }).section, "settings");
+  assert.equal(parseRatingsFilter({ section: "everything" }).section, "all");
+  assert.equal(parseRatingsFilter({ source: "video", section: "stories" }).section, "all");
+  assert.equal(parseRatingsFilter({ source: "words", section: "normal" }).section, "all");
+  assert.equal(ratingsFilterParams(parseRatingsFilter({ section: "stories" })).section, "stories");
+  assert.equal(ratingsFilterParams(parseRatingsFilter({ section: "all" })).section, undefined);
 });

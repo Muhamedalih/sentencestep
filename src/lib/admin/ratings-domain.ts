@@ -15,14 +15,25 @@ export const RATINGS_PAGE_SIZE = 25;
 
 /**
  * Where a rating was given. "app" is everything about SentenceStep itself (the rating pop-up
- * and Settings); "passages" is the one-time card after a learner's first finished passage, "video"
- * the one-time card after a learner's first finished video.
+ * after a Daily lesson or a Story, and Settings); "passages" is the one-time card after a learner's
+ * first finished passage, "video" the one-time card after a learner's first finished video, "words"
+ * the row of stars at the end of a «كلماتي» review.
  * They are listed and counted apart, and only the app's own ratings make the site's average.
  */
-export type RatingsSource = "app" | "passages" | "video";
+export type RatingsSource = "app" | "passages" | "video" | "words";
+
+/**
+ * Inside the "app" source, where in the app the rating was given: after a Daily lesson ("normal"),
+ * after a Story ("stories") or in Settings. "all" is every app rating, which is what the site's average
+ * is made of, so a section is only a closer look at part of it.
+ */
+export const RATINGS_SECTIONS = ["all", "normal", "stories", "settings"] as const;
+export type RatingsSection = (typeof RATINGS_SECTIONS)[number];
 
 export interface RatingsFilter {
   source: RatingsSource;
+  /** Only meaningful for the "app" source (it is "all" for the others). */
+  section: RatingsSection;
   view: RatingsView;
   /** Only this many stars, or null for all. */
   stars: 1 | 2 | 3 | 4 | 5 | null;
@@ -39,7 +50,13 @@ function first(value: string | string[] | undefined): string | undefined {
 }
 
 function parseSource(value: string | undefined): RatingsSource {
-  return value === "passages" || value === "video" ? value : "app";
+  return value === "passages" || value === "video" || value === "words" ? value : "app";
+}
+
+function parseSection(value: string | undefined): RatingsSection {
+  return (RATINGS_SECTIONS as readonly string[]).includes(value ?? "")
+    ? (value as RatingsSection)
+    : "all";
 }
 
 /** Reads Admin > Ratings' query string; anything unrecognised falls back to the default view. */
@@ -48,9 +65,11 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
   const stars = Number(first(params.stars));
   const userType = first(params.type);
   const page = Number(first(params.page));
+  const source = parseSource(first(params.source));
 
   return {
-    source: parseSource(first(params.source)),
+    source,
+    section: source === "app" ? parseSection(first(params.section)) : "all",
     view: view === "archived" || view === "public" ? view : "active",
     stars:
       Number.isInteger(stars) && stars >= 1 && stars <= 5 ? (stars as 1 | 2 | 3 | 4 | 5) : null,
@@ -64,6 +83,7 @@ export function parseRatingsFilter(params: RawParams): RatingsFilter {
 export function ratingsFilterParams(filter: RatingsFilter): Record<string, string | undefined> {
   return {
     source: filter.source === "app" ? undefined : filter.source,
+    section: filter.source === "app" && filter.section !== "all" ? filter.section : undefined,
     view: filter.view === "active" ? undefined : filter.view,
     stars: filter.stars ? String(filter.stars) : undefined,
     type: filter.userType ?? undefined,
