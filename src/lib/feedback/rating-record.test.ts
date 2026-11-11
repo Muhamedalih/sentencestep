@@ -1,5 +1,7 @@
 // Run with `npm run test:feedback`.
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -7,6 +9,8 @@ import {
   buildAppRatingRecord,
   MAX_RATING_COMMENT_LENGTH,
   PASSAGES_RATING_MODE,
+  VIDEO_RATING_MODE,
+  WORDS_RATING_MODE,
 } from "./rating-record";
 
 const base = {
@@ -87,4 +91,25 @@ test("a Passages rating is stored under its own mode, with the passage it follow
   );
   assert.equal(record?.mode, "passages");
   assert.equal(record?.lesson_id, "the-quiet-hour");
+});
+
+test("the words rating mode is the one the database function leaves out of the app's own figure", () => {
+  assert.equal(WORDS_RATING_MODE, "words");
+  const sql = readFileSync(
+    join(process.cwd(), "supabase/migrations/20250358000000_ratings_words_apart.sql"),
+    "utf8",
+  );
+  assert.ok(
+    sql.includes(
+      `r.mode not in ('${PASSAGES_RATING_MODE}', '${VIDEO_RATING_MODE}', '${WORDS_RATING_MODE}')`,
+    ),
+  );
+  assert.match(sql, /create or replace function public\.app_rating_distribution\(\)/);
+  assert.match(sql, /security invoker/);
+  assert.match(sql, /r\.status <> 'archived'/);
+  // It only replaces that one function: no table, policy or row is touched.
+  assert.doesNotMatch(
+    sql,
+    /\b(create table|alter table|drop |create policy|insert into|update |delete from)\b/i,
+  );
 });

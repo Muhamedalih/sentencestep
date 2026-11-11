@@ -14,12 +14,14 @@ import { RatingReplyForm } from "@/components/admin/rating-reply-form";
 import { RatingStatusControl } from "@/components/admin/rating-status-control";
 import {
   RATINGS_PAGE_SIZE,
+  RATINGS_SECTIONS,
   parseRatingsFilter,
   ratingsFilterParams,
   type AppRatingStatus,
   type RatingsFilter,
 } from "@/lib/admin/ratings-domain";
 import {
+  countAppRatingsBySection,
   countNewRatingsBySource,
   getAppRatingsOverview,
   listAppRatings,
@@ -42,6 +44,14 @@ const STATUS_VARIANT: Record<AppRatingStatus, "secondary" | "outline" | "success
 };
 
 const STARS = [1, 2, 3, 4, 5] as const;
+
+/** The small tabs under App: where in the app a rating was given. */
+const SECTION_LABEL: Record<(typeof RATINGS_SECTIONS)[number], string> = {
+  all: "All",
+  normal: "Daily lessons",
+  stories: "Stories",
+  settings: "Settings",
+};
 
 /** A link to this page with one part of the filter changed; the page number always restarts at 1. */
 function hrefWith(filter: RatingsFilter, change: Record<string, string | undefined>): string {
@@ -93,14 +103,21 @@ export default async function AdminRatingsPage({
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
   const filter = parseRatingsFilter(await searchParams);
-  const [overview, { ratings, totalCount }, settings, newBySource] = await Promise.all([
-    getAppRatingsOverview(filter.source),
-    listAppRatings(filter),
-    getRatingsSettings(),
-    countNewRatingsBySource(),
-  ]);
+  const [overview, { ratings, totalCount }, settings, newBySource, sectionCounts] =
+    await Promise.all([
+      getAppRatingsOverview(filter.source, filter.section),
+      listAppRatings(filter),
+      getRatingsSettings(),
+      countNewRatingsBySource(),
+      filter.source === "app" ? countAppRatingsBySection() : Promise.resolve(null),
+    ]);
   const forPassages = filter.source === "passages";
   const forVideo = filter.source === "video";
+  const forWords = filter.source === "words";
+  // Passages, Video and Words are kept apart from the app's own ratings; a section of the App tab is
+  // part of them (the site's average is made of every section together).
+  const keptApart = forPassages || forVideo || forWords;
+  const wholeApp = filter.source === "app" && filter.section === "all";
   const biggestStar = Math.max(1, ...overview.perStar);
   const proof = buildRatingsProof(overview.perStar);
   const proofPreview = proof
@@ -117,19 +134,24 @@ export default async function AdminRatingsPage({
         <p className="text-muted-foreground mt-1">
           {forPassages
             ? "What learners said about the Passages section, from the one-time card shown after their first finished passage (the passage is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
-            : forVideo
-              ? "What learners said about the Video section and how to develop the site, from the one-time card shown after their first finished video (the video is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
-              : "What learners gave the app from the rating pop-up and Settings, newest first. "}
+            : forWords
+              ? "What learners said about My Words («كلماتي»), from the row of stars at the end of a words review. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
+              : forVideo
+                ? "What learners said about the Video section and how to develop the site, from the one-time card shown after their first finished video (the video is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
+                : "What learners gave the app from the rating pop-up after a Daily lesson or a Story and from Settings, newest first. The small tabs under App look at one of those places at a time; together they make the average quoted on the site. "}
           Reply by email to anyone who left an address (signed-in members always have one), and
           approve the best ones to show on the site. Archiving a rating takes it out of the figures
           below
-          {forPassages || forVideo ? "" : " and out of the average quoted on the site"}. Times are
-          Baghdad time (UTC+3), like the old sheet.
+          {keptApart ? "" : " and out of the average quoted on the site"}. Times are Baghdad time
+          (UTC+3), like the old sheet.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-1">
-        <Chip href={hrefWith(filter, { source: undefined })} active={filter.source === "app"}>
+        <Chip
+          href={hrefWith(filter, { source: undefined, section: undefined })}
+          active={filter.source === "app"}
+        >
           App
           {newBySource.app > 0 && (
             <Badge variant="secondary" className="ms-2">
@@ -137,7 +159,10 @@ export default async function AdminRatingsPage({
             </Badge>
           )}
         </Chip>
-        <Chip href={hrefWith(filter, { source: "passages" })} active={filter.source === "passages"}>
+        <Chip
+          href={hrefWith(filter, { source: "passages", section: undefined })}
+          active={filter.source === "passages"}
+        >
           Passages
           {newBySource.passages > 0 && (
             <Badge variant="secondary" className="ms-2">
@@ -145,7 +170,7 @@ export default async function AdminRatingsPage({
             </Badge>
           )}
         </Chip>
-        <Chip href={hrefWith(filter, { source: "video" })} active={forVideo}>
+        <Chip href={hrefWith(filter, { source: "video", section: undefined })} active={forVideo}>
           Video
           {newBySource.video > 0 && (
             <Badge variant="secondary" className="ms-2">
@@ -153,9 +178,34 @@ export default async function AdminRatingsPage({
             </Badge>
           )}
         </Chip>
+        <Chip href={hrefWith(filter, { source: "words", section: undefined })} active={forWords}>
+          Words
+          {newBySource.words > 0 && (
+            <Badge variant="secondary" className="ms-2">
+              {newBySource.words} new
+            </Badge>
+          )}
+        </Chip>
       </div>
 
-      {filter.source === "app" && (
+      {sectionCounts && (
+        <div className="-mt-3 flex flex-wrap gap-1" aria-label="Where in the app">
+          {RATINGS_SECTIONS.map((section) => (
+            <Chip
+              key={section}
+              href={hrefWith(filter, { section: section === "all" ? undefined : section })}
+              active={filter.section === section}
+            >
+              {SECTION_LABEL[section]}
+              <span className="text-muted-foreground ms-1.5 text-xs tabular-nums">
+                {sectionCounts[section]}
+              </span>
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      {wholeApp && (
         <RatingsDisplaySettings
           initial={settings}
           proofPreview={proofPreview}
