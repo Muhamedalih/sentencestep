@@ -23,6 +23,12 @@ import type { BankSource } from "@/lib/word-bank/types";
 
 /** Words being learned at once. */
 export const BANK_ACTIVE_CAP = 20;
+/**
+ * The strength a word enters the bank at when its very first answer is clean (the database function
+ * does it: see 20250357000000_learner_words_clean_start.sql). Two steps up, so two reviews make it
+ * stable instead of three.
+ */
+export const BANK_CLEAN_START_STRENGTH = 2;
 /** Words asked in one day, over every round of that day. */
 export const BANK_DAILY_CAP = BANK_ROUND_SIZE;
 

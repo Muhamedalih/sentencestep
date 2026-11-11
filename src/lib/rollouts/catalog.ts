@@ -195,6 +195,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Needs Today's session to be open for the same people: most words come from Today's words step, so it stays closed while Today is closed.",
       "Needs the learner_words table (migration 20250350000000, applied by pasting the SQL). Until it exists nothing is recorded and nothing is asked back.",
+      "A word typed right the first time it is met starts two steps up, so it needs two reviews to become stable instead of three (migration 20250357000000, which only replaces the function). Until that file is run a new word starts one step up, as before; nothing else depends on it.",
       "Today's five words stay exactly the day's story and passage words: the bank only remembers them, it never adds to them or changes which words are asked.",
       "The three shelves (stable, being learned, waiting) are worked out from the rows each time, never stored, so the caps (five a day, twenty at once) can change without touching a learner's words.",
       "Not here yet: a passage's own word lesson and the Daily lessons do not add words, and the Home card and the lesson finish screen do not mention the bank.",
