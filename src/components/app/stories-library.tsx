@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { StoryCard } from "@/components/app/story-card";
+import type { Readiness } from "@/lib/word-bank/readiness";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -44,6 +45,7 @@ export function StoriesLibrary({
   isPremiumUser,
   openTodayId = null,
   recallCount = 0,
+  readiness = {},
 }: {
   lessons: Lesson[];
   isPremiumUser: boolean;
@@ -51,6 +53,8 @@ export function StoriesLibrary({
   openTodayId?: string | null;
   /** This section's own due Vocabulary Recall count (see fetchVocabularyRecallCountAction) — drives VocabularySectionRecallCard, shown right under the title. */
   recallCount?: number;
+  /** How much of each unfinished story the learner has typed before, by story id (see readinessByLesson). Empty for everyone the words bank is closed to. */
+  readiness?: Record<string, Readiness>;
 }) {
   const { isCompleted, isLoaded } = useProgress();
   const { locale, dir, t } = useLocale();
@@ -206,7 +210,10 @@ export function StoriesLibrary({
           // Progress hasn't loaded yet — same neutral pulse as LessonListView's
           // own skeleton, for the same reason: avoids a flash of "Ready to
           // start" / 0% before a returning learner's real tier progress loads.
-          <div className={cn("mt-6 mb-2 flex flex-col gap-2", phoneUx && "max-md:mt-3")} aria-hidden="true">
+          <div
+            className={cn("mt-6 mb-2 flex flex-col gap-2", phoneUx && "max-md:mt-3")}
+            aria-hidden="true"
+          >
             <div className="bg-muted h-5 w-40 animate-pulse rounded" />
             <div className="bg-muted h-2 w-full animate-pulse rounded-full" />
           </div>
@@ -241,6 +248,7 @@ export function StoriesLibrary({
                 completed={isLoaded && isCompleted("stories", lesson.id)}
                 isPremiumUser={isPremiumUser}
                 openToday={lesson.id === openTodayId}
+                readiness={readiness[lesson.id]}
               />
             ))}
           </motion.div>

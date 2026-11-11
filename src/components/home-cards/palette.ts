@@ -91,6 +91,8 @@ export const PAPER = {
   wordLine: "#aab1fb",
   wordLineSoft: "#d9dce6",
   wordShadow: "0 14px 22px -10px rgba(0,0,0,0.75),0 2px 4px rgba(0,0,0,0.35)",
+  /** The name of the lesson a word came from, at the foot of its card (the words bank only). */
+  wordSource: "#8a90a3",
 } as const;
 
 /** The round audio mark on the Passages sheet. */

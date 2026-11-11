@@ -54,6 +54,20 @@ export interface BankStrings {
   /** What kind of lesson a group of the list came from. */
   kind: Record<BankSource, string>;
   listEmpty: string;
+  /** The story finish page: the heading over the story's words once they have joined the bank. */
+  joined: string;
+  /** Under those words: where they come back. */
+  comesBack: string;
+  /** The Home card: the words beside the big number of today's words. */
+  cardReady: (n: number) => string;
+  /** The Home card's small line: "{minutes}", "{total}" words in the bank, "{stable}" of them stable. */
+  cardHint: string;
+  /** The same line while no word is stable yet. */
+  cardHintNoStable: string;
+  /** A story card: "{p}" is the percentage of the story's words the learner has typed before. */
+  knowLine: string;
+  /** A story card: how many of its words are new to the learner. */
+  freshWords: (n: number) => string;
   emptyTitle: string;
   emptyBody: string;
   emptyAction: string;
@@ -102,6 +116,13 @@ const AR: BankStrings = {
   dueInDays: (n) => (n === 2 ? "بعد يومين" : `بعد ${n} ${n <= 10 ? "أيام" : "يوماً"}`),
   kind: { story: "قصة", passage: "نص", lesson: "درس", core: "كلمات الموقع", star: "نجمتك" },
   listEmpty: "لا كلمات هنا بعد.",
+  joined: "دخلت كلماتك",
+  comesBack: "ترجع إليك في «كلماتي» داخل جملة تسمعها وتكتبها.",
+  cardReady: (n) => (n === 1 ? "كلمة جاهزة اليوم" : "كلمات جاهزة اليوم"),
+  cardHint: "{minutes} · في كلماتك {total}، ثبتت منها {stable}",
+  cardHintNoStable: "{minutes} · في كلماتك {total}",
+  knowLine: "تعرف {p} من كلماتها",
+  freshWords: (n) => `${n} جديدة`,
   emptyTitle: "لا كلمات بعد",
   emptyBody: "أكمل قصة أو كلمات اليوم، وستدخل كلماتها المستهدفة هنا وحدها.",
   emptyAction: "إلى القصص",
@@ -151,6 +172,13 @@ const EN: BankStrings = {
     star: "starred",
   },
   listEmpty: "No words here yet.",
+  joined: "Joined your words",
+  comesBack: "They come back in My Words, inside a sentence you hear and type.",
+  cardReady: (n) => (n === 1 ? "word ready today" : "words ready today"),
+  cardHint: "{minutes} · {total} in your words, {stable} stable",
+  cardHintNoStable: "{minutes} · {total} in your words",
+  knowLine: "You know {p} of its words",
+  freshWords: (n) => `${n} new`,
   emptyTitle: "No words yet",
   emptyBody:
     "Finish a story or Today's words, and their target words will arrive here by themselves.",
@@ -201,6 +229,13 @@ const ES: BankStrings = {
     star: "tu estrella",
   },
   listEmpty: "Aún no hay palabras aquí.",
+  joined: "Entraron en tus palabras",
+  comesBack: "Vuelven en Mis palabras, dentro de una frase que escuchas y escribes.",
+  cardReady: (n) => (n === 1 ? "palabra lista hoy" : "palabras listas hoy"),
+  cardHint: "{minutes} · {total} en tus palabras, {stable} fijadas",
+  cardHintNoStable: "{minutes} · {total} en tus palabras",
+  knowLine: "Conoces el {p} de sus palabras",
+  freshWords: (n) => (n === 1 ? "1 nueva" : `${n} nuevas`),
   emptyTitle: "Aún no hay palabras",
   emptyBody:
     "Termina una historia o las palabras de hoy, y sus palabras clave llegarán aquí solas.",
@@ -251,6 +286,13 @@ const TR: BankStrings = {
     star: "yıldızlı",
   },
   listEmpty: "Burada henüz kelime yok.",
+  joined: "Kelimelerine eklendi",
+  comesBack: "Kelimelerim'de, dinleyip yazdığın bir cümlenin içinde geri gelirler.",
+  cardReady: () => "kelime bugün hazır",
+  cardHint: "{minutes} · kelimelerinde {total}, {stable} kalıcı",
+  cardHintNoStable: "{minutes} · kelimelerinde {total}",
+  knowLine: "Kelimelerinin {p} kadarını biliyorsun",
+  freshWords: (n) => `${n} yeni`,
   emptyTitle: "Henüz kelime yok",
   emptyBody:
     "Bir hikâyeyi ya da bugünün kelimelerini bitir; hedef kelimeleri buraya kendiliğinden gelir.",

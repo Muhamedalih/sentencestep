@@ -7,7 +7,9 @@ import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { fetchWordCardHints } from "@/lib/supabase/queries/word-hints";
+import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
+import { loadBankCard } from "@/lib/word-bank/card-load";
 import { getWordGroupSummaries } from "@/lib/word-lists";
 import {
   getLearnerToday,
@@ -68,6 +70,11 @@ export default async function WordListsPage() {
       : {}
     : null;
 
+  // The same card shows today's words of the learner's words bank («كلماتي») on a day it has some,
+  // exactly as on Home (one read of the learner's own rows, only while "wordBank" is open to them).
+  const user = homeCards && features.rollouts.wordBank ? await getCurrentUser() : null;
+  const homeCardBank = user ? await loadBankCard(user.id, await getLearnerToday()) : null;
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
       {/* The redesigned dashboard is admin-controlled ("Word Lists redesign" in /admin/features):
@@ -87,6 +94,7 @@ export default async function WordListsPage() {
           weakWords={weakWords}
           mastery={mastery}
           homeCardWords={homeCardWords}
+          homeCardBank={homeCardBank}
         />
       )}
     </div>

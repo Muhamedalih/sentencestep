@@ -14,6 +14,8 @@ import type { LessonUnit } from "@/types/content";
 import { ContinueCard } from "./continue-card";
 import { PassagesSectionCard, VideoSectionCard } from "./section-cards";
 import { StatsPanel } from "./stats-panel";
+import type { BankCardData } from "@/lib/word-bank/shelves";
+
 import { WordsSection } from "./words-section";
 
 async function PassagesSlot({ data }: { data: Promise<PassagesHomeData | null> }) {
@@ -46,6 +48,7 @@ export function HomeCardsPage({
   video,
   videosFinished,
   wordHints,
+  wordsBank = null,
 }: {
   engagement: HomeEngagementStream | null;
   /** «Up next». */
@@ -65,6 +68,8 @@ export function HomeCardsPage({
   videosFinished: number | null;
   /** The Arabic meaning of the due words' cards, by word id. */
   wordHints: Record<string, string>;
+  /** Today's words of the learner's words bank («كلماتي»), or null: the words card then shows the review queue. */
+  wordsBank?: BankCardData | null;
 }) {
   return (
     <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl">
@@ -99,7 +104,7 @@ export function HomeCardsPage({
           <VideoSectionCard card={video.card} heading={video.heading} cta={video.cta} index={4} />
         )}
       </div>
-      <WordsSection reviewCount={reviewCount} words={dueWords} hints={wordHints} />
+      <WordsSection reviewCount={reviewCount} words={dueWords} hints={wordHints} bank={wordsBank} />
       {footer}
     </div>
   );

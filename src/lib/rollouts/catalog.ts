@@ -198,7 +198,8 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "A word typed right the first time it is met starts two steps up, so it needs two reviews to become stable instead of three (migration 20250357000000, which only replaces the function). Until that file is run a new word starts one step up, as before; nothing else depends on it.",
       "Today's five words stay exactly the day's story and passage words: the bank only remembers them, it never adds to them or changes which words are asked.",
       "The three shelves (stable, being learned, waiting) are worked out from the rows each time, never stored, so the caps (five a day, twenty at once) can change without touching a learner's words.",
-      "Not here yet: a passage's own word lesson and the Daily lessons do not add words, and the Home card and the lesson finish screen do not mention the bank.",
+      "It also shows in three places the learner already is: a finished story's words say they joined the bank, the Home words card (and the same card on Word Lists) shows today's words on a day the bank has some, and each unfinished story's card says how much of its words the learner has typed before (from five finished lessons on; an index of the lessons' words is kept for an hour for everyone).",
+      "Not here yet: a passage's own word lesson and the Daily lessons do not add words.",
     ],
   },
   dailyRule: {

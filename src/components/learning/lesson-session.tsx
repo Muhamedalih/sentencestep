@@ -1189,6 +1189,7 @@ export function LessonSession({
                 nextLessonLocked={nextLessonLocked}
                 vocabulary={unit.vocabulary}
                 wordOutcomes={storyWordOutcomes ?? undefined}
+                wordsJoinedBank={features.rollouts.wordBank && !previewMode}
                 streak={streak.currentStreak}
                 xp={xp}
                 xpEarned={previewMode ? 0 : xpEarned}

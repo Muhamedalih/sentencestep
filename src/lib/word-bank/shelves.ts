@@ -203,3 +203,31 @@ export function daysUntil(iso: string, todayISO: string): number {
   const day = 24 * 60 * 60 * 1000;
   return Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${todayISO}T00:00:00Z`)) / day);
 }
+
+/** What the Home «كلماتك» card shows of the bank on a day it has words for the learner. */
+export interface BankCardData {
+  /** Today's words (the daily cap at most). */
+  count: number;
+  /** The first of them, for the paper cards: the word, its meaning ("" when none) and its lesson's name. */
+  words: { word: string; ar: string; title: string | null }[];
+  sources: BankRoundSource[];
+  /** Every word in the bank, and how many of them are stable. */
+  total: number;
+  stable: number;
+}
+
+/** The card's data from the overview, or null on a day with no words (the card then keeps what it always showed). */
+export function bankCardData(overview: BankOverview, cards = 4): BankCardData | null {
+  if (overview.today.length === 0) return null;
+  return {
+    count: overview.today.length,
+    words: overview.today.slice(0, cards).map((state) => ({
+      word: state.word,
+      ar: state.ar,
+      title: state.lessonTitle?.trim() || null,
+    })),
+    sources: overview.todaySources,
+    total: overview.total,
+    stable: overview.stable,
+  };
+}
