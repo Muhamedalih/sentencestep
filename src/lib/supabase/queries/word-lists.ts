@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { isAdmin } from "@/lib/admin/access";
 import { createClient } from "@/lib/supabase/server";
 import { readAllPages } from "@/lib/supabase/read-all-pages";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -10,6 +11,7 @@ import {
   warnIfMissing,
 } from "@/lib/i18n/content-translations";
 import type { SupportLocale } from "@/lib/i18n/locales";
+import { canOpenWordGroup } from "@/lib/word-lists-access";
 import type { Database } from "@/types/database";
 import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
 
@@ -193,11 +195,16 @@ export async function fetchWordGroupById(
     .from("word_groups")
     .select("*")
     .eq("id", groupId)
-    .eq("status", "published")
+    .in("status", ["published", "draft"])
     .maybeSingle();
   if (groupError) throw groupError;
-  // Defensive double-check, see isLearnerVisibleStatus's doc comment.
-  if (!group || !isLearnerVisibleStatus(group.status)) return undefined;
+  if (!group) return undefined;
+  // Defensive double-check, see isLearnerVisibleStatus's doc comment. A DRAFT only comes back to an
+  // admin (the row-level rule already hides it from everyone else): the admin tries a new topic in the
+  // learner's own rounds before it is published. Only a draft pays for the admin check.
+  if (!isLearnerVisibleStatus(group.status) && !canOpenWordGroup(group, await isAdmin())) {
+    return undefined;
+  }
 
   const { data: words, error: wordsError } = await supabase
     .from("vocabulary_words")
