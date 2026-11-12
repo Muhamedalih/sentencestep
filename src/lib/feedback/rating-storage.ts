@@ -1,3 +1,5 @@
+import { parseRoundsRatingState, type RoundsRatingState } from "@/lib/word-ladder/rating-gate";
+
 /**
  * Local, best-effort state for RatingPrompt — whether this browser has
  * already been shown the one-time "rate the app" prompt, and a stable
@@ -14,6 +16,7 @@ const RATED_KEY = "looma:rated-app:v1";
 const RATED_PASSAGES_KEY = "looma:rated-passages:v1";
 const RATED_VIDEO_KEY = "looma:rated-video:v1";
 const ANON_ID_KEY = "looma:rating-anon-id:v1";
+const RATED_ROUNDS_KEY = "looma:rated-rounds:v2";
 
 export function hasRatedApp(): boolean {
   if (typeof window === "undefined") return true;
@@ -90,5 +93,28 @@ export function getOrCreateAnonId(): string {
     return fresh;
   } catch {
     return "";
+  }
+}
+
+/**
+ * What this browser remembers about the word rounds' rating card (see rating-gate.ts): rated or not,
+ * how many times "not now" was chosen, how many rounds were finished. Storage that cannot be read
+ * counts as "already rated" (silence, never a repeat prompt).
+ */
+export function readRoundsRatingState(): RoundsRatingState {
+  if (typeof window === "undefined") return { rated: true, skips: 0, finished: 0 };
+  try {
+    return parseRoundsRatingState(window.localStorage.getItem(RATED_ROUNDS_KEY));
+  } catch {
+    return { rated: true, skips: 0, finished: 0 };
+  }
+}
+
+export function writeRoundsRatingState(state: RoundsRatingState): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(RATED_ROUNDS_KEY, JSON.stringify(state));
+  } catch {
+    // Best-effort only: worst case the card is offered again a little sooner.
   }
 }

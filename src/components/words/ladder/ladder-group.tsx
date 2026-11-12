@@ -73,7 +73,6 @@ export function LadderGroup({
         key={runKey}
         words={active.words}
         number={active.number}
-        count={active.count}
         done={active.done}
         total={active.total}
         group={group}
@@ -81,7 +80,7 @@ export function LadderGroup({
         bankFeed={bankFeed}
         todayISO={todayISO}
         onWordComplete={complete}
-        nextNumber={plan?.number ?? null}
+        next={plan ? { number: plan.number, firstWord: plan.words[0]!.word } : null}
         onNext={() => (plan ? start(plan) : setView("topic"))}
       />
     );

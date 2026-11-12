@@ -11,6 +11,7 @@ import {
 } from "@/lib/admin/ratings-domain";
 import {
   PASSAGES_RATING_MODE,
+  ROUNDS_RATING_LESSON_ID,
   VIDEO_RATING_MODE,
   WORDS_RATING_MODE,
 } from "@/lib/feedback/rating-record";
@@ -22,10 +23,15 @@ const APP_EXCLUDED_MODES = `(${PASSAGES_RATING_MODE},${VIDEO_RATING_MODE},${WORD
 function sourceMode(source: Exclude<RatingsSource, "app">): string {
   return source === "video"
     ? VIDEO_RATING_MODE
-    : source === "words"
+    : source === "words" || source === "rounds"
       ? WORDS_RATING_MODE
       : PASSAGES_RATING_MODE;
 }
+
+/** The two tabs that share the mode "words" are told apart by the lesson id: the word rounds' is "rounds". */
+type ModeScope =
+  | { only: string; lessonId?: string; notLessonId?: string }
+  | { except: string };
 
 /**
  * Which `mode`s a tab shows: one mode (a section's own tab, or one section of the app: the rating pop-up
@@ -36,7 +42,9 @@ function sourceMode(source: Exclude<RatingsSource, "app">): string {
 function modeScope(
   source: RatingsSource,
   section: RatingsSection,
-): { only: string } | { except: string } {
+): ModeScope {
+  if (source === "rounds") return { only: sourceMode(source), lessonId: ROUNDS_RATING_LESSON_ID };
+  if (source === "words") return { only: sourceMode(source), notLessonId: ROUNDS_RATING_LESSON_ID };
   if (source !== "app") return { only: sourceMode(source) };
   return section === "all" ? { except: APP_EXCLUDED_MODES } : { only: section };
 }
@@ -76,7 +84,13 @@ export async function listAppRatings(
     .order("created_at", { ascending: false });
 
   const scope = modeScope(filter.source, filter.section);
-  query = "only" in scope ? query.eq("mode", scope.only) : query.not("mode", "in", scope.except);
+  if ("only" in scope) {
+    query = query.eq("mode", scope.only);
+    if (scope.lessonId) query = query.eq("lesson_id", scope.lessonId);
+    if (scope.notLessonId) query = query.neq("lesson_id", scope.notLessonId);
+  } else {
+    query = query.not("mode", "in", scope.except);
+  }
   if (filter.view === "archived") query = query.eq("status", "archived");
   else if (filter.view === "public") query = query.eq("is_public", true);
   else query = query.neq("status", "archived");
@@ -129,8 +143,15 @@ export async function getAppRatingsOverview(
   const supabase = await createClient();
   const scope = modeScope(source, section);
   const head = () => {
-    const query = supabase.from("app_ratings").select("id", { count: "exact", head: true });
-    return "only" in scope ? query.eq("mode", scope.only) : query.not("mode", "in", scope.except);
+    let query = supabase.from("app_ratings").select("id", { count: "exact", head: true });
+    if ("only" in scope) {
+      query = query.eq("mode", scope.only);
+      if (scope.lessonId) query = query.eq("lesson_id", scope.lessonId);
+      if (scope.notLessonId) query = query.neq("lesson_id", scope.notLessonId);
+    } else {
+      query = query.not("mode", "in", scope.except);
+    }
+    return query;
   };
 
   // The per-star spread: the passages, video and whole-app figures come from the database functions
@@ -149,7 +170,7 @@ export async function getAppRatingsOverview(
       ? supabase.rpc("passage_rating_distribution")
       : source === "video"
         ? supabase.rpc("video_rating_distribution")
-        : source === "words" || section !== "all"
+        : source === "words" || source === "rounds" || section !== "all"
           ? perStar().then((data) => ({ data, error: null }))
           : supabase.rpc("app_rating_distribution"),
     head().eq("status", "new"),
@@ -176,21 +197,24 @@ export async function countNewRatingsBySource(): Promise<Record<RatingsSource, n
   const unread = () =>
     supabase.from("app_ratings").select("id", { count: "exact", head: true }).eq("status", "new");
 
-  const [passages, video, words, app] = await Promise.all([
+  const [passages, video, words, rounds, app] = await Promise.all([
     unread().eq("mode", PASSAGES_RATING_MODE),
     unread().eq("mode", VIDEO_RATING_MODE),
-    unread().eq("mode", WORDS_RATING_MODE),
+    unread().eq("mode", WORDS_RATING_MODE).neq("lesson_id", ROUNDS_RATING_LESSON_ID),
+    unread().eq("mode", WORDS_RATING_MODE).eq("lesson_id", ROUNDS_RATING_LESSON_ID),
     unread().not("mode", "in", APP_EXCLUDED_MODES),
   ]);
   if (passages.error) throw passages.error;
   if (video.error) throw video.error;
   if (words.error) throw words.error;
+  if (rounds.error) throw rounds.error;
   if (app.error) throw app.error;
   return {
     app: app.count ?? 0,
     passages: passages.count ?? 0,
     video: video.count ?? 0,
     words: words.count ?? 0,
+    rounds: rounds.count ?? 0,
   };
 }
 

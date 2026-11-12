@@ -1,7 +1,7 @@
 import { seededShuffle } from "@/lib/word-ladder/random";
 import type { WordOutcome } from "@/lib/word-mastery/schedule";
 
-/** The five steps of a round, in order: meet the words, choose the meaning, hear and choose the spelling, put the letters in order, hear and type. */
+/** The five kinds of screen of a round: meet a word, choose its meaning, hear and choose its spelling, put its letters in order, hear and type it. */
 export const LADDER_STEPS = ["meet", "meaning", "listen", "letters", "type"] as const;
 export type LadderStep = (typeof LADDER_STEPS)[number];
 
@@ -36,18 +36,36 @@ export function stepsFor(word: SteppedWord): LadderStep[] {
 }
 
 /**
- * The queue of a round, step by step: the step-1 screens of every word, then the step-2 screens of
- * every word, and so on, so a word comes back after the others instead of five times in a row (the
- * same word asked again and again is answered from the short-term memory and teaches little). The
- * words of a step after the first come in a seeded order, and a step never opens with the word the
- * step before it ended on.
+ * What the progress bar of a round counts: the introductions (each word met and asked its meaning
+ * right away), then the three tests.
+ */
+export const LADDER_PHASES = ["intro", "listen", "letters", "type"] as const;
+export type LadderPhase = (typeof LADDER_PHASES)[number];
+
+export function phaseOf(step: LadderStep): LadderPhase {
+  return step === "meet" || step === "meaning" ? "intro" : step;
+}
+
+/**
+ * The queue of a round. Each word is introduced on its own and asked what it means at once: the
+ * first word with its meaning, then its four choices, then the second word the same way, then the
+ * third. After the introductions come the tests, test by test: every word heard and chosen, every
+ * word's letters put in order, every word heard and typed. So a test brings a word back after the
+ * others instead of the same word again and again (answered from the short-term memory, it teaches
+ * little). The words of a test come in a seeded order, and a test never opens with the word the
+ * screen before it was about.
  */
 export function buildQueue(words: readonly SteppedWord[], seed: string): LadderCard[] {
   const queue: LadderCard[] = [];
-  for (const step of LADDER_STEPS) {
+  for (const word of words) {
+    const steps = stepsFor(word);
+    queue.push({ wordId: word.id, step: "meet", retry: false });
+    if (steps.includes("meaning")) queue.push({ wordId: word.id, step: "meaning", retry: false });
+  }
+  for (const step of ["listen", "letters", "type"] as const) {
     const asked = words.filter((word) => stepsFor(word).includes(step));
     if (asked.length === 0) continue;
-    const ordered = step === "meet" ? [...asked] : seededShuffle(asked, `${seed}:${step}`);
+    const ordered = seededShuffle(asked, `${seed}:${step}`);
     const last = queue[queue.length - 1];
     if (last && ordered.length > 1 && ordered[0]!.id === last.wordId) {
       [ordered[0], ordered[1]] = [ordered[1]!, ordered[0]!];
