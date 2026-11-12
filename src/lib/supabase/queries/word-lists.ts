@@ -1,7 +1,7 @@
 import { cache } from "react";
 
-import { createPublicClient } from "@/lib/supabase/public-client";
 import { createClient } from "@/lib/supabase/server";
+import { readAllPages } from "@/lib/supabase/read-all-pages";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { isLearnerVisibleStatus } from "@/lib/content-helpers";
 import {
@@ -10,6 +10,7 @@ import {
   warnIfMissing,
 } from "@/lib/i18n/content-translations";
 import type { SupportLocale } from "@/lib/i18n/locales";
+import type { Database } from "@/types/database";
 import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
 
 /**
@@ -18,11 +19,11 @@ import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
  * see src/lib/word-lists.ts, the single place the rest of the app reads
  * word groups/words from.
  *
- * fetchWordGroupSummaries reads the groups with the public client:
- * word_groups rows themselves are fully public-readable regardless of
- * premium status (same as `lessons` — only the content *inside* a premium
- * group is gated). The word ids and counts come from the service-role
- * client instead: vocabulary_words RLS hides a premium group's rows
+ * fetchWordGroupSummaries reads the groups AND their word ids with the
+ * service-role client: word_groups rows themselves are fully public-readable
+ * regardless of premium status (same as `lessons` — only the content
+ * *inside* a premium group is gated), but the word ids and counts must not
+ * depend on who is looking: vocabulary_words RLS hides a premium group's rows
  * entirely (ids included) from the anonymous client, so reading ids there
  * made a paying subscriber's progress on every premium group read as 0
  * whenever the sitewide free-for-all switch was off. Only ids and group ids
@@ -37,41 +38,68 @@ import type { WordGroup, WordGroupSummary } from "@/types/word-lists";
  * paying user.
  */
 
+/** A word_groups row with the ids of its words embedded (PostgREST resource embedding over the group_id foreign key). */
+type GroupWithWordIds = Database["public"]["Tables"]["word_groups"]["Row"] & {
+  vocabulary_words: Array<{ id: string }> | null;
+};
+
+/**
+ * Every published group, in one request, with the ids of its words embedded. The word ids and counts
+ * are read with the service-role client for the reason in the doc comment above, and they used to
+ * come from a read of the WHOLE vocabulary_words table: PostgREST answers at most 1,000 rows to a
+ * request and says nothing when it cuts, and that table (every topic, the drafts and the hidden
+ * passage lists) is past 1,000 rows once a few more topics are added, which would have shown a
+ * published list with missing words and wrong progress. The 1,000 cap counts the GROUPS here, a few
+ * dozen, never their words.
+ */
 export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<WordGroupSummary[]> {
-  const supabase = createPublicClient();
-
-  const [{ data: groupRows, error: groupsError }, { data: words, error: wordsError }] =
-    await Promise.all([
-      supabase.from("word_groups").select("*").eq("status", "published").order("order_index"),
-      // Service-role, not the public client above: a group's real word ids and
-      // count have to be accurate regardless of whether THIS viewer can read
-      // its rows (a locked group viewed by a free learner, or a premium group
-      // viewed by a subscriber, which the anonymous client can never resolve
-      // as one). Ids only — see the doc comment above.
-      createServiceRoleClient().from("vocabulary_words").select("id, group_id"),
-    ]);
-
-  if (groupsError) throw groupsError;
-  if (wordsError) throw wordsError;
+  const { data, error } = await createServiceRoleClient()
+    .from("word_groups")
+    .select("*, vocabulary_words(id)")
+    .eq("status", "published")
+    .order("order_index");
+  if (error) throw error;
   // Defensive double-check, see isLearnerVisibleStatus's doc comment.
-  const groups = (groupRows ?? []).filter((group) => isLearnerVisibleStatus(group.status));
+  const groups = ((data ?? []) as unknown as GroupWithWordIds[]).filter((group) =>
+    isLearnerVisibleStatus(group.status),
+  );
+  return summarizeGroups(groups, locale);
+}
 
-  const idsByGroup = new Map<string, string[]>();
-  for (const word of words ?? []) {
-    const list = idsByGroup.get(word.group_id) ?? [];
-    list.push(word.id);
-    idsByGroup.set(word.group_id, list);
-  }
+/**
+ * The topics nobody has published yet (drafts), as summaries, so the library can show them to an
+ * ADMIN and to nobody else: the public client cannot read a draft at all, so this uses the
+ * service-role client, and its caller MUST have checked isAdmin() first. A passage's own word list
+ * (id passage-..., a draft for good) stays out. Each summary is marked `draft`.
+ */
+export async function fetchDraftWordGroupSummaries(
+  locale?: SupportLocale,
+): Promise<WordGroupSummary[]> {
+  const { data, error } = await createServiceRoleClient()
+    .from("word_groups")
+    .select("*, vocabulary_words(id)")
+    .eq("status", "draft")
+    .not("id", "like", "passage-%")
+    .order("order_index");
+  if (error) throw error;
+  const drafts = await summarizeGroups((data ?? []) as unknown as GroupWithWordIds[], locale);
+  return drafts.map((group) => ({ ...group, draft: true }));
+}
 
+async function summarizeGroups(
+  groups: GroupWithWordIds[],
+  locale?: SupportLocale,
+): Promise<WordGroupSummary[]> {
   const translations = locale
     ? await getContentTranslations(
         "word_group",
-        (groups ?? []).map((group) => group.id),
+        groups.map((group) => group.id),
         locale,
       )
     : undefined;
 
-  return (groups ?? []).map((group) => {
+  return groups.map((group) => {
+    const wordIds = (group.vocabulary_words ?? []).map((word) => word.id);
     const summary: WordGroupSummary = {
       id: group.id,
       level: group.level,
@@ -81,12 +109,11 @@ export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<W
       description: group.description ?? undefined,
       descriptionAr: group.description_ar ?? undefined,
       isFree: group.is_free,
-      // Both come from the service-role read above, so they are every
-      // group's true figures whatever this viewer's access: a locked group
-      // is never misreported as empty, and a subscriber's progress on a
-      // premium group counts its real words.
-      wordCount: idsByGroup.get(group.id)?.length ?? 0,
-      wordIds: idsByGroup.get(group.id) ?? [],
+      // Both are every group's true figures whatever this viewer's access (service-role read): a
+      // locked group is never misreported as empty, and a subscriber's progress on a premium group
+      // counts its real words.
+      wordCount: wordIds.length,
+      wordIds,
       // Absent until 20250359000000_word_group_covers.sql is applied: no chosen picture.
       coverUrl: group.cover_url ?? null,
     };
@@ -140,11 +167,16 @@ export interface VocabularyWordFlatRow {
  */
 export const fetchAllVocabularyWordsFlat = cache(async (): Promise<VocabularyWordFlatRow[]> => {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("vocabulary_words")
-    .select("id, group_id, target_word");
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
+  // Page by page: an admin's session sees every row of the table (drafts and the hidden passage
+  // lists too), and one request would be cut silently at 1,000 rows. See readAllPages.
+  const data = await readAllPages((from, to) =>
+    supabase
+      .from("vocabulary_words")
+      .select("id, group_id, target_word")
+      .order("id")
+      .range(from, to),
+  );
+  return data.map((row) => ({
     id: row.id,
     groupId: row.group_id,
     targetWord: row.target_word,

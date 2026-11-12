@@ -172,7 +172,9 @@ test("every published topic has a drawing of its own, and an unknown topic has n
   ]) {
     assert.ok(hasCoverScene(title), title);
   }
-  for (const title of ["Gaming", "", "toString", "constructor"]) {
+  // "Gaming" was the example of a topic with no drawing until the third expansion drew it
+  // (src/data/word-lists/expansion-3.test.ts keeps those sixteen honest).
+  for (const title of ["A Topic Nobody Added", "", "toString", "constructor"]) {
     assert.equal(hasCoverScene(title), false, title);
   }
 });

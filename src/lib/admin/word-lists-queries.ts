@@ -1,4 +1,5 @@
 import { WORD_IPA } from "@/data/word-lists/ipa";
+import { readAllPages } from "@/lib/supabase/read-all-pages";
 import { createClient } from "@/lib/supabase/server";
 import type { WordGroupStatus } from "@/lib/admin/word-lists-validation";
 
@@ -35,17 +36,19 @@ export async function listWordGroupsAdmin(): Promise<AdminWordGroup[]> {
   if (error) throw error;
   if (!groups || groups.length === 0) return [];
 
-  const { data: words, error: wordsError } = await supabase
-    .from("vocabulary_words")
-    .select("group_id")
-    .in(
-      "group_id",
-      groups.map((g) => g.id),
-    );
-  if (wordsError) throw wordsError;
+  // Page by page (see readAllPages): the table holds more than 1,000 words once the drafts are in.
+  const groupIds = groups.map((g) => g.id);
+  const words = await readAllPages((from, to) =>
+    supabase
+      .from("vocabulary_words")
+      .select("group_id")
+      .in("group_id", groupIds)
+      .order("id")
+      .range(from, to),
+  );
 
   const countByGroup = new Map<string, number>();
-  for (const word of words ?? []) {
+  for (const word of words) {
     countByGroup.set(word.group_id, (countByGroup.get(word.group_id) ?? 0) + 1);
   }
 

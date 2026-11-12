@@ -3,7 +3,11 @@ import { cache } from "react";
 import { wordGroups as localWordGroups } from "@/data/word-lists";
 import { WORD_IPA } from "@/data/word-lists/ipa";
 import { WORD_POS } from "@/data/word-lists/pos";
-import { fetchWordGroupById, fetchWordGroupSummaries } from "@/lib/supabase/queries/word-lists";
+import {
+  fetchDraftWordGroupSummaries,
+  fetchWordGroupById,
+  fetchWordGroupSummaries,
+} from "@/lib/supabase/queries/word-lists";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { normalizeIpa } from "@/lib/word-lists-ipa";
@@ -47,6 +51,23 @@ function withIpa(group: WordGroup): WordGroup {
 export async function getWordGroupSummaries(locale?: SupportLocale): Promise<WordGroupSummary[]> {
   if (isSupabaseConfigured()) return fetchWordGroupSummaries(locale);
   return localWordGroups.map(toSummary);
+}
+
+/**
+ * The topics still in draft, for an ADMIN's library only: the caller must have checked isAdmin()
+ * first (the read bypasses the row-level rule that hides drafts). A failed read gives none, so a
+ * problem here never takes the library down with it. The local seed has no drafts.
+ */
+export async function getDraftWordGroupSummaries(
+  locale?: SupportLocale,
+): Promise<WordGroupSummary[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    return await fetchDraftWordGroupSummaries(locale);
+  } catch (error) {
+    console.error("[word-lists] reading the draft topics failed", error);
+    return [];
+  }
 }
 
 /**

@@ -12,7 +12,7 @@ import { fetchWordCardHints } from "@/lib/supabase/queries/word-hints";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchWeakWordsAction } from "@/lib/weak-words/actions";
 import { loadBankWordLists } from "@/lib/word-bank/card-load";
-import { getWordGroupSummaries } from "@/lib/word-lists";
+import { getDraftWordGroupSummaries, getWordGroupSummaries } from "@/lib/word-lists";
 import {
   getLearnerToday,
   getSmartWordsAccess,
@@ -51,6 +51,10 @@ export default async function WordListsPage({
       getWordsRedesignEnabled(),
       getEffectiveFeatures(),
     ]);
+
+  // Topics still in draft are shown to an admin alone, in the grid only (a card marked Draft that opens
+  // the admin preview): the figures below (mastery, the banner) never count them.
+  const drafts = isAdminUser ? await getDraftWordGroupSummaries(locale ?? undefined) : [];
 
   // Smart word practice, signed-in learners only (the schedule needs an
   // account): each card's mastery and the number of words waiting for review.
@@ -106,7 +110,7 @@ export default async function WordListsPage({
         />
       ) : (
         <WordListsLibrary
-          groups={groups}
+          groups={drafts.length > 0 ? [...groups, ...drafts] : groups}
           isPremiumUser={hasPremium || isAdminUser}
           weakWords={weakWords}
           mastery={mastery}

@@ -82,4 +82,6 @@ export type WordGroupSummary = Omit<WordGroup, "words"> & {
   wordIds: string[];
   /** The cover picture an admin chose for this list (word_groups.cover_url), or null/absent for the drawing made for its topic. */
   coverUrl?: string | null;
+  /** Present (true) only on a topic that is still a draft: it is read for an admin alone, so the library can show it to them before it is published. Learners never get a summary with it. */
+  draft?: boolean;
 };
