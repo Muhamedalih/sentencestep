@@ -73,6 +73,17 @@ export async function fetchSavedWordSet(userId: string): Promise<string[]> {
   return (data ?? []).map((row) => row.word);
 }
 
+/** How many words the learner has saved — one head count, read only when a word is about to be saved (to tell the very first save). */
+export async function countSavedCards(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("saved_words")
+    .select("word", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function fetchDueCardCount(userId: string): Promise<number> {
   const supabase = await createClient();
   const { count, error } = await supabase

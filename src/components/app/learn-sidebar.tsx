@@ -101,7 +101,7 @@ export function LearnSidebar({
   videoEnabled?: boolean;
   /** The "contactInstagram" permission, resolved for this visitor: the «تواصل معنا» box at the foot of the md: sidebar, and the last tile of the phone's More sheet. */
   contactInstagram?: boolean;
-  /** The "wordBank" permission, resolved for this visitor (and signed in): «كلماتي» is a menu item right before Word Lists from md: up, and a tile in the phone's More sheet. */
+  /** The "wordBank" permission or the saved words ("Personal word cards"), resolved for this visitor (and signed in): «كلماتي» is a menu item right before Word Lists from md: up, and a tile in the phone's More sheet. */
   wordBankEnabled?: boolean;
 }) {
   const pathname = usePathname();

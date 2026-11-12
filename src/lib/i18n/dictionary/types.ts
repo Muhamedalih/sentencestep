@@ -1789,7 +1789,7 @@ export interface Dictionary {
     emptyState: string;
     items: Record<BadgeId, { name: string; description: string }>;
   };
-  /** Personal word cards: the save star in lessons, the /learn/cards page, its review session and the Anki export. */
+  /** Saved words ("Personal word cards"): the save star in lessons, the saved list inside «كلماتي» (/learn/words/saved), its review session, the Anki export and the one-time note after the first save. */
   myCards: {
     title: string;
     navLabel: string;
@@ -1814,6 +1814,14 @@ export interface Dictionary {
     reviewCompleteSubtitle: string;
     signInHeading: string;
     signInBody: string;
+    savedNoticeHeading: string;
+    savedNoticeBody: string;
+    savedNoticeOpen: string;
+    savedNoticeClose: string;
+    /** The "open the list" link on the saved-words tile of «كلماتي». */
+    openSaved: string;
+    /** "{n}" words are saved — the tile's second line. */
+    savedTileCount: string;
   };
   /** Today's session: the Home card (src/components/app/daily-session-card.tsx) and the session's completion screen. */
   dailySession: {

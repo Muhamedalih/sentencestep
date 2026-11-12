@@ -5,6 +5,7 @@ import { after } from "next/server";
 
 import type { ReviewWord } from "@/components/learning/word-review-session";
 import {
+  countSavedCards,
   deleteSavedCard,
   fetchCardsForReview,
   fetchSavedWordSet,
@@ -20,6 +21,12 @@ import { buildBlankSentence } from "@/lib/vocabulary-recall/blank-sentence";
 
 /** How many cards one review session covers — a session, not the whole deck. */
 const REVIEW_SESSION_LIMIT = 20;
+
+/** The saved words live inside «كلماتي»: its page and the saved list under it show them. */
+function revalidateSavedWords(): void {
+  revalidatePath("/learn/words");
+  revalidatePath("/learn/words/saved");
+}
 
 /** The signed-in learner's id, but only when the personal-cards feature is actually open to them; null otherwise (feature off, preview state, premium-only, or a guest). */
 async function getCardsUserId(): Promise<string | null> {
@@ -65,7 +72,9 @@ function cleanText(value: unknown, max: number): string | null {
  * worst a forged request can do is put junk in the caller's OWN deck, which
  * only they ever see (and the Anki export HTML-escapes it).
  */
-export async function saveWordCardAction(input: SaveWordCardInput): Promise<{ ok: boolean }> {
+export async function saveWordCardAction(
+  input: SaveWordCardInput,
+): Promise<{ ok: boolean; first?: boolean }> {
   try {
     const features = await getEffectiveFeatures();
     const userId = await getCardsUserId();
@@ -87,6 +96,9 @@ export async function saveWordCardAction(input: SaveWordCardInput): Promise<{ ok
       return { ok: false };
     }
 
+    // The learner's very first saved word (an empty deck before this one): the lesson screen then
+    // says, once, where the word went. Read before the insert; a failed read only skips that note.
+    const first = (await countSavedCards(userId).catch(() => 1)) === 0;
     await insertSavedCard(userId, {
       word,
       meaning,
@@ -100,8 +112,8 @@ export async function saveWordCardAction(input: SaveWordCardInput): Promise<{ ok
     after(async () => {
       await awardEventBadge("firstCard");
     });
-    revalidatePath("/learn/cards");
-    return { ok: true };
+    revalidateSavedWords();
+    return { ok: true, first };
   } catch (error) {
     console.error("[cards] saveWordCardAction failed", error);
     return { ok: false };
@@ -113,7 +125,7 @@ export async function removeWordCardAction(word: string): Promise<{ ok: boolean 
     const userId = await getCardsUserId();
     if (!userId) return { ok: false };
     await deleteSavedCard(userId, normalizeMistakeWord(word));
-    revalidatePath("/learn/cards");
+    revalidateSavedWords();
     return { ok: true };
   } catch (error) {
     console.error("[cards] removeWordCardAction failed", error);
@@ -131,7 +143,7 @@ export async function markCardReviewedAction(word: string, hadErrors: boolean): 
       await recordQuestEventsAndBadges(userId, [{ type: "masterWords", amount: 1 }]);
     });
   }
-  revalidatePath("/learn/cards");
+  revalidateSavedWords();
 }
 
 /**

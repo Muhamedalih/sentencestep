@@ -34,7 +34,7 @@ const FEATURE_COPY: Record<FeatureId, { title: string; description: string }> = 
   personalCards: {
     title: "Personal word cards",
     description:
-      "A save star on the current-word card, a My Cards page with spaced review (1/3/7/16 days) and an Anki TSV export. Signed-in learners only. The section switches control where the save star appears.",
+      "A save star on the current-word card. A saved word goes to «كلماتي» (My Words) → Saved words, which opens its own page with spaced review (1/3/7/16 days) and an Anki TSV export, and shows «كلماتي» in the menu even where the words bank is closed. The learner's first saved word shows a one-time note saying where it went. Signed-in learners only. The section switches control where the save star appears.",
   },
   dailySession: {
     title: "Daily session",

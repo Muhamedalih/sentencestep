@@ -218,7 +218,7 @@ export function WordReviewSession({
     (variant === "recall" || variant === "session"
       ? "/learn"
       : variant === "cards"
-        ? "/learn/cards"
+        ? "/learn/words/saved"
         : "/learn/word-lists");
   const backLabel =
     variant === "recall" || variant === "session"
