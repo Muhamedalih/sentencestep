@@ -72,12 +72,36 @@ export function isAutoSkipChar(char: string): boolean {
  * should never be required. Called both on reset (a sentence can *start*
  * with punctuation) and after every accepted real character.
  */
-export function advanceAutoSkip(target: string, typed: string): string {
+export function advanceAutoSkip(target: string, typed: string, skipSpaces = false): string {
   let result = typed;
-  while (result.length < target.length && isAutoSkipChar(target.charAt(result.length))) {
+  while (
+    result.length < target.length &&
+    (isAutoSkipChar(target.charAt(result.length)) ||
+      (skipSpaces && /\s/.test(target.charAt(result.length))))
+  ) {
     result += target.charAt(result.length);
   }
   return result;
+}
+
+/**
+ * The «auto space» mode (the Video section): the space after a word is folded
+ * in by `advanceAutoSkip(…, true)` the moment the word's last letter is right,
+ * so the learner never presses it. A backspace then has to undo the letter, not
+ * the space that was never typed: when everything a deletion removed is skippable
+ * (spaces, punctuation), the trailing skippable run that remains goes too, along
+ * with the one real character before it. A deletion that removes a real letter
+ * is returned as it is.
+ */
+export function backspaceOverAutoSkips(removed: string, remaining: string): string {
+  const onlySkippable =
+    removed.length > 0 && [...removed].every((c) => isAutoSkipChar(c) || /\s/.test(c));
+  if (!onlySkippable) return remaining;
+  let result = remaining;
+  while (result.length > 0 && (isAutoSkipChar(result.slice(-1)) || /\s/.test(result.slice(-1)))) {
+    result = result.slice(0, -1);
+  }
+  return result.slice(0, -1);
 }
 
 /**
