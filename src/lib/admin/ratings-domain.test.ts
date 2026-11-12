@@ -127,6 +127,12 @@ test("the words ratings have their own source, like passages and video", () => {
   assert.equal(ratingsFilterParams(parseRatingsFilter({ source: "words" })).source, "words");
 });
 
+test("the word rounds' ratings have their own source too, and it is read for no section", () => {
+  assert.equal(parseRatingsFilter({ source: "rounds" }).source, "rounds");
+  assert.equal(parseRatingsFilter({ source: "rounds", section: "stories" }).section, "all");
+  assert.equal(ratingsFilterParams(parseRatingsFilter({ source: "rounds" })).source, "rounds");
+});
+
 test("a section is a closer look at the app's ratings: read for the app source only, and kept out of the link when it is every section", () => {
   assert.equal(parseRatingsFilter({ section: "stories" }).section, "stories");
   assert.equal(parseRatingsFilter({ section: "normal" }).section, "normal");

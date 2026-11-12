@@ -17,10 +17,11 @@ export const RATINGS_PAGE_SIZE = 25;
  * Where a rating was given. "app" is everything about SentenceStep itself (the rating pop-up
  * after a Daily lesson or a Story, and Settings); "passages" is the one-time card after a learner's
  * first finished passage, "video" the one-time card after a learner's first finished video, "words"
- * the row of stars at the end of a «كلماتي» review.
+ * the row of stars at the end of a «كلماتي» review, "rounds" the faces card after a round of three
+ * words of Word Lists (a rating of the words section too, told apart by its lesson id).
  * They are listed and counted apart, and only the app's own ratings make the site's average.
  */
-export type RatingsSource = "app" | "passages" | "video" | "words";
+export type RatingsSource = "app" | "passages" | "video" | "words" | "rounds";
 
 /**
  * Inside the "app" source, where in the app the rating was given: after a Daily lesson ("normal"),
@@ -50,7 +51,9 @@ function first(value: string | string[] | undefined): string | undefined {
 }
 
 function parseSource(value: string | undefined): RatingsSource {
-  return value === "passages" || value === "video" || value === "words" ? value : "app";
+  return value === "passages" || value === "video" || value === "words" || value === "rounds"
+    ? value
+    : "app";
 }
 
 function parseSection(value: string | undefined): RatingsSection {

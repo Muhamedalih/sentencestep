@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  LADDER_PHASES,
   LADDER_STEPS,
   buildQueue,
   canScramble,
   ladderOutcome,
+  phaseOf,
   retryOf,
   stepsFor,
 } from "@/lib/word-ladder/sequence";
@@ -19,7 +21,7 @@ const word = (id: string, over: Partial<SteppedWord> = {}): SteppedWord => ({
   ...over,
 });
 
-test("a word that can be scrambled goes through all five steps", () => {
+test("a word that can be scrambled goes through all five kinds of screen", () => {
   assert.deepEqual(stepsFor(word("aunt")), [...LADDER_STEPS]);
 });
 
@@ -45,32 +47,43 @@ test("a word is scrambled only when it is plain letters, three to fourteen, not 
   assert.equal(canScramble("a".repeat(15)), false);
 });
 
-test("a round of three is fifteen screens, step by step: every word's step one, then every word's step two...", () => {
+test("each word is met and asked its meaning at once, one word after the other", () => {
+  const queue = buildQueue([word("aunt"), word("uncle"), word("cousin")], "round-1");
+  assert.deepEqual(
+    queue.slice(0, 6).map((card) => `${card.wordId}:${card.step}`),
+    ["aunt:meet", "aunt:meaning", "uncle:meet", "uncle:meaning", "cousin:meet", "cousin:meaning"],
+  );
+});
+
+test("after the introductions come the tests, one test at a time over every word: fifteen screens in all", () => {
   const queue = buildQueue([word("aunt"), word("uncle"), word("cousin")], "round-1");
   assert.equal(queue.length, 15);
   assert.deepEqual(
-    queue.map((card) => card.step),
-    LADDER_STEPS.flatMap((step) => [step, step, step]),
+    queue.slice(6).map((card) => card.step),
+    ["listen", "listen", "listen", "letters", "letters", "letters", "type", "type", "type"],
   );
-  for (let step = 0; step < 5; step++) {
-    const ids = queue.slice(step * 3, step * 3 + 3).map((card) => card.wordId);
-    assert.deepEqual([...ids].sort(), ["aunt", "cousin", "uncle"]);
+  for (const [from, to] of [
+    [6, 9],
+    [9, 12],
+    [12, 15],
+  ] as const) {
+    assert.deepEqual(
+      queue
+        .slice(from, to)
+        .map((card) => card.wordId)
+        .sort(),
+      ["aunt", "cousin", "uncle"],
+    );
   }
   assert.ok(queue.every((card) => card.retry === false));
 });
 
-test("the meeting step keeps the topic's order", () => {
-  const queue = buildQueue([word("aunt"), word("uncle"), word("cousin")], "any");
-  assert.deepEqual(
-    queue.slice(0, 3).map((card) => card.wordId),
-    ["aunt", "uncle", "cousin"],
-  );
-});
-
-test("a step never opens with the word the step before it ended on", () => {
+test("a test never opens with the word the screen before it was about", () => {
   for (let n = 0; n < 60; n++) {
     const queue = buildQueue([word("aunt"), word("uncle"), word("cousin")], `seed-${n}`);
     for (let i = 1; i < queue.length; i++) {
+      // The meeting and the meaning of one word are meant to be side by side.
+      if (queue[i]!.step === "meaning") continue;
       assert.notEqual(queue[i]!.wordId, queue[i - 1]!.wordId, `seed-${n} at ${i}`);
     }
   }
@@ -81,11 +94,31 @@ test("the same seed gives the same order", () => {
   assert.deepEqual(buildQueue(words, "same"), buildQueue(words, "same"));
 });
 
-test("a word without a step is left out of that step only", () => {
+test("a word without a screen kind is left out of that kind only", () => {
   const queue = buildQueue([word("aunt"), word("it", { meaningOptions: [] })], "seed");
-  const meaning = queue.filter((card) => card.step === "meaning").map((card) => card.wordId);
-  assert.deepEqual(meaning, ["aunt"]);
+  assert.deepEqual(
+    queue.filter((card) => card.step === "meaning").map((card) => card.wordId),
+    ["aunt"],
+  );
+  assert.deepEqual(
+    queue.slice(0, 3).map((card) => `${card.wordId}:${card.step}`),
+    ["aunt:meet", "aunt:meaning", "it:meet"],
+  );
   assert.equal(queue.filter((card) => card.step === "type").length, 2);
+});
+
+test("a round of four words is four introductions and three tests of four", () => {
+  const queue = buildQueue([word("aunt"), word("uncle"), word("cousin"), word("niece")], "four");
+  assert.equal(queue.length, 8 + 12);
+});
+
+test("the progress bar counts the introductions as one phase and each test as its own", () => {
+  assert.deepEqual([...LADDER_PHASES], ["intro", "listen", "letters", "type"]);
+  assert.equal(phaseOf("meet"), "intro");
+  assert.equal(phaseOf("meaning"), "intro");
+  assert.equal(phaseOf("listen"), "listen");
+  assert.equal(phaseOf("letters"), "letters");
+  assert.equal(phaseOf("type"), "type");
 });
 
 test("a miss earns one more go at the end, never two, and the meeting earns none", () => {

@@ -114,9 +114,10 @@ export default async function AdminRatingsPage({
   const forPassages = filter.source === "passages";
   const forVideo = filter.source === "video";
   const forWords = filter.source === "words";
+  const forRounds = filter.source === "rounds";
   // Passages, Video and Words are kept apart from the app's own ratings; a section of the App tab is
   // part of them (the site's average is made of every section together).
-  const keptApart = forPassages || forVideo || forWords;
+  const keptApart = forPassages || forVideo || forWords || forRounds;
   const wholeApp = filter.source === "app" && filter.section === "all";
   const biggestStar = Math.max(1, ...overview.perStar);
   const proof = buildRatingsProof(overview.perStar);
@@ -134,7 +135,9 @@ export default async function AdminRatingsPage({
         <p className="text-muted-foreground mt-1">
           {forPassages
             ? "What learners said about the Passages section, from the one-time card shown after their first finished passage (the passage is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
-            : forWords
+            : forRounds
+              ? "What learners said about the word rounds of Word Lists, from the faces card shown after a finished round (a face is 5 stars for loved it down to 1 for hated it, with an optional comment). They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
+              : forWords
               ? "What learners said about My Words («كلماتي»), from the row of stars at the end of a words review. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
               : forVideo
                 ? "What learners said about the Video section and how to develop the site, from the one-time card shown after their first finished video (the video is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
@@ -192,6 +195,14 @@ export default async function AdminRatingsPage({
           {newBySource.words > 0 && (
             <Badge variant="secondary" className="ms-2">
               {newBySource.words} new
+            </Badge>
+          )}
+        </Chip>
+        <Chip href={hrefWith(filter, { source: "rounds", section: undefined })} active={forRounds}>
+          Word rounds
+          {newBySource.rounds > 0 && (
+            <Badge variant="secondary" className="ms-2">
+              {newBySource.rounds} new
             </Badge>
           )}
         </Chip>

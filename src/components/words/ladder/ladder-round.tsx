@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Check, Volume2 } from "lucide-react";
+import { ArrowLeft, Check, Volume2, X } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
 import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
@@ -14,7 +14,8 @@ import { useLessonFontSettings } from "@/components/providers/lesson-font-settin
 import { useLocale } from "@/components/providers/locale-provider";
 import { usePronunciationSettings } from "@/components/providers/pronunciation-settings-provider";
 import { useTypingSoundSettings } from "@/components/providers/typing-sound-settings-provider";
-import { LadderRoundBar } from "@/components/words/ladder/ladder-round-bar";
+import { LadderFinish } from "@/components/words/ladder/ladder-finish";
+import { LadderRatingModal } from "@/components/words/ladder/ladder-rating-modal";
 import { WordPosBadge } from "@/components/words/word-pos-badge";
 import { Button } from "@/components/ui/button";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
@@ -22,13 +23,22 @@ import { useTypingSound } from "@/hooks/use-typing-sound";
 import { useWordsRoundTracking } from "@/hooks/use-words-round-tracking";
 import { resolveSectionFontFamily } from "@/lib/admin/lesson-font-settings";
 import { resolveSectionSentenceCompleteSound } from "@/lib/admin/typing-sound-settings";
+import { readRoundsRatingState, writeRoundsRatingState } from "@/lib/feedback/rating-storage";
 import { splitAroundWord } from "@/lib/passages/text";
 import { cn } from "@/lib/utils";
 import { recordBankWordAction } from "@/lib/word-bank/actions";
 import { scrambleLetters } from "@/lib/word-ladder/options";
 import {
+  shouldAskRoundsRating,
+  withFinishedRound,
+  withRated,
+  withSkip,
+} from "@/lib/word-ladder/rating-gate";
+import {
+  LADDER_PHASES,
   buildQueue,
   ladderOutcome,
+  phaseOf,
   retryOf,
   type LadderCard,
   type LadderStep,
@@ -39,7 +49,7 @@ import { formatIpa } from "@/lib/word-lists-ipa";
 import type { WordOutcome } from "@/lib/word-mastery/schedule";
 import { BLANK_TOKEN } from "@/types/word-lists";
 
-/** How one word went through the round, kept for the finish screen. */
+/** How one word went through the round, kept for the finish page. */
 interface Run {
   earlierMisses: number;
   typedFirst: boolean | null;
@@ -48,9 +58,8 @@ interface Run {
 
 export interface LadderRoundProps {
   words: LadderWord[];
-  /** Which round of the topic this is, how many rounds it has, and how many of its words are finished. */
+  /** Which round of the topic this is, and how many of the topic's words were finished before it. */
   number: number;
-  count: number;
   done: number;
   total: number;
   group: { id: string; title: string; supportTitle?: string };
@@ -60,25 +69,29 @@ export interface LadderRoundProps {
   todayISO: string;
   /** A word was typed right: the topic's progress and the visit's own count are updated by the parent. */
   onWordComplete: (wordId: string) => void;
-  /** The round that follows this one (its number), or null when the topic is finished. */
-  nextNumber: number | null;
+  /** The round that follows this one (its number and first word), or null when the topic is finished. */
+  next: { number: number; firstWord: string } | null;
   onNext: () => void;
 }
 
-/** A miss on the typed step shows the right spelling; the others show their own feedback in place. */
-const CORRECT_DELAY_MS = 450;
-const WRONG_DELAY_MS = 1200;
+/** After a choice: how long the answer stays on screen before the next screen (a miss stays longer, to be read). */
+const CORRECT_DELAY_MS = 650;
+const WRONG_DELAY_MS = 1400;
+/** The shake of a wrong choice. */
+const SHAKE = [0, -9, 9, -6, 6, -3, 3, 0];
 
 /**
- * One round of three words of a Word Lists topic: five steps, each asked about every word before the
- * next step begins (see buildQueue). Only the typed step counts as learned; the others are the
- * scaffolding that gets the word there. A wrong answer in any step earns that screen once more at
- * the end of the round. The first typed answer of each word is what the learner's records hear.
+ * One round of three words of a Word Lists topic. Each word is met and asked its meaning at once,
+ * one word after the other; then come the tests over all three (hear and choose, put the letters in
+ * order, hear and type). Only the typed test counts as learned; the rest is the scaffolding that gets
+ * the word there. A wrong answer anywhere earns that screen once more at the end of the round, and
+ * shows itself with a small shake, a red edge and the right answer. The first typed answer of each
+ * word is what the learner's records hear. When the round ends, the finish page opens, and the
+ * rating card of the rounds is offered (see rating-gate.ts).
  */
 export function LadderRound({
   words,
   number,
-  count,
   done,
   total,
   group,
@@ -86,7 +99,7 @@ export function LadderRound({
   bankFeed,
   todayISO,
   onWordComplete,
-  nextNumber,
+  next,
   onNext,
 }: LadderRoundProps) {
   const { locale } = useLocale();
@@ -106,6 +119,7 @@ export function LadderRound({
     ),
   );
   const [typedWrong, setTypedWrong] = useState<string | null>(null);
+  const [ratingOpen, setRatingOpen] = useState(false);
 
   const finished = pos >= queue.length;
   const card = queue[pos];
@@ -137,12 +151,25 @@ export function LadderRound({
   const live = useRef({ card, word, runs, queue });
   live.current = { card, word, runs, queue };
 
+  // The round ran to its end: it is reported, and the rating card is offered when it is due. The
+  // decision is made once (a development double-run of the effect must not count the round twice).
+  const askRef = useRef<boolean | null>(null);
   useEffect(() => {
-    if (finished) tracking.finish();
+    if (!finished) return;
+    tracking.finish();
+    if (askRef.current === null) {
+      const state = withFinishedRound(readRoundsRatingState());
+      writeRoundsRatingState(state);
+      askRef.current = shouldAskRoundsRating(state);
+    }
+    if (!askRef.current) return;
+    const timer = window.setTimeout(() => setRatingOpen(true), 1100);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the last screen is done
   }, [finished]);
 
-  const feedback = useCallback(
+  /** The sound of an answer, the moment it is given: the soft achievement sound for a right one, the error tick for a wrong one. */
+  const answered = useCallback(
     (correct: boolean) => {
       if (correct) {
         playSentenceComplete(resolveSectionSentenceCompleteSound(typingSoundSettings, "wordLists"));
@@ -182,7 +209,6 @@ export function LadderRound({
     (correct: boolean) => {
       const { card: current } = live.current;
       if (!current) return;
-      feedback(correct);
       if (!correct) {
         setRuns((previous) => ({
           ...previous,
@@ -196,7 +222,7 @@ export function LadderRound({
       }
       advance();
     },
-    [advance, feedback],
+    [advance],
   );
 
   /** The typed step: the first answer is what the records hear, a right one finishes the word. */
@@ -204,17 +230,20 @@ export function LadderRound({
     (correct: boolean, written: string) => {
       const { card: current, word: target, runs: all } = live.current;
       if (!current || !target) return;
-      feedback(correct);
+      answered(correct);
       const previous = all[target.id]!;
       const first = !current.retry;
-      const next: Run = {
+      const nextRun: Run = {
         earlierMisses: previous.earlierMisses,
         typedFirst: first ? correct : previous.typedFirst,
         typedRight: previous.typedRight || correct,
       };
-      setRuns((state) => ({ ...state, [target.id]: next }));
+      setRuns((state) => ({ ...state, [target.id]: nextRun }));
       if (first) {
-        const outcome = ladderOutcome({ earlierMisses: next.earlierMisses, typedFirst: correct });
+        const outcome = ladderOutcome({
+          earlierMisses: nextRun.earlierMisses,
+          typedFirst: correct,
+        });
         if (outcome) report(target, outcome);
         if (!correct) {
           const again = retryOf(current);
@@ -225,14 +254,14 @@ export function LadderRound({
       if (correct) advance();
       else setTypedWrong(written.trim().slice(0, 40));
     },
-    [advance, feedback, onWordComplete, report],
+    [advance, answered, onWordComplete, report],
   );
 
   const step: LadderStep | null = card?.step ?? null;
   const audio = step === "meet" || step === "listen" || step === "type";
   const replay = useCallback(() => settingsRef.current?.replay(), []);
 
-  // Position of this screen inside its step ("1 of 3"). The screens a miss adds at the end carry no
+  // Position of this screen inside its kind ("1 of 3"). The screens a miss adds at the end carry no
   // position: they are a second go, not a fourth word.
   const stepScreens = card ? queue.filter((item) => item.step === card.step && !item.retry) : [];
   const stepIndex = card ? stepScreens.indexOf(card) + 1 : 0;
@@ -265,11 +294,13 @@ export function LadderRound({
               <ArrowLeft className="size-4" aria-hidden="true" />
               {s.back}
             </Link>
-            <LadderProgress queue={queue} pos={pos} finished={finished} />
+            {finished ? <div /> : <LadderProgress queue={queue} pos={pos} />}
             <div className="flex items-center gap-3 justify-self-end">
-              <span className="text-muted-foreground text-sm font-medium" dir="auto">
-                {s.nextRound(number)}
-              </span>
+              {!finished && (
+                <span className="text-muted-foreground text-sm font-medium" dir="auto">
+                  {s.nextRound(number)}
+                </span>
+              )}
               {!finished && word && (
                 <LessonSettings
                   ref={settingsRef}
@@ -294,19 +325,17 @@ export function LadderRound({
               initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16"
+              className="flex flex-1 items-center justify-center overflow-y-auto px-6 py-4 lg:px-16"
             >
-              <Finish
-                s={s}
+              <LadderFinish
                 words={words}
                 runs={runs}
                 number={number}
-                count={count}
                 done={done}
                 total={total}
                 title={group.title}
                 bankFeed={bankFeed}
-                nextNumber={nextNumber}
+                next={next}
                 onNext={onNext}
               />
             </motion.div>
@@ -337,6 +366,7 @@ export function LadderRound({
                     word={word}
                     options={word.meaningOptions}
                     answer={word.term}
+                    onAnswered={answered}
                     onSettled={settle}
                   />
                 )}
@@ -347,6 +377,7 @@ export function LadderRound({
                     word={word}
                     options={word.spellingOptions}
                     answer={word.word}
+                    onAnswered={answered}
                     onSettled={settle}
                     onSpeak={replay}
                     listenLabel={s.listen}
@@ -358,6 +389,7 @@ export function LadderRound({
                     s={s}
                     word={word}
                     seed={`${seed}:${card.wordId}:${card.retry ? 1 : 0}`}
+                    onAnswered={answered}
                     onSettled={settle}
                   />
                 )}
@@ -380,34 +412,34 @@ export function LadderRound({
           )}
         </AnimatePresence>
       </div>
+      <LadderRatingModal
+        open={ratingOpen}
+        onRated={() => {
+          writeRoundsRatingState(withRated(readRoundsRatingState()));
+          setRatingOpen(false);
+        }}
+        onSkip={() => {
+          writeRoundsRatingState(withSkip(readRoundsRatingState()));
+          setRatingOpen(false);
+        }}
+      />
     </SharedInputProvider>
   );
 }
 
-/** The five-step bar of the top: a step is full once all its screens are done. */
-function LadderProgress({
-  queue,
-  pos,
-  finished,
-}: {
-  queue: LadderCard[];
-  pos: number;
-  finished: boolean;
-}) {
-  const steps: LadderStep[] = ["meet", "meaning", "listen", "letters", "type"];
+/** The bar at the top: the introductions, then each test, a segment full once all its screens are done. */
+function LadderProgress({ queue, pos }: { queue: LadderCard[]; pos: number }) {
   return (
     <div className="flex w-[190px] gap-1.5 sm:w-[300px]" dir="ltr" aria-hidden="true">
-      {steps.map((step) => {
-        // The screens a miss adds at the end are not counted: a step never un-fills.
+      {LADDER_PHASES.map((phase) => {
+        // The screens a miss adds at the end are not counted: a segment never un-fills.
         const screens = queue
           .map((item, index) => ({ item, index }))
-          .filter(({ item }) => item.step === step && !item.retry);
-        const doneScreens = finished
-          ? screens.length
-          : screens.filter(({ index }) => index < pos).length;
+          .filter(({ item }) => phaseOf(item.step) === phase && !item.retry);
+        const doneScreens = screens.filter(({ index }) => index < pos).length;
         const width = screens.length === 0 ? 100 : (doneScreens / screens.length) * 100;
         return (
-          <span key={step} className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
+          <span key={phase} className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
             <span
               className="bg-primary block h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
               style={{ width: `${width}%` }}
@@ -419,7 +451,7 @@ function LadderProgress({
   );
 }
 
-/** Step 1: the word, how it sounds, what kind of word it is, what it means, and the sentence it lives in. */
+/** A word is met: the word, how it sounds, what kind of word it is, what it means, and the sentence it lives in. */
 function MeetScreen({
   s,
   word,
@@ -493,12 +525,18 @@ function MeetScreen({
   );
 }
 
-/** Steps 2 and 3: the word (or its sound) and up to four choices; keys 1 to 4 choose. A right choice moves on at once, a wrong one shows the right one first. */
+/**
+ * The meaning question (the word and up to four meanings) and the hearing question (its sound and up
+ * to four spellings); keys 1 to 4 choose. A right choice plays the achievement sound at once and
+ * moves on; a wrong one shakes the chosen option, marks it with a red edge and a cross, shows the
+ * right one in green with a tick, and moves on a moment later.
+ */
 function ChoiceScreen({
   kind,
   word,
   options,
   answer,
+  onAnswered,
   onSettled,
   onSpeak,
   listenLabel,
@@ -507,21 +545,28 @@ function ChoiceScreen({
   word: LadderWord;
   options: string[];
   answer: string;
+  /** The choice was made (right or wrong): the sound is played by the round. */
+  onAnswered: (correct: boolean) => void;
+  /** The moment is over: the round moves on. */
   onSettled: (correct: boolean) => void;
   onSpeak?: () => void;
   listenLabel?: string;
 }) {
   const { dir } = useLocale();
+  const reducedMotion = useReducedMotion() ?? false;
   const [chosen, setChosen] = useState<number | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const settled = useRef(onSettled);
   settled.current = onSettled;
+  const answeredRef = useRef(onAnswered);
+  answeredRef.current = onAnswered;
 
   const pick = useCallback(
     (index: number) => {
       if (chosen !== null || index < 0 || index >= options.length) return;
       setChosen(index);
       const right = options[index] === answer;
+      answeredRef.current(right);
       timer.current = window.setTimeout(
         () => settled.current(right),
         right ? CORRECT_DELAY_MS : WRONG_DELAY_MS,
@@ -570,26 +615,42 @@ function ChoiceScreen({
           const state =
             chosen === null ? "idle" : right ? "right" : chosen === index ? "wrong" : "dim";
           return (
-            <button
+            <motion.button
               key={`${index}:${option}`}
               type="button"
               disabled={chosen !== null}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => pick(index)}
+              animate={state === "wrong" && !reducedMotion ? { x: SHAKE } : { x: 0 }}
+              transition={{ duration: 0.42, ease: "easeOut" }}
               className={cn(
                 "relative flex min-h-[58px] items-center justify-center rounded-xl border px-12 py-3 text-xl font-medium transition-colors sm:min-h-[68px]",
                 state === "idle" &&
                   "border-border bg-card hover:border-primary/60 hover:bg-muted/40",
                 state === "right" && "border-success bg-success/10",
-                state === "wrong" && "border-destructive bg-destructive/10",
-                state === "dim" && "border-border bg-card opacity-60",
+                state === "wrong" && "border-danger bg-danger/10",
+                state === "dim" && "border-border bg-card opacity-50",
               )}
             >
               <kbd className="border-border text-muted-foreground absolute top-1/2 left-3.5 hidden size-6 -translate-y-1/2 place-items-center rounded-md border text-xs font-semibold sm:grid [html[data-keyboard]_&]:grid">
                 {index + 1}
               </kbd>
               <span dir={kind === "meaning" ? dir : "ltr"}>{option}</span>
-            </button>
+              {state === "right" && (
+                <Check
+                  className="text-success absolute top-1/2 right-3.5 size-5 -translate-y-1/2"
+                  strokeWidth={2.6}
+                  aria-hidden="true"
+                />
+              )}
+              {state === "wrong" && (
+                <X
+                  className="text-danger absolute top-1/2 right-3.5 size-5 -translate-y-1/2"
+                  strokeWidth={2.6}
+                  aria-hidden="true"
+                />
+              )}
+            </motion.button>
           );
         })}
       </div>
@@ -597,19 +658,26 @@ function ChoiceScreen({
   );
 }
 
-/** Step 4: the meaning stays on screen and the word's letters are put in order, tapped or typed on the keyboard. */
+/**
+ * The letters question: the meaning stays on screen and the word's letters are put in order, tapped
+ * or typed on the keyboard. A right word plays the achievement sound and turns green; a wrong one
+ * shakes the row, turns it red and shows the right spelling under it before the round moves on.
+ */
 function LettersScreen({
   s,
   word,
   seed,
+  onAnswered,
   onSettled,
 }: {
   s: LadderStrings;
   word: LadderWord;
   seed: string;
+  onAnswered: (correct: boolean) => void;
   onSettled: (correct: boolean) => void;
 }) {
   const { dir } = useLocale();
+  const reducedMotion = useReducedMotion() ?? false;
   const tiles = useMemo(() => scrambleLetters(word.word, seed), [word.word, seed]);
   const [placed, setPlaced] = useState<number[]>([]);
   const [result, setResult] = useState<"right" | "wrong" | null>(null);
@@ -618,21 +686,24 @@ function LettersScreen({
   const timer = useRef<number | undefined>(undefined);
   const settled = useRef(onSettled);
   settled.current = onSettled;
+  const answeredRef = useRef(onAnswered);
+  answeredRef.current = onAnswered;
 
-  const update = useCallback((next: number[]) => {
-    placedRef.current = next;
-    setPlaced(next);
+  const update = useCallback((nextPlaced: number[]) => {
+    placedRef.current = nextPlaced;
+    setPlaced(nextPlaced);
   }, []);
 
   const place = useCallback(
     (tile: number) => {
       if (resultRef.current || placedRef.current.includes(tile)) return;
-      const next = [...placedRef.current, tile];
-      update(next);
-      if (next.length < tiles.length) return;
-      const right = next.map((index) => tiles[index]).join("") === word.word;
+      const nextPlaced = [...placedRef.current, tile];
+      update(nextPlaced);
+      if (nextPlaced.length < tiles.length) return;
+      const right = nextPlaced.map((index) => tiles[index]).join("") === word.word;
       resultRef.current = right ? "right" : "wrong";
       setResult(resultRef.current);
+      answeredRef.current(right);
       timer.current = window.setTimeout(
         () => settled.current(right),
         right ? CORRECT_DELAY_MS : WRONG_DELAY_MS,
@@ -685,7 +756,12 @@ function LettersScreen({
           </p>
         )}
       </div>
-      <div className="flex flex-wrap justify-center gap-2.5" dir="ltr">
+      <motion.div
+        className="flex flex-wrap justify-center gap-2.5"
+        dir="ltr"
+        animate={result === "wrong" && !reducedMotion ? { x: SHAKE } : { x: 0 }}
+        transition={{ duration: 0.42, ease: "easeOut" }}
+      >
         {tiles.map((_, slot) => {
           const tile = placed[slot];
           const letter = tile === undefined ? "" : tiles[tile];
@@ -700,14 +776,14 @@ function LettersScreen({
                 "grid h-[72px] w-16 place-items-center rounded-xl border text-3xl font-semibold transition-colors",
                 letter ? "border-border bg-card" : "border-border/70 border-dashed",
                 result === "right" && "border-success bg-success/10",
-                result === "wrong" && "border-destructive bg-destructive/10",
+                result === "wrong" && "border-danger bg-danger/10",
               )}
             >
               {letter}
             </button>
           );
         })}
-      </div>
+      </motion.div>
       <div className="flex flex-wrap justify-center gap-2.5" dir="ltr">
         {tiles.map((letter, index) => (
           <button
@@ -725,14 +801,20 @@ function LettersScreen({
           </button>
         ))}
       </div>
-      <p className="text-muted-foreground text-[13px] [html[data-keyboard]_&]:hidden" dir="auto">
-        {s.lettersHint}
-      </p>
+      {result === "wrong" ? (
+        <p className="text-success text-2xl font-bold tracking-tight" dir="ltr" aria-live="polite">
+          {word.word}
+        </p>
+      ) : (
+        <p className="text-muted-foreground text-[13px] [html[data-keyboard]_&]:hidden" dir="auto">
+          {s.lettersHint}
+        </p>
+      )}
     </>
   );
 }
 
-/** Step 5: only the word's sound, and the learner types it. A miss shows the right spelling and its sentence before moving on. */
+/** The typed test: only the word's sound, and the learner types it. A miss shows the right spelling and its sentence before moving on. */
 function TypeScreen({
   s,
   word,
@@ -766,7 +848,7 @@ function TypeScreen({
         {wrong && (
           <p className="text-muted-foreground text-sm" dir="auto">
             {s.youTyped("")}
-            <bdi dir="ltr" className="text-destructive font-semibold line-through">
+            <bdi dir="ltr" className="text-danger font-semibold line-through">
               {wrong}
             </bdi>
           </p>
@@ -829,118 +911,5 @@ function TypeScreen({
         />
       </div>
     </>
-  );
-}
-
-/** The finish screen: each word of the round and how it went, where the words come back, how far the topic is, and the next round. */
-function Finish({
-  s,
-  words,
-  runs,
-  number,
-  count,
-  done,
-  total,
-  title,
-  bankFeed,
-  nextNumber,
-  onNext,
-}: {
-  s: LadderStrings;
-  words: LadderWord[];
-  runs: Record<string, Run>;
-  number: number;
-  count: number;
-  done: number;
-  total: number;
-  title: string;
-  bankFeed: boolean;
-  nextNumber: number | null;
-  onNext: () => void;
-}) {
-  const { dir } = useLocale();
-  const right = words.filter((word) => runs[word.id]?.typedRight);
-  const allRight = right.length === words.length;
-  useEnterToContinue(true, onNext);
-  return (
-    <div className="flex w-full max-w-[520px] flex-col items-center gap-3 text-center">
-      <div className="bg-success/15 text-success ring-success/25 grid size-11 place-items-center rounded-full ring-1">
-        <Check className="size-[22px]" strokeWidth={2.4} aria-hidden="true" />
-      </div>
-      <p className="text-muted-foreground text-[12.5px] font-semibold tracking-wide" dir="auto">
-        {s.roundOver(number)}
-      </p>
-      {right.length > 0 && (
-        <h2
-          className="text-foreground text-[clamp(1.8rem,1.5rem+1.4vw,2.2rem)] font-semibold tracking-tight"
-          dir="auto"
-        >
-          {s.gotWords(right.length)}
-        </h2>
-      )}
-      <div className="border-border bg-card w-full rounded-2xl border px-5 py-1.5 text-start">
-        {words.map((word) => {
-          const run = runs[word.id]!;
-          const chip =
-            run.typedFirst && run.earlierMisses === 0
-              ? "clean"
-              : run.typedRight
-                ? "assisted"
-                : "missed";
-          return (
-            <div
-              key={word.id}
-              className="border-border grid grid-cols-[110px_1fr_auto] items-baseline gap-3 border-b py-3 last:border-b-0"
-            >
-              <span className="text-foreground text-xl font-semibold" dir="ltr">
-                {word.word}
-              </span>
-              <span className="text-muted-foreground text-[15px]" dir={dir}>
-                {word.term}
-              </span>
-              <span
-                className={cn(
-                  "rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold",
-                  chip === "clean"
-                    ? "border-success/40 bg-success/10 text-success"
-                    : "border-border text-muted-foreground",
-                )}
-                dir="auto"
-              >
-                {chip === "clean"
-                  ? s.chipClean
-                  : chip === "assisted"
-                    ? s.chipAssisted
-                    : s.chipMissed}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      {bankFeed && (
-        <p className="text-muted-foreground text-sm" dir="auto">
-          {s.comesBack}
-        </p>
-      )}
-      <div className="mt-1 w-full">
-        <LadderRoundBar
-          count={count}
-          done={allRight ? number : number - 1}
-          current={allRight ? null : number - 1}
-        />
-        <p className="text-muted-foreground mt-2 text-sm" dir="auto">
-          {s.progressIn(done + right.length, total, title)}
-        </p>
-      </div>
-      <Button size="lg" className="mt-3" onClick={onNext}>
-        <span dir="auto">{nextNumber === null ? s.back : s.nextRound(nextNumber)}</span>
-      </Button>
-      <Link
-        href="/learn/word-lists"
-        className="text-muted-foreground hover:text-foreground text-sm"
-      >
-        <span dir="auto">{s.enough}</span>
-      </Link>
-    </div>
   );
 }

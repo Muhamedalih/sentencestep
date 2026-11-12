@@ -20,6 +20,14 @@ export const PASSAGES_RATING_MODE = "passages";
 export const WORDS_RATING_MODE = "words";
 
 /**
+ * The `lesson_id` of a rating given about the word rounds of Word Lists (the wordLadder permission).
+ * It is a rating of the words section too (mode "words", so the site's average leaves it out), told
+ * apart from the «كلماتي» review's ("bank") by this id: Admin > Ratings lists it on its own tab, and
+ * the Words tab keeps to the rest.
+ */
+export const ROUNDS_RATING_LESSON_ID = "rounds";
+
+/**
  * The `mode` of a rating given at the end of a Video lesson (its `lesson_id` is then the video).
  * Kept out of the app's own figures like Passages': app_rating_distribution() leaves out 'video' and
  * video_rating_distribution() counts it (20250354000000_video_timings_and_ratings.sql).
