@@ -50,7 +50,7 @@ const SECTION_LABEL: Record<(typeof RATINGS_SECTIONS)[number], string> = {
   all: "All",
   normal: "Daily lessons",
   stories: "Stories",
-  settings: "Settings",
+  settings: "Site (Settings)",
 };
 
 /** A link to this page with one part of the filter changed; the page number always restarts at 1. */
@@ -109,7 +109,7 @@ export default async function AdminRatingsPage({
       listAppRatings(filter),
       getRatingsSettings(),
       countNewRatingsBySource(),
-      filter.source === "app" ? countAppRatingsBySection() : Promise.resolve(null),
+      countAppRatingsBySection(),
     ]);
   const forPassages = filter.source === "passages";
   const forVideo = filter.source === "video";
@@ -138,7 +138,7 @@ export default async function AdminRatingsPage({
               ? "What learners said about My Words («كلماتي»), from the row of stars at the end of a words review. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
               : forVideo
                 ? "What learners said about the Video section and how to develop the site, from the one-time card shown after their first finished video (the video is named on each rating), newest first. They are kept apart from the app's own ratings, so they never move the average quoted on the site. "
-                : "What learners gave the app from the rating pop-up after a Daily lesson or a Story and from Settings, newest first. The small tabs under App look at one of those places at a time; together they make the average quoted on the site. "}
+                : "What learners gave the app from the rating pop-up after a Daily lesson or a Story and from Settings, newest first. The tabs Daily lessons, Stories and Site look at one of those places at a time; together (App all) they make the average quoted on the site. "}
           Reply by email to anyone who left an address (signed-in members always have one), and
           approve the best ones to show on the site. Archiving a rating takes it out of the figures
           below
@@ -148,17 +148,26 @@ export default async function AdminRatingsPage({
       </div>
 
       <div className="flex flex-wrap gap-1">
-        <Chip
-          href={hrefWith(filter, { source: undefined, section: undefined })}
-          active={filter.source === "app"}
-        >
-          App
+        <Chip href={hrefWith(filter, { source: undefined, section: undefined })} active={wholeApp}>
+          App (all)
           {newBySource.app > 0 && (
             <Badge variant="secondary" className="ms-2">
               {newBySource.app} new
             </Badge>
           )}
         </Chip>
+        {RATINGS_SECTIONS.filter((section) => section !== "all").map((section) => (
+          <Chip
+            key={section}
+            href={hrefWith(filter, { source: undefined, section })}
+            active={filter.source === "app" && filter.section === section}
+          >
+            {SECTION_LABEL[section]}
+            <span className="text-muted-foreground ms-1.5 text-xs tabular-nums">
+              {sectionCounts[section]}
+            </span>
+          </Chip>
+        ))}
         <Chip
           href={hrefWith(filter, { source: "passages", section: undefined })}
           active={filter.source === "passages"}
@@ -187,23 +196,6 @@ export default async function AdminRatingsPage({
           )}
         </Chip>
       </div>
-
-      {sectionCounts && (
-        <div className="-mt-3 flex flex-wrap gap-1" aria-label="Where in the app">
-          {RATINGS_SECTIONS.map((section) => (
-            <Chip
-              key={section}
-              href={hrefWith(filter, { section: section === "all" ? undefined : section })}
-              active={filter.section === section}
-            >
-              {SECTION_LABEL[section]}
-              <span className="text-muted-foreground ms-1.5 text-xs tabular-nums">
-                {sectionCounts[section]}
-              </span>
-            </Chip>
-          ))}
-        </div>
-      )}
 
       {wholeApp && (
         <RatingsDisplaySettings
