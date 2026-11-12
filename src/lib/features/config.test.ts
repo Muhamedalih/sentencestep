@@ -430,6 +430,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       wordLadder: false,
       wordsPage: false,
       wordCovers: false,
+      wordsBanner: false,
     });
   }
 });

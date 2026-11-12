@@ -2,6 +2,7 @@ import { BookOpen } from "lucide-react";
 
 import { CoreWordsShelf } from "@/components/words/core-words-shelf";
 import { WordsHubHeader } from "@/components/words/words-hub-header";
+import { WordsBanner } from "@/components/words/words-banner";
 import { WordsReviewStrip } from "@/components/words/words-review-strip";
 import { WordsTopicGrid } from "@/components/words/words-topic-grid";
 import { isAdmin } from "@/lib/admin/access";
@@ -60,15 +61,26 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
     }
     body = (
       <>
-        {overview && (
-          <WordsReviewStrip
-            overview={overview}
-            todayISO={todayISO}
-            locale={locale}
-            t={t}
-            s={bankStrings(locale)}
-          />
-        )}
+        {features.rollouts.wordsBanner
+          ? // The banner (permission wordsBanner) takes the review strip's place; its button goes where the strip's did.
+            groups.length > 0 && (
+              <WordsBanner
+                groups={groups}
+                isPremiumUser={premium}
+                reviewCount={overview?.today.length ?? 0}
+                reviewHref="/learn/words/review"
+                className="mt-5"
+              />
+            )
+          : overview && (
+              <WordsReviewStrip
+                overview={overview}
+                todayISO={todayISO}
+                locale={locale}
+                t={t}
+                s={bankStrings(locale)}
+              />
+            )}
         {groups.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="bg-brand-muted text-primary flex size-14 items-center justify-center rounded-full">
