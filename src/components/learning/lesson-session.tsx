@@ -25,6 +25,7 @@ import {
 import { PhoneToolsLeadProvider } from "@/components/learning/phone-tools-lead";
 import { SharedInputHost, SharedInputProvider } from "@/components/learning/shared-input";
 import { ShiftReplayHint } from "@/components/learning/shift-replay-hint";
+import { SavedWordsNotice } from "@/components/words/saved-words-notice";
 import { TypingSentence } from "@/components/learning/typing-sentence";
 import { Progress } from "@/components/ui/progress";
 import { useFeatures } from "@/components/providers/feature-provider";
@@ -967,6 +968,8 @@ export function LessonSession({
           into each of its branches — one <h1> for the whole session. */}
       {sessionLabel}
       {!isComplete && <ShiftReplayHint />}
+      {/* The learner's very first saved word: a one-time note saying it went to «كلماتي» → Saved words. */}
+      {!isComplete && wordCards?.notice && <SavedWordsNotice onClose={wordCards.dismissNotice} />}
 
       {/* Corner-flush brand mark, always present regardless of mode/state —
           the one way back to /learn from a full-bleed lesson screen that

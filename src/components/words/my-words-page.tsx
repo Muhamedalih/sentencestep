@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, BookmarkCheck, Check } from "lucide-react";
 
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { SupportLocale } from "@/lib/i18n/locales";
@@ -59,12 +59,15 @@ export function MyWordsOverview({
   locale,
   t,
   s,
+  saved = null,
 }: {
   overview: BankOverview;
   todayISO: string;
   locale: SupportLocale | null;
   t: Dictionary;
   s: BankStrings;
+  /** The words saved with the star (feature "Personal word cards"): when present, a tile at the foot opens them. */
+  saved?: SavedWordsTileData | null;
 }) {
   const count = overview.today.length;
   const lastReview = overview.lastReviewedOn
@@ -240,7 +243,58 @@ export function MyWordsOverview({
           </div>
         </>
       )}
+      {saved && <SavedWordsTile saved={saved} t={t} />}
     </div>
+  );
+}
+
+/** What the saved-words tile shows: how many words, and the newest few. */
+export interface SavedWordsTileData {
+  count: number;
+  latest: readonly string[];
+}
+
+/**
+ * The place inside «كلماتي» for the words a learner saves with the star in a lesson: a card with
+ * how many are saved, the newest few as chips, and a link to the full list (due words, practice and
+ * the Anki export live there). Always shown for a learner the feature is open to, empty or not, so
+ * the place is found before the first word is saved.
+ */
+function SavedWordsTile({ saved, t }: { saved: SavedWordsTileData; t: Dictionary }) {
+  return (
+    <Link
+      href="/learn/words/saved"
+      prefetch={false}
+      className="bg-card border-border hover:border-primary/40 focus-visible:ring-ring mt-3 flex items-center gap-4 rounded-2xl border px-[18px] py-4 transition-colors duration-150 outline-none focus-visible:ring-2 md:mt-4 md:px-7"
+    >
+      <BookmarkCheck className="text-primary size-6 shrink-0" aria-hidden="true" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-left text-[15px] font-semibold" dir="auto">
+          {t.myCards.title}
+        </span>
+        <span className="text-muted-foreground mt-0.5 block text-left text-[13px]" dir="auto">
+          {saved.count > 0
+            ? t.myCards.savedTileCount.replace("{n}", String(saved.count))
+            : t.myCards.emptyBody}
+        </span>
+        {saved.latest.length > 0 && (
+          <span className="mt-2 flex flex-wrap gap-1.5" dir="ltr">
+            {saved.latest.map((word) => (
+              <span
+                key={word}
+                className="bg-muted text-foreground rounded-full px-2.5 py-0.5 text-[12.5px] font-medium"
+              >
+                {word}
+              </span>
+            ))}
+          </span>
+        )}
+      </span>
+      <span className="text-primary flex shrink-0 items-center gap-1 text-[13px] font-semibold">
+        <span dir="auto">{t.myCards.openSaved}</span>
+        <ArrowRight className="size-3.5" aria-hidden="true" />
+      </span>
+    </Link>
   );
 }
 

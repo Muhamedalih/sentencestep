@@ -9,7 +9,7 @@ import { lookupCachedAudioUrl } from "@/lib/voice/voice-audio";
 // The queue is per-learner and time-dependent (what's due now).
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "My Cards" };
+export const metadata: Metadata = { title: "Saved words" };
 
 /**
  * Reviews the learner's saved word cards with the same fill-in-the-blank
@@ -24,7 +24,7 @@ export default async function CardsReviewPage({
 }) {
   const { scope } = await searchParams;
   const words = await fetchCardReviewWordsAction(scope === "all" ? "all" : "due");
-  if (words.length === 0) redirect("/learn/cards");
+  if (words.length === 0) redirect("/learn/words/saved");
 
   const defaultVoiceId = await getDefaultPronunciationVoiceId();
   // Same cache-only pre-resolution of the first word as Vocabulary Recall.
@@ -45,7 +45,7 @@ export default async function CardsReviewPage({
       words={hydratedWords}
       defaultVoiceId={defaultVoiceId}
       variant="cards"
-      backHref="/learn/cards"
+      backHref="/learn/words/saved"
     />
   );
 }
