@@ -5,7 +5,6 @@ import Link from "next/link";
 import { PAPER } from "@/components/home-cards/palette";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useEnterToContinue } from "@/hooks/use-enter-to-continue";
-import { cn } from "@/lib/utils";
 import { ladderStrings } from "@/lib/word-ladder/strings";
 import type { LadderWord } from "@/lib/word-ladder/types";
 
@@ -33,6 +32,7 @@ export function LadderFinish({
   bankFeed,
   next,
   onNext,
+  onExam,
 }: {
   words: LadderWord[];
   runs: Record<string, FinishRun>;
@@ -44,6 +44,8 @@ export function LadderFinish({
   /** The round that follows, with its first word, or null when the topic is finished. */
   next: { number: number; firstWord: string } | null;
   onNext: () => void;
+  /** Opens the exam of this round's words (every word heard and typed once, then a score). */
+  onExam: () => void;
 }) {
   const { locale, dir } = useLocale();
   const s = ladderStrings(locale);
@@ -142,7 +144,7 @@ export function LadderFinish({
         </p>
       </div>
 
-      <div className={cn("mt-6 flex gap-3", !next && "justify-start")}>
+      <div className="mt-6 flex gap-3">
         {next && (
           <button
             type="button"
@@ -152,12 +154,16 @@ export function LadderFinish({
             <span dir="auto">{s.oneMore}</span>
           </button>
         )}
+        <button
+          type="button"
+          onClick={onExam}
+          className="border-border text-foreground hover:bg-muted/50 h-[60px] flex-1 rounded-lg border text-lg font-semibold transition-colors"
+        >
+          <span dir="auto">{s.exam}</span>
+        </button>
         <Link
           href="/learn/word-lists"
-          className={cn(
-            "border-border text-foreground hover:bg-muted/50 grid h-[60px] place-items-center rounded-lg border text-lg font-semibold transition-colors",
-            next ? "flex-1" : "w-full",
-          )}
+          className="border-border text-foreground hover:bg-muted/50 grid h-[60px] flex-1 place-items-center rounded-lg border text-lg font-semibold transition-colors"
         >
           <span dir="auto">{s.done}</span>
         </Link>

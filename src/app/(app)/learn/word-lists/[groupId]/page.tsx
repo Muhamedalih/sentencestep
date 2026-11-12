@@ -107,7 +107,7 @@ export default async function WordGroupPracticePage({
     );
   }
 
-  // Word Lists as rounds of three words (the wordLadder permission): the topic's own screen, and the
+  // Word Lists as rounds of four words (the wordLadder permission): the topic's own screen, and the
   // five-step round it opens, replace Practice for the people the permission is open to. Everyone
   // else keeps the practice below, which is also the comparison.
   const features = await getEffectiveFeatures();

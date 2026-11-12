@@ -2,7 +2,8 @@ import { splitWordHint } from "@/lib/word-lists-hint";
 import { seededShuffle } from "@/lib/word-ladder/random";
 
 /**
- * The choices of the ladder's two multiple-choice steps, worked out from the topic's own words (nothing is read from anywhere else). Pure and client-safe.
+ * The choices of the ladder's two multiple-choice steps and the scrambled letters, worked out from
+ * the topic's own words (nothing is read from anywhere else). Pure and client-safe.
  */
 
 /** The short term of a word's hint (Arabic, Spanish or Turkish), without its closing full stop: "العمة أو الخالة: أخت والدك." -> "العمة أو الخالة". */
@@ -175,4 +176,14 @@ export function spellingChoices(
     if (!any) break;
   }
   return seededShuffle([word, ...picked], `${options.seed}:order`);
+}
+
+/** The word's letters in a seeded jumble that is never the word itself (a word of one repeated letter is not scrambled at all: see canScramble). */
+export function scrambleLetters(word: string, seed: string): string[] {
+  const letters = [...word];
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const jumbled = seededShuffle(letters, `${seed}:${attempt}`);
+    if (jumbled.join("") !== word) return jumbled;
+  }
+  return [...letters.slice(1), letters[0]!];
 }
