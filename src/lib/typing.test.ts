@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   advanceAutoSkip,
+  backspaceOverAutoSkips,
   calculateAccuracy,
   calculateWpm,
   getCurrentWordIndex,
@@ -282,6 +283,50 @@ test("advanceAutoSkip: trailing punctuation completes the sentence without an ex
 
 test("advanceAutoSkip: a no-op when typed is already at the target's length", () => {
   assert.equal(advanceAutoSkip("Hi", "Hi"), "Hi");
+});
+
+// --- Auto space (the Video section): the space after a right word is folded in too ---
+
+test("advanceAutoSkip with spaces: the space after a finished word is folded in, stopping at the next letter", () => {
+  assert.equal(advanceAutoSkip("Hello world", "Hello", true), "Hello ");
+});
+
+test("advanceAutoSkip with spaces: punctuation and the space after it go together", () => {
+  assert.equal(advanceAutoSkip('He said, "wow!" and left', "He said", true), 'He said, "');
+  assert.equal(
+    advanceAutoSkip('He said, "wow!" and left', 'He said, "wow', true),
+    'He said, "wow!" ',
+  );
+});
+
+test("advanceAutoSkip with spaces: off by default, so every other lesson still needs the space", () => {
+  assert.equal(advanceAutoSkip("Hello world", "Hello"), "Hello");
+  assert.equal(advanceAutoSkip("Hello world", "Hello", false), "Hello");
+});
+
+test("advanceAutoSkip with spaces: inside a word nothing is added, and the last word completes the sentence", () => {
+  assert.equal(advanceAutoSkip("Hello world", "Hel", true), "Hel");
+  assert.equal(advanceAutoSkip("Hello world", "Hello worl", true), "Hello worl");
+  assert.equal(advanceAutoSkip("Hello world", "Hello world", true), "Hello world");
+});
+
+test("backspaceOverAutoSkips: a backspace over the auto space takes the word's last letter", () => {
+  // typed "Hello " (the space was folded in), the native backspace leaves "Hello".
+  assert.equal(backspaceOverAutoSkips(" ", "Hello"), "Hell");
+});
+
+test("backspaceOverAutoSkips: punctuation and the space after it go together with one letter", () => {
+  assert.equal(backspaceOverAutoSkips(" ", "Hi,"), "H");
+  assert.equal(backspaceOverAutoSkips(", ", "Hi"), "H");
+});
+
+test("backspaceOverAutoSkips: a backspace over a real letter is left as it is", () => {
+  assert.equal(backspaceOverAutoSkips("o", "Hell"), "Hell");
+  assert.equal(backspaceOverAutoSkips("", "Hell"), "Hell");
+});
+
+test("backspaceOverAutoSkips: nothing left to take back gives an empty buffer", () => {
+  assert.equal(backspaceOverAutoSkips('"', ""), "");
 });
 
 // --- tokenize: sanity check, unrelated to the bug but shares this module ---

@@ -13,6 +13,7 @@ import {
 
 import {
   advanceAutoSkip,
+  backspaceOverAutoSkips,
   calculateAccuracy,
   calculateWpm,
   getLetterStates,
@@ -68,6 +69,14 @@ interface UseTypingEngineOptions {
    * and only when it really is a prefix of `target`.
    */
   initialTyped?: string;
+  /**
+   * The space after a word is typed by the engine, the moment the word's last
+   * letter is right: the learner goes straight on to the next word's first
+   * letter. A space they press anyway is ignored (never a mistake), and a
+   * backspace takes back the last letter, not the space. Off by default; the
+   * Video section is the one caller that turns it on.
+   */
+  autoSpace?: boolean;
 }
 
 /**
@@ -89,6 +98,7 @@ export function useTypingEngine({
   inputRef: externalInputRef,
   autoFocus = true,
   initialTyped,
+  autoSpace = false,
 }: UseTypingEngineOptions) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
@@ -118,7 +128,7 @@ export function useTypingEngine({
   // runs here too, not just after each accepted keystroke below.
   useEffect(() => {
     const seed = seedRef.current.key === resetKey ? (seedRef.current.typed ?? "") : "";
-    setTyped(advanceAutoSkip(target, isValidPrefixEdit(target, seed) ? seed : ""));
+    setTyped(advanceAutoSkip(target, isValidPrefixEdit(target, seed) ? seed : "", autoSpace));
     setErrorIndex(null);
     setErrorChar(null);
     completedRef.current = false;
@@ -207,7 +217,15 @@ export function useTypingEngine({
         // let the controlled input snap back to the last valid `typed` state,
         // so `typed.length` positions never silently stop matching `target`.
         if (isValidPrefixEdit(target, value)) {
-          setTyped(value);
+          let next = value;
+          if (autoSpace) {
+            // The space after a word was never typed by the learner: the backspace that
+            // removed it takes the word's last letter too. Never below the opening skips.
+            next = backspaceOverAutoSkips(typed.slice(value.length), value);
+            const opening = advanceAutoSkip(target, "", true);
+            if (next.length < opening.length) next = opening;
+          }
+          setTyped(next);
           setErrorIndex(null);
           setErrorChar(null);
         }
@@ -222,11 +240,14 @@ export function useTypingEngine({
       // thing to compare against a KeyboardEvent-derived value.
       const nextChar = value.charAt(typed.length);
 
+      // Auto space: a space the learner presses out of habit is no mistake and no keystroke.
+      if (autoSpace && /\s/.test(nextChar) && !/\s/.test(target.charAt(typed.length))) return;
+
       totalKeystrokesRef.current += 1;
 
       if (isCorrectChar(target, typed.length, nextChar)) {
         correctKeystrokesRef.current += 1;
-        const updated = advanceAutoSkip(target, typed + nextChar);
+        const updated = advanceAutoSkip(target, typed + nextChar, autoSpace);
         setTyped(updated);
         setErrorIndex(null);
         setErrorChar(null);
@@ -250,7 +271,16 @@ export function useTypingEngine({
         onErrorChar?.(nextChar);
       }
     },
-    [typed, target, onCorrectChar, onErrorChar, onComplete, completeDelayMs, errorDelayMs],
+    [
+      typed,
+      target,
+      autoSpace,
+      onCorrectChar,
+      onErrorChar,
+      onComplete,
+      completeDelayMs,
+      errorDelayMs,
+    ],
   );
 
   const handlePaste = useCallback((event: ClipboardEvent<HTMLInputElement>) => {

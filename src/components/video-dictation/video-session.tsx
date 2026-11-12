@@ -725,6 +725,8 @@ function SentenceTyper({
     onComplete: () => onComplete(),
     onCorrectChar: () => onKeystroke(true),
     onErrorChar: () => onKeystroke(false),
+    // The space after each right word is typed for the learner.
+    autoSpace: true,
   });
   const { inputRef, errorIndex } = engine;
 
