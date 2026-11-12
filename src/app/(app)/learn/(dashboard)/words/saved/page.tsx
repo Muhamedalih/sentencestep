@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { SavedWordsView } from "@/components/words/saved-words-view";
+import { WordsHubHeader } from "@/components/words/words-hub-header";
+import { availableTabs } from "@/lib/words-hub/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchSavedCards } from "@/lib/cards/queries";
@@ -54,6 +56,19 @@ export default async function SavedWordsPage() {
   if (!features.personalCards.page) redirect("/learn");
 
   const cards = await fetchSavedCards(user.id).catch(() => []);
+  if (features.rollouts.wordsPage) {
+    // The one Words page: the saved words are its third tab, under the same title and tabs.
+    return (
+      <div className="mx-auto w-full max-w-[1060px] px-4 pt-4 pb-10 md:px-6 md:pt-6">
+        <WordsHubHeader
+          active="saved"
+          tabs={availableTabs({ core: features.rollouts.wordBank, saved: true })}
+          locale={locale}
+        />
+        <SavedWordsView cards={cards} heading={t.myCards.title} dir={dir} t={t} embedded />
+      </div>
+    );
+  }
   return (
     <SavedWordsView
       cards={cards}

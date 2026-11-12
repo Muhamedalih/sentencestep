@@ -31,6 +31,7 @@ import {
 } from "@/lib/contact/instagram";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import { videoNewLabel, videoStrings } from "@/lib/video-dictation/strings";
+import { wordsHubStrings } from "@/lib/words-hub/strings";
 import { cn } from "@/lib/utils";
 
 /**
@@ -87,6 +88,7 @@ export function LearnSidebar({
   videoEnabled = false,
   contactInstagram = false,
   wordBankEnabled = false,
+  wordsHub = false,
 }: {
   isAdminUser?: boolean;
   /** Whether the Library's menu item exists for this visitor: admins, and subscribers once the "libraryGift" permission is open for them. Defaults to isAdminUser. */
@@ -103,6 +105,8 @@ export function LearnSidebar({
   contactInstagram?: boolean;
   /** The "wordBank" permission or the saved words ("Personal word cards"), resolved for this visitor (and signed in): «كلماتي» is a menu item right before Word Lists from md: up, and a tile in the phone's More sheet. */
   wordBankEnabled?: boolean;
+  /** The "wordsPage" permission, resolved for this visitor: «كلماتي» and Word Lists are ONE menu item, «الكلمات», and one row of the phone's More sheet; every page under /learn/words lights it up. */
+  wordsHub?: boolean;
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
@@ -136,7 +140,9 @@ export function LearnSidebar({
                   : pathname.startsWith("/learn/word-lists")
                     ? "word-lists"
                     : pathname.startsWith("/learn/words")
-                      ? "words"
+                      ? wordsHub
+                        ? "word-lists"
+                        : "words"
                       : pathname.startsWith("/learn/library")
                         ? "library"
                         : pathname.startsWith("/learn/rules")
@@ -160,7 +166,12 @@ export function LearnSidebar({
     { key: "video", href: "/learn/video", label: videoStrings(locale).navLabel, icon: Play },
     { key: "library", href: "/learn/library", label: t.nav.library, icon: Library },
     { key: "words", href: "/learn/words", label: t.myWords.title, icon: BookMarked },
-    { key: "word-lists", href: "/learn/word-lists", label: t.nav.wordLists, icon: ListChecks },
+    {
+      key: "word-lists",
+      href: "/learn/word-lists",
+      label: wordsHub ? wordsHubStrings(locale).title : t.nav.wordLists,
+      icon: ListChecks,
+    },
     { key: "rules", href: "/learn/rules", label: ruleStrings(locale).myRules, icon: Lightbulb },
   ].filter(
     (item) =>
@@ -168,7 +179,7 @@ export function LearnSidebar({
       (item.key !== "passages" || passagesEnabled) &&
       (item.key !== "video" || videoEnabled) &&
       (item.key !== "rules" || rulesEnabled) &&
-      (item.key !== "words" || wordBankEnabled),
+      (item.key !== "words" || (wordBankEnabled && !wordsHub)),
   );
 
   // The phone bar of the mobilePath permission: one tab per kind of content (Path, Passages, Stories and
@@ -201,13 +212,13 @@ export function LearnSidebar({
               },
             ]
           : []),
-        ...(wordBankEnabled
+        ...(wordBankEnabled && !wordsHub
           ? [{ key: "words", href: "/learn/words", label: t.myWords.title, icon: BookMarked }]
           : []),
         {
           key: "word-lists",
           href: "/learn/word-lists",
-          label: t.mobilePath.navWords,
+          label: wordsHub ? wordsHubStrings(locale).title : t.mobilePath.navWords,
           icon: ListChecks,
         },
         ...(showLibrary
