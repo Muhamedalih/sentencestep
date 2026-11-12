@@ -43,6 +43,7 @@ export const ROLLOUT_IDS = [
   "mobilePhoneUx",
   "wordLadder",
   "wordsPage",
+  "wordCovers",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -454,6 +455,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The review strip and the Core tab need the Words bank (“wordBank”) open for the same people, and show only for a signed-in learner; the Saved tab needs the saved words (“Personal word cards”). Without them the page is just the topics, without tabs.",
       "Only the menu and the page change: the topics, their words, the free lists, the review round, the saved words and every learner's progress stay exactly as they are, and Word Lists keeps working at the same address.",
       "Needs no new reads or writes: the strip reads the learner's bank rows once, as «كلماتي» already did.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordCovers: {
+    id: "wordCovers",
+    audience: "learner",
+    title: "Word Lists with picture covers",
+    description:
+      "Every topic of the Word Lists is drawn as a picture cover with its name, how many words are done and a thin progress bar under it, instead of the cards with a line icon. The three levels are rows one under the other, four covers in a row on a laptop and two on a phone. Each topic has a drawing made for it; an admin can replace the picture of any topic with a photo of their own, or go back to the drawing, from the cover itself.",
+    notes: [
+      "Only the look of the topics changes: the lists, their words, the free lists, the lock, the review strip, the Learn / Practice choice and every learner's progress stay exactly as they are.",
+      "The admin's change-picture buttons appear on the covers for an admin only, whoever else this is open to.",
+      "Needs the covers migration (20250359000000_word_group_covers.sql) for a chosen picture to be saved; without it every topic shows its drawing and saving a picture says so.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

@@ -80,7 +80,7 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
             </div>
           </div>
         ) : (
-          <WordsTopicGrid groups={groups} isPremiumUser={premium} />
+          <WordsTopicGrid groups={groups} isPremiumUser={premium} canEditCovers={isAdminUser} />
         )}
       </>
     );

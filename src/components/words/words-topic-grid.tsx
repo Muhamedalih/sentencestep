@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, Lock } from "lucide-react";
 
+import { CoverFace, iconForGroup } from "@/components/app/word-group-card";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { WordCoverEditor } from "@/components/words/word-cover-editor";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
 import { cn } from "@/lib/utils";
@@ -27,11 +29,14 @@ type Level = (typeof LEVELS)[number];
 export function WordsTopicGrid({
   groups,
   isPremiumUser,
+  canEditCovers = false,
 }: {
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
+  /** An admin: with the picture covers open (permission wordCovers) each cover carries the buttons that change its picture. */
+  canEditCovers?: boolean;
 }) {
-  const { locale, dir } = useLocale();
+  const { locale, dir, t } = useLocale();
   const s = wordsHubStrings(locale);
   const { rollouts } = useFeatures();
   const { isLoaded, completedCountIn } = useWordProgress();
@@ -64,7 +69,16 @@ export function WordsTopicGrid({
         ))}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+      <div
+        className={cn(
+          "mt-4 grid grid-cols-2",
+          // With the picture covers open (permission wordCovers) the topics are covers, as on the Word Lists
+          // page: two across on a phone, three on a laptop, four on a wide screen.
+          rollouts.wordCovers
+            ? "mt-5 gap-x-3.5 gap-y-[22px] sm:gap-x-5 sm:gap-y-[26px] lg:grid-cols-3 xl:grid-cols-4"
+            : "gap-3 md:grid-cols-4 md:gap-4",
+        )}
+      >
         {shown.map((group) => {
           const locked = !group.isFree && !isPremiumUser;
           const done = isLoaded && !locked ? completedCountIn(group.wordIds) : 0;
@@ -76,6 +90,39 @@ export function WordsTopicGrid({
               ? `/learn/word-lists/${group.id}`
               : `/learn/word-lists/${group.id}/words`;
           const percent = group.wordCount === 0 ? 0 : Math.round((done / group.wordCount) * 100);
+          if (rollouts.wordCovers) {
+            return (
+              <div key={group.id} className="group relative">
+                <Link
+                  href={href}
+                  prefetch={false}
+                  aria-label={group.title}
+                  className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-[14px] outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                >
+                  <CoverFace
+                    as="h3"
+                    difficulty={difficultyForLevel(group.level)}
+                    Icon={iconForGroup(group.title)}
+                    group={group}
+                    dir={dir}
+                    locked={locked}
+                    completed={finished}
+                    count={
+                      started || finished
+                        ? `${done} / ${group.wordCount}`
+                        : s.wordsCount(group.wordCount)
+                    }
+                    dueLabel={null}
+                    percent={finished ? 100 : percent}
+                    progressLabel={t.wordLists.progressLabel}
+                  />
+                </Link>
+                {canEditCovers && (
+                  <WordCoverEditor groupId={group.id} hasPicture={Boolean(group.coverUrl)} />
+                )}
+              </div>
+            );
+          }
           return (
             <Link
               key={group.id}

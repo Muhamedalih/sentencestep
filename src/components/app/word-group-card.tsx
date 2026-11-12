@@ -33,6 +33,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { WordCover } from "@/components/words/word-cover";
+import { WordCoverEditor } from "@/components/words/word-cover-editor";
 import { difficultyForLevel, type Difficulty } from "@/lib/levels";
 import { fadeInUp } from "@/lib/motion";
 import { TIER_DOT_CLASS, TIER_WATERMARK_CLASS } from "@/lib/tier-colors";
@@ -77,6 +79,8 @@ const CARD_CLASS =
   "border-border/60 bg-card overflow-hidden rounded-2xl border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]";
 const FACE_CLASS =
   "relative flex min-h-44 w-full flex-col justify-end p-4 text-start lg:min-h-56 lg:p-5";
+/** The face of a topic with the picture covers open: the cover and its text, no card around them. */
+const COVER_FACE_CLASS = "block w-full rounded-[14px] text-start";
 
 function GroupFace({
   as: Title = "span",
@@ -177,6 +181,119 @@ function GroupFace({
 }
 
 /**
+ * The face of a topic when the picture covers are open (permission wordCovers): the cover (the admin's
+ * picture or the topic's drawing) with a lock top-left for a Premium list, or a check once every word
+ * is finished, and the count of words waiting for review top-right when there are some; under it the
+ * title with the count of finished words beside it, the translated title and, once the learner has
+ * started, a thin progress bar in the level's colour. No card around it: the cover is the card.
+ */
+export function CoverFace({
+  as: Title = "span",
+  difficulty,
+  Icon,
+  group,
+  dir,
+  locked,
+  completed,
+  count,
+  dueLabel,
+  percent,
+  progressLabel,
+}: {
+  as?: "h3" | "span";
+  difficulty: Difficulty;
+  Icon: LucideIcon;
+  group: WordGroupSummary;
+  dir: "ltr" | "rtl";
+  locked: boolean;
+  completed: boolean;
+  count: string;
+  dueLabel: string | null;
+  percent: number;
+  progressLabel: string;
+}) {
+  const badge =
+    "absolute top-2 left-2 flex size-7 items-center justify-center rounded-full border sm:top-2.5 sm:left-2.5";
+  return (
+    <>
+      <WordCover
+        title={group.title}
+        level={group.level}
+        coverUrl={group.coverUrl}
+        Icon={Icon}
+        dimmed={locked}
+        className="transition-transform duration-[250ms] motion-safe:group-hover:-translate-y-[3px]"
+      >
+        {locked && (
+          <span
+            aria-hidden="true"
+            className={cn(badge, "border-white/20 bg-black/60 text-white backdrop-blur-sm")}
+          >
+            <Lock className="size-3.5" />
+          </span>
+        )}
+        {completed && (
+          <span
+            aria-hidden="true"
+            className={cn(badge, "border-transparent text-white", TIER_DOT_CLASS[difficulty])}
+          >
+            <Check className="size-3.5" />
+          </span>
+        )}
+        {dueLabel && (
+          <span
+            dir="auto"
+            className="absolute top-2 right-2 rounded-full border border-white/15 bg-black/60 px-2.5 py-0.5 text-[11px] leading-normal font-semibold text-white backdrop-blur-sm sm:top-2.5 sm:right-2.5 sm:text-xs"
+          >
+            {dueLabel}
+          </span>
+        )}
+      </WordCover>
+      <span className={cn("block pt-3", locked && "opacity-60")}>
+        <span className="flex items-baseline justify-between gap-2.5">
+          <Title
+            className="min-w-0 text-start text-[15.5px] leading-tight font-semibold tracking-[-0.005em] sm:text-[18px]"
+            dir="ltr"
+          >
+            {group.title}
+          </Title>
+          <span
+            className="text-muted-foreground shrink-0 text-[12.5px] tabular-nums sm:text-sm"
+            dir="auto"
+          >
+            {count}
+          </span>
+        </span>
+        <span
+          className="text-muted-foreground mt-0.5 block truncate text-start text-[13px] sm:text-sm"
+          dir={dir}
+        >
+          {group.supportTitle ?? group.title}
+        </span>
+        {percent > 0 && (
+          <span
+            role="progressbar"
+            aria-label={progressLabel}
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="bg-border mt-2.5 block h-1 overflow-hidden rounded-full"
+          >
+            <span
+              className={cn(
+                "block h-full rounded-full transition-[width] duration-500 ease-out",
+                TIER_DOT_CLASS[difficulty],
+              )}
+              style={{ width: `${percent}%` }}
+            />
+          </span>
+        )}
+      </span>
+    </>
+  );
+}
+
+/**
  * One vocabulary group in the Word Lists library, drawn like the Stories cards' family but with no
  * ribbon: the topic's icon is a large hollow outline in the level's colour (the level shows there,
  * there is no separate marker or tier chip, the column header already names the level), then the
@@ -195,6 +312,7 @@ export function WordGroupCard({
   isLoaded,
   isPremiumUser,
   mastery = null,
+  canEditCover = false,
 }: {
   group: WordGroupSummary;
   completedCount: number;
@@ -202,6 +320,8 @@ export function WordGroupCard({
   isPremiumUser: boolean;
   /** Smart word practice for a signed-in learner: this group's mastery. The bar and the percent show how many of the group's words the learner has finished (10 of 20 reads 50%), the counts say what is due and new, and the primary action becomes Continue. */
   mastery?: GroupMastery | null;
+  /** An admin: with the picture covers open (permission wordCovers) the cover carries the buttons that change its picture. */
+  canEditCover?: boolean;
 }) {
   const locked = !group.isFree && !isPremiumUser;
   const percent = group.wordCount === 0 ? 0 : Math.round((completedCount / group.wordCount) * 100);
@@ -231,6 +351,38 @@ export function WordGroupCard({
     !locked && (!!mastery || isLoaded) && group.wordCount > 0 && doneCount >= group.wordCount;
   const barPercent = mastery ? mastery.percent : percent;
   const progressLabel = t.wordLists.progressLabel;
+  // The picture covers (permission wordCovers): the topic is drawn as a cover, with no card around it.
+  const covers = rollouts.wordCovers;
+  const wordCountText = t.wordLists.wordCount.replace("{n}", String(group.wordCount));
+
+  if (locked && covers) {
+    return (
+      <motion.div variants={fadeInUp} className="group relative">
+        <Link
+          href={`/learn/word-lists/${group.id}`}
+          aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
+          className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-[14px] outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        >
+          <CoverFace
+            as="h3"
+            difficulty={difficulty}
+            Icon={Icon}
+            group={group}
+            dir={dir}
+            locked
+            completed={false}
+            count={wordCountText}
+            dueLabel={null}
+            percent={0}
+            progressLabel={progressLabel}
+          />
+        </Link>
+        {canEditCover && (
+          <WordCoverEditor groupId={group.id} hasPicture={Boolean(group.coverUrl)} />
+        )}
+      </motion.div>
+    );
+  }
 
   if (locked) {
     return (
@@ -261,42 +413,77 @@ export function WordGroupCard({
   }
 
   return (
-    <motion.div variants={fadeInUp}>
-      <div className={cn(CARD_CLASS, "transition-colors duration-200 hover:border-white/15")}>
+    <motion.div variants={fadeInUp} className={covers ? "group relative" : undefined}>
+      <div
+        className={
+          covers
+            ? undefined
+            : cn(CARD_CLASS, "transition-colors duration-200 hover:border-white/15")
+        }
+      >
         {/* With the wordLadder permission the card has no Learn / Practice panel: it opens the topic's own screen. */}
         <FaceShell
           href={rollouts.wordLadder ? `/learn/word-lists/${group.id}` : null}
           expanded={expanded}
           panelId={panelId}
           onToggle={() => setExpanded((prev) => !prev)}
+          faceClass={covers ? COVER_FACE_CLASS : undefined}
         >
-          <GroupFace
-            difficulty={difficulty}
-            Icon={Icon}
-            title={group.title}
-            supportTitle={supportTitle}
-            dir={dir}
-            status={completedAll ? "completed" : null}
-            percent={barPercent}
-            progressLabel={progressLabel}
-            left={
-              mastery
-                ? `${mastery.doneCount} / ${mastery.total}`
-                : isLoaded
-                  ? `${completedCount} / ${group.wordCount}`
-                  : t.wordLists.wordCount.replace("{n}", String(group.wordCount))
-            }
-            right={
-              mastery && mastery.dueCount > 0 ? (
-                <span className="text-primary font-medium">
-                  {t.wordLists.smart.dueBadge.replace("{n}", String(mastery.dueCount))}
-                </span>
-              ) : completedAll ? (
-                t.wordLists.complete
-              ) : null
-            }
-          />
+          {covers ? (
+            <CoverFace
+              difficulty={difficulty}
+              Icon={Icon}
+              group={group}
+              dir={dir}
+              locked={false}
+              completed={completedAll}
+              count={
+                mastery
+                  ? `${mastery.doneCount} / ${mastery.total}`
+                  : isLoaded
+                    ? `${completedCount} / ${group.wordCount}`
+                    : wordCountText
+              }
+              dueLabel={
+                mastery && mastery.dueCount > 0
+                  ? t.wordLists.smart.dueBadge.replace("{n}", String(mastery.dueCount))
+                  : null
+              }
+              percent={barPercent}
+              progressLabel={progressLabel}
+            />
+          ) : (
+            <GroupFace
+              difficulty={difficulty}
+              Icon={Icon}
+              title={group.title}
+              supportTitle={supportTitle}
+              dir={dir}
+              status={completedAll ? "completed" : null}
+              percent={barPercent}
+              progressLabel={progressLabel}
+              left={
+                mastery
+                  ? `${mastery.doneCount} / ${mastery.total}`
+                  : isLoaded
+                    ? `${completedCount} / ${group.wordCount}`
+                    : t.wordLists.wordCount.replace("{n}", String(group.wordCount))
+              }
+              right={
+                mastery && mastery.dueCount > 0 ? (
+                  <span className="text-primary font-medium">
+                    {t.wordLists.smart.dueBadge.replace("{n}", String(mastery.dueCount))}
+                  </span>
+                ) : completedAll ? (
+                  t.wordLists.complete
+                ) : null
+              }
+            />
+          )}
         </FaceShell>
+        {covers && canEditCover && (
+          <WordCoverEditor groupId={group.id} hasPicture={Boolean(group.coverUrl)} />
+        )}
 
         <AnimatePresence initial={false}>
           {expanded && (
@@ -316,8 +503,8 @@ export function WordGroupCard({
             >
               <div
                 className={cn(
-                  "flex items-center gap-2 px-4 pt-1 lg:px-5",
-                  mastery ? "pb-3" : "pb-4",
+                  "flex items-center gap-2",
+                  covers ? "pt-3" : cn("px-4 pt-1 lg:px-5", mastery ? "pb-3" : "pb-4"),
                 )}
               >
                 <Button asChild variant="outline" className="flex-1 gap-1.5">
@@ -336,7 +523,7 @@ export function WordGroupCard({
                 </Button>
               </div>
               {partlyDone && (
-                <div className="px-4 pb-4 lg:px-5">
+                <div className={covers ? "pt-2" : "px-4 pb-4 lg:px-5"}>
                   <Link
                     href={`/learn/word-lists/${group.id}?scope=all`}
                     className="border-primary/25 from-primary/15 to-primary/5 text-primary hover:border-primary/50 hover:from-primary/25 hover:to-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-center gap-2 rounded-xl border bg-gradient-to-b px-4 py-2.5 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2"
@@ -350,7 +537,7 @@ export function WordGroupCard({
                 // The whole list again, whatever is due: a quiet but real button (tinted
                 // surface, icon, hover lift) rather than a grey text link, so it reads as
                 // a deliberate second path next to Learn and Continue.
-                <div className="px-4 pb-4 lg:px-5">
+                <div className={covers ? "pt-2" : "px-4 pb-4 lg:px-5"}>
                   <Link
                     href={`/learn/word-lists/${group.id}?scope=all`}
                     className="border-primary/25 from-primary/15 to-primary/5 text-primary hover:border-primary/50 hover:from-primary/25 hover:to-primary/10 focus-visible:ring-ring focus-visible:ring-offset-background flex w-full items-center justify-center gap-2 rounded-xl border bg-gradient-to-b px-4 py-2.5 text-sm font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2"
@@ -378,16 +565,19 @@ function FaceShell({
   expanded,
   panelId,
   onToggle,
+  faceClass = FACE_CLASS,
   children,
 }: {
   href: string | null;
   expanded: boolean;
   panelId: string;
   onToggle: () => void;
+  /** The face's own shape: the card's by default, the cover's when the picture covers are open. */
+  faceClass?: string;
   children: ReactNode;
 }) {
   const className = cn(
-    FACE_CLASS,
+    faceClass,
     "focus-visible:ring-ring focus-visible:ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
   );
   if (href) {

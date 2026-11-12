@@ -8,11 +8,12 @@ import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { WordGroupCard } from "@/components/app/word-group-card";
 import { WordsSection } from "@/components/home-cards/words-section";
 import type { BankCardData } from "@/lib/word-bank/shelves";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
 import { staggerChildren } from "@/lib/motion";
-import { TIER_RING_CLASS } from "@/lib/tier-colors";
+import { TIER_RING_CLASS, TIER_TEXT_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 import type { LibraryMastery } from "@/lib/word-mastery/types";
@@ -27,9 +28,17 @@ const LEVELS = [1, 2, 3];
  * (aria-hidden): the tier's own name already says what it is; this is just
  * the at-a-glance shorthand next to it.
  */
-function TierDots({ level, total = 3 }: { level: number; total?: number }) {
+function TierDots({
+  level,
+  total = 3,
+  className,
+}: {
+  level: number;
+  total?: number;
+  className?: string;
+}) {
   return (
-    <span className="ms-1.5 inline-flex items-center gap-0.5" aria-hidden="true">
+    <span className={cn("ms-1.5 inline-flex items-center gap-0.5", className)} aria-hidden="true">
       {Array.from({ length: total }, (_, index) => (
         <span
           key={index}
@@ -59,7 +68,10 @@ export function WordListsLibrary({
   homeCardWords = null,
   homeCardBank = null,
   shelf = null,
+  canEditCovers = false,
 }: {
+  /** An admin: with the picture covers open (permission wordCovers) each cover carries the buttons that change its picture. */
+  canEditCovers?: boolean;
   groups: WordGroupSummary[];
   isPremiumUser: boolean;
   weakWords: WeakWordItem[];
@@ -74,6 +86,8 @@ export function WordListsLibrary({
 }) {
   const { isLoaded, completedCountIn } = useWordProgress();
   const { locale, dir, t } = useLocale();
+  // The picture covers (permission wordCovers): the three levels become rows of covers, one under the other.
+  const covers = useFeatures().rollouts.wordCovers;
   // What waits for review: the words due now, and — with Smart word practice — the schedule's own count.
   const reviewWords = weakWords.filter((word) => word.dueNow);
   const reviewCount = mastery?.reviewCount ?? reviewWords.length;
@@ -117,6 +131,56 @@ export function WordListsLibrary({
             <p className="font-medium">{t.library.wordListsEmptyHeading}</p>
             <p className="text-muted-foreground mt-1 text-sm">{t.library.checkBackSoon}</p>
           </div>
+        </div>
+      ) : covers ? (
+        <div className="flex flex-col gap-9">
+          {LEVELS.map((level) => {
+            const difficulty = difficultyForLevel(level);
+            const tierText = locale ? tierSupportLabel(difficulty, locale) : "";
+            const levelGroups = groups
+              .filter((group) => group.level === level)
+              .sort((a, b) => a.order - b.order);
+
+            return (
+              <section key={level} className="min-w-0">
+                <div className="mb-[18px] flex items-center gap-2.5">
+                  <span className={cn("inline-flex items-center", TIER_TEXT_CLASS[difficulty])}>
+                    <TierDots level={level} className="ms-0 gap-1" />
+                  </span>
+                  <h2
+                    className={cn("text-[14.5px] font-semibold", TIER_TEXT_CLASS[difficulty])}
+                    dir={dir}
+                  >
+                    {tierText}
+                  </h2>
+                  <span className="bg-border/60 h-px flex-1" aria-hidden="true" />
+                </div>
+
+                {levelGroups.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">{t.library.moreGroupsSoon}</p>
+                ) : (
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={staggerChildren}
+                    className="grid grid-cols-2 gap-x-3.5 gap-y-[22px] sm:gap-x-5 sm:gap-y-[26px] lg:grid-cols-3 xl:grid-cols-4"
+                  >
+                    {levelGroups.map((group) => (
+                      <WordGroupCard
+                        key={group.id}
+                        group={group}
+                        completedCount={completedCountIn(group.wordIds)}
+                        isLoaded={isLoaded}
+                        isPremiumUser={isPremiumUser}
+                        mastery={mastery?.byGroup[group.id] ?? null}
+                        canEditCover={canEditCovers}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </section>
+            );
+          })}
         </div>
       ) : (
         <div className="grid gap-8 lg:grid-cols-3">

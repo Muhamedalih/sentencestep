@@ -1178,6 +1178,8 @@ export interface Database {
           status: "draft" | "published" | "archived";
           /** Per-group narration voice override — mirrors books.voice_id (see 20250311000000_word_group_voice_override.sql). Null falls back to tts_settings.default_pronunciation_voice_id, exactly like a group with no override. Must resolve to an Edge-TTS voice; generateWordGroupVoiceDraft ignores it otherwise. */
           voice_id: string | null;
+          /** The picture an admin chose for the list's cover, a public URL in the 'word-covers' bucket (see 20250359000000_word_group_covers.sql); null means the topic's own drawing. Absent on a project that has not applied that migration yet. */
+          cover_url?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1192,6 +1194,7 @@ export interface Database {
           is_free?: boolean;
           status?: "draft" | "published" | "archived";
           voice_id?: string | null;
+          cover_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
