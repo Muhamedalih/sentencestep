@@ -106,14 +106,11 @@ export function WordsTopicGrid({
           const done = isLoaded && !locked ? completedCountIn(group.wordIds) : 0;
           const finished = !locked && group.wordCount > 0 && done >= group.wordCount;
           const started = done > 0 && !finished;
-          // A topic still in draft (an admin's grid only) opens the admin's own preview of the list.
-          const href = group.draft
-            ? `/admin/word-lists/${group.id}/preview`
-            : locked
+          const href = locked
+            ? `/learn/word-lists/${group.id}`
+            : rollouts.wordLadder
               ? `/learn/word-lists/${group.id}`
-              : rollouts.wordLadder
-                ? `/learn/word-lists/${group.id}`
-                : `/learn/word-lists/${group.id}/words`;
+              : `/learn/word-lists/${group.id}/words`;
           const percent = group.wordCount === 0 ? 0 : Math.round((done / group.wordCount) * 100);
           if (rollouts.wordCovers) {
             return (
