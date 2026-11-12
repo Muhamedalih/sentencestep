@@ -5,9 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Star } from "lucide-react";
 
+import { useFacesStrings } from "@/components/feedback/faces-rating-card";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
+import { RatingFace, type FaceLevel } from "@/components/words/ladder/ladder-faces";
 import { setBookRatingAction } from "@/lib/book-progress/rating-actions";
+import { faceLabel } from "@/lib/feedback/faces-strings";
 import { cn } from "@/lib/utils";
 import type { BookRatingSummary } from "@/lib/supabase/queries/book-ratings";
 
@@ -20,7 +24,10 @@ const STARS = [1, 2, 3, 4, 5];
  * server-fetched props (see the [bookId] page), never fetched client-side on
  * mount, matching every other reading-state prop this page already passes
  * down. Updates optimistically on click, same "assume it saved, revert on
- * failure" idiom as useBookSentenceMark's bookmark toggle.
+ * failure" idiom as useBookSentenceMark's bookmark toggle. With the faceRatings permission the five
+ * stars are five faces (the look of the Words rounds' rating card): the one under the pointer lights up
+ * and the others lose their colour, and the learner's own face stays lit; the average and the count
+ * beside them are the same numbers.
  */
 export function BookRating({
   bookId,
@@ -32,6 +39,8 @@ export function BookRating({
   initialMyRating: number | null;
 }) {
   const { t, dir } = useLocale();
+  const faces = useFeatures().rollouts.faceRatings;
+  const faceNames = useFacesStrings();
   const pathname = usePathname();
   const userId = useAuthUserId();
   const isSignedIn = Boolean(userId);
@@ -72,24 +81,47 @@ export function BookRating({
         role={isSignedIn ? "radiogroup" : undefined}
         aria-label={t.bookLibrary.yourRatingLabel}
       >
-        {STARS.map((star) => (
-          <button
-            key={star}
-            type="button"
-            disabled={!isSignedIn}
-            onClick={() => handleRate(star)}
-            onMouseEnter={() => isSignedIn && setHoverRating(star)}
-            aria-pressed={myRating === star}
-            aria-label={t.bookLibrary.rateStarsLabel.replace("{n}", String(star))}
-            className={cn(
-              "transition-colors",
-              isSignedIn ? "cursor-pointer" : "cursor-default",
-              star <= activeRating ? "text-[var(--lesson-xp)]" : "text-muted-foreground/40",
-            )}
-          >
-            <Star className="size-5" fill={star <= activeRating ? "currentColor" : "none"} />
-          </button>
-        ))}
+        <span
+          // The faces keep the rating card's order whatever the page's direction: the hated one on the left, the loved one on the right.
+          className={faces ? "flex items-center gap-1" : "contents"}
+          dir={faces ? "ltr" : undefined}
+        >
+          {STARS.map((star) => (
+            <button
+              key={star}
+              type="button"
+              disabled={!isSignedIn}
+              onClick={() => handleRate(star)}
+              onMouseEnter={() => isSignedIn && setHoverRating(star)}
+              aria-pressed={myRating === star}
+              aria-label={
+                faces
+                  ? faceLabel(faceNames, star)
+                  : t.bookLibrary.rateStarsLabel.replace("{n}", String(star))
+              }
+              className={cn(
+                "transition-colors",
+                isSignedIn ? "cursor-pointer" : "cursor-default",
+                !faces &&
+                  (star <= activeRating ? "text-[var(--lesson-xp)]" : "text-muted-foreground/40"),
+              )}
+            >
+              {faces ? (
+                <RatingFace
+                  level={star as FaceLevel}
+                  className={cn(
+                    "size-7 transition-all duration-200 ease-out motion-reduce:transition-none",
+                    activeRating === star &&
+                      "scale-110 drop-shadow-[0_4px_10px_rgba(255,160,60,0.35)]",
+                    activeRating !== 0 && activeRating !== star && "opacity-45 grayscale",
+                  )}
+                />
+              ) : (
+                <Star className="size-5" fill={star <= activeRating ? "currentColor" : "none"} />
+              )}
+            </button>
+          ))}
+        </span>
         {displaySummary && displaySummary.count > 0 && (
           <span className="text-muted-foreground ms-1.5 text-sm">
             {displaySummary.average.toFixed(1)} ·{" "}

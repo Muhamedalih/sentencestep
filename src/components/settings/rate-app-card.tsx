@@ -1,24 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Smile, Star } from "lucide-react";
 
 import { RatingModal } from "@/components/learning/rating-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 
 /**
  * Settings' always-available counterpart to RatingPrompt's one-time
  * automatic pop-up (see that component's own doc comment) — the same
- * 5-star + comment card (RatingModal), just reachable on demand instead of
- * gated behind "second lesson ever completed, never shown before". Never
+ * 5-star (or, with the faceRatings permission, five-faces) + comment card (RatingModal), just
+ * reachable on demand instead of gated behind "second lesson ever completed, never shown before". Never
  * touches rating-storage's hasRatedApp() itself: a learner who already saw
  * the automatic prompt, or already rated from here once, can always come
  * back and rate again if their opinion changes.
  */
 export function RateAppCard() {
   const { t } = useLocale();
+  const faces = useFeatures().rollouts.faceRatings;
   const [open, setOpen] = useState(false);
 
   return (
@@ -30,7 +32,11 @@ export function RateAppCard() {
         </CardHeader>
         <CardContent>
           <Button type="button" onClick={() => setOpen(true)} className="w-fit">
-            <Star className="size-4" aria-hidden="true" />
+            {faces ? (
+              <Smile className="size-4" aria-hidden="true" />
+            ) : (
+              <Star className="size-4" aria-hidden="true" />
+            )}
             {t.settings.rateAppButton}
           </Button>
         </CardContent>
