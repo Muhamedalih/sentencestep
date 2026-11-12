@@ -10,12 +10,12 @@ import type { RoundPlan } from "@/lib/word-ladder/rounds";
 import type { LadderWord } from "@/lib/word-ladder/types";
 
 /**
- * Word Lists as rounds of three words (the wordLadder permission): the topic's own screen and the
- * round the learner plays from it. The words a round asks are the topic's words not finished yet, in
- * the topic's order, so the old Practice's finished words count and a word that missed twice comes
- * round again. Finished words are the learner's own Word Lists progress (signed in or a guest's, the
- * same as the old Practice), plus the ones typed right in this visit, which are known at once without
- * waiting for the server's answer.
+ * Word Lists as rounds of four words (the wordLadder permission): the topic's own screen, the round
+ * the learner plays from it and the exam after a round. The words a round asks are the topic's words
+ * not finished yet, in the topic's order, so the old Practice's finished words count and a word that
+ * missed comes round again. Finished words are the learner's own Word Lists progress (signed in or a
+ * guest's, the same as the old Practice), plus the ones typed right in this visit, which are known at
+ * once without waiting for the server's answer.
  */
 export function LadderGroup({
   group,
@@ -31,7 +31,7 @@ export function LadderGroup({
   todayISO: string;
 }) {
   const { isLoaded, completedWordIds, markWordComplete } = useWordProgress();
-  const [view, setView] = useState<"topic" | "round">("topic");
+  const [view, setView] = useState<"topic" | "round" | "exam">("topic");
   const [active, setActive] = useState<RoundPlan<LadderWord> | null>(null);
   const [runKey, setRunKey] = useState(0);
   const [visitDone, setVisitDone] = useState<ReadonlySet<string>>(() => new Set());
@@ -53,6 +53,12 @@ export function LadderGroup({
     setView("round");
   }, []);
 
+  /** The exam of the round just played (or again): a fresh screen each time, so it starts from its first word. */
+  const exam = useCallback(() => {
+    setRunKey((key) => key + 1);
+    setView("exam");
+  }, []);
+
   const complete = useCallback(
     (wordId: string) => {
       markWordComplete(group.id, wordId);
@@ -67,10 +73,11 @@ export function LadderGroup({
     start(planRound(words, new Set()));
   }
 
-  if (view === "round" && active) {
+  if ((view === "round" || view === "exam") && active) {
     return (
       <LadderRound
-        key={runKey}
+        key={`${view}:${runKey}`}
+        mode={view}
         words={active.words}
         number={active.number}
         done={active.done}
@@ -82,6 +89,7 @@ export function LadderGroup({
         onWordComplete={complete}
         next={plan ? { number: plan.number, firstWord: plan.words[0]!.word } : null}
         onNext={() => (plan ? start(plan) : setView("topic"))}
+        onExam={exam}
       />
     );
   }

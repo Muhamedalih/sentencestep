@@ -42,17 +42,20 @@ export interface LadderStrings {
   /** The small caption over each screen, before " · 1 of 3". */
   stepMeet: string;
   stepMeaning: string;
+  stepLetters: string;
   stepListen: string;
   stepType: string;
   /** "{n}" of "{total}". */
   position: (n: number, total: number) => string;
   /** The button on the meeting screen. */
   next: string;
+  /** Under the letters: how to put them in. */
+  lettersHint: string;
   /** The speaker's accessible name. */
   listen: string;
   /** After a wrong typed answer: "You typed: x". */
   youTyped: (typed: string) => string;
-  /** Under a wrong typed answer: the word comes back once. */
+  /** Under a wrong typed answer: the word comes back a few screens later. */
   comesBackOnce: string;
   /** The finish page's big title when every word of the round is secure, and when one is not. */
   roundPassed: string;
@@ -71,6 +74,12 @@ export interface LadderStrings {
   done: string;
   /** "Round 5": the label in the top corner. */
   nextRound: (n: number) => string;
+  /** The finish page's button that opens the exam of the round, and the exam's own words. */
+  exam: string;
+  examTitle: string;
+  /** "3 of 4": the result. */
+  examScore: (right: number, total: number) => string;
+  examRetake: string;
   /** Shown while the learner's saved progress is read. */
   loading: string;
   rating: LadderRatingStrings;
@@ -92,13 +101,15 @@ const AR: LadderStrings = {
   level: (l) => levelAr[l - 1] ?? "",
   stepMeet: "كلمة جديدة",
   stepMeaning: "ما معنى هذه الكلمة؟",
+  stepLetters: "رتّب الحروف",
   stepListen: "أي كلمة سمعت؟",
   stepType: "اكتب ما سمعت",
   position: (n, t) => `${n} من ${t}`,
   next: "كمّل",
+  lettersHint: "اكتب بالكيبورد أو اضغط الحروف",
   listen: "استمع",
   youTyped: (typed) => `كتبتَ: ${typed}`,
-  comesBackOnce: "هذه الكلمة تنعاد مرة واحدة في آخر الجولة",
+  comesBackOnce: "ترجع لك هذه الكلمة بعد قليل",
   roundPassed: "اجتزت الجولة",
   roundOver: (n) => `الجولة ${n} انتهت`,
   wordsTail: (n) =>
@@ -116,6 +127,10 @@ const AR: LadderStrings = {
   oneMore: "جولة أخرى",
   done: "انتهيت",
   nextRound: (n) => `الجولة ${n}`,
+  exam: "اختبر",
+  examTitle: "اختبار الجولة",
+  examScore: (r, t) => `${r} من ${t}`,
+  examRetake: "أعد الاختبار",
   loading: "جارٍ التحميل…",
   rating: {
     tag: "جديد: جولات الكلمات",
@@ -142,13 +157,15 @@ const EN: LadderStrings = {
   level: (l) => levelEn[l - 1] ?? "",
   stepMeet: "New word",
   stepMeaning: "What does it mean?",
+  stepLetters: "Put the letters in order",
   stepListen: "Which word did you hear?",
   stepType: "Type what you hear",
   position: (n, t) => `${n} of ${t}`,
   next: "Continue",
+  lettersHint: "Type on the keyboard or tap the letters",
   listen: "Listen",
   youTyped: (typed) => `You typed: ${typed}`,
-  comesBackOnce: "This word comes back once at the end of the round",
+  comesBackOnce: "This word comes back in a moment",
   roundPassed: "Round passed",
   roundOver: (n) => `Round ${n} is over`,
   wordsTail: (n) => (n === 1 ? "word is yours" : "words are yours"),
@@ -159,6 +176,10 @@ const EN: LadderStrings = {
   oneMore: "One more",
   done: "Done",
   nextRound: (n) => `Round ${n}`,
+  exam: "Test",
+  examTitle: "Round test",
+  examScore: (r, t) => `${r} of ${t}`,
+  examRetake: "Retake",
   loading: "Loading…",
   rating: {
     tag: "New: word rounds",
@@ -185,13 +206,15 @@ const ES: LadderStrings = {
   level: (l) => levelEs[l - 1] ?? "",
   stepMeet: "Palabra nueva",
   stepMeaning: "¿Qué significa?",
+  stepLetters: "Ordena las letras",
   stepListen: "¿Qué palabra oíste?",
   stepType: "Escribe lo que oyes",
   position: (n, t) => `${n} de ${t}`,
   next: "Continuar",
+  lettersHint: "Escribe con el teclado o toca las letras",
   listen: "Escuchar",
   youTyped: (typed) => `Escribiste: ${typed}`,
-  comesBackOnce: "Esta palabra vuelve una vez al final de la ronda",
+  comesBackOnce: "Esta palabra vuelve en un momento",
   roundPassed: "Ronda superada",
   roundOver: (n) => `La ronda ${n} terminó`,
   wordsTail: (n) => (n === 1 ? "palabra ya es tuya" : "palabras ya son tuyas"),
@@ -202,6 +225,10 @@ const ES: LadderStrings = {
   oneMore: "Una más",
   done: "Listo",
   nextRound: (n) => `Ronda ${n}`,
+  exam: "Probar",
+  examTitle: "Prueba de la ronda",
+  examScore: (r, t) => `${r} de ${t}`,
+  examRetake: "Repetir",
   loading: "Cargando…",
   rating: {
     tag: "Nuevo: rondas de palabras",
@@ -228,13 +255,15 @@ const TR: LadderStrings = {
   level: (l) => levelTr[l - 1] ?? "",
   stepMeet: "Yeni kelime",
   stepMeaning: "Ne anlama geliyor?",
+  stepLetters: "Harfleri sıraya koy",
   stepListen: "Hangi kelimeyi duydun?",
   stepType: "Duyduğunu yaz",
   position: (n, t) => `${n} / ${t}`,
   next: "Devam",
+  lettersHint: "Klavyeyle yaz ya da harflere dokun",
   listen: "Dinle",
   youTyped: (typed) => `Yazdığın: ${typed}`,
-  comesBackOnce: "Bu kelime turun sonunda bir kez daha gelir",
+  comesBackOnce: "Bu kelime birazdan tekrar gelir",
   roundPassed: "Tur geçildi",
   roundOver: (n) => `${n}. tur bitti`,
   wordsTail: () => "kelime artık senin",
@@ -245,6 +274,10 @@ const TR: LadderStrings = {
   oneMore: "Bir tur daha",
   done: "Bitti",
   nextRound: (n) => `Tur ${n}`,
+  exam: "Test et",
+  examTitle: "Tur testi",
+  examScore: (r, t) => `${r} / ${t}`,
+  examRetake: "Tekrar dene",
   loading: "Yükleniyor…",
   rating: {
     tag: "Yeni: kelime turları",

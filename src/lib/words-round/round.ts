@@ -8,7 +8,7 @@ import type { WordOutcome } from "@/lib/word-mastery/schedule";
  * id or a lesson id.
  */
 
-/** Where a round was asked: a Word Lists practice (`list`), Today's five words (`today`), the Review All Words queue (`review`) a review round of the words bank «كلماتي» (`bank`) or a round of three words of a Word Lists topic (`ladder`, behind the wordLadder permission). */
+/** Where a round was asked: a Word Lists practice (`list`), Today's five words (`today`), the Review All Words queue (`review`) a review round of the words bank «كلماتي» (`bank`) or a round of up to four words of a Word Lists topic (`ladder`, behind the wordLadder permission). */
 export const WORDS_ROUND_SOURCES = ["list", "today", "review", "bank", "ladder"] as const;
 export type WordsRoundSource = (typeof WORDS_ROUND_SOURCES)[number];
 

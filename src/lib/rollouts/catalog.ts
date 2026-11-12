@@ -434,9 +434,9 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
   wordLadder: {
     id: "wordLadder",
     audience: "learner",
-    title: "Word Lists as rounds of three words (the five-step ladder)",
+    title: "Word Lists as rounds of four words (the five-step ladder)",
     description:
-      "Inside a Word Lists topic, Learn and Practice become one Continue button that opens the next round of three words. Each word of a round is met in turn (the word, its sound, its type, its meaning and a sentence) and its meaning is chosen at once; then come two tests over the three words: hear each word and pick its spelling, then hear each word and type it. A word asked wrong is asked once more at the end of the round. Only the typed step counts as learned, and a word typed right is saved to the learner's Word Lists progress exactly as the old Practice saved it.",
+      "Inside a Word Lists topic, Learn and Practice become one Continue button that opens the next round: four words (three only where a topic's count needs it). Every word goes through five steps: (1) its meaning and sound, (2) four meanings to choose from, (3) its scrambled letters put in order, (4) its sound and four spellings to choose from, (5) its sound and the learner types it. Steps 1 to 3 go word by word in an order that brings each word back after others (A, B and C are met and asked their meaning, then A's and B's letters, then D joins, then C's and D's letters); then step 4 and step 5 run over every word. A word answered wrong shows its right answer and the same screen comes back three screens later (twice at most), not at the end of the round. The finish page has an exam button: every word of the round heard and typed once, then a score. Only the typed step counts as learned, and a word typed right is saved to the learner's Word Lists progress exactly as the old Practice saved it.",
     notes: [
       "The topics, their words, the free lists and every learner's finished words stay as they are: a word typed right in the old Practice already counts here.",
       "When the Words bank is open for the same people (“wordBank”), the words of a finished round join the learner's bank with the sentence they were met in, so they come back after a few days in a different form; with the bank closed nothing is added to it.",

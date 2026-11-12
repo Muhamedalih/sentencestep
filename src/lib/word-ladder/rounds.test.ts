@@ -1,31 +1,48 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ladderRoundCount, nextRoundSize, planRound } from "@/lib/word-ladder/rounds";
+import { ladderRoundCount, nextRoundSize, planRound, roundSizes } from "@/lib/word-ladder/rounds";
 
 const words = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `w${i + 1}` }));
+const sum = (sizes: number[]) => sizes.reduce((a, b) => a + b, 0);
 
-test("a topic is split into rounds of three, and a lone leftover joins the last round", () => {
-  assert.equal(ladderRoundCount(0), 0);
-  assert.equal(ladderRoundCount(1), 1);
-  assert.equal(ladderRoundCount(3), 1);
-  assert.equal(ladderRoundCount(4), 1);
-  assert.equal(ladderRoundCount(5), 2);
-  assert.equal(ladderRoundCount(7), 2);
-  assert.equal(ladderRoundCount(25), 8);
-  assert.equal(ladderRoundCount(26), 9);
-  assert.equal(ladderRoundCount(30), 10);
+test("a topic is split into rounds of four, with threes only where the count needs them", () => {
+  assert.deepEqual(roundSizes(0), []);
+  assert.deepEqual(roundSizes(1), [1]);
+  assert.deepEqual(roundSizes(2), [2]);
+  assert.deepEqual(roundSizes(3), [3]);
+  assert.deepEqual(roundSizes(4), [4]);
+  assert.deepEqual(roundSizes(5), [3, 2]);
+  assert.deepEqual(roundSizes(6), [3, 3]);
+  assert.deepEqual(roundSizes(7), [4, 3]);
+  assert.deepEqual(roundSizes(8), [4, 4]);
+  assert.deepEqual(roundSizes(9), [3, 3, 3]);
+  assert.deepEqual(roundSizes(25), [4, 4, 4, 4, 3, 3, 3]);
+  assert.deepEqual(roundSizes(26), [4, 4, 4, 4, 4, 3, 3]);
+  assert.deepEqual(roundSizes(28), [4, 4, 4, 4, 4, 4, 4]);
+  assert.deepEqual(roundSizes(30), [4, 4, 4, 4, 4, 4, 3, 3]);
 });
 
-test("a round takes three words, or all of a tail of four or fewer", () => {
+test("every split adds up, never has a round of more than four, and uses the fewest threes", () => {
+  for (let n = 1; n <= 120; n++) {
+    const sizes = roundSizes(n);
+    assert.equal(sum(sizes), n, `n=${n}`);
+    assert.ok(Math.max(...sizes) <= 4, `n=${n}`);
+    if (n >= 6) assert.ok(Math.min(...sizes) >= 3, `n=${n}`);
+    assert.ok(sizes.filter((size) => size === 3).length <= 3, `n=${n}`);
+  }
+});
+
+test("the next round and the round count follow the split", () => {
   assert.equal(nextRoundSize(0), 0);
-  assert.equal(nextRoundSize(1), 1);
-  assert.equal(nextRoundSize(4), 4);
+  assert.equal(nextRoundSize(25), 4);
+  assert.equal(nextRoundSize(9), 3);
   assert.equal(nextRoundSize(5), 3);
-  assert.equal(nextRoundSize(25), 3);
+  assert.equal(ladderRoundCount(25), 7);
+  assert.equal(ladderRoundCount(30), 8);
 });
 
-test("walking a 25-word topic gives seven rounds of three and a last of four, numbered 1 to 8", () => {
+test("walking a 25-word topic gives four rounds of four and three of three, numbered 1 to 7", () => {
   const topic = words(25);
   const done = new Set<string>();
   const sizes: number[] = [];
@@ -35,25 +52,13 @@ test("walking a 25-word topic gives seven rounds of three and a last of four, nu
     if (!plan) break;
     sizes.push(plan.words.length);
     numbers.push(plan.number);
-    assert.equal(plan.count, 8);
+    assert.equal(plan.count, 7);
     assert.equal(plan.done, done.size);
     for (const word of plan.words) done.add(word.id);
   }
-  assert.deepEqual(sizes, [3, 3, 3, 3, 3, 3, 3, 4]);
-  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(sizes, [4, 4, 4, 4, 3, 3, 3]);
+  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6, 7]);
   assert.equal(planRound(topic, done), null);
-});
-
-test("a 30-word topic is ten rounds of three", () => {
-  const topic = words(30);
-  const done = new Set<string>();
-  let rounds = 0;
-  for (let plan = planRound(topic, done); plan; plan = planRound(topic, done)) {
-    assert.equal(plan.words.length, 3);
-    for (const word of plan.words) done.add(word.id);
-    rounds += 1;
-  }
-  assert.equal(rounds, 10);
 });
 
 test("words finished in the old Practice, in any order, are not asked again", () => {
