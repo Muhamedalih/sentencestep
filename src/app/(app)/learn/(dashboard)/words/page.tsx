@@ -42,6 +42,11 @@ export default async function MyWordsPage({
   ]);
   const savedOpen = features.personalCards.page;
   if (!user || (!features.rollouts.wordBank && !savedOpen)) redirect("/learn");
+  // With the one Words page («الكلمات», permission wordsPage) the overview is that page; the lists of
+  // words (?show=) keep their own address.
+  if (features.rollouts.wordsPage && !isBankListView((await searchParams).show)) {
+    redirect("/learn/word-lists");
+  }
 
   if (!features.rollouts.wordBank) {
     // The saved words only: no bank to show, so the section is the saved list itself.

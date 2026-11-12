@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { WordListsLibrary } from "@/components/app/word-lists-library";
 import { CoreWordsShelf } from "@/components/words/core-words-shelf";
+import { WordsHubPage } from "@/components/words/words-hub-page";
 import { WordListsDashboard } from "@/components/words/word-lists-dashboard";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
@@ -28,7 +29,17 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Word Lists" };
 
-export default async function WordListsPage() {
+export default async function WordListsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  // The one Words page («الكلمات», permission wordsPage): the topics, the core words and (through its
+  // tabs) the saved words under one title. Everyone else keeps the library below, as it always was.
+  if ((await getEffectiveFeatures()).rollouts.wordsPage) {
+    return <WordsHubPage tab={(await searchParams).tab} />;
+  }
+
   const locale = await getLocale();
   const [groups, hasPremium, isAdminUser, weakWords, access, redesign, features] =
     await Promise.all([

@@ -20,6 +20,7 @@ export function SavedWordsView({
   t,
   backHref,
   backLabel,
+  embedded = false,
 }: {
   cards: readonly SavedCard[];
   heading: string;
@@ -27,6 +28,8 @@ export function SavedWordsView({
   t: Dictionary;
   backHref?: string;
   backLabel?: string;
+  /** Drawn inside another page (the Saved tab of the Words page): no container, back link or title of its own. */
+  embedded?: boolean;
 }) {
   const now = Date.now();
   const items = cards.map((card) => ({
@@ -41,8 +44,8 @@ export function SavedWordsView({
   const dueCount = items.filter((item) => item.isDue).length;
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-      {backHref && backLabel && (
+    <div className={embedded ? undefined : "mx-auto max-w-4xl px-6 py-10 sm:py-14"}>
+      {!embedded && backHref && backLabel && (
         <Link
           href={backHref}
           className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1.5 text-sm"
@@ -51,10 +54,17 @@ export function SavedWordsView({
           <span dir="auto">{backLabel}</span>
         </Link>
       )}
-      <h1 className="text-3xl font-semibold tracking-tight" dir={dir}>
-        {heading}
-      </h1>
-      <p className="text-muted-foreground mt-2 max-w-2xl" dir={dir}>
+      {!embedded && (
+        <h1 className="text-3xl font-semibold tracking-tight" dir={dir}>
+          {heading}
+        </h1>
+      )}
+      <p
+        className={
+          embedded ? "text-muted-foreground max-w-2xl" : "text-muted-foreground mt-2 max-w-2xl"
+        }
+        dir={dir}
+      >
         {t.myCards.subtitle}
       </p>
 

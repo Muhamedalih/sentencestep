@@ -1,0 +1,134 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Check, Lock } from "lucide-react";
+
+import { useFeatures } from "@/components/providers/feature-provider";
+import { useLocale } from "@/components/providers/locale-provider";
+import { useWordProgress } from "@/hooks/use-word-progress";
+import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
+import { cn } from "@/lib/utils";
+import { wordsHubStrings } from "@/lib/words-hub/strings";
+import type { WordGroupSummary } from "@/types/word-lists";
+
+const LEVELS = [1, 2, 3] as const;
+type Level = (typeof LEVELS)[number];
+
+/**
+ * The topics of the Words page: the three levels as tabs and the chosen level's topics as plain cards
+ * (the topic's name in English and in the learner's language, how many of its words are done, a thin
+ * bar), no pictures. A locked topic wears a lock and still opens its own lock screen. A card goes to
+ * the topic's own screen when the word rounds are open for the learner, and otherwise to the Learn
+ * and Practice chooser the topics always had. The learner's progress is read in the browser (a
+ * guest's lives there; a signed-in learner's comes from their account), exactly like the Word Lists
+ * library.
+ */
+export function WordsTopicGrid({
+  groups,
+  isPremiumUser,
+}: {
+  groups: WordGroupSummary[];
+  isPremiumUser: boolean;
+}) {
+  const { locale, dir } = useLocale();
+  const s = wordsHubStrings(locale);
+  const { rollouts } = useFeatures();
+  const { isLoaded, completedCountIn } = useWordProgress();
+  const [level, setLevel] = useState<Level>(1);
+
+  const shown = groups.filter((group) => group.level === level).sort((a, b) => a.order - b.order);
+  const levelLabel = (value: Level) =>
+    locale
+      ? tierSupportLabel(difficultyForLevel(value), locale)
+      : tierLabel(difficultyForLevel(value)).label;
+
+  return (
+    <div>
+      <div className="bg-muted mt-5 flex rounded-[10px] p-[3px] md:mt-5 md:inline-flex">
+        {LEVELS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setLevel(value)}
+            aria-pressed={level === value}
+            className={cn(
+              "flex-1 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-colors duration-150 md:flex-none md:px-4",
+              level === value
+                ? "bg-brand-muted text-primary"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <span dir="auto">{levelLabel(value)}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        {shown.map((group) => {
+          const locked = !group.isFree && !isPremiumUser;
+          const done = isLoaded && !locked ? completedCountIn(group.wordIds) : 0;
+          const finished = !locked && group.wordCount > 0 && done >= group.wordCount;
+          const started = done > 0 && !finished;
+          const href = locked
+            ? `/learn/word-lists/${group.id}`
+            : rollouts.wordLadder
+              ? `/learn/word-lists/${group.id}`
+              : `/learn/word-lists/${group.id}/words`;
+          const percent = group.wordCount === 0 ? 0 : Math.round((done / group.wordCount) * 100);
+          return (
+            <Link
+              key={group.id}
+              href={href}
+              prefetch={false}
+              className={cn(
+                "bg-card border-border hover:border-primary/40 focus-visible:ring-ring flex min-h-[92px] flex-col rounded-2xl border px-4 py-3.5 transition-colors duration-150 outline-none focus-visible:ring-2 md:min-h-[108px] md:px-[18px] md:py-4",
+                locked && "opacity-80",
+              )}
+            >
+              <span className="flex items-baseline justify-between gap-2">
+                <span
+                  className="text-foreground text-[17px] leading-tight font-semibold tracking-[-0.01em] md:text-lg"
+                  dir="ltr"
+                >
+                  {group.title}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-1 text-[12.5px] tabular-nums",
+                    finished ? "text-success" : "text-muted-foreground",
+                  )}
+                  dir="auto"
+                >
+                  {locked ? (
+                    <Lock className="size-3.5" aria-hidden="true" />
+                  ) : finished ? (
+                    <Check className="size-4" aria-hidden="true" />
+                  ) : started ? (
+                    `${done}/${group.wordCount}`
+                  ) : (
+                    s.wordsCount(group.wordCount)
+                  )}
+                </span>
+              </span>
+              <span className="text-muted-foreground mt-0.5 text-[13.5px]" dir={dir}>
+                {group.supportTitle ?? group.titleAr}
+              </span>
+              {(started || finished) && (
+                <span className="bg-muted mt-auto block h-1 overflow-hidden rounded-full pt-0">
+                  <span
+                    className={cn(
+                      "block h-full rounded-full",
+                      finished ? "bg-success" : "bg-primary",
+                    )}
+                    style={{ width: `${finished ? 100 : percent}%` }}
+                  />
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

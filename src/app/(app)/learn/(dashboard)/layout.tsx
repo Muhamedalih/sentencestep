@@ -78,6 +78,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
             wordBankEnabled={
               Boolean(user) && (features.rollouts.wordBank || features.personalCards.page)
             }
+            wordsHub={features.rollouts.wordsPage}
           />
         }
       >

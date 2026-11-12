@@ -42,6 +42,7 @@ export const ROLLOUT_IDS = [
   "returnLoop",
   "mobilePhoneUx",
   "wordLadder",
+  "wordsPage",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -440,6 +441,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Each round reports WORDS_ROUND events with the source “ladder”, so its finish rate can be set against the old Practice (“list”) and Today's words.",
       "The old Learn and Practice screens are not removed: a learner without this permission still gets them, which keeps them as the comparison.",
       "Needs no new reads or writes beyond what Practice already made: the choices are worked out in the browser from the topic's own words, and a word is written once, when it is typed right.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordsPage: {
+    id: "wordsPage",
+    audience: "learner",
+    title: "One Words page («الكلمات»)",
+    description:
+      "The two menu items «كلماتي» and Word Lists become ONE, «الكلمات» (a single row in the phone's More sheet too), and its page is built around the learner's words: the title with three tabs (Topics, Core, Saved), the words waiting for review in one strip at the top (today's number, how many words the learner knows and the button), then the topics by level as plain cards with the learner's progress. The Core tab holds «كلمات الموقع الأساسية» and the Saved tab the words saved with the star, so nothing has to be looked for in another section; the old «كلماتي» page leads here.",
+    notes: [
+      "The review strip and the Core tab need the Words bank (“wordBank”) open for the same people, and show only for a signed-in learner; the Saved tab needs the saved words (“Personal word cards”). Without them the page is just the topics, without tabs.",
+      "Only the menu and the page change: the topics, their words, the free lists, the review round, the saved words and every learner's progress stay exactly as they are, and Word Lists keeps working at the same address.",
+      "Needs no new reads or writes: the strip reads the learner's bank rows once, as «كلماتي» already did.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
