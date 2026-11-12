@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
+import { fill, palette, stroke, type Palette } from "@/components/words/word-cover-kit";
+import { MORE_PALETTES, MORE_SCENES } from "@/components/words/word-cover-scenes";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,20 +15,10 @@ import { cn } from "@/lib/utils";
  *   ink   the darkest detail  main   the main object          alt    the second object
  *   soft  light shapes (faces, paper, clouds)                 pop    one accent
  *
- * The scenes are drawn here, in code, so they belong to the site and cost no image download. A
+ * The scenes are drawn in code (the first nine here, the rest in word-cover-scenes.tsx), so they belong to the site and cost no image download. A
  * topic without a scene (a list added later) gets a soft level-coloured ground with the topic's
  * own icon until a drawing or an admin's picture is added: it is never an empty box.
  */
-
-type Tone = "bg" | "tint" | "ink" | "main" | "alt" | "soft" | "pop";
-type Palette = Record<Tone, string>;
-
-const fill = (tone: Tone): CSSProperties => ({ fill: `var(--wc-${tone})` });
-const stroke = (tone: Tone): CSSProperties => ({ stroke: `var(--wc-${tone})` });
-
-function palette([bg, tint, ink, main, alt, soft, pop]: readonly string[]): Palette {
-  return { bg, tint, ink, main, alt, soft, pop } as Palette;
-}
 
 /** Topic title (the group's English title, as in TOPIC_ICON) -> palette: bg, tint, ink, main, alt, soft, pop. */
 const PALETTES: Record<string, Palette> = {
@@ -55,6 +47,7 @@ const PALETTES: Record<string, Palette> = {
     "#eef3fd",
     "#e5588a",
   ]),
+  ...MORE_PALETTES,
 };
 
 /** The ground of a topic with no scene, by level (1 beginner, 2 intermediate, 3 advanced). */
@@ -317,6 +310,7 @@ const SCENES: Record<string, () => ReactNode> = {
   Health,
   Finance,
   Technology,
+  ...MORE_SCENES,
 };
 
 /** Whether a topic has a drawing of its own (otherwise its cover is the soft ground with its icon). */
