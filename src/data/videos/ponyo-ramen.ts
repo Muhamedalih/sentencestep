@@ -9,7 +9,7 @@ export const ponyoRamen: VideoLesson = {
   level: "A2",
   durationSeconds: 77,
   clipStartSeconds: 3,
-  clipEndSeconds: 51.2,
+  clipEndSeconds: 72.4,
   textSource: "trial",
   sourceNote:
     "TRIAL ONLY (no licence or permission, so Admins only and hidden from learners): a film clip by HBO Max Family (https://www.youtube.com/@hbomaxfamily), no licence or permission, so Admins only and hidden from learners. Text: the creator's manual captions as the player shows them (2026-11-12), sound tags removed. Stops: loudness in the official embed, with the thresholds chosen per sentence because sound effects hide the pauses; the first 8 spoken lines only. A first version, to be checked by ear.",
@@ -202,6 +202,122 @@ export const ponyoRamen: VideoLesson = {
         {
           en: "peeking",
           ar: "تلصّص",
+        },
+      ],
+    },
+    {
+      id: "ponyo-ramen-s8",
+      startSeconds: 53.69,
+      endSeconds: 60.78,
+      en: "Get ready to look now! Abracadabra!",
+      ar: "كوني جاهزة لتنظري الآن! أبراكادابرا!",
+      wordTranslations: [
+        {
+          en: "Get",
+          ar: "كوني",
+        },
+        {
+          en: "ready",
+          ar: "جاهزة",
+        },
+        {
+          en: "to",
+          ar: "كي",
+        },
+        {
+          en: "look",
+          ar: "تنظري",
+        },
+        {
+          en: "now",
+          ar: "الآن",
+        },
+        {
+          en: "Abracadabra",
+          ar: "أبراكادابرا",
+        },
+      ],
+    },
+    {
+      id: "ponyo-ramen-s9",
+      startSeconds: 63.55,
+      endSeconds: 67.82,
+      en: "Mm! It's ham! Careful, it's hot!",
+      ar: "ممم! إنه لحم هام! احذري، إنه ساخن!",
+      wordTranslations: [
+        {
+          en: "Mm",
+          ar: "ممم",
+        },
+        {
+          en: "It's",
+          ar: "إنه",
+        },
+        {
+          en: "ham",
+          ar: "لحم هام",
+        },
+        {
+          en: "Careful",
+          ar: "احذري",
+        },
+        {
+          en: "it's",
+          ar: "إنه",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
+        },
+      ],
+    },
+    {
+      id: "ponyo-ramen-s10",
+      startSeconds: 68.3,
+      endSeconds: 68.85,
+      en: "Ah!",
+      ar: "آه!",
+      wordTranslations: [
+        {
+          en: "Ah",
+          ar: "آه",
+        },
+      ],
+    },
+    {
+      id: "ponyo-ramen-s11",
+      startSeconds: 69.25,
+      endSeconds: 71.85,
+      en: "Hot, hot, hot, hot, hot, hot, hot!",
+      ar: "ساخن، ساخن، ساخن، ساخن، ساخن، ساخن، ساخن!",
+      wordTranslations: [
+        {
+          en: "Hot",
+          ar: "ساخن",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
+        },
+        {
+          en: "hot",
+          ar: "ساخن",
         },
       ],
     },
