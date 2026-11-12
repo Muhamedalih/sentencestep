@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Star } from "lucide-react";
 
+import {
+  FacesRatingCard,
+  toFaceLevel,
+  useFacesStrings,
+} from "@/components/feedback/faces-rating-card";
 import { Button } from "@/components/ui/button";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { submitAppRatingAction } from "@/lib/feedback/actions";
 import {
@@ -22,7 +28,8 @@ import type { LearningMode } from "@/types/content";
 const MAX_COMMENT_LENGTH = 2000;
 
 /**
- * The actual 5-star + comment card — the one visual/interaction surface
+ * The actual rating + comment card — five stars, or five faces with the faceRatings permission —
+ * the one visual/interaction surface
  * shared by both RatingPrompt's one-time automatic pop-up (after a
  * learner's second lesson ever) and Settings' always-available "Rate
  * SentenceStep" card (RateAppCard). Purely controlled: owns none of the
@@ -48,14 +55,14 @@ const MAX_COMMENT_LENGTH = 2000;
  * app and say the message never comes back, which a row that is always there
  * contradicts.
  */
-export function RatingModal({
-  open,
-  onOpenChange,
-  lessonId,
-  mode,
-  initialRating = 0,
-  onSubmitted,
-}: {
+export function RatingModal(props: RatingModalProps) {
+  // With the faceRatings permission the card shows five faces (see FacesRatingCard), the look of the
+  // Words rounds' card; without it, the five stars it always had.
+  const { rollouts } = useFeatures();
+  return rollouts.faceRatings ? <FacesRatingModal {...props} /> : <StarsRatingModal {...props} />;
+}
+
+export interface RatingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lessonId: string;
@@ -65,20 +72,103 @@ export function RatingModal({
   initialRating?: number;
   /** Called with the rating once it has been sent. */
   onSubmitted?: (rating: number) => void;
-}) {
-  const { t, locale } = useLocale();
-  const forPassages = mode === "passages";
-  const forWords = mode === "words";
-  const forVideo = mode === "video";
-  const copy = forPassages
+}
+
+type Locale = ReturnType<typeof useLocale>["locale"];
+type Dictionary = ReturnType<typeof useLocale>["t"];
+
+/** The headline and words of the card for one section: the app's own, or the section's that opened it. */
+function sectionCopy(mode: RatingModalProps["mode"], t: Dictionary, locale: Locale) {
+  return mode === "passages"
     ? { ...t.rateApp, ...t.passages.rating }
-    : forWords
+    : mode === "words"
       ? { ...t.rateApp, ...t.myWords.rating }
-      : forVideo
+      : mode === "video"
         ? { ...t.rateApp, ...videoRatingCopy(locale) }
         : mode === "stories"
           ? { ...t.rateApp, ...t.lesson.storyEnd.rating }
           : t.rateApp;
+}
+
+/**
+ * Sends a rating and retires the one-time gate it belongs to. A rating of one section retires only
+ * that section's own card; the words review's quiet row (a rating of «كلماتي») retires nothing: a
+ * learner who rated it is still asked about the app.
+ */
+function sendRating({
+  rating,
+  comment,
+  email,
+  lessonId,
+  mode,
+  locale,
+  isGuest,
+}: {
+  rating: number;
+  comment: string;
+  email: string;
+  lessonId: string;
+  mode: RatingModalProps["mode"];
+  locale: Locale;
+  isGuest: boolean;
+}) {
+  void submitAppRatingAction({
+    rating,
+    comment,
+    lessonId,
+    mode,
+    locale,
+    anonId: getOrCreateAnonId(),
+    contactEmail: isGuest ? email : undefined,
+  });
+  if (mode === "passages") markRatedPassages();
+  else if (mode === "video") markRatedVideo();
+  else if (mode !== "words") markRatedApp();
+}
+
+/** The same card with five faces: the section's headline, the faces' own words, and the same sending. */
+function FacesRatingModal({
+  open,
+  onOpenChange,
+  lessonId,
+  mode,
+  initialRating = 0,
+  onSubmitted,
+}: RatingModalProps) {
+  const { t, locale } = useLocale();
+  const copy = sectionCopy(mode, t, locale);
+  const faces = useFacesStrings();
+  // A signed-in learner is answered at their account email, so only a guest is asked for one.
+  const isGuest = useAuthUserId() === null;
+  return (
+    <FacesRatingCard
+      open={open}
+      title={copy.headline}
+      subtitle={faces.subtitle}
+      copy={faces}
+      initialLevel={toFaceLevel(initialRating)}
+      emailPlaceholder={isGuest ? t.rateApp.emailPlaceholder : undefined}
+      thanksMs={1800}
+      onSend={(level, comment, email) => {
+        sendRating({ rating: level, comment, email, lessonId, mode, locale, isGuest });
+        onSubmitted?.(level);
+      }}
+      onSkip={() => onOpenChange(false)}
+      onDone={() => onOpenChange(false)}
+    />
+  );
+}
+
+function StarsRatingModal({
+  open,
+  onOpenChange,
+  lessonId,
+  mode,
+  initialRating = 0,
+  onSubmitted,
+}: RatingModalProps) {
+  const { t, locale } = useLocale();
+  const copy = sectionCopy(mode, t, locale);
   // A signed-in learner is answered at their account email, so only a guest is asked for one.
   const isGuest = useAuthUserId() === null;
   const prefersReducedMotion = useReducedMotion();
@@ -105,20 +195,7 @@ export function RatingModal({
 
   function handleSubmit() {
     if (rating === 0) return;
-    void submitAppRatingAction({
-      rating,
-      comment,
-      lessonId,
-      mode,
-      locale,
-      anonId: getOrCreateAnonId(),
-      contactEmail: isGuest ? email : undefined,
-    });
-    // A rating of one section retires only that section's own card; the words review's quiet row of
-    // stars (a rating of «كلماتي») retires nothing: a learner who rated it is still asked about the app.
-    if (forPassages) markRatedPassages();
-    else if (forVideo) markRatedVideo();
-    else if (!forWords) markRatedApp();
+    sendRating({ rating, comment, email, lessonId, mode, locale, isGuest });
     onSubmitted?.(rating);
     setSubmitted(true);
     window.setTimeout(() => onOpenChange(false), 1800);

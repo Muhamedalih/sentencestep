@@ -45,6 +45,7 @@ export const ROLLOUT_IDS = [
   "wordsPage",
   "wordCovers",
   "wordsBanner",
+  "faceRatings",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -483,6 +484,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The learner's progress is read in the browser, as the topics already do, so it costs no new read. The order of a signed-in learner's finished words is now asked from the database (by completion time) so the book studied last can lean.",
       "Below 1280 px it stacks (number, button, shelf) and the shelf shows six books and the leaning one.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  faceRatings: {
+    id: "faceRatings",
+    audience: "learner",
+    title: "Ratings as five faces",
+    description:
+      "Every place a learner rates something shows the five faces of the Words rounds' rating card instead of five stars: the card after a learner's second lesson and the one in Settings, the one-time cards of Passages and Video, the quiet row at the end of a story and of a words review (five small faces that open the same card with the tapped face chosen), and the rating under a book in the Library. The face under the pointer lights up and the others lose their colour; once a face is chosen an optional comment box opens under it. A rating is still a number from 1 (hates it) to 5 (loves it), so nothing in Admin > Ratings or in the site's average changes.",
+    notes: [
+      "Only the look of the rating changes: the same one-time gates, the same rows in the same table, the same optional comment and (for a guest) the same optional address to be answered at.",
+      "The public reviews on the start page and the average quoted on the plans page stay as they are: they show what other learners gave, they are not a place to rate.",
+      "Needs no new reads or writes and no migration.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page; without it every rating keeps its five stars.",
     ],
   },
   mobilePath: {
