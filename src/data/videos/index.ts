@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { ponyoRamen } from "./ponyo-ramen";
 import { happyRatsBoggling } from "./happy-rats-boggling";
 import { thisBirdUsesVibrationsToFindWorms } from "./this-bird-uses-vibrations-to-find-worms";
 import { whatIfHumansHadHummingbirdHearts } from "./what-if-humans-had-hummingbird-hearts";
@@ -86,4 +87,5 @@ export const videoLessons: readonly VideoLesson[] = [
   whatIfHumansHadHummingbirdHearts,
   thisBirdUsesVibrationsToFindWorms,
   happyRatsBoggling,
+  ponyoRamen,
 ];
