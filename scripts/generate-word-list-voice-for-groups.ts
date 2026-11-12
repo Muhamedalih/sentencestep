@@ -8,8 +8,14 @@
  *
  * Used for the third expansion's drafts, so an admin can hear them before they are published.
  *
- * Run with: npx tsx --env-file=.env.local scripts/generate-word-list-voice-for-groups.ts kitchen bathroom ...
+ * A group whose own voice is an ElevenLabs voice needs the key of the paid account (the one in
+ * .env.local is an old account's): pass --eleven-key-file="C:/Users/<you>/.sentencestep/elevenlabs_api_key.txt".
+ * The key is read into this process only and never printed. ElevenLabs bills per character, so
+ * --dry-run prints how many characters the groups' words hold and stops before spending any.
+ *
+ * Run with: npx tsx --env-file=.env.local scripts/generate-word-list-voice-for-groups.ts [--dry-run] [--eleven-key-file=...] kitchen bathroom ...
  */
+import fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "../src/types/database";
@@ -23,6 +29,11 @@ if (!url || !serviceRoleKey) {
 
 async function main() {
   const groupIds = process.argv.slice(2).filter((arg) => !arg.startsWith("--"));
+  const keyFileArg = process.argv.find((arg) => arg.startsWith("--eleven-key-file="));
+  if (keyFileArg) {
+    process.env.ELEVENLABS_API_KEY = fs.readFileSync(keyFileArg.split("=")[1]!, "utf8").trim();
+  }
+  const dryRun = process.argv.includes("--dry-run");
   if (groupIds.length === 0) {
     console.error("Name at least one group id, e.g. kitchen bathroom.");
     process.exit(1);
@@ -32,6 +43,18 @@ async function main() {
   const supabase = createClient<Database>(url!, serviceRoleKey!, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  if (dryRun) {
+    // What would be spent: every word of the groups, in characters (ElevenLabs counts characters).
+    const { data: words, error } = await supabase
+      .from("vocabulary_words")
+      .select("group_id, target_word")
+      .in("group_id", groupIds);
+    if (error) throw error;
+    const chars = (words ?? []).reduce((sum, word) => sum + word.target_word.length, 0);
+    console.log(`Dry run: ${words?.length ?? 0} words, ${chars} characters; nothing generated.`);
+    return;
+  }
 
   let generated = 0;
   let skipped = 0;

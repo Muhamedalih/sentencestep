@@ -5,7 +5,7 @@ import { WordGroupForm } from "@/components/admin/word-group-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getVoices } from "@/lib/admin/voices-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { isWordListProvider } from "@/lib/voice/content-provider-map";
+import { isWordListGroupProvider } from "@/lib/voice/content-provider-map";
 
 export const metadata: Metadata = {
   title: "Add word group",
@@ -19,7 +19,7 @@ export default async function NewWordGroupPage() {
   // voices that would actually work if chosen" filtering
   // AdminVoiceContentPage already applies for Stories/Books and Normal
   // lessons.
-  const voices = (await getVoices()).filter((voice) => isWordListProvider(voice.source));
+  const voices = (await getVoices()).filter((voice) => isWordListGroupProvider(voice.source));
 
   return (
     <div className="flex flex-col gap-6">

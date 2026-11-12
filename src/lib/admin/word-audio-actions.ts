@@ -8,7 +8,7 @@ import type { ActionResult } from "@/lib/admin/content-actions";
 import { getWordGroupAudioStatus, type WordGroupAudioStatus } from "@/lib/admin/word-audio-queries";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { isWordListProvider } from "@/lib/voice/content-provider-map";
+import { isWordListGroupProvider } from "@/lib/voice/content-provider-map";
 import { triggerAutomaticWordGroupVoiceGeneration } from "@/lib/voice/auto-trigger";
 import { generateWordGroupVoiceDraft } from "@/lib/voice/word-list-voice-generation";
 
@@ -50,8 +50,8 @@ export async function setWordGroupVoiceAction(
       .select("source")
       .eq("id", voiceId)
       .maybeSingle();
-    if (!voice || !isWordListProvider(voice.source)) {
-      return { error: "Word Lists can only use an Edge-TTS or Fish Audio voice." };
+    if (!voice || !isWordListGroupProvider(voice.source)) {
+      return { error: "A word group can only use an Edge-TTS, Fish Audio or ElevenLabs voice." };
     }
   }
 

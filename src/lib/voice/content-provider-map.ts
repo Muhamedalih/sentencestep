@@ -68,6 +68,35 @@ export function isWordListProvider(source: string): boolean {
 }
 
 /**
+ * A GROUP's own narration voice (word_groups.voice_id) may also be an ElevenLabs voice (added
+ * 2026-11-13 at the owner's request, for the third expansion's topics). It is allowed for a group
+ * and for nothing else: the site-wide default pronunciation voice and the on-demand clip of a
+ * single word stay on isWordListProvider (Edge-TTS / Fish Audio), because ElevenLabs bills per
+ * character, and a default or an on-demand path would spend credits for every list and every click
+ * (the September 2026 incident was exactly a default that silently regenerated a whole library).
+ * A group's voice is used for playback only once ALL its words have a clip in it, so a half-made
+ * list never plays in two voices (see word-group-playback-voice.ts), and the only generation under
+ * an ElevenLabs voice is the admin's own "generate" for that group (or the sweep, for a published
+ * group of theirs that still has words without a clip).
+ */
+export const WORD_LIST_GROUP_PROVIDERS = [...WORD_LIST_PROVIDERS, "elevenlabs"] as const;
+
+export function isWordListGroupProvider(source: string): boolean {
+  return (WORD_LIST_GROUP_PROVIDERS as readonly string[]).includes(source);
+}
+
+/**
+ * The ElevenLabs model for a Word Lists clip, pinned like FISH_AUDIO_MODEL so the pipeline never
+ * moves on its own. eleven_multilingual_v2 on purpose, not the Stories' eleven_v3: a single word
+ * has no sentence round it for v3 to perform, and v2 read isolated words cleanly and the same way
+ * every time (an audition of 9 voices on 12 of the new words, 2026-11-13).
+ */
+export const WORD_LIST_ELEVENLABS_MODEL = "eleven_multilingual_v2";
+
+/** How steady an ElevenLabs word clip is: 0.85 (not the sentence default 0.5) made the recognised words rise from 6 to 10 of 12 on the voices chosen for the new topics. */
+export const WORD_LIST_ELEVENLABS_STABILITY = 0.85;
+
+/**
  * Fish Audio's free tier: the `s2.1-pro-free` model, $0 per million bytes
  * under Fish's Fair Use Policy, no card required (confirmed against
  * docs.fish.audio's pricing page and a live free-account call on
@@ -82,7 +111,9 @@ export const FISH_AUDIO_MODEL = "s2.1-pro-free";
 
 /** The model string stored in voice_audio_cache.model for a Word Lists clip — Edge-TTS ignores its model argument entirely, Fish needs the free-tier model id. */
 export function wordListModelFor(source: string): string {
-  return source === "fish-audio" ? FISH_AUDIO_MODEL : "edge-tts";
+  if (source === "fish-audio") return FISH_AUDIO_MODEL;
+  if (source === "elevenlabs") return WORD_LIST_ELEVENLABS_MODEL;
+  return "edge-tts";
 }
 
 /**

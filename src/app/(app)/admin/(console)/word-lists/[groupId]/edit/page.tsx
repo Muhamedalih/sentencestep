@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getVoices } from "@/lib/admin/voices-queries";
 import { getWordGroupByIdAdmin } from "@/lib/admin/word-lists-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { isWordListProvider } from "@/lib/voice/content-provider-map";
+import { isWordListGroupProvider } from "@/lib/voice/content-provider-map";
 import { countReadyWordClips } from "@/lib/voice/word-group-playback-voice";
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export default async function EditWordGroupPage({
   // voices that would actually work if chosen" filtering
   // AdminVoiceContentPage already applies for Stories/Books and Normal
   // lessons.
-  const voices = allVoices.filter((voice) => isWordListProvider(voice.source));
+  const voices = allVoices.filter((voice) => isWordListGroupProvider(voice.source));
 
   // How much of the group is already generated under its saved voice — only
   // worth a query when the group has a voice of its own. A failed read just
