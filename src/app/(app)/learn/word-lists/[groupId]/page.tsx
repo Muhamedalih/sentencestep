@@ -131,6 +131,8 @@ export default async function WordGroupPracticePage({
         voiceId={voiceId ?? null}
         bankFeed={Boolean(user) && features.rollouts.wordBank}
         todayISO={todayISO}
+        // The picture beside the words (permission wordsSplit): the topic's own cover.
+        split={features.rollouts.wordsSplit ? { coverUrl: group.coverUrl ?? null } : undefined}
       />
     );
   }

@@ -45,6 +45,7 @@ export const ROLLOUT_IDS = [
   "wordsPage",
   "wordCovers",
   "wordsBanner",
+  "wordsSplit",
   "faceRatings",
 ] as const;
 
@@ -483,6 +484,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "It replaces the review card at the top of the page (the words-bank strip on the Words page, the review card on the Word Lists page), so the page gains no element; its button goes where that card's button went.",
       "The learner's progress is read in the browser, as the topics already do, so it costs no new read. The order of a signed-in learner's finished words is now asked from the database (by completion time) so the book studied last can lean.",
       "Below 1280 px it stacks (number, button, shelf) and the shelf shows six books and the leaning one.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordsSplit: {
+    id: "wordsSplit",
+    audience: "learner",
+    title: "Word topic: the picture beside the words",
+    description:
+      "On a laptop and a tablet a Word Lists topic opens as two parts, like a lesson: about a third of the screen is the topic's own picture (its drawing, or the photo an admin set for it) with its level and name, and the larger part holds the words, the round's list, the button and then the round itself. The picture stays in place for the whole visit (topic screen, the five steps, the exam), so it never reloads as the learner moves on. On a phone nothing changes: the words keep the whole screen. The picture also steps aside while the on-screen keyboard is open and on a short landscape phone, so the word being typed keeps its room.",
+    notes: [
+      "Only the layout of the topic's screens changes: the words, the rounds, the saved progress and the free lists stay exactly as they are. It applies to the rounds of four words (“wordLadder”); a learner who does not have those keeps the old Learn / Practice screens, unchanged.",
+      "The picture is the one used on the topic's cover (“wordCovers”), so an admin who changes a topic's picture there changes it here too.",
+      "Needs no new reads or writes and no migration.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
