@@ -231,6 +231,8 @@ export async function fetchWordGroupById(
     descriptionAr: group.description_ar ?? undefined,
     isFree: group.is_free,
     voiceId: group.voice_id ?? undefined,
+    // Absent until 20250359000000_word_group_covers.sql is applied: no chosen picture.
+    coverUrl: group.cover_url ?? null,
     words: (words ?? []).map((w) => {
       const word = {
         id: w.id,

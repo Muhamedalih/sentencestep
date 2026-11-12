@@ -20,6 +20,7 @@ export function LadderTopic({
   plan,
   words,
   loading,
+  split = false,
   onStart,
   onAgain,
 }: {
@@ -29,6 +30,8 @@ export function LadderTopic({
   words: LadderWord[];
   /** The learner's saved progress is still being read. */
   loading: boolean;
+  /** The picture beside the words is on (permission wordsSplit): it carries the level and the name, so they are not said twice. */
+  split?: boolean;
   onStart: () => void;
   onAgain: () => void;
 }) {
@@ -37,6 +40,27 @@ export function LadderTopic({
   const total = words.length;
   const done = plan ? plan.done : total;
   const count = plan?.count ?? 1;
+
+  const heading = (
+    <>
+      <p className="text-muted-foreground mb-1.5 text-[12.5px] font-semibold" dir="auto">
+        {s.level(group.level)}
+      </p>
+      <h1 className="flex flex-wrap items-baseline justify-center gap-x-3.5">
+        <span
+          className="text-foreground text-[clamp(2.2rem,1.8rem+1.8vw,2.75rem)] font-bold tracking-tight"
+          dir="ltr"
+        >
+          {group.title}
+        </span>
+        {group.supportTitle && (
+          <span className="text-muted-foreground text-[22px]" dir={dir}>
+            {group.supportTitle}
+          </span>
+        )}
+      </h1>
+    </>
+  );
 
   return (
     <div className="h-app relative flex w-full flex-col">
@@ -50,23 +74,15 @@ export function LadderTopic({
         </Link>
       </div>
       <div className="flex flex-1 items-center justify-center px-6 py-8 lg:px-16">
-        <div className="flex w-full max-w-[560px] flex-col items-center text-center">
-          <p className="text-muted-foreground mb-1.5 text-[12.5px] font-semibold" dir="auto">
-            {s.level(group.level)}
-          </p>
-          <h1 className="flex flex-wrap items-baseline justify-center gap-x-3.5">
-            <span
-              className="text-foreground text-[clamp(2.2rem,1.8rem+1.8vw,2.75rem)] font-bold tracking-tight"
-              dir="ltr"
-            >
-              {group.title}
-            </span>
-            {group.supportTitle && (
-              <span className="text-muted-foreground text-[22px]" dir={dir}>
-                {group.supportTitle}
-              </span>
-            )}
-          </h1>
+        <div
+          className={`flex w-full flex-col items-center text-center ${split ? "max-w-[620px]" : "max-w-[560px]"}`}
+        >
+          {/* With the picture beside the words the title is on the picture (see .split-title in globals.css: hidden only while the picture shows). */}
+          {split ? (
+            <div className="split-title flex flex-col items-center">{heading}</div>
+          ) : (
+            heading
+          )}
           {loading ? (
             <p className="text-muted-foreground mt-6 text-sm" aria-busy="true" dir="auto">
               {s.loading}

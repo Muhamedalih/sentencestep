@@ -321,6 +321,11 @@ export function hasCoverScene(title: string): boolean {
   return Object.prototype.hasOwnProperty.call(SCENES, title);
 }
 
+/** The tones a topic's cover is painted with (its own palette, or its level's soft ground when it has no drawing). */
+export function coverTones(title: string, level: number): Palette {
+  return (hasCoverScene(title) ? PALETTES[title] : undefined) ?? FALLBACK[level] ?? FALLBACK[1]!;
+}
+
 function varsOf(p: Palette): CSSProperties {
   return {
     "--wc-bg": p.bg,
@@ -343,15 +348,22 @@ export function WordCoverArt({
   title,
   level,
   Icon,
+  fit = "fill",
   className,
 }: {
   title: string;
   level: number;
   Icon: LucideIcon;
+  /**
+   * "fill" (the cover's own 4:3 box) crops the drawing to whatever shape it is given. "bottom" is for a
+   * tall panel (the picture beside a topic's words): the whole drawing at the panel's width, standing
+   * on the bottom edge, with the ground colour above it, so nothing of it is cut off.
+   */
+  fit?: "fill" | "bottom";
   className?: string;
 }) {
   const scene = hasCoverScene(title) ? SCENES[title] : null;
-  const tones = (scene ? PALETTES[title] : undefined) ?? FALLBACK[level] ?? FALLBACK[1]!;
+  const tones = coverTones(title, level);
 
   return (
     <span
@@ -362,11 +374,20 @@ export function WordCoverArt({
       {scene ? (
         <svg
           viewBox="0 0 400 300"
-          preserveAspectRatio="xMidYMid slice"
+          preserveAspectRatio={fit === "bottom" ? "xMidYMax meet" : "xMidYMid slice"}
           className="absolute inset-0 size-full"
         >
           {scene()}
         </svg>
+      ) : fit === "bottom" ? (
+        <span className="absolute inset-x-0 bottom-0 flex justify-center pb-[12%]">
+          <span
+            className="flex aspect-square w-[64%] items-center justify-center rounded-full"
+            style={{ background: "var(--wc-tint)" }}
+          >
+            <Icon className="size-1/2" strokeWidth={1.5} style={{ color: "var(--wc-main)" }} />
+          </span>
+        </span>
       ) : (
         <span className="absolute inset-0 flex items-center justify-center">
           <span

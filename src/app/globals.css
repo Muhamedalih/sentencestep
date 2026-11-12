@@ -441,6 +441,37 @@ html[data-keyboard] .kb-hide {
 }
 
 /*
+ * A Word Lists topic with the picture beside the words (permission wordsSplit, see WordSplit): from
+ * md: up the picture takes about a third of the row and the words the rest. The picture cell is
+ * .compact-hide, so while the keyboard is open and on a short landscape phone it is gone, and the
+ * words then take the whole row instead of falling into the narrow first track.
+ */
+@media (min-width: 768px) {
+  .words-split {
+    display: grid;
+    grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+  }
+  /* The topic's screen says its level and name once: on the picture, so not again in the words' part. */
+  .words-split .split-title {
+    display: none;
+  }
+  html[data-keyboard] .words-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-keyboard] .words-split .split-title {
+    display: flex;
+  }
+}
+@media (min-width: 768px) and (pointer: coarse) and (max-height: 500px) {
+  .words-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .words-split .split-title {
+    display: flex;
+  }
+}
+
+/*
  * A phone held sideways is wider than the 640px "tablet" cutoff but only
  * ~375px tall, so height + touch decide these, not width.
  *  - .tap-gate: the "tap to start" card is for touch screens only.

@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 import { LadderRound } from "@/components/words/ladder/ladder-round";
 import { LadderTopic } from "@/components/words/ladder/ladder-topic";
+import { WordSplit } from "@/components/words/word-split";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { planRound } from "@/lib/word-ladder/rounds";
 import type { RoundPlan } from "@/lib/word-ladder/rounds";
@@ -23,12 +24,15 @@ export function LadderGroup({
   voiceId,
   bankFeed,
   todayISO,
+  split,
 }: {
   group: { id: string; title: string; supportTitle?: string; level: number };
   words: LadderWord[];
   voiceId: string | null;
   bankFeed: boolean;
   todayISO: string;
+  /** The picture beside the words (permission wordsSplit): the topic's picture, or absent for the screens as they were. */
+  split?: { coverUrl: string | null };
 }) {
   const { isLoaded, completedWordIds, markWordComplete } = useWordProgress();
   const [view, setView] = useState<"topic" | "round" | "exam">("topic");
@@ -73,8 +77,26 @@ export function LadderGroup({
     start(planRound(words, new Set()));
   }
 
+  // With the picture beside the words every screen of the visit (the topic, a round, its exam) sits in
+  // the same frame, so the picture stays mounted while the words part changes.
+  const frame = (screen: ReactNode) =>
+    split ? (
+      <WordSplit
+        topic={{
+          title: group.title,
+          supportTitle: group.supportTitle,
+          level: group.level,
+          coverUrl: split.coverUrl,
+        }}
+      >
+        {screen}
+      </WordSplit>
+    ) : (
+      screen
+    );
+
   if ((view === "round" || view === "exam") && active) {
-    return (
+    return frame(
       <LadderRound
         key={`${view}:${runKey}`}
         mode={view}
@@ -90,18 +112,19 @@ export function LadderGroup({
         next={plan ? { number: plan.number, firstWord: plan.words[0]!.word } : null}
         onNext={() => (plan ? start(plan) : setView("topic"))}
         onExam={exam}
-      />
+      />,
     );
   }
 
-  return (
+  return frame(
     <LadderTopic
       group={group}
       plan={plan}
       words={words}
       loading={!isLoaded}
+      split={Boolean(split)}
       onStart={() => start(plan)}
       onAgain={again}
-    />
+    />,
   );
 }
