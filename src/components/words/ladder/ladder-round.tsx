@@ -27,7 +27,6 @@ import { readRoundsRatingState, writeRoundsRatingState } from "@/lib/feedback/ra
 import { splitAroundWord } from "@/lib/passages/text";
 import { cn } from "@/lib/utils";
 import { recordBankWordAction } from "@/lib/word-bank/actions";
-import { scrambleLetters } from "@/lib/word-ladder/options";
 import {
   shouldAskRoundsRating,
   withFinishedRound,
@@ -82,9 +81,9 @@ const SHAKE = [0, -9, 9, -6, 6, -3, 3, 0];
 
 /**
  * One round of three words of a Word Lists topic. Each word is met and asked its meaning at once,
- * one word after the other; then come the tests over all three (hear and choose, put the letters in
- * order, hear and type). Only the typed test counts as learned; the rest is the scaffolding that gets
- * the word there. A wrong answer anywhere earns that screen once more at the end of the round, and
+ * one word after the other; then come the two tests over all three (hear and choose, then hear and
+ * type). Only the typed test counts as learned; the rest is the scaffolding that gets the word
+ * there. A wrong answer anywhere earns that screen once more at the end of the round, and
  * shows itself with a small shake, a red edge and the right answer. The first typed answer of each
  * word is what the learner's records hear. When the round ends, the finish page opens, and the
  * rating card of the rounds is offered (see rating-gate.ts).
@@ -204,7 +203,7 @@ export function LadderRound({
     [bankFeed, group.id, group.title, todayISO, tracking],
   );
 
-  /** A choice or the letters settled: a miss counts against the word and earns the screen once more at the end. */
+  /** A choice settled: a miss counts against the word and earns the screen once more at the end. */
   const settle = useCallback(
     (correct: boolean) => {
       const { card: current } = live.current;
@@ -270,7 +269,6 @@ export function LadderRound({
         meet: s.stepMeet,
         meaning: s.stepMeaning,
         listen: s.stepListen,
-        letters: s.stepLetters,
         type: s.stepType,
       }[step]
     : "";
@@ -381,16 +379,6 @@ export function LadderRound({
                     onSettled={settle}
                     onSpeak={replay}
                     listenLabel={s.listen}
-                  />
-                )}
-                {card.step === "letters" && (
-                  <LettersScreen
-                    key={`t${pos}`}
-                    s={s}
-                    word={word}
-                    seed={`${seed}:${card.wordId}:${card.retry ? 1 : 0}`}
-                    onAnswered={answered}
-                    onSettled={settle}
                   />
                 )}
                 {card.step === "type" && (
@@ -654,162 +642,6 @@ function ChoiceScreen({
           );
         })}
       </div>
-    </>
-  );
-}
-
-/**
- * The letters question: the meaning stays on screen and the word's letters are put in order, tapped
- * or typed on the keyboard. A right word plays the achievement sound and turns green; a wrong one
- * shakes the row, turns it red and shows the right spelling under it before the round moves on.
- */
-function LettersScreen({
-  s,
-  word,
-  seed,
-  onAnswered,
-  onSettled,
-}: {
-  s: LadderStrings;
-  word: LadderWord;
-  seed: string;
-  onAnswered: (correct: boolean) => void;
-  onSettled: (correct: boolean) => void;
-}) {
-  const { dir } = useLocale();
-  const reducedMotion = useReducedMotion() ?? false;
-  const tiles = useMemo(() => scrambleLetters(word.word, seed), [word.word, seed]);
-  const [placed, setPlaced] = useState<number[]>([]);
-  const [result, setResult] = useState<"right" | "wrong" | null>(null);
-  const placedRef = useRef<number[]>([]);
-  const resultRef = useRef<"right" | "wrong" | null>(null);
-  const timer = useRef<number | undefined>(undefined);
-  const settled = useRef(onSettled);
-  settled.current = onSettled;
-  const answeredRef = useRef(onAnswered);
-  answeredRef.current = onAnswered;
-
-  const update = useCallback((nextPlaced: number[]) => {
-    placedRef.current = nextPlaced;
-    setPlaced(nextPlaced);
-  }, []);
-
-  const place = useCallback(
-    (tile: number) => {
-      if (resultRef.current || placedRef.current.includes(tile)) return;
-      const nextPlaced = [...placedRef.current, tile];
-      update(nextPlaced);
-      if (nextPlaced.length < tiles.length) return;
-      const right = nextPlaced.map((index) => tiles[index]).join("") === word.word;
-      resultRef.current = right ? "right" : "wrong";
-      setResult(resultRef.current);
-      answeredRef.current(right);
-      timer.current = window.setTimeout(
-        () => settled.current(right),
-        right ? CORRECT_DELAY_MS : WRONG_DELAY_MS,
-      );
-    },
-    [tiles, update, word.word],
-  );
-
-  const remove = useCallback(
-    (from: number) => {
-      if (resultRef.current) return;
-      update(placedRef.current.slice(0, from));
-    },
-    [update],
-  );
-
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
-      if (event.key === "Backspace") {
-        event.preventDefault();
-        remove(Math.max(0, placedRef.current.length - 1));
-        return;
-      }
-      if (!/^[a-zA-Z]$/.test(event.key)) return;
-      const letter = event.key.toLowerCase();
-      const index = tiles.findIndex((tile, i) => tile === letter && !placedRef.current.includes(i));
-      if (index !== -1) {
-        event.preventDefault();
-        place(index);
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [place, remove, tiles]);
-
-  return (
-    <>
-      <div className="flex max-w-2xl flex-col items-center gap-1.5">
-        <p
-          className="text-foreground text-[clamp(1.8rem,1.4rem+1.8vw,2.3rem)] leading-tight font-semibold text-balance"
-          dir={dir}
-        >
-          {word.term}
-        </p>
-        {word.definition && (
-          <p className="text-muted-foreground text-base" dir={dir}>
-            {word.definition}
-          </p>
-        )}
-      </div>
-      <motion.div
-        className="flex flex-wrap justify-center gap-2.5"
-        dir="ltr"
-        animate={result === "wrong" && !reducedMotion ? { x: SHAKE } : { x: 0 }}
-        transition={{ duration: 0.42, ease: "easeOut" }}
-      >
-        {tiles.map((_, slot) => {
-          const tile = placed[slot];
-          const letter = tile === undefined ? "" : tiles[tile];
-          return (
-            <button
-              key={slot}
-              type="button"
-              aria-label={letter || undefined}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => letter && remove(slot)}
-              className={cn(
-                "grid h-[72px] w-16 place-items-center rounded-xl border text-3xl font-semibold transition-colors",
-                letter ? "border-border bg-card" : "border-border/70 border-dashed",
-                result === "right" && "border-success bg-success/10",
-                result === "wrong" && "border-danger bg-danger/10",
-              )}
-            >
-              {letter}
-            </button>
-          );
-        })}
-      </motion.div>
-      <div className="flex flex-wrap justify-center gap-2.5" dir="ltr">
-        {tiles.map((letter, index) => (
-          <button
-            key={index}
-            type="button"
-            disabled={placed.includes(index) || result !== null}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => place(index)}
-            className={cn(
-              "bg-muted border-border grid size-[58px] place-items-center rounded-[11px] border text-2xl font-semibold transition-opacity",
-              placed.includes(index) && "invisible",
-            )}
-          >
-            {letter}
-          </button>
-        ))}
-      </div>
-      {result === "wrong" ? (
-        <p className="text-success text-2xl font-bold tracking-tight" dir="ltr" aria-live="polite">
-          {word.word}
-        </p>
-      ) : (
-        <p className="text-muted-foreground text-[13px] [html[data-keyboard]_&]:hidden" dir="auto">
-          {s.lettersHint}
-        </p>
-      )}
     </>
   );
 }

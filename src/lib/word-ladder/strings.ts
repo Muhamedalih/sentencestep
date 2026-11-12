@@ -43,14 +43,11 @@ export interface LadderStrings {
   stepMeet: string;
   stepMeaning: string;
   stepListen: string;
-  stepLetters: string;
   stepType: string;
   /** "{n}" of "{total}". */
   position: (n: number, total: number) => string;
   /** The button on the meeting screen. */
   next: string;
-  /** Under the letters: how to put them in. */
-  lettersHint: string;
   /** The speaker's accessible name. */
   listen: string;
   /** After a wrong typed answer: "You typed: x". */
@@ -96,11 +93,9 @@ const AR: LadderStrings = {
   stepMeet: "كلمة جديدة",
   stepMeaning: "ما معنى هذه الكلمة؟",
   stepListen: "أي كلمة سمعت؟",
-  stepLetters: "رتّب الحروف",
   stepType: "اكتب ما سمعت",
   position: (n, t) => `${n} من ${t}`,
   next: "كمّل",
-  lettersHint: "اكتب بالكيبورد أو اضغط الحروف",
   listen: "استمع",
   youTyped: (typed) => `كتبتَ: ${typed}`,
   comesBackOnce: "هذه الكلمة تنعاد مرة واحدة في آخر الجولة",
@@ -148,11 +143,9 @@ const EN: LadderStrings = {
   stepMeet: "New word",
   stepMeaning: "What does it mean?",
   stepListen: "Which word did you hear?",
-  stepLetters: "Put the letters in order",
   stepType: "Type what you hear",
   position: (n, t) => `${n} of ${t}`,
   next: "Continue",
-  lettersHint: "Type on the keyboard or tap the letters",
   listen: "Listen",
   youTyped: (typed) => `You typed: ${typed}`,
   comesBackOnce: "This word comes back once at the end of the round",
@@ -193,11 +186,9 @@ const ES: LadderStrings = {
   stepMeet: "Palabra nueva",
   stepMeaning: "¿Qué significa?",
   stepListen: "¿Qué palabra oíste?",
-  stepLetters: "Ordena las letras",
   stepType: "Escribe lo que oyes",
   position: (n, t) => `${n} de ${t}`,
   next: "Continuar",
-  lettersHint: "Escribe con el teclado o toca las letras",
   listen: "Escuchar",
   youTyped: (typed) => `Escribiste: ${typed}`,
   comesBackOnce: "Esta palabra vuelve una vez al final de la ronda",
@@ -238,11 +229,9 @@ const TR: LadderStrings = {
   stepMeet: "Yeni kelime",
   stepMeaning: "Ne anlama geliyor?",
   stepListen: "Hangi kelimeyi duydun?",
-  stepLetters: "Harfleri sıraya koy",
   stepType: "Duyduğunu yaz",
   position: (n, t) => `${n} / ${t}`,
   next: "Devam",
-  lettersHint: "Klavyeyle yaz ya da harflere dokun",
   listen: "Dinle",
   youTyped: (typed) => `Yazdığın: ${typed}`,
   comesBackOnce: "Bu kelime turun sonunda bir kez daha gelir",
