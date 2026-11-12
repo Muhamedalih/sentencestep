@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { VocabularyLearn } from "@/components/learning/vocabulary-learn";
 import { VocabularyLearnBatches } from "@/components/words/vocabulary-learn-batches";
@@ -8,6 +8,7 @@ import { WordGroupUnavailable } from "@/components/learning/word-group-unavailab
 import { isAdmin } from "@/lib/admin/access";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
 import { getSmartWordsAccess, getWordsRedesignEnabled } from "@/lib/word-mastery/access";
@@ -42,6 +43,8 @@ export default async function WordGroupLearnPage({
   params: Promise<{ groupId: string }>;
 }) {
   const { groupId } = await params;
+  // With the wordLadder permission a topic has one screen (its rounds), so Learn leads there.
+  if ((await getEffectiveFeatures()).rollouts.wordLadder) redirect(`/learn/word-lists/${groupId}`);
   const locale = await getLocale();
   const group = await getWordGroupById(groupId, locale ?? undefined);
   if (!group) notFound();

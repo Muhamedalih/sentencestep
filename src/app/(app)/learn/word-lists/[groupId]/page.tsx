@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { VocabularyPractice } from "@/components/learning/vocabulary-practice";
+import { LadderGroup } from "@/components/words/ladder/ladder-group";
 import { WordGroupLockScreen } from "@/components/learning/word-group-lock-screen";
 import { WordGroupUnavailable } from "@/components/learning/word-group-unavailable";
 import { isAdmin } from "@/lib/admin/access";
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { hasPremiumAccess } from "@/lib/billing/access";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { buildLadderWords } from "@/lib/word-ladder/build";
+import { loadSpellingChecks } from "@/lib/word-ladder/load";
 import { getWordGroupById } from "@/lib/word-lists";
 import {
   getLearnerToday,
@@ -99,6 +104,34 @@ export default async function WordGroupPracticePage({
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <WordGroupUnavailable title={group.title} />
       </div>
+    );
+  }
+
+  // Word Lists as rounds of three words (the wordLadder permission): the topic's own screen, and the
+  // five-step round it opens, replace Practice for the people the permission is open to. Everyone
+  // else keeps the practice below, which is also the comparison.
+  const features = await getEffectiveFeatures();
+  if (features.rollouts.wordLadder) {
+    const [user, todayISO, checks, defaultVoiceId] = await Promise.all([
+      getCurrentUser(),
+      getLearnerToday(),
+      loadSpellingChecks(),
+      getDefaultPronunciationVoiceId(),
+    ]);
+    const voiceId = await resolveWordGroupPlaybackVoiceId(group, defaultVoiceId);
+    return (
+      <LadderGroup
+        group={{
+          id: group.id,
+          title: group.title,
+          supportTitle: group.supportTitle ?? (locale ? group.titleAr : undefined),
+          level: group.level,
+        }}
+        words={buildLadderWords(group.words, checks)}
+        voiceId={voiceId ?? null}
+        bankFeed={Boolean(user) && features.rollouts.wordBank}
+        todayISO={todayISO}
+      />
     );
   }
 

@@ -263,15 +263,12 @@ export function WordGroupCard({
   return (
     <motion.div variants={fadeInUp}>
       <div className={cn(CARD_CLASS, "transition-colors duration-200 hover:border-white/15")}>
-        <button
-          type="button"
-          onClick={() => setExpanded((prev) => !prev)}
-          aria-expanded={expanded}
-          aria-controls={panelId}
-          className={cn(
-            FACE_CLASS,
-            "focus-visible:ring-ring focus-visible:ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-          )}
+        {/* With the wordLadder permission the card has no Learn / Practice panel: it opens the topic's own screen. */}
+        <FaceShell
+          href={rollouts.wordLadder ? `/learn/word-lists/${group.id}` : null}
+          expanded={expanded}
+          panelId={panelId}
+          onToggle={() => setExpanded((prev) => !prev)}
         >
           <GroupFace
             difficulty={difficulty}
@@ -299,7 +296,7 @@ export function WordGroupCard({
               ) : null
             }
           />
-        </button>
+        </FaceShell>
 
         <AnimatePresence initial={false}>
           {expanded && (
@@ -368,5 +365,47 @@ export function WordGroupCard({
         </AnimatePresence>
       </div>
     </motion.div>
+  );
+}
+
+/**
+ * The face of an unlocked card: a button that opens the Learn / Practice panel, or, when `href` is
+ * given (the wordLadder permission), a link straight to the topic's own screen, where one button
+ * opens the next round.
+ */
+function FaceShell({
+  href,
+  expanded,
+  panelId,
+  onToggle,
+  children,
+}: {
+  href: string | null;
+  expanded: boolean;
+  panelId: string;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const className = cn(
+    FACE_CLASS,
+    "focus-visible:ring-ring focus-visible:ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+  );
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      aria-controls={panelId}
+      className={className}
+    >
+      {children}
+    </button>
   );
 }
