@@ -77,4 +77,9 @@ export interface WordGroup {
  * content, which is gated and only fetched once the learner actually
  * opens the group).
  */
-export type WordGroupSummary = Omit<WordGroup, "words"> & { wordCount: number; wordIds: string[] };
+export type WordGroupSummary = Omit<WordGroup, "words"> & {
+  wordCount: number;
+  wordIds: string[];
+  /** The cover picture an admin chose for this list (word_groups.cover_url), or null/absent for the drawing made for its topic. */
+  coverUrl?: string | null;
+};

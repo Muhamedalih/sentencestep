@@ -96,7 +96,7 @@ export default async function WordListsPage({
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
       {/* The redesigned dashboard is admin-controlled ("Word Lists redesign" in /admin/features):
           everyone else keeps the library exactly as it was. */}
-      {redesign ? (
+      {redesign && !features.rollouts.wordCovers ? (
         <WordListsDashboard
           groups={groups}
           isPremiumUser={hasPremium || isAdminUser}
@@ -113,6 +113,7 @@ export default async function WordListsPage({
           homeCardWords={homeCardWords}
           homeCardBank={homeCardBank}
           shelf={coreShelf}
+          canEditCovers={isAdminUser}
         />
       )}
     </div>

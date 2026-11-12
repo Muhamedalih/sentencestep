@@ -87,6 +87,8 @@ export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<W
       // premium group counts its real words.
       wordCount: idsByGroup.get(group.id)?.length ?? 0,
       wordIds: idsByGroup.get(group.id) ?? [],
+      // Absent until 20250359000000_word_group_covers.sql is applied: no chosen picture.
+      coverUrl: group.cover_url ?? null,
     };
 
     if (locale && translations) {

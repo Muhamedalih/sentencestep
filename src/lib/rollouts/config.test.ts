@@ -207,6 +207,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     mobilePhoneUx: false,
     wordLadder: false,
     wordsPage: false,
+    wordCovers: false,
   });
 });
 
