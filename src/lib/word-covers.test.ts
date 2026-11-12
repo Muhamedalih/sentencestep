@@ -142,21 +142,37 @@ test("the covers migration: one additive column and a public WebP-only bucket th
   assert.doesNotMatch(sql, /drop (table|column)/i, "nothing that exists is removed");
 });
 
-test("every topic of the seed has a drawing of its own, and an unknown topic has none", () => {
+test("every published topic has a drawing of its own, and an unknown topic has none", () => {
+  // The 24 published Word Lists, by level (the live library, 2026-11-12).
   for (const title of [
     "Family",
     "Colors",
     "Animals",
+    "Food",
+    "House",
+    "Clothes",
+    "Body",
+    "Transportation",
     "Friendship",
     "Travel",
     "Health",
+    "Shopping",
+    "Weather",
+    "Work",
+    "Sports",
+    "Emotions",
     "Politics",
     "Finance",
     "Technology",
+    "Environment",
+    "Education",
+    "Media",
+    "Law",
+    "Science",
   ]) {
     assert.ok(hasCoverScene(title), title);
   }
-  for (const title of ["Weather", "", "toString", "constructor"]) {
+  for (const title of ["Gaming", "", "toString", "constructor"]) {
     assert.equal(hasCoverScene(title), false, title);
   }
 });

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { BookOpen } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
 import { WordGroupCard } from "@/components/app/word-group-card";
@@ -12,7 +12,7 @@ import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
-import { staggerChildren } from "@/lib/motion";
+import { fadeIn, staggerChildren } from "@/lib/motion";
 import { TIER_RING_CLASS, TIER_TEXT_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { WeakWordItem } from "@/lib/weak-words/types";
@@ -88,6 +88,7 @@ export function WordListsLibrary({
   const { locale, dir, t } = useLocale();
   // The picture covers (permission wordCovers): the three levels become rows of covers, one under the other.
   const covers = useFeatures().rollouts.wordCovers;
+  const reducedMotion = useReducedMotion() ?? false;
   // What waits for review: the words due now, and — with Smart word practice — the schedule's own count.
   const reviewWords = weakWords.filter((word) => word.dueNow);
   const reviewCount = mastery?.reviewCount ?? reviewWords.length;
@@ -142,8 +143,16 @@ export function WordListsLibrary({
               .sort((a, b) => a.order - b.order);
 
             return (
-              <section key={level} className="min-w-0">
-                <div className="mb-[18px] flex items-center gap-2.5">
+              // Each level comes in as it scrolls into view: its heading first, then its covers one after another.
+              <motion.section
+                key={level}
+                initial={reducedMotion ? false : "hidden"}
+                whileInView="visible"
+                viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+                variants={staggerChildren}
+                className="min-w-0"
+              >
+                <motion.div variants={fadeIn} className="mb-[18px] flex items-center gap-2.5">
                   <span className={cn("inline-flex items-center", TIER_TEXT_CLASS[difficulty])}>
                     <TierDots level={level} className="ms-0 gap-1" />
                   </span>
@@ -154,17 +163,12 @@ export function WordListsLibrary({
                     {tierText}
                   </h2>
                   <span className="bg-border/60 h-px flex-1" aria-hidden="true" />
-                </div>
+                </motion.div>
 
                 {levelGroups.length === 0 ? (
                   <p className="text-muted-foreground text-sm">{t.library.moreGroupsSoon}</p>
                 ) : (
-                  <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={staggerChildren}
-                    className="grid grid-cols-2 gap-x-3.5 gap-y-[22px] sm:gap-x-5 sm:gap-y-[26px] lg:grid-cols-3 xl:grid-cols-4"
-                  >
+                  <div className="grid grid-cols-2 gap-x-3.5 gap-y-[22px] sm:gap-x-5 sm:gap-y-[26px] lg:grid-cols-3 xl:grid-cols-4">
                     {levelGroups.map((group) => (
                       <WordGroupCard
                         key={group.id}
@@ -176,9 +180,9 @@ export function WordListsLibrary({
                         canEditCover={canEditCovers}
                       />
                     ))}
-                  </motion.div>
+                  </div>
                 )}
-              </section>
+              </motion.section>
             );
           })}
         </div>

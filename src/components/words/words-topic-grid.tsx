@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, Lock } from "lucide-react";
 
 import { CoverFace, iconForGroup } from "@/components/app/word-group-card";
@@ -10,6 +11,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { WordCoverEditor } from "@/components/words/word-cover-editor";
 import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierLabel, tierSupportLabel } from "@/lib/levels";
+import { fadeIn, fadeInUp, staggerChildren } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { wordsHubStrings } from "@/lib/words-hub/strings";
 import type { WordGroupSummary } from "@/types/word-lists";
@@ -41,6 +43,10 @@ export function WordsTopicGrid({
   const { rollouts } = useFeatures();
   const { isLoaded, completedCountIn } = useWordProgress();
   const [level, setLevel] = useState<Level>(1);
+  // With the picture covers open (permission wordCovers) moving between the levels is animated: the
+  // active tab's pill glides to the new level and the covers of that level rise in one after another.
+  const animated = rollouts.wordCovers;
+  const reducedMotion = useReducedMotion() ?? false;
 
   const shown = groups.filter((group) => group.level === level).sort((a, b) => a.order - b.order);
   const levelLabel = (value: Level) =>
@@ -58,23 +64,39 @@ export function WordsTopicGrid({
             onClick={() => setLevel(value)}
             aria-pressed={level === value}
             className={cn(
-              "flex-1 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-colors duration-150 md:flex-none md:px-4",
+              "relative flex-1 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-colors duration-150 md:flex-none md:px-4",
               level === value
-                ? "bg-brand-muted text-primary"
+                ? animated
+                  ? "text-primary"
+                  : "bg-brand-muted text-primary"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <span dir="auto">{levelLabel(value)}</span>
+            {animated && level === value && (
+              <motion.span
+                layoutId="words-level-pill"
+                aria-hidden="true"
+                className="bg-brand-muted absolute inset-0 rounded-lg"
+                transition={
+                  reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }
+                }
+              />
+            )}
+            <span dir="auto" className="relative">
+              {levelLabel(value)}
+            </span>
           </button>
         ))}
       </div>
 
-      <div
+      <GridShell
+        animated={animated}
+        levelKey={level}
         className={cn(
           "mt-4 grid grid-cols-2",
           // With the picture covers open (permission wordCovers) the topics are covers, as on the Word Lists
           // page: two across on a phone, three on a laptop, four on a wide screen.
-          rollouts.wordCovers
+          animated
             ? "mt-5 gap-x-3.5 gap-y-[22px] sm:gap-x-5 sm:gap-y-[26px] lg:grid-cols-3 xl:grid-cols-4"
             : "gap-3 md:grid-cols-4 md:gap-4",
         )}
@@ -92,7 +114,11 @@ export function WordsTopicGrid({
           const percent = group.wordCount === 0 ? 0 : Math.round((done / group.wordCount) * 100);
           if (rollouts.wordCovers) {
             return (
-              <div key={group.id} className="group relative">
+              <motion.div
+                key={group.id}
+                variants={reducedMotion ? fadeIn : fadeInUp}
+                className="group relative"
+              >
                 <Link
                   href={href}
                   prefetch={false}
@@ -120,7 +146,7 @@ export function WordsTopicGrid({
                 {canEditCovers && (
                   <WordCoverEditor groupId={group.id} hasPicture={Boolean(group.coverUrl)} />
                 )}
-              </div>
+              </motion.div>
             );
           }
           return (
@@ -175,7 +201,37 @@ export function WordsTopicGrid({
             </Link>
           );
         })}
-      </div>
+      </GridShell>
     </div>
+  );
+}
+
+/**
+ * The grid of one level. Plain when the picture covers are closed; with them open it is keyed by the
+ * level, so choosing another level mounts it afresh and its covers rise in one after another (the
+ * covers carry their own entrance, see the cards above).
+ */
+function GridShell({
+  animated,
+  levelKey,
+  className,
+  children,
+}: {
+  animated: boolean;
+  levelKey: number;
+  className: string;
+  children: ReactNode;
+}) {
+  if (!animated) return <div className={className}>{children}</div>;
+  return (
+    <motion.div
+      key={levelKey}
+      initial="hidden"
+      animate="visible"
+      variants={staggerChildren}
+      className={className}
+    >
+      {children}
+    </motion.div>
   );
 }
