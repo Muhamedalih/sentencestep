@@ -10,7 +10,7 @@ import { getFishAudioVoices } from "@/lib/admin/fish-audio-queries";
 import { getVoices } from "@/lib/admin/voices-queries";
 import { listWordAudioDashboardRows } from "@/lib/admin/word-audio-queries";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { isWordListProvider } from "@/lib/voice/content-provider-map";
+import { isWordListGroupProvider } from "@/lib/voice/content-provider-map";
 
 export const metadata: Metadata = { title: "Word Audio Status" };
 
@@ -29,9 +29,9 @@ export default async function AdminWordAudioStatusPage() {
     getVoices(),
     getFishAudioVoices(),
   ]);
-  // Only voices Word Lists can actually generate with — see
-  // content-provider-map.ts's WORD_LIST_PROVIDERS.
-  const pickableVoices = allVoices.filter((voice) => isWordListProvider(voice.source));
+  // Only voices a word group can actually generate with — see
+  // content-provider-map.ts's WORD_LIST_GROUP_PROVIDERS.
+  const pickableVoices = allVoices.filter((voice) => isWordListGroupProvider(voice.source));
   const defaultVoiceName =
     allVoices.find((voice) => voice.id === defaultVoiceId)?.name ?? defaultVoiceId;
 

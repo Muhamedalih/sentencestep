@@ -2,7 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import type { SentenceDirection } from "@/lib/voice/director-types";
-import { isWordListProvider, wordListModelFor } from "@/lib/voice/content-provider-map";
+import {
+  isWordListGroupProvider,
+  isWordListProvider,
+  WORD_LIST_ELEVENLABS_STABILITY,
+  wordListModelFor,
+} from "@/lib/voice/content-provider-map";
 import type { TTSProvider } from "@/lib/voice/provider";
 import { createProviderForSource } from "@/lib/voice/provider-registry";
 import { cacheKeyParts } from "@/lib/voice/resolution";
@@ -130,14 +135,18 @@ export async function generateWordGroupVoiceDraft(
     .maybeSingle();
 
   let candidateVoiceId = await getDefaultPronunciationVoiceId();
+  // An ElevenLabs voice counts only as the group's OWN voice, never as the site default (see
+  // content-provider-map.ts's WORD_LIST_GROUP_PROVIDERS).
+  let usingGroupVoice = false;
   if (group?.voice_id) {
     const { data: overrideVoice } = await supabase
       .from("voices")
       .select("id, source")
       .eq("id", group.voice_id)
       .maybeSingle();
-    if (overrideVoice && isWordListProvider(overrideVoice.source)) {
+    if (overrideVoice && isWordListGroupProvider(overrideVoice.source)) {
       candidateVoiceId = overrideVoice.id;
+      usingGroupVoice = true;
     }
   }
 
@@ -146,12 +155,17 @@ export async function generateWordGroupVoiceDraft(
     .select("id, provider_voice_id, source")
     .eq("id", candidateVoiceId)
     .maybeSingle();
-  if (!voiceRow || !isWordListProvider(voiceRow.source)) {
+  if (
+    !voiceRow ||
+    !(usingGroupVoice
+      ? isWordListGroupProvider(voiceRow.source)
+      : isWordListProvider(voiceRow.source))
+  ) {
     return {
       generated: 0,
       skipped: 0,
       failed: words.length,
-      error: `The Word Lists voice (${candidateVoiceId}) is missing or isn't an Edge-TTS or Fish Audio voice.`,
+      error: `The Word Lists voice (${candidateVoiceId}) is missing or isn't an Edge-TTS, Fish Audio or (for a group's own voice) ElevenLabs voice.`,
     };
   }
   // The adapter comes from the voice's own source (see
@@ -168,6 +182,11 @@ export async function generateWordGroupVoiceDraft(
   const voiceId = voiceRow.id;
   const providerVoiceId = voiceRow.provider_voice_id;
   const generationVersion = WORD_LIST_GENERATION_VERSION;
+  // Edge-TTS and Fish ignore the settings; an ElevenLabs word clip is made steadier than a sentence.
+  const synthesisSettings =
+    voiceRow.source === "elevenlabs"
+      ? { ...NEUTRAL_VOICE_SETTINGS, stability: WORD_LIST_ELEVENLABS_STABILITY }
+      : NEUTRAL_VOICE_SETTINGS;
 
   const keyedWords = (words as VocabularyWordRow[]).map((word) => ({
     word,
@@ -248,7 +267,7 @@ export async function generateWordGroupVoiceDraft(
         direction,
         item.word.target_word,
         providerVoiceId,
-        NEUTRAL_VOICE_SETTINGS,
+        synthesisSettings,
       );
       const { audio, durationMs } = await provider.synthesize({
         text,
@@ -291,7 +310,8 @@ export async function generateWordGroupVoiceDraft(
       if (item) await generateOne(item);
     }
   };
-  const concurrency = provider.name === "fish-audio" ? FISH_AUDIO_CONCURRENCY : 1;
+  const concurrency =
+    provider.name === "fish-audio" || provider.name === "elevenlabs" ? FISH_AUDIO_CONCURRENCY : 1;
   await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
   return { generated, skipped, failed, error: notes.length > 0 ? notes.join(" ") : undefined };

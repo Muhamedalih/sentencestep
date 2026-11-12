@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getDefaultPronunciationVoiceId } from "@/lib/admin/voices-queries";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { isWordListProvider } from "@/lib/voice/content-provider-map";
+import { isWordListGroupProvider } from "@/lib/voice/content-provider-map";
 import { hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 import type { Database } from "@/types/database";
 
@@ -61,7 +61,7 @@ async function effectiveVoiceIds(
       .select("id, source")
       .in("id", overrideIds);
     if (error) throw error;
-    for (const voice of data ?? []) if (isWordListProvider(voice.source)) valid.add(voice.id);
+    for (const voice of data ?? []) if (isWordListGroupProvider(voice.source)) valid.add(voice.id);
   }
   return new Map(
     groups.map((group) => [
