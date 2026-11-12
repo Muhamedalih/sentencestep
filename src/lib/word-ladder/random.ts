@@ -1,8 +1,7 @@
 /**
- * A small seeded random generator, so everything the five-step rounds shuffle (the choices, the
- * order of a step, the scrambled letters) comes out the same for the same word and round: the server
- * and the browser agree, a test can pin it down, and nothing flickers when a screen renders again.
- * Pure and client-safe.
+ * A small seeded random generator, so everything the rounds shuffle (the choices, the order of a
+ * test) comes out the same for the same word and round: the server and the browser agree, a test can
+ * pin it down, and nothing flickers when a screen renders again. Pure and client-safe.
  */
 
 /** FNV-1a: a string to a 32-bit number. */

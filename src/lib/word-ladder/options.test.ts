@@ -5,7 +5,6 @@ import { buildLadderWords, fillSentence } from "@/lib/word-ladder/build";
 import {
   definitionOf,
   meaningChoices,
-  scrambleLetters,
   spellingCandidates,
   spellingChoices,
   termOf,
@@ -109,15 +108,6 @@ test("a word nothing can be made from gets fewer choices, never an empty list or
   const everything = new Set(Object.values(spellingCandidates("it")).flat());
   const choices = spellingChoices("it", { known: everything, seed: "s" });
   assert.deepEqual(choices, ["it"]);
-});
-
-test("the scrambled letters are the word's own letters in another order", () => {
-  for (const w of ["aunt", "level", "noon", "sovereignty", "abab"]) {
-    const letters = scrambleLetters(w, `seed:${w}`);
-    assert.equal(letters.length, w.length);
-    assert.deepEqual([...letters].sort(), [...w].sort());
-    assert.notEqual(letters.join(""), w);
-  }
 });
 
 const vocab = (
