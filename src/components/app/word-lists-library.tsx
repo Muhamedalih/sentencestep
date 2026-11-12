@@ -108,7 +108,7 @@ export function WordListsLibrary({
       {wordsBanner ? (
         // The banner (permission wordsBanner) takes the review card's place at the top of the page.
         <WordsBanner
-          groups={groups}
+          groups={groups.filter((group) => !group.draft)}
           isPremiumUser={isPremiumUser}
           reviewCount={reviewCount}
           reviewHref="/learn/word-lists/review"

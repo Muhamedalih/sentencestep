@@ -4,11 +4,19 @@ import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Bath,
+  Brain,
   Briefcase,
   BookOpen,
+  Building2,
   Check,
   CloudSun,
+  CookingPot,
   Cpu,
+  FlaskConical,
+  Flower2,
+  Frame,
+  Gamepad2,
   GraduationCap,
   HeartHandshake,
   HeartPulse,
@@ -16,14 +24,22 @@ import {
   Landmark,
   Layers,
   Leaf,
+  Library,
   Lock,
+  Music,
   Newspaper,
   Palette,
   PawPrint,
   PencilLine,
+  PencilRuler,
   Plane,
+  PlaneTakeoff,
+  Rocket,
+  ShieldCheck,
   Shirt,
   ShoppingBag,
+  Soup,
+  Umbrella,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -69,6 +85,22 @@ const TOPIC_ICON: Record<string, LucideIcon> = {
   Environment: Leaf,
   Education: GraduationCap,
   Media: Newspaper,
+  Kitchen: CookingPot,
+  Bathroom: Bath,
+  "School Supplies": PencilRuler,
+  Garden: Flower2,
+  Beach: Umbrella,
+  Restaurant: Soup,
+  Library: Library,
+  Airport: PlaneTakeoff,
+  Music: Music,
+  Gaming: Gamepad2,
+  Space: Rocket,
+  Chemistry: FlaskConical,
+  Architecture: Building2,
+  Psychology: Brain,
+  Cybersecurity: ShieldCheck,
+  "Art Gallery": Frame,
 };
 
 export function iconForGroup(title: string): LucideIcon {
@@ -354,6 +386,64 @@ export function WordGroupCard({
   // The picture covers (permission wordCovers): the topic is drawn as a cover, with no card around it.
   const covers = rollouts.wordCovers;
   const wordCountText = t.wordLists.wordCount.replace("{n}", String(group.wordCount));
+
+  // A topic still in draft (an admin's library only): no progress, no lock; the card opens the admin's own
+  // preview of the list, and says Draft so nobody takes it for something a learner can see.
+  if (group.draft) {
+    return (
+      <motion.div variants={fadeInUp} className="group relative">
+        <Link
+          href={`/admin/word-lists/${group.id}/preview`}
+          aria-label={`${group.title} (draft)`}
+          className={cn(
+            "focus-visible:ring-ring focus-visible:ring-offset-background block outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+            covers ? "rounded-[14px]" : "rounded-2xl",
+          )}
+        >
+          {covers ? (
+            <CoverFace
+              as="h3"
+              difficulty={difficulty}
+              Icon={Icon}
+              group={group}
+              dir={dir}
+              locked={false}
+              completed={false}
+              count={wordCountText}
+              dueLabel={null}
+              percent={0}
+              progressLabel={progressLabel}
+            />
+          ) : (
+            <div className={cn(CARD_CLASS, FACE_CLASS)}>
+              <GroupFace
+                as="h3"
+                difficulty={difficulty}
+                Icon={Icon}
+                title={group.title}
+                supportTitle={supportTitle}
+                dir={dir}
+                status={null}
+                percent={0}
+                progressLabel={progressLabel}
+                left={wordCountText}
+                right={null}
+              />
+            </div>
+          )}
+        </Link>
+        <span
+          dir="ltr"
+          className="pointer-events-none absolute top-2 left-2 rounded-full border border-white/20 bg-black/60 px-2.5 py-0.5 text-[11px] leading-normal font-semibold text-white backdrop-blur-sm sm:top-2.5 sm:left-2.5"
+        >
+          Draft
+        </span>
+        {covers && canEditCover && (
+          <WordCoverEditor groupId={group.id} hasPicture={Boolean(group.coverUrl)} />
+        )}
+      </motion.div>
+    );
+  }
 
   if (locked && covers) {
     return (

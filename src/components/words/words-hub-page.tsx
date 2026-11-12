@@ -16,7 +16,7 @@ import { loadBankWordLists } from "@/lib/word-bank/card-load";
 import { bankOverview } from "@/lib/word-bank/shelves";
 import type { BankOverview } from "@/lib/word-bank/shelves";
 import { bankStrings } from "@/lib/word-bank/strings";
-import { getWordGroupSummaries } from "@/lib/word-lists";
+import { getDraftWordGroupSummaries, getWordGroupSummaries } from "@/lib/word-lists";
 import { getLearnerToday } from "@/lib/word-mastery/access";
 import { availableTabs, parseListsTab, showsTabs } from "@/lib/words-hub/tabs";
 
@@ -48,6 +48,8 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
     body = <CoreWordsShelf data={shelf} isPremiumUser={premium} className="mt-1" />;
   } else {
     const groups = await getWordGroupSummaries(locale ?? undefined);
+    // Topics still in draft: an admin's grid only (the banner and the figures never count them).
+    const drafts = isAdminUser ? await getDraftWordGroupSummaries(locale ?? undefined) : [];
     let overview: BankOverview | null = null;
     if (bankOpen && user) {
       overview = await fetchBankStates(user.id)
@@ -92,7 +94,11 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
             </div>
           </div>
         ) : (
-          <WordsTopicGrid groups={groups} isPremiumUser={premium} canEditCovers={isAdminUser} />
+          <WordsTopicGrid
+            groups={drafts.length > 0 ? [...groups, ...drafts] : groups}
+            isPremiumUser={premium}
+            canEditCovers={isAdminUser}
+          />
         )}
       </>
     );

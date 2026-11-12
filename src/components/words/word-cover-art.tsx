@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { fill, palette, stroke, type Palette } from "@/components/words/word-cover-kit";
 import { MORE_PALETTES, MORE_SCENES } from "@/components/words/word-cover-scenes";
+import { NEW_PALETTES, NEW_SCENES } from "@/components/words/word-cover-scenes-new";
 import { cn } from "@/lib/utils";
 
 /**
@@ -48,6 +49,7 @@ const PALETTES: Record<string, Palette> = {
     "#e5588a",
   ]),
   ...MORE_PALETTES,
+  ...NEW_PALETTES,
 };
 
 /** The ground of a topic with no scene, by level (1 beginner, 2 intermediate, 3 advanced). */
@@ -311,6 +313,7 @@ const SCENES: Record<string, () => ReactNode> = {
   Finance,
   Technology,
   ...MORE_SCENES,
+  ...NEW_SCENES,
 };
 
 /** Whether a topic has a drawing of its own (otherwise its cover is the soft ground with its icon). */
