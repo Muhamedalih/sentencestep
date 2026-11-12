@@ -44,6 +44,7 @@ export const ROLLOUT_IDS = [
   "wordLadder",
   "wordsPage",
   "wordCovers",
+  "wordsBanner",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -468,6 +469,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the look of the topics changes: the lists, their words, the free lists, the lock, the review strip, the Learn / Practice choice and every learner's progress stay exactly as they are.",
       "The admin's change-picture buttons appear on the covers for an admin only, whoever else this is open to.",
       "Needs the covers migration (20250359000000_word_group_covers.sql) for a chosen picture to be saved; without it every topic shows its drawing and saving a picture says so.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordsBanner: {
+    id: "wordsBanner",
+    audience: "learner",
+    title: "Words: the banner at the top",
+    description:
+      "A deep green band at the top of the Words page: the number of words the learner has learned (counting up when it appears), how many topics are going, one button, and a shelf of books on the other side. Each book is a topic the learner has begun, in the colour of its cover and as tall as they have got in it, with its English title along the spine; the one studied last leans, and a book opens its topic. The button asks for the words waiting for review (with how many), and when none wait it picks up the last topic, or starts the first one for a learner who has not begun (whose shelf shows three dotted places). On entering the books rise one after another; all of it stops for a learner who asked for reduced motion.",
+    notes: [
+      "It replaces the review card at the top of the page (the words-bank strip on the Words page, the review card on the Word Lists page), so the page gains no element; its button goes where that card's button went.",
+      "The learner's progress is read in the browser, as the topics already do, so it costs no new read. The order of a signed-in learner's finished words is now asked from the database (by completion time) so the book studied last can lean.",
+      "Below 1280 px it stacks (number, button, shelf) and the shelf shows six books and the leaning one.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

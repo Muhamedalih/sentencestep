@@ -5,6 +5,7 @@ import { BookOpen } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { NeedsReviewWords } from "@/components/app/needs-review-words";
+import { WordsBanner } from "@/components/words/words-banner";
 import { WordGroupCard } from "@/components/app/word-group-card";
 import { WordsSection } from "@/components/home-cards/words-section";
 import type { BankCardData } from "@/lib/word-bank/shelves";
@@ -87,7 +88,7 @@ export function WordListsLibrary({
   const { isLoaded, completedCountIn } = useWordProgress();
   const { locale, dir, t } = useLocale();
   // The picture covers (permission wordCovers): the three levels become rows of covers, one under the other.
-  const covers = useFeatures().rollouts.wordCovers;
+  const { wordCovers: covers, wordsBanner } = useFeatures().rollouts;
   const reducedMotion = useReducedMotion() ?? false;
   // What waits for review: the words due now, and — with Smart word practice — the schedule's own count.
   const reviewWords = weakWords.filter((word) => word.dueNow);
@@ -104,7 +105,16 @@ export function WordListsLibrary({
         </p>
       </div>
 
-      {homeCardWords ? (
+      {wordsBanner ? (
+        // The banner (permission wordsBanner) takes the review card's place at the top of the page.
+        <WordsBanner
+          groups={groups}
+          isPremiumUser={isPremiumUser}
+          reviewCount={reviewCount}
+          reviewHref="/learn/word-lists/review"
+          className="mb-6 sm:mb-10"
+        />
+      ) : homeCardWords ? (
         // The same section Home ends with, with the same words and meanings; like the classic card it is
         // left out when nothing waits (its button would only lead back here).
         reviewCount > 0 || homeCardBank ? (

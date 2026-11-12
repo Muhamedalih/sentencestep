@@ -7,7 +7,9 @@ export async function fetchWordProgress(userId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from("word_progress")
     .select("word_id")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    // Oldest first, so the last word is the one typed most recently (the Words banner leans the book of its topic).
+    .order("completed_at", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => row.word_id);
 }
