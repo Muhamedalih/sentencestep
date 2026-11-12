@@ -41,6 +41,7 @@ export const ROLLOUT_IDS = [
   "openerHelp",
   "returnLoop",
   "mobilePhoneUx",
+  "wordLadder",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -424,6 +425,21 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Only the phone layout changes: nothing at 768 px and wider, and no lesson audio or lesson content is touched.",
       "Needs no extra reads or writes: it only changes how the same data is laid out.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordLadder: {
+    id: "wordLadder",
+    audience: "learner",
+    title: "Word Lists as rounds of three words (the five-step ladder)",
+    description:
+      "Inside a Word Lists topic, Learn and Practice become one Continue button that opens the next round of three words. Each round goes through five steps together: meet the three words (the word, its sound, its type, its meaning and a sentence), choose each word's meaning, hear each word and pick its spelling, put each word's scrambled letters in order, then hear each word and type it. A word asked wrong is asked once more at the end of the round. Only the typed step counts as learned, and a word typed right is saved to the learner's Word Lists progress exactly as the old Practice saved it.",
+    notes: [
+      "The topics, their words, the free lists and every learner's finished words stay as they are: a word typed right in the old Practice already counts here.",
+      "When the Words bank is open for the same people (“wordBank”), the words of a finished round join the learner's bank with the sentence they were met in, so they come back after a few days in a different form; with the bank closed nothing is added to it.",
+      "Each round reports WORDS_ROUND events with the source “ladder”, so its finish rate can be set against the old Practice (“list”) and Today's words.",
+      "The old Learn and Practice screens are not removed: a learner without this permission still gets them, which keeps them as the comparison.",
+      "Needs no new reads or writes beyond what Practice already made: the choices are worked out in the browser from the topic's own words, and a word is written once, when it is typed right.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

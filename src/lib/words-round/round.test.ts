@@ -12,8 +12,9 @@ import {
 } from "@/lib/words-round/round";
 import { resumePoint } from "@/lib/word-mastery/schedule";
 
-test("the sources are the four places a round can be asked", () => {
-  assert.deepEqual([...WORDS_ROUND_SOURCES], ["list", "today", "review", "bank"]);
+test("the sources are the five places a round can be asked", () => {
+  assert.deepEqual([...WORDS_ROUND_SOURCES], ["list", "today", "review", "bank", "ladder"]);
+  assert.equal(isWordsRoundSource("ladder"), true);
   assert.equal(isWordsRoundSource("list"), true);
   assert.equal(isWordsRoundSource("today"), true);
   assert.equal(isWordsRoundSource("review"), true);
