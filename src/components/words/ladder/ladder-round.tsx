@@ -80,6 +80,12 @@ export interface LadderRoundProps {
   mode?: "round" | "exam";
   /** The finish page's «اختبر» button, and the exam result's «أعد الاختبار»: opens the exam of these words. */
   onExam: () => void;
+  /** Where "back" and "done" lead; the Word Lists page unless the round was opened from the Map. */
+  backHref?: string;
+  /** The round's name in the corner when it is not "Round N" (today's session). */
+  roundLabel?: string;
+  /** A round of mixed topics has no topic to be "N of M" in: the finish page leaves the topic's progress bar out. */
+  mixed?: boolean;
 }
 
 /** After a choice: how long the answer stays on screen before the next screen (a miss stays longer, to be read). */
@@ -114,6 +120,9 @@ export function LadderRound({
   onNext,
   mode = "round",
   onExam,
+  backHref = "/learn/word-lists",
+  roundLabel,
+  mixed = false,
 }: LadderRoundProps) {
   const exam = mode === "exam";
   const { locale } = useLocale();
@@ -157,10 +166,10 @@ export function LadderRound({
   // The round's words are resolved in the background, so their speakers find the sound cached.
   const { prefetchPronunciation } = usePronunciationSettings();
   useEffect(() => {
-    if (!voiceId) return;
     for (const item of words) {
-      if (item.audioUrl) continue;
-      prefetchPronunciation({ contentType: "word", contentId: item.id, voiceId });
+      const voice = item.topic ? item.topic.voiceId : voiceId;
+      if (item.audioUrl || !voice) continue;
+      prefetchPronunciation({ contentType: "word", contentId: item.id, voiceId: voice });
     }
   }, [words, voiceId, prefetchPronunciation]);
 
@@ -213,8 +222,8 @@ export function LadderRound({
         outcome,
         todayISO,
         source: "lesson",
-        lessonId: `wordlist:${group.id}`,
-        lessonTitle: group.title,
+        lessonId: `wordlist:${target.topic?.id ?? group.id}`,
+        lessonTitle: target.topic?.title ?? group.title,
         ar: target.term || undefined,
         homeSentence: target.sentence,
       }).catch(() => {});
@@ -306,7 +315,7 @@ export function LadderRound({
         <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <Link
-              href="/learn/word-lists"
+              href={backHref}
               className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 justify-self-start text-sm font-medium pointer-coarse:min-h-11"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
@@ -320,7 +329,7 @@ export function LadderRound({
             <div className="flex items-center gap-3 justify-self-end">
               {!finished && (
                 <span className="text-muted-foreground text-sm font-medium" dir="auto">
-                  {exam ? s.examTitle : s.nextRound(number)}
+                  {exam ? s.examTitle : (roundLabel ?? s.nextRound(number))}
                 </span>
               )}
               {!finished && word && (
@@ -331,7 +340,7 @@ export function LadderRound({
                   autoPlay={audio && typedWrong === null}
                   resetKey={`${pos}:${word.id}:${card?.step}`}
                   inputRef={inputRef}
-                  kokoroVoiceId={voiceId}
+                  kokoroVoiceId={word.topic ? word.topic.voiceId : voiceId}
                   contentType="word"
                   contentId={word.id}
                 />
@@ -359,6 +368,7 @@ export function LadderRound({
                   next={next}
                   onRetake={onExam}
                   onNext={onNext}
+                  backHref={backHref}
                 />
               ) : (
                 <LadderFinish
@@ -372,6 +382,8 @@ export function LadderRound({
                   next={next}
                   onNext={onNext}
                   onExam={onExam}
+                  backHref={backHref}
+                  mixed={mixed}
                 />
               )}
             </motion.div>

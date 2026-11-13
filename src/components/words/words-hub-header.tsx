@@ -24,6 +24,7 @@ export function WordsHubHeader({
   const labels: Record<WordsTab, string> = {
     groups: s.tabGroups,
     core: s.tabCore,
+    map: s.tabMap,
     saved: s.tabSaved,
   };
   return (

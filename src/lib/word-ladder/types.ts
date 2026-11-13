@@ -19,4 +19,9 @@ export interface LadderWord {
   spellingOptions: string[];
   /** Pre-resolved sound, when already known (see VocabularyWord.audioUrl). */
   audioUrl?: string | null;
+  /**
+   * The topic this word belongs to, set only for a round that mixes topics (today's session on the
+   * Map tab): the word is then reported, voiced and counted under ITS topic, not under the round's.
+   */
+  topic?: { id: string; title: string; voiceId: string | null };
 }

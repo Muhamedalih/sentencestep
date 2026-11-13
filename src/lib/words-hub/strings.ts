@@ -12,6 +12,7 @@ export interface WordsHubStrings {
   title: string;
   tabGroups: string;
   tabCore: string;
+  tabMap: string;
   tabSaved: string;
   /** A topic that has not been started: "25 words". */
   wordsCount: (n: number) => string;
@@ -23,6 +24,7 @@ const AR: WordsHubStrings = {
   title: "الكلمات",
   tabGroups: "المجموعات",
   tabCore: "الأساسية",
+  tabMap: "الخريطة",
   tabSaved: "محفوظاتي",
   wordsCount: (n) => `${n} كلمة`,
   tabsLabel: "أقسام الكلمات",
@@ -32,6 +34,7 @@ const EN: WordsHubStrings = {
   title: "Words",
   tabGroups: "Topics",
   tabCore: "Core",
+  tabMap: "Map",
   tabSaved: "Saved",
   wordsCount: (n) => `${n} words`,
   tabsLabel: "Words sections",
@@ -41,6 +44,7 @@ const ES: WordsHubStrings = {
   title: "Palabras",
   tabGroups: "Temas",
   tabCore: "Básicas",
+  tabMap: "Mapa",
   tabSaved: "Guardadas",
   wordsCount: (n) => `${n} palabras`,
   tabsLabel: "Secciones de palabras",
@@ -50,6 +54,7 @@ const TR: WordsHubStrings = {
   title: "Kelimeler",
   tabGroups: "Konular",
   tabCore: "Temel",
+  tabMap: "Harita",
   tabSaved: "Kaydedilenler",
   wordsCount: (n) => `${n} kelime`,
   tabsLabel: "Kelime bölümleri",

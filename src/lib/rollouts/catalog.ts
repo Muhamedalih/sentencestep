@@ -46,6 +46,7 @@ export const ROLLOUT_IDS = [
   "wordCovers",
   "wordsBanner",
   "wordsSplit",
+  "wordsMap",
   "faceRatings",
 ] as const;
 
@@ -497,6 +498,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the layout of the topic's screens changes: the words, the rounds, the saved progress and the free lists stay exactly as they are. It applies to the rounds of four words (“wordLadder”); a learner who does not have those keeps the old Learn / Practice screens, unchanged.",
       "The picture is the one used on the topic's cover (“wordCovers”), so an admin who changes a topic's picture there changes it here too.",
       "Needs no new reads or writes and no migration.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordsMap: {
+    id: "wordsMap",
+    audience: "learner",
+    title: "Words page: the Map tab",
+    description:
+      "On the Words page the Core words tab («الأساسية») is replaced by «الخريطة»: all the Word Lists words in one place. A green band with today's session (four new words from four different topics, shown with their topics' pictures) and one button; below it the topics of one level as a path of circles (each with its drawing and a progress ring, the topics going today marked), and a second view, a list of every word with a search and filters (new, being settled, stable, not seen). The session opens the usual five-step round with the four words.",
+    notes: [
+      "The words and their saved progress are the ones the Word Lists and the words bank already hold; nothing new is written when the Map is looked at. A round played from the Map writes what a Word Lists round writes.",
+      "The Core words data stays where it is (the words already in a learner's bank keep their place); only their tab is not offered while this is open.",
+      "Needs a signed-in learner (the states come from the learner's own words); a guest keeps the Topics tab only.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

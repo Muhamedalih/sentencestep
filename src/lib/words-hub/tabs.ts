@@ -6,20 +6,22 @@
  * client-safe.
  */
 
-export const WORDS_TABS = ["groups", "core", "saved"] as const;
+export const WORDS_TABS = ["groups", "core", "map", "saved"] as const;
 export type WordsTab = (typeof WORDS_TABS)[number];
 
 /** What the learner has: the Core tab needs the words bank, the Saved tab the saved words. */
 export interface WordsTabAvailability {
   core: boolean;
   saved: boolean;
+  /** The Map tab (the wordsMap permission, a signed-in learner): it takes the Core tab's place, so Core is not offered with it. */
+  map?: boolean;
 }
 
 /** The tabs to draw, in order. Topics is always there; with nothing else to show the page has no tabs at all (see `showsTabs`). */
 export function availableTabs(available: WordsTabAvailability): WordsTab[] {
   return [
     "groups",
-    ...(available.core ? (["core"] as const) : []),
+    ...(available.map ? (["map"] as const) : available.core ? (["core"] as const) : []),
     ...(available.saved ? (["saved"] as const) : []),
   ];
 }
@@ -32,6 +34,7 @@ export function showsTabs(available: WordsTabAvailability): boolean {
 /** Where a tab leads. */
 export function tabHref(tab: WordsTab): string {
   if (tab === "core") return "/learn/word-lists?tab=core";
+  if (tab === "map") return "/learn/word-lists?tab=map";
   if (tab === "saved") return "/learn/words/saved";
   return "/learn/word-lists";
 }
@@ -40,7 +43,11 @@ export function tabHref(tab: WordsTab): string {
  * Which view of `/learn/word-lists` a `?tab=` asks for: Core when it says so and the learner has it,
  * otherwise Topics (also for any other value, and for "saved", which is a page of its own).
  */
-export function parseListsTab(value: unknown, available: WordsTabAvailability): "groups" | "core" {
+export function parseListsTab(
+  value: unknown,
+  available: WordsTabAvailability,
+): "groups" | "core" | "map" {
   const raw = Array.isArray(value) ? value[0] : value;
-  return raw === "core" && available.core ? "core" : "groups";
+  if (raw === "map" && available.map) return "map";
+  return raw === "core" && available.core && !available.map ? "core" : "groups";
 }
