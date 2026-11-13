@@ -329,7 +329,11 @@ export function LadderRound({
             {finished ? (
               <div />
             ) : (
-              <LadderProgress queue={queue} pos={pos} phases={exam ? ["type"] : single ? SINGLE_PHASES : LADDER_PHASES} />
+              <LadderProgress
+                queue={queue}
+                pos={pos}
+                phases={exam ? ["type"] : single ? SINGLE_PHASES : LADDER_PHASES}
+              />
             )}
             <div className="flex items-center gap-3 justify-self-end">
               {!finished && (
@@ -354,117 +358,120 @@ export function LadderRound({
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {finished ? (
-            <motion.div
-              key="finish"
-              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-1 items-center justify-center overflow-y-auto px-6 py-4 lg:px-16"
-            >
-              {exam ? (
-                <LadderExamResult
-                  words={words}
-                  results={Object.fromEntries(
-                    words.map((item) => [item.id, runs[item.id]?.typedFirst === true]),
-                  )}
-                  title={group.title}
-                  next={next}
-                  onRetake={onExam}
-                  onNext={onNext}
-                  backHref={backHref}
-                />
-              ) : (
-                <LadderFinish
-                  words={words}
-                  runs={runs}
-                  number={number}
-                  done={done}
-                  total={total}
-                  title={group.title}
-                  bankFeed={bankFeed}
-                  next={next}
-                  onNext={onNext}
-                  onExam={onExam}
-                  backHref={backHref}
-                  mixed={mixed}
-                  hideExam={single}
-                />
-              )}
-            </motion.div>
-          ) : (
-            card &&
-            word && (
+        {/* overflow-clip: a screen comes in 8px lower (y: 8) and this area touches the bottom of the window, so without it the page grew taller than the window for the 0.18s of the slide and a laptop drew a scroll bar (15px of width), squeezing everything sideways and back at every screen. Clipping here (not on the whole round) keeps a tall screen on a short window scrollable as before. */}
+        <div className="flex flex-1 flex-col overflow-clip">
+          <AnimatePresence mode="wait">
+            {finished ? (
               <motion.div
-                key={`${pos}:${card.wordId}:${card.step}`}
+                key="finish"
                 initial={reducedMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
-                transition={{ duration: 0.18 }}
-                className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-6 text-center lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
+                transition={{ duration: 0.2 }}
+                className="flex flex-1 items-center justify-center overflow-y-auto px-6 py-4 lg:px-16"
               >
-                <p
-                  className="text-muted-foreground text-[12.5px] font-semibold tracking-wide"
-                  dir="auto"
-                >
-                  {caption}
-                </p>
-                {card.step === "meet" && (
-                  <MeetScreen s={s} word={word} onSpeak={replay} onNext={advance} />
-                )}
-                {card.step === "meaning" && (
-                  <ChoiceScreen
-                    key={`m${pos}`}
-                    kind="meaning"
-                    word={word}
-                    options={word.meaningOptions}
-                    answer={word.term}
-                    onAnswered={answered}
-                    onSettled={settle}
+                {exam ? (
+                  <LadderExamResult
+                    words={words}
+                    results={Object.fromEntries(
+                      words.map((item) => [item.id, runs[item.id]?.typedFirst === true]),
+                    )}
+                    title={group.title}
+                    next={next}
+                    onRetake={onExam}
+                    onNext={onNext}
+                    backHref={backHref}
                   />
-                )}
-                {card.step === "letters" && (
-                  <LettersScreen
-                    key={`t${pos}`}
-                    s={s}
-                    word={word}
-                    seed={`${seed}:${card.wordId}:${card.tries}`}
-                    onAnswered={answered}
-                    onSettled={settle}
-                  />
-                )}
-                {card.step === "listen" && (
-                  <ChoiceScreen
-                    key={`l${pos}`}
-                    kind="listen"
-                    word={word}
-                    options={word.spellingOptions}
-                    answer={word.word}
-                    onAnswered={answered}
-                    onSettled={settle}
-                    onSpeak={replay}
-                    listenLabel={s.listen}
-                  />
-                )}
-                {card.step === "type" && (
-                  <TypeScreen
-                    s={s}
-                    word={word}
-                    retry={card.retry}
-                    wrong={typedWrong}
-                    inputRef={inputRef}
-                    fontFamily={sectionFontFamily}
-                    onSpeak={replay}
-                    onResult={typed}
-                    onContinue={advance}
-                    willReturn={!exam && retryOf(card) !== null}
+                ) : (
+                  <LadderFinish
+                    words={words}
+                    runs={runs}
+                    number={number}
+                    done={done}
+                    total={total}
+                    title={group.title}
+                    bankFeed={bankFeed}
+                    next={next}
+                    onNext={onNext}
+                    onExam={onExam}
+                    backHref={backHref}
+                    mixed={mixed}
+                    hideExam={single}
                   />
                 )}
               </motion.div>
-            )
-          )}
-        </AnimatePresence>
+            ) : (
+              card &&
+              word && (
+                <motion.div
+                  key={`${pos}:${card.wordId}:${card.step}`}
+                  initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-6 text-center lg:px-16 [html[data-keyboard]_&]:gap-3 [html[data-keyboard]_&]:py-3"
+                >
+                  <p
+                    className="text-muted-foreground text-[12.5px] font-semibold tracking-wide"
+                    dir="auto"
+                  >
+                    {caption}
+                  </p>
+                  {card.step === "meet" && (
+                    <MeetScreen s={s} word={word} onSpeak={replay} onNext={advance} />
+                  )}
+                  {card.step === "meaning" && (
+                    <ChoiceScreen
+                      key={`m${pos}`}
+                      kind="meaning"
+                      word={word}
+                      options={word.meaningOptions}
+                      answer={word.term}
+                      onAnswered={answered}
+                      onSettled={settle}
+                    />
+                  )}
+                  {card.step === "letters" && (
+                    <LettersScreen
+                      key={`t${pos}`}
+                      s={s}
+                      word={word}
+                      seed={`${seed}:${card.wordId}:${card.tries}`}
+                      onAnswered={answered}
+                      onSettled={settle}
+                    />
+                  )}
+                  {card.step === "listen" && (
+                    <ChoiceScreen
+                      key={`l${pos}`}
+                      kind="listen"
+                      word={word}
+                      options={word.spellingOptions}
+                      answer={word.word}
+                      onAnswered={answered}
+                      onSettled={settle}
+                      onSpeak={replay}
+                      listenLabel={s.listen}
+                    />
+                  )}
+                  {card.step === "type" && (
+                    <TypeScreen
+                      s={s}
+                      word={word}
+                      retry={card.retry}
+                      wrong={typedWrong}
+                      inputRef={inputRef}
+                      fontFamily={sectionFontFamily}
+                      onSpeak={replay}
+                      onResult={typed}
+                      onContinue={advance}
+                      willReturn={!exam && retryOf(card) !== null}
+                    />
+                  )}
+                </motion.div>
+              )
+            )}
+          </AnimatePresence>
+        </div>
       </div>
       <LadderRatingModal
         open={ratingOpen}
