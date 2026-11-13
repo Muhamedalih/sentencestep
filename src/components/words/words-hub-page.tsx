@@ -55,6 +55,7 @@ export async function WordsHubPage({ tab: tabParam, view }: { tab: unknown; view
       userId: user.id,
       locale,
       isAdminUser,
+      hasPremium: premium,
       bankOpen,
     });
     body = (

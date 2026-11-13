@@ -52,6 +52,7 @@ export default async function WordsSessionPage() {
     userId: user.id,
     isAdminUser,
     locale,
+    hasPremium,
     bankOpen: bankFeed,
   });
   const topicById = new Map(topics.map((topic) => [topic.id, topic]));

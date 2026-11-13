@@ -1,4 +1,7 @@
+import { unstable_cache } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 import { readAllPages } from "@/lib/supabase/read-all-pages";
 import { fetchBankStates, isMissingBankSchema } from "@/lib/supabase/queries/learner-words";
 import { fetchWordProgress } from "@/lib/supabase/queries/word-progress";
@@ -62,7 +65,49 @@ async function readTopics(isAdminUser: boolean, locale: SupportLocale | null): P
     .sort((a, b) => a.level - b.level || a.order - b.order);
 }
 
-async function readWordRows(topicIds: ReadonlySet<string>): Promise<WordRow[]> {
+/**
+ * Every word of every topic, read once with the service role and kept for an hour for everyone (never
+ * per learner): about 1,000 rows that the Map tab used to read, page by page, on every visit. It holds
+ * only what the tab shows (the word, its Arabic hint and its place); who may see which topic's words is
+ * decided in `readWordRows`, not here. A failed read throws, and unstable_cache does not keep a throw.
+ */
+const cachedAllWordRows = unstable_cache(
+  async (): Promise<WordRow[]> => {
+    const supabase = createServiceRoleClient();
+    const rows = await readAllPages((from, to) =>
+      supabase
+        .from("vocabulary_words")
+        .select("id, group_id, target_word, hint_ar, order_index")
+        .order("id")
+        .range(from, to),
+    );
+    return rows as WordRow[];
+  },
+  ["words-map-all-word-rows-v1"],
+  { revalidate: 3600 },
+);
+
+/**
+ * The words the learner may read. Admins (who also see draft topics) and a server without the service
+ * role read with their own session, as before. Everyone else gets the shared hour-long copy, cut to the
+ * rule of the table: a free topic's words for all, a locked topic's words only for a subscriber.
+ */
+async function readWordRows(
+  topics: readonly MapTopic[],
+  canReadLocked: boolean,
+  isAdminUser: boolean,
+): Promise<WordRow[]> {
+  const topicIds = new Set(topics.map((topic) => topic.id));
+  if (!isAdminUser && isServiceRoleConfigured()) {
+    try {
+      const open = new Set(
+        topics.filter((topic) => canReadLocked || topic.isFree).map((topic) => topic.id),
+      );
+      return (await cachedAllWordRows()).filter((row) => open.has(row.group_id));
+    } catch (error) {
+      console.error("[words-map] the shared words read failed, reading with the session", error);
+    }
+  }
   const supabase = await createClient();
   const rows = await readAllPages((from, to) =>
     supabase
@@ -147,12 +192,12 @@ export async function loadWordsMap(args: {
   userId: string;
   locale: SupportLocale | null;
   isAdminUser: boolean;
+  hasPremium: boolean;
   bankOpen: boolean;
 }): Promise<WordsMapData> {
   const topics = await readTopics(args.isAdminUser, args.locale);
-  const topicIds = new Set(topics.map((topic) => topic.id));
   const [rows, learner, lessons] = await Promise.all([
-    readWordRows(topicIds),
+    readWordRows(topics, args.hasPremium, args.isAdminUser),
     readLearnerWords(args.userId, args.bankOpen),
     loadLessonWords().catch(() => ({}) as Record<string, string[]>),
   ]);
@@ -197,11 +242,12 @@ export async function loadSessionPick(args: {
   userId: string;
   isAdminUser: boolean;
   locale: SupportLocale | null;
+  hasPremium: boolean;
   bankOpen: boolean;
 }): Promise<{ picked: PickedWord[]; topics: MapTopic[] }> {
   const topics = await readTopics(args.isAdminUser, args.locale);
   const [rows, learner, lessons] = await Promise.all([
-    readWordRows(new Set(topics.map((topic) => topic.id))),
+    readWordRows(topics, args.hasPremium, args.isAdminUser),
     readLearnerWords(args.userId, args.bankOpen),
     loadLessonWords().catch(() => ({}) as Record<string, string[]>),
   ]);
