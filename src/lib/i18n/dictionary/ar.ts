@@ -3,7 +3,7 @@ import type { Dictionary } from "@/lib/i18n/dictionary/types";
 export const ar: Dictionary = {
   mobilePath: {
     navPath: "المسار",
-    navWords: "الكلمات",
+    navWords: "المفردات",
     navLessons: "الدروس",
     navMore: "المزيد",
     moreSubscribers: "للمشتركين",

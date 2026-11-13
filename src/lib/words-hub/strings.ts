@@ -21,13 +21,13 @@ export interface WordsHubStrings {
 }
 
 const AR: WordsHubStrings = {
-  title: "الكلمات",
+  title: "المفردات",
   tabGroups: "المجموعات",
   tabCore: "الأساسية",
   tabMap: "الخريطة",
   tabSaved: "محفوظاتي",
   wordsCount: (n) => `${n} كلمة`,
-  tabsLabel: "أقسام الكلمات",
+  tabsLabel: "أقسام المفردات",
 };
 
 const EN: WordsHubStrings = {
