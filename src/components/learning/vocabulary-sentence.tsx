@@ -707,7 +707,11 @@ function BlankBox({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: popS, ease: easeOut }}
-        className="text-success mx-1 inline-block align-baseline"
+        // The empty box it replaces stands 1.65em above the baseline and so makes its line taller than
+        // plain text would: this empty strut of the same height keeps the line (and everything centred
+        // around it) exactly where it was, instead of the sentence shrinking ~20px when the word settles
+        // and growing back when the next one opens.
+        className="text-success mx-1 inline-block align-baseline before:inline-block before:h-[1.65em] before:align-baseline before:content-['']"
       >
         {revealedWord}
       </motion.span>

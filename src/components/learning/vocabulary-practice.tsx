@@ -295,6 +295,9 @@ function VocabularyPracticeSession({
   const currentBlock = blocks[blockIndex] ?? [];
   const currentSlot: number | undefined = queue[0];
   const blockSize = currentBlock.length;
+  // The summary is on screen from the very render that drains the block's queue. `showSummary` is set by
+  // an effect one render later, and in between the screen would show nothing (no word, no summary).
+  const summaryOn = showSummary || (queue.length === 0 && blockSize > 0 && !isComplete);
 
   // Once every slot in the current block has been resolved correctly (the
   // queue drains to empty), show the summary of the block's words. Runs as an
@@ -502,9 +505,10 @@ function VocabularyPracticeSession({
     <SharedInputProvider>
       <div className="h-app relative flex w-full flex-col">
         <SharedInputHost />
-        {!isComplete && (!showSummary || drillWord) && <ShiftReplayHint />}
+        {!isComplete && (!summaryOn || drillWord) && <ShiftReplayHint />}
         <div className="shrink-0 px-6 pt-4 lg:px-16 lg:pt-5 [html[data-keyboard]_&]:pt-2">
-          <div className="flex items-center justify-between gap-4">
+          {/* min-h: the audio/counter group on the right comes and goes with the word (it is absent on the summary), and without a fixed row height the whole page below moved by ~16px each time. */}
+          <div className="flex min-h-9 items-center justify-between gap-4 pointer-coarse:min-h-11">
             <Link
               href={back?.href ?? "/learn/word-lists"}
               className="text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 text-sm font-medium pointer-coarse:min-h-11"
@@ -537,13 +541,20 @@ function VocabularyPracticeSession({
               </div>
             )}
           </div>
-          {redesign && !isComplete && !showSummary && !drillWord && blockSize > 0 && (
-            <BatchProgress
-              batchIndex={blockIndex}
-              batchCount={blocks.length}
-              done={doneInBlock.size}
-              size={blockSize}
-            />
+          {redesign && !isComplete && blockSize > 0 && (
+            // Kept in place (just not drawn) on the summary and the drill, so the header's height — and the
+            // screen under it — does not jump when the learner moves between them and the next word.
+            <div
+              className={cn(summaryOn || drillWord ? "invisible" : undefined)}
+              aria-hidden={summaryOn || drillWord ? true : undefined}
+            >
+              <BatchProgress
+                batchIndex={blockIndex}
+                batchCount={blocks.length}
+                done={doneInBlock.size}
+                size={blockSize}
+              />
+            </div>
           )}
         </div>
 
@@ -669,7 +680,7 @@ function VocabularyPracticeSession({
                 onBack={() => setDrillWord(null)}
               />
             </motion.div>
-          ) : showSummary ? (
+          ) : summaryOn ? (
             <VocabularyBlockSummary
               key={`summary-${blockIndex}`}
               words={currentBlock}
@@ -723,7 +734,7 @@ function VocabularyPracticeSession({
 
                 <div className="bg-border compact-hide h-10 w-px" aria-hidden="true" />
 
-                <div className="flex w-full max-w-2xl flex-col items-center gap-3">
+                <div className="relative flex w-full max-w-2xl flex-col items-center gap-3">
                   <VocabularySentence
                     sentence={word.sentence}
                     targetWord={word.targetWord}
@@ -759,13 +770,15 @@ function VocabularyPracticeSession({
                       onGiveUp={() => controlsRef.current?.giveUp()}
                     />
                   )}
+                  {/* Hangs under the help bar without taking any room: it appears when the saved progress
+                    arrives and when this very word is marked done, and a line that took room made
+                    the whole centred screen jump by about 24px each time. */}
+                  {isWordCompleted(word.id) && (
+                    <span className="text-success absolute inset-x-0 top-full mt-2 text-center text-xs font-medium">
+                      {t.wordLists.completedBefore}
+                    </span>
+                  )}
                 </div>
-
-                {isWordCompleted(word.id) && (
-                  <span className="text-success text-xs font-medium">
-                    {t.wordLists.completedBefore}
-                  </span>
-                )}
               </motion.div>
             )
           )}
