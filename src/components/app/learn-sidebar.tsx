@@ -22,7 +22,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
 import { usePhoneMoreSeen } from "@/hooks/use-phone-more-seen";
-import { useVideoNew } from "@/hooks/use-video-new";
+import { useVideoNew, useWordsNew } from "@/hooks/use-video-new";
 import {
   INSTAGRAM_DM_URL,
   INSTAGRAM_HANDLE,
@@ -113,6 +113,8 @@ export function LearnSidebar({
   // Until the learner has opened «فيديو» once, its button wears a small «new» word (see useVideoNew).
   const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled;
   const newLabel = videoNewLabel(locale);
+  // Same small «new» word on Words, until it has been opened once.
+  const wordsIsNew = useWordsNew(pathname.startsWith("/learn/word-lists"));
   const showLibrary = false; // the Library section is hidden from everyone
   // Home is an exact match (not a prefix) — "/learn" is a short enough
   // prefix that /learn/settings, /learn/saved, and every other non-nav
@@ -220,6 +222,7 @@ export function LearnSidebar({
           href: "/learn/word-lists",
           label: wordsHub ? wordsHubStrings(locale).title : t.mobilePath.navWords,
           icon: ListChecks,
+          ...(wordsIsNew ? { tag: newLabel } : {}),
         },
         ...(showLibrary
           ? [
@@ -313,6 +316,7 @@ export function LearnSidebar({
               <Icon className="size-5 shrink-0 md:size-4" aria-hidden="true" />
               <span dir={dir}>{item.label}</span>
               {item.key === "video" && videoIsNew && <NewWord label={newLabel} dir={dir} />}
+              {item.key === "word-lists" && wordsIsNew && <NewWord label={newLabel} dir={dir} />}
             </SidebarLink>
           );
 
