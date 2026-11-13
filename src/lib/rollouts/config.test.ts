@@ -210,6 +210,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     wordCovers: false,
     wordsBanner: false,
     wordsSplit: false,
+    wordsMap: false,
     faceRatings: false,
   });
 });

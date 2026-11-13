@@ -62,7 +62,11 @@ export default async function SavedWordsPage() {
       <div className="mx-auto w-full max-w-[1060px] px-4 pt-4 pb-10 md:px-6 md:pt-6">
         <WordsHubHeader
           active="saved"
-          tabs={availableTabs({ core: features.rollouts.wordBank, saved: true })}
+          tabs={availableTabs({
+            core: features.rollouts.wordBank,
+            map: features.rollouts.wordsMap,
+            saved: true,
+          })}
           locale={locale}
         />
         <SavedWordsView cards={cards} heading={t.myCards.title} dir={dir} t={t} embedded />

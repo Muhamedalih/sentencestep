@@ -1,6 +1,7 @@
 import { BookOpen } from "lucide-react";
 
 import { CoreWordsShelf } from "@/components/words/core-words-shelf";
+import { WordsMapView } from "@/components/words/map/words-map-view";
 import { WordsHubHeader } from "@/components/words/words-hub-header";
 import { WordsBanner } from "@/components/words/words-banner";
 import { WordsReviewStrip } from "@/components/words/words-review-strip";
@@ -19,6 +20,7 @@ import { bankStrings } from "@/lib/word-bank/strings";
 import { getDraftWordGroupSummaries, getWordGroupSummaries } from "@/lib/word-lists";
 import { getLearnerToday } from "@/lib/word-mastery/access";
 import { availableTabs, parseListsTab, showsTabs } from "@/lib/words-hub/tabs";
+import { loadWordsMap } from "@/lib/words-map/load";
 
 /**
  * The one Words page («الكلمات», the wordsPage permission) at `/learn/word-lists`: the title with its
@@ -34,7 +36,12 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
     getCurrentUser(),
   ]);
   const bankOpen = features.rollouts.wordBank && Boolean(user);
-  const available = { core: bankOpen, saved: Boolean(user) && features.personalCards.page };
+  const available = {
+    core: bankOpen,
+    // The Map tab (permission wordsMap) takes the Core tab's place for a signed-in learner.
+    map: features.rollouts.wordsMap && Boolean(user),
+    saved: Boolean(user) && features.personalCards.page,
+  };
   const tab = parseListsTab(tabParam, available);
   const tabs = showsTabs(available) ? availableTabs(available) : (["groups"] as const);
   const t = locale ? getDictionary(locale) : fallbackDictionary;
@@ -43,7 +50,15 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
   const todayISO = bankOpen ? await getLearnerToday() : "";
 
   let body;
-  if (tab === "core" && user) {
+  if (tab === "map" && user) {
+    const data = await loadWordsMap({
+      userId: user.id,
+      locale,
+      isAdminUser,
+      bankOpen,
+    });
+    body = <WordsMapView data={data} isPremiumUser={premium} />;
+  } else if (tab === "core" && user) {
     const { shelf } = await loadBankWordLists(user.id, todayISO);
     body = <CoreWordsShelf data={shelf} isPremiumUser={premium} className="mt-1" />;
   } else {

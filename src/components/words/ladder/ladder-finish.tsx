@@ -33,6 +33,8 @@ export function LadderFinish({
   next,
   onNext,
   onExam,
+  backHref = "/learn/word-lists",
+  mixed = false,
 }: {
   words: LadderWord[];
   runs: Record<string, FinishRun>;
@@ -46,6 +48,9 @@ export function LadderFinish({
   onNext: () => void;
   /** Opens the exam of this round's words (every word heard and typed once, then a score). */
   onExam: () => void;
+  backHref?: string;
+  /** Words of several topics: there is no single topic's progress to show. */
+  mixed?: boolean;
 }) {
   const { locale, dir } = useLocale();
   const s = ladderStrings(locale);
@@ -130,15 +135,19 @@ export function LadderFinish({
       )}
 
       <div className="mt-6">
-        <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full" aria-hidden="true">
-          <div
-            className="bg-success h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none"
-            style={{ width: `${total === 0 ? 0 : (doneAfter / total) * 100}%` }}
-          />
-        </div>
-        <p className="text-muted-foreground mt-2.5 text-[15px]" dir="auto">
-          <b className="text-foreground">{doneAfter}</b> {s.progressTail(total, title)}
-        </p>
+        {!mixed && (
+          <>
+            <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full" aria-hidden="true">
+              <div
+                className="bg-success h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none"
+                style={{ width: `${total === 0 ? 0 : (doneAfter / total) * 100}%` }}
+              />
+            </div>
+            <p className="text-muted-foreground mt-2.5 text-[15px]" dir="auto">
+              <b className="text-foreground">{doneAfter}</b> {s.progressTail(total, title)}
+            </p>
+          </>
+        )}
         <p className="text-muted-foreground/80 mt-0.5 text-[14px]" dir="auto">
           {bankFeed ? s.savedToWords : s.savedProgress}
         </p>
@@ -162,7 +171,7 @@ export function LadderFinish({
           <span dir="auto">{s.exam}</span>
         </button>
         <Link
-          href="/learn/word-lists"
+          href={backHref}
           className="border-border text-foreground hover:bg-muted/50 grid h-[60px] flex-1 place-items-center rounded-lg border text-lg font-semibold transition-colors"
         >
           <span dir="auto">{s.done}</span>

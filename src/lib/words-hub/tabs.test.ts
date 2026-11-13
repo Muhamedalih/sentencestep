@@ -10,6 +10,19 @@ test("Topics is always a tab; Core and Saved come only with what they show", () 
   assert.deepEqual(availableTabs({ core: true, saved: true }), ["groups", "core", "saved"]);
 });
 
+test("the Map tab takes Core's place, and ?tab=map opens it only when it is offered", () => {
+  assert.deepEqual(availableTabs({ core: true, saved: true, map: true }), [
+    "groups",
+    "map",
+    "saved",
+  ]);
+  assert.deepEqual(availableTabs({ core: false, saved: false, map: true }), ["groups", "map"]);
+  assert.equal(tabHref("map"), "/learn/word-lists?tab=map");
+  assert.equal(parseListsTab("map", { core: true, saved: true, map: true }), "map");
+  assert.equal(parseListsTab("map", { core: true, saved: true }), "groups");
+  assert.equal(parseListsTab("core", { core: true, saved: true, map: true }), "groups");
+});
+
 test("a page with a single tab draws no tab bar", () => {
   assert.equal(showsTabs({ core: false, saved: false }), false);
   assert.equal(showsTabs({ core: true, saved: false }), true);

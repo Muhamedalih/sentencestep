@@ -21,6 +21,7 @@ export function LadderExamResult({
   next,
   onRetake,
   onNext,
+  backHref = "/learn/word-lists",
 }: {
   words: LadderWord[];
   /** By word id: typed right when it was asked. */
@@ -29,6 +30,7 @@ export function LadderExamResult({
   next: { number: number; firstWord: string } | null;
   onRetake: () => void;
   onNext: () => void;
+  backHref?: string;
 }) {
   const { locale, dir } = useLocale();
   const s = ladderStrings(locale);
@@ -102,7 +104,7 @@ export function LadderExamResult({
           </button>
         )}
         <Link
-          href="/learn/word-lists"
+          href={backHref}
           className="border-border text-foreground hover:bg-muted/50 grid h-[60px] flex-1 place-items-center rounded-lg border text-lg font-semibold transition-colors"
         >
           <span dir="auto">{s.done}</span>
