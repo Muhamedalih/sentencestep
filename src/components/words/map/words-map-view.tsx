@@ -45,9 +45,12 @@ const PIPS: Record<MapWordState, number> = { unseen: 0, new: 1, settling: 2, sta
 export function WordsMapView({
   data,
   isPremiumUser,
+  initialView = "map",
 }: {
   data: WordsMapData;
   isPremiumUser: boolean;
+  /** "list" opens the word list directly (where a one-word round sends the learner back to). */
+  initialView?: "map" | "list";
 }) {
   const { locale } = useLocale();
   const s = wordsMapStrings(locale);
@@ -75,8 +78,8 @@ export function WordsMapView({
   );
 
   const firstLevel = topicById.get(data.session[0]?.groupId ?? "")?.level ?? 1;
-  const [view, setView] = useState<"map" | "list">("map");
-  const [level, setLevel] = useState<number>(firstLevel);
+  const [view, setView] = useState<"map" | "list">(initialView);
+  const [level, setLevel] = useState<number>(initialView === "list" ? 0 : firstLevel);
 
   const levelLabel = (value: number) =>
     locale
@@ -443,7 +446,6 @@ function List({
 }) {
   const { locale } = useLocale();
   const s = wordsMapStrings(locale);
-  const { rollouts } = useFeatures();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("all");
   const [shown, setShown] = useState(PAGE);
@@ -514,23 +516,14 @@ function List({
             const state = stateOf.get(word.id) ?? "unseen";
             const today = sessionSet.has(word.id);
             const locked = topic ? !topic.isFree && !isPremiumUser : false;
-            return (
-              <Link
-                key={word.id}
-                href={
-                  topic
-                    ? locked
-                      ? `/learn/word-lists/${topic.id}`
-                      : topicHref(topic, rollouts.wordLadder)
-                    : "/learn/word-lists"
-                }
-                prefetch={false}
-                className={cn(
-                  "bg-card hover:border-foreground/25 flex min-h-[112px] flex-col gap-0.5 rounded-[14px] border px-3.5 py-3 text-left transition-colors",
-                  today ? "border-primary/50" : "border-border",
-                  state === "unseen" && !today && "bg-transparent opacity-70",
-                )}
-              >
+            const cardClass = cn(
+              locked && "cursor-not-allowed opacity-60",
+              "bg-card hover:border-foreground/25 flex min-h-[112px] flex-col gap-0.5 rounded-[14px] border px-3.5 py-3 text-left transition-colors",
+              today ? "border-primary/50" : "border-border",
+              state === "unseen" && !today && "bg-transparent opacity-70",
+            );
+            const inner = (
+              <>
                 <span className="text-muted-foreground flex items-center gap-1.5 text-[11.5px]">
                   <i
                     className="size-2 shrink-0 rounded-full"
@@ -569,8 +562,23 @@ function List({
                       />
                     ))}
                   </span>
+                  {locked && <Lock className="size-3.5" aria-hidden="true" />}
                   <span dir="auto">{today ? s.startsToday : s.state[state]}</span>
                 </span>
+              </>
+            );
+            return locked ? (
+              <div key={word.id} aria-disabled="true" className={cardClass}>
+                {inner}
+              </div>
+            ) : (
+              <Link
+                key={word.id}
+                href={`/learn/word-lists/word/${word.id}?g=${word.g}`}
+                prefetch={false}
+                className={cardClass}
+              >
+                {inner}
               </Link>
             );
           })}

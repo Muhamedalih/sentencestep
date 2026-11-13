@@ -35,6 +35,7 @@ export function LadderFinish({
   onExam,
   backHref = "/learn/word-lists",
   mixed = false,
+  hideExam = false,
 }: {
   words: LadderWord[];
   runs: Record<string, FinishRun>;
@@ -51,6 +52,8 @@ export function LadderFinish({
   backHref?: string;
   /** Words of several topics: there is no single topic's progress to show. */
   mixed?: boolean;
+  /** A one-word round has nothing to test again: the exam button is left out. */
+  hideExam?: boolean;
 }) {
   const { locale, dir } = useLocale();
   const s = ladderStrings(locale);
@@ -163,13 +166,15 @@ export function LadderFinish({
             <span dir="auto">{s.oneMore}</span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={onExam}
-          className="border-border text-foreground hover:bg-muted/50 h-[60px] flex-1 rounded-lg border text-lg font-semibold transition-colors"
-        >
-          <span dir="auto">{s.exam}</span>
-        </button>
+        {!hideExam && (
+          <button
+            type="button"
+            onClick={onExam}
+            className="border-border text-foreground hover:bg-muted/50 h-[60px] flex-1 rounded-lg border text-lg font-semibold transition-colors"
+          >
+            <span dir="auto">{s.exam}</span>
+          </button>
+        )}
         <Link
           href={backHref}
           className="border-border text-foreground hover:bg-muted/50 grid h-[60px] flex-1 place-items-center rounded-lg border text-lg font-semibold transition-colors"

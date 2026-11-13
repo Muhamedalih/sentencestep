@@ -222,3 +222,11 @@ test("the outcome is decided by the typed step: right all the way is clean, a mi
   assert.equal(ladderOutcome({ earlierMisses: 0, typedFirst: false }), "missed");
   assert.equal(ladderOutcome({ earlierMisses: 3, typedFirst: false }), "missed");
 });
+
+test("a one-word round (skipListen) is four steps: meet, meaning, letters, type", () => {
+  const queue = buildQueue([word("apple")], "w", true);
+  assert.deepEqual(
+    queue.map((card) => card.step),
+    ["meet", "meaning", "letters", "type"],
+  );
+});

@@ -29,7 +29,7 @@ import { loadWordsMap } from "@/lib/words-map/load";
  * page, drawn under the same head (see the saved words route). Everything it shows already
  * existed: the page only brings it to one address.
  */
-export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
+export async function WordsHubPage({ tab: tabParam, view }: { tab: unknown; view?: unknown }) {
   const [features, locale, user] = await Promise.all([
     getEffectiveFeatures(),
     getLocale(),
@@ -57,7 +57,13 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
       isAdminUser,
       bankOpen,
     });
-    body = <WordsMapView data={data} isPremiumUser={premium} />;
+    body = (
+      <WordsMapView
+        data={data}
+        isPremiumUser={premium}
+        initialView={view === "list" ? "list" : "map"}
+      />
+    );
   } else if (tab === "core" && user) {
     const { shelf } = await loadBankWordLists(user.id, todayISO);
     body = <CoreWordsShelf data={shelf} isPremiumUser={premium} className="mt-1" />;

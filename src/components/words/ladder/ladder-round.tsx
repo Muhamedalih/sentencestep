@@ -86,11 +86,15 @@ export interface LadderRoundProps {
   roundLabel?: string;
   /** A round of mixed topics has no topic to be "N of M" in: the finish page leaves the topic's progress bar out. */
   mixed?: boolean;
+  /** One word opened from the words list: four steps (no hearing test) and no exam button at the end. */
+  single?: boolean;
 }
 
 /** After a choice: how long the answer stays on screen before the next screen (a miss stays longer, to be read). */
 const CORRECT_DELAY_MS = 650;
 const WRONG_DELAY_MS = 1400;
+/** The bar of a one-word round: learning, then the typed test. */
+const SINGLE_PHASES: readonly LadderPhase[] = ["learn", "type"];
 /** The shake of a wrong choice. */
 const SHAKE = [0, -9, 9, -6, 6, -3, 3, 0];
 
@@ -123,6 +127,7 @@ export function LadderRound({
   backHref = "/learn/word-lists",
   roundLabel,
   mixed = false,
+  single = false,
 }: LadderRoundProps) {
   const exam = mode === "exam";
   const { locale } = useLocale();
@@ -135,7 +140,7 @@ export function LadderRound({
   );
 
   const [queue, setQueue] = useState<LadderCard[]>(() =>
-    exam ? buildExamQueue(words, seed) : buildQueue(words, seed),
+    exam ? buildExamQueue(words, seed) : buildQueue(words, seed, single),
   );
   const [pos, setPos] = useState(0);
   const [runs, setRuns] = useState<Record<string, Run>>(() =>
@@ -324,7 +329,7 @@ export function LadderRound({
             {finished ? (
               <div />
             ) : (
-              <LadderProgress queue={queue} pos={pos} phases={exam ? ["type"] : LADDER_PHASES} />
+              <LadderProgress queue={queue} pos={pos} phases={exam ? ["type"] : single ? SINGLE_PHASES : LADDER_PHASES} />
             )}
             <div className="flex items-center gap-3 justify-self-end">
               {!finished && (
@@ -384,6 +389,7 @@ export function LadderRound({
                   onExam={onExam}
                   backHref={backHref}
                   mixed={mixed}
+                  hideExam={single}
                 />
               )}
             </motion.div>

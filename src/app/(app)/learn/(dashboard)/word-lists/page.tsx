@@ -32,12 +32,13 @@ export const metadata: Metadata = { title: "Word Lists" };
 export default async function WordListsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string | string[] }>;
+  searchParams: Promise<{ tab?: string | string[]; view?: string | string[] }>;
 }) {
   // The one Words page («الكلمات», permission wordsPage): the topics, the core words and (through its
   // tabs) the saved words under one title. Everyone else keeps the library below, as it always was.
   if ((await getEffectiveFeatures()).rollouts.wordsPage) {
-    return <WordsHubPage tab={(await searchParams).tab} />;
+    const params = await searchParams;
+    return <WordsHubPage tab={params.tab} view={params.view} />;
   }
 
   const locale = await getLocale();

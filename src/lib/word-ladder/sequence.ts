@@ -93,7 +93,12 @@ export function learnOrder(count: number): LearnToken[] {
  * a seeded order, then the typed test over every word in another seeded order. A test never opens
  * with the word the screen before it was about.
  */
-export function buildQueue(words: readonly SteppedWord[], seed: string): LadderCard[] {
+export function buildQueue(
+  words: readonly SteppedWord[],
+  seed: string,
+  /** A round of one word (opened from the words list) leaves the hearing test out: four steps, not five. */
+  skipListen = false,
+): LadderCard[] {
   const queue: LadderCard[] = [];
   const card = (wordId: string, step: LadderStep): LadderCard => ({
     wordId,
@@ -113,7 +118,7 @@ export function buildQueue(words: readonly SteppedWord[], seed: string): LadderC
     }
   }
 
-  for (const step of ["listen", "type"] as const) {
+  for (const step of skipListen ? (["type"] as const) : (["listen", "type"] as const)) {
     const asked = words.filter((word) => stepsFor(word).includes(step));
     if (asked.length === 0) continue;
     const ordered = seededShuffle(asked, `${seed}:${step}`);
