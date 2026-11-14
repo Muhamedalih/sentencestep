@@ -191,6 +191,12 @@ export const TASKS = {
     fill: "var(--primary)",
     current: "rgba(124,131,240,0.55)",
   },
+  /** The calm look's capsule: the wash that fills it as the day's tasks are done (indigo, green once the day is done). */
+  wash: {
+    from: "rgba(124,131,240,0.22)",
+    to: "rgba(124,131,240,0.07)",
+    done: "linear-gradient(90deg,rgba(62,194,122,0.16),rgba(62,194,122,0.08))",
+  },
   /** The «streak freezes left» pill. */
   freeze: { background: "rgba(56,189,248,0.1)", border: "rgba(56,189,248,0.28)", ink: "#7dd3fc" },
   /** The same count as plain text, with no pill (the daily tasks as three steps). */
@@ -222,94 +228,4 @@ export const TASKS = {
   why: "#b9bbd6",
   /** The small print of the opened card's heading line. */
   reward: "#a3a6d6",
-} as const;
-
-/**
- * The calm look (permission "homeCalm"; mock-up reports/home-proposal.html, every number below is the
- * mock-up's): the page is a deep blue-black, the side menu a shade darker, and each section's card has
- * its own deep colour that repeats in the card's tag, its small print and its dot, instead of one grey
- * for all. Story and daily lesson share the indigo of the logo's ink; Passages is a deep blue, Video a
- * deep teal. No yellow anywhere. Dark theme only; the light theme keeps its own tokens.
- */
-export const CALM_COLORS = {
-  stories: {
-    base: "#1a1940",
-    background: "#1a1940",
-    edge: "#2b2a63",
-    chip: "rgba(168,164,255,0.14)",
-    chipEdge: "rgba(168,164,255,0)",
-    soft: "#a3a1d6",
-    accent: "#c7c4ff",
-  },
-  lesson: {
-    base: "#1a1940",
-    background: "#1a1940",
-    edge: "#2b2a63",
-    chip: "rgba(168,164,255,0.14)",
-    chipEdge: "rgba(168,164,255,0)",
-    soft: "#a3a1d6",
-    accent: "#c7c4ff",
-  },
-  passages: {
-    base: "#10263f",
-    background: "#10263f",
-    edge: "#1d3b5e",
-    chip: "rgba(120,170,240,0.15)",
-    chipEdge: "rgba(120,170,240,0)",
-    soft: "#8fb2d9",
-    accent: "#a9cbf7",
-  },
-  video: {
-    base: "#0f2e30",
-    background: "#0f2e30",
-    edge: "#1b4a4c",
-    chip: "rgba(80,200,180,0.15)",
-    chipEdge: "rgba(80,200,180,0)",
-    soft: "#86bdb5",
-    accent: "#9fe0d3",
-  },
-  stats: {
-    base: "#121724",
-    background: "#121724",
-    edge: "#1c2335",
-    chip: "rgba(168,164,255,0.14)",
-    chipEdge: "rgba(168,164,255,0)",
-    soft: "#8b93a7",
-    accent: "#c7c4ff",
-  },
-} as const satisfies Record<string, CardColors>;
-
-export type CalmColorKey = keyof typeof CALM_COLORS;
-
-export const CALM = {
-  /** The page and the side menu (dark theme), applied in globals.css under `.app-shell[data-calm]`. */
-  page: "#0d121b",
-  sidebar: "#090c13",
-  /** The story card: the line under the title, its small print and the white button. */
-  heroSub: "#c1bef2",
-  heroText: "#9f9dd1",
-  /** The underline of the open tab (Stories / Daily lessons) above the story card. */
-  tabLine: "#a8a4ff",
-  button: { background: "#f1f2f8", ink: "#17163a" },
-  /** The small dot before «next» and the link's colour, per section card. */
-  passages: { dot: "#7fb0ee", link: "#cfe1f8" },
-  video: { dot: "#6fd3c1", link: "#c6efe7" },
-  /** The achievements tiles: a flat tint of the section's hue, and the icon on it. */
-  tiles: {
-    stories: { rgb: "168,164,255", ink: "#c7c4ff" },
-    videos: { rgb: "236,110,130", ink: "#f2a0ae" },
-    lines: { rgb: "90,150,235", ink: "#9dc3f5" },
-    words: { rgb: "70,190,170", ink: "#8fdccd" },
-  },
-  /** The page tilted on the story card (the story's title and its own lines on paper). */
-  pageArt: {
-    back: "#aaa6e8",
-    sheet: "#efecff",
-    title: "#2f2a7a",
-    rule: "#a8a4ff",
-    text: "#25215c",
-    sub: "#7a76b8",
-    ghost: "#d3cff5",
-    mark: "#cfcbff",
-  },
 } as const;

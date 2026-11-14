@@ -21,7 +21,7 @@ import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
-import { CALM_COLORS, HOME_CARD_COLORS, TASKS } from "./palette";
+import { HOME_CARD_COLORS, TASKS } from "./palette";
 
 type RowState = "done" | "current" | "idle";
 
@@ -31,18 +31,27 @@ function halo(state: RowState): string | undefined {
 }
 
 /** A thin vertical line between the steps and the week (from xl up, like the strip it replaces). */
-function Divider({ calm = false }: { calm?: boolean }) {
+function Divider() {
   return (
     <span
       aria-hidden="true"
       className="mx-6 hidden h-[34px] w-px shrink-0 xl:block"
-      style={{ background: calm ? "transparent" : TASKS.hairline }}
+      style={{ background: TASKS.hairline }}
     />
   );
 }
 
 /** The day's tasks as three small discs joined by lines: the rail of the opened box, folded. */
-function StepTrio({ quests, current }: { quests: DailyQuest[]; current: DailyQuest | undefined }) {
+function StepTrio({
+  quests,
+  current,
+  calm = false,
+}: {
+  quests: DailyQuest[];
+  current: DailyQuest | undefined;
+  /** The calm look: the step in progress breathes softly. */
+  calm?: boolean;
+}) {
   return (
     <div className="flex shrink-0 items-center" aria-hidden="true">
       {quests.map((quest, index) => {
@@ -56,7 +65,10 @@ function StepTrio({ quests, current }: { quests: DailyQuest[]; current: DailyQue
         return (
           <Fragment key={quest.slot}>
             <span
-              className="grid size-8 shrink-0 place-items-center rounded-full border-[1.5px]"
+              className={cn(
+                "grid size-8 shrink-0 place-items-center rounded-full border-[1.5px]",
+                calm && state === "current" && "tk-breathe",
+              )}
               style={
                 {
                   borderColor: disc.border,
@@ -264,12 +276,11 @@ export function TasksStepsBox({
 }) {
   const { t, dir } = useLocale();
   const copy = t.today;
-  // The calm look (permission "homeCalm"): folded, the line has no box and no dividers (the same line on the page); opened, it is a quiet card.
-  const calm = useFeatures().rollouts.homeCalm;
-  const colors = calm ? CALM_COLORS.stats : HOME_CARD_COLORS.lesson;
+  const colors = HOME_CARD_COLORS.lesson;
   const [open, setOpen] = useState(false);
   const panelId = useId();
-  const flat = calm && !open;
+  // The calm look (permission "homeCalm"): folded, the box is a slim capsule that FILLS with a soft wash as the day's tasks are done (green once the day is done), the step in progress breathes, and one small white button starts it.
+  const calm = useFeatures().rollouts.homeCalm;
 
   const required = requiredQuests(quests.quests);
   const done = required.filter((quest) => quest.completed).length;
@@ -279,6 +290,16 @@ export function TasksStepsBox({
   // (once the three are done that is the sentence exam, if the day has one).
   const rowCurrent = quests.quests.find((quest) => !quest.completed);
   const finished = quests.allDone || !current;
+  const washPercent = finished ? 100 : total > 0 ? Math.round((done / total) * 100) : 0;
+  const nextInfo = current?.today ?? null;
+  const nextStart = nextInfo
+    ? {
+        listen: copy.startListen,
+        story: copy.startStory,
+        words: copy.startWords,
+        sentences: copy.startSentences,
+      }[nextInfo.kind]
+    : null;
   const remaining = streak?.freezesRemaining ?? 0;
   const totalXp = required.reduce((sum, quest) => sum + quest.xp, 0);
   const earnedXp = required.reduce(
@@ -301,23 +322,28 @@ export function TasksStepsBox({
   return (
     <div className={className}>
       <div
-        className={cn(
-          "hover:border-primary/40 relative rounded-2xl border border-(--hc-edge) transition-colors",
-          flat && "hover:border-transparent",
-        )}
-        style={
-          {
-            background: flat ? "transparent" : colors.background,
-            "--hc-edge": flat ? "transparent" : colors.edge,
-          } as CSSProperties
-        }
+        className="hover:border-primary/40 relative rounded-2xl border border-(--hc-edge) transition-colors"
+        style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
       >
         <div
           className={cn(
             "relative flex flex-wrap items-center gap-x-5 gap-y-3 px-3.5 py-3 xl:h-[calc(4.4rem-2px)] xl:flex-nowrap xl:gap-x-0 xl:py-0 xl:pe-4",
-            flat && "px-0 xl:pe-0",
+            calm && "overflow-hidden xl:h-[calc(3.5rem-2px)]",
+            calm && (open ? "rounded-t-2xl" : "rounded-2xl"),
           )}
         >
+          {calm && !open && (
+            <span
+              aria-hidden="true"
+              className="tk-wash pointer-events-none absolute inset-y-0 start-0 origin-left rtl:origin-right"
+              style={{
+                width: `${washPercent}%`,
+                background: finished
+                  ? TASKS.wash.done
+                  : `linear-gradient(to ${dir === "rtl" ? "left" : "right"},${TASKS.wash.from},${TASKS.wash.to})`,
+              }}
+            />
+          )}
           <div className="flex min-w-0 flex-1 basis-56 items-center">
             {open ? (
               <p className="ms-1.5 flex min-w-0 items-baseline gap-2.5 leading-[1.3] whitespace-nowrap">
@@ -338,7 +364,7 @@ export function TasksStepsBox({
               </p>
             ) : (
               <>
-                <StepTrio quests={required} current={current} />
+                <StepTrio quests={required} current={current} calm={calm} />
                 <div className="ms-4 flex min-w-0 flex-col gap-[3px] whitespace-nowrap">
                   <p className="text-muted-foreground flex gap-1.5 text-xs leading-[1.2]">
                     <span dir={dir}>{t.quests.heading}</span>
@@ -380,7 +406,7 @@ export function TasksStepsBox({
 
           {streak && (
             <>
-              <Divider calm={calm} />
+              <Divider />
               <div className="flex shrink-0 flex-col gap-2">
                 <span className="text-muted-foreground text-xs leading-none" dir={dir}>
                   {t.streakCalendar.heading}
@@ -400,6 +426,18 @@ export function TasksStepsBox({
             </>
           )}
 
+          {calm && !open && !finished && nextInfo && nextStart && (
+            <Link
+              href={nextInfo.href}
+              className="focus-visible:ring-ring relative z-10 inline-flex h-9 shrink-0 items-center gap-2 rounded-[11px] bg-white px-3.5 text-[13.5px] font-bold whitespace-nowrap text-slate-900 transition-colors outline-none hover:bg-white/90 focus-visible:ring-2 max-sm:w-full max-sm:justify-center xl:ms-4"
+            >
+              <span dir="auto">{nextStart}</span>
+              <span className="font-medium text-slate-500" dir="auto">
+                {fill(copy.minutes, { n: nextInfo.minutes })}
+              </span>
+              <ArrowRight className="size-3.5" strokeWidth={2.2} aria-hidden="true" />
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}

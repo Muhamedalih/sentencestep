@@ -74,6 +74,7 @@ export function HomeEngagementSection({
   lead,
   trail,
   className,
+  calm,
 }: {
   stream: HomeEngagementStream | null;
   /** The classic Home permission: the strip stays folded and does not glow until the learner taps it. */
@@ -84,6 +85,8 @@ export function HomeEngagementSection({
   lead?: ReactNode;
   trail?: ReactNode;
   className?: string;
+  /** The calm look: the daily-tasks box is a slim capsule, so its placeholder is as tall. */
+  calm?: boolean;
 }) {
   if (!stream) return <HomeEngagement cards={cards} className={className} />;
   return (
@@ -92,7 +95,12 @@ export function HomeEngagementSection({
         <DailySessionSlot data={stream.dailySession} />
       </Suspense>
       <Suspense
-        fallback={<CardSkeleton feature="strip" className={cards ? "xl:h-[4.4rem]" : undefined} />}
+        fallback={
+          <CardSkeleton
+            feature="strip"
+            className={cards ? (calm ? "xl:h-14" : "xl:h-[4.4rem]") : undefined}
+          />
+        }
       >
         <EngagementStripSlot
           today={stream.todayISO}

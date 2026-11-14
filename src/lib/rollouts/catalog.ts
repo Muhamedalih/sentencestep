@@ -573,11 +573,11 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Home: a calmer look",
     description:
-      "The learner area and Home in a calmer dress: the top bar loses its line and its flame (the streak stays in the week dots), the flags and the account sit bare, and the logo moves to the top of the side menu, whose open item is a soft grey instead of the strong violet. On Home the cards are no longer one grey: the story card is a deep indigo, Passages a deep blue and Video a deep teal, with a big heavy title, one white button and, on the story card, a tilted page showing the story's own title and description lines. The tabs (Stories / Daily lessons) sit above the card, the daily-tasks line has no box, and the level card has no divider. A card no longer rises or grows when the pointer touches it; the picture inside a card still moves as before.",
+      "The learner area and Home in a calmer dress: the top bar loses its line and its flame (the streak stays in the week dots), the flags and the account sit bare, and the logo moves to the top of the side menu, whose open item is a soft grey instead of the strong violet. On Home the Stories / Daily lessons tabs sit above the story card, and the daily-tasks box becomes a slim capsule that fills with a soft wash as the day's tasks are done (green when the day is done), whose step in progress breathes and which has one small button to start the next task straight from Home. A card no longer rises or grows when the pointer touches it; the picture inside a card still moves as before. The colours of the page and of the cards are not changed.",
     notes: [
       "Only the look changes: the same links, the same numbers, the same tabs and the same words. No new reads or requests, no migration.",
-      "Dark theme only for the colours (the page turns a deep blue-black and the cards take their section's colour); the light theme gets the structural changes (no top line, no flame, quieter menu, no card lift).",
-      "The top bar, the side menu and the card lift change on every page under /learn, not only Home; the colours of the cards are Home's.",
+      "The top bar, the side menu and the card lift change on every page under /learn, not only Home; the tabs and the tasks capsule are Home's.",
+      "The capsule's start button goes to the same place as the current row of the opened box; the box itself, opened, is unchanged.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
