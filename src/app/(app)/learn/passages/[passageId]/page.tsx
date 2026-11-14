@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { PASSAGE_EXAMS } from "@/data/passages/exams";
 import { HybridWall } from "@/components/hybrid/hybrid-wall";
 import { PassageLocked, PosterArt } from "@/components/passages/passage-locked";
 import { PassageReader } from "@/components/passages/passage-reader";
@@ -17,6 +18,7 @@ import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { pauseMarksFor } from "@/lib/passages/admin-pauses";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
+import { arrangedExam } from "@/lib/passages/exam";
 import { resumeSectionIndex } from "@/lib/passages/progress";
 import { fetchPassage, fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
 import { getGateFigures } from "@/lib/stats/gate-figures";
@@ -177,6 +179,11 @@ export default async function PassageReaderPage({
     <div className="lesson-shell bg-background text-foreground min-h-svh w-full">
       <PassageReader
         passage={passage}
+        // The full exam after the last part (the "passageExam" permission): five new questions,
+        // read from the code on the server, so only this passage's five ever reach the browser.
+        exam={
+          features.rollouts.passageExam ? arrangedExam(passage.id, PASSAGE_EXAMS[passage.id]) : []
+        }
         pauseMarks={pauseMarks}
         initialSectionIndex={resumeSectionIndex(progress, passage.sections.length)}
         // Only Arabic translations are written so far (see PassageSentence.ar).

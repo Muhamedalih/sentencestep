@@ -46,7 +46,7 @@ function wordCount(text: string): number {
 }
 
 /** What every question has to be, whether it ends a part or closes the passage: worded, translated, 2-4 distinct options and a right answer that is one of them. */
-function checkQuestion(
+export function checkQuestion(
   question: PassageClosingSeed,
   where: string,
   at: (where: string, message: string) => void,

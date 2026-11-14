@@ -8,6 +8,7 @@ import { PassageBackdrop } from "@/components/passages/passage-backdrop";
 import { PassageButton, PassageLinkButton } from "@/components/passages/passage-button";
 import { PassageCompletion } from "@/components/passages/passage-completion";
 import { PassageControls } from "@/components/passages/passage-controls";
+import { PassageExam } from "@/components/passages/passage-exam";
 import { PassageListenStage } from "@/components/passages/passage-listen-stage";
 import { PassageQuestionDock } from "@/components/passages/passage-question-dock";
 import type { PassageAnswer } from "@/components/passages/passage-question-dock";
@@ -39,8 +40,9 @@ import { cn } from "@/lib/utils";
  * The passage reader. A part has two moments: first the TEXT — set as a page, so
  * the whole part fits one screen, read aloud with the speaking sentence lit — and
  * only when the learner has read it and presses "Check yourself" the QUESTION,
- * which rises over the text as a card. After the last part come the score and the
- * passage's words, on one screen. Nothing is typed here: this is the
+ * which rises over the text as a card. After the last part comes the full exam
+ * (five new questions beside the whole text, see PassageExam) when the passage
+ * has one, and then the score and the passage's words, on one screen. Nothing is typed here: this is the
  * comprehension counterpart to the typing lessons.
  *
  * Listen-only hides the text during the first moment (the learner has to
@@ -51,6 +53,8 @@ import { cn } from "@/lib/utils";
 
 export interface PassageReaderProps {
   passage: Passage;
+  /** The full exam asked after the last part: five new questions about the whole text. Empty when the passage has none, or the exam is not open to this viewer; the end screen then follows the last part directly. */
+  exam?: PassageQuestion[];
   /** The part to open on — the first unfinished one for a passage in progress, else 0. */
   initialSectionIndex: number;
   /** Arabic translations exist, and this learner's support language is Arabic. */
@@ -69,8 +73,12 @@ export interface PassageReaderProps {
 
 type Phase = "read" | "check";
 
+/** One empty list for "no exam", so the default never looks like a new value to the hooks that depend on it. */
+const NO_EXAM: PassageQuestion[] = [];
+
 export function PassageReader({
   passage,
+  exam = NO_EXAM,
   initialSectionIndex,
   translationAvailable,
   nextPassage,
@@ -91,6 +99,8 @@ export function PassageReader({
   const [phase, setPhase] = useState<Phase>("read");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [complete, setComplete] = useState(false);
+  /** The last part is done and the full exam is on screen (between the parts and the end screen). */
+  const [examOpen, setExamOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<string, PassageAnswer>>({});
   /** The questions already answered this visit (read at once, unlike `answers`, which a second key could beat) — so a right answer chimes once. */
   const answeredRef = useRef<Set<string>>(new Set());
@@ -138,8 +148,9 @@ export function PassageReader({
   );
 
   const allQuestions = useMemo(
-    () => passage.sections.flatMap((candidate) => candidate.questions),
-    [passage.sections],
+    // The exam's questions count in the final score like any other.
+    () => [...passage.sections.flatMap((candidate) => candidate.questions), ...exam],
+    [exam, passage.sections],
   );
   const answeredCount = Object.keys(answers).length;
   const correctCount = Object.values(answers).filter((answer) => answer.correct).length;
@@ -164,13 +175,18 @@ export function PassageReader({
   );
 
   const saveProgress = useCallback(
-    async (sectionsDone: number, completed: boolean) => {
+    async (
+      sectionsDone: number,
+      completed: boolean,
+      // The score to save when it is not in this render's state yet (the exam's answers arrive all at once).
+      score: { correct: number; total: number } = { correct: correctCount, total: answeredCount },
+    ) => {
       if (!userId) return;
       const payload = {
         passageId: passage.id,
         sectionsDone,
-        correct: correctCount,
-        total: answeredCount,
+        correct: score.correct,
+        total: score.total,
         completed,
         // The learner's own date: the streak and the daily quest are keyed on it.
         todayISO: todayLocalISODate(),
@@ -221,10 +237,29 @@ export function PassageReader({
     const isLast = sectionIndex >= sectionCount - 1;
     void saveProgress(sectionIndex + 1, isLast);
     resetPart();
-    if (isLast) setComplete(true);
+    // The passage is saved as finished here, exam or not: leaving during the exam costs nothing.
+    if (isLast && exam.length > 0) setExamOpen(true);
+    else if (isLast) setComplete(true);
     else setSectionIndex((current) => current + 1);
     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-  }, [reducedMotion, resetPart, saveProgress, sectionCount, sectionIndex]);
+  }, [exam.length, reducedMotion, resetPart, saveProgress, sectionCount, sectionIndex]);
+
+  /** The exam is checked and "Continue" pressed: its answers join the others, and the end screen opens. */
+  const finishExam = useCallback(
+    (examAnswers: Record<string, PassageAnswer>) => {
+      const merged = { ...answers, ...examAnswers };
+      setAnswers(merged);
+      setExamOpen(false);
+      setComplete(true);
+      const results = Object.values(merged);
+      void saveProgress(sectionCount, true, {
+        correct: results.filter((answer) => answer.correct).length,
+        total: results.length,
+      });
+      window.scrollTo({ top: 0 });
+    },
+    [answers, saveProgress, sectionCount],
+  );
 
   /** "Check yourself": the text is read, the question rises. A part with no question simply moves on. */
   const handleCheck = useCallback(() => {
@@ -280,6 +315,7 @@ export function PassageReader({
     answeredRef.current.clear();
     setAnswers({});
     setComplete(false);
+    setExamOpen(false);
     setSectionIndex(0);
     setSaveFailed(false);
     setRewards({ quests: [], badges: [] });
@@ -316,7 +352,7 @@ export function PassageReader({
   // provider answers a lone Shift press with whatever is registered): here the part is read again
   // from its first sentence. Only while the text or the stage is on screen, not under a question.
   const { registerReplay } = usePronunciationSettings();
-  const shiftReplayEnabled = phase === "read" && !complete && audio.hasAudio;
+  const shiftReplayEnabled = phase === "read" && !complete && !examOpen && audio.hasAudio;
   useEffect(() => {
     if (!shiftReplayEnabled) return;
     return registerReplay(playAll);
@@ -324,11 +360,11 @@ export function PassageReader({
 
   // Enter does what the Check button does — the same shortcut the other check-then-continue screens
   // have (a focused button or sentence keeps its own Enter, and the tips card is not in the way).
-  useEnterToContinue(phase === "read" && !complete && !showTips, handleCheck);
+  useEnterToContinue(phase === "read" && !complete && !examOpen && !showTips, handleCheck);
 
   // When the question card appears, make sure it is not sitting on the text: if the text runs
   // under it, the page scrolls just far enough to lift the text clear (the page keeps room for it).
-  const checkingNow = phase === "check" && !complete;
+  const checkingNow = phase === "check" && !complete && !examOpen;
 
   // Keep the page's bottom room as tall as the card is (it grows with a fourth choice or the
   // translation), so the text can always be scrolled fully clear of it. The observer reports the
@@ -393,7 +429,7 @@ export function PassageReader({
 
   const readingThrough = audio.readingThrough && audio.activeIndex !== null;
   const readingActive = readingThrough && !audio.paused;
-  const checking = phase === "check" && !complete;
+  const checking = phase === "check" && !complete && !examOpen;
   // The question is open and not yet answered: the text is blurred, so the answer comes from memory.
   // (Listen-only already has no text on screen, so there is nothing to blur there.)
   const recalling = checking && Boolean(activeQuestion) && !answers[activeQuestion?.id ?? ""];
@@ -410,6 +446,8 @@ export function PassageReader({
           <div className="flex-1" />
           {!complete && (
             <PassageControls
+              // The exam is read, not listened to: only the translation switch means something there.
+              examOnly={examOpen}
               audioAvailable={audio.hasAudio}
               // What the part looks like, not what is stored: after "Show the text" the switch reads off.
               listenOnly={listenOnlyActive}
@@ -425,14 +463,26 @@ export function PassageReader({
         </div>
         <ProgressSegments
           total={sectionCount}
-          current={complete ? sectionCount : sectionIndex}
+          current={complete || examOpen ? sectionCount : sectionIndex}
           currentAnswered={
             !complete && section.questions.every((question) => Boolean(answers[question.id]))
           }
         />
       </header>
 
+      {examOpen && !complete && (
+        <PassageExam
+          passage={passage}
+          questions={exam}
+          translationAvailable={translationAvailable}
+          showTranslation={showTranslation}
+          playCorrect={playCorrect}
+          onContinue={finishExam}
+        />
+      )}
+
       <main
+        hidden={examOpen && !complete}
         className={cn(
           "mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-10",
           // Room under the text for the question card, so nothing is ever stuck behind it (the
@@ -594,7 +644,7 @@ export function PassageReader({
       )}
 
       {/* A quest or badge the part just earned. On the end screen the same lines are in the result card. */}
-      {notice && !complete && (
+      {notice && !complete && !examOpen && (
         <motion.div
           role="status"
           initial={reducedMotion ? false : { opacity: 0, y: -14, scale: 0.96 }}

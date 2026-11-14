@@ -1866,6 +1866,22 @@ export interface Dictionary {
     checkYourself: string;
     /** Under an open question, while the text is blurred: why it is out of focus (the learner answers from memory). */
     recallHint: string;
+    /** The full exam after the last part (the passageExam permission): its label, the line under it, the two phone tabs, the answered count, the button that reveals the answers and its hint, the score and the three result lines, and the small per-question translate link. */
+    examEyebrow: string;
+    examIntro: string;
+    examTabText: string;
+    examTabQuestions: string;
+    examAnswered: string;
+    examCheck: string;
+    examAnswerAll: string;
+    examChecking: string;
+    examScore: string;
+    examResultPerfect: string;
+    examResultGood: string;
+    examResultLow: string;
+    examContinue: string;
+    examTranslate: string;
+    examLevel: string;
     /** "Question {n} of {total}" — only shown when a part asks more than one. */
     questionOf: string;
     audioMissing: string;

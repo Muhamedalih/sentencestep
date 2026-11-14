@@ -52,6 +52,7 @@ function ToolbarSwitch({
 }
 
 export function PassageControls({
+  examOnly = false,
   audioAvailable,
   listenOnly,
   listenOnlyLocked = false,
@@ -62,6 +63,8 @@ export function PassageControls({
   translation,
   onToggleTranslation,
 }: {
+  /** The full exam is on screen: nothing is read aloud there, so only the translation switch stays. */
+  examOnly?: boolean;
   /** The current part has a clip for every sentence. */
   audioAvailable: boolean;
   /** What this part looks like right now: true while the text is hidden. */
@@ -77,29 +80,35 @@ export function PassageControls({
 }) {
   const { t } = useLocale();
 
+  if (examOnly && !translationAvailable) return null;
+
   return (
     <div className="bg-foreground/[0.06] flex items-center gap-0.5 rounded-2xl p-1">
-      <ToolbarSwitch
-        active={listenOnly && audioAvailable}
-        disabled={!audioAvailable || listenOnlyLocked}
-        label={t.passages.listenOnly}
-        title={audioAvailable ? undefined : t.passages.audioMissing}
-        onClick={onToggleListenOnly}
-      >
-        <Headphones className="size-4" aria-hidden="true" />
-        <span className="hidden md:inline">{t.passages.listenOnly}</span>
-      </ToolbarSwitch>
+      {!examOnly && (
+        <ToolbarSwitch
+          active={listenOnly && audioAvailable}
+          disabled={!audioAvailable || listenOnlyLocked}
+          label={t.passages.listenOnly}
+          title={audioAvailable ? undefined : t.passages.audioMissing}
+          onClick={onToggleListenOnly}
+        >
+          <Headphones className="size-4" aria-hidden="true" />
+          <span className="hidden md:inline">{t.passages.listenOnly}</span>
+        </ToolbarSwitch>
+      )}
 
-      <ToolbarSwitch
-        disabled={!audioAvailable}
-        label={`${t.passages.speed}: ${formatPlaybackRate(rate)}`}
-        onClick={onCycleRate}
-      >
-        <Gauge className="size-4" aria-hidden="true" />
-        <span className="min-w-[2.25rem] text-start tabular-nums" dir="ltr">
-          {formatPlaybackRate(rate)}
-        </span>
-      </ToolbarSwitch>
+      {!examOnly && (
+        <ToolbarSwitch
+          disabled={!audioAvailable}
+          label={`${t.passages.speed}: ${formatPlaybackRate(rate)}`}
+          onClick={onCycleRate}
+        >
+          <Gauge className="size-4" aria-hidden="true" />
+          <span className="min-w-[2.25rem] text-start tabular-nums" dir="ltr">
+            {formatPlaybackRate(rate)}
+          </span>
+        </ToolbarSwitch>
+      )}
 
       {translationAvailable && (
         <ToolbarSwitch
