@@ -49,6 +49,7 @@ export const ROLLOUT_IDS = [
   "wordsMap",
   "faceRatings",
   "videoSilence",
+  "passageExam",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -538,6 +539,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The wave is a drawing, not a reading of the video's sound: the YouTube player does not let the page hear its audio. Its height follows how close the speech is, with a gentle natural wobble.",
       "Nothing is stored or sent: it is drawn in the learner's browser from the playhead time the page already reads, so there is no extra load.",
       "A learner who has reduced motion switched on sees a still, low wave instead of a moving one.",
+    ],
+  },
+  passageExam: {
+    id: "passageExam",
+    audience: "learner",
+    title: "Passages: the full exam at the end of a passage",
+    description:
+      "After the last part of a passage, one more screen before the result: the whole text from its first word to its last on one side (medium type, its key words in bold) and five new questions on the other, each side scrolling on its own. Three questions are multiple choice and two are true / false. The learner picks all five answers freely, presses one button, and the answers are checked one after another with an animation and a score; “Continue” then opens the usual end screen (score, words, next passage), whose score now counts the exam too.",
+    notes: [
+      "The five questions are new: none repeats a part’s own question or the closing question (a test enforces it for all 53 passages).",
+      "The questions live in the code (src/data/passages/exams) and are read on the server, so the exam adds no database reads; the only traffic is one small progress save when the learner continues.",
+      "The passage is saved as finished after its last part, exactly as before, so a learner who leaves during the exam loses nothing.",
+      "On a phone the text and the questions are two tabs instead of two columns.",
     ],
   },
   mobilePath: {
