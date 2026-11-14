@@ -625,21 +625,27 @@ export function PassageExam({
                           .replace("{total}", String(total))}
                       </bdi>
                     </span>
-                    <span className="text-muted-foreground max-sm:hidden"> · {resultLine}</span>
+                    <span className="text-muted-foreground max-sm:hidden">
+                      {" · "}
+                      <bdi>{resultLine}</bdi>
+                    </span>
                   </>
                 ) : checking ? (
                   <bdi className="text-muted-foreground">{t.passages.examChecking}</bdi>
                 ) : (
                   <span className="text-muted-foreground">
                     <bdi>
-                      {allAnswered
-                        ? t.passages.examAnswered
-                            .replace("{n}", String(answeredCount))
-                            .replace("{total}", String(total))
-                        : `${t.passages.examAnswered
-                            .replace("{n}", String(answeredCount))
-                            .replace("{total}", String(total))} · ${t.passages.examAnswerAll}`}
+                      {t.passages.examAnswered
+                        .replace("{n}", String(answeredCount))
+                        .replace("{total}", String(total))}
                     </bdi>
+                    {/* The hint needs room: a phone shows the count alone (its button is visibly off). */}
+                    {!allAnswered && (
+                      <span className="max-sm:hidden">
+                        {" · "}
+                        <bdi>{t.passages.examAnswerAll}</bdi>
+                      </span>
+                    )}
                   </span>
                 )}
               </p>
