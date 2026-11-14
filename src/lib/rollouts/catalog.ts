@@ -48,6 +48,7 @@ export const ROLLOUT_IDS = [
   "wordsSplit",
   "wordsMap",
   "faceRatings",
+  "videoSilence",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -525,6 +526,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The public reviews on the start page and the average quoted on the plans page stay as they are: they show what other learners gave, they are not a place to rate.",
       "Needs no new reads or writes and no migration.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page; without it every rating keeps its five stars.",
+    ],
+  },
+  videoSilence: {
+    id: "videoSilence",
+    audience: "learner",
+    title: "Video: a quiet wave while the speaker is silent",
+    description:
+      "In a video lesson, when the next sentence is a second or more away (the speakers are silent, or only music plays), the sentence is hidden and a soft wave of thin bars plays in its place: calm at first, and rising a little as the speech comes close. At the exact moment the speaker starts the sentence the wave fades and the sentence appears, never before. A pause shorter than a second, a replay and every typing moment look exactly as before.",
+    notes: [
+      "The wave is a drawing, not a reading of the video's sound: the YouTube player does not let the page hear its audio. Its height follows how close the speech is, with a gentle natural wobble.",
+      "Nothing is stored or sent: it is drawn in the learner's browser from the playhead time the page already reads, so there is no extra load.",
+      "A learner who has reduced motion switched on sees a still, low wave instead of a moving one.",
     ],
   },
   mobilePath: {

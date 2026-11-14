@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { watchUrl } from "@/lib/video-dictation/content";
 import {
   isSameVideo,
+  isSilentGap,
   nextLead,
   nextRate,
   POLL_MS,
@@ -56,6 +57,7 @@ import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
 import { useYouTubePlayer, type PlayerControls } from "./use-youtube-player";
 import { VideoFinishRecorder } from "./video-finish-recorder";
 import { VideoFinishScreen } from "./video-finish-screen";
+import { SilenceWave } from "./silence-wave";
 import { VideoRatingPrompt } from "./video-rating-prompt";
 import { VideoStopsEditor } from "./video-stops-editor";
 import { PLAYER_STATE } from "./youtube-api";
@@ -91,6 +93,7 @@ export function VideoSession({
   nextLessonTitle = null,
   newFinish = false,
   canEditStops = false,
+  silenceWave = false,
 }: {
   lesson: VideoLesson;
   nextLessonId: string | null;
@@ -100,6 +103,8 @@ export function VideoSession({
   newFinish?: boolean;
   /** An Admin can move where each sentence starts and where the video stops (see VideoStopsEditor). */
   canEditStops?: boolean;
+  /** The "videoSilence" permission: a quiet wave stands in for the sentence while the speakers are silent. */
+  silenceWave?: boolean;
 }) {
   const { locale } = useLocale();
   const strings = videoStrings(locale);
@@ -112,6 +117,8 @@ export function VideoSession({
   const [rate, setRate] = useState(1);
   const [hideWords, setHideWords] = useState(false);
   const [adPlaying, setAdPlaying] = useState(false);
+  // True while the next sentence is a second or more away and the video plays on: the wave shows, the sentence waits.
+  const [quiet, setQuiet] = useState(false);
   const [needsTap, setNeedsTap] = useState(false);
   const [focusTick, setFocusTick] = useState(0);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -152,9 +159,12 @@ export function VideoSession({
 
   /** Reads the playhead until it reaches the end of the sentence, then pauses the video and hands over to typing. */
   const startPolling = useCallback(
-    (endSeconds: number) => {
+    (endSeconds: number, startSeconds: number) => {
       stopPolling();
+      setQuiet(false);
       let sawBefore = false;
+      // Decided once, at the first reading: a wait of a second or more before the first word is a silence.
+      let silent: boolean | null = null;
       pollRef.current = window.setInterval(() => {
         const player = controlsRef.current;
         if (!player) return;
@@ -163,17 +173,23 @@ export function VideoSession({
           return;
         }
         setAdPlaying(false);
-        const tick = segmentTick(sawBefore, player.getTime(), endSeconds - leadRef.current);
+        const time = player.getTime();
+        if (silenceWave) {
+          if (silent === null) silent = isSilentGap(startSeconds, time);
+          setQuiet(silent && time < startSeconds);
+        }
+        const tick = segmentTick(sawBefore, time, endSeconds - leadRef.current);
         sawBefore = tick.sawBefore;
         if (!tick.stop) return;
         stopPolling();
         stopEndRef.current = endSeconds;
         player.pause();
+        setQuiet(false);
         move({ phase: "typing" });
         setFocusTick((n) => n + 1);
       }, POLL_MS);
     },
-    [lesson.durationSeconds, move, stopPolling],
+    [lesson.durationSeconds, move, silenceWave, stopPolling],
   );
 
   const replay = useCallback(() => {
@@ -186,7 +202,7 @@ export function VideoSession({
     player.seekTo(replayPosition(sentence.startSeconds));
     player.play();
     move({ phase: "listening" });
-    startPolling(sentence.endSeconds);
+    startPolling(sentence.endSeconds, sentence.startSeconds);
   }, [move, sentences, startPolling, stopPolling]);
 
   /** The Admin's "Test": plays one sentence from its replay start to its stop with the times as they are now. */
@@ -200,7 +216,7 @@ export function VideoSession({
       move({ index: at, phase: "listening" });
       player.seekTo(replayPosition(target.startSeconds));
       player.play();
-      startPolling(target.endSeconds);
+      startPolling(target.endSeconds, target.startSeconds);
     },
     [move, sentences, startPolling, stopPolling],
   );
@@ -223,6 +239,7 @@ export function VideoSession({
         if (!player || !isSameVideo(player.getDuration(), lesson.durationSeconds)) return;
         stopPolling();
         stopEndRef.current = null;
+        setQuiet(false);
         move({ phase: "typing" });
         setFocusTick((n) => n + 1);
         return;
@@ -232,7 +249,7 @@ export function VideoSession({
       const sentence = sentences[at];
       if (current === "armed" && sentence) {
         move({ phase: "listening" });
-        startPolling(sentence.endSeconds);
+        startPolling(sentence.endSeconds, sentence.startSeconds);
         // Started with the mouse on YouTube's own button: the keyboard belongs to the sentence again.
         setFocusTick((n) => n + 1);
       } else if (current === "typing") {
@@ -343,7 +360,7 @@ export function VideoSession({
           setNeedsTap(true);
       }, 1200);
     }
-    startPolling(sentence.endSeconds);
+    startPolling(sentence.endSeconds, sentence.startSeconds);
   }, [move, sentences, startPolling, stopPolling]);
 
   const handleKeystroke = useCallback((correct: boolean) => {
@@ -363,6 +380,13 @@ export function VideoSession({
   };
 
   const sentence = sentences[index];
+  const reducedMotion = useReducedMotion() ?? false;
+  // How far the playhead is from the first word of the sentence, read by the wave on every frame.
+  const secondsToSpeech = useCallback(() => {
+    const start = sentences[live.current.index]?.startSeconds;
+    const time = controlsRef.current?.getTime();
+    return start === undefined || time === undefined ? Infinity : start - time;
+  }, [sentences]);
   const progress = phase === "done" ? 100 : (index / Math.max(1, sentences.length)) * 100;
 
   if (failure) {
@@ -528,16 +552,50 @@ export function VideoSession({
                     </p>
                   )}
                 </div>
-                <SentenceTyper
-                  key={sentence.id}
-                  sentence={sentence}
-                  hideWords={hideWords}
-                  dim={phase === "armed"}
-                  focusTick={focusTick}
-                  onKeystroke={handleKeystroke}
-                  onMistakeWord={handleMistakeWord}
-                  onComplete={handleSentenceDone}
-                />
+                <div className="relative">
+                  {/* While the speakers are silent the sentence keeps its place (so nothing jumps) but is not seen. */}
+                  <div
+                    className={cn(
+                      "transition-opacity",
+                      quiet
+                        ? "pointer-events-none opacity-0 duration-300 select-none"
+                        : "opacity-100 duration-150",
+                    )}
+                    aria-hidden={quiet || undefined}
+                  >
+                    <SentenceTyper
+                      key={sentence.id}
+                      sentence={sentence}
+                      hideWords={hideWords}
+                      dim={phase === "armed"}
+                      focusTick={focusTick}
+                      onKeystroke={handleKeystroke}
+                      onMistakeWord={handleMistakeWord}
+                      onComplete={handleSentenceDone}
+                    />
+                  </div>
+                  {silenceWave && (
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity",
+                        quiet ? "opacity-100 duration-500" : "opacity-0 duration-150",
+                      )}
+                      aria-hidden="true"
+                    >
+                      {quiet && (
+                        <>
+                          <SilenceWave
+                            secondsToSpeech={secondsToSpeech}
+                            reducedMotion={reducedMotion}
+                          />
+                          <span className="text-muted-foreground text-[13px]" dir="auto">
+                            {strings.listeningHint}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="lg:hidden">
                   {phase === "listening" && !needsTap && !adPlaying && index > 0 && (
                     <p className="text-muted-foreground mt-3 text-center text-[13px]" dir="auto">

@@ -212,6 +212,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     wordsSplit: false,
     wordsMap: false,
     faceRatings: false,
+    videoSilence: false,
   });
 });
 
