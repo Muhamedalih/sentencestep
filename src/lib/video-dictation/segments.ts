@@ -68,3 +68,25 @@ export function isSameVideo(playerDuration: number, expectedDuration: number): b
   if (!Number.isFinite(playerDuration) || playerDuration <= 0) return false;
   return Math.abs(playerDuration - expectedDuration) <= SAME_VIDEO_TOLERANCE_SECONDS;
 }
+
+/** A wait this long (or longer) before a sentence's first word is a silence: the sentence is hidden and a wave plays. */
+export const SILENCE_MIN_SECONDS = 1;
+
+/** The wave starts to rise this long before the speech, so it feels like the sound is coming. */
+const WAVE_RISE_SECONDS = 1.4;
+
+/** Whether the wait from `fromSeconds` to the sentence's start is long enough to be a silence. */
+export function isSilentGap(startSeconds: number, fromSeconds: number): boolean {
+  const gap = startSeconds - fromSeconds;
+  return Number.isFinite(gap) && gap >= SILENCE_MIN_SECONDS;
+}
+
+/**
+ * How high the wave stands, 0 to 1: a low calm level that rises smoothly as the speech comes near, so the
+ * bars lean forward just before the first word. `secondsToSpeech` is the playhead's distance from the start.
+ */
+export function waveLevel(secondsToSpeech: number): number {
+  const near = 1 - Math.min(1, Math.max(0, secondsToSpeech / WAVE_RISE_SECONDS));
+  const eased = near * near * (3 - 2 * near);
+  return 0.28 + 0.52 * eased;
+}

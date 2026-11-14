@@ -35,7 +35,9 @@ import {
   MAX_LEAD_SECONDS,
   nextLead,
   nextRate,
+  isSilentGap,
   replayPosition,
+  waveLevel,
   segmentTick,
   START_LEAD_SECONDS,
 } from "./segments";
@@ -714,4 +716,20 @@ test("finish screen: a word's meaning comes from its own sentence, and the words
   assert.equal(meaningInSentence(second, "looks"), "يبدو");
   assert.equal(meaningInSentence(second, "absent"), "");
   assert.equal(wordsInVideo(gibbons.sentences), 53);
+});
+
+test("a wait of a second or more before the first word is a silence", () => {
+  assert.equal(isSilentGap(10, 9), true);
+  assert.equal(isSilentGap(10, 8), true);
+  assert.equal(isSilentGap(10, 9.2), false);
+  assert.equal(isSilentGap(10, 9.8), false);
+  assert.equal(isSilentGap(10, 10.5), false);
+  assert.equal(isSilentGap(10, Number.NaN), false);
+});
+
+test("the wave rises smoothly as the speech comes near and stays in range", () => {
+  assert.equal(waveLevel(10), waveLevel(2));
+  assert.ok(waveLevel(0) > waveLevel(0.7));
+  assert.ok(waveLevel(0.7) > waveLevel(1.4));
+  assert.ok(waveLevel(-1) <= 1 && waveLevel(Infinity) > 0);
 });

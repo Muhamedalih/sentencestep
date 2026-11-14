@@ -29,6 +29,8 @@ export interface VideoStrings {
   continueNow: string;
   resumingSoon: string;
   adPlaying: string;
+  /** Under the quiet wave while the speakers are silent. */
+  listeningHint: string;
   /** "{n}" of "{total}". */
   progress: string;
   finishTitle: string;
@@ -133,6 +135,7 @@ const ar: VideoStrings = {
   continueNow: "كمّل الآن",
   resumingSoon: "يكمل الفيديو بعد لحظة…",
   adPlaying: "إعلان من يوتيوب… يكمل الفيديو بعده",
+  listeningHint: "استمع…",
   progress: "{n} / {total}",
   finishTitle: "أنهيت الفيديو",
   accuracyLine: "دقة الكتابة {percent}% · {count} جمل",
