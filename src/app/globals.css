@@ -991,3 +991,39 @@ html[data-keyboard] .kb-hide {
     animation: none;
   }
 }
+
+/*
+ * The calm look (permission "homeCalm"; the numbers are the mock-up's, see reports/home-proposal.html).
+ * The dashboard shell carries data-calm: in the dark theme the page is a deep blue-black and the side
+ * menu a shade darker (no line between them); the light theme keeps its own page and gets a very light
+ * grey menu. On Home (data-calm-home) a card no longer rises or presses in under the pointer or the
+ * keyboard focus: only the picture inside it moves (the rules above for .hc-peek, .hc-tilt-*, .hc-type,
+ * .hc-play, .hc-go, .hc-wave and .hc-fan are left as they are).
+ */
+.app-shell[data-calm] {
+  --calm-sidebar: oklch(0.965 0.004 260);
+}
+.dark .app-shell[data-calm] {
+  --background: #0d121b;
+  --calm-sidebar: #090c13;
+}
+/* The page on the story card sits tilted and straightens under the pointer, like the sheets of the other cards. */
+.hc-tilt-p {
+  transform: rotate(-6deg);
+  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hc-card:hover .hc-tilt-p,
+.hc-card:has(:focus-visible) .hc-tilt-p {
+  transform: rotate(0deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hc-tilt-p {
+    transition: none;
+  }
+}
+[data-calm-home] .hc-card:hover,
+[data-calm-home] .hc-card:has(:focus-visible),
+[data-calm-home] .hc-card:active {
+  transform: none;
+  box-shadow: none;
+}

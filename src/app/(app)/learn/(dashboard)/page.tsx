@@ -434,6 +434,7 @@ export default async function LearnHomePage({
           videosFinished={videosFinished}
           wordHints={wordHints}
           wordsBank={wordsBank}
+          calm={features.rollouts.homeCalm}
         />
       </ProgressProvider>
     );
