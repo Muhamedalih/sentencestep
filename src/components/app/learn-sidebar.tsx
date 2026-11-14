@@ -289,8 +289,7 @@ export function LearnSidebar({
       className={cn(
         "border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-md",
         "md:bg-background/80 md:sticky md:top-16 md:bottom-auto md:h-[calc(100svh-4rem)] md:w-56 md:border-t-0 md:border-r",
-        calm &&
-          "md:top-0 md:h-svh md:w-[15.5rem] md:border-r-0 md:bg-(--calm-sidebar) md:backdrop-blur-none",
+        calm && "md:top-0 md:h-svh md:w-[15.5rem] md:border-r-0",
       )}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >

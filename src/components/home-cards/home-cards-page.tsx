@@ -84,7 +84,7 @@ export function HomeCardsPage({
       data-calm-home={calm ? "" : undefined}
     >
       {banners}
-      <HomeEngagementSection stream={engagement} quiet cards className="hc-rise" />
+      <HomeEngagementSection stream={engagement} quiet cards calm={calm} className="hc-rise" />
       {!calm && (
         <div className="mt-4 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <h2 className="text-lg font-semibold tracking-tight">{heading}</h2>
@@ -92,10 +92,7 @@ export function HomeCardsPage({
         </div>
       )}
       <div
-        className={cn(
-          "grid gap-4 lg:grid-cols-[minmax(0,1fr)_20.75rem]",
-          calm && "mt-[26px] gap-x-5 gap-y-4 lg:grid-cols-[minmax(0,1fr)_20.125rem]",
-        )}
+        className={cn("grid gap-4 lg:grid-cols-[minmax(0,1fr)_20.75rem]", calm && "mt-5 gap-y-4")}
       >
         <ContinueCard
           units={units}
@@ -110,7 +107,7 @@ export function HomeCardsPage({
           videosFinished={videosFinished}
         />
       </div>
-      <div className={cn("mt-4 flex flex-wrap gap-4 empty:hidden", calm && "mt-5 gap-5")}>
+      <div className="mt-4 flex flex-wrap gap-4 empty:hidden">
         <Suspense
           fallback={
             <CardSkeleton feature="passages" className="min-h-[13.75rem] flex-1 basis-[20rem]" />

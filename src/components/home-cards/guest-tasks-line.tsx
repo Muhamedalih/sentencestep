@@ -7,7 +7,6 @@ import { Target } from "lucide-react";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 import { HOME_CARD_COLORS, TASKS } from "./palette";
 
@@ -19,22 +18,14 @@ import { HOME_CARD_COLORS, TASKS } from "./palette";
  * guestTeaser: a guest, with a feature that needs an account open).
  */
 export function GuestTasksLine() {
-  const { guestTeaser, rollouts } = useFeatures();
+  const { guestTeaser } = useFeatures();
   const { t } = useLocale();
   if (!guestTeaser) return null;
   const colors = HOME_CARD_COLORS.lesson;
   return (
     <div
-      className={cn(
-        "flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-(--hc-edge) px-3.5 py-3 xl:h-[4.4rem] xl:py-0 xl:pe-4",
-        rollouts.homeCalm && "px-0 xl:pe-0",
-      )}
-      style={
-        {
-          background: rollouts.homeCalm ? "transparent" : colors.background,
-          "--hc-edge": rollouts.homeCalm ? "transparent" : colors.edge,
-        } as CSSProperties
-      }
+      className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-(--hc-edge) px-3.5 py-3 xl:h-[4.4rem] xl:py-0 xl:pe-4"
+      style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
     >
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
         <span

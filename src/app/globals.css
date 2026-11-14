@@ -993,31 +993,41 @@ html[data-keyboard] .kb-hide {
 }
 
 /*
- * The calm look (permission "homeCalm"; the numbers are the mock-up's, see reports/home-proposal.html).
- * The dashboard shell carries data-calm: in the dark theme the page is a deep blue-black and the side
- * menu a shade darker (no line between them); the light theme keeps its own page and gets a very light
- * grey menu. On Home (data-calm-home) a card no longer rises or presses in under the pointer or the
- * keyboard focus: only the picture inside it moves (the rules above for .hc-peek, .hc-tilt-*, .hc-type,
+ * The calm look (permission "homeCalm"). The dashboard shell carries data-calm (the layout, the top bar
+ * and the side menu read it); the colours of the page and of the cards are NOT changed by it. On Home
+ * (data-calm-home) a card no longer rises or presses in under the pointer or the keyboard focus: only
+ * the picture inside it moves (the rules above for .hc-peek, .hc-tilt-*, .hc-type,
  * .hc-play, .hc-go, .hc-wave and .hc-fan are left as they are).
  */
-.app-shell[data-calm] {
-  --calm-sidebar: oklch(0.965 0.004 260);
+/* The daily-tasks capsule: its wash fills from the start when it is first drawn, and the step in progress breathes. */
+@keyframes tk-wash {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
 }
-.dark .app-shell[data-calm] {
-  --background: #0d121b;
-  --calm-sidebar: #090c13;
+.tk-wash {
+  animation: tk-wash 900ms cubic-bezier(0.3, 0.7, 0.2, 1) 200ms backwards;
+  transition: width 700ms cubic-bezier(0.3, 0.7, 0.2, 1);
 }
-/* The page on the story card sits tilted and straightens under the pointer, like the sheets of the other cards. */
-.hc-tilt-p {
-  transform: rotate(-6deg);
-  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+@keyframes tk-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(124, 131, 240, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(124, 131, 240, 0.03);
+  }
 }
-.hc-card:hover .hc-tilt-p,
-.hc-card:has(:focus-visible) .hc-tilt-p {
-  transform: rotate(0deg);
+.tk-breathe {
+  animation: tk-breathe 2.6s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .hc-tilt-p {
+  .tk-wash,
+  .tk-breathe {
+    animation: none;
     transition: none;
   }
 }

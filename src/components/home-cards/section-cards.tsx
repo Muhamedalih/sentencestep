@@ -1,13 +1,12 @@
 "use client";
 
 import { HomeVideoNew } from "@/components/app/home-video-new";
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { PassagesHomeData } from "@/lib/passages/home-card";
 import type { VideoCardData } from "@/lib/video-dictation/content";
 
 import { CategoryCard } from "./category-card";
-import { CALM, CALM_COLORS, HOME_CARD_COLORS } from "./palette";
+import { HOME_CARD_COLORS } from "./palette";
 import { homeCardsStrings } from "./strings";
 import { YouTubeTag } from "./youtube-mark";
 
@@ -16,12 +15,9 @@ export function PassagesSectionCard({ data, index }: { data: PassagesHomeData; i
   const { t, locale } = useLocale();
   const s = homeCardsStrings(locale);
   const { passage } = data;
-  // The calm look (permission "homeCalm"): Passages is a deep blue.
-  const calm = useFeatures().rollouts.homeCalm;
   return (
     <CategoryCard
-      calm={calm ? CALM.passages : undefined}
-      colors={calm ? CALM_COLORS.passages : HOME_CARD_COLORS.passages}
+      colors={HOME_CARD_COLORS.passages}
       art="sheet"
       kind={s.passagesKind}
       title={t.nav.passages}
@@ -50,12 +46,9 @@ export function VideoSectionCard({
 }) {
   const { locale } = useLocale();
   const s = homeCardsStrings(locale);
-  // The calm look (permission "homeCalm"): Video is a deep teal.
-  const calm = useFeatures().rollouts.homeCalm;
   return (
     <CategoryCard
-      calm={calm ? CALM.video : undefined}
-      colors={calm ? CALM_COLORS.video : HOME_CARD_COLORS.video}
+      colors={HOME_CARD_COLORS.video}
       art="frame"
       kind={s.videoKind}
       title={heading}
