@@ -1,5 +1,20 @@
 import { cn } from "@/lib/utils";
 
+/**
+ * The mark: three word-shaped bars climbing like stairs — a sentence built
+ * one word, one step at a time. Same geometry as public/favicon.svg and the
+ * public/icon-*.png app icons (there it sits light on an ink tile).
+ */
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true" className={className}>
+      <rect x="5" y="33" width="17" height="7.5" rx="3.75" />
+      <rect x="15.5" y="20.25" width="17" height="7.5" rx="3.75" />
+      <rect x="26" y="7.5" width="17" height="7.5" rx="3.75" />
+    </svg>
+  );
+}
+
 export function Logo({
   className,
   size = "default",
@@ -16,19 +31,15 @@ export function Logo({
         className,
       )}
     >
-      <span
+      <LogoMark
         className={cn(
-          // Fixed to the PWA/favicon icon's own colors (public/favicon.svg,
-          // public/icon-*.png: #4F3FE0 on #F5F4FF) rather than the
-          // theme-driven --primary token, so the in-app mark reads as the
-          // exact same brand color as the installed app icon in both light
-          // and dark mode instead of two different shades of it.
-          "flex items-center justify-center rounded-md bg-[#4F3FE0] font-bold text-[#F5F4FF]",
-          size === "sm" ? "size-[22px] text-[14px]" : "size-6.5 text-sm",
+          // Fixed to the app icon's own ink (#2F2A7A, light #ECEAFB on dark
+          // themes) rather than the theme-driven --primary token, so the
+          // in-app mark reads as the same brand color as the installed icon.
+          "shrink-0 text-[#2F2A7A] dark:text-[#ECEAFB]",
+          size === "sm" ? "size-[22px]" : "size-6.5",
         )}
-      >
-        S
-      </span>
+      />
       <span>SentenceStep</span>
     </span>
   );
