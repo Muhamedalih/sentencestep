@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Check, ChevronDown, RotateCcw, Snowflake, Target } from "lucide-react";
 
 import { RepeatLessonMenu, WeekDots } from "@/components/app/engagement-strip";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   ICONS,
@@ -20,7 +21,7 @@ import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
-import { HOME_CARD_COLORS, TASKS } from "./palette";
+import { CALM_COLORS, HOME_CARD_COLORS, TASKS } from "./palette";
 
 type RowState = "done" | "current" | "idle";
 
@@ -30,12 +31,12 @@ function halo(state: RowState): string | undefined {
 }
 
 /** A thin vertical line between the steps and the week (from xl up, like the strip it replaces). */
-function Divider() {
+function Divider({ calm = false }: { calm?: boolean }) {
   return (
     <span
       aria-hidden="true"
       className="mx-6 hidden h-[34px] w-px shrink-0 xl:block"
-      style={{ background: TASKS.hairline }}
+      style={{ background: calm ? "transparent" : TASKS.hairline }}
     />
   );
 }
@@ -263,9 +264,12 @@ export function TasksStepsBox({
 }) {
   const { t, dir } = useLocale();
   const copy = t.today;
-  const colors = HOME_CARD_COLORS.lesson;
+  // The calm look (permission "homeCalm"): folded, the line has no box and no dividers (the same line on the page); opened, it is a quiet card.
+  const calm = useFeatures().rollouts.homeCalm;
+  const colors = calm ? CALM_COLORS.stats : HOME_CARD_COLORS.lesson;
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const flat = calm && !open;
 
   const required = requiredQuests(quests.quests);
   const done = required.filter((quest) => quest.completed).length;
@@ -297,10 +301,23 @@ export function TasksStepsBox({
   return (
     <div className={className}>
       <div
-        className="hover:border-primary/40 relative rounded-2xl border border-(--hc-edge) transition-colors"
-        style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
+        className={cn(
+          "hover:border-primary/40 relative rounded-2xl border border-(--hc-edge) transition-colors",
+          flat && "hover:border-transparent",
+        )}
+        style={
+          {
+            background: flat ? "transparent" : colors.background,
+            "--hc-edge": flat ? "transparent" : colors.edge,
+          } as CSSProperties
+        }
       >
-        <div className="relative flex flex-wrap items-center gap-x-5 gap-y-3 px-3.5 py-3 xl:h-[calc(4.4rem-2px)] xl:flex-nowrap xl:gap-x-0 xl:py-0 xl:pe-4">
+        <div
+          className={cn(
+            "relative flex flex-wrap items-center gap-x-5 gap-y-3 px-3.5 py-3 xl:h-[calc(4.4rem-2px)] xl:flex-nowrap xl:gap-x-0 xl:py-0 xl:pe-4",
+            flat && "px-0 xl:pe-0",
+          )}
+        >
           <div className="flex min-w-0 flex-1 basis-56 items-center">
             {open ? (
               <p className="ms-1.5 flex min-w-0 items-baseline gap-2.5 leading-[1.3] whitespace-nowrap">
@@ -363,7 +380,7 @@ export function TasksStepsBox({
 
           {streak && (
             <>
-              <Divider />
+              <Divider calm={calm} />
               <div className="flex shrink-0 flex-col gap-2">
                 <span className="text-muted-foreground text-xs leading-none" dir={dir}>
                   {t.streakCalendar.heading}

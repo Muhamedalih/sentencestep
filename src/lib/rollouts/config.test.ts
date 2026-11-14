@@ -215,6 +215,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     videoSilence: false,
     logoInk: false,
     passageExam: false,
+    homeCalm: false,
   });
 });
 
@@ -232,6 +233,23 @@ test("the lean lock card and the Library for subscribers: Admins only until open
   assert.equal(evaluateRollouts(config, guest).libraryGift, false);
   assert.equal(
     withRolloutDependencies({ ...evaluateRollouts(config, guest), todaySession: false }).leanGate,
+    true,
+  );
+});
+
+test("the calm look: Admins only until opened, and it needs neither the Home cards nor Today's session", () => {
+  const config = defaultRolloutConfig();
+  assert.equal(evaluateRollouts(config, admin).homeCalm, true);
+  assert.equal(evaluateRollouts(config, learner).homeCalm, false);
+  assert.equal(evaluateRollouts(config, guest).homeCalm, false);
+  // Opened for everyone it stays open when the Home cards and Today's session are closed: it also dresses the top bar and the side menu of every page.
+  config.homeCalm = entry({ mode: "everyone" });
+  assert.equal(
+    withRolloutDependencies({
+      ...evaluateRollouts(config, guest),
+      homeCards: false,
+      todaySession: false,
+    }).homeCalm,
     true,
   );
 });

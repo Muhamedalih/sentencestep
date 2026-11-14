@@ -69,6 +69,8 @@ export function AppHeader({
   const features = useFeatures();
   // The Home polish permission: the saved-items bookmark and its badge use the brand colour, not the amber accent.
   const polish = features.rollouts.homePolish;
+  // The calm look (permission "homeCalm"): no line under the bar, no flame, the saved-items count as a small dot, no divider, and (from md:) the logo lives in the side menu.
+  const calm = features.rollouts.homeCalm;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -112,7 +114,13 @@ export function AppHeader({
               />
             </Link>
           </Button>
-          {Boolean(savedCount) && (
+          {Boolean(savedCount) && calm && (
+            <span
+              className="pointer-events-none absolute end-0.5 top-0.5 size-2 rounded-full bg-[#e4607a]"
+              aria-hidden="true"
+            />
+          )}
+          {Boolean(savedCount) && !calm && (
             <span
               className={cn(
                 "ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2",
@@ -127,7 +135,10 @@ export function AppHeader({
         <LanguageSwitcher />
         <ThemeToggle />
       </div>
-      <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
+      <div
+        className={cn("bg-border/60 hidden h-6 w-px sm:block", calm && "sm:hidden")}
+        aria-hidden="true"
+      />
       <AccountMenu user={user} />
     </>
   ) : (
@@ -150,21 +161,30 @@ export function AppHeader({
     <header
       className={cn(
         "border-border/60 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md transition-shadow duration-200",
+        calm && "bg-background border-b-0 backdrop-blur-none",
         scrolled && "shadow-sm shadow-black/5",
       )}
     >
-      <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6">
+      <div
+        className={cn(
+          "grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6",
+          calm && "md:h-[4.75rem] md:px-12",
+        )}
+      >
         <Link
           href="/learn"
           aria-label={t.marketing.dashboardLinkAriaLabel}
-          className="inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11"
+          className={cn(
+            "inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11",
+            calm && "md:hidden",
+          )}
         >
           {/* Under 340px the wordmark gives way to the logo mark so the streak and buttons still fit. */}
           <Logo className="max-[340px]:[&>span:last-child]:hidden" />
         </Link>
 
         <div className="justify-self-center">
-          {user && <ProgressHud initialProgress={initialProgress} />}
+          {user && !calm && <ProgressHud initialProgress={initialProgress} />}
         </div>
 
         <div className="flex items-center gap-2 justify-self-end sm:gap-3">

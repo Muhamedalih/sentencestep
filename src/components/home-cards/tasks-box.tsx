@@ -345,8 +345,16 @@ export function TasksBox({
   return (
     <div className={className}>
       <div
-        className="hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-(--hc-edge) px-3.5 py-3 transition-colors xl:h-[4.4rem] xl:flex-nowrap xl:gap-x-0 xl:py-0 xl:pe-4"
-        style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
+        className={cn(
+          "hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-(--hc-edge) px-3.5 py-3 transition-colors xl:h-[4.4rem] xl:flex-nowrap xl:gap-x-0 xl:py-0 xl:pe-4",
+          rollouts.homeCalm && !open && "px-0 hover:border-transparent xl:pe-0",
+        )}
+        style={
+          {
+            background: rollouts.homeCalm && !open ? "transparent" : colors.background,
+            "--hc-edge": rollouts.homeCalm && !open ? "transparent" : colors.edge,
+          } as CSSProperties
+        }
       >
         {quests && (
           <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">

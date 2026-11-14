@@ -51,6 +51,7 @@ export const ROLLOUT_IDS = [
   "logoInk",
   "videoSilence",
   "passageExam",
+  "homeCalm",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -565,6 +566,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The questions live in the code (src/data/passages/exams) and are read on the server, so the exam adds no database reads; the only traffic is one small progress save when the learner continues.",
       "The passage is saved as finished after its last part, exactly as before, so a learner who leaves during the exam loses nothing.",
       "On a phone the text and the questions are two tabs instead of two columns.",
+    ],
+  },
+  homeCalm: {
+    id: "homeCalm",
+    audience: "learner",
+    title: "Home: a calmer look",
+    description:
+      "The learner area and Home in a calmer dress: the top bar loses its line and its flame (the streak stays in the week dots), the flags and the account sit bare, and the logo moves to the top of the side menu, whose open item is a soft grey instead of the strong violet. On Home the cards are no longer one grey: the story card is a deep indigo, Passages a deep blue and Video a deep teal, with a big heavy title, one white button and, on the story card, a tilted page showing the story's own title and description lines. The tabs (Stories / Daily lessons) sit above the card, the daily-tasks line has no box, and the level card has no divider. A card no longer rises or grows when the pointer touches it; the picture inside a card still moves as before.",
+    notes: [
+      "Only the look changes: the same links, the same numbers, the same tabs and the same words. No new reads or requests, no migration.",
+      "Dark theme only for the colours (the page turns a deep blue-black and the cards take their section's colour); the light theme gets the structural changes (no top line, no flame, quieter menu, no card lift).",
+      "The top bar, the side menu and the card lift change on every page under /learn, not only Home; the colours of the cards are Home's.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   mobilePath: {

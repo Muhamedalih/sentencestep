@@ -63,7 +63,10 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
   const libraryOpen = isAdminUser || (features.rollouts.libraryGift && (await hasPremiumAccess()));
 
   return (
-    <div className="app-shell bg-background flex min-h-svh flex-col">
+    <div
+      className="app-shell bg-background flex min-h-svh flex-col"
+      data-calm={features.rollouts.homeCalm ? "" : undefined}
+    >
       <DashboardChrome
         header={<AppHeader user={user} savedCount={savedCount} initialProgress={initialProgress} />}
         sidebar={

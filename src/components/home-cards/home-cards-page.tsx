@@ -10,6 +10,7 @@ import type { PassagesHomeData } from "@/lib/passages/home-card";
 import type { VideoCardData } from "@/lib/video-dictation/content";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 import type { LessonUnit } from "@/types/content";
+import { cn } from "@/lib/utils";
 
 import { ContinueCard } from "./continue-card";
 import { PassagesSectionCard, VideoSectionCard } from "./section-cards";
@@ -49,6 +50,7 @@ export function HomeCardsPage({
   videosFinished,
   wordHints,
   wordsBank = null,
+  calm = false,
 }: {
   engagement: HomeEngagementStream | null;
   /** «Up next». */
@@ -70,21 +72,37 @@ export function HomeCardsPage({
   wordHints: Record<string, string>;
   /** Today's words of the learner's words bank («كلماتي»), or null: the words card then shows the review queue. */
   wordsBank?: BankCardData | null;
+  /** The calm look (permission "homeCalm"): tabs above the story card instead of a heading, a narrower centred page, no lift under the pointer. */
+  calm?: boolean;
 }) {
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl">
+    <div
+      className={cn(
+        "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl",
+        calm && "pt-3 sm:pt-3 xl:max-w-[1180px] xl:px-12",
+      )}
+      data-calm-home={calm ? "" : undefined}
+    >
       {banners}
       <HomeEngagementSection stream={engagement} quiet cards className="hc-rise" />
-      <div className="mt-4 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">{heading}</h2>
-        {!isPremiumUser && <StarterPathProgress units={units} />}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20.75rem]">
+      {!calm && (
+        <div className="mt-4 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <h2 className="text-lg font-semibold tracking-tight">{heading}</h2>
+          {!isPremiumUser && <StarterPathProgress units={units} />}
+        </div>
+      )}
+      <div
+        className={cn(
+          "grid gap-4 lg:grid-cols-[minmax(0,1fr)_20.75rem]",
+          calm && "mt-[26px] gap-x-5 gap-y-4 lg:grid-cols-[minmax(0,1fr)_20.125rem]",
+        )}
+      >
         <ContinueCard
           units={units}
           storiesUnits={storiesUnits}
           isPremiumUser={isPremiumUser}
           hasWeakWords={reviewCount > 0}
+          extra={calm && !isPremiumUser ? <StarterPathProgress units={units} /> : null}
         />
         <StatsPanel
           lessonStats={lessonStats}
@@ -92,7 +110,7 @@ export function HomeCardsPage({
           videosFinished={videosFinished}
         />
       </div>
-      <div className="mt-4 flex flex-wrap gap-4 empty:hidden">
+      <div className={cn("mt-4 flex flex-wrap gap-4 empty:hidden", calm && "mt-5 gap-5")}>
         <Suspense
           fallback={
             <CardSkeleton feature="passages" className="min-h-[13.75rem] flex-1 basis-[20rem]" />

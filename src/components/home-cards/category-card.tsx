@@ -264,6 +264,7 @@ export function CategoryCard({
   plain = false,
   badge,
   index = 0,
+  calm,
 }: {
   colors: CardColors;
   art: CategoryArt;
@@ -283,10 +284,13 @@ export function CategoryCard({
   badge?: ReactNode;
   /** The place in the page's staggered entrance. */
   index?: number;
+  /** The calm look (permission "homeCalm"): the card's own deep colour, a big heavy title, a taller card. The dot and link colours go with the colours passed in. */
+  calm?: { dot: string; link: string };
 }) {
   const { dir } = useLocale();
   const className = cn(
     "hc-card hc-rise group relative isolate flex min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] flex-col overflow-hidden rounded-2xl border p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+    calm && "min-h-[18.125rem] rounded-3xl px-[34px] pt-[50px] pb-[30px]",
   );
   const style = {
     background: colors.background,
@@ -300,24 +304,37 @@ export function CategoryCard({
       <span className="absolute end-4 top-4 z-10 flex items-center gap-2">
         {badge}
         <span
-          className="rounded-lg border px-2.5 py-1 text-xs font-semibold"
+          className={cn(
+            "rounded-lg border px-2.5 py-1 text-xs font-semibold",
+            calm && "rounded-full px-[13px] py-1 text-[13px] font-medium",
+          )}
           style={{ background: colors.chip, borderColor: colors.chipEdge, color: colors.accent }}
           dir={dir}
         >
           {kind}
         </span>
       </span>
-      <h3 className="relative z-10 text-[1.9rem] leading-tight font-bold tracking-tight" dir={dir}>
+      <h3
+        className={cn(
+          "relative z-10 text-[1.9rem] leading-tight font-bold tracking-tight",
+          calm && "text-[2.875rem] leading-[1.1] font-extrabold tracking-[-1px]",
+        )}
+        dir={dir}
+      >
         {title}
       </h3>
-      <p className="relative z-10 mt-1 text-sm" style={{ color: colors.soft }} dir={dir}>
+      <p
+        className={cn("relative z-10 mt-1 text-sm", calm && "mt-2 text-[15px]")}
+        style={{ color: colors.soft }}
+        dir={dir}
+      >
         {line}
       </p>
       <p className="relative z-10 mt-3 flex max-w-[calc(100%-12.5rem)] min-w-0 items-baseline gap-2 text-sm xl:max-w-[calc(100%-18.25rem)]">
         <span
           aria-hidden="true"
           className="size-1.5 shrink-0 self-center rounded-full"
-          style={{ background: colors.accent }}
+          style={{ background: calm ? calm.dot : colors.accent }}
         />
         <span style={{ color: colors.soft }} dir={dir}>
           {nextLabel}
@@ -331,7 +348,13 @@ export function CategoryCard({
           </bdi>
         )}
       </p>
-      <span className="hc-go relative z-10 mt-auto inline-flex items-center gap-2 pt-4 font-semibold">
+      <span
+        className={cn(
+          "hc-go relative z-10 mt-auto inline-flex items-center gap-2 pt-4 font-semibold",
+          calm && "gap-[9px] text-base font-bold",
+        )}
+        style={calm ? { color: calm.link } : undefined}
+      >
         <span dir={dir}>{cta}</span>
         <ArrowRight className="size-4" aria-hidden="true" />
       </span>
