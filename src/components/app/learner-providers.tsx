@@ -13,6 +13,7 @@ import { getLessonCompletionTheme } from "@/lib/admin/lesson-completion-theme-qu
 import { getLessonFontSettings } from "@/lib/admin/lesson-font-queries";
 import { getTypingSoundSettings } from "@/lib/admin/typing-sound-queries";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { LOGO_INK_CSS } from "@/lib/rollouts/logo-ink";
 import { getVoiceSettings } from "@/lib/admin/voice-queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
@@ -85,6 +86,8 @@ export async function LearnerProviders({
           takes effect for every learner on next load — no rebuild/redeploy
           needed. */}
       {lessonColorCss && <style>{lessonColorCss}</style>}
+      {/* Permission "logoInk": the brand colour becomes the new logo's ink (see logo-ink.ts). */}
+      {features.rollouts.logoInk && <style>{LOGO_INK_CSS}</style>}
       <AuthUserProvider userId={user?.id ?? null}>
         <FeatureProvider features={features}>
           <VoiceSettingsProvider settings={voiceSettings}>

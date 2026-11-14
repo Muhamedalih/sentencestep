@@ -48,6 +48,7 @@ export const ROLLOUT_IDS = [
   "wordsSplit",
   "wordsMap",
   "faceRatings",
+  "logoInk",
   "videoSilence",
 ] as const;
 
@@ -526,6 +527,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The public reviews on the start page and the average quoted on the plans page stay as they are: they show what other learners gave, they are not a place to rate.",
       "Needs no new reads or writes and no migration.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page; without it every rating keeps its five stars.",
+    ],
+  },
+  logoInk: {
+    id: "logoInk",
+    audience: "learner",
+    title: "Buttons in the logo's colour",
+    description:
+      "The app's main colour (the big buttons, links, progress bars and focus rings) changes from the brighter violet to the calm ink of the new logo: dark ink with light text in the light theme, and the logo's light lavender with ink text in the dark theme. Only the colour changes; nothing moves or resizes.",
+    notes: [
+      "Covers every screen under the learner area (/learn) and the admin previews of lessons. The sign-in, plans and marketing pages keep the old violet until this is opened to everyone and moved into the stylesheet.",
+      "Pure CSS: a few lines in the page, no database reads, no extra requests.",
+      "Closing it brings the old violet back at once.",
     ],
   },
   videoSilence: {
