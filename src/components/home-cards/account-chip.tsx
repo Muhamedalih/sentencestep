@@ -5,21 +5,18 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 
 import { InitialsAvatar } from "@/components/app/initials-avatar";
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { CurrentUser } from "@/lib/supabase/auth";
-import { cn } from "@/lib/utils";
 
 /**
  * The header's account button when the Home cards are open ("homeCards"): the learner's Google
  * picture, or their letter on their own colour when there is none, beside «Manage account» and their
- * name. It is one link, to the same settings page the plain "Manage account" button opens. A picture
- * that fails to load (offline, a removed photo) falls back to the letter.
+ * name only (the link still says «Manage account» to a screen reader and in its tooltip). It is one
+ * link, to the same settings page the plain "Manage account" button opens. A picture that fails to
+ * load (offline, a removed photo) falls back to the letter.
  */
 export function AccountChip({ user }: { user: CurrentUser }) {
-  const { t, dir } = useLocale();
-  // The calm look (permission "homeCalm"): the picture and the name only (the link still says «Manage account» to a screen reader and in its tooltip).
-  const calm = useFeatures().rollouts.homeCalm;
+  const { t } = useLocale();
   const [pictureFailed, setPictureFailed] = useState(false);
   const name = user.displayName?.trim() || user.email.split("@")[0] || user.email;
 
@@ -27,7 +24,7 @@ export function AccountChip({ user }: { user: CurrentUser }) {
     <Link
       href="/learn/settings"
       aria-label={`${t.account.manageAccountLabel}: ${name}`}
-      title={calm ? t.account.manageAccountLabel : undefined}
+      title={t.account.manageAccountLabel}
       className="hover:bg-muted/70 focus-visible:ring-ring flex items-center gap-2.5 rounded-2xl py-1.5 ps-1.5 pe-2.5 transition-colors outline-none focus-visible:ring-2"
     >
       {user.avatarUrl && !pictureFailed ? (
@@ -39,22 +36,17 @@ export function AccountChip({ user }: { user: CurrentUser }) {
           height={40}
           referrerPolicy="no-referrer"
           onError={() => setPictureFailed(true)}
-          className={cn("size-10 shrink-0 rounded-full object-cover", calm && "size-9")}
+          className="size-9 shrink-0 rounded-full object-cover"
         />
       ) : (
         <InitialsAvatar
           seed={user.id}
           displayName={user.displayName}
           email={user.email}
-          className={cn("size-10 shrink-0 text-base", calm && "size-9 text-[15px]")}
+          className="size-9 shrink-0 text-[15px]"
         />
       )}
       <span className="flex min-w-0 flex-col leading-tight">
-        {!calm && (
-          <span className="text-muted-foreground text-[11.5px] font-medium" dir={dir}>
-            {t.account.manageAccountLabel}
-          </span>
-        )}
         <span dir="ltr" className="max-w-44 truncate text-[15px] font-bold tracking-tight">
           {name}
         </span>

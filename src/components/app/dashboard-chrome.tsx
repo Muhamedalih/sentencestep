@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 
 /**
@@ -27,8 +26,7 @@ export function DashboardChrome({
 }) {
   const pathname = usePathname();
   const { t } = useLocale();
-  // The calm look (permission "homeCalm"): the side menu runs the full height of the window (the logo is at its top) and the top bar sits above the page only, beside it.
-  const calm = useFeatures().rollouts.homeCalm;
+  // The side menu runs the full height of the window (the logo is at its top) and the top bar sits above the page only, beside it.
   const focusedDesktopScreen = pathname === "/learn/settings";
 
   return (
@@ -39,35 +37,19 @@ export function DashboardChrome({
       >
         {t.nav.skipToContent}
       </a>
-      {calm ? (
-        <div className="flex flex-1 flex-col md:flex-row">
-          <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{sidebar}</div>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{header}</div>
-            <main
-              id="main-content"
-              tabIndex={-1}
-              className="min-w-0 flex-1 pb-16 outline-none md:pb-0"
-            >
-              {children}
-            </main>
-          </div>
-        </div>
-      ) : (
-        <>
+      <div className="flex flex-1 flex-col md:flex-row">
+        <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{sidebar}</div>
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{header}</div>
-          <div className="flex flex-1 flex-col md:flex-row">
-            <div className={focusedDesktopScreen ? "md:hidden" : undefined}>{sidebar}</div>
-            <main
-              id="main-content"
-              tabIndex={-1}
-              className="min-w-0 flex-1 pb-16 outline-none md:pb-0"
-            >
-              {children}
-            </main>
-          </div>
-        </>
-      )}
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="min-w-0 flex-1 pb-16 outline-none md:pb-0"
+          >
+            {children}
+          </main>
+        </div>
+      </div>
     </>
   );
 }

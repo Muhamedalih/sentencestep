@@ -19,7 +19,6 @@ import {
 
 import { LinkPendingMarker } from "@/components/app/link-pending-marker";
 import { Logo } from "@/components/layout/logo";
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useDeferredPrefetch } from "@/hooks/use-deferred-prefetch";
 import { useIntentPrefetch } from "@/hooks/use-intent-prefetch";
@@ -112,8 +111,6 @@ export function LearnSidebar({
 }) {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
-  // The calm look (permission "homeCalm"): the menu runs the full height with the logo at its top, the open item is a soft grey, no line beside it.
-  const calm = useFeatures().rollouts.homeCalm;
   // Until the learner has opened «فيديو» once, its button wears a small «new» word (see useVideoNew).
   const videoIsNew = useVideoNew(pathname.startsWith("/learn/video")) && videoEnabled;
   const newLabel = videoNewLabel(locale);
@@ -288,27 +285,23 @@ export function LearnSidebar({
       aria-label={t.nav.ariaLabel}
       className={cn(
         "border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-md",
-        "md:bg-background/80 md:sticky md:top-16 md:bottom-auto md:h-[calc(100svh-4rem)] md:w-56 md:border-t-0 md:border-r",
-        calm && "md:top-0 md:h-svh md:w-[15.5rem] md:border-r-0",
+        "md:bg-background/80 md:sticky md:top-0 md:bottom-auto md:h-svh md:w-[15.5rem] md:border-t-0 md:border-r-0",
       )}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div
         className={cn(
           "group/bar flex items-stretch justify-around px-1 py-1.5",
-          "md:h-full md:flex-col md:items-stretch md:justify-start md:gap-1 md:px-3 md:py-6",
-          calm && "md:px-4 md:pt-6 md:pb-5",
+          "md:h-full md:flex-col md:items-stretch md:justify-start md:gap-1 md:px-4 md:pt-6 md:pb-5",
         )}
       >
-        {calm && (
-          <Link
-            href="/learn"
-            aria-label={t.marketing.dashboardLinkAriaLabel}
-            className="focus-visible:ring-ring mx-2 mb-9 hidden items-center rounded-lg outline-none focus-visible:ring-2 md:inline-flex"
-          >
-            <Logo className="text-xl font-bold" />
-          </Link>
-        )}
+        <Link
+          href="/learn"
+          aria-label={t.marketing.dashboardLinkAriaLabel}
+          className="focus-visible:ring-ring mx-2 mb-9 hidden items-center rounded-lg outline-none focus-visible:ring-2 md:inline-flex"
+        >
+          <Logo className="text-xl font-bold" />
+        </Link>
         {NAV_ITEMS.flatMap((item) => {
           const Icon = item.icon;
           const isActive = active === item.key;
@@ -320,19 +313,12 @@ export function LearnSidebar({
               fullLoad={item.key === "video"}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-medium",
-                "md:flex-none md:flex-row md:gap-2.5 md:px-3 md:py-2.5 md:text-sm md:whitespace-nowrap pointer-coarse:md:min-h-11",
-                calm && "md:gap-3 md:rounded-[11px] md:px-3.5 md:py-[11px] md:text-[15px]",
+                "md:flex-none md:flex-row md:gap-3 md:rounded-[11px] md:px-3.5 md:py-[11px] md:text-[15px] md:whitespace-nowrap pointer-coarse:md:min-h-11",
                 (PHONE_ITEMS || item.key === "rules") && "max-md:hidden",
                 isActive
-                  ? calm
-                    ? "text-primary md:text-foreground md:bg-foreground/[0.065]"
-                    : "text-primary md:bg-brand-muted"
-                  : calm
-                    ? "text-muted-foreground hover:text-foreground md:hover:bg-foreground/[0.04]"
-                    : "text-muted-foreground hover:text-foreground md:hover:bg-secondary",
-                calm
-                  ? "has-[[data-pending]]:text-primary md:has-[[data-pending]]:bg-foreground/[0.065]"
-                  : "has-[[data-pending]]:text-primary md:has-[[data-pending]]:bg-brand-muted",
+                  ? "text-primary md:text-foreground md:bg-foreground/[0.065]"
+                  : "text-muted-foreground hover:text-foreground md:hover:bg-foreground/[0.04]",
+                "has-[[data-pending]]:text-primary md:has-[[data-pending]]:bg-foreground/[0.065]",
               )}
             >
               <Icon className="size-5 shrink-0 md:size-4" aria-hidden="true" />
@@ -395,15 +381,9 @@ export function LearnSidebar({
                   className={cn(
                     "rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:py-3",
                     subItem.isSubActive
-                      ? calm
-                        ? "text-foreground bg-foreground/[0.065]"
-                        : "text-primary bg-brand-muted"
-                      : calm
-                        ? "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                    calm
-                      ? "has-[[data-pending]]:text-foreground has-[[data-pending]]:bg-foreground/[0.065]"
-                      : "has-[[data-pending]]:text-primary has-[[data-pending]]:bg-brand-muted",
+                      ? "text-foreground bg-foreground/[0.065]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]",
+                    "has-[[data-pending]]:text-foreground has-[[data-pending]]:bg-foreground/[0.065]",
                   )}
                 >
                   <span dir={dir}>{subItem.label}</span>
@@ -444,7 +424,7 @@ export function LearnSidebar({
             contact={contactInstagram ? contactStrings(locale) : null}
           />
         )}
-        {contactInstagram && <ContactBox dir={dir} strings={contactStrings(locale)} calm={calm} />}
+        {contactInstagram && <ContactBox dir={dir} strings={contactStrings(locale)} />}
       </div>
     </nav>
   );
@@ -617,16 +597,7 @@ function PhoneMore({
  * mt-auto, the Instagram mark and the title on one line, the account name under them. A tap opens a chat
  * with the account on Instagram in a new tab. Desktop sidebar only: phones get the More sheet's tile.
  */
-function ContactBox({
-  dir,
-  strings,
-  calm = false,
-}: {
-  dir: "ltr" | "rtl";
-  strings: ContactStrings;
-  /** The calm look: no box round it, only a soft shade under the pointer. */
-  calm?: boolean;
-}) {
+function ContactBox({ dir, strings }: { dir: "ltr" | "rtl"; strings: ContactStrings }) {
   return (
     <a
       href={INSTAGRAM_DM_URL}
@@ -635,16 +606,11 @@ function ContactBox({
       aria-label={strings.linkLabel}
       title={strings.linkLabel}
       className={cn(
-        "focus-visible:ring-ring focus-visible:ring-offset-background group mt-auto hidden flex-col gap-0.5 rounded-xl border px-3 py-2.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 md:flex",
-        calm
-          ? "hover:bg-foreground/[0.04] border-transparent px-3.5"
-          : "border-primary/30 hover:bg-brand-muted",
+        "focus-visible:ring-ring focus-visible:ring-offset-background group hover:bg-foreground/[0.04] mt-auto hidden flex-col gap-0.5 rounded-xl border border-transparent px-3.5 py-2.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 md:flex",
       )}
     >
       <span className="flex items-center gap-2.5 text-sm font-medium">
-        <InstagramMark
-          className={cn("size-4 shrink-0", calm ? "text-muted-foreground" : "text-primary")}
-        />
+        <InstagramMark className="text-muted-foreground size-4 shrink-0" />
         <span dir={dir}>{strings.title}</span>
       </span>
       <span dir="ltr" className="text-muted-foreground ps-[26px] text-xs">

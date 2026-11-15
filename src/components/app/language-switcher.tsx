@@ -2,7 +2,6 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { LOCALE_META, SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -25,11 +24,16 @@ import { cn } from "@/lib/utils";
  * before — no locale-selection, persistence, or routing logic lives here;
  * see LocaleProvider for all of that.
  */
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcher({
+  className,
+  bare = false,
+}: {
+  className?: string;
+  /** The app's calm top bar: the flags sit bare, with no pill round them; the open one is the bright one. The marketing header keeps the pill. */
+  bare?: boolean;
+}) {
   const { locale, t, setLocale } = useLocale();
   const reducedMotion = useReducedMotion() ?? false;
-  // The calm look (permission "homeCalm"): the flags sit bare, with no pill round them; the open one is the bright one.
-  const calm = useFeatures().rollouts.homeCalm;
 
   return (
     <div
@@ -37,7 +41,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       aria-label={t.localeSwitcher.ariaLabel}
       className={cn(
         "bg-muted/60 ring-border/50 relative inline-flex items-center gap-0.5 rounded-full p-1 ring-1 sm:gap-1 sm:p-1.5",
-        calm && "bg-transparent p-0 ring-0 sm:p-0",
+        bare && "bg-transparent p-0 ring-0 sm:p-0",
         className,
       )}
     >
@@ -61,7 +65,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
               !isActive && "opacity-55 hover:opacity-100",
             )}
           >
-            {isActive && !calm && (
+            {isActive && !bare && (
               <motion.span
                 layoutId="language-switcher-active"
                 transition={
