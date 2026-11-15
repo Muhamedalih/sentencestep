@@ -1,4 +1,5 @@
-import { HOME_CARD_COLORS, VIDEO_SCENE } from "./palette";
+import { GREY, VIDEO_SCENE, homeCardColors } from "./palette";
+import { useGreyHome } from "./use-grey-home";
 
 /** The two shapes of YouTube's play icon (a viewBox of 28.57 x 20): the rounded body and the triangle. */
 const BODY =
@@ -26,7 +27,9 @@ export function YouTubeIcon({
  * come from. Dark like the kind tag; the icon's red is the only colour in it.
  */
 export function YouTubeTag() {
-  const colors = HOME_CARD_COLORS.video;
+  // The grey look of Home (permission "greyCalm"): the tag follows the Video card's colours and small corners.
+  const grey = useGreyHome();
+  const colors = homeCardColors(grey, "video");
   return (
     <span
       dir="ltr"
@@ -35,6 +38,7 @@ export function YouTubeTag() {
         background: colors.chip,
         borderColor: colors.chipEdge,
         color: "rgba(255,255,255,0.86)",
+        borderRadius: grey ? GREY.radius.chip : undefined,
       }}
     >
       <YouTubeIcon className="h-[11px] w-auto" />

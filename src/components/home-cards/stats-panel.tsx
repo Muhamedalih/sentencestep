@@ -9,10 +9,11 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSharedProgress } from "@/components/providers/progress-provider";
 import { learnerLevelSupportLabel } from "@/lib/progress/learner-level";
 
-import { HOME_CARD_COLORS, STATS } from "./palette";
+import { GREY, HOME_CARD_COLORS, STATS } from "./palette";
 import { countFinishedStories, levelPercent } from "./stats";
 import { fillText, homeCardsStrings } from "./strings";
 import { useCountUp } from "./use-count-up";
+import { useGreyHome } from "./use-grey-home";
 
 type TileKey = keyof typeof STATS.tiles;
 
@@ -31,7 +32,9 @@ function Stat({
 }) {
   const { dir } = useLocale();
   const shown = useCountUp(value, ready);
-  const colors = STATS.tiles[tile];
+  // The grey look of Home (permission "greyCalm"): the Stories tile follows the Stories hue, the tiles have small corners.
+  const grey = useGreyHome();
+  const colors = grey && tile === "stories" ? GREY.storiesTile : STATS.tiles[tile];
   return (
     <div className="group/stat flex items-center gap-3.5">
       <span
@@ -41,6 +44,7 @@ function Stat({
           background: `linear-gradient(160deg,rgba(${colors.rgb},0.26),rgba(${colors.rgb},0.1))`,
           borderColor: `rgba(${colors.rgb},0.34)`,
           color: colors.ink,
+          borderRadius: grey ? GREY.radius.tile : undefined,
         }}
       >
         {icon}
@@ -79,7 +83,9 @@ export function StatsPanel({
   const s = homeCardsStrings(locale);
   const { isLoaded, completions, learnerLevel } = useSharedProgress();
   const totals = useHeaderTotals(lessonStats, sessionCount);
-  const colors = HOME_CARD_COLORS.words;
+  // The grey look of Home (permission "greyCalm"): a neutral grey card with small corners.
+  const grey = useGreyHome();
+  const colors = grey ? GREY.colors.neutral : HOME_CARD_COLORS.words;
   const stories = countFinishedStories(completions, lessonStats);
   const percent = levelPercent(learnerLevel.progress, learnerLevel.next !== null);
   const levelName = learnerLevelSupportLabel(learnerLevel.level.name, t);
@@ -93,6 +99,7 @@ export function StatsPanel({
         {
           background: colors.background,
           borderColor: colors.edge,
+          borderRadius: grey ? GREY.radius.card : undefined,
           "--hc-i": 2,
         } as CSSProperties
       }
@@ -128,7 +135,10 @@ export function StatsPanel({
         </div>
       </div>
 
-      <hr className="border-0 border-t" style={{ borderColor: STATS.hairline }} />
+      <hr
+        className="border-0 border-t"
+        style={{ borderColor: grey ? GREY.hairline : STATS.hairline }}
+      />
 
       <div className="flex flex-col gap-[9px]">
         <Stat

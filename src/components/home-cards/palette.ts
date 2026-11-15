@@ -60,6 +60,58 @@ export const HOME_CARD_COLORS = {
 
 export type HomeCardColorKey = keyof typeof HOME_CARD_COLORS;
 
+/**
+ * The grey look of Home (permission "greyCalm"): a soft grey page, a darker side menu, and ONE flat
+ * colour per card in the hue of its section (no wash, no gradient), each with a lighter edge of the same
+ * hue and small corners. The fills are hsl(hue, saturation, 14%) and the edges the same hue at 28%
+ * lightness, as shown in the approved mock-up (reports/home-grey-calm-v2-2026-11-15.html, midnight
+ * violet, flat, 8 px): Stories H258 S38, Passages H214 S38, Video H2 S52 (YouTube's red), Words and the
+ * lesson side H236 S34, the level panel and the tasks capsule H220 S6 (neutral). The art on the cards
+ * (paper, book, player, orb) is not recoloured.
+ */
+function flatCard(base: string, edge: string, accent: string): CardColors {
+  return {
+    base,
+    background: base,
+    edge,
+    chip: "rgba(255,255,255,0.06)",
+    chipEdge: `color-mix(in srgb,${edge} 88%,#fff 12%)`,
+    soft: "rgba(255,255,255,0.58)",
+    accent,
+  };
+}
+
+export const GREY = {
+  /** The page behind everything, the side menu and the line that closes it, the open item and the others' text. */
+  page: "#0e0f11",
+  side: "#090a0b",
+  sideEdge: "#171a1d",
+  sideActive: "#202124",
+  sideText: "#a1a5ab",
+  colors: {
+    stories: flatCard("#1e1631", "#3f325d", "#b8abd9"),
+    passages: flatCard("#162231", "#32455d", "#abbfd9"),
+    video: flatCard("#361211", "#652c2a", "#daaba9"),
+    words: flatCard("#181930", "#34375b", "#adb0d7"),
+    lesson: flatCard("#181930", "#34375b", "#adb0d7"),
+    /** The level panel and the tasks capsule. */
+    neutral: flatCard("#222326", "#44464b", "#bec1c5"),
+  },
+  /** Small corners: a card, a small tile, a button, a tag, the tasks capsule, and a menu item. */
+  radius: { card: 8, tile: 6, button: 8, chip: 6, capsule: 8, nav: 8 },
+  /** The Stories tile of the achievements panel follows the Stories hue (violet, H258). */
+  storiesTile: { rgb: "131,97,209", ink: "#bba8e6" },
+  /** The line between the panel's groups. */
+  hairline: "rgba(255,255,255,0.07)",
+  /** The tasks capsule's wash as the day's tasks are done (indigo; green once the day is done is the usual one). */
+  wash: { from: "rgba(124,131,240,0.15)", to: "rgba(124,131,240,0.05)" },
+} as const;
+
+/** The colours of one Home card: the grey look's when it is open for this visitor, the usual ones otherwise. */
+export function homeCardColors(grey: boolean, key: HomeCardColorKey): CardColors {
+  return grey ? GREY.colors[key] : HOME_CARD_COLORS[key];
+}
+
 /** The white paper of the art: sheets, the word cards, the question box and the marks drawn on them. */
 export const PAPER = {
   /** A sheet's face, and the two sheets stacked behind it. */

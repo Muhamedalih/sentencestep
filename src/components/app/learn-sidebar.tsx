@@ -283,6 +283,7 @@ export function LearnSidebar({
   return (
     <nav
       aria-label={t.nav.ariaLabel}
+      data-learn-side=""
       className={cn(
         "border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-md",
         "md:bg-background/80 md:sticky md:top-0 md:bottom-auto md:h-svh md:w-[15.5rem] md:border-t-0 md:border-r-0",

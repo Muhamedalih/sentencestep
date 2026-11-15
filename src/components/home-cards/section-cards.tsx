@@ -6,18 +6,20 @@ import type { PassagesHomeData } from "@/lib/passages/home-card";
 import type { VideoCardData } from "@/lib/video-dictation/content";
 
 import { CategoryCard } from "./category-card";
-import { HOME_CARD_COLORS } from "./palette";
+import { homeCardColors } from "./palette";
 import { homeCardsStrings } from "./strings";
+import { useGreyHome } from "./use-grey-home";
 import { YouTubeTag } from "./youtube-mark";
 
 /** The Passages card of the Home cards: the passage to read next (the one in progress, or the first not started). */
 export function PassagesSectionCard({ data, index }: { data: PassagesHomeData; index: number }) {
   const { t, locale } = useLocale();
   const s = homeCardsStrings(locale);
+  const grey = useGreyHome();
   const { passage } = data;
   return (
     <CategoryCard
-      colors={HOME_CARD_COLORS.passages}
+      colors={homeCardColors(grey, "passages")}
       art="sheet"
       kind={s.passagesKind}
       title={t.nav.passages}
@@ -46,9 +48,10 @@ export function VideoSectionCard({
 }) {
   const { locale } = useLocale();
   const s = homeCardsStrings(locale);
+  const grey = useGreyHome();
   return (
     <CategoryCard
-      colors={HOME_CARD_COLORS.video}
+      colors={homeCardColors(grey, "video")}
       art="frame"
       kind={s.videoKind}
       title={heading}

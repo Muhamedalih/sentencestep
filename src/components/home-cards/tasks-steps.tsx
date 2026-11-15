@@ -21,7 +21,8 @@ import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
-import { HOME_CARD_COLORS, TASKS } from "./palette";
+import { GREY, HOME_CARD_COLORS, TASKS } from "./palette";
+import { useGreyHome } from "./use-grey-home";
 
 type RowState = "done" | "current" | "idle";
 
@@ -32,11 +33,12 @@ function halo(state: RowState): string | undefined {
 
 /** A thin vertical line between the steps and the week (from xl up, like the strip it replaces). */
 function Divider() {
+  const grey = useGreyHome();
   return (
     <span
       aria-hidden="true"
       className="mx-6 hidden h-[34px] w-px shrink-0 xl:block"
-      style={{ background: TASKS.hairline }}
+      style={{ background: grey ? GREY.hairline : TASKS.hairline }}
     />
   );
 }
@@ -276,7 +278,10 @@ export function TasksStepsBox({
 }) {
   const { t, dir } = useLocale();
   const copy = t.today;
-  const colors = HOME_CARD_COLORS.lesson;
+  // The grey look of Home (permission "greyCalm"): the capsule is a flat neutral grey with small corners.
+  const grey = useGreyHome();
+  const colors = grey ? GREY.colors.neutral : HOME_CARD_COLORS.lesson;
+  const capsuleRadius = grey ? GREY.radius.capsule : null;
   const [open, setOpen] = useState(false);
   const panelId = useId();
   // The calm look (permission "homeCalm"): folded, the box is a slim capsule that FILLS with a soft wash as the day's tasks are done (green once the day is done), the step in progress breathes, and one small white button starts it.
@@ -323,7 +328,13 @@ export function TasksStepsBox({
     <div className={className}>
       <div
         className="hover:border-primary/40 relative rounded-2xl border border-(--hc-edge) transition-colors"
-        style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
+        style={
+          {
+            background: colors.background,
+            "--hc-edge": colors.edge,
+            borderRadius: capsuleRadius ?? undefined,
+          } as CSSProperties
+        }
       >
         <div
           className={cn(
@@ -331,6 +342,11 @@ export function TasksStepsBox({
             calm && "overflow-hidden xl:h-[calc(3.5rem-2px)]",
             calm && (open ? "rounded-t-2xl" : "rounded-2xl"),
           )}
+          style={
+            capsuleRadius !== null && calm
+              ? { borderRadius: open ? `${capsuleRadius}px ${capsuleRadius}px 0 0` : capsuleRadius }
+              : undefined
+          }
         >
           {calm && !open && (
             <span
@@ -340,7 +356,7 @@ export function TasksStepsBox({
                 width: `${washPercent}%`,
                 background: finished
                   ? TASKS.wash.done
-                  : `linear-gradient(to ${dir === "rtl" ? "left" : "right"},${TASKS.wash.from},${TASKS.wash.to})`,
+                  : `linear-gradient(to ${dir === "rtl" ? "left" : "right"},${grey ? GREY.wash.from : TASKS.wash.from},${grey ? GREY.wash.to : TASKS.wash.to})`,
               }}
             />
           )}
@@ -430,6 +446,7 @@ export function TasksStepsBox({
             <Link
               href={nextInfo.href}
               className="focus-visible:ring-ring relative z-10 inline-flex h-9 shrink-0 items-center gap-2 rounded-[11px] bg-white px-3.5 text-[13.5px] font-bold whitespace-nowrap text-slate-900 transition-colors outline-none hover:bg-white/90 focus-visible:ring-2 max-sm:w-full max-sm:justify-center xl:ms-4"
+              style={grey ? { borderRadius: GREY.radius.button } : undefined}
             >
               <span dir="auto">{nextStart}</span>
               <span className="font-medium text-slate-500" dir="auto">
