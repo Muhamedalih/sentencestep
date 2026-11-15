@@ -560,10 +560,10 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Home: a calmer look",
     description:
-      "The learner area and Home in a calmer dress: the top bar loses its line and its flame (the streak stays in the week dots), the flags and the account sit bare, and the logo moves to the top of the side menu, whose open item is a soft grey instead of the strong violet. On Home the Stories / Daily lessons tabs sit above the story card, and the daily-tasks box becomes a slim capsule that fills with a soft wash as the day's tasks are done (green when the day is done), whose step in progress breathes and which has one small button to start the next task straight from Home. A card no longer rises or grows when the pointer touches it; the picture inside a card still moves as before. The colours of the page and of the cards are not changed.",
+      "Home in a calmer dress: the Stories / Daily lessons tabs sit above the story card, and the daily-tasks box becomes a slim capsule that fills with a soft wash as the day's tasks are done (green when the day is done), whose step in progress breathes and which has one small button to start the next task straight from Home. A card no longer rises or grows when the pointer touches it; the picture inside a card still moves as before. The colours of the page and of the cards are not changed. (The calm top bar and side menu — no line, no flame, bare flags, the logo at the top of the menu, a soft grey open item — are no longer part of this permission: every account has them.)",
     notes: [
       "Only the look changes: the same links, the same numbers, the same tabs and the same words. No new reads or requests, no migration.",
-      "The top bar, the side menu and the card lift change on every page under /learn, not only Home; the tabs and the tasks capsule are Home's.",
+      "The tabs, the card lift and the tasks capsule are Home's only.",
       "The capsule's start button goes to the same place as the current row of the opened box; the box itself, opened, is unchanged.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],

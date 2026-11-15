@@ -7,8 +7,6 @@ import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
-import { fetchProgressCached } from "@/lib/progress/cached";
-import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
 
@@ -41,18 +39,17 @@ import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentenc
 export default async function LearnDashboardLayout({ children }: { children: ReactNode }) {
   // getCurrentUser() is React cache()-memoized (LearnLayout already resolved it
   // for this request), so awaiting it here costs nothing — and it lets the
-  // three reads below all start together. isAdmin() runs unconditionally
+  // reads below all start together. isAdmin() runs unconditionally
   // (matching every other isAdmin() call site in the app, e.g. the Home
   // dashboard page.tsx) rather than being gated behind `user` — it has its own
   // non-production dev-cookie override that works without a real session.
-  // None of the three depends on another (the saved-items count and the
-  // progress need only user.id), so they used to wait on isAdmin's role lookup
-  // for no reason, adding a full round trip to every dashboard page.
+  // None of them depends on another (the saved-items count needs only
+  // user.id), so they used to wait on isAdmin's role lookup for no reason,
+  // adding a full round trip to every dashboard page.
   const user = await getCurrentUser();
-  const [isAdminUser, savedCount, initialProgress, features] = await Promise.all([
+  const [isAdminUser, savedCount, features] = await Promise.all([
     isAdmin(),
     user ? fetchMySavedSentencesCount(user.id) : 0,
-    user ? fetchProgressCached(todayLocalISODate()) : undefined,
     // Already resolved for this request by LearnLayout (cache()'d), so it costs nothing here.
     getEffectiveFeatures(),
   ]);
@@ -63,12 +60,9 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
   const libraryOpen = isAdminUser || (features.rollouts.libraryGift && (await hasPremiumAccess()));
 
   return (
-    <div
-      className="app-shell bg-background flex min-h-svh flex-col"
-      data-calm={features.rollouts.homeCalm ? "" : undefined}
-    >
+    <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
-        header={<AppHeader user={user} savedCount={savedCount} initialProgress={initialProgress} />}
+        header={<AppHeader user={user} savedCount={savedCount} />}
         sidebar={
           <LearnSidebar
             isAdminUser={isAdminUser}

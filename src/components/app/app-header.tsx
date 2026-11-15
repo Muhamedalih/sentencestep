@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Flame, Menu, Trophy, UserRound, X } from "lucide-react";
+import { Bookmark, Menu, Trophy, UserRound, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -11,66 +11,31 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useProgress } from "@/hooks/use-progress";
 import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/supabase/auth";
-import type { ProgressState } from "@/lib/progress/types";
-
-/** Duolingo-style always-visible streak counter, centered in the header — see AppHeader's own doc comment for why this replaced empty header space. Renders nothing until progress has actually loaded, never a flashing "0". */
-function ProgressHud({ initialProgress }: { initialProgress?: ProgressState }) {
-  const { isLoaded, streak } = useProgress(initialProgress);
-  if (!isLoaded) return null;
-
-  return (
-    <div className="text-muted-foreground flex items-center gap-4 text-sm font-semibold">
-      <span className="inline-flex items-center gap-1.5 text-base sm:gap-2 sm:text-lg">
-        <Flame
-          className={cn(
-            "size-4 sm:size-5",
-            streak.currentStreak > 0
-              ? "text-orange-500 dark:text-orange-400"
-              : "text-muted-foreground",
-          )}
-          aria-hidden="true"
-        />
-        <span className="tabular-nums" dir="ltr">
-          {streak.currentStreak}
-        </span>
-      </span>
-    </div>
-  );
-}
 
 /**
- * Header/account-menu redesign (round 3): the wide empty gap the previous
- * plain logo-left/icons-right layout left on anything but a narrow viewport
- * now holds something real — the learner's own streak/XP, the same "always
- * visible, never buried in a menu" ambient-progress idiom Duolingo's own top
- * bar uses. Right side is a utility cluster (saved items, language, theme)
- * followed by a divider and the account avatar anchoring the true outer
- * edge — not sandwiched in the middle of the row, see that section's own
- * inline comment for why. Gains a soft shadow only once the page has
- * actually scrolled (see useState/useEffect below) instead of a shadow
- * baked in permanently — a flat header at the very top of a page, a
- * "lifted" one once content is sliding underneath it.
+ * The calm top bar, the same for every account: no line under it, no streak flame (the streak
+ * stays in Home's week dots), the saved-items count as a small dot, the flags bare, no divider, and
+ * (from md:) the logo lives at the top of the side menu (see LearnSidebar) instead of here. Right
+ * side is a utility cluster (saved items, language, theme) followed by the account button
+ * anchoring the true outer edge — not sandwiched in the middle of the row, see that section's own
+ * inline comment for why. Gains a soft shadow only once the page has actually scrolled (see
+ * useState/useEffect below) instead of a shadow baked in permanently — a flat header at the very
+ * top of a page, a "lifted" one once content is sliding underneath it.
  */
 export function AppHeader({
   user,
   savedCount,
-  initialProgress,
 }: {
   user: CurrentUser | null;
   /** This learner's saved-sentence count, for the bookmark icon's badge — 0/undefined renders no badge at all. */
   savedCount?: number;
-  /** Already fetched server-side by the layout rendering this header — see ProgressHud/useProgress's own doc comments for why this avoids a client-side flash on every /learn/* page, not just the Home dashboard. */
-  initialProgress?: ProgressState;
 }) {
   const { t } = useLocale();
   const features = useFeatures();
-  // The Home polish permission: the saved-items bookmark and its badge use the brand colour, not the amber accent.
+  // The Home polish permission: the saved-items bookmark uses the brand colour, not the amber accent.
   const polish = features.rollouts.homePolish;
-  // The calm look (permission "homeCalm"): no line under the bar, no flame, the saved-items count as a small dot, no divider, and (from md:) the logo lives in the side menu.
-  const calm = features.rollouts.homeCalm;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -114,37 +79,22 @@ export function AppHeader({
               />
             </Link>
           </Button>
-          {Boolean(savedCount) && calm && (
+          {Boolean(savedCount) && (
             <span
               className="pointer-events-none absolute end-0.5 top-0.5 size-2 rounded-full bg-[#e4607a]"
               aria-hidden="true"
             />
           )}
-          {Boolean(savedCount) && !calm && (
-            <span
-              className={cn(
-                "ring-background pointer-events-none absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2",
-                polish ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground",
-              )}
-              aria-hidden="true"
-            >
-              {savedCount! > 9 ? "9+" : savedCount}
-            </span>
-          )}
         </div>
-        <LanguageSwitcher />
+        <LanguageSwitcher bare />
         <ThemeToggle />
       </div>
-      <div
-        className={cn("bg-border/60 hidden h-6 w-px sm:block", calm && "sm:hidden")}
-        aria-hidden="true"
-      />
       <AccountMenu user={user} />
     </>
   ) : (
     <>
       <div className="flex items-center gap-1.5">
-        <LanguageSwitcher />
+        <LanguageSwitcher bare />
         <ThemeToggle />
       </div>
       <div className="bg-border/60 hidden h-6 w-px sm:block" aria-hidden="true" />
@@ -160,32 +110,22 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "border-border/60 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md transition-shadow duration-200",
-        calm && "bg-background border-b-0 backdrop-blur-none",
+        "bg-background sticky top-0 z-50 transition-shadow duration-200",
         scrolled && "shadow-sm shadow-black/5",
       )}
     >
-      <div
-        className={cn(
-          "grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6",
-          calm && "md:h-[4.75rem] md:px-12",
-        )}
-      >
+      <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 sm:gap-4 sm:px-6 md:h-[4.75rem] md:px-12">
         <Link
           href="/learn"
           aria-label={t.marketing.dashboardLinkAriaLabel}
-          className={cn(
-            "inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11",
-            calm && "md:hidden",
-          )}
+          className="inline-flex min-h-11 items-center justify-self-start max-[340px]:min-w-11 md:hidden"
         >
-          {/* Under 340px the wordmark gives way to the logo mark so the streak and buttons still fit. */}
+          {/* Under 340px the wordmark gives way to the logo mark so the buttons still fit. */}
           <Logo className="max-[340px]:[&>span:last-child]:hidden" />
         </Link>
 
-        <div className="justify-self-center">
-          {user && !calm && <ProgressHud initialProgress={initialProgress} />}
-        </div>
+        {/* The middle column stays: it pushes the right-hand cluster to the far edge. */}
+        <div />
 
         <div className="flex items-center gap-2 justify-self-end sm:gap-3">
           {/* Matches how every major app anchors the profile avatar at the
