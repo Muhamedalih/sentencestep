@@ -1,16 +1,19 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The mark: three word-shaped bars climbing like stairs — a sentence built
- * one word, one step at a time. Same geometry as public/favicon.svg and the
- * public/icon-*.png app icons (there it sits light on an ink tile).
+ * The mark: the installed app icon itself — three word-shaped bars climbing like
+ * stairs, light on an ink tile — identical to public/favicon.svg and the
+ * public/icon-*.png files, so the in-app logo and the tab/app icon match.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true" className={className}>
-      <rect x="5" y="33" width="17" height="7.5" rx="3.75" />
-      <rect x="15.5" y="20.25" width="17" height="7.5" rx="3.75" />
-      <rect x="26" y="7.5" width="17" height="7.5" rx="3.75" />
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <rect width="64" height="64" rx="16" fill="#2F2A7A" />
+      <g transform="translate(8 8)" fill="#F4F3FB">
+        <rect x="5" y="33" width="17" height="7.5" rx="3.75" />
+        <rect x="15.5" y="20.25" width="17" height="7.5" rx="3.75" />
+        <rect x="26" y="7.5" width="17" height="7.5" rx="3.75" />
+      </g>
     </svg>
   );
 }
@@ -31,15 +34,7 @@ export function Logo({
         className,
       )}
     >
-      <LogoMark
-        className={cn(
-          // Fixed to the app icon's own ink (#2F2A7A, light #ECEAFB on dark
-          // themes) rather than the theme-driven --primary token, so the
-          // in-app mark reads as the same brand color as the installed icon.
-          "shrink-0 text-[#2F2A7A] dark:text-[#ECEAFB]",
-          size === "sm" ? "size-[22px]" : "size-6.5",
-        )}
-      />
+      <LogoMark className={cn("shrink-0", size === "sm" ? "size-[24px]" : "size-7")} />
       <span>SentenceStep</span>
     </span>
   );
