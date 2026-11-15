@@ -3,6 +3,7 @@ import { cache } from "react";
 import { unitsByMode } from "@/data/units";
 import { lessonsByMode } from "@/data/lessons";
 import {
+  fetchDraftLessonSummaries,
   fetchLessonById,
   fetchLessonNav,
   fetchLessonSentenceStats,
@@ -90,6 +91,15 @@ export async function getLessonSummaries(
   return lessonsByMode[mode].map((lesson) => ({ ...lesson, sentences: [] }));
 }
 
+/** An admin's draft lessons of a mode as catalog cards — see fetchDraftLessonSummaries. Empty without Supabase. */
+export async function getDraftLessonSummaries(
+  mode: LearningMode,
+  locale?: SupportLocale,
+): Promise<LessonUnit[]> {
+  if (!isSupabaseConfigured()) return [];
+  return fetchDraftLessonSummaries(mode, locale);
+}
+
 /** Sentence and word counts of one lesson — see HomeLessons.lessonStats. */
 export type LessonCounts = { sentences: number; words: number };
 
@@ -162,8 +172,10 @@ export const getLessonById = cache(async function getLessonById(
   mode: LearningMode,
   id: string,
   locale?: SupportLocale,
+  /** An admin's own view of a still-draft lesson — see fetchLessonById. */
+  allowDraft = false,
 ): Promise<Lesson | undefined> {
-  if (isSupabaseConfigured()) return fetchLessonById(mode, id, locale);
+  if (isSupabaseConfigured()) return fetchLessonById(mode, id, locale, allowDraft);
   const lesson = lessonsByMode[mode].find((unit) => unit.id === id);
   if (!lesson) return undefined;
   return mode === "stories" ? withStoryVocabulary(lesson) : withLessonVocabulary(lesson);

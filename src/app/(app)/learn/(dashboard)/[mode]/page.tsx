@@ -7,7 +7,13 @@ import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { MODE_TITLE_KEY, MODE_DESCRIPTION_KEY } from "@/components/marketing/mode-title-key";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessonSummaries, getLessons, getLevelNames } from "@/lib/content";
+import {
+  getDraftLessonSummaries,
+  getLessonSummaries,
+  getLessons,
+  getLevelNames,
+} from "@/lib/content";
+import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { LEARNING_MODES, isLearningMode, modeMeta } from "@/lib/learning-modes";
@@ -89,6 +95,15 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
 
   const isPremiumUser = hasPremium || isAdminUser;
 
+  // An admin also sees the lessons still in draft, after the published ones, so a new lesson can
+  // be tried in the real list before it is published. Learners (and an admin who switched to the
+  // learner's view) never get this: the drafts come from their own uncached read.
+  const draftUnits =
+    mode === "normal" && isAdminUser && !(await isLearnerViewOn())
+      ? await getDraftLessonSummaries(mode, locale ?? undefined).catch(() => [])
+      : [];
+  const listedUnits = draftUnits.length > 0 ? [...units, ...draftUnits] : units;
+
   return (
     <div className="mx-auto max-w-5xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
       {/* "normal" is really Stories' "Longer Stories" half (see
@@ -100,7 +115,7 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
         mode={mode}
         title={title}
         description={description}
-        units={units}
+        units={listedUnits}
         isPremiumUser={isPremiumUser}
         levelNames={levelNames}
         recallCount={recallCount}
