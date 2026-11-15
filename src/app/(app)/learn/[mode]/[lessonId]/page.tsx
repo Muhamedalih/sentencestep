@@ -110,9 +110,12 @@ export default async function LessonPage({
   // see fetchLessonNav's doc comment for why the previous full-list fetch
   // here was the single most expensive call on this page after
   // fetchLessonById's own.
+  // An admin may also open a lesson that is still a draft (their own preview inside the real
+  // player); everyone else gets only published lessons, exactly as before.
+  const adminViewer = await isAdmin();
   const [lessonNav, baseUnit, user, opener] = await Promise.all([
     getLessonNav(mode),
-    getLessonById(mode, lessonId, locale ?? undefined),
+    getLessonById(mode, lessonId, locale ?? undefined, adminViewer),
     getCurrentUser(),
     // Only the three opening lessons (First Steps) ever ask: which of the two opening-lesson tests this
     // visitor is in (the short text, the skip button) and, for the short text, its sentences.

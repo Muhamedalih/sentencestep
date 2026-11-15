@@ -453,6 +453,78 @@ export const fetchLessonSummaries = unstable_cache(
   { tags: ["lesson-nav", "levels"], revalidate: 300 },
 );
 
+/**
+ * The draft lessons of a mode, as catalog cards, for an admin's own list only. Not cached and
+ * session-aware on purpose: the shared summaries above are read with the anonymous client and are
+ * the same for every viewer, so a draft must never go through them. The `lessons` RLS policy gives
+ * a non-admin session no draft rows, so even a wrong call returns an empty list.
+ */
+export async function fetchDraftLessonSummaries(
+  mode: LearningMode,
+  locale?: SupportLocale,
+): Promise<LessonUnit[]> {
+  const supabase = await createClient();
+  const [{ data: rows, error }, { data: levels, error: levelsError }] = await Promise.all([
+    supabase
+      .from("lessons")
+      .select(
+        "id, mode, level_id, order_index, title, title_ar, description, description_ar, is_free, status, illustration_url",
+      )
+      .eq("mode", mode)
+      .eq("status", "draft")
+      .order("order_index"),
+    supabase.from("levels").select("id, index").eq("mode", mode),
+  ]);
+  if (error) throw error;
+  if (levelsError) throw levelsError;
+  const drafts = rows ?? [];
+  if (drafts.length === 0) return [];
+
+  const levelIndexById = new Map((levels ?? []).map((level) => [level.id, level.index]));
+  const translations = locale
+    ? await getContentTranslations(
+        "lesson",
+        drafts.map((lesson) => lesson.id),
+        locale,
+      )
+    : undefined;
+
+  return drafts.map((lesson) => {
+    const unit: LessonUnit = {
+      id: lesson.id,
+      mode: lesson.mode,
+      level: levelIndexById.get(lesson.level_id) ?? 1,
+      order: lesson.order_index,
+      title: lesson.title,
+      titleAr: lesson.title_ar,
+      isFree: lesson.is_free,
+      illustrationUrl: lesson.illustration_url ?? undefined,
+      description: lesson.description ?? undefined,
+      descriptionAr: lesson.description_ar ?? undefined,
+      sentences: [],
+    };
+    if (locale && translations) {
+      const supportTitle = resolveScalarField(
+        translations,
+        lesson.id,
+        "title",
+        lesson.title_ar,
+        locale,
+      );
+      if (supportTitle !== undefined) unit.supportTitle = supportTitle;
+      const supportDescription = resolveScalarField(
+        translations,
+        lesson.id,
+        "description",
+        lesson.description_ar,
+        locale,
+      );
+      if (supportDescription !== undefined) unit.supportDescription = supportDescription;
+    }
+    return unit;
+  });
+}
+
 /** Ids per request — this reads two short columns, so it can take far more than fetchLessons' 40, while staying well inside URL length limits. */
 const SENTENCE_STATS_CHUNK_SIZE = 60;
 
@@ -628,6 +700,12 @@ export async function fetchLessonById(
   mode: LearningMode,
   id: string,
   locale?: SupportLocale,
+  /**
+   * An admin's own view: also return a lesson that is still a draft. Only the lesson page passes
+   * true, and only for an admin; the lessons RLS policy ("Published lessons are public; admins see
+   * all") is the second lock, since a non-admin session never receives a draft row at all.
+   */
+  allowDraft = false,
 ): Promise<Lesson | undefined> {
   const supabase = await createClient();
 
@@ -650,7 +728,7 @@ export async function fetchLessonById(
         .select("*, levels(*)")
         .eq("mode", mode)
         .eq("id", id)
-        .eq("status", "published")
+        .in("status", allowDraft ? ["published", "draft"] : ["published"])
         .maybeSingle(),
       supabase.from("sentences").select("*").eq("lesson_id", id).order("order_index"),
     ]);
@@ -658,7 +736,11 @@ export async function fetchLessonById(
   if (lessonError) throw lessonError;
   if (sentencesError) throw sentencesError;
   // Defensive double-check, see isLearnerVisibleStatus's doc comment.
-  if (!lesson || !isLearnerVisibleStatus(lesson.status)) return undefined;
+  if (
+    !lesson ||
+    !(isLearnerVisibleStatus(lesson.status) || (allowDraft && lesson.status === "draft"))
+  )
+    return undefined;
 
   const level = (
     lesson as unknown as { levels: Database["public"]["Tables"]["levels"]["Row"] | null }
