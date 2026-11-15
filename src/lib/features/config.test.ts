@@ -435,7 +435,6 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       wordsMap: false,
       faceRatings: false,
       videoSilence: false,
-      logoInk: false,
       passageExam: false,
       homeCalm: false,
     });
