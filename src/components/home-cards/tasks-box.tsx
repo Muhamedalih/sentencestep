@@ -25,7 +25,8 @@ import type { DailyQuest, DailyQuestsPayload } from "@/lib/features/quests";
 import { requiredQuests } from "@/lib/today/quests";
 import { cn } from "@/lib/utils";
 
-import { HOME_CARD_COLORS, TASKS } from "./palette";
+import { GREY, HOME_CARD_COLORS, TASKS } from "./palette";
+import { useGreyHome } from "./use-grey-home";
 import { TasksStepsBox } from "./tasks-steps";
 
 type RowState = "done" | "current" | "idle";
@@ -209,7 +210,9 @@ function TaskRow({
 function TasksPanel({ payload }: { payload: DailyQuestsPayload }) {
   const { t, dir } = useLocale();
   const copy = t.today;
-  const colors = HOME_CARD_COLORS.lesson;
+  // The grey look of Home (permission "greyCalm"): the same neutral grey and small corners as the tasks capsule.
+  const grey = useGreyHome();
+  const colors = grey ? GREY.colors.neutral : HOME_CARD_COLORS.lesson;
   const quests = payload.quests;
   const current = quests.find((quest) => !quest.completed);
   const required = requiredQuests(quests);
@@ -227,7 +230,11 @@ function TasksPanel({ payload }: { payload: DailyQuestsPayload }) {
     <section
       aria-label={copy.questsHeading}
       className="rounded-2xl border px-5 pt-5 pb-2.5 sm:px-6"
-      style={{ background: colors.background, borderColor: colors.edge }}
+      style={{
+        background: colors.background,
+        borderColor: colors.edge,
+        borderRadius: grey ? GREY.radius.capsule : undefined,
+      }}
     >
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="text-[15px] font-bold" dir={dir}>
@@ -303,7 +310,8 @@ export function TasksBox({
   className?: string;
 }) {
   const { t, dir } = useLocale();
-  const colors = HOME_CARD_COLORS.lesson;
+  const grey = useGreyHome();
+  const colors = grey ? GREY.colors.neutral : HOME_CARD_COLORS.lesson;
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const { rollouts } = useFeatures();
@@ -346,7 +354,13 @@ export function TasksBox({
     <div className={className}>
       <div
         className="hover:border-primary/40 relative flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-(--hc-edge) px-3.5 py-3 transition-colors xl:h-[4.4rem] xl:flex-nowrap xl:gap-x-0 xl:py-0 xl:pe-4"
-        style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
+        style={
+          {
+            background: colors.background,
+            "--hc-edge": colors.edge,
+            borderRadius: grey ? GREY.radius.capsule : undefined,
+          } as CSSProperties
+        }
       >
         {quests && (
           <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">

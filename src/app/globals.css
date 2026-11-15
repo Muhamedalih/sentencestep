@@ -1037,3 +1037,36 @@ html[data-keyboard] .kb-hide {
   transform: none;
   box-shadow: none;
 }
+
+/*
+ * The grey look of Home (permission "greyCalm"): on Home alone (DashboardChrome sets data-grey-calm)
+ * the page is #0e0f11 instead of the black one, and from md: up the side menu is a darker #090a0b
+ * closed by a #171a1d line, its open item #202124 and the other items #a1a5ab, all with 8 px corners
+ * (the approved mock-up, reports/home-grey-calm-v2-2026-11-15.html). Dark theme only. The cards'
+ * own colours are in the Home cards' palette.ts (GREY), not here.
+ */
+.dark [data-grey-calm] {
+  --background: #0e0f11;
+  background-color: var(--background);
+}
+@media (min-width: 48rem) {
+  .dark [data-grey-calm] [data-learn-side] {
+    background-color: #090a0b;
+    border-right: 1px solid #171a1d;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .dark [data-grey-calm] [data-learn-side] a {
+    border-radius: 8px;
+  }
+  .dark [data-grey-calm] [data-learn-side] a:not([aria-current="page"]) {
+    color: #a1a5ab;
+  }
+  .dark [data-grey-calm] [data-learn-side] a:not([aria-current="page"]):hover {
+    color: var(--foreground);
+  }
+  .dark [data-grey-calm] [data-learn-side] a[aria-current="page"],
+  .dark [data-grey-calm] [data-learn-side] a:has([data-pending]) {
+    background-color: #202124;
+  }
+}

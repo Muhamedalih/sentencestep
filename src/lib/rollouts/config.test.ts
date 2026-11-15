@@ -215,6 +215,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     videoSilence: false,
     passageExam: false,
     homeCalm: false,
+    greyCalm: false,
   });
 });
 
@@ -249,6 +250,22 @@ test("the calm look: Admins only until opened, and it needs neither the Home car
       homeCards: false,
       todaySession: false,
     }).homeCalm,
+    true,
+  );
+});
+
+test("the grey look of Home: Admins only until opened, and it needs neither the Home cards nor Today's session", () => {
+  const config = defaultRolloutConfig();
+  assert.equal(evaluateRollouts(config, admin).greyCalm, true);
+  assert.equal(evaluateRollouts(config, learner).greyCalm, false);
+  assert.equal(evaluateRollouts(config, guest).greyCalm, false);
+  config.greyCalm = entry({ mode: "everyone" });
+  assert.equal(
+    withRolloutDependencies({
+      ...evaluateRollouts(config, guest),
+      homeCards: false,
+      todaySession: false,
+    }).greyCalm,
     true,
   );
 });

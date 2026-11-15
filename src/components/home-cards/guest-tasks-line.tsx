@@ -8,7 +8,8 @@ import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 
-import { HOME_CARD_COLORS, TASKS } from "./palette";
+import { GREY, HOME_CARD_COLORS, TASKS } from "./palette";
+import { useGreyHome } from "./use-grey-home";
 
 /**
  * A visitor without an account on the Home cards page (permission guestCards): where a learner has
@@ -20,12 +21,20 @@ import { HOME_CARD_COLORS, TASKS } from "./palette";
 export function GuestTasksLine() {
   const { guestTeaser } = useFeatures();
   const { t } = useLocale();
+  const grey = useGreyHome();
   if (!guestTeaser) return null;
-  const colors = HOME_CARD_COLORS.lesson;
+  // The grey look of Home (permission "greyCalm"): the same neutral grey and small corners as the tasks capsule.
+  const colors = grey ? GREY.colors.neutral : HOME_CARD_COLORS.lesson;
   return (
     <div
       className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border border-(--hc-edge) px-3.5 py-3 xl:h-[4.4rem] xl:py-0 xl:pe-4"
-      style={{ background: colors.background, "--hc-edge": colors.edge } as CSSProperties}
+      style={
+        {
+          background: colors.background,
+          "--hc-edge": colors.edge,
+          borderRadius: grey ? GREY.radius.capsule : undefined,
+        } as CSSProperties
+      }
     >
       <div className="flex min-w-0 flex-1 basis-56 items-center gap-3.5">
         <span

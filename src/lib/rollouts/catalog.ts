@@ -51,6 +51,7 @@ export const ROLLOUT_IDS = [
   "videoSilence",
   "passageExam",
   "homeCalm",
+  "greyCalm",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -565,6 +566,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the look changes: the same links, the same numbers, the same tabs and the same words. No new reads or requests, no migration.",
       "The tabs, the card lift and the tasks capsule are Home's only.",
       "The capsule's start button goes to the same place as the current row of the opened box; the box itself, opened, is unchanged.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  greyCalm: {
+    id: "greyCalm",
+    audience: "learner",
+    title: "Home: a grey page and tinted cards",
+    description:
+      "Home on a soft grey page (#0e0f11) with a darker side menu and one flat colour per card, each in the hue of its section: Stories midnight violet, Passages steel blue, Video YouTube red, Words and the lesson card indigo, and the level panel and the daily-tasks capsule neutral grey. Every card has a lighter edge of its own hue and small 8 px corners (buttons, tags and the open menu item too). The pictures on the cards, the words, the numbers and the links are the same as before.",
+    notes: [
+      "Only the look of Home changes, and only in the dark theme for the page and the menu: the other pages keep their black page, and no read or request is added.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

@@ -16,14 +16,16 @@ import { storyMonogram } from "@/lib/story-monogram";
 import { cn } from "@/lib/utils";
 import type { LessonUnit } from "@/types/content";
 
-import { HOME_CARD_COLORS, STORY_BOOK } from "./palette";
+import { GREY, STORY_BOOK, homeCardColors } from "./palette";
 import { homeCardsStrings } from "./strings";
+import { useGreyHome } from "./use-grey-home";
 
 type Choice = "lesson" | "story";
 
 /** The shade that lets the lesson's picture fade into the card's own colour. */
-const LESSON_BASE = HOME_CARD_COLORS.lesson.base;
-const LESSON_SHADE = `linear-gradient(90deg,${LESSON_BASE} 0%,${LESSON_BASE} 36%,color-mix(in srgb,${LESSON_BASE} 86%,transparent) 54%,transparent 100%)`;
+function lessonShade(base: string): string {
+  return `linear-gradient(90deg,${base} 0%,${base} 36%,color-mix(in srgb,${base} 86%,transparent) 54%,transparent 100%)`;
+}
 
 /** The white button of the story choice (the lesson choice keeps the site's own button, like every lesson card). */
 const WHITE_BUTTON =
@@ -101,8 +103,11 @@ export function ContinueCard({
     progress,
   );
   const [picked, setPicked] = useState<Choice | null>(null);
-  const stories = HOME_CARD_COLORS.stories;
-  const lessonColors = HOME_CARD_COLORS.lesson;
+  // The grey look of Home (permission "greyCalm"): one flat colour per side, small corners.
+  const grey = useGreyHome();
+  const stories = homeCardColors(grey, "stories");
+  const lessonColors = homeCardColors(grey, "lesson");
+  const whiteButtonStyle = grey ? { borderRadius: GREY.radius.button } : undefined;
   // The calm look (permission "homeCalm"): the two choices are tabs above the card instead of a pill inside it; the card itself is unchanged.
   const calm = rollouts.homeCalm;
 
@@ -147,6 +152,7 @@ export function ContinueCard({
         {
           background: lessonColors.background,
           borderColor: onStory ? stories.edge : lessonColors.edge,
+          borderRadius: grey ? GREY.radius.card : undefined,
           "--hc-i": 1,
         } as CSSProperties
       }
@@ -214,7 +220,10 @@ export function ContinueCard({
             className="absolute inset-y-0 end-0 aspect-auto h-full w-[68%] rounded-none border-0 shadow-none"
           />
         )}
-        <div className="absolute inset-0" style={{ backgroundImage: LESSON_SHADE }} />
+        <div
+          className="absolute inset-0"
+          style={{ backgroundImage: lessonShade(lessonColors.base) }}
+        />
         {lesson ? (
           <Texts
             title={lesson.title}
@@ -295,6 +304,7 @@ export function ContinueCard({
               background: stories.chip,
               borderColor: stories.chipEdge,
               color: stories.accent,
+              borderRadius: grey ? GREY.radius.chip : undefined,
             }}
             dir={dir}
           >
@@ -354,14 +364,18 @@ export function ContinueCard({
               ) : null
             }
           >
-            <Link href={`/learn/stories/${story.id}`} className={WHITE_BUTTON}>
+            <Link
+              href={`/learn/stories/${story.id}`}
+              className={WHITE_BUTTON}
+              style={whiteButtonStyle}
+            >
               <span dir={dir}>{storiesDone.length > 0 ? s.storyContinue : s.storyStart}</span>
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </Texts>
         ) : (
           <Texts narrow title={t.nav.stories} support={s.storiesAllDone} lines={null}>
-            <Link href="/learn/stories" className={WHITE_BUTTON}>
+            <Link href="/learn/stories" className={WHITE_BUTTON} style={whiteButtonStyle}>
               <span dir={dir}>{t.nav.stories}</span>
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>

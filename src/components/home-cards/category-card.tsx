@@ -7,8 +7,9 @@ import { ArrowRight, Maximize, Play, Settings, Subtitles, Volume2 } from "lucide
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 
-import { ORB, PAPER, VIDEO_SCENE } from "./palette";
+import { GREY, ORB, PAPER, VIDEO_SCENE } from "./palette";
 import type { CardColors } from "./palette";
+import { useGreyHome } from "./use-grey-home";
 import { YouTubeIcon } from "./youtube-mark";
 
 /** The picture that rises from the card's foot: a stack of paper sheets, or a video frame. */
@@ -285,12 +286,15 @@ export function CategoryCard({
   index?: number;
 }) {
   const { dir } = useLocale();
+  // The grey look of Home (permission "greyCalm"): small corners (the colours come from the caller).
+  const grey = useGreyHome();
   const className = cn(
     "hc-card hc-rise group relative isolate flex min-h-[13.75rem] min-w-0 flex-1 basis-[20rem] flex-col overflow-hidden rounded-2xl border p-5 text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70",
   );
   const style = {
     background: colors.background,
     borderColor: colors.edge,
+    borderRadius: grey ? GREY.radius.card : undefined,
     "--hc-accent": colors.accent,
     "--hc-i": index,
   } as CSSProperties;
@@ -301,7 +305,12 @@ export function CategoryCard({
         {badge}
         <span
           className="rounded-lg border px-2.5 py-1 text-xs font-semibold"
-          style={{ background: colors.chip, borderColor: colors.chipEdge, color: colors.accent }}
+          style={{
+            background: colors.chip,
+            borderColor: colors.chipEdge,
+            color: colors.accent,
+            borderRadius: grey ? GREY.radius.chip : undefined,
+          }}
           dir={dir}
         >
           {kind}

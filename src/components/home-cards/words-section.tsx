@@ -9,9 +9,10 @@ import type { BankCardData } from "@/lib/word-bank/shelves";
 import { bankStrings } from "@/lib/word-bank/strings";
 import type { WeakWordItem } from "@/lib/weak-words/types";
 
-import { HOME_CARD_COLORS, PAPER } from "./palette";
+import { GREY, PAPER, homeCardColors } from "./palette";
 import { homeCardsStrings } from "./strings";
 import { useCountUp } from "./use-count-up";
+import { useGreyHome } from "./use-grey-home";
 
 /** How the four word cards sit in the hand: their turn, and how far each is lowered. */
 const HAND = [
@@ -69,7 +70,9 @@ export function WordsSection({
   const b = bankStrings(locale);
   const count = bank ? bank.count : reviewCount;
   const shown = useCountUp(count, true);
-  const colors = HOME_CARD_COLORS.words;
+  // The grey look of Home (permission "greyCalm"): one flat indigo, small corners (only on Home: this section also sits on the Word Lists page).
+  const grey = useGreyHome();
+  const colors = homeCardColors(grey, "words");
   const cards: FanCard[] = bank
     ? bank.words.slice(0, HAND.length).map((word) => ({
         key: word.word,
@@ -97,6 +100,7 @@ export function WordsSection({
         {
           background: colors.background,
           borderColor: colors.edge,
+          borderRadius: grey ? GREY.radius.card : undefined,
           "--hc-i": index,
         } as CSSProperties
       }
@@ -104,7 +108,12 @@ export function WordsSection({
       <span className="absolute end-4 top-4 z-10">
         <span
           className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold"
-          style={{ background: colors.chip, borderColor: colors.chipEdge, color: colors.accent }}
+          style={{
+            background: colors.chip,
+            borderColor: colors.chipEdge,
+            color: colors.accent,
+            borderRadius: grey ? GREY.radius.chip : undefined,
+          }}
           dir={dir}
         >
           <PenLine className="size-3.5" aria-hidden="true" />
@@ -159,6 +168,7 @@ export function WordsSection({
             href={href}
             prefetch={bank ? false : undefined}
             className="inline-flex h-10 items-center rounded-[11px] bg-white px-5 text-[14.5px] font-bold text-slate-900 transition-colors outline-none hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white/70"
+            style={grey ? { borderRadius: GREY.radius.button } : undefined}
           >
             <span dir={dir}>
               {bank || reviewCount > 0 ? t.wordLists.needsReviewAction : t.nav.wordLists}
