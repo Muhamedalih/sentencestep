@@ -52,6 +52,7 @@ export const ROLLOUT_IDS = [
   "passageExam",
   "homeCalm",
   "greyCalm",
+  "storyCovers",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -577,6 +578,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Home on a soft grey page (#0e0f11) with a darker side menu and one flat colour per card, each in the hue of its section: Stories midnight violet, Passages steel blue, Video YouTube red, Words and the lesson card indigo, and the level panel and the daily-tasks capsule neutral grey. Every card has a lighter edge of its own hue and small 8 px corners (buttons, tags and the open menu item too). The pictures on the cards, the words, the numbers and the links are the same as before.",
     notes: [
       "Only the look of Home changes, and only in the dark theme for the page and the menu: the other pages keep their black page, and no read or request is added.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  storyCovers: {
+    id: "storyCovers",
+    audience: "learner",
+    title: "Stories with picture covers",
+    description:
+      "The Stories library is drawn like the Word Lists: every story is a calm, fully drawn 4:3 cover in soft colours with its name in English and in the learner's language and a thin bar under it, the three levels as tabs and the stories of the chosen level in one grid (two across on a phone, three on a laptop, four on a wide screen), instead of the letter tiles. Each story has a drawing made for it.",
+    notes: [
+      "Only the look of the library changes: the stories, their lock, today's free story, the recall card and every learner's progress stay exactly as they are.",
+      "The drawings are made in code, so no image is downloaded and nothing new is read or written.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

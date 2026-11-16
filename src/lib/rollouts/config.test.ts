@@ -216,6 +216,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     passageExam: false,
     homeCalm: false,
     greyCalm: false,
+    storyCovers: false,
   });
 });
 

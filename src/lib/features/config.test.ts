@@ -438,6 +438,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       passageExam: false,
       homeCalm: false,
       greyCalm: false,
+      storyCovers: false,
     });
   }
 });

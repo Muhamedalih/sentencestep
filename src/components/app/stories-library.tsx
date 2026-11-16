@@ -7,9 +7,10 @@ import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { StoryCard } from "@/components/app/story-card";
 import type { Readiness } from "@/lib/word-bank/readiness";
 import { VocabularySectionRecallCard } from "@/components/app/vocabulary-section-recall-card";
+import { useFeatures } from "@/components/providers/feature-provider";
+import { StoryCoverCard } from "@/components/stories/story-cover-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useProgress } from "@/hooks/use-progress";
 import { difficultyForLevel, tierSupportLabel, type Difficulty } from "@/lib/levels";
@@ -56,10 +57,11 @@ export function StoriesLibrary({
   /** How much of each unfinished story the learner has typed before, by story id (see readinessByLesson). Empty for everyone the words bank is closed to. */
   readiness?: Record<string, Readiness>;
 }) {
+  const { rollouts } = useFeatures();
   const { isCompleted, isLoaded } = useProgress();
   const { locale, dir, t } = useLocale();
   // The phone list header of the mobilePhoneUx permission (below md: only): one title line, no icon tile or intro, one-line level tabs.
-  const phoneUx = useFeatures().rollouts.mobilePhoneUx;
+  const phoneUx = rollouts.mobilePhoneUx;
   const [activeTier, setActiveTier] = useState<Difficulty>("beginner");
   const [page, setPage] = useState(1);
 
@@ -89,6 +91,88 @@ export function StoriesLibrary({
   function selectTier(tier: Difficulty) {
     setActiveTier(tier);
     setPage(1);
+  }
+
+  if (rollouts.storyCovers) {
+    return (
+      <div>
+        <div className="mb-6 flex items-center gap-4">
+          <div
+            aria-hidden="true"
+            className="from-primary/15 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br to-transparent sm:size-14"
+          >
+            <BookOpen className="size-6 sm:size-7" />
+          </div>
+          <div>
+            <h1
+              className="from-foreground to-foreground/70 bg-gradient-to-r bg-clip-text py-1 text-3xl leading-[1.4] font-semibold tracking-tight text-transparent sm:text-4xl"
+              dir={dir}
+            >
+              {t.library.storiesHeading}
+            </h1>
+            <p className="text-muted-foreground mt-2 text-lg" dir={dir}>
+              {t.library.storiesSubtitle}
+            </p>
+          </div>
+        </div>
+
+        <VocabularySectionRecallCard mode="stories" count={recallCount} />
+
+        <div className="bg-muted mt-5 flex rounded-[10px] p-[3px] md:inline-flex">
+          {TIERS.map((tier) => (
+            <button
+              key={tier}
+              type="button"
+              onClick={() => selectTier(tier)}
+              aria-pressed={tier === activeTier}
+              className={cn(
+                "relative flex-1 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-colors duration-150 md:flex-none md:px-4",
+                tier === activeTier
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {tier === activeTier && (
+                <motion.span
+                  layoutId="stories-level-pill"
+                  aria-hidden="true"
+                  className="bg-brand-muted absolute inset-0 rounded-lg"
+                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                />
+              )}
+              <span dir="auto" className="relative">
+                {locale ? tierSupportLabel(tier, locale) : tier}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="font-medium">{t.library.storiesEmptyHeading}</p>
+            <p className="text-muted-foreground text-sm">{t.library.checkBackSoon}</p>
+          </div>
+        ) : (
+          <motion.div
+            key={activeTier}
+            initial="hidden"
+            animate="visible"
+            variants={staggerChildren}
+            className="mt-5 grid grid-cols-2 gap-x-3.5 gap-y-[22px] sm:gap-x-5 sm:gap-y-[26px] lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {filtered.map((lesson) => (
+              <StoryCoverCard
+                key={lesson.id}
+                lesson={lesson}
+                completed={isLoaded && isCompleted("stories", lesson.id)}
+                isPremiumUser={isPremiumUser}
+                openToday={lesson.id === openTodayId}
+              />
+            ))}
+          </motion.div>
+        )}
+      </div>
+    );
   }
 
   return (
