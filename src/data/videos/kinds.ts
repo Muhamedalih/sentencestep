@@ -46,6 +46,7 @@ export const videoKinds: Readonly<Record<string, VideoKind>> = {
   "army-ants-build-bridges": "science",
   "goldfish-in-the-filter-tank": "science",
   "this-bird-uses-vibrations-to-find-worms": "science",
+  "japanese-eel-escape": "science",
 
   "someone-elses-dream": "motivation",
   "the-tigers-and-the-strawberry-parable": "motivation",

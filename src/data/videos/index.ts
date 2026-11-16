@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { japaneseEelEscape } from "./japanese-eel-escape";
 import { ponyoRamen } from "./ponyo-ramen";
 import { happyRatsBoggling } from "./happy-rats-boggling";
 import { thisBirdUsesVibrationsToFindWorms } from "./this-bird-uses-vibrations-to-find-worms";
@@ -88,4 +89,5 @@ export const videoLessons: readonly VideoLesson[] = [
   thisBirdUsesVibrationsToFindWorms,
   happyRatsBoggling,
   ponyoRamen,
+  japaneseEelEscape,
 ];
