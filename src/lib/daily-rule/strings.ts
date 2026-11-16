@@ -69,6 +69,11 @@ export interface RuleStrings {
   librarySubtitle: string;
   /** The line over the library's bar: the level the course is on ({level}). */
   youAreIn: string;
+  /** The indigo box of the library (permission rulesWall): the label beside the count, the line under it ({total}, {level}), the review button, and the wall's name for screen readers ({met}, {total}). */
+  wallLearned: string;
+  wallProgress: string;
+  wallReview: string;
+  wallLabel: string;
   /** What a screen reader says of the library's row of level tabs. */
   levelTabsLabel: string;
   /** The library's first group: the rules whose day has come. */
@@ -161,6 +166,10 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     libraryTitle: "قواعدي (مسارك من A1 إلى B2)",
     librarySubtitle: "اقرأ القاعدة بلغتك، شوف أمثلتها، ثم تمرّن عليها.",
     youAreIn: "أنت في {level}",
+    wallLearned: "قاعدة تعلّمتها",
+    wallProgress: "من {total} قاعدة، المستوى {level} جارٍ",
+    wallReview: "راجع قواعدك",
+    wallLabel: "{met} من {total} قاعدة",
     levelTabsLabel: "مستويات المسار",
     dueSection: "تحتاج مراجعة اليوم",
     statusNext: "التالية",
@@ -232,6 +241,10 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     libraryTitle: "Mis reglas (tu camino de A1 a B2)",
     librarySubtitle: "Lee la regla en tu idioma, mira sus ejemplos y luego practícala.",
     youAreIn: "Estás en {level}",
+    wallLearned: "reglas aprendidas",
+    wallProgress: "de {total} reglas, vas en {level}",
+    wallReview: "Repasa tus reglas",
+    wallLabel: "{met} de {total} reglas",
     levelTabsLabel: "Niveles del camino",
     dueSection: "Para repasar hoy",
     statusNext: "Siguiente",
@@ -304,6 +317,10 @@ export const RULE_STRINGS: Record<SupportLocale, RuleStrings> = {
     libraryTitle: "Kurallarım (A1'den B2'ye yolun)",
     librarySubtitle: "Kuralı kendi dilinde oku, örneklerine bak, sonra üzerinde çalış.",
     youAreIn: "Şu an {level} seviyesindesin",
+    wallLearned: "kural öğrendin",
+    wallProgress: "{total} kuraldan, şu an {level}",
+    wallReview: "Kurallarını tekrar et",
+    wallLabel: "{total} kuraldan {met}",
     levelTabsLabel: "Yolun seviyeleri",
     dueSection: "Bugün tekrar edilecekler",
     statusNext: "Sıradaki",
