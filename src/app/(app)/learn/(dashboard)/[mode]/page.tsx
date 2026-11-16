@@ -105,7 +105,7 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
   const listedUnits = draftUnits.length > 0 ? [...units, ...draftUnits] : units;
 
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
+    <div className="mx-auto max-w-7xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">
       {/* "normal" is really Stories' "Longer Stories" half (see
           learn-sidebar.tsx's Stories merge doc comment) and needs the same
           switch back to Simple Stories that LibraryMobileTabs already gives

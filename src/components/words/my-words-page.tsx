@@ -79,7 +79,7 @@ export function MyWordsOverview({
   const nextIn = overview.nextDueOn ? daysUntil(overview.nextDueOn, todayISO) : null;
 
   return (
-    <div className="mx-auto w-full max-w-[1060px] px-4 pt-4 pb-10 md:px-6 md:pt-6">
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-10 md:px-6 md:pt-6">
       <div className="mb-3.5 md:mb-5 md:min-h-[52px]">
         <h1 className="text-left text-2xl leading-[1.2] font-semibold tracking-[-0.01em] md:text-[28px]">
           <span dir="auto">{t.myWords.title}</span>
@@ -415,7 +415,7 @@ export function MyWordsList({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1060px] px-4 pt-4 pb-10 md:px-6 md:pt-6">
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-10 md:px-6 md:pt-6">
       <Link
         href="/learn/words"
         prefetch={false}

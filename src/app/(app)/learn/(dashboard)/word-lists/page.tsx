@@ -97,7 +97,7 @@ export default async function WordListsPage({
   ) : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+    <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
       {/* The redesigned dashboard is admin-controlled ("Word Lists redesign" in /admin/features):
           everyone else keeps the library exactly as it was. */}
       {redesign && !features.rollouts.wordCovers ? (

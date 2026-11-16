@@ -208,7 +208,7 @@ export function VideoLibraryArranger({
   if (!arranging) {
     const visible = shown.filter((section) => section.ids.length > 0);
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         <LibraryHeader strings={strings} action={arrangeButton} />
         {message && <StatusLine message={message} className="-mt-2 mb-6" />}
         {visible.length === 0 ? (
@@ -242,7 +242,7 @@ export function VideoLibraryArranger({
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
       <div className="border-border/60 bg-background/90 sticky top-16 z-40 -mx-4 -mt-8 mb-7 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-2" dir="rtl">
           <Button size="sm" onClick={save} disabled={pending || !changed}>

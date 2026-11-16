@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16" aria-hidden="true">
+    <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16" aria-hidden="true">
       <div className="mb-8">
         <Skeleton className="mb-2 h-9 w-56" />
         <Skeleton className="h-6 w-72" />

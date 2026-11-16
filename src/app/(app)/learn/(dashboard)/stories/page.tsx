@@ -70,7 +70,7 @@ export default async function StoriesLibraryPage() {
   return (
     <div
       className={cn(
-        "mx-auto max-w-6xl px-6 py-8 sm:py-10",
+        "mx-auto max-w-7xl px-6 py-8 sm:py-10",
         phoneRollouts.mobilePhoneUx && "max-md:pt-4",
       )}
     >

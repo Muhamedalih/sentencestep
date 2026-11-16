@@ -41,7 +41,7 @@ export function VideoLibrary({
   }
   const shown = sections.filter((section) => section.ids.length > 0);
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
       <LibraryHeader strings={strings} />
       {shown.length === 0 ? (
         <p className="text-muted-foreground" dir="auto">
