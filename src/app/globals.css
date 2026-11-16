@@ -1070,3 +1070,129 @@ html[data-keyboard] .kb-hide {
     background-color: #202124;
   }
 }
+
+
+/*
+ * The banner at the top of the Passages list (the passagesBanner permission): headphones that float a
+ * few pixels, seven sound bars that breathe one after another, and an exam paper that rises on
+ * entering whose answers tick in one by one (then "3 / 3" appears) on a nine-second loop. Nothing is
+ * quick or flashing. The ticks use a `backwards` fill, so before their delay they are already in
+ * their first frame. Nothing moves for a visitor who asks for reduced motion (the answers then show
+ * ticked and the line shows "3 / 3").
+ */
+@keyframes pbn-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes pbn-breathe {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes pbn-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbn-pick {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  5% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  8% {
+    transform: scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pbn-done {
+  0% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  5% {
+    opacity: 1;
+    transform: none;
+  }
+  88% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pbn-fill {
+  0% {
+    transform: scaleX(0.12);
+  }
+  30% {
+    transform: scaleX(0.9);
+  }
+  88% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0.12);
+  }
+}
+.pbn-float {
+  animation: pbn-float 6s ease-in-out infinite;
+}
+.pbn-wave {
+  transform-origin: center;
+  animation: pbn-breathe 2.8s ease-in-out infinite;
+}
+.pbn-paper {
+  animation: pbn-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+.pbn-pick {
+  opacity: 0;
+  animation: pbn-pick 9s ease-in-out infinite backwards;
+}
+.pbn-done {
+  opacity: 0;
+  animation: pbn-done 9s ease-in-out infinite backwards;
+  animation-delay: 3.1s;
+}
+.pbn-fill {
+  transform-origin: left;
+  animation: pbn-fill 9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pbn-float,
+  .pbn-wave,
+  .pbn-paper,
+  .pbn-fill {
+    animation: none;
+  }
+  .pbn-pick,
+  .pbn-done {
+    animation: none;
+    opacity: 1;
+  }
+}

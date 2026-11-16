@@ -5,6 +5,8 @@ import { AudioLines, Headphones } from "lucide-react";
 import { LevelBadge } from "@/components/passages/level-badge";
 import { PassageCard } from "@/components/passages/passage-card";
 import { PassagesAdminBar } from "@/components/passages/passages-admin-bar";
+import { PassagesBanner } from "@/components/passages/passages-banner";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { passageStatus } from "@/lib/passages/progress";
 import type { PassageLevel, PassageProgress, PassageSummary } from "@/lib/passages/types";
@@ -41,6 +43,7 @@ export function PassagesLibrary({
   adminState: "admin" | "on" | null;
 }) {
   const { t, locale } = useLocale();
+  const { passagesBanner } = useFeatures().rollouts;
   const progressById = new Map(progress.map((entry) => [entry.passageId, entry]));
 
   const levels = [...new Set(passages.map((passage) => passage.level))];
@@ -49,29 +52,39 @@ export function PassagesLibrary({
     <div className="mx-auto max-w-7xl px-6 py-8 sm:py-10">
       {adminState && <PassagesAdminBar isPublic={adminState === "on"} />}
 
-      <header className="mb-9">
-        {/* Says what the section is for before anything else: it trains the ear. (Arabic joins its letters, so it is never spaced out or capitalised.) */}
-        <p
-          className={cn(
-            "border-primary/25 bg-primary/10 text-primary mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold",
-            locale !== "ar" && "tracking-[0.14em] uppercase",
-          )}
-        >
-          <AudioLines aria-hidden="true" className="size-3.5" />
-          {t.passages.eyebrow}
-        </p>
-        <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-          {/* Passages are lessons you listen to: the headphones sway slowly beside the title to say so (see .passage-headphones). */}
-          <Headphones
-            aria-hidden="true"
-            className="passage-headphones text-primary size-7 shrink-0 sm:size-9"
-          />
-          {t.passages.title}
-        </h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl leading-relaxed">
-          {t.passages.subtitle}
-        </p>
-      </header>
+      {passagesBanner && passages.length > 0 ? (
+        // The banner (permission passagesBanner) takes the page heading's place at the top.
+        <PassagesBanner
+          passages={passages}
+          progress={progress}
+          upNextId={upNextId}
+          title={t.passages.title}
+        />
+      ) : (
+        <header className="mb-9">
+          {/* Says what the section is for before anything else: it trains the ear. (Arabic joins its letters, so it is never spaced out or capitalised.) */}
+          <p
+            className={cn(
+              "border-primary/25 bg-primary/10 text-primary mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold",
+              locale !== "ar" && "tracking-[0.14em] uppercase",
+            )}
+          >
+            <AudioLines aria-hidden="true" className="size-3.5" />
+            {t.passages.eyebrow}
+          </p>
+          <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+            {/* Passages are lessons you listen to: the headphones sway slowly beside the title to say so (see .passage-headphones). */}
+            <Headphones
+              aria-hidden="true"
+              className="passage-headphones text-primary size-7 shrink-0 sm:size-9"
+            />
+            {t.passages.title}
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl leading-relaxed">
+            {t.passages.subtitle}
+          </p>
+        </header>
+      )}
 
       {passages.length === 0 ? (
         <div className="border-border rounded-2xl border border-dashed px-6 py-14 text-center">
