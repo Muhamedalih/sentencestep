@@ -59,7 +59,7 @@ export default async function SavedWordsPage() {
   if (features.rollouts.wordsPage) {
     // The one Words page: the saved words are its third tab, under the same title and tabs.
     return (
-      <div className="mx-auto w-full max-w-[1060px] px-4 pt-4 pb-10 md:px-6 md:pt-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-10 md:px-6 md:pt-6">
         <WordsHubHeader
           active="saved"
           tabs={availableTabs({

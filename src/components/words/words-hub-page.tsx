@@ -127,7 +127,7 @@ export async function WordsHubPage({ tab: tabParam, view }: { tab: unknown; view
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1060px] px-4 pt-4 pb-10 md:px-6 md:pt-6">
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-10 md:px-6 md:pt-6">
       <WordsHubHeader active={tab} tabs={tabs} locale={locale} />
       {body}
     </div>

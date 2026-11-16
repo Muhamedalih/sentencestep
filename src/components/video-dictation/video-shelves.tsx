@@ -42,7 +42,7 @@ export function ShelvesLibrary({
     }))
     .filter((section) => section.cards.length > 0);
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
       {playerHeader ? (
         <VideoHeader
           strings={strings}
