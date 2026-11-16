@@ -3,6 +3,7 @@ import { Lightbulb } from "lucide-react";
 
 import { RuleLevelTabs, type RuleLevelTab } from "@/components/today/rule-level-tabs";
 import { RuleTile } from "@/components/today/rule-tile";
+import { RulesWall } from "@/components/today/rules-wall";
 import { buttonVariants } from "@/components/ui/button";
 import type { Library, LibraryLevel, LibraryUnit } from "@/lib/daily-rule/library";
 import { fill, ruleStrings, ruleTextDir, type RuleStrings } from "@/lib/daily-rule/strings";
@@ -29,9 +30,12 @@ export function RulesLibrary({
   library,
   locale,
   preview = false,
+  wall = false,
 }: {
   library: Library;
   locale: SupportLocale | null;
+  /** The "rulesWall" permission: the indigo box with the wall, and covers on the cards. */
+  wall?: boolean;
   /** The viewer is an admin: the rules not met yet open their pages too. */
   preview?: boolean;
 }) {
@@ -40,7 +44,7 @@ export function RulesLibrary({
     label: level.label,
     tier: level.tier,
     count: `${level.met}/${level.total}`,
-    panel: <LevelPanel level={level} locale={locale} copy={copy} preview={preview} />,
+    panel: <LevelPanel level={level} locale={locale} copy={copy} preview={preview} cover={wall} />,
   }));
   const initial = (library.levels.find((level) => level.current) ?? library.levels[0])?.label;
   return (
@@ -65,7 +69,9 @@ export function RulesLibrary({
         </div>
       </header>
 
-      {library.met === 0 && (
+      {wall && <RulesWall library={library} locale={locale} copy={copy} />}
+
+      {library.met === 0 && !wall && (
         <div className="mb-8 flex flex-col items-center gap-3 py-6 text-center">
           <h2 className="text-2xl font-semibold tracking-tight" dir="auto">
             {copy.emptyTitle}
@@ -80,7 +86,7 @@ export function RulesLibrary({
       )}
 
       {library.due.length > 0 && (
-        <section className="mb-8">
+        <section id="due" className="mb-8 scroll-mt-24">
           <SectionHead title={copy.dueSection} count={String(library.due.length)} locale={locale} />
           <div className={cn(TILE_GRID, "mt-3")}>
             {library.due.map((rule) => (
@@ -98,6 +104,7 @@ export function RulesLibrary({
                 copy={copy}
                 openable
                 levelLabel={library.levels.length > 1 ? rule.levelLabel : undefined}
+                cover={wall}
               />
             ))}
           </div>
@@ -146,11 +153,13 @@ function LevelPanel({
   locale,
   copy,
   preview,
+  cover,
 }: {
   level: LibraryLevel;
   locale: SupportLocale | null;
   copy: RuleStrings;
   preview: boolean;
+  cover: boolean;
 }) {
   const percent = level.total > 0 ? (level.met / level.total) * 100 : 0;
   return (
@@ -171,7 +180,14 @@ function LevelPanel({
       <Bar percent={percent} className="h-1.5" />
       <div>
         {level.units.map((unit) => (
-          <UnitSection key={unit.id} unit={unit} locale={locale} copy={copy} preview={preview} />
+          <UnitSection
+            key={unit.id}
+            unit={unit}
+            locale={locale}
+            copy={copy}
+            preview={preview}
+            cover={cover}
+          />
         ))}
       </div>
     </div>
@@ -184,11 +200,13 @@ function UnitSection({
   locale,
   copy,
   preview,
+  cover,
 }: {
   unit: LibraryUnit;
   locale: SupportLocale | null;
   copy: RuleStrings;
   preview: boolean;
+  cover: boolean;
 }) {
   const percent = unit.total > 0 ? (unit.met / unit.total) * 100 : 0;
   return (
@@ -206,6 +224,7 @@ function UnitSection({
             // carries the rule row); later rules stay closed. An admin opens every rule's page.
             openable={preview || rule.state !== "ahead"}
             href={!preview && rule.state === "next" ? START_NEXT_RULE_HREF : undefined}
+            cover={cover}
           />
         ))}
       </div>

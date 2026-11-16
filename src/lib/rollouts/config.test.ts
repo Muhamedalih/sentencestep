@@ -217,6 +217,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     homeCalm: false,
     greyCalm: false,
     storyCovers: false,
+    rulesWall: false,
   });
 });
 

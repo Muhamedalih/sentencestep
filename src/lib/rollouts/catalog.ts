@@ -53,6 +53,7 @@ export const ROLLOUT_IDS = [
   "homeCalm",
   "greyCalm",
   "storyCovers",
+  "rulesWall",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -591,6 +592,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the look of the library changes: the stories, their lock, today's free story, the recall card and every learner's progress stay exactly as they are.",
       "The drawings are made in code, so no image is downloaded and nothing new is read or written.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  rulesWall: {
+    id: "rulesWall",
+    audience: "learner",
+    title: "My rules: the indigo wall and the formula covers",
+    description:
+      "On the «قواعدي» page, a deep indigo box under the title shows how many rules the learner has met, with a wall of bricks where every rule met is a lit brick, the number of rules to review, and the level the course is on. Every rule card gets a soft coloured cover with the rule's formula as its picture. The cards, tabs and links keep working as before.",
+    notes: [
+      "Nothing new is stored or fetched: the box reads the same library the page already builds.",
+      "Each row of the wall is a level of the course (A1 at the bottom); its lit bricks show how far the learner is on that level.",
     ],
   },
   mobilePath: {

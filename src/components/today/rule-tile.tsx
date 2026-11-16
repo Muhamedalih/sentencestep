@@ -8,6 +8,14 @@ import { ruleTextDir, type RuleStrings } from "@/lib/daily-rule/strings";
 import type { SupportLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
+/** The soft covers of the cards (permission rulesWall): four tones, by the rule's number, dark ink on a pale ground. */
+const COVER_TONES = [
+  { bg: "#d9dcff", ink: "#25276b" },
+  { bg: "#d6ecf5", ink: "#1d4a63" },
+  { bg: "#e6dcf3", ink: "#43286a" },
+  { bg: "#f3dce3", ink: "#6a2840" },
+] as const;
+
 /** What a tile of the rule library shows of one rule. */
 export type TileRule = Pick<MapRule, "id" | "title" | "order" | "state" | "dots" | "idea">;
 
@@ -27,6 +35,7 @@ export function RuleTile({
   openable,
   href,
   levelLabel,
+  cover = false,
 }: {
   rule: TileRule;
   locale: SupportLocale | null;
@@ -37,11 +46,88 @@ export function RuleTile({
   href?: string | undefined;
   /** The level's name, for a card shown outside its level (today's reviews, with more than one level on the map). */
   levelLabel?: string | undefined;
+  /** The permission rulesWall: a soft coloured cover with the rule's formula as its picture. */
+  cover?: boolean;
 }) {
   const met = rule.state === "due" || rule.state === "held" || rule.state === "learning";
   const next = rule.state === "next";
   const ahead = rule.state === "ahead";
-  const card = (
+  const tone = COVER_TONES[rule.order % COVER_TONES.length]!;
+  const card = cover ? (
+    <div
+      className={cn(
+        "border-border/60 bg-card relative flex h-full w-full flex-col overflow-hidden rounded-2xl border",
+        "max-sm:flex-row max-sm:items-center max-sm:gap-3 max-sm:p-3",
+        next && "border-primary/55",
+        ahead && (openable ? "opacity-60" : "opacity-45"),
+        openable &&
+          cn(
+            "transition-[translate,border-color,scale] [transition-duration:300ms,300ms,150ms]",
+            "hover:border-foreground/20 motion-safe:group-hover:-translate-y-1",
+            "motion-safe:group-active:-translate-y-px motion-safe:group-active:scale-[0.985]",
+          ),
+      )}
+    >
+      <div
+        className="relative flex h-28 items-center justify-center px-4 text-center max-sm:hidden"
+        style={{ backgroundColor: tone.bg, color: tone.ink }}
+      >
+        <h3 className="line-clamp-2 text-[17px] leading-tight font-semibold" dir="ltr">
+          {rule.title}
+        </h3>
+        {met && (
+          <StoryRibbon
+            difficulty="beginner"
+            status="completed"
+            className="absolute start-3.5 top-0 h-9 w-[18px] pt-1.5"
+          />
+        )}
+      </div>
+      <span
+        aria-hidden="true"
+        className="relative hidden h-[52px] w-11 shrink-0 items-center justify-center rounded-[10px] text-sm font-semibold max-sm:flex"
+        style={{ backgroundColor: tone.bg, color: tone.ink }}
+      >
+        {rule.order}
+      </span>
+      <div className="flex min-w-0 flex-col gap-1 p-4 max-sm:flex-1 max-sm:p-0">
+        <h3
+          className="hidden text-[15px] leading-snug font-semibold max-sm:line-clamp-2 max-sm:block"
+          dir="ltr"
+        >
+          {rule.title}
+        </h3>
+        {levelLabel && (
+          <span className="text-muted-foreground text-xs" dir="ltr">
+            {levelLabel}
+          </span>
+        )}
+        {rule.idea && (
+          <p
+            className="text-muted-foreground line-clamp-2 min-h-[2.4em] text-[13px] leading-[1.4] max-sm:line-clamp-1 max-sm:min-h-0 max-sm:text-xs"
+            dir={ruleTextDir(locale)}
+          >
+            <Say text={rule.idea} locale={locale} />
+          </p>
+        )}
+        <div className="mt-2 flex items-center justify-between max-sm:mt-0 max-sm:justify-end">
+          <Standing rule={rule} copy={copy} />
+          {openable && (
+            <span
+              aria-hidden="true"
+              className={cn(
+                "text-muted-foreground border-border flex size-7 shrink-0 items-center justify-center rounded-full border max-sm:hidden",
+                "transition-[translate,background-color,border-color,color] duration-200",
+                "group-hover:border-primary/50 group-hover:bg-primary/[0.18] group-hover:text-primary motion-safe:group-hover:translate-x-[3px]",
+              )}
+            >
+              <ArrowRight className="size-3.5" />
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : (
     <div
       className={cn(
         "border-border/60 bg-card relative flex h-full min-h-52 w-full flex-col justify-end overflow-hidden rounded-2xl border p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]",
