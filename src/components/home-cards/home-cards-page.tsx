@@ -79,7 +79,7 @@ export function HomeCardsPage({
     <div
       className={cn(
         "mx-auto max-w-5xl px-6 pt-4 pb-12 sm:pt-6 sm:pb-16 xl:max-w-7xl",
-        calm && "pt-3 sm:pt-3 xl:max-w-[1180px] xl:px-12",
+        calm && "max-w-7xl pt-3 sm:pt-3",
       )}
       data-calm-home={calm ? "" : undefined}
     >
