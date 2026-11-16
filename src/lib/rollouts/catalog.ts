@@ -55,6 +55,7 @@ export const ROLLOUT_IDS = [
   "storyCovers",
   "rulesWall",
   "videoHeader",
+  "passagesBanner",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -389,6 +390,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the header changes: the shelves, the cards, the videos, their order and the arrange mode stay as they are. It needs the shelves look (the permission above) to show.",
       "The pictures are YouTube's own (the same ones the first shelf already loads), nothing is stored on our side, and the red is only the colour of the progress, not YouTube's logo.",
       "The counting and the shake stop for a learner who asked for reduced motion (the card shows the picture and a still player bar).",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  passagesBanner: {
+    id: "passagesBanner",
+    audience: "learner",
+    title: "Passages: the banner at the top",
+    description:
+      "A deep petrol band at the top of the Passages list that says what the section is: «اسمع، ثم امتحن نفسك», with the line «تدريب الاستماع · نمط IELTS», one short sentence and one button, and on the other side the section drawn as a picture: headphones, a sound wave and an exam paper. The button opens the passage that “Up next” points at («تابع الاستماع» once the learner has begun, «ابدأ الاستماع» before, «استمع من جديد» when every passage is finished). The headphones float a few pixels, the seven sound bars breathe one after another, and the paper rises on entering and ticks its three answers in one by one, then shows «3 / 3», on a nine-second loop. It stops for a learner who asked for reduced motion.",
+    notes: [
+      "It takes the place of the page's own heading (the tag, the title and the subtitle); its headline becomes the page's main heading and the section's name stays for screen readers. The levels and the posters under it stay as they are.",
+      "Below 768 px the picture is left out and the band is the text and the button.",
+      "It reads nothing new: the learner's passages and progress are the ones the list already has.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
