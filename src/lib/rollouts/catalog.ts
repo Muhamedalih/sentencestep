@@ -54,6 +54,7 @@ export const ROLLOUT_IDS = [
   "greyCalm",
   "storyCovers",
   "rulesWall",
+  "videoHeader",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -375,6 +376,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Only the look changes: the videos, their order (the Admin's saved arrangement, or easiest first) and the arrange mode stay as they are.",
       "The pictures still come from YouTube (i.ytimg.com): a Short uses YouTube's 480x360 picture (about 10 KB) instead of the 320x180 one; nothing is stored on our side.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  videoHeader: {
+    id: "videoHeader",
+    audience: "learner",
+    title: "Video: the header with a mini player",
+    description:
+      "The header of the «فيديو» library (the shelves look) becomes one calm card: a small red dot and «فيديو», the line «الإنجليزي كما يتكلّمه أهله», the Admin's arrange button, and on the side two stacked video pictures (the first videos of the library, with the length and a thin red progress line). Under the line sits a small player bar: its time counts up a second at a time (0:41, 0:42, 0:43…) and its red line and the picture's progress line move with it. When the pointer comes near the card, the pictures give a short shake.",
+    notes: [
+      "Only the header changes: the shelves, the cards, the videos, their order and the arrange mode stay as they are. It needs the shelves look (the permission above) to show.",
+      "The pictures are YouTube's own (the same ones the first shelf already loads), nothing is stored on our side, and the red is only the colour of the progress, not YouTube's logo.",
+      "The counting and the shake stop for a learner who asked for reduced motion (the card shows the picture and a still player bar).",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

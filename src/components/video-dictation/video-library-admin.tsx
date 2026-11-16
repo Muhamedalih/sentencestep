@@ -50,6 +50,8 @@ interface LibraryProps {
   locale: SupportLocale | null;
   /** The "videoShelves" permission: the shelves look, and its section names in the arrange mode too. */
   shelves?: boolean;
+  /** The "videoHeader" permission: the header with a mini player (only in the shelves look). */
+  playerHeader?: boolean;
 }
 
 /** What the arrange mode asks of the server (both are Admin-only there): kept apart so the screen can be tried without a database. */
@@ -74,6 +76,7 @@ export function VideoLibraryArranger({
   cards,
   locale,
   shelves = false,
+  playerHeader = false,
   actions,
 }: LibraryProps & { actions: ArrangeActions }) {
   const strings = videoStrings(locale);
@@ -196,6 +199,7 @@ export function VideoLibraryArranger({
         cards={cards}
         strings={strings}
         action={arrangeButton}
+        playerHeader={playerHeader}
         status={message && <StatusLine message={message} className="-mt-2 mb-6" />}
       />
     );

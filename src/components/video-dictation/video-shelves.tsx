@@ -8,6 +8,7 @@ import { fill } from "@/lib/video-dictation/strings";
 import type { VideoStrings } from "@/lib/video-dictation/strings";
 
 import { VideoCard } from "./video-card";
+import { VideoHeader } from "./video-header";
 import { ShelfSection } from "./video-shelf-section";
 
 /**
@@ -23,6 +24,7 @@ export function ShelvesLibrary({
   strings,
   action,
   status,
+  playerHeader = false,
 }: {
   sections: readonly VideoSection[];
   cards: Readonly<Record<string, VideoCardData>>;
@@ -30,6 +32,8 @@ export function ShelvesLibrary({
   action?: ReactNode;
   /** A line under the header (the Admin's "saved" message). */
   status?: ReactNode;
+  /** The "videoHeader" permission: the header with a mini player and stacked pictures (see VideoHeader). */
+  playerHeader?: boolean;
 }) {
   const shown = sections
     .map((section) => ({
@@ -39,7 +43,22 @@ export function ShelvesLibrary({
     .filter((section) => section.cards.length > 0);
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
-      <ShelvesHeader strings={strings} action={action} />
+      {playerHeader ? (
+        <VideoHeader
+          strings={strings}
+          action={action}
+          previews={shown
+            .flatMap((section) => section.cards)
+            .slice(0, 2)
+            .map((card) => ({
+              youtubeId: card.youtubeId,
+              vertical: card.vertical,
+              clipSeconds: card.clipSeconds,
+            }))}
+        />
+      ) : (
+        <ShelvesHeader strings={strings} action={action} />
+      )}
       {status}
       {shown.length === 0 ? (
         <p className="text-muted-foreground" dir="auto">
