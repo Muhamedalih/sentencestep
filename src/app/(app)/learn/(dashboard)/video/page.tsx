@@ -41,6 +41,7 @@ export default async function VideoLibraryPage() {
           cards={cards}
           locale={locale}
           shelves={features.rollouts.videoShelves}
+          playerHeader={features.rollouts.videoHeader}
         />
       ) : (
         <VideoLibrary
@@ -48,6 +49,7 @@ export default async function VideoLibraryPage() {
           cards={cards}
           locale={locale}
           shelves={features.rollouts.videoShelves}
+          playerHeader={features.rollouts.videoHeader}
         />
       )}
     </>

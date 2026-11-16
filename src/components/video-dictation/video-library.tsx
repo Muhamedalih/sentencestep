@@ -18,15 +18,27 @@ export function VideoLibrary({
   cards,
   locale,
   shelves = false,
+  playerHeader = false,
 }: {
   sections: readonly VideoSection[];
   cards: Readonly<Record<string, VideoCardData>>;
   locale: SupportLocale | null;
   /** The "videoShelves" permission: the shelves look (see ShelvesLibrary). */
   shelves?: boolean;
+  /** The "videoHeader" permission: the header with a mini player (only in the shelves look). */
+  playerHeader?: boolean;
 }) {
   const strings = videoStrings(locale);
-  if (shelves) return <ShelvesLibrary sections={sections} cards={cards} strings={strings} />;
+  if (shelves) {
+    return (
+      <ShelvesLibrary
+        sections={sections}
+        cards={cards}
+        strings={strings}
+        playerHeader={playerHeader}
+      />
+    );
+  }
   const shown = sections.filter((section) => section.ids.length > 0);
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
