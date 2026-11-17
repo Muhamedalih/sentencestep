@@ -35,6 +35,8 @@ import {
 import { resolveVocabularySupportText } from "@/lib/content-helpers";
 import type { CompletionSaveStatus } from "@/hooks/use-progress";
 import { BadgeMedal } from "@/components/app/badge-medal";
+import { StoryFinish } from "@/components/learning/story-finish";
+import { useFeatures } from "@/components/providers/feature-provider";
 import { HybridMomentCard } from "@/components/hybrid/hybrid-moment-card";
 import { StoryRatingRow } from "@/components/learning/story-rating-row";
 import { UpgradeMomentDialog } from "@/components/upgrade-moments/upgrade-moment-dialog";
@@ -313,6 +315,7 @@ export function LessonCompletion({
   const storyCopy = t.lesson.storyEnd;
   const bankCopy = bankStrings(locale);
   const theme = useLessonCompletionTheme();
+  const storyFinishOn = useFeatures().rollouts.storyFinish;
   const styles = deriveLessonCompletionStyles(theme);
   // The header and the stats panel read `view`; everything else (word cards, buttons) reads
   // `theme`. They are the same object unless this lesson has no target words.
@@ -442,6 +445,37 @@ export function LessonCompletion({
   const [nextCaptionBefore = "", nextCaptionAfter = ""] = storyCopy.nextCaption
     .split("{title}")
     .map((part) => part.trim());
+
+  // Permission storyFinish: a story's finish page in the look of the Words round page.
+  if (storyFinishOn && isStory && lessonId) {
+    return (
+      <StoryFinish
+        lessonId={lessonId}
+        heading={theme.headingText || storyCopy.completeHeading}
+        accuracy={accuracy}
+        accuracyPercent={accuracyPercent}
+        wpm={wpm}
+        vocabulary={vocabulary ?? []}
+        wordOutcomes={wordOutcomes}
+        learnerLevel={learnerLevel}
+        xpIntoLevel={xpIntoLevel}
+        xpNeededForLevel={xpNeededForLevel}
+        xpBarFromPercent={xpBarFromPercent}
+        rewards={rewards}
+        saveStatus={saveStatus}
+        onRetrySave={onRetrySave}
+        hybridStar={hybridStar}
+        actions={[
+          ...actions
+            .filter((a) => a.id !== "fix")
+            .map((a) => ({ id: a.id, label: a.label, href: a.href, onClick: a.onClick })),
+          ...(onViewWords
+            ? [{ id: "words", label: storyCopy.practiceWordsAgain, onClick: onViewWords }]
+            : []),
+        ]}
+      />
+    );
+  }
 
   // The grace-day note is intentionally split out of `rewards` before it
   // ever reaches formatReward's accent-colored join below — it isn't a

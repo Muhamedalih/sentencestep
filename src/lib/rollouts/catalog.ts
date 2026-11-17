@@ -56,6 +56,7 @@ export const ROLLOUT_IDS = [
   "rulesWall",
   "videoHeader",
   "passagesBanner",
+  "storyFinish",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -631,6 +632,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Nothing new is stored or fetched: the box reads the same library the page already builds.",
       "Each row of the wall is a level of the course (A1 at the bottom); its lit bricks show how far the learner is on that level.",
+    ],
+  },
+  storyFinish: {
+    id: "storyFinish",
+    audience: "learner",
+    title: "Stories: the new finish page",
+    description:
+      "A story's finish page takes the look of the Words round page: a big heading, the accuracy and the speed as two large numbers, the story's words as pale cards in a row, one progress bar, and large buttons (next story first, in white). The extra lines of text are gone. The save, the rating row and the offers keep working as before.",
+    notes: [
+      "Only the page's look changes: the words step, the XP and every save are untouched.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
   mobilePath: {
