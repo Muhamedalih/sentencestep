@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { FromMemorySession } from "@/components/learning/from-memory-session";
 import { SessionEnd } from "@/components/learning/session-end";
+import { SessionFinish, type SessionFinishStats } from "@/components/learning/session-finish";
 import { useReturnPlan } from "@/components/learning/use-return-plan";
 import type { SessionEndExtra, SessionEndReminder } from "@/components/learning/session-end";
 import { useAuthUserId } from "@/components/providers/auth-user-provider";
@@ -54,6 +55,7 @@ export function SessionEndFlow({
   showFirstLetters,
   onMistakes,
   endExtras,
+  finish,
 }: {
   unit: { id: string; mode: LearningMode };
   /** Every sentence of the lesson that can be asked back (buildFromMemoryItems). */
@@ -72,6 +74,8 @@ export function SessionEndFlow({
   onMistakes: (sentenceId: string, words: { word: string; errorIndexes: number[] }[]) => void;
   /** Rendered only once the finish screen is up — the one-time rating card, which must not appear over the recall round. */
   endExtras?: ReactNode;
+  /** The lesson accuracy and XP bar for the new finish page (permission sessionFinish). */
+  finish?: SessionFinishStats;
 }) {
   const userId = useAuthUserId();
   const { t } = useLocale();
@@ -174,6 +178,40 @@ export function SessionEndFlow({
     : data && nextLessonLocked && nextLesson
       ? { href: `/learn/${nextLesson.mode}/${nextLesson.id}`, locked: true }
       : null;
+
+  // Permission sessionFinish: the end in the look of the Words and Stories finish pages.
+  if (features.rollouts.sessionFinish && finish) {
+    return (
+      <SessionFinish
+        stats={finish}
+        nextTitle={next?.title ?? null}
+        endExtras={endExtras}
+        props={{
+          isGuest: !userId,
+          tomorrow: {
+            ready: data !== null,
+            reviewWords,
+            nextTitle: next?.title ?? null,
+            minutes: estimateTomorrowMinutes(reviewWords, next !== null),
+          },
+          extra,
+          extraMinutes: LESSON_MINUTES,
+          reminder:
+            userId && features.rollouts.sessionReminders
+              ? {
+                  hours: REMINDER_HOURS,
+                  selected: reminderHour,
+                  status: reminderStatus,
+                  onSelect: handleReminder,
+                }
+              : null,
+          saveStatus,
+          onRetrySave,
+          onAction: handleAction,
+        }}
+      />
+    );
+  }
 
   return (
     <>

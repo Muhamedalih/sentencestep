@@ -221,6 +221,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     videoHeader: false,
     passagesBanner: false,
     storyFinish: false,
+    sessionFinish: false,
   });
 });
 
