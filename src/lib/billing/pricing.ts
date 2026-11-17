@@ -20,9 +20,9 @@ export type { PricingTier } from "./plans";
 const FIXED_FX_RATES_PER_USD: ReadonlyMap<string, number> = new Map([
   ["IQD", 1520],
   ["USDT", 1],
-  // Vodafone Cash (Egypt). A whole number of pounds per dollar, so every plan price is a whole
+  // Vodafone Cash (Egypt), about the market rate (4 USD = 216 EGP). A whole number of pounds per dollar, so every plan price is a whole
   // number of pounds (the learner is never asked for piasters). A deliberate code change, like the others.
-  ["EGP", 50],
+  ["EGP", 54],
 ]);
 
 /** Lowercase ISO 3166-1 alpha-2 codes, the same format as profiles.country. */
