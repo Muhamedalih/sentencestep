@@ -6,9 +6,12 @@ import assert from "node:assert/strict";
 import type { PaymentAlert } from "@/lib/billing/payments/fulfillment";
 
 import {
+  alertUnansweredClaim,
+  CLAIM_ALERT_AFTER_MS,
   handleSms,
   linkByOperationNumber,
   normalizeOperationNumber,
+  processUnansweredClaims,
   processUnlinkedMessages,
   readMessage,
   readSecret,
@@ -54,6 +57,7 @@ function fakeStore(orders: MatchableOrder[]) {
   const messages: StoredMessage[] = [];
   const unreadable: { rawText: string; looksLikeTransfer: boolean }[] = [];
   const notified: string[] = [];
+  const claims = new Map<string, { claimedAt: string; alerted: boolean }>();
   const store: Partial<EgyptWalletStore> = {
     getSettings: async () => SETTINGS,
     insertMessage: async (transfer, rawText, seenAt) => {
@@ -96,8 +100,27 @@ function fakeStore(orders: MatchableOrder[]) {
       messages.find((m) => m.id === id)!.notifiedAt = new Date(NOW).toISOString();
     },
     touchState: async () => undefined,
+    claimAlertDue: async (orderId, claimedBefore) => {
+      const claim = claims.get(orderId);
+      if (!claim || claim.alerted || Date.parse(claim.claimedAt) > claimedBefore.getTime())
+        return false;
+      claim.alerted = true;
+      return true;
+    },
+    listUnansweredClaims: async (claimedBefore) =>
+      orders.flatMap((order) => {
+        const claim = claims.get(order.orderId);
+        const paid = messages.some((m) => m.linkedOrderId === order.orderId);
+        return claim &&
+          !claim.alerted &&
+          !paid &&
+          Date.parse(claim.claimedAt) <= claimedBefore.getTime()
+          ? [{ order, claimedAt: claim.claimedAt }]
+          : [];
+      }),
+    getEmail: async () => "learner@example.com",
   };
-  return { store: store as EgyptWalletStore, messages, unreadable, notified };
+  return { store: store as EgyptWalletStore, messages, unreadable, notified, claims };
 }
 
 function setup(orders: MatchableOrder[]) {
@@ -285,4 +308,59 @@ test("normalizeOperationNumber keeps digits only", () => {
   assert.equal(normalizeOperationNumber(" 0258-78179077"), "025878179077");
   assert.equal(normalizeOperationNumber("#025878179077"), "025878179077");
   assert.equal(normalizeOperationNumber("12ab"), null);
+});
+
+const MINUTE = 60_000;
+
+test("a claim younger than the wait raises no alert", async () => {
+  const t = setup([order()]);
+  t.claims.set("o1", { claimedAt: new Date(NOW - 3 * MINUTE).toISOString(), alerted: false });
+  assert.equal(
+    await alertUnansweredClaim(t.deps, order(), new Date(NOW - 3 * MINUTE).toISOString()),
+    false,
+  );
+  assert.deepEqual(t.alerts, []);
+});
+
+test("a claim with no matching transfer after the wait alerts the admins once, with who and how much", async () => {
+  const t = setup([order()]);
+  const claimedAt = new Date(NOW - CLAIM_ALERT_AFTER_MS - MINUTE).toISOString();
+  t.claims.set("o1", { claimedAt, alerted: false });
+  assert.equal(await alertUnansweredClaim(t.deps, order(), claimedAt), true);
+  assert.equal(await alertUnansweredClaim(t.deps, order(), claimedAt), false);
+  assert.equal(t.alerts.length, 1);
+  assert.equal(t.alerts[0]!.code, "egypt_wallet_paid_not_activated");
+  assert.equal(t.alerts[0]!.referenceId, "ss_1");
+  assert.match(t.alerts[0]!.detail ?? "", /learner@example.com/);
+  assert.match(t.alerts[0]!.detail ?? "", /215 EGP/);
+  assert.match(t.alerts[0]!.detail ?? "", /01120000001/);
+});
+
+test("the cron safety net alerts every old unanswered claim but not an order already paid", async () => {
+  const unpaid = order();
+  const paid = order({ orderId: "o2", referenceId: "ss_2", userId: "u2" });
+  const t = setup([unpaid, paid]);
+  const old = new Date(NOW - 20 * MINUTE).toISOString();
+  t.claims.set("o1", { claimedAt: old, alerted: false });
+  t.claims.set("o2", { claimedAt: old, alerted: false });
+  t.messages.push({
+    id: "mx",
+    status: "linked",
+    transactionId: "9",
+    amountPiasters: 21_500,
+    balancePiasters: null,
+    payerPhone: null,
+    payerName: null,
+    walletNumber: null,
+    receivedAt: old,
+    rawText: "x",
+    seenAt: old,
+    notifiedAt: null,
+    linkedOrderId: "o2",
+    linkMethod: "phone",
+  });
+  const result = await processUnansweredClaims(t.deps);
+  assert.equal(result.alerted, 1);
+  assert.equal(t.alerts.length, 1);
+  assert.equal(t.alerts[0]!.referenceId, "ss_1");
 });

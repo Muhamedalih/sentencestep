@@ -14,6 +14,7 @@ import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AFTER_PAYMENT_COOKIE, safeLessonPath } from "@/lib/billing/after-payment";
+import { alertIfClaimIsOld } from "@/lib/billing/egypt-wallet/claim-check";
 import { EGYPT_WALLET_PROVIDER } from "@/lib/billing/egypt-wallet/constants";
 import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
 import { egyptStrings } from "@/lib/billing/egypt-wallet/strings";
@@ -84,6 +85,7 @@ export default async function EgyptWalletPage({
 
   let walletNumber = "";
   let payerPhone: string | null = null;
+  let claimedPaid = false;
   if (order) {
     try {
       const store = createEgyptWalletStore();
@@ -93,6 +95,10 @@ export default async function EgyptWalletPage({
       ]);
       walletNumber = settings.walletNumber;
       payerPhone = intent?.payerPhone ?? null;
+      claimedPaid = intent?.claimedPaidAt != null;
+      // "I sent the money" more than a few minutes ago and still nothing: the admins are told (once).
+      if (claimedPaid && order.status !== "fulfilled")
+        await alertIfClaimIsOld(order.reference_id, user.id);
     } catch (error) {
       console.error("[egypt-wallet] payment page could not read the settings", error);
     }
@@ -229,6 +235,7 @@ export default async function EgyptWalletPage({
           walletNumber={walletNumber}
           amount={order.charge_amount}
           payerPhone={payerPhone}
+          claimedPaid={claimedPaid}
           expiresAt={order.link_expires_at}
           expired={expired}
         />

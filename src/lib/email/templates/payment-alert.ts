@@ -160,6 +160,34 @@ const KNOWN_ALERTS: Record<string, PaymentAlertExplanation> = {
     action:
       "Read the error in Admin > Binance Pay. Typical causes: the API key was deleted or its IP restriction no longer matches the relay's address, or Binance is down.",
   },
+  egypt_wallet_paid_not_activated: {
+    title: "A learner says they paid by Vodafone Cash, but nothing arrived",
+    meaning:
+      'A learner pressed "I sent the money" on the Vodafone Cash page, and no matching transfer message has reached the site after several minutes. Nothing was granted yet.',
+    action:
+      'Open Admin > Vodafone Cash. Check the wallet\'s phone is on and online and the forwarding app is running; if the text is there, it is forwarded when the phone is back. If the learner sent from another number or another amount, the transfer shows there as "Not linked": link it to their order by hand.',
+  },
+  egypt_wallet_message_needs_match: {
+    title: "A Vodafone Cash transfer could not be matched to an order",
+    meaning:
+      "A transfer arrived but was not activated by itself (a different amount from the price, a number nobody is paying from, a closed or already paid order, or past the allowed time). Nothing was granted.",
+    action:
+      "Open Admin > Vodafone Cash, read the reason next to the transfer, and either link it to the right order or ignore it.",
+  },
+  egypt_wallet_unreadable_message: {
+    title: "A text about money from the Vodafone Cash phone could not be read",
+    meaning:
+      "The wallet's phone forwarded a text that looks like a transfer in a shape the reader does not know, so it was only saved. If it is a real payment, the learner is waiting.",
+    action:
+      "Open Admin > Vodafone Cash > Unread messages, read the text, and link the order by hand if it is a payment. The reader may need updating for the new wording.",
+  },
+  egypt_wallet_untrusted_sender: {
+    title: "A fake Vodafone Cash text was refused",
+    meaning:
+      "A message that looks like a transfer came from an ordinary number, not from Vodafone, so it was kept and not trusted. Nothing was granted.",
+    action:
+      "Nothing is needed unless it repeats. If you did send yourself a test text, ignore this.",
+  },
   fulfillment_mismatch: MISMATCH,
   amount_mismatch: MISMATCH,
   currency_mismatch: MISMATCH,
