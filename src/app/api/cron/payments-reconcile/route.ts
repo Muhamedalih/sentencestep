@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 
 import { checkRelayHealth } from "@/lib/billing/binance/health";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
-import { getBinancePayRuntime, getPaymentRuntime } from "@/lib/billing/payments/runtime";
+import { getEgyptWalletDeps } from "@/lib/billing/egypt-wallet/deps";
+import { processUnlinkedMessages } from "@/lib/billing/egypt-wallet/ingest";
+import {
+  getBinancePayRuntime,
+  getEgyptWalletRuntime,
+  getPaymentRuntime,
+} from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
 import { reconcileOpenOrders } from "@/lib/billing/payments/reconcile";
 import { isValidCronAuth } from "@/lib/cron/auth";
@@ -31,14 +37,16 @@ async function handlePaymentsReconcileCron(request: Request): Promise<NextRespon
 
   let runtime: PaymentRuntime | null;
   let binanceRuntime: PaymentRuntime | null;
+  let egyptRuntime: PaymentRuntime | null;
   try {
     runtime = getPaymentRuntime();
     binanceRuntime = getBinancePayRuntime();
+    egyptRuntime = getEgyptWalletRuntime();
   } catch (error) {
     console.error("[payments] reconcile: payment storage is not configured", error);
     return NextResponse.json({ error: "Payment storage is not configured." }, { status: 501 });
   }
-  if (!runtime && !binanceRuntime) {
+  if (!runtime && !binanceRuntime && !egyptRuntime) {
     return NextResponse.json({ skipped: "No payment provider is configured." });
   }
 
@@ -68,6 +76,22 @@ async function handlePaymentsReconcileCron(request: Request): Promise<NextRespon
       summary = { ...summary, binance: { ...binance, relay } };
     } catch (error) {
       console.error("[payments] Binance Pay reconcile failed", error);
+      failed = true;
+    }
+  }
+
+  if (egyptRuntime) {
+    try {
+      // Matches any transfer message still waiting (one that arrived before its learner wrote their
+      // number, or that hit a database hiccup), then settles the orders like every other provider.
+      const deps = getEgyptWalletDeps();
+      const matched = deps
+        ? await processUnlinkedMessages(deps, await deps.store.getSettings())
+        : null;
+      const egypt = await reconcileOpenOrders(egyptRuntime);
+      summary = { ...summary, egyptWallet: { ...egypt, matched: matched?.linked ?? 0 } };
+    } catch (error) {
+      console.error("[payments] Vodafone Cash reconcile failed", error);
       failed = true;
     }
   }

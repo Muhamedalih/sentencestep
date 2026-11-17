@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AFTER_PAYMENT_COOKIE, safeLessonPath } from "@/lib/billing/after-payment";
 import { BINANCE_PAY_PROVIDER } from "@/lib/billing/binance/constants";
+import { EGYPT_WALLET_PROVIDER } from "@/lib/billing/egypt-wallet/constants";
 import { verifyAndFulfill } from "@/lib/billing/payments/fulfillment";
 import type { FulfillmentOutcome } from "@/lib/billing/payments/fulfillment";
 import { getPaymentRuntime } from "@/lib/billing/payments/runtime";
@@ -96,6 +97,9 @@ export default async function BillingReturnPage({
   // Someone sent here with a Binance Pay order (a link from a report, a bookmark) is taken to that order's own page.
   if (order?.provider === BINANCE_PAY_PROVIDER) {
     redirect(`/billing/binance/${encodeURIComponent(order.reference_id)}`);
+  }
+  if (order?.provider === EGYPT_WALLET_PROVIDER) {
+    redirect(`/billing/egypt/${encodeURIComponent(order.reference_id)}`);
   }
 
   let content: {

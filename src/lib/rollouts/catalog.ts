@@ -59,6 +59,7 @@ export const ROLLOUT_IDS = [
   "storyFinish",
   "sessionFinish",
   "videoFinishLook",
+  "egyptWallet",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -667,6 +668,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Every number on it is about the typing, never about watching (YouTube's rules): the bar is the share of words typed right the first time.",
       "The training stores and sends nothing: it is a practice round on the words the page already has.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  egyptWallet: {
+    id: "egyptWallet",
+    audience: "learner",
+    title: "Pay with Vodafone Cash (Egypt)",
+    description:
+      "A third way to pay on the upgrade page, shown only to visitors in Egypt: Vodafone Cash. The learner writes the Vodafone Cash number they will send from, sends the plan's price in whole Egyptian pounds to the shop's wallet, and the page opens Premium by itself when the transfer arrives, with nobody having to approve anything. Every transfer is recorded for Admin > Vodafone Cash.",
+    notes: [
+      "Shown only where our own location check says Egypt. While this is on “Admins only”, admins see it from any country so they can try it.",
+      "Needs the EGYPT_WALLET_SECRET setting and the forwarding app on the shop wallet's phone; without them the option stays hidden.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

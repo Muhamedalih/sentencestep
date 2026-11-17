@@ -1,7 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
 
 import type { PaymentProvider } from "@/lib/billing/payment-provider";
-import { getBinancePayProvider, getPaymentProvider } from "@/lib/billing/provider-registry";
+import {
+  getBinancePayProvider,
+  getEgyptWalletProvider,
+  getPaymentProvider,
+} from "@/lib/billing/provider-registry";
 import { markWebhookEventProcessed, recordWebhookEvent } from "@/lib/billing/webhook-events";
 
 import { notifyAdminsOfPaymentAlert } from "./admin-alerts";
@@ -58,9 +62,24 @@ export function getBinancePayRuntime(): PaymentRuntime | null {
   };
 }
 
+/**
+ * Vodafone Cash's (Egypt) own runtime: the same store, alerts and receipt email, with the Vodafone
+ * Cash provider. Null while EGYPT_WALLET_SECRET is not set.
+ */
+export function getEgyptWalletRuntime(): PaymentRuntime | null {
+  const provider = getEgyptWalletProvider();
+  if (!provider) return null;
+  return {
+    provider,
+    store: createPaymentStore(),
+    report: reportPaymentAlert,
+    onFulfilled: sendPurchaseConfirmation,
+  };
+}
+
 /** The runtime that owns an order, found by the provider name stored on it. */
 export function getRuntimeForProvider(providerName: string): PaymentRuntime | null {
-  const candidates = [getPaymentRuntime, getBinancePayRuntime];
+  const candidates = [getPaymentRuntime, getBinancePayRuntime, getEgyptWalletRuntime];
   for (const candidate of candidates) {
     const runtime = candidate();
     if (runtime?.provider.name === providerName) return runtime;

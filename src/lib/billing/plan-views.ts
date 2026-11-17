@@ -7,7 +7,7 @@ import {
   savingsPercent,
 } from "./plans";
 import type { PlanId, PricingTier } from "./plans";
-import { formatUsd, formatUsdExact, formatUsdPerDay } from "./pricing";
+import { formatUsd, formatUsdExact, formatUsdPerDay, quotePrice } from "./pricing";
 
 /**
  * What /upgrade shows for one plan: every figure already formatted, in USD
@@ -24,6 +24,8 @@ export interface PlanView {
   price: string;
   /** The same price as a plain number of USDT, e.g. "4" (one USDT is one dollar), for the Binance Pay button. */
   usdt: string;
+  /** The same price in whole Egyptian pounds, e.g. "200", for the Vodafone Cash button (only shown in Egypt). */
+  egp: string;
   /** The price per 30 days, e.g. "$1.33". */
   perMonth: string;
   /** The price per day over all the days they get, e.g. "$0.04". */
@@ -47,6 +49,7 @@ export function buildPlanViews(tier: PricingTier, bonus: PlanBonusDays = 0): Pla
       bonusDays,
       price: formatUsd(cents),
       usdt: String(cents / 100),
+      egp: String(quotePrice(tier, "EGP", plan.id).amount),
       // The plan's own comparison figures ignore the bonus, so they stay the same with or without an offer.
       perMonth: formatUsdExact(perMonthCents(tier, plan.id)),
       perDay: formatUsdPerDay(cents, plan.days + bonusDays),

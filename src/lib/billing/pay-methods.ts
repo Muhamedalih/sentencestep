@@ -4,3 +4,5 @@ export const CARD_METHODS = ["Visa", "Mastercard"] as const;
 export const IRAQI_WALLET_METHODS = ["Super Qi", "ZainCash", "FIB"] as const;
 /** The brand's own name, never translated; only listed while Binance Pay is offered to this visitor. */
 export const BINANCE_PAY_METHOD = "Binance Pay";
+/** The brand's own name, never translated; only listed while Vodafone Cash is offered to this visitor (Egypt). */
+export const EGYPT_WALLET_METHOD = "Vodafone Cash";
