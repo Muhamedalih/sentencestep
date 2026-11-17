@@ -605,4 +605,20 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
     { en: "ridiculous", ar: "سخيف" },
     { en: "ceasefire", ar: "وقف إطلاق النار" },
   ],
+  // Emotional stories (admin drafts until published)
+  "story-211": [
+    { en: "tired", ar: "متعب" },
+    { en: "wash", ar: "يغسل" },
+    { en: "whispered", ar: "يهمس" },
+  ],
+  "story-212": [
+    { en: "proposal", ar: "طلب زواج" },
+    { en: "guilty", ar: "مذنب" },
+    { en: "knelt", ar: "يركع" },
+  ],
+  "story-213": [
+    { en: "graduation", ar: "تخرج" },
+    { en: "complained", ar: "يشتكي" },
+    { en: "practiced", ar: "يتدرب" },
+  ],
 };
