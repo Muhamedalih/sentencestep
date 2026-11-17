@@ -57,6 +57,7 @@ export const ROLLOUT_IDS = [
   "videoHeader",
   "passagesBanner",
   "storyFinish",
+  "sessionFinish",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -642,6 +643,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "A story's finish page takes the look of the Words round page: a big heading, the accuracy and the speed as two large numbers, the story's words as pale cards in a row, one progress bar, and large buttons (next story first, in white). The extra lines of text are gone. The save, the rating row and the offers keep working as before.",
     notes: [
       "Only the page's look changes: the words step, the XP and every save are untouched.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  sessionFinish: {
+    id: "sessionFinish",
+    audience: "learner",
+    title: "Daily lessons: the new finish page",
+    description:
+      "The end of a daily lesson takes the look of the Words and Stories finish pages: the accuracy of the lesson as one large number, the XP as a bar that fills, the reminder as a pale card with large time choices, and large buttons (the next lesson first, with its name). The extra lines of text are gone. The reminder, the save and the buttons keep working as before.",
+    notes: [
+      "Only the page's look changes: the recall round before it, the reminder emails and every save are untouched.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

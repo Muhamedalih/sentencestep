@@ -67,6 +67,7 @@ import {
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { recordBankWordAction } from "@/lib/word-bank/actions";
 import { storyBankAnswers } from "@/lib/word-bank/feed";
+import { getLearnerLevel, learnerLevelSupportLabel } from "@/lib/progress/learner-level";
 import { isTodayRunUrl } from "@/lib/today/run-state";
 import { cn } from "@/lib/utils";
 import type { WordAudioWindowRequest } from "@/lib/voice/word-audio-preloader";
@@ -340,6 +341,17 @@ export function LessonSession({
   const hasTrackedAudioRef = useRef(false);
   const { prefetchPronunciation, setWordWindow, replayCurrent } = usePronunciationSettings();
   const { t, locale } = useLocale();
+  // The accuracy and the XP bar of the finish page of a daily lesson (permission sessionFinish).
+  const previousLevel = getLearnerLevel(Math.max(0, xp - xpEarned));
+  const sessionFinishStats = {
+    accuracyPercent: Math.round(finalAccuracy * 100),
+    levelLabel: learnerLevelSupportLabel(learnerLevel.level.name, t),
+    fromPercent:
+      previousLevel.level.name !== learnerLevel.level.name
+        ? 0
+        : Math.round(previousLevel.progress * 100),
+    toPercent: Math.round(learnerLevel.progress * 100),
+  };
   const router = useRouter();
 
   // The opening lesson's measurement (counts only, never what was typed): the phone's "tap to start"
@@ -1076,6 +1088,7 @@ export function LessonSession({
               allowReveal={features.fromMemory.allowReveal}
               showFirstLetters={features.fromMemory.showFirstLetters}
               onMistakes={handleSentenceMistakes}
+              finish={sessionFinishStats}
               endExtras={
                 <RatingPrompt show={eligibleForRatingPrompt} lessonId={unit.id} mode={unit.mode} />
               }

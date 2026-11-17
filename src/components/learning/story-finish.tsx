@@ -19,7 +19,7 @@ import type { RewardEvent } from "@/lib/progress/types";
 import type { StoryWordOutcomes } from "@/lib/story-words";
 import type { VocabularyItem } from "@/types/content";
 
-const GREEN = "#3dba5f";
+export const GREEN = "#3dba5f";
 const INK = "#14192b";
 
 export type StoryFinishAction = {
@@ -255,7 +255,7 @@ export function StoryFinish({
 const MotionLink = motion.create(Link);
 const SPRING = { type: "spring", stiffness: 420, damping: 24, mass: 0.7 } as const;
 
-function FinishButton({
+export function FinishButton({
   action,
   primary,
   children,
@@ -286,6 +286,7 @@ function FinishButton({
     return (
       <MotionLink
         href={action.href}
+        onClick={action.onClick}
         className={className}
         whileHover={hover}
         whileTap={tap}
