@@ -39,7 +39,11 @@ export interface PlanView {
 /** Launch-offer bonus days: one number for every plan, or one for each plan. */
 export type PlanBonusDays = number | Readonly<Record<PlanId, number>>;
 
-export function buildPlanViews(tier: PricingTier, bonus: PlanBonusDays = 0): PlanView[] {
+export function buildPlanViews(
+  tier: PricingTier,
+  bonus: PlanBonusDays = 0,
+  options: { egpRatePerUsd?: number } = {},
+): PlanView[] {
   return PLANS.map((plan) => {
     const cents = planPriceCents(tier, plan.id);
     const bonusDays = typeof bonus === "number" ? bonus : bonus[plan.id];
@@ -49,7 +53,9 @@ export function buildPlanViews(tier: PricingTier, bonus: PlanBonusDays = 0): Pla
       bonusDays,
       price: formatUsd(cents),
       usdt: String(cents / 100),
-      egp: String(quotePrice(tier, "EGP", plan.id).amount),
+      egp: String(
+        quotePrice(tier, "EGP", plan.id, 0, { ratePerUsd: options.egpRatePerUsd }).amount,
+      ),
       // The plan's own comparison figures ignore the bonus, so they stay the same with or without an offer.
       perMonth: formatUsdExact(perMonthCents(tier, plan.id)),
       perDay: formatUsdPerDay(cents, plan.days + bonusDays),

@@ -25,6 +25,8 @@ import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
 import { EGYPT_COUNTRY } from "@/lib/billing/egypt-wallet/constants";
+import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
+import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
 import {
   isBinancePayConfigured,
   isEgyptWalletConfigured,
@@ -99,7 +101,16 @@ export default async function UpgradePage({
   const storedOffer = await getLaunchOffer();
   const offer = isOfferActive(storedOffer, new Date()) ? storedOffer : null;
   const tier = tierForCountry(country);
-  const plans = buildPlanViews(tier, offer ? offerBonusDaysByPlan(offer) : 0);
+  // The pound prices of the Vodafone Cash tile follow the day's rate (one stored row, read only while that tile is on offer).
+  let egpRatePerUsd: number | undefined;
+  if (egyptWalletOpen) {
+    try {
+      egpRatePerUsd = effectiveRate(await createEgyptWalletStore().getSettings()).rate;
+    } catch (error) {
+      console.error("[egypt-wallet] upgrade page: could not read the day's rate", error);
+    }
+  }
+  const plans = buildPlanViews(tier, offer ? offerBonusDaysByPlan(offer) : 0, { egpRatePerUsd });
 
   // Opened with a lock card's button (see PremiumGate)? Then the event says which lock, which button
   // and which card, so the presses can be counted before and after a change to the card.

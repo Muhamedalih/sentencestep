@@ -65,7 +65,13 @@ export function quotePrice(
   currency: string,
   planId: PlanId,
   bonusDays = 0,
+  options: { ratePerUsd?: number } = {},
 ): PriceQuote {
+  // Egyptian pounds follow the day's rate (see egypt-wallet/rate.ts): the price is the dollar price at
+  // that rate rounded to the nearest whole pound, and the order stores the rounded rate (a whole number).
+  if (currency === "EGP" && options.ratePerUsd !== undefined) {
+    return quoteAtDayRate(tier, currency, planId, bonusDays, options.ratePerUsd);
+  }
   const fxRatePerUsd = FIXED_FX_RATES_PER_USD.get(currency);
   if (fxRatePerUsd === undefined) {
     throw new Error(`No fixed exchange rate is configured for ${currency}.`);
@@ -93,6 +99,44 @@ export function quotePrice(
     amount,
     premiumDays: plan.days + bonusDays,
   };
+}
+
+function quoteAtDayRate(
+  tier: PricingTier,
+  currency: string,
+  planId: PlanId,
+  bonusDays: number,
+  ratePerUsd: number,
+): PriceQuote {
+  if (!Number.isFinite(ratePerUsd) || ratePerUsd < 20 || ratePerUsd > 200) {
+    throw new Error(`The ${currency} rate ${ratePerUsd} is outside the allowed range.`);
+  }
+  if (!Number.isInteger(bonusDays) || bonusDays < 0) {
+    throw new Error(`Bonus days must be a whole number of days, not ${bonusDays}.`);
+  }
+  const plan = getPlan(planId);
+  const usdCents = plan.priceUsdCents[tier];
+  return {
+    tier,
+    planId,
+    usdCents,
+    currency,
+    fxRatePerUsd: Math.round(ratePerUsd),
+    amount: Math.round((usdCents * ratePerUsd) / 100),
+    premiumDays: plan.days + bonusDays,
+  };
+}
+
+/**
+ * Mirrors the database check for Vodafone Cash orders (migration 20250357): the charge may differ from
+ * price x the stored whole rate by the rounding of the rate plus the rounding of the charge.
+ */
+export function chargeMatchesStoredRate(
+  chargeAmount: number,
+  usdCents: number,
+  storedRatePerUsd: number,
+): boolean {
+  return Math.abs(chargeAmount * 100 - usdCents * storedRatePerUsd) * 2 <= usdCents + 200;
 }
 
 /** "$2" for whole dollars, "$2.50" otherwise. */

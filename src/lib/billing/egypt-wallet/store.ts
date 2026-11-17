@@ -114,6 +114,9 @@ export interface EgyptWalletStore {
   markNotified(messageId: string, now: Date): Promise<void>;
   ignoreMessage(messageId: string): Promise<void>;
 
+  /** Stores the day's USD to EGP rate. `locked` true marks an admin's own rate (the automatic update stops), false gives it back. */
+  saveRate(input: { rate: number; source: string; locked?: boolean }, now: Date): Promise<void>;
+
   touchState(now: Date): Promise<void>;
   getLastMessageAt(): Promise<string | null>;
 }
@@ -526,6 +529,19 @@ export function createEgyptWalletStore(
         .update({ status: "ignored" })
         .eq("id", messageId)
         .eq("status", "new");
+      if (error) throw error;
+    },
+
+    async saveRate({ rate, source, locked }, now) {
+      const { error } = await supabase
+        .from("egypt_wallet_settings")
+        .update({
+          usd_to_egp: rate,
+          rate_updated_at: now.toISOString(),
+          rate_source: source,
+          ...(locked === undefined ? {} : { rate_locked: locked }),
+        })
+        .eq("id", 1);
       if (error) throw error;
     },
 

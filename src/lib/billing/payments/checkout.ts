@@ -44,6 +44,8 @@ export interface CheckoutDeps {
    * Not set for Wayl.
    */
   allowNewOrder?: () => Promise<boolean>;
+  /** The day's rate for a provider whose currency follows it (Vodafone Cash, Egyptian pounds): the price is quoted at it. */
+  ratePerUsd?: number;
 }
 
 export interface CheckoutInput {
@@ -79,7 +81,9 @@ export async function createCheckout(
   const origin = input.origin.replace(/\/+$/, "");
 
   const tier = tierForCountry(input.country.country);
-  const quote = quotePrice(tier, provider.settlementCurrency, input.plan, input.bonusDays ?? 0);
+  const quote = quotePrice(tier, provider.settlementCurrency, input.plan, input.bonusDays ?? 0, {
+    ratePerUsd: deps.ratePerUsd,
+  });
 
   const reusable = await store.findReusableOrder({
     userId: input.userId,

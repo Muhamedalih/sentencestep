@@ -181,6 +181,20 @@ const KNOWN_ALERTS: Record<string, PaymentAlertExplanation> = {
     action:
       "Open Admin > Vodafone Cash > Unread messages, read the text, and link the order by hand if it is a payment. The reader may need updating for the new wording.",
   },
+  egypt_wallet_rate_stale: {
+    title: "The dollar rate for Vodafone Cash could not be refreshed",
+    meaning:
+      "The daily USD/EGP reading failed for two days (or never worked), so Vodafone Cash prices use the last stored rate, or the built-in fallback if none was ever stored. Orders are still created and paid normally.",
+    action:
+      "Open Admin > Vodafone Cash > Dollar rate. Try Refresh now, or set the rate by hand. If it keeps failing, the rate service may be down or blocked.",
+  },
+  egypt_wallet_rate_refused: {
+    title: "A new dollar rate for Vodafone Cash was refused",
+    meaning:
+      "The rate service gave a number that is outside the sane range or more than 10% away from the stored rate, so it was not used. Prices stay on the stored rate.",
+    action:
+      "Open Admin > Vodafone Cash > Dollar rate. If the market really moved that much, set the new rate by hand; otherwise ignore it.",
+  },
   egypt_wallet_untrusted_sender: {
     title: "A fake Vodafone Cash text was refused",
     meaning:

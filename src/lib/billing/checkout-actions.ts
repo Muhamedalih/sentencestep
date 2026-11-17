@@ -21,6 +21,7 @@ import { createBinancePayStore } from "@/lib/billing/binance/store";
 import { createCheckout } from "@/lib/billing/payments/checkout";
 import { EGYPT_COUNTRY } from "@/lib/billing/egypt-wallet/constants";
 import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
+import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
 import { egyptStrings } from "@/lib/billing/egypt-wallet/strings";
 import {
   getBinancePayRuntime,
@@ -160,8 +161,13 @@ export async function startCheckout(
 
   let result;
   try {
+    // Vodafone Cash is priced in pounds at the day's rate (stored once a day, read here from one row).
+    const ratePerUsd =
+      method === "egypt"
+        ? effectiveRate(await createEgyptWalletStore().getSettings()).rate
+        : undefined;
     result = await createCheckout(
-      { ...runtime, allowNewOrder },
+      { ...runtime, allowNewOrder, ratePerUsd },
       {
         userId: user.id,
         country,
