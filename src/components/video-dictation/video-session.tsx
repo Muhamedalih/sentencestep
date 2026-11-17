@@ -46,6 +46,7 @@ import {
 } from "@/lib/video-dictation/segments";
 import {
   meaningInSentence,
+  buildTrainingWords,
   pickReviewWords,
   recordMissedWord,
   wordsInVideo,
@@ -56,6 +57,7 @@ import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
 
 import { useYouTubePlayer, type PlayerControls } from "./use-youtube-player";
 import { VideoFinishRecorder } from "./video-finish-recorder";
+import { VideoFinishLook } from "./video-finish-look";
 import { VideoFinishScreen } from "./video-finish-screen";
 import { SilenceWave } from "./silence-wave";
 import { VideoRatingPrompt } from "./video-rating-prompt";
@@ -75,6 +77,8 @@ interface Summary {
   sentenceMistakes: boolean[];
   /** For the new finish screen: up to four mistyped words with their meaning (see pickReviewWords). */
   reviewWords: MissedWord[];
+  /** Every word mistyped on this visit (the training round asks them first). */
+  missedWords: string[];
 }
 
 const ICON_BUTTON =
@@ -92,6 +96,7 @@ export function VideoSession({
   nextLessonId,
   nextLessonTitle = null,
   newFinish = false,
+  finishLook = false,
   canEditStops = false,
   silenceWave = false,
 }: {
@@ -101,6 +106,8 @@ export function VideoSession({
   nextLessonTitle?: string | null;
   /** The "videoFinish" permission: the finish screen in the lesson finish screen's look (VideoFinishScreen). */
   newFinish?: boolean;
+  /** The "videoFinishLook" permission: the finish screen in the look of the Words and Stories finish pages (VideoFinishLook). */
+  finishLook?: boolean;
   /** An Admin can move where each sentence starts and where the video stops (see VideoStopsEditor). */
   canEditStops?: boolean;
   /** The "videoSilence" permission: a quiet wave stands in for the sentence while the speakers are silent. */
@@ -343,6 +350,7 @@ export function VideoSession({
         words: [...words].slice(0, 8),
         sentenceMistakes: sentences.map((_, at) => mistakeSentences.has(at)),
         reviewWords: pickReviewWords(missed.values()),
+        missedWords: [...missed.keys()],
       });
       move({ phase: "done" });
       return;
@@ -530,6 +538,7 @@ export function VideoSession({
             nextLessonId={nextLessonId}
             nextLessonTitle={nextLessonTitle}
             newFinish={newFinish}
+            finishLook={finishLook}
             wordsTyped={wordsInVideo(sentences)}
             count={sentences.length}
           />
@@ -848,6 +857,7 @@ function Finish({
   nextLessonId,
   nextLessonTitle,
   newFinish,
+  finishLook,
   wordsTyped,
   count,
 }: {
@@ -856,11 +866,33 @@ function Finish({
   nextLessonId: string | null;
   nextLessonTitle: string | null;
   newFinish: boolean;
+  finishLook: boolean;
   wordsTyped: number;
   count: number;
 }) {
   const { locale } = useLocale();
   const strings = videoStrings(locale);
+  // The "videoFinishLook" permission: the finish screen in the look of the Words and Stories pages.
+  if (finishLook)
+    return (
+      <>
+        <VideoFinishRecorder videoId={lesson.id} />
+        <VideoRatingPrompt videoId={lesson.id} />
+        <VideoFinishLook
+          summary={{
+            accuracy: summary.accuracy,
+            sentenceMistakes: summary.sentenceMistakes,
+            reviewWords: summary.reviewWords,
+            wordsTyped,
+          }}
+          youtubeId={lesson.youtubeId}
+          nextLessonId={nextLessonId}
+          nextLessonTitle={nextLessonTitle}
+          trainingWords={buildTrainingWords(lesson.sentences, summary.missedWords)}
+          cleanWords={Math.max(0, wordsTyped - summary.missedWords.length)}
+        />
+      </>
+    );
   // The "videoFinish" permission: the same recording and rating card, in the lesson finish screen's look.
   if (newFinish)
     return (

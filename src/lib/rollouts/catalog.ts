@@ -58,6 +58,7 @@ export const ROLLOUT_IDS = [
   "passagesBanner",
   "storyFinish",
   "sessionFinish",
+  "videoFinishLook",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -654,6 +655,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "The end of a daily lesson takes the look of the Words and Stories finish pages: the accuracy of the lesson as one large number, the XP as a bar that fills, the reminder as a pale card with large time choices, and large buttons (the next lesson first, with its name). The extra lines of text are gone. The reminder, the save and the buttons keep working as before.",
     notes: [
       "Only the page's look changes: the recall round before it, the reminder emails and every save are untouched.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  videoFinishLook: {
+    id: "videoFinishLook",
+    audience: "learner",
+    title: "Video: the finish page in the look of the Words pages",
+    description:
+      "The screen after the last sentence of a «فيديو» video takes the look of the Words, Stories and daily-lesson finish pages: the accuracy and the words typed as two large numbers, a red bar (YouTube's colour) that fills with the share of words typed right the first time, the mistyped words as pale cards (a tap says the word), and large buttons: the next video with its name, a new «تدرّب على كلمات الفيديو» button, back to the videos, and watch on YouTube. The training asks the video's words one by one: the learner hears the word and must type it right to move on. It takes the place of the finish screen of the Video: the new finish screen permission for whoever has both.",
+    notes: [
+      "Every number on it is about the typing, never about watching (YouTube's rules): the bar is the share of words typed right the first time.",
+      "The training stores and sends nothing: it is a practice round on the words the page already has.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
