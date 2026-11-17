@@ -73,7 +73,7 @@ const CLAIM_RED_AFTER_MS = 10 * 60 * 1000;
 export default async function AdminEgyptWalletPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
 
-  const { settings, lastMessageAt, waiting, transfers, unreadable, stats } =
+  const { settings, lastMessageAt, waiting, transfers, unreadable, stats, activity, balance } =
     await getEgyptWalletOverview();
   const now = Date.now();
   const rate = effectiveRate(settings);
@@ -124,6 +124,12 @@ export default async function AdminEgyptWalletPage() {
       {settings.walletNumber === "" && (
         <p className="bg-danger/10 text-danger rounded-lg px-3 py-2 text-sm">
           No wallet number is set, so the option cannot be offered.
+        </p>
+      )}
+      {balance.breaks.length > 0 && (
+        <p className="bg-danger/10 text-danger rounded-lg px-3 py-2 text-sm">
+          The wallet&apos;s balance does not match its texts in {balance.breaks.length} step(s):
+          money moved that no text explains (see &quot;Money out and balance check&quot; below).
         </p>
       )}
       {unanswered.length > 0 && (
@@ -353,6 +359,97 @@ export default async function AdminEgyptWalletPage() {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Money out and balance check</h2>
+        <p className="text-muted-foreground text-sm">
+          Every text from Vodafone says what the wallet&apos;s balance was after it. Money received
+          adds to it, money sent out (and its fee) takes from it. If a balance does not follow from
+          the text before it, some money moved that no text we have explains, and you are told.
+        </p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Tile
+            label="Balance in the last text"
+            value={balance.latest ? `${balance.latest} EGP` : "—"}
+            hint={
+              balance.latestAt ? `at ${formatDate(balance.latestAt)}` : "no text with a balance yet"
+            }
+          />
+          <Tile label="Received, 7 days" value={`${balance.inLast7d} EGP`} />
+          <Tile label="Sent out, 7 days" value={`${balance.outLast7d} EGP`} hint="with fees" />
+          <Tile
+            label="Balance check"
+            value={balance.breaks.length === 0 ? "Matches" : `${balance.breaks.length} to look at`}
+            hint={
+              balance.breaks.length === 0 ? "every step follows from the texts" : "listed below"
+            }
+          />
+        </div>
+        {balance.breaks.length > 0 && (
+          <ul className="flex flex-col gap-2">
+            {balance.breaks.map((step) => (
+              <li
+                key={step.operation}
+                className="border-danger/40 bg-danger/5 rounded-xl border p-3 text-sm"
+              >
+                <p className="font-medium">
+                  {Number(step.diff) < 0 ? "Less" : "More"} than the texts explain:{" "}
+                  <span className="tabular-nums">{Math.abs(Number(step.diff)).toFixed(2)} EGP</span>
+                </p>
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  After operation <bdi dir="ltr">{step.after}</bdi> the balance should be{" "}
+                  {step.expected} EGP, but operation <bdi dir="ltr">{step.operation}</bdi> (
+                  {formatDate(step.at)}) says {step.actual} EGP.
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+        {activity.length === 0 ? (
+          <div className="text-muted-foreground rounded-xl border border-dashed px-4 py-8 text-center text-sm">
+            No money sent out has been seen yet.
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border">
+            <table className="w-full text-left text-sm">
+              <thead className="text-muted-foreground bg-muted/50 text-xs uppercase">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Time</th>
+                  <th className="px-3 py-2 font-medium">Amount</th>
+                  <th className="px-3 py-2 font-medium">Fee</th>
+                  <th className="px-3 py-2 font-medium">To</th>
+                  <th className="px-3 py-2 font-medium">Balance after</th>
+                  <th className="px-3 py-2 font-medium">Operation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activity.map((row) => (
+                  <tr key={row.id} className="border-t align-top">
+                    <td className="px-3 py-2 whitespace-nowrap">{formatDate(row.occurredAt)}</td>
+                    <td className="px-3 py-2 font-medium whitespace-nowrap tabular-nums">
+                      {row.amount ? (
+                        `${row.amount} EGP`
+                      ) : (
+                        <span className="text-muted-foreground font-normal" title={row.rawText}>
+                          a kind we do not read
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                      {row.fee ? `${row.fee} EGP` : "—"}
+                    </td>
+                    <td className="px-3 py-2 tabular-nums">{row.toPhone ?? "—"}</td>
+                    <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                      {row.balance ? `${row.balance} EGP` : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-xs tabular-nums">{row.transactionId}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

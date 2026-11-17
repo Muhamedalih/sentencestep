@@ -14,9 +14,27 @@ export interface ParsedTransfer {
   receivedAt: string | null;
 }
 
+/**
+ * Any other text from Vodafone that carries an operation number and the wallet's balance: a transfer
+ * SENT out (with its service fee), or something we do not read (a payment, a recharge). It is the other
+ * half of the wallet's record, never money received for an order.
+ */
+export interface ParsedActivity {
+  transactionId: string;
+  /** "out": a transfer or payment we read (amount known). "other": only the balance is known. */
+  kind: "out" | "other";
+  amountPiasters: number | null;
+  feePiasters: number | null;
+  toPhone: string | null;
+  balancePiasters: number | null;
+  /** The time written in the message (Cairo time) as an instant; null when it has none we can read. */
+  occurredAt: string | null;
+}
+
 export type ParsedMessage =
   | { kind: "transfer"; transfer: ParsedTransfer }
-  /** Not a readable incoming transfer. `looksLikeTransfer` is true when it still smells like money (an admin should look). */
+  | { kind: "activity"; activity: ParsedActivity }
+  /** Not a readable incoming transfer and not a record of the wallet's balance. `looksLikeTransfer` is true when it still looks like money RECEIVED (an admin should look). */
   | { kind: "other"; looksLikeTransfer: boolean };
 
 /** "215.00" or "1,215.5" as piasters (21500, 121550); null for anything that is not a plain amount. */
@@ -93,7 +111,38 @@ function cleanName(raw: string | undefined): string | null {
 }
 
 const MONEY_WORDS = /(?:جنيه|ج\.?\s?م|egp)/i;
-const TRANSFER_WORDS = /(?:استلام|استلمت|تحويل|received|transfer)/i;
+/** Words of money coming IN. Money going out ("تم تحويل ... لرقم ...") is the wallet's own activity and never worth an alert. */
+const INCOMING_WORDS = /(?:استلام|استلمت|received|وارد|إليك|اليك|إلى\s+محفظتك|الى\s+محفظتك)/i;
+const AMOUNT = "(\\d[\\d,]*(?:\\.\\d{1,2})?)";
+const OPERATION = /رقم\s+العملية\s*[:：]?\s*(\d{6,20})/u;
+const BALANCE = new RegExp(`رصيد(?:ك|\\s+حسابك)[^\\d]{0,60}?${AMOUNT}`, "u");
+const OUTGOING = new RegExp(
+  `تم\\s+(?:تحويل|سحب|دفع|شراء|شحن)\\s+(?:مبلغ\\s+)?${AMOUNT}\\s*(?:جنيه|ج\\.?\\s?م|egp)`,
+  "iu",
+);
+const FEE = new RegExp(`مصاريف\\s+الخدمة\\s+${AMOUNT}`, "u");
+const TO_PHONE = /لرقم\s+(\+?\d[\d\s-]{8,16})/u;
+
+/** The wallet's own records: a transfer sent out, or any text with an operation number and a balance. */
+function parseActivity(text: string): ParsedActivity | null {
+  const operation = OPERATION.exec(text);
+  if (!operation) return null;
+  const out = OUTGOING.exec(text);
+  const balance = BALANCE.exec(text);
+  if (!out && !balance) return null;
+
+  const fee = FEE.exec(text);
+  const to = TO_PHONE.exec(text);
+  return {
+    transactionId: operation[1]!,
+    kind: out ? "out" : "other",
+    amountPiasters: out ? parseAmountPiasters(out[1]!) : null,
+    feePiasters: fee ? parseAmountPiasters(fee[1]!) : null,
+    toPhone: to ? normalizeEgyptPhone(to[1]!) : null,
+    balancePiasters: balance ? parseAmountPiasters(balance[1]!) : null,
+    occurredAt: parseMessageTime(text),
+  };
+}
 
 /**
  * Reads one text message from the shop wallet's phone. Only the Vodafone Cash "تم استلام مبلغ ..."
@@ -108,9 +157,12 @@ const TRANSFER_WORDS = /(?:استلام|استلمت|تحويل|received|transfe
  */
 export function parseSms(rawText: string): ParsedMessage {
   const text = toAsciiDigits(rawText.slice(0, MAX_SMS_CHARS));
-  const looksLikeTransfer = MONEY_WORDS.test(text) && TRANSFER_WORDS.test(text);
+  const looksLikeTransfer = MONEY_WORDS.test(text) && INCOMING_WORDS.test(text);
 
-  if (!/تم\s+استلام\s+مبلغ/u.test(text)) return { kind: "other", looksLikeTransfer };
+  if (!/تم\s+استلام\s+مبلغ/u.test(text)) {
+    const activity = parseActivity(text);
+    return activity ? { kind: "activity", activity } : { kind: "other", looksLikeTransfer };
+  }
 
   const amountMatch = /استلام\s+مبلغ\s+([\d.,]+)\s*(?:جنيه|ج\.?\s?م|egp)/iu.exec(text);
   const transactionMatch = /رقم\s+العملية\s*[:：]?\s*(\d{6,20})/u.exec(text);

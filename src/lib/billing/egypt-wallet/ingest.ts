@@ -256,13 +256,18 @@ export async function handleSms(
     const parsed = parseSms(rawText);
 
     if (!senderIsVodafone(sender)) {
-      // Text that claims to be a transfer but did not come from Vodafone: kept, never trusted.
+      // A text from an ordinary number is kept and never trusted. Only one that claims to be money
+      // received is worth an alert (the app's own TEST message, for one, is not).
+      const claimsMoney =
+        parsed.kind === "transfer" || (parsed.kind === "other" && parsed.looksLikeTransfer);
       await deps.store.insertUnreadable({
         rawText,
         sender: sender?.slice(0, 64) ?? null,
-        looksLikeTransfer: true,
+        looksLikeTransfer: claimsMoney,
       });
-      if (parsed.kind === "transfer" || (parsed.kind === "other" && parsed.looksLikeTransfer)) {
+      // The request was authenticated: the phone's path works, whatever the text said.
+      await deps.store.touchState(now);
+      if (claimsMoney) {
         await deps.report({
           code: "egypt_wallet_untrusted_sender",
           referenceId: "batch",
@@ -270,6 +275,16 @@ export async function handleSms(
         });
       }
       return { status: 200, body: { ok: true, status: "ignored" } };
+    }
+
+    if (parsed.kind === "activity") {
+      // Money sent out, or any other text with a balance: the wallet's own record, never an order's payment.
+      const stored = await deps.store.insertActivity(parsed.activity, rawText, now);
+      await deps.store.touchState(now);
+      return {
+        status: 200,
+        body: { ok: true, status: stored === "inserted" ? "recorded" : "duplicate" },
+      };
     }
 
     if (parsed.kind === "other") {

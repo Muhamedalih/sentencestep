@@ -18,6 +18,8 @@ import {
   senderIsVodafone,
 } from "./ingest";
 import type { SmsDeps } from "./ingest";
+import type { BalanceObservation } from "./balance";
+import { processBalanceChecks } from "./balance-check";
 import type { MatchableOrder } from "./matching";
 import type { EgyptWalletSettings } from "./settings";
 import type { EgyptWalletStore, StoredMessage } from "./store";
@@ -62,6 +64,10 @@ function fakeStore(orders: MatchableOrder[]) {
   const unreadable: { rawText: string; looksLikeTransfer: boolean }[] = [];
   const notified: string[] = [];
   const claims = new Map<string, { claimedAt: string; alerted: boolean }>();
+  const observations: BalanceObservation[] = [];
+  const activity: { transactionId: string; kind: string }[] = [];
+  let heartbeats = 0;
+  const balanceAlerted = new Set<string>();
   const store: Partial<EgyptWalletStore> = {
     getSettings: async () => SETTINGS,
     insertMessage: async (transfer, rawText, seenAt) => {
@@ -103,7 +109,20 @@ function fakeStore(orders: MatchableOrder[]) {
       notified.push(id);
       messages.find((m) => m.id === id)!.notifiedAt = new Date(NOW).toISOString();
     },
-    touchState: async () => undefined,
+    touchState: async () => {
+      heartbeats += 1;
+    },
+    insertActivity: async (item) => {
+      if (activity.some((a) => a.transactionId === item.transactionId)) return "duplicate";
+      activity.push({ transactionId: item.transactionId, kind: item.kind });
+      return "inserted";
+    },
+    listBalanceObservations: async () => observations,
+    claimBalanceAlert: async (op) => {
+      if (balanceAlerted.has(op)) return false;
+      balanceAlerted.add(op);
+      return true;
+    },
     claimAlertDue: async (orderId, claimedBefore) => {
       const claim = claims.get(orderId);
       if (!claim || claim.alerted || Date.parse(claim.claimedAt) > claimedBefore.getTime())
@@ -124,7 +143,16 @@ function fakeStore(orders: MatchableOrder[]) {
       }),
     getEmail: async () => "learner@example.com",
   };
-  return { store: store as EgyptWalletStore, messages, unreadable, notified, claims };
+  return {
+    store: store as EgyptWalletStore,
+    messages,
+    unreadable,
+    notified,
+    claims,
+    activity,
+    observations,
+    heartbeats: () => heartbeats,
+  };
 }
 
 function setup(orders: MatchableOrder[]) {
@@ -367,4 +395,86 @@ test("the cron safety net alerts every old unanswered claim but not an order alr
   assert.equal(result.alerted, 1);
   assert.equal(t.alerts.length, 1);
   assert.equal(t.alerts[0]!.referenceId, "ss_1");
+});
+
+const OUT_TEXT = `تم تحويل 20 جنيه لرقم 01033333333 مصاريف الخدمة 1 جنيه رصيد حسابك فى فودافون كاش الحالي 663.87.
+تاريخ العملية 22:48 26-11-17 :
+رقم العملية 025900585759 :`;
+
+test("money sent out is recorded as the wallet's activity: no alert, no order touched, heartbeat updated", async () => {
+  const t = setup([order()]);
+  const response = await handleSms(t.deps, {
+    body: JSON.stringify({ message: OUT_TEXT, from: "VF-Cash" }),
+    headers: headers(SECRET),
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.status, "recorded");
+  assert.deepEqual(t.activity, [{ transactionId: "025900585759", kind: "out" }]);
+  assert.deepEqual(t.alerts, []);
+  assert.deepEqual(t.fulfilled, []);
+  assert.equal(t.heartbeats(), 1);
+  // The same text again is recognised, not stored twice.
+  const again = await handleSms(t.deps, {
+    body: JSON.stringify({ message: OUT_TEXT, from: "VF-Cash" }),
+    headers: headers(SECRET),
+  });
+  assert.equal(again.body.status, "duplicate");
+  assert.equal(t.activity.length, 1);
+});
+
+test("the app's own TEST text from an ordinary sender raises no alert, is not flagged, and updates the heartbeat", async () => {
+  const t = setup([order()]);
+  const response = await handleSms(t.deps, {
+    body: JSON.stringify({ message: "test message", from: "123456789" }),
+    headers: headers(SECRET),
+  });
+  assert.equal(response.body.status, "ignored");
+  assert.equal(t.unreadable.length, 1);
+  assert.equal(t.unreadable[0]!.looksLikeTransfer, false);
+  assert.deepEqual(t.alerts, []);
+  assert.equal(t.heartbeats(), 1);
+});
+
+test("the balance job tells the admins once about a step no text explains, and waits for late texts", async () => {
+  const t = setup([]);
+  const old = new Date(NOW - 60 * MINUTE).toISOString();
+  const recent = new Date(NOW - 2 * MINUTE).toISOString();
+  t.observations.push(
+    {
+      transactionId: "100",
+      kind: "in",
+      amountPiasters: 10_000,
+      feePiasters: null,
+      balancePiasters: 30_000,
+      at: old,
+      seenAt: old,
+    },
+    // 300.00 - 20.00 - 1.00 should be 279.00, the text says 270.00: 9.00 missing.
+    {
+      transactionId: "200",
+      kind: "out",
+      amountPiasters: 2_000,
+      feePiasters: 100,
+      balancePiasters: 27_000,
+      at: old,
+      seenAt: old,
+    },
+  );
+  assert.deepEqual(await processBalanceChecks(t.deps), { alerted: 1 });
+  assert.equal(t.alerts[0]!.code, "egypt_wallet_balance_mismatch");
+  assert.equal(t.alerts[0]!.referenceId, "200");
+  assert.match(t.alerts[0]!.detail ?? "", /9\.00 EGP less/);
+  assert.deepEqual(await processBalanceChecks(t.deps), { alerted: 0 });
+
+  // A step whose text only just arrived is not reported yet: an earlier text may still be on its way.
+  t.observations.push({
+    transactionId: "300",
+    kind: "out",
+    amountPiasters: 1_000,
+    feePiasters: 0,
+    balancePiasters: 10_000,
+    at: recent,
+    seenAt: recent,
+  });
+  assert.deepEqual(await processBalanceChecks(t.deps), { alerted: 0 });
 });
