@@ -7,8 +7,16 @@ import {
   IgnoreMessageButton,
   LinkMessageButton,
 } from "@/components/admin/egypt-wallet-forms";
+import {
+  AutomaticRateButton,
+  RefreshRateButton,
+  SetRateForm,
+} from "@/components/admin/egypt-wallet-rate-forms";
 import { Badge } from "@/components/ui/badge";
 import { getEgyptWalletOverview } from "@/lib/admin/egypt-wallet-queries";
+import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
+import { PLANS } from "@/lib/billing/plans";
+import { quotePrice } from "@/lib/billing/pricing";
 import { isEgyptWalletConfigured } from "@/lib/billing/provider-registry";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -68,6 +76,7 @@ export default async function AdminEgyptWalletPage() {
   const { settings, lastMessageAt, waiting, transfers, unreadable, stats } =
     await getEgyptWalletOverview();
   const now = Date.now();
+  const rate = effectiveRate(settings);
   const unanswered = waiting.filter(
     (order) =>
       order.claimedPaidAt !== null && now - Date.parse(order.claimedPaidAt) >= CLAIM_RED_AFTER_MS,
@@ -159,6 +168,38 @@ export default async function AdminEgyptWalletPage() {
           hint={stats.unmatched > 0 ? "Waiting for you below" : "Nothing waiting"}
         />
       </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Dollar rate</h2>
+        <p className="text-muted-foreground text-sm">
+          Prices in pounds follow the day&apos;s rate, read once a day and rounded to the nearest
+          whole pound. An order keeps the price it was opened at.
+        </p>
+        <div className="flex flex-col gap-3 rounded-xl border p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-2xl font-semibold tabular-nums">{rate.rate} EGP</span>
+            <span className="text-muted-foreground text-sm">per USD</span>
+            <Badge variant={settings.rateLocked ? "secondary" : "success"}>
+              {settings.rateLocked ? "Set by hand" : "Automatic"}
+            </Badge>
+            <span className="text-muted-foreground text-xs">
+              {rate.updatedAt
+                ? `from ${rate.source}, ${ago(rate.updatedAt, now)}`
+                : "no reading yet: the built-in fallback is in use"}
+            </span>
+          </div>
+          <p className="text-sm tabular-nums">
+            {PLANS.map(
+              (plan) =>
+                `${plan.days} days = ${quotePrice("A", "EGP", plan.id, 0, { ratePerUsd: rate.rate }).amount} EGP`,
+            ).join("  ·  ")}
+          </p>
+          <div className="flex flex-wrap items-start gap-4">
+            {settings.rateLocked ? <AutomaticRateButton /> : <RefreshRateButton />}
+            <SetRateForm current={rate.rate} />
+          </div>
+        </div>
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Orders waiting for a transfer</h2>

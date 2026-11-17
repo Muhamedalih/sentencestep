@@ -7,6 +7,7 @@ import {
   processUnansweredClaims,
   processUnlinkedMessages,
 } from "@/lib/billing/egypt-wallet/ingest";
+import { refreshRate } from "@/lib/billing/egypt-wallet/rate";
 import {
   getBinancePayRuntime,
   getEgyptWalletRuntime,
@@ -91,12 +92,21 @@ async function handlePaymentsReconcileCron(request: Request): Promise<NextRespon
       const matched = deps
         ? await processUnlinkedMessages(deps, await deps.store.getSettings())
         : null;
+      // The day's dollar rate: reaches out about once a day (see rate.ts), otherwise does nothing.
+      const rate = deps
+        ? await refreshRate({ store: deps.store, now: deps.now, report: deps.report })
+        : null;
       const egypt = await reconcileOpenOrders(egyptRuntime);
       // A learner who said they paid and has waited long enough without a matching transfer: the admins are told.
       const claims = deps ? await processUnansweredClaims(deps) : null;
       summary = {
         ...summary,
-        egyptWallet: { ...egypt, matched: matched?.linked ?? 0, claimAlerts: claims?.alerted ?? 0 },
+        egyptWallet: {
+          ...egypt,
+          matched: matched?.linked ?? 0,
+          claimAlerts: claims?.alerted ?? 0,
+          rate,
+        },
       };
     } catch (error) {
       console.error("[payments] Vodafone Cash reconcile failed", error);

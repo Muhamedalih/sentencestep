@@ -634,9 +634,19 @@ export interface Database {
           auto_activate: boolean;
           late_payment_hours: number;
           updated_at: string;
+          /** The day's USD to EGP rate, or null before the first reading. */
+          usd_to_egp: number | null;
+          rate_updated_at: string | null;
+          rate_source: string | null;
+          /** True while an admin's own rate is in use and the automatic update is off. */
+          rate_locked: boolean;
         };
         Insert: {
           id?: number;
+          usd_to_egp?: number | null;
+          rate_updated_at?: string | null;
+          rate_source?: string | null;
+          rate_locked?: boolean;
           wallet_number?: string;
           daily_order_cap?: number;
           auto_activate?: boolean;

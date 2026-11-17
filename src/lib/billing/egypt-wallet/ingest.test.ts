@@ -31,6 +31,10 @@ const SETTINGS: EgyptWalletSettings = {
   dailyOrderCap: 50,
   autoActivate: true,
   latePaymentHours: 24,
+  usdToEgp: null,
+  rateUpdatedAt: null,
+  rateSource: null,
+  rateLocked: false,
 };
 
 /** A transfer message the way Vodafone writes it (made-up numbers), at 13:05 Cairo time = 11:05 UTC. */
