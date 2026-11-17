@@ -164,3 +164,44 @@ test("parseSms: a new wording of money coming IN is still flagged for a look", (
     looksLikeTransfer: true,
   });
 });
+
+// The second wording of a received-money text, as the wallet's phone really got it (made-up numbers):
+// "من رقم 01…" and "تاريخ العملية:" instead of "من 01…" and "بتاريخ".
+const SECOND_WORDING = `تم استلام مبلغ 113 جنيه من رقم 01055555555 المسجل بإسم Test Sender على رقم محفظتك  01090000002.
+رصيدك الحالي: 672.87 جنيه
+تاريخ العملية: 23:29 26-11-17
+رقم العملية: 025901794160
+تابع كل مصروفاتك من تاريخ المعاملات على أبلكيشن أنا فودافون http://vf.eg/vfcash
+`;
+
+test("parseSms reads the second wording of a received-money text, including the sender's number", () => {
+  const result = parseSms(SECOND_WORDING);
+  assert.equal(result.kind, "transfer");
+  if (result.kind !== "transfer") return;
+  assert.deepEqual(result.transfer, {
+    transactionId: "025901794160",
+    amountPiasters: 11_300,
+    balancePiasters: 67_287,
+    payerPhone: "01055555555",
+    payerName: "Test Sender",
+    walletNumber: "01090000002",
+    receivedAt: "2026-11-17T21:29:00.000Z",
+  });
+});
+
+test("parseSms never takes the digits of a later 'من' for the sender", () => {
+  // "من تاريخ المعاملات" must not be read as a number, and a text with no sender stays without one.
+  const result = parseSms(
+    "تم استلام مبلغ 50 جنيه رقم العملية: 025901794999 تابع كل مصروفاتك من تاريخ المعاملات على أبلكيشن أنا فودافون",
+  );
+  assert.equal(result.kind, "transfer");
+  if (result.kind !== "transfer") return;
+  assert.equal(result.transfer.payerPhone, null);
+});
+
+test("parseSms finds the sender after a plain 'من' even when the amount is not followed by the currency word", () => {
+  const result = parseSms("تم استلام مبلغ 75.50 EGP\nمن 01066666666\nرقم العملية: 025901795000");
+  assert.equal(result.kind, "transfer");
+  if (result.kind !== "transfer") return;
+  assert.equal(result.transfer.payerPhone, "01066666666");
+});
