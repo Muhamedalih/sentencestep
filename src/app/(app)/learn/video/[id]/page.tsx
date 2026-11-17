@@ -42,6 +42,7 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
       nextLessonId={next ?? null}
       nextLessonTitle={nextTitle}
       newFinish={features.rollouts.videoFinish}
+      finishLook={features.rollouts.videoFinishLook}
       canEditStops={admin}
       silenceWave={features.rollouts.videoSilence}
     />

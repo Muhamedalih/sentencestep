@@ -733,3 +733,37 @@ test("the wave rises smoothly as the speech comes near and stays in range", () =
   assert.ok(waveLevel(0.7) > waveLevel(1.4));
   assert.ok(waveLevel(-1) <= 1 && waveLevel(Infinity) > 0);
 });
+
+test("the training words: the mistyped ones first, then the longest, each word once, letters only", async () => {
+  const { buildTrainingWords } = await import("./finish-summary");
+  const sentence = (en: string, pairs: [string, string][]) => ({
+    id: en,
+    startSeconds: 0,
+    endSeconds: 1,
+    en,
+    ar: "",
+    wordTranslations: pairs.map(([word, ar]) => ({ en: word, ar })),
+  });
+  const sentences = [
+    sentence("Where is the hand?", [
+      ["Where", "أين"],
+      ["is", "هو"],
+      ["the", ""],
+      ["hand?", "اليد"],
+    ]),
+    sentence("Nice hand, 2024!", [
+      ["Nice", "أحسنت"],
+      ["hand,", ""],
+      ["2024!", ""],
+    ]),
+    sentence("Wonderful day", [
+      ["Wonderful", "رائع"],
+      ["day", "يوم"],
+    ]),
+  ];
+  const words = buildTrainingWords(sentences, ["nice"], 8).map((item) => item.word);
+  assert.deepEqual(words, ["nice", "wonderful", "where", "hand", "the", "day"]);
+  assert.equal(buildTrainingWords(sentences, [], 2).length, 2);
+  const hand = buildTrainingWords(sentences, [], 8).find((item) => item.word === "hand");
+  assert.equal(hand?.meaning, "اليد");
+});

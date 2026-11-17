@@ -51,6 +51,18 @@ export interface VideoStrings {
   /** Put before the next video's title (the title follows in its own element). */
   finishNext: string;
   finishWatch: string;
+  /** The look of the finish page in the "videoFinishLook" permission. */
+  finishAccuracy: string;
+  finishWords: string;
+  finishBarLabel: string;
+  finishBarGreat: string;
+  finishBarKeep: string;
+  /** The training on the video's words. */
+  trainButton: string;
+  trainListen: string;
+  trainReplay: string;
+  trainDone: string;
+  trainBack: string;
   /** "{channel}" */
   videoFrom: string;
   watchOnYouTube: string;
@@ -151,6 +163,16 @@ const ar: VideoStrings = {
   finishStatWords: "كلمة كتبتها",
   finishNext: "التالي:",
   finishWatch: "شاهده على يوتيوب",
+  finishAccuracy: "الدقة",
+  finishWords: "كلمة كتبتها",
+  finishBarLabel: "كلمات كتبتها صح من أول مرة",
+  finishBarGreat: "كتابة ممتازة. كلماتك بدأت تثبت",
+  finishBarKeep: "كل كلمة تكتبها تقرّبك أكثر. جرّب التدريب لتثبّتها",
+  trainButton: "تدرّب على كلمات الفيديو",
+  trainListen: "استمع إلى الكلمة واكتبها",
+  trainReplay: "أعد الصوت",
+  trainDone: "أتقنت كلمات الفيديو",
+  trainBack: "رجوع",
   videoFrom: "الفيديو من قناة {channel}، ويُعرض من يوتيوب",
   watchOnYouTube: "Watch on YouTube",
   unavailableTitle: "الفيديو غير متاح حالياً",

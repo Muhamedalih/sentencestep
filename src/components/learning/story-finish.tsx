@@ -258,10 +258,13 @@ const SPRING = { type: "spring", stiffness: 420, damping: 24, mass: 0.7 } as con
 export function FinishButton({
   action,
   primary,
+  tone,
   children,
 }: {
   action: StoryFinishAction;
   primary: boolean;
+  /** "green" outlines the button in green (an extra practice); "youtube" turns its hover red. */
+  tone?: "green" | "youtube";
   children: ReactNode;
 }) {
   const reduced = useReducedMotion();
@@ -269,7 +272,9 @@ export function FinishButton({
     "flex h-[4.5rem] items-center justify-center rounded-2xl border px-4 text-center text-xl font-semibold sm:h-20 sm:text-2xl " +
     (primary
       ? "border-transparent bg-[#f1f2f6] text-[#12141c]"
-      : "border-[#1e1e22] bg-black text-white");
+      : tone === "green"
+        ? "border-[#3dba5f] bg-black text-[#3dba5f]"
+        : "border-[#1e1e22] bg-black text-white");
   const hover = primary
     ? {
         backgroundColor: "#ffffff",
@@ -277,11 +282,27 @@ export function FinishButton({
         ...(reduced ? {} : { y: -5, scale: 1.03 }),
       }
     : {
-        borderColor: GREEN,
-        backgroundColor: "rgba(61,186,95,0.12)",
+        borderColor: tone === "youtube" ? "#e5322d" : GREEN,
+        backgroundColor: tone === "youtube" ? "rgba(229,50,45,0.12)" : "rgba(61,186,95,0.12)",
         ...(reduced ? {} : { y: -5, scale: 1.03 }),
       };
   const tap = reduced ? undefined : { scale: 0.95, y: 0 };
+  if (action.href && /^https?:/.test(action.href)) {
+    return (
+      <motion.a
+        href={action.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={action.onClick}
+        className={className}
+        whileHover={hover}
+        whileTap={tap}
+        transition={SPRING}
+      >
+        {children}
+      </motion.a>
+    );
+  }
   if (action.href) {
     return (
       <MotionLink
