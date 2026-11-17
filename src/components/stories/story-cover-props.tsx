@@ -1401,6 +1401,17 @@ function Guitar() {
   );
 }
 
+function GradCap() {
+  return (
+    <>
+      {pa("M-26 4V26Q0 40 26 26V4L0 16z", "ink")}
+      {pa("M-52 -6L0 -30L52 -6L0 18z", "ink")}
+      {li("M44 -4V24", "pop", 4)}
+      {ci(44, 28, 5, "pop")}
+    </>
+  );
+}
+
 function Rings() {
   return (
     <>
@@ -1855,6 +1866,7 @@ export const PROPS: Record<string, () => ReactNode> = {
   dinner: () => <Dinner />,
   guitar: () => <Guitar />,
   rings: () => <Rings />,
+  gradCap: () => <GradCap />,
   sticky: () => <Sticky />,
   foilcube: () => <FoilCube />,
   cart: () => <Cart />,

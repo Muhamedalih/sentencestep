@@ -690,6 +690,36 @@ const SCENES: Record<string, Scene> = {
     bg: "room",
     props: [p("desk", 200, 190, 1.4), p("foilcube", 170, 140, 1), p("sticky", 290, 150, 0.8)],
   },
+  "Mama's Tired Hands": {
+    pal: "peach",
+    bg: "room",
+    props: [
+      p("person", 140, 176, 1.25),
+      p("personAlt", 262, 206, 0.8),
+      p("heart", 200, 92, 0.75),
+      p("cup", 330, 212, 0.7),
+    ],
+  },
+  "The Dog Ate the Ring": {
+    pal: "rose",
+    bg: "halo",
+    props: [
+      p("dog", 140, 198, 1.35),
+      p("rings", 290, 184, 1.1),
+      p("heart", 330, 80, 0.5),
+      p("sparkle", 80, 90, 0.6),
+    ],
+  },
+  "My Mother's Four Words": {
+    pal: "cherry",
+    bg: "halo",
+    props: [
+      p("person", 135, 178, 1.3),
+      p("personAlt", 268, 182, 1.15),
+      p("gradCap", 268, 116, 0.8),
+      p("heart", 200, 78, 0.6),
+    ],
+  },
 };
 
 export function hasStoryScene(title: string): boolean {
