@@ -87,3 +87,38 @@ export async function submitOperationNumber(
     return { error: t.otherErrors.failed };
   }
 }
+
+/**
+ * The learner says they sent the money. It only records the claim (and looks once more for a transfer
+ * that may already have arrived); nothing is granted because of it. If no matching transfer shows up
+ * within a few minutes, the admins are alerted (see alertUnansweredClaim).
+ */
+export async function claimPaid(
+  _previous: EgyptActionState | null,
+  formData: FormData,
+): Promise<EgyptActionState> {
+  const t = egyptStrings(await getLocale());
+  const user = await getCurrentUser();
+  const reference = text(formData, "reference", MAX_REFERENCE_LENGTH);
+  if (!user || !reference) return { error: t.genericError };
+
+  try {
+    const deps = getEgyptWalletDeps();
+    if (!deps) return { error: t.genericError };
+    const order = await deps.store.getOrderForUser(reference, user.id);
+    if (!order) return { error: t.genericError };
+    if (order.status === "fulfilled") return { ok: true };
+    if (!order.payerPhone) return { error: t.claimNeedsPhone };
+
+    await deps.store.claimPaid(order.orderId, new Date(deps.now()));
+    try {
+      await processUnlinkedMessages(deps, await deps.store.getSettings());
+    } catch (error) {
+      console.error("[egypt-wallet] matching after the claim failed", error);
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[egypt-wallet] recording the claim failed", error);
+    return { error: t.genericError };
+  }
+}

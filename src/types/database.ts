@@ -652,6 +652,10 @@ export interface Database {
           /** The number the learner says they will send from. */
           payer_phone: string | null;
           payer_phone_set_at: string | null;
+          /** When the learner pressed "I sent the money". */
+          claimed_paid_at: string | null;
+          /** When the admins were told that no matching transfer arrived after that. */
+          claim_alerted_at: string | null;
           expires_at: string;
           created_at: string;
         };
@@ -659,6 +663,8 @@ export interface Database {
           order_id: string;
           payer_phone?: string | null;
           payer_phone_set_at?: string | null;
+          claimed_paid_at?: string | null;
+          claim_alerted_at?: string | null;
           expires_at: string;
           created_at?: string;
         };

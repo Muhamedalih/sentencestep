@@ -8,7 +8,11 @@ import { Check, ChevronDown, Clock, Copy, Info, Loader2 } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { savePayerPhone, submitOperationNumber } from "@/lib/billing/egypt-wallet/actions";
+import {
+  claimPaid,
+  savePayerPhone,
+  submitOperationNumber,
+} from "@/lib/billing/egypt-wallet/actions";
 import type { EgyptActionState } from "@/lib/billing/egypt-wallet/actions";
 import { egyptStrings } from "@/lib/billing/egypt-wallet/strings";
 import { cn } from "@/lib/utils";
@@ -22,6 +26,8 @@ interface EgyptWalletInstructionsProps {
   amount: number;
   /** The number the learner wrote, or null before they wrote it. */
   payerPhone: string | null;
+  /** True once the learner pressed "I sent the money". */
+  claimedPaid: boolean;
   /** ISO time the order's hour ends. */
   expiresAt: string | null;
   /** True once that hour has passed (a late transfer from the saved number still counts). */
@@ -181,6 +187,32 @@ function PhoneForm({
   );
 }
 
+function ClaimForm({ reference }: { reference: string }) {
+  const { locale } = useLocale();
+  const t = egyptStrings(locale);
+  const [state, action, pending] = useActionState(claimPaid, null);
+  useRefreshOnSuccess(state);
+
+  return (
+    <form action={action} className="flex flex-col gap-2">
+      <input type="hidden" name="reference" value={reference} />
+      <Button type="submit" size="lg" disabled={pending} className="w-full">
+        {pending ? (
+          <Loader2 className="animate-spin" aria-hidden="true" />
+        ) : (
+          <Check aria-hidden="true" />
+        )}
+        <span dir="auto">{t.claimButton}</span>
+      </Button>
+      {state?.error && (
+        <p role="alert" className="text-danger text-xs" dir="auto">
+          {state.error}
+        </p>
+      )}
+    </form>
+  );
+}
+
 function OperationForm({ reference }: { reference: string }) {
   const { locale } = useLocale();
   const t = egyptStrings(locale);
@@ -231,6 +263,7 @@ export function EgyptWalletInstructions({
   walletNumber,
   amount,
   payerPhone,
+  claimedPaid,
   expiresAt,
   expired,
 }: EgyptWalletInstructionsProps) {
@@ -351,6 +384,17 @@ export function EgyptWalletInstructions({
           <p className="text-muted-foreground text-xs leading-relaxed" dir="auto">
             {t.waitingBody}
           </p>
+          {claimedPaid ? (
+            <p
+              className="bg-muted flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-xs leading-relaxed"
+              dir="auto"
+            >
+              <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{t.claimedNote}</span>
+            </p>
+          ) : (
+            <ClaimForm reference={reference} />
+          )}
         </div>
       )}
 

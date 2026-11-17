@@ -46,6 +46,8 @@ export interface AdminOrderOption {
 }
 
 export interface AdminWaitingOrder extends AdminOrderOption {
+  /** When the learner pressed "I sent the money", or null. */
+  claimedPaidAt: string | null;
   status: string;
   createdAt: string;
   expiresAt: string | null;
@@ -147,7 +149,7 @@ export async function getEgyptWalletOverview(): Promise<AdminEgyptOverview> {
             .in("id", orderIds),
           supabase
             .from("egypt_wallet_intents")
-            .select("order_id, payer_phone")
+            .select("order_id, payer_phone, claimed_paid_at")
             .in("order_id", orderIds),
         ]);
   if (ordersResult.error) throw ordersResult.error;
@@ -158,6 +160,9 @@ export async function getEgyptWalletOverview(): Promise<AdminEgyptOverview> {
     (intentsResult.data ?? []).map((row) => [row.order_id, row.payer_phone]),
   );
 
+  const claimedByOrder = new Map(
+    (intentsResult.data ?? []).map((row) => [row.order_id, row.claimed_paid_at]),
+  );
   const emailByUser = new Map<string, string>();
   const userIds = [...new Set((ordersResult.data ?? []).map((row) => row.user_id))];
   await Promise.all(
@@ -174,6 +179,7 @@ export async function getEgyptWalletOverview(): Promise<AdminEgyptOverview> {
     chargeAmount: row.charge_amount,
     premiumDays: row.premium_days,
     payerPhone: phoneByOrder.get(row.id) ?? null,
+    claimedPaidAt: claimedByOrder.get(row.id) ?? null,
     status: row.status,
     createdAt: row.created_at,
     expiresAt: row.link_expires_at,

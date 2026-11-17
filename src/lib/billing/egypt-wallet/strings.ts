@@ -59,6 +59,9 @@ export interface EgyptStrings {
   back: string;
   startNewOrder: string;
   genericError: string;
+  claimButton: string;
+  claimedNote: string;
+  claimNeedsPhone: string;
 }
 
 const ar: EgyptStrings = {
@@ -111,6 +114,10 @@ const ar: EgyptStrings = {
   back: "رجوع",
   startNewOrder: "ابدأ طلباً جديداً",
   genericError: "حدث خطأ. حاول مرة أخرى.",
+  claimButton: "حوّلت المبلغ",
+  claimedNote:
+    "سجّلنا أنك حوّلت المبلغ. إذا تأخر التفعيل سنراجعه فوراً ونفعّل اشتراكك، فلا داعي لتحويل مبلغ آخر.",
+  claimNeedsPhone: "اكتب رقم محفظتك أولاً.",
 };
 
 const en: EgyptStrings = {
@@ -167,6 +174,10 @@ const en: EgyptStrings = {
   back: "Back",
   startNewOrder: "Start a new order",
   genericError: "Something went wrong. Try again.",
+  claimButton: "I sent the money",
+  claimedNote:
+    "We noted that you sent the money. If activation is delayed we will check it right away and activate your access, so there is no need to send another transfer.",
+  claimNeedsPhone: "Write your wallet number first.",
 };
 
 export function egyptStrings(locale: SupportLocale | null): EgyptStrings {

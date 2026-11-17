@@ -353,3 +353,56 @@ export async function linkByOperationNumber(
     "The learner gave the operation number from Vodafone's receipt.",
   );
 }
+
+/** How long after "I sent the money" the admins are alerted when no matching transfer has arrived. */
+export const CLAIM_ALERT_AFTER_MS = 10 * 60 * 1000;
+/** A claim older than this is no longer chased (the order's late window is over anyway). */
+const CLAIM_LOOK_BACK_MS = 3 * 24 * 60 * 60 * 1000;
+const CLAIMS_BATCH = 50;
+
+/**
+ * A learner said they sent the money and nothing matching has arrived: tells the admins once, by
+ * e-mail and push, with who it is, which number they send from and what amount. The right to alert
+ * is won by one atomic database update, so the payment page, the cron job and a double click can
+ * never send it twice. Returns true when this call sent it.
+ */
+export async function alertUnansweredClaim(
+  deps: SmsDeps,
+  order: MatchableOrder,
+  claimedAt: string,
+): Promise<boolean> {
+  const now = new Date(deps.now());
+  const won = await deps.store.claimAlertDue(
+    order.orderId,
+    new Date(now.getTime() - CLAIM_ALERT_AFTER_MS),
+    now,
+  );
+  if (!won) return false;
+  const email = (await deps.store.getEmail(order.userId).catch(() => null)) ?? "a learner";
+  const minutes = Math.max(1, Math.round((now.getTime() - Date.parse(claimedAt)) / 60_000));
+  await deps.report({
+    code: "egypt_wallet_paid_not_activated",
+    referenceId: order.referenceId,
+    detail: `${email} pressed "I sent the money" ${minutes} minutes ago for ${order.chargeAmount} EGP from ${order.payerPhone ?? "a number they did not write"}, and no matching transfer message has arrived.`,
+  });
+  return true;
+}
+
+/** Alerts about every claim that has waited long enough without a matching transfer (the cron job's safety net). */
+export async function processUnansweredClaims(deps: SmsDeps): Promise<{ alerted: number }> {
+  const nowMs = deps.now();
+  const claims = await deps.store.listUnansweredClaims(
+    new Date(nowMs - CLAIM_ALERT_AFTER_MS),
+    new Date(nowMs - CLAIM_LOOK_BACK_MS),
+    CLAIMS_BATCH,
+  );
+  let alerted = 0;
+  for (const claim of claims) {
+    try {
+      if (await alertUnansweredClaim(deps, claim.order, claim.claimedAt)) alerted += 1;
+    } catch (error) {
+      console.error("[egypt-wallet] a claim alert failed", error);
+    }
+  }
+  return { alerted };
+}

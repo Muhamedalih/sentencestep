@@ -36,6 +36,16 @@ export interface PaymentState {
 export interface IntentRecord {
   payerPhone: string | null;
   expiresAt: string;
+  /** When the learner pressed "I sent the money". */
+  claimedPaidAt: string | null;
+  /** When the admins were told that nothing matching arrived after that. */
+  claimAlertedAt: string | null;
+}
+
+/** An order whose learner said they paid, and whose transfer has not shown up. */
+export interface UnansweredClaim {
+  order: MatchableOrder;
+  claimedAt: string;
 }
 
 export interface OrderForIntent {
@@ -59,6 +69,14 @@ export interface EgyptWalletStore {
   /** Creates the order's intent (no number yet). Asked twice for one order it does nothing the second time. */
   insertIntent(input: { orderId: string; expiresAt: string }): Promise<void>;
   getIntent(orderId: string): Promise<IntentRecord | null>;
+  /** Records that the learner says they sent the money (the first time only). */
+  claimPaid(orderId: string, now: Date): Promise<void>;
+  /** Wins the one right to alert about this order's unanswered claim: true for exactly one caller, ever. */
+  claimAlertDue(orderId: string, claimedBefore: Date, now: Date): Promise<boolean>;
+  /** Orders whose learner said they paid before `claimedBefore` (not earlier than `since`), still unpaid, not yet alerted. */
+  listUnansweredClaims(claimedBefore: Date, since: Date, limit: number): Promise<UnansweredClaim[]>;
+  /** The learner's e-mail, for the alert. */
+  getEmail(userId: string): Promise<string | null>;
   /** Writes the number the learner will send from. False when the order already has a transfer or is paid. */
   setPayerPhone(orderId: string, phone: string, now: Date): Promise<boolean>;
   listPaymentStates(referenceIds: string[]): Promise<PaymentState[]>;
@@ -206,11 +224,76 @@ export function createEgyptWalletStore(
     async getIntent(orderId) {
       const { data, error } = await supabase
         .from("egypt_wallet_intents")
-        .select("payer_phone, expires_at")
+        .select("payer_phone, expires_at, claimed_paid_at, claim_alerted_at")
         .eq("order_id", orderId)
         .maybeSingle();
       if (error) throw error;
-      return data ? { payerPhone: data.payer_phone, expiresAt: data.expires_at } : null;
+      return data
+        ? {
+            payerPhone: data.payer_phone,
+            expiresAt: data.expires_at,
+            claimedPaidAt: data.claimed_paid_at,
+            claimAlertedAt: data.claim_alerted_at,
+          }
+        : null;
+    },
+
+    async claimPaid(orderId, now) {
+      const { error } = await supabase
+        .from("egypt_wallet_intents")
+        .update({ claimed_paid_at: now.toISOString() })
+        .eq("order_id", orderId)
+        .not("payer_phone", "is", null)
+        .is("claimed_paid_at", null);
+      if (error) throw error;
+    },
+
+    async claimAlertDue(orderId, claimedBefore, now) {
+      const { data, error } = await supabase
+        .from("egypt_wallet_intents")
+        .update({ claim_alerted_at: now.toISOString() })
+        .eq("order_id", orderId)
+        .not("claimed_paid_at", "is", null)
+        .lte("claimed_paid_at", claimedBefore.toISOString())
+        .is("claim_alerted_at", null)
+        .select("order_id");
+      if (error) throw error;
+      return (data ?? []).length > 0;
+    },
+
+    async listUnansweredClaims(claimedBefore, since, limit) {
+      const { data: intents, error } = await supabase
+        .from("egypt_wallet_intents")
+        .select("order_id, payer_phone, claimed_paid_at")
+        .not("claimed_paid_at", "is", null)
+        .is("claim_alerted_at", null)
+        .lte("claimed_paid_at", claimedBefore.toISOString())
+        .gte("claimed_paid_at", since.toISOString())
+        .limit(limit);
+      if (error) throw error;
+      const rows = intents ?? [];
+      if (rows.length === 0) return [];
+      const ids = rows.map((row) => row.order_id);
+      const [orders, linked] = await Promise.all([
+        matchableOrders(
+          supabase,
+          ids,
+          OPEN_STATUSES,
+          new Map(rows.map((row) => [row.order_id, row.payer_phone])),
+        ),
+        supabase.from("egypt_wallet_messages").select("linked_order_id").in("linked_order_id", ids),
+      ]);
+      if (linked.error) throw linked.error;
+      const paid = new Set((linked.data ?? []).map((row) => row.linked_order_id));
+      const claimedAt = new Map(rows.map((row) => [row.order_id, row.claimed_paid_at as string]));
+      return orders
+        .filter((order) => !paid.has(order.orderId))
+        .map((order) => ({ order, claimedAt: claimedAt.get(order.orderId)! }));
+    },
+
+    async getEmail(userId) {
+      const { data } = await supabase.auth.admin.getUserById(userId);
+      return data.user?.email ?? null;
     },
 
     async setPayerPhone(orderId, phone, now) {

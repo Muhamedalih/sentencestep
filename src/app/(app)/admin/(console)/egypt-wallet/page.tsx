@@ -59,8 +59,8 @@ const METHOD_LABEL = {
   manual: "by an admin",
 } as const;
 
-/** The phone's heartbeat: a message that arrived lately, or a warning when an order waits and the phone has been silent. */
-const SILENT_AFTER_MS = 6 * 60 * 60 * 1000;
+/** A learner who said they paid and has waited this long with no matching transfer is flagged red (the admins are also e-mailed and pushed). */
+const CLAIM_RED_AFTER_MS = 10 * 60 * 1000;
 
 export default async function AdminEgyptWalletPage() {
   if (!isSupabaseConfigured()) return <NotConfiguredNotice />;
@@ -68,9 +68,10 @@ export default async function AdminEgyptWalletPage() {
   const { settings, lastMessageAt, waiting, transfers, unreadable, stats } =
     await getEgyptWalletOverview();
   const now = Date.now();
-  const silent =
-    waiting.length > 0 &&
-    (lastMessageAt === null || now - Date.parse(lastMessageAt) > SILENT_AFTER_MS);
+  const unanswered = waiting.filter(
+    (order) =>
+      order.claimedPaidAt !== null && now - Date.parse(order.claimedPaidAt) >= CLAIM_RED_AFTER_MS,
+  );
   const suspicious = unreadable.filter((message) => message.looksLikeTransfer);
 
   return (
@@ -116,10 +117,12 @@ export default async function AdminEgyptWalletPage() {
           No wallet number is set, so the option cannot be offered.
         </p>
       )}
-      {silent && (
+      {unanswered.length > 0 && (
         <p className="bg-danger/10 text-danger rounded-lg px-3 py-2 text-sm">
-          Orders are waiting but the wallet&apos;s phone has sent nothing for a long time. Check
-          that it is on, online, and that the forwarding app is running.
+          {unanswered.length} learner(s) say they sent the money but no matching transfer text has
+          arrived (see the red rows below). Check that the wallet&apos;s phone is on and online with
+          the forwarding app running; the text is forwarded when the phone is back. If they sent
+          from another number or another amount, link their transfer by hand.
         </p>
       )}
       {suspicious.length > 0 && (
@@ -190,9 +193,21 @@ export default async function AdminEgyptWalletPage() {
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      {order.status === "expired"
-                        ? "Past its hour (a late transfer still counts)"
-                        : "Waiting"}
+                      {order.claimedPaidAt ? (
+                        <span
+                          className={
+                            now - Date.parse(order.claimedPaidAt) >= CLAIM_RED_AFTER_MS
+                              ? "text-danger font-medium"
+                              : "font-medium"
+                          }
+                        >
+                          Says they paid {ago(order.claimedPaidAt, now)}: no transfer yet
+                        </span>
+                      ) : order.status === "expired" ? (
+                        "Past its hour (a late transfer still counts)"
+                      ) : (
+                        "Waiting"
+                      )}
                     </td>
                     <td className="px-3 py-2">
                       <CloseOrderButton orderId={order.orderId} />

@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { checkRelayHealth } from "@/lib/billing/binance/health";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
 import { getEgyptWalletDeps } from "@/lib/billing/egypt-wallet/deps";
-import { processUnlinkedMessages } from "@/lib/billing/egypt-wallet/ingest";
+import {
+  processUnansweredClaims,
+  processUnlinkedMessages,
+} from "@/lib/billing/egypt-wallet/ingest";
 import {
   getBinancePayRuntime,
   getEgyptWalletRuntime,
@@ -89,7 +92,12 @@ async function handlePaymentsReconcileCron(request: Request): Promise<NextRespon
         ? await processUnlinkedMessages(deps, await deps.store.getSettings())
         : null;
       const egypt = await reconcileOpenOrders(egyptRuntime);
-      summary = { ...summary, egyptWallet: { ...egypt, matched: matched?.linked ?? 0 } };
+      // A learner who said they paid and has waited long enough without a matching transfer: the admins are told.
+      const claims = deps ? await processUnansweredClaims(deps) : null;
+      summary = {
+        ...summary,
+        egyptWallet: { ...egypt, matched: matched?.linked ?? 0, claimAlerts: claims?.alerted ?? 0 },
+      };
     } catch (error) {
       console.error("[payments] Vodafone Cash reconcile failed", error);
       failed = true;
