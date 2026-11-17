@@ -740,6 +740,47 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["egypt_wallet_unreadable"]["Insert"]>;
         Relationships: [];
       };
+      egypt_wallet_activity: {
+        Row: {
+          id: string;
+          /** Vodafone's own operation number. */
+          transaction_id: string;
+          kind: "out" | "other";
+          occurred_at: string;
+          amount_piasters: number | null;
+          fee_piasters: number | null;
+          to_phone: string | null;
+          balance_piasters: number | null;
+          raw_text: string;
+          seen_at: string;
+        };
+        Insert: {
+          id?: string;
+          transaction_id: string;
+          kind: "out" | "other";
+          occurred_at: string;
+          amount_piasters?: number | null;
+          fee_piasters?: number | null;
+          to_phone?: string | null;
+          balance_piasters?: number | null;
+          raw_text: string;
+          seen_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_activity"]["Insert"]>;
+        Relationships: [];
+      };
+      egypt_wallet_balance_alerts: {
+        Row: {
+          transaction_id: string;
+          alerted_at: string;
+        };
+        Insert: {
+          transaction_id: string;
+          alerted_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_balance_alerts"]["Insert"]>;
+        Relationships: [];
+      };
       egypt_wallet_state: {
         Row: {
           id: number;

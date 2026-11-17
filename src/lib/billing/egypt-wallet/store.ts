@@ -6,7 +6,8 @@ import { EGYPT_WALLET_PROVIDER } from "./constants";
 import type { MatchableMessage, MatchableOrder } from "./matching";
 import { sanitizeEgyptWalletSettings } from "./settings";
 import type { EgyptWalletSettings } from "./settings";
-import type { ParsedTransfer } from "./sms";
+import type { BalanceObservation } from "./balance";
+import type { ParsedActivity, ParsedTransfer } from "./sms";
 
 export type LinkResultName =
   Database["public"]["Functions"]["link_egypt_wallet_message"]["Returns"]["result"];
@@ -22,6 +23,20 @@ export interface StoredMessage extends MatchableMessage {
   notifiedAt: string | null;
   linkedOrderId: string | null;
   linkMethod: "phone" | "reference" | "manual" | null;
+}
+
+/** A text from Vodafone that is not money received: a transfer sent out, or any text with a balance. */
+export interface StoredActivity {
+  id: string;
+  transactionId: string;
+  kind: "out" | "other";
+  occurredAt: string;
+  amountPiasters: number | null;
+  feePiasters: number | null;
+  toPhone: string | null;
+  balancePiasters: number | null;
+  rawText: string;
+  seenAt: string;
 }
 
 /** What the provider adapter needs to answer "has this order been paid?". */
@@ -116,6 +131,18 @@ export interface EgyptWalletStore {
 
   /** Stores the day's USD to EGP rate. `locked` true marks an admin's own rate (the automatic update stops), false gives it back. */
   saveRate(input: { rate: number; source: string; locked?: boolean }, now: Date): Promise<void>;
+
+  /** Stores a text that is not money received (see ParsedActivity). "duplicate" when its operation number is already stored. */
+  insertActivity(
+    activity: ParsedActivity,
+    rawText: string,
+    seenAt: Date,
+  ): Promise<"inserted" | "duplicate">;
+  listActivity(limit: number): Promise<StoredActivity[]>;
+  /** Every text with an operation number since then, money in and out together, for the balance check. */
+  listBalanceObservations(since: Date, limit: number): Promise<BalanceObservation[]>;
+  /** Wins the one right to alert about the balance step ending at this operation: true for exactly one caller, ever. */
+  claimBalanceAlert(transactionId: string): Promise<boolean>;
 
   touchState(now: Date): Promise<void>;
   getLastMessageAt(): Promise<string | null>;
@@ -543,6 +570,103 @@ export function createEgyptWalletStore(
         })
         .eq("id", 1);
       if (error) throw error;
+    },
+
+    async insertActivity(activity, rawText, seenAt) {
+      const { data, error } = await supabase
+        .from("egypt_wallet_activity")
+        .upsert(
+          {
+            transaction_id: activity.transactionId,
+            kind: activity.kind,
+            // A text whose time could not be read counts as happening when it arrived.
+            occurred_at: activity.occurredAt ?? seenAt.toISOString(),
+            amount_piasters: activity.amountPiasters,
+            fee_piasters: activity.feePiasters,
+            to_phone: activity.toPhone,
+            balance_piasters: activity.balancePiasters,
+            raw_text: rawText,
+            seen_at: seenAt.toISOString(),
+          },
+          { onConflict: "transaction_id", ignoreDuplicates: true },
+        )
+        .select("id");
+      if (error) throw error;
+      return (data ?? []).length > 0 ? "inserted" : "duplicate";
+    },
+
+    async listActivity(limit) {
+      const { data, error } = await supabase
+        .from("egypt_wallet_activity")
+        .select("*")
+        .order("occurred_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        transactionId: row.transaction_id,
+        kind: row.kind,
+        occurredAt: row.occurred_at,
+        amountPiasters: row.amount_piasters,
+        feePiasters: row.fee_piasters,
+        toPhone: row.to_phone,
+        balancePiasters: row.balance_piasters,
+        rawText: row.raw_text,
+        seenAt: row.seen_at,
+      }));
+    },
+
+    async listBalanceObservations(since, limit) {
+      const [incoming, activity] = await Promise.all([
+        supabase
+          .from("egypt_wallet_messages")
+          .select("transaction_id, amount_piasters, balance_piasters, received_at, seen_at")
+          .gte("seen_at", since.toISOString())
+          .order("seen_at", { ascending: false })
+          .limit(limit),
+        supabase
+          .from("egypt_wallet_activity")
+          .select(
+            "transaction_id, kind, amount_piasters, fee_piasters, balance_piasters, occurred_at, seen_at",
+          )
+          .gte("seen_at", since.toISOString())
+          .order("seen_at", { ascending: false })
+          .limit(limit),
+      ]);
+      if (incoming.error) throw incoming.error;
+      if (activity.error) throw activity.error;
+      return [
+        ...(incoming.data ?? []).map((row) => ({
+          transactionId: row.transaction_id,
+          kind: "in" as const,
+          amountPiasters: row.amount_piasters,
+          feePiasters: null,
+          balancePiasters: row.balance_piasters,
+          at: row.received_at,
+          seenAt: row.seen_at,
+        })),
+        ...(activity.data ?? []).map((row) => ({
+          transactionId: row.transaction_id,
+          kind: row.kind,
+          amountPiasters: row.amount_piasters,
+          feePiasters: row.fee_piasters,
+          balancePiasters: row.balance_piasters,
+          at: row.occurred_at,
+          seenAt: row.seen_at,
+        })),
+      ];
+    },
+
+    async claimBalanceAlert(transactionId) {
+      const { data, error } = await supabase
+        .from("egypt_wallet_balance_alerts")
+        .upsert(
+          { transaction_id: transactionId },
+          { onConflict: "transaction_id", ignoreDuplicates: true },
+        )
+        .select("transaction_id");
+      if (error) throw error;
+      return (data ?? []).length > 0;
     },
 
     async touchState(now) {

@@ -195,6 +195,13 @@ const KNOWN_ALERTS: Record<string, PaymentAlertExplanation> = {
     action:
       "Open Admin > Vodafone Cash > Dollar rate. If the market really moved that much, set the new rate by hand; otherwise ignore it.",
   },
+  egypt_wallet_balance_mismatch: {
+    title: "The Vodafone Cash balance does not match the texts",
+    meaning:
+      "Each text from Vodafone says what the wallet's balance was after it. After the previous text and what it explains (money received, money sent out and its fee), this text's balance is different, so some money moved that no text we have explains: a text that never reached the site, or an operation of a kind the reader does not know (a payment, a recharge, a cash withdrawal).",
+    action:
+      "Open Admin > Vodafone Cash > Money out and balance check. Read the two operations and the amount, and ask the wallet's owner what happened. Nothing was granted or taken back by this alert.",
+  },
   egypt_wallet_untrusted_sender: {
     title: "A fake Vodafone Cash text was refused",
     meaning:

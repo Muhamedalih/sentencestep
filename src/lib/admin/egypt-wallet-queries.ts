@@ -1,3 +1,8 @@
+import {
+  checkBalanceChain,
+  compareOperations,
+  formatPounds,
+} from "@/lib/billing/egypt-wallet/balance";
 import { EGYPT_WALLET_PROVIDER } from "@/lib/billing/egypt-wallet/constants";
 import { decideLink, SKIP_REASON_TEXT, wholePounds } from "@/lib/billing/egypt-wallet/matching";
 import type { MatchableOrder } from "@/lib/billing/egypt-wallet/matching";
@@ -61,7 +66,42 @@ export interface AdminUnreadable {
   seenAt: string;
 }
 
+/** A text from Vodafone that is not money received: a transfer sent out, or any text with a balance. */
+export interface AdminActivity {
+  id: string;
+  transactionId: string;
+  kind: "out" | "other";
+  occurredAt: string;
+  amount: string | null;
+  fee: string | null;
+  toPhone: string | null;
+  balance: string | null;
+  /** The text, so a kind we do not read can be understood by a person. */
+  rawText: string;
+}
+
+/** A step of the wallet's balance that the texts do not explain. */
+export interface AdminBalanceBreak {
+  operation: string;
+  after: string;
+  expected: string;
+  actual: string;
+  /** Pounds, negative when money left that no text explains. */
+  diff: string;
+  at: string;
+}
+
 export interface AdminEgyptOverview {
+  /** Money sent out of the wallet and the balance check (see balance.ts). */
+  activity: AdminActivity[];
+  balance: {
+    latest: string | null;
+    latestOperation: string | null;
+    latestAt: string | null;
+    breaks: AdminBalanceBreak[];
+    outLast7d: string;
+    inLast7d: string;
+  };
   settings: EgyptWalletSettings;
   lastMessageAt: string | null;
   waiting: AdminWaitingOrder[];
@@ -100,31 +140,41 @@ export async function getEgyptWalletOverview(): Promise<AdminEgyptOverview> {
   const lateWindowMs = settings.latePaymentHours * 60 * 60 * 1000;
   const since = new Date(now - lateWindowMs - 60 * 60 * 1000);
 
-  const [lastMessageAt, messagesResult, unreadableResult, waitingResult, ordersLast24h] =
-    await Promise.all([
-      store.getLastMessageAt(),
-      supabase
-        .from("egypt_wallet_messages")
-        .select("*")
-        .order("received_at", { ascending: false })
-        .limit(TRANSFERS_LIMIT),
-      supabase
-        .from("egypt_wallet_unreadable")
-        .select("*")
-        .order("seen_at", { ascending: false })
-        .limit(UNREADABLE_LIMIT),
-      supabase
-        .from("payment_orders")
-        .select(
-          "id, reference_id, user_id, premium_days, charge_amount, status, created_at, link_expires_at",
-        )
-        .eq("provider", EGYPT_WALLET_PROVIDER)
-        .in("status", ["created", "pending", "expired"])
-        .gte("created_at", since.toISOString())
-        .order("created_at", { ascending: false })
-        .limit(WAITING_LIMIT),
-      store.countOrdersSince(new Date(now - DAY_MS), providerEnvironment()),
-    ]);
+  const [
+    lastMessageAt,
+    messagesResult,
+    unreadableResult,
+    waitingResult,
+    ordersLast24h,
+    activityRows,
+    observations,
+  ] = await Promise.all([
+    store.getLastMessageAt(),
+    supabase
+      .from("egypt_wallet_messages")
+      .select("*")
+      .order("received_at", { ascending: false })
+      .limit(TRANSFERS_LIMIT),
+    supabase
+      .from("egypt_wallet_unreadable")
+      .select("*")
+      .order("seen_at", { ascending: false })
+      .limit(UNREADABLE_LIMIT),
+    supabase
+      .from("payment_orders")
+      .select(
+        "id, reference_id, user_id, premium_days, charge_amount, status, created_at, link_expires_at",
+      )
+      .eq("provider", EGYPT_WALLET_PROVIDER)
+      .in("status", ["created", "pending", "expired"])
+      .gte("created_at", since.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(WAITING_LIMIT),
+    store.countOrdersSince(new Date(now - DAY_MS), providerEnvironment()),
+    store.listActivity(100),
+    store.listBalanceObservations(new Date(now - 30 * DAY_MS), 1_000),
+  ]);
+  const dayMs = 24 * 60 * 60 * 1000;
   if (messagesResult.error) throw messagesResult.error;
   if (unreadableResult.error) throw unreadableResult.error;
   if (waitingResult.error) throw waitingResult.error;
@@ -257,7 +307,55 @@ export async function getEgyptWalletOverview(): Promise<AdminEgyptOverview> {
   const within = (list: AdminTransfer[], from: number) =>
     list.filter((t) => t.linkedAt !== null && Date.parse(t.linkedAt) >= from);
 
+  const weekAgoMs = now - 7 * dayMs;
+  const withBalance = observations
+    .filter((observation) => observation.balancePiasters !== null)
+    .sort((a, b) => compareOperations(b.transactionId, a.transactionId));
+  const latestObservation = withBalance[0] ?? null;
+  const sumPiasters = (list: { piasters: number }[]) =>
+    list.reduce((total, item) => total + item.piasters, 0);
+
   return {
+    activity: activityRows.map((row) => ({
+      id: row.id,
+      transactionId: row.transactionId,
+      kind: row.kind,
+      occurredAt: row.occurredAt,
+      amount: row.amountPiasters === null ? null : formatPounds(row.amountPiasters),
+      fee: row.feePiasters === null ? null : formatPounds(row.feePiasters),
+      toPhone: row.toPhone,
+      balance: row.balancePiasters === null ? null : formatPounds(row.balancePiasters),
+      rawText: row.rawText,
+    })),
+    balance: {
+      latest: latestObservation ? formatPounds(latestObservation.balancePiasters!) : null,
+      latestOperation: latestObservation?.transactionId ?? null,
+      latestAt: latestObservation?.at ?? null,
+      breaks: checkBalanceChain(observations)
+        .sort((a, b) => compareOperations(b.operation, a.operation))
+        .map((step) => ({
+          operation: step.operation,
+          after: step.after,
+          expected: formatPounds(step.expectedPiasters),
+          actual: formatPounds(step.actualPiasters),
+          diff: formatPounds(step.diffPiasters),
+          at: step.at,
+        })),
+      outLast7d: formatPounds(
+        sumPiasters(
+          observations
+            .filter((o) => o.kind === "out" && Date.parse(o.at) >= weekAgoMs)
+            .map((o) => ({ piasters: (o.amountPiasters ?? 0) + (o.feePiasters ?? 0) })),
+        ),
+      ),
+      inLast7d: formatPounds(
+        sumPiasters(
+          observations
+            .filter((o) => o.kind === "in" && Date.parse(o.at) >= weekAgoMs)
+            .map((o) => ({ piasters: o.amountPiasters ?? 0 })),
+        ),
+      ),
+    },
     settings,
     lastMessageAt,
     waiting,

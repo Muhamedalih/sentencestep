@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { checkRelayHealth } from "@/lib/billing/binance/health";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
+import { processBalanceChecks } from "@/lib/billing/egypt-wallet/balance-check";
 import { getEgyptWalletDeps } from "@/lib/billing/egypt-wallet/deps";
 import {
   processUnansweredClaims,
@@ -96,6 +97,8 @@ async function handlePaymentsReconcileCron(request: Request): Promise<NextRespon
       const rate = deps
         ? await refreshRate({ store: deps.store, now: deps.now, report: deps.report })
         : null;
+      // The wallet's balance against its texts: a step no text explains is reported once.
+      const balance = deps ? await processBalanceChecks(deps) : null;
       const egypt = await reconcileOpenOrders(egyptRuntime);
       // A learner who said they paid and has waited long enough without a matching transfer: the admins are told.
       const claims = deps ? await processUnansweredClaims(deps) : null;
@@ -106,6 +109,7 @@ async function handlePaymentsReconcileCron(request: Request): Promise<NextRespon
           matched: matched?.linked ?? 0,
           claimAlerts: claims?.alerted ?? 0,
           rate,
+          balanceAlerts: balance?.alerted ?? 0,
         },
       };
     } catch (error) {
