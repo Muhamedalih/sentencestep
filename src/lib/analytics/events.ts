@@ -98,7 +98,7 @@ export type AnalyticsEvent =
         plan: PlanId;
         tier: PricingTier;
         bonusDays: number;
-        method?: "card" | "binance";
+        method?: "card" | "binance" | "egypt";
       };
     }
   | {

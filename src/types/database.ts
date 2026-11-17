@@ -625,6 +625,117 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["binance_relay_state"]["Insert"]>;
         Relationships: [];
       };
+      egypt_wallet_settings: {
+        Row: {
+          id: number;
+          /** The Vodafone Cash number learners send to; empty switches the way to pay off. */
+          wallet_number: string;
+          daily_order_cap: number;
+          auto_activate: boolean;
+          late_payment_hours: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          wallet_number?: string;
+          daily_order_cap?: number;
+          auto_activate?: boolean;
+          late_payment_hours?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_settings"]["Insert"]>;
+        Relationships: [];
+      };
+      egypt_wallet_intents: {
+        Row: {
+          order_id: string;
+          /** The number the learner says they will send from. */
+          payer_phone: string | null;
+          payer_phone_set_at: string | null;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          order_id: string;
+          payer_phone?: string | null;
+          payer_phone_set_at?: string | null;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_intents"]["Insert"]>;
+        Relationships: [];
+      };
+      egypt_wallet_messages: {
+        Row: {
+          id: string;
+          /** Vodafone's own operation number. */
+          transaction_id: string;
+          received_at: string;
+          amount_piasters: number;
+          balance_piasters: number | null;
+          payer_phone: string | null;
+          payer_name: string | null;
+          wallet_number: string | null;
+          raw_text: string;
+          status: "new" | "linked" | "ignored";
+          linked_order_id: string | null;
+          link_method: "phone" | "reference" | "manual" | null;
+          link_reason: string | null;
+          seen_at: string;
+          linked_at: string | null;
+          notified_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          transaction_id: string;
+          received_at: string;
+          amount_piasters: number;
+          balance_piasters?: number | null;
+          payer_phone?: string | null;
+          payer_name?: string | null;
+          wallet_number?: string | null;
+          raw_text: string;
+          status?: "new" | "linked" | "ignored";
+          linked_order_id?: string | null;
+          link_method?: "phone" | "reference" | "manual" | null;
+          link_reason?: string | null;
+          seen_at?: string;
+          linked_at?: string | null;
+          notified_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_messages"]["Insert"]>;
+        Relationships: [];
+      };
+      egypt_wallet_unreadable: {
+        Row: {
+          id: string;
+          raw_text: string;
+          sender: string | null;
+          looks_like_transfer: boolean;
+          seen_at: string;
+        };
+        Insert: {
+          id?: string;
+          raw_text: string;
+          sender?: string | null;
+          looks_like_transfer?: boolean;
+          seen_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_unreadable"]["Insert"]>;
+        Relationships: [];
+      };
+      egypt_wallet_state: {
+        Row: {
+          id: number;
+          last_message_at: string | null;
+        };
+        Insert: {
+          id?: number;
+          last_message_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["egypt_wallet_state"]["Insert"]>;
+        Relationships: [];
+      };
       access_settings: {
         Row: {
           id: number;
@@ -2383,6 +2494,25 @@ export interface Database {
       complete_lesson: {
         Args: { p_lesson_id: string; p_mode: string; p_accuracy: number };
         Returns: { is_first_completion: boolean; attempt_count: number }[];
+      };
+      link_egypt_wallet_message: {
+        Args: {
+          p_message: string;
+          p_order: string;
+          p_method: "phone" | "reference" | "manual";
+          p_reason: string;
+        };
+        Returns: {
+          result:
+            | "linked"
+            | "already_linked_here"
+            | "message_already_linked"
+            | "message_not_found"
+            | "order_not_found"
+            | "order_already_paid"
+            | "order_already_has_message"
+            | "bad_method";
+        };
       };
       link_binance_transaction: {
         Args: {

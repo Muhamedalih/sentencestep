@@ -19,8 +19,16 @@ import { orderLimitReason } from "@/lib/billing/binance/limits";
 import type { OrderLimitReason } from "@/lib/billing/binance/limits";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
 import { createCheckout } from "@/lib/billing/payments/checkout";
-import { getBinancePayRuntime, getPaymentRuntime } from "@/lib/billing/payments/runtime";
+import { EGYPT_COUNTRY } from "@/lib/billing/egypt-wallet/constants";
+import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
+import { egyptStrings } from "@/lib/billing/egypt-wallet/strings";
+import {
+  getBinancePayRuntime,
+  getEgyptWalletRuntime,
+  getPaymentRuntime,
+} from "@/lib/billing/payments/runtime";
 import type { PaymentRuntime } from "@/lib/billing/payments/runtime";
+import { isAdmin } from "@/lib/admin/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -53,9 +61,10 @@ export async function startCheckout(
 
   const plan = formData.get("plan");
   if (!isPlanId(plan)) return { error: t.premium.checkoutTryAgain };
-  // Which button was pressed. Anything but "binance" is the card button, so a
-  // form posted by hand can only ever choose between the two real ways to pay.
-  const method = formData.get("method") === "binance" ? "binance" : "card";
+  // Which button was pressed. Anything but "binance" or "egypt" is the card button, so a
+  // form posted by hand can only ever choose between the real ways to pay.
+  const chosen = formData.get("method");
+  const method = chosen === "binance" ? "binance" : chosen === "egypt" ? "egypt" : "card";
 
   const country = resolvePricingCountry(await headers());
   // Decided here, on the server, for this moment — never from the form.
@@ -85,6 +94,14 @@ export async function startCheckout(
         return { error: t.premium.checkoutNotConnected };
       }
       runtime = getBinancePayRuntime();
+    } else if (method === "egypt") {
+      // Offered only to visitors our own location check places in Egypt (an admin, while the permission
+      // is on "Admins only", from anywhere, to try it). Re-checked here so a hand-made post can't open one.
+      const open = (await getEffectiveFeatures()).rollouts.egyptWallet;
+      if (!open || (country.country !== EGYPT_COUNTRY && !(await isAdmin()))) {
+        return { error: t.premium.checkoutNotConnected };
+      }
+      runtime = getEgyptWalletRuntime();
     } else {
       runtime = getPaymentRuntime();
     }
@@ -102,15 +119,20 @@ export async function startCheckout(
   const limit: { reason: OrderLimitReason | null } = { reason: null };
   const environment = runtime.provider.environment;
   const allowNewOrder =
-    method === "binance"
+    method === "egypt"
       ? async () => {
-          const store = createBinancePayStore();
+          const store = createEgyptWalletStore();
           const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
           const [settings, ordersInLastDay, ordersByThisLearnerInLastDay] = await Promise.all([
             store.getSettings(),
             store.countOrdersSince(since, environment),
             store.countUserOrdersSince(user.id, since, environment),
           ]);
+          // No wallet number set: the page could not tell anyone where to send the money.
+          if (settings.walletNumber === "") {
+            limit.reason = "paused_today";
+            return false;
+          }
           limit.reason = orderLimitReason({
             dailyOrderCap: settings.dailyOrderCap,
             ordersInLastDay,
@@ -118,7 +140,23 @@ export async function startCheckout(
           });
           return limit.reason === null;
         }
-      : undefined;
+      : method === "binance"
+        ? async () => {
+            const store = createBinancePayStore();
+            const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const [settings, ordersInLastDay, ordersByThisLearnerInLastDay] = await Promise.all([
+              store.getSettings(),
+              store.countOrdersSince(since, environment),
+              store.countUserOrdersSince(user.id, since, environment),
+            ]);
+            limit.reason = orderLimitReason({
+              dailyOrderCap: settings.dailyOrderCap,
+              ordersInLastDay,
+              ordersByThisLearnerInLastDay,
+            });
+            return limit.reason === null;
+          }
+        : undefined;
 
   let result;
   try {
@@ -138,6 +176,10 @@ export async function startCheckout(
   }
 
   if (!result.ok) {
+    if (result.error === "not_allowed" && method === "egypt") {
+      const s = egyptStrings(locale);
+      return { error: limit.reason === "personal_limit" ? s.limitReached : s.pausedToday };
+    }
     if (result.error === "not_allowed") {
       return {
         error:

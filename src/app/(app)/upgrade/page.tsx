@@ -11,6 +11,7 @@ import { LearnerReviews } from "@/components/marketing/learner-reviews";
 import { ContentStatsRow } from "@/components/billing/content-stats-row";
 import { PremiumFaq } from "@/components/billing/premium-faq";
 import { Logo } from "@/components/layout/logo";
+import { isAdmin } from "@/lib/admin/access";
 import { devSetAdmin } from "@/lib/admin/dev-actions";
 import { track } from "@/lib/analytics/track";
 import { getAccessState } from "@/lib/billing/access";
@@ -23,7 +24,12 @@ import { isOfferActive, offerBonusDaysByPlan, sharedBonusDays } from "@/lib/bill
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { buildPlanViews, cheapestPerMonth } from "@/lib/billing/plan-views";
 import { tierForCountry } from "@/lib/billing/pricing";
-import { isBinancePayConfigured, showUsdOnWaylPage } from "@/lib/billing/provider-registry";
+import { EGYPT_COUNTRY } from "@/lib/billing/egypt-wallet/constants";
+import {
+  isBinancePayConfigured,
+  isEgyptWalletConfigured,
+  showUsdOnWaylPage,
+} from "@/lib/billing/provider-registry";
 import { getEffectiveFeatures, isFeaturePublished } from "@/lib/features/queries";
 import { getDictionary, fallbackDictionary } from "@/lib/i18n/dictionary";
 import { formatCount } from "@/lib/i18n/format-count";
@@ -83,6 +89,13 @@ export default async function UpgradePage({
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
   const { country } = resolvePricingCountry(await headers());
+  // Vodafone Cash: only for the visitors the "egyptWallet" permission reaches (admins first), only
+  // while the SMS secret is configured, and only where our own location check says Egypt (an admin
+  // previewing it sees it from anywhere). The checkout action re-checks all of it.
+  const egyptWalletOpen =
+    features.rollouts.egyptWallet &&
+    isEgyptWalletConfigured() &&
+    (country === EGYPT_COUNTRY || (await isAdmin()));
   const storedOffer = await getLaunchOffer();
   const offer = isOfferActive(storedOffer, new Date()) ? storedOffer : null;
   const tier = tierForCountry(country);
@@ -232,6 +245,7 @@ export default async function UpgradePage({
                 showIraqiWallets={country === "iq"}
                 afterPaymentPath={afterPaymentPath}
                 binancePayOpen={binancePayOpen}
+                egyptWalletOpen={egyptWalletOpen}
               />
             )}
           </>
@@ -249,6 +263,7 @@ export default async function UpgradePage({
               showIraqiWallets={country === "iq"}
               afterPaymentPath={afterPaymentPath}
               binancePayOpen={binancePayOpen}
+              egyptWalletOpen={egyptWalletOpen}
             />
           </>
         )}

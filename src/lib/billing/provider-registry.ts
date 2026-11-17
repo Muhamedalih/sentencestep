@@ -1,4 +1,8 @@
 import { MIN_RELAY_SECRET_LENGTH } from "@/lib/billing/binance/constants";
+import { MIN_SECRET_LENGTH as MIN_EGYPT_SECRET_LENGTH } from "@/lib/billing/egypt-wallet/constants";
+import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
+import type { EgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
+import { createVodafoneCashProvider } from "@/lib/billing/providers/vodafone-cash";
 import { createBinancePayStore } from "@/lib/billing/binance/store";
 import type { BinancePayStore } from "@/lib/billing/binance/store";
 import type { PaymentProvider } from "@/lib/billing/payment-provider";
@@ -62,5 +66,34 @@ export function getBinancePayProvider(): PaymentProvider | null {
   return createBinancePayProvider({
     environment: process.env.NODE_ENV === "production" ? "live" : "test",
     store: () => (store ??= createBinancePayStore()),
+  });
+}
+
+/**
+ * The secret shared with the SMS-forwarding app on the Vodafone Cash wallet's phone, or null while
+ * EGYPT_WALLET_SECRET is unset or too short to be safe. The way to pay is simply unavailable then:
+ * an order could be created but nothing could ever tell the site it had been paid.
+ */
+export function getEgyptWalletSecret(): string | null {
+  const secret = process.env.EGYPT_WALLET_SECRET;
+  return secret && secret.length >= MIN_EGYPT_SECRET_LENGTH ? secret : null;
+}
+
+export function isEgyptWalletConfigured(): boolean {
+  return getEgyptWalletSecret() !== null;
+}
+
+/**
+ * Null — never a fake — until EGYPT_WALLET_SECRET is set. The wallet learners pay to lives in the
+ * admin-visible egypt_wallet_settings row, and the database is only opened when a payment is
+ * actually created or asked about. Whether anyone is shown the option is decided separately, by
+ * the "egyptWallet" permission and the visitor's country.
+ */
+export function getEgyptWalletProvider(): PaymentProvider | null {
+  if (!isEgyptWalletConfigured()) return null;
+  let store: EgyptWalletStore | undefined;
+  return createVodafoneCashProvider({
+    environment: process.env.NODE_ENV === "production" ? "live" : "test",
+    store: () => (store ??= createEgyptWalletStore()),
   });
 }

@@ -223,6 +223,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     storyFinish: false,
     sessionFinish: false,
     videoFinishLook: false,
+    egyptWallet: false,
   });
 });
 

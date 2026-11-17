@@ -28,7 +28,13 @@ import { upgradeSignInHref } from "@/lib/billing/after-payment";
 import { premiumBenefits } from "@/lib/billing/benefits";
 import { startCheckout } from "@/lib/billing/checkout-actions";
 import type { CheckoutActionState } from "@/lib/billing/checkout-actions";
-import { BINANCE_PAY_METHOD, CARD_METHODS, IRAQI_WALLET_METHODS } from "@/lib/billing/pay-methods";
+import { egyptStrings } from "@/lib/billing/egypt-wallet/strings";
+import {
+  BINANCE_PAY_METHOD,
+  CARD_METHODS,
+  EGYPT_WALLET_METHOD,
+  IRAQI_WALLET_METHODS,
+} from "@/lib/billing/pay-methods";
 import type { PlanView } from "@/lib/billing/plan-views";
 import type { PlanId } from "@/lib/billing/plans";
 import { formatDayCount } from "@/lib/i18n/format-days";
@@ -74,6 +80,8 @@ interface CheckoutCardProps {
   afterPaymentPath?: string | null;
   /** True when the "binancePay" switch is open for this visitor: a signed-in learner then chooses between card or wallet and Binance Pay (USDT) before the one pay button. The server re-checks the switch when the form is posted. */
   binancePayOpen?: boolean;
+  /** True when the "egyptWallet" permission is open for this visitor AND our location check says Egypt (or an admin is previewing): a third tile, Vodafone Cash, priced in whole Egyptian pounds. The server re-checks both when the form is posted. */
+  egyptWalletOpen?: boolean;
 }
 
 /**
@@ -95,13 +103,14 @@ export function CheckoutCard({
   showIraqiWallets = false,
   afterPaymentPath = null,
   binancePayOpen = false,
+  egyptWalletOpen = false,
 }: CheckoutCardProps) {
   const { t, locale } = useLocale();
   const formId = useId();
   const payAreaRef = useRef<HTMLDivElement>(null);
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
   // How the learner chose to pay (only asked while Binance Pay is on offer; otherwise it is always the card).
-  const [method, setMethod] = useState<"card" | "binance">("card");
+  const [method, setMethod] = useState<"card" | "binance" | "egypt">("card");
   const [selectedId, setSelectedId] = useState<PlanId>(
     () => (plans.find((plan) => plan.preselected) ?? plans[0])!.id,
   );
@@ -139,12 +148,19 @@ export function CheckoutCard({
   const cardMethods = showIraqiWallets ? [...CARD_METHODS, ...IRAQI_WALLET_METHODS] : CARD_METHODS;
   // Someone who can pay chooses between the two in the tiles; a visitor who cannot yet (not signed in) is
   // still shown, in the list under the button, that Binance Pay is accepted.
-  const showMethodChoice = signedIn && binancePayOpen;
-  const acceptedMethods = binancePayOpen ? [...cardMethods, BINANCE_PAY_METHOD] : cardMethods;
+  const showMethodChoice = signedIn && (binancePayOpen || egyptWalletOpen);
+  const acceptedMethods = [
+    ...cardMethods,
+    ...(binancePayOpen ? [BINANCE_PAY_METHOD] : []),
+    ...(egyptWalletOpen ? [EGYPT_WALLET_METHOD] : []),
+  ];
   const paysByCard = !showMethodChoice || method === "card";
+  const egyptText = egyptStrings(locale);
   const payLabel = paysByCard
     ? t.premium.payCta.replace("{price}", selected.price).replace("{days}", daysLabel)
-    : t.binancePay.payCta.replace("{amount}", selected.usdt);
+    : method === "egypt"
+      ? egyptText.payCta.replace("{amount}", selected.egp)
+      : t.binancePay.payCta.replace("{amount}", selected.usdt);
   const showRating = !extend && socialProof?.rating;
   const showSocialProof =
     !extend && socialProof && (socialProof.learners || socialProof.lessons || socialProof.rating);
@@ -365,46 +381,92 @@ export function CheckoutCard({
                   </div>
                 </label>
 
-                <label className="relative block cursor-pointer">
-                  <input
-                    type="radio"
-                    name="method"
-                    value="binance"
-                    checked={method === "binance"}
-                    onChange={() => setMethod("binance")}
-                    className="peer sr-only"
-                  />
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl border-2 bg-[oklch(0.12_0.008_265)] px-4 py-3 text-white transition-all duration-200",
-                      "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2",
-                      method === "binance"
-                        ? "border-primary shadow-sm"
-                        : "border-white/10 hover:border-white/25",
-                    )}
-                  >
-                    <span
-                      aria-hidden="true"
+                {binancePayOpen && (
+                  <label className="relative block cursor-pointer">
+                    <input
+                      type="radio"
+                      name="method"
+                      value="binance"
+                      checked={method === "binance"}
+                      onChange={() => setMethod("binance")}
+                      className="peer sr-only"
+                    />
+                    <div
                       className={cn(
-                        "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-                        method === "binance" ? "border-primary bg-primary" : "border-white/40",
+                        "flex items-center gap-3 rounded-xl border-2 bg-[oklch(0.12_0.008_265)] px-4 py-3 text-white transition-all duration-200",
+                        "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2",
+                        method === "binance"
+                          ? "border-primary shadow-sm"
+                          : "border-white/10 hover:border-white/25",
                       )}
                     >
-                      {method === "binance" && (
-                        <Check className="text-primary-foreground size-3" strokeWidth={4} />
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                          method === "binance" ? "border-primary bg-primary" : "border-white/40",
+                        )}
+                      >
+                        {method === "binance" && (
+                          <Check className="text-primary-foreground size-3" strokeWidth={4} />
+                        )}
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="text-sm font-semibold">
+                          <bdi dir="ltr">{BINANCE_PAY_METHOD}</bdi>
+                        </span>
+                        <span className="text-xs text-white/70" dir="auto">
+                          {t.binancePay.tileCaption}
+                        </span>
+                      </span>
+                      <BinanceMark className="size-6 shrink-0 text-[#F0B90B]" />
+                    </div>
+                  </label>
+                )}
+
+                {egyptWalletOpen && (
+                  <label className="relative block cursor-pointer">
+                    <input
+                      type="radio"
+                      name="method"
+                      value="egypt"
+                      checked={method === "egypt"}
+                      onChange={() => setMethod("egypt")}
+                      className="peer sr-only"
+                    />
+                    <div
+                      className={cn(
+                        "bg-card flex items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all duration-200",
+                        "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2",
+                        method === "egypt"
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border hover:border-primary/40",
                       )}
-                    </span>
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="text-sm font-semibold">
-                        <bdi dir="ltr">{BINANCE_PAY_METHOD}</bdi>
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                          method === "egypt"
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground/40",
+                        )}
+                      >
+                        {method === "egypt" && (
+                          <Check className="text-primary-foreground size-3" strokeWidth={4} />
+                        )}
                       </span>
-                      <span className="text-xs text-white/70" dir="auto">
-                        {t.binancePay.tileCaption}
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="text-sm font-semibold">
+                          <bdi dir="ltr">{EGYPT_WALLET_METHOD}</bdi>
+                        </span>
+                        <span className="text-muted-foreground text-xs" dir="auto">
+                          {egyptText.tileCaption}
+                        </span>
                       </span>
-                    </span>
-                    <BinanceMark className="size-6 shrink-0 text-[#F0B90B]" />
-                  </div>
-                </label>
+                    </div>
+                  </label>
+                )}
               </fieldset>
             )}
 
