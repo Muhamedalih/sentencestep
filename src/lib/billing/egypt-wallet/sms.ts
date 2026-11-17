@@ -171,7 +171,10 @@ export function parseSms(rawText: string): ParsedMessage {
     return { kind: "other", looksLikeTransfer: true };
   }
 
-  const payerMatch = /(?:جنيه|ج\.?\s?م|egp)\s+من\s+(\+?[\d][\d\s-]{8,16})/iu.exec(text);
+  // Two wordings exist: "... جنيه من 01…" and "... جنيه من رقم 01…". The number is the one right after "من".
+  const payerMatch =
+    /(?:جنيه|ج\.?\s?م|egp)\s+من\s+(?:رقم\s+)?(\+?\d[\d\s-]{8,16})/iu.exec(text) ??
+    /(?:^|\s)من\s+(?:رقم\s+)?(\+?\d[\d\s-]{8,16})/u.exec(text);
   const walletMatch = /محفظتك\s+(\+?[\d][\d\s-]{8,16})/u.exec(text);
   const nameMatch = /(?:بإسم|باسم|بأسم)\s+([^\n\r]+?)(?=\s+على\s+رقم|\s*[\n\r]|$)/u.exec(text);
   const balanceMatch = /رصيدك\s+الحالي\s*[:：]?\s*([\d.,]+)/u.exec(text);
