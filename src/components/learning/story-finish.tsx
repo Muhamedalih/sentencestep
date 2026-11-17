@@ -77,7 +77,10 @@ export function StoryFinish({
 
   return (
     <div className="relative flex min-h-[100svh] w-full flex-col bg-black text-white lg:h-full lg:min-h-0 lg:overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-9 px-6 py-10 sm:px-10 lg:gap-11">
+      <div
+        style={{ zoom: 0.85 }}
+        className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-9 px-6 py-10 sm:px-10 lg:gap-11"
+      >
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -121,7 +124,9 @@ export function StoryFinish({
             {vocabulary.slice(0, 4).map((item) => {
               const outcome = wordOutcomes?.[item.id];
               return (
-                <li
+                <motion.li
+                  whileHover={reduced ? undefined : { y: -6, scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 22 }}
                   key={item.id}
                   style={{
                     background: "linear-gradient(160deg, #e1ded6 0%, #f7f4ec 100%)",
@@ -149,7 +154,7 @@ export function StoryFinish({
                   <span dir={dir} className="text-xl" style={{ color: "#5a5f6e" }}>
                     {resolveVocabularySupportText(item, locale)}
                   </span>
-                </li>
+                </motion.li>
               );
             })}
           </motion.ul>
@@ -247,6 +252,9 @@ export function StoryFinish({
   );
 }
 
+const MotionLink = motion.create(Link);
+const SPRING = { type: "spring", stiffness: 420, damping: 24, mass: 0.7 } as const;
+
 function FinishButton({
   action,
   primary,
@@ -256,21 +264,47 @@ function FinishButton({
   primary: boolean;
   children: ReactNode;
 }) {
+  const reduced = useReducedMotion();
   const className =
-    "flex h-[4.5rem] items-center justify-center rounded-2xl border px-4 text-center text-xl font-semibold transition-colors sm:h-20 sm:text-2xl " +
+    "flex h-[4.5rem] items-center justify-center rounded-2xl border px-4 text-center text-xl font-semibold sm:h-20 sm:text-2xl " +
     (primary
-      ? "border-transparent bg-[#f1f2f6] text-[#12141c] hover:bg-white"
-      : "border-[#1e1e22] bg-black text-white hover:bg-white/5");
+      ? "border-transparent bg-[#f1f2f6] text-[#12141c]"
+      : "border-[#1e1e22] bg-black text-white");
+  const hover = primary
+    ? {
+        backgroundColor: "#ffffff",
+        boxShadow: "0 18px 36px -14px rgba(255,255,255,0.45)",
+        ...(reduced ? {} : { y: -5, scale: 1.03 }),
+      }
+    : {
+        borderColor: GREEN,
+        backgroundColor: "rgba(61,186,95,0.12)",
+        ...(reduced ? {} : { y: -5, scale: 1.03 }),
+      };
+  const tap = reduced ? undefined : { scale: 0.95, y: 0 };
   if (action.href) {
     return (
-      <Link href={action.href} className={className}>
+      <MotionLink
+        href={action.href}
+        className={className}
+        whileHover={hover}
+        whileTap={tap}
+        transition={SPRING}
+      >
         {children}
-      </Link>
+      </MotionLink>
     );
   }
   return (
-    <button type="button" onClick={action.onClick} className={className}>
+    <motion.button
+      type="button"
+      onClick={action.onClick}
+      className={className}
+      whileHover={hover}
+      whileTap={tap}
+      transition={SPRING}
+    >
       {children}
-    </button>
+    </motion.button>
   );
 }
