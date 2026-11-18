@@ -82,6 +82,8 @@ interface CheckoutCardProps {
   binancePayOpen?: boolean;
   /** True when the "egyptWallet" permission is open for this visitor AND our location check says Egypt (or an admin is previewing): a third tile, Vodafone Cash, priced in whole Egyptian pounds. The server re-checks both when the form is posted. */
   egyptWalletOpen?: boolean;
+  /** True for a visitor whose country is Egypt: Vodafone Cash starts chosen (still free to change). */
+  preferEgyptWallet?: boolean;
 }
 
 /**
@@ -104,13 +106,16 @@ export function CheckoutCard({
   afterPaymentPath = null,
   binancePayOpen = false,
   egyptWalletOpen = false,
+  preferEgyptWallet = false,
 }: CheckoutCardProps) {
   const { t, locale } = useLocale();
   const formId = useId();
   const payAreaRef = useRef<HTMLDivElement>(null);
   const [state, formAction, pending] = useActionState(startCheckout, initialState);
   // How the learner chose to pay (only asked while Binance Pay is on offer; otherwise it is always the card).
-  const [method, setMethod] = useState<"card" | "binance" | "egypt">("card");
+  const [method, setMethod] = useState<"card" | "binance" | "egypt">(
+    signedIn && egyptWalletOpen && preferEgyptWallet ? "egypt" : "card",
+  );
   const [selectedId, setSelectedId] = useState<PlanId>(
     () => (plans.find((plan) => plan.preselected) ?? plans[0])!.id,
   );
