@@ -1,4 +1,5 @@
 import type { VideoLesson } from "@/lib/video-dictation/types";
+import { howlsBreakfast } from "./howls-breakfast";
 import { shifuVsTaiLung } from "./shifu-vs-tai-lung";
 import { japaneseEelEscape } from "./japanese-eel-escape";
 import { ponyoRamen } from "./ponyo-ramen";
@@ -92,4 +93,5 @@ export const videoLessons: readonly VideoLesson[] = [
   ponyoRamen,
   japaneseEelEscape,
   shifuVsTaiLung,
+  howlsBreakfast,
 ];
