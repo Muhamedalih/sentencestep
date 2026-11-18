@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckoutCard } from "@/components/billing/checkout-card";
+import { CheckoutCardV2 } from "@/components/billing/checkout-card-v2";
 import { LearnerReviews } from "@/components/marketing/learner-reviews";
 import { ContentStatsRow } from "@/components/billing/content-stats-row";
 import { PremiumFaq } from "@/components/billing/premium-faq";
@@ -38,7 +39,11 @@ import { formatCount } from "@/lib/i18n/format-count";
 import { formatLongDate } from "@/lib/i18n/format-date";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getContentStats, getSocialProof } from "@/lib/stats/public-stats";
-import { getRatingsProof, listPublicReviews } from "@/lib/stats/public-ratings";
+import {
+  getCombinedRatingsProof,
+  getRatingsProof,
+  listPublicReviews,
+} from "@/lib/stats/public-ratings";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -98,6 +103,8 @@ export default async function UpgradePage({
     features.rollouts.egyptWallet &&
     isEgyptWalletConfigured() &&
     (country === EGYPT_COUNTRY || (await isAdmin()));
+  // Permission checkoutV2: the one-screen checkout (admins first). Only the look of the buying card changes.
+  const checkoutV2 = features.rollouts.checkoutV2;
   const storedOffer = await getLaunchOffer();
   const offer = isOfferActive(storedOffer, new Date()) ? storedOffer : null;
   const tier = tierForCountry(country);
@@ -133,7 +140,8 @@ export default async function UpgradePage({
     ? await Promise.all([
         getSocialProof(),
         getContentStats(),
-        getRatingsProof(),
+        // The one-screen checkout quotes the ratings of every section together; the old card, the app's own.
+        checkoutV2 ? getCombinedRatingsProof() : getRatingsProof(),
         listPublicReviews(),
       ])
     : [null, null, null, []];
@@ -178,16 +186,18 @@ export default async function UpgradePage({
               ? t.premium.premiumHeading
               : t.premium.upgradeHeading}
         </h1>
-        <p className="text-muted-foreground mt-2 text-lg">
-          {freeNow
-            ? t.premium.freeNowSubtitle
-            : user && access.isPremium
-              ? t.premium.premiumSubtitle
-              : t.premium.upgradeSubtitle}
-        </p>
+        {!(checkoutV2 && showsPlans) && (
+          <p className="text-muted-foreground mt-2 text-lg">
+            {freeNow
+              ? t.premium.freeNowSubtitle
+              : user && access.isPremium
+                ? t.premium.premiumSubtitle
+                : t.premium.upgradeSubtitle}
+          </p>
+        )}
       </div>
 
-      {showsPlans && (
+      {showsPlans && !checkoutV2 && (
         <ContentStatsRow heading={t.premium.contentStatsHeading} items={contentItems} />
       )}
 
@@ -260,6 +270,21 @@ export default async function UpgradePage({
               />
             )}
           </>
+        ) : checkoutV2 ? (
+          <CheckoutCardV2
+            plans={plans}
+            signedIn={Boolean(user)}
+            passagesOpen={passagesOpen}
+            proof={
+              socialProof ? { rating: socialProof.rating, learners: socialProof.learners } : null
+            }
+            waylShowsDollars={showUsdOnWaylPage()}
+            showIraqiWallets={country === "iq"}
+            afterPaymentPath={afterPaymentPath}
+            binancePayOpen={binancePayOpen}
+            egyptWalletOpen={egyptWalletOpen}
+            preferEgyptWallet={country === EGYPT_COUNTRY}
+          />
         ) : (
           <>
             <LearnerReviews items={reviews} />
