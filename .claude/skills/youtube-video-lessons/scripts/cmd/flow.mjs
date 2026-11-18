@@ -265,7 +265,7 @@ export async function run(args) {
         if (adMs > 0) row.flags.push(`an ad played for ${(adMs / 1000).toFixed(0)} s (waited out)`);
       } else {
         for (let k = 0; k < 40 && !finished; k++) {
-          finished = (await page.evaluate(() => document.body.innerText)).includes("أنهيت الفيديو");
+          finished = (await page.evaluate(() => document.body.innerText)).match(/أنهيت الفيديو|دقة الكتابة|الفيديو التالي/) !== null;
           if (!finished) await sleep(250);
         }
       }
