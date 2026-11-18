@@ -19,6 +19,15 @@ test("buildRatingsProof: the average is never rounded up", () => {
   assert.equal(buildRatingsProof([0, 0, 0, 1, 999])!.average, 4.9);
 });
 
+test("buildRatingsProof: nearest rounding reads 4.77 as 4.8, 4.74 as 4.7, and never goes past 5", () => {
+  // 100 ratings averaging exactly 4.77 and 4.74.
+  assert.equal(buildRatingsProof([0, 0, 0, 23, 77], { rounding: "nearest" })!.average, 4.8);
+  assert.equal(buildRatingsProof([0, 0, 0, 26, 74], { rounding: "nearest" })!.average, 4.7);
+  assert.equal(buildRatingsProof([0, 0, 0, 1, 999], { rounding: "nearest" })!.average, 5);
+  // The default stays rounded down.
+  assert.equal(buildRatingsProof([0, 0, 0, 23, 77])!.average, 4.7);
+});
+
 test("buildRatingsProof: too few ratings are never quoted", () => {
   assert.equal(buildRatingsProof([0, 0, 0, 0, MIN_RATINGS_TO_QUOTE - 1]), null);
   assert.deepEqual(buildRatingsProof([0, 0, 0, 0, MIN_RATINGS_TO_QUOTE]), {
