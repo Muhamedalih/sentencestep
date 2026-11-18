@@ -81,6 +81,7 @@ export function VideoTimingTool({
     youtubeId,
     startSeconds: loadedStart,
     onState: () => {},
+    nativeControls: true,
   });
 
   useEffect(() => {

@@ -23,6 +23,8 @@ interface Options {
   startSeconds: number;
   /** Called with YouTube's own state number (see PLAYER_STATE) on every change. */
   onState: (state: number) => void;
+  /** YouTube's own bar (progress, "More videos" strip). Off for learners: it popped up at every pause and covered the picture. */
+  nativeControls?: boolean;
 }
 
 /**
@@ -31,7 +33,12 @@ interface Options {
  * changes the speed through the documented calls. The privacy-enhanced host (youtube-nocookie.com)
  * is used so nothing is stored in the viewer's browser before they press play.
  */
-export function useYouTubePlayer({ youtubeId, startSeconds, onState }: Options): {
+export function useYouTubePlayer({
+  youtubeId,
+  startSeconds,
+  onState,
+  nativeControls = false,
+}: Options): {
   hostRef: RefObject<HTMLDivElement | null>;
   ready: boolean;
   failure: PlayerFailure | null;
@@ -62,6 +69,7 @@ export function useYouTubePlayer({ youtubeId, startSeconds, onState }: Options):
           videoId: youtubeId,
           playerVars: {
             playsinline: 1,
+            controls: nativeControls ? 1 : 0,
             rel: 0,
             disablekb: 1,
             iv_load_policy: 3,
@@ -96,7 +104,7 @@ export function useYouTubePlayer({ youtubeId, startSeconds, onState }: Options):
       }
       host.replaceChildren();
     };
-  }, [youtubeId, startSeconds]);
+  }, [youtubeId, startSeconds, nativeControls]);
 
   const controls = useMemo<PlayerControls>(() => {
     const read = (fallback: number, call: (player: YTPlayer) => number): number => {
