@@ -59,6 +59,7 @@ async function readCombinedRatingsProof(): Promise<RatingsProof | null> {
   return buildRatingsProof(
     summarizeDistribution([...(app.data ?? []), ...(passages.data ?? []), ...(video.data ?? [])])
       .perStar,
+    { rounding: "nearest" },
   );
 }
 
@@ -71,7 +72,8 @@ const getCachedCombinedRatingsProof = unstable_cache(
 /**
  * Like getRatingsProof, but over every section's ratings together (lessons, stories, words,
  * Passages and Video) instead of the app's own ones: the figure quoted on the one-screen
- * checkout (permission checkoutV2). Same switch, same rounding down, same "nothing on failure".
+ * checkout (permission checkoutV2). Same switch, same "nothing on failure"; the average is
+ * rounded to the nearest tenth (the owner's choice), the count still rounded down.
  */
 export async function getCombinedRatingsProof(): Promise<RatingsProof | null> {
   try {
