@@ -29,6 +29,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
+import { usePassageChime } from "@/hooks/use-passage-chime";
 import { isWordWorthSaving, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { solveFitZoom } from "@/lib/today/fit-zoom";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
@@ -781,10 +782,16 @@ function SentenceTyper({
 }) {
   const reducedMotion = useReducedMotion() ?? false;
   const { speakWord } = useSpeech();
+  const { playCorrect } = usePassageChime();
+  const chimedUpTo = useRef(0);
   const engine = useTypingEngine({
     target: sentence.en,
     resetKey: sentence.id,
-    onComplete: () => onComplete(),
+    onComplete: () => {
+      // The last word has no next word to move on to, so its chime plays here.
+      playCorrect();
+      onComplete();
+    },
     onCorrectChar: () => onKeystroke(true),
     onErrorChar: () => onKeystroke(false),
     // The space after each right word is typed for the learner.
@@ -816,7 +823,16 @@ function SentenceTyper({
     () => sentence.wordTranslations.map((word) => ({ en: word.en, text: word.ar })),
     [sentence.wordTranslations],
   );
-  const current = glosses[getCurrentWordIndex(sentence.en, engine.typed.length)];
+  const wordIndex = getCurrentWordIndex(sentence.en, engine.typed.length);
+  const current = glosses[wordIndex];
+
+  // A soft chime each time a word is finished: once per word, never again after a backspace and retype.
+  useEffect(() => {
+    if (wordIndex > chimedUpTo.current) {
+      chimedUpTo.current = wordIndex;
+      playCorrect();
+    }
+  }, [wordIndex, playCorrect]);
   const label = current
     ? {
         en: hideWords ? "•".repeat(Math.min(current.en.length, 8)) : current.en,
