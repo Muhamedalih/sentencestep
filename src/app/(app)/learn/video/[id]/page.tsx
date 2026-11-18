@@ -8,6 +8,7 @@ import { flattenSections } from "@/lib/video-dictation/arrange";
 import { getVideoArrangement } from "@/lib/video-dictation/arrangement-store";
 import { withSavedTimings } from "@/lib/video-dictation/timings-store";
 import { arrangeVideoLessons, getVideoLessons } from "@/lib/video-dictation/content";
+import { loadVideoWordClips } from "@/lib/video-dictation/word-clips";
 
 export const metadata: Metadata = { title: "Video" };
 
@@ -36,8 +37,11 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
   const nextTitle = next
     ? (lessons.find((candidate) => candidate.id === next)?.title ?? null)
     : null;
+  // The finish screen's words play the Word Lists voice's (Emma) recorded clips: a cache-only read.
+  const wordClips = features.rollouts.videoFinishLook ? await loadVideoWordClips(timed) : {};
   return (
     <VideoSession
+      wordClips={wordClips}
       lesson={timed}
       nextLessonId={next ?? null}
       nextLessonTitle={nextTitle}

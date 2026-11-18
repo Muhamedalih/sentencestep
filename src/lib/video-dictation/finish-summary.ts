@@ -83,6 +83,8 @@ export function buildTrainingWords(
   sentences: readonly VideoSentence[],
   missedWords: readonly string[],
   max: number = TRAINING_WORDS_MAX,
+  /** When given, only words that have a recorded clip in it (word -> URL) are asked. */
+  clips?: Readonly<Record<string, string>>,
 ): TrainingWord[] {
   const typeable = /^[\p{L}']+$/u;
   const seen = new Map<string, TrainingWord>();
@@ -90,6 +92,7 @@ export function buildTrainingWords(
     for (const entry of sentence.wordTranslations) {
       const word = normalizeMistakeWord(entry.en);
       if (word.length < TRAINING_MIN_LENGTH || !typeable.test(word)) continue;
+      if (clips && !clips[word]) continue;
       const known = seen.get(word);
       if (!known) seen.set(word, { word, meaning: entry.ar });
       else if (!known.meaning && entry.ar) known.meaning = entry.ar;

@@ -1,87 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Volume2 } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
-import { useSpeech } from "@/hooks/use-speech";
+import { VocabularySentence } from "@/components/learning/vocabulary-sentence";
+import { useWordClips } from "@/components/video-dictation/use-word-clips";
+import { BLANK_TOKEN } from "@/types/word-lists";
 import type { TrainingWord } from "@/lib/video-dictation/finish-summary";
 import { videoStrings } from "@/lib/video-dictation/strings";
 
 const RED = "#e5322d";
-const GREEN = "#3dba5f";
 
 /**
  * Training on the words of a video (the button of VideoFinishLook), in the way the Word Lists are
- * practised: the learner hears the word and has to type it, letter by letter. A wrong letter is not
- * accepted (the slots shake), so a word only moves on when it is typed right; the red bar fills with
- * every word. Nothing is stored or sent: it is a practice round on the words this page already has.
+ * practised: the learner hears the word (Emma's recorded clip) and types it on the same big stage as the
+ * old Words section (VocabularySentence: the letters appear large as they are typed; a wrong word shows
+ * its diff and the right spelling and is asked again); the red bar fills with every word. Nothing is stored or sent: it is a practice round on the words this page already has.
  */
 export function VideoWordTraining({
   words,
+  wordClips,
   nextLessonId,
   onBack,
 }: {
   words: readonly TrainingWord[];
+  /** The Word Lists voice's (Emma) clip of each word, word -> URL. */
+  wordClips: Readonly<Record<string, string>>;
   nextLessonId: string | null;
   onBack: () => void;
 }) {
   const reduced = useReducedMotion();
   const { locale } = useLocale();
   const strings = videoStrings(locale);
-  const { speakWord } = useSpeech();
+  // Emma's recorded clips only: a word with no clip is never asked (see buildTrainingWords).
+  const say = useWordClips(wordClips, { silentWithoutClip: true });
   const inputRef = useRef<HTMLInputElement>(null);
   const [index, setIndex] = useState(0);
-  const [typed, setTyped] = useState("");
-  const [shake, setShake] = useState(0);
-  const [solved, setSolved] = useState(false);
 
   const word = words[index];
   const finished = index >= words.length;
 
-  const say = useCallback(
-    (text: string) => {
-      speakWord(text);
-    },
-    [speakWord],
-  );
-
-  // Each new word is said once as it appears, and the field takes the keyboard.
+  // Each new word is said once as it appears.
   useEffect(() => {
     if (!word) return;
     say(word.word);
-    inputRef.current?.focus();
-    // `say` changes with the speech settings; the word is what decides when to speak.
+    // `say` changes with the clips; the word is what decides when to speak.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
-
-  function handleChange(value: string) {
-    if (!word || solved) return;
-    const target = word.word.toLowerCase();
-    const next = value.toLowerCase();
-    if (next.length < typed.length) {
-      setTyped(word.word.slice(0, next.length));
-      return;
-    }
-    if (!target.startsWith(next)) {
-      setShake((n) => n + 1);
-      return;
-    }
-    setTyped(word.word.slice(0, next.length));
-    if (next === target) {
-      setSolved(true);
-      window.setTimeout(
-        () => {
-          setSolved(false);
-          setTyped("");
-          setIndex((i) => i + 1);
-        },
-        reduced ? 250 : 650,
-      );
-    }
-  }
 
   const percent = Math.round((Math.min(index, words.length) / Math.max(1, words.length)) * 100);
 
@@ -152,43 +120,20 @@ export function VideoWordTraining({
                   {word.meaning}
                 </p>
               )}
-              <motion.div
-                key={shake}
-                animate={shake > 0 && !reduced ? { x: [0, -12, 12, -8, 8, 0] } : undefined}
-                transition={{ duration: 0.35 }}
-                onClick={() => inputRef.current?.focus()}
-                className="relative flex flex-wrap justify-center gap-2"
-                dir="ltr"
-              >
-                {word.word.split("").map((letter, at) => {
-                  const done = at < typed.length;
-                  return (
-                    <span
-                      key={at}
-                      className="grid h-20 w-14 place-items-center rounded-2xl border text-4xl font-bold sm:w-16"
-                      style={{
-                        background: done ? (solved ? GREEN : "#ece9e0") : "transparent",
-                        borderColor: done ? "transparent" : "#2a2a30",
-                        color: done ? (solved ? "#04210e" : "#14192b") : "transparent",
-                      }}
-                    >
-                      {done ? typed[at] : letter}
-                    </span>
-                  );
-                })}
-                <input
-                  ref={inputRef}
-                  value={typed}
-                  onChange={(event) => handleChange(event.target.value)}
-                  autoFocus
-                  autoCapitalize="off"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  aria-label={strings.trainListen}
-                  className="absolute inset-0 h-full w-full opacity-0"
+              {/* The same typing stage as the old Words section: nothing is drawn until the first letter, which then appears large; a wrong word shows its diff and the right spelling, then is asked again. */}
+              <div className="w-full">
+                <VocabularySentence
+                  key={word.word}
+                  sentence={BLANK_TOKEN}
+                  targetWord={word.word}
+                  onResult={(correct) => {
+                    if (correct) setIndex((i) => i + 1);
+                  }}
+                  inputRef={inputRef}
+                  enlarged
+                  smart={{}}
                 />
-              </motion.div>
+              </div>
             </div>
           )
         )}
