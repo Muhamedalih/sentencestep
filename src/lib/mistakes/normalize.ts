@@ -206,6 +206,8 @@ const FUNCTION_WORDS = new Set([
   "do",
   "does",
   "did",
+  "done",
+  "doing",
   // modals
   "can",
   "could",

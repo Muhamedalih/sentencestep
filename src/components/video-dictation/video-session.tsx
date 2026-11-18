@@ -29,7 +29,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { useSpeech } from "@/hooks/use-speech";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
-import { isMistakeWorthTracking, normalizeMistakeWord } from "@/lib/mistakes/normalize";
+import { isWordWorthSaving, normalizeMistakeWord } from "@/lib/mistakes/normalize";
 import { solveFitZoom } from "@/lib/today/fit-zoom";
 import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
 import { cn } from "@/lib/utils";
@@ -806,7 +806,7 @@ function SentenceTyper({
   useEffect(() => {
     if (errorIndex === null) return;
     const located = locateWordAtCharIndex(sentence.en, errorIndex);
-    if (located && isMistakeWorthTracking(located.word)) {
+    if (located && isWordWorthSaving(located.word)) {
       const word = normalizeMistakeWord(located.word);
       onMistakeWord(word, meaningInSentence(sentence, word));
     }
