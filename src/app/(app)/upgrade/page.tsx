@@ -300,6 +300,7 @@ export default async function UpgradePage({
               afterPaymentPath={afterPaymentPath}
               binancePayOpen={binancePayOpen}
               egyptWalletOpen={egyptWalletOpen}
+              preferEgyptWallet={country === EGYPT_COUNTRY}
             />
           </>
         )}
