@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { FinishButton, type StoryFinishAction } from "@/components/learning/story-finish";
 import { VideoWordTraining } from "@/components/video-dictation/video-word-training";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useSpeech } from "@/hooks/use-speech";
+import { useWordClips } from "@/components/video-dictation/use-word-clips";
 import { watchUrl } from "@/lib/video-dictation/content";
 import type { TrainingWord } from "@/lib/video-dictation/finish-summary";
 import { videoStrings } from "@/lib/video-dictation/strings";
@@ -29,6 +29,7 @@ export function VideoFinishLook({
   nextLessonId,
   nextLessonTitle,
   trainingWords,
+  wordClips,
   cleanWords,
 }: {
   summary: VideoFinishSummary;
@@ -36,13 +37,15 @@ export function VideoFinishLook({
   nextLessonId: string | null;
   nextLessonTitle: string | null;
   trainingWords: readonly TrainingWord[];
+  /** The Word Lists voice's (Emma) clip of each word of the video, word -> URL. */
+  wordClips: Readonly<Record<string, string>>;
   /** Words typed without a wrong letter, out of summary.wordsTyped. */
   cleanWords: number;
 }) {
   const reduced = useReducedMotion();
   const { locale } = useLocale();
   const strings = videoStrings(locale);
-  const { speakWord } = useSpeech();
+  const speakWord = useWordClips(wordClips);
   const [training, setTraining] = useState(false);
 
   const total = Math.max(1, summary.wordsTyped);
@@ -70,6 +73,7 @@ export function VideoFinishLook({
     return (
       <VideoWordTraining
         words={trainingWords}
+        wordClips={wordClips}
         nextLessonId={nextLessonId}
         onBack={() => setTraining(false)}
       />
@@ -205,7 +209,13 @@ export function VideoFinishLook({
           {actions.map((action, index) => (
             <div
               key={action.id}
-              className={index === 0 && action.id === "next" ? "col-span-2" : undefined}
+              className={
+                (index === 0 && action.id === "next") ||
+                // With the training button the row above holds two buttons: the YouTube button is as long as both.
+                (action.id === "watch" && trainingWords.length > 0)
+                  ? "col-span-2"
+                  : undefined
+              }
             >
               <FinishButton
                 action={action}

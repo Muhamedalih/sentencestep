@@ -100,6 +100,7 @@ export function VideoSession({
   finishLook = false,
   canEditStops = false,
   silenceWave = false,
+  wordClips = {},
 }: {
   lesson: VideoLesson;
   nextLessonId: string | null;
@@ -113,6 +114,8 @@ export function VideoSession({
   canEditStops?: boolean;
   /** The "videoSilence" permission: a quiet wave stands in for the sentence while the speakers are silent. */
   silenceWave?: boolean;
+  /** The Word Lists voice's (Emma) clip of each word of the video, word -> URL: the finish screen's words play these. */
+  wordClips?: Record<string, string>;
 }) {
   const { locale } = useLocale();
   const strings = videoStrings(locale);
@@ -548,6 +551,7 @@ export function VideoSession({
             nextLessonTitle={nextLessonTitle}
             newFinish={newFinish}
             finishLook={finishLook}
+            wordClips={wordClips}
             wordsTyped={wordsInVideo(sentences)}
             count={sentences.length}
           />
@@ -867,6 +871,7 @@ function Finish({
   nextLessonTitle,
   newFinish,
   finishLook,
+  wordClips,
   wordsTyped,
   count,
 }: {
@@ -876,6 +881,7 @@ function Finish({
   nextLessonTitle: string | null;
   newFinish: boolean;
   finishLook: boolean;
+  wordClips: Record<string, string>;
   wordsTyped: number;
   count: number;
 }) {
@@ -908,7 +914,9 @@ function Finish({
           youtubeId={lesson.youtubeId}
           nextLessonId={nextLessonId}
           nextLessonTitle={nextLessonTitle}
-          trainingWords={buildTrainingWords(lesson.sentences, summary.missedWords)}
+          // Only words with a recorded Emma clip are asked: a word with no sound would be a silent test.
+          trainingWords={buildTrainingWords(lesson.sentences, summary.missedWords, undefined, wordClips)}
+          wordClips={wordClips}
           cleanWords={Math.max(0, wordsTyped - summary.missedWords.length)}
         />
       </>
