@@ -43,6 +43,45 @@ export async function getRatingsProof(): Promise<RatingsProof | null> {
   }
 }
 
+async function readCombinedRatingsProof(): Promise<RatingsProof | null> {
+  if (!isSupabaseConfigured() || !isServiceRoleConfigured()) return null;
+  const client = createServiceRoleClient();
+  // The app's own ratings already hold lessons, stories, words and settings; Passages and Video
+  // keep their own counts, so the three are added together (still only per-star totals).
+  const [app, passages, video] = await Promise.all([
+    client.rpc("app_rating_distribution"),
+    client.rpc("passage_rating_distribution"),
+    client.rpc("video_rating_distribution"),
+  ]);
+  if (app.error) throw app.error;
+  if (passages.error) throw passages.error;
+  if (video.error) throw video.error;
+  return buildRatingsProof(
+    summarizeDistribution([...(app.data ?? []), ...(passages.data ?? []), ...(video.data ?? [])])
+      .perStar,
+  );
+}
+
+const getCachedCombinedRatingsProof = unstable_cache(
+  readCombinedRatingsProof,
+  ["ratings-proof-combined-v1"],
+  { revalidate: 3600, tags: [RATINGS_PROOF_TAG] },
+);
+
+/**
+ * Like getRatingsProof, but over every section's ratings together (lessons, stories, words,
+ * Passages and Video) instead of the app's own ones: the figure quoted on the one-screen
+ * checkout (permission checkoutV2). Same switch, same rounding down, same "nothing on failure".
+ */
+export async function getCombinedRatingsProof(): Promise<RatingsProof | null> {
+  try {
+    if (!(await getRatingsSettings()).showRatingProof) return null;
+    return await getCachedCombinedRatingsProof();
+  } catch {
+    return null;
+  }
+}
+
 async function readPublicReviews(): Promise<ReviewItem[]> {
   if (!isSupabaseConfigured() || !isServiceRoleConfigured()) return [];
 

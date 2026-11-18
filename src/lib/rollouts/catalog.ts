@@ -60,6 +60,7 @@ export const ROLLOUT_IDS = [
   "sessionFinish",
   "videoFinishLook",
   "egyptWallet",
+  "checkoutV2",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -680,6 +681,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Shown only where our own location check says Egypt. While this is on “Admins only”, admins see it from any country so they can try it.",
       "Needs the EGYPT_WALLET_SECRET setting and the forwarding app on the shop wallet's phone; without them the option stays hidden.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  checkoutV2: {
+    id: "checkoutV2",
+    audience: "learner",
+    title: "Upgrade page: the one-screen checkout",
+    description:
+      "The plans page in one screen: a solid indigo header with the price, the real rating (stars, number of ratings and subscribers), one green line comparing our monthly price with similar apps, a “What you get” list that opens on a tap, three plan tiles (the 3-month one marked “Most chosen”, the 6-month one “Best value”), three payment tiles in a row and a larger pay button. A visitor in Egypt gets Vodafone Cash already chosen (still free to change). The stats row, the reviews carousel and the long benefit lists are gone from the page.",
+    notes: [
+      "Only the look and the order change: the plans, the prices, the payment methods, the terms and every check on the server are untouched.",
+      "The rating quoted is the sum over every section (lessons, stories, words, Passages and Video), rounded down like before.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
