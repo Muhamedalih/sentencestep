@@ -1,7 +1,23 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { splitLevelTitle, tierSupportLabel } from "./levels";
+import { difficultyForLevel, splitLevelTitle, tierSupportLabel } from "./levels";
+
+// --- difficultyForLevel: Stories level 4 is the Expert tier above Advanced ---
+
+test("difficultyForLevel: levels 1-3 keep their tiers and level 4 and up is Expert", () => {
+  assert.equal(difficultyForLevel(1), "beginner");
+  assert.equal(difficultyForLevel(2), "intermediate");
+  assert.equal(difficultyForLevel(3), "advanced");
+  assert.equal(difficultyForLevel(4), "expert");
+  assert.equal(difficultyForLevel(7), "expert");
+});
+
+test("tierSupportLabel: the Expert tier has a label in every support language", () => {
+  assert.equal(tierSupportLabel("expert", "ar"), "خبير");
+  assert.equal(tierSupportLabel("expert", "es"), "Experto");
+  assert.equal(tierSupportLabel("expert", "tr"), "Uzman");
+});
 
 // --- tierSupportLabel (locale routing case 4/4) ---
 

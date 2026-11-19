@@ -19,7 +19,7 @@ import { TIER_DOT_CLASS, TIER_TEXT_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
 import type { Lesson } from "@/types/content";
 
-const TIERS: Difficulty[] = ["beginner", "intermediate", "advanced"];
+const TIERS: Difficulty[] = ["beginner", "intermediate", "advanced", "expert"];
 const PAGE_SIZE = 12;
 
 /** CEFR code shown beside each tier's support-language name in the level
@@ -32,6 +32,7 @@ const CEFR_BY_TIER: Record<Difficulty, string> = {
   beginner: "A1",
   intermediate: "A2–B1",
   advanced: "B2+",
+  expert: "C1",
 };
 
 /**
@@ -66,6 +67,17 @@ export function StoriesLibrary({
   const [page, setPage] = useState(1);
 
   const sorted = useMemo(() => [...lessons].sort((a, b) => a.order - b.order), [lessons]);
+
+  // The Expert tab (Stories level 4) only appears once the viewer can see a lesson in it, so while
+  // its lessons are drafts (visible to admins only) learners never see an empty tab.
+  const visibleTiers = useMemo(
+    () =>
+      TIERS.filter(
+        (tier) =>
+          tier !== "expert" || sorted.some((lesson) => difficultyForLevel(lesson.level) === tier),
+      ),
+    [sorted],
+  );
 
   const filtered = useMemo(
     () => sorted.filter((lesson) => difficultyForLevel(lesson.level) === activeTier),
@@ -224,7 +236,7 @@ export function StoriesLibrary({
         aria-label={t.library.levelTabsAriaLabel}
         className="border-border flex items-center gap-1 border-b"
       >
-        {TIERS.map((tier) => {
+        {visibleTiers.map((tier) => {
           const label = locale ? tierSupportLabel(tier, locale) : tier;
           const isActive = tier === activeTier;
           return (

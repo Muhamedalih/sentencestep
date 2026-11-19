@@ -7,7 +7,7 @@ import type { SupportLocale } from "@/lib/i18n/locales";
 // says which levels count as "Beginner" vs "Intermediate" vs "Advanced", so
 // growing a mode from 3 levels to 9 is a one-line edit here, not a UI change.
 
-export type Difficulty = "beginner" | "intermediate" | "advanced";
+export type Difficulty = "beginner" | "intermediate" | "advanced" | "expert";
 
 interface TierConfig {
   tier: Difficulty;
@@ -42,6 +42,15 @@ const TIERS: TierConfig[] = [
     labelAr: "متقدم",
     labelEs: "Avanzado",
     labelTr: "İleri Seviye",
+    maxLevel: 3,
+  },
+  {
+    // Above Advanced (C1): today only Stories has a level 4, so nothing else in the app reaches it.
+    tier: "expert",
+    label: "Expert",
+    labelAr: "خبير",
+    labelEs: "Experto",
+    labelTr: "Uzman",
     maxLevel: Infinity,
   },
 ];

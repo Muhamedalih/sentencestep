@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Palette } from "@/components/words/word-cover-kit";
 import type { Lesson } from "@/types/content";
 
-const CEFR = { beginner: "A1", intermediate: "A2–B1", advanced: "B2+" } as const;
+const CEFR = { beginner: "A1", intermediate: "A2–B1", advanced: "B2+", expert: "C1" } as const;
 
 function varsOf(p: Palette): CSSProperties {
   return {

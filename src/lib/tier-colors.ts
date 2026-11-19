@@ -18,6 +18,7 @@ export const TIER_BADGE_CLASS: Record<Difficulty, string> = {
   beginner: "bg-success/10 text-success border-success/25",
   intermediate: "bg-sky-500/10 text-sky-500 border-sky-500/25",
   advanced: "bg-violet-500/10 text-violet-500 border-violet-500/25",
+  expert: "bg-rose-500/10 text-rose-500 border-rose-500/25",
 };
 
 /**
@@ -35,6 +36,7 @@ export const TIER_ICON_CLASS: Record<Difficulty, string> = {
   beginner: "bg-success/15 text-success",
   intermediate: "bg-sky-500/15 text-sky-500",
   advanced: "bg-violet-500/15 text-violet-500",
+  expert: "bg-rose-500/15 text-rose-500",
 };
 
 /** Same three colors as TIER_BADGE_CLASS, as a solid fill — for a plain dot or an active-tab underline rather than a tinted pill. */
@@ -42,6 +44,7 @@ export const TIER_DOT_CLASS: Record<Difficulty, string> = {
   beginner: "bg-success",
   intermediate: "bg-sky-500",
   advanced: "bg-violet-500",
+  expert: "bg-rose-500",
 };
 
 /** Same three colors as TIER_BADGE_CLASS, text-only — for a CEFR code or label with no fill/border of its own. */
@@ -49,6 +52,7 @@ export const TIER_TEXT_CLASS: Record<Difficulty, string> = {
   beginner: "text-success",
   intermediate: "text-sky-500",
   advanced: "text-violet-500",
+  expert: "text-rose-500",
 };
 
 /** Same three colors as TIER_BADGE_CLASS, as a ring-inset pill fill — for Word Lists' larger section-header chip. */
@@ -56,6 +60,7 @@ export const TIER_RING_CLASS: Record<Difficulty, string> = {
   beginner: "bg-success/15 text-success ring-success/30",
   intermediate: "bg-sky-500/10 text-sky-500 ring-sky-500/30",
   advanced: "bg-violet-500/10 text-violet-500 ring-violet-500/30",
+  expert: "bg-rose-500/10 text-rose-500 ring-rose-500/30",
 };
 
 /**
@@ -71,6 +76,8 @@ export const TIER_CHIP_CLASS: Record<Difficulty, string> = {
     "bg-sky-600/10 text-sky-700 border-sky-600/25 dark:bg-sky-400/12 dark:text-sky-300 dark:border-sky-400/30",
   advanced:
     "bg-violet-600/10 text-violet-700 border-violet-600/25 dark:bg-violet-400/12 dark:text-violet-300 dark:border-violet-400/30",
+  expert:
+    "bg-rose-600/10 text-rose-700 border-rose-600/25 dark:bg-rose-400/12 dark:text-rose-300 dark:border-rose-400/30",
 };
 
 /** Same three colors as TIER_BADGE_CLASS at 32%, for the big hollow outline icon on a Word List tile (WordGroupCard): the level shows in that icon, so the tile needs no other marker. */
@@ -78,4 +85,5 @@ export const TIER_WATERMARK_CLASS: Record<Difficulty, string> = {
   beginner: "text-success/32",
   intermediate: "text-sky-500/32",
   advanced: "text-violet-500/32",
+  expert: "text-rose-500/32",
 };

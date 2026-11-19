@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { useProgress } from "@/hooks/use-progress";
 import { readFirstRunVariantNow, resolveFirstRunVariant } from "@/lib/first-run/browser";
 import type { FirstRunVariant } from "@/lib/first-run/variant";
-import type { Difficulty } from "@/lib/levels";
+import type { PlacementTier } from "@/lib/progress/starting-level";
 import { clearProgress, setFreshGuestWrites } from "@/lib/progress/store";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { hasSupabaseAuthCookieClient } from "@/lib/supabase/has-session-cookie-client";
@@ -200,8 +200,8 @@ interface GetStartedStepContextValue {
   setForceLanguageStep: (value: boolean) => void;
   forceLevelStep: boolean;
   setForceLevelStep: (value: boolean) => void;
-  pendingDifficulty: Difficulty | null;
-  setPendingDifficulty: (value: Difficulty | null) => void;
+  pendingDifficulty: PlacementTier | null;
+  setPendingDifficulty: (value: PlacementTier | null) => void;
   countryStepDone: boolean;
   setCountryStepDone: (value: boolean) => void;
   tutorialStepDone: boolean;
@@ -241,7 +241,7 @@ export function GetStartedStepProvider({
   const [introContinued, setIntroContinued] = useState(false);
   const [forceLanguageStep, setForceLanguageStep] = useState(false);
   const [forceLevelStep, setForceLevelStep] = useState(false);
-  const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
+  const [pendingDifficulty, setPendingDifficulty] = useState<PlacementTier | null>(null);
   const [countryStepDone, setCountryStepDone] = useState(false);
   const [tutorialStepDone, setTutorialStepDone] = useState(false);
   const [firstRunVariant, setFirstRunVariant] = useState<FirstRunVariant | null>(null);
