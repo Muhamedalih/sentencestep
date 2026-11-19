@@ -690,6 +690,26 @@ const SCENES: Record<string, Scene> = {
     bg: "sunset",
     props: [p("calendar", 190, 160, 1.4), p("sun", 320, 80, 0.5)],
   },
+  // The last three stories (211-213) are drawn behind the permission storyCoversNew (see GATED_SCENES).
+  "Mama's Tired Hands": {
+    pal: "peach",
+    bg: "room",
+    props: [p("plate", 150, 190, 1.4), p("cup", 270, 190, 1.1), p("heart", 210, 88, 0.8)],
+  },
+  "The Dog Ate the Ring": {
+    pal: "cherry",
+    bg: "room",
+    props: [p("dog", 130, 190, 1.3), p("rings", 276, 160, 1.2), p("sparkle", 214, 90, 0.6)],
+  },
+  "My Mother's Four Words": {
+    pal: "lilac",
+    bg: "halo",
+    props: [
+      p("personAlt", 130, 178, 1.3),
+      p("speechHeart", 276, 110, 1.2),
+      p("paper", 300, 176, 0.6),
+    ],
+  },
   "Revenge of the Foil Desk": {
     pal: "steel",
     bg: "room",
@@ -756,12 +776,23 @@ const SCENES: Record<string, Scene> = {
   },
 };
 
+/** Scenes shown only where the permission storyCoversNew is open (admins until it is opened to others). */
+const GATED_SCENES = new Set([
+  "Mama's Tired Hands",
+  "The Dog Ate the Ring",
+  "My Mother's Four Words",
+]);
+
 export function hasStoryScene(title: string): boolean {
   return Object.prototype.hasOwnProperty.call(SCENES, title);
 }
 
-export function storyScene(title: string): { palette: Palette; draw: () => ReactNode } | null {
+export function storyScene(
+  title: string,
+  allowGated = false,
+): { palette: Palette; draw: () => ReactNode } | null {
   if (!hasStoryScene(title)) return null;
+  if (GATED_SCENES.has(title) && !allowGated) return null;
   const scene = SCENES[title]!;
   const tones = PALETTES[scene.pal] ?? PALETTES.lilac!;
   const draw = () => (
