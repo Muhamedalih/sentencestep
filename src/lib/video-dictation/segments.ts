@@ -69,8 +69,8 @@ export function isSameVideo(playerDuration: number, expectedDuration: number): b
   return Math.abs(playerDuration - expectedDuration) <= SAME_VIDEO_TOLERANCE_SECONDS;
 }
 
-/** A wait this long (or longer) before a sentence's first word is a silence: the sentence is hidden and a wave plays. */
-export const SILENCE_MIN_SECONDS = 1;
+/** A wait this long (or longer) before a sentence's first word is a silence: the sentence is hidden and a wave plays. Anything shorter is only a breath between words. */
+export const SILENCE_MIN_SECONDS = 0.5;
 
 /** The wave starts to rise this long before the speech, so it feels like the sound is coming. */
 const WAVE_RISE_SECONDS = 1.4;

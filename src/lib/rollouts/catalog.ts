@@ -571,7 +571,7 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     audience: "learner",
     title: "Video: a quiet wave while the speaker is silent",
     description:
-      "In a video lesson, when the next sentence is a second or more away (the speakers are silent, or only music plays), the sentence is hidden and a soft wave of thin bars plays in its place: calm at first, and rising a little as the speech comes close. At the exact moment the speaker starts the sentence the wave fades and the sentence appears, never before. A pause shorter than a second, a replay and every typing moment look exactly as before.",
+      "In a video lesson, when the next sentence is half a second or more away (the speakers are silent, or only music plays), the sentence is hidden and a soft wave of thin bars plays in its place: calm at first, and rising a little as the speech comes close. At the exact moment the speaker starts the sentence the wave fades and the sentence appears, never before. A pause shorter than half a second, a replay and every typing moment look exactly as before.",
     notes: [
       "The wave is a drawing, not a reading of the video's sound: the YouTube player does not let the page hear its audio. Its height follows how close the speech is, with a gentle natural wobble.",
       "Nothing is stored or sent: it is drawn in the learner's browser from the playhead time the page already reads, so there is no extra load.",

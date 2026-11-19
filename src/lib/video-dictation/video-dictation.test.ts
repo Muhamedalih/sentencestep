@@ -682,10 +682,12 @@ test("finish screen: a word's meaning comes from its own sentence, and the words
   assert.equal(wordsInVideo(gibbons.sentences), 53);
 });
 
-test("a wait of a second or more before the first word is a silence", () => {
+test("a wait of half a second or more before the first word is a silence", () => {
   assert.equal(isSilentGap(10, 9), true);
   assert.equal(isSilentGap(10, 8), true);
-  assert.equal(isSilentGap(10, 9.2), false);
+  assert.equal(isSilentGap(10, 9.5), true);
+  assert.equal(isSilentGap(10, 9.4), true);
+  assert.equal(isSilentGap(10, 9.6), false);
   assert.equal(isSilentGap(10, 9.8), false);
   assert.equal(isSilentGap(10, 10.5), false);
   assert.equal(isSilentGap(10, Number.NaN), false);

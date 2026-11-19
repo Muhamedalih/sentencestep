@@ -571,7 +571,7 @@ export function VideoSession({
                     className={cn(
                       "transition-opacity",
                       quiet
-                        ? "pointer-events-none opacity-0 duration-300 select-none"
+                        ? "pointer-events-none opacity-0 duration-200 select-none"
                         : "opacity-100 duration-150",
                     )}
                     aria-hidden={quiet || undefined}
@@ -591,7 +591,7 @@ export function VideoSession({
                     <div
                       className={cn(
                         "pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity",
-                        quiet ? "opacity-100 duration-500" : "opacity-0 duration-150",
+                        quiet ? "opacity-100 duration-200" : "opacity-0 duration-150",
                       )}
                       aria-hidden="true"
                     >
