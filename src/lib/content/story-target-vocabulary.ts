@@ -621,4 +621,55 @@ export const STORY_TARGET_VOCABULARY: Record<string, { en: string; ar: string }[
     { en: "complained", ar: "يشتكي" },
     { en: "practiced", ar: "يتدرب" },
   ],
+  // Expert level (Stories level 4, admin drafts until published)
+  "story-214": [
+    { en: "eerie", ar: "مخيف وغريب" },
+    { en: "wheezing", ar: "يتنفس بصعوبة" },
+    { en: "tormentor", ar: "معذِّب" },
+  ],
+  "story-215": [
+    { en: "hopelessly", ar: "بلا أمل" },
+    { en: "crimson", ar: "قرمزي" },
+    { en: "gossip", ar: "نمّام" },
+  ],
+  "story-216": [
+    { en: "scandalized", ar: "مصدوم" },
+    { en: "nonchalantly", ar: "ببرود" },
+    { en: "bicker", ar: "يتشاجر" },
+  ],
+  "story-217": [
+    { en: "sweltering", ar: "خانق الحرارة" },
+    { en: "jammed", ar: "انحشر" },
+    { en: "humiliated", ar: "مُهان" },
+  ],
+  "story-218": [
+    { en: "shuffled", ar: "مشى متثاقلاً" },
+    { en: "meticulously", ar: "بدقة متناهية" },
+    { en: "crumpled", ar: "مجعّد" },
+  ],
+  "story-219": [
+    { en: "intrigued", ar: "مثار الفضول" },
+    { en: "annotated", ar: "عليه تعليقات" },
+    { en: "serendipity", ar: "الصدفة السعيدة" },
+  ],
+  "story-220": [
+    { en: "widower", ar: "أرمل" },
+    { en: "wistfully", ar: "بحنين" },
+    { en: "murmured", ar: "غمغم" },
+  ],
+  "story-221": [
+    { en: "speechless", ar: "عاجز عن الكلام" },
+    { en: "anonymous", ar: "مجهول" },
+    { en: "reciprocated", ar: "ردّ الجميل" },
+  ],
+  "story-222": [
+    { en: "matchmaking", ar: "التوفيق بين العرسان" },
+    { en: "rehearsed", ar: "مُتمرَّن عليه" },
+    { en: "bewildered", ar: "حائر" },
+  ],
+  "story-223": [
+    { en: "oath", ar: "قسم" },
+    { en: "estranged", ar: "متباعد" },
+    { en: "demolish", ar: "يهدم" },
+  ],
 };

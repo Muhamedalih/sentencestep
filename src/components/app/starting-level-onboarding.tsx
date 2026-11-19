@@ -12,8 +12,8 @@ import { LockBodyScroll } from "@/components/app/lock-body-scroll";
 import { Logo } from "@/components/layout/logo";
 import { trackOnboardingLevelAction } from "@/lib/analytics/track-actions";
 import { isMarketingHomePath } from "@/lib/i18n/locales";
-import { tierSupportLabel, type Difficulty } from "@/lib/levels";
-import { STARTING_LEVEL_TIERS } from "@/lib/progress/starting-level";
+import { tierSupportLabel } from "@/lib/levels";
+import { STARTING_LEVEL_TIERS, type PlacementTier } from "@/lib/progress/starting-level";
 
 const TIER_BODY_KEY = {
   beginner: "beginnerBody",
@@ -22,7 +22,7 @@ const TIER_BODY_KEY = {
 } as const;
 
 /** Matches the reference onboarding's colored placement dots — purely decorative, one fixed color per tier, not theme-derived. Same green/blue/purple progression as every other tier badge in the app (see src/lib/tier-colors.ts). */
-const TIER_DOT_CLASS: Record<Difficulty, string> = {
+const TIER_DOT_CLASS: Record<PlacementTier, string> = {
   beginner: "bg-emerald-500",
   intermediate: "bg-sky-500",
   advanced: "bg-violet-500",
@@ -96,7 +96,7 @@ export function StartingLevelOnboarding() {
   if (!locale || !isLoaded || completions.length > 0) return null;
   if (startingLevel !== null && !forceLevelStep) return null;
 
-  function handleSelect(difficulty: Difficulty, level: number) {
+  function handleSelect(difficulty: PlacementTier, level: number) {
     setStartingLevel(level);
     setPendingDifficulty(difficulty);
     if (firstRunVariant) void trackOnboardingLevelAction(level, firstRunVariant).catch(() => {});

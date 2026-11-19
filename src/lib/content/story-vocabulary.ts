@@ -610,6 +610,9 @@ const LEVEL_WEIGHTS: Record<Difficulty, { common: number; specific: number }> = 
   beginner: { common: 1.5, specific: 1.0 },
   intermediate: { common: 1.0, specific: 1.8 },
   advanced: { common: 0.6, specific: 2.4 },
+  // Expert (Stories level 4): its difficulty is carried by rare words, so the target words
+  // are almost always the rare, specific ones, never the everyday ones.
+  expert: { common: 0.3, specific: 3.0 },
 };
 
 interface LengthBand {
@@ -632,6 +635,8 @@ function lengthBandForLevel(difficulty: Difficulty): LengthBand {
       return { idealMin: 5, idealMax: 10 };
     case "advanced":
       return { idealMin: 5, idealMax: 12 };
+    case "expert":
+      return { idealMin: 6, idealMax: 14 };
   }
 }
 
@@ -671,6 +676,9 @@ function difficultyFitBonus(word: string, difficulty: Difficulty): number {
   }
   if (difficulty === "advanced") {
     return syllables >= 3 ? 0.5 : 0;
+  }
+  if (difficulty === "expert") {
+    return syllables >= 4 ? 0.8 : syllables >= 3 ? 0.5 : 0;
   }
   return 0;
 }
