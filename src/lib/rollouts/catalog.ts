@@ -61,6 +61,7 @@ export const ROLLOUT_IDS = [
   "videoFinishLook",
   "egyptWallet",
   "checkoutV2",
+  "storyCoversNew",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -624,6 +625,17 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Only the look of the library changes: the stories, their lock, today's free story, the recall card and every learner's progress stay exactly as they are.",
       "The drawings are made in code, so no image is downloaded and nothing new is read or written.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  storyCoversNew: {
+    id: "storyCoversNew",
+    audience: "learner",
+    title: "Stories: covers for the last three stories",
+    description:
+      "The three stories added last that still had the plain book on their cover (Mama's Tired Hands, The Dog Ate the Ring and My Mother's Four Words) get a drawing made for them, in the same calm style as every other cover. Needs the picture covers (storyCovers) to be open.",
+    notes: [
+      "Only those three covers change: the stories, their lock and every learner's progress stay exactly as they are, and nothing new is read or written.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },

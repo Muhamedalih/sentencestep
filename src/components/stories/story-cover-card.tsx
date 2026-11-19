@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { BookOpen, Check, Lock } from "lucide-react";
 
+import { useFeatures } from "@/components/providers/feature-provider";
 import { useLocale } from "@/components/providers/locale-provider";
 import { FALLBACK_PALETTE, PALETTES, storyScene } from "@/components/stories/story-cover-scenes";
 import { difficultyForLevel } from "@/lib/levels";
@@ -47,10 +48,11 @@ export function StoryCoverCard({
   openToday?: boolean;
 }) {
   const { dir, t } = useLocale();
+  const { rollouts } = useFeatures();
   const reducedMotion = useReducedMotion() ?? false;
   const locked = !lesson.isFree && !isPremiumUser && !openToday;
   const difficulty = difficultyForLevel(lesson.level);
-  const scene = storyScene(lesson.title);
+  const scene = storyScene(lesson.title, rollouts.storyCoversNew);
   const tones = scene?.palette ?? PALETTES[FALLBACK_PALETTE[lesson.level] ?? "green"]!;
   const supportTitle = lesson.supportTitle ?? lesson.title;
   const badge =
