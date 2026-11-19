@@ -29,8 +29,13 @@ export const PALETTES: Record<string, Palette> = {
   sandy: palette(["#efe2d6", "#e4d1c2", "#3b2f2a", "#c06a4b", "#5f8f8a", "#fbf4ec", "#4a6fd1"]),
 };
 
-/** The ground of a story with no drawing, by level (1 beginner, 2 intermediate, 3 advanced). */
-export const FALLBACK_PALETTE: Record<number, string> = { 1: "green", 2: "sky", 3: "lilac" };
+/** The ground of a story with no drawing, by level (1 beginner, 2 intermediate, 3 advanced, 4 expert). */
+export const FALLBACK_PALETTE: Record<number, string> = {
+  1: "green",
+  2: "sky",
+  3: "lilac",
+  4: "cherry",
+};
 
 type Prop = readonly [name: string, x: number, y: number, scale?: number, rotate?: number];
 type Scene = { pal: string; bg: string; props: Prop[] };
@@ -689,6 +694,65 @@ const SCENES: Record<string, Scene> = {
     pal: "steel",
     bg: "room",
     props: [p("desk", 200, 190, 1.4), p("foilcube", 170, 140, 1), p("sticky", 290, 150, 0.8)],
+  },
+  // ---------------------------------------------------------------- expert
+  "The Rooster Next Door": {
+    pal: "peach",
+    bg: "sun",
+    props: [p("rooster", 170, 150, 1.5), p("sun", 326, 70, 0.6), p("house", 330, 196, 0.7)],
+  },
+  "The Parrot Told Everyone": {
+    pal: "cherry",
+    bg: "halo",
+    props: [p("parrot", 150, 150, 1.4), p("speechHeart", 292, 100, 1.1), p("heart", 90, 100, 0.4)],
+  },
+  "Seventy-Eight and Swiping": {
+    pal: "orchid",
+    bg: "halo",
+    props: [p("phone", 190, 150, 1.5, -8), p("heart", 300, 96, 0.8), p("sparkle", 96, 100, 0.6)],
+  },
+  "Stuck in the Chicken Suit": {
+    pal: "coral",
+    bg: "sun",
+    props: [p("chickenSuit", 200, 160, 1.4), p("sun", 330, 66, 0.55)],
+  },
+  "The Last Haircut": {
+    pal: "teal",
+    bg: "room",
+    props: [p("mirror", 120, 150, 1.1), p("scissors", 264, 160, 1.3, -20)],
+  },
+  "In the Margins": {
+    pal: "sandy",
+    bg: "room",
+    props: [
+      p("openBook", 190, 186, 1.5),
+      p("pencil", 276, 112, 1, -35),
+      p("sparkle", 96, 100, 0.6),
+    ],
+  },
+  "Two Tickets": {
+    pal: "indigo",
+    bg: "night",
+    props: [
+      p("ticket", 150, 150, 1.1, -8),
+      p("ticket", 256, 176, 1.1, 8),
+      p("star", 330, 120, 0.5),
+    ],
+  },
+  "Paid by a Stranger": {
+    pal: "mint",
+    bg: "halo",
+    props: [p("cup", 160, 180, 1.3), p("receipt", 292, 150, 1.1), p("heart", 220, 78, 0.6)],
+  },
+  "The Hired Girlfriend": {
+    pal: "rose",
+    bg: "halo",
+    props: [p("personAlt", 140, 178, 1.3), p("coins", 272, 190, 1), p("heart", 230, 90, 0.7)],
+  },
+  "The Time Capsule": {
+    pal: "forest",
+    bg: "hills",
+    props: [p("jar", 196, 168, 1.4), p("tree", 78, 150, 0.8), p("sprout", 316, 200, 1)],
   },
 };
 

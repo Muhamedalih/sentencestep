@@ -1728,7 +1728,106 @@ function Track() {
 
 // ---- the registry -----------------------------------------------------------------------------
 
+// ---- the Expert level's own drawings ----------------------------------------------------------
+
+function Rooster() {
+  return (
+    <>
+      {pa("M-36 6Q-78 -8 -70 -52Q-46 -34 -30 -10z", "alt")}
+      {pa("M-36 16Q-86 22 -82 -18Q-56 -6 -32 6z", "pop")}
+      {el(-2, 14, 42, 32, "main")}
+      {pa("M-20 14Q2 -6 28 16Q4 34 -20 14z", "alt")}
+      {ci(30, -26, 22, "main")}
+      {ci(18, -50, 7, "pop")}
+      {ci(30, -54, 8, "pop")}
+      {ci(42, -50, 7, "pop")}
+      {pa("M48 -32L76 -40L50 -24z", "alt")}
+      {pa("M48 -22L74 -12L48 -14z", "alt")}
+      {pa("M44 -12Q42 8 32 0z", "pop")}
+      {ci(34, -31, 3.5, "ink")}
+      {li("M-10 44V70M12 44V70", "ink", 5)}
+      {li("M-18 72H-2M4 72H20", "ink", 5)}
+    </>
+  );
+}
+function Parrot() {
+  return (
+    <>
+      {li("M-66 62H74", "ink", 7)}
+      {pa("M-12 40Q-34 84 -24 100Q2 88 10 44z", "alt")}
+      {pa("M-26 42Q-40 -10 0 -30Q36 -10 28 42Q0 58 -26 42z", "main")}
+      {pa("M-18 -2Q-6 -14 8 0Q10 28 -6 40Q-24 20 -18 -2z", "alt")}
+      {ci(8, -44, 24, "main")}
+      {pa("M-6 -62Q6 -86 20 -66Q8 -70 -6 -62z", "pop")}
+      {ci(16, -48, 10, "soft")}
+      {ci(18, -48, 4, "ink")}
+      {pa("M30 -54Q60 -52 56 -28Q46 -36 32 -34z", "pop")}
+      {li("M-4 56V62M10 56V62", "ink", 4)}
+    </>
+  );
+}
+function ChickenSuit() {
+  return (
+    <>
+      {pa("M-44 70V0Q-44 -60 0 -60Q44 -60 44 0V70z", "main")}
+      {pa("M-44 -8Q-78 8 -64 38Q-52 22 -44 16z", "main")}
+      {pa("M44 -8Q78 8 64 38Q52 22 44 16z", "main")}
+      {ci(0, -72, 26, "main")}
+      {pa("M-16 -98Q-8 -118 0 -100Q8 -118 16 -98z", "pop")}
+      {pa("M-11 -74H11L0 -58z", "pop")}
+      {ci(-11, -80, 3.5, "ink")}
+      {ci(11, -80, 3.5, "ink")}
+      {li("M0 -46V68", "ink", 4, 0.8, "7 7")}
+      {re(-7, -22, 14, 18, "soft", 3)}
+      {pa("M-28 70H-4L-12 88H-36z", "pop")}
+      {pa("M4 70H28L36 88H12z", "pop")}
+      {pa("M66 -62Q76 -44 66 -38Q56 -44 66 -62z", "soft")}
+      {pa("M-66 -50Q-56 -32 -66 -26Q-76 -32 -66 -50z", "soft")}
+    </>
+  );
+}
+function Scissors() {
+  return (
+    <>
+      {pa("M0 0L64 -50L70 -42L8 10z", "alt")}
+      {pa("M0 0L64 50L70 42L8 -10z", "main")}
+      {li("M-14 -14L2 0M-14 14L2 0", "ink", 6)}
+      {ring(-32, -24, 18, "pop", 9)}
+      {ring(-32, 24, 18, "pop", 9)}
+      {ci(2, 0, 5, "ink")}
+    </>
+  );
+}
+function Pencil() {
+  return (
+    <>
+      {re(-60, -12, 100, 24, "alt", 3)}
+      {re(-60, -12, 100, 8, "main", 3, 0.5)}
+      {pa("M40 -12L76 0L40 12z", "soft")}
+      {pa("M62 -4L76 0L62 4z", "ink")}
+      {re(-70, -12, 12, 24, "ink", 2)}
+      {re(-86, -12, 18, 24, "pop", 6)}
+    </>
+  );
+}
+function Ticket() {
+  return (
+    <>
+      {pa("M-58 -32H58V-9A9 9 0 0 0 58 9V32H-58V9A9 9 0 0 0 -58 -9z", "main")}
+      {li("M20 -28V28", "soft", 3, 0.75, "4 6")}
+      <polygon points={STAR} style={fill("pop")} transform="translate(-22 0) scale(.6)" />
+      {li("M32 -12H48M32 0H48M32 12H42", "soft", 4, 0.85)}
+    </>
+  );
+}
+
 export const PROPS: Record<string, () => ReactNode> = {
+  rooster: () => <Rooster />,
+  parrot: () => <Parrot />,
+  chickenSuit: () => <ChickenSuit />,
+  scissors: () => <Scissors />,
+  pencil: () => <Pencil />,
+  ticket: () => <Ticket />,
   person: () => <Person />,
   personAlt: () => <Person body="alt" />,
   personPop: () => <Person body="pop" />,
