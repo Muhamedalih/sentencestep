@@ -5,7 +5,7 @@ import { StoriesLibrary } from "@/components/app/stories-library";
 import { StoriesMobileTabs } from "@/components/app/stories-mobile-tabs";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
-import { getLessonSummaries } from "@/lib/content";
+import { getDraftLessonSummaries, getLessonSummaries } from "@/lib/content";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { isLearnerViewOn } from "@/lib/hybrid/learner-view";
 import { viewerTaste } from "@/lib/hybrid/viewer";
@@ -44,6 +44,14 @@ export default async function StoriesLibraryPage() {
     ]);
   // An admin who asked for the learner's view (see lib/hybrid/learner-view.ts) sees the locks.
   const isPremiumUser = hasPremium || (isAdminUser && !learnerView);
+  // An admin also sees the stories that are still drafts (the Expert level while it is being narrated),
+  // so they can be opened and tried in the real list before they are published. Learners, and an admin
+  // who switched to the learner's view, never get this: the drafts come from an uncached, session-aware read.
+  const draftLessons =
+    isAdminUser && !learnerView
+      ? await getDraftLessonSummaries("stories", locale ?? undefined).catch(() => [])
+      : [];
+  const listedLessons = draftLessons.length > 0 ? [...lessons, ...draftLessons] : lessons;
   // The taste of the day (see lib/hybrid): a free learner's story for today is open in the grid too.
   const openTodayId =
     user && features.rollouts.hybridOffers && !isPremiumUser
@@ -76,7 +84,7 @@ export default async function StoriesLibraryPage() {
     >
       <StoriesMobileTabs active="simplified" className={mobilePath ? "hidden" : "mb-6"} />
       <StoriesLibrary
-        lessons={lessons}
+        lessons={listedLessons}
         isPremiumUser={isPremiumUser}
         openTodayId={openTodayId}
         recallCount={recallCount}
