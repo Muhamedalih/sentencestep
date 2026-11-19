@@ -131,7 +131,7 @@ export function StoriesLibrary({
         <VocabularySectionRecallCard mode="stories" count={recallCount} />
 
         <div className="bg-muted mt-5 flex rounded-[10px] p-[3px] md:inline-flex">
-          {TIERS.map((tier) => (
+          {visibleTiers.map((tier) => (
             <button
               key={tier}
               type="button"
