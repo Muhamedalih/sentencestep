@@ -52,6 +52,26 @@ interface DayOne {
   cta: string;
 }
 
+/**
+ * The other way to pay offered to someone whose checkout stalled (see checkoutHelpFor in select.ts):
+ * Vodafone Cash for a learner in Egypt (with the plan's price in whole Egyptian pounds when it is
+ * known), Binance Pay for everyone else.
+ */
+export type CheckoutHelp = { method: "vodafone"; egp: number | null } | { method: "binance" };
+
+/** The wording of a "your payment did not complete" email (the stalled-checkout variant of the reminder). */
+interface CheckoutHelpCopy {
+  subjectVodafone: string;
+  subjectBinance: string;
+  preview: string;
+  heading: string;
+  lead: string;
+  vodafone: (egp: number | null) => string;
+  binance: string;
+  reply: string;
+  cta: string;
+}
+
 /** The reminder to someone who opened checkout and did not pay: short, about THEIR plan, in their language. */
 interface Checkout {
   planLabel: Record<PlanId, string>;
@@ -274,6 +294,79 @@ const CHECKOUT: Record<NudgeLanguage, Checkout> = {
   },
 };
 
+/**
+ * The stalled-checkout variant, written for the owner's approved text (2026-11-20): it says the payment
+ * did not complete, offers the one other way to pay that fits the learner's country, and asks them to
+ * reply with what happened. It carries no offer line, no price pitch and no promise beyond what the
+ * method really does (a Vodafone Cash transfer opens Premium by itself when it arrives).
+ */
+const CHECKOUT_HELP: Record<NudgeLanguage, CheckoutHelpCopy> = {
+  ar: {
+    subjectVodafone: "ما اكتمل دفعك؟ جرّب فودافون كاش",
+    subjectBinance: "ما اكتمل دفعك؟ نساعدك الآن",
+    preview: "جرّب طريقة دفع أخرى، أو أخبرنا ما حصل",
+    heading: "ما اكتمل دفعك؟",
+    lead: "لاحظنا أنك حاولت تفعّل Premium ولم يكتمل الدفع. أحياناً لا ينجح الدفع بالبطاقة مع بعض البنوك.",
+    vodafone: (egp) =>
+      egp
+        ? `جرّب فودافون كاش: اختره من صفحة الترقية وادفع بالجنيه (${egp} جنيه للخطة التي اخترتها)، وتفتح Premium تلقائياً عند وصول التحويل.`
+        : "جرّب فودافون كاش: اختره من صفحة الترقية وادفع بالجنيه، وتفتح Premium تلقائياً عند وصول التحويل.",
+    binance:
+      "جرّب Binance Pay (USDT): اختره من صفحة الترقية وتابع الخطوات هناك، أو جرّب بطاقة أخرى.",
+    reply:
+      "وإن واجهت شيئاً آخر، ردّ على هذه الرسالة بجملة واحدة تشرح ما حصل (البطاقة رُفضت؟ ما عندي بطاقة؟ السعر؟) ونحلّه لك.",
+    cta: "أكمل الدفع",
+  },
+  es: {
+    subjectVodafone: "¿No se completó tu pago? Prueba Vodafone Cash",
+    subjectBinance: "¿No se completó tu pago? Te ayudamos",
+    preview: "Prueba otra forma de pago o cuéntanos qué pasó",
+    heading: "Tu pago no se completó",
+    lead: "Vimos que intentaste activar Premium y el pago no se completó. A veces el pago con tarjeta no funciona con algunos bancos.",
+    vodafone: (egp) =>
+      egp
+        ? `Prueba Vodafone Cash: elígelo en la página de Premium y paga en libras egipcias (${egp} EGP por el plan que elegiste); Premium se activa solo cuando llega la transferencia.`
+        : "Prueba Vodafone Cash: elígelo en la página de Premium y paga en libras egipcias; Premium se activa solo cuando llega la transferencia.",
+    binance:
+      "Prueba Binance Pay (USDT): elígelo en la página de Premium y sigue los pasos que verás allí, o prueba con otra tarjeta.",
+    reply:
+      "Si hubo otro problema, responde a este correo con una frase sobre lo que pasó (¿tarjeta rechazada? ¿no tienes tarjeta? ¿el precio?) y lo resolvemos.",
+    cta: "Completar el pago",
+  },
+  tr: {
+    subjectVodafone: "Ödemeniz tamamlanmadı mı? Vodafone Cash'i deneyin",
+    subjectBinance: "Ödemeniz tamamlanmadı mı? Yardımcı olalım",
+    preview: "Başka bir ödeme yolunu deneyin ya da ne olduğunu bize yazın",
+    heading: "Ödemeniz tamamlanmadı",
+    lead: "Premium'u etkinleştirmeyi denediğinizi ve ödemenin tamamlanmadığını gördük. Kartla ödeme bazı bankalarda bazen çalışmıyor.",
+    vodafone: (egp) =>
+      egp
+        ? `Vodafone Cash'i deneyin: yükseltme sayfasında seçin ve Mısır lirasıyla ödeyin (seçtiğiniz plan için ${egp} EGP); transfer ulaşınca Premium kendiliğinden açılır.`
+        : "Vodafone Cash'i deneyin: yükseltme sayfasında seçin ve Mısır lirasıyla ödeyin; transfer ulaşınca Premium kendiliğinden açılır.",
+    binance:
+      "Binance Pay'i (USDT) deneyin: yükseltme sayfasında seçin ve oradaki adımları izleyin ya da başka bir kart deneyin.",
+    reply:
+      "Başka bir sorun çıktıysa, bu e-postayı tek cümleyle yanıtlayın (kart reddedildi mi? kartınız yok mu? fiyat mı?), biz çözelim.",
+    cta: "Ödemeyi tamamla",
+  },
+  en: {
+    subjectVodafone: "Payment didn't go through? Try Vodafone Cash",
+    subjectBinance: "Payment didn't go through? We can help",
+    preview: "Try another way to pay, or tell us what happened",
+    heading: "Your payment didn't complete",
+    lead: "We noticed you tried to activate Premium and the payment didn't go through. Card payments sometimes don't work with certain banks.",
+    vodafone: (egp) =>
+      egp
+        ? `Try Vodafone Cash: choose it on the upgrade page and pay in Egyptian pounds (${egp} EGP for the plan you picked), and Premium opens by itself when the transfer arrives.`
+        : "Try Vodafone Cash: choose it on the upgrade page and pay in Egyptian pounds, and Premium opens by itself when the transfer arrives.",
+    binance:
+      "Try Binance Pay (USDT): choose it on the upgrade page and follow the steps there, or try another card.",
+    reply:
+      "If something else got in the way, just reply to this email with one sentence about what happened (card declined? no card? the price?) and we'll sort it out.",
+    cta: "Finish paying",
+  },
+};
+
 /** A paragraph of plain text, optionally ending in a link (the offer line points at the upgrade page). */
 export type Paragraph = string | { text: string; linkLabel: string; linkUrl: string };
 
@@ -416,6 +509,12 @@ export interface AbandonedCheckoutInput extends NudgeEmailInput {
   priceCents: number | null;
   /** The offer running right now on that plan: its number of days, or null days when there is no single number; null when no offer runs. */
   offer: { days: number | null } | null;
+  /**
+   * Set for a learner whose checkout stalled and who has another way to pay open to them: the email
+   * then says the payment did not complete, offers that way and invites a reply, instead of the
+   * plain "one step left" reminder (which stays exactly as it was when this is absent).
+   */
+  help?: CheckoutHelp | null;
 }
 
 /** "Your plan is one step away": someone who opened checkout and did not pay. Short, about their own plan and price, and the gift days only while an offer really runs. */
@@ -427,7 +526,22 @@ export function abandonedCheckoutEmail({
   plan,
   priceCents,
   offer,
+  help = null,
 }: AbandonedCheckoutInput): EmailContent {
+  if (help) {
+    const h = CHECKOUT_HELP[language];
+    return render(language, {
+      subject: help.method === "vodafone" ? h.subjectVodafone : h.subjectBinance,
+      preview: h.preview,
+      heading: h.heading,
+      paragraphs: [h.lead, help.method === "vodafone" ? h.vodafone(help.egp) : h.binance, h.reply],
+      cta: h.cta,
+      ctaUrl: `${origin}/upgrade`,
+      settingsUrl: `${origin}/learn/settings`,
+      displayName,
+      unsubscribe,
+    });
+  }
   const c = CHECKOUT[language];
   const planName = plan ? c.planLabel[plan] : null;
   const days = offer?.days && offer.days > 0 ? offer.days : null;

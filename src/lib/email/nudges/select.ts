@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import type { CheckoutHelp } from "@/lib/email/nudges/copy";
+
 /**
  * Who gets a nudge email, as small pure rules so each can be tested on its own. The runners
  * (run.ts) read the data and apply them; nothing here touches the database or the network.
@@ -79,6 +81,36 @@ export function isDayOneCandidate(input: {
 /** The two-week period an abandoned-checkout email belongs to: one per learner per period. */
 export function abandonedBucket(now: Date): number {
   return Math.floor(now.getTime() / (14 * DAY_MS));
+}
+
+/**
+ * The one-off send to learners who tried to pay more than once and never did (the daily run only
+ * looks 2 to 30 hours back, so it never reaches them): their last order may be up to two weeks old,
+ * and they must have pressed Pay at least this many times.
+ */
+export const BLOCKED_MAX_AGE_MS = 14 * DAY_MS;
+export const BLOCKED_MIN_ORDERS = 2;
+
+/**
+ * The other way to pay a stalled checkout's email offers: Vodafone Cash for a learner whose order was
+ * priced in Egypt (when it is open to everyone), otherwise Binance Pay (when it is on), otherwise
+ * nothing, and the plain reminder is sent as before. `egp` is the plan's price in whole Egyptian
+ * pounds at the day's rate; an unknown or non-positive one is left out of the sentence.
+ */
+export function checkoutHelpFor(input: {
+  country: string | null | undefined;
+  vodafoneOpen: boolean;
+  binanceOpen: boolean;
+  egp: number | null;
+}): CheckoutHelp | null {
+  if (input.country?.trim().toLowerCase() === "eg" && input.vodafoneOpen) {
+    return {
+      method: "vodafone",
+      egp: input.egp !== null && Number.isFinite(input.egp) && input.egp > 0 ? input.egp : null,
+    };
+  }
+  if (input.binanceOpen) return { method: "binance" };
+  return null;
 }
 
 /**

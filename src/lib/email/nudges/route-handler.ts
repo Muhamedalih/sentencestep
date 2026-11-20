@@ -18,7 +18,10 @@ const EMAIL_SHAPE = /^[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+$/;
  * check as every other cron (fails closed without CRON_SECRET), then one of
  *   - the run itself (GET or POST from the scheduler),
  *   - `?dry=1`: counts who would be emailed, sends and writes nothing,
- *   - `?preview=<address>&lang=<ar|es|tr|en>`: sends one sample to that address.
+ *   - `?preview=<address>&lang=<ar|es|tr|en>`: sends one sample to that address (for the checkout
+ *     reminder, `&help=vodafone` or `&help=binance` shows the stalled-checkout wording),
+ *   - for the checkout reminder only, `?audience=blocked` (with or without `dry=1`): the one-off to
+ *     learners who pressed Pay at least twice in the last two weeks and never paid.
  * Learner addresses are never part of any response.
  */
 export async function handleNudgeRequest(
@@ -47,8 +50,22 @@ export async function handleNudgeRequest(
         to: preview,
         language: nudgeLanguage(params.get("lang")),
         origin,
+        help:
+          params.get("help") === "vodafone" || params.get("help") === "binance"
+            ? (params.get("help") as "vodafone" | "binance")
+            : null,
       });
       return NextResponse.json(result);
+    }
+
+    if (kind === "abandoned") {
+      const summary = await runAbandonedCheckoutNudge({
+        origin,
+        now: new Date(),
+        dryRun: params.get("dry") === "1",
+        audience: params.get("audience") === "blocked" ? "blocked" : "recent",
+      });
+      return NextResponse.json(summary);
     }
 
     const run =
@@ -56,9 +73,7 @@ export async function handleNudgeRequest(
         ? runDayOneNudge
         : kind === "reminder"
           ? runReminderNudge
-          : kind === "session-reminder"
-            ? runSessionReminders
-            : runAbandonedCheckoutNudge;
+          : runSessionReminders;
     const summary = await run({ origin, now: new Date(), dryRun: params.get("dry") === "1" });
     return NextResponse.json(summary);
   } catch (error) {
