@@ -177,6 +177,29 @@ test("decodeFirstTouch: a cookie is client input, so anything unexpected is reje
   assert.equal(decodeFirstTouch(`${"a".repeat(33)}~~`), null);
 });
 
+test("attributionProperties: the landing tag is carried only when it is a clean tag", () => {
+  assert.deepEqual(
+    attributionProperties({
+      cookie: "google~~",
+      userAgent: "Chrome",
+      country: "eg",
+      landing: "grammar",
+    }),
+    { source: "google", landing: "grammar", country: "eg" },
+  );
+  assert.deepEqual(
+    attributionProperties({ cookie: null, userAgent: null, country: null, landing: "home" }),
+    { landing: "home" },
+  );
+  for (const bad of ["Grammar", "a b", "x".repeat(40), "<script>", "", null, undefined]) {
+    assert.deepEqual(
+      attributionProperties({ cookie: null, userAgent: null, country: null, landing: bad }),
+      {},
+      String(bad),
+    );
+  }
+});
+
 test("attributionProperties: includes only what is known", () => {
   assert.deepEqual(
     attributionProperties({

@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
 import { SUPPORT_LOCALES } from "@/lib/i18n/locales";
+import { PUBLIC_PAGES_INDEXABLE, PUBLIC_PAGES_LOCALE } from "@/lib/public-pages/flag";
+import { publicRuleSlugs } from "@/lib/public-pages/rule-page-data";
 
 /**
  * The marketing pages that exist both unprefixed and under every support locale ("/", "/ar",
@@ -27,9 +29,12 @@ export function sitemapUrl(siteUrl: string): string {
  * with no language yet sees). No lastModified, changeFrequency or priority: the pages do not track
  * a modification date and search engines ignore the other two.
  */
-export function buildSitemap(siteUrl: string): MetadataRoute.Sitemap {
+export function buildSitemap(
+  siteUrl: string,
+  publicPagesOpen: boolean = PUBLIC_PAGES_INDEXABLE,
+): MetadataRoute.Sitemap {
   const origin = withoutTrailingSlash(siteUrl);
-  return MARKETING_PATHS.flatMap((path) => {
+  const marketing = MARKETING_PATHS.flatMap((path) => {
     const unprefixed = `${origin}${path || "/"}`;
     const languages: Record<string, string> = Object.fromEntries(
       SUPPORT_LOCALES.map((locale) => [locale, `${origin}/${locale}${path}`]),
@@ -39,4 +44,15 @@ export function buildSitemap(siteUrl: string): MetadataRoute.Sitemap {
       (url) => ({ url, alternates: { languages } }),
     );
   });
+  if (!publicPagesOpen) return marketing;
+
+  // The public pages (src/lib/public-pages/): one language for now, so no hreflang set. Only listed once
+  // the switch in flag.ts is on, and only the rules that have an article.
+  const base = `${origin}/${PUBLIC_PAGES_LOCALE}`;
+  const publicPages = [
+    `${base}/about`,
+    `${base}/grammar`,
+    ...publicRuleSlugs().map((slug) => `${base}/grammar/${slug}`),
+  ].map((url) => ({ url }));
+  return [...marketing, ...publicPages];
 }

@@ -14,6 +14,7 @@ import { TutorialOnboarding } from "@/components/app/tutorial-onboarding";
 import { GetStartedStepProvider } from "@/components/providers/get-started-step-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { dirFor, type SupportLocale } from "@/lib/i18n/locales";
+import { IS_PUBLIC_PAGE_PATH_JS } from "@/lib/public-pages/paths";
 
 /**
  * Amiri (--font-book, globals.css) and Lora (--font-quote) — self-hosted via
@@ -141,6 +142,7 @@ export const CLARITY_INIT_SCRIPT = `
 export const RETURNING_GUEST_REDIRECT_SCRIPT = `
 (function () {
   try {
+    if (${IS_PUBLIC_PAGE_PATH_JS}) return;
     var raw = window.localStorage.getItem("looma:progress:v2");
     if (!raw) return;
     var parsed = JSON.parse(raw);
@@ -185,6 +187,7 @@ export const RETURNING_GUEST_REDIRECT_SCRIPT = `
 export const ONBOARDING_TRANSITION_MASK_SCRIPT = `
 (function () {
   try {
+    if (${IS_PUBLIC_PAGE_PATH_JS}) return;
     var hasLocaleCookie = document.cookie.split("; ").some(function (c) {
       return c.indexOf("ss_locale=") === 0;
     });

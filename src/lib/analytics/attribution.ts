@@ -17,6 +17,14 @@
 export const ATTRIBUTION_COOKIE = "ss_ft";
 export const ATTRIBUTION_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
+/**
+ * Which part of the site a visitor's FIRST page was ("home", "grammar", "about", "learn", ...: see
+ * landingSectionOf in src/lib/public-pages/paths.ts), written once next to the first-touch cookie. A
+ * separate cookie so the first-touch cookie's own format never changes: the sign-up event carries it as
+ * `landing`, to read the sign-ups the public pages bring per kind of page.
+ */
+export const LANDING_COOKIE = "ss_lp";
+
 export interface FirstTouch {
   source: string;
   medium: string | null;
@@ -173,8 +181,12 @@ export function attributionProperties(input: {
   cookie: string | null | undefined;
   userAgent: string | null | undefined;
   country: string | null | undefined;
+  /** The landing cookie's value (LANDING_COOKIE), when the request has it. */
+  landing?: string | null | undefined;
 }): Record<string, string> {
   const properties: Record<string, string> = {};
+  // Only a clean tag, since a cookie is client input.
+  if (input.landing && TAG_PATTERN.test(input.landing)) properties.landing = input.landing;
   const touch = decodeFirstTouch(input.cookie);
   if (touch) {
     properties.source = touch.source;
