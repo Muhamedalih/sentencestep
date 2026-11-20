@@ -410,6 +410,11 @@ export const tr: Dictionary = {
       bodyAndroid:
         "Google ile giriş {app} içinde çalışmaz. Sayfayı tarayıcında açıp tek dokunuşla devam et ya da burada e-postayla kaydol.",
       bodyIos: "Google ile giriş {app} içinde çalışmaz. Ya da burada e-postayla kaydol.",
+      payTitle: "Ödemeni tarayıcında tamamla",
+      payBodyAndroid:
+        "Ödeme {app} içinde tamamlanmayabilir. Sayfayı tarayıcında aç ve tek dokunuşla devam et. Orada tekrar giriş yapman istenebilir.",
+      payBodyIos:
+        "Ödeme {app} içinde tamamlanmayabilir. Sayfayı telefonunun tarayıcısında aç ve oradan devam et:",
       openButton: "Tarayıcıda aç",
       copyButton: "Bağlantıyı kopyala",
       copiedButton: "Kopyalandı",

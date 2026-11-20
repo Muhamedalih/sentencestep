@@ -226,6 +226,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     egyptWallet: false,
     checkoutV2: false,
     storyCoversNew: false,
+    inAppPayStrip: false,
   });
 });
 

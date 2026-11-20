@@ -411,6 +411,11 @@ export const en: Dictionary = {
       bodyAndroid:
         "Google sign-in doesn't work inside {app}. Open the page in your browser and continue in one tap, or sign up with email here.",
       bodyIos: "Google sign-in doesn't work inside {app}. Or sign up with email here.",
+      payTitle: "Finish your payment in your browser",
+      payBodyAndroid:
+        "Payment may not complete inside {app}. Open the page in your browser and continue in one tap. You may be asked to sign in again there.",
+      payBodyIos:
+        "Payment may not complete inside {app}. Open the page in your phone's browser and continue from there:",
       openButton: "Open in browser",
       copyButton: "Copy link",
       copiedButton: "Copied",

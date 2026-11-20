@@ -106,14 +106,31 @@ export function InAppStripSlot({
   return <InAppStrip decision={decision} page={page} bucket={bucket} />;
 }
 
+/**
+ * The same strip on the upgrade page, above the Pay button of a learner who is about to pay by card
+ * inside Facebook's or Instagram's browser (see decidePayStrip in strip.ts). It has no bucket, so the
+ * link it opens carries none; the Pay button is left alone. Records that it was shown once per browser
+ * session, like the sign-up strip.
+ */
+export function PayStrip({ decision }: { decision: StripDecision }) {
+  const { app, platform, forced } = decision;
+  useEffect(() => {
+    reportShown({ app, platform, forced }, "upgrade", null, true);
+  }, [app, platform, forced]);
+  return <InAppStrip decision={decision} page="upgrade" bucket={null} purpose="pay" />;
+}
+
 function InAppStrip({
   decision,
   page,
   bucket,
+  purpose = "signup",
 }: {
   decision: StripDecision;
   page: StripPage;
   bucket: number | null;
+  /** "signup": it replaces the Google button; "pay": it sits above the Pay button and talks about paying. */
+  purpose?: "signup" | "pay";
 }) {
   const { t } = useLocale();
   const s = t.auth.inAppStrip;
@@ -169,6 +186,9 @@ function InAppStrip({
 
   const appName = decision.app === "facebook" ? s.appFacebook : s.appInstagram;
   const android = decision.platform === "android";
+  const pay = purpose === "pay";
+  const title = pay ? s.payTitle : s.title;
+  const body = android ? (pay ? s.payBodyAndroid : s.bodyAndroid) : pay ? s.payBodyIos : s.bodyIos;
 
   return (
     <div
@@ -179,14 +199,14 @@ function InAppStrip({
       <div className="mb-1.5 flex items-center gap-2">
         <ExternalLink className="text-primary size-[18px] shrink-0" aria-hidden="true" />
         <span id={titleId} dir="auto" className="text-sm font-medium">
-          {s.title}
+          {title}
         </span>
       </div>
       <p
         dir="auto"
         className="text-foreground/75 mb-2.5 text-[13px] leading-[1.6] dark:text-[#c3c8d1]"
       >
-        {(android ? s.bodyAndroid : s.bodyIos).replace("{app}", appName)}
+        {body.replace("{app}", appName)}
       </p>
 
       {android ? (

@@ -62,6 +62,7 @@ export const ROLLOUT_IDS = [
   "egyptWallet",
   "checkoutV2",
   "storyCoversNew",
+  "inAppPayStrip",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -637,6 +638,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Only those three covers change: the stories, their lock and every learner's progress stay exactly as they are, and nothing new is read or written.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  inAppPayStrip: {
+    id: "inAppPayStrip",
+    audience: "learner",
+    title: "Open in browser strip on the Pay step (Facebook and Instagram)",
+    description:
+      "On the upgrade page, for a signed-in learner inside Facebook's or Instagram's built-in browser who is about to pay by card: a quiet strip just above the Pay button, “Finish your payment in your browser”, with an open button and a copy-link button on Android and two steps and a copy-link button on iPhone. The Pay button stays as it is. Everywhere else, and for anyone paying with Vodafone Cash or Binance Pay, nothing changes.",
+    notes: [
+      "Why: from 7 weeks of live orders, 14 learners outside Egypt who pressed Pay inside those browsers paid 0 times, against 31% in ordinary browsers. The strip says payment “may not” finish there, because the cause is not proven.",
+      "Admins only: nobody is given it. To look at it, add ?in_app_strip=facebook-android, facebook-ios, instagram-android or instagram-ios to /upgrade (as an admin, or from a real in-app browser).",
+      "The browser they open has no sign-in from the app's browser, so they may be asked to sign in again; the page brings them back to the plans after that. Every view (IN_APP_STRIP_SHOWN with page upgrade), every tap on “open” and every tap on “copy” is recorded.",
+      "Only the Android button is a one-tap open; iPhone gets the steps, like the sign-up strip.",
     ],
   },
   rulesWall: {

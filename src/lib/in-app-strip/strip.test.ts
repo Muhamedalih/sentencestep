@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildExternalUrl,
   buildIntentUrl,
+  decidePayStrip,
   decideStrip,
   isInAppBrowserName,
   isStripPage,
@@ -70,7 +71,45 @@ test("the names that arrive from the browser are checked against the known ones"
   assert.equal(isStripPlatform("ios"), true);
   assert.equal(isStripPlatform("windows"), false);
   assert.equal(isStripPage("login"), true);
-  assert.equal(isStripPage("upgrade"), false);
+  assert.equal(isStripPage("upgrade"), true);
+  assert.equal(isStripPage("home"), false);
+});
+
+const payDecide = (overrides: Partial<Parameters<typeof decidePayStrip>[0]> = {}) =>
+  decidePayStrip({ userAgent: FACEBOOK_ANDROID, forcedParam: null, open: true, ...overrides });
+
+test("the pay strip is for a learner inside Facebook's or Instagram's browser, and only while the permission reaches them", () => {
+  const given = payDecide();
+  assert.equal(given?.show, true);
+  assert.equal(given?.app, "facebook");
+  assert.equal(given?.platform, "android");
+  assert.equal(given?.forced, false);
+  // No share and no bucket: nobody is held back, and the link it opens carries no group number.
+  assert.equal(given?.bucket, null);
+  assert.equal(given?.share, 0);
+  assert.equal(payDecide({ userAgent: INSTAGRAM_IPHONE })?.platform, "ios");
+  assert.equal(payDecide({ userAgent: INSTAGRAM_IPHONE })?.app, "instagram");
+  // Closed: nothing, whichever browser.
+  assert.equal(payDecide({ open: false }), null);
+});
+
+test("outside those browsers the pay strip never appears, open or not", () => {
+  assert.equal(payDecide({ userAgent: CHROME_ANDROID }), null);
+  assert.equal(payDecide({ userAgent: CHROME_DESKTOP }), null);
+  assert.equal(payDecide({ userAgent: null }), null);
+});
+
+test("the pay strip's preview parameter: a named version needs the permission or a real in-app browser, and on shows the real one", () => {
+  const named = payDecide({ userAgent: CHROME_DESKTOP, forcedParam: "instagram-ios" });
+  assert.equal(named?.forced, true);
+  assert.equal(named?.app, "instagram");
+  assert.equal(named?.platform, "ios");
+  assert.equal(payDecide({ userAgent: CHROME_DESKTOP, forcedParam: "instagram-ios", open: false }), null);
+  // From a real in-app browser the named version shows even while the permission is closed (the owner on a phone).
+  assert.equal(payDecide({ forcedParam: "instagram-ios", open: false })?.app, "instagram");
+  assert.equal(payDecide({ forcedParam: "on", open: false })?.platform, "android");
+  assert.equal(payDecide({ userAgent: CHROME_ANDROID, forcedParam: "on" }), null);
+  assert.equal(payDecide({ forcedParam: "nonsense" })?.forced, false);
 });
 
 test("a visitor outside Facebook's and Instagram's browsers is never concerned, whatever the share or the cookie", () => {
