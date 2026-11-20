@@ -28,9 +28,14 @@ export default async function VideoPracticePage({ params }: { params: Promise<{ 
   const lesson = lessons.find((candidate) => candidate.id === id);
   if (!lesson) notFound();
 
+  // A video an Admin deleted is a 404 for everyone else (an Admin can still open it, to look before restoring).
+  const saved = await getVideoArrangement();
+  if (!admin && saved?.removed?.includes(id)) notFound();
+
   // "Next video" follows the order the library shows, section after section (and an Admin's arrangement).
-  const order = flattenSections(arrangeVideoLessons(lessons, await getVideoArrangement()));
-  const next = order[order.indexOf(lesson.id) + 1];
+  const order = flattenSections(arrangeVideoLessons(lessons, saved));
+  const at = order.indexOf(lesson.id);
+  const next = at >= 0 ? order[at + 1] : undefined;
   // The times an Admin saved by hand replace the ones written in the video's file (one cached read, shared).
   const timed = await withSavedTimings(lesson);
   // The new finish screen ("videoFinish", Admins only until opened) names the next video.
