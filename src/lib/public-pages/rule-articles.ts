@@ -1,16 +1,21 @@
 /**
  * The written layer of the public rule pages: only the rules listed here have a page (see types.ts).
- * The first twelve are rules where the Arabic speaker's own mistake is the point (each has a
- * "mistake" note in teach.ts), so the page answers what an Arabic speaker actually searches. More rules
- * are added in waves: add an entry here and the page, its sitemap entry and its links appear with it.
+ * They come in waves, each one the rules where the Arabic speaker's own mistake is the point (each has a
+ * "mistake" note in teach.ts), so the page answers what an Arabic speaker actually searches: the first
+ * twelve are below, and the other 22 of the 34 such rules are in rule-articles-a1.ts, -a2.ts and -b2.ts.
+ * More rules are added the same way: add an entry and the page, its sitemap entry and its links appear
+ * with it.
  *
- * Every article is checked by rule-articles.test.ts: six translated examples in the order of the rule's
+ * Every article is checked by public-pages.test.ts: six translated examples in the order of the rule's
  * prepared sentences, a real answer under each question, and enough words to be worth reading.
  */
 
+import { RULE_ARTICLES_A1 } from "./rule-articles-a1";
+import { RULE_ARTICLES_A2 } from "./rule-articles-a2";
+import { RULE_ARTICLES_B2 } from "./rule-articles-b2";
 import type { RuleArticle } from "./types";
 
-export const RULE_ARTICLES: Readonly<Record<string, RuleArticle>> = {
+const FIRST_TWELVE: Readonly<Record<string, RuleArticle>> = {
   "a2-16": {
     h1: "الفرق بين for و since في الإنجليزية",
     description:
@@ -566,4 +571,12 @@ export const RULE_ARTICLES: Readonly<Record<string, RuleArticle>> = {
       },
     ],
   },
+};
+
+/** Every rule that has a public page. */
+export const RULE_ARTICLES: Readonly<Record<string, RuleArticle>> = {
+  ...FIRST_TWELVE,
+  ...RULE_ARTICLES_A1,
+  ...RULE_ARTICLES_A2,
+  ...RULE_ARTICLES_B2,
 };
