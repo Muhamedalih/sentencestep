@@ -129,6 +129,8 @@ export interface VideoStrings {
   stopsStateSaved: string;
   stopsStateUnsaved: string;
   stopsStateFailed: string;
+  /** The editor's note on how late this device stops: "{s}" seconds. */
+  stopsDeviceLead: string;
 }
 
 const ar: VideoStrings = {
@@ -251,6 +253,8 @@ const ar: VideoStrings = {
   stopsStateSaved: "ما تراه الآن محفوظ، ويشاهده الجميع هكذا.",
   stopsStateUnsaved: "تعديلاتك لم تُحفظ بعد، ولا يراها غير حسابك. تُحفظ تلقائيًا بعد لحظة.",
   stopsStateFailed: "لم تُحفظ تعديلاتك، ولا يراها غير حسابك.",
+  stopsDeviceLead:
+    "هذا الجهاز يطلب التوقف قبل نهاية الجملة بـ {s} ثانية ليعوّض تأخره، ويتعلّمها وحده من توقفاته.",
 };
 
 /** What the one-time rating card after a finished video asks, in the learner's own language (null is English). */

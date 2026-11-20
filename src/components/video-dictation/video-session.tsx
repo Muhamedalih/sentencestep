@@ -36,14 +36,19 @@ import { getCurrentWordIndex, locateWordAtCharIndex } from "@/lib/typing";
 import { cn } from "@/lib/utils";
 import { watchUrl } from "@/lib/video-dictation/content";
 import {
+  initialLead,
+  isAppleWebKit,
   isSameVideo,
   isSilentGap,
+  LEAD_STORAGE_KEY,
   nextLead,
   nextRate,
   POLL_MS,
   replayPosition,
   segmentTick,
+  SETTLE_MS,
   START_LEAD_SECONDS,
+  stopTime,
 } from "@/lib/video-dictation/segments";
 import {
   meaningInSentence,
@@ -150,6 +155,8 @@ export function VideoSession({
   // How much earlier than a sentence's end the stop is asked for, learned from this device's own delay
   // (see nextLead), and the end of the sentence the page has just stopped at, until the pause is measured.
   const leadRef = useRef(START_LEAD_SECONDS);
+  // The same number, for the Admin's editor to show (what this device has learned about how late it stops).
+  const [deviceLead, setDeviceLead] = useState(START_LEAD_SECONDS);
   const stopEndRef = useRef<number | null>(null);
   const stats = useRef({
     correct: 0,
@@ -205,7 +212,7 @@ export function VideoSession({
           if (silent === null) silent = isSilentGap(startSeconds, time);
           setQuiet(silent && time < startSeconds);
         }
-        const tick = segmentTick(sawBefore, time, endSeconds - leadRef.current);
+        const tick = segmentTick(sawBefore, time, stopTime(startSeconds, endSeconds, leadRef.current));
         sawBefore = tick.sawBefore;
         if (!tick.stop) return;
         stopPolling();
@@ -251,11 +258,23 @@ export function VideoSession({
   const handleState = useCallback(
     (state: number) => {
       if (state === PLAYER_STATE.PAUSED && stopEndRef.current !== null) {
-        // The page's own stop: where the video really paused tells how late this device answers.
+        // The page's own stop: where the video really rests tells how late this device answers. It is read a moment
+        // later, because right at the event a player may still report the time from before the pause, which hides
+        // the delay (Safari did, and let the next sentence's first sound out).
         const end = stopEndRef.current;
         stopEndRef.current = null;
-        const stoppedAt = controlsRef.current?.getTime();
-        if (stoppedAt !== undefined) leadRef.current = nextLead(leadRef.current, stoppedAt, end);
+        window.setTimeout(() => {
+          const player = controlsRef.current;
+          if (!player || player.getState() !== PLAYER_STATE.PAUSED) return;
+          const learned = nextLead(leadRef.current, player.getTime(), end);
+          leadRef.current = learned;
+          setDeviceLead(learned);
+          try {
+            window.localStorage.setItem(LEAD_STORAGE_KEY, learned.toFixed(3));
+          } catch {
+            // Not remembered: the next video learns it again from its first stops.
+          }
+        }, SETTLE_MS);
         return;
       }
       if (state === PLAYER_STATE.ENDED && live.current.phase === "listening") {
@@ -335,6 +354,20 @@ export function VideoSession({
     } catch {
       // Storage is blocked: the words stay shown.
     }
+  }, []);
+
+  // How late this device stops: what it learned on earlier videos, else the start for its kind of browser (Apple's answer late).
+  useEffect(() => {
+    let stored: number | null = null;
+    try {
+      const raw = window.localStorage.getItem(LEAD_STORAGE_KEY);
+      stored = raw === null ? null : Number(raw);
+    } catch {
+      // Storage is blocked: the start for the browser's kind is used.
+    }
+    const lead = initialLead(stored, isAppleWebKit(navigator.userAgent, navigator.maxTouchPoints));
+    leadRef.current = lead;
+    setDeviceLead(lead);
   }, []);
 
   const toggleHideWords = () => {
@@ -689,6 +722,7 @@ export function VideoSession({
         <VideoStopsEditor
           videoId={lesson.id}
           sentences={sentences}
+          deviceLead={deviceLead}
           saveState={stops.state}
           saveError={stops.error}
           onSaveNow={stops.saveNow}
