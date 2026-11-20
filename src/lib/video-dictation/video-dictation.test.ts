@@ -32,6 +32,9 @@ import {
 } from "./news";
 import {
   isSameVideo,
+  APPLE_START_LEAD_SECONDS,
+  initialLead,
+  isAppleWebKit,
   MAX_LEAD_SECONDS,
   nextLead,
   nextRate,
@@ -40,6 +43,7 @@ import {
   waveLevel,
   segmentTick,
   START_LEAD_SECONDS,
+  stopTime,
 } from "./segments";
 import {
   cuesToSentences,
@@ -233,11 +237,55 @@ test("nextLead: a late stop asks for an earlier one, an early stop for a later o
   assert.ok(nextLead(0.12, 9.9, 10) < 0.12);
   // Never negative, never more than the cap.
   assert.equal(nextLead(0, 9.5, 10), 0);
-  assert.equal(nextLead(0.2, 10.6, 10), MAX_LEAD_SECONDS);
-  assert.equal(nextLead(0.24, 10.9, 10), MAX_LEAD_SECONDS);
+  assert.equal(nextLead(0.7, 11.2, 10), MAX_LEAD_SECONDS);
+  assert.equal(nextLead(0.5, 11.4, 10), MAX_LEAD_SECONDS);
   // A reading far from the end (an ad, a seek) changes nothing.
   assert.equal(nextLead(0.1, 14, 10), 0.1);
   assert.equal(nextLead(0.1, Number.NaN, 10), 0.1);
+});
+
+test("nextLead: a slow browser that stops 0.6 s late is caught within three stops", () => {
+  let lead = APPLE_START_LEAD_SECONDS;
+  for (let i = 0; i < 3; i++) lead = nextLead(lead, 10 - lead + 0.6, 10);
+  assert.ok(Math.abs(lead - 0.6) < 0.05, `settled at ${lead}`);
+});
+
+test("isAppleWebKit: Safari, any browser on an iPhone or iPad, and an iPad asking for the desktop site; not Chrome or Firefox", () => {
+  const safariMac =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15";
+  const iPad =
+    "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+  const chromeIOS =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/125.0 Mobile/15E148 Safari/604.1";
+  const chromeAndroid =
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36";
+  const chromeWindows =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+  const firefox = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0";
+  assert.equal(isAppleWebKit(safariMac, 0), true);
+  assert.equal(isAppleWebKit(iPad, 5), true);
+  assert.equal(isAppleWebKit(chromeIOS, 5), true);
+  // iPadOS asking for the desktop site presents itself as a Mac with a touch screen.
+  assert.equal(isAppleWebKit(safariMac, 5), true);
+  assert.equal(isAppleWebKit(chromeAndroid, 5), false);
+  assert.equal(isAppleWebKit(chromeWindows, 0), false);
+  assert.equal(isAppleWebKit(firefox, 0), false);
+});
+
+test("initialLead: what the device learned before wins, else the start for its kind of browser", () => {
+  assert.equal(initialLead(null, false), START_LEAD_SECONDS);
+  assert.equal(initialLead(null, true), APPLE_START_LEAD_SECONDS);
+  assert.equal(initialLead(0.31, true), 0.31);
+  assert.equal(initialLead(0, true), 0);
+  assert.equal(initialLead(5, false), MAX_LEAD_SECONDS);
+  assert.equal(initialLead(Number.NaN, false), START_LEAD_SECONDS);
+  assert.equal(initialLead(-1, true), APPLE_START_LEAD_SECONDS);
+});
+
+test("stopTime: the lead moves a stop earlier but never before the sentence has begun to be heard", () => {
+  assert.equal(stopTime(5, 9, 0.3), 8.7);
+  assert.equal(stopTime(5, 5.5, 0.8), 5.25);
+  assert.equal(stopTime(5, 9, 0), 9);
 });
 
 const sample: VideoLesson = {

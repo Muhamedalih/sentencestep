@@ -12,19 +12,56 @@ export const POLL_MS = 30;
 /** The stop is asked for this much earlier before any stop has been measured. */
 export const START_LEAD_SECONDS = 0.03;
 
+/**
+ * The same, on Apple's browsers (Safari, and every browser on an iPhone or iPad): their player answers
+ * late, and a video stopped on the time asked for let the next sentence's first sound out. It is only
+ * where the device starts; the measured delay takes over after the first stops.
+ */
+export const APPLE_START_LEAD_SECONDS = 0.25;
+
 /** The most the stop is ever moved earlier to make up for a slow device. */
-export const MAX_LEAD_SECONDS = 0.25;
+export const MAX_LEAD_SECONDS = 0.8;
+
+/** Where the page remembers how late this device stops, so the next video starts already tuned. */
+export const LEAD_STORAGE_KEY = "video-stop-lead";
+
+/** How long after the pause the page reads where the video rests: right at the event a player may still answer with the time from before it. */
+export const SETTLE_MS = 200;
+
+/** Whether the browser is Apple's engine: any browser on an iPhone or iPad, an iPad asking for the desktop site, or Safari on a Mac. */
+export function isAppleWebKit(userAgent: string, maxTouchPoints: number): boolean {
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return true;
+  if (/Macintosh/i.test(userAgent) && maxTouchPoints > 1) return true;
+  return (
+    userAgent.includes("Safari/") &&
+    !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android|Firefox/i.test(userAgent)
+  );
+}
+
+/** The lead a page starts with: what this device learned before (when it is a sane number), else the start for its kind of browser. */
+export function initialLead(stored: number | null, apple: boolean): number {
+  if (stored !== null && Number.isFinite(stored) && stored >= 0) {
+    return Math.min(MAX_LEAD_SECONDS, stored);
+  }
+  return apple ? APPLE_START_LEAD_SECONDS : START_LEAD_SECONDS;
+}
+
+/** The time a sentence is stopped at: its end minus the device's lead, but never so early that the sentence is cut before it is heard. */
+export function stopTime(startSeconds: number, endSeconds: number, lead: number): number {
+  return Math.max(endSeconds - lead, startSeconds + 0.25);
+}
 
 /**
  * Every stop lands a little after the end it was asked for (the player answers late, more so on a phone).
  * After each stop the page reads where the video really paused and moves the next stop earlier or later by
- * half of the error, so it settles on the device's own delay: a stop that was late asks for a bigger lead,
- * one that was early for a smaller one. A reading far from the end (an ad, a seek) is ignored.
+ * three quarters of the error, so it settles on the device's own delay within a few sentences: a stop that
+ * was late asks for a bigger lead, one that was early for a smaller one. A reading far from the end (an ad,
+ * a seek) is ignored.
  */
 export function nextLead(lead: number, stoppedAt: number, endSeconds: number): number {
   const error = stoppedAt - endSeconds;
-  if (!Number.isFinite(error) || Math.abs(error) > 1) return lead;
-  return Math.min(MAX_LEAD_SECONDS, Math.max(0, lead + 0.5 * error));
+  if (!Number.isFinite(error) || Math.abs(error) > 1.5) return lead;
+  return Math.min(MAX_LEAD_SECONDS, Math.max(0, lead + 0.75 * error));
 }
 
 /** A replay starts this far before the sentence, so its first sound is not cut. */

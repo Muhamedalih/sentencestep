@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
-import { videoStrings } from "@/lib/video-dictation/strings";
+import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import { resetVideoTimingsAction } from "@/lib/video-dictation/timings-actions";
 import type { VideoSentence } from "@/lib/video-dictation/types";
 
@@ -31,6 +31,7 @@ const round = (seconds: number) => Math.round(seconds * 100) / 100;
 export function VideoStopsEditor({
   videoId,
   sentences,
+  deviceLead,
   saveState,
   saveError,
   onSaveNow,
@@ -42,6 +43,8 @@ export function VideoStopsEditor({
 }: {
   videoId: string;
   sentences: readonly VideoSentence[];
+  /** How much earlier than a sentence's end this device asks for the stop, learned from its own delay (seconds). */
+  deviceLead: number;
   /** Whether the times on screen are the ones everyone plays (see useStopsAutosave). */
   saveState: StopsSaveState;
   /** Why the last save was refused, while saveState is "failed". */
@@ -102,6 +105,9 @@ export function VideoStopsEditor({
           <h2 className="text-[15px] font-semibold">{strings.stopsTitle}</h2>
           <p className="text-muted-foreground mt-0.5 text-[12px] leading-snug">
             {strings.stopsHint}
+          </p>
+          <p className="text-muted-foreground mt-1 text-[11px] leading-snug tabular-nums">
+            {fill(strings.stopsDeviceLead, { s: deviceLead.toFixed(2) })}
           </p>
         </div>
         <button
