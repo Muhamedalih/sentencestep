@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
+import { OFFSET_STEP_SECONDS } from "@/lib/video-dictation/device-diag";
 import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import { resetVideoTimingsAction } from "@/lib/video-dictation/timings-actions";
 import type { VideoSentence } from "@/lib/video-dictation/types";
@@ -32,6 +33,8 @@ export function VideoStopsEditor({
   videoId,
   sentences,
   deviceLead,
+  offset,
+  onOffset,
   saveState,
   saveError,
   onSaveNow,
@@ -45,6 +48,9 @@ export function VideoStopsEditor({
   sentences: readonly VideoSentence[];
   /** How much earlier than a sentence's end this device asks for the stop, learned from its own delay (seconds). */
   deviceLead: number;
+  /** The Admin's own offset for this device, by ear (seconds): added to the learned delay, kept on the device for every video. */
+  offset: number;
+  onOffset: (seconds: number) => void;
   /** Whether the times on screen are the ones everyone plays (see useStopsAutosave). */
   saveState: StopsSaveState;
   /** Why the last save was refused, while saveState is "failed". */
@@ -108,6 +114,35 @@ export function VideoStopsEditor({
           </p>
           <p className="text-muted-foreground mt-1 text-[11px] leading-snug tabular-nums">
             {fill(strings.stopsDeviceLead, { s: deviceLead.toFixed(2) })}
+          </p>
+          <div className="mt-1.5 flex items-center gap-1.5" dir="ltr">
+            <span className="text-muted-foreground shrink-0 text-[11px]" dir="auto">
+              {strings.stopsOffsetLabel}
+            </span>
+            <button
+              type="button"
+              className={STEP_BUTTON}
+              onClick={() => onOffset(offset - OFFSET_STEP_SECONDS)}
+            >
+              −{OFFSET_STEP_SECONDS}
+            </button>
+            <span className="w-12 text-center text-[13px] font-semibold tabular-nums">
+              {offset > 0 ? "+" : ""}
+              {offset.toFixed(2)}
+            </span>
+            <button
+              type="button"
+              className={STEP_BUTTON}
+              onClick={() => onOffset(offset + OFFSET_STEP_SECONDS)}
+            >
+              +{OFFSET_STEP_SECONDS}
+            </button>
+            <button type="button" className={STEP_BUTTON} onClick={() => onOffset(0)} dir="auto">
+              {strings.stopsOffsetZero}
+            </button>
+          </div>
+          <p className="text-muted-foreground mt-1 text-[11px] leading-snug">
+            {strings.stopsOffsetHint}
           </p>
         </div>
         <button

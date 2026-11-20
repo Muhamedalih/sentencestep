@@ -57,6 +57,7 @@ import {
   wordsInVideo,
   type MissedWord,
 } from "@/lib/video-dictation/finish-summary";
+import { clampOffset, OFFSET_STORAGE_KEY } from "@/lib/video-dictation/device-diag";
 import { fill, videoStrings } from "@/lib/video-dictation/strings";
 import type { VideoLesson, VideoSentence } from "@/lib/video-dictation/types";
 
@@ -66,6 +67,7 @@ import { VideoFinishLook } from "./video-finish-look";
 import { VideoFinishScreen } from "./video-finish-screen";
 import { SilenceWave } from "./silence-wave";
 import { VideoRatingPrompt } from "./video-rating-prompt";
+import { useDeviceReport } from "./use-device-report";
 import { useStopsAutosave } from "./use-stops-autosave";
 import { VideoStopsEditor } from "./video-stops-editor";
 import { PLAYER_STATE } from "./youtube-api";
@@ -156,6 +158,23 @@ export function VideoSession({
   const leadRef = useRef(START_LEAD_SECONDS);
   // The same number, for the Admin's editor to show (what this device has learned about how late it stops).
   const [deviceLead, setDeviceLead] = useState(START_LEAD_SECONDS);
+  // The Admin's own offset for this device, by ear (set in the editor), added to the learned delay.
+  const [offset, setOffset] = useState(0);
+  const offsetRef = useRef(0);
+  // What fired the stop that has just been made, until the video's resting place is read.
+  const pendingStopRef = useRef<{
+    end: number;
+    lead: number;
+    trigger: number;
+    maxGapMs: number;
+  } | null>(null);
+  // An Admin's device sends the numbers behind its stops to the audit log (see useDeviceReport).
+  const report = useDeviceReport({
+    enabled: canEditStops,
+    videoId: lesson.id,
+    expectedDuration: lesson.durationSeconds,
+    getContext: () => ({ learnedLead: leadRef.current, offset: offsetRef.current }),
+  });
   const stopEndRef = useRef<number | null>(null);
   const stats = useRef({
     correct: 0,
@@ -190,10 +209,17 @@ export function VideoSession({
       let sawBefore = false;
       // Decided once, at the first reading: a wait of a second or more before the first word is a silence.
       let silent: boolean | null = null;
+      // The longest wait between two readings: a busy device reads late, and its stop lands late with it.
+      let lastTickMs = performance.now();
+      let maxGapMs = 0;
       pollRef.current = window.setInterval(() => {
+        const nowMs = performance.now();
+        maxGapMs = Math.max(maxGapMs, nowMs - lastTickMs);
+        lastTickMs = nowMs;
         const player = controlsRef.current;
         if (!player) return;
         if (!isSameVideo(player.getDuration(), lesson.durationSeconds)) {
+          report.ad(player.getDuration());
           setAdPlaying(true);
           return;
         }
@@ -203,18 +229,20 @@ export function VideoSession({
           if (silent === null) silent = isSilentGap(startSeconds, time);
           setQuiet(silent && time < startSeconds);
         }
-        const tick = segmentTick(sawBefore, time, stopTime(startSeconds, endSeconds, leadRef.current));
+        const lead = leadRef.current + offsetRef.current;
+        const tick = segmentTick(sawBefore, time, stopTime(startSeconds, endSeconds, lead));
         sawBefore = tick.sawBefore;
         if (!tick.stop) return;
         stopPolling();
         stopEndRef.current = endSeconds;
+        pendingStopRef.current = { end: endSeconds, lead, trigger: time, maxGapMs: Math.round(maxGapMs) };
         player.pause();
         setQuiet(false);
         move({ phase: "typing" });
         setFocusTick((n) => n + 1);
       }, POLL_MS);
     },
-    [lesson.durationSeconds, move, silenceWave, stopPolling],
+    [lesson.durationSeconds, move, report, silenceWave, stopPolling],
   );
 
   const replay = useCallback(() => {
@@ -253,11 +281,16 @@ export function VideoSession({
         // later, because right at the event a player may still report the time from before the pause, which hides
         // the delay (Safari did, and let the next sentence's first sound out).
         const end = stopEndRef.current;
+        const fired = pendingStopRef.current;
         stopEndRef.current = null;
+        pendingStopRef.current = null;
         window.setTimeout(() => {
           const player = controlsRef.current;
           if (!player || player.getState() !== PLAYER_STATE.PAUSED) return;
-          const learned = nextLead(leadRef.current, player.getTime(), end);
+          const rest = player.getTime();
+          if (fired) report.stop({ ...fired, rest });
+          // The Admin's own offset is a stop asked for earlier on purpose, so the delay is measured against the end minus it.
+          const learned = nextLead(leadRef.current, rest, end - offsetRef.current);
           leadRef.current = learned;
           setDeviceLead(learned);
           try {
@@ -295,7 +328,7 @@ export function VideoSession({
         setFocusTick((n) => n + 1);
       }
     },
-    [lesson.durationSeconds, move, replay, sentences, startPolling, stopPolling],
+    [lesson.durationSeconds, move, replay, report, sentences, startPolling, stopPolling],
   );
 
   const { hostRef, failure, controls } = useYouTubePlayer({
@@ -359,6 +392,27 @@ export function VideoSession({
     const lead = initialLead(stored, isAppleWebKit(navigator.userAgent, navigator.maxTouchPoints));
     leadRef.current = lead;
     setDeviceLead(lead);
+    let storedOffset = 0;
+    try {
+      const raw = window.localStorage.getItem(OFFSET_STORAGE_KEY);
+      storedOffset = raw === null ? 0 : clampOffset(Number(raw));
+    } catch {
+      // Storage is blocked: no offset.
+    }
+    offsetRef.current = storedOffset;
+    setOffset(storedOffset);
+  }, []);
+
+  /** The Admin's by-ear offset for this device: how much earlier than the learned delay it stops. Kept on the device for every video. */
+  const changeOffset = useCallback((seconds: number) => {
+    const next = clampOffset(seconds);
+    offsetRef.current = next;
+    setOffset(next);
+    try {
+      window.localStorage.setItem(OFFSET_STORAGE_KEY, String(next));
+    } catch {
+      // Not remembered: it is lost when the page closes.
+    }
   }, []);
 
   const toggleHideWords = () => {
@@ -388,6 +442,7 @@ export function VideoSession({
     if (next >= sentences.length) {
       stopPolling();
       player?.pause();
+      report.send();
       const { correct, total, words, missed, mistakeSentences } = stats.current;
       setSummary({
         accuracy: total > 0 ? Math.round((correct / total) * 100) : 100,
@@ -408,12 +463,14 @@ export function VideoSession({
       // A phone can refuse to start a video that no tap started: the button below is then the tap.
       if (resumeRef.current !== null) window.clearTimeout(resumeRef.current);
       resumeRef.current = window.setTimeout(() => {
-        if (live.current.phase === "listening" && player.getState() !== PLAYER_STATE.PLAYING)
+        if (live.current.phase === "listening" && player.getState() !== PLAYER_STATE.PLAYING) {
           setNeedsTap(true);
+          report.needsTap();
+        }
       }, 1200);
     }
     startPolling(sentence.endSeconds, sentence.startSeconds);
-  }, [move, sentences, startPolling, stopPolling]);
+  }, [move, report, sentences, startPolling, stopPolling]);
 
   const handleKeystroke = useCallback((correct: boolean) => {
     stats.current.total += 1;
@@ -714,6 +771,8 @@ export function VideoSession({
           videoId={lesson.id}
           sentences={sentences}
           deviceLead={deviceLead}
+          offset={offset}
+          onOffset={changeOffset}
           saveState={stops.state}
           saveError={stops.error}
           onSaveNow={stops.saveNow}

@@ -16,6 +16,14 @@ import {
 import type { VideoSection } from "./arrange";
 import { arrangeVideoLessons } from "./content";
 import {
+  clampOffset,
+  MAX_OFFSET_SECONDS,
+  MAX_STOPS_PER_REPORT,
+  MIN_OFFSET_SECONDS,
+  overshootOf,
+  sanitizeDeviceReport,
+} from "./device-diag";
+import {
   meaningInSentence,
   pickReviewWords,
   recordMissedWord,
@@ -280,6 +288,47 @@ test("initialLead: what the device learned before wins, else the start for its k
   assert.equal(initialLead(5, false), MAX_LEAD_SECONDS);
   assert.equal(initialLead(Number.NaN, false), START_LEAD_SECONDS);
   assert.equal(initialLead(-1, true), APPLE_START_LEAD_SECONDS);
+});
+
+test("device report: a good one is kept, rounded and bounded; a malformed one is refused", () => {
+  const good = {
+    videoId: "pistol-shrimp",
+    userAgent: "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) Safari/604.1",
+    touchPoints: 5,
+    apple: true,
+    learnedLead: 0.31234,
+    offset: 0.1,
+    expectedDuration: 54.004,
+    seenDuration: null,
+    adReadings: 0,
+    needsTaps: 1,
+    stops: [{ end: 3.257, lead: 0.4, trigger: 2.87123, rest: 3.4712, maxGapMs: 42.6 }],
+  };
+  const clean = sanitizeDeviceReport(good);
+  assert.ok(clean);
+  assert.equal(clean.learnedLead, 0.312);
+  assert.equal(clean.expectedDuration, 54);
+  assert.deepEqual(clean.stops[0], { end: 3.26, lead: 0.4, trigger: 2.871, rest: 3.471, maxGapMs: 43 });
+  assert.equal(overshootOf(clean.stops[0]!), 0.211);
+
+  const many = { ...good, stops: Array.from({ length: 60 }, () => good.stops[0]) };
+  assert.equal(sanitizeDeviceReport(many)?.stops.length, MAX_STOPS_PER_REPORT);
+  assert.equal(sanitizeDeviceReport({ ...good, userAgent: "x".repeat(500) })?.userAgent.length, 200);
+
+  assert.equal(sanitizeDeviceReport(null), null);
+  assert.equal(sanitizeDeviceReport({ ...good, videoId: "" }), null);
+  assert.equal(sanitizeDeviceReport({ ...good, learnedLead: Number.NaN }), null);
+  assert.equal(sanitizeDeviceReport({ ...good, seenDuration: "54" }), null);
+  assert.equal(sanitizeDeviceReport({ ...good, stops: "none" }), null);
+  assert.equal(sanitizeDeviceReport({ ...good, stops: [{ end: 1, lead: 0, trigger: 1 }] }), null);
+});
+
+test("offset: the Admin's by-ear offset stays in its range and on a hundredth", () => {
+  assert.equal(clampOffset(0.123), 0.12);
+  assert.equal(clampOffset(5), MAX_OFFSET_SECONDS);
+  assert.equal(clampOffset(-5), MIN_OFFSET_SECONDS);
+  assert.equal(clampOffset(Number.NaN), 0);
+  assert.equal(clampOffset(0), 0);
 });
 
 test("stopTime: the lead moves a stop earlier but never before the sentence has begun to be heard", () => {
