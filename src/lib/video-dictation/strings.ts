@@ -125,6 +125,10 @@ export interface VideoStrings {
   stopsNotAllowed: string;
   stopsInvalid: string;
   stopsNoTable: string;
+  /** The editor's status line: what is on screen is what everyone plays / is not saved yet / could not be saved. */
+  stopsStateSaved: string;
+  stopsStateUnsaved: string;
+  stopsStateFailed: string;
 }
 
 const ar: VideoStrings = {
@@ -228,7 +232,7 @@ const ar: VideoStrings = {
   stopsOpen: "ضبط التوقف",
   stopsTitle: "ضبط توقف الفيديو",
   stopsHint:
-    "البداية: من أين تُعاد الجملة. التوقف: أين يقف الفيديو بعدها. حرّك بالأزرار أو قف بالفيديو على اللحظة واضغط «الآن»، ثم جرّب واحفظ.",
+    "البداية: من أين تُعاد الجملة. التوقف: أين يقف الفيديو بعدها. حرّك بالأزرار أو قف بالفيديو على اللحظة واضغط «الآن»، ثم جرّب. كل تعديل يُحفظ للجميع تلقائيًا بعد لحظة.",
   stopsStart: "البداية",
   stopsEnd: "التوقف",
   stopsNow: "الآن",
@@ -244,6 +248,9 @@ const ar: VideoStrings = {
   stopsNotAllowed: "هذا الخيار للأدمن فقط.",
   stopsInvalid: "الأوقات غير صالحة (جملة أقصر من 0.3 ثانية أو توقفات غير مرتبة)، لم يُحفظ شيء.",
   stopsNoTable: "تعذّر الحفظ: جدول الأوقات غير موجود بعد في قاعدة البيانات (الملف 20250354000000).",
+  stopsStateSaved: "ما تراه الآن محفوظ، ويشاهده الجميع هكذا.",
+  stopsStateUnsaved: "تعديلاتك لم تُحفظ بعد، ولا يراها غير حسابك. تُحفظ تلقائيًا بعد لحظة.",
+  stopsStateFailed: "لم تُحفظ تعديلاتك، ولا يراها غير حسابك.",
 };
 
 /** What the one-time rating card after a finished video asks, in the learner's own language (null is English). */

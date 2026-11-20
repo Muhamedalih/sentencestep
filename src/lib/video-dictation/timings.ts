@@ -21,6 +21,17 @@ export function timingsOf(sentences: readonly VideoSentence[]): VideoTiming[] {
 const round = (seconds: number) => Math.round(seconds * 100) / 100;
 
 /**
+ * A fingerprint of the times of a list of sentences (to the hundredth of a second, as they are saved):
+ * two lists with the same key play the same, so the editor can tell whether what is on the Admin's screen
+ * is what the database holds, and so what every other viewer plays.
+ */
+export function timingsKey(sentences: readonly VideoSentence[]): string {
+  return JSON.stringify(
+    sentences.map(({ id, startSeconds, endSeconds }) => [id, round(startSeconds), round(endSeconds)]),
+  );
+}
+
+/**
  * Checks times that came from the browser (a Server Action is reachable as a direct POST) or from the
  * database against the video they are for: one entry per sentence in the sentences' own order, each
  * inside the video, long enough, and the stops in increasing order. Returns them rounded to a hundredth
