@@ -61,6 +61,7 @@ import { VideoFinishLook } from "./video-finish-look";
 import { VideoFinishScreen } from "./video-finish-screen";
 import { SilenceWave } from "./silence-wave";
 import { VideoRatingPrompt } from "./video-rating-prompt";
+import { useStopsAutosave } from "./use-stops-autosave";
 import { VideoStopsEditor } from "./video-stops-editor";
 import { PLAYER_STATE } from "./youtube-api";
 
@@ -121,6 +122,13 @@ export function VideoSession({
   // The sentences' times are state only so an Admin can move them by hand and test them at once.
   const [sentences, setSentences] = useState<VideoSentence[]>(lesson.sentences);
   const [editingStops, setEditingStops] = useState(false);
+  // The times an Admin moves are saved for everyone by themselves; `stops.state` says whether this screen and everyone else's agree.
+  const stops = useStopsAutosave({
+    enabled: canEditStops,
+    videoId: lesson.id,
+    sentences,
+    savedSentences: lesson.sentences,
+  });
 
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("armed");
@@ -444,9 +452,19 @@ export function VideoSession({
                 aria-pressed={editingStops}
                 aria-label={strings.stopsOpen}
                 title={strings.stopsOpen}
-                className={cn(ICON_BUTTON, editingStops && "bg-brand-muted border-transparent")}
+                className={cn(
+                  ICON_BUTTON,
+                  "relative",
+                  editingStops && "bg-brand-muted border-transparent",
+                )}
               >
                 <SlidersHorizontal className="size-4" aria-hidden="true" />
+                {stops.state !== "saved" && (
+                  <span
+                    className="bg-destructive absolute -top-0.5 -right-0.5 size-2.5 rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
               </button>
             )}
             <button
@@ -662,6 +680,9 @@ export function VideoSession({
         <VideoStopsEditor
           videoId={lesson.id}
           sentences={sentences}
+          saveState={stops.state}
+          saveError={stops.error}
+          onSaveNow={stops.saveNow}
           current={index}
           getTime={() => controlsRef.current?.getTime()}
           onChange={setSentences}

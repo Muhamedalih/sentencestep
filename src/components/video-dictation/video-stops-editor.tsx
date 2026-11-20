@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 import { videoStrings } from "@/lib/video-dictation/strings";
-import { timingsOf } from "@/lib/video-dictation/timings";
-import {
-  resetVideoTimingsAction,
-  saveVideoTimingsAction,
-} from "@/lib/video-dictation/timings-actions";
+import { resetVideoTimingsAction } from "@/lib/video-dictation/timings-actions";
 import type { VideoSentence } from "@/lib/video-dictation/types";
+
+import type { StopsSaveState } from "./use-stops-autosave";
 
 const FINE = 0.05;
 const COARSE = 0.25;
@@ -26,12 +24,16 @@ const round = (seconds: number) => Math.round(seconds * 100) / 100;
  * The Admin's editor of where each sentence of a video starts (the replay begins just before it) and
  * where the video stops after it. Times move by hand with the small buttons, or take the playhead's
  * position ("Now": scrub YouTube's own bar to the moment, then press it); "Test" plays the sentence with
- * the times as they are now, so a stop can be heard before it is saved. Saving writes the video's times
- * for everyone (see saveVideoTimingsAction); the page keeps working on the edited copy meanwhile.
+ * the times as they are now. The times are saved for everyone by themselves a moment after the last change
+ * (see useStopsAutosave and saveVideoTimingsAction): the page plays the edited copy, so a time that stayed
+ * only on the Admin's screen would sound right to him and wrong to every other viewer. "Save" saves at once.
  */
 export function VideoStopsEditor({
   videoId,
   sentences,
+  saveState,
+  saveError,
+  onSaveNow,
   current,
   getTime,
   onChange,
@@ -40,6 +42,12 @@ export function VideoStopsEditor({
 }: {
   videoId: string;
   sentences: readonly VideoSentence[];
+  /** Whether the times on screen are the ones everyone plays (see useStopsAutosave). */
+  saveState: StopsSaveState;
+  /** Why the last save was refused, while saveState is "failed". */
+  saveError: string | null;
+  /** Saves the times at once, without waiting for the pause after the last change. */
+  onSaveNow: () => void;
   /** The sentence the practice screen is on, highlighted in the list. */
   current: number;
   /** The playhead of the video, or undefined while the player is not ready. */
@@ -70,12 +78,13 @@ export function VideoStopsEditor({
       );
     });
 
-  const save = () => run(() => saveVideoTimingsAction(videoId, timingsOf(sentences)));
   const reset = () => {
     if (!window.confirm(strings.stopsResetConfirm)) return;
     run(async () => {
       const result = await resetVideoTimingsAction(videoId);
-      // The page shows the file's own times again after a reload; the saved ones stay on screen until then.
+      // The page reloads with the file's own times, so the screen never keeps times the database no longer holds
+      // (they would be saved again by themselves).
+      if (!result.error) window.location.reload();
       return result;
     });
   };
@@ -148,13 +157,18 @@ export function VideoStopsEditor({
       </ol>
 
       <div className="border-border flex flex-wrap items-center gap-2 border-t px-4 py-3">
-        <Button type="button" onClick={save} disabled={pending} size="sm">
-          {pending ? strings.stopsSaving : strings.stopsSave}
+        <Button
+          type="button"
+          onClick={onSaveNow}
+          disabled={pending || saveState === "saving" || saveState === "saved"}
+          size="sm"
+        >
+          {saveState === "saving" ? strings.stopsSaving : strings.stopsSave}
         </Button>
         <Button type="button" onClick={reset} disabled={pending} size="sm" variant="outline">
           {strings.stopsReset}
         </Button>
-        {message && (
+        {message ? (
           <p
             role="status"
             className={cn(
@@ -163,6 +177,22 @@ export function VideoStopsEditor({
             )}
           >
             {message.text}
+          </p>
+        ) : (
+          <p
+            role="status"
+            className={cn(
+              "basis-full text-[12px]",
+              saveState === "saved" ? "text-muted-foreground" : "text-destructive font-semibold",
+            )}
+          >
+            {saveState === "saved"
+              ? strings.stopsStateSaved
+              : saveState === "failed"
+                ? `${strings.stopsStateFailed} ${saveError ?? ""}`
+                : saveState === "saving"
+                  ? strings.stopsSaving
+                  : strings.stopsStateUnsaved}
           </p>
         )}
       </div>

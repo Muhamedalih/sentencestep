@@ -23,7 +23,7 @@ import {
   wordsInVideo,
 } from "./finish-summary";
 import type { MissedWord } from "./finish-summary";
-import { applyTimings, sanitizeTimings, timingsOf } from "./timings";
+import { applyTimings, sanitizeTimings, timingsKey, timingsOf } from "./timings";
 import {
   documentCookieHasVideoNewsSeen,
   isVideoNewsSeen,
@@ -627,6 +627,25 @@ test("timings: what an Admin moved by hand replaces the file's times, and a bad 
       ),
       lesson,
     );
+});
+
+test("timings: the editor tells an edit that was not saved from times everyone already plays", () => {
+  const lesson = videoLessons[0]!;
+  const saved = timingsKey(lesson.sentences);
+  // The same times, whatever the float noise below a hundredth of a second, are not an edit.
+  const noise = lesson.sentences.map((s) => ({ ...s, endSeconds: s.endSeconds + 0.001 }));
+  assert.equal(timingsKey(noise), saved);
+  // A real nudge (one stop 0.05 s later, or one start 0.05 s earlier) is an edit.
+  const later = lesson.sentences.map((s, at) =>
+    at === 0 ? { ...s, endSeconds: s.endSeconds + 0.05 } : s,
+  );
+  assert.notEqual(timingsKey(later), saved);
+  const earlier = lesson.sentences.map((s, at) =>
+    at === 0 ? { ...s, startSeconds: Math.max(0, s.startSeconds - 0.05) } : s,
+  );
+  if (lesson.sentences[0]!.startSeconds > 0.05) assert.notEqual(timingsKey(earlier), saved);
+  // What the editor saves is what everyone then loads: the saved times applied back give the same key.
+  assert.equal(timingsKey(applyTimings(lesson, timingsOf(later)).sentences), timingsKey(later));
 });
 
 test("finish screen: a mistyped word keeps its first meaning and counts every wrong letter", () => {
