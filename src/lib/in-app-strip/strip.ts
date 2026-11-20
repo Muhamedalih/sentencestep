@@ -32,7 +32,7 @@ export const IN_APP_BUCKET_PARAM = "ias";
 export const IN_APP_STRIP_PARAM = "in_app_strip";
 
 export type StripPlatform = "android" | "ios" | "other";
-export type StripPage = "register" | "login";
+export type StripPage = "register" | "login" | "upgrade";
 
 export function isInAppBrowserName(value: unknown): value is InAppBrowser {
   return value === "facebook" || value === "instagram";
@@ -43,7 +43,7 @@ export function isStripPlatform(value: unknown): value is StripPlatform {
 }
 
 export function isStripPage(value: unknown): value is StripPage {
-  return value === "register" || value === "login";
+  return value === "register" || value === "login" || value === "upgrade";
 }
 
 /** What the browser says it runs on. iPhone has no way to open a link in another app from a page, so it gets steps; "other" (a desktop looking at the strip) gets the same. */
@@ -132,6 +132,38 @@ export function decideStrip(input: {
     forced: false,
     ...rest,
   };
+}
+
+/**
+ * What the upgrade page does about the strip for this request (the inAppPayStrip permission): null
+ * unless the visitor is inside Facebook's or Instagram's browser and the permission reaches them
+ * (`open`: an admin, or everyone once it is opened). There is no share and no bucket here, so nobody
+ * is held back as a comparison group: too few learners reach this step inside those browsers for a
+ * split to be readable. `?in_app_strip=` works as on the sign-up page: a named version is for looking
+ * at (it needs the permission, or a real in-app browser), `on` shows the real one.
+ */
+export function decidePayStrip(input: {
+  userAgent: string | null | undefined;
+  forcedParam: string | null | undefined;
+  open: boolean;
+}): StripDecision | null {
+  const detected = detectInAppBrowser(input.userAgent);
+  const forced = parseForcedStrip(input.forcedParam);
+  const rest = { show: true, bucket: null, share: 0 };
+
+  if (forced) {
+    const app = forced.app ?? detected;
+    if (!app || (forced.app && !detected && !input.open)) return null;
+    return {
+      app,
+      platform: forced.platform ?? stripPlatformFrom(input.userAgent),
+      forced: true,
+      ...rest,
+    };
+  }
+
+  if (!detected || !input.open) return null;
+  return { app: detected, platform: stripPlatformFrom(input.userAgent), forced: false, ...rest };
 }
 
 /**

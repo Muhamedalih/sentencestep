@@ -448,6 +448,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       egyptWallet: false,
       checkoutV2: false,
       storyCoversNew: false,
+      inAppPayStrip: false,
     });
   }
 });

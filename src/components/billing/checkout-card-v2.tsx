@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { PayStrip } from "@/components/auth/in-app-browser-strip";
 import { BinanceMark } from "@/components/billing/binance-mark";
 import { BinanceReportPrompt } from "@/components/billing/binance-report-prompt";
 import { ReportPaymentProblem } from "@/components/billing/report-payment-problem";
@@ -44,6 +45,7 @@ import type { PlanView } from "@/lib/billing/plan-views";
 import type { PlanId } from "@/lib/billing/plans";
 import { formatDayCount } from "@/lib/i18n/format-days";
 import { isSupportLocale } from "@/lib/i18n/locales";
+import type { StripDecision } from "@/lib/in-app-strip/strip";
 import { cn } from "@/lib/utils";
 
 const initialState: CheckoutActionState = {};
@@ -76,6 +78,8 @@ interface CheckoutCardV2Props {
   egyptWalletOpen?: boolean;
   /** True for a visitor whose country is Egypt: Vodafone Cash starts chosen (still free to change). */
   preferEgyptWallet?: boolean;
+  /** Set (see decidePayStrip) for a learner inside Facebook's or Instagram's browser: the "finish your payment in your browser" strip then shows above the Pay button while paying by card. */
+  payStrip?: StripDecision | null;
 }
 
 const STAR_PATH = "M12 3.2l2.5 5.6 6.1.6-4.6 4.1 1.3 6-5.3-3.1-5.3 3.1 1.3-6-4.6-4.1 6.1-.6z";
@@ -126,6 +130,7 @@ export function CheckoutCardV2({
   binancePayOpen = false,
   egyptWalletOpen = false,
   preferEgyptWallet = false,
+  payStrip = null,
 }: CheckoutCardV2Props) {
   const { t, locale } = useLocale();
   const v2 = checkoutV2Strings(locale);
@@ -478,6 +483,8 @@ export function CheckoutCardV2({
                 )}
               </fieldset>
             )}
+
+            {signedIn && paysByCard && payStrip && <PayStrip decision={payStrip} />}
 
             <div ref={payAreaRef} className="flex flex-col gap-2.5">
               {signedIn ? (

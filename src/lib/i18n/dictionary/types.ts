@@ -463,6 +463,10 @@ export interface Dictionary {
       bodyAndroid: string;
       /** iPhone: two steps and a copy button follow. */
       bodyIos: string;
+      /** The same strip above the Pay button on the upgrade page (a learner about to pay by card inside one of those browsers): its title, and its body for Android and for iPhone. The buttons, steps and hints are the ones above. */
+      payTitle: string;
+      payBodyAndroid: string;
+      payBodyIos: string;
       openButton: string;
       copyButton: string;
       copiedButton: string;

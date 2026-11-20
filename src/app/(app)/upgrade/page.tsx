@@ -44,6 +44,7 @@ import {
   getRatingsProof,
   listPublicReviews,
 } from "@/lib/stats/public-ratings";
+import { decidePayStrip } from "@/lib/in-app-strip/strip";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 export const metadata: Metadata = {
@@ -68,6 +69,8 @@ export default async function UpgradePage({
     from?: string | string[];
     at?: string | string[];
     v?: string | string[];
+    /** Looking at the "open in browser" strip on purpose (see decidePayStrip). */
+    in_app_strip?: string | string[];
   }>;
 }) {
   const [user, access, locale, params, passagesOpen, features] = await Promise.all([
@@ -95,7 +98,19 @@ export default async function UpgradePage({
   // The price is the one place a visitor ever sees one (always USD). It is
   // resolved here from the hosting platform's own geolocation — the same resolution the
   // checkout action repeats server-side — never from anything the client sends.
-  const { country } = resolvePricingCountry(await headers());
+  const requestHeaders = await headers();
+  const { country } = resolvePricingCountry(requestHeaders);
+  // Permission inAppPayStrip: inside Facebook's or Instagram's browser a signed-in learner paying by
+  // card gets a strip above the Pay button that gets them into their own browser. Only a signed-in
+  // learner has a Pay button, and the card only draws it while a card is the chosen way to pay (so a
+  // visitor in Egypt, who starts on Vodafone Cash, does not see it unless they switch to a card).
+  const payStrip = user
+    ? decidePayStrip({
+        userAgent: requestHeaders.get("user-agent"),
+        forcedParam: firstParam(params.in_app_strip) ?? null,
+        open: features.rollouts.inAppPayStrip,
+      })
+    : null;
   // Vodafone Cash: only for the visitors the "egyptWallet" permission reaches (admins first), only
   // while the SMS secret is configured, and only where our own location check says Egypt (an admin
   // previewing it sees it from anywhere). The checkout action re-checks all of it.
@@ -267,6 +282,7 @@ export default async function UpgradePage({
                 afterPaymentPath={afterPaymentPath}
                 binancePayOpen={binancePayOpen}
                 egyptWalletOpen={egyptWalletOpen}
+                payStrip={payStrip}
               />
             )}
           </>
@@ -284,6 +300,7 @@ export default async function UpgradePage({
             binancePayOpen={binancePayOpen}
             egyptWalletOpen={egyptWalletOpen}
             preferEgyptWallet={country === EGYPT_COUNTRY}
+            payStrip={payStrip}
           />
         ) : (
           <>
@@ -301,6 +318,7 @@ export default async function UpgradePage({
               binancePayOpen={binancePayOpen}
               egyptWalletOpen={egyptWalletOpen}
               preferEgyptWallet={country === EGYPT_COUNTRY}
+              payStrip={payStrip}
             />
           </>
         )}

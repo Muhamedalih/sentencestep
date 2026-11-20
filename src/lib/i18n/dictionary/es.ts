@@ -421,6 +421,11 @@ export const es: Dictionary = {
         "El acceso con Google no funciona dentro del {app}. Abre la página en tu navegador y continúa con un toque, o regístrate aquí con tu correo.",
       bodyIos:
         "El acceso con Google no funciona dentro del {app}. O regístrate aquí con tu correo.",
+      payTitle: "Termina el pago en tu navegador",
+      payBodyAndroid:
+        "Puede que el pago no se complete dentro del {app}. Abre la página en tu navegador y continúa con un toque. Es posible que te pida iniciar sesión de nuevo.",
+      payBodyIos:
+        "Puede que el pago no se complete dentro del {app}. Abre la página en el navegador de tu teléfono y continúa desde ahí:",
       openButton: "Abrir en el navegador",
       copyButton: "Copiar enlace",
       copiedButton: "Copiado",
