@@ -5,9 +5,12 @@ import assert from "node:assert/strict";
 
 import { dedupeKeyFor, shouldNotify } from "@/lib/email/events";
 import {
+  BLOCKED_MAX_AGE_MS,
+  BLOCKED_MIN_ORDERS,
   HOUR_MS,
   abandonedBucket,
   canEmailAccount,
+  checkoutHelpFor,
   holdoutPercent,
   isDayOneCandidate,
   isHoldout,
@@ -92,4 +95,34 @@ test("the two nudge events are idempotent per learner: once ever, and once per t
     dedupeKeyFor({ type: "CHECKOUT_ABANDONED", bucket: 7 }),
     dedupeKeyFor({ type: "CHECKOUT_ABANDONED", bucket: 8 }),
   );
+});
+
+test("checkoutHelpFor: Vodafone Cash for an order priced in Egypt, Binance Pay for everyone else, and only for a way that is open", () => {
+  const open = { vodafoneOpen: true, binanceOpen: true, egp: 216 };
+  assert.deepEqual(checkoutHelpFor({ country: "eg", ...open }), { method: "vodafone", egp: 216 });
+  assert.deepEqual(checkoutHelpFor({ country: " EG ", ...open }), { method: "vodafone", egp: 216 });
+  assert.deepEqual(checkoutHelpFor({ country: "dz", ...open }), { method: "binance" });
+  assert.deepEqual(checkoutHelpFor({ country: null, ...open }), { method: "binance" });
+  // Vodafone Cash closed: an Egyptian is offered Binance Pay if that is open, otherwise nothing.
+  assert.deepEqual(checkoutHelpFor({ country: "eg", ...open, vodafoneOpen: false }), {
+    method: "binance",
+  });
+  assert.equal(
+    checkoutHelpFor({ country: "eg", ...open, vodafoneOpen: false, binanceOpen: false }),
+    null,
+  );
+  // Binance Pay closed: another country gets the plain reminder.
+  assert.equal(checkoutHelpFor({ country: "ma", ...open, binanceOpen: false }), null);
+  // An unknown or silly pound price is left out, never shown.
+  for (const egp of [null, 0, -5, Number.NaN]) {
+    assert.deepEqual(checkoutHelpFor({ country: "eg", ...open, egp }), {
+      method: "vodafone",
+      egp: null,
+    });
+  }
+});
+
+test("the one-off for stuck payers: two weeks back, at least two orders", () => {
+  assert.equal(BLOCKED_MAX_AGE_MS, 14 * 24 * HOUR_MS);
+  assert.equal(BLOCKED_MIN_ORDERS, 2);
 });

@@ -1,8 +1,12 @@
 import { isOfferActive, offerBonusDaysForPlan, sharedBonusDays } from "@/lib/billing/launch-offer";
 import type { LaunchOffer } from "@/lib/billing/launch-offer";
 import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
+import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
+import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
+import { buildPlanViews } from "@/lib/billing/plan-views";
 import { PLAN_IDS, planPriceCents } from "@/lib/billing/plans";
 import type { PlanId } from "@/lib/billing/plans";
+import { isBinancePayConfigured, isEgyptWalletConfigured } from "@/lib/billing/provider-registry";
 import { dedupeKeyFor } from "@/lib/email/events";
 import type { NotificationEvent } from "@/lib/email/events";
 import {
@@ -17,16 +21,19 @@ import {
   reminderEmail,
   sessionReminderEmail,
 } from "@/lib/email/nudges/copy";
-import type { NudgeLanguage } from "@/lib/email/nudges/copy";
+import type { CheckoutHelp, NudgeLanguage } from "@/lib/email/nudges/copy";
 import {
   ABANDONED_MAX_AGE_MS,
   ABANDONED_MIN_AGE_MS,
   ABANDONED_STATUSES,
+  BLOCKED_MAX_AGE_MS,
+  BLOCKED_MIN_ORDERS,
   DAY_ONE_MAX_AGE_MS,
   DAY_ONE_MIN_AGE_MS,
   FAILED_STATUS,
   abandonedBucket,
   canEmailAccount,
+  checkoutHelpFor,
   holdoutPercent,
   isDayOneCandidate,
   isHoldout,
@@ -53,6 +60,8 @@ import type { EmailContent } from "@/lib/email/templates/layout";
 import { unsubscribeLinks } from "@/lib/email/unsubscribe-token";
 import type { UnsubscribeLinks } from "@/lib/email/nudges/copy";
 import { createSupabaseUsageStore, utcDay } from "@/lib/email/usage";
+import { getFeatureConfig } from "@/lib/features/queries";
+import { getRolloutConfig } from "@/lib/rollouts/queries";
 import {
   REMINDER_RETURNED_WINDOW_MS,
   hasReturnedBeforeReminder,
@@ -132,6 +141,8 @@ interface Recipient {
   /** The plan and price (USD cents) of the checkout they left (the checkout reminder only). */
   plan?: PlanId | null;
   priceCents?: number | null;
+  /** The other way to pay the checkout reminder offers (Vodafone Cash in Egypt, otherwise Binance Pay), or null for the plain reminder. */
+  help?: CheckoutHelp | null;
   /** The date (YYYY-MM-DD) a session reminder was due (the session reminder only). */
   reminderDay?: string;
   /** The session reminder only: what the learner's chosen reminder names (null for a plain one, set before the return loop) and the channel they chose. */
@@ -782,8 +793,15 @@ export async function runAbandonedCheckoutNudge(options: {
   origin: string;
   now: Date;
   dryRun: boolean;
+  /**
+   * "recent" (the daily run): orders 2 to 30 hours old. "blocked" (a one-off, `?audience=blocked`):
+   * learners who pressed Pay at least twice in the last two weeks and never paid; nobody is held out
+   * of it, and a learner already emailed in this two-week period is not emailed again.
+   */
+  audience?: "recent" | "blocked";
 }): Promise<NudgeRunSummary> {
   const { origin, now, dryRun } = options;
+  const blocked = options.audience === "blocked";
   const summary = emptySummary(dryRun);
   const limit = gate(summary);
   if (limit === null) return summary;
@@ -792,25 +810,37 @@ export async function runAbandonedCheckoutNudge(options: {
   const db = createServiceRoleClient();
   const { data: orders, error } = await db
     .from("payment_orders")
-    .select("user_id, status, created_at, pricing_tier, price_usd_cents")
+    .select("user_id, status, created_at, pricing_tier, pricing_country, price_usd_cents")
     .eq("provider_env", "live")
     .in("status", [...ABANDONED_STATUSES, FAILED_STATUS])
-    .gte("created_at", new Date(now.getTime() - ABANDONED_MAX_AGE_MS).toISOString())
+    .gte(
+      "created_at",
+      new Date(now.getTime() - (blocked ? BLOCKED_MAX_AGE_MS : ABANDONED_MAX_AGE_MS)).toISOString(),
+    )
     .lte("created_at", new Date(now.getTime() - ABANDONED_MIN_AGE_MS).toISOString())
     .order("created_at", { ascending: false })
     .limit(5000);
   if (error) throw error;
 
   // Newest order first, so the first row seen for a learner is the checkout they left last.
-  const lastOrder = new Map<string, { tier: string; cents: number }>();
+  const lastOrder = new Map<string, { tier: string; cents: number; country: string | null }>();
+  const orderCount = new Map<string, number>();
   const hadFailure = new Set<string>();
   for (const o of orders ?? []) {
+    orderCount.set(o.user_id, (orderCount.get(o.user_id) ?? 0) + 1);
     if (o.status === FAILED_STATUS) hadFailure.add(o.user_id);
     else if (!lastOrder.has(o.user_id)) {
-      lastOrder.set(o.user_id, { tier: o.pricing_tier, cents: o.price_usd_cents });
+      lastOrder.set(o.user_id, {
+        tier: o.pricing_tier,
+        cents: o.price_usd_cents,
+        country: o.pricing_country ?? null,
+      });
     }
   }
-  const ids = Array.from(new Set((orders ?? []).map((o) => o.user_id)));
+  // The one-off reaches only learners who tried more than once: the others are the daily run's.
+  const ids = Array.from(new Set((orders ?? []).map((o) => o.user_id))).filter(
+    (id) => !blocked || (orderCount.get(id) ?? 0) >= BLOCKED_MIN_ORDERS,
+  );
 
   const bucket = abandonedBucket(now);
   const [paid, exclusions, profiles] = await Promise.all([
@@ -829,6 +859,7 @@ export async function runAbandonedCheckoutNudge(options: {
       .map((row) => row.user_id),
   );
   const profileById = new Map(profiles.map((p) => [p.id, p]));
+  const ways = await openWaysToPay();
 
   const recipients: Recipient[] = [];
   for (const id of ids) {
@@ -839,12 +870,19 @@ export async function runAbandonedCheckoutNudge(options: {
     else {
       const profile = profileById.get(id);
       const order = lastOrder.get(id);
+      const plan = order ? planOfOrder(order.tier, order.cents) : null;
       recipients.push({
         userId: id,
         displayName: profile?.display_name ?? null,
         language: nudgeLanguage(profile?.preferred_language),
-        plan: order ? planOfOrder(order.tier, order.cents) : null,
+        plan,
         priceCents: order?.cents ?? null,
+        help: checkoutHelpFor({
+          country: order?.country ?? null,
+          vodafoneOpen: ways.vodafoneOpen,
+          binanceOpen: ways.binanceOpen,
+          egp: plan && order ? egpPriceOf(order.tier, plan, ways.egpRatePerUsd) : null,
+        }),
       });
     }
   }
@@ -859,6 +897,8 @@ export async function runAbandonedCheckoutNudge(options: {
     origin,
     // The reminder that matters most goes out through Resend first, from the room kept for important mail.
     priority: "important",
+    // The one-off to learners who were stuck is not an experiment: nobody is held out of it.
+    skipHoldout: blocked,
     makeEvent: (_r, holdout) => ({
       type: "CHECKOUT_ABANDONED",
       bucket,
@@ -873,9 +913,47 @@ export async function runAbandonedCheckoutNudge(options: {
         plan: r.plan ?? null,
         priceCents: r.plan ? (r.priceCents ?? null) : null,
         offer: checkoutOffer(offer, now, r.plan ?? null),
+        help: r.help ?? null,
       }),
   });
   return summary;
+}
+
+/**
+ * Which other ways to pay are really open to everyone right now, read the same way the upgrade page
+ * decides what to draw: Vodafone Cash needs its secret and its permission open to everyone (100%),
+ * Binance Pay its relay secret and its switch "On". A way that is not open is never offered in an email.
+ */
+async function openWaysToPay(): Promise<{
+  vodafoneOpen: boolean;
+  binanceOpen: boolean;
+  egpRatePerUsd: number | undefined;
+}> {
+  const [rollouts, features] = await Promise.all([
+    getRolloutConfig({ fresh: true }),
+    getFeatureConfig(),
+  ]);
+  const wallet = rollouts.egyptWallet;
+  const vodafoneOpen =
+    isEgyptWalletConfigured() && wallet.mode === "everyone" && wallet.percent >= 100;
+  const binanceOpen = isBinancePayConfigured() && features.features.binancePay.state === "on";
+  let egpRatePerUsd: number | undefined;
+  if (vodafoneOpen) {
+    try {
+      egpRatePerUsd = effectiveRate(await createEgyptWalletStore().getSettings()).rate;
+    } catch (error) {
+      console.error("[nudge] couldn't read the day's Vodafone Cash rate", error);
+    }
+  }
+  return { vodafoneOpen, binanceOpen, egpRatePerUsd };
+}
+
+/** A plan's price in whole Egyptian pounds at the day's rate, or null when the rate is not known. */
+function egpPriceOf(tier: string, plan: PlanId, ratePerUsd: number | undefined): number | null {
+  if (ratePerUsd === undefined || (tier !== "A" && tier !== "B")) return null;
+  const view = buildPlanViews(tier, 0, { egpRatePerUsd: ratePerUsd }).find((p) => p.id === plan);
+  const amount = view ? Number(view.egp) : NaN;
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
 }
 
 /**
@@ -887,6 +965,8 @@ export async function sendNudgePreview(options: {
   to: string;
   language: NudgeLanguage;
   origin: string;
+  /** The abandoned-checkout sample only: show the stalled-checkout wording for one of the two other ways to pay. */
+  help?: CheckoutHelp["method"] | null;
 }): Promise<{ status: "sent" | "queued"; detail?: string }> {
   const { kind, to, language, origin } = options;
   const now = new Date();
@@ -909,6 +989,12 @@ export async function sendNudgePreview(options: {
               plan: "3m",
               priceCents: planPriceCents("A", "3m"),
               offer: checkoutOffer(await getLaunchOffer(), now, "3m"),
+              help:
+                options.help === "vodafone"
+                  ? { method: "vodafone", egp: 216 }
+                  : options.help === "binance"
+                    ? { method: "binance" }
+                    : null,
             });
   // A sample goes the same way the real one would, so a preview also proves that route works.
   const result = await sendTemplateEmail(to, content, {

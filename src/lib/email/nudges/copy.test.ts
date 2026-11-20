@@ -132,6 +132,79 @@ test("abandonedCheckoutEmail: with no known plan it is generic and never invents
   assert.equal(/plan \(/.test(email.html), false);
 });
 
+test("abandonedCheckoutEmail with help: says the payment did not complete, offers the other way, invites a reply, in every language", () => {
+  const base = {
+    origin: ORIGIN,
+    displayName: "Sara",
+    plan: "3m",
+    priceCents: 400,
+    offer: { days: 17 },
+  } as const;
+  for (const language of LANGUAGES) {
+    const vodafone = abandonedCheckoutEmail({
+      ...base,
+      language,
+      help: { method: "vodafone", egp: 216 },
+    });
+    const binance = abandonedCheckoutEmail({ ...base, language, help: { method: "binance" } });
+    assert.ok(/فودافون|Vodafone/.test(vodafone.html), `${language} names Vodafone Cash`);
+    assert.ok(vodafone.html.includes("216"), `${language} the plan's price in pounds`);
+    assert.equal(/Binance/.test(vodafone.html), false, `${language} one other way only`);
+    assert.ok(binance.html.includes("Binance Pay"), `${language} binance`);
+    assert.equal(/Vodafone|فودافون/.test(binance.html), false, `${language} one other way only`);
+    for (const email of [vodafone, binance]) {
+      assert.ok(email.html.includes(`${ORIGIN}/upgrade"`), `${language} cta`);
+      assert.ok(email.html.includes("Sara"), `${language} name`);
+      // It invites a reply and does not repeat the plain reminder's offer or price pitch.
+      assert.ok(
+        /ردّ على هذه الرسالة|reply to this email|responde a este correo|yanıtlayın/.test(
+          email.html,
+        ),
+        `${language} reply`,
+      );
+      assert.equal(email.html.includes("17"), false, `${language} no gift days`);
+      assert.equal(email.html.includes("4 دولارات") || email.html.includes("$4"), false, language);
+      assert.equal(FORBIDDEN.test(email.html), false, language);
+      assert.equal(/\{[a-z]+\}/i.test(email.html), false, `${language} unfilled placeholder`);
+      assert.ok(email.text.includes(`${ORIGIN}/upgrade`), `${language} text`);
+    }
+    assert.notEqual(vodafone.subject, binance.subject, language);
+    // A learner without a known pound price still gets the wording, without a figure.
+    const noPrice = abandonedCheckoutEmail({
+      ...base,
+      language,
+      help: { method: "vodafone", egp: null },
+    });
+    assert.equal(
+      /\(\s*(EGP|جنيه)|\d+ (EGP|جنيه)/.test(noPrice.html),
+      false,
+      `${language} no figure`,
+    );
+  }
+});
+
+test("abandonedCheckoutEmail without help is the plain reminder exactly as before", () => {
+  const plain = abandonedCheckoutEmail({
+    origin: ORIGIN,
+    displayName: null,
+    language: "en",
+    plan: "3m",
+    priceCents: 400,
+    offer: null,
+  });
+  const nullHelp = abandonedCheckoutEmail({
+    origin: ORIGIN,
+    displayName: null,
+    language: "en",
+    plan: "3m",
+    priceCents: 400,
+    offer: null,
+    help: null,
+  });
+  assert.equal(plain.html, nullHelp.html);
+  assert.equal(plain.subject, "Your 3-month Premium plan is one step away");
+});
+
 test("abandonedCheckoutEmail: Arabic counts days properly", () => {
   const days = (n: number) =>
     abandonedCheckoutEmail({
