@@ -6,7 +6,9 @@ import { SUPPORT_LOCALES } from "@/lib/i18n/locales";
 import { buildSitemap, sitemapUrl } from "./sitemap";
 
 const ORIGIN = "https://sentencestep.com";
-const urls = (siteUrl = ORIGIN) => buildSitemap(siteUrl).map((entry) => entry.url);
+// These tests are about the marketing pages (landing and legal), so they ask for the sitemap with the public
+// pages left out; what the public pages add when they are open is tested in public-pages.test.ts.
+const urls = (siteUrl = ORIGIN) => buildSitemap(siteUrl, false).map((entry) => entry.url);
 
 test("buildSitemap: the landing and legal pages, unprefixed and in every support locale", () => {
   const expected = [
@@ -40,7 +42,8 @@ test("buildSitemap: nothing from the app, the admin console, the API or the auth
 });
 
 test("buildSitemap: a trailing slash on the site URL changes nothing", () => {
-  assert.deepEqual(buildSitemap(`${ORIGIN}/`), buildSitemap(ORIGIN));
+  assert.deepEqual(buildSitemap(`${ORIGIN}/`, false), buildSitemap(ORIGIN, false));
+  assert.deepEqual(buildSitemap(`${ORIGIN}/`, true), buildSitemap(ORIGIN, true));
 });
 
 test("buildSitemap: another origin is used verbatim", () => {
@@ -50,7 +53,7 @@ test("buildSitemap: another origin is used verbatim", () => {
 });
 
 test("buildSitemap: each page lists every language, x-default is the unprefixed page, and they agree with each other", () => {
-  const entries = buildSitemap(ORIGIN);
+  const entries = buildSitemap(ORIGIN, false);
   for (const entry of entries) {
     const languages = entry.alternates?.languages as Record<string, string> | undefined;
     assert.ok(languages, entry.url);
