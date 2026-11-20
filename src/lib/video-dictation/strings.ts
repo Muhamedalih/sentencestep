@@ -136,6 +136,10 @@ export interface VideoStrings {
   stopsStateFailed: string;
   /** The editor's note on how late this device stops: "{s}" seconds. */
   stopsDeviceLead: string;
+  /** The editor's by-ear offset for this device: label, what it does, and the button that sets it back to zero. */
+  stopsOffsetLabel: string;
+  stopsOffsetHint: string;
+  stopsOffsetZero: string;
 }
 
 const ar: VideoStrings = {
@@ -266,6 +270,10 @@ const ar: VideoStrings = {
   stopsStateFailed: "لم تُحفظ تعديلاتك، ولا يراها غير حسابك.",
   stopsDeviceLead:
     "هذا الجهاز يطلب التوقف قبل نهاية الجملة بـ {s} ثانية ليعوّض تأخره، ويتعلّمها وحده من توقفاته.",
+  stopsOffsetLabel: "تعويض بالأذن",
+  stopsOffsetHint:
+    "لهذا الجهاز فقط وكل الفيديوهات عليه: إن دخل صوت الجملة التالية قبل التوقف فزِد (+)، وإن قُطعت نهاية الجملة فانقص (−). جرّب جملة بزر «جرّب» بعد كل خطوة.",
+  stopsOffsetZero: "صفر",
 };
 
 /** What the one-time rating card after a finished video asks, in the learner's own language (null is English). */
