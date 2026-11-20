@@ -1,13 +1,25 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { HomePageContent } from "@/components/marketing/home-page-content";
 import { isSupportLocale, SUPPORT_LOCALES } from "@/lib/i18n/locales";
+import { homeMetadata } from "@/lib/public-pages/home-metadata";
 
 export function generateStaticParams() {
   return SUPPORT_LOCALES.map((locale) => ({ locale }));
 }
 
 export const dynamicParams = false;
+
+/** The landing page's title and description in its own language, with the canonical address and the language alternates. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return isSupportLocale(locale) ? homeMetadata(locale) : {};
+}
 
 /**
  * Explicit, not left to auto-detection: this route calls no dynamic API and

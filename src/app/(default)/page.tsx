@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
+
 import { HomePageContent } from "@/components/marketing/home-page-content";
+import { homeMetadata } from "@/lib/public-pages/home-metadata";
 
 /**
  * Explicit, not left to auto-detection: this route calls no dynamic API and
@@ -12,6 +15,9 @@ import { HomePageContent } from "@/components/marketing/home-page-content";
  * instead of silently reverting to per-request dynamic rendering.
  */
 export const dynamic = "force-static";
+
+/** Canonical address and the language alternates (the title and description stay the site-wide English ones). */
+export const metadata: Metadata = homeMetadata(null);
 
 /**
  * The unprefixed "/" — statically pre-rendered at build time (see

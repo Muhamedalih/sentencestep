@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SUPABASE_AUTH_COOKIE_PATTERN } from "@/lib/supabase/auth-cookie-pattern";
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "@/lib/i18n/locale-cookie";
 import { isSupportLocale, SUPPORT_LOCALES } from "@/lib/i18n/locales";
+import { isPublicPagePath } from "@/lib/public-pages/paths";
 
 /**
  * Pages an already-authenticated visitor shouldn't land on again. The
@@ -105,11 +106,15 @@ function needsYouTube(pathname: string): boolean {
 
 /**
  * True for "/", "/privacy", "/terms" and every one of their locale-prefixed
- * static siblings ("/ar", "/es/privacy", "/tr/terms", ...) — see
- * buildCsp's `isStaticRoute` param for why this distinction exists.
+ * static siblings ("/ar", "/es/privacy", "/tr/terms", ...), and for the public
+ * pages ("/ar/grammar", "/ar/grammar/for-since", "/ar/about": see
+ * src/lib/public-pages/paths.ts) — see buildCsp's `isStaticRoute` param for why
+ * this distinction exists. A static page missing from this test gets the nonce
+ * policy, and its own scripts are blocked.
  */
 function isStaticMarketingPath(pathname: string): boolean {
   if (MARKETING_STATIC_PATHS.has(pathname)) return true;
+  if (isPublicPagePath(pathname)) return true;
   return SUPPORT_LOCALES.some(
     (locale) =>
       pathname === `/${locale}` ||

@@ -8,7 +8,9 @@ import {
   encodeFirstTouch,
   firstTouchFrom,
   isTikTokBrowser,
+  LANDING_COOKIE,
 } from "@/lib/analytics/attribution";
+import { landingSectionOf } from "@/lib/public-pages/paths";
 
 /**
  * Remembers, once, which link a visitor arrived from (see attribution.ts) so
@@ -48,6 +50,8 @@ export function FirstTouchCookie() {
       });
       const secure = window.location.protocol === "https:" ? "; secure" : "";
       document.cookie = `${ATTRIBUTION_COOKIE}=${encodeFirstTouch(touch)}; path=/; max-age=${ATTRIBUTION_COOKIE_MAX_AGE}; samesite=lax${secure}`;
+      // Which part of the site this first page was, beside it (see LANDING_COOKIE): the public pages' sign-ups are read per kind of page.
+      document.cookie = `${LANDING_COOKIE}=${landingSectionOf(window.location.pathname)}; path=/; max-age=${ATTRIBUTION_COOKIE_MAX_AGE}; samesite=lax${secure}`;
     } catch {
       // Cookies blocked: nothing is recorded and nothing else is affected.
     }

@@ -1,6 +1,10 @@
 import { cookies, headers } from "next/headers";
 
-import { ATTRIBUTION_COOKIE, attributionProperties } from "@/lib/analytics/attribution";
+import {
+  ATTRIBUTION_COOKIE,
+  LANDING_COOKIE,
+  attributionProperties,
+} from "@/lib/analytics/attribution";
 import { resolvePricingCountry } from "@/lib/billing/geo-pricing";
 import { FIRST_RUN_COOKIE, parseFirstRunCookie } from "@/lib/first-run/variant";
 import { IN_APP_BUCKET_COOKIE, parseBucket } from "@/lib/in-app-strip/strip";
@@ -59,6 +63,7 @@ async function requestPropertiesFor(name: AnalyticsEventName): Promise<Record<st
     const properties: Record<string, string> = attributed
       ? attributionProperties({
           cookie: cookieStore.get(ATTRIBUTION_COOKIE)?.value,
+          landing: cookieStore.get(LANDING_COOKIE)?.value,
           userAgent: requestHeaders.get("user-agent"),
           country: resolvePricingCountry(requestHeaders).country,
         })

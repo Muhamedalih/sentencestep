@@ -1,5 +1,6 @@
 import { FreeCta } from "@/components/marketing/free-cta";
 import { FreeExperience } from "@/components/marketing/free-experience";
+import { JsonLd } from "@/components/public-pages/json-ld";
 import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { ModeSection } from "@/components/marketing/mode-section";
@@ -9,6 +10,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { fallbackDictionary, getDictionary } from "@/lib/i18n/dictionary";
 import type { SupportLocale } from "@/lib/i18n/locales";
+import { siteGraph } from "@/lib/public-pages/json-ld";
 
 /**
  * The actual homepage markup, shared by both marketing root layouts (see
@@ -33,6 +35,7 @@ export function HomePageContent({ locale }: { locale: SupportLocale | null }) {
 
   return (
     <div className="flex min-h-svh flex-col">
+      <JsonLd data={siteGraph()} />
       <SiteHeader />
       <main className="flex-1">
         <Hero isAuthenticated={false} />
