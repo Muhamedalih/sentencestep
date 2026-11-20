@@ -43,7 +43,7 @@ test("slugs: every rule has a unique, non-empty, lower-case ASCII slug that lead
 
 test("articles: each one belongs to a real rule and has six translated examples in order", () => {
   const ids = Object.keys(RULE_ARTICLES);
-  assert.ok(ids.length >= 12);
+  assert.equal(ids.length, 34);
   for (const id of ids) {
     assert.ok(ruleById(id), `${id} is not a rule of the course`);
     const teach = teachFor(id);
