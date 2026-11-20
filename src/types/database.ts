@@ -223,7 +223,7 @@ export interface Database {
         Row: {
           /** Always "library": there is one arrangement. */
           id: string;
-          /** [{ kind, ids }] — checked again on read by sanitizeArrangement (src/lib/video-dictation/arrange.ts), never trusted as-is. */
+          /** [{ kind, ids }], plus one { kind: "removed", ids } entry for the deleted videos — read back by decodeStored and checked again by sanitizeArrangement (src/lib/video-dictation/arrange.ts), never trusted as-is. */
           sections: unknown;
           updated_at: string;
           updated_by: string | null;

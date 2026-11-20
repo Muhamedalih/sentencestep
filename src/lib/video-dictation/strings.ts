@@ -94,6 +94,11 @@ export interface VideoStrings {
   arrangeReset: string;
   arrangeResetConfirm: string;
   arrangeEmptySection: string;
+  /** Deleting a video in the arrange mode: the trash button's label ("{title}" follows), the list of deleted videos, restoring one. */
+  removeVideo: string;
+  removedTitle: string;
+  removedHint: string;
+  restoreVideo: string;
   moveUp: string;
   moveDown: string;
   moveSectionUp: string;
@@ -212,13 +217,19 @@ const ar: VideoStrings = {
   shelfPrevious: "السابق",
   shelfNext: "التالي",
   arrange: "ترتيب الفيديوهات",
-  arrangeHint: "اسحب الفيديو لتغيير مكانه، أو استعمل الأسهم والقائمة.",
+  arrangeHint:
+    "اسحب الفيديو لتغيير مكانه، أو استعمل الأسهم والقائمة. زر السلة يحذف الفيديو من الموقع عند الحفظ.",
   arrangeSave: "حفظ الترتيب",
   arrangeSaving: "جارٍ الحفظ…",
   arrangeCancel: "إلغاء",
   arrangeReset: "العودة للترتيب الافتراضي",
-  arrangeResetConfirm: "ترجع الأقسام والفيديوهات إلى ترتيبها الافتراضي، ويُحذف ترتيبك المحفوظ؟",
+  arrangeResetConfirm:
+    "ترجع الأقسام والفيديوهات إلى ترتيبها الافتراضي، ويُحذف ترتيبك المحفوظ؟ (الفيديوهات المحذوفة تبقى محذوفة.)",
   arrangeEmptySection: "لا توجد فيديوهات هنا. انقل فيديو إليه من قائمة القسم.",
+  removeVideo: "حذف الفيديو",
+  removedTitle: "فيديوهات محذوفة",
+  removedHint: "لا تظهر لأحد بعد الحفظ. اضغط «استرجاع» لتعيد الفيديو إلى قسمه.",
+  restoreVideo: "استرجاع",
   moveUp: "أعلى",
   moveDown: "أسفل",
   moveSectionUp: "نقل القسم للأعلى",

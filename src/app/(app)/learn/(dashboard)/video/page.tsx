@@ -38,6 +38,7 @@ export default async function VideoLibraryPage() {
         <VideoLibraryAdmin
           sections={sections}
           defaultSections={arrangeVideoLessons(lessons, null)}
+          removed={saved?.removed ?? []}
           cards={cards}
           locale={locale}
           shelves={features.rollouts.videoShelves}

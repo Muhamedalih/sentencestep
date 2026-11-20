@@ -6,12 +6,17 @@ import { videoKinds } from "@/data/videos/kinds";
 
 import {
   arrangeLessons,
+  decodeStored,
+  encodeStored,
   flattenSections,
+  homeKind,
   moveVideo,
+  sameIds,
   sameSections,
   sanitizeArrangement,
   shiftSection,
   shiftVideo,
+  withoutVideo,
 } from "./arrange";
 import type { VideoSection } from "./arrange";
 import { arrangeVideoLessons } from "./content";
@@ -585,6 +590,105 @@ test("arrange: what a browser sends is checked, and what is wrong is refused who
   ]) {
     assert.equal(sanitizeArrangement(bad, known), null, JSON.stringify(bad).slice(0, 80));
   }
+});
+
+test("delete: a deleted video is in no section, for a saved order and for the default order alike", () => {
+  const lessons = [bare("a", "A2", 30), bare("b", "B1", 30), bare("c", "B1", 40)];
+  const kinds = { a: "comedy", b: "comedy", c: "animals" } as const;
+  // With an order saved: the deleted id is skipped wherever it is listed, the others keep their places.
+  const saved = arrangeLessons(lessons, kinds, {
+    sections: [{ kind: "comedy", ids: ["b", "a"] }],
+    removed: ["a"],
+  });
+  assert.deepEqual(idsOf(saved, "comedy"), ["b"]);
+  assert.deepEqual(flattenSections(saved).sort(), ["b", "c"]);
+  // With no order saved (only the deleted list): every other video is placed by default, the deleted one is not.
+  const bareList = arrangeLessons(lessons, kinds, { sections: [], removed: ["b"] });
+  assert.deepEqual(idsOf(bareList, "comedy"), ["a"]);
+  assert.deepEqual(flattenSections(bareList).sort(), ["a", "c"]);
+  // "Next video" never lands on a deleted video.
+  assert.equal(flattenSections(bareList).includes("b"), false);
+  // Nothing deleted (or the field missing) changes nothing.
+  assert.deepEqual(
+    arrangeLessons(lessons, kinds, { sections: [], removed: [] }),
+    arrangeLessons(lessons, kinds, null),
+  );
+});
+
+test("delete: what a browser sends as the deleted list is checked like the rest", () => {
+  const known = new Set(["a", "b", "c"]);
+  // Unknown and repeated ids are dropped; a deleted video is taken out of every section; the list is left out when empty.
+  assert.deepEqual(
+    sanitizeArrangement(
+      { sections: [{ kind: "comedy", ids: ["a", "b"] }], removed: ["b", "gone", "b", "c"] },
+      known,
+    ),
+    { sections: [{ kind: "comedy", ids: ["a"] }], removed: ["b", "c"] },
+  );
+  assert.deepEqual(
+    sanitizeArrangement({ sections: [{ kind: "comedy", ids: ["a"] }], removed: [] }, known),
+    { sections: [{ kind: "comedy", ids: ["a"] }] },
+  );
+  assert.deepEqual(
+    sanitizeArrangement({ sections: [{ kind: "comedy", ids: ["a"] }], removed: null }, known),
+    { sections: [{ kind: "comedy", ids: ["a"] }] },
+  );
+  for (const bad of [
+    { sections: [], removed: "a" },
+    { sections: [], removed: [1] },
+    { sections: [], removed: Array.from({ length: 1001 }, () => "a") },
+  ]) {
+    assert.equal(sanitizeArrangement(bad, known), null, JSON.stringify(bad).slice(0, 60));
+  }
+});
+
+test("delete: the deleted list is stored inside the one list of sections and comes back out of it", () => {
+  const known = new Set(["a", "b", "c"]);
+  const arrangement = {
+    sections: [
+      { kind: "comedy" as const, ids: ["a"] },
+      { kind: "animals" as const, ids: ["c"] },
+    ],
+    removed: ["b"],
+  };
+  const stored = encodeStored(arrangement);
+  assert.deepEqual(stored, [...arrangement.sections, { kind: "removed", ids: ["b"] }]);
+  assert.deepEqual(sanitizeArrangement(decodeStored(stored), known), arrangement);
+  // Nothing deleted: the stored list is exactly the sections, as it was before deleting existed.
+  assert.deepEqual(encodeStored({ sections: arrangement.sections }), arrangement.sections);
+  assert.deepEqual(sanitizeArrangement(decodeStored(arrangement.sections), known), {
+    sections: arrangement.sections,
+  });
+  // Only the deleted videos (a reset that keeps them) reads as "default order, these are deleted".
+  assert.deepEqual(
+    sanitizeArrangement(decodeStored(encodeStored({ sections: [], removed: ["b"] })), known),
+    {
+      sections: [],
+      removed: ["b"],
+    },
+  );
+  // Anything that is not a list is handed on so the check refuses it, and a broken deleted entry is refused whole.
+  assert.equal(sanitizeArrangement(decodeStored("comedy"), known), null);
+  assert.equal(sanitizeArrangement(decodeStored(null), known), null);
+  assert.equal(sanitizeArrangement(decodeStored([{ kind: "removed", ids: "b" }]), known), null);
+});
+
+test("delete: the screen's helpers take a video out, bring it back to its default section, and compare", () => {
+  const start: VideoSection[] = [
+    { kind: "comedy", ids: ["a", "b"] },
+    { kind: "animals", ids: ["c"] },
+  ];
+  assert.deepEqual(withoutVideo(start, "b"), [
+    { kind: "comedy", ids: ["a"] },
+    { kind: "animals", ids: ["c"] },
+  ]);
+  assert.deepEqual(withoutVideo(start, "zzz"), start);
+  assert.deepEqual(start[0]?.ids, ["a", "b"]);
+  assert.equal(homeKind(start, "c"), "animals");
+  assert.equal(homeKind(start, "unknown"), "other");
+  assert.equal(sameIds(["a", "b"], ["b", "a"]), true);
+  assert.equal(sameIds(["a"], ["a", "b"]), false);
+  assert.equal(sameIds([], []), true);
 });
 
 test("arrange: moving a video changes only that video's place", () => {

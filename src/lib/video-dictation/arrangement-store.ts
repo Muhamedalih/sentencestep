@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/service-role";
 
-import { sanitizeArrangement } from "./arrange";
+import { decodeStored, sanitizeArrangement } from "./arrange";
 import type { VideoArrangement } from "./arrange";
 import { getVideoLessons } from "./content";
 
@@ -50,7 +50,10 @@ export async function getVideoArrangement(
   try {
     const sections = options.fresh ? await readSections() : await readSectionsCached();
     if (sections === null || sections === undefined) return null;
-    return sanitizeArrangement({ sections }, new Set(getVideoLessons().map((lesson) => lesson.id)));
+    return sanitizeArrangement(
+      decodeStored(sections),
+      new Set(getVideoLessons().map((lesson) => lesson.id)),
+    );
   } catch (error) {
     console.error("[video] couldn't read the saved arrangement; the default order is used", error);
     return null;

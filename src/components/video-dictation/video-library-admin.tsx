@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowUpDown, Check, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
+import {
+  ArrowUpDown,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import type { DragEvent, ReactNode } from "react";
@@ -8,7 +16,15 @@ import type { DragEvent, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { ActionResult } from "@/lib/admin/content-actions";
 import type { SupportLocale } from "@/lib/i18n/locales";
-import { moveVideo, sameSections, shiftSection, shiftVideo } from "@/lib/video-dictation/arrange";
+import {
+  homeKind,
+  moveVideo,
+  sameIds,
+  sameSections,
+  shiftSection,
+  shiftVideo,
+  withoutVideo,
+} from "@/lib/video-dictation/arrange";
 import type { VideoSection } from "@/lib/video-dictation/arrange";
 import {
   resetVideoArrangementAction,
@@ -39,13 +55,18 @@ interface DropAt {
  * mode («ترتيب الفيديوهات»). In it every video is a row that can be dragged (or moved with the arrows)
  * inside its section, moved to another section from its list, and every section can move up or down;
  * «حفظ الترتيب» stores the result for everyone (saveVideoArrangementAction, Admin-only again on the
- * server), «العودة للترتيب الافتراضي» deletes it. Only this component and its two server actions know
- * about arranging: the page hands it the sections already arranged, the default arrangement (what a
- * reset goes back to) and slim card data, never the videos' sentences.
+ * server), «العودة للترتيب الافتراضي» deletes it. The trash button of a row deletes the video once the
+ * arrangement is saved: it moves to a list of deleted videos at the bottom, where «استرجاع» puts it back
+ * into its section, and «إلغاء» undoes all of it (the video file stays in the code, so a deleted video can
+ * always come back). Only this component and its two server actions know about arranging: the page hands
+ * it the sections already arranged, the videos already deleted, the default arrangement (what a reset
+ * goes back to) and slim card data, never the videos' sentences.
  */
 interface LibraryProps {
   sections: readonly VideoSection[];
   defaultSections: readonly VideoSection[];
+  /** The videos an Admin deleted earlier: in no section, shown only in the arrange mode (to restore). */
+  removed?: readonly string[];
   cards: Readonly<Record<string, VideoCardData>>;
   locale: SupportLocale | null;
   /** The "videoShelves" permission: the shelves look, and its section names in the arrange mode too. */
@@ -56,7 +77,7 @@ interface LibraryProps {
 
 /** What the arrange mode asks of the server (both are Admin-only there): kept apart so the screen can be tried without a database. */
 export interface ArrangeActions {
-  save: (input: { sections: VideoSection[] }) => Promise<ActionResult>;
+  save: (input: { sections: VideoSection[]; removed: string[] }) => Promise<ActionResult>;
   reset: () => Promise<ActionResult>;
 }
 
@@ -73,6 +94,7 @@ export function VideoLibraryAdmin(props: LibraryProps) {
 export function VideoLibraryArranger({
   sections,
   defaultSections,
+  removed = [],
   cards,
   locale,
   shelves = false,
@@ -86,6 +108,7 @@ export function VideoLibraryArranger({
   const [pending, startTransition] = useTransition();
   const [arranging, setArranging] = useState(false);
   const [draft, setDraft] = useState<VideoSection[]>([]);
+  const [removedDraft, setRemovedDraft] = useState<string[]>([]);
   const [message, setMessage] = useState<Message | null>(null);
   // The video being dragged: the ref is known the instant the drag starts (the drop handlers read it), the
   // state follows a moment later to dim the row without disturbing the drag image.
@@ -97,13 +120,17 @@ export function VideoLibraryArranger({
   const [saved, setSaved] = useState<{
     base: readonly VideoSection[];
     value: readonly VideoSection[];
+    removed: readonly string[];
   } | null>(null);
 
-  const shown = saved && saved.base === sections ? saved.value : sections;
-  const changed = !sameSections(draft, shown);
+  const current = saved && saved.base === sections ? saved : null;
+  const shown = current ? current.value : sections;
+  const shownRemoved = current ? current.removed : removed;
+  const changed = !sameSections(draft, shown) || !sameIds(removedDraft, shownRemoved);
 
   function startArranging() {
     setDraft(shown.map((section) => ({ kind: section.kind, ids: [...section.ids] })));
+    setRemovedDraft([...shownRemoved]);
     setMessage(null);
     setArranging(true);
   }
@@ -127,7 +154,11 @@ export function VideoLibraryArranger({
   }
 
   /** Runs one of the two server actions; a request that fails on the way (no network) shows the same failure message as a refusal. */
-  function run(action: () => Promise<ActionResult>, after: readonly VideoSection[], done: string) {
+  function run(
+    action: () => Promise<ActionResult>,
+    after: { sections: readonly VideoSection[]; removed: readonly string[] },
+    done: string,
+  ) {
     startTransition(async () => {
       let result: ActionResult;
       try {
@@ -139,7 +170,7 @@ export function VideoLibraryArranger({
         setMessage({ kind: "error", text: result.error });
         return;
       }
-      setSaved({ base: sections, value: after });
+      setSaved({ base: sections, value: after.sections, removed: after.removed });
       setMessage({ kind: "success", text: result.success ?? done });
       stopArranging();
       router.refresh();
@@ -147,12 +178,31 @@ export function VideoLibraryArranger({
   }
 
   function save() {
-    run(() => actions.save({ sections: draft }), draft, strings.arrangeSaved);
+    run(
+      () => actions.save({ sections: draft, removed: removedDraft }),
+      { sections: draft, removed: removedDraft },
+      strings.arrangeSaved,
+    );
   }
 
   function reset() {
     if (!window.confirm(strings.arrangeResetConfirm)) return;
-    run(() => actions.reset(), defaultSections, strings.arrangeResetDone);
+    // The order goes back to the default; the deleted videos stay deleted (and out of the sections).
+    const kept = defaultSections.map((section) => ({
+      kind: section.kind,
+      ids: section.ids.filter((id) => !shownRemoved.includes(id)),
+    }));
+    run(() => actions.reset(), { sections: kept, removed: shownRemoved }, strings.arrangeResetDone);
+  }
+
+  function removeVideo(id: string) {
+    setDraft((current) => withoutVideo(current, id));
+    setRemovedDraft((current) => (current.includes(id) ? current : [...current, id]));
+  }
+
+  function restoreVideo(id: string) {
+    setDraft((current) => moveVideo(current, id, homeKind(defaultSections, id)));
+    setRemovedDraft((current) => current.filter((candidate) => candidate !== id));
   }
 
   function onDragOverSection(event: DragEvent<HTMLElement>, kind: VideoKind) {
@@ -311,10 +361,26 @@ export function VideoLibraryArranger({
                 onDragEnd: endDrag,
                 onShift: (id, delta) => setDraft((current) => shiftVideo(current, id, delta)),
                 onMoveTo: (id, kind) => setDraft((current) => moveVideo(current, id, kind)),
+                onRemove: removeVideo,
               })}
             </div>
           </SectionBlock>
         ))}
+        {removedDraft.length > 0 && (
+          <SectionBlock title={strings.removedTitle} count={removedDraft.length}>
+            <p className="text-muted-foreground -mt-1 mb-3 text-sm" dir="auto">
+              {strings.removedHint}
+            </p>
+            <div className="flex flex-col gap-2">
+              {removedDraft.map((id) => {
+                const card = cards[id];
+                return card ? (
+                  <RemovedRow key={id} card={card} strings={strings} onRestore={restoreVideo} />
+                ) : null;
+              })}
+            </div>
+          </SectionBlock>
+        )}
       </div>
     </div>
   );
@@ -325,6 +391,7 @@ interface RowHandlers {
   onDragEnd: () => void;
   onShift: (id: string, delta: -1 | 1) => void;
   onMoveTo: (id: string, kind: VideoKind) => void;
+  onRemove: (id: string) => void;
 }
 
 /** The rows of one section, with the drop line where a dragged video would land. */
@@ -471,7 +538,55 @@ function ArrangeRow({
           disabled={last}
           onClick={() => handlers.onShift(card.id, 1)}
         />
+        <button
+          type="button"
+          aria-label={`${strings.removeVideo}: ${card.title}`}
+          title={strings.removeVideo}
+          onClick={() => handlers.onRemove(card.id)}
+          className="border-border text-muted-foreground hover:border-danger/50 hover:bg-danger/10 hover:text-danger focus-visible:ring-ring flex size-8 items-center justify-center rounded-[10px] border transition-colors outline-none focus-visible:ring-2 pointer-coarse:size-11"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </button>
       </div>
+    </div>
+  );
+}
+
+/** A deleted video in the arrange mode: dimmed, with the button that puts it back. */
+function RemovedRow({
+  card,
+  strings,
+  onRestore,
+}: {
+  card: VideoCardData;
+  strings: VideoStrings;
+  onRestore: (id: string) => void;
+}) {
+  return (
+    <div
+      data-removed-row={card.id}
+      className="border-border bg-card flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-dashed py-2 pr-3 pl-2"
+      dir="ltr"
+    >
+      <div className="bg-muted aspect-video w-24 shrink-0 overflow-hidden rounded-[8px] opacity-50 max-sm:w-20">
+        {/* eslint-disable-next-line @next/next/no-img-element -- YouTube's own thumbnail, served by YouTube and never stored here */}
+        <img
+          src={thumbnailUrl(card.youtubeId)}
+          alt=""
+          width={320}
+          height={180}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="min-w-0 flex-1 basis-40 opacity-70">
+        <p className="truncate text-[15px] leading-5 font-semibold">{card.title}</p>
+        <p className="text-muted-foreground truncate text-[13px] leading-[18px]">{card.channel}</p>
+      </div>
+      <Button size="sm" variant="outline" onClick={() => onRestore(card.id)}>
+        <RotateCcw aria-hidden="true" />
+        <span dir="auto">{strings.restoreVideo}</span>
+      </Button>
     </div>
   );
 }
