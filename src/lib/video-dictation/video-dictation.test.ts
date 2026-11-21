@@ -47,11 +47,12 @@ import {
 } from "./news";
 import {
   isSameVideo,
-  APPLE_START_LEAD_SECONDS,
+  APPLE_AUDIO_AHEAD_SECONDS,
   initialLead,
   isAppleWebKit,
   MAX_LEAD_SECONDS,
   nextLead,
+  platformBias,
   nextRate,
   isSilentGap,
   replayPosition,
@@ -260,8 +261,8 @@ test("nextLead: a late stop asks for an earlier one, an early stop for a later o
 });
 
 test("nextLead: a slow browser that stops 0.6 s late is caught within three stops", () => {
-  let lead = APPLE_START_LEAD_SECONDS;
-  for (let i = 0; i < 3; i++) lead = nextLead(lead, 10 - lead + 0.6, 10);
+  let lead = START_LEAD_SECONDS;
+  for (let i = 0; i < 4; i++) lead = nextLead(lead, 10 - lead + 0.6, 10);
   assert.ok(Math.abs(lead - 0.6) < 0.05, `settled at ${lead}`);
 });
 
@@ -287,14 +288,23 @@ test("isAppleWebKit: Safari, any browser on an iPhone or iPad, and an iPad askin
   assert.equal(isAppleWebKit(firefox, 0), false);
 });
 
-test("initialLead: what the device learned before wins, else the start for its kind of browser", () => {
-  assert.equal(initialLead(null, false), START_LEAD_SECONDS);
-  assert.equal(initialLead(null, true), APPLE_START_LEAD_SECONDS);
-  assert.equal(initialLead(0.31, true), 0.31);
-  assert.equal(initialLead(0, true), 0);
-  assert.equal(initialLead(5, false), MAX_LEAD_SECONDS);
-  assert.equal(initialLead(Number.NaN, false), START_LEAD_SECONDS);
-  assert.equal(initialLead(-1, true), APPLE_START_LEAD_SECONDS);
+test("initialLead: what the device learned before wins, else the start", () => {
+  assert.equal(initialLead(null), START_LEAD_SECONDS);
+  assert.equal(initialLead(0.31), 0.31);
+  assert.equal(initialLead(0), 0);
+  assert.equal(initialLead(5), MAX_LEAD_SECONDS);
+  assert.equal(initialLead(Number.NaN), START_LEAD_SECONDS);
+  assert.equal(initialLead(-1), START_LEAD_SECONDS);
+});
+
+test("platformBias: Apple's sound runs ahead of the player's clock, so its stops are always asked earlier; nobody else's", () => {
+  assert.equal(platformBias(true), APPLE_AUDIO_AHEAD_SECONDS);
+  assert.equal(platformBias(false), 0);
+  // The learned delay is measured against the end minus the bias, so a stop that rests on the asked time reads as no delay.
+  const end = 20;
+  const asked = end - platformBias(true) - START_LEAD_SECONDS;
+  const learned = nextLead(START_LEAD_SECONDS, asked + 0.03, end - platformBias(true));
+  assert.ok(Math.abs(learned - START_LEAD_SECONDS) < 1e-9);
 });
 
 test("device report: a good one is kept, rounded and bounded; a malformed one is refused", () => {

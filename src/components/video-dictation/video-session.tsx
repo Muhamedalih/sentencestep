@@ -37,6 +37,7 @@ import { watchUrl } from "@/lib/video-dictation/content";
 import {
   initialLead,
   isAppleWebKit,
+  platformBias,
   isSameVideo,
   isSilentGap,
   LEAD_STORAGE_KEY,
@@ -165,6 +166,8 @@ export function VideoSession({
   // The Admin's own offset for this device, by ear (set in the editor), added to the learned delay.
   const [offset, setOffset] = useState(0);
   const offsetRef = useRef(0);
+  // The fixed lead of this browser's kind: Apple's sound runs ahead of the player's clock (see APPLE_AUDIO_AHEAD_SECONDS).
+  const biasRef = useRef(0);
   // What fired the stop that has just been made, until the video's resting place is read.
   const pendingStopRef = useRef<{
     end: number;
@@ -254,7 +257,7 @@ export function VideoSession({
           if (silent === null) silent = isSilentGap(startSeconds, time);
           setQuiet(silent && time < startSeconds);
         }
-        const lead = leadRef.current + offsetRef.current;
+        const lead = leadRef.current + offsetRef.current + biasRef.current;
         const tick = segmentTick(sawBefore, time, stopTime(startSeconds, endSeconds, lead));
         sawBefore = tick.sawBefore;
         if (!tick.stop) return;
@@ -340,7 +343,7 @@ export function VideoSession({
             });
           }
           // The Admin's own offset is a stop asked for earlier on purpose, so the delay is measured against the end minus it.
-          const learned = nextLead(leadRef.current, rest, end - offsetRef.current);
+          const learned = nextLead(leadRef.current, rest, end - offsetRef.current - biasRef.current);
           leadRef.current = learned;
           setDeviceLead(learned);
           try {
@@ -446,7 +449,8 @@ export function VideoSession({
     } catch {
       // Storage is blocked: the start for the browser's kind is used.
     }
-    const lead = initialLead(stored, isAppleWebKit(navigator.userAgent, navigator.maxTouchPoints));
+    const lead = initialLead(stored);
+    biasRef.current = platformBias(isAppleWebKit(navigator.userAgent, navigator.maxTouchPoints));
     leadRef.current = lead;
     setDeviceLead(lead);
     setSendsReport(
