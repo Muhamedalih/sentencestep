@@ -80,6 +80,11 @@ export function generatedFishAudioClipPath(voiceId: string): string {
   return `generated/fish-audio/${voiceId}/${randomUUID()}.mp3`;
 }
 
+/** Same bucket, a separate `generated/voice-studio/` prefix — clips made on the owner's own PC by the local VoiceStudio app (scripts/voice-studio/fill.ts) and uploaded; nothing on the server ever synthesizes them. */
+export function generatedVoiceStudioClipPath(voiceId: string): string {
+  return `generated/voice-studio/${voiceId}/${randomUUID()}.mp3`;
+}
+
 /** The path for a voice's one admin-preview sample — deterministic (not UUID-suffixed) so re-seeding the same voice overwrites its old sample instead of accumulating orphans. */
 export function samplePath(voiceId: string): string {
   return `samples/${voiceId}.mp3`;
