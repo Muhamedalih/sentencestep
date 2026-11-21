@@ -3,17 +3,17 @@
 import { useMemo, useRef } from "react";
 
 import type { StopSample } from "@/lib/video-dictation/device-diag";
-import { MAX_STOPS_PER_REPORT } from "@/lib/video-dictation/device-diag";
+import { MAX_PLAY_SAMPLES, MAX_STOPS_PER_REPORT } from "@/lib/video-dictation/device-diag";
 import { reportVideoDeviceAction } from "@/lib/video-dictation/device-report-actions";
 import { isAppleWebKit } from "@/lib/video-dictation/segments";
 
 /** The report goes out after this many stops of the visit (and once more when the video is finished). */
-const SEND_AT_STOP = new Set([3, 6, 10, 16, 24, 32]);
+const SEND_AT_STOP = new Set([3, 6, 10, 16]);
 
 /**
- * Collects, for an Admin only, how the video's stops land on this device (see DeviceReport) and sends it
- * to the audit log a few times per video. This is how a tablet's late stop is measured instead of guessed:
- * the numbers are read from the log after the Admin has played a video on that device.
+ * Collects how the video's stops land on this device (see DeviceReport) and sends it as an analytics
+ * event a few times per video, when `enabled` (every Apple browser, an Admin's device and one visit in
+ * ten of the others). This is how a tablet's late stop is measured instead of guessed.
  */
 export function useDeviceReport({
   enabled,
@@ -29,7 +29,9 @@ export function useDeviceReport({
 }) {
   const data = useRef({
     stops: [] as StopSample[],
+    playMs: [] as number[],
     total: 0,
+    sent: 0,
     adReadings: 0,
     needsTaps: 0,
     seenDuration: null as number | null,
@@ -42,6 +44,9 @@ export function useDeviceReport({
       if (!enabled) return;
       const state = data.current;
       if (state.stops.length === 0 && state.adReadings === 0 && state.needsTaps === 0) return;
+      // Nothing new since the last report: nothing to say.
+      if (state.sent === state.total + state.adReadings + state.needsTaps) return;
+      state.sent = state.total + state.adReadings + state.needsTaps;
       const { learnedLead, offset } = context.current();
       reportVideoDeviceAction({
         videoId,
@@ -54,6 +59,7 @@ export function useDeviceReport({
         seenDuration: state.seenDuration,
         adReadings: state.adReadings,
         needsTaps: state.needsTaps,
+        playMs: state.playMs.slice(-MAX_PLAY_SAMPLES),
         stops: state.stops.slice(-MAX_STOPS_PER_REPORT),
       }).catch(() => undefined);
     };
@@ -66,6 +72,12 @@ export function useDeviceReport({
         if (state.stops.length > MAX_STOPS_PER_REPORT) state.stops.shift();
         state.total += 1;
         if (SEND_AT_STOP.has(state.total)) send();
+      },
+      /** The player said "playing" this many ms after the page asked it to play. */
+      played(ms: number) {
+        if (!enabled) return;
+        data.current.playMs.push(ms);
+        if (data.current.playMs.length > MAX_PLAY_SAMPLES) data.current.playMs.shift();
       },
       /** A reading was taken for an ad because the player's length was not the video's: what it said. */
       ad(playerDuration: number) {

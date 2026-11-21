@@ -7,6 +7,7 @@ import type { StripPage, StripPlatform } from "@/lib/in-app-strip/strip";
 import type { OpenerStep, OpenerVariant } from "@/lib/opener/shared";
 import type { SessionEndAction } from "@/lib/session-end/action-names";
 import type { WordsRoundSource } from "@/lib/words-round/round";
+import type { DeviceReport } from "@/lib/video-dictation/device-diag";
 import type { LearningMode } from "@/types/content";
 
 // --- The analytics event catalog. ---
@@ -273,6 +274,12 @@ export type AnalyticsEvent =
         assisted: number;
         missed: number;
       };
+    }
+  | {
+      name: "VIDEO_DEVICE_REPORT";
+      category: "ENGAGEMENT";
+      /** How the stops of a «فيديو» lesson landed on this device (see DeviceReport): per stop, where it was asked for, what the page read, where the video came to rest, how long the player took to pause, and how stale its estimate of the time got; how long it took to say "playing"; the length it reported for the video; taps needed to go on. Sent by every Apple browser (where a late stop is reported), by an Admin's device and by one visit in ten of the others, at the 3rd, 6th and 10th stop and at the end. Numbers only, plus the browser's user-agent text cut to 200 characters. Temporary, to find why a stop is late on an iPad: read it, fix the cause, then remove it. */
+      properties: DeviceReport;
     };
 
 export type AnalyticsEventName = AnalyticsEvent["name"];

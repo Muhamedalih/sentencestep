@@ -23,10 +23,12 @@ import { arrangeVideoLessons } from "./content";
 import {
   clampOffset,
   MAX_OFFSET_SECONDS,
+  MAX_PLAY_SAMPLES,
   MAX_STOPS_PER_REPORT,
   MIN_OFFSET_SECONDS,
   overshootOf,
   sanitizeDeviceReport,
+  sendsDeviceReport,
 } from "./device-diag";
 import {
   meaningInSentence,
@@ -296,6 +298,17 @@ test("initialLead: what the device learned before wins, else the start for its k
 });
 
 test("device report: a good one is kept, rounded and bounded; a malformed one is refused", () => {
+  const stop = {
+    end: 3.257,
+    lead: 0.4,
+    trigger: 2.87123,
+    event: 3.1,
+    rest: 3.4712,
+    maxGapMs: 42.6,
+    pauseMs: 88.4,
+    devPlus: 0.04,
+    devMinus: -0.31,
+  };
   const good = {
     videoId: "pistol-shrimp",
     userAgent: "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) Safari/604.1",
@@ -307,25 +320,49 @@ test("device report: a good one is kept, rounded and bounded; a malformed one is
     seenDuration: null,
     adReadings: 0,
     needsTaps: 1,
-    stops: [{ end: 3.257, lead: 0.4, trigger: 2.87123, rest: 3.4712, maxGapMs: 42.6 }],
+    playMs: [210, 5000.4],
+    stops: [stop],
   };
   const clean = sanitizeDeviceReport(good);
   assert.ok(clean);
   assert.equal(clean.learnedLead, 0.312);
   assert.equal(clean.expectedDuration, 54);
-  assert.deepEqual(clean.stops[0], { end: 3.26, lead: 0.4, trigger: 2.871, rest: 3.471, maxGapMs: 43 });
+  assert.deepEqual(clean.playMs, [210, 5000]);
+  assert.deepEqual(clean.stops[0], {
+    end: 3.26,
+    lead: 0.4,
+    trigger: 2.871,
+    event: 3.1,
+    rest: 3.471,
+    maxGapMs: 43,
+    pauseMs: 88,
+    devPlus: 0.04,
+    devMinus: -0.31,
+  });
   assert.equal(overshootOf(clean.stops[0]!), 0.211);
 
-  const many = { ...good, stops: Array.from({ length: 60 }, () => good.stops[0]) };
+  const many = { ...good, stops: Array.from({ length: 60 }, () => stop) };
   assert.equal(sanitizeDeviceReport(many)?.stops.length, MAX_STOPS_PER_REPORT);
+  const manyPlays = { ...good, playMs: Array.from({ length: 60 }, () => 100) };
+  assert.equal(sanitizeDeviceReport(manyPlays)?.playMs.length, MAX_PLAY_SAMPLES);
   assert.equal(sanitizeDeviceReport({ ...good, userAgent: "x".repeat(500) })?.userAgent.length, 200);
+  assert.equal(sanitizeDeviceReport({ ...good, stops: [{ ...stop, devPlus: 900 }] })?.stops[0]?.devPlus, 120);
 
   assert.equal(sanitizeDeviceReport(null), null);
   assert.equal(sanitizeDeviceReport({ ...good, videoId: "" }), null);
   assert.equal(sanitizeDeviceReport({ ...good, learnedLead: Number.NaN }), null);
   assert.equal(sanitizeDeviceReport({ ...good, seenDuration: "54" }), null);
   assert.equal(sanitizeDeviceReport({ ...good, stops: "none" }), null);
+  assert.equal(sanitizeDeviceReport({ ...good, playMs: [Number.NaN] }), null);
   assert.equal(sanitizeDeviceReport({ ...good, stops: [{ end: 1, lead: 0, trigger: 1 }] }), null);
+});
+
+test("device report: every Apple browser sends it, an Admin's device too, and one visit in ten of the others", () => {
+  assert.equal(sendsDeviceReport(true, false, 0.99), true);
+  assert.equal(sendsDeviceReport(false, true, 0.99), true);
+  assert.equal(sendsDeviceReport(false, false, 0.05), true);
+  assert.equal(sendsDeviceReport(false, false, 0.1), false);
+  assert.equal(sendsDeviceReport(false, false, 0.99), false);
 });
 
 test("offset: the Admin's by-ear offset stays in its range and on a hundredth", () => {
