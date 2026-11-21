@@ -1,3 +1,5 @@
+import { isPlainStandIn } from "@/lib/german-typing";
+
 export type LetterState = "correct" | "current" | "error" | "pending";
 
 /**
@@ -31,8 +33,16 @@ export type LetterState = "correct" | "current" | "error" | "pending";
  * the exact same comparison; lower-casing a space or a period is a no-op,
  * so nothing about their exact-match behavior changes.
  */
-export function isCorrectChar(target: string, index: number, typedChar: string): boolean {
-  return typedChar.toLowerCase() === target.charAt(index).toLowerCase();
+export function isCorrectChar(
+  target: string,
+  index: number,
+  typedChar: string,
+  foldDiacritics = false,
+): boolean {
+  const targetChar = target.charAt(index);
+  if (typedChar.toLowerCase() === targetChar.toLowerCase()) return true;
+  // German (permission germanTrack): the plain letter may stand in for ä, ö, ü, ß — see german-typing.ts.
+  return foldDiacritics && isPlainStandIn(targetChar, typedChar);
 }
 
 /**
