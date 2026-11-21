@@ -79,12 +79,12 @@ for (const l of lessons) {
     if (words.length !== s.gl.length) throw new Error(`${l.sourceId} ${s.src}: gloss count`);
     const sid = `${id}-${s.src}`;
     sentenceRows.push({
-      id: sid, lesson_id: id, order_index: source.order_index, en: s.de, ar: source.ar,
+      id: sid, lesson_id: id, order_index: source.order_index, en: s.de, ar: s.ar ?? source.ar,
       speaker: null, audio_url: null,
       word_translations: words.map((w, i) => ({ en: w, ar: s.gl[i] })),
     });
     const srcTr = await get(`content_translations?select=locale,value&content_type=eq.sentence&content_id=eq.${l.sourceId}-${s.src}&field=eq.text&locale=in.(es,tr)`);
-    for (const t of srcTr) translationRows.push(tr("sentence", sid, "text", t.locale, t.value, s.de));
+    for (const t of srcTr) translationRows.push(tr("sentence", sid, "text", t.locale, s[t.locale] ?? t.value, s.de));
   }
   console.log(`${id}: ${sentenceRows.length} sentences, ${translationRows.length} translation rows`);
   nLessons++; nSentences += sentenceRows.length; nTranslations += translationRows.length;
