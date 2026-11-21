@@ -227,6 +227,8 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     checkoutV2: false,
     storyCoversNew: false,
     inAppPayStrip: false,
+
+    germanTrack: false,
   });
 });
 

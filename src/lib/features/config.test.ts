@@ -449,6 +449,8 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       checkoutV2: false,
       storyCoversNew: false,
       inAppPayStrip: false,
+
+      germanTrack: false,
     });
   }
 });

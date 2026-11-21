@@ -63,6 +63,7 @@ export const ROLLOUT_IDS = [
   "checkoutV2",
   "storyCoversNew",
   "inAppPayStrip",
+  "germanTrack",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -651,6 +652,18 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Admins only: nobody is given it. To look at it, add ?in_app_strip=facebook-android, facebook-ios, instagram-android or instagram-ios to /upgrade (as an admin, or from a real in-app browser).",
       "The browser they open has no sign-in from the app's browser, so they may be asked to sign in again; the page brings them back to the plans after that. Every view (IN_APP_STRIP_SHOWN with page upgrade), every tap on “open” and every tap on “copy” is recorded.",
       "Only the Android button is a one-tap open; iPhone gets the steps, like the sign-up strip.",
+    ],
+  },
+  germanTrack: {
+    id: "germanTrack",
+    audience: "learner",
+    title: "German as a language to learn",
+    description:
+      "A learner can choose German beside English as the language they learn. In German the learner types German sentences from the same lessons and stories (the Arabic, Spanish and Turkish meaning of each sentence is the one the English lesson already has), learns German words in Word Lists and reads German Passages. Typing is made easy: the plain letter is accepted for ä, ö, ü (a, o, u) and ss for ß, so nobody needs a German keyboard, and the real letter is accepted too. Video, voices, books and the rule course are not part of German yet.",
+    notes: [
+      "Nothing about English changes: German lessons, words and passages are separate rows marked lang = 'de', and every English screen reads only lang = 'en'.",
+      "Admins only: nobody is given it. German content is inserted as drafts and stays hidden from learners until the owner opens it.",
+      "Needs the migration 20250360000000_german_track.sql (lang columns); the code that reads them treats a missing column as English only.",
     ],
   },
   rulesWall: {
