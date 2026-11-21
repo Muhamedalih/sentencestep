@@ -43,6 +43,11 @@
   .gender label{margin-inline-end:10px}
   details{margin-top:8px}summary{cursor:pointer;color:var(--brand)}
   .log{font-size:13px;color:var(--bad);margin-top:6px;white-space:pre-wrap}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 18px}
+  .grid2 label{display:block;font-size:14px}.grid2 label b{float:inline-end;font-weight:600;color:var(--brand)}
+  .grid2 input[type=range]{width:100%;margin-top:4px}
+  .prev{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-top:6px;font-size:13px}
+  .prev .tag{color:var(--mute)}.prev.good{border-color:#bcd9c7}
 </style>
 </head>
 <body>
@@ -71,6 +76,47 @@
       <p class="muted">أي صوت تحفظه في VoiceStudio (استنساخ أو تصميم) يظهر هنا. اختر نوعه ثم أضفه للموقع.</p>
       <div id="unreg"></div>
     </details>
+  </section>
+
+  <section id="tune">
+    <h2><span>2+</span>تحكّم بالصوت وجرّبه قبل أن تبدأ</h2>
+    <p class="muted">الإعدادات تخص الصوت المختار فقط وتُحفظ على جهازك. جرّب أي إعدادات على جملة أو كلمة، قارن بين التجارب، ثم احفظ ما يعجبك. التوليد يستخدم الإعدادات المحفوظة.</p>
+    <div class="grid2">
+      <label>سرعة الجمل <b id="sSpeedV">1.00×</b><input id="sSpeed" type="range" min="0.6" max="1.4" step="0.05" value="1"></label>
+      <label>سرعة الكلمات المفردة <b id="wSpeedV">1.00×</b><input id="wSpeed" type="range" min="0.6" max="1.4" step="0.05" value="1"></label>
+      <label>النبرة (تجريبية)
+        <select id="tone">
+          <option value="">بلا (كما هو)</option>
+          <option value="low pitch">منخفضة</option>
+          <option value="very low pitch">منخفضة جداً</option>
+          <option value="high pitch">عالية</option>
+          <option value="very high pitch">عالية جداً</option>
+          <option value="whisper">همس</option>
+        </select>
+      </label>
+      <details style="margin:0"><summary>متقدم</summary>
+        <label>الجودة (خطوات التوليد)
+          <select id="steps"><option value="">افتراضي</option><option value="24">أعلى (أبطأ قليلاً)</option><option value="32">عالية (أبطأ)</option><option value="48">أعلى جداً (أبطأ 3 مرات)</option></select>
+        </label>
+        <label>الالتزام بالنص والصوت
+          <select id="guid"><option value="">افتراضي</option><option value="1.5">أخف</option><option value="2.5">متوسط</option><option value="3.5">أشد</option></select>
+        </label>
+      </details>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label><input type="radio" name="pkind" value="sentence" checked> جملة</label>
+      <label><input type="radio" name="pkind" value="word"> كلمة</label>
+      <input id="ptext" type="text" dir="ltr" placeholder="النص الذي تجرّبه (يُملأ من الدرس المختار)" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit">
+      <button id="ptry" class="primary">جرّب</button>
+    </div>
+    <div id="pmsg"></div>
+    <div id="plist"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="psave">احفظ كإعدادات لهذا الصوت</button>
+      <button id="preset">أعد الافتراضي</button>
+      <span id="setinfo" class="muted"></span>
+    </div>
+    <p class="muted">الحفظ يؤثر على المقاطع التي ستُولَّد بعد الآن فقط. المقاطع الجاهزة لا تتغير حتى تضغط «أعد» عليها.</p>
   </section>
 
   <section>
@@ -130,7 +176,7 @@ async function loadStatus() {
   $("voices").innerHTML = s.voices.length
     ? s.voices.map((v) => `<div class="voice ${v.id === keep ? "sel" : ""}" data-id="${esc(v.id)}"><b>${esc(v.name)}</b><small>${v.gender === "female" ? "أنثى" : "ذكر"} · ${esc(v.id)}</small><div style="margin-top:6px"><audio controls preload="none" src="http://127.0.0.1:3900/profiles/${esc(v.provider_voice_id)}/audio"></audio></div></div>`).join("")
     : `<div class="muted">لا يوجد صوت مسجّل بعد. افتح «إضافة صوت جديد» أدناه.</div>`;
-  document.querySelectorAll(".voice").forEach((el) => el.addEventListener("click", (e) => { if (e.target.tagName === "AUDIO") return; state.voiceId = el.dataset.id; document.querySelectorAll(".voice").forEach((x) => x.classList.toggle("sel", x === el)); refreshLesson(); }));
+  document.querySelectorAll(".voice").forEach((el) => el.addEventListener("click", (e) => { if (e.target.tagName === "AUDIO") return; state.voiceId = el.dataset.id; document.querySelectorAll(".voice").forEach((x) => x.classList.toggle("sel", x === el)); loadVoiceSettings(); refreshLesson(); }));
   $("unreg").innerHTML = s.unregistered.length
     ? s.unregistered.map((p) => `<div class="row" style="margin:8px 0"><b>${esc(p.name)}</b><span class="gender"><label><input type="radio" name="g-${esc(p.id)}" value="female"> أنثى</label><label><input type="radio" name="g-${esc(p.id)}" value="male"> ذكر</label></span><button data-reg="${esc(p.id)}">أضفه للموقع</button></div>`).join("")
     : `<div class="muted">كل أصوات VoiceStudio مضافة.</div>`;
@@ -157,7 +203,7 @@ async function refreshLesson() {
   try {
     state.detail = await api(`/api/lesson?id=${encodeURIComponent(state.lessonId)}&voice=${encodeURIComponent(state.voiceId || "")}`);
   } catch (e) { say($("usemsg"), e.message, "bad"); return; }
-  renderClips();
+  renderClips(); fillPreviewText();
 }
 
 function renderClips() {
@@ -192,6 +238,64 @@ async function pollJob() {
     }
   } catch {}
 }
+
+/* ---- voice settings + trying them ---- */
+const DEFAULTS = { sentenceSpeed: 1, wordSpeed: 1, tone: "", steps: null, guidance: null };
+const TONE_LABEL = { "": "بلا", "low pitch": "منخفضة", "very low pitch": "منخفضة جداً", "high pitch": "عالية", "very high pitch": "عالية جداً", whisper: "همس" };
+const fmtX = (n) => Number(n).toFixed(2) + "×";
+state.previews = []; state.ptextDirty = false;
+
+function readSettings() {
+  return { sentenceSpeed: Number($("sSpeed").value), wordSpeed: Number($("wSpeed").value), tone: $("tone").value, steps: $("steps").value ? Number($("steps").value) : null, guidance: $("guid").value ? Number($("guid").value) : null };
+}
+function showSettings(s) {
+  $("sSpeed").value = s.sentenceSpeed; $("wSpeed").value = s.wordSpeed; $("tone").value = s.tone || "";
+  $("steps").value = s.steps ?? ""; $("guid").value = s.guidance ?? "";
+  $("sSpeedV").textContent = fmtX(s.sentenceSpeed); $("wSpeedV").textContent = fmtX(s.wordSpeed);
+}
+function summary(s) {
+  return `جمل ${fmtX(s.sentenceSpeed)} · كلمات ${fmtX(s.wordSpeed)} · نبرة ${TONE_LABEL[s.tone || ""]}${s.steps ? " · جودة " + s.steps : ""}${s.guidance ? " · التزام " + s.guidance : ""}`;
+}
+async function loadVoiceSettings() {
+  if (!state.voiceId) return;
+  try {
+    const r = await api("/api/settings?voice=" + encodeURIComponent(state.voiceId));
+    state.saved = r.settings; showSettings(r.settings);
+    $("setinfo").textContent = "المحفوظ الآن: " + summary(r.settings);
+  } catch (e) { $("setinfo").textContent = e.message; }
+}
+function fillPreviewText() {
+  if (state.ptextDirty || !state.detail || !state.detail.clips) return;
+  const kind = document.querySelector('input[name="pkind"]:checked').value;
+  const first = state.detail.clips.find((c) => c.kind === kind);
+  if (first) $("ptext").value = first.text;
+}
+["sSpeed", "wSpeed"].forEach((id) => $(id).addEventListener("input", () => { $("sSpeedV").textContent = fmtX($("sSpeed").value); $("wSpeedV").textContent = fmtX($("wSpeed").value); }));
+$("ptext").addEventListener("input", () => { state.ptextDirty = true; });
+document.querySelectorAll('input[name="pkind"]').forEach((r) => r.addEventListener("change", () => { state.ptextDirty = false; fillPreviewText(); }));
+$("ptry").addEventListener("click", async () => {
+  if (!state.voiceId) return alert("اختر الصوت أولاً.");
+  const kind = document.querySelector('input[name="pkind"]:checked').value, text = $("ptext").value.trim();
+  if (!text) return alert("اكتب نصاً للتجربة.");
+  const settings = readSettings();
+  $("ptry").disabled = true; $("ptry").textContent = "يجري التوليد…"; say($("pmsg"), "", "");
+  try {
+    const r = await api("/api/preview", { voiceId: state.voiceId, kind, text, settings });
+    state.previews.unshift({ ...r, kind, text, settings });
+    state.previews = state.previews.slice(0, 6);
+    renderPreviews(true);
+  } catch (e) { say($("pmsg"), e.message, "bad"); }
+  $("ptry").disabled = false; $("ptry").textContent = "جرّب";
+});
+function renderPreviews(autoplay) {
+  $("plist").innerHTML = state.previews.map((p, i) => `<div class="prev ${p.verified ? "good" : ""}"><audio controls ${autoplay && i === 0 ? "autoplay" : ""} src="data:audio/mpeg;base64,${p.audioBase64}"></audio><span><b dir="ltr">${esc(p.text.length > 40 ? p.text.slice(0, 40) + "…" : p.text)}</b> <span class="tag">${p.kind === "word" ? "كلمة" : "جملة"} · ${p.seconds ?? "?"} ث · ${p.verified ? "الفحص ✓" : "الفحص لم يتأكد"}${p.attempts > 1 ? " · " + p.attempts + " محاولات" : ""}</span><br><span class="tag">${esc(summary(p.settings))}</span></span><button data-useprev="${i}">استخدم هذه الإعدادات</button></div>`).join("");
+  document.querySelectorAll("[data-useprev]").forEach((b) => b.addEventListener("click", () => showSettings(state.previews[Number(b.dataset.useprev)].settings)));
+}
+$("psave").addEventListener("click", async () => {
+  if (!state.voiceId) return alert("اختر الصوت أولاً.");
+  try { const r = await api("/api/settings", { voiceId: state.voiceId, settings: readSettings() }); state.saved = r.settings; showSettings(r.settings); $("setinfo").textContent = "تم الحفظ: " + summary(r.settings); } catch (e) { alert(e.message); }
+});
+$("preset").addEventListener("click", () => showSettings(DEFAULTS));
 
 $("q").addEventListener("input", renderLessons);
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => { state.mode = r.value; renderLessons(); }));
