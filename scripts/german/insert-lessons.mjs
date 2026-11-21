@@ -23,6 +23,8 @@ if (!url || !key) {
 // lessons has a unique (mode, order_index): German lessons keep the English order, shifted by 1000.
 const GERMAN_ORDER_OFFSET = 1000;
 const apply = process.argv.includes("--apply");
+// --refresh: also rewrite the German text and glosses of German sentences that already exist (only de- ids, nothing English).
+const refresh = process.argv.includes("--refresh");
 const file = process.argv[2];
 const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
 
@@ -90,6 +92,12 @@ for (const l of lessons) {
     await insert("lessons", [lessonRow]);
     await insert("sentences", sentenceRows);
     await insert("content_translations", translationRows);
+    if (refresh) {
+      for (const row of sentenceRows) {
+        const r = await fetch(`${url}/rest/v1/sentences?id=eq.${row.id}&id=like.de-*`, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ en: row.en, word_translations: row.word_translations }) });
+        if (!r.ok) throw new Error(`PATCH ${row.id}: ${r.status} ${await r.text()}`);
+      }
+    }
   }
 }
 console.log(`${apply ? "WROTE" : "dry run:"} ${nLessons} lessons, ${nSentences} sentences, ${nTranslations} translation rows`);
