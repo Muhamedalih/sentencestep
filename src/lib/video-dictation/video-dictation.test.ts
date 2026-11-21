@@ -53,6 +53,8 @@ import {
   MAX_LEAD_SECONDS,
   nextLead,
   platformBias,
+  resumePosition,
+  APPLE_RESUME_LEAD_SECONDS,
   nextRate,
   isSilentGap,
   replayPosition,
@@ -381,6 +383,18 @@ test("offset: the Admin's by-ear offset stays in its range and on a hundredth", 
   assert.equal(clampOffset(-5), MIN_OFFSET_SECONDS);
   assert.equal(clampOffset(Number.NaN), 0);
   assert.equal(clampOffset(0), 0);
+});
+
+test("resumePosition: Apple's video is taken back to a second before the next sentence, other browsers play on", () => {
+  // Paused half a second before the end of sentence 1 (16.0); sentence 2 begins at 16.6.
+  assert.equal(resumePosition(16.6, 16.0, true), 16.6 - APPLE_RESUME_LEAD_SECONDS);
+  assert.equal(resumePosition(16.6, 16.0, false), null);
+  // A long silence before the sentence: the video is already earlier than that point, so it plays on.
+  assert.equal(resumePosition(30, 16.0, true), null);
+  assert.equal(resumePosition(16.6, 15.6, true), null);
+  // Never before the start of the video.
+  assert.equal(resumePosition(0.5, 3, true), 0);
+  assert.equal(resumePosition(Number.NaN, 3, true), null);
 });
 
 test("stopTime: the lead moves a stop earlier but never before the sentence has begun to be heard", () => {
