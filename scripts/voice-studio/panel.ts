@@ -22,12 +22,17 @@ import {
   clipStates,
   connect,
   coverage,
+  cleanSettings,
   listAppProfiles,
+  loadSettings,
   makeClip,
   planLesson,
+  previewClip,
   registerVoice,
+  saveSettings,
   siteVoices,
   voiceStudioHealth,
+  TONES,
   type ClipKind,
   type Db,
   type SiteVoice,
@@ -85,6 +90,8 @@ async function runJob(lessonId: string, voice: SiteVoice, scope: "both" | "sente
     startedAt: Date.now(),
   };
   const mine = job;
+  // The settings are read once, so every clip of this run is made the same way even if they are edited meanwhile.
+  const settings = loadSettings(voice.id);
   void (async () => {
     try {
       for (const clip of todo) {
@@ -93,7 +100,7 @@ async function runJob(lessonId: string, voice: SiteVoice, scope: "both" | "sente
           return;
         }
         mine.current = clip.text;
-        const result = await makeClip(db, voice, clip.kind, clip.text);
+        const result = await makeClip(db, voice, clip.kind, clip.text, { settings });
         mine.done += 1;
         if (result.outcome === "generated") {
           mine.generated += 1;
@@ -272,6 +279,27 @@ async function route(req: IncomingMessage, res: ServerResponse) {
         200,
         job ? { ...job, seconds: Math.round((Date.now() - job.startedAt) / 1000) } : null,
       );
+    }
+    if (req.method === "GET" && path === "/api/settings") {
+      const voice = await pickVoice(url.searchParams.get("voice"));
+      return send(res, 200, { settings: loadSettings(voice.id), tones: TONES });
+    }
+    if (req.method === "POST" && path === "/api/settings") {
+      const body = await readBody(req);
+      const voice = await pickVoice(body.voiceId);
+      return send(res, 200, { settings: saveSettings(voice.id, cleanSettings(body.settings)) });
+    }
+    if (req.method === "POST" && path === "/api/preview") {
+      const body = await readBody(req);
+      if (job?.state === "running")
+        throw new Error("يوجد توليد شغّال الآن. انتظر انتهاءه أو أوقفه ثم جرّب.");
+      if (!(await voiceStudioHealth())) throw new Error("برنامج VoiceStudio غير مفتوح.");
+      const voice = await pickVoice(body.voiceId);
+      const kind = body.kind === "word" ? "word" : "sentence";
+      const text = typeof body.text === "string" ? body.text.trim() : "";
+      if (!text || text.length > (kind === "word" ? 40 : 400))
+        throw new Error("اكتب نصاً قصيراً للتجربة.");
+      return send(res, 200, await previewClip(voice, kind, text, cleanSettings(body.settings)));
     }
     if (req.method === "POST" && path === "/api/redo") {
       const body = await readBody(req);

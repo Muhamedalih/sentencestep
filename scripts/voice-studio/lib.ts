@@ -8,6 +8,11 @@
  * Additive by construction: a (voice, text, version) that already has a ready clip is never touched
  * unless the caller asks for a redo of exactly that clip; clips of other voices are never read or written.
  */
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { cacheKeyParts } from "../../src/lib/voice/resolution";
@@ -63,7 +68,101 @@ export async function listAppProfiles(): Promise<AppProfile[]> {
   return (await response.json()) as AppProfile[];
 }
 
-async function speak(input: string, profileId: string, seed: number | null): Promise<Buffer> {
+// ---------------------------------------------------------------------------------------------
+// Per-voice settings: how fast, how carefully, in what manner. Saved on this PC (never on the site) and
+// recorded in each clip's voice_direction, so it is always known how a clip was made.
+// ---------------------------------------------------------------------------------------------
+
+export const TONES = [
+  "",
+  "low pitch",
+  "very low pitch",
+  "high pitch",
+  "very high pitch",
+  "whisper",
+] as const;
+
+export interface VoiceSettings {
+  /** 0.6–1.4: how fast a SENTENCE is spoken. Applied after generation with ffmpeg's time-stretch (pitch unchanged), because VoiceStudio's own speed control barely moves OmniVoice. */
+  sentenceSpeed: number;
+  /** The same for a single WORD (a slightly slower word is easier to catch). */
+  wordSpeed: number;
+  /** Diffusion steps: null = the engine's default; more steps = cleaner but much slower (48 is ~3x). */
+  steps: number | null;
+  /** How strictly the voice follows the text/reference: null = engine default. */
+  guidance: number | null;
+  /** One of TONES ("" = none). Experimental on cloned voices: it can shift the voice. */
+  tone: (typeof TONES)[number];
+}
+
+export const DEFAULT_SETTINGS: VoiceSettings = {
+  sentenceSpeed: 1,
+  wordSpeed: 1,
+  steps: null,
+  guidance: null,
+  tone: "",
+};
+
+const SETTINGS_FILE = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "reports",
+  "voice-studio-settings.json",
+);
+
+const clamp = (n: unknown, lo: number, hi: number, fallback: number) =>
+  typeof n === "number" && Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fallback;
+
+/** Anything from the page or the file becomes a valid settings object (unknown keys dropped, numbers clamped). */
+export function cleanSettings(raw: unknown): VoiceSettings {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const steps =
+    typeof r.steps === "number" && r.steps > 0 ? Math.round(clamp(r.steps, 4, 64, 16)) : null;
+  const guidance =
+    typeof r.guidance === "number" && r.guidance > 0 ? clamp(r.guidance, 0.5, 5, 2) : null;
+  return {
+    sentenceSpeed: clamp(r.sentenceSpeed, 0.6, 1.4, 1),
+    wordSpeed: clamp(r.wordSpeed, 0.6, 1.4, 1),
+    steps,
+    guidance,
+    tone: (TONES as readonly string[]).includes(r.tone as string)
+      ? (r.tone as VoiceSettings["tone"])
+      : "",
+  };
+}
+
+function readAllSettings(): Record<string, unknown> {
+  try {
+    return existsSync(SETTINGS_FILE)
+      ? (JSON.parse(readFileSync(SETTINGS_FILE, "utf8")) as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+export function loadSettings(voiceId: string): VoiceSettings {
+  return cleanSettings(readAllSettings()[voiceId]);
+}
+
+export function saveSettings(voiceId: string, settings: VoiceSettings): VoiceSettings {
+  const clean = cleanSettings(settings);
+  mkdirSync(dirname(SETTINGS_FILE), { recursive: true });
+  writeFileSync(
+    SETTINGS_FILE,
+    JSON.stringify({ ...readAllSettings(), [voiceId]: clean }, null, 2),
+    "utf8",
+  );
+  return clean;
+}
+
+async function speak(
+  input: string,
+  profileId: string,
+  seed: number | null,
+  settings: VoiceSettings = DEFAULT_SETTINGS,
+): Promise<Buffer> {
   const response = await fetch(`${API}/v1/audio/speech`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -73,6 +172,9 @@ async function speak(input: string, profileId: string, seed: number | null): Pro
       voice: profileId,
       response_format: "mp3",
       ...(seed === null ? {} : { seed }),
+      ...(settings.steps === null ? {} : { num_step: settings.steps }),
+      ...(settings.guidance === null ? {} : { guidance_scale: settings.guidance }),
+      ...(settings.tone ? { instruct: settings.tone } : {}),
     }),
     signal: AbortSignal.timeout(300_000),
   });
@@ -167,8 +269,9 @@ async function wordFromCarrier(
   word: string,
   profileId: string,
   seed: number,
+  settings: VoiceSettings,
 ): Promise<MadeAudio | null> {
-  const audio = await speak(`The word is: ${word}.`, profileId, seed);
+  const audio = await speak(`The word is: ${word}.`, profileId, seed, settings);
   const { text, words } = await transcribeWithTimes(audio);
   const heard = tokens(text);
   if (heard.slice(0, 3).join(" ") !== "the word is" || heard[heard.length - 1] !== tokens(word)[0])
@@ -240,6 +343,28 @@ export async function makeCheckedAudio(
   kind: ClipKind,
   text: string,
   profileId: string,
+  settings: VoiceSettings = DEFAULT_SETTINGS,
+): Promise<MadeAudio> {
+  const made = await makeCheckedTake(kind, text, profileId, settings);
+  // Speed is applied last, to the take that passed the check (a slower clip is the same words).
+  const speed = kind === "word" ? settings.wordSpeed : settings.sentenceSpeed;
+  if (Math.abs(speed - 1) < 0.01) return made;
+  const stretched = await ffmpegPipe(made.audio, [
+    "-af",
+    `atempo=${speed.toFixed(3)}`,
+    "-ar",
+    "24000",
+    "-ac",
+    "1",
+  ]);
+  return stretched ? { ...made, audio: stretched } : made;
+}
+
+async function makeCheckedTake(
+  kind: ClipKind,
+  text: string,
+  profileId: string,
+  settings: VoiceSettings,
 ): Promise<MadeAudio> {
   const spoken = kind === "word" ? `${text}.` : text;
   let best: MadeAudio | null = null;
@@ -247,7 +372,12 @@ export async function makeCheckedAudio(
   // A word gets two direct takes; when neither is heard right (or it is silent) it is cut out of a carrier phrase.
   const directAttempts = kind === "word" ? 2 : MAX_ATTEMPTS;
   for (let attempt = 1; attempt <= directAttempts; attempt++) {
-    const audio = await speak(spoken, profileId, attempt === 1 ? null : 1000 + attempt * 37);
+    const audio = await speak(
+      spoken,
+      profileId,
+      attempt === 1 ? null : 1000 + attempt * 37,
+      settings,
+    );
     const heard = await transcribe(audio);
     const right =
       kind === "word"
@@ -263,34 +393,40 @@ export async function makeCheckedAudio(
   }
   if (kind === "word") {
     for (let attempt = 1; attempt <= 3; attempt++) {
-      const cut = await wordFromCarrier(text, profileId, attempt === 1 ? 7 : 2000 + attempt * 41);
+      const cut = await wordFromCarrier(
+        text,
+        profileId,
+        attempt === 1 ? 7 : 2000 + attempt * 41,
+        settings,
+      );
       if (cut) return { ...cut, attempts: directAttempts + attempt };
     }
   }
   return { ...best!, attempts: MAX_ATTEMPTS };
 }
 
-async function durationMs(audio: Buffer): Promise<number | null> {
+/** Length of a clip in ms. ffprobe cannot read an mp3's length from a pipe, so it goes through a temp file. */
+export async function durationMs(audio: Buffer): Promise<number | null> {
+  let dir: string | null = null;
   try {
-    const { spawn } = await import("node:child_process");
-    return await new Promise<number | null>((resolve) => {
-      const child = spawn(
-        "ffprobe",
-        ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", "-i", "pipe:0"],
-        { stdio: ["pipe", "pipe", "ignore"] },
-      );
-      let out = "";
-      child.stdout.on("data", (chunk: Buffer) => (out += chunk.toString()));
-      child.on("error", () => resolve(null));
-      child.on("close", () => {
-        const seconds = Number.parseFloat(out);
-        resolve(Number.isFinite(seconds) ? Math.round(seconds * 1000) : null);
-      });
-      child.stdin.on("error", () => undefined);
-      child.stdin.end(audio);
-    });
+    dir = mkdtempSync(join(tmpdir(), "vs-"));
+    const file = join(dir, "clip.mp3");
+    writeFileSync(file, audio);
+    const { execFileSync } = await import("node:child_process");
+    const out = execFileSync(
+      "ffprobe",
+      ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file],
+      {
+        encoding: "utf8",
+        timeout: 15_000,
+      },
+    );
+    const seconds = Number.parseFloat(out);
+    return Number.isFinite(seconds) ? Math.round(seconds * 1000) : null;
   } catch {
     return null;
+  } finally {
+    if (dir) rmSync(dir, { recursive: true, force: true });
   }
 }
 
@@ -441,8 +577,9 @@ export async function makeClip(
   voice: SiteVoice,
   kind: ClipKind,
   text: string,
-  opts: { redo?: boolean } = {},
+  opts: { redo?: boolean; settings?: VoiceSettings } = {},
 ): Promise<MakeResult> {
+  const settings = opts.settings ?? loadSettings(voice.id);
   const version = kind === "word" ? WORD_VERSION : SENTENCE_VERSION;
   const key = cacheKeyParts(text, voice.id, version);
   const { data: existing } = await db
@@ -468,7 +605,12 @@ export async function makeClip(
     rowId = claimed.id;
   }
   try {
-    const made = await makeCheckedAudio(kind, key.normalizedText, voice.provider_voice_id);
+    const made = await makeCheckedAudio(
+      kind,
+      key.normalizedText,
+      voice.provider_voice_id,
+      settings,
+    );
     const url = await uploadVoiceClip(generatedVoiceStudioClipPath(voice.id), made.audio);
     await db
       .from("voice_audio_cache")
@@ -476,6 +618,12 @@ export async function makeClip(
         status: "ready",
         audio_url: url,
         duration_ms: await durationMs(made.audio),
+        // How this clip was made (the site only reads the sentence-direction keys; this one is ours).
+        voice_direction: {
+          ...NEUTRAL_DIRECTION,
+          sentenceId: `voice-studio:${voice.id}`,
+          voiceStudio: settings,
+        },
         last_error: made.verified
           ? null
           : `unverified: Whisper heard "${made.heard.slice(0, 120)}"`,
@@ -500,6 +648,38 @@ export async function makeClip(
       .eq("id", rowId);
     return { outcome: "failed", error: message };
   }
+}
+
+export interface Preview {
+  /** The finished clip as base64 mp3 (not stored anywhere). */
+  audioBase64: string;
+  seconds: number | null;
+  heard: string;
+  verified: boolean;
+  attempts: number;
+}
+
+/** Makes a clip exactly as makeClip would with these settings, but keeps it nowhere: for trying settings out. */
+export async function previewClip(
+  voice: SiteVoice,
+  kind: ClipKind,
+  text: string,
+  settings: VoiceSettings,
+): Promise<Preview> {
+  const made = await makeCheckedAudio(
+    kind,
+    cacheKeyParts(text, voice.id, "x").normalizedText,
+    voice.provider_voice_id,
+    settings,
+  );
+  const ms = await durationMs(made.audio);
+  return {
+    audioBase64: made.audio.toString("base64"),
+    seconds: ms === null ? null : Math.round(ms / 10) / 100,
+    heard: made.heard,
+    verified: made.verified,
+    attempts: made.attempts,
+  };
 }
 
 /** Lesson-level safety check before a lesson is pointed at a voice: every sentence and every word must already be ready. */
