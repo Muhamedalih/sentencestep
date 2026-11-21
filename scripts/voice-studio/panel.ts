@@ -366,7 +366,9 @@ async function route(req: IncomingMessage, res: ServerResponse) {
 createServer((req, res) => void route(req, res)).listen(PORT, "127.0.0.1", () => {
   const url = `http://127.0.0.1:${PORT}`;
   console.log(`SentenceStep Voice Studio panel: ${url}  (Ctrl+C to close)`);
-  if (!process.argv.includes("--no-open")) {
+  // Opt-in: the desktop launcher (start-panel.cmd) waits for this server and opens the browser itself,
+  // which proved more reliable than opening it from inside this process.
+  if (process.argv.includes("--open")) {
     spawn("powershell", ["-NoProfile", "-Command", `Start-Process '${url}'`], {
       stdio: "ignore",
       detached: true,
