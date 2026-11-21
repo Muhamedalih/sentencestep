@@ -22,17 +22,22 @@ export const START_LEAD_SECONDS = 0.03;
 export const APPLE_AUDIO_AHEAD_SECONDS = 0.5;
 
 /**
- * On Apple's browsers the sound also comes back late after every pause: measured by ear on an iPad, the
- * first half second to a second of the next sentence was missing when the video went on by itself, so it
- * seemed to begin at the second word. The video is therefore taken back so that it starts playing this
- * long before the sentence's first word, and the sound has woken by the time the word comes.
+ * On Apple's browsers the sound comes back late when the video simply goes on after a pause: by ear on an
+ * iPad the first half second to a second of the next sentence was missing, so it seemed to begin at the
+ * second word. A seek before playing starts the sound at once (taking the video back a full second played
+ * the end of the sentence before again, annoyingly), so the video is always put at a point a little before
+ * the sentence's first word, even when that is where it already is. The point is this much before the word:
+ * the sound runs ahead of the clock on these browsers, so a stop asked for earlier on purpose has heard the
+ * sentence to its end, and this is how far back that leaves the clock.
  */
-export const APPLE_RESUME_LEAD_SECONDS = 1;
+export const APPLE_RESUME_LEAD_SECONDS = 0.4;
+
+/** A video further from the resume point than this is left alone: a long silence before the sentence is not skipped. */
+const RESUME_NEAR_SECONDS = 1.5;
 
 /**
- * Where to take the video back to before it goes on to a sentence, or null when it should simply play on:
- * only on Apple's browsers, and only when the video is now later than that point (a long silence before the
- * sentence already gives the sound time to wake).
+ * Where to put the video before it goes on to a sentence, or null when it should simply play on: only on
+ * Apple's browsers, and only when the video is near that point (the seek is what wakes the sound).
  */
 export function resumePosition(
   sentenceStart: number,
@@ -41,7 +46,7 @@ export function resumePosition(
 ): number | null {
   if (!apple || !Number.isFinite(sentenceStart) || !Number.isFinite(currentTime)) return null;
   const target = Math.max(0, sentenceStart - APPLE_RESUME_LEAD_SECONDS);
-  return target < currentTime - 0.02 ? target : null;
+  return Math.abs(target - currentTime) <= RESUME_NEAR_SECONDS ? target : null;
 }
 
 /** The fixed lead of a browser's kind (see APPLE_AUDIO_AHEAD_SECONDS). */
