@@ -13,11 +13,18 @@ export const POLL_MS = 30;
 export const START_LEAD_SECONDS = 0.03;
 
 /**
- * The same, on Apple's browsers (Safari, and every browser on an iPhone or iPad): their player answers
- * late, and a video stopped on the time asked for let the next sentence's first sound out. It is only
- * where the device starts; the measured delay takes over after the first stops.
+ * On Apple's browsers (Safari, and every browser on an iPhone or iPad) the sound runs ahead of the time the
+ * player reports: measured on an iPad, a stop landed within 0.02 s of the time asked for by the player's own
+ * clock (so the delay the page learns is about nothing), and still the first half second of the next sentence
+ * was heard. That gap cannot be seen from the page, so the learning can never find it: the stop is always
+ * asked this much earlier on these browsers, besides what the page learns and an Admin sets by ear.
  */
-export const APPLE_START_LEAD_SECONDS = 0.25;
+export const APPLE_AUDIO_AHEAD_SECONDS = 0.5;
+
+/** The fixed lead of a browser's kind (see APPLE_AUDIO_AHEAD_SECONDS). */
+export function platformBias(apple: boolean): number {
+  return apple ? APPLE_AUDIO_AHEAD_SECONDS : 0;
+}
 
 /** The most the stop is ever moved earlier to make up for a slow device. */
 export const MAX_LEAD_SECONDS = 0.8;
@@ -38,12 +45,12 @@ export function isAppleWebKit(userAgent: string, maxTouchPoints: number): boolea
   );
 }
 
-/** The lead a page starts with: what this device learned before (when it is a sane number), else the start for its kind of browser. */
-export function initialLead(stored: number | null, apple: boolean): number {
+/** The learned delay a page starts with: what this device learned before (when it is a sane number), else the start. */
+export function initialLead(stored: number | null): number {
   if (stored !== null && Number.isFinite(stored) && stored >= 0) {
     return Math.min(MAX_LEAD_SECONDS, stored);
   }
-  return apple ? APPLE_START_LEAD_SECONDS : START_LEAD_SECONDS;
+  return START_LEAD_SECONDS;
 }
 
 /** The time a sentence is stopped at: its end minus the device's lead, but never so early that the sentence is cut before it is heard. */
