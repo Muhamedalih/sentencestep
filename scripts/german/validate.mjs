@@ -54,7 +54,7 @@ for (const lesson of lessons) {
         spell.correct(bare[0].toUpperCase() + bare.slice(1));
       if (!ok) bad(`spelling? "${bare}" (${spell.suggest(bare).slice(0, 3).join(", ")})`);
     }
-    if (!/^[A-ZÄÖÜ]/.test(s.de)) bad("does not start with a capital");
+    if (!/^[^p{L}]*[A-ZÄÖÜ]/u.test(s.de)) bad("does not start with a capital");
   }
 }
 console.log(`${lessons.length} lessons, ${totalWords} words, ${problems} problem(s)`);
