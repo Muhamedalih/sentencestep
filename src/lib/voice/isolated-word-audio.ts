@@ -96,7 +96,9 @@ const wordVoiceCache = new Map<string, { promise: Promise<WordVoice | null>; exp
 async function computeWordVoice(narratorVoiceId: string): Promise<WordVoice | null> {
   const voice = await lookupVoice(narratorVoiceId);
   if (!voice) return null;
-  return voice.source === "edge-tts"
+  // A voice-studio narrator's words are made offline on the owner's PC (scripts/voice-studio) under the
+  // narrator's own id, exactly like an Edge narrator's — so they are looked up there, not under a stand-in.
+  return voice.source === "edge-tts" || voice.source === "voice-studio"
     ? { id: narratorVoiceId, providerVoiceId: voice.providerVoiceId }
     : pickGenderMatchedEdgeTtsVoice(voice.gender);
 }
@@ -196,6 +198,9 @@ export async function generateIsolatedWordAudio(
   voiceId: string,
   providerVoiceId: string,
 ): Promise<string | null> {
+  // A voice-studio voice has no server-side synthesis: its clips are made offline, so a missing one is a
+  // gap to fill there, never something to try Edge with (its provider id is a VoiceStudio profile, not an Edge voice).
+  if ((await lookupVoice(voiceId))?.source === "voice-studio") return null;
   const provider = createEdgeTtsProvider();
   const supabase = createServiceRoleClient();
   const key = cacheKeyParts(word, voiceId, EDGE_TTS_GENERATION_VERSION);

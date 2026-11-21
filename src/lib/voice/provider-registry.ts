@@ -48,6 +48,12 @@ export function createProviderForSource(source: string): TTSProvider {
     }
     case "edge-tts":
       return createEdgeTtsProvider();
+    case "voice-studio":
+      // Made offline on the owner's PC (scripts/voice-studio/fill.ts) — the server has no
+      // VoiceStudio to call, so a missing clip is a gap to fill there, never something to synthesize here.
+      throw new Error(
+        'Voice "voice-studio" clips are made locally with scripts/voice-studio/fill.ts, not on the server.',
+      );
     default:
       throw new Error(`Unknown voice provider "${source}".`);
   }
