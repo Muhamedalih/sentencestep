@@ -537,7 +537,7 @@ export function VideoSession({
     setNeedsTap(false);
     move({ index: next, phase: "listening" });
     if (player && player.getState() !== PLAYER_STATE.PLAYING) {
-      // Apple's sound wakes late after a pause: start playing a little before the sentence's first word.
+      // Apple's sound comes back late after a plain pause but at once after a seek: put the video a little before the sentence's first word.
       const back = resumePosition(sentence.startSeconds, player.getTime(), biasRef.current > 0);
       if (back !== null) player.seekTo(back);
       playAskedRef.current = performance.now();

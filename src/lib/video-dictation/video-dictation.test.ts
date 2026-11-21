@@ -385,15 +385,17 @@ test("offset: the Admin's by-ear offset stays in its range and on a hundredth", 
   assert.equal(clampOffset(0), 0);
 });
 
-test("resumePosition: Apple's video is taken back to a second before the next sentence, other browsers play on", () => {
-  // Paused half a second before the end of sentence 1 (16.0); sentence 2 begins at 16.6.
-  assert.equal(resumePosition(16.6, 16.0, true), 16.6 - APPLE_RESUME_LEAD_SECONDS);
-  assert.equal(resumePosition(16.6, 16.0, false), null);
-  // A long silence before the sentence: the video is already earlier than that point, so it plays on.
+test("resumePosition: Apple's video is put a little before the next sentence's first word (a seek wakes the sound), other browsers play on", () => {
+  // Paused half a second before the end of sentence 1 (16.0); sentence 2 begins at 16.5 (no silence between).
+  assert.equal(resumePosition(16.5, 16.0, true), 16.5 - APPLE_RESUME_LEAD_SECONDS);
+  assert.equal(resumePosition(16.5, 16.0, false), null);
+  // Even when the video is already exactly there, the seek is made.
+  assert.equal(resumePosition(16.4, 16.0, true), 16.4 - APPLE_RESUME_LEAD_SECONDS);
+  // A video that is later than the point goes back to it; a long silence before the sentence is left alone.
+  assert.equal(resumePosition(16.5, 17.2, true), 16.5 - APPLE_RESUME_LEAD_SECONDS);
   assert.equal(resumePosition(30, 16.0, true), null);
-  assert.equal(resumePosition(16.6, 15.6, true), null);
   // Never before the start of the video.
-  assert.equal(resumePosition(0.5, 3, true), 0);
+  assert.equal(resumePosition(0.3, 1, true), 0);
   assert.equal(resumePosition(Number.NaN, 3, true), null);
 });
 
