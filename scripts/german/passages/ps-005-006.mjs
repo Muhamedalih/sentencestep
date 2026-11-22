@@ -1,0 +1,93 @@
+// German Passages: the-quiet-hour, the-honest-mechanic.
+export const passages = [
+  { sourceId: "the-quiet-hour", title: "Die stille Stunde", summary: "Jeden Dienstag um sechs dimmte der Laden sein Licht, seine Musik und seine Pieptöne.", speakers: { "Ms. Lowell": "Frau Lowell" },
+    sections: [
+      { title: "Die Mitteilung", lines: [
+        "Am Montag hing die Mitteilung am Schwarzen Brett: „Ab diesem Dienstag findet zwischen achtzehn und neunzehn Uhr im Laden eine Stille Stunde statt.“",
+        "Das Licht würde gedimmt, die Musik und die Durchsagen abgeschaltet, die Scannertöne leiser gestellt. Owen las es dreimal und hoffte, dass dort etwas anderes stand.",
+        "Der Dienstagabend war seine umsatzstärkste Stunde. In acht Jahren an der Kasse hatte er gelernt, dass ein lauter, heller, voller Laden ein Laden war, der Geld verdiente.",
+        "Frau Lowell, bei allem Respekt, wir verlieren ein Vermögen. Niemand geht für Stille in den Supermarkt.",
+        "Manche Leute kommen gar nicht, Owen, weil sie den Lärm nicht ertragen. Ich würde gern wissen, wie viele.",
+        "Owen nickte, wie ein skeptischer Mann nickt, der nicht überzeugt ist, und rechnete mit einer leeren Stunde, die ihm recht geben würde.",
+      ], questions: [{ prompt: "Was können wir über Owens Haltung zur Stillen Stunde schließen?", options: ["Er war begeistert von der Idee", "Er zweifelte, dass sie die verlorenen Umsätze wert wäre", "Er hatte Angst vor Frau Lowell", "Er hatte sie selbst vorgeschlagen"] }] },
+      { title: "Der erste Dienstag", lines: [
+        "Um sechs Uhr veränderte sich der Laden. Das grelle Licht wurde zu einer warmen Dämmerung, und ohne Musik offenbarte das Gebäude ein Geräusch, das niemand bemerkt hatte: das Summen der Kühlschränke.",
+        "Zwanzig Minuten lang zählte Owen drei Kunden und sah viermal auf seine Uhr. Jede Minute Stille fühlte sich für ihn wie ein kleiner Sieg an.",
+        "Dann blieben eine Frau und ein etwa neunjähriger Junge am Eingang stehen. Der Junge trug dicke Gehörschützer, und einen langen Moment bewegte sich keiner von beiden, als würden sie die Luft testen.",
+        "Die Schultern des Jungen, die bis zu den Ohren hochgezogen gewesen waren, sanken langsam herab.",
+        "Es ist leise. Eli, es ist wirklich leise.",
+        "Sie sagte es so, wie Menschen gute Nachrichten verkünden, die sie sich nicht zu glauben trauen.",
+      ], questions: [{ prompt: "Was deutet die Veränderung der Schultern des Jungen an?", options: ["Ihm war langweilig", "Er war müde vom Gehen", "Der Laden war für ihn angenehm geworden", "Er hatte Angst vor der Kassiererin"] }] },
+      { title: "Elis Liste", lines: [
+        "Owen sah ihnen zu, wie sie an den Regalen entlanggingen. Eli las jedes Etikett leise vor, legte die Packungen, die er wollte, in den Korb und stellte die anderen genau an dieselbe Stelle zurück.",
+        "An der Kasse scannte Owen jeden Artikel langsam und hielt den Scanner, als wäre er ein schlafendes Tier. Der Piepton war kaum zu hören.",
+        "Normalerweise ist ein Laden für ihn überwältigend: das Licht, die Musik, die Durchsagen, alles auf einmal. Deshalb kaufen wir online ein, oder ich komme allein um fünf Uhr morgens.",
+        "Heute hat Eli zum ersten Mal die Lebensmittel selbst ausgesucht. Wissen Sie, was das für uns bedeutet?",
+        "Owen antwortete nicht sofort. Acht Jahre lang hatte er den Lärm für den Klang des Geschäfts gehalten und nie gefragt, wen er aussperrte.",
+        "Ich glaube, ich fange an, es zu wissen.",
+      ], questions: [{ prompt: "Warum hatte Karen Eli noch nie in den Laden mitgenommen?", options: ["Die Preise waren zu hoch", "Sie kaufte lieber online ein", "Sie hatte nicht gewusst, dass es den Laden gab", "Der übliche Lärm und das Licht waren für Eli zu überwältigend"] }] },
+      { title: "Die Summe", lines: [
+        "An diesem Abend waren die Umsätze der Stillen Stunde niedriger als in jeder anderen Dienstagsstunde. Frau Lowell betrachtete die Zahlen ohne sichtbare Enttäuschung.",
+        "Ich habe Ihnen gesagt, dass wir Geld verlieren würden.",
+        "Das haben Sie. Und Frau Brennan hat mir erzählt, dass sie nächste Woche vier Freundinnen mitbringt. Beides stimmt.",
+        "Owen dachte an die Schultern des Jungen. Er dachte an eine Frau, die jahrelang allein um fünf Uhr morgens eingekauft hatte, damit ihr Sohn nicht an einem Ort stehen musste, der ihm wehtat.",
+        "Ich habe nie versprochen, dass es Geld einbringt, Owen. Ich habe versprochen, dass es Sinn ergibt.",
+        "Owen sagte nichts. Ihm wurde klar, dass er die falschen Dinge gezählt hatte: Kunden pro Minute statt Menschen, die endlich kommen konnten.",
+      ], questions: [{ prompt: "Was meint Frau Lowell mit „Ich habe versprochen, dass es Sinn ergibt“?", options: ["Die Stunde hätte einen lohnenden Zweck, auch wenn sie weniger einbringt", "Die Verkaufszahlen wären leicht zu erklären", "Die Kunden würden den neuen Zeitplan verstehen", "Der Laden würde mehr verdienen als vorher"] }] },
+      { title: "Sechs Monate später", lines: [
+        "Sechs Monate später bildete sich jeden Dienstag um zehn vor sechs eine Schlange vor dem Laden: Familien, Paare und ein Rentner, der sagte, er könne in einem Supermarkt endlich seine eigenen Gedanken hören.",
+        "Owen leitete die Stunde jetzt selbst. Er schulte neue Mitarbeiter darin, auf alles einzugehen, was ein Kunde brauchte, und fügte eine Regel hinzu: Niemand steht hinter einem Kunden, der noch überlegt.",
+        "Die Umsätze der Stunde stiegen, erst langsam, dann schneller, bis sie der geschäftigsten Stunde der Woche entsprachen. Frau Lowell, die es nie erwähnte, hörte einfach auf, nachzusehen.",
+        "Jeden Dienstag um sechs, bevor das Licht herunterging, ging Owen nach vorn und schaltete die Musik selbst aus. Es war zu dem Teil der Arbeit geworden, den er am liebsten mochte.",
+      ], questions: [
+        { prompt: "Was zeigt Owens Gewohnheit, die Musik selbst auszuschalten?", options: ["Er wollte Strom sparen", "Er behandelte die Stille Stunde jetzt als etwas Eigenes", "Er befolgte Frau Lowells Anweisungen", "Er mochte die Musik nicht"] },
+        { prompt: "Wie veränderte sich Owens Sicht auf den Lärm im Laden im Lauf der Geschichte?", options: ["Er begann, einen noch lauteren Laden zu bevorzugen", "Es war ihm nicht mehr wichtig, ob der Laden Geld verdiente", "Er kam dazu, seinen Job nicht zu mögen", "Er erkannte, dass das, was er für den Klang des Geschäfts hielt, manche Menschen aussperrte"] },
+      ] },
+    ] },
+  { sourceId: "the-honest-mechanic", title: "Der ehrliche Mechaniker", summary: "Rachels Auto ging kaputt. Walt hätte ihr das Zehnfache berechnen können.",
+    sections: [
+      { title: "Rauch auf der Autobahn", lines: [
+        "Rachel war Krankenschwester und arbeitete sehr hart. Am Freitag hatte sie endlich einen freien Abend und fuhr drei Stunden, um das Schultheaterstück ihrer Tochter zu sehen.",
+        "Auf halbem Weg kam ein seltsames Geräusch unter dem Auto hervor. Dann begann vorne weißer Rauch aufzusteigen.",
+        "Nein. Nicht heute. Bitte, nicht heute.",
+        "Sie hielt am Straßenrand an und rief einen Abschleppwagen. Eine Stunde später kam ihr Auto in einer kleinen Werkstatt in einer Stadt an, von der sie noch nie gehört hatte.",
+        "Auf dem Schild über der Tür stand: „Walts Werkstatt, seit 1989.“",
+        "Rachel hatte sich bereits das Schlimmste ausgemalt: ein neuer Motor, zweitausend Dollar und kein Theaterstück.",
+      ], questions: [{ prompt: "Was hatte sich Rachel ausgemalt?", options: ["Eine kostenlose Reparatur", "Eine sehr kurze Reparatur", "Eine sehr teure Reparatur"] }] },
+      { title: "Die Diagnose", lines: [
+        "Walt war ein alter Mann mit grauen Händen und einer ruhigen Stimme. Er hob die Motorhaube an und sah zehn Minuten lang ohne ein Wort hinein.",
+        "Gute Nachrichten, gnädige Frau. Es ist nicht der Motor.",
+        "Es ist ein kleiner Gummiriemen. Er ist gerissen und hat viel Rauch gemacht. Das Teil kostet zwölf Dollar.",
+        "Sein junger Gehilfe Tyler zog ihn zur Seite und flüsterte. Rachel konnte trotzdem jedes Wort hören.",
+        "Chef, sie kommt aus der Stadt. Sie hat keine Ahnung von Autos. Wir könnten sagen, es ist die Wasserpumpe, und ihr vierhundert berechnen.",
+        "Sie würde es nicht wissen. Aber ich.",
+      ], questions: [{ prompt: "Was war an Rachels Auto kaputt?", options: ["Ein Motorschaden", "Ein gerissener Gummiriemen", "Ein platter Reifen"] }] },
+      { title: "Vierzig Dollar", lines: [
+        "Walt reparierte das Auto in fünfunddreißig Minuten. Als er fertig war, wischte er sich die Hände an einem alten Tuch ab und schrieb die Rechnung.",
+        "Vierzig Dollar. Zwölf für den Riemen, achtundzwanzig für meine Zeit.",
+        "Vierzig? Ich dachte, es würde Tausende kosten. Bitte, nehmen Sie mehr. Sie haben mir das ganze Wochenende gerettet.",
+        "Der Preis ist der Preis. Und jetzt fahren Sie. Wenn Sie sich beeilen, verpassen Sie das Stück Ihrer Tochter nicht.",
+        "Rachel kam an der Schule an, gerade als das Licht ausging. Ihre Tochter, als Baum verkleidet, stand auf der Bühne.",
+        "Sie hatte nur eine Zeile. Sie sagte sie perfekt. Und Rachel weinte in der letzten Reihe mehr als in einem ganzen Jahr.",
+      ], questions: [{ prompt: "Wie viel berechnete Walt?", options: ["Vierhundert Dollar", "Zweitausend Dollar", "Vierzig Dollar"] }] },
+      { title: "Ein hartes Jahr", lines: [
+        "Zwei Jahre später lief es für Walt nicht gut. Am Stadtrand hatte eine große Autoreparatur-Kette eröffnet, mit einem grellen Schild und billiger Werbung.",
+        "Es kamen immer weniger Kunden. An einem Montag saß Walt allein in seiner leeren Werkstatt und zählte sein Geld zweimal. Es reichte nicht für die Miete.",
+        "Vielleicht ist es Zeit zu schließen, Tyler.",
+        "Chef, warten Sie. Sehen Sie aufs Telefon. Da passiert etwas Seltsames.",
+        "Das Telefon klingelte ununterbrochen. Draußen warteten Autos. Eine Schlange von Menschen zog sich die Straße hinunter.",
+        "Jemand hat im Internet über Sie geschrieben. Es wurde zweihunderttausend Mal geteilt.",
+      ], questions: [{ prompt: "Warum kamen plötzlich Kunden?", options: ["Walt senkte seine Preise", "Jemand schrieb online über Walt", "Eine neue Straße wurde eröffnet"] }] },
+      { title: "Faire Preise", lines: [
+        "Es war Rachel. Sie hatte die Geschichte des alten Mechanikers erzählt, der ihr vierzig Dollar berechnet hatte, obwohl er vierhundert hätte berechnen können.",
+        "Menschen aus drei verschiedenen Bundesstaaten fuhren zu Walts Werkstatt, nur um den ehrlichen Mann kennenzulernen und ihm ihre Autos zu bringen.",
+        "In dieser Woche arbeiteten Walt und Tyler von morgens bis abends. Sie reparierten mehr Autos als im ganzen Jahr davor.",
+        "Chef, ich muss mich bei Ihnen entschuldigen. Ich lag mit dem Wasserpumpen-Trick falsch.",
+        "Keine Sorge, mein Junge. Ich habe es nicht fürs Internet getan. Ich habe es nur getan, damit ich nachts schlafen kann.",
+        "Am nächsten Morgen malte Tyler einen neuen Satz unter das alte Schild: „Faire Preise. Ehrliche Arbeit.“",
+      ], questions: [
+        { prompt: "Warum sagte Walt, er sei ehrlich gewesen?", options: ["Damit er nachts schlafen kann", "Weil Rachel ihm leidtat", "Weil er den Preis vergessen hatte"] },
+        { prompt: "Was wollte Tyler zuerst, dass Walt tut?", options: ["Das Auto kostenlos reparieren", "Rachel zu einer anderen Werkstatt schicken", "Sagen, es sei die Wasserpumpe, und Rachel mehr berechnen"] },
+      ] },
+    ] },
+];
