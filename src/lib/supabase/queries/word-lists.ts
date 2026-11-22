@@ -77,14 +77,17 @@ export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<W
  */
 export async function fetchDraftWordGroupSummaries(
   locale?: SupportLocale,
+  /** "de": the German drafts (ids "de-…", permission germanTrack) instead of the English ones. */
+  language: "en" | "de" = "en",
 ): Promise<WordGroupSummary[]> {
-  const { data, error } = await createServiceRoleClient()
+  const base = createServiceRoleClient()
     .from("word_groups")
     .select("*, vocabulary_words(id)")
-    .eq("status", "draft")
-    .not("id", "like", "de-%")
-    .not("id", "like", "passage-%")
-    .order("order_index");
+    .eq("status", "draft");
+  const { data, error } = await (language === "de"
+    ? base.like("id", "de-%")
+    : base.not("id", "like", "de-%").not("id", "like", "passage-%")
+  ).order("order_index");
   if (error) throw error;
   const drafts = await summarizeGroups((data ?? []) as unknown as GroupWithWordIds[], locale);
   return drafts.map((group) => ({ ...group, draft: true }));

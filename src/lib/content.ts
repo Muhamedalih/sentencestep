@@ -95,9 +95,10 @@ export async function getLessonSummaries(
 export async function getDraftLessonSummaries(
   mode: LearningMode,
   locale?: SupportLocale,
+  language: "en" | "de" = "en",
 ): Promise<LessonUnit[]> {
   if (!isSupabaseConfigured()) return [];
-  return fetchDraftLessonSummaries(mode, locale);
+  return fetchDraftLessonSummaries(mode, locale, language);
 }
 
 /** Sentence and word counts of one lesson — see HomeLessons.lessonStats. */

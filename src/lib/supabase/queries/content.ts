@@ -464,18 +464,19 @@ export const fetchLessonSummaries = unstable_cache(
 export async function fetchDraftLessonSummaries(
   mode: LearningMode,
   locale?: SupportLocale,
+  /** "de": the German drafts (ids "de-…", permission germanTrack) instead of the English ones. */
+  language: "en" | "de" = "en",
 ): Promise<LessonUnit[]> {
   const supabase = await createClient();
+  const base = supabase
+    .from("lessons")
+    .select(
+      "id, mode, level_id, order_index, title, title_ar, description, description_ar, is_free, status, illustration_url",
+    )
+    .eq("mode", mode);
+  const scoped = language === "de" ? base.like("id", "de-%") : base.not("id", "like", "de-%");
   const [{ data: rows, error }, { data: levels, error: levelsError }] = await Promise.all([
-    supabase
-      .from("lessons")
-      .select(
-        "id, mode, level_id, order_index, title, title_ar, description, description_ar, is_free, status, illustration_url",
-      )
-      .eq("mode", mode)
-      .not("id", "like", "de-%")
-      .eq("status", "draft")
-      .order("order_index"),
+    scoped.eq("status", "draft").order("order_index"),
     supabase.from("levels").select("id, index").eq("mode", mode),
   ]);
   if (error) throw error;
@@ -731,7 +732,8 @@ export async function fetchLessonById(
         .from("lessons")
         .select("*, levels(*)")
         .eq("mode", mode)
-        .not("id", "like", "de-%")
+        // A German id ("de-…", permission germanTrack) is read as itself. German lessons stay drafts
+        // for now, which the lessons rule shows to an admin alone, so this opens nothing for a learner.
         .eq("id", id)
         .in("status", allowDraft ? ["published", "draft"] : ["published"])
         .maybeSingle(),

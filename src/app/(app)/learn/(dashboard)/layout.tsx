@@ -7,6 +7,7 @@ import { ReportProblemButton } from "@/components/app/report-problem-button";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
 import { getEffectiveFeatures } from "@/lib/features/queries";
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { fetchMySavedSentencesCount } from "@/lib/supabase/queries/saved-sentences";
 
@@ -53,6 +54,8 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
     // Already resolved for this request by LearnLayout (cache()'d), so it costs nothing here.
     getEffectiveFeatures(),
   ]);
+  // The learning-language chip is for Admins alone for now (permission germanTrack).
+  const learnLanguage = isAdminUser ? await getLearnLanguage() : undefined;
 
   // The Library's menu item: admins always; a subscriber once the "libraryGift" permission is open for
   // them. The subscription is only looked up when that permission is open, so while it is closed this
@@ -62,7 +65,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
   return (
     <div className="app-shell bg-background flex min-h-svh flex-col">
       <DashboardChrome
-        header={<AppHeader user={user} savedCount={savedCount} />}
+        header={<AppHeader user={user} savedCount={savedCount} learnLanguage={learnLanguage} />}
         sidebar={
           <LearnSidebar
             isAdminUser={isAdminUser}

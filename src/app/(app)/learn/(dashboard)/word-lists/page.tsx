@@ -1,3 +1,4 @@
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 
 import { WordListsLibrary } from "@/components/app/word-lists-library";
@@ -55,7 +56,9 @@ export default async function WordListsPage({
 
   // Topics still in draft are shown to an admin alone, in the grid only (a card marked Draft that opens
   // the admin preview): the figures below (mastery, the banner) never count them.
-  const drafts = isAdminUser ? await getDraftWordGroupSummaries(locale ?? undefined) : [];
+  // In German (permission germanTrack, an admin's choice) the grid is the German topics, all drafts for now.
+  const language = isAdminUser ? await getLearnLanguage() : "en";
+  const drafts = isAdminUser ? await getDraftWordGroupSummaries(locale ?? undefined, language) : [];
 
   // Smart word practice, signed-in learners only (the schedule needs an
   // account): each card's mastery and the number of words waiting for review.
@@ -101,7 +104,7 @@ export default async function WordListsPage({
     <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
       {/* The redesigned dashboard is admin-controlled ("Word Lists redesign" in /admin/features):
           everyone else keeps the library exactly as it was. */}
-      {redesign && !features.rollouts.wordCovers ? (
+      {redesign && !features.rollouts.wordCovers && language !== "de" ? (
         <WordListsDashboard
           groups={groups}
           isPremiumUser={hasPremium || isAdminUser}
@@ -111,7 +114,9 @@ export default async function WordListsPage({
         />
       ) : (
         <WordListsLibrary
-          groups={drafts.length > 0 ? [...groups, ...drafts] : groups}
+          groups={
+            language === "de" ? drafts : drafts.length > 0 ? [...groups, ...drafts] : groups
+          }
           isPremiumUser={hasPremium || isAdminUser}
           weakWords={weakWords}
           mastery={mastery}
