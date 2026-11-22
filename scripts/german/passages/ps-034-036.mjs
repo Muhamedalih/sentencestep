@@ -30,12 +30,12 @@ export const passages = [
         "Dreißig Verwandte hielten den Atem an. Tante Pam betrachtete die Decke. Onkel Rick betrachtete seine Schuhe.",
         "Zwölf Jahre. Zwölf Jahre habe ich darauf gewartet, dass das zu mir zurückkommt.",
         "Ein Murmeln ging durch den Raum. Zu ihm zurück?",
-        "Ich habe sie an einer Tankstelle gekauft und Rick als Scherz geschenkt. Ich wollte sehen, wie lange sie sich hält. Ich habe ein Notizbuch geführt: sieben Haushalte, vier Geschenkpapiere, eine Beerdigung im Garten.",
+        "Ich habe sie an einer Tankstelle gekauft und Rick zum Spaß geschenkt. Ich wollte sehen, wie lange sie sich hält. Ich habe ein Notizbuch geführt: sieben Haushalte, vier Sorten Geschenkpapier, eine Beerdigung im Garten.",
       ], questions: [{ prompt: "Was verrät Opa Joes Wendung „zu mir zurückkommt“?", options: ["Er hatte die Lampe schon einmal geschenkt bekommen", "Er mochte die Lampe weniger als alle anderen", "Er hatte die Lampe von Rick gestohlen", "Er war derjenige, der die Tradition begonnen hatte"] }] },
       { title: "Eigentum der Familie", lines: [
         "Du? Du warst es? Ich habe zwölf Jahre gelitten!",
         "Du hast gelitten? Ich habe gesehen, wie du sie in einer Schachtel mit Teebeuteln versteckt hast. Es war der beste Tag meines Jahres.",
-        "Der Raum explodierte: Gelächter, Anschuldigungen, dreißig Menschen, die zwölf Jahre Feste von Grund auf neu zusammensetzten. Tante Pam holte ihre Tabelle hervor und schrieb zum ersten Mal einen Namen ganz nach oben.",
+        "Der Raum explodierte: Gelächter, Anschuldigungen, dreißig Menschen, die zwölf Jahre Feste von Grund auf neu rekonstruierten. Tante Pam holte ihre Tabelle hervor und schrieb zum ersten Mal einen Namen ganz nach oben.",
         "Opa Joe stellte den Flamingo auf den Kaminsims, neben ein Foto seiner verstorbenen Frau, die, wie er sagte, die Einzige gewesen war, die es gewusst hatte.",
         "Er kam nie wieder in eine Schachtel. Aber jeden Dezember versammelt sich die ganze Familie um den Kaminsims und tut ganz feierlich so, als sähe sie ihn zum ersten Mal.",
       ], questions: [
@@ -47,7 +47,7 @@ export const passages = [
     sections: [
       { title: "Vierzig Dollar", lines: [
         "Danny Brooks war ein neunzehnjähriger Ingenieurstudent, der Geld brauchte. Als die Riverside Roosters bekannt gaben, dass sie ein Maskottchen suchten, bewarb er sich in etwa vier Sekunden.",
-        "Der Job brachte vierzig Dollar pro Spiel. Der letzte Maskottchendarsteller, erfuhr Danny später, hatte aufgehört, nachdem er bei einer Anfeuerungsveranstaltung von der Bühne gefallen war.",
+        "Der Job brachte vierzig Dollar pro Spiel. Der letzte Maskottchendarsteller, erfuhr Danny später, hatte aufgehört, nachdem er bei einer Motivationsfeier vor dem Spiel von der Bühne gefallen war.",
         "Du musst nur tanzen, winken und nicht hinfallen.",
         "Er reichte Danny ein riesiges rot-weißes Hühnerkostüm. Allein der Kopf war so groß wie eine Waschmaschine, und der Schnabel ragte heraus wie der Bug eines Kanus.",
         "Danny konnte nur durch einen schmalen Gitterschlitz unter dem Schnabel sehen.",
@@ -77,7 +77,7 @@ export const passages = [
         "Danny rannte auf das Spielfeld, was Maskottchen nie tun durften. Der Schiedsrichter pfiff.",
         "Ein Spieler der Gäste wollte gerade einen Freiwurf ausführen.",
         "Danny wollte tanzen, aber sein linker Fuß fand eine Schweißpfütze, und er rutschte auf dem Bauch wie eine riesige Bowlingkugel über den Boden.",
-        "In Erinnerung an Brendas dritte Regel blieb er liegen und hob einen Flügel, als wäre alles geplant gewesen.",
+        "Brendas dritte Regel im Kopf, blieb er liegen und hob einen Flügel, als wäre alles geplant gewesen.",
         "Der Spieler der Gäste starrte auf ein riesiges Huhn zu seinen Füßen, verlor die Konzentration und verfehlte beide Würfe.",
       ], questions: [{ prompt: "Warum verfehlte der Spieler der Gäste seine Würfe?", options: ["Ein riesiges Huhn rutschte neben ihm über den Boden", "Der Schiedsrichter pfiff noch einmal", "Der Ball war zu schwer"] }] },
       { title: "Die Regel", lines: [

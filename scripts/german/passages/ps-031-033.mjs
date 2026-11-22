@@ -12,7 +12,7 @@ export const passages = [
       ], questions: [{ prompt: "Wie dachte Paul zu Beginn über den Kurs?", options: ["Er hielt ihn für Zeitverschwendung", "Er war nervös wegen der Kursleiterin", "Er freute sich darauf, etwas Neues zu lernen"] }] },
       { title: "Annie", lines: [
         "Jedes Paar bekam eine Plastikpuppe. Carla stellte ihre als Annie vor: fünfzehn Jahre im Dienst, und sie hatte sich nie ein einziges Mal beschwert.",
-        "Die erste Fertigkeit war die Herzdruckmassage: fest und schnell drücken, im Rhythmus eines berühmten Disco-Lieds über das Überleben.",
+        "Das Erste, was sie übten, war die Herzdruckmassage: fest und schnell drücken, im Rhythmus eines berühmten Disco-Lieds über das Überleben.",
         "Paul drückte vorsichtig, als könnte die Puppe zerbrechen.",
         "Sie tun ihr nicht weh, Paul. Fünf Zentimeter tief, und hören Sie nicht auf.",
         "Nach fünf Minuten brannten seine Arme, und sein Hemd war nass. Er hatte schon lange aufgehört, auf die Uhr zu sehen.",
@@ -21,7 +21,7 @@ export const passages = [
       ], questions: [{ prompt: "Was tat Paul, als die Übung zu Ende war?", options: ["Er bat, früher gehen zu dürfen", "Er entschuldigte sich bei der Puppe", "Er machte ein Foto von Annie"] }] },
       { title: "Marcos", lines: [
         "Im Juni hatte Paul den Kurs fast vergessen.",
-        "An dem Geburtstag seiner Tochter Emily ging die Familie ins Marcos, ein kleines italienisches Restaurant, in dem die Kellner jeden beim Namen kannten.",
+        "Am Geburtstag seiner Tochter Emily ging die Familie ins „Marco’s“, ein kleines italienisches Restaurant, in dem die Kellner jeden beim Namen kannten. (section 3 title Marcos -> Marco’s)",
         "Am Nebentisch erzählte ein älterer Mann seinem Enkel einen Witz, und alle um ihn herum lachten.",
         "Plötzlich veränderte sich sein Gesicht. Er legte eine Hand auf die Brust und sackte auf den Tisch.",
         "Eine Frau schrie. Teller krachten auf den Boden. Vierzig Leute standen auf, aber niemand rührte sich.",
@@ -39,7 +39,7 @@ export const passages = [
       ], questions: [{ prompt: "Warum sagte die Krankenschwester Paul, er solle weitermachen?", options: ["Der Krankenwagen hatte Verspätung", "Er machte es richtig", "Sie wusste nicht, wie sie helfen sollte"] }] },
       { title: "Eine Karte", lines: [
         "Die Sanitäter brachten den Mann ins Krankenhaus. Zwei Tage lang sagte niemand Paul, ob er überlebt hatte.",
-        "Am dritten Tag rief der Restaurantbesitzer an. Der Mann hieß Herr Reyes, war achtundsiebzig und war wach und wollte Pasta.",
+        "Am dritten Tag rief der Restaurantbesitzer an. Der Mann hieß Herr Reyes, war achtundsiebzig, wieder bei Bewusstsein und verlangte nach Pasta.",
         "Einen Monat später kam eine Karte in Pauls Büro: „Sie haben mir mehr Jahre mit meinem Enkel geschenkt. Ich kann Ihnen nie genug danken.“",
         "Paul las sie dreimal. Dann ging er durch das Büro zu Denises Schreibtisch.",
         "Denise, wann ist der nächste Erste-Hilfe-Kurs? Der für Fortgeschrittene.",
@@ -69,7 +69,7 @@ export const passages = [
         "Dann schenkt dir niemand eine Million Dollar. Das ist ein Trick.",
       ], questions: [{ prompt: "Was denkt Dan über die E-Mail?", options: ["Sie ist echt", "Sie ist ein Trick", "Sie ist von Mama"] }] },
       { title: "Drei Regeln", lines: [
-        "Merk dir drei Regeln. Regel eins: Wenn etwas zu gut ist, ist es nicht echt.",
+        "Merk dir drei Regeln. Regel eins: Wenn etwas zu gut klingt, um wahr zu sein, ist es nicht echt.",
         "Regel zwei: Gib niemandem dein Passwort.",
         "Regel drei: Klick nicht auf seltsame Links. Frag zuerst jemanden, dem du vertraust.",
         "Okay. Aber die E-Mail sieht so echt aus!",
@@ -118,7 +118,7 @@ export const passages = [
         "Im Büro öffnet eine Frau die Tür. Es ist Nina!",
         "Willkommen, Ben. Ich bin hier die Chefin.",
         "Sie?!",
-        "Ja. Sei zu allen freundlich. Man weiß nie, wer sie sind.",
+        "Ja. Sei zu allen freundlich. Man weiß nie, wen man vor sich hat.",
         "Ben lächelt. Heute wird ein guter Tag.",
       ], questions: [
         { prompt: "Wer ist Nina?", options: ["Bens Schwester", "Die Chefin des Büros", "Eine Lehrerin"] },

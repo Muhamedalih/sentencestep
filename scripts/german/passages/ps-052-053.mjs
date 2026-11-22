@@ -30,7 +30,7 @@ export const passages = [
       ], questions: [{ prompt: "Wie versuchten sie, das Sofa ein zweites Mal zu bewegen?", options: ["Mit einem Seil durch das Fenster", "Mit einem größeren Lastwagen", "Mit vier starken Nachbarn"] }] },
       { title: "Die graue Tür", lines: [
         "Im vierten Stock war das Fenster zu klein. Das Sofa passte auch dort nicht hindurch.",
-        "Mike kam herunter, und sie setzten sich auf dem Gehweg auf das Sofa und lachten, bis sie weinten.",
+        "\"Mike kam herunter, und sie setzten sich auf das Sofa auf dem Gehweg und lachten, bis sie weinten.\"",
         "Herr Grant, der Hausverwalter, kam mit einem Kaffee heraus. Er sah das Seil, das Sofa und die beiden erschöpften Menschen an.",
         "Warum haben Sie nicht den Lastenaufzug benutzt?",
         "Den was?",

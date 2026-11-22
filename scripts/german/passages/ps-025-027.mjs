@@ -4,10 +4,10 @@ export const passages = [
     sections: [
       { title: "Eine große Angst", lines: [
         "Sara ist dreißig Jahre alt. Sie kann nicht schwimmen.",
-        "Sie hat Angst vor Wasser. Schon ein kleines Becken ist beängstigend.",
-        "Ihre Freunde planen eine Ausflug an den Strand.",
+        "Sie hat Angst vor Wasser. Schon ein kleines Becken macht ihr Angst.",
+        "Ihre Freunde planen einen Ausflug an den Strand.",
         "Ich möchte mitkommen ... aber ich kann nicht schwimmen.",
-        "Sie beschließt, an einem Schwimmkurs für Erwachsene teilzunehmen.",
+        "Sie beschließt, sich für einen Schwimmkurs für Erwachsene anzumelden.",
       ], questions: [{ prompt: "Was ist Saras Problem?", options: ["Sie kann nicht schwimmen", "Sie hat keine Freunde", "Sie hasst den Strand"] }] },
       { title: "Nur deine Füße", lines: [
         "Ihre Lehrerin ist Trainerin Lisa. Sie ist freundlich und ruhig.",
@@ -19,10 +19,10 @@ export const passages = [
       ], questions: [{ prompt: "Was macht Sara am ersten Tag?", options: ["Sie schwimmt zehn Meter", "Sie springt ins Becken", "Sie steckt ihre Füße ins Wasser"] }] },
       { title: "Das Treiben", lines: [
         "Dritte Woche. Sara ist jetzt im Wasser.",
-        "Lass dich nach hinten sinken. Ich bin da. Ich halte dich.",
+        "Lehn dich zurück. Ich bin da. Ich halte dich.",
         "Lass nicht los!",
         "Ich lasse nicht los. Atme. Entspann dich.",
-        "Langsam beginnt Sara, auf dem Wasser zu treiben.",
+        "Auf dem Wasser treiben",
         "Ich treibe! Lisa, sieh mal!",
         "Ich weiß. Und ich habe vor zehn Sekunden losgelassen.",
       ], questions: [{ prompt: "Hält Lisa Sara am Ende fest?", options: ["Nein, Sara treibt allein", "Ja, mit beiden Händen", "Ja, mit einer Hand"] }] },
@@ -44,7 +44,7 @@ export const passages = [
       { title: "Ein erstes Date", lines: [
         "Dan war sehr nervös. Heute Abend hatte er sein erstes Date mit Chloe, und sie hatte ein teures Restaurant ausgesucht.",
         "Er kam zwanzig Minuten zu früh und übte im Spiegel der Toilette seine besten Witze.",
-        "Guten Abend, der Herr. Ein Tisch für Dan?",
+        "Guten Abend, mein Herr. Ein Tisch für Dan?",
         "Ja! Ein Tisch für zwei, bitte.",
         "Der Kellner lächelte auf eine seltsame Art. Dan bemerkte es nicht.",
         "Chloe kam um sieben. Sie sah wunderschön aus, und Dan vergaß alle seine Witze.",
@@ -67,15 +67,15 @@ export const passages = [
       ], questions: [{ prompt: "Was tat Dan, als der Kuchen kam?", options: ["Er sagte allen die Wahrheit", "Er tat so, als hätte er Geburtstag", "Er verließ das Restaurant"] }] },
       { title: "Zwei Dans", lines: [
         "Der andere Mann hieß auch Dan. Heute war sein fünfzigster Geburtstag, und seine Frau hatte eine Überraschung für ihn.",
-        "Aber der Kuchen und alle Wunderkerzen waren an den falschen Tisch gegangen.",
+        "Aber der Kuchen und alle Wunderkerzen waren an den falschen Tisch gebracht worden.",
         "Es tut mir so leid. Es ist nicht mein Geburtstag. Ich habe nur Ihren Kuchen gegessen.",
-        "Der ältere Dan lachte so sehr, dass er weinte. Dann lud er beide an seinen Tisch ein.",
+        "Der ältere Dan lachte so sehr, dass ihm die Tränen kamen. Dann lud er beide an seinen Tisch ein.",
         "Die Kellner brachten einen zweiten Kuchen. Diesmal sangen alle den richtigen Namen für den richtigen Mann.",
         "Ich mag dich mehr, wenn du die Wahrheit sagst, Dan. Vielleicht fangen wir beim nächsten Mal damit an.",
         "Beim nächsten Mal? Du willst ein zweites Date?",
       ], questions: [
         { prompt: "Warum war ein zweiter Dan im Restaurant?", options: ["Er hatte seinen fünfzigsten Geburtstag", "Er arbeitete dort", "Er war Chloes Vater"] },
-        { prompt: "Was gefiel Chloe laut ihren Worten an Dan?", options: ["Seine lustigen Witze", "Wenn er die Wahrheit sagt", "Seine teuren Geschenke"] },
+        { prompt: "Was sagte Chloe, dass ihr an Dan gefällt?", options: ["Seine lustigen Witze", "Wenn er die Wahrheit sagt", "Seine teuren Geschenke"] },
       ] },
     ] },
   { sourceId: "the-vacant-lot", title: "Das brachliegende Grundstück", summary: "Alle in der Elm Street waren sich einig, dass das leere Grundstück ein Schandfleck war. Niemand war sich einig, was man dagegen tun sollte.", speakers: { "Councilman Hughes": "Stadtrat Hughes" },
@@ -104,11 +104,11 @@ export const passages = [
         "Die Abstimmung wurde um sechzig Tage verschoben, was in der Sprache der Politik bedeutete, dass jemand umdachte.",
       ], questions: [{ prompt: "Was zeigten die Anwohner, indem sie schweigend aufstanden?", options: ["Dass der Garten einem großen Teil der Gemeinde wichtig war", "Dass sie die Sitzung langweilte", "Dass sie dem Stadtrat zustimmten", "Dass sie gehen wollten"] }] },
       { title: "Ernte", lines: [
-        "Am Ende tat der Stadtrat etwas Ungewöhnliches. Er bot dem Bauträger ein anderes Grundstück an und gab den Nachbarn einen Pachtvertrag über zehn Jahre für das Grundstück zu einem Dollar pro Jahr.",
+        "Am Ende tat der Stadtrat etwas Ungewöhnliches. Er bot dem Bauträger ein anderes Grundstück an und verpachtete den Nachbarn das Grundstück für zehn Jahre zu einem Dollar pro Jahr.",
         "Im Oktober feierten sie das erste Erntefest: zweiundvierzig Gemüsesorten, ein Tisch voller Kuchen und eine Menge Nachbarn, die einst die Straßenseite gewechselt hatten, um einander auszuweichen.",
         "Stadtrat Hughes kam spät, im Anzug und mit einer Papiertüte in der Hand. Er fragte, ein wenig verlegen, ob jemand ein freies Beet habe.",
         "Wir haben eins ganz hinten, neben Walters Tomaten. Eine Warnung vorab: Walter hat Meinungen.",
-        "Tomaten kümmert die Politik nicht, junger Mann. Bring einen Spaten mit.",
+        "Tomaten ist die Politik egal, junger Mann. Bring einen Spaten mit.",
         "Im folgenden Frühling erschien ein kleines Holzschild am Zaun: Gemeinschaftsgarten Elm Street. Darunter hatte jemand in kleineren Buchstaben gemalt: Beete frei. Meinungen willkommen.",
       ], questions: [
         { prompt: "Wie löste der Stadtrat das Problem schließlich?", options: ["Er stoppte das Projekt des Bauträgers vollständig", "Er bot dem Bauträger ein anderes Grundstück an und verpachtete das Grundstück an die Nachbarn", "Er verkaufte das Grundstück an Ruth", "Er bat die Nachbarn zu gehen"] },

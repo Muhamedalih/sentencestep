@@ -9,7 +9,7 @@ export const passages = [
         "Es war eine kleine Frau in einem grünen Mantel, mit einem Klapphocker unter dem Arm, und sie sah aus, als wäre sie etwa achtundsiebzig.",
         "Willkommen in der Gruppe, meine Dame! Sie sind, genau genommen, die ganze Gruppe.",
         "Keine Sorge, mein Lieber. Ich bin es gewohnt, zu früh zu kommen und die Einzige zu sein. Ich heiße Rosa.",
-      ], questions: [{ prompt: "Wer nahm an Leos erster Führung teil?", options: ["Eine ganze Menge Touristen", "Zwei Freunde von Herrn Kane", "Nur eine ältere Frau"] }] },
+      ], questions: [{ prompt: "Wer nahm an Leos erster Führung teil?", options: ["Eine ganze Touristengruppe", "Zwei Freunde von Herrn Kane", "Nur eine ältere Frau"] }] },
       { title: "Eine kleine Korrektur", lines: [
         "Leo begann am Brunnen, so wie es im Skript stand: Er war im Jahr achtzehnhundertneunzig vom berühmten Architekten Julian Hale gebaut worden.",
         "Achtzehnhundertvierundneunzig, mein Lieber. Und Herr Hale hat ihn nie gesehen. Mein Großvater hat den dritten Stein von links gesetzt.",
@@ -22,7 +22,7 @@ export const passages = [
       { title: "Die flüsternde Ecke", lines: [
         "Am Ende der Marktarkade blieb sie unter einer gewölbten Steindecke stehen und zeigte auf eine Ecke.",
         "Stellen Sie sich dorthin, schauen Sie zur Wand und warten Sie.",
-        "Sie ging langsam zur gegenüberliegenden Ecke, zehn Meter entfernt. Leo kam sich lächerlich vor, ein erwachsener Mann, der in einer öffentlichen Arkade zur Wand sah.",
+        "Sie ging langsam zur gegenüberliegenden Ecke, zehn Meter entfernt. Leo kam sich lächerlich vor, ein erwachsener Mann, der in einer öffentlichen Arkade zur Wand blickte.",
         "Dann erreichte ihn ein Flüstern, so klar, als stünde sie neben ihm: „Willkommen in meiner Stadt.“",
         "Wie ist das möglich?",
         "Die Wölbung trägt den Schall an der Wand entlang. Mein Mann hat mir aus dieser Ecke einen Heiratsantrag gemacht. Ich habe zu einer Wand Ja gesagt.",
@@ -84,7 +84,7 @@ export const passages = [
         "Nächstes Jahr komme ich in fünfzig Minuten ins Ziel.",
       ], questions: [
         { prompt: "Warum gab Josh Jess zehn Dollar?", options: ["Er hatte die Wette verloren", "Sie hatte Geburtstag", "Sie hatte das Rennen gewonnen"] },
-        { prompt: "Was kaufte Jess in der Nacht der Wette?", options: ["Eine Eintrittskarte für das Rennen", "Ein Paar Laufschuhe", "Ein Geschenk für Josh"] },
+        { prompt: "Was kaufte Jess in der Nacht der Wette?", options: ["Eine Startnummer für das Rennen", "Ein Paar Laufschuhe", "Ein Geschenk für Josh"] },
       ] },
     ] },
   { sourceId: "the-wrong-seat", title: "Der falsche Platz", summary: "Zwei Karten, ein Sitzplatz, und niemand will stehen.", speakers: { "Mr. Hill": "Herr Hill" },

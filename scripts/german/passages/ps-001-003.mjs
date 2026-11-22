@@ -108,7 +108,7 @@ export const passages = [
       { title: "Greg hat einen Plan", lines: [
         "Du, sieh unter dem Tisch nach. Du, prüf die Bücher. Nora, fass nichts an!",
         "Im dritten Buch fand jemand ein Stück Papier mit drei Zahlen: drei, eins, fünf.",
-        "Eine Telefonnummer! Soll jemand dort anrufen!",
+        "Eine Telefonnummer! Jemand soll dort anrufen!",
         "Greg, eine Telefonnummer hat mehr als drei Ziffern.",
         "Dann ist es der Anfang einer Telefonnummer. Sucht weiter!",
         "In der Ecke hob Brian die Hand. Er war ein ruhiger Mann aus der Buchhaltung und sagte auch in Besprechungen nie viel.",
@@ -126,7 +126,7 @@ export const passages = [
       ], questions: [{ prompt: "Was bemerkte Brian?", options: ["Die Wanduhr passte zu den Zahlen auf dem Papier", "Der Timer war kaputt", "Die Tür war offen"] }] },
       { title: "Hör auf Brian", lines: [
         "Unter der Uhr war ein kleiner Safe. Nora drehte am Rad: drei, eins, fünf. Er öffnete sich.",
-        "Darin lag ein kleiner Schlüssel. Alle rannten zur Tür, und Nora öffnete sie mit noch vierzig Sekunden übrig.",
+        "Darin lag ein kleiner Schlüssel. Alle rannten zur Tür, und Nora öffnete sie, als noch vierzig Sekunden übrig waren.",
         "Glückwunsch! Neunundfünfzig Minuten und zwanzig Sekunden. Unsere Kamera zeigt, dass Brian die Lösung in Minute fünf hatte.",
         "Alle sahen Greg an. Greg sah auf den Boden.",
         "Zu meiner Verteidigung: Ich war sehr damit beschäftigt, zu führen.",

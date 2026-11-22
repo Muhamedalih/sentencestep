@@ -23,7 +23,7 @@ export const passages = [
       ], questions: [{ prompt: "Wo prüfte Mark den Rauchmelder?", options: ["In der Küche", "Im Schlafzimmer", "Im Flur"] }] },
       { title: "Kein Schlaf", lines: [
         "Um halb fünf waren beide sehr müde.",
-        "Julie legte sich ein Kissen über den Kopf. Mark saß im Wohnzimmer mit einem anderen Kissen über den Ohren.",
+        "Julie legte sich ein Kissen über den Kopf. Mark saß im Wohnzimmer mit einem zweiten Kissen über den Ohren.",
         "Piep.",
         "Jetzt reicht's. Ich gehe in ein Hotel.",
         "Warte! Ich habe eine Idee. Ich nehme das Geräusch mit meinem Handy auf und finde heraus, woher es kommt.",
@@ -40,7 +40,7 @@ export const passages = [
         "Er nahm die Batterie heraus, und das Haus war endlich still. Sie schliefen bis zum Mittag, und Julie sprach bis zum Mittagessen nicht mit ihm.",
       ], questions: [
         { prompt: "Wo fand Julie den alten Rauchmelder?", options: ["An der Decke", "Unter dem Bett", "In der Krimskramsschublade"] },
-        { prompt: "Warum war es so schwer, das Piepen zu finden?", options: ["Es kam einmal pro Minute, aus dem Inneren einer Schublade", "Der Rauchmelder im Flur war kaputt", "Ein Vogel versteckte sich im Schlafzimmer"] },
+        { prompt: "Warum war es so schwer, das Piepen zu finden?", options: ["\"Es kam einmal pro Minute, aus einer Schublade\"", "Der Rauchmelder im Flur war kaputt", "Ein Vogel versteckte sich im Schlafzimmer"] },
       ] },
     ] },
   { sourceId: "the-vending-machine", title: "Der Automat", summary: "Sam wirft einen Dollar ein. Die Chips fallen nicht.", speakers: { "Mr. Dunn": "Herr Dunn", "Mrs. Cruz": "Frau Cruz" },
@@ -73,8 +73,8 @@ export const passages = [
         "Frau Cruz ist die Putzfrau. Sie kommt um drei Uhr.",
       ], questions: [{ prompt: "Wer hat den Schlüssel?", options: ["Frau Cruz", "Herr Dunn", "Sam"] }] },
       { title: "Das Geheimnis", lines: [
-        "Um drei Uhr kommt Frau Cruz mit ihrem Wagen. Sie sieht Sam, den Wachmann und den Automaten an.",
-        "Schon wieder die Chips? Das machen alle. Passen Sie auf.",
+        "\"Um drei Uhr kommt Frau Cruz mit ihrem Reinigungswagen. Sie sieht Sam, den Wachmann und den Automaten an.\"",
+        "\"Schon wieder die Chips? Das machen alle. Schauen Sie zu.\"",
         "Sie legt die Hand an die Seite. Sie gibt einen kleinen Stoß.",
         "Bums! Bums! Beide Tüten fallen.",
         "Woher wissen Sie das?",
@@ -102,7 +102,7 @@ export const passages = [
         "Die Frau schüttelte den Kopf, und Hannah wollte weinen.",
         "Am Informationsschalter hörte ihr ein Wachmann namens Herr Brooks ruhig zu.",
         "Keine Sorge. Das passiert jede Woche, und Kinder werden fast immer innerhalb von zehn Minuten gefunden.",
-        "Er sprach in sein Funkgerät: „Ein Mädchen, fünf Jahre alt, gelber Mantel, rote Mütze. Ihr Name ist Lily.“",
+        "\"Er sprach in sein Funkgerät: „Ein Mädchen, fünf Jahre alt, gelber Mantel, rote Mütze. Sie heißt Lily.“\"",
         "Eine Minute später füllte eine Stimme das ganze Einkaufszentrum: „Lily, deine Mama wartet am Informationsschalter.“",
       ], questions: [{ prompt: "Wer half Hannah am Informationsschalter?", options: ["Die Frau, die sie angehalten hatte", "Eine Freundin von Lily", "Herr Brooks, ein Wachmann"] }] },
       { title: "Sieben Minuten", lines: [
@@ -117,7 +117,7 @@ export const passages = [
       ], questions: [{ prompt: "Wie fühlte sich das Warten für Hannah an?", options: ["Wie sieben Stunden", "Wie sieben Tage", "Wie sieben Sekunden"] }] },
       { title: "Der Hamster", lines: [
         "Lily saß auf dem Boden der Tierhandlung vor einem kleinen Glashäuschen.",
-        "Darin lief ein Hamster in einem Rad, und Lily sah ihm mit einem breiten Lächeln zu.",
+        "\"Darin lief ein Hamster in einem Laufrad, und Lily sah ihm mit einem breiten Lächeln zu.\"",
         "Hannah rannte zu ihr und hielt sie fest. Sie weinte.",
         "Mama, warum weinst du?",
         "Lily! Du hast dich verlaufen! Ich habe überall gesucht.",

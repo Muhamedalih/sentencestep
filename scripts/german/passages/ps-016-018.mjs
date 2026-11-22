@@ -4,7 +4,7 @@ export const passages = [
     sections: [
       { title: "Ein Klopfen an der Tür", lines: [
         "Frau Holloway war vor elf Jahren aus dem Schuldienst in den Ruhestand gegangen, aber ehemalige Schüler besuchten ihr kleines Haus noch, meist dann, wenn sie etwas brauchten.",
-        "An einem regnerischen Donnerstag klopfte ein großer Mann in einem nervösen Anzug an ihre Tür. Sie brauchte eine volle Minute, um Marcus Reed zu erkennen, der einmal eine Vertretungslehrerin in der Abstellkammer eingeschlossen hatte.",
+        "An einem regnerischen Donnerstag klopfte ein großer Mann in einem nervösen Anzug an ihre Tür. Sie brauchte eine volle Minute, um Marcus Reed zu erkennen, der einmal einen Vertretungslehrer in der Abstellkammer eingeschlossen hatte.",
         "Frau Holloway, ich weiß, dass Sie keinen Grund haben, mir zu helfen. Aber ich bewerbe mich als Lehrer, und die Schule braucht ein Empfehlungsschreiben von jemandem, der mich als Schüler kannte.",
         "Ein Empfehlungsschreiben. Von mir. Für Sie.",
         "Sie sagte weder Ja noch Nein. Sie schenkte zwei Tassen Tee ein, so langsam wie jemand, der seine Worte wählt.",
@@ -16,7 +16,7 @@ export const passages = [
         "Sie erinnerte sich an den Winter, in dem sein Vater seine Arbeit verlor und Marcus anfing, eine Stunde zu früh zu kommen. Nicht um zu lernen, sondern weil das Schulgebäude warm war.",
         "Sie erinnerte sich daran, dass er einen jüngeren Jungen zweimal gegen Mobber verteidigt hatte und danach so getan hatte, als wäre nichts gewesen.",
         "Sie hätte „energiegeladen und begabt“ schreiben können. Das wäre höflich gewesen und falsch. Stattdessen schrieb sie drei Stunden lang, zerriss zwei Entwürfe und fing von vorn an.",
-      ], questions: [{ prompt: "Warum zerriss Frau Holloway zwei Entwürfe?", options: ["Sie konnte sich nicht klar an Marcus erinnern", "Sie hatte Angst, die Schule würde ihn ablehnen", "Sie wollte, dass der Brief ehrlich und nicht nur höflich ist", "Sie hatte zu viele Rechtschreibfehler gemacht"] }] },
+      ], questions: [{ prompt: "Warum zerriss Frau Holloway zwei Entwürfe?", options: ["Sie konnte sich nicht klar an Marcus erinnern", "Sie hatte Angst, die Schule würde ihn ablehnen", "Sie wollte, dass der Brief ehrlich und nicht nur höflich wäre", "Sie hatte zu viele Rechtschreibfehler gemacht"] }] },
       { title: "Das Vorstellungsgespräch", lines: [
         "Zwei Wochen später saß Marcus Direktor Bell gegenüber, einem ruhigen Mann mit grauem Bart und einer aufgeschlagenen Mappe auf dem Schreibtisch.",
         "Ich habe Frau Holloways Brief mehrmals gelesen. Ich möchte Ihnen einen Satz vorlesen.",
@@ -28,14 +28,14 @@ export const passages = [
       { title: "Raum vierzehn", lines: [
         "Marcus fing im September in Raum vierzehn an, mit einunddreißig Schülern und einem Magen voller Nervosität.",
         "Am ersten Morgen legte ein Junge in der letzten Reihe die Füße auf den Tisch und starrte ihn mit offener Verachtung an.",
-        "Marcus erkannte den Blick. Er hatte ihn selbst jahrelang getragen.",
-        "Füße runter, bitte. Und bleib nach dem Unterricht einen Moment da. Du hast keinen Ärger. Ich glaube nur, dass du klüger bist, als du die Leute sehen lässt.",
+        "Marcus erkannte den Blick. Er hatte ihn selbst jahrelang aufgesetzt.",
+        "Füße runter, bitte. Und bleib nach dem Unterricht einen Moment da. Du bekommst keinen Ärger. Ich glaube nur, dass du klüger bist, als du die Leute sehen lässt.",
         "Der Junge sah überrascht aus, dann misstrauisch, dann, ganz leicht, neugierig.",
         "An diesem Abend schrieb Marcus eine Notiz auf eine einfache weiße Karte und schickte sie an ein kleines Haus am anderen Ende der Stadt.",
         "Liebe Frau Holloway, ich habe die Stelle bekommen. Ich glaube, ich werde viel Tee und viel Geduld brauchen. Danke, dass Sie der wahren Version von mir vertraut haben.",
       ], questions: [
         { prompt: "Warum sprach Marcus den Jungen in der letzten Reihe so an?", options: ["Er wollte den Jungen vor der Klasse bestrafen", "Er hatte Angst vor dem Jungen", "Er wollte, dass der Direktor ihn bemerkt", "Er erkannte in dem Jungen eine Version seines jüngeren Ichs und wollte ihn erreichen"] },
-        { prompt: "Was ist die zentrale Botschaft der Geschichte?", options: ["Lehrer sollten schlechtes Verhalten nie verzeihen", "Ein Empfehlungsschreiben muss immer positiv sein", "Ehrlicher Glaube an einen Menschen kann seine Zukunft verändern", "Junge Leute sollten keine Risiken eingehen"] },
+        { prompt: "Was ist die zentrale Botschaft der Geschichte?", options: ["Lehrer sollten schlechtes Verhalten nie verzeihen", "Ein Empfehlungsschreiben muss immer positiv sein", "Aufrichtiger Glaube an einen Menschen kann seine Zukunft verändern", "Junge Leute sollten keine Risiken eingehen"] },
       ] },
     ] },
   { sourceId: "the-camera-is-on", title: "Die Kamera ist an", summary: "Brandons Hemd sah perfekt aus. Seine Shorts nicht.", speakers: { "Ms. Parker": "Frau Parker" },
@@ -49,7 +49,7 @@ export const passages = [
       ], questions: [{ prompt: "Was stimmte mit Brandons Kleidung nicht?", options: ["Sein Hemd war schmutzig", "Er trug unter dem Tisch eine Schlafanzug-Shorts", "Er hatte seine Krawatte vergessen"] }] },
       { title: "Ein kleines Problem", lines: [
         "Zehn Minuten lang war alles in Ordnung. Frau Parker sprach über das neue Projekt.",
-        "Plötzlich fing Brandons Hund Max an der Tür laut an zu bellen.",
+        "Plötzlich begann Brandons Hund Max, an der Tür laut zu bellen.",
         "Dann klingelte es an der Tür. Max bellte noch lauter.",
         "Entschuldigung, alle zusammen. Das ist ein Paket. Eine Minute!",
         "Brandon sprang von seinem Stuhl auf. Er vergaß eine Kleinigkeit.",
@@ -99,12 +99,12 @@ export const passages = [
         "Ein Mann antwortet. Seine Stimme ist traurig.",
         "Hallo? Mein Portemonnaie? Ja! Es gehört mir!",
         "Sie treffen sich an der Bushaltestelle. Herr Carter ist alt, und seine Hände zittern.",
-        "Danke, junge Dame. Das Geld ist nicht wichtig. Aber das Foto ist meine Frau. Sie ist nicht mehr da.",
+        "Danke, junge Dame. Das Geld ist nicht wichtig. Aber das Foto zeigt meine Frau. Sie ist nicht mehr bei uns.",
         "Maria spürt etwas Warmes in ihrem Herzen.",
       ], questions: [{ prompt: "Warum ist das Portemonnaie für Herrn Carter wichtig?", options: ["Es hat ein Foto seiner Frau", "Es ist neu", "Es hat viel Geld"] }] },
       { title: "Ein Geschenk", lines: [
         "Bitte, nehmen Sie fünfzig Dollar. Das ist für Sie.",
-        "Nein, danke. Ich bin glücklich, weil das Portemonnaie wieder bei Ihnen ist.",
+        "Nein, danke. Ich bin froh, dass das Portemonnaie wieder bei Ihnen ist.",
         "Herr Carter lächelt. Er kauft ihr im Café neben der Bushaltestelle eine heiße Schokolade.",
         "In dieser Nacht schläft Maria sehr gut.",
         "Sie hat nicht viel Geld. Aber manche Dinge sind wichtiger als Geld.",
