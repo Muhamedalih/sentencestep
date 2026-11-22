@@ -33,7 +33,7 @@ for (const g of groups) {
     if ((sentence.match(/___/g) ?? []).length !== 1) { console.log(`x ${g.sourceId} ${k}: the sentence needs exactly one ___`); problems++; }
     const accepted = [...new Set([...alts, ...(de.includes("ß") ? [de.replaceAll("ß", "ss")] : []), ...(alts.some((a) => a.includes("ß")) ? alts.map((a) => a.replaceAll("ß", "ss")) : [])])].map((a) => a.toLowerCase());
     const wid = `${gid}-${k}`;
-    wordRows.push({ id: wid, group_id: gid, order_index: s.order_index, target_word: de, sentence, hint_ar: s.hint_ar, ipa: null, accepted_answers: accepted });
+    wordRows.push({ id: wid, group_id: gid, order_index: s.order_index, target_word: de, sentence, hint_ar: s.hint_ar, accepted_answers: accepted });
     nWords++;
     const hints = await get(`content_translations?select=locale,value&content_type=eq.vocabulary_word&content_id=eq.${g.sourceId}-${k}&field=eq.hint&locale=in.(es,tr)`);
     for (const h of hints) trRows.push(tr("vocabulary_word", wid, "hint", h.locale, h.value));
