@@ -7,6 +7,8 @@ import { getAllLessons } from "@/lib/content";
 import { getDefaultNormalLessonVoiceId } from "@/lib/admin/voices-queries";
 import { recordQuestEventsAndBadges } from "@/lib/features/quest-service";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { languageOfContentId, type TargetLanguage } from "@/lib/learn-language";
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import {
   getContentTranslations,
   resolveScalarField,
@@ -54,9 +56,11 @@ function creditWordMastery(userId: string): void {
 export async function fetchActiveMistakeCountAction(): Promise<number> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return 0;
+  // Only the mistakes of the language being learned (German is a separate list, permission germanTrack).
+  const language = await getLearnLanguage();
   const [activeCount, dueReviewCount] = await Promise.all([
-    fetchActiveMistakeCount(userId),
-    fetchDueReviewCount(userId),
+    fetchActiveMistakeCount(userId, language),
+    fetchDueReviewCount(userId, language),
   ]);
   return activeCount + dueReviewCount;
 }
@@ -100,7 +104,7 @@ export async function recordSentenceMistakesAction(
     ),
   );
 
-  return { activeCount: await fetchActiveMistakeCount(userId) };
+  return { activeCount: await fetchActiveMistakeCount(userId, languageOfContentId(sentenceId)) };
 }
 
 /**
@@ -179,6 +183,9 @@ export async function recordWordListMistakeAction(word: string): Promise<void> {
   const userId = await getAuthenticatedUserId();
   if (!userId) throw new Error("Sign in to save progress.");
   if (!isMistakeWorthTracking(word)) return;
+  // A Word Lists mistake has no sentence, so it cannot be told apart by language and would land in the
+  // English list: German Word Lists practice records none (permission germanTrack).
+  if ((await getLearnLanguage()) === "de") return;
   await recordMistake(normalizeMistakeWord(word), null);
   revalidatePath("/learn/word-lists");
   revalidatePath("/learn/word-lists/review");
@@ -217,7 +224,7 @@ export async function recordWordListMistakeAction(word: string): Promise<void> {
 export async function fetchMistakesAction(lessonId: string): Promise<MistakeQueueItem[]> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return [];
-  return buildMistakeQueue(userId, { lessonId });
+  return buildMistakeQueue(userId, { lessonId }, languageOfContentId(lessonId));
 }
 
 /**
@@ -232,16 +239,17 @@ export async function fetchAllMistakesAction(limit: number): Promise<MistakeQueu
   if (!userId) return [];
   // A client-supplied number, so bounded: it can only ever ask for its own data, but each item costs a lookup.
   const bounded = Math.min(100, Math.max(1, Math.floor(Number.isFinite(limit) ? limit : 20)));
-  return buildMistakeQueue(userId, { limit: bounded });
+  return buildMistakeQueue(userId, { limit: bounded }, await getLearnLanguage());
 }
 
 async function buildMistakeQueue(
   userId: string,
   { lessonId, limit }: { lessonId?: string; limit?: number },
+  language: TargetLanguage,
 ): Promise<MistakeQueueItem[]> {
   const [activeRows, dueReviewRows] = await Promise.all([
-    fetchActiveMistakeRows(userId),
-    fetchDueReviewRows(userId),
+    fetchActiveMistakeRows(userId, language),
+    fetchDueReviewRows(userId, language),
   ]);
   const rows = [
     ...activeRows.map((row) => ({ ...row, isReview: false as const })),

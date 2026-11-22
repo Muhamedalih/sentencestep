@@ -1,17 +1,45 @@
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import { languageOfContentId, type TargetLanguage } from "@/lib/learn-language";
 import type { LearningMode } from "@/types/content";
+
+/**
+ * The mistakes of one learning language (permission germanTrack). A mistake belongs to the language of
+ * the sentence it was made in (ids "de-…" are German); a Word Lists mistake has no sentence and counts as
+ * English, which is why German Word Lists practice records none. Counts filter in SQL; the row readers
+ * filter after the read (the sets are tiny). Every reader defaults to English, so callers with no request
+ * (cron, e-mails) and every non-admin keep exactly what they had.
+ */
+function inLanguage(sentenceId: string | null, language: TargetLanguage): boolean {
+  return languageOfContentId(sentenceId ?? "") === language;
+}
+
+/** The SQL form of inLanguage for a head-count query on sentence_id. */
+function scopeCount<T extends { like: (c: string, p: string) => T; or: (f: string) => T }>(
+  query: T,
+  language: TargetLanguage,
+): T {
+  return language === "de"
+    ? query.like("sentence_id", "de-%")
+    : query.or("sentence_id.is.null,sentence_id.not.like.de-%");
+}
 
 /** Signed-in-only reads/writes for `mistakes` — always the session-aware server client, since RLS scopes every row to auth.uid() = user_id. */
 
-export async function fetchActiveMistakeCount(userId: string): Promise<number> {
+export async function fetchActiveMistakeCount(
+  userId: string,
+  language: TargetLanguage = "en",
+): Promise<number> {
   const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("mistakes")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "active");
+  const { count, error } = await scopeCount(
+    supabase
+      .from("mistakes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "active"),
+    language,
+  );
   if (error) throw error;
   return count ?? 0;
 }
@@ -22,15 +50,21 @@ export async function fetchActiveMistakeCount(userId: string): Promise<number> {
  * CTA also accounts for reviews, the only entry point into that flow (see
  * fetchDueReviewRows for the equivalent hydrated-row read).
  */
-export async function fetchDueReviewCount(userId: string): Promise<number> {
+export async function fetchDueReviewCount(
+  userId: string,
+  language: TargetLanguage = "en",
+): Promise<number> {
   const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("mistakes")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "corrected")
-    .not("next_review_at", "is", null)
-    .lte("next_review_at", new Date().toISOString());
+  const { count, error } = await scopeCount(
+    supabase
+      .from("mistakes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "corrected")
+      .not("next_review_at", "is", null)
+      .lte("next_review_at", new Date().toISOString()),
+    language,
+  );
   if (error) throw error;
   return count ?? 0;
 }
@@ -39,15 +73,22 @@ export async function fetchDueReviewCount(userId: string): Promise<number> {
  * Corrected words whose spaced review falls due by `until` — what will be waiting at the end of a
  * given day (the finish screen's "tomorrow"), where fetchDueReviewCount only counts what is due right now.
  */
-export async function fetchDueReviewCountBy(userId: string, until: Date): Promise<number> {
+export async function fetchDueReviewCountBy(
+  userId: string,
+  until: Date,
+  language: TargetLanguage = "en",
+): Promise<number> {
   const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("mistakes")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "corrected")
-    .not("next_review_at", "is", null)
-    .lte("next_review_at", until.toISOString());
+  const { count, error } = await scopeCount(
+    supabase
+      .from("mistakes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "corrected")
+      .not("next_review_at", "is", null)
+      .lte("next_review_at", until.toISOString()),
+    language,
+  );
   if (error) throw error;
   return count ?? 0;
 }
@@ -111,16 +152,18 @@ export const fetchWeakCandidateMistakeRows = cache(async function fetchWeakCandi
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mistakes")
-    .select("word, status, review_stage, next_review_at")
+    .select("word, status, review_stage, next_review_at, sentence_id")
     .eq("user_id", userId)
     .or("status.eq.active,next_review_at.not.is.null");
   if (error) throw error;
-  return (data ?? []).map((row) => ({
-    word: row.word,
-    status: row.status,
-    reviewStage: row.review_stage,
-    nextReviewAt: row.next_review_at,
-  }));
+  return (data ?? [])
+    .filter((row) => inLanguage(row.sentence_id, "en"))
+    .map((row) => ({
+      word: row.word,
+      status: row.status,
+      reviewStage: row.review_stage,
+      nextReviewAt: row.next_review_at,
+    }));
 });
 
 /** The words the learner most recently stumbled on and has not fixed yet, newest first (the return loop names one of them in the reminder). */
@@ -131,13 +174,16 @@ export async function fetchRecentActiveMistakeWords(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mistakes")
-    .select("word")
+    .select("word, sentence_id")
     .eq("user_id", userId)
     .eq("status", "active")
     .order("updated_at", { ascending: false })
-    .limit(limit);
+    .limit(limit * 2);
   if (error) throw error;
-  return (data ?? []).map((row) => row.word);
+  return (data ?? [])
+    .filter((row) => inLanguage(row.sentence_id, "en"))
+    .slice(0, limit)
+    .map((row) => row.word);
 }
 
 export interface ActiveMistakeRow {
@@ -147,7 +193,10 @@ export interface ActiveMistakeRow {
   errorIndexes: number[];
 }
 
-export async function fetchActiveMistakeRows(userId: string): Promise<ActiveMistakeRow[]> {
+export async function fetchActiveMistakeRows(
+  userId: string,
+  language: TargetLanguage = "en",
+): Promise<ActiveMistakeRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mistakes")
@@ -155,15 +204,20 @@ export async function fetchActiveMistakeRows(userId: string): Promise<ActiveMist
     .eq("user_id", userId)
     .eq("status", "active");
   if (error) throw error;
-  return (data ?? []).map((row) => ({
-    word: row.word,
-    sentenceId: row.sentence_id,
-    errorIndexes: row.error_indexes ?? [],
-  }));
+  return (data ?? [])
+    .filter((row) => inLanguage(row.sentence_id, language))
+    .map((row) => ({
+      word: row.word,
+      sentenceId: row.sentence_id,
+      errorIndexes: row.error_indexes ?? [],
+    }));
 }
 
 /** Same shape as fetchActiveMistakeRows, for corrected words whose scheduled review is now due (see the mistake_review_scheduling migration). */
-export async function fetchDueReviewRows(userId: string): Promise<ActiveMistakeRow[]> {
+export async function fetchDueReviewRows(
+  userId: string,
+  language: TargetLanguage = "en",
+): Promise<ActiveMistakeRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mistakes")
@@ -173,11 +227,13 @@ export async function fetchDueReviewRows(userId: string): Promise<ActiveMistakeR
     .not("next_review_at", "is", null)
     .lte("next_review_at", new Date().toISOString());
   if (error) throw error;
-  return (data ?? []).map((row) => ({
-    word: row.word,
-    sentenceId: row.sentence_id,
-    errorIndexes: row.error_indexes ?? [],
-  }));
+  return (data ?? [])
+    .filter((row) => inLanguage(row.sentence_id, language))
+    .map((row) => ({
+      word: row.word,
+      sentenceId: row.sentence_id,
+      errorIndexes: row.error_indexes ?? [],
+    }));
 }
 
 export interface MistakeSentenceRow {
