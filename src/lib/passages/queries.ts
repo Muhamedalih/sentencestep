@@ -85,14 +85,15 @@ function toSummary(
 
 // --- The list -------------------------------------------------------------
 
-async function loadSummaries(): Promise<PassageSummary[]> {
+async function loadSummaries(language: "en" | "de" = "en"): Promise<PassageSummary[]> {
   const supabase = createServiceRoleClient();
 
-  const { data: passages, error } = await supabase
-    .from("passages")
-    .select("*")
-    .eq("status", "published")
-    .not("id", "like", "de-%")
+  // German passages (permission germanTrack, ids "de-…") are drafts for now, listed to an admin alone.
+  const base = supabase.from("passages").select("*").eq("status", language === "de" ? "draft" : "published");
+  const { data: passages, error } = await (language === "de"
+    ? base.like("id", "de-%")
+    : base.not("id", "like", "de-%")
+  )
     .order("level")
     .order("order_index");
   if (error) throw error;
@@ -132,7 +133,7 @@ async function loadSummaries(): Promise<PassageSummary[]> {
   });
 }
 
-const readSummaries = unstable_cache(loadSummaries, ["passage-summaries"], {
+const readSummaries = unstable_cache(() => loadSummaries("en"), ["passage-summaries"], {
   tags: [PASSAGES_CACHE_TAG],
   revalidate: CACHE_SECONDS,
 });
@@ -152,6 +153,20 @@ export const fetchPassageSummaries = cache(async (): Promise<PassageSummary[]> =
     return [];
   }
 });
+
+/**
+ * The German passages (permission germanTrack) as cards, for an admin's list only: the caller MUST have
+ * checked isAdmin() first. Not cached; a failed read gives none.
+ */
+export async function fetchGermanPassageSummaries(): Promise<PassageSummary[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    return await loadSummaries("de");
+  } catch (error) {
+    console.error("[passages] fetchGermanPassageSummaries failed", error);
+    return [];
+  }
+}
 
 // --- One passage ----------------------------------------------------------
 

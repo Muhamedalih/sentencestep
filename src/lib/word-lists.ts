@@ -60,10 +60,11 @@ export async function getWordGroupSummaries(locale?: SupportLocale): Promise<Wor
  */
 export async function getDraftWordGroupSummaries(
   locale?: SupportLocale,
+  language: "en" | "de" = "en",
 ): Promise<WordGroupSummary[]> {
   if (!isSupabaseConfigured()) return [];
   try {
-    return await fetchDraftWordGroupSummaries(locale);
+    return await fetchDraftWordGroupSummaries(locale, language);
   } catch (error) {
     console.error("[word-lists] reading the draft topics failed", error);
     return [];

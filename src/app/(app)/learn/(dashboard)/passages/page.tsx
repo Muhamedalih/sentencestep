@@ -1,3 +1,4 @@
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -10,7 +11,11 @@ import { viewerTaste } from "@/lib/hybrid/viewer";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { canOpenPassage, openablePassages } from "@/lib/passages/access";
 import { recommendedPassageId } from "@/lib/passages/progress";
-import { fetchPassageProgress, fetchPassageSummaries } from "@/lib/passages/queries";
+import {
+  fetchGermanPassageSummaries,
+  fetchPassageProgress,
+  fetchPassageSummaries,
+} from "@/lib/passages/queries";
 import { getCurrentUser } from "@/lib/supabase/auth";
 
 // A learner's own progress (Continue / Done) and the live Passages switch decide
@@ -26,12 +31,18 @@ export default async function PassagesPage() {
   if (!features.passages.enabled) notFound();
 
   const user = await getCurrentUser();
-  const [passages, progress, isAdminUser, config] = await Promise.all([
+  const [englishPassages, progress, isAdminUser, config] = await Promise.all([
     fetchPassageSummaries(),
     user ? fetchPassageProgress(user.id) : Promise.resolve([]),
     isAdmin(),
     getFeatureConfig(),
   ]);
+  // In German (permission germanTrack, an admin's choice) the list is the German passages instead,
+  // which are all drafts for now.
+  const passages =
+    isAdminUser && (await getLearnLanguage()) === "de"
+      ? await fetchGermanPassageSummaries()
+      : englishPassages;
   // A Premium passage opens for subscribers and admins only; "Up next" never points anyone at a
   // lock. The subscription is only looked up when some passage is Premium (none is, until an
   // admin makes one so), so a list of free passages costs nothing extra.

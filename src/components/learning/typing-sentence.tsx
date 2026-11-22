@@ -1,5 +1,6 @@
 "use client";
 
+import { foldsDiacritics, languageOfContentId } from "@/lib/learn-language";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -215,6 +216,8 @@ export function TypingSentence({
     // both need to read the same gate.
     autoFocus: hasStarted,
     initialTyped,
+    // German (permission germanTrack): the plain letter stands in for ä, ö, ü, ß, see german-typing.ts.
+    foldDiacritics: foldsDiacritics(languageOfContentId(sentence.id)),
   });
 
   // Fires once per genuinely new wrong keystroke (errorIndex transitions
