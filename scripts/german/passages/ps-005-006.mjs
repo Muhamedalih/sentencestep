@@ -38,7 +38,7 @@ export const passages = [
         "Sechs Monate später bildete sich jeden Dienstag um zehn vor sechs eine Schlange vor dem Laden: Familien, Paare und ein Rentner, der sagte, er könne in einem Supermarkt endlich seine eigenen Gedanken hören.",
         "Owen leitete die Stunde jetzt selbst. Er schulte neue Mitarbeiter darin, auf alles einzugehen, was ein Kunde brauchte, und fügte eine Regel hinzu: Niemand steht hinter einem Kunden, der noch überlegt.",
         "Die Umsätze der Stunde stiegen, erst langsam, dann schneller, bis sie der geschäftigsten Stunde der Woche entsprachen. Frau Lowell, die es nie erwähnte, hörte einfach auf, nachzusehen.",
-        "Jeden Dienstag um sechs, bevor das Licht herunterging, ging Owen nach vorn und schaltete die Musik selbst aus. Es war zu dem Teil der Arbeit geworden, den er am liebsten mochte.",
+        "Jeden Dienstag um sechs, bevor das Licht herunterging, ging Owen nach vorn und schaltete die Musik selbst aus. Es war zu dem Teil der Arbeit geworden, den er am meisten mochte.",
       ], questions: [
         { prompt: "Was zeigt Owens Gewohnheit, die Musik selbst auszuschalten?", options: ["Er wollte Strom sparen", "Er behandelte die Stille Stunde jetzt als etwas Eigenes", "Er befolgte Frau Lowells Anweisungen", "Er mochte die Musik nicht"] },
         { prompt: "Wie veränderte sich Owens Sicht auf den Lärm im Laden im Lauf der Geschichte?", options: ["Er begann, einen noch lauteren Laden zu bevorzugen", "Es war ihm nicht mehr wichtig, ob der Laden Geld verdiente", "Er kam dazu, seinen Job nicht zu mögen", "Er erkannte, dass das, was er für den Klang des Geschäfts hielt, manche Menschen aussperrte"] },
@@ -87,7 +87,7 @@ export const passages = [
         "Am nächsten Morgen malte Tyler einen neuen Satz unter das alte Schild: „Faire Preise. Ehrliche Arbeit.“",
       ], questions: [
         { prompt: "Warum sagte Walt, er sei ehrlich gewesen?", options: ["Damit er nachts schlafen kann", "Weil Rachel ihm leidtat", "Weil er den Preis vergessen hatte"] },
-        { prompt: "Was wollte Tyler zuerst, dass Walt tut?", options: ["Das Auto kostenlos reparieren", "Rachel zu einer anderen Werkstatt schicken", "Sagen, es sei die Wasserpumpe, und Rachel mehr berechnen"] },
+        { prompt: "Was sollte Walt nach Tylers Wunsch zuerst tun?", options: ["Das Auto kostenlos reparieren", "Rachel zu einer anderen Werkstatt schicken", "Sagen, es sei die Wasserpumpe, und Rachel mehr berechnen"] },
       ] },
     ] },
 ];

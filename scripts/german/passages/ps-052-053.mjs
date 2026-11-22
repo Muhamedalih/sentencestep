@@ -68,7 +68,7 @@ export const passages = [
         "Mama, es tut mir leid. Ich bin nicht wütend auf dich. Ich bin nur müde.",
         "Ich weiß, mein Schatz. Geh in die Küche. Was hast du da?",
         "Ich habe ein Ei. Nur eins.",
-        "Gut! Mach es mit etwas Salz. Ich bleibe am Telefon.",
+        "Gut! Koch es mit etwas Salz. Ich bleibe am Telefon.",
         "Luke kocht das Ei. Mama erzählt die ganze Zeit von ihrem Garten.",
       ], questions: [{ prompt: "Was tut Mama, während Luke kocht?", options: ["Sie geht ins Bett", "Sie bleibt am Telefon", "Sie kocht auch"] }] },
       { title: "Du bist dran", lines: [

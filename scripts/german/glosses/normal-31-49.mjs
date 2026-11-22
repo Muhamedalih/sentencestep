@@ -18,7 +18,7 @@ export const glosses = {
     ["Los|primeros|cinco|minutos|fueron|terriblemente|incómodos|y|silenciosos", "-|ilk|beş|dakika|idi|müthiş|utanç verici|ve|sessiz"],
     ["Yo|derribé|sin querer|mi|entero|vaso de agua|complemento: derribar", "Ben|devirdim|yanlışlıkla|benim|bütün|su bardağı|tamamlayıcı: devirmek"],
     ["Ella|rio|tan|mucho|que|ella|casi|de la|silla|se cayó", "O|güldü|o kadar|çok|ki|o|neredeyse|-den|sandalye|düştü"],
-    ["Este|un|momento|rompió|de algún modo|la|entera|tensión|entre|nosotros", "Bu|bir|an|kırdı|bir şekilde|-|bütün|gerginlik|arasında|biz"],
+    ["Este|un|momento|disolvió|de algún modo|la|entera|tensión|entre|nosotros", "Bu|bir|an|çözdü|bir şekilde|-|bütün|gerginlik|arasında|biz"],
     ["Al|final|hablamos|nosotros|aún|casi|tres|más|horas", "-de|son|konuştuk|biz|daha|neredeyse|üç|daha fazla|saat"],
     ["Mi|amiga|tenía|sorprendentemente|razón|con|nosotros|ambos", "Benim|arkadaş|vardı|şaşırtıcı şekilde|haklı|hakkında|biz|ikimiz"],
   ],

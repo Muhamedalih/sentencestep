@@ -9,7 +9,7 @@ export const lessons = [
       { src: "s5", de: "Nein! Er fliegt über eine schlafende Katze.", gl: ["لا","هو","يطير","فوق","واحدة","نائمة","قطة"] },
       { src: "s6", de: "Die Katze wacht auf. Überraschung!", gl: ["الـ","قطة","تستيقظ","تكملة: استيقظ","مفاجأة"] },
       { src: "s7", de: "Jetzt fliegt er in einen Baum.", gl: ["الآن","يطير","هو","في","واحدة","شجرة"] },
-      { src: "s8", de: "Festgesteckt! Aber er lächelt trotzdem.", gl: ["عالق","لكن","هو","يبتسم","مع ذلك"] },
+      { src: "s8", de: "Er steckt fest! Aber er lächelt trotzdem.", gl: ["هو","يعلق","عالقاً","لكن","هو","يبتسم","مع ذلك"] },
       { src: "s9", de: "Zeit für einen neuen Ballon, halt ihn gut fest!", gl: ["وقت","لأجل","واحد","جديد","بالون","أمسك","إياه","جيداً","تكملة: أمسك"] },
     ] },
 ];

@@ -108,7 +108,7 @@ export const passages = [
       { title: "Greg hat einen Plan", lines: [
         "Du, sieh unter dem Tisch nach. Du, prüf die Bücher. Nora, fass nichts an!",
         "Im dritten Buch fand jemand ein Stück Papier mit drei Zahlen: drei, eins, fünf.",
-        "Eine Telefonnummer! Ruft jemand an.",
+        "Eine Telefonnummer! Soll jemand dort anrufen!",
         "Greg, eine Telefonnummer hat mehr als drei Ziffern.",
         "Dann ist es der Anfang einer Telefonnummer. Sucht weiter!",
         "In der Ecke hob Brian die Hand. Er war ein ruhiger Mann aus der Buchhaltung und sagte auch in Besprechungen nie viel.",

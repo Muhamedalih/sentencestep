@@ -13,10 +13,10 @@ export const passages = [
         "Noch einmal!",
         "Diesmal fliegt ein Vogel vor das Handy.",
         "Geh weg, Vogel!",
-        "Drittes Foto: Der Wind nimmt seinen Hut.",
+        "Drittes Foto: Der Wind weht ihm den Hut vom Kopf.",
         "Jake rennt seinem Hut hinterher. Ein paar Leute lachen.",
         "Das ist nicht lustig!",
-      ], questions: [{ prompt: "Was nimmt Jakes Hut?", options: ["Der Wind", "Ein Hund", "Ein Mann"] }] },
+      ], questions: [{ prompt: "Was passiert mit Jakes Hut?", options: ["Der Wind weht ihn weg", "Ein Hund rennt mit ihm weg", "Ein Mann nimmt ihn"] }] },
       { title: "Eine nette Frau", lines: [
         "Eine Frau sitzt auf einer Bank. Sie heißt Nina.",
         "Brauchst du Hilfe? Ich kann dein Foto machen.",
@@ -59,7 +59,7 @@ export const passages = [
       { title: "Soll ich gehen?", lines: [
         "Nudeln?! Nein, nein, nein. Komm um vier zum Essen. Bring einen Freund mit. Es gibt wie immer zu viel zu essen.",
         "Ethan rief seinen Freund Dylan an, der außerhalb des Campus wohnte, und las ihm die Nachrichten vor.",
-        "Ein Fremder lädt dich per SMS zum Essen ein? Das ist der Anfang von jedem Horrorfilm!",
+        "Eine Fremde lädt dich per SMS zum Essen ein? Das ist der Anfang von jedem Horrorfilm!",
         "Sie ist jemandes Großmutter, Dylan. Sie hat gesagt, ich klinge wie ein Junge, der eine ordentliche Mahlzeit braucht.",
         "Okay. Aber ich komme mit. Und wenn wir um neun nicht zurück sind, rufe ich die Polizei.",
         "So standen zwei hungrige Studenten am Donnerstag um vier Uhr vor einem kleinen weißen Haus.",

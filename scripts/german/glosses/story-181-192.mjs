@@ -2,11 +2,11 @@
 export const glosses = {
   "story-181": [
     ["Después de|mi|último|mal de amores|construí|yo|muros", "-den sonra|benim|son|aşk acısı|inşa ettim|ben|duvarlar"],
-    ["Nadie|viene|cerca|no|realmente|no|del todo", "Kimse|gelir|yakın|değil|gerçekten|değil|tamamen"],
+    ["Nadie|se acerca|me|cerca|no|realmente|no|del todo", "Kimse|gelir|bana|yakın|değil|gerçekten|değil|tamamen"],
     ["Una|nueva|amiga|aparece|aun así|siempre|de nuevo|complemento: aparecer", "Bir|yeni|arkadaş|ortaya çıkar|yine de|her zaman|tekrar|tamamlayıcı: ortaya çıkmak"],
     ["Ella|presiona|no|ella|se queda|simplemente", "O|baskı yapar|değil|o|kalır|sadece"],
     ["Una|noche|me siento|yo|me|por fin|vulnerable|suficiente", "Bir|akşam|hissederim|ben|kendimi|sonunda|savunmasız|yeterince"],
-    ["Yo|abro|me|sobre|las|verdaderas|razones", "Ben|açarım|kendimi|hakkında|-|gerçek|nedenler"],
+    ["Yo|me abro|me|y|cuento|le|las|verdaderas|razones", "Ben|açılırım|kendimi|ve|anlatırım|ona|-|gerçek|nedenler"],
     ["Ella|corre|no|complemento: huir|ella|escucha|simplemente|complemento: escuchar", "O|koşar|değil|tamamlayıcı: kaçmak|o|dinler|sadece|tamamlayıcı: dinlemek"],
     ["El|muro|empieza|lentamente|a derrumbarse", "-|duvar|başlar|yavaşça|yıkılmaya"],
   ],
@@ -18,7 +18,7 @@ export const glosses = {
     ["Primero|se siente|se|este|silencio|abrumador|complemento: sentirse", "Önce|hissettirir|kendini|bu|sessizlik|ezici|tamamlayıcı: hissettirmek"],
     ["Entonces|cambia|se|silenciosamente|algo|en|mí", "Sonra|değişir|kendini|sessizce|bir şey|içinde|bende"],
     ["Yo|reconozco|que|el|trabajo|aun así|bueno|era", "Ben|fark ederim|ki|-|iş|yine de|iyi|idi"],
-    ["Mi|valor|era|nunca|su|asunto|lo|a|otorgar", "Benim|değer|idi|asla|onların|iş|onu|-mek|vermek"],
+    ["Mi|valor|estaba|nunca|en|sus|manos", "Benim|değer|idi|asla|-de|onların|eller"],
   ],
   "story-183": [
     ["Después de|la|pérdida|me volví|yo|completamente|insensible", "-den sonra|-|kayıp|oldum|ben|tamamen|duygusuz"],
@@ -33,12 +33,12 @@ export const glosses = {
   "story-184": [
     ["Yo|he (auxiliar)|cinco|años|por|este|título|sacrificado", "Ben|sahibim (yardımcı)|beş|yıl|için|bu|diploma|feda ettim"],
     ["Perdidas|bodas|perdidos|cumpleaños|perdido|sueño", "Kaçırılmış|düğünler|kaçırılmış|doğum günleri|kaçırılmış|uyku"],
-    ["Algunas|noches|dudé|yo|el|sacrificio|completamente|complemento: dudar", "Bazı|geceler|şüphe ettim|ben|-|fedakârlık|tamamen|tamamlayıcı: sorgulamak"],
-    ["Era|algo|de ello|realmente|lo|digno", "Idi|bir şey|bundan|gerçekten|onu|değer"],
+    ["En|algunas|noches|puse|yo|el|sacrificio|completamente|en duda", "-de|bazı|geceler|koydum|ben|-|fedakârlık|tamamen|sorgulamaya"],
+    ["Fue|algo|de ello|realmente|el|esfuerzo|digno", "Idi|herhangi bir şey|bundan|gerçekten|-|çaba|değer"],
     ["El|día de la graduación|llega|por fin|silenciosamente|complemento: llegar", "-|mezuniyet günü|gelir|sonunda|sessizce|tamamlayıcı: varmak"],
     ["Mi|familia|se sienta|en|la|primera|fila", "Benim|aile|oturur|-de|-|ilk|sıra"],
     ["Cuando|yo|sus|caras|veo|recibo|yo|mi|respuesta", "-ince|ben|onların|yüzler|görürüm|alırım|ben|benim|cevap"],
-    ["Cada|sacrificio|fue|de algún modo|lo|valió", "Her|fedakârlık|idi|bir şekilde|onu|değdi"],
+    ["Cada|sacrificio|ha (auxiliar)|se|de algún modo|valido la pena", "Her|fedakârlık|sahip (yardımcı)|kendini|bir şekilde|değdi"],
   ],
   "story-185": [
     ["Mi|trabajo soñado|era|no|lo que|yo|me|imaginado|había (auxiliar)", "Benim|hayal işi|idi|değil|ne|ben|kendime|hayal etmiştim|sahipti (yardımcı)"],
@@ -47,7 +47,7 @@ export const glosses = {
     ["Yo|habría (auxiliar)|sinceramente|dicho|casi|sin|plan|renunciado", "Ben|-mış olurdum (yardımcı)|dürüst olmak|söylenirse|neredeyse|-siz|plan|istifa ettim"],
     ["Entonces|cambia|un|pequeño|proyecto|todo", "Sonra|değiştirir|bir|küçük|proje|her şey"],
     ["Real|impacto|reales|personas|real|sentido", "Gerçek|etki|gerçek|insanlar|gerçek|anlam"],
-    ["Mi|sentido|de|propósito|se siente|se|de repente|renovado|complemento: sentirse", "Benim|duygu|-in|amaç|hissettirir|kendini|birdenbire|yenilenmiş|tamamlayıcı: hissettirmek"],
+    ["De repente|siento|yo|de nuevo|un|sentido|en|aquello|lo que|yo|hago", "Birdenbire|hissederim|ben|tekrar|bir|anlam|-de|şey|ne|ben|yaparım"],
     ["El mismo|trabajo|ahora|una|completamente|diferente|sensación", "Aynı|iş|şimdi|bir|tamamen|farklı|his"],
   ],
   "story-186": [

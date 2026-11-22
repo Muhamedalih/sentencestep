@@ -1,7 +1,7 @@
 // Spanish / Turkish word glosses for the German stories story-149 .. story-158. See normal-01-06.mjs for the conventions.
 export const glosses = {
   "story-149": [
-    ["Yo|termino|casi|un|rompecabezas de mil piezas|complemento: terminar", "Ben|bitiririm|neredeyse|bir|bin parçalık yapboz|tamamlayıcı: bitirmek"],
+    ["Yo|tengo|casi|un|rompecabezas|con|mil|piezas|terminado", "Ben|var|neredeyse|bir|yapboz|ile|bin|parça|bitmiş"],
     ["Una|pieza|falta|solo|una", "Bir|parça|eksik|sadece|bir"],
     ["Yo|busco|otra|vez|la|entera|mesa|complemento: buscar", "Ben|ararım|bir|daha|-|bütün|masa|tamamlayıcı: aramak"],
     ["Yo|busco|también|debajo de|la|mesa", "Ben|ararım|de|altında|-|masa"],
@@ -44,7 +44,7 @@ export const glosses = {
     ["Yo|monto|fuera|un|puesto de limonada|complemento: montar", "Ben|kurarım|dışarıda|bir|limonata tezgâhı|tamamlayıcı: kurmak"],
     ["Una|hora|pasa|en absoluto|ningún|cliente", "Bir|saat|geçer|hiç|hiç|müşteri"],
     ["Dos|horas|pasan|todavía|aún|se detiene|nadie|complemento: detenerse", "İki|saat|geçer|hâlâ|yine|durur|kimse|tamamlayıcı: durmak"],
-    ["Yo|recojo|casi|todo|decepcionado|de nuevo|complemento: recoger", "Ben|toplarım|neredeyse|her şey|hayal kırıklığına uğramış|tekrar|tamamlayıcı: toplamak"],
+    ["Decepcionado|habría (auxiliar)|yo|casi|todo|de nuevo|recogido", "Hayal kırıklığına uğramış|-mış olurdum (yardımcı)|ben|neredeyse|her şey|tekrar|topladım"],
     ["Entonces|llega|una|vecina|sedienta|complemento: pasar", "Sonra|gelir|bir|komşu|susamış|tamamlayıcı: uğramak"],
     ["Ella|compra|tres|vasos|de|una vez", "O|satın alır|üç|bardak|-de|bir kerede"],
     ["Ello|se corre la voz|se|complemento: correrse|y|ello|vienen|más|personas", "O|yayılır|kendini|tamamlayıcı: yayılmak|ve|o|gelir|daha fazla|insanlar"],
@@ -68,14 +68,14 @@ export const glosses = {
     ["Nada|malo|pasa|en absoluto|nada", "Hiçbir şey|kötü|olur|hiç|hiçbir şey"],
     ["En|la|semana|después|también|nada|malo", "-de|-|hafta|sonra|de|hiçbir şey|kötü"],
     ["Yo|río|de|mí|mismo|porque|yo|me|tan|muchas|preocupaciones|hice|he (auxiliar)", "Ben|gülerim|-e|ben|kendi|çünkü|ben|kendime|bu kadar|çok|endişe|yaptım|sahibim (yardımcı)"],
-    ["Espejos|controlan|simplemente|en absoluto|nada", "Aynalar|kontrol eder|sadece|hiç|hiçbir şey"],
+    ["Espejos|tienen|simplemente|sobre|en absoluto|nada|influencia", "Aynalar|sahiptir|sadece|-e|hiç|hiçbir şey|etki"],
   ],
   "story-156": [
     ["Nuestra|tortuga de la clase|hace|hoy|una|carrera|con|otras|mascotas", "Bizim|sınıf kaplumbağası|yapar|bugün|bir|yarış|ile|diğer|evcil hayvanlar"],
     ["Una|liebre|un|hámster|incluso|una|lagartija", "Bir|tavşan|bir|hamster|hatta|bir|kertenkele"],
     ["La|tortuga|se mueve|se|en|su|habitual|ritmo|lentamente", "-|kaplumbağa|hareket eder|kendini|-de|onun|olağan|tempo|yavaşça"],
     ["Todos|ríen|y|esperan|una|fácil|derrota", "Herkes|güler|ve|bekler|bir|kolay|yenilgi"],
-    ["A la|mitad|se detiene|la|liebre|complemento: detenerse|para|una|siesta|a|echar", "-de|orta|durur|-|tavşan|tamamlayıcı: durmak|için|bir|şekerleme|-mek|yapmak"],
+    ["A|mitad de|camino|se detiene|la|liebre|complemento: detenerse|para|una|siesta|a|echar", "-de|yarı|yol|durur|-|tavşan|tamamlayıcı: durmak|için|bir|şekerleme|-mek|yapmak"],
     ["La|tortuga|se mueve|se|simplemente|constantemente|adelante", "-|kaplumbağa|hareket eder|kendini|sadece|durmadan|ileri"],
     ["Lentamente|pero|con seguridad|cruza|la|tortuga|como|primera|la|línea de meta", "Yavaşça|ama|emin adımlarla|geçer|-|kaplumbağa|olarak|ilk|-|bitiş çizgisi"],
     ["Nadie|ríe|más|de|la|lenta|tortuga", "Kimse|güler|artık|-e|-|yavaş|kaplumbağa"],

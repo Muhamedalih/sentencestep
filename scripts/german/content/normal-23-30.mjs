@@ -65,7 +65,7 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Ein Umzugswagen parkte heute Morgen vor unserem Haus", gl: ["واحد","شاحنة نقل","ركنت","اليوم","صباحاً","أمام","الخاص بنا","مبنى"] },
       { src: "s2", de: "Eine junge Frau trug allein Kisten die Treppe hoch", gl: ["واحدة","شابة","امرأة","حملت","وحدها","صناديق","الـ","الدرج","إلى الأعلى"] },
-      { src: "s3", de: "Ich bot ihr an, ihr mit der schwersten zu helfen", gl: ["أنا","عرضتُ","عليها","تكملة: عرض","لها","مع","الـ","الأثقل","لـ","أساعد"] },
+      { src: "s3", de: "Ich bot ihr an, die schwerste Kiste zu tragen", gl: ["أنا","عرضتُ","عليها","تكملة: عرض","الـ","الأثقل","صندوق","لـ","أحمل"] },
       { src: "s4", de: "Sie lächelte und bedankte sich mit leiser Stimme", gl: ["هي","ابتسمت","و","شكرت","نفسها","بـ","هادئ","صوت"] },
       { src: "s5", de: "Wir unterhielten uns ein paar Minuten im Treppenhaus", gl: ["نحن","تحدثنا","أنفسنا","بضع","قليل","دقائق","في الـ","الدرج"] },
       { src: "s6", de: "Sie sagte, sie kenne noch niemanden in der Stadt", gl: ["هي","قالت","هي","تعرف","بعد","لا أحد","في","الـ","مدينة"] },

@@ -14,7 +14,7 @@ export const lessons = [
     ] },
   { sourceId: "story-170", title: "War nur ein Scherz", description: "Ein wiederholter Witz ist nicht mehr lustig, und „war nur ein Scherz“ ist nicht die Entschuldigung, die es sein müsste.",
     sentences: [
-      { src: "s1", de: "Ich ziehe die Vogelbeobachtungs-Besessenheit meiner Freundin sanft auf.", gl: ["أنا","أسخر","الـ","هوس مراقبة الطيور","الخاصة بي","صديقة","بلطف","تكملة: سخر"] },
+      { src: "s1", de: "Ich ziehe meine Freundin sanft mit ihrer Vogelbeobachtungs-Leidenschaft auf.", gl: ["أنا","أسخر","الخاصة بي","صديقة","بلطف","من","الخاصة بها","شغف مراقبة الطيور","تكملة: سخر"] },
       { src: "s2", de: "„War nur ein Scherz“, füge ich schnell lachend hinzu.", gl: ["كان","فقط","واحد","مزاح","أضيف","أنا","بسرعة","ضاحكاً","تكملة: أضاف"] },
       { src: "s3", de: "Aber ich merke, dass sie nicht zurücklacht.", gl: ["لكن","أنا","ألاحظ","أنّ","هي","لا","تضحك بالمقابل"] },
       { src: "s4", de: "Ich ziehe sie in der nächsten Woche wieder auf, ohne nachzudenken.", gl: ["أنا","أسخر","منها","في","الـ","التالي","أسبوع","مجدداً","تكملة: سخر","دون","أن أفكر"] },
@@ -84,7 +84,7 @@ export const lessons = [
       { src: "s2", de: "Jemand am Nebentisch hört jedes Wort mit.", gl: ["أحدهم","عند","الطاولة المجاورة","يسمع","كل","كلمة","تكملة: سمع"] },
       { src: "s3", de: "Bis zum Mittag weiß das ganze Büro es irgendwie.", gl: ["حتى","الـ","ظهر","يعرف","الـ","كامل","مكتب","إياه","بطريقة ما"] },
       { src: "s4", de: "Ich gerate in Panik und flüstere der ursprünglichen Freundin Entschuldigungen zu.", gl: ["أنا","أقع","في","ذعر","و","أهمس","لـ الـ","الأصلية","صديقة","اعتذارات","تكملة: همس"] },
-      { src: "s5", de: "Sie lacht nur: Es war nicht mal ein großes Geheimnis.", gl: ["هي","تضحك","فقط","الأمر","كان","ليس","حتى","واحداً","كبيراً","سر"] },
+      { src: "s5", de: "Sie lacht nur: „Es war nicht mal ein großes Geheimnis.“", gl: ["هي","تضحك","فقط","الأمر","كان","ليس","حتى","واحداً","كبيراً","سر"] },
       { src: "s6", de: "Ich merke, dass ich wegen praktisch nichts in Panik geraten bin.", gl: ["أنا","ألاحظ","أنّ","أنا","بسبب","عملياً","لا شيء","في","ذعر","وقعتُ","أكون (مساعد)"] },
       { src: "s7", de: "Nächstes Mal flüstere ich an einem wirklich privaten Ort.", gl: ["القادم","مرة","أهمس","أنا","في","واحد","حقاً","خاص","مكان"] },
       { src: "s8", de: "Oder ich flüstere bei der Arbeit lieber gar keine Geheimnisse.", gl: ["أو","أنا","أهمس","في","الـ","عمل","بالأحرى","أبداً","لا","أسرار"] },

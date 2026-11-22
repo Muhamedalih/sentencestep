@@ -73,7 +73,7 @@ export const passages = [
       ], questions: [{ prompt: "Was tat Elena während des Sturms?", options: ["Sie gab allen kostenlos Suppe und Kaffee", "Sie schloss ihr Café", "Sie ging zum Schlafen nach Hause"] }] },
       { title: "Eine Schlange um sechs", lines: [
         "Als der Schnee schmolz, öffnete Elena ihr Café wie immer um sechs Uhr morgens. Sie ließ fast die Schlüssel fallen.",
-        "Draußen stand eine Schlange. Sie reichte die Straße entlang und um die Ecke.",
+        "Draußen stand eine Schlange. Sie zog sich die Straße entlang und um die Ecke.",
         "In diesem Winter hatten die Menschen der Stadt etwas beschlossen: Ein Café, das in einem Sturm seine Tür öffnet, verdient es, voll zu sein.",
         "Jemand hinterließ einen Zettel an der Wand. Dann noch einer. Bald war die ganze Wand mit kleinen Zetteln bedeckt, auf denen stand: „Danke, Elena.“",
         "Entschuldigung, stellen Sie jemanden ein? Ich bin sechzehn und lerne sehr schnell.",

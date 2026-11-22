@@ -92,8 +92,8 @@ export const glosses = {
   ],
   "story-148": [
     ["Mi|despertador|suena|en punto|siete", "Benim|çalar saat|çalar|tam|yedi"],
-    ["Yo|pulso|en|repetición|solo|cinco|minutos|más", "Ben|basarım|-e|erteleme|sadece|beş|dakika|daha"],
-    ["Él|suena|de nuevo|yo|pulso|de nuevo|en|repetición", "O|çalar|tekrar|ben|basarım|tekrar|-e|erteleme"],
+    ["Yo|pulso|el|botón de repetición|solo|cinco|minutos|más", "Ben|basarım|-|erteleme tuşu|sadece|beş|dakika|daha"],
+    ["Él|suena|de nuevo|yo|pulso|de nuevo|el|botón de repetición", "O|çalar|tekrar|ben|basarım|tekrar|-|erteleme tuşu"],
     ["Eso|pasa|fácilmente|aún|cuatro veces", "Bu|olur|kolayca|daha|dört kez"],
     ["Por fin|miro|yo|a|la|correcta|hora", "Sonunda|bakarım|ben|-e|-|doğru|saat"],
     ["Yo|estoy|cuarenta|minutos|demasiado|tarde|cuarenta", "Ben|-im|kırk|dakika|çok|geç|kırk"],

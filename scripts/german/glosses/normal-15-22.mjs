@@ -34,7 +34,7 @@ export const glosses = {
     ["Constantemente|localizable|a|ser|es|no|lo mismo|que|presente|a|estar", "Sürekli|ulaşılabilir|-mek|olmak|-dir|değil|aynı şey|gibi|mevcut|-mek|olmak"],
   ],
   "normal-18": [
-    ["Yo|era|con|diferencia|el|más nuevo|en el|equipo", "Ben|idim|ile|fark|-|en yeni|-de|takım"],
+    ["Yo|era|con|diferencia|el|nuevo|en el|equipo", "Ben|idim|ile|fark|-|yeni|-de|takım"],
     ["En|reuniones|asentí|yo|mayormente|solo|y|tomé|notas", "-de|toplantılar|başımı salladım|ben|çoğunlukla|sadece|ve|aldım|notlar"],
     ["Yo|tenía|terrible|miedo|mis|ideas|podrían|obvias|o|equivocadas|sonar", "Ben|vardı|korkunç|korku|benim|fikirler|-ebilirdi|bariz|veya|yanlış|kulağa gelmek"],
     ["En|una|reunión|avanzó|el|equipo|en|un|problema|no|más allá", "-de|bir|toplantı|ilerledi|-|takım|-de|bir|sorun|değil|daha öteye"],
@@ -52,7 +52,7 @@ export const glosses = {
     ["Casi|todos|admitieron|en voz baja|complemento: admitir|que|su|vida|más caótica|parecía|que|en el|internet", "Neredeyse|herkes|itiraf etti|usulca|tamamlayıcı: itiraf etmek|ki|onların|hayat|daha kaotik|görünüyordu|-den|-de|internet"],
     ["En su lugar|reímos|nosotros|de|nuestras|viejas|vergonzosas|fotos", "Bunun yerine|güldük|biz|-e|bizim|eski|utanç verici|fotoğraflar"],
     ["La|comparación|que|yo|temido|había (auxiliar)|tuvo lugar|nunca|complemento: tener lugar", "-|karşılaştırma|ki onu|ben|korkmuştum|sahipti (yardımcı)|gerçekleşti|asla|tamamlayıcı: gerçekleşmek"],
-    ["Yo|me fui|con|una|más ligera|sensación|que|desde hace|meses", "Ben|ayrıldım|ile|bir|daha hafif|his|-den|-den beri|aylar"],
+    ["Yo|me fui|tan|aliviado|como|desde hace|meses|no|más", "Ben|ayrıldım|kadar|rahatlamış|gibi|-den beri|aylar|değil|artık"],
     ["Aparentemente|encuentran|todos|simplemente|en silencio|su|camino", "Görünüşe göre|buluyor|herkes|sadece|sessizce|kendi|yol"],
   ],
   "normal-20": [
@@ -73,7 +73,7 @@ export const glosses = {
     ["Yo|habría (auxiliar)|en|la|segunda|frustrante|semana|casi|abandonado", "Ben|-mış olurdum (yardımcı)|-de|-|ikinci|sinir bozucu|hafta|neredeyse|vazgeçtim"],
     ["Una|amiga|recordó|me|de ello|que|principiantes|terrible|sonar|deben", "Bir|arkadaş|hatırlattı|bana|bunu|ki|acemiler|korkunç|kulağa gelmek|-meli"],
     ["Algo|cambió|se|cuando|yo|dejé|me|con|desconocidos|en la|red|a|comparar", "Bir şey|değişti|kendini|-ken|ben|bıraktım|kendimi|ile|yabancılar|-de|ağ|-mek|karşılaştırmak"],
-    ["Yo|practiqué|mal|y|honestamente|solo|por|pura|alegría|de ello", "Ben|çalıştım|kötü|ve|dürüstçe|sadece|-den|saf|zevk|bundan"],
+    ["Yo|empecé|complemento: empezar|mal|pero|con|entrega|a|practicar|simplemente|por|pura|alegría|de ello", "Ben|başladım|tamamlayıcı: başlamak|kötü|ama|ile|özveri|-mek|çalışmak|sadece|-den|saf|zevk|bundan"],
     ["Después de|seis|meses|puedo|yo|por fin|una|canción|sin|pausa|tocar", "-den sonra|altı|ay|-ebilirim|ben|sonunda|bir|şarkı|-siz|ara|çalmak"],
     ["De nuevo|principiante|a|ser|fue|extrañamente|liberador", "Yeniden|acemi|-mek|olmak|-idi|garip biçimde|özgürleştirici"],
   ],

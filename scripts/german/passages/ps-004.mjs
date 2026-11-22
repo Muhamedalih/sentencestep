@@ -29,7 +29,7 @@ export const passages = [
       { title: "Nicht bewiesen", lines: [
         "Um neun Uhr stimmten sie erneut ab. Diesmal hoben sich zwölf Hände für „nicht schuldig“, und Tylers war die letzte, widerwillig erhoben, wie etwas Schweres.",
         "Ich glaube immer noch, dass er es getan haben könnte. Ich kann nur nicht sagen, dass es bewiesen ist.",
-        "Genau das ist der Unterschied zwischen „könnte haben“ und „hat“. Unsere ganze Aufgabe ist es zu wissen, worüber wir entscheiden dürfen.",
+        "Genau das ist der Unterschied zwischen „könnte es getan haben“ und „hat es getan“. Unsere ganze Aufgabe ist es zu wissen, worüber wir entscheiden dürfen.",
         "Am nächsten Morgen übergab der Vorsitzende das Urteil dem Richter. Danny Walsh, der vier Tage lang kaum geschlafen hatte, schloss die Augen und sagte nichts.",
         "Diane sah keinen der anderen Geschworenen je wieder. Aber noch Jahre später erinnerte sie sich daran, dass elf Menschen bereit gewesen waren, in vier Minuten zu entscheiden, und dass es einen Einzigen gebraucht hatte, um sie warten zu lassen.",
       ], questions: [

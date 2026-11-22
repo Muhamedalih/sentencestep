@@ -5,7 +5,7 @@ export const passages = [
       { title: "Die Regeln", lines: [
         "In der Familie Whitfield hatte der Geschenketausch zum Fest eine unumstößliche Tradition, und sie hatte nichts mit Großzügigkeit zu tun. Sie hieß der Flamingo.",
         "Der Flamingo war eine Messinglampe in Form eines Flamingos mit Sonnenbrille. Sie war vor zwölf Jahren zum ersten Mal aufgetaucht, in Zeitungspapier gewickelt, und niemand hatte je zugegeben, sie gekauft zu haben.",
-        "Seitdem war sie von Verwandtem zu Verwandtem gewandert und tauchte jeden Dezember in neuem Papier vor einem neuen Opfer wieder auf.",
+        "Seitdem war sie von einem Verwandten zum nächsten gewandert und tauchte jeden Dezember in neuem Papier vor einem neuen Opfer wieder auf.",
         "Die Regeln waren ungeschrieben, aber heilig: begeistert aussehen, nie verraten, woher sie kam, und sie innerhalb eines Jahres weitergeben.",
         "Tante Pam, die Familienchronistin, führte an ihrem Kühlschrank eine Tabelle: sieben Haushalte, vier Sorten Geschenkpapier und ein gescheiterter Versuch, sie in ihrem Garten zu vergraben.",
       ], questions: [{ prompt: "Warum reicht die Familie die Lampe immer weiter?", options: ["Sie hält sie für wertvoll", "Niemand hat den Mut, sie wegzuwerfen", "Das Weitergeben ist zu einem Spiel geworden, das die ganze Familie genießt", "Es ist das einzige Geschenk, das sie sich leisten können"] }] },
@@ -30,7 +30,7 @@ export const passages = [
         "Dreißig Verwandte hielten den Atem an. Tante Pam betrachtete die Decke. Onkel Rick betrachtete seine Schuhe.",
         "Zwölf Jahre. Zwölf Jahre habe ich darauf gewartet, dass das zu mir zurückkommt.",
         "Ein Murmeln ging durch den Raum. Zu ihm zurück?",
-        "Ich habe sie an einer Tankstelle gekauft und Rick als Scherz geschenkt. Ich wollte sehen, wie lange sie sich hält. Ich habe ein Notizbuch geführt: sieben Häuser, vier Papiere, eine Beerdigung im Garten.",
+        "Ich habe sie an einer Tankstelle gekauft und Rick als Scherz geschenkt. Ich wollte sehen, wie lange sie sich hält. Ich habe ein Notizbuch geführt: sieben Haushalte, vier Geschenkpapiere, eine Beerdigung im Garten.",
       ], questions: [{ prompt: "Was verrät Opa Joes Wendung „zu mir zurückkommt“?", options: ["Er hatte die Lampe schon einmal geschenkt bekommen", "Er mochte die Lampe weniger als alle anderen", "Er hatte die Lampe von Rick gestohlen", "Er war derjenige, der die Tradition begonnen hatte"] }] },
       { title: "Eigentum der Familie", lines: [
         "Du? Du warst es? Ich habe zwölf Jahre gelitten!",
@@ -75,7 +75,7 @@ export const passages = [
         "Trainer Miller sah ein Huhn im Tunnel und winkte mit beiden Armen wie ein Mann, der ein Flugzeug einweist.",
         "Raus mit dir, Danny! Tanz! Mach irgendwas!",
         "Danny rannte auf das Spielfeld, was Maskottchen nie tun durften. Der Schiedsrichter pfiff.",
-        "Ein Spieler der Gäste wollte gerade einen Freiwurf nehmen.",
+        "Ein Spieler der Gäste wollte gerade einen Freiwurf ausführen.",
         "Danny wollte tanzen, aber sein linker Fuß fand eine Schweißpfütze, und er rutschte auf dem Bauch wie eine riesige Bowlingkugel über den Boden.",
         "In Erinnerung an Brendas dritte Regel blieb er liegen und hob einen Flügel, als wäre alles geplant gewesen.",
         "Der Spieler der Gäste starrte auf ein riesiges Huhn zu seinen Füßen, verlor die Konzentration und verfehlte beide Würfe.",
@@ -89,7 +89,7 @@ export const passages = [
         "Die Erhöhung betrug fünf Dollar. Danny nahm sie mit aller Würde an, die ein Mann haben kann, während er einen Schnabel trägt.",
         "Beim nächsten Spiel zählte er jeden Schritt. Und wenn er fiel, fiel er, als hätte er es gewollt.",
       ], questions: [
-        { prompt: "Was war die Danny-Regel?", options: ["Maskottchen müssen kleinere Köpfe tragen", "Maskottchen müssen vom Spielfeld bleiben", "Maskottchen müssen mehr bezahlt bekommen"] },
+        { prompt: "Was war die Danny-Regel?", options: ["Maskottchen müssen kleinere Köpfe tragen", "Maskottchen müssen dem Spielfeld fernbleiben", "Maskottchen müssen mehr bezahlt bekommen"] },
         { prompt: "Was zeigt Brendas Verhalten auf dem Parkplatz über sie?", options: ["Sie war wütend auf das College", "Sie wollte, dass Danny das Spiel verliert", "Sie war erfahren und bereit, einem Anfänger zu helfen"] },
       ] },
     ] },

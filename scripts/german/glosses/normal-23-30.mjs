@@ -58,7 +58,7 @@ export const glosses = {
   "normal-28": [
     ["Un|camión de mudanzas|aparcó|hoy|por la mañana|delante de|nuestro|edificio", "Bir|taşıma kamyonu|park etti|bugün|sabah|önünde|bizim|bina"],
     ["Una|joven|mujer|llevaba|sola|cajas|la|escalera|arriba", "Bir|genç|kadın|taşıdı|tek başına|kutular|-|merdiven|yukarı"],
-    ["Yo|ofrecí|le|complemento: ofrecer|le|con|la|más pesada|a|ayudar", "Ben|teklif ettim|ona|tamamlayıcı: teklif etmek|ona|ile|-|en ağır|-mek|yardım etmek"],
+    ["Yo|ofrecí|le|complemento: ofrecer|la|más pesada|caja|a|llevar", "Ben|teklif ettim|ona|tamamlayıcı: teklif etmek|-|en ağır|kutu|-mek|taşımak"],
     ["Ella|sonrió|y|agradeció|se|con|suave|voz", "O|gülümsedi|ve|teşekkür etti|kendine|ile|alçak|ses"],
     ["Nosotros|conversamos|nos|unos|pocos|minutos|en la|escalera", "Biz|sohbet ettik|kendimizle|birkaç|az|dakika|-de|merdiven boşluğu"],
     ["Ella|dijo|ella|conoce|todavía|a nadie|en|la|ciudad", "O|söyledi|o|tanıyor|henüz|kimseyi|-de|-|şehir"],

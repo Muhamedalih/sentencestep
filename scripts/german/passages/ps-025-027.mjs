@@ -17,15 +17,15 @@ export const passages = [
         "Sara setzt sich an den Rand. Sie steckt ihre Füße ins Wasser. Ihr Herz klopft bum, bum, bum.",
         "Du hast es geschafft. Das ist sehr mutig.",
       ], questions: [{ prompt: "Was macht Sara am ersten Tag?", options: ["Sie schwimmt zehn Meter", "Sie springt ins Becken", "Sie steckt ihre Füße ins Wasser"] }] },
-      { title: "Das Schweben", lines: [
+      { title: "Das Treiben", lines: [
         "Dritte Woche. Sara ist jetzt im Wasser.",
         "Lehn dich zurück. Ich bin da. Ich halte dich.",
         "Lass nicht los!",
         "Ich lasse nicht los. Atme. Entspann dich.",
-        "Langsam beginnt Sara zu schweben.",
-        "Ich schwebe! Lisa, sieh mal!",
+        "Langsam beginnt Sara, auf dem Wasser zu treiben.",
+        "Ich treibe! Lisa, sieh mal!",
         "Ich weiß. Und ich habe vor zehn Sekunden losgelassen.",
-      ], questions: [{ prompt: "Hält Lisa Sara am Ende fest?", options: ["Nein, Sara schwebt allein", "Ja, mit beiden Händen", "Ja, mit einer Hand"] }] },
+      ], questions: [{ prompt: "Hält Lisa Sara am Ende fest?", options: ["Nein, Sara treibt allein", "Ja, mit beiden Händen", "Ja, mit einer Hand"] }] },
       { title: "Der Strand", lines: [
         "Drei Monate später ist Sara mit ihren Freunden am Strand.",
         "Das Meer ist groß und blau.",
@@ -104,7 +104,7 @@ export const passages = [
         "Die Abstimmung wurde um sechzig Tage verschoben, was in der Sprache der Politik bedeutete, dass jemand umdachte.",
       ], questions: [{ prompt: "Was zeigten die Anwohner, indem sie schweigend aufstanden?", options: ["Dass der Garten einem großen Teil der Gemeinde wichtig war", "Dass sie die Sitzung langweilte", "Dass sie dem Stadtrat zustimmten", "Dass sie gehen wollten"] }] },
       { title: "Ernte", lines: [
-        "Am Ende tat der Stadtrat etwas Ungewöhnliches. Er bot dem Bauträger ein anderes Grundstück an und gab den Nachbarn einen Zehnjahrespachtvertrag für das Grundstück für einen Dollar pro Jahr.",
+        "Am Ende tat der Stadtrat etwas Ungewöhnliches. Er bot dem Bauträger ein anderes Grundstück an und gab den Nachbarn einen Pachtvertrag über zehn Jahre für das Grundstück zu einem Dollar pro Jahr.",
         "Im Oktober feierten sie das erste Erntefest: zweiundvierzig Gemüsesorten, ein Tisch voller Kuchen und eine Menge Nachbarn, die einst die Straßenseite gewechselt hatten, um einander auszuweichen.",
         "Stadtrat Hughes kam spät, im Anzug und mit einer Papiertüte in der Hand. Er fragte, ein wenig verlegen, ob jemand ein freies Beet habe.",
         "Wir haben eins ganz hinten, neben Walters Tomaten. Eine Warnung vorab: Walter hat Meinungen.",

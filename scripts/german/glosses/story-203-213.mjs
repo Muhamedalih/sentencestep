@@ -21,7 +21,7 @@ export const glosses = {
     ["Nosotros|dejamos|nos|muy|muy|mucho tiempo|no|complemento: soltarse", "Biz|bıraktık|birbirimizi|çok|çok|uzun süre|değil|tamamlayıcı: bırakmak"],
   ],
   "story-205": [
-    ["Nuestro|aniversario|estaba|dos|días|lejos|y|yo|tenía|todavía|aún|ningún|plan", "Bizim|yıldönümü|idi|iki|gün|uzakta|ve|ben|vardı|hâlâ|yine|hiç|plan"],
+    ["Nuestro|aniversario|estaba|en|dos|días|complemento: estar próximo|y|yo|tenía|todavía|aún|ningún|plan", "Bizim|yıldönümü|vardı|-de|iki|gün|tamamlayıcı: yaklaşmak|ve|ben|vardı|hâlâ|yine|hiç|plan"],
     ["Yo|quería|algo|mejor|que|la|habitual|reserva de mesa", "Ben|istedim|bir şey|daha iyi|-den|-|olağan|masa rezervasyonu"],
     ["Así que|llené|yo|nuestro|piso|en su lugar|con|luz de velas", "Öyleyse|doldurdum|ben|bizim|daire|bunun yerine|ile|mum ışığı"],
     ["Cada|superficie|llevaba|una|parpadeante|vela|cuando|él|entró", "Her|yüzey|taşıyordu|bir|titreşen|mum|-ince|o|girdi"],
@@ -56,7 +56,7 @@ export const glosses = {
     ["En|algunas|mañanas|me sorprendo|yo|me|en ello|los|fuegos artificiales|del|comienzo|a|echar de menos", "-de|bazı|sabahlar|yakalarım|ben|kendimi|bunda|-|havai fişekler|-in|başlangıç|-mek|özlemek"],
     ["Entonces|alcanza|él|me|el|café|exactamente|así|como|yo|lo|quiero|sin|que|yo|pregunte", "Sonra|uzatır|o|bana|-|kahve|tam olarak|böyle|gibi|ben|onu|severim|-meden|ki|ben|sorayım"],
     ["Nosotros|somos|ambos|no|perfectos|cansados|y|a veces|irritables|el uno con el otro", "Biz|-iz|ikimiz de|değil|mükemmel|yorgun|ve|bazen|alıngan|birbirimizle"],
-    ["Y|de algún modo|elegimos|nosotros|nos|cada|solo|día|aun así", "Ve|bir şekilde|seçeriz|biz|birbirimizi|her|tek|gün|yine de"],
+    ["Y|de algún modo|decidimos|nosotros|nos|cada|solo|día|aun así|el uno por el otro", "Ve|bir şekilde|karar veririz|biz|kendimizi|her|tek|gün|yine de|birbirimiz için"],
     ["Verdadero|amor|he (auxiliar)|yo|aprendido|es|no|fuegos artificiales|sino|constante|silencioso|y|puntual", "Gerçek|aşk|sahibim (yardımcı)|ben|öğrendim|-dir|değil|havai fişek|aksine|kalıcı|sessiz|ve|dakik"],
     ["Catorce|años|ordinarias|mañanas|y|yo|iba a (auxiliar)|cada|una|de nuevo|elegir", "On dört|yıl|sıradan|sabahlar|ve|ben|-ecektim (yardımcı)|her|bir|tekrar|seçmek"],
   ],
@@ -68,7 +68,7 @@ export const glosses = {
     ["Deberíamos|nosotros|intentar|esto|aquí|real|volverse|a|dejar|pregunté|yo|finalmente", "-meli miyiz|biz|denemek|bunu|burada|gerçek|olmak|-mek|bırakmak|sordum|ben|sonunda"],
     ["Yo|sé|lo|no|dijo|ella|pero|yo|iba a (auxiliar)|esto|apreciar|no importa|qué|pase", "Ben|bilirim|onu|değil|dedi|o|ama|ben|-ecek (yardımcı)|bunu|takdir etmek|fark etmez|ne|olursa"],
     ["Nosotros|resolvimos|lo|en|esta|noche|no|y|sinceramente|dicho|todavía|aún|no", "Biz|çözdük|onu|-de|bu|gece|değil|ve|dürüst olmak|söylenirse|hâlâ|yine|değil"],
-    ["Algunas|cosas|son|como|se|muestra|lo|valen|elegidas|a|ser|sin|a|saber|cómo|ellas|terminan", "Bazı|şeyler|-dir|gibi|kendini|gösterir|onu|değer|seçilmiş|-mek|olmak|-meden|-mek|bilmek|nasıl|onlar|biter"],
+    ["Algunas|cosas|merecen|ello|elegidas|a|ser|incluso|sin|a|saber|cómo|ellas|terminan", "Bazı|şeyler|hak eder|onu|seçilmeyi|-mek|olmak|bile|-meden|-mek|bilmek|nasıl|onlar|biter"],
   ],
   "story-210": [
     ["Ello|empezó|con|una|sola|nota adhesiva|sobre|mi|sensor del ratón", "O|başladı|ile|bir|tek|yapışkan not|üzerinde|benim|fare sensörü"],
@@ -104,12 +104,12 @@ export const glosses = {
   "story-213": [
     ["Mi|madre|ha (auxiliar)|nunca|alemán|aprendido|porque|ella|dos|trabajos|tenía|para|me|a criar", "Benim|anne|sahip (yardımcı)|asla|Almanca|öğrendi|çünkü|o|iki|iş|vardı|için|beni|büyütmek"],
     ["Ella|limpiaba|de noche|oficinas|y|se quejó|se|nunca|una|sola|vez", "O|temizledi|geceleri|ofisler|ve|şikâyet etti|kendine|asla|bir|tek|kez"],
-    ["En|mi|día de graduación|se sentó|ella|en|la|última|fila|en|su|más bonito|vestido", "-de|benim|mezuniyet günü|oturdu|o|-de|-|son|sıra|-de|onun|en güzel|elbise"],
+    ["En|el|día|de mi|ceremonia de graduación|se sentó|ella|en|la|última|fila|con|su|más bonito|vestido", "-de|-|gün|benim|mezuniyet töreni|oturdu|o|-de|-|son|sıra|-de|onun|en güzel|elbise"],
     ["Cuando|mi|nombre|llamado|fue|se puso de pie|ella|antes de|todos|los demás|complemento: ponerse de pie", "-ince|benim|isim|çağrıldı|oldu (yardımcı)|ayağa kalktı|o|-den önce|herkes|diğerleri|tamamlayıcı: ayağa kalkmak"],
     ["Después|tomó|ella|mi|cara|entre|sus|manos|y|habló|lentamente", "Sonra|aldı|o|benim|yüz|arasına|onun|eller|ve|konuştu|yavaşça"],
     ["Yo|estoy|orgullosa|de|ti|dijo|ella|en|cuidadoso|practicado|alemán", "Ben|-im|gururlu|-den|seni|dedi|o|-de|özenli|alıştırılmış|Almanca"],
-    ["Ella|había (auxiliar)|estas|cuatro|palabras|durante meses|practicado|sola|en el|autobús", "O|sahipti (yardımcı)|bu|dört|kelime|aylarca|alıştırma yaptı|yalnız|-de|otobüs"],
+    ["Ella|había (auxiliar)|estas|cinco|palabras|durante meses|practicado|sola|en el|autobús", "O|sahipti (yardımcı)|bu|beş|kelime|aylarca|alıştırma yaptı|yalnız|-de|otobüs"],
     ["Yo|había (auxiliar)|mi|entera|vida|por ello|esperado|las|a|oír|en|cualquier|idioma", "Ben|sahiptim (yardımcı)|benim|bütün|hayat|bunun için|bekledim|onları|-mek|duymak|-de|herhangi|dil"],
-    ["Yo|lloré|porque|ella|por|estas|cuatro|palabras|más duro|trabajado|había (auxiliar)|que|yo|por|mi|título", "Ben|ağladım|çünkü|o|için|bu|dört|kelime|daha çok|çalıştı|sahipti (yardımcı)|-den|ben|için|benim|diploma"],
+    ["Yo|lloré|porque|ella|por|estas|cinco|palabras|más duro|trabajado|había (auxiliar)|que|yo|por|mi|título", "Ben|ağladım|çünkü|o|için|bu|beş|kelime|daha çok|çalıştı|sahipti (yardımcı)|-den|ben|için|benim|diploma"],
   ],
 };

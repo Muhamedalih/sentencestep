@@ -45,12 +45,12 @@ export const passages = [
       { title: "Der Sonntagsstreit", lines: [
         "Sechsundvierzig Jahre lang waren Harold und Margaret Whitaker jeden Sonntag zum Mittagessen zum Haus ihrer Tochter gefahren, und jeden Sonntag hatten sie, bevor das Auto die Einfahrt verließ, denselben Streit.",
         "Harold wollte die Route Neun, die alte Straße, die an jedem Obstgarten vorbeiführte und auf einer Steinbrücke einen Bach überquerte.",
-        "Margaret wollte die Autobahn, die schneller, gerader und ihrer Meinung nach viel weniger geeignet war, ihr Übelkeit zu bereiten.",
+        "Margaret wollte die Autobahn, die schneller, gerader und ihrer Meinung nach viel seltener der Grund dafür war, dass ihr im Auto schlecht wurde.",
         "Eine Straße sollte etwas sein, das man genießt, Maggie, nicht etwas, das man überlebt.",
         "Eine Straße sollte einen zu deiner Tochter bringen, bevor der Braten kalt wird.",
-        "Margaret gewann immer. Harold murrte über die Seele einer Straße, bis zum Schluss stur, bis sie die Autobahn erreichten, und sie tat so, als lächle sie nicht.",
+        "Margaret gewann immer. Harold murrte stur über die Seele einer Straße, bis sie die Autobahn erreichten, und sie tat so, als lächle sie nicht.",
         "Keiner von beiden hätte es je zugegeben, aber der Streit gehörte so sehr zum Sonntag wie der Braten selbst.",
-      ], questions: [{ prompt: "Was deutet der Text über den Sonntagsstreit an?", options: ["Er brachte die Familie oft zu spät", "Beide genossen ihn heimlich", "Margaret wollte, dass er endet", "Harold hatte ihn nie ernst gemeint"] }] },
+      ], questions: [{ prompt: "Was deutet der Text über den Sonntagsstreit an?", options: ["Er sorgte oft dafür, dass die Familie zu spät kam", "Beide genossen ihn heimlich", "Margaret wollte, dass er endet", "Harold hatte ihn nie ernst gemeint"] }] },
       { title: "Die Autobahn ist okay", lines: [
         "An diesem Sonntag saß Margaret am Steuer, ihre Argumente bereit, wie in den letzten sechsundvierzig Jahren. Harold schnallte sich an und sah geradeaus.",
         "Die Autobahn ist okay.",
@@ -72,7 +72,7 @@ export const passages = [
       { title: "Die Brücke", lines: [
         "Die Straße wand sich durch die Obstgärten, kahl und grau im Novemberlicht, und keiner von beiden sprach, bis die Steinbrücke am Fuß des Hügels erschien.",
         "Margaret hielt auf dem Kies neben der Brücke und schaltete den Motor aus. Sie stiegen aus und standen am steinernen Geländer, und unter ihnen war der Bach braun und langsam.",
-        "Es war ein sonniger Tag, als ich dich gefragt habe. Erinnerst du dich? Keine Wolke am Himmel.",
+        "Es war ein sonniger Tag, als ich dir den Heiratsantrag gemacht habe. Erinnerst du dich? Keine Wolke am Himmel.",
         "Es hat in Strömen geregnet, Harold. Ich hielt meinen Mantel über den Kopf, und du standest bis auf die Knochen durchnässt da und hast dann entdeckt, dass du den Ring im Auto vergessen hattest.",
         "Sonnig.",
         "In Strömen.",
@@ -85,7 +85,7 @@ export const passages = [
         "Ich habe immer gewusst, dass es geregnet hat, Maggie. Aber wenn ich an diesen Tag denke, stehst du hier, und die Sonne scheint. Ich konnte mich nie anders daran erinnern.",
         "Sechsundvierzig Jahre lang hatte Margaret den Regen mit allen Fakten verteidigt, die sie besaß. Jetzt sah sie das Foto an, dann das braune Wasser unter sich, und stellte fest, dass ihr die Fakten ausgegangen waren.",
         "Sonnig. Es war ein wunderschöner, sonniger Tag.",
-        "Sie erreichten das Haus ihrer Tochter eine Stunde zu spät und gaben der Autobahn die Schuld. Es war das erste Geheimnis, das sie je vor ihrer Tochter hatten, und sie hielten es schlecht, lächelten einander über dem Braten zu.",
+        "Sie erreichten das Haus ihrer Tochter eine Stunde zu spät und gaben der Autobahn die Schuld. Es war das erste Geheimnis, das sie je vor ihrer Tochter hatten, und sie hielten es schlecht geheim, lächelten einander über dem Braten zu.",
       ], questions: [
         { prompt: "Was zeigt Margarets letzte Antwort „Sonnig“?", options: ["Sie wollte das Gespräch schnell beenden", "Ihr war Harolds Erinnerung wichtiger, als recht zu haben", "Sie hatte endlich begriffen, dass sie sich geirrt hatte", "Sie hatte vergessen, was wirklich geschehen war"] },
         { prompt: "Was deutet die Geschichte über die Gewohnheiten eines Paares im Lauf eines Lebens an?", options: ["Paare sind am glücklichsten, wenn sie nie streiten", "Alte Straßen sind immer besser als neue", "Gewohnheiten lassen Menschen irgendwann einander nicht mehr zuhören", "Selbst die Streitereien eines Paares können eine Art sein, „Ich bin noch da“ zu sagen"] },
@@ -94,7 +94,7 @@ export const passages = [
   { sourceId: "push-or-pull", title: "Drücken oder Ziehen?", summary: "Auf dem Schild an der Tür steht ein Wort. Niemand liest es.", speakers: { "Mr. Reed": "Herr Reed", "Mr. Stone": "Herr Stone" },
     sections: [
       { title: "Eine Glastür", lines: [
-        "Heute ist Amys erster Tag in ihrer neuen Arbeit.",
+        "Heute ist Amys erster Tag in ihrem neuen Job.",
         "Sie ist früh dran. Sie hat einen Kaffee und eine große Tasche.",
         "Das Büro hat eine große Glastür.",
         "Auf der Tür steht ein Wort: „Ziehen“.",
@@ -128,7 +128,7 @@ export const passages = [
         "Er drückt. Die Tür bewegt sich nicht. Er drückt fester.",
         "Warum ist diese Tür kaputt?",
         "Das ist Herr Stone, Amy. Er ist der große Chef.",
-        "Niemand sagt ein Wort. Amy trinkt ihren Kaffee. Es ist eine gute Arbeit.",
+        "Niemand sagt ein Wort. Amy trinkt ihren Kaffee. Es ist ein guter Job.",
       ], questions: [
         { prompt: "Wer ist Herr Stone?", options: ["Der neue Wachmann", "Der große Chef", "Ein Kunde"] },
         { prompt: "Warum können die meisten Leute die Tür nicht öffnen?", options: ["Sie drücken, aber auf dem Schild steht „Ziehen“", "Die Tür ist abgeschlossen", "Die Tür ist sehr schwer"] },

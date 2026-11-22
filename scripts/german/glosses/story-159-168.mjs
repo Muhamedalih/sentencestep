@@ -54,11 +54,11 @@ export const glosses = {
     ["Yo|me ofrezco|me|voluntariamente|la|fiesta de la oficina|a|planear", "Ben|gönüllü olurum|kendimi|isteyerek|-|ofis partisi|-mek|planlamak"],
     ["Yo|me arrepiento|de ello|enseguida|ya|al|siguiente|día", "Ben|pişman olurum|bundan|hemen|zaten|-de|ertesi|gün"],
     ["Tan|muchas|decisiones|tan|muchos|correos", "Çok|fazla|kararlar|çok|fazla|e-postalar"],
-    ["Yo|me arrepiento|mi|ofrecimiento|casi|cada|solo|mañana", "Ben|pişman olurum|benim|gönüllülük|neredeyse|her|tek|sabah"],
+    ["Yo|me arrepiento|de ello|casi|cada|solo|mañana|de que|yo|me|presentado|he (auxiliar)", "Ben|pişmanım|bundan|neredeyse|her|tek|sabah|ki|ben|kendimi|gönüllü oldum|sahibim (yardımcı)"],
     ["La|noche de la fiesta|llega|por fin|por fin|complemento: llegar", "-|parti gecesi|gelir|sonunda|sonunda|tamamlayıcı: gelmek"],
     ["Todos|bailan|ríen|y|disfrutan|de ello|realmente", "Herkes|dans eder|güler|ve|keyif alır|bundan|gerçekten"],
     ["Mi|colega|dice|ello|fuera|la|mejor|fiesta|hasta ahora", "Benim|iş arkadaşı|der|o|-miş|-|en iyi|parti|şimdiye kadar"],
-    ["Quizás|fue|el|ofrecimiento|en absoluto|no|tan|mala|idea", "Belki|idi|-|gönüllülük|hiç|değil|o kadar|kötü|fikir"],
+    ["Quizás|fue|ello|en absoluto|ninguna|tan|mala|idea|me|voluntariamente|a|ofrecer", "Belki|idi|o|hiç|hiç|o kadar|kötü|fikir|kendimi|gönüllü olarak|-mek|başvurmak"],
   ],
   "story-165": [
     ["Mi|amiga|presenta|una|extraña|idea de negocio|complemento: presentar", "Benim|arkadaş|sunar|bir|tuhaf|iş fikri|tamamlayıcı: sunmak"],

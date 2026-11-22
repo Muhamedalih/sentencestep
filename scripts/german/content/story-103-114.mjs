@@ -36,7 +36,7 @@ export const lessons = [
     ] },
   { sourceId: "story-106", title: "Der vergessene Satz", description: "Ein nervöser Moment auf der Bühne wird zu einer unerwartet freundlichen Erinnerung.",
     sentences: [
-      { src: "s1", de: "Ich bin vor dem Schultheater nervös hinter der Bühne.", gl: ["أنا","أكون","قبل","الـ","مسرح المدرسة","متوتراً","خلف","الـ","خشبة المسرح"] },
+      { src: "s1", de: "Ich bin vor der Schulaufführung nervös hinter der Bühne.", gl: ["أنا","أكون","قبل","الـ","عرض المدرسة","متوتراً","خلف","الـ","خشبة المسرح"] },
       { src: "s2", de: "Meine Hände zittern, als ich auf die Bühne gehe.", gl: ["الخاصة بي","أيدي","ترتجف","عندما","أنا","على","الـ","خشبة المسرح","أذهب"] },
       { src: "s3", de: "Meine ersten zwei Sätze spiele ich perfekt.", gl: ["الخاصة بي","الأولى","اثنين","جمل","أؤدي","أنا","بشكل مثالي"] },
       { src: "s4", de: "Dann vergesse ich plötzlich den dritten völlig.", gl: ["ثم","أنسى","أنا","فجأة","الـ","الثالث","تماماً"] },
@@ -50,7 +50,7 @@ export const lessons = [
       { src: "s1", de: "Ich spare jeden Monat ein bisschen Geld.", gl: ["أنا","أدخر","كل","شهر","شيء","قليل","مال"] },
       { src: "s2", de: "Mein Ziel: eine richtige Reise ins Ausland nächstes Jahr.", gl: ["الخاص بي","هدف","واحدة","حقيقية","رحلة","إلى الـ","الخارج","القادم","عام"] },
       { src: "s3", de: "Dann sehe ich das perfekte Paar Schuhe.", gl: ["ثم","أرى","أنا","الـ","المثالي","زوج","أحذية"] },
-      { src: "s4", de: "Ich gebe fast alle meine Ersparnisse dafür aus.", gl: ["أنا","أنفق","تقريباً","كل","الخاصة بي","مدخرات","مقابلها","تكملة: أنفق"] },
+      { src: "s4", de: "Ich hätte dafür fast alle meine Ersparnisse ausgegeben.", gl: ["أنا","لكان (مساعد)","مقابل ذلك","تقريباً","كل","الخاصة بي","مدخرات","أنفقتُ"] },
       { src: "s5", de: "Ich stehe an der Kasse, die Schuhe in der Hand.", gl: ["أنا","أقف","عند","الـ","الصندوق","الـ","أحذية","في","الـ","يد"] },
       { src: "s6", de: "Ich denke an die Reise. Ich stelle sie zurück.", gl: ["أنا","أفكر","في","الـ","رحلة","أنا","أضع","إياها","تكملة: أعاد"] },
       { src: "s7", de: "Ich gebe das Geld nicht aus. Ich spare stattdessen weiter.", gl: ["أنا","أنفق","الـ","مال","لا","تكملة: أنفق","أنا","أدخر","بدلاً من ذلك","باستمرار"] },
@@ -78,7 +78,7 @@ export const lessons = [
       { src: "s7", de: "Irgendwie repariere ich sie tatsächlich perfekt.", gl: ["بطريقة ما","أصلح","أنا","إياها","فعلاً","بشكل مثالي"] },
       { src: "s8", de: "Niemand findet es je heraus. Mein Geheimnis ist sicher.", gl: ["لا أحد","يجد","إياه","يوماً","تكملة: اكتشف","الخاص بي","سر","هو","آمن"] },
     ] },
-  { sourceId: "story-110", title: "Der neue Laden in der Innenstadt", description: "Es dauert Wochen, die Freunde zu überzeugen, etwas Neues auszuprobieren, und ein Bissen reicht, sie zu gewinnen.",
+  { sourceId: "story-110", title: "Das neue Lokal in der Innenstadt", description: "Es dauert Wochen, die Freunde zu überzeugen, etwas Neues auszuprobieren, und ein Bissen reicht, sie zu gewinnen.",
     sentences: [
       { src: "s1", de: "Ich versuche, meine Freunde zu überreden, ein neues Restaurant auszuprobieren.", gl: ["أنا","أحاول","الخاصون بي","أصدقاء","لـ","أقنع","واحداً","جديداً","مطعم","أن أجرّب"] },
       { src: "s2", de: "Keiner stimmt zu. Alle wollen das übliche Lokal.", gl: ["لا أحد","يوافق","تكملة: وافق","الجميع","يريدون","الـ","المعتاد","مكان"] },
@@ -93,10 +93,10 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Ich erzähle eine kleine Lüge, um Ärger zu vermeiden.", gl: ["أنا","أحكي","واحدة","صغيرة","كذبة","لكي","مشكلة","لـ","أتجنب"] },
       { src: "s2", de: "Sie wirkt harmlos. Nur eine kleine Lüge.", gl: ["هي","تبدو","غير ضارة","فقط","واحدة","صغيرة","كذبة"] },
-      { src: "s3", de: "Aber die Schuld begleitet mich die ganze Woche.", gl: ["لكن","الـ","الذنب","يلازم","إياي","الـ","كامل","أسبوع"] },
+      { src: "s3", de: "Aber das schlechte Gewissen begleitet mich die ganze Woche.", gl: ["لكن","الـ","السيئ","ضمير","يلازم","إياي","الـ","كامل","أسبوع"] },
       { src: "s4", de: "Ich bin dreimal kurz davor, zu gestehen.", gl: ["أنا","أكون","ثلاث مرات","قريباً","من ذلك","لـ","أعترف"] },
       { src: "s5", de: "Jedes Mal kneife ich in der letzten Sekunde.", gl: ["كل","مرة","أتراجع","أنا","في","الـ","الأخيرة","ثانية"] },
-      { src: "s6", de: "Schließlich setze ich meine Freundin hin, um zu gestehen.", gl: ["في النهاية","أجلس","أنا","الخاصة بي","صديقة","تكملة: جلس","لكي","لـ","أعترف"] },
+      { src: "s6", de: "Schließlich nehme ich meine Freundin beiseite, um ihr alles zu gestehen.", gl: ["في النهاية","آخذ","أنا","الخاصة بي","صديقة","جانباً","لكي","لها","كل شيء","لـ","أعترف"] },
       { src: "s7", de: "„Das ist alles? Das wusste ich schon“, lacht sie.", gl: ["هذا","هو","كل شيء","ذلك","عرفتُ","أنا","بالفعل","تضحك","هي"] },
       { src: "s8", de: "Gestehen fühlt sich leichter an, als die Lüge es je war.", gl: ["الاعتراف","يبدو","نفسه","أخف","تكملة: بدا","من","الـ","كذبة","إياه","يوماً","كانت"] },
     ] },
@@ -130,7 +130,7 @@ export const lessons = [
       { src: "s4", de: "Meine Mitbewohnerin öffnet genau da die Tür.", gl: ["الخاصة بي","زميلة السكن","تفتح","بالضبط","حينها","الـ","باب"] },
       { src: "s5", de: "Alle versuchen, so zu tun, als wäre nichts.", gl: ["الجميع","يحاولون","هكذا","لـ","يتصرفوا","كأنّ","كان","لا شيء"] },
       { src: "s6", de: "Sie starrt uns völlig verwirrt an.", gl: ["هي","تحدّق","إلينا","تماماً","مرتبكة","تكملة: حدّق"] },
-      { src: "s7", de: "Endlich ruft jemand viel zu spät Überraschung.", gl: ["أخيراً","ينادي","أحدهم","بكثير","جداً","متأخراً","مفاجأة"] },
+      { src: "s7", de: "Endlich ruft jemand viel zu spät: „Überraschung!“", gl: ["أخيراً","ينادي","أحدهم","بكثير","جداً","متأخراً","مفاجأة"] },
       { src: "s8", de: "Sie lacht so sehr, dass sie fast umfällt.", gl: ["هي","تضحك","بهذا","كثيراً","أنّ","هي","تقريباً","تسقط"] },
     ] },
 ];

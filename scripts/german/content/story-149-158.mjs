@@ -3,7 +3,7 @@
 export const lessons = [
   { sourceId: "story-149", title: "Das fehlende Teil", description: "Ein fehlendes Puzzleteil taucht am allerletzten Ort auf, an dem jemand gesucht hätte.",
     sentences: [
-      { src: "s1", de: "Ich schließe fast ein Tausend-Teile-Puzzle ab.", gl: ["أنا","أنهي","تقريباً","واحد","أحجية من ألف قطعة","تكملة: أنهى"] },
+      { src: "s1", de: "Ich habe fast ein Puzzle mit tausend Teilen fertig.", gl: ["أنا","لدي","تقريباً","واحدة","أحجية","بـ","ألف","قطع","منتهية"] },
       { src: "s2", de: "Ein Teil fehlt. Nur eins.", gl: ["واحدة","قطعة","تنقص","فقط","واحدة"] },
       { src: "s3", de: "Ich suche noch einmal den ganzen Tisch ab.", gl: ["أنا","أبحث","مرة","أخرى","الـ","كامل","طاولة","تكملة: بحث"] },
       { src: "s4", de: "Ich suche auch unter dem Tisch.", gl: ["أنا","أبحث","أيضاً","تحت","الـ","طاولة"] },
@@ -50,7 +50,7 @@ export const lessons = [
       { src: "s1", de: "Ich baue draußen einen Limonadenstand auf.", gl: ["أنا","أنصب","في الخارج","واحداً","كشك عصير الليمون","تكملة: نصب"] },
       { src: "s2", de: "Eine Stunde vergeht. Überhaupt keine Kunden.", gl: ["واحدة","ساعة","تمر","على الإطلاق","لا","زبائن"] },
       { src: "s3", de: "Zwei Stunden vergehen. Immer noch hält niemand an.", gl: ["اثنتان","ساعات","تمران","ما","زال","يتوقف","لا أحد","تكملة: توقف"] },
-      { src: "s4", de: "Ich packe fast alles enttäuscht wieder ein.", gl: ["أنا","أحزم","تقريباً","كل شيء","خائب الأمل","مجدداً","تكملة: حزم"] },
+      { src: "s4", de: "Enttäuscht hätte ich beinahe alles wieder eingepackt.", gl: ["خائب الأمل","لكان لديّ (مساعد)","أنا","تقريباً","كل شيء","مجدداً","حزمتُ"] },
       { src: "s5", de: "Dann kommt eine Nachbarin durstig vorbei.", gl: ["ثم","تأتي","واحدة","جارة","عطشى","تكملة: مرّت"] },
       { src: "s6", de: "Sie kauft drei Becher auf einmal.", gl: ["هي","تشتري","ثلاثة","أكواب","على","مرة"] },
       { src: "s7", de: "Es spricht sich herum, und es kommen mehr Leute.", gl: ["الأمر","ينتشر","نفسه","تكملة: انتشر","و","الأمر","يأتي","أكثر","ناس"] },
@@ -76,7 +76,7 @@ export const lessons = [
       { src: "s5", de: "Nichts Schlimmes passiert. Gar nichts.", gl: ["لا شيء","سيء","يحدث","أبداً","لا شيء"] },
       { src: "s6", de: "In der Woche danach auch nichts Schlimmes.", gl: ["في","الـ","أسبوع","بعد ذلك","أيضاً","لا شيء","سيء"] },
       { src: "s7", de: "Ich lache über mich selbst, weil ich mir so viele Sorgen gemacht habe.", gl: ["أنا","أضحك","على","نفسي","بنفسي","لأن","أنا","لنفسي","هكذا","كثيراً","قلقاً","صنعتُ","أملك (مساعد)"] },
-      { src: "s8", de: "Spiegel kontrollieren eben gar nichts.", gl: ["مرايا","تتحكم","ببساطة","أبداً","بشيء"] },
+      { src: "s8", de: "Spiegel haben eben auf gar nichts Einfluss.", gl: ["مرايا","لديها","ببساطة","على","أبداً","لا شيء","تأثير"] },
     ] },
   { sourceId: "story-156", title: "Langsam, aber stetig", description: "Die Klassenschildkröte tritt gegen schnellere Tiere an und gewinnt auf die vorhersehbarste, befriedigendste Art.",
     sentences: [
@@ -84,7 +84,7 @@ export const lessons = [
       { src: "s2", de: "Ein Hase. Ein Hamster. Sogar eine Eidechse.", gl: ["واحد","أرنب","واحد","هامستر","حتى","واحدة","سحلية"] },
       { src: "s3", de: "Die Schildkröte bewegt sich in ihrem üblichen Tempo: langsam.", gl: ["الـ","سلحفاة","تتحرك","نفسها","في","الخاص بها","المعتاد","إيقاع","ببطء"] },
       { src: "s4", de: "Alle lachen und erwarten eine leichte Niederlage.", gl: ["الجميع","يضحكون","و","يتوقعون","واحدة","سهلة","هزيمة"] },
-      { src: "s5", de: "Zur Hälfte hält der Hase an, um ein Nickerchen zu machen.", gl: ["إلى الـ","منتصف","يتوقف","الـ","أرنب","تكملة: توقف","لكي","واحدة","قيلولة","لـ","يأخذ"] },
+      { src: "s5", de: "Auf halber Strecke hält der Hase an, um ein Nickerchen zu machen.", gl: ["على","نصف","مسافة","يتوقف","الـ","أرنب","تكملة: توقف","لكي","واحدة","قيلولة","لـ","يأخذ"] },
       { src: "s6", de: "Die Schildkröte bewegt sich einfach stetig weiter.", gl: ["الـ","سلحفاة","تتحرك","نفسها","ببساطة","بثبات","باستمرار"] },
       { src: "s7", de: "Langsam, aber sicher überquert die Schildkröte als Erste die Ziellinie.", gl: ["ببطء","لكن","بثبات","تعبر","الـ","سلحفاة","كـ","الأولى","الـ","خط النهاية"] },
       { src: "s8", de: "Niemand lacht mehr über die langsame Schildkröte.", gl: ["لا أحد","يضحك","بعد","على","الـ","البطيئة","سلحفاة"] },

@@ -13,14 +13,14 @@ export const passages = [
       { title: "Der andere Walter", lines: [
         "Janet durchsuchte das Archiv und fand die ursprüngliche Bildunterschrift: „Walter J. Brandt, Sieger der Senioren-Tanzmeisterschaft.“ Die Adresse war zehn Minuten entfernt.",
         "Sie durfte nicht gehen, bevor die Seite geschlossen wurde. Sie griff trotzdem nach ihrem Mantel: Eine Regel, die einen Fehler schützt, ist es nicht wert, sie zu behalten, entschied sie.",
-        "Um fünf vor halb zwölf brannte an der Adresse noch Licht. Ein Mann im Bademantel öffnete die Tür: dasselbe Grinsen, dieselben Ohren, und sehr lebendig.",
+        "Um fünf nach halb zwölf brannte an der Adresse noch Licht. Ein Mann im Bademantel öffnete die Tür: dasselbe Grinsen, dieselben Ohren, und sehr lebendig.",
         "Herr Brandt? Es tut mir so leid. Ich arbeite bei der Gazette, und morgen früh wird ein Nachruf mit Ihrem Foto erscheinen.",
         "Es folgte eine lange Pause. Dann trat Walter Brandt, neunundsiebzig, zur Seite, um sie hereinzulassen.",
         "Kommen Sie herein, meine Liebe. Sagen Sie mir nur eins vorher: War es ein schmeichelhaftes Foto?",
       ], questions: [{ prompt: "Was deutet Walters erste Frage über ihn an?", options: ["Er war über den Fehler beleidigt", "Er hatte sie nicht verstanden", "Er nahm die Nachricht mit Humor", "Er wollte die Zeitung verklagen"] }] },
       { title: "Sechzig Jahre Post", lines: [
         "Janet zeigte ihm den Probeabzug. Er las den ganzen Nachruf langsam, so wie man einen Brief liest, der an einen selbst gerichtet ist, und am Ende nahm er die Brille ab.",
-        "Walter A. Brandt. Der andere Walter. Also ist er gegangen.",
+        "Walter A. Brandt. Der andere Walter. Also ist er von uns gegangen.",
         "Er erklärte, dass die beiden sechzig Jahre lang einen Namen und eine Stadt geteilt hatten. Ihre Post war durcheinandergeraten, ihre Rechnungen hatten sich gekreuzt, und eine Hochzeitseinladung war in der falschen Kirche gelandet.",
         "Wir haben immer gesagt, wir trinken mal zusammen einen Kaffee. Ich hätte meinen Namensvetter gern kennengelernt. Jeder von uns nahm an, der andere sei zu beschäftigt.",
         "Einen Augenblick lang sah der fröhliche Mann im Bademantel so alt aus, wie er war. Dann setzte er die Brille wieder auf und wurde wieder der Mann auf dem Foto.",
@@ -33,7 +33,7 @@ export const passages = [
         "Die E-Mail des Bestattungsinstituts lag seit acht Uhr ungelesen im Posteingang. Der Praktikant hatte sie nie geöffnet.",
         "Janet hängte das richtige Foto an: ein Mann im grauen Anzug, der das kleine Lächeln von jemandem lächelte, der vierzig Jahre lang Brüche erklärt hatte.",
         "Die korrigierte Seite ging vier Minuten vor Schluss in den Druck.",
-        "Gut erwischt, Moore. Und falls jemand fragt: Ich habe nie gesagt, dass Sie sie drucken sollen.",
+        "Gut gesehen, Moore. Und falls jemand fragt: Ich habe nie gesagt, dass Sie sie drucken sollen.",
       ], questions: [{ prompt: "Was deutet Herrn Delgados letzte Bemerkung an?", options: ["Er will sich die Korrektur zugutehalten", "Er ist wütend, dass Janet das Gebäude verlassen hat", "Er ist froh, dass der Fehler nie gedruckt wurde", "Es ist ihm peinlich, dass er ihr gesagt hatte, sie solle drucken"] }] },
       { title: "Zwei Walter", lines: [
         "Am nächsten Morgen brachte die Gazette eine Korrektur unter der Überschrift „Zwei Walter“, die Geschichte von zwei Männern, die einen Namen, eine Stadt und sechzig Jahre falsch zugestellte Post geteilt hatten.",
@@ -89,7 +89,7 @@ export const passages = [
         "Am Sonntag stellte der Handwerker die Zeiger wieder vor, und der Jubel war lauter als beim ersten Mal.",
         "Unter der Uhr brachte die Bürgermeisterin ein kleines Schild an: „Larkspur-Zeit: Neun Minuten zu früh, seit neunzehnhunderteinundzwanzig.“ Es hatte eine zweite Zeile: „Hüter der Uhr: Arthur Finch.“",
         "Joshs Artikel erschien am Montag unter der Überschrift „Der Mann, der die Uhr reparierte, indem er sie reparieren wollte“. Jedes Geschäft der Stadt hängte ihn an die Wand.",
-        "Arthur schreibt dem Bürgermeister noch immer jeden Montag. Heutzutage ändert sich der Brief nie, und er hat nur einen Satz.",
+        "Arthur schreibt der Bürgermeisterin noch immer jeden Montag. Heutzutage ändert sich der Brief nie, und er hat nur einen Satz.",
         "Er lautet: „Danke für Ihre Geduld.“",
       ], questions: [
         { prompt: "Was deutet der letzte Satz der Geschichte an?", options: ["Er schreibt jetzt, um der Bürgermeisterin zu danken, statt sich zu beschweren", "Er glaubt immer noch, dass die Uhr falsch geht", "Er hat aufgehört, der Bürgermeisterin zu schreiben"] },

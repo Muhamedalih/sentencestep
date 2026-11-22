@@ -31,7 +31,7 @@ export const passages = [
       { title: "Qualitätskontrolle", lines: [
         "Zurück am Brunnen war Leo nervös. Er hatte eine Stunde lang keinen einzigen Satz des Skripts gesagt, und seine einzige Kundin hatte mehr geredet als er.",
         "Hinter einer Säule stand Herr Kane, der ihnen mit einem Notizbuch in einigem Abstand gefolgt war. Leo schloss die Augen und wartete darauf, gefeuert zu werden.",
-        "Vierzig Jahre in diesem Geschäft, und ich habe noch nie jemanden diese Arkade so flüstern hören.",
+        "Vierzig Jahre in diesem Geschäft, und ich habe noch nie erlebt, dass jemand diese Arkade so zum Flüstern gebracht hat.",
         "Das war ich nicht, Chef. Das war sie. Es tut mir leid. Ich habe das Skript aufgegeben.",
         "Das Skript ist langweilig, Leo. Ich habe es geschrieben.",
         "Er wandte sich an Frau Alvarez und fragte mit überraschender Schüchternheit, ob sie schon einmal daran gedacht habe, selbst Führungen zu leiten.",
@@ -44,7 +44,7 @@ export const passages = [
         "Niemand fragte mehr nach Jahreszahlen. Sie fragten, was an diesem Dienstag in der Bäckerei geschehen war, und sie erzählte es immer gern.",
         "Leo behielt die erste Seite des Skripts in seiner Brieftasche. Auf die Rückseite hatte er Herrn Kanes Regel durchgestrichen und eine neue geschrieben: „Frag Frau Alvarez.“",
       ], questions: [
-        { prompt: "Was deutet Leos neue Regel an?", options: ["Er vertraut auswendig gelernten Fakten jetzt mehr als Menschen", "Er will mehr Führer einstellen", "Er hat gelernt, dass die Erinnerungen eines Menschen mehr lehren können als ein Skript"] },
+        { prompt: "Was deutet Leos neue Regel an?", options: ["Er vertraut auswendig gelernten Fakten jetzt mehr als Menschen", "Er will mehr Stadtführer einstellen", "Er hat gelernt, dass die Erinnerungen eines Menschen mehr lehren können als ein Skript"] },
         { prompt: "Was deutet die Geschichte darüber an, wie man die Geschichte eines Ortes kennenlernt?", options: ["Lebendige Erinnerungen können lehren, was kein Skript kann", "Skripte sind immer genauer als Menschen", "Ältere Menschen sollten keine Führungen leiten"] },
       ] },
     ] },
@@ -54,7 +54,7 @@ export const passages = [
         "Jess war fünfunddreißig und hasste Laufen. Ihr kleiner Bruder Josh war Läufer.",
         "Im Juni gibt es einen Fünf-Kilometer-Lauf. Du kannst keine fünf Kilometer laufen. Niemand in unserer Familie kann das, außer mir.",
         "Ist das eine Wette?",
-        "Zehn Dollar sagen, dass du es nicht schaffst.",
+        "Zehn Dollar, dass du es nicht schaffst.",
         "Die Wette gilt, kleiner Bruder.",
         "In dieser Nacht kaufte Jess ihr erstes Paar Laufschuhe.",
       ], questions: [{ prompt: "Worum ging es bei der Wette?", options: ["Ob Jess fünf Kilometer laufen kann", "Ob Josh das Rennen gewinnen kann", "Ob Jess neue Schuhe kaufen kann"] }] },

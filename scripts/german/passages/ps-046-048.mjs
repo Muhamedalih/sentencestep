@@ -3,7 +3,7 @@ export const passages = [
   { sourceId: "say-that-again", title: "Sag das noch mal", summary: "Jörgs Hörgeräte pfeifen. Ruths bleiben in ihrer Handtasche.", speakers: { "George": "Jörg" },
     sections: [
       { title: "Der falsche Stuhl", lines: [
-        "Zehn Jahre lang hatte Jörg in der Klinik auf seinen Hörtest immer auf demselben Stuhl gewartet. In diesem Frühling saß eine kleine Frau in einer blauen Strickjacke darauf.",
+        "Zehn Jahre lang hatte Jörg in der Klinik auf seinen Hörtest immer auf demselben Stuhl auf seinen Hörtest gewartet. In diesem Frühling saß eine kleine Frau in einer blauen Strickjacke darauf.",
         "Er nahm stattdessen den Stuhl neben ihrem. Sie beugte sich zu ihm, eine Hand hinter dem Ohr, und runzelte höflich die Stirn.",
         "Guten Morgen. Ich bin Jörg.",
         "Berg? Wie der Berg? Was für ein ungewöhnlicher Name!",
@@ -63,7 +63,7 @@ export const passages = [
         "In dieser Nacht saß Daniel allein in der Küche. Er liebte Emma über alles. Aber er konnte nicht mit ihr sprechen.",
       ], questions: [{ prompt: "Warum antwortete Daniel Emma nicht?", options: ["Er war wütend", "Ihm gefiel die Zeichnung nicht", "Er verstand kein Englisch"] }] },
       { title: "Raum zwölf", lines: [
-        "In der nächsten Woche fand Daniel einen Englischkurs im Gemeindezentrum. Er fand dienstags und donnerstags abends statt, in Raum zwölf.",
+        "In der Woche darauf fand Daniel einen Englischkurs im Gemeindezentrum. Er fand dienstags und donnerstags abends statt, in Raum zwölf.",
         "Am ersten Abend war er die älteste Person im Raum. Die anderen Teilnehmer waren zwanzig Jahre alt.",
         "Vielleicht war das ein Fehler.",
         "Willkommen, Daniel. In diesem Raum ist niemand zu alt, und niemand ist zu langsam.",
@@ -87,8 +87,8 @@ export const passages = [
         "Opa! Du hast alles auf Englisch gesagt!",
         "Ja. Und das ist erst der Anfang.",
       ], questions: [
-        { prompt: "Was bereitete Daniel für den Geburtstag vor?", options: ["Einen großen Kuchen", "Etwas Besonderes zum Sagen, auf Englisch", "Eine Zeichnung eines Drachen"] },
-        { prompt: "Warum ging Daniel in den Englischkurs?", options: ["Er wollte mit Emma sprechen", "Er brauchte es für seine Arbeit", "Ein Freund hatte ihn darum gebeten"] },
+        { prompt: "Was bereitete Daniel für den Geburtstag vor?", options: ["Einen großen Kuchen", "Etwas Besonderes, das er auf Englisch sagen wollte", "Eine Zeichnung eines Drachen"] },
+        { prompt: "Warum ging Daniel in den Englischkurs?", options: ["Er wollte mit Emma sprechen", "Er brauchte ihn für seine Arbeit", "Ein Freund hatte ihn darum gebeten"] },
       ] },
     ] },
   { sourceId: "the-phone-rings", title: "Das Telefon klingelt", summary: "Ryan hat eine neue Arbeit, ein großes Telefon und drei kleine Sätze.", speakers: { "Ms. Cole": "Frau Cole", "Mr. Garcia": "Herr Garcia" },

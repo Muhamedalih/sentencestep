@@ -24,7 +24,7 @@ export const glosses = {
     ["Por fin|llegué|yo|solo|quince|minutos|demasiado|tarde|a|el|trabajo|complemento: llegar", "Sonunda|vardım|ben|sadece|on beş|dakika|çok|geç|-de|-|iş|tamamlayıcı: varmak"],
   ],
   "normal-3": [
-    ["Mi|teléfono|vibró|con|un|mensaje|de|una|vieja|amiga", "Benim|telefon|titredi|ile|bir|mesaj|-den|bir|eski|arkadaş"],
+    ["Mi|móvil|vibró|un|mensaje|de|una|vieja|amiga", "Benim|telefon|vızıldadı|bir|mesaj|-den|bir|eski|arkadaş"],
     ["Nosotros|habíamos (auxiliar)|casi|dos|años|no|el uno con el otro|hablado", "Biz|sahiptik (yardımcı)|neredeyse|iki|yıl|değil|birbirimizle|konuştuk"],
     ["Ella|dijo|que|ella|próxima|semana|mi|ciudad|visitar|iría (auxiliar)", "O|dedi|ki|o|gelecek|hafta|benim|şehir|ziyaret etmek|-ecekti (yardımcı)"],
     ["Yo|estaba|emocionado|y|un|poco|nervioso", "Ben|idim|heyecanlı|ve|bir|biraz|gergin"],
@@ -60,7 +60,7 @@ export const glosses = {
     ["Antes|dejé|yo|casi|cada|día|el|desayuno|complemento: dejar", "Eskiden|bıraktım|ben|neredeyse|her|gün|-|kahvaltı|tamamlayıcı: bırakmak"],
     ["Un|amigo|convenció|me|más temprano|a|comer", "Bir|arkadaş|ikna etti|beni|daha erken|-mek|yemek"],
     ["Al|principio|fue|eso|para mí|realmente|difícil|puntualmente|levantarme", "-de|başlangıç|idi|bu|bana|gerçekten|zor|zamanında|kalkmak"],
-    ["Después de|una|semana|noté|yo|durante el día|más|energía", "Sonra|bir|hafta|fark ettim|ben|gün boyunca|daha|enerji"],
+    ["Después de|una|semana|noté|yo|complemento: notar|que|yo|de día|más|energía|tenía", "-den sonra|bir|hafta|fark ettim|ben|tamamlayıcı: fark etmek|ki|ben|gündüz|daha fazla|enerji|vardı"],
     ["Además|tomé|yo|al mediodía|no|más|a|dulces|aperitivos", "Ayrıca|uzandım|ben|öğlen|değil|artık|-e|tatlı|atıştırmalıklar"],
     ["Mi|concentración|en|el|trabajo|se volvió|mejor|de lo que|yo|esperado|había (auxiliar)", "Benim|konsantrasyon|-de|-|iş|oldu|daha iyi|-den|ben|beklemiştim|sahiptim (yardımcı)"],
     ["En|algunos|días|olvido|yo|eso|todavía|y|eso|es|totalmente|en|orden", "-de|bazı|günler|unuturum|ben|onu|hâlâ|ve|bu|-dir|tamamen|-de|düzen"],

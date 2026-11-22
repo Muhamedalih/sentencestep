@@ -8,7 +8,7 @@ export const glosses = {
     ["No|él|vuela|sobre|una|dormida|gata", "Hayır|o|uçar|üzerinde|bir|uyuyan|kedi"],
     ["La|gata|se despierta|complemento: despertarse|sorpresa", "-|kedi|uyanır|tamamlayıcı: uyanmak|sürpriz"],
     ["Ahora|vuela|él|en|un|árbol", "Şimdi|uçar|o|-e|bir|ağaç"],
-    ["Atascado|pero|él|sonríe|aun así", "Sıkışmış|ama|o|gülümser|yine de"],
+    ["Él|queda|atascado|pero|él|sonríe|aun así", "O|kalır|sıkışmış|ama|o|gülümser|yine de"],
     ["Tiempo|para|un|nuevo|globo|sujeta|lo|bien|complemento: sujetar", "Zaman|için|bir|yeni|balon|tut|onu|iyi|tamamlayıcı: tutmak"],
   ],
 };

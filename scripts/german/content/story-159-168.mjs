@@ -61,11 +61,11 @@ export const lessons = [
       { src: "s1", de: "Ich melde mich freiwillig, die Büroparty zu planen.", gl: ["أنا","أتطوع","نفسي","طوعاً","الـ","حفلة المكتب","لـ","أخطط"] },
       { src: "s2", de: "Ich bereue es sofort, schon am nächsten Tag.", gl: ["أنا","أندم","على ذلك","فوراً","بالفعل","في الـ","التالي","يوم"] },
       { src: "s3", de: "So viele Entscheidungen. So viele E-Mails.", gl: ["هكذا","كثيرة","قرارات","هكذا","كثيرة","رسائل إلكترونية"] },
-      { src: "s4", de: "Ich bereue meine Meldung fast jeden einzelnen Morgen.", gl: ["أنا","أندم","الخاصة بي","تطوع","تقريباً","كل","منفرد","صباح"] },
+      { src: "s4", de: "Ich bereue es fast jeden einzelnen Morgen, dass ich mich gemeldet habe.", gl: ["أنا","أندم","على ذلك","تقريباً","كل","منفرد","صباح","أنّ","أنا","نفسي","تطوعتُ","أملك (مساعد)"] },
       { src: "s5", de: "Die Party-Nacht kommt endlich, endlich an.", gl: ["الـ","ليلة الحفلة","تصل","أخيراً","أخيراً","تكملة: وصل"] },
       { src: "s6", de: "Alle tanzen, lachen und genießen es wirklich.", gl: ["الجميع","يرقصون","يضحكون","و","يستمتعون","بذلك","فعلاً"] },
       { src: "s7", de: "Mein Kollege sagt, es sei die beste Party bisher.", gl: ["الخاص بي","زميل","يقول","هي","كانت","الـ","أفضل","حفلة","حتى الآن"] },
-      { src: "s8", de: "Vielleicht war die Meldung gar keine so schlechte Idee.", gl: ["ربما","كانت","الـ","تطوع","أبداً","لا","هكذا","سيئة","فكرة"] },
+      { src: "s8", de: "Vielleicht war es gar keine so schlechte Idee, mich freiwillig zu melden.", gl: ["ربما","كان","الأمر","أبداً","ليس","هكذا","سيئة","فكرة","نفسي","طوعاً","لـ","أتطوع"] },
     ] },
   { sourceId: "story-165", title: "Ich nehme es zurück", description: "Eine hart kritisierte Geschäftsidee ist trotzdem erfolgreich, und es bleibt nichts mehr zu verteidigen.",
     sentences: [

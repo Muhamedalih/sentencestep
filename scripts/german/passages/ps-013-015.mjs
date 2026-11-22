@@ -11,7 +11,7 @@ export const passages = [
       ], questions: [{ prompt: "Wie lange wartet Emma?", options: ["Mehr als vierzig Minuten", "Zwanzig Minuten", "Eine Stunde"] }] },
       { title: "Der Anruf", lines: [
         "Hallo? Wo ist meine Pizza?",
-        "Hallo! Ich bin Joe, dein Lieferant. Ich bin in der Oak Street, aber ich finde dein Haus nicht!",
+        "Hallo! Ich bin Joe, dein Pizzabote. Ich bin in der Oak Street, aber ich finde dein Haus nicht!",
         "Meine Adresse ist Oak Street 24.",
         "24? Ich bin bei ... Oak Street 42. Oh nein.",
         "Das ist das falsche Haus, Joe!",
@@ -34,7 +34,7 @@ export const passages = [
         "An diesem Abend essen Emma und Herr Brown in der Oak Street 24 zusammen Pizza. Joe bekommt auch ein Stück.",
       ], questions: [
         { prompt: "Was macht Emma am Ende?", options: ["Sie ist wütend und geht nach Hause", "Sie teilt die Pizza mit Herrn Brown", "Sie kocht das Abendessen"] },
-        { prompt: "Wer ist Joe?", options: ["Der Pizzalieferant", "Emmas Bruder", "Herrn Browns Sohn"] },
+        { prompt: "Wer ist Joe?", options: ["Der Pizzabote", "Emmas Bruder", "Herrn Browns Sohn"] },
       ] },
     ] },
   { sourceId: "the-wrong-wedding", title: "Die falsche Hochzeit", summary: "Die Karte sagte: „Sie haben Ihr Ziel erreicht.“ Die Karte irrte sich.",
@@ -115,7 +115,7 @@ export const passages = [
       ], questions: [{ prompt: "Was malte Chris auf das Boot?", options: ["„Die Jungs“", "„Papa“", "„Freiheit“"] }] },
       { title: "Derselbe See", lines: [
         "Sie saßen eine Stunde ohne ein Wort im Boot und glitten langsam über das Wasser. Es war derselbe See, an dem ihr Vater ihnen das Schwimmen beigebracht hatte.",
-        "Ich habe der Anwältin heute Morgen gesagt, sie soll den Verkauf absagen.",
+        "Ich habe der Anwältin heute Morgen gesagt, sie soll den Verkauf rückgängig machen.",
         "Was? Warum?",
         "Weil ich keinen Fremden in Papas Garage will. Und weil dieses Haus der einzige Ort ist, an dem ich mich erinnere, wie man dein Bruder ist.",
         "Chris sah lange aufs Wasser. Seine Augen waren feucht, aber er lächelte.",

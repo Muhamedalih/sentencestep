@@ -15,7 +15,7 @@ const apply = process.argv.includes("--apply");
 const OFFSET = 1000;
 const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
 const get = async (p) => { const r = await fetch(`${url}/rest/v1/${p}`, { headers: { ...headers, Range: "0-4999", "Range-Unit": "items" } }); if (!r.ok) throw new Error(`GET ${p}: ${r.status} ${await r.text()}`); return r.json(); };
-const insert = async (table, rows) => { if (!rows.length) return; const r = await fetch(`${url}/rest/v1/${table}`, { method: "POST", headers: { ...headers, Prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error(`POST ${table}: ${r.status} ${await r.text()}`); };
+const insert = async (table, rows) => { if (!rows.length) return; const r = await fetch(`${url}/rest/v1/${table}`, { method: "POST", headers: { ...headers, Prefer: `resolution=${process.argv.includes("--overwrite") ? "merge" : "ignore"}-duplicates,return=minimal` }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error(`POST ${table}: ${r.status} ${await r.text()}`); };
 
 const { groups } = await import(pathToFileURL(path.resolve(process.argv[2])).href);
 let problems = 0, nWords = 0;

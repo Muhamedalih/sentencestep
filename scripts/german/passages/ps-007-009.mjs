@@ -110,7 +110,7 @@ export const passages = [
         "Vierzig am Tag? Warum steht er dann nicht auf der Vorderseite?",
         "Die Vorderseite ist für die Vorschriften. Die Rückseite ist für die Menschen.",
         "Zehn Minuten später ging Kevin mit einem vorläufigen Führerschein und dem seltsamen Gefühl hinaus, in ein Geheimnis eingeweiht worden zu sein. Auf dem Parkplatz kam er an einem Mann vorbei, der dasselbe Formular stirnrunzelnd ansah.",
-        "Dreh es um. Vertrau mir.",
+        "Drehen Sie es um. Vertrauen Sie mir.",
       ], questions: [
         { prompt: "Was meint Herr Pruitt mit „Die Vorderseite ist für die Vorschriften. Die Rückseite ist für die Menschen“?", options: ["Die Rückseite des Formulars ist weniger wichtig", "Die offiziellen Regeln stehen vorn, aber echte Hilfe für echte Menschen ist hinten versteckt", "Menschen dürfen die Vorderseite nicht lesen", "Nur Vorgesetzte dürfen die Rückseite lesen"] },
         { prompt: "Was ist an der Art, wie Kevins Problem gelöst wurde, ironisch?", options: ["Das System hatte die Lösung die ganze Zeit enthalten, sie aber vor denen versteckt, die sie brauchten", "Kevin löste es, indem er die Regeln brach", "Eine Jugendliche musste das Formular für ihn ausfüllen", "Der Vorgesetzte weigerte sich zuerst zu helfen"] },

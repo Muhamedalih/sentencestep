@@ -103,8 +103,8 @@ export const lessons = [
   { sourceId: "story-148", title: "Noch eine Minute", description: "Ein Wecker, fünfmal Schlummern und ein Sprint zur Tür, vierzig Minuten zu spät.",
     sentences: [
       { src: "s1", de: "Mein Wecker klingelt Punkt sieben.", gl: ["الخاص بي","منبه","يرن","تماماً","سبعة"] },
-      { src: "s2", de: "Ich drücke auf Schlummern. Nur fünf Minuten noch.", gl: ["أنا","أضغط","على","غفوة","فقط","خمس","دقائق","بعد"] },
-      { src: "s3", de: "Er klingelt wieder. Ich drücke wieder auf Schlummern.", gl: ["هو","يرن","مجدداً","أنا","أضغط","مجدداً","على","غفوة"] },
+      { src: "s2", de: "Ich drücke die Schlummertaste. Nur fünf Minuten noch.", gl: ["أنا","أضغط","الـ","زر الغفوة","فقط","خمس","دقائق","بعد"] },
+      { src: "s3", de: "Er klingelt wieder. Ich drücke wieder die Schlummertaste.", gl: ["هو","يرن","مجدداً","أنا","أضغط","مجدداً","الـ","زر الغفوة"] },
       { src: "s4", de: "Das passiert locker noch viermal.", gl: ["هذا","يحدث","بسهولة","بعد","أربع مرات"] },
       { src: "s5", de: "Endlich sehe ich auf die richtige Uhrzeit.", gl: ["أخيراً","أنظر","أنا","إلى","الـ","الصحيحة","وقت"] },
       { src: "s6", de: "Ich bin vierzig Minuten zu spät. Vierzig!", gl: ["أنا","أكون","أربعين","دقيقة","جداً","متأخر","أربعون"] },

@@ -11,7 +11,7 @@ export const glosses = {
     ["Tres|meses|más tarde|pierdo|yo|ningún|curso|más", "Üç|ay|sonra|kaçırırım|ben|hiç|kurs|artık"],
   ],
   "story-170": [
-    ["Yo|tomo el pelo|la|obsesión por observar aves|de mi|amiga|suavemente|complemento: tomar el pelo", "Ben|dalga geçerim|-|kuş gözlemi takıntısıyla|benim|arkadaş|nazikçe|tamamlayıcı: dalga geçmek"],
+    ["Yo|tomo el pelo|a mi|amiga|suavemente|con|su|pasión por la observación de aves|complemento: tomar el pelo", "Ben|dalga geçerim|benim|arkadaş|nazikçe|ile|onun|kuş gözlemi tutkusu|tamamlayıcı: dalga geçmek"],
     ["Fue|solo|una|broma|añado|yo|rápido|riendo|complemento: añadir", "Idi|sadece|bir|şaka|eklerim|ben|çabuk|gülerek|tamamlayıcı: eklemek"],
     ["Pero|yo|noto|que|ella|no|devuelve la risa", "Ama|ben|fark ederim|ki|o|değil|karşılık olarak güler"],
     ["Yo|tomo el pelo|la|en|la|próxima|semana|de nuevo|complemento: tomar el pelo|sin|a pensar", "Ben|dalga geçerim|ona|-de|-|gelecek|hafta|tekrar|tamamlayıcı: dalga geçmek|-meden|düşünmek"],

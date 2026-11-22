@@ -43,10 +43,10 @@ export const passages = [
       { title: "Zehn Minuten vorher", lines: [
         "Brandon arbeitete von zu Hause. Um zehn Uhr hatte er ein wichtiges Meeting mit seiner Chefin, Frau Parker.",
         "Um 9:50 Uhr sah er in den Spiegel. Er trug ein sauberes weißes Hemd und eine blaue Krawatte.",
-        "Aber unter dem Tisch trug er seine alte Schlafanzughose mit kleinen Enten darauf.",
+        "Aber unter dem Tisch trug er seine alte Schlafanzug-Shorts mit kleinen Enten darauf.",
         "Niemand kann meine Beine sehen. Die Kamera zeigt nur meine obere Hälfte.",
         "Er setzte sich, lächelte und klickte auf den grünen Knopf. Das Meeting begann.",
-      ], questions: [{ prompt: "Was stimmte mit Brandons Kleidung nicht?", options: ["Sein Hemd war schmutzig", "Er trug unter dem Tisch Schlafanzughosen", "Er hatte seine Krawatte vergessen"] }] },
+      ], questions: [{ prompt: "Was stimmte mit Brandons Kleidung nicht?", options: ["Sein Hemd war schmutzig", "Er trug unter dem Tisch eine Schlafanzug-Shorts", "Er hatte seine Krawatte vergessen"] }] },
       { title: "Ein kleines Problem", lines: [
         "Zehn Minuten lang war alles in Ordnung. Frau Parker sprach über das neue Projekt.",
         "Plötzlich fing Brandons Hund Max an der Tür laut an zu bellen.",
@@ -103,7 +103,7 @@ export const passages = [
         "Maria spürt etwas Warmes in ihrem Herzen.",
       ], questions: [{ prompt: "Warum ist das Portemonnaie für Herrn Carter wichtig?", options: ["Es hat ein Foto seiner Frau", "Es ist neu", "Es hat viel Geld"] }] },
       { title: "Ein Geschenk", lines: [
-        "Bitte, nehmen Sie fünfzig Dollar. Sie sind für Sie.",
+        "Bitte, nehmen Sie fünfzig Dollar. Das ist für Sie.",
         "Nein, danke. Ich bin glücklich, weil das Portemonnaie wieder bei Ihnen ist.",
         "Herr Carter lächelt. Er kauft ihr im Café neben der Bushaltestelle eine heiße Schokolade.",
         "In dieser Nacht schläft Maria sehr gut.",

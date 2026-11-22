@@ -39,7 +39,7 @@ export const passages = [
       ], questions: [{ prompt: "Warum sagte die Krankenschwester Paul, er solle weitermachen?", options: ["Der Krankenwagen hatte Verspätung", "Er machte es richtig", "Sie wusste nicht, wie sie helfen sollte"] }] },
       { title: "Eine Karte", lines: [
         "Die Sanitäter brachten den Mann ins Krankenhaus. Zwei Tage lang sagte niemand Paul, ob er überlebt hatte.",
-        "Am dritten Tag rief der Restaurantbesitzer an. Der Mann hieß Herr Reyes, war achtundsiebzig und war wach und verlangte Nudeln.",
+        "Am dritten Tag rief der Restaurantbesitzer an. Der Mann hieß Herr Reyes, war achtundsiebzig und war wach und wollte Pasta.",
         "Einen Monat später kam eine Karte in Pauls Büro: „Sie haben mir mehr Jahre mit meinem Enkel geschenkt. Ich kann Ihnen nie genug danken.“",
         "Paul las sie dreimal. Dann ging er durch das Büro zu Denises Schreibtisch.",
         "Denise, wann ist der nächste Erste-Hilfe-Kurs? Der für Fortgeschrittene.",
@@ -105,7 +105,7 @@ export const passages = [
         "Alle sind beschäftigt. Ben fühlt sich sehr klein in der großen Stadt.",
       ], questions: [{ prompt: "Was tun die Leute, wenn Ben um Hilfe bittet?", options: ["Sie bleiben nicht stehen", "Sie geben ihm eine Karte", "Sie lachen ihn aus"] }] },
       { title: "Eine freundliche Fremde", lines: [
-        "Hallo! Du siehst verloren aus. Kann ich dir helfen?",
+        "Hallo! Du siehst aus, als hättest du dich verirrt. Kann ich dir helfen?",
         "Ja, bitte! Ich suche die Park Street, Nummer zwanzig.",
         "Kein Problem. Geh zwei Häuserblocks geradeaus. Dann biege an der Bank links ab.",
         "Das Gebäude ist auf der rechten Seite, neben einem Café. Von hier sind es zehn Minuten.",
