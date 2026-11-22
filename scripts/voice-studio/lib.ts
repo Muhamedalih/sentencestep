@@ -60,6 +60,8 @@ export interface AppProfile {
   name: string;
   kind: string;
   language: string;
+  /** Set by a DESIGNED voice: its description, e.g. "female, middle-aged". */
+  instruct?: string;
 }
 
 export async function listAppProfiles(): Promise<AppProfile[]> {
@@ -206,7 +208,7 @@ async function speak(
   return audio;
 }
 
-async function transcribe(audio: Buffer): Promise<string> {
+export async function transcribe(audio: Buffer): Promise<string> {
   const form = new FormData();
   form.append("file", new Blob([new Uint8Array(audio)], { type: "audio/mpeg" }), "clip.mp3");
   form.append("model", "whisper-1");
@@ -365,8 +367,9 @@ export async function makeCheckedAudio(
   text: string,
   profileId: string,
   settings: VoiceSettings = DEFAULT_SETTINGS,
+  check: CheckMode = "fast",
 ): Promise<MadeAudio> {
-  const made = await makeCheckedTake(kind, text, profileId, settings);
+  const made = await makeCheckedTake(kind, text, profileId, settings, check);
   // Speed is applied last, to the take that passed the check (a slower clip is the same words).
   const filters = finishFilters(kind, settings);
   if (filters.length === 0) return made;
@@ -398,11 +401,31 @@ export function finishFilters(kind: ClipKind, settings: VoiceSettings): string[]
   return filters;
 }
 
+/**
+ * "fast" (the default): a take passes when it is not silent and its length is plausible for the text — no
+ * Whisper, because on this PC one Whisper check costs as much as making the clip (~15-20 s, it runs on the CPU).
+ * Only a take that fails that test is retried / cut out with the Whisper check. "full": every clip is checked
+ * by Whisper (slow, certain).
+ */
+export type CheckMode = "fast" | "full";
+
+async function plausible(kind: ClipKind, text: string, audio: Buffer): Promise<boolean> {
+  const peak = await peakDb(audio);
+  if (peak === null || peak < -30) return false;
+  const ms = await durationMs(audio);
+  if (ms === null) return true;
+  const seconds = ms / 1000;
+  if (kind === "word") return seconds >= 0.3 && seconds <= 2.6;
+  const chars = text.length;
+  return seconds >= chars * 0.04 && seconds <= chars * 0.16 + 1;
+}
+
 async function makeCheckedTake(
   kind: ClipKind,
   text: string,
   profileId: string,
   settings: VoiceSettings,
+  check: CheckMode,
 ): Promise<MadeAudio> {
   const spoken = kind === "word" ? `${text}.` : text;
   let best: MadeAudio | null = null;
@@ -416,6 +439,8 @@ async function makeCheckedTake(
       attempt === 1 ? null : 1000 + attempt * 37,
       settings,
     );
+    if (check === "fast" && (await plausible(kind, text, audio)))
+      return { audio, heard: "", attempts: attempt, verified: true };
     const heard = await transcribe(audio);
     const right =
       kind === "word"
@@ -615,7 +640,7 @@ export async function makeClip(
   voice: SiteVoice,
   kind: ClipKind,
   text: string,
-  opts: { redo?: boolean; settings?: VoiceSettings } = {},
+  opts: { redo?: boolean; settings?: VoiceSettings; check?: CheckMode } = {},
 ): Promise<MakeResult> {
   const settings = opts.settings ?? loadSettings(voice.id);
   const version = kind === "word" ? WORD_VERSION : SENTENCE_VERSION;
@@ -648,6 +673,7 @@ export async function makeClip(
       key.normalizedText,
       voice.provider_voice_id,
       settings,
+      opts.check ?? "fast",
     );
     const url = await uploadVoiceClip(generatedVoiceStudioClipPath(voice.id), made.audio);
     await db

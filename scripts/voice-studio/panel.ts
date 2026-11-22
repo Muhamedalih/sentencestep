@@ -26,7 +26,6 @@ import {
   listAppProfiles,
   loadSettings,
   makeClip,
-  planLesson,
   previewClip,
   profileSample,
   registerVoice,
@@ -37,7 +36,16 @@ import {
   type ClipKind,
   type Db,
   type SiteVoice,
+  type CheckMode,
 } from "./lib";
+import {
+  createProfile,
+  createProfileFromSiteVoice,
+  listItems,
+  parseItemKey,
+  planItem,
+  referenceCandidates,
+} from "./extras";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.VOICE_PANEL_PORT ?? 4410);
@@ -66,8 +74,13 @@ interface Job {
 }
 let job: Job | null = null;
 
-async function runJob(lessonId: string, voice: SiteVoice, scope: "both" | "sentences" | "words") {
-  const plan = await planLesson(db, lessonId);
+async function runJob(
+  lessonId: string,
+  voice: SiteVoice,
+  scope: "both" | "sentences" | "words",
+  check: CheckMode,
+) {
+  const plan = await planItem(db, lessonId);
   const states = await clipStates(db, plan, voice.id);
   const todo = states.filter(
     (s) =>
@@ -101,7 +114,7 @@ async function runJob(lessonId: string, voice: SiteVoice, scope: "both" | "sente
           return;
         }
         mine.current = clip.text;
-        const result = await makeClip(db, voice, clip.kind, clip.text, { settings });
+        const result = await makeClip(db, voice, clip.kind, clip.text, { settings, check });
         mine.done += 1;
         if (result.outcome === "generated") {
           mine.generated += 1;
@@ -157,6 +170,8 @@ function writeHistory(entries: HistoryEntry[]) {
 // ---------------------------------------------------------------------------------------------
 
 const ID = /^[A-Za-z0-9._-]{1,80}$/;
+/** A lesson id, or "passage:<id>" / "words:<id>" for a reading text / word list. */
+const ITEM = /^[A-Za-z0-9._:-]{1,100}$/;
 
 function send(
   res: ServerResponse,
@@ -173,29 +188,6 @@ async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> 
   for await (const chunk of req) chunks.push(chunk as Buffer);
   const text = Buffer.concat(chunks).toString("utf8");
   return text ? (JSON.parse(text) as Record<string, unknown>) : {};
-}
-
-async function allLessons() {
-  const rows: {
-    id: string;
-    mode: string;
-    title: string;
-    status: string;
-    voice_id: string | null;
-    order_index: number | null;
-  }[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await db
-      .from("lessons")
-      .select("id, mode, title, status, voice_id, order_index")
-      .order("mode")
-      .order("order_index")
-      .range(from, from + 999);
-    if (error) throw error;
-    rows.push(...(data ?? []));
-    if (!data || data.length < 1000) break;
-  }
-  return rows;
 }
 
 async function pickVoice(voiceId: unknown): Promise<SiteVoice> {
@@ -238,7 +230,7 @@ async function route(req: IncomingMessage, res: ServerResponse) {
     }
     if (req.method === "GET" && path === "/api/lessons") {
       const [lessons, voices] = await Promise.all([
-        allLessons(),
+        listItems(db),
         db.from("voices").select("id, name"),
       ]);
       const names = new Map((voices.data ?? []).map((v) => [v.id, v.name]));
@@ -254,8 +246,8 @@ async function route(req: IncomingMessage, res: ServerResponse) {
     if (req.method === "GET" && path === "/api/lesson") {
       const lessonId = url.searchParams.get("id") ?? "";
       const voiceId = url.searchParams.get("voice") ?? "";
-      if (!ID.test(lessonId)) throw new Error("درس غير صالح.");
-      const plan = await planLesson(db, lessonId);
+      if (!ITEM.test(lessonId)) throw new Error("درس غير صالح.");
+      const plan = await planItem(db, lessonId);
       const states = ID.test(voiceId) ? await clipStates(db, plan, voiceId) : [];
       return send(res, 200, {
         lesson: plan.lesson,
@@ -268,13 +260,13 @@ async function route(req: IncomingMessage, res: ServerResponse) {
     if (req.method === "POST" && path === "/api/generate") {
       if (job?.state === "running") throw new Error("يوجد توليد شغّال الآن. انتظر أو اضغط إيقاف.");
       const body = await readBody(req);
-      if (typeof body.lessonId !== "string" || !ID.test(body.lessonId))
+      if (typeof body.lessonId !== "string" || !ITEM.test(body.lessonId))
         throw new Error("اختر الدرس أولاً.");
       if (!(await voiceStudioHealth()))
         throw new Error("برنامج VoiceStudio غير مفتوح. افتحه ثم أعد المحاولة.");
       const voice = await pickVoice(body.voiceId);
       const scope = body.scope === "sentences" || body.scope === "words" ? body.scope : "both";
-      await runJob(body.lessonId, voice, scope);
+      await runJob(body.lessonId, voice, scope, body.check === "full" ? "full" : "fast");
       return send(res, 200, { ok: true });
     }
     if (req.method === "POST" && path === "/api/stop") {
@@ -316,16 +308,42 @@ async function route(req: IncomingMessage, res: ServerResponse) {
       if (!(await voiceStudioHealth())) throw new Error("برنامج VoiceStudio غير مفتوح.");
       const voice = await pickVoice(body.voiceId);
       // Only a clip that belongs to the lesson on screen may be redone.
-      if (typeof body.lessonId !== "string" || !ID.test(body.lessonId))
+      if (typeof body.lessonId !== "string" || !ITEM.test(body.lessonId))
         throw new Error("درس غير صالح.");
-      const plan = await planLesson(db, body.lessonId);
+      const plan = await planItem(db, body.lessonId);
       const allowed =
         kind === "word"
           ? plan.words.includes(body.text)
           : plan.sentences.some((s) => s.en === body.text);
       if (!allowed) throw new Error("هذا النص ليس من هذا الدرس.");
-      const result = await makeClip(db, voice, kind as ClipKind, body.text, { redo: true });
+      const result = await makeClip(db, voice, kind as ClipKind, body.text, {
+        redo: true,
+        check: body.check === "full" ? "full" : "fast",
+      });
       return send(res, 200, result);
+    }
+    if (req.method === "GET" && path === "/api/ref-voices") {
+      return send(res, 200, await referenceCandidates(db));
+    }
+    if (req.method === "POST" && path === "/api/new-voice") {
+      // One step: make the profile inside VoiceStudio AND put it on the site.
+      const body = await readBody(req);
+      const name = typeof body.name === "string" ? body.name.trim().slice(0, 60) : "";
+      if (!name) throw new Error("اكتب اسماً للصوت.");
+      if (body.gender !== "female" && body.gender !== "male") throw new Error("اختر: أنثى أو ذكر.");
+      if (!(await voiceStudioHealth())) throw new Error("برنامج VoiceStudio غير مفتوح.");
+      let profile;
+      if (body.kind === "site") {
+        if (typeof body.siteVoiceId !== "string" || !ID.test(body.siteVoiceId))
+          throw new Error("اختر الصوت الذي تنسخه.");
+        profile = await createProfileFromSiteVoice(db, body.siteVoiceId, name);
+      } else {
+        if (typeof body.audioBase64 !== "string" || body.audioBase64.length < 2000)
+          throw new Error("اختر ملفاً صوتياً.");
+        profile = await createProfile(name, Buffer.from(body.audioBase64, "base64"));
+      }
+      const voice = await registerVoice(db, profile, body.gender, name);
+      return send(res, 200, voice);
     }
     if (req.method === "POST" && path === "/api/register-voice") {
       const body = await readBody(req);
@@ -345,10 +363,14 @@ async function route(req: IncomingMessage, res: ServerResponse) {
     if (req.method === "POST" && path === "/api/use-voice") {
       const body = await readBody(req);
       if (body.confirm !== true) throw new Error("يلزم التأكيد.");
-      if (typeof body.lessonId !== "string" || !ID.test(body.lessonId))
+      if (typeof body.lessonId !== "string" || !ITEM.test(body.lessonId))
         throw new Error("درس غير صالح.");
+      if (parseItemKey(body.lessonId).source !== "lesson")
+        throw new Error(
+          "الموقع لا يشغّل أصوات الاستوديو في النصوص والمفردات بعد؛ المقاطع تُصنع وتُحفظ فقط، والاعتماد يحتاج تعديلاً في الموقع.",
+        );
       const voice = await pickVoice(body.voiceId);
-      const plan = await planLesson(db, body.lessonId);
+      const plan = await planItem(db, body.lessonId);
       const states = await clipStates(db, plan, voice.id);
       const cover = coverage(states);
       if (cover.missing.length > 0)

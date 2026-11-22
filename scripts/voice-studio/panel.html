@@ -41,6 +41,7 @@
   .st-ready{color:var(--ok)}.st-missing{color:var(--mute)}.st-failed{color:var(--bad)}
   audio{height:30px;width:200px}
   .gender label{margin-inline-end:10px}
+  .addbox{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:12px}.addbox h3{margin:0 0 4px;font-size:15px}.opt{border:1px solid var(--line);border-radius:8px;padding:10px}.opt select,.opt input[type=file]{width:100%;margin-top:6px}
   details{margin-top:8px}summary{cursor:pointer;color:var(--brand)}
   .log{font-size:13px;color:var(--bad);margin-top:6px;white-space:pre-wrap}
   .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 18px}
@@ -58,12 +59,14 @@
   </header>
 
   <section>
-    <h2><span>1</span>اختر الدرس</h2>
-    <input id="q" type="search" placeholder="ابحث: رقم الدرس أو عنوانه (مثل normal-5 أو The Wrong Order)">
+    <h2><span>1</span>اختر الدرس أو النص أو قائمة المفردات</h2>
+    <input id="q" type="search" placeholder="ابحث برقم أو عنوان (مثل normal-5 أو The Wrong Order)">
     <div class="row" style="margin-top:8px">
       <label><input type="radio" name="mode" value="" checked> الكل</label>
       <label><input type="radio" name="mode" value="normal"> دروس عادية</label>
       <label><input type="radio" name="mode" value="stories"> قصص</label>
+      <label><input type="radio" name="mode" value="passage"> نصوص</label>
+      <label><input type="radio" name="mode" value="words"> مفردات</label>
     </div>
     <div id="lessons" class="list"></div>
     <div id="picked" class="muted" style="margin-top:8px"></div>
@@ -72,10 +75,31 @@
   <section>
     <h2><span>2</span>اختر الصوت</h2>
     <div id="voices" class="voices"></div>
-    <details id="addbox"><summary>إضافة صوت جديد من برنامج VoiceStudio</summary>
-      <p class="muted">أي صوت تحفظه في VoiceStudio (استنساخ أو تصميم) يظهر هنا. اختر نوعه ثم أضفه للموقع.</p>
+    <div id="addbox" class="addbox">
+      <h3>＋ صوت جديد</h3>
+      <p class="muted">لا تحتاج فتح VoiceStudio. اكتب اسماً، اختر أنثى أو ذكر، ثم اختر من أين تأخذ الصوت.</p>
+      <div class="row">
+        <input id="nvName" type="text" placeholder="اسم الصوت (مثل: سارة)" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit">
+        <label><input type="radio" name="nvG" value="female"> أنثى</label>
+        <label><input type="radio" name="nvG" value="male"> ذكر</label>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="opt">
+          <b>انسخ صوتاً موجوداً في الموقع</b>
+          <div class="muted">يأخذ عدة جمل منه (نحو 12 ثانية) فيصير الاستنساخ أدق بكثير من جملة قصيرة.</div>
+          <select id="nvSite"><option value="">اختر الصوت…</option></select>
+          <button id="nvSiteGo" class="primary" style="margin-top:6px">اصنع الصوت</button>
+        </div>
+        <div class="opt">
+          <b>أو من ملف صوتي</b>
+          <div class="muted">تسجيل نظيف لشخص واحد، من 8 إلى 20 ثانية، بلا موسيقى.</div>
+          <input id="nvFile" type="file" accept="audio/*">
+          <button id="nvFileGo" class="primary" style="margin-top:6px">اصنع الصوت</button>
+        </div>
+      </div>
+      <div id="nvMsg"></div>
       <div id="unreg"></div>
-    </details>
+    </div>
   </section>
 
   <section id="tune">
@@ -134,13 +158,17 @@
         <option value="sentences">الجمل فقط</option>
         <option value="words">الكلمات فقط</option>
       </select>
+      <select id="check" style="width:auto" title="الفحص بـ Whisper بطيء على هذا الجهاز">
+        <option value="fast">فحص سريع (موصى به)</option>
+        <option value="full">فحص كامل بـ Whisper (أبطأ بكثير)</option>
+      </select>
       <button id="go" class="primary">ابدأ التوليد</button>
       <button id="stop" disabled>إيقاف</button>
     </div>
     <div class="bar"><i id="barfill"></i></div>
     <div id="jobline" class="muted">لم يبدأ شيء بعد.</div>
     <div id="joblog" class="log"></div>
-    <p class="muted">كل مقطع يُفحص بإعادته إلى نص؛ إن كان خاطئاً تُعاد المحاولة بصوت أنظف تلقائياً. التوليد يضيف مقاطع جديدة فقط ولا يغيّر أي صوت قديم، ولا يسمعه أحد في الموقع حتى تضغط الخطوة 4.</p>
+    <p class="muted">الفحص السريع: يتأكد أن المقطع ليس صامتاً وأن طوله منطقي، وإن شك أعاد المحاولة وفحصه بـ Whisper. الفحص الكامل يعيد كل مقطع إلى نص (حوالي 20 ثانية إضافية لكل مقطع). التوليد يضيف مقاطع جديدة فقط ولا يغيّر أي صوت قديم، ولا يسمعه أحد في الموقع حتى تضغط الخطوة 4.</p>
   </section>
 
   <section>
@@ -156,6 +184,7 @@
       <button id="use" class="primary" disabled>استخدم هذا الصوت في الدرس</button>
       <button id="undo" class="danger">تراجع عن آخر تغيير لهذا الدرس</button>
     </div>
+    <div id="usenote" class="muted"></div>
     <div id="usemsg"></div>
     <div id="hist" class="muted" style="margin-top:10px"></div>
   </section>
@@ -182,16 +211,14 @@ async function loadStatus() {
   const keep = state.voiceId;
   $("voices").innerHTML = s.voices.length
     ? s.voices.map((v) => `<div class="voice ${v.id === keep ? "sel" : ""}" data-id="${esc(v.id)}"><b>${esc(v.name)}</b><small>${v.gender === "female" ? "أنثى" : "ذكر"} · ${esc(v.id)}</small><div style="margin-top:6px"><button data-sample="${esc(v.provider_voice_id)}">▶ استمع</button> <span class="muted" data-samplemsg="${esc(v.provider_voice_id)}"></span></div></div>`).join("")
-    : `<div class="muted">لا يوجد صوت مسجّل بعد. افتح «إضافة صوت جديد» أدناه.</div>`;
+    : `<div class="muted">لا يوجد صوت بعد. أضف واحداً من «صوت جديد» أدناه.</div>`;
   document.querySelectorAll(".voice").forEach((el) => el.addEventListener("click", (e) => { if (e.target.closest("[data-sample]")) return; state.voiceId = el.dataset.id; document.querySelectorAll(".voice").forEach((x) => x.classList.toggle("sel", x === el)); loadVoiceSettings(); refreshLesson(); }));
   $("unreg").innerHTML = s.unregistered.length
-    ? s.unregistered.map((p) => `<div class="row" style="margin:8px 0"><b>${esc(p.name)}</b><button data-sample="${esc(p.id)}">▶ استمع</button><span class="muted" data-samplemsg="${esc(p.id)}"></span><span class="gender"><label><input type="radio" name="g-${esc(p.id)}" value="female"> أنثى</label><label><input type="radio" name="g-${esc(p.id)}" value="male"> ذكر</label></span><button data-reg="${esc(p.id)}">أضفه للموقع</button></div>`).join("")
-    : `<div class="muted">كل أصوات VoiceStudio مضافة.</div>`;
+    ? s.unregistered.map((p) => `<div class="row" style="margin:8px 0"><b>${esc(p.name)}</b><span class="muted">موجود في VoiceStudio${p.instruct ? " · " + esc(p.instruct) : ""}</span><button data-sample="${esc(p.id)}">▶ استمع</button><span class="muted" data-samplemsg="${esc(p.id)}"></span><button data-reg="${esc(p.id)}" data-g="female">أضفه كأنثى</button><button data-reg="${esc(p.id)}" data-g="male">أضفه كذكر</button></div>`).join("")
+    : "";
   document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("click", () => playSample(b.dataset.sample, b)));
   document.querySelectorAll("[data-reg]").forEach((b) => b.addEventListener("click", async () => {
-    const g = document.querySelector(`input[name="g-${b.dataset.reg}"]:checked`);
-    if (!g) return alert("اختر أنثى أو ذكر أولاً.");
-    try { await api("/api/register-voice", { profileId: b.dataset.reg, gender: g.value }); await loadStatus(); } catch (e) { alert(e.message); }
+    try { await api("/api/register-voice", { profileId: b.dataset.reg, gender: b.dataset.g }); await loadStatus(); } catch (e) { alert(e.message); }
   }));
   $("hist").innerHTML = s.history.length ? "آخر التغييرات: " + s.history.map((h) => `${esc(h.lessonId)}: ${esc(h.from ?? "—")} ← ${esc(h.to)}${h.undone ? " (تم التراجع)" : ""}`).join(" · ") : "";
 }
@@ -223,7 +250,7 @@ function renderLessons() {
 async function refreshLesson() {
   if (!state.lessonId) return;
   const l = state.lessons.find((x) => x.id === state.lessonId);
-  $("picked").textContent = l ? `الدرس: ${l.title} (${l.id}) — صوته الحالي: ${l.voice ?? "بدون"} — ${l.status === "published" ? "منشور" : l.status}` : "";
+  $("picked").textContent = l ? `المختار: ${l.title} (${l.id}) — صوته الحالي: ${l.voice ?? "بدون"} — ${l.status === "published" ? "منشور" : l.status}` : "";
   try {
     state.detail = await api(`/api/lesson?id=${encodeURIComponent(state.lessonId)}&voice=${encodeURIComponent(state.voiceId || "")}`);
   } catch (e) { say($("usemsg"), e.message, "bad"); return; }
@@ -240,10 +267,12 @@ function renderClips() {
   document.querySelectorAll("[data-redo]").forEach((b) => b.addEventListener("click", async () => {
     const c = rows[Number(b.dataset.redo)]; if (!state.voiceId) return alert("اختر الصوت أولاً.");
     b.disabled = true; b.textContent = "…";
-    try { await api("/api/redo", { lessonId: state.lessonId, voiceId: state.voiceId, kind: c.kind, text: c.text }); } catch (e) { alert(e.message); }
+    try { await api("/api/redo", { lessonId: state.lessonId, voiceId: state.voiceId, kind: c.kind, text: c.text, check: $("check").value }); } catch (e) { alert(e.message); }
     refreshLesson();
   }));
-  $("use").disabled = !(cv && cv.missing.length === 0 && cv.total > 0 && state.voiceId);
+  const isLesson = !/^(passage|words):/.test(state.lessonId || "");
+  $("use").disabled = !(isLesson && cv && cv.missing.length === 0 && cv.total > 0 && state.voiceId);
+  $("usenote").textContent = isLesson ? "" : "هذا نص/قائمة مفردات: المقاطع تُصنع وتُحفظ وتستمع لها هنا، لكن الموقع لا يشغّل أصوات الاستوديو فيها بعد، فلا يوجد اعتماد.";
 }
 
 async function pollJob() {
@@ -327,13 +356,34 @@ $("psave").addEventListener("click", async () => {
 });
 $("preset").addEventListener("click", () => showSettings(DEFAULTS));
 
+async function fillRefVoices() {
+  try { const r = await api("/api/ref-voices"); $("nvSite").innerHTML = '<option value="">اختر الصوت…</option>' + r.map((v) => `<option value="${esc(v.id)}">${esc(v.name)} — ${esc(v.source)} · ${v.gender === "female" ? "أنثى" : "ذكر"}</option>`).join(""); } catch {}
+}
+function nvCommon() {
+  const name = $("nvName").value.trim(), g = document.querySelector('input[name="nvG"]:checked');
+  if (!name) { alert("اكتب اسماً للصوت."); return null; }
+  if (!g) { alert("اختر أنثى أو ذكر."); return null; }
+  return { name, gender: g.value };
+}
+async function makeVoice(body, btn) {
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "يجري الصنع… (قد يأخذ دقيقة)"; say($("nvMsg"), "", "");
+  try { const v = await api("/api/new-voice", body); say($("nvMsg"), "تم: الصوت «" + v.name + "» جاهز في القائمة أعلاه.", "ok"); $("nvName").value = ""; state.voiceId = v.id; await loadStatus(); loadVoiceSettings(); }
+  catch (e) { say($("nvMsg"), e.message, "bad"); }
+  btn.disabled = false; btn.textContent = label;
+}
+$("nvSiteGo").addEventListener("click", () => { const c = nvCommon(); if (!c) return; if (!$("nvSite").value) return alert("اختر الصوت الذي تنسخه."); makeVoice({ kind: "site", siteVoiceId: $("nvSite").value, ...c }, $("nvSiteGo")); });
+$("nvFileGo").addEventListener("click", () => {
+  const c = nvCommon(); if (!c) return; const file = $("nvFile").files[0]; if (!file) return alert("اختر ملفاً صوتياً.");
+  const rd = new FileReader(); rd.onload = () => makeVoice({ kind: "file", audioBase64: String(rd.result).split(",")[1], ...c }, $("nvFileGo")); rd.readAsDataURL(file);
+});
+fillRefVoices();
 $("q").addEventListener("input", renderLessons);
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => { state.mode = r.value; renderLessons(); }));
 $("onlyBad").addEventListener("change", renderClips);
 $("go").addEventListener("click", async () => {
   if (!state.lessonId) return alert("اختر الدرس أولاً.");
   if (!state.voiceId) return alert("اختر الصوت أولاً.");
-  try { await api("/api/generate", { lessonId: state.lessonId, voiceId: state.voiceId, scope: $("scope").value }); pollJob(); } catch (e) { alert(e.message); }
+  try { await api("/api/generate", { lessonId: state.lessonId, voiceId: state.voiceId, scope: $("scope").value, check: $("check").value }); pollJob(); } catch (e) { alert(e.message); }
 });
 $("stop").addEventListener("click", () => api("/api/stop", {}));
 $("use").addEventListener("click", async () => {
