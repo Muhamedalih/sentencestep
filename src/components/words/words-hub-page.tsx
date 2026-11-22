@@ -1,3 +1,4 @@
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import { BookOpen } from "lucide-react";
 
 import { CoreWordsShelf } from "@/components/words/core-words-shelf";
@@ -62,9 +63,13 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
     const { shelf } = await loadBankWordLists(user.id, todayISO);
     body = <CoreWordsShelf data={shelf} isPremiumUser={premium} className="mt-1" />;
   } else {
-    const groups = await getWordGroupSummaries(locale ?? undefined);
+    // In German (permission germanTrack, an admin's choice) the grid is the German topics, all drafts for now.
+    const german = isAdminUser && (await getLearnLanguage()) === "de";
+    const groups = german ? [] : await getWordGroupSummaries(locale ?? undefined);
     // Topics still in draft: an admin's grid only (the banner and the figures never count them).
-    const drafts = isAdminUser ? await getDraftWordGroupSummaries(locale ?? undefined) : [];
+    const drafts = isAdminUser
+      ? await getDraftWordGroupSummaries(locale ?? undefined, german ? "de" : "en")
+      : [];
     let overview: BankOverview | null = null;
     if (bankOpen && user) {
       overview = await fetchBankStates(user.id)
@@ -98,7 +103,7 @@ export async function WordsHubPage({ tab: tabParam }: { tab: unknown }) {
                 s={bankStrings(locale)}
               />
             )}
-        {groups.length === 0 ? (
+        {groups.length === 0 && drafts.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="bg-brand-muted text-primary flex size-14 items-center justify-center rounded-full">
               <BookOpen className="size-7" aria-hidden="true" />
