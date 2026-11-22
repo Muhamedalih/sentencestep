@@ -52,7 +52,7 @@ export const lessons = [
   { sourceId: "normal-12", title: "Auswandern, so ungefähr", description: "Ein Visum für nur ein Jahr macht aus einem leichten Abenteuer eine viel schwerere Entscheidung",
     sentences: [
       { src: "s1", de: "Das Jobangebot hatte einen Haken: Es galt nur für ein Jahr", gl: ["الـ","عرض العمل","كان لديه","واحد","شرط","الأمر","كان صالحاً","فقط","لـ","واحدة","سنة"] },
-      { src: "s2", de: "Alle um mich herum nahmen an, dass ich sofort ablehnen würde", gl: ["الجميع","حول","إياي","تكملة: حول","افترضوا","تكملة: افترض","أنّ","أنا","فوراً","أرفض","كان سـ (مساعد)"] },
+      { src: "s2", de: "Alle um mich herum nahmen an, dass ich sofort ablehnen würde", gl: ["الجميع","حول","ـي","تكملة: حول","افترضوا","تكملة: افترض","أنّ","أنا","فوراً","أرفض","كان سـ (مساعد)"] },
       { src: "s3", de: "Stattdessen wog ich ernsthaft das Für und Wider ab", gl: ["بدلاً من ذلك","وزنتُ","أنا","بجدية","الـ","المؤيدات","و","المعارضات","تكملة: وزن"] },
       { src: "s4", de: "Meine Wohnung, meine Routine und meine Freunde zu verlassen, fühlte sich überwältigend an", gl: ["الخاصة بي","شقة","الخاص بي","روتين","و","الخاصين بي","أصدقاء","لـ","الترك","بدا","نفسه","ساحقاً","تكملة: بدا"] },
       { src: "s5", de: "Gleichzeitig fühlte sich das Bleiben an wie Bequemlichkeit statt Wachstum", gl: ["في نفس الوقت","بدا","نفسه","الـ","البقاء","تكملة: بدا","مثل","راحة","بدلاً من","نمو"] },
@@ -79,7 +79,7 @@ export const lessons = [
       { src: "s2", de: "Meine Freunde wählten meinen Namen für den Karaoke-Abend", gl: ["الخاصون بي","أصدقاء","اختاروا","الخاص بي","اسم","لـ","الـ","ليلة الكاريوكي"] },
       { src: "s3", de: "Meine Hände zitterten, als ich das Mikrofon nahm", gl: ["الخاصتان بي","يدان","ارتجفتا","عندما","أنا","الـ","الميكروفون","أخذتُ"] },
       { src: "s4", de: "Ich vergaß die erste Zeile des Liedes völlig", gl: ["أنا","نسيتُ","الـ","الأول","سطر","الـ","أغنية","تماماً"] },
-      { src: "s5", de: "Der ganze Raum fing an, sie für mich zu singen", gl: ["الـ","كامل","القاعة","بدأ","تكملة: بدأ","إياها","لأجل","إياي","لـ","الغناء"] },
+      { src: "s5", de: "Der ganze Raum fing an, sie für mich zu singen", gl: ["الـ","كامل","القاعة","بدأ","تكملة: بدأ","إياها","لأجل","ـي","لـ","الغناء"] },
       { src: "s6", de: "Endlich entspannte ich mich und genoss einfach das Lied", gl: ["أخيراً","استرخيتُ","أنا","نفسي","و","استمتعتُ","فقط","الـ","الأغنية"] },
       { src: "s7", de: "Die Leute klatschten laut, als die Musik aufhörte", gl: ["الـ","الناس","صفقوا","بصوت عالٍ","عندما","الـ","الموسيقى","توقفت"] },
       { src: "s8", de: "Meine Freunde sagten, ich solle öfter singen", gl: ["الخاصون بي","أصدقاء","قالوا","أنا","ينبغي","أكثر تكراراً","أغني"] },

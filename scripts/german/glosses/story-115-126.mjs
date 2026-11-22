@@ -115,7 +115,7 @@ export const glosses = {
     ["Soltar|se sentía|se|sinceramente|dicho|mucho tiempo|imposible|complemento: sentirse", "Bırakmak|hissettirdi|kendini|dürüst olmak|söylenirse|uzun süre|imkânsız|tamamlayıcı: hissettirmek"],
     ["Lentamente|empecé|yo|de nuevo|complemento: empezar|pequeñas|cosas|a|disfrutar", "Yavaş yavaş|başladım|ben|tekrar|tamamlayıcı: başlamak|küçük|şeyler|-mek|keyif almak"],
     ["Un|buen|café|una|divertida|serie|un|tranquilo|paseo", "Bir|iyi|kahve|bir|komik|dizi|bir|sakin|yürüyüş"],
-    ["Un|día|noté|yo|que|él|por fin|se desvaneció|había (auxiliar)", "Bir|gün|fark ettim|ben|ki|o|sonunda|soldu|sahipti (yardımcı)"],
+    ["Un|día|noté|yo|que|él|por fin|se desvaneció|había (auxiliar)", "Bir|gün|fark ettim|ben|ki|o|sonunda|soldu|-mıştı (yardımcı)"],
     ["Entonces|supe|yo|que|yo|por fin|de ello|superado|estaba", "O zaman|bildim|ben|ki|ben|sonunda|bundan|aştım|idim"],
   ],
 };

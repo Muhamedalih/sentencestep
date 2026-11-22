@@ -4,7 +4,7 @@ export const passages = [
     sections: [
       { title: "Neues Jahr, neuer Mike", lines: [
         "Es ist der erste Januar. Mike hat in diesem Jahr einen großen Plan: Er will stark werden.",
-        "Er kauft eine Karte für das Fitnessstudio.",
+        "Er kauft eine Mitgliedskarte für das Fitnessstudio.",
         "Dieses Jahr werde ich stark!",
         "Er geht ins Fitnessstudio. Es ist voller Leute.",
         "Alle sehen stark aus. Alle wissen, was sie tun müssen. Mike weiß gar nichts.",
@@ -36,8 +36,8 @@ export const passages = [
         "Immer.",
         "Anfangen ist leicht. Jeden Tag wiederzukommen ist der schwere Teil.",
       ], questions: [
-        { prompt: "Was passiert am einunddreißigsten Januar?", options: ["Mike hört auf, hinzugehen", "Das Fitnessstudio ist geschlossen", "Das Fitnessstudio ist halb leer, aber Mike ist da"] },
-        { prompt: "Was ist laut der Geschichte der schwere Teil?", options: ["Am ersten Januar anzufangen", "Eine Karte für das Fitnessstudio zu kaufen", "Jeden Tag wiederzukommen"] },
+        { prompt: "Was passiert am einunddreißigsten Januar?", options: ["Mike geht nicht mehr hin", "Das Fitnessstudio ist geschlossen", "Das Fitnessstudio ist halb leer, aber Mike ist da"] },
+        { prompt: "Was ist laut der Geschichte der schwere Teil?", options: ["Am ersten Januar anzufangen", "Eine Mitgliedskarte zu kaufen", "Jeden Tag wiederzukommen"] },
       ] },
     ] },
   { sourceId: "route-nine", title: "Route Neun", summary: "Sechsundvierzig Jahre lang gewann Margaret den Sonntagsstreit. An diesem Sonntag ließ Harold sie gewinnen.", speakers: {},
@@ -47,7 +47,7 @@ export const passages = [
         "Harold wollte die Route Neun, die alte Straße, die an jedem Obstgarten vorbeiführte und auf einer Steinbrücke einen Bach überquerte.",
         "Margaret wollte die Autobahn, die schneller, gerader und ihrer Meinung nach viel seltener der Grund dafür war, dass ihr im Auto schlecht wurde.",
         "Eine Straße sollte etwas sein, das man genießt, Maggie, nicht etwas, das man überlebt.",
-        "Eine Straße sollte einen zu deiner Tochter bringen, bevor der Braten kalt wird.",
+        "Eine Straße sollte dich zu deiner Tochter bringen, bevor der Braten kalt wird.",
         "Margaret gewann immer. Harold murrte stur über die Seele einer Straße, bis sie die Autobahn erreichten, und sie tat so, als lächle sie nicht.",
         "Keiner von beiden hätte es je zugegeben, aber der Streit gehörte so sehr zum Sonntag wie der Braten selbst.",
       ], questions: [{ prompt: "Was deutet der Text über den Sonntagsstreit an?", options: ["Er sorgte oft dafür, dass die Familie zu spät kam", "Beide genossen ihn heimlich", "Margaret wollte, dass er endet", "Harold hatte ihn nie ernst gemeint"] }] },
@@ -65,7 +65,7 @@ export const passages = [
         "Sie sagte nichts. In fünfzig Jahren hatte sie gelernt, dass Harold über alles streiten konnte, außer über die Dinge, die wehtaten.",
         "Die Ampel wurde grün. Geradeaus lag die Auffahrt zur Autobahn. Rechts, halb hinter einer Hecke versteckt, lag die schmale Abzweigung zur Route Neun.",
         "Ich glaube, ich würde heute gern die Route Neun nehmen.",
-        "Das sind zwanzig Minuten mehr. Wir kommen zu spät. Der Braten ...",
+        "Das dauert zwanzig Minuten länger. Wir kommen zu spät. Der Braten ...",
         "Dann muss uns der Braten eben verzeihen.",
         "Sie bog rechts ab. Harold sagte kein Wort, aber er schob die Zeitung behutsam ins Handschuhfach, als brächte er sie zu Bett.",
       ], questions: [{ prompt: "Warum bog Margaret auf die Route Neun ab, ohne Harold zu fragen, was los war?", options: ["Sie verstand, dass Harold nicht darüber sprechen konnte, was ihn schmerzte", "Sie wollte dem Verkehr auf der Autobahn ausweichen", "Sie war es leid, mit ihm zu streiten", "Sie hatte wochenlang eine Überraschung geplant"] }] },

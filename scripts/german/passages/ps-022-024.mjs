@@ -46,7 +46,7 @@ export const passages = [
         "Jeden Freitag legte sie zwanzig Dollar in eine alte Kaffeedose unter ihrem Bett. Jeden Freitag, sechs Jahre lang.",
         "Eines Tages werde ich mein eigenes Café haben. Ein kleines, mit einem großen Tisch, an dem alle sitzen können.",
         "Ihre Kollegen lächelten freundlich. Niemand glaubte ihr. Elena störte das nicht. Sie glaubte genug für alle.",
-      ], questions: [{ prompt: "Wo bewahrte Elena ihre Ersparnisse auf?", options: ["Auf einer Bank", "In einer alten Kaffeedose unter ihrem Bett", "In ihren Schuhen"] }] },
+      ], questions: [{ prompt: "Wo bewahrte Elena ihre Ersparnisse auf?", options: ["Bei einer Bank", "In einer alten Kaffeedose unter ihrem Bett", "In ihren Schuhen"] }] },
       { title: "Das leere Café", lines: [
         "Im Frühling des sechsten Jahres mietete Elena einen winzigen Raum in der Maple Street und strich die Wände selbst. Sie nannte den Laden „Mesa Grande“, das heißt „Großer Tisch“.",
         "Am ersten Tag kamen drei Leute. Am zweiten Tag fünf. Am Ende des ersten Monats machte sie jede Woche Verlust.",
@@ -80,7 +80,7 @@ export const passages = [
         "Natürlich. Wasch dir die Hände, und ich zeige dir unsere Rezepte. Das ist ein kleines Café, aber es hat einen sehr großen Tisch.",
       ], questions: [
         { prompt: "Warum stand eine Schlange vor dem Café?", options: ["Es war der Tag des kostenlosen Kaffees", "Die große Kette war wieder geschlossen", "Die Stadt erinnerte sich an ihre Freundlichkeit im Sturm"] },
-        { prompt: "Von was für einem Café träumte Elena von Anfang an?", options: ["Von einem großen modernen Café mit vielen Tischen", "Von einem kleinen mit einem großen Tisch für alle", "Von einem schnellen Café, das die ganze Nacht geöffnet ist"] },
+        { prompt: "Von welcher Art Café träumte Elena von Anfang an?", options: ["Von einem großen modernen Café mit vielen Tischen", "Von einem kleinen mit einem großen Tisch für alle", "Von einem schnellen Café, das die ganze Nacht geöffnet ist"] },
       ] },
     ] },
   { sourceId: "the-surprise-party", title: "Die Überraschungsparty", summary: "Dreißig Menschen verstecken sich im Wohnzimmer. Lisa kommt früher nach Hause.", speakers: {},

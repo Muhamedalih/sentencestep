@@ -4,8 +4,8 @@ export const passages = [
     sections: [
       { title: "Eine große Angst", lines: [
         "Sara ist dreißig Jahre alt. Sie kann nicht schwimmen.",
-        "Sie hat Angst vor Wasser. Schon ein kleines Becken ist unheimlich.",
-        "Ihre Freunde planen eine Reise an den Strand.",
+        "Sie hat Angst vor Wasser. Schon ein kleines Becken ist beängstigend.",
+        "Ihre Freunde planen eine Ausflug an den Strand.",
         "Ich möchte mitkommen ... aber ich kann nicht schwimmen.",
         "Sie beschließt, an einem Schwimmkurs für Erwachsene teilzunehmen.",
       ], questions: [{ prompt: "Was ist Saras Problem?", options: ["Sie kann nicht schwimmen", "Sie hat keine Freunde", "Sie hasst den Strand"] }] },
@@ -19,7 +19,7 @@ export const passages = [
       ], questions: [{ prompt: "Was macht Sara am ersten Tag?", options: ["Sie schwimmt zehn Meter", "Sie springt ins Becken", "Sie steckt ihre Füße ins Wasser"] }] },
       { title: "Das Treiben", lines: [
         "Dritte Woche. Sara ist jetzt im Wasser.",
-        "Lehn dich zurück. Ich bin da. Ich halte dich.",
+        "Lass dich nach hinten sinken. Ich bin da. Ich halte dich.",
         "Lass nicht los!",
         "Ich lasse nicht los. Atme. Entspann dich.",
         "Langsam beginnt Sara, auf dem Wasser zu treiben.",
@@ -69,7 +69,7 @@ export const passages = [
         "Der andere Mann hieß auch Dan. Heute war sein fünfzigster Geburtstag, und seine Frau hatte eine Überraschung für ihn.",
         "Aber der Kuchen und alle Wunderkerzen waren an den falschen Tisch gegangen.",
         "Es tut mir so leid. Es ist nicht mein Geburtstag. Ich habe nur Ihren Kuchen gegessen.",
-        "Der alte Dan lachte so sehr, dass er weinte. Dann lud er beide an seinen Tisch ein.",
+        "Der ältere Dan lachte so sehr, dass er weinte. Dann lud er beide an seinen Tisch ein.",
         "Die Kellner brachten einen zweiten Kuchen. Diesmal sangen alle den richtigen Namen für den richtigen Mann.",
         "Ich mag dich mehr, wenn du die Wahrheit sagst, Dan. Vielleicht fangen wir beim nächsten Mal damit an.",
         "Beim nächsten Mal? Du willst ein zweites Date?",

@@ -5,7 +5,7 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Ich stolpere im Flur über absolut gar nichts.", gl: ["أنا","أتعثر","في الـ","ممر","فوق","مطلقاً","أبداً","لا شيء"] },
       { src: "s2", de: "Bücher fliegen überall hin. Meine Würde auch.", gl: ["كتب","تطير","في كل مكان","تكملة: إلى هناك","الخاصة بي","كرامة","أيضاً"] },
-      { src: "s3", de: "Alle um mich herum bleiben stehen und starren.", gl: ["الجميع","حول","إياي","تكملة: حول","يبقون","تكملة: توقف","و","يحدّقون"] },
+      { src: "s3", de: "Alle um mich herum bleiben stehen und starren.", gl: ["الجميع","حول","ـي","تكملة: حول","يبقون","تكملة: توقف","و","يحدّقون"] },
       { src: "s4", de: "Ich spüre, wie mein ganzes Gesicht rot wird.", gl: ["أنا","أشعر","كيف","الخاص بي","كامل","وجه","أحمر","يصبح"] },
       { src: "s5", de: "Für eine Sekunde will ich komplett verschwinden.", gl: ["لـ","واحدة","ثانية","أريد","أنا","تماماً","أختفي"] },
       { src: "s6", de: "Dann reicht mir jemand die Hand und lacht freundlich.", gl: ["ثم","يمد","لي","أحدهم","الـ","يد","و","يضحك","بلطف"] },

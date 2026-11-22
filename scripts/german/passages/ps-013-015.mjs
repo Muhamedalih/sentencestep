@@ -30,7 +30,7 @@ export const passages = [
         "Schon gut, Herr Brown.",
         "Joe ruft seinen Chef an. In zehn Minuten kommt eine neue Pizza, umsonst!",
         "Herr Brown, möchten Sie mit mir essen?",
-        "Wirklich? Danke! Ich wohne allein, und das Abendessen ist immer still.",
+        "Wirklich? Danke! Ich wohne allein, und das Abendessen ist immer so ruhig.",
         "An diesem Abend essen Emma und Herr Brown in der Oak Street 24 zusammen Pizza. Joe bekommt auch ein Stück.",
       ], questions: [
         { prompt: "Was macht Emma am Ende?", options: ["Sie ist wütend und geht nach Hause", "Sie teilt die Pizza mit Herrn Brown", "Sie kocht das Abendessen"] },

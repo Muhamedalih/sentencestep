@@ -1,16 +1,16 @@
 // German Passages: my-cat-is-my-boss, the-quiet-neighbor, window-number-nine.
 export const passages = [
-  { sourceId: "my-cat-is-my-boss", title: "Meine Katze ist mein Chef", summary: "Jeden Morgen um fünf Uhr will Toms Katze nur eins.",
+  { sourceId: "my-cat-is-my-boss", title: "Mein Kater ist mein Chef", summary: "Jeden Morgen um fünf Uhr will Toms Kater nur eins.",
     sections: [
       { title: "Fünf Uhr", lines: [
-        "Tom hat eine Katze. Sie heißt Milo.",
+        "Tom hat einen Kater. Er heißt Milo.",
         "Milo ist klein, aber er ist der Chef.",
         "Es ist fünf Uhr morgens. Tom schläft.",
         "Plötzlich springt Milo auf Toms Gesicht.",
         "Milo! Es ist fünf Uhr!",
         "Milo sieht Tom an und sagt: „Miau.“",
         "In der Katzensprache heißt das: „Futter. Sofort.“",
-      ], questions: [{ prompt: "Wer ist in diesem Haus der Chef?", options: ["Milo, die Katze", "Tom", "Toms Mama"] }] },
+      ], questions: [{ prompt: "Wer ist in diesem Haus der Chef?", options: ["Milo, der Kater", "Tom", "Toms Mama"] }] },
       { title: "Das falsche Futter", lines: [
         "Tom steht auf. Er ist sehr müde.",
         "Er füllt Futter in Milos Napf.",
@@ -31,11 +31,11 @@ export const passages = [
       { title: "Guten Morgen, Chef", lines: [
         "Tom ist wütend, aber Milo ist glücklich.",
         "Jetzt liegt Milo auf dem Sofa. Er schläft.",
-        "Du bist eine böse Katze. Aber du bist meine böse Katze.",
+        "Du bist ein böser Kater. Aber du bist mein böser Kater.",
         "Morgen um fünf Uhr kommt Milo wieder.",
         "Aber Tom hat einen Plan: zwei Sandwiches.",
       ], questions: [
-        { prompt: "Was ist Toms Plan für morgen?", options: ["Eine neue Katze", "Ein großer Napf", "Zwei Sandwiches"] },
+        { prompt: "Was ist Toms Plan für morgen?", options: ["Ein neuer Kater", "Ein großer Napf", "Zwei Sandwiches"] },
         { prompt: "Wie weckt Milo Tom auf?", options: ["Er springt auf Toms Gesicht", "Er zieht an Toms Decke", "Er öffnet das Fenster"] },
       ] },
     ] },
@@ -97,7 +97,7 @@ export const passages = [
         "Mein Führerschein ist der Grund, warum ich hier bin!",
       ], questions: [{ prompt: "Warum konnte Kevin den Brief, den er brauchte, nicht bekommen?", options: ["Die Firma verlangte genau den Führerschein, den er zu erneuern versuchte", "Die Firma hatte aufgehört, Briefe zu schicken", "Der Mitarbeiter konnte ihn nicht hören", "Er hatte seinen Reisepass vergessen"] }] },
       { title: "Die Rückseite des Formulars", lines: [
-        "Besiegt setzte sich Kevin auf den Boden neben dem Automaten. Eine Jugendliche, die auf ihre Lernberechtigung wartete, bot ihm ohne eine einzige Frage die Hälfte ihres Sandwiches an.",
+        "Besiegt setzte sich Kevin auf den Boden neben dem Automaten. Eine Jugendliche, die auf ihren Fahrschülerausweis wartete, bot ihm ohne eine einzige Frage die Hälfte ihres Sandwiches an.",
         "Du steckst in einer Schleife fest, stimmt's? Mein Onkel steckte einen Monat lang fest. Er sagt, auf der Rückseite des Formulars steht etwas.",
         "Kevin drehte das Formular um. Ganz unten stand in winziger grauer Schrift: „Antragsteller mit zirkulären Anforderungen legen diese Seite einem Vorgesetzten vor.“",
         "Er las es dreimal. Das Amt hatte die ganze Zeit von dem Problem gewusst. Es hatte die Lösung einfach dort gedruckt, wo niemand hinschaut.",

@@ -49,7 +49,7 @@ export const passages = [
         "Sam hat Hunger. Es ist zwei Uhr, und er hat kein Mittagessen.",
         "Im Flur seines Büros steht ein Automat.",
         "Er wirft einen Dollar ein. Er drückt die Taste für die Chips.",
-        "Der Automat macht ein Geräusch. Die Tüte bewegt sich. Dann bleibt sie stehen.",
+        "Der Automat macht ein Geräusch. Die Tüte bewegt sich. Dann bleibt sie hängen.",
         "Die Tüte fällt nicht. Sie hängt dort, direkt vor Sam.",
         "Na los! Das ist mein Dollar!",
         "Die Chips antworten nicht.",
@@ -123,7 +123,7 @@ export const passages = [
         "Lily! Du hast dich verlaufen! Ich habe überall gesucht.",
         "Ich habe mich nicht verlaufen. Ich wusste, wo ich war. Du hast dich verlaufen!",
         "Herr Brooks lachte so sehr, dass er sich hinsetzen musste. Hannah lachte und weinte zugleich.",
-        "Auf dem Weg nach draußen fragte Lily: „Kann ich einen Hamster haben?“ Hannah antwortete: „Frag mich in zehn Jahren noch einmal.“",
+        "Auf dem Weg nach draußen fragte Lily: „Darf ich einen Hamster haben?“ Hannah antwortete: „Frag mich in zehn Jahren noch einmal.“",
       ], questions: [
         { prompt: "Was tat Lily, als man sie fand?", options: ["Sie spielte mit einem Ball", "Sie sah einem Hamster zu", "Sie sprach mit einem Wachmann"] },
         { prompt: "Warum sagte Lily, sie habe sich nicht verlaufen?", options: ["Ihre Mutter war bei ihr", "Sie sah den Wachmann", "Sie wusste, wo sie war"] },

@@ -67,7 +67,7 @@ export const glosses = {
     ["Yo|me hago|me|la|entera|semana|preocupaciones|por ello", "Ben|yaparım|kendime|-|bütün|hafta|endişe|bunun hakkında"],
     ["Nada|malo|pasa|en absoluto|nada", "Hiçbir şey|kötü|olur|hiç|hiçbir şey"],
     ["En|la|semana|después|también|nada|malo", "-de|-|hafta|sonra|de|hiçbir şey|kötü"],
-    ["Yo|río|de|mí|mismo|porque|yo|me|tan|muchas|preocupaciones|hice|he (auxiliar)", "Ben|gülerim|-e|ben|kendi|çünkü|ben|kendime|bu kadar|çok|endişe|yaptım|sahibim (yardımcı)"],
+    ["Yo|río|de|mí|mismo|porque|yo|me|tan|muchas|preocupaciones|hice|he (auxiliar)", "Ben|gülerim|-e|ben|kendi|çünkü|ben|kendime|bu kadar|çok|endişe|yaptım|-dım (yardımcı)"],
     ["Espejos|tienen|simplemente|sobre|en absoluto|nada|influencia", "Aynalar|sahiptir|sadece|-e|hiç|hiçbir şey|etki"],
   ],
   "story-156": [

@@ -53,7 +53,7 @@ export const glosses = {
   "story-144": [
     ["Yo|construyo|la|entera|tarde|un|castillo de arena", "Ben|yaparım|-|bütün|öğleden sonra|bir|kum kalesi"],
     ["Altas|torres|una|pequeña|bandera|encima", "Yüksek|kuleler|bir|küçük|bayrak|üstünde"],
-    ["Yo|doy un paso|complemento: retroceder|orgulloso|de|mi|trabajo", "Ben|atarım|tamamlayıcı: geri çekilmek|gururlu|-den|benim|iş"],
+    ["Yo|doy un paso|complemento: retroceder|orgulloso|de|mi|trabajo", "Ben|atarım|tamamlayıcı: geri çekilmek|gururlu|ile|benim|iş"],
     ["Una|grande|ola|rueda|lentamente|complemento: acercarse", "Bir|büyük|dalga|yuvarlanır|yavaşça|tamamlayıcı: yaklaşmak"],
     ["Ella|toca|el|borde|del|castillo", "O|dokunur|-|kenar|-in|kale"],
     ["Entonces|se lleva|ella|la|entera|cosa|complemento: llevarse", "Sonra|alır|o|-|bütün|şey|tamamlayıcı: beraberinde götürmek"],

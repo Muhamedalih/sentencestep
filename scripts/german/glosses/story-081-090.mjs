@@ -85,7 +85,7 @@ export const glosses = {
     ["En|algunos|días|se esconden|se|los|peces|simplemente|dice|él", "-de|bazı|günler|saklanır|kendini|-|balıklar|sadece|der|o"],
     ["Nosotros|recogemos|nuestra|vacía|bolsa de pesca|complemento: recoger", "Biz|toplarız|bizim|boş|olta çantası|tamamlayıcı: toplamak"],
     ["En|el|camino a casa|cuenta|él|en su lugar|historias de pesca", "-de|-|eve dönüş yolu|anlatır|o|bunun yerine|balık hikâyeleri"],
-    ["Yo|he (auxiliar)|ningún|pez|pescado|pero|algo|mejor", "Ben|sahibim (yardımcı)|hiç|balık|tuttum|ama|bir şey|daha iyi"],
+    ["Yo|he (auxiliar)|ningún|pez|pescado|pero|algo|mejor", "Ben|-dım (yardımcı)|hiç|balık|tuttum|ama|bir şey|daha iyi"],
   ],
   "story-89": [
     ["Yo|tengo|de noche|miedo|de|el|oscuro|pasillo", "Ben|var|geceleri|korku|-den|-|karanlık|koridor"],

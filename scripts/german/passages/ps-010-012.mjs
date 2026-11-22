@@ -19,7 +19,7 @@ export const passages = [
       ], questions: [{ prompt: "Was passiert mit Jakes Hut?", options: ["Der Wind weht ihn weg", "Ein Hund rennt mit ihm weg", "Ein Mann nimmt ihn"] }] },
       { title: "Eine nette Frau", lines: [
         "Eine Frau sitzt auf einer Bank. Sie heißt Nina.",
-        "Brauchst du Hilfe? Ich kann dein Foto machen.",
+        "Brauchst du Hilfe? Ich kann ein Foto von dir machen.",
         "Ja, bitte! Danke!",
         "Okay. Sieh mich an. Sag Cheese!",
         "In diesem Moment springt Rex an Jake hoch und leckt ihm das Gesicht ab.",
@@ -63,7 +63,7 @@ export const passages = [
         "Sie ist jemandes Großmutter, Dylan. Sie hat gesagt, ich klinge wie ein Junge, der eine ordentliche Mahlzeit braucht.",
         "Okay. Aber ich komme mit. Und wenn wir um neun nicht zurück sind, rufe ich die Polizei.",
         "So standen zwei hungrige Studenten am Donnerstag um vier Uhr vor einem kleinen weißen Haus.",
-      ], questions: [{ prompt: "Was sagte Dylan, sollten sie tun?", options: ["Zusammen hingehen und die Polizei rufen, falls sie spät dran waren", "Zu Hause bleiben", "Allein hingehen und es niemandem sagen"] }] },
+      ], questions: [{ prompt: "Was sollten sie nach Dylans Worten tun?", options: ["Zusammen hingehen und die Polizei rufen, falls sie sich verspäteten", "Zu Hause bleiben", "Allein hingehen und es niemandem sagen"] }] },
       { title: "Donnerstag um vier", lines: [
         "Die Tür ging auf, bevor sie klopften. Eine kleine Frau mit silbernem Haar breitete die Arme aus, als kenne sie die beiden seit Jahren.",
         "Du musst Ethan sein! Und du bist der Freund. Kommt herein, kommt herein. Ihr seid beide zu dünn.",

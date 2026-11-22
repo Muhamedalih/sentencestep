@@ -106,7 +106,7 @@ export const lessons = [
       { src: "s2", de: "Alle verstecken sich hinter Bäumen und Zäunen.", gl: ["الجميع","يختبئون","أنفسهم","خلف","أشجار","و","أسوار"] },
       { src: "s3", de: "Ich werfe die erste und verfehle völlig.", gl: ["أنا","أرمي","الـ","الأولى","و","أخطئ","تماماً"] },
       { src: "s4", de: "Ich werfe die zweite und verfehle wieder.", gl: ["أنا","أرمي","الـ","الثانية","و","أخطئ","مجدداً"] },
-      { src: "s5", de: "Jemand wirft direkt auf mich.", gl: ["أحدهم","يرمي","مباشرة","على","إياي"] },
+      { src: "s5", de: "Jemand wirft direkt auf mich.", gl: ["أحدهم","يرمي","مباشرة","على","ـي"] },
       { src: "s6", de: "Volltreffer, genau auf meinen Rücken.", gl: ["إصابة كاملة","بالضبط","على","الخاص بي","ظهر"] },
       { src: "s7", de: "Ich lache so laut wie den ganzen Sommer nicht.", gl: ["أنا","أضحك","بقدر","عالياً","كما","الـ","كامل","صيف","لا"] },
       { src: "s8", de: "Die beste Wasserbomben-Schlacht aller Zeiten, ganz klar.", gl: ["الـ","أفضل","معركة بالونات الماء","كل","أزمنة","تماماً","واضح"] },

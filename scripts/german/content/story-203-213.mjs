@@ -98,7 +98,7 @@ export const lessons = [
       { src: "s4", de: "„Mama, setz dich“, sagte der kleine Tom", gl: ["ماما","اجلسي","نفسك","قال","الـ","الصغير","توم"] },
       { src: "s5", de: "Er spülte jede Tasse und jeden Teller ganz allein", gl: ["هو","غسل","كل","فنجان","و","كل","صحن","تماماً","وحده"] },
       { src: "s6", de: "Dann küsste er ihre müden Hände", gl: ["ثم","قبّل","هو","الخاصة بها","المتعبة","أيدي"] },
-      { src: "s7", de: "„Diese Hände arbeiten den ganzen Tag für mich“, flüsterte er", gl: ["هذه","أيدي","تعمل","الـ","كامل","يوم","لأجل","إياي","همس","هو"] },
+      { src: "s7", de: "„Diese Hände arbeiten den ganzen Tag für mich“, flüsterte er", gl: ["هذه","أيدي","تعمل","الـ","كامل","يوم","لأجل","ـي","همس","هو"] },
       { src: "s8", de: "Mama weinte und sagte: „Jetzt sind es die glücklichsten Hände der Welt.“", gl: ["ماما","بكت","و","قالت","الآن","هي","الأمر","الـ","أسعد","أيدي","من الـ","عالم"] },
     ] },
   { sourceId: "story-212", title: "Der Hund fraß den Ring", description: "Er plante den perfekten Heiratsantrag, und sein Hund hatte andere Pläne",

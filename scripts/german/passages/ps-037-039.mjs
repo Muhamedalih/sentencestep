@@ -34,7 +34,7 @@ export const passages = [
         "Janet hängte das richtige Foto an: ein Mann im grauen Anzug, der das kleine Lächeln von jemandem lächelte, der vierzig Jahre lang Brüche erklärt hatte.",
         "Die korrigierte Seite ging vier Minuten vor Schluss in den Druck.",
         "Gut gesehen, Moore. Und falls jemand fragt: Ich habe nie gesagt, dass Sie sie drucken sollen.",
-      ], questions: [{ prompt: "Was deutet Herrn Delgados letzte Bemerkung an?", options: ["Er will sich die Korrektur zugutehalten", "Er ist wütend, dass Janet das Gebäude verlassen hat", "Er ist froh, dass der Fehler nie gedruckt wurde", "Es ist ihm peinlich, dass er ihr gesagt hatte, sie solle drucken"] }] },
+      ], questions: [{ prompt: "Was deutet Herrn Delgados letzte Bemerkung an?", options: ["Er will sich das Verdienst für die Korrektur zuschreiben", "Er ist wütend, dass Janet das Gebäude verlassen hat", "Er ist froh, dass der Fehler nie gedruckt wurde", "Es ist ihm peinlich, dass er ihr gesagt hatte, sie solle drucken"] }] },
       { title: "Zwei Walter", lines: [
         "Am nächsten Morgen brachte die Gazette eine Korrektur unter der Überschrift „Zwei Walter“, die Geschichte von zwei Männern, die einen Namen, eine Stadt und sechzig Jahre falsch zugestellte Post geteilt hatten.",
         "Am Donnerstag saß Walter J. Brandt im dunklen Anzug in der letzten Reihe der Kirche, seinen Pokal hatte er zu Hause gelassen.",
@@ -60,7 +60,7 @@ export const passages = [
         "Ein Mann gibt die Wahrheit nicht auf. Er schreibt sie nur noch einmal, mit besserer Handschrift.",
       ], questions: [{ prompt: "Was tat Arthur zweiundzwanzig Jahre lang jeden Montag?", options: ["Er reparierte die Uhr", "Er schrieb einen Brief an den Bürgermeister", "Er schrieb an die Zeitung"] }] },
       { title: "Eine neue Bürgermeisterin", lines: [
-        "In diesem Frühling wurde Carol Hayes Bürgermeisterin. An ihrem ersten Abend im Amt fand sie in der Ecke einen Pappkarton mit der Aufschrift „Finch, A.“. Er war voller Briefe.",
+        "In jenem Frühling wurde Carol Hayes Bürgermeisterin. An ihrem ersten Abend im Amt fand sie in der Ecke einen Pappkarton mit der Aufschrift „Finch, A.“. Er war voller Briefe.",
         "Sie las bis Mitternacht. Am Ende lachte sie, und dann nicht mehr. Niemand, dachte sie, war je so geduldig bei etwas so Kleinem gewesen.",
         "Zweiundzwanzig Jahre Briefe, und niemand hat zurückgeschrieben. Ich repariere diese Uhr.",
         "Am nächsten Montag stieg ein Handwerker mit einem Werkzeugkasten und einer Thermoskanne auf den Turm, und die ganze Stadt versammelte sich auf dem Platz, um zuzusehen, als wäre es ein Raketenstart.",
@@ -70,11 +70,11 @@ export const passages = [
       { title: "Stadtzeit", lines: [
         "Am Mittwoch hatte Larkspur ein Problem. Alle hatten ihr ganzes Leben lang ihren Tag nach dem Turm eingerichtet, und niemand hatte bemerkt, dass die zusätzlichen neun Minuten für sie gearbeitet hatten.",
         "Arbeiter, die immer früh gekommen waren, kamen jetzt genau pünktlich, was sich in Larkspur wie Zuspätkommen anfühlte. Die Schulleiterin sagte, ihre Schüler seien noch nie so gehetzt gewesen.",
-        "Der Bäcker verlor seine ruhige Morgenschlange, und der Briefträger verlor seine Teepause. Bis Freitag hatte eine Petition auf dem Platz vierhundert Unterschriften.",
+        "Der Bäcker verlor die ruhige Schlange vor seinem Laden am Morgen, und der Briefträger verlor seine Teepause. Bis Freitag hatte eine Petition auf dem Platz vierhundert Unterschriften.",
         "Darauf stand in Großbuchstaben: GEBT UNS UNSERE NEUN MINUTEN ZURÜCK.",
         "Herr Finch, Sie haben die Uhr repariert und die Stadt kaputt gemacht. Wie fühlt sich das an?",
         "Schrecklich. Und genau deshalb will ich in diesen Turm hineinsehen.",
-      ], questions: [{ prompt: "Welches Problem verursachte die korrigierte Uhr?", options: ["Der Turm begann sich zu neigen", "Die Glocken hörten auf zu läuten", "Menschen, die früher früh kamen, fühlten sich gehetzt"] }] },
+      ], questions: [{ prompt: "Welches Problem verursachte die korrigierte Uhr?", options: ["Der Turm begann sich zu neigen", "Die Glocken hörten auf zu läuten", "Menschen, die sonst früh kamen, fühlten sich gehetzt"] }] },
       { title: "Im Turm", lines: [
         "Am Samstag stiegen Arthur, die Bürgermeisterin und Josh die zweihundertvier Stufen des Turms hinauf, wobei Arthur auf jedem Absatz stehen blieb, um den Mechanismus zu erklären.",
         "Hinter dem Hauptrad fand die Bürgermeisterin etwas, das hundert Jahre lang niemand berührt hatte: ein kleines Messingkästchen.",
@@ -100,7 +100,7 @@ export const passages = [
     sections: [
       { title: "Kein Auto, kein Problem", lines: [
         "Linda war vierzig Jahre alt, und sie konnte nicht Auto fahren. Sie fuhr überallhin mit dem Bus.",
-        "Dann bekam sie eine neue Arbeit. Sie war gut, aber sehr weit von ihrem Haus entfernt.",
+        "Dann bekam sie eine neue Stelle. Sie war gut, aber sehr weit von ihrem Haus entfernt.",
         "Der Bus brauchte jeweils zwei Stunden für den Hinweg und für den Rückweg. Sie war müde, noch bevor der Arbeitstag begann.",
         "Ich muss Autofahren lernen. Aber ich habe Angst vor Autos. Und ich bin zu alt zum Lernen.",
         "Mama, du bist nicht zu alt. Du bist vierzig! Viele Leute lernen es mit vierzig.",
@@ -108,7 +108,7 @@ export const passages = [
       ], questions: [{ prompt: "Warum musste Linda Autofahren lernen?", options: ["Sie wollte ein Rennen gewinnen", "Ihre Freunde hatten sie darum gebeten", "Ihre neue Arbeit war weit von ihrem Haus entfernt"] }] },
       { title: "Die erste Stunde", lines: [
         "Ihr Lehrer war ein ruhiger Mann namens Sam. Er hatte ein breites Lächeln und auf seiner Seite des Autos ein zweites Pedal.",
-        "Keine Sorge. Ich kann das Auto von hier aus anhalten. Jetzt setz den Fuß auf das Pedal. Langsam.",
+        "Keine Sorge. Ich kann das Auto von hier aus anhalten. Jetzt setzen Sie den Fuß auf das Gaspedal. Langsam.",
         "Linda trat auf das falsche Pedal. Das Auto sprang nach vorn und blieb stehen.",
         "Ich kann das nicht. Es tut mir leid. Ich bin so schlecht darin.",
         "Jeder fängt hier an. Jeder Fahrer auf dieser Straße hat an seinem ersten Tag dasselbe getan.",
@@ -127,7 +127,7 @@ export const passages = [
         "Bei der dritten Prüfung fuhr sie gegen keinen Kegel. Sie hielt nicht an der falschen Stelle an. Sie weinte nicht.",
         "Der Prüfer lächelte zum ersten Mal. „Glückwunsch. Sie haben bestanden.“",
         "Ich habe bestanden! Katie, ich habe bestanden!",
-        "Am Montag fuhr Linda zum ersten Mal zu ihrer neuen Arbeit. Katie saß neben ihr und sang laut.",
+        "Am Montag fuhr Linda zum ersten Mal zu ihrer neuen Arbeitsstelle. Katie saß neben ihr und sang laut.",
         "Der Weg war lang. Aber jetzt dauerte er nur noch zwanzig Minuten, und sie war diejenige, die das Lenkrad hielt.",
       ], questions: [
         { prompt: "Wie oft legte Linda die Prüfung ab?", options: ["Zweimal", "Einmal", "Dreimal"] },

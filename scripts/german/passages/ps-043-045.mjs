@@ -7,7 +7,7 @@ export const passages = [
         "Sein Chef, Herr Kane, hatte ihm eine Regel gegeben: lächeln, langsam sprechen und nie sagen: „Das weiß ich nicht.“",
         "Am Samstagmorgen wartete er am Brunnen, bereit, eine Menschenmenge zu begeistern. Um zehn Uhr kam genau eine Person.",
         "Es war eine kleine Frau in einem grünen Mantel, mit einem Klapphocker unter dem Arm, und sie sah aus, als wäre sie etwa achtundsiebzig.",
-        "Willkommen in der Gruppe, gnädige Frau! Sie sind, genau genommen, die ganze Gruppe.",
+        "Willkommen in der Gruppe, meine Dame! Sie sind, genau genommen, die ganze Gruppe.",
         "Keine Sorge, mein Lieber. Ich bin es gewohnt, zu früh zu kommen und die Einzige zu sein. Ich heiße Rosa.",
       ], questions: [{ prompt: "Wer nahm an Leos erster Führung teil?", options: ["Eine ganze Menge Touristen", "Zwei Freunde von Herrn Kane", "Nur eine ältere Frau"] }] },
       { title: "Eine kleine Korrektur", lines: [
@@ -21,7 +21,7 @@ export const passages = [
       ], questions: [{ prompt: "Warum konnte Frau Alvarez Leos Skript korrigieren?", options: ["Sie hatte ihr ganzes Leben in der Altstadt verbracht", "Sie hatte das Skript selbst geschrieben", "Sie arbeitete für ein anderes Tourunternehmen"] }] },
       { title: "Die flüsternde Ecke", lines: [
         "Am Ende der Marktarkade blieb sie unter einer gewölbten Steindecke stehen und zeigte auf eine Ecke.",
-        "Stellen Sie sich dorthin, sehen Sie zur Wand und warten Sie.",
+        "Stellen Sie sich dorthin, schauen Sie zur Wand und warten Sie.",
         "Sie ging langsam zur gegenüberliegenden Ecke, zehn Meter entfernt. Leo kam sich lächerlich vor, ein erwachsener Mann, der in einer öffentlichen Arkade zur Wand sah.",
         "Dann erreichte ihn ein Flüstern, so klar, als stünde sie neben ihm: „Willkommen in meiner Stadt.“",
         "Wie ist das möglich?",
@@ -32,11 +32,11 @@ export const passages = [
         "Zurück am Brunnen war Leo nervös. Er hatte eine Stunde lang keinen einzigen Satz des Skripts gesagt, und seine einzige Kundin hatte mehr geredet als er.",
         "Hinter einer Säule stand Herr Kane, der ihnen mit einem Notizbuch in einigem Abstand gefolgt war. Leo schloss die Augen und wartete darauf, gefeuert zu werden.",
         "Vierzig Jahre in diesem Geschäft, und ich habe noch nie erlebt, dass jemand diese Arkade so zum Flüstern gebracht hat.",
-        "Das war ich nicht, Chef. Das war sie. Es tut mir leid. Ich habe das Skript aufgegeben.",
+        "Das war ich nicht, Chef. Das war sie. Es tut mir leid. Ich habe mich nicht ans Skript gehalten.",
         "Das Skript ist langweilig, Leo. Ich habe es geschrieben.",
         "Er wandte sich an Frau Alvarez und fragte mit überraschender Schüchternheit, ob sie schon einmal daran gedacht habe, selbst Führungen zu leiten.",
         "Ich habe fünfzig Jahre darauf gewartet, dass mich jemand nach dieser Stadt fragt. Samstags um zehn, und ich bringe meinen eigenen Hocker mit.",
-      ], questions: [{ prompt: "Warum erwartete Leo, gefeuert zu werden?", options: ["Er hatte das Skript aufgegeben", "Er war zu spät gekommen", "Er hatte seine einzige Kundin verloren"] }] },
+      ], questions: [{ prompt: "Warum erwartete Leo, gefeuert zu werden?", options: ["Er hatte sich nicht an das Skript gehalten", "Er war zu spät gekommen", "Er hatte seine einzige Kundin verloren"] }] },
       { title: "Zwei Namen auf dem Schild", lines: [
         "Am folgenden Samstag stand neben dem Brunnen ein neues Schild: „Altstadtrundgang, mit Leo und Frau Alvarez. Zehn Uhr.“",
         "Neunzehn Leute kamen. Bis zum Ende des Monats war die Führung sechs Wochen im Voraus ausverkauft, und die Besucher sagten, sie hätten die wirkliche Stadt noch nie gehört.",
@@ -48,15 +48,15 @@ export const passages = [
         { prompt: "Was deutet die Geschichte darüber an, wie man die Geschichte eines Ortes kennenlernt?", options: ["Lebendige Erinnerungen können lehren, was kein Skript kann", "Skripte sind immer genauer als Menschen", "Ältere Menschen sollten keine Führungen leiten"] },
       ] },
     ] },
-  { sourceId: "last-place-and-proud", title: "Letzter Platz und stolz", summary: "Jess hasste Laufen. Dann schloss ihr kleiner Bruder eine Wette ab.", speakers: { "Ed": "Herr Ed" },
+  { sourceId: "last-place-and-proud", title: "Letzter Platz und stolz", summary: "Jess hasste das Laufen. Dann schloss ihr kleiner Bruder eine Wette ab.", speakers: { "Ed": "Herr Ed" },
     sections: [
       { title: "Die Wette", lines: [
-        "Jess war fünfunddreißig und hasste Laufen. Ihr kleiner Bruder Josh war Läufer.",
+        "Jess war fünfunddreißig und hasste das Laufen. Ihr kleiner Bruder Josh war Läufer.",
         "Im Juni gibt es einen Fünf-Kilometer-Lauf. Du kannst keine fünf Kilometer laufen. Niemand in unserer Familie kann das, außer mir.",
         "Ist das eine Wette?",
         "Zehn Dollar, dass du es nicht schaffst.",
         "Die Wette gilt, kleiner Bruder.",
-        "In dieser Nacht kaufte Jess ihr erstes Paar Laufschuhe.",
+        "An diesem Abend kaufte Jess ihr erstes Paar Laufschuhe.",
       ], questions: [{ prompt: "Worum ging es bei der Wette?", options: ["Ob Jess fünf Kilometer laufen kann", "Ob Josh das Rennen gewinnen kann", "Ob Jess neue Schuhe kaufen kann"] }] },
       { title: "Eine Schildkröte braucht einen Freund", lines: [
         "Am nächsten Morgen lief Jess zwei Minuten. Dann hörte sie auf, die Hände auf den Knien. Sie bekam keine Luft.",

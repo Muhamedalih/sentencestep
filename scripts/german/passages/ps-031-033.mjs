@@ -96,7 +96,7 @@ export const passages = [
         "Oh nein! Mein Handy ist leer. Ich kenne den Weg nicht!",
         "Es ist neun Uhr. Das Vorstellungsgespräch ist um zehn.",
         "Ben sieht die großen Straßen und die hohen Gebäude. Er hat sich verirrt.",
-      ], questions: [{ prompt: "Was ist Bens Problem?", options: ["Er hat den Bus verpasst", "Sein Handy ist leer, und er hat sich verirrt", "Er hat kein Geld"] }] },
+      ], questions: [{ prompt: "Was ist Bens Problem?", options: ["Er kommt zu spät zum Bus", "Sein Handy ist leer, und er hat sich verirrt", "Er hat kein Geld"] }] },
       { title: "Niemand bleibt stehen", lines: [
         "Entschuldigung, können Sie mir helfen?",
         "Ein Mann geht vorbei. Er bleibt nicht stehen.",
@@ -107,7 +107,7 @@ export const passages = [
       { title: "Eine freundliche Fremde", lines: [
         "Hallo! Du siehst aus, als hättest du dich verirrt. Kann ich dir helfen?",
         "Ja, bitte! Ich suche die Park Street, Nummer zwanzig.",
-        "Kein Problem. Geh zwei Häuserblocks geradeaus. Dann biege an der Bank links ab.",
+        "Kein Problem. Geh zwei Häuserblocks geradeaus. Dann bieg an der Bank links ab.",
         "Das Gebäude ist auf der rechten Seite, neben einem Café. Von hier sind es zehn Minuten.",
         "Vielen Dank! Du bist sehr nett.",
         "Viel Glück!",

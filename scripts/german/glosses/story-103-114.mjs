@@ -28,7 +28,7 @@ export const glosses = {
     ["Mi|compañera|pide|me|nunca|lo|devolver", "Benim|iş arkadaşı|ister|benden|asla|onu|geri vermek"],
     ["Eso|hace|ello|de algún modo|mucho|peor", "Bu|yapar|onu|bir şekilde|çok|daha kötü"],
     ["Seis|meses|más tarde|doy|yo|lo|por fin|complemento: devolver", "Altı|ay|sonra|veririm|ben|onu|sonunda|tamamlayıcı: geri vermek"],
-    ["Yo|había (auxiliar)|completamente|olvidado|que|tú|eso|tienes|dice|ella", "Ben|sahiptim (yardımcı)|tamamen|unuttum|ki|sen|bunu|sahipsin|der|o"],
+    ["Yo|había (auxiliar)|completamente|olvidado|que|tú|eso|tienes|dice|ella", "Ben|-mıştım (yardımcı)|tamamen|unuttum|ki|sen|bunu|sahipsin|der|o"],
   ],
   "story-106": [
     ["Yo|estoy|antes de|la|función escolar|nervioso|detrás de|el|escenario", "Ben|-im|-den önce|-|okul gösterisi|gergin|arkasında|-|sahne"],

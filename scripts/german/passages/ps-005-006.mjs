@@ -56,12 +56,12 @@ export const passages = [
       ], questions: [{ prompt: "Was hatte sich Rachel ausgemalt?", options: ["Eine kostenlose Reparatur", "Eine sehr kurze Reparatur", "Eine sehr teure Reparatur"] }] },
       { title: "Die Diagnose", lines: [
         "Walt war ein alter Mann mit grauen Händen und einer ruhigen Stimme. Er hob die Motorhaube an und sah zehn Minuten lang ohne ein Wort hinein.",
-        "Gute Nachrichten, gnädige Frau. Es ist nicht der Motor.",
-        "Es ist ein kleiner Gummiriemen. Er ist gerissen und hat viel Rauch gemacht. Das Teil kostet zwölf Dollar.",
+        "Gute Nachrichten: Es ist nicht der Motor.",
+        "Es ist ein kleiner Keilriemen. Er ist gerissen und hat viel Rauch gemacht. Das Teil kostet zwölf Dollar.",
         "Sein junger Gehilfe Tyler zog ihn zur Seite und flüsterte. Rachel konnte trotzdem jedes Wort hören.",
         "Chef, sie kommt aus der Stadt. Sie hat keine Ahnung von Autos. Wir könnten sagen, es ist die Wasserpumpe, und ihr vierhundert berechnen.",
         "Sie würde es nicht wissen. Aber ich.",
-      ], questions: [{ prompt: "Was war an Rachels Auto kaputt?", options: ["Ein Motorschaden", "Ein gerissener Gummiriemen", "Ein platter Reifen"] }] },
+      ], questions: [{ prompt: "Was war an Rachels Auto kaputt?", options: ["Ein Motorschaden", "Ein gerissener Keilriemen", "Ein platter Reifen"] }] },
       { title: "Vierzig Dollar", lines: [
         "Walt reparierte das Auto in fünfunddreißig Minuten. Als er fertig war, wischte er sich die Hände an einem alten Tuch ab und schrieb die Rechnung.",
         "Vierzig Dollar. Zwölf für den Riemen, achtundzwanzig für meine Zeit.",

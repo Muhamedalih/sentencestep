@@ -112,7 +112,7 @@ export const glosses = {
   ],
   "story-180": [
     ["Mi|trabajo|se siente|se|cómodo|seguro|y|complaciente|complemento: sentirse", "Benim|iş|hissettirir|kendini|rahat|güvenli|ve|kendinden memnun|tamamlayıcı: hissettirmek"],
-    ["Sinceramente|dicho|he (auxiliar)|yo|hace|años|dejado|de|aprender", "Dürüst olmak|söylenirse|sahibim (yardımcı)|ben|önce|yıllar|bıraktım|-mek|öğrenmek"],
+    ["Sinceramente|dicho|he (auxiliar)|yo|hace|años|dejado|de|aprender", "Dürüst olmak|söylenirse|-dım (yardımcı)|ben|önce|yıllar|bıraktım|-mek|öğrenmek"],
     ["Una|nueva|colega|empieza|complemento: empezar|llena|preguntas", "Bir|yeni|iş arkadaşı|başlar|tamamlayıcı: başlamak|dolu|sorular"],
     ["Su|curiosidad|enciende|lentamente|algo|en|mí", "Onun|merak|tutuşturur|yavaş yavaş|bir şey|içinde|bende"],
     ["También|yo|empiezo|de nuevo|complemento: empezar|preguntas|a|hacer", "De|ben|başlarım|tekrar|tamamlayıcı: başlamak|sorular|-mek|sormak"],

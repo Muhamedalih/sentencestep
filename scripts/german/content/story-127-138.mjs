@@ -5,7 +5,7 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Meine Freundin redet ständig von ihrem neuen Yogakurs.", gl: ["الخاصة بي","صديقة","تتحدث","باستمرار","عن","الخاص بها","الجديد","حصة يوغا"] },
       { src: "s2", de: "Ich bleibe ehrlich gesagt die ganze Zeit skeptisch.", gl: ["أنا","أبقى","بصراحة","تقال","الـ","كامل","وقت","متشككاً"] },
-      { src: "s3", de: "„Das ist nichts für mich“, sage ich ihr selbstsicher.", gl: ["هذا","هو","لا شيء","لأجل","إياي","أقول","أنا","لها","بثقة"] },
+      { src: "s3", de: "„Das ist nichts für mich“, sage ich ihr selbstsicher.", gl: ["هذا","هو","لا شيء","لأجل","ـي","أقول","أنا","لها","بثقة"] },
       { src: "s4", de: "Aus reiner Langeweile probiere ich schließlich einen Kurs aus.", gl: ["من","خالص","ملل","أجرّب","أنا","أخيراً","واحداً","حصة","تكملة: جرّب"] },
       { src: "s5", de: "Nach der Hälfte bin ich immer noch völlig skeptisch.", gl: ["بعد","الـ","نصف","أكون","أنا","ما","زلتُ","تماماً","متشككاً"] },
       { src: "s6", de: "Am Ende passiert etwas Unerwartetes.", gl: ["في الـ","نهاية","يحدث","شيء","غير متوقع"] },
@@ -82,7 +82,7 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Ich buche ein völlig spontanes Ticket nur für den Hinflug.", gl: ["أنا","أحجز","واحدة","تماماً","عفوية","تذكرة","فقط","لـ","الـ","رحلة الذهاب"] },
       { src: "s2", de: "Kein richtiger Plan. Nicht einmal ein Hotel gebucht.", gl: ["لا","حقيقية","خطة","ليس","حتى","واحد","فندق","محجوز"] },
-      { src: "s3", de: "Meine Familie hält die ganze Reise für leichtsinnig.", gl: ["الخاصة بي","عائلة","تعتبر","الـ","كامل","رحلة","لـ","متهورة"] },
+      { src: "s3", de: "Meine Familie hält die ganze Reise für leichtsinnig.", gl: ["الخاصة بي","عائلة","تعتبر","الـ","كامل","رحلة","على أنها","متهورة"] },
       { src: "s4", de: "Ehrlich gesagt bin ich am Flughafen auch nervös.", gl: ["بصراحة","تقال","أكون","أنا","في الـ","مطار","أيضاً","متوتر"] },
       { src: "s5", de: "Die erste Nacht allein fühlt sich seltsam still an.", gl: ["الـ","الأولى","ليلة","وحدي","تبدو","نفسها","بغرابة","هادئة","تكملة: بدا"] },
       { src: "s6", de: "Am dritten Tag übernimmt das Abenteuer komplett.", gl: ["في","الثالث","يوم","تسيطر","الـ","مغامرة","تماماً"] },
@@ -92,10 +92,10 @@ export const lessons = [
   { sourceId: "story-135", title: "Sein Lieblingsplatz", description: "Die Trauer um einen alten Hund wird langsam sanfter, mit jeder stillen Erinnerung.",
     sentences: [
       { src: "s1", de: "Mein Hund ist vor drei Monaten gestorben.", gl: ["الخاص بي","كلب","يكون (مساعد)","قبل","ثلاثة","أشهر","مات"] },
-      { src: "s2", de: "Ich trauere immer noch mehr um ihn, als ich erwartet hatte.", gl: ["أنا","أحزن","ما","زلتُ","أكثر","على","إياه","مما","أنا","توقعتُ","كان لديّ (مساعد)"] },
+      { src: "s2", de: "Ich trauere immer noch mehr um ihn, als ich erwartet hatte.", gl: ["أنا","أحزن","ما","زلتُ","أكثر","على","ـه","مما","أنا","توقعتُ","كان لديّ (مساعد)"] },
       { src: "s3", de: "Sein Lieblingsplatz auf dem Sofa bleibt leer.", gl: ["الخاص به","مكان مفضل","على","الـ","أريكة","يبقى","فارغاً"] },
       { src: "s4", de: "Wochenlang konnte ich diesen Platz nicht einmal ansehen.", gl: ["لأسابيع","استطعتُ","أنا","هذا","مكان","ليس","حتى","أنظر إليه"] },
-      { src: "s5", de: "Langsam fühlte sich die Trauer um ihn etwas sanfter an.", gl: ["ببطء","بدا","نفسه","الـ","حزن","على","إياه","شيئاً","ألطف","تكملة: بدا"] },
+      { src: "s5", de: "Langsam fühlte sich die Trauer um ihn etwas sanfter an.", gl: ["ببطء","بدا","نفسه","الـ","حزن","على","ـه","شيئاً","ألطف","تكملة: بدا"] },
       { src: "s6", de: "Ich begann zu heilen, jede Woche ein kleines bisschen.", gl: ["أنا","بدأتُ","لـ","أتعافى","كل","أسبوع","واحد","صغير","قليل"] },
       { src: "s7", de: "Heute setzte ich mich auf seinen Platz und lächelte stattdessen.", gl: ["اليوم","جلستُ","أنا","نفسي","على","الخاص به","مكان","و","ابتسمتُ","بدلاً من ذلك"] },
       { src: "s8", de: "Heilung löschte ihn nicht aus, sie schuf Platz für beides.", gl: ["الشفاء","محا","إياه","لا","تكملة: محا","هي","خلقت","مكاناً","لـ","كليهما"] },

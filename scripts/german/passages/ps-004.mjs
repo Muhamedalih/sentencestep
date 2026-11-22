@@ -6,7 +6,7 @@ export const passages = [
         "Nach drei Tagen Zeugenaussagen saßen zwölf Fremde in einem fensterlosen Raum mit einem Tisch, einem Krug Wasser und einer Frage: Hatte Danny Walsh elftausend Dollar aus dem Restaurant gestohlen, in dem er arbeitete?",
         "Bevor wir anfangen, sehen wir, wo jeder steht. Heben Sie die Hand, wenn Sie glauben, dass er schuldig ist.",
         "Innerhalb von Sekunden gingen elf Hände hoch. Die zwölfte, die einer Nachtschwester namens Diane gehörte, blieb auf dem Tisch.",
-        "Das kann nicht dein Ernst sein. Er hatte die Schlüssel, er war allein im Gebäude, und das Geld ist verschwunden. Was brauchst du noch?",
+        "Das kann nicht Ihr Ernst sein. Er hatte die Schlüssel, er war allein im Gebäude, und das Geld ist verschwunden. Was brauchen Sie noch?",
         "Ich muss sicher sein. Nicht fast sicher. Sicher.",
         "Das ist ihr gutes Recht, Tyler. Unsere Aufgabe ist es, zu beraten, nicht abzustimmen und nach Hause zu gehen.",
       ], questions: [{ prompt: "Warum ließ Diane ihre Hand auf dem Tisch?", options: ["Sie hatte den Angeklagten persönlich gekannt", "Sie war noch nicht sicher, dass er schuldig war", "Sie hatte die Frage nicht verstanden", "Sie wollte, dass die anderen schnell gingen"] }] },
@@ -30,7 +30,7 @@ export const passages = [
         "Um neun Uhr stimmten sie erneut ab. Diesmal hoben sich zwölf Hände für „nicht schuldig“, und Tylers war die letzte, widerwillig erhoben, wie etwas Schweres.",
         "Ich glaube immer noch, dass er es getan haben könnte. Ich kann nur nicht sagen, dass es bewiesen ist.",
         "Genau das ist der Unterschied zwischen „könnte es getan haben“ und „hat es getan“. Unsere ganze Aufgabe ist es zu wissen, worüber wir entscheiden dürfen.",
-        "Am nächsten Morgen übergab der Vorsitzende das Urteil dem Richter. Danny Walsh, der vier Tage lang kaum geschlafen hatte, schloss die Augen und sagte nichts.",
+        "Am nächsten Morgen übergab der Sprecher der Geschworenen das Urteil dem Richter. Danny Walsh, der vier Tage lang kaum geschlafen hatte, schloss die Augen und sagte nichts.",
         "Diane sah keinen der anderen Geschworenen je wieder. Aber noch Jahre später erinnerte sie sich daran, dass elf Menschen bereit gewesen waren, in vier Minuten zu entscheiden, und dass es einen Einzigen gebraucht hatte, um sie warten zu lassen.",
       ], questions: [
         { prompt: "Warum hob Tyler als Letzter die Hand?", options: ["Er glaubte, dass Danny unschuldig war", "Er hatte der Diskussion nicht zugehört", "Er verdächtigte Danny immer noch, akzeptierte aber, dass nichts bewiesen war", "Er wollte anders abstimmen als Diane"] },

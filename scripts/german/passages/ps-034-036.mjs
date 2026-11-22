@@ -3,10 +3,10 @@ export const passages = [
   { sourceId: "the-flamingo", title: "Der Flamingo", summary: "Niemand hatte je zugegeben, ihn gekauft zu haben. Alle hatten ihn verschenkt.", speakers: { "Aunt Pam": "Tante Pam", "Uncle Rick": "Onkel Rick", "Grandpa Joe": "Opa Joe" },
     sections: [
       { title: "Die Regeln", lines: [
-        "In der Familie Whitfield hatte der Geschenketausch zum Fest eine unumstößliche Tradition, und sie hatte nichts mit Großzügigkeit zu tun. Sie hieß der Flamingo.",
+        "In der Familie Whitfield hatte der Geschenketausch zum Fest eine unumstößliche Tradition, und sie hatte nichts mit Großzügigkeit zu tun. Man nannte sie den Flamingo.",
         "Der Flamingo war eine Messinglampe in Form eines Flamingos mit Sonnenbrille. Sie war vor zwölf Jahren zum ersten Mal aufgetaucht, in Zeitungspapier gewickelt, und niemand hatte je zugegeben, sie gekauft zu haben.",
         "Seitdem war sie von einem Verwandten zum nächsten gewandert und tauchte jeden Dezember in neuem Papier vor einem neuen Opfer wieder auf.",
-        "Die Regeln waren ungeschrieben, aber heilig: begeistert aussehen, nie verraten, woher sie kam, und sie innerhalb eines Jahres weitergeben.",
+        "Die Regeln waren ungeschrieben, aber heilig: sich begeistert zeigen, nie verraten, woher sie kam, und sie innerhalb eines Jahres weitergeben.",
         "Tante Pam, die Familienchronistin, führte an ihrem Kühlschrank eine Tabelle: sieben Haushalte, vier Sorten Geschenkpapier und ein gescheiterter Versuch, sie in ihrem Garten zu vergraben.",
       ], questions: [{ prompt: "Warum reicht die Familie die Lampe immer weiter?", options: ["Sie hält sie für wertvoll", "Niemand hat den Mut, sie wegzuwerfen", "Das Weitergeben ist zu einem Spiel geworden, das die ganze Familie genießt", "Es ist das einzige Geschenk, das sie sich leisten können"] }] },
       { title: "Das Opfer", lines: [
@@ -37,7 +37,7 @@ export const passages = [
         "Du hast gelitten? Ich habe gesehen, wie du sie in einer Schachtel mit Teebeuteln versteckt hast. Es war der beste Tag meines Jahres.",
         "Der Raum explodierte: Gelächter, Anschuldigungen, dreißig Menschen, die zwölf Jahre Feste von Grund auf neu zusammensetzten. Tante Pam holte ihre Tabelle hervor und schrieb zum ersten Mal einen Namen ganz nach oben.",
         "Opa Joe stellte den Flamingo auf den Kaminsims, neben ein Foto seiner verstorbenen Frau, die, wie er sagte, die Einzige gewesen war, die es gewusst hatte.",
-        "Er kam nie wieder in eine Schachtel. Aber jeden Dezember versammelt sich die ganze Familie um den Kaminsims und tut mit großer Zeremonie so, als sähe sie ihn zum ersten Mal.",
+        "Er kam nie wieder in eine Schachtel. Aber jeden Dezember versammelt sich die ganze Familie um den Kaminsims und tut ganz feierlich so, als sähe sie ihn zum ersten Mal.",
       ], questions: [
         { prompt: "Warum schrieb Tante Pam einen Namen ganz oben in ihre Tabelle?", options: ["Sie wollte die Person eintragen, die ihn zuletzt bekommen hatte", "Sie wusste endlich, wer die Kette begonnen hatte", "Sie wollte Onkel Rick bestrafen", "Sie hatte die früheren Namen vergessen"] },
         { prompt: "Was bedeutet der Flamingo am Ende für die Familie?", options: ["Eine Erinnerung an einen alten Streit", "Ein gemeinsamer Scherz, der sie zusammenhält", "Ein wertvoller Familienschatz", "Eine Strafe für schlechtes Benehmen"] },
@@ -47,7 +47,7 @@ export const passages = [
     sections: [
       { title: "Vierzig Dollar", lines: [
         "Danny Brooks war ein neunzehnjähriger Ingenieurstudent, der Geld brauchte. Als die Riverside Roosters bekannt gaben, dass sie ein Maskottchen suchten, bewarb er sich in etwa vier Sekunden.",
-        "Der Job brachte vierzig Dollar pro Spiel. Der letzte Maskottchendarsteller, erfuhr Danny später, hatte aufgehört, nachdem er bei einer Pep-Rally von der Bühne gefallen war.",
+        "Der Job brachte vierzig Dollar pro Spiel. Der letzte Maskottchendarsteller, erfuhr Danny später, hatte aufgehört, nachdem er bei einer Anfeuerungsveranstaltung von der Bühne gefallen war.",
         "Du musst nur tanzen, winken und nicht hinfallen.",
         "Er reichte Danny ein riesiges rot-weißes Hühnerkostüm. Allein der Kopf war so groß wie eine Waschmaschine, und der Schnabel ragte heraus wie der Bug eines Kanus.",
         "Danny konnte nur durch einen schmalen Gitterschlitz unter dem Schnabel sehen.",
@@ -89,7 +89,7 @@ export const passages = [
         "Die Erhöhung betrug fünf Dollar. Danny nahm sie mit aller Würde an, die ein Mann haben kann, während er einen Schnabel trägt.",
         "Beim nächsten Spiel zählte er jeden Schritt. Und wenn er fiel, fiel er, als hätte er es gewollt.",
       ], questions: [
-        { prompt: "Was war die Danny-Regel?", options: ["Maskottchen müssen kleinere Köpfe tragen", "Maskottchen müssen dem Spielfeld fernbleiben", "Maskottchen müssen mehr bezahlt bekommen"] },
+        { prompt: "Was war die Danny-Regel?", options: ["Maskottchen müssen kleinere Köpfe tragen", "Maskottchen müssen dem Spielfeld fernbleiben", "Maskottchen müssen besser bezahlt werden"] },
         { prompt: "Was zeigt Brendas Verhalten auf dem Parkplatz über sie?", options: ["Sie war wütend auf das College", "Sie wollte, dass Danny das Spiel verliert", "Sie war erfahren und bereit, einem Anfänger zu helfen"] },
       ] },
     ] },
@@ -106,7 +106,7 @@ export const passages = [
         "Wie heißt du? Wo wohnst du?",
         "Ich bin Leo. Ich bin zwölf. Ich ... ich will nicht nach Hause.",
         "Frank sah die roten Augen des Jungen. Er stellte keine weiteren Fragen. Er öffnete seine Thermoskanne und goss zwei Tassen heiße Schokolade ein.",
-        "Sie saßen fünf Minuten lang schweigend trinkend im leeren Bus.",
+        "Sie saßen fünf Minuten lang schweigend im leeren Bus und tranken.",
         "Mein Papa hat mich angeschrien. Meine Noten waren schlecht. Ich habe schlimme Dinge gesagt, und ich bin weggelaufen.",
       ], questions: [{ prompt: "Warum lief Leo weg?", options: ["Er hatte Streit mit seinem Vater wegen seiner Noten", "Er wollte die Stadt sehen", "Er hatte seine Schultasche verloren"] }] },
       { title: "Ein langes Gespräch", lines: [
@@ -120,7 +120,7 @@ export const passages = [
       { title: "Scheinwerfer", lines: [
         "Zwanzig Minuten später kam ein Auto mit eingeschalteten Scheinwerfern an. Ein großer Mann im Schlafanzug sprang heraus. Seine Augen waren rot.",
         "Leo! Leo, es tut mir so leid, dass ich dich angeschrien habe. Die Noten sind mir egal.",
-        "Vater und Sohn umarmten sich lange. Frank sah weg, um ihnen Privatsphäre zu geben.",
+        "Vater und Sohn umarmten sich lange. Frank sah weg, um ihnen einen Moment für sich zu lassen.",
         "In dieser Nacht holte Frank zu Hause sein Handy hervor. Er rief seinen Sohn nicht an. Er schrieb eine kurze Nachricht.",
         "Hallo, Michael. Ich vermisse dich. Es tut mir leid.",
         "Zehn Minuten später vibrierte das Handy: „Papa? Ich habe am Sonntag Zeit.“",

@@ -23,7 +23,7 @@ export const passages = [
         "In der nächsten Stunde bekam Mark siebenundachtzig Antworten. Die meisten waren nur eine Zeile lang.",
         "„Beste E-Mail meiner Karriere.“ „Endlich hat es jemand gesagt.“ „Ich trage den Hut auch nicht.“",
         "Mark, du bist ein Held! Drei Leute aus meiner Abteilung haben vor Lachen geweint.",
-        "Mark lachte nicht. Er dachte daran, sich im Bad zu verstecken. Dann dachte er daran, sich in seinem Auto zu verstecken. Dann dachte er daran, sich einen neuen Job zu suchen.",
+        "Mark lachte nicht. Er dachte daran, sich auf der Toilette zu verstecken. Dann dachte er daran, sich in seinem Auto zu verstecken. Dann dachte er daran, sich einen neuen Job zu suchen.",
         "Um zwölf Uhr kam eine neue E-Mail. Der Betreff lautete: „Bitte kommen Sie in mein Büro.“ Sie war von Herrn Whitfield.",
         "Das war's. Ich bin erledigt.",
         "Er ging in den zehnten Stock wie ein Mann auf dem Weg zu seiner eigenen Beerdigung.",

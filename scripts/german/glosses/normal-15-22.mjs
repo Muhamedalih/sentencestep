@@ -3,7 +3,7 @@ export const glosses = {
   "normal-15": [
     ["Un|pequeño|perro|siguió|me|del|parque|a|casa", "Bir|küçük|köpek|takip etti|beni|-den|park|-e|ev"],
     ["Él|tenía|ningún|collar|y|parecía|muy|hambriento|complemento: parecer", "O|vardı|hiç|tasma|ve|göründü|çok|aç|tamamlayıcı: görünmek"],
-    ["Yo|di|le|agua|y|un|poco|comida", "Ben|verdim|ona|su|ve|biraz|az|yem"],
+    ["Yo|di|le|agua|y|un|poco|comida", "Ben|verdim|ona|su|ve|bir|az|yem"],
     ["Yo|publiqué|su|foto|en|un|local|grupo|en el|internet", "Ben|paylaştım|onun|fotoğraf|-de|bir|yerel|grup|-de|internet"],
     ["Dentro de|una|hora|respondió|una|mujer|y|lloró|de|alivio", "İçinde|bir|saat|cevap verdi|bir|kadın|ve|ağladı|-den|rahatlama"],
     ["Ella|dijo|el|perro|había|hace|tres|días|huido", "O|söyledi|-|köpek|-miş|önce|üç|gün|kaçtı"],
@@ -13,7 +13,7 @@ export const glosses = {
   ],
   "normal-16": [
     ["Yo|quería|antes de|la|boda|de mi|hermana|solo|un|pequeño|corte", "Ben|istedim|-den önce|-|düğün|benim|kız kardeş|sadece|bir|küçük|kesim"],
-    ["El|peluquero|cortó|mucho|más|complemento: cortar|de lo que|yo|pedí|había (auxiliar)", "-|kuaför|kesti|çok|daha|tamamlayıcı: kesmek|-den|ben|istedim|sahipti (yardımcı)"],
+    ["El|peluquero|cortó|mucho|más|complemento: cortar|de lo que|yo|pedí|había (auxiliar)", "-|kuaför|kesti|çok|daha|tamamlayıcı: kesmek|-den|ben|istedim|-mıştı (yardımcı)"],
     ["Yo|miré|en|el|espejo|y|tuve que|casi|llorar", "Ben|baktım|-e|-|ayna|ve|zorundaydım|neredeyse|ağlamak"],
     ["Yo|probé|tres|diferentes|sombreros|complemento: probar|antes de que|yo|la|casa|dejé", "Ben|denedim|üç|farklı|şapka|tamamlayıcı: denemek|-meden önce|ben|-|ev|terk ettim"],
     ["En|la|boda|toqué|yo|me|nerviosamente|constantemente|a|el|pelo", "-de|-|düğün|dokundum|ben|kendime|gergin şekilde|sürekli|-e|-|saç"],
@@ -51,12 +51,12 @@ export const glosses = {
     ["El|compañero de clase|al que|yo|en lo|más|admiraba|confesó|que|él|se|también|perdido|sentía", "-|sınıf arkadaşı|ki onu|ben|-de|en çok|hayran oldum|itiraf etti|ki|o|kendini|de|kayıp|hissetti"],
     ["Casi|todos|admitieron|en voz baja|complemento: admitir|que|su|vida|más caótica|parecía|que|en el|internet", "Neredeyse|herkes|itiraf etti|usulca|tamamlayıcı: itiraf etmek|ki|onların|hayat|daha kaotik|görünüyordu|-den|-de|internet"],
     ["En su lugar|reímos|nosotros|de|nuestras|viejas|vergonzosas|fotos", "Bunun yerine|güldük|biz|-e|bizim|eski|utanç verici|fotoğraflar"],
-    ["La|comparación|que|yo|temido|había (auxiliar)|tuvo lugar|nunca|complemento: tener lugar", "-|karşılaştırma|ki onu|ben|korkmuştum|sahipti (yardımcı)|gerçekleşti|asla|tamamlayıcı: gerçekleşmek"],
+    ["La|comparación|que|yo|temido|había (auxiliar)|tuvo lugar|nunca|complemento: tener lugar", "-|karşılaştırma|ki onu|ben|korkmuştum|-mıştı (yardımcı)|gerçekleşti|asla|tamamlayıcı: gerçekleşmek"],
     ["Yo|me fui|tan|aliviado|como|desde hace|meses|no|más", "Ben|ayrıldım|kadar|rahatlamış|gibi|-den beri|aylar|değil|artık"],
     ["Aparentemente|encuentran|todos|simplemente|en silencio|su|camino", "Görünüşe göre|buluyor|herkes|sadece|sessizce|kendi|yol"],
   ],
   "normal-20": [
-    ["Nosotros|habíamos (auxiliar)|el|picnic de cumpleaños|de mi|hermana|durante semanas|planeado", "Biz|sahiptik (yardımcı)|-|doğum günü pikniği|benim|kız kardeş|haftalarca|planladık"],
+    ["Nosotros|habíamos (auxiliar)|el|picnic de cumpleaños|de mi|hermana|durante semanas|planeado", "Biz|-mıştık (yardımcı)|-|doğum günü pikniği|benim|kız kardeş|haftalarca|planladık"],
     ["Oscuras|nubes|se acumularon|complemento: acumularse|justo|cuando|nosotros|en el|parque|llegamos", "Koyu|bulutlar|toplandı|tamamlayıcı: toplanmak|tam|-ken|biz|-de|park|vardık"],
     ["Dentro de|de|minutos|llovía|ello|a|torrentes", "İçinde|-den|dakikalar|yağdı|o|-de|sel gibi"],
     ["Todos|estaban de pie|empapados|allí|y|miraron fijamente|a|el|arruinado|pastel", "Herkes|durdu|sırılsıklam|orada|ve|gözlerini dikti|-e|-|mahvolmuş|pasta"],
@@ -78,7 +78,7 @@ export const glosses = {
     ["De nuevo|principiante|a|ser|fue|extrañamente|liberador", "Yeniden|acemi|-mek|olmak|-idi|garip biçimde|özgürleştirici"],
   ],
   "normal-22": [
-    ["Mi|padre|y|yo|habíamos (auxiliar)|ocho|años|no|entre nosotros|hablado", "Benim|baba|ve|ben|sahiptik (yardımcı)|sekiz|yıl|değil|birbirimizle|konuştuk"],
+    ["Mi|padre|y|yo|habíamos (auxiliar)|ocho|años|no|entre nosotros|hablado", "Benim|baba|ve|ben|-mıştık (yardımcı)|sekiz|yıl|değil|birbirimizle|konuştuk"],
     ["En|un|normal|martes|parpadeó|su|número|en|mi|pantalla", "-de|bir|sıradan|salı|yandı söndü|onun|numara|-de|benim|ekran"],
     ["Yo|miré fijamente|en ello|y|dejé|lo|completamente|sonar hasta el final", "Ben|baktım|ona|ve|bıraktım|onu|tamamen|sonuna kadar çalmak"],
     ["Él|dejó|un|mensaje de voz|y|se disculpó|se|con|una|voz|que|yo|apenas|reconocí", "O|bıraktı|bir|sesli mesaj|ve|özür diledi|kendini|ile|bir|ses|ki|ben|zar zor|tanıdım"],

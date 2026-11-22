@@ -53,7 +53,7 @@ export const glosses = {
     ["Yo|di|me|una|semana|para la|decisión|no|más", "Ben|verdim|kendime|bir|hafta|için|karar vermek|değil|fazla"],
     ["Al|final|me dio|me|la incertidumbre|menos|miedo|que|el arrepentimiento", "-de|son|yaptı|bana|belirsizlik|daha az|korku|-den|pişmanlık"],
     ["Yo|firmé|el|contrato|dos|días|antes de|el|plazo", "Ben|imzaladım|-|sözleşme|iki|gün|önce|-|son tarih"],
-    ["Lo que|también|después de|este|año|pase|yo|sé|que|yo|la|más valiente|elección|tomado|he (auxiliar)", "Ne|olursa|sonra|bu|yıl|olsun|ben|biliyorum|ki|ben|-|daha cesur|seçim|yaptım|sahibim (yardımcı)"],
+    ["Lo que|también|después de|este|año|pase|yo|sé|que|yo|la|más valiente|elección|tomado|he (auxiliar)", "Ne|olursa|sonra|bu|yıl|olsun|ben|biliyorum|ki|ben|-|daha cesur|seçim|yaptım|-dım (yardımcı)"],
   ],
   "normal-13": [
     ["Cada|mañana|fui|yo|con|mi|vecina|en el|ascensor", "Her|sabah|bindim|ben|ile|benim|komşu|-de|asansör"],

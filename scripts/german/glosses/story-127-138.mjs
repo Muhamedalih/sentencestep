@@ -8,7 +8,7 @@ export const glosses = {
     ["Después de|la|mitad|estoy|yo|todavía|aún|completamente|escéptico", "-den sonra|-|yarı|-im|ben|hâlâ|yine|tamamen|şüpheci"],
     ["Al|final|pasa|algo|inesperado", "-de|son|olur|bir şey|beklenmedik"],
     ["Yo|me siento|me|extrañamente|tranquilo|y|curiosamente|convencido", "Ben|hissederim|kendimi|garip şekilde|sakin|ve|tuhaf şekilde|ikna olmuş"],
-    ["Tres|meses|más tarde|he (auxiliar)|yo|ninguna|sola|clase|perdido", "Üç|ay|sonra|sahibim (yardımcı)|ben|hiç|tek|ders|kaçırdım"],
+    ["Tres|meses|más tarde|he (auxiliar)|yo|ninguna|sola|clase|perdido", "Üç|ay|sonra|-dım (yardımcı)|ben|hiç|tek|ders|kaçırdım"],
   ],
   "story-128": [
     ["En|milla|dieciocho|estoy|yo|completamente|agotado", "-de|mil|on sekiz|-im|ben|tamamen|bitkin"],
@@ -38,7 +38,7 @@ export const glosses = {
     ["Yo|me acostumbro|me|a|la|comida|el|idioma|el|ritmo", "Ben|alışırım|kendimi|-e|-|yemek|-|dil|-|tempo"],
     ["Un|día|pregunta|me|aquí|un|desconocido|por|el|camino", "Bir|gün|sorar|bana|burada|bir|yabancı|hakkında|-|yol"],
     ["Yo|conozco|la|respuesta|realmente|sin|a pensar", "Ben|bilirim|-|cevap|gerçekten|-meden|düşünmek"],
-    ["Entonces|noto|yo|que|yo|me|por fin|completamente|adaptado|he (auxiliar)", "O zaman|fark ederim|ben|ki|ben|kendimi|sonunda|tamamen|uyum sağladım|sahibim (yardımcı)"],
+    ["Entonces|noto|yo|que|yo|me|por fin|completamente|adaptado|he (auxiliar)", "O zaman|fark ederim|ben|ki|ben|kendimi|sonunda|tamamen|uyum sağladım|-dım (yardımcı)"],
   ],
   "story-131": [
     ["Mi|hermana|se perdió|mi|decimoctavo|cumpleaños|completamente", "Benim|kız kardeş|kaçırdı|benim|on sekizinci|doğum günü|tamamen"],
@@ -63,7 +63,7 @@ export const glosses = {
   "story-133": [
     ["Yo|confié|le|algo|profundamente|personal|complemento: confiar", "Ben|güvendim|ona|bir şey|derinden|kişisel|tamamlayıcı: emanet etmek"],
     ["Ella|contó|lo|a alguien|otro|ello|volvió|rápido|complemento: volver|a|mí", "O|anlattı|onu|birine|başka|o|döndü|çabuk|tamamlayıcı: geri dönmek|-e|bana"],
-    ["Esta|traición|dolió|más|complemento: doler|de lo que|yo|esperaba|había (auxiliar)", "Bu|ihanet|acıttı|daha fazla|tamamlayıcı: acıtmak|-den|ben|beklemiştim|sahipti (yardımcı)"],
+    ["Esta|traición|dolió|más|complemento: doler|de lo que|yo|esperaba|había (auxiliar)", "Bu|ihanet|acıttı|daha fazla|tamamlayıcı: acıtmak|-den|ben|beklemiştim|-mıştı (yardımcı)"],
     ["Durante meses|confío|yo|a nadie|algo|real|complemento: confiar", "Aylarca|güvenirim|ben|kimseye|bir şey|gerçek|tamamlayıcı: emanet etmek"],
     ["Nuevos|amigos|notan|cuán|cuidadoso|yo|me he vuelto|soy (auxiliar)", "Yeni|arkadaşlar|fark eder|ne kadar|dikkatli|ben|oldum|-im (yardımcı)"],
     ["Lentamente|gana|se|un|amigo|un|diminuto|poco|confianza", "Yavaş yavaş|kazanır|kendine|bir|arkadaş|bir|minik|az|güven"],
@@ -82,7 +82,7 @@ export const glosses = {
   ],
   "story-135": [
     ["Mi|perro|ha (auxiliar)|hace|tres|meses|muerto", "Benim|köpek|-dir (yardımcı)|önce|üç|ay|öldü"],
-    ["Yo|estoy de luto|todavía|aún|más|por|él|de lo que|yo|esperaba|había (auxiliar)", "Ben|yas tutarım|hâlâ|yine|daha fazla|için|o|-den|ben|beklemiştim|sahipti (yardımcı)"],
+    ["Yo|estoy de luto|todavía|aún|más|por|él|de lo que|yo|esperaba|había (auxiliar)", "Ben|yas tutarım|hâlâ|yine|daha fazla|için|o|-den|ben|beklemiştim|-mıştı (yardımcı)"],
     ["Su|lugar favorito|en|el|sofá|se queda|vacío", "Onun|favori yer|-de|-|kanepe|kalır|boş"],
     ["Durante semanas|podía|yo|este|lugar|no|siquiera|mirarlo", "Haftalarca|-ebildim|ben|bu|yer|değil|bile|bakmak"],
     ["Lentamente|se sentía|se|el|duelo|por|él|algo|más suave|complemento: sentirse", "Yavaş yavaş|hissettirdi|kendini|-|yas|için|o|biraz|daha yumuşak|tamamlayıcı: hissettirmek"],
@@ -94,11 +94,11 @@ export const glosses = {
     ["Mi|lista de tareas|tiene|hoy|treinta|puntos", "Benim|yapılacaklar listesi|var|bugün|otuz|madde"],
     ["Solo|al|mirarla|me siento|yo|me|completamente|abrumado", "Sadece|-de|bakmak|hissederim|ben|kendimi|tamamen|bunalmış"],
     ["Yo|intento|todo|a|una vez|a|hacer|y|de hecho|mal", "Ben|denerim|her şey|-de|bir kerede|-mek|yapmak|ve|aslında|kötü"],
-    ["Hasta|mediodía|he (auxiliar)|yo|apenas|una|sola|tarea|terminado", "-e kadar|öğle|sahibim (yardımcı)|ben|zar zor|bir|tek|görev|bitirdim"],
+    ["Hasta|mediodía|he (auxiliar)|yo|apenas|una|sola|tarea|terminado", "-e kadar|öğle|-dım (yardımcı)|ben|zar zor|bir|tek|görev|bitirdim"],
     ["Yo|me detengo|complemento: detenerse|y|me pregunto|me|qué|importa|hoy|realmente", "Ben|dururum|tamamlayıcı: durmak|ve|sorarım|kendime|ne|önemli|bugün|gerçekten"],
     ["Yo|pongo|tres|prioridades|y|tacho|el|resto", "Ben|koyarım|üç|öncelik|ve|çizerim|-|geri kalan"],
     ["Estas|tres|cosas|se hacen|realmente|hechas|esta vez|correctamente", "Bu|üç|şey|olur|gerçekten|yapılmış|bu sefer|doğru şekilde"],
-    ["Ello|resulta|se|complemento: resultar|el|agobio|había (auxiliar)|nunca|con|el|trabajo|a|ver", "O|çıkar|kendini|tamamlayıcı: ortaya çıkmak|-|bunalma|sahipti (yardımcı)|asla|ile|-|iş|-mek|ilgisi olmak"],
+    ["Ello|resulta|se|complemento: resultar|el|agobio|había (auxiliar)|nunca|con|el|trabajo|a|ver", "O|çıkar|kendini|tamamlayıcı: ortaya çıkmak|-|bunalma|-mıştı (yardımcı)|asla|ile|-|iş|-mek|ilgisi olmak"],
   ],
   "story-137": [
     ["Yo|soy|a los libros de autoayuda|hacia|por principio|profundamente|cínico", "Ben|-im|kişisel gelişim kitapları|karşı|prensip olarak|derinden|alaycı"],
@@ -113,7 +113,7 @@ export const glosses = {
   "story-138": [
     ["En|mis|veinte|fui|yo|completamente|imprudentemente|con|dinero|complemento: manejar", "-de|benim|yirmi|gittim|ben|tamamen|düşüncesizce|ile|para|tamamlayıcı: harcamak"],
     ["Yo|gasté|primero|complemento: gastar|y|pensé|nunca|en ello|complemento: pensar", "Ben|harcadım|önce|tamamlayıcı: harcamak|ve|düşündüm|asla|bunun üzerine|tamamlayıcı: düşünmek"],
-    ["Mi|mayor|yo|habría (auxiliar)|esta|versión|sinceramente|dicho|imprudente|llamado", "Benim|daha yaşlı|ben|-mış olurdum (yardımcı)|bu|versiyon|dürüst olmak|söylenirse|düşüncesiz|dedim"],
+    ["Mi|mayor|yo|habría (auxiliar)|esta|versión|sinceramente|dicho|imprudente|llamado", "Benim|daha yaşlı|ben|-mış olurdum (yardımcı)|bu|versiyon|dürüst olmak|söylenirse|düşüncesiz|adlandırmış"],
     ["Lentamente|sin|ello|a|notar|empezó|se|algo|a|cambiar", "Yavaş yavaş|-meden|onu|-mek|fark etmek|başladı|kendini|bir şey|-mek|değişmek"],
     ["Yo|empecé|complemento: empezar|a|ahorrar|y|leí|facturas|realmente|antes de que|yo|las|pagara", "Ben|başladım|tamamlayıcı: başlamak|-mek|biriktirmek|ve|okudum|faturalar|gerçekten|-meden önce|ben|onları|ödedim"],
     ["Mis|amigos|llamaron|me|en broma|el|responsable", "Benim|arkadaşlar|dedi|bana|alay ederek|-|sorumlu"],

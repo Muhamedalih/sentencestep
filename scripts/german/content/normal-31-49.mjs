@@ -76,8 +76,8 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Mein Chef bot mir die Beförderung an, nach der ich jahrelang gestrebt hatte", gl: ["الخاص بي","المدير","عرض","لي","الـ","الترقية","تكملة: عرض","نحو","التي","أنا","لسنوات","سعيتُ","كان لديّ (مساعد)"] },
       { src: "s2", de: "Sie brachte einen größeren Titel, das doppelte Gehalt und ständiges Reisen mit sich", gl: ["هي","جلبت","واحداً","أكبر","لقب","الـ","المضاعف","راتب","و","دائم","سفر","تكملة: جلب","نفسها"] },
-      { src: "s3", de: "Sie anzunehmen hätte bedeutet, das meiste vom ersten Lebensjahr meiner Tochter zu verpassen", gl: ["إياها","أن أقبل","لكان لديه (مساعد)","يعني","الـ","الأكثر","من الـ","الأول","عام من العمر","الخاصة بي","ابنة","لـ","أفوّت"] },
-      { src: "s4", de: "Alle um mich herum nahmen an, ich würde sofort zusagen", gl: ["الجميع","حول","إياي","تكملة: حول","افترضوا","تكملة: افترض","أنا","كان سـ (مساعد)","فوراً","أوافق"] },
+      { src: "s3", de: "Sie anzunehmen hätte bedeutet, das meiste vom ersten Lebensjahr meiner Tochter zu verpassen", gl: ["إياها","أن أقبل","لكان (مساعد)","يعني","الـ","الأكثر","من الـ","الأول","عام من العمر","الخاصة بي","ابنة","لـ","أفوّت"] },
+      { src: "s4", de: "Alle um mich herum nahmen an, ich würde sofort zusagen", gl: ["الجميع","حول","ـي","تكملة: حول","افترضوا","تكملة: افترض","أنا","كان سـ (مساعد)","فوراً","أوافق"] },
       { src: "s5", de: "Ich verbrachte ein ganzes Wochenende damit, sinnlose Listen mit Für und Wider zu schreiben", gl: ["أنا","قضيتُ","واحدة","كاملة","عطلة نهاية الأسبوع","في ذلك","عديمة الجدوى","قوائم","بـ","المؤيدات","و","المعارضات","لـ","أكتب"] },
       { src: "s6", de: "Tief im Inneren wusste ich längst, was mir wichtiger war", gl: ["عميقاً","في الـ","الداخل","عرفتُ","أنا","منذ زمن","ما","لي","أهم","كان"] },
       { src: "s7", de: "Ich lehnte ab, und mein Chef sah wirklich verwirrt aus", gl: ["أنا","رفضتُ","تكملة: رفض","و","الخاص بي","المدير","بدا","حقاً","مرتبكاً","تكملة: بدا"] },
@@ -91,7 +91,7 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Ich hatte dieses Vorstellungsgespräch fast eine Woche lang gefürchtet", gl: ["أنا","كان لديّ (مساعد)","هذه","مقابلة عمل","تقريباً","واحدة","أسبوع","طوال","خشيتُ"] },
       { src: "s2", de: "Zehn Minuten vor dem Beginn schrieb der Personaler, um den Termin zu verschieben", gl: ["عشر","دقائق","قبل","الـ","بداية","كتب","الـ","مسؤول التوظيف","لكي","الـ","الموعد","لـ","أؤجل"] },
-      { src: "s3", de: "Ein Teil von mir war erleichtert, ein anderer seltsam enttäuscht", gl: ["واحد","جزء","من","أنا","كان","مرتاحاً","واحد","آخر","بشكل غريب","خائب الأمل"] },
+      { src: "s3", de: "Ein Teil von mir war erleichtert, ein anderer seltsam enttäuscht", gl: ["واحد","جزء","من","مني","كان","مرتاحاً","واحد","آخر","بشكل غريب","خائب الأمل"] },
       { src: "s4", de: "Ich merkte, dass ich nur routiniert gehandelt hatte, statt wirklich dabei zu sein", gl: ["أنا","لاحظتُ","أنّ","أنا","فقط","بشكل روتيني","تصرفتُ","كان لديّ (مساعد)","بدلاً من أن","حقاً","معهم","لـ","أكون"] },
       { src: "s5", de: "An diesem Abend setzte ich mich hin und schrieb meinen ganzen Lebenslauf neu", gl: ["في","هذا","مساء","جلستُ","أنا","نفسي","تكملة: جلس","و","كتبتُ","الخاص بي","كامل","سيرة ذاتية","من جديد"] },
       { src: "s6", de: "Ich hörte auf, ihn mit Schlagwörtern aufzublähen, und konzentrierte mich auf das, was ich wirklich gebaut hatte", gl: ["أنا","توقفتُ","تكملة: توقف","إياه","بـ","كلمات رنانة","أن أنفخه","و","ركّزتُ","نفسي","على","ذلك","ما","أنا","فعلاً","بنيتُ","كان لديّ (مساعد)"] },

@@ -105,7 +105,7 @@ export const lessons = [
       { src: "s1", de: "Ich vergesse ständig Namen.", gl: ["أنا","أنسى","باستمرار","أسماء"] },
       { src: "s2", de: "Auf der Party winkt mir jemand zu.", gl: ["في","الـ","حفلة","يلوّح","لي","أحدهم","تكملة: لوّح"] },
       { src: "s3", de: "Ich habe keine Ahnung, wer das ist.", gl: ["أنا","لدي","لا","فكرة","من","هذا","يكون"] },
-      { src: "s4", de: "Ich tue so, als erinnerte ich mich perfekt an ihn.", gl: ["أنا","أفعل","هكذا","كأنّ","أتذكر","أنا","نفسي","بشكل مثالي","إلى","إياه"] },
+      { src: "s4", de: "Ich tue so, als erinnerte ich mich perfekt an ihn.", gl: ["أنا","أفعل","هكذا","كأنّ","أتذكر","أنا","نفسي","بشكل مثالي","إلى","ـه"] },
       { src: "s5", de: "„Hey... du!“ Cool, oder?", gl: ["مرحباً","أنت","رائع","أليس كذلك"] },
       { src: "s6", de: "Er lacht: „Du hast meinen Namen schon wieder vergessen.“", gl: ["هو","يضحك","أنت","لديك (مساعد)","الخاص بي","اسم","بالفعل","مجدداً","نسيتَ"] },
       { src: "s7", de: "Schuldig. Ich vergesse es immer.", gl: ["مذنب","أنا","أنسى","إياه","دائماً"] },

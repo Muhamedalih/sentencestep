@@ -58,7 +58,7 @@ export const lessons = [
   { sourceId: "story-120", title: "Alte Fotos", description: "Ein altes Fotoalbum taucht auf, und die Nostalgie fällt sanfter aus als erwartet.",
     sentences: [
       { src: "s1", de: "Ich stoße zufällig auf ein altes Fotoalbum.", gl: ["أنا","أعثر","بالصدفة","على","واحد","قديم","ألبوم صور"] },
-      { src: "s2", de: "Jedes Bild macht mich nostalgisch.", gl: ["كل","صورة","تجعل","إياي","حنيناً"] },
+      { src: "s2", de: "Jedes Bild macht mich nostalgisch.", gl: ["كل","صورة","تجعل","إياي","شديد الحنين"] },
       { src: "s3", de: "Wir sahen damals so jung aus.", gl: ["نحن","بدونا","حينها","هكذا","صغاراً","تكملة: بدا"] },
       { src: "s4", de: "Manche Erinnerungen lassen einen nicht los.", gl: ["بعض","ذكريات","تدع","أحداً","لا","تكملة: ترك"] },
       { src: "s5", de: "Früher dachte ich, ich würde nie loslassen.", gl: ["سابقاً","ظننتُ","أنا","أنا","كان سـ (مساعد)","أبداً","أتخلى"] },
@@ -123,7 +123,7 @@ export const lessons = [
   { sourceId: "story-126", title: "Kleine Freuden", description: "Ein schmerzhafter Liebeskummer verliert langsam seinen Griff, mit jeder kleinen alltäglichen Freude.",
     sentences: [
       { src: "s1", de: "Ich hatte monatelang ein völlig gebrochenes Herz.", gl: ["أنا","كان لدي","لأشهر","واحد","تماماً","مكسور","قلب"] },
-      { src: "s2", de: "Jedes Lied im Radio erinnerte mich schmerzhaft an ihn.", gl: ["كل","أغنية","في الـ","راديو","ذكّرت","إياي","بألم","بـ","إياه"] },
+      { src: "s2", de: "Jedes Lied im Radio erinnerte mich schmerzhaft an ihn.", gl: ["كل","أغنية","في الـ","راديو","ذكّرت","إياي","بألم","بـ","ـه"] },
       { src: "s3", de: "Meine Freunde sagten mir ständig, ich solle loslassen.", gl: ["الخاصون بي","أصدقاء","قالوا","لي","باستمرار","أنا","ينبغي","أتخلى"] },
       { src: "s4", de: "Loszulassen fühlte sich ehrlich gesagt lange unmöglich an.", gl: ["أن أتخلى","بدا","نفسه","بصراحة","تقال","طويلاً","مستحيلاً","تكملة: بدا"] },
       { src: "s5", de: "Langsam fing ich wieder an, kleine Dinge zu genießen.", gl: ["ببطء","بدأتُ","أنا","مجدداً","تكملة: بدأ","صغيرة","أشياء","لـ","أستمتع"] },

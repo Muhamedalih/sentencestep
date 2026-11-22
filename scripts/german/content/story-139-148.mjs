@@ -60,7 +60,7 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Ich baue den ganzen Nachmittag eine Sandburg.", gl: ["أنا","أبني","الـ","كامل","بعد الظهر","واحدة","قلعة رمل"] },
       { src: "s2", de: "Hohe Türme. Eine kleine Fahne obendrauf.", gl: ["عالية","أبراج","واحدة","صغيرة","علم","في الأعلى"] },
-      { src: "s3", de: "Ich trete zurück, stolz auf meine Arbeit.", gl: ["أنا","أخطو","تكملة: تراجع","فخور","على","الخاصة بي","عمل"] },
+      { src: "s3", de: "Ich trete zurück, stolz auf meine Arbeit.", gl: ["أنا","أخطو","تكملة: تراجع","فخور","بـ","الخاصة بي","عمل"] },
       { src: "s4", de: "Eine große Welle rollt langsam heran.", gl: ["واحدة","كبيرة","موجة","تتدحرج","ببطء","تكملة: اقتربت"] },
       { src: "s5", de: "Sie berührt den Rand der Burg.", gl: ["هي","تلمس","الـ","حافة","لـ الـ","قلعة"] },
       { src: "s6", de: "Dann nimmt sie das ganze Ding mit.", gl: ["ثم","تأخذ","هي","الـ","كامل","شيء","تكملة: أخذ معها"] },
@@ -69,7 +69,7 @@ export const lessons = [
     ] },
   { sourceId: "story-145", title: "Ein goldenes Blatt", description: "Ein einzelnes fallendes Blatt zu fangen macht aus einem gewöhnlichen Herbstspaziergang einen kleinen Sieg.",
     sentences: [
-      { src: "s1", de: "Herbstblätter fallen überall um mich herum.", gl: ["أوراق الخريف","تسقط","في كل مكان","حول","إياي","تكملة: حول"] },
+      { src: "s1", de: "Herbstblätter fallen überall um mich herum.", gl: ["أوراق الخريف","تسقط","في كل مكان","حول","ـي","تكملة: حول"] },
       { src: "s2", de: "Rote. Orangefarbene. Gelbe.", gl: ["حمراء","برتقالية","صفراء"] },
       { src: "s3", de: "Ich versuche, eins in der Luft zu fangen.", gl: ["أنا","أحاول","واحدة","في","الـ","هواء","لـ","أمسك"] },
       { src: "s4", de: "Es rutscht mir direkt durch die Finger.", gl: ["هو","ينزلق","لي","مباشرة","عبر","الـ","أصابع"] },

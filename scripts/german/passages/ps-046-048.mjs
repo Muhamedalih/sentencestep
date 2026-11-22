@@ -30,7 +30,7 @@ export const passages = [
         "Jörg sagte ihr nicht, sie solle sie tragen. Er sagte überhaupt nichts Weises. Er nickte, und die Stille, die folgte, war eine freundliche.",
       ], questions: [{ prompt: "Warum hatte Ruth aufgehört, ihre Hörgeräte zu tragen?", options: ["Nach dem Tod ihres Mannes wollte sie die Welt nicht mehr hören", "Sie waren kaputt", "Sie waren zu teuer"] }] },
       { title: "Eine schöne Stimme", lines: [
-        "Ich sage Ihnen nicht, was Sie tun sollen. Aber man sagt mir, ich hätte eine ziemlich schöne Stimme, und sie ist an jemanden verschwendet, der sie nicht hören kann.",
+        "Ich sage Ihnen nicht, was Sie tun sollen. Aber man hat mir gesagt, ich hätte eine ziemlich schöne Stimme, und sie ist an jemanden verschwendet, der sie nicht hören kann.",
         "Ruth lachte, ein echtes Lachen, das erste seit langer Zeit. Dann öffnete sie die Handtasche.",
         "Die Hörgeräte waren klein und ein wenig verstaubt. Sie putzte sie am Ärmel und setzte sie ein, eines nach dem anderen.",
         "Einen Moment lang stürmte die Welt herein: die Blätter, ein ferner Rasenmäher, ein Kind, das auf einem Fahrrad schrie. Es war zu viel, und es war wunderbar.",
@@ -65,7 +65,7 @@ export const passages = [
       { title: "Raum zwölf", lines: [
         "In der Woche darauf fand Daniel einen Englischkurs im Gemeindezentrum. Er fand dienstags und donnerstags abends statt, in Raum zwölf.",
         "Am ersten Abend war er die älteste Person im Raum. Die anderen Teilnehmer waren zwanzig Jahre alt.",
-        "Vielleicht war das ein Fehler.",
+        "Vielleicht ist das ein Fehler.",
         "Willkommen, Daniel. In diesem Raum ist niemand zu alt, und niemand ist zu langsam.",
         "Er kaufte ein kleines Notizbuch und schrieb jedes neue Wort mit einem Bild auf, damit er es nicht vergaß.",
         "Es war schwer. Nach einem langen Arbeitstag fielen ihm im Kurs die Augen zu. Einmal schlief er sogar ein.",
@@ -91,7 +91,7 @@ export const passages = [
         { prompt: "Warum ging Daniel in den Englischkurs?", options: ["Er wollte mit Emma sprechen", "Er brauchte ihn für seine Arbeit", "Ein Freund hatte ihn darum gebeten"] },
       ] },
     ] },
-  { sourceId: "the-phone-rings", title: "Das Telefon klingelt", summary: "Ryan hat eine neue Arbeit, ein großes Telefon und drei kleine Sätze.", speakers: { "Ms. Cole": "Frau Cole", "Mr. Garcia": "Herr Garcia" },
+  { sourceId: "the-phone-rings", title: "Das Telefon klingelt", summary: "Ryan hat eine neue Stelle, ein großes Telefon und drei kleine Sätze.", speakers: { "Ms. Cole": "Frau Cole", "Mr. Garcia": "Herr Garcia" },
     sections: [
       { title: "Eine neue Arbeit", lines: [
         "Heute ist Ryans erster Tag in einem kleinen Büro.",

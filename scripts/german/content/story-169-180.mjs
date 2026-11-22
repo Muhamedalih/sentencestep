@@ -5,8 +5,8 @@ export const lessons = [
     sentences: [
       { src: "s1", de: "Eine Anmeldeliste für einen Tanzkurs hängt an der Wand.", gl: ["واحدة","قائمة تسجيل","لـ","واحد","حصة رقص","معلقة","على","الـ","حائط"] },
       { src: "s2", de: "Ich zögere jedes Mal, wenn ich daran vorbeigehe.", gl: ["أنا","أتردد","كل","مرة","عندما","أنا","بجانبها","أمر"] },
-      { src: "s3", de: "Woche für Woche zögere ich und gehe weiter.", gl: ["أسبوع","تلو","أسبوع","أتردد","أنا","و","أمشي","بعيداً"] },
-      { src: "s4", de: "Meine Freundin nimmt schließlich für mich den Stift.", gl: ["الخاصة بي","صديقة","تأخذ","أخيراً","لأجل","إياي","الـ","قلم"] },
+      { src: "s3", de: "Woche für Woche zögere ich und gehe weiter.", gl: ["أسبوع","تلو","أسبوع","أتردد","أنا","و","أمشي","تكملة: واصل"] },
+      { src: "s4", de: "Meine Freundin nimmt schließlich für mich den Stift.", gl: ["الخاصة بي","صديقة","تأخذ","أخيراً","لأجل","ـي","الـ","قلم"] },
       { src: "s5", de: "„Leg dich einfach fest“, sagt sie und reicht ihn mir.", gl: ["ضع","نفسك","ببساطة","تكملة: التزم","تقول","هي","و","تمد","إياه","لي"] },
       { src: "s6", de: "Ein letztes Mal zögere ich, dann unterschreibe ich.", gl: ["واحدة","أخيرة","مرة","أتردد","أنا","ثم","أوقّع","أنا"] },
       { src: "s7", de: "Der erste Kurs ist peinlich, aber ich bleibe trotzdem dabei.", gl: ["الـ","الأول","حصة","هي","محرجة","لكن","أنا","أبقى","مع ذلك","معهم"] },
