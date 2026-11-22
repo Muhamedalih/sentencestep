@@ -28,6 +28,7 @@ import {
   makeClip,
   planLesson,
   previewClip,
+  profileSample,
   registerVoice,
   saveSettings,
   siteVoices,
@@ -164,7 +165,7 @@ function send(
   type = "application/json; charset=utf-8",
 ) {
   res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
-  res.end(typeof body === "string" ? body : JSON.stringify(body));
+  res.end(typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 }
 
 async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
@@ -227,6 +228,13 @@ async function route(req: IncomingMessage, res: ServerResponse) {
         unregistered: profiles.filter((p) => !known.has(p.id) && !/^demo/i.test(p.id)),
         history: readHistory().slice(-12).reverse(),
       });
+    }
+    if (req.method === "GET" && path === "/api/sample") {
+      const profile = url.searchParams.get("profile") ?? "";
+      if (!ID.test(profile)) throw new Error("صوت غير صالح.");
+      if (!(await voiceStudioHealth())) throw new Error("برنامج VoiceStudio غير مفتوح.");
+      if (job?.state === "running") throw new Error("يوجد توليد شغّال الآن؛ انتظر انتهاءه.");
+      return send(res, 200, await profileSample(profile), "audio/mpeg");
     }
     if (req.method === "GET" && path === "/api/lessons") {
       const [lessons, voices] = await Promise.all([

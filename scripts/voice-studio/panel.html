@@ -84,7 +84,9 @@
     <div class="grid2">
       <label>سرعة الجمل <b id="sSpeedV">1.00×</b><input id="sSpeed" type="range" min="0.6" max="1.4" step="0.05" value="1"></label>
       <label>سرعة الكلمات المفردة <b id="wSpeedV">1.00×</b><input id="wSpeed" type="range" min="0.6" max="1.4" step="0.05" value="1"></label>
-      <label>النبرة (تجريبية)
+      <label>حدّة الصوت (أغلظ ↔ أرفع) <b id="pitchV">0 نصف نغمة</b><input id="pitch" type="range" min="-6" max="6" step="0.5" value="0"></label>
+      <label>مستوى الصوت (أعلى ↔ أهدأ) <b id="volV">0 dB</b><input id="vol" type="range" min="-9" max="9" step="0.5" value="0"></label>
+      <label>النبرة والأسلوب (تجريبية)
         <select id="tone">
           <option value="">بلا (كما هو)</option>
           <option value="low pitch">منخفضة</option>
@@ -94,11 +96,16 @@
           <option value="whisper">همس</option>
         </select>
       </label>
+      <div>
+        <label style="display:block"><input id="evenLevel" type="checkbox"> توحيد مستوى الصوت بين كل المقاطع</label>
+        <label style="display:block"><input id="clarity" type="checkbox"> تقوية الوضوح (يخفف الطنين ويثبّت القمم)</label>
+      </div>
       <details style="margin:0"><summary>متقدم</summary>
         <label>الجودة (خطوات التوليد)
           <select id="steps"><option value="">افتراضي</option><option value="24">أعلى (أبطأ قليلاً)</option><option value="32">عالية (أبطأ)</option><option value="48">أعلى جداً (أبطأ 3 مرات)</option></select>
         </label>
-        <label>الالتزام بالنص والصوت
+        <label style="display:block"><input id="denoise" type="checkbox" checked> تنظيف الضجيج بواسطة المحرّك</label>
+        <label>الثبات والالتزام بالنص وبالصوت الأصلي
           <select id="guid"><option value="">افتراضي</option><option value="1.5">أخف</option><option value="2.5">متوسط</option><option value="3.5">أشد</option></select>
         </label>
       </details>
@@ -174,18 +181,35 @@ async function loadStatus() {
   $("chip").textContent = s.voiceStudio ? `VoiceStudio شغّال · ${s.voiceStudio.device}` : "VoiceStudio غير مفتوح — افتحه أولاً";
   const keep = state.voiceId;
   $("voices").innerHTML = s.voices.length
-    ? s.voices.map((v) => `<div class="voice ${v.id === keep ? "sel" : ""}" data-id="${esc(v.id)}"><b>${esc(v.name)}</b><small>${v.gender === "female" ? "أنثى" : "ذكر"} · ${esc(v.id)}</small><div style="margin-top:6px"><audio controls preload="none" src="http://127.0.0.1:3900/profiles/${esc(v.provider_voice_id)}/audio"></audio></div></div>`).join("")
+    ? s.voices.map((v) => `<div class="voice ${v.id === keep ? "sel" : ""}" data-id="${esc(v.id)}"><b>${esc(v.name)}</b><small>${v.gender === "female" ? "أنثى" : "ذكر"} · ${esc(v.id)}</small><div style="margin-top:6px"><button data-sample="${esc(v.provider_voice_id)}">▶ استمع</button> <span class="muted" data-samplemsg="${esc(v.provider_voice_id)}"></span></div></div>`).join("")
     : `<div class="muted">لا يوجد صوت مسجّل بعد. افتح «إضافة صوت جديد» أدناه.</div>`;
-  document.querySelectorAll(".voice").forEach((el) => el.addEventListener("click", (e) => { if (e.target.tagName === "AUDIO") return; state.voiceId = el.dataset.id; document.querySelectorAll(".voice").forEach((x) => x.classList.toggle("sel", x === el)); loadVoiceSettings(); refreshLesson(); }));
+  document.querySelectorAll(".voice").forEach((el) => el.addEventListener("click", (e) => { if (e.target.closest("[data-sample]")) return; state.voiceId = el.dataset.id; document.querySelectorAll(".voice").forEach((x) => x.classList.toggle("sel", x === el)); loadVoiceSettings(); refreshLesson(); }));
   $("unreg").innerHTML = s.unregistered.length
-    ? s.unregistered.map((p) => `<div class="row" style="margin:8px 0"><b>${esc(p.name)}</b><span class="gender"><label><input type="radio" name="g-${esc(p.id)}" value="female"> أنثى</label><label><input type="radio" name="g-${esc(p.id)}" value="male"> ذكر</label></span><button data-reg="${esc(p.id)}">أضفه للموقع</button></div>`).join("")
+    ? s.unregistered.map((p) => `<div class="row" style="margin:8px 0"><b>${esc(p.name)}</b><button data-sample="${esc(p.id)}">▶ استمع</button><span class="muted" data-samplemsg="${esc(p.id)}"></span><span class="gender"><label><input type="radio" name="g-${esc(p.id)}" value="female"> أنثى</label><label><input type="radio" name="g-${esc(p.id)}" value="male"> ذكر</label></span><button data-reg="${esc(p.id)}">أضفه للموقع</button></div>`).join("")
     : `<div class="muted">كل أصوات VoiceStudio مضافة.</div>`;
+  document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("click", () => playSample(b.dataset.sample, b)));
   document.querySelectorAll("[data-reg]").forEach((b) => b.addEventListener("click", async () => {
     const g = document.querySelector(`input[name="g-${b.dataset.reg}"]:checked`);
     if (!g) return alert("اختر أنثى أو ذكر أولاً.");
     try { await api("/api/register-voice", { profileId: b.dataset.reg, gender: g.value }); await loadStatus(); } catch (e) { alert(e.message); }
   }));
   $("hist").innerHTML = s.history.length ? "آخر التغييرات: " + s.history.map((h) => `${esc(h.lessonId)}: ${esc(h.from ?? "—")} ← ${esc(h.to)}${h.undone ? " (تم التراجع)" : ""}`).join(" · ") : "";
+}
+
+let sampleAudio = null;
+async function playSample(id, btn) {
+  const msg = document.querySelector(`[data-samplemsg="${id}"]`);
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "يجري التحضير…"; if (msg) msg.textContent = "أول مرة قد تأخذ حتى دقيقة، بعدها فورية.";
+  try {
+    const res = await fetch("/api/sample?profile=" + encodeURIComponent(id));
+    if (!res.ok) throw new Error((await res.json()).error || "تعذر");
+    const url = URL.createObjectURL(await res.blob());
+    if (sampleAudio) sampleAudio.pause();
+    sampleAudio = new Audio(url); await sampleAudio.play();
+    if (msg) msg.textContent = "";
+  } catch (e) { if (msg) msg.textContent = e.message; }
+  btn.disabled = false; btn.textContent = label;
 }
 
 async function loadLessons() { state.lessons = await api("/api/lessons"); renderLessons(); }
@@ -240,21 +264,25 @@ async function pollJob() {
 }
 
 /* ---- voice settings + trying them ---- */
-const DEFAULTS = { sentenceSpeed: 1, wordSpeed: 1, tone: "", steps: null, guidance: null };
+const DEFAULTS = { sentenceSpeed: 1, wordSpeed: 1, tone: "", steps: null, guidance: null, pitch: 0, volumeDb: 0, evenLevel: false, clarity: false, denoise: true };
+const fmtSt = (n) => (Number(n) > 0 ? "+" : "") + Number(n) + " نصف نغمة";
+const fmtDb = (n) => (Number(n) > 0 ? "+" : "") + Number(n) + " dB";
 const TONE_LABEL = { "": "بلا", "low pitch": "منخفضة", "very low pitch": "منخفضة جداً", "high pitch": "عالية", "very high pitch": "عالية جداً", whisper: "همس" };
 const fmtX = (n) => Number(n).toFixed(2) + "×";
 state.previews = []; state.ptextDirty = false;
 
 function readSettings() {
-  return { sentenceSpeed: Number($("sSpeed").value), wordSpeed: Number($("wSpeed").value), tone: $("tone").value, steps: $("steps").value ? Number($("steps").value) : null, guidance: $("guid").value ? Number($("guid").value) : null };
+  return { sentenceSpeed: Number($("sSpeed").value), wordSpeed: Number($("wSpeed").value), tone: $("tone").value, steps: $("steps").value ? Number($("steps").value) : null, guidance: $("guid").value ? Number($("guid").value) : null, pitch: Number($("pitch").value), volumeDb: Number($("vol").value), evenLevel: $("evenLevel").checked, clarity: $("clarity").checked, denoise: $("denoise").checked };
 }
 function showSettings(s) {
   $("sSpeed").value = s.sentenceSpeed; $("wSpeed").value = s.wordSpeed; $("tone").value = s.tone || "";
   $("steps").value = s.steps ?? ""; $("guid").value = s.guidance ?? "";
   $("sSpeedV").textContent = fmtX(s.sentenceSpeed); $("wSpeedV").textContent = fmtX(s.wordSpeed);
+  $("pitch").value = s.pitch ?? 0; $("vol").value = s.volumeDb ?? 0; $("evenLevel").checked = !!s.evenLevel; $("clarity").checked = !!s.clarity; $("denoise").checked = s.denoise !== false;
+  $("pitchV").textContent = fmtSt(s.pitch ?? 0); $("volV").textContent = fmtDb(s.volumeDb ?? 0);
 }
 function summary(s) {
-  return `جمل ${fmtX(s.sentenceSpeed)} · كلمات ${fmtX(s.wordSpeed)} · نبرة ${TONE_LABEL[s.tone || ""]}${s.steps ? " · جودة " + s.steps : ""}${s.guidance ? " · التزام " + s.guidance : ""}`;
+  return `جمل ${fmtX(s.sentenceSpeed)} · كلمات ${fmtX(s.wordSpeed)} · نبرة ${TONE_LABEL[s.tone || ""]}${s.pitch ? " · حدّة " + fmtSt(s.pitch) : ""}${s.volumeDb ? " · مستوى " + fmtDb(s.volumeDb) : ""}${s.evenLevel ? " · توحيد المستوى" : ""}${s.clarity ? " · وضوح" : ""}${s.denoise === false ? " · بلا تنظيف" : ""}${s.steps ? " · جودة " + s.steps : ""}${s.guidance ? " · التزام " + s.guidance : ""}`;
 }
 async function loadVoiceSettings() {
   if (!state.voiceId) return;
@@ -271,6 +299,8 @@ function fillPreviewText() {
   if (first) $("ptext").value = first.text;
 }
 ["sSpeed", "wSpeed"].forEach((id) => $(id).addEventListener("input", () => { $("sSpeedV").textContent = fmtX($("sSpeed").value); $("wSpeedV").textContent = fmtX($("wSpeed").value); }));
+$("pitch").addEventListener("input", () => { $("pitchV").textContent = fmtSt($("pitch").value); });
+$("vol").addEventListener("input", () => { $("volV").textContent = fmtDb($("vol").value); });
 $("ptext").addEventListener("input", () => { state.ptextDirty = true; });
 document.querySelectorAll('input[name="pkind"]').forEach((r) => r.addEventListener("change", () => { state.ptextDirty = false; fillPreviewText(); }));
 $("ptry").addEventListener("click", async () => {
@@ -318,7 +348,7 @@ $("undo").addEventListener("click", async () => {
   try { const r = await api("/api/undo-voice", { lessonId: state.lessonId }); say($("usemsg"), `تم التراجع. صوت الدرس الآن: ${r.restored ?? "بدون"}.`, "ok"); await loadLessons(); await loadStatus(); refreshLesson(); } catch (e) { say($("usemsg"), e.message, "bad"); }
 });
 
-loadStatus(); loadLessons(); setInterval(pollJob, 1200); setInterval(() => { if (![...document.querySelectorAll("audio")].some((a) => !a.paused)) loadStatus(); }, 30000);
+loadStatus(); loadLessons(); setInterval(pollJob, 1200); setInterval(() => { if (![...document.querySelectorAll("audio")].some((a) => !a.paused) && !document.querySelector("[data-sample]:disabled") && !(sampleAudio && !sampleAudio.paused)) loadStatus(); }, 30000);
 </script>
 </body>
 </html>
