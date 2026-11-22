@@ -1,3 +1,4 @@
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -98,11 +99,19 @@ export default async function ModeLessonsPage({ params }: { params: Promise<{ mo
   // An admin also sees the lessons still in draft, after the published ones, so a new lesson can
   // be tried in the real list before it is published. Learners (and an admin who switched to the
   // learner's view) never get this: the drafts come from their own uncached read.
+  // In German (permission germanTrack, an admin's choice) the list is the German lessons instead,
+  // which are all drafts for now: the English ones are left out.
+  const language = isAdminUser ? await getLearnLanguage() : "en";
   const draftUnits =
     mode === "normal" && isAdminUser && !(await isLearnerViewOn())
-      ? await getDraftLessonSummaries(mode, locale ?? undefined).catch(() => [])
+      ? await getDraftLessonSummaries(mode, locale ?? undefined, language).catch(() => [])
       : [];
-  const listedUnits = draftUnits.length > 0 ? [...units, ...draftUnits] : units;
+  const listedUnits =
+    language === "de" && mode === "normal"
+      ? draftUnits
+      : draftUnits.length > 0
+        ? [...units, ...draftUnits]
+        : units;
 
   return (
     <div className="mx-auto max-w-7xl px-6 pt-12 pb-12 sm:pt-16 sm:pb-16">

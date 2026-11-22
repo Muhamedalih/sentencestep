@@ -6,6 +6,8 @@ import { Bookmark, Menu, Trophy, UserRound, X } from "lucide-react";
 
 import { AccountMenu } from "@/components/app/account-menu";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
+import { LearnLanguageChip } from "@/components/app/learn-language-chip";
+import type { TargetLanguage } from "@/lib/learn-language";
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -27,8 +29,11 @@ import type { CurrentUser } from "@/lib/supabase/auth";
 export function AppHeader({
   user,
   savedCount,
+  learnLanguage,
 }: {
   user: CurrentUser | null;
+  /** The learning-language chip (permission germanTrack, Admins): the current language, or undefined for no chip. */
+  learnLanguage?: TargetLanguage;
   /** This learner's saved-sentence count, for the bookmark icon's badge — 0/undefined renders no badge at all. */
   savedCount?: number;
 }) {
@@ -86,6 +91,7 @@ export function AppHeader({
             />
           )}
         </div>
+        {learnLanguage && <LearnLanguageChip current={learnLanguage} />}
         <LanguageSwitcher bare />
         <ThemeToggle />
       </div>

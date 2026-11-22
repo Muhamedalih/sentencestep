@@ -30,3 +30,7 @@ export function speechLangFor(language: TargetLanguage): string {
 export function foldsDiacritics(language: TargetLanguage): boolean {
   return language === "de";
 }
+
+/** The cookie that holds an admin's chosen learning language on this browser (permission germanTrack). */
+export const LEARN_LANGUAGE_COOKIE = "ss_learn_lang";
+export const LEARN_LANGUAGE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;

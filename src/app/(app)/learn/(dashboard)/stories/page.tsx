@@ -1,3 +1,4 @@
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 
 import { ReportProblemButton } from "@/components/app/report-problem-button";
@@ -47,11 +48,19 @@ export default async function StoriesLibraryPage() {
   // An admin also sees the stories that are still drafts (the Expert level while it is being narrated),
   // so they can be opened and tried in the real list before they are published. Learners, and an admin
   // who switched to the learner's view, never get this: the drafts come from an uncached, session-aware read.
+  // In German (permission germanTrack, an admin's choice) the list is the German stories instead,
+  // which are all drafts for now: the English ones are left out.
+  const language = isAdminUser ? await getLearnLanguage() : "en";
   const draftLessons =
     isAdminUser && !learnerView
-      ? await getDraftLessonSummaries("stories", locale ?? undefined).catch(() => [])
+      ? await getDraftLessonSummaries("stories", locale ?? undefined, language).catch(() => [])
       : [];
-  const listedLessons = draftLessons.length > 0 ? [...lessons, ...draftLessons] : lessons;
+  const listedLessons =
+    language === "de"
+      ? draftLessons
+      : draftLessons.length > 0
+        ? [...lessons, ...draftLessons]
+        : lessons;
   // The taste of the day (see lib/hybrid): a free learner's story for today is open in the grid too.
   const openTodayId =
     user && features.rollouts.hybridOffers && !isPremiumUser
