@@ -3,7 +3,7 @@ export const passages = [
   { sourceId: "say-that-again", title: "Sag das noch mal", summary: "Jörgs Hörgeräte pfeifen. Ruths bleiben in ihrer Handtasche.", speakers: { "George": "Jörg" },
     sections: [
       { title: "Der falsche Stuhl", lines: [
-        "Zehn Jahre lang hatte Jörg in der Klinik auf seinen Hörtest immer auf demselben Stuhl gewartet. In diesem Frühling saß eine kleine Frau in einer blauen Strickjacke darauf.",
+        "Zehn Jahre lang hatte Jörg in der Klinik immer auf demselben Stuhl auf seinen Hörtest gewartet. In diesem Frühling saß eine kleine Frau in einer blauen Strickjacke darauf.",
         "Er nahm stattdessen den Stuhl neben ihrem. Sie beugte sich zu ihm, eine Hand hinter dem Ohr, und runzelte höflich die Stirn.",
         "Guten Morgen. Ich bin Jörg.",
         "Berg? Wie der Berg? Was für ein ungewöhnlicher Name!",
@@ -27,19 +27,19 @@ export const passages = [
         "Ich habe auch so ein Paar. Sie sind hier drin. Ich trage sie seit drei Jahren überallhin mit, und ich habe sie nie getragen.",
         "Darf ich fragen, warum?",
         "Mein Mann ist gestorben, und das Haus wurde still, und ich merkte, dass es mir nichts ausmachte. Die Welt war laut, und niemand darin war jemand, den ich hören wollte.",
-        "Jörg sagte ihr nicht, sie solle sie tragen. Er sagte überhaupt nichts Weises. Er nickte, und die Stille, die folgte, war eine freundliche.",
+        "\"Jörg sagte ihr nicht, sie solle sie tragen. Er sagte überhaupt nichts Kluges. Er nickte, und die Stille, die folgte, war eine freundliche.\"",
       ], questions: [{ prompt: "Warum hatte Ruth aufgehört, ihre Hörgeräte zu tragen?", options: ["Nach dem Tod ihres Mannes wollte sie die Welt nicht mehr hören", "Sie waren kaputt", "Sie waren zu teuer"] }] },
       { title: "Eine schöne Stimme", lines: [
-        "Ich sage Ihnen nicht, was Sie tun sollen. Aber man sagt mir, ich hätte eine ziemlich schöne Stimme, und sie ist an jemanden verschwendet, der sie nicht hören kann.",
+        "\"Ich sage Ihnen nicht, was Sie tun sollen. Aber man hat mir gesagt, ich hätte eine ziemlich schöne Stimme, und die sei an jemanden verschwendet, der sie nicht hören kann.\"",
         "Ruth lachte, ein echtes Lachen, das erste seit langer Zeit. Dann öffnete sie die Handtasche.",
         "Die Hörgeräte waren klein und ein wenig verstaubt. Sie putzte sie am Ärmel und setzte sie ein, eines nach dem anderen.",
         "Einen Moment lang stürmte die Welt herein: die Blätter, ein ferner Rasenmäher, ein Kind, das auf einem Fahrrad schrie. Es war zu viel, und es war wunderbar.",
-        "Und unter alldem war eine Stimme, tiefer und wärmer, als sie sie sich vorgestellt hatte.",
+        "\"Und unter alldem war eine Stimme, tiefer und wärmer, als sie es sich vorgestellt hatte.\"",
         "Hören Sie mich jetzt?",
         "Ja. Oh, ja. Sie hatten recht mit der Stimme.",
       ], questions: [{ prompt: "Wie fühlte sich Ruth, als die Geräusche zurückkamen?", options: ["Wütend und müde", "Überwältigt, aber froh", "Gelangweilt und ruhig"] }] },
       { title: "Noch einmal", lines: [
-        "Jörg holte tief Luft, so wie Menschen es tun, bevor sie in kaltes Wasser springen. Es kostete ihn all seinen Mut.",
+        "\"Jörg holte tief Luft, so wie Menschen es tun, bevor sie in kaltes Wasser springen. Es kostete ihn seinen ganzen Mut.\"",
         "Ich würde Sie gern wiedersehen. Vielleicht nächsten Dienstag. An einem ruhigen Ort.",
         "Jede Silbe erreichte Ruths Ohr klar, als hätte sie jemand mit großer Sorgfalt dorthin gelegt.",
         "Sagen Sie das noch mal.",
@@ -60,12 +60,12 @@ export const passages = [
         "Opa, sieh mal! Meine Zeichnung! Das ist ein Drache mit einem rosa Hut! Gefällt sie dir?",
         "Daniel lächelte und nickte. Er verstand kein einziges Wort.",
         "Opa, warum antwortest du mir nicht?",
-        "In dieser Nacht saß Daniel allein in der Küche. Er liebte Emma über alles. Aber er konnte nicht mit ihr sprechen.",
+        "\"An diesem Abend saß Daniel allein in der Küche. Er liebte Emma über alles. Aber er konnte nicht mit ihr sprechen.\"",
       ], questions: [{ prompt: "Warum antwortete Daniel Emma nicht?", options: ["Er war wütend", "Ihm gefiel die Zeichnung nicht", "Er verstand kein Englisch"] }] },
       { title: "Raum zwölf", lines: [
-        "In der nächsten Woche fand Daniel einen Englischkurs im Gemeindezentrum. Er fand dienstags und donnerstags abends statt, in Raum zwölf.",
+        "In der Woche darauf fand Daniel einen Englischkurs im Gemeindezentrum. Er fand dienstags und donnerstags abends statt, in Raum zwölf.",
         "Am ersten Abend war er die älteste Person im Raum. Die anderen Teilnehmer waren zwanzig Jahre alt.",
-        "Vielleicht war das ein Fehler.",
+        "Vielleicht ist das ein Fehler.",
         "Willkommen, Daniel. In diesem Raum ist niemand zu alt, und niemand ist zu langsam.",
         "Er kaufte ein kleines Notizbuch und schrieb jedes neue Wort mit einem Bild auf, damit er es nicht vergaß.",
         "Es war schwer. Nach einem langen Arbeitstag fielen ihm im Kurs die Augen zu. Einmal schlief er sogar ein.",
@@ -87,11 +87,11 @@ export const passages = [
         "Opa! Du hast alles auf Englisch gesagt!",
         "Ja. Und das ist erst der Anfang.",
       ], questions: [
-        { prompt: "Was bereitete Daniel für den Geburtstag vor?", options: ["Einen großen Kuchen", "Etwas Besonderes zum Sagen, auf Englisch", "Eine Zeichnung eines Drachen"] },
-        { prompt: "Warum ging Daniel in den Englischkurs?", options: ["Er wollte mit Emma sprechen", "Er brauchte es für seine Arbeit", "Ein Freund hatte ihn darum gebeten"] },
+        { prompt: "Was bereitete Daniel für den Geburtstag vor?", options: ["Einen großen Kuchen", "Etwas Besonderes, das er auf Englisch sagen wollte", "Eine Drachenzeichnung"] },
+        { prompt: "Warum ging Daniel in den Englischkurs?", options: ["Er wollte mit Emma sprechen", "Er brauchte ihn für seine Arbeit", "Ein Freund hatte ihn darum gebeten"] },
       ] },
     ] },
-  { sourceId: "the-phone-rings", title: "Das Telefon klingelt", summary: "Ryan hat eine neue Arbeit, ein großes Telefon und drei kleine Sätze.", speakers: { "Ms. Cole": "Frau Cole", "Mr. Garcia": "Herr Garcia" },
+  { sourceId: "the-phone-rings", title: "Das Telefon klingelt", summary: "Ryan hat eine neue Stelle, ein großes Telefon und drei kleine Sätze.", speakers: { "Ms. Cole": "Frau Cole", "Mr. Garcia": "Herr Garcia" },
     sections: [
       { title: "Eine neue Arbeit", lines: [
         "Heute ist Ryans erster Tag in einem kleinen Büro.",

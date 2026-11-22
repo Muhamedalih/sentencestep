@@ -23,7 +23,7 @@ export const passages = [
         "In der nächsten Stunde bekam Mark siebenundachtzig Antworten. Die meisten waren nur eine Zeile lang.",
         "„Beste E-Mail meiner Karriere.“ „Endlich hat es jemand gesagt.“ „Ich trage den Hut auch nicht.“",
         "Mark, du bist ein Held! Drei Leute aus meiner Abteilung haben vor Lachen geweint.",
-        "Mark lachte nicht. Er dachte daran, sich im Bad zu verstecken. Dann dachte er daran, sich in seinem Auto zu verstecken. Dann dachte er daran, sich einen neuen Job zu suchen.",
+        "Mark lachte nicht. Er dachte daran, sich auf der Toilette zu verstecken. Dann dachte er daran, sich in seinem Auto zu verstecken. Dann dachte er daran, sich einen neuen Job zu suchen.",
         "Um zwölf Uhr kam eine neue E-Mail. Der Betreff lautete: „Bitte kommen Sie in mein Büro.“ Sie war von Herrn Whitfield.",
         "Das war's. Ich bin erledigt.",
         "Er ging in den zehnten Stock wie ein Mann auf dem Weg zu seiner eigenen Beerdigung.",
@@ -108,7 +108,7 @@ export const passages = [
       { title: "Greg hat einen Plan", lines: [
         "Du, sieh unter dem Tisch nach. Du, prüf die Bücher. Nora, fass nichts an!",
         "Im dritten Buch fand jemand ein Stück Papier mit drei Zahlen: drei, eins, fünf.",
-        "Eine Telefonnummer! Ruft jemand an.",
+        "Eine Telefonnummer! Jemand soll dort anrufen!",
         "Greg, eine Telefonnummer hat mehr als drei Ziffern.",
         "Dann ist es der Anfang einer Telefonnummer. Sucht weiter!",
         "In der Ecke hob Brian die Hand. Er war ein ruhiger Mann aus der Buchhaltung und sagte auch in Besprechungen nie viel.",
@@ -126,7 +126,7 @@ export const passages = [
       ], questions: [{ prompt: "Was bemerkte Brian?", options: ["Die Wanduhr passte zu den Zahlen auf dem Papier", "Der Timer war kaputt", "Die Tür war offen"] }] },
       { title: "Hör auf Brian", lines: [
         "Unter der Uhr war ein kleiner Safe. Nora drehte am Rad: drei, eins, fünf. Er öffnete sich.",
-        "Darin lag ein kleiner Schlüssel. Alle rannten zur Tür, und Nora öffnete sie mit noch vierzig Sekunden übrig.",
+        "Darin lag ein kleiner Schlüssel. Alle rannten zur Tür, und Nora öffnete sie, als noch vierzig Sekunden übrig waren.",
         "Glückwunsch! Neunundfünfzig Minuten und zwanzig Sekunden. Unsere Kamera zeigt, dass Brian die Lösung in Minute fünf hatte.",
         "Alle sahen Greg an. Greg sah auf den Boden.",
         "Zu meiner Verteidigung: Ich war sehr damit beschäftigt, zu führen.",

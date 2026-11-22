@@ -30,7 +30,7 @@ export const passages = [
       ], questions: [{ prompt: "Wie versuchten sie, das Sofa ein zweites Mal zu bewegen?", options: ["Mit einem Seil durch das Fenster", "Mit einem größeren Lastwagen", "Mit vier starken Nachbarn"] }] },
       { title: "Die graue Tür", lines: [
         "Im vierten Stock war das Fenster zu klein. Das Sofa passte auch dort nicht hindurch.",
-        "Mike kam herunter, und sie setzten sich auf dem Gehweg auf das Sofa und lachten, bis sie weinten.",
+        "\"Mike kam herunter, und sie setzten sich auf das Sofa auf dem Gehweg und lachten, bis sie weinten.\"",
         "Herr Grant, der Hausverwalter, kam mit einem Kaffee heraus. Er sah das Seil, das Sofa und die beiden erschöpften Menschen an.",
         "Warum haben Sie nicht den Lastenaufzug benutzt?",
         "Den was?",
@@ -68,7 +68,7 @@ export const passages = [
         "Mama, es tut mir leid. Ich bin nicht wütend auf dich. Ich bin nur müde.",
         "Ich weiß, mein Schatz. Geh in die Küche. Was hast du da?",
         "Ich habe ein Ei. Nur eins.",
-        "Gut! Mach es mit etwas Salz. Ich bleibe am Telefon.",
+        "Gut! Koch es mit etwas Salz. Ich bleibe am Telefon.",
         "Luke kocht das Ei. Mama erzählt die ganze Zeit von ihrem Garten.",
       ], questions: [{ prompt: "Was tut Mama, während Luke kocht?", options: ["Sie geht ins Bett", "Sie bleibt am Telefon", "Sie kocht auch"] }] },
       { title: "Du bist dran", lines: [

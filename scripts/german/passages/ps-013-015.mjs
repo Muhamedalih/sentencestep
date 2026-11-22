@@ -3,7 +3,7 @@ export const passages = [
   { sourceId: "pizza-where-are-you", title: "Pizza, wo bist du?", summary: "Fünfundvierzig Minuten. Keine Pizza. Wo ist sie?", speakers: { "Mr. Brown": "Herr Brown" },
     sections: [
       { title: "Fünfundvierzig Minuten", lines: [
-        "Emma hat großen Hunger. Sie bestellt eine Pizza mit dem Handy.",
+        "Emma hat großen Hunger. Sie bestellt eine Pizza mit ihrem Handy.",
         "Die App sagt: „Deine Pizza kommt in 20 Minuten.“",
         "Emma wartet zwanzig Minuten. Dann dreißig. Dann fünfundvierzig.",
         "Wo ist meine Pizza?!",
@@ -11,7 +11,7 @@ export const passages = [
       ], questions: [{ prompt: "Wie lange wartet Emma?", options: ["Mehr als vierzig Minuten", "Zwanzig Minuten", "Eine Stunde"] }] },
       { title: "Der Anruf", lines: [
         "Hallo? Wo ist meine Pizza?",
-        "Hallo! Ich bin Joe, dein Lieferant. Ich bin in der Oak Street, aber ich finde dein Haus nicht!",
+        "Hallo! Ich bin Joe, dein Pizzabote. Ich bin in der Oak Street, aber ich finde dein Haus nicht!",
         "Meine Adresse ist Oak Street 24.",
         "24? Ich bin bei ... Oak Street 42. Oh nein.",
         "Das ist das falsche Haus, Joe!",
@@ -30,11 +30,11 @@ export const passages = [
         "Schon gut, Herr Brown.",
         "Joe ruft seinen Chef an. In zehn Minuten kommt eine neue Pizza, umsonst!",
         "Herr Brown, möchten Sie mit mir essen?",
-        "Wirklich? Danke! Ich wohne allein, und das Abendessen ist immer still.",
+        "Wirklich? Danke! Ich wohne allein, und das Abendessen ist immer so ruhig.",
         "An diesem Abend essen Emma und Herr Brown in der Oak Street 24 zusammen Pizza. Joe bekommt auch ein Stück.",
       ], questions: [
         { prompt: "Was macht Emma am Ende?", options: ["Sie ist wütend und geht nach Hause", "Sie teilt die Pizza mit Herrn Brown", "Sie kocht das Abendessen"] },
-        { prompt: "Wer ist Joe?", options: ["Der Pizzalieferant", "Emmas Bruder", "Herrn Browns Sohn"] },
+        { prompt: "Wer ist Joe?", options: ["Der Pizzabote", "Emmas Bruder", "Herrn Browns Sohn"] },
       ] },
     ] },
   { sourceId: "the-wrong-wedding", title: "Die falsche Hochzeit", summary: "Die Karte sagte: „Sie haben Ihr Ziel erreicht.“ Die Karte irrte sich.",
@@ -43,7 +43,7 @@ export const passages = [
         "Ryan hatte für Samstag einen Plan: die Hochzeit seiner Freundin Julia im Green Garden, um drei Uhr.",
         "Er zog seinen besten Anzug an und öffnete die Karte auf seinem Handy.",
         "Die Karte sagte: „Links abbiegen. Rechts abbiegen. Sie haben Ihr Ziel erreicht.“",
-        "Ryan sah auf. Er sah einen schönen Garten und viele Menschen in schöner Kleidung.",
+        "Ryan sah auf. Er sah einen schönen Garten und viele Menschen in festlicher Kleidung.",
         "Perfekt. Ich bin nicht zu spät!",
         "Er ging hinein und setzte sich in die letzte Reihe.",
       ], questions: [{ prompt: "Warum ging Ryan in den Garten?", options: ["Julia rief ihn hinein", "Die Karte sagte, er sei angekommen", "Er sah dort seine Freunde"] }] },
@@ -60,19 +60,19 @@ export const passages = [
       { title: "Tisch sieben", lines: [
         "Ryan wollte gehen, aber alle sahen die Braut an. Also blieb er auf seinem Platz.",
         "Nach der Trauung gab es ein großes Essen. Rose nahm Ryan am Arm.",
-        "Du siehst hungrig aus, junger Mann. Setz dich zu uns an Tisch sieben!",
+        "Sie sehen hungrig aus, junger Mann. Setzen Sie sich zu uns an Tisch sieben!",
         "Tisch sieben war laut und fröhlich. „Das ist der Enkel meines Cousins aus Kanada“, sagte Rose zu allen.",
         "Äh ... ja. Hallo. Ich komme aus Kanada.",
         "Das Essen war köstlich. Ryan aß Hähnchen, Reis und drei Stück Kuchen.",
-        "Iss mehr! Du bist zu dünn.",
+        "Essen Sie mehr! Sie sind zu dünn.",
       ], questions: [{ prompt: "Was erzählte Rose allen über Ryan?", options: ["Er sei der Bruder des Bräutigams", "Er sei ein berühmter Koch", "Er sei der Enkel ihres Cousins aus Kanada"] }] },
       { title: "Zwei Hochzeiten", lines: [
         "Um neun Uhr klingelte Ryans Handy. Es war Julia.",
         "Ryan! Wo bist du? Die Hochzeit war um drei!",
         "Ich bin auf einer Hochzeit. Auf einer anderen Hochzeit.",
-        "Was? Es gibt in dieser Stadt zwei Green Gardens. Du bist zum falschen gegangen!",
+        "Was? Es gibt in dieser Stadt zwei Green Gardens. Du bist zum falschen Green Garden gegangen!",
         "Ryan verabschiedete sich von Rose und nahm ein Taxi quer durch die Stadt.",
-        "Er kam gerade rechtzeitig zum letzten Tanz bei der richtigen Hochzeit an.",
+        "Er kam bei der richtigen Hochzeit gerade rechtzeitig zum letzten Tanz an.",
         "Eine Woche später kam eine Karte mit der Post: „Komm zum Essen, Cousin Ryan. Alles Liebe, Oma Rose.“",
       ], questions: [
         { prompt: "Warum ging Ryan zur falschen Hochzeit?", options: ["Es gibt zwei Orte mit demselben Namen", "Er hatte den Tag vergessen", "Julia hatte ihm eine falsche Adresse gegeben"] },
@@ -92,7 +92,7 @@ export const passages = [
       { title: "Die Garage", lines: [
         "Das alte Haus war bereits leer. In der Garage stand unter einer dicken grauen Plane etwas Großes.",
         "Chris zog die Plane ab, und der Staub stieg ins Nachmittagslicht.",
-        "Es war ein Holzboot, halb fertig. Der Boden war perfekt. Die Seiten waren erst ein paar Bretter.",
+        "Es war ein Holzboot, halb fertig. Der Boden war perfekt. Die Bordwände bestanden erst aus ein paar Brettern.",
         "Papas Boot. Er hat es angefangen, als wir Kinder waren. Ich hatte es völlig vergessen.",
         "Ich habe es nicht vergessen. Jeden Sommer haben wir es zusammen gebaut, erinnerst du dich? Du hast das Holz gehalten, und ich den Hammer.",
         "Auf der Werkbank lag ein kleiner Zettel. Darauf stand in der krakeligen Handschrift ihres Vaters: „Jungs, ich habe es nie fertiggestellt. Vielleicht schafft ihr es.“",
@@ -106,7 +106,7 @@ export const passages = [
         "Adam legte seine Säge hin. Er sagte nichts, weil es nichts zu sagen gab. Er legte nur die Hand auf die Schulter seines Bruders.",
       ], questions: [{ prompt: "Warum war Chris bei der Beerdigung so wütend gewesen?", options: ["Adam wohnte weit weg, während Chris sich um ihren Vater kümmerte", "Adam wollte das Boot mitnehmen", "Adam kam zu spät"] }] },
       { title: "Der Stapellauf", lines: [
-        "Sie brauchten vier Monate. Im Juni war das Boot fertig: glatt, stark und dunkelblau gestrichen.",
+        "Sie brauchten vier Monate. Im Juni war das Boot fertig: glatt, stabil und dunkelblau gestrichen.",
         "An die Seite hatte Chris zwei Wörter in Weiß gemalt: „Die Jungs.“",
         "Sie trugen es gemeinsam zum See. Es war schwer, und sie lachten und beschwerten sich den ganzen Weg, genau wie früher als Kinder.",
         "Auf drei? Eins, zwei ...",
@@ -115,14 +115,14 @@ export const passages = [
       ], questions: [{ prompt: "Was malte Chris auf das Boot?", options: ["„Die Jungs“", "„Papa“", "„Freiheit“"] }] },
       { title: "Derselbe See", lines: [
         "Sie saßen eine Stunde ohne ein Wort im Boot und glitten langsam über das Wasser. Es war derselbe See, an dem ihr Vater ihnen das Schwimmen beigebracht hatte.",
-        "Ich habe der Anwältin heute Morgen gesagt, sie soll den Verkauf absagen.",
+        "Ich habe der Anwältin heute Morgen gesagt, sie soll den Verkauf rückgängig machen.",
         "Was? Warum?",
         "Weil ich keinen Fremden in Papas Garage will. Und weil dieses Haus der einzige Ort ist, an dem ich mich erinnere, wie man dein Bruder ist.",
         "Chris sah lange aufs Wasser. Seine Augen waren feucht, aber er lächelte.",
         "Dann behalten wir das Haus. Jeden Sommer wir beide und das Boot.",
       ], questions: [
-        { prompt: "Wofür entschied sich Adam?", options: ["Das Boot zu verkaufen", "Den Verkauf des Hauses abzusagen", "In ein anderes Land zu ziehen"] },
-        { prompt: "Wie veränderte der Bau des Bootes die Brüder?", options: ["Er half ihnen, miteinander zu reden und einander zu vergeben", "Er ließ sie wieder über Geld streiten", "Er ließ sie das Haus noch schneller verkaufen wollen"] },
+        { prompt: "Wofür entschied sich Adam?", options: ["Das Boot zu verkaufen", "Den Verkauf des Hauses rückgängig zu machen", "In ein anderes Land zu ziehen"] },
+        { prompt: "Wie veränderte der Bau des Bootes die Brüder?", options: ["Er half ihnen, miteinander zu reden und einander zu vergeben", "Er ließ sie wieder über Geld streiten", "Er brachte sie dazu, das Haus noch schneller verkaufen zu wollen"] },
       ] },
     ] },
 ];

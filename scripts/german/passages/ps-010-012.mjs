@@ -13,13 +13,13 @@ export const passages = [
         "Noch einmal!",
         "Diesmal fliegt ein Vogel vor das Handy.",
         "Geh weg, Vogel!",
-        "Drittes Foto: Der Wind nimmt seinen Hut.",
+        "Drittes Foto: Der Wind weht ihm den Hut vom Kopf.",
         "Jake rennt seinem Hut hinterher. Ein paar Leute lachen.",
         "Das ist nicht lustig!",
-      ], questions: [{ prompt: "Was nimmt Jakes Hut?", options: ["Der Wind", "Ein Hund", "Ein Mann"] }] },
+      ], questions: [{ prompt: "Was passiert mit Jakes Hut?", options: ["Der Wind weht ihn weg", "Ein Hund rennt mit ihm weg", "Ein Mann nimmt ihn"] }] },
       { title: "Eine nette Frau", lines: [
         "Eine Frau sitzt auf einer Bank. Sie heißt Nina.",
-        "Brauchst du Hilfe? Ich kann dein Foto machen.",
+        "Brauchst du Hilfe? Ich kann ein Foto von dir machen.",
         "Ja, bitte! Danke!",
         "Okay. Sieh mich an. Sag Cheese!",
         "In diesem Moment springt Rex an Jake hoch und leckt ihm das Gesicht ab.",
@@ -40,7 +40,7 @@ export const passages = [
   { sourceId: "the-wrong-number", title: "Ein Platz am Tisch", summary: "Eine Nachricht für einen Enkel erreichte einen Fremden. Der Fremde kam zum Essen.", speakers: { "Mrs. Walker": "Frau Walker" },
     sections: [
       { title: "Eine Nachricht aus dem Nichts", lines: [
-        "Es war die Woche von Thanksgiving, und das Studentenwohnheim war fast leer. Alle waren nach Hause gefahren, außer Ethan.",
+        "Es war die Thanksgiving-Woche, und das Studentenwohnheim war fast leer. Alle waren nach Hause gefahren, außer Ethan.",
         "Seine Familie lebte zweitausend Meilen entfernt, und ein Flugticket kostete mehr, als er auf dem Konto hatte.",
         "Am Mittwochabend aß er Instantnudeln und sah einen sehr alten Film, als sein Handy vibrierte.",
         "Die Nachricht kam von einer Nummer, die er nicht kannte: „Das Essen ist am Donnerstag um vier, Schatz! Bring gern einen Freund mit. Alles Liebe, Oma.“",
@@ -59,11 +59,11 @@ export const passages = [
       { title: "Soll ich gehen?", lines: [
         "Nudeln?! Nein, nein, nein. Komm um vier zum Essen. Bring einen Freund mit. Es gibt wie immer zu viel zu essen.",
         "Ethan rief seinen Freund Dylan an, der außerhalb des Campus wohnte, und las ihm die Nachrichten vor.",
-        "Ein Fremder lädt dich per SMS zum Essen ein? Das ist der Anfang von jedem Horrorfilm!",
+        "Eine Fremde lädt dich per SMS zum Essen ein? Das ist der Anfang von jedem Horrorfilm!",
         "Sie ist jemandes Großmutter, Dylan. Sie hat gesagt, ich klinge wie ein Junge, der eine ordentliche Mahlzeit braucht.",
         "Okay. Aber ich komme mit. Und wenn wir um neun nicht zurück sind, rufe ich die Polizei.",
         "So standen zwei hungrige Studenten am Donnerstag um vier Uhr vor einem kleinen weißen Haus.",
-      ], questions: [{ prompt: "Was sagte Dylan, sollten sie tun?", options: ["Zusammen hingehen und die Polizei rufen, falls sie spät dran waren", "Zu Hause bleiben", "Allein hingehen und es niemandem sagen"] }] },
+      ], questions: [{ prompt: "Was sollten sie nach Dylans Worten tun?", options: ["Zusammen hingehen und die Polizei rufen, falls sie sich verspäteten", "Zu Hause bleiben", "Allein hingehen und es niemandem sagen"] }] },
       { title: "Donnerstag um vier", lines: [
         "Die Tür ging auf, bevor sie klopften. Eine kleine Frau mit silbernem Haar breitete die Arme aus, als kenne sie die beiden seit Jahren.",
         "Du musst Ethan sein! Und du bist der Freund. Kommt herein, kommt herein. Ihr seid beide zu dünn.",
@@ -79,7 +79,7 @@ export const passages = [
         "Ethan lächelte. Er hatte ihren Namen schon vor langer Zeit als „Oma Walker“ in seinem Handy gespeichert.",
         "Im Jahr darauf ging er wieder hin. Und im Jahr danach auch.",
         "Als Ethan sein Studium abschloss, war seine eigene Familie wieder weit weg. Aber in der ersten Reihe weinte eine kleine Frau mit silbernem Haar und klatschte lauter als alle anderen.",
-        "Manche sagen, es war ein Fehler. Ich glaube, es war die beste Nachricht, die ich nie hätte bekommen sollen.",
+        "Manche sagen, es sei ein Fehler gewesen. Ich glaube, es war die beste Nachricht, die ich eigentlich nie hätte bekommen dürfen.",
       ], questions: [
         { prompt: "Wo war Frau Walker, als Ethan seinen Abschluss machte?", options: ["In der ersten Reihe", "Zu Hause", "In einem Flugzeug"] },
         { prompt: "Was wurde Frau Walker im Lauf der Jahre für Ethan?", options: ["Seine Lehrerin an der Universität", "Wie eine Großmutter", "Eine Nachbarin aus seinem Wohnheim"] },
@@ -108,7 +108,7 @@ export const passages = [
       { title: "Der Tanz", lines: [
         "Am Donnerstag regnete es wieder.",
         "Gib mir den Regenschirm, Jack. Heute halte ich ihn.",
-        "Sie hielt ihn über seinen Kopf. Nach fünf Schritten legte Jack die Hand an den Griff und schob ihn wieder über sie.",
+        "Sie hielt ihn über seinem Kopf. Nach fünf Schritten legte Jack die Hand an den Griff und schob ihn wieder über sie.",
         "Sie schob ihn nach links. Er schob ihn nach rechts. Sie schob ihn wieder nach links. Er schob ihn wieder nach rechts.",
         "Ein Mann mit einer Zeitung blieb stehen und starrte sie an. Sie sahen aus wie zwei Menschen, die schlecht tanzen.",
         "Jack! Hör auf, den Regenschirm zu bewegen!",
