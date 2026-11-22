@@ -159,6 +159,8 @@ export interface Database {
           /** Lowercase ISO 3166-1 alpha-2 code (matching CountryCode, src/lib/i18n/country-codes.ts), or null until CountryOnboarding has been answered. */
           country: string | null;
           role: "user" | "editor" | "admin";
+          /** The language the learner learns (permission germanTrack): "en" (default) or "de". See supabase/migrations/20250360000000_german_track.sql. */
+          target_language: "en" | "de";
           created_at: string;
           updated_at: string;
         };
@@ -172,6 +174,7 @@ export interface Database {
           starting_level?: number | null;
           country?: string | null;
           role?: "user" | "editor" | "admin";
+          target_language?: "en" | "de";
           created_at?: string;
           updated_at?: string;
         };
