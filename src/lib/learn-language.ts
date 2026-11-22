@@ -34,3 +34,6 @@ export function foldsDiacritics(language: TargetLanguage): boolean {
 /** The cookie that holds an admin's chosen learning language on this browser (permission germanTrack). */
 export const LEARN_LANGUAGE_COOKIE = "ss_learn_lang";
 export const LEARN_LANGUAGE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+/** Set once an admin has seen the first-time language picker (permission germanTrack), whatever they chose. */
+export const LEARN_LANGUAGE_ASKED_COOKIE = "ss_learn_lang_asked";

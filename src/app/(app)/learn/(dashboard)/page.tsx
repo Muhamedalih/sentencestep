@@ -1,3 +1,5 @@
+import { GermanHome } from "@/components/german/german-home";
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
@@ -99,6 +101,13 @@ export default async function LearnHomePage({
   // The phone-only layout of the mobilePath permission (see the Path page and HomeToday's phone pieces).
   const features = await getEffectiveFeatures();
   const mobilePath = features.rollouts.mobilePath;
+
+  // An admin who chose German (permission germanTrack) gets the German track's own Home; the rest of
+  // this page is English-only and is skipped entirely for them.
+  if ((await isAdmin()) && (await getLearnLanguage()) === "de") {
+    const germanUser = await getCurrentUser();
+    return <GermanHome userId={germanUser?.id ?? null} locale={locale ?? null} />;
+  }
 
   // The lesson catalog comes from getHomeLessons — lesson cards plus per-lesson
   // sentence/word counts, never the sentence bodies themselves (see that
