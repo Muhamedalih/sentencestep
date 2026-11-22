@@ -47,7 +47,7 @@ for (const p of passages) {
   }
   console.log(`de-${p.sourceId}: ${sectionRows.length} sections, ${lineRows.length} lines`);
   if (apply && !problems) {
-    await insert("passages", [{ id: `de-${p.sourceId}`, order_index: src.order_index, level: src.level, tone: src.tone, icon: src.icon, title: p.title, title_ar: src.title_ar, summary: p.summary, summary_ar: src.summary_ar, status: "draft", is_free: src.is_free, word_group_id: null, poster_url: src.poster_url, background_url: src.background_url }]);
+    await insert("passages", [{ id: `de-${p.sourceId}`, order_index: 1000 + src.order_index, level: src.level, tone: src.tone, icon: src.icon, title: p.title, title_ar: src.title_ar, summary: p.summary, summary_ar: src.summary_ar, status: "draft", is_free: src.is_free, word_group_id: null, poster_url: src.poster_url, background_url: src.background_url }]);
     await insert("passage_sections", sectionRows);
     await insert("passage_sentences", lineRows);
   }
