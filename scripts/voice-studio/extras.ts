@@ -10,7 +10,15 @@ import { join } from "node:path";
 
 import { sentenceWordEntries } from "../../src/lib/voice/sentence-word-plan";
 
-import { API, planLesson, transcribe, type AppProfile, type Db, type LessonPlan } from "./lib";
+import {
+  API,
+  durationMs,
+  planLesson,
+  transcribe,
+  type AppProfile,
+  type Db,
+  type LessonPlan,
+} from "./lib";
 
 export type ItemSource = "lesson" | "passage" | "words";
 
@@ -233,10 +241,8 @@ export async function createProfileFromSiteVoice(
     .eq("voice_id", siteVoiceId)
     .eq("status", "ready")
     .not("audio_url", "is", null)
-    .gte("duration_ms", 2500)
-    .lte("duration_ms", 7000)
     .not("audio_url", "like", "%zogigmxbfianyevsdvgl%")
-    .limit(60);
+    .limit(80);
   if (error) throw error;
   const rows = (data ?? []).filter((r) => (r.normalized_text ?? "").split(/\s+/).length >= 5);
   const picked: { buf: Buffer; text: string }[] = [];
@@ -247,7 +253,13 @@ export async function createProfileFromSiteVoice(
       const res = await fetch(r.audio_url!, { signal: AbortSignal.timeout(20_000) });
       if (!res.ok) continue;
       picked.push({ buf: Buffer.from(await res.arrayBuffer()), text: r.normalized_text });
-      total += r.duration_ms ?? 0;
+      const buf = picked[picked.length - 1]!.buf;
+      const ms = (await durationMs(buf)) ?? 0;
+      if (ms < 2000 || ms > 8000) {
+        picked.pop();
+        continue;
+      }
+      total += ms;
     } catch {
       /* skip an unreachable clip */
     }
