@@ -93,6 +93,16 @@ export interface VoiceSettings {
   guidance: number | null;
   /** One of TONES ("" = none). Experimental on cloned voices: it can shift the voice. */
   tone: (typeof TONES)[number];
+  /** Semitones, -6..+6: raises/lowers the voice WITHOUT changing speed (ffmpeg rubberband, after generation). 0 = untouched. */
+  pitch: number;
+  /** Decibels, -9..+9: louder/quieter clip (after generation). 0 = untouched. */
+  volumeDb: number;
+  /** Evens the loudness so every clip of the voice is about equally loud (EBU R128 loudnorm). */
+  evenLevel: boolean;
+  /** A light "presence" pass: removes low rumble and tames peaks so the voice is clearer (the site's "speaker boost"). */
+  clarity: boolean;
+  /** The engine's own noise-cleaning of the take (on by default); off keeps the raw take. */
+  denoise: boolean;
 }
 
 export const DEFAULT_SETTINGS: VoiceSettings = {
@@ -101,6 +111,11 @@ export const DEFAULT_SETTINGS: VoiceSettings = {
   steps: null,
   guidance: null,
   tone: "",
+  pitch: 0,
+  volumeDb: 0,
+  evenLevel: false,
+  clarity: false,
+  denoise: true,
 };
 
 const SETTINGS_FILE = join(
@@ -129,6 +144,11 @@ export function cleanSettings(raw: unknown): VoiceSettings {
     tone: (TONES as readonly string[]).includes(r.tone as string)
       ? (r.tone as VoiceSettings["tone"])
       : "",
+    pitch: clamp(r.pitch, -6, 6, 0),
+    volumeDb: clamp(r.volumeDb, -9, 9, 0),
+    evenLevel: r.evenLevel === true,
+    clarity: r.clarity === true,
+    denoise: r.denoise !== false,
   };
 }
 
@@ -175,6 +195,7 @@ async function speak(
       ...(settings.steps === null ? {} : { num_step: settings.steps }),
       ...(settings.guidance === null ? {} : { guidance_scale: settings.guidance }),
       ...(settings.tone ? { instruct: settings.tone } : {}),
+      ...(settings.denoise ? {} : { denoise: false }),
     }),
     signal: AbortSignal.timeout(300_000),
   });
@@ -347,17 +368,34 @@ export async function makeCheckedAudio(
 ): Promise<MadeAudio> {
   const made = await makeCheckedTake(kind, text, profileId, settings);
   // Speed is applied last, to the take that passed the check (a slower clip is the same words).
-  const speed = kind === "word" ? settings.wordSpeed : settings.sentenceSpeed;
-  if (Math.abs(speed - 1) < 0.01) return made;
-  const stretched = await ffmpegPipe(made.audio, [
+  const filters = finishFilters(kind, settings);
+  if (filters.length === 0) return made;
+  const finished = await ffmpegPipe(made.audio, [
     "-af",
-    `atempo=${speed.toFixed(3)}`,
+    filters.join(","),
     "-ar",
     "24000",
     "-ac",
     "1",
   ]);
-  return stretched ? { ...made, audio: stretched } : made;
+  return finished ? { ...made, audio: finished } : made;
+}
+
+/** The ffmpeg steps applied to a finished take, in this order: pitch, speed, clarity, even level, volume. Empty = leave the take untouched. */
+export function finishFilters(kind: ClipKind, settings: VoiceSettings): string[] {
+  const filters: string[] = [];
+  if (Math.abs(settings.pitch) >= 0.05)
+    filters.push(`rubberband=pitch=${(2 ** (settings.pitch / 12)).toFixed(5)}`);
+  const speed = kind === "word" ? settings.wordSpeed : settings.sentenceSpeed;
+  if (Math.abs(speed - 1) >= 0.01) filters.push(`atempo=${speed.toFixed(3)}`);
+  if (settings.clarity)
+    filters.push(
+      "highpass=f=70",
+      "acompressor=threshold=-20dB:ratio=3:attack=5:release=80:makeup=2",
+    );
+  if (settings.evenLevel) filters.push("loudnorm=I=-16:TP=-1.5:LRA=11");
+  if (Math.abs(settings.volumeDb) >= 0.1) filters.push(`volume=${settings.volumeDb.toFixed(1)}dB`);
+  return filters;
 }
 
 async function makeCheckedTake(
@@ -680,6 +718,24 @@ export async function previewClip(
     verified: made.verified,
     attempts: made.attempts,
   };
+}
+
+const SAMPLE_DIR = join(dirname(SETTINGS_FILE), "voice-studio-samples");
+export const SAMPLE_TEXT = "Hello! This is how I sound. Nice to meet you.";
+
+/**
+ * A short listening sample of a VoiceStudio profile. A cloned voice has its own reference recording; a DESIGNED
+ * voice (made from a description) has none, so its /audio address never answers — that is why "add a new
+ * voice" showed a dead player. So a sample is made once with the voice itself and kept on this PC.
+ */
+export async function profileSample(profileId: string): Promise<Buffer> {
+  if (!/^[A-Za-z0-9._-]{1,80}$/.test(profileId)) throw new Error("Bad profile id.");
+  const file = join(SAMPLE_DIR, `${profileId}.mp3`);
+  if (existsSync(file)) return readFileSync(file);
+  const audio = await speak(SAMPLE_TEXT, profileId, 42);
+  mkdirSync(SAMPLE_DIR, { recursive: true });
+  writeFileSync(file, audio);
+  return audio;
 }
 
 /** Lesson-level safety check before a lesson is pointed at a voice: every sentence and every word must already be ready. */
