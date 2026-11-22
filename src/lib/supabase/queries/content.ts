@@ -236,6 +236,7 @@ export async function fetchLessons(mode: LearningMode, locale?: SupportLocale): 
         .from("lessons")
         .select("*")
         .eq("mode", mode)
+        .not("id", "like", "de-%")
         .eq("status", "published")
         .order("order_index"),
       supabase.from("levels").select("*").eq("mode", mode),
@@ -391,6 +392,7 @@ async function fetchLessonSummariesUncached(
           "id, mode, level_id, order_index, title, title_ar, description, description_ar, is_free, status, illustration_url",
         )
         .eq("mode", mode)
+        .not("id", "like", "de-%")
         .eq("status", "published")
         .order("order_index"),
       supabase.from("levels").select("id, index").eq("mode", mode),
@@ -471,6 +473,7 @@ export async function fetchDraftLessonSummaries(
         "id, mode, level_id, order_index, title, title_ar, description, description_ar, is_free, status, illustration_url",
       )
       .eq("mode", mode)
+      .not("id", "like", "de-%")
       .eq("status", "draft")
       .order("order_index"),
     supabase.from("levels").select("id, index").eq("mode", mode),
@@ -614,6 +617,7 @@ async function fetchLessonNavUncached(mode: LearningMode): Promise<LessonNavEntr
     .from("lessons")
     .select("id, mode, order_index, status, is_free, title, levels(index)")
     .eq("mode", mode)
+    .not("id", "like", "de-%")
     .eq("status", "published")
     .order("order_index");
 
@@ -727,6 +731,7 @@ export async function fetchLessonById(
         .from("lessons")
         .select("*, levels(*)")
         .eq("mode", mode)
+        .not("id", "like", "de-%")
         .eq("id", id)
         .in("status", allowDraft ? ["published", "draft"] : ["published"])
         .maybeSingle(),

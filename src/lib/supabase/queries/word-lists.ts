@@ -59,6 +59,7 @@ export async function fetchWordGroupSummaries(locale?: SupportLocale): Promise<W
     .from("word_groups")
     .select("*, vocabulary_words(id)")
     .eq("status", "published")
+    .not("id", "like", "de-%")
     .order("order_index");
   if (error) throw error;
   // Defensive double-check, see isLearnerVisibleStatus's doc comment.
@@ -81,6 +82,7 @@ export async function fetchDraftWordGroupSummaries(
     .from("word_groups")
     .select("*, vocabulary_words(id)")
     .eq("status", "draft")
+    .not("id", "like", "de-%")
     .not("id", "like", "passage-%")
     .order("order_index");
   if (error) throw error;

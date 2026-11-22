@@ -20,12 +20,15 @@ import {
   isCorrectChar,
   isValidPrefixEdit,
 } from "@/lib/typing";
+import { isPlainStandIn, secondLetterToSwallow } from "@/lib/german-typing";
 import type { LetterState } from "@/lib/typing";
 
 /** How often the live WPM display re-computes while a sentence is actively being typed, purely to keep it ticking between keystrokes — see the effect below. */
 const STATS_TICK_MS = 250;
 
 interface UseTypingEngineOptions {
+  /** German (permission germanTrack): accept the plain letter for ä, ö, ü, ß (and the spelled-out ae, oe, ue, ss) — see src/lib/german-typing.ts. Off by default: every other caller is unchanged. */
+  foldDiacritics?: boolean;
   /** The sentence the learner is typing. */
   target: string;
   /** Changing this resets the engine — pass the sentence id, not the text. */
@@ -99,6 +102,7 @@ export function useTypingEngine({
   autoFocus = true,
   initialTyped,
   autoSpace = false,
+  foldDiacritics = false,
 }: UseTypingEngineOptions) {
   const [typed, setTyped] = useState("");
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
@@ -108,6 +112,8 @@ export function useTypingEngine({
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const completeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const completedRef = useRef(false);
+  // The second letter of a spelled-out ae/oe/ue/ss that the next keystroke may be (see secondLetterToSwallow).
+  const swallowRef = useRef<string | null>(null);
 
   // Per-sentence WPM/accuracy — reset alongside everything else on resetKey
   // change, same as the rest of this hook's state (see the reset effect
@@ -225,6 +231,7 @@ export function useTypingEngine({
             const opening = advanceAutoSkip(target, "", true);
             if (next.length < opening.length) next = opening;
           }
+          swallowRef.current = null;
           setTyped(next);
           setErrorIndex(null);
           setErrorChar(null);
@@ -243,11 +250,32 @@ export function useTypingEngine({
       // Auto space: a space the learner presses out of habit is no mistake and no keystroke.
       if (autoSpace && /\s/.test(nextChar) && !/\s/.test(target.charAt(typed.length))) return;
 
+      // German: the second letter of ae/oe/ue/ss after a special letter is no mistake and no keystroke.
+      const pendingSwallow = swallowRef.current;
+      swallowRef.current = null;
+      if (
+        foldDiacritics &&
+        pendingSwallow !== null &&
+        nextChar.toLowerCase() === pendingSwallow
+      ) {
+        return;
+      }
+
       totalKeystrokesRef.current += 1;
 
-      if (isCorrectChar(target, typed.length, nextChar)) {
+      if (isCorrectChar(target, typed.length, nextChar, foldDiacritics)) {
         correctKeystrokesRef.current += 1;
-        const updated = advanceAutoSkip(target, typed + nextChar, autoSpace);
+        const targetChar = target.charAt(typed.length);
+        const standIn = foldDiacritics && isPlainStandIn(targetChar, nextChar);
+        // A stand-in letter is stored as the sentence's own letter (ä, not a), so the typed text stays a prefix of the sentence.
+        if (standIn) {
+          swallowRef.current = secondLetterToSwallow(targetChar, target.charAt(typed.length + 1));
+        }
+        const updated = advanceAutoSkip(
+          target,
+          typed + (standIn ? targetChar : nextChar),
+          autoSpace,
+        );
         setTyped(updated);
         setErrorIndex(null);
         setErrorChar(null);
@@ -275,6 +303,7 @@ export function useTypingEngine({
       typed,
       target,
       autoSpace,
+      foldDiacritics,
       onCorrectChar,
       onErrorChar,
       onComplete,

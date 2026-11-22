@@ -92,6 +92,7 @@ async function loadSummaries(): Promise<PassageSummary[]> {
     .from("passages")
     .select("*")
     .eq("status", "published")
+    .not("id", "like", "de-%")
     .order("level")
     .order("order_index");
   if (error) throw error;
