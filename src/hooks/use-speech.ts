@@ -33,6 +33,12 @@ function matchVoice(
   return list.find((voice) => voice.voiceURI === best.voiceURI) ?? null;
 }
 
+/** True on a page of German learning content: its address holds a segment starting with "de-" (see GERMAN_ID_PREFIX). */
+function isGermanContentPage(): boolean {
+  if (typeof window === "undefined") return false;
+  return /\/de-[a-z0-9]/i.test(window.location.pathname);
+}
+
 interface SpeakOverrides {
   voice?: SpeechSynthesisVoice;
   rate?: number;
@@ -132,6 +138,10 @@ export function useSpeech(options?: {
   // function from a real click, stays available as the manual fallback.
   const playText = useCallback((text: string, overrides?: SpeakOverrides) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    // German content (a lesson, story, text or word list whose id starts with "de-") is only ever read
+    // by our own recorded voices. The browser's voices are English: they must never speak German, not
+    // even when a recording is missing or failed to load (Shift / replay used to fall back to them).
+    if (isGermanContentPage()) return;
 
     try {
       window.speechSynthesis.cancel();
