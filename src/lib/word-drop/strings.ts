@@ -75,6 +75,26 @@ export interface WordDropStrings {
   cardAccuracy: string;
   cardSpeed: string;
   cardTagline: string;
+  /** Sentences mode (level 2 and 3): short sentences fall and are typed whole. */
+  sentences: string;
+  sentencesHint: string;
+  /** The switch that puts the learner's own words and mistakes first in a free round: "{n}" words. */
+  myWordsTitle: string;
+  myWordsLine: string;
+  /** Said on the start page when the pool has no word to drop. */
+  emptyPool: string;
+  /** Shown when the Hard-mode / Sentences pool is too small. */
+  tooFewSentences: string;
+  /** Notices of things that did not work. */
+  saveFailed: string;
+  shareFailed: string;
+  rankFailed: string;
+  rankLimit: string;
+  /** Said under the end page's buttons for a round of the learner's own words, which cannot be sent as a challenge. */
+  noChallengeOwn: string;
+  /** The small card on Home: one line about the game and the button's words. */
+  homeLine: string;
+  homeCta: string;
 }
 
 const AR: WordDropStrings = {
@@ -118,7 +138,7 @@ const AR: WordDropStrings = {
   dailyMode: "متوسط · المعنى بالعربي وتكتب الإنجليزي",
   friendHeadline1: "تحدّاك صديق",
   friendHeadline2: "تغلّب على نتيجته",
-  friendMode: "جولة جديدة بكلمات مستواه",
+  friendMode: "نفس كلمات صديقك وبنفس الترتيب",
   toBeat: "المطلوب أكثر من {n} نقطة",
   beatFriend: "تغلبت على صديقك بـ {n} نقطة.",
   missFriend: "بقي لك {n} نقطة لتتغلب عليه.",
@@ -137,6 +157,19 @@ const AR: WordDropStrings = {
   cardAccuracy: "دقة",
   cardSpeed: "كلمة/دقيقة",
   cardTagline: "اكتب الكلمة قبل ما تسقط",
+  sentences: "جمل",
+  sentencesHint: "جمل قصيرة تسقط وتكتبها كاملة",
+  myWordsTitle: "كلماتي أولاً",
+  myWordsLine: "تبدأ الجولة بكلماتك الضعيفة والمحفوظة ({n})",
+  emptyPool: "ما توفرت كلمات لهذه الجولة. جرّب لاحقاً.",
+  tooFewSentences: "لا توجد جمل كافية بعد",
+  saveFailed: "ما قدرنا نحفظ الكلمة. جرّب مرة ثانية.",
+  shareFailed: "ما تم المشاركة. جرّب مرة ثانية.",
+  rankFailed: "ما قدرنا نسجّل نتيجتك في الترتيب.",
+  rankLimit: "لم تُسجَّل هذه النتيجة: انتظر قليلاً بين جولتين من التحدي.",
+  noChallengeOwn: "جولة كلماتك لا تُرسل كتحدي؛ العب جولة عادية لتتحدى صديقك.",
+  homeLine: "كلمات تسقط من فوق، اكتبها قبل ما تنزل",
+  homeCta: "العب",
 };
 
 const ES: WordDropStrings = {
@@ -180,7 +213,7 @@ const ES: WordDropStrings = {
   dailyMode: "Medio · ves el significado y escribes en inglés",
   friendHeadline1: "Un amigo te reta",
   friendHeadline2: "Supera su resultado",
-  friendMode: "Una ronda nueva con palabras de su nivel",
+  friendMode: "Las mismas palabras de tu amigo, en el mismo orden",
   toBeat: "Necesitas más de {n} puntos",
   beatFriend: "Superaste a tu amigo por {n} puntos.",
   missFriend: "Te faltan {n} puntos para superarlo.",
@@ -199,6 +232,20 @@ const ES: WordDropStrings = {
   cardAccuracy: "precisión",
   cardSpeed: "pal./min",
   cardTagline: "Escribe la palabra antes de que caiga",
+  sentences: "Frases",
+  sentencesHint: "Caen frases cortas y las escribes enteras",
+  myWordsTitle: "Mis palabras primero",
+  myWordsLine: "La ronda empieza con tus palabras débiles y guardadas ({n})",
+  emptyPool: "No hay palabras para esta ronda. Inténtalo más tarde.",
+  tooFewSentences: "Aún no hay frases suficientes",
+  saveFailed: "No pudimos guardar la palabra. Inténtalo de nuevo.",
+  shareFailed: "No se pudo compartir. Inténtalo de nuevo.",
+  rankFailed: "No pudimos registrar tu resultado en la clasificación.",
+  rankLimit: "Este resultado no se registró: espera un poco entre dos rondas del reto.",
+  noChallengeOwn:
+    "Una ronda con tus palabras no se envía como reto; juega una ronda normal para retar a un amigo.",
+  homeLine: "Las palabras caen: escríbelas antes de que bajen",
+  homeCta: "Jugar",
 };
 
 const TR: WordDropStrings = {
@@ -242,7 +289,7 @@ const TR: WordDropStrings = {
   dailyMode: "Orta · anlamı görür, İngilizcesini yazarsın",
   friendHeadline1: "Bir arkadaşın sana meydan okudu",
   friendHeadline2: "Sonucunu geç",
-  friendMode: "Onun seviyesindeki kelimelerle yeni bir tur",
+  friendMode: "Arkadaşınla aynı kelimeler, aynı sırada",
   toBeat: "{n} puandan fazlası gerekiyor",
   beatFriend: "Arkadaşını {n} puanla geçtin.",
   missFriend: "Onu geçmek için {n} puan kaldı.",
@@ -261,6 +308,20 @@ const TR: WordDropStrings = {
   cardAccuracy: "doğruluk",
   cardSpeed: "kelime/dk",
   cardTagline: "Kelimeyi düşmeden önce yaz",
+  sentences: "Cümleler",
+  sentencesHint: "Kısa cümleler düşer, hepsini yazarsın",
+  myWordsTitle: "Önce kelimelerim",
+  myWordsLine: "Tur, zayıf ve kayıtlı kelimelerinle başlar ({n})",
+  emptyPool: "Bu tur için kelime yok. Sonra tekrar dene.",
+  tooFewSentences: "Henüz yeterli cümle yok",
+  saveFailed: "Kelime kaydedilemedi. Tekrar dene.",
+  shareFailed: "Paylaşılamadı. Tekrar dene.",
+  rankFailed: "Sonucun sıralamaya kaydedilemedi.",
+  rankLimit: "Bu sonuç kaydedilmedi: meydan okuma turları arasında biraz bekle.",
+  noChallengeOwn:
+    "Kendi kelimelerinle oynanan tur meydan okuma olarak gönderilmez; arkadaşına meydan okumak için normal bir tur oyna.",
+  homeLine: "Kelimeler düşer, inmeden önce yaz",
+  homeCta: "Oyna",
 };
 
 export function wordDropStrings(locale: SupportLocale | null): WordDropStrings {

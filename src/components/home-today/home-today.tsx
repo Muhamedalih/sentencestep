@@ -13,6 +13,7 @@ import { TodayEndCard } from "@/components/home-today/today-end-card";
 import { UpgradeMomentDialog } from "@/components/upgrade-moments/upgrade-moment-dialog";
 import type { UpgradeMoment } from "@/lib/upgrade-moments/rules";
 import { HomeTopBar } from "@/components/home-today/top-bar";
+import { WordDropHomeCard } from "@/components/home-today/word-drop-card";
 import { WeeklyLineView } from "@/components/today/today-tasks";
 import type { HomeEngagementStream } from "@/lib/features/home-engagement";
 import { getEffectiveFeatures } from "@/lib/features/queries";
@@ -175,6 +176,7 @@ export function HomeToday({
   hasWeakWords,
   banners,
   mobilePath = false,
+  wordDrop = false,
 }: {
   stream: HomeEngagementStream;
   user: CurrentUser;
@@ -186,6 +188,8 @@ export function HomeToday({
   hasWeakWords: boolean;
   banners?: ReactNode;
   mobilePath?: boolean;
+  /** The "wordDrop" permission, resolved for this visitor: a small card that opens the falling-words game. */
+  wordDrop?: boolean;
 }) {
   const topBar: TopBarProps = {
     user,
@@ -222,6 +226,7 @@ export function HomeToday({
             />
             {/* Learners on the free plan keep their counter of starter lessons, small, under the card. */}
             {!isPremiumUser && <StarterPathProgress units={units} />}
+            {wordDrop && <WordDropHomeCard />}
           </div>
         </div>
         <Suspense fallback={null}>

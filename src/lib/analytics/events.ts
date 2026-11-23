@@ -252,6 +252,31 @@ export type AnalyticsEvent =
       properties: { source: WordsRoundSource; count: number };
     }
   | {
+      name: "WORD_DROP_STARTED";
+      category: "ENGAGEMENT";
+      /** A round of Word Drop (the falling-words typing game, Admins only for now) began: its `mode` (easy, mid, hard, sentences), its `kind` (a free round, the daily challenge, or a friend's challenge link) and the learner's `level` (1 to 3). Counts only: no word, no name. A reload or "another round" counts again. */
+      properties: { mode: string; kind: string; level: number };
+    }
+  | {
+      name: "WORD_DROP_FINISHED";
+      category: "ENGAGEMENT";
+      /** A Word Drop round ended (time ran out or the lives did): the same `mode`, `kind` and `level`, plus the `score`, the `accuracy` (whole percent of letters typed right) and the number of `words` typed. Read with WORD_DROP_STARTED: how many who start finish, and how a daily or friend's round compares with a free one. */
+      properties: {
+        mode: string;
+        kind: string;
+        level: number;
+        score: number;
+        accuracy: number;
+        words: number;
+      };
+    }
+  | {
+      name: "WORD_DROP_SHARED";
+      category: "ENGAGEMENT";
+      /** The end page of a Word Drop round was used to share: the result's picture (`card`) or a challenge link (`link`: copied or sent through the share sheet), after a round of this `kind`. */
+      properties: { how: string; kind: string };
+    }
+  | {
       name: "WORDS_ROUND_FINISHED";
       category: "ENGAGEMENT";
       /** A round of words ran to its end (every word landed): of `count` words, `clean` were typed right on the first go with no help, `assisted` right after one hint, `missed` wrong (or given up on) on the first go; count = clean + assisted + missed. A learner who leaves halfway writes only the start, so finished over started is the share who stay to the end, and (clean + assisted) over count is the first-go accuracy. */

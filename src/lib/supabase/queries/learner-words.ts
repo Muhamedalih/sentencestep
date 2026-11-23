@@ -134,3 +134,34 @@ export async function countDueBankWords(userId: string, todayISO: string): Promi
   if (error) throw error;
   return count ?? 0;
 }
+
+/** A word of the learner's bank as Word Drop wants it: the word, its short Arabic, and the sentence it was met in. */
+export interface BankDropRow {
+  word: string;
+  ar: string;
+  homeSentence: string | null;
+}
+
+/**
+ * The weakest words of the learner's own bank, for Word Drop's free rounds: one small read (the
+ * learner's own rows, weakest first and, among equals, the ones due soonest), capped, so a word they
+ * missed comes back in a round of the game. Only words that carry an Arabic meaning (a falling tile
+ * has to say what it is).
+ */
+export async function fetchWeakestBankWords(userId: string, limit = 30): Promise<BankDropRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("learner_words")
+    .select("word, ar, home_sentence")
+    .eq("user_id", userId)
+    .neq("ar", "")
+    .order("strength", { ascending: true })
+    .order("due_on", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    word: row.word,
+    ar: row.ar,
+    homeSentence: row.home_sentence,
+  }));
+}
