@@ -229,6 +229,7 @@ test("evaluateRollouts: default config opens everything for admins only", () => 
     inAppPayStrip: false,
 
     germanTrack: false,
+    wordDrop: false,
   });
 });
 
