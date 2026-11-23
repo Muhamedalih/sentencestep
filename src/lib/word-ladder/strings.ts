@@ -26,6 +26,9 @@ export interface LadderRatingStrings {
 export interface LadderStrings {
   /** The way back from a round and from a topic. */
   back: string;
+  /** The corner arrows that step to the screen before / after (never past the furthest one reached). */
+  previousScreen: string;
+  nextScreen: string;
   /** "{n}" of "{total}" words: under the topic's title. */
   progress: (done: number, total: number) => string;
   /** "Round 5 of 8". */
@@ -98,6 +101,8 @@ const levelTr = ["Başlangıç", "Orta", "İleri"];
 
 const AR: LadderStrings = {
   back: "الكلمات",
+  previousScreen: "الشاشة السابقة",
+  nextScreen: "الشاشة التالية",
   progress: (d, t) => `${d} من ${t} كلمة`,
   roundOf: (n, c) => `الجولة ${n} من ${c}`,
   startRound: (n) => `ابدأ الجولة ${n}`,
@@ -159,6 +164,8 @@ const AR: LadderStrings = {
 
 const EN: LadderStrings = {
   back: "Words",
+  previousScreen: "Previous screen",
+  nextScreen: "Next screen",
   progress: (d, t) => `${d} of ${t} words`,
   roundOf: (n, c) => `Round ${n} of ${c}`,
   startRound: (n) => `Start round ${n}`,
@@ -213,6 +220,8 @@ const EN: LadderStrings = {
 
 const ES: LadderStrings = {
   back: "Palabras",
+  previousScreen: "Pantalla anterior",
+  nextScreen: "Pantalla siguiente",
   progress: (d, t) => `${d} de ${t} palabras`,
   roundOf: (n, c) => `Ronda ${n} de ${c}`,
   startRound: (n) => `Empezar la ronda ${n}`,
@@ -267,6 +276,8 @@ const ES: LadderStrings = {
 
 const TR: LadderStrings = {
   back: "Kelimeler",
+  previousScreen: "Önceki ekran",
+  nextScreen: "Sonraki ekran",
   progress: (d, t) => `${d} / ${t} kelime`,
   roundOf: (n, c) => `Tur ${n} / ${c}`,
   startRound: (n) => `${n}. turu başlat`,
