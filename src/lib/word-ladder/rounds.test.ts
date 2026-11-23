@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ladderRoundCount, nextRoundSize, planRound, roundSizes } from "@/lib/word-ladder/rounds";
+import {
+  allRounds,
+  ladderRoundCount,
+  nextRoundSize,
+  pickRound,
+  planRound,
+  roundSizes,
+} from "@/lib/word-ladder/rounds";
 
 const words = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `w${i + 1}` }));
 const sum = (sizes: number[]) => sizes.reduce((a, b) => a + b, 0);
@@ -87,4 +94,33 @@ test("a topic of one or two words is a single round", () => {
   assert.equal(planRound(words(2), [])?.words.length, 2);
   assert.equal(planRound(words(2), [])?.count, 1);
   assert.equal(planRound(words(1), [])?.number, 1);
+});
+
+test("the rounds a learner picks from are cut from the topic's own order, finished or not", () => {
+  const topic = words(25);
+  const rounds = allRounds(topic);
+  assert.deepEqual(
+    rounds.map((round) => round.words.length),
+    [4, 4, 4, 4, 3, 3, 3],
+  );
+  assert.deepEqual(
+    rounds.map((round) => round.number),
+    [1, 2, 3, 4, 5, 6, 7],
+  );
+  assert.deepEqual(rounds[1]!.words.map((word) => word.id), ['w5', 'w6', 'w7', 'w8']);
+  assert.deepEqual(allRounds(words(0)), []);
+});
+
+test('a picked round keeps its finished words and counts only the finished words outside it', () => {
+  const topic = words(25);
+  const finished = new Set(['w1', 'w2', 'w5', 'w6', 'w20']);
+  const plan = pickRound(topic, 2, finished)!;
+  assert.deepEqual(plan.words.map((word) => word.id), ['w5', 'w6', 'w7', 'w8']);
+  assert.equal(plan.number, 2);
+  assert.equal(plan.count, 7);
+  assert.equal(plan.total, 25);
+  assert.equal(plan.done, 3);
+  assert.equal(pickRound(topic, 0, finished), null);
+  assert.equal(pickRound(topic, 8, finished), null);
+  assert.equal(pickRound(topic, 7, [])!.words.length, 3);
 });

@@ -90,5 +90,12 @@ export default async function WordGroupWallPage({
     }
   }
 
-  return <WordGroupWall group={group} states={states} today={today} />;
+  return (
+    <WordGroupWall
+      group={group}
+      states={states}
+      today={today}
+      rounds={features.rollouts.wordLadder}
+    />
+  );
 }

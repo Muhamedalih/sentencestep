@@ -68,10 +68,10 @@ export default async function WordGroupPracticePage({
   searchParams,
 }: {
   params: Promise<{ groupId: string }>;
-  searchParams: Promise<{ scope?: string }>;
+  searchParams: Promise<{ scope?: string; round?: string }>;
 }) {
   const { groupId } = await params;
-  const { scope: rawScope } = await searchParams;
+  const { scope: rawScope, round: rawRound } = await searchParams;
   // The redesign is admin-controlled (see getWordsRedesignEnabled); `weak` is part of it.
   const redesign = await getWordsRedesignEnabled();
   const requestedScope = practiceScope(rawScope);
@@ -133,6 +133,8 @@ export default async function WordGroupPracticePage({
         todayISO={todayISO}
         // The picture beside the words (permission wordsSplit): the topic's own cover.
         split={features.rollouts.wordsSplit ? { coverUrl: group.coverUrl ?? null } : undefined}
+        // A round picked on the topic's word page (?round=N).
+        initialRound={/^\d{1,2}$/.test(rawRound ?? "") ? Number(rawRound) : undefined}
       />
     );
   }
