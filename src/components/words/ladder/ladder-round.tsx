@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Check, Volume2, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Volume2, X } from "lucide-react";
 
 import { LessonSettings } from "@/components/learning/lesson-settings";
 import type { PronunciationButtonHandle } from "@/components/learning/pronunciation-button";
@@ -138,6 +138,9 @@ export function LadderRound({
     exam ? buildExamQueue(words, seed) : buildQueue(words, seed),
   );
   const [pos, setPos] = useState(0);
+  // The furthest screen reached: the corner arrows go back and forward only up to it. A screen
+  // before it is a look back (`reviewing`): its answers move on but are never counted again.
+  const [reach, setReach] = useState(0);
   const [runs, setRuns] = useState<Record<string, Run>>(() =>
     Object.fromEntries(
       words.map((word) => [word.id, { earlierMisses: 0, typedFirst: null, typedRight: false }]),
@@ -174,8 +177,8 @@ export function LadderRound({
   }, [words, voiceId, prefetchPronunciation]);
 
   // What the handlers read: the typing engine may hold on to an older render's callback.
-  const live = useRef({ card, word, runs, pos });
-  live.current = { card, word, runs, pos };
+  const live = useRef({ card, word, runs, pos, reach });
+  live.current = { card, word, runs, pos, reach };
 
   // The round ran to its end: it is reported, and the rating card is offered when it is due (not
   // after the exam). The decision is made once (a development double-run of the effect must not
@@ -208,8 +211,24 @@ export function LadderRound({
   );
 
   const advance = useCallback(() => {
+    const { pos: at } = live.current;
     setTypedWrong(null);
-    setPos((current) => current + 1);
+    setPos(at + 1);
+    setReach((furthest) => Math.max(furthest, at + 1));
+  }, []);
+
+  /** The corner arrows: one screen back, or forward again, never past the furthest screen reached. */
+  const stepBack = useCallback(() => {
+    const { pos: at } = live.current;
+    if (at <= 0) return;
+    setTypedWrong(null);
+    setPos(at - 1);
+  }, []);
+  const stepForward = useCallback(() => {
+    const { pos: at, reach: furthest } = live.current;
+    if (at >= furthest) return;
+    setTypedWrong(null);
+    setPos(at + 1);
   }, []);
 
   /** Tells the learner's records how a word's first typed answer went: the bank (when it is open) and the round's tally. */
@@ -234,9 +253,9 @@ export function LadderRound({
   /** A choice or the letters settled: a miss counts against the word and the screen comes back a few screens later. */
   const settle = useCallback(
     (correct: boolean) => {
-      const { card: current, pos: at } = live.current;
+      const { card: current, pos: at, reach: furthest } = live.current;
       if (!current) return;
-      if (!correct) {
+      if (!correct && at >= furthest) {
         setRuns((previous) => ({
           ...previous,
           [current.wordId]: {
@@ -255,9 +274,15 @@ export function LadderRound({
   /** The typed step: the first answer is what the records hear, a right one finishes the word, a wrong one comes back a few screens later. */
   const typed = useCallback(
     (correct: boolean, written: string) => {
-      const { card: current, word: target, runs: all, pos: at } = live.current;
+      const { card: current, word: target, runs: all, pos: at, reach: furthest } = live.current;
       if (!current || !target) return;
       answered(correct);
+      if (at < furthest) {
+        // A look back at a screen already played: nothing is counted or reported twice.
+        if (correct) advance();
+        else setTypedWrong(written.trim().slice(0, 40));
+        return;
+      }
       const previous = all[target.id]!;
       const first = !current.retry;
       const nextRun: Run = {
@@ -327,6 +352,25 @@ export function LadderRound({
               <LadderProgress queue={queue} pos={pos} phases={exam ? ["type"] : LADDER_PHASES} />
             )}
             <div className="flex items-center gap-3 justify-self-end">
+              {!finished && (
+                <div className="flex items-center gap-0.5" dir="ltr">
+                  <StepArrow
+                    direction="back"
+                    label={s.previousScreen}
+                    disabled={pos <= 0}
+                    onClick={stepBack}
+                  />
+                  <span className="text-muted-foreground min-w-12 text-center text-sm font-medium tabular-nums">
+                    {pos + 1} / {queue.length}
+                  </span>
+                  <StepArrow
+                    direction="forward"
+                    label={s.nextScreen}
+                    disabled={pos >= reach}
+                    onClick={stepForward}
+                  />
+                </div>
+              )}
               {!finished && (
                 <span className="text-muted-foreground text-sm font-medium" dir="auto">
                   {exam ? s.examTitle : (roundLabel ?? s.nextRound(number))}
@@ -971,5 +1015,35 @@ function TypeScreen({
         />
       </div>
     </>
+  );
+}
+
+/** One of the two corner arrows (left = back, right = forward, in both directions of text); dim when there is nowhere to go. */
+function StepArrow({
+  direction,
+  label,
+  disabled,
+  onClick,
+}: {
+  direction: "back" | "forward";
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const Icon = direction === "back" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "text-foreground bg-muted hover:bg-muted/70 flex size-7 shrink-0 items-center justify-center rounded-full transition-colors pointer-coarse:size-11",
+        disabled && "text-muted-foreground/40 pointer-events-none bg-transparent",
+      )}
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </button>
   );
 }
