@@ -2488,6 +2488,29 @@ export interface Database {
         };
         Returns: { out_strength: number; out_due_on: string }[];
       };
+      /** Word Drop's daily challenge: keeps the better score of the day for the caller. See 20250361000000_word_drop_daily.sql. */
+      record_word_drop_daily: {
+        Args: {
+          p_day: string;
+          p_level: number;
+          p_score: number;
+          p_accuracy: number;
+          p_wpm: number;
+          p_words: number;
+          p_country?: string | null;
+        };
+        Returns: { out_best: number; out_improved: boolean }[];
+      };
+      /** The countries side by side for one day (aggregates only). */
+      word_drop_daily_board: {
+        Args: { p_day: string };
+        Returns: { country: string; players: number; avg_score: number }[];
+      };
+      /** The caller's own place among the players of their level for one day. */
+      word_drop_daily_rank: {
+        Args: { p_day: string };
+        Returns: { my_score: number; my_rank: number; total: number }[];
+      };
       record_learner_word_review: {
         Args: {
           p_word: string;

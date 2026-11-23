@@ -8,6 +8,10 @@ import { Check, Volume2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { recordBankWordAction } from "@/lib/word-bank/actions";
+import { submitDailyScoreAction, type DailyOutcome } from "@/lib/word-drop/actions";
+import { newToken, friendSeed, seededRandom, type RoundSeed } from "@/lib/word-drop/seed";
+import { renderShareCard, shareImage, shareLink } from "@/lib/word-drop/share-card";
+import type { DailyBoard } from "@/lib/word-drop/store";
 import {
   MAX_ON_SCREEN,
   MIN_HARD_WORDS,
@@ -79,9 +83,13 @@ interface Round {
   missed: DropWord[];
   factor: number;
   remaining: number;
+  /** Game time (ms of the round that has actually run), and the game time the last tile appeared at: tiles are paced by the game's own clock, so a slow phone does not pile them up. */
+  elapsedMs: number;
   lastSpawn: number;
   last: number;
   deck: Deck;
+  /** Where tiles appear: repeatable for a seeded round, random otherwise. */
+  rand: () => number;
   uid: number;
   prevLen: number;
   /** The letters now in the input (the screen's own copy lives in state). */
@@ -129,12 +137,50 @@ function clock(seconds: number): string {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
-export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: boolean }) {
+interface WordDropGameProps {
+  pool: DropWord[];
+  bankOpen: boolean;
+  signedIn: boolean;
+  /** The level the words belong to. */
+  level: 1 | 2 | 3;
+  /** The seed of a daily or friend's challenge, or null for a free round. */
+  seed: RoundSeed | null;
+  /** A friend's score to beat (friend's challenge only). */
+  beat: number | null;
+  /** Where the daily challenge starts (a link to this page with today's seed). */
+  dailyHref: string;
+  /** The day's ranking, for the start page's daily card. */
+  board: DailyBoard | null;
+}
+
+/** Country names in the learner's own language, from the browser's own tables. */
+function countryName(code: string, locale: string | null): string {
+  try {
+    return (
+      new Intl.DisplayNames([locale ?? "ar"], { type: "region" }).of(code.toUpperCase()) ?? code
+    );
+  } catch {
+    return code.toUpperCase();
+  }
+}
+
+export function WordDropGame({
+  pool,
+  bankOpen,
+  signedIn,
+  level,
+  seed,
+  beat,
+  dailyHref,
+  board,
+}: WordDropGameProps) {
   const { locale } = useLocale();
   const strings = wordDropStrings(locale);
 
   const [screen, setScreen] = useState<"start" | "play" | "end">("start");
-  const [mode, setMode] = useState<WordDropMode>("easy");
+  const [mode, setMode] = useState<WordDropMode>(seed ? seed.mode : "easy");
+  const [daily, setDaily] = useState<DailyOutcome | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [hud, setHud] = useState<Hud>({
     score: 0,
     lives: START_LIVES,
@@ -237,9 +283,21 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
         beat,
       });
       setSaved(new Set());
+      setDaily(null);
+      // The daily challenge keeps the better score of the day for a signed-in learner and answers with the ranking.
+      if (seed?.kind === "daily" && signedIn) {
+        void submitDailyScoreAction({
+          day: seed.key,
+          level: seed.level,
+          score: r.score,
+          accuracy: accuracyPercent(r.typed, r.wrong),
+          wpm: wordsPerMinute(r.chars, ROUND_SECONDS - Math.max(0, r.remaining)),
+          words: r.correct,
+        }).then(setDaily);
+      }
       later(700, () => setScreen("end"));
     },
-    [later],
+    [later, seed, signedIn],
   );
 
   const spawn = useCallback(
@@ -247,9 +305,9 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
       const word = r.deck.next();
       r.uid += 1;
       // Pick a spot that does not sit on top of a tile that has only just appeared.
-      let frac = Math.random();
+      let frac = r.rand();
       for (let tries = 0; tries < 8; tries += 1) {
-        const candidate = Math.random();
+        const candidate = r.rand();
         if (!r.live.some((other) => other.y < 100 && Math.abs(other.frac - candidate) < 0.3)) {
           frac = candidate;
           break;
@@ -305,8 +363,9 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
       r.remaining -= dt;
       const height = fieldRef.current?.clientHeight ?? 400;
       const speed = ((height - TILE_ROOM) / FALL_SECONDS) * r.factor;
-      if (r.live.length < MAX_ON_SCREEN && now - r.lastSpawn > spawnGapMs(r.factor)) {
-        spawn(r, now, activeMode);
+      r.elapsedMs += dt * 1000;
+      if (r.live.length < MAX_ON_SCREEN && r.elapsedMs - r.lastSpawn > spawnGapMs(r.factor)) {
+        spawn(r, r.elapsedMs, activeMode);
       }
       for (const live of [...r.live]) {
         live.y += speed * dt;
@@ -334,6 +393,8 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
     const words = mode === "hard" ? pool.filter((word) => word.audioUrl !== null) : pool;
     if (words.length === 0) return;
     const now = performance.now();
+    // A seeded round deals the same words in the same order, at the same places, to everyone who plays the seed.
+    const rand = seed ? seededRandom(`${seed.raw}.places`) : Math.random;
     const r: Round = {
       running: true,
       lives: START_LIVES,
@@ -348,9 +409,11 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
       missed: [],
       factor: 1,
       remaining: ROUND_SECONDS,
-      lastSpawn: now,
+      elapsedMs: 0,
+      lastSpawn: 0,
       last: now,
-      deck: createDeck(words),
+      deck: createDeck(words, seed ? seededRandom(`${seed.raw}.deck`) : Math.random),
+      rand,
       uid: 0,
       prevLen: 0,
       typedValue: "",
@@ -365,12 +428,13 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
       setPops([]);
       setLiveView([]);
       setResult(null);
+      setDaily(null);
       setHud({ score: 0, lives: START_LIVES, combo: 0, seconds: ROUND_SECONDS });
     });
     inputRef.current?.focus({ preventScroll: true });
-    spawn(r, now, mode);
+    spawn(r, 0, mode);
     frame.current = requestAnimationFrame((t) => tick(t, mode));
-  }, [mode, pool, spawn, tick]);
+  }, [mode, pool, seed, spawn, tick]);
 
   const complete = useCallback(
     (r: Round, live: Live) => {
@@ -438,6 +502,57 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
     if (answer.ok) setSaved((current) => new Set(current).add(word.id));
   }
 
+  function say(text: string) {
+    setNotice(text);
+    later(2200, () => setNotice(null));
+  }
+
+  /** The point difference to the friend whose challenge this round answered, or null. */
+  const versus = seed?.kind === "friend" && beat !== null && result ? result.score - beat : null;
+
+  function versusLine(): string | null {
+    if (versus === null) return null;
+    if (versus > 0) return strings.beatFriend.replace("{n}", String(versus));
+    if (versus < 0) return strings.missFriend.replace("{n}", String(-versus));
+    return strings.tieFriend;
+  }
+
+  function placeLine(): string | null {
+    const mine = daily?.board?.mine;
+    if (!mine) return null;
+    return strings.yourPlace
+      .replace("{rank}", String(mine.rank))
+      .replace("{total}", String(mine.total));
+  }
+
+  async function onShareCard() {
+    if (!result) return;
+    const blob = await renderShareCard({
+      score: result.score,
+      accuracy: result.accuracy,
+      wpm: result.wpm,
+      scoreLabel: strings.cardScore,
+      accuracyLabel: strings.cardAccuracy,
+      speedLabel: strings.cardSpeed,
+      tagline: strings.cardTagline,
+      footer: placeLine() ?? versusLine(),
+    });
+    if (!blob) return;
+    const outcome = await shareImage(blob, strings.shareText.replace("{n}", String(result.score)));
+    if (outcome === "saved") say(strings.cardSaved);
+  }
+
+  async function onChallenge() {
+    if (!result) return;
+    const challengeMode = mode === "easy" ? "easy" : "mid";
+    const url = `${window.location.origin}/learn/word-drop?seed=${friendSeed(newToken(), level, challengeMode)}&beat=${result.score}`;
+    const outcome = await shareLink(
+      url,
+      strings.challengeText.replace("{n}", String(result.score)),
+    );
+    if (outcome === "copied") say(strings.linkCopied);
+  }
+
   const modeLabel: Record<WordDropMode, { name: string; hint: string }> = {
     easy: { name: strings.easy, hint: strings.easyHint },
     mid: { name: strings.mid, hint: strings.midHint },
@@ -475,11 +590,36 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
             </div>
             <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-6 pb-4">
               <h1 dir="auto" className="text-right text-[34px] leading-[1.2] font-extrabold">
-                {strings.headline1}
+                {seed?.kind === "daily"
+                  ? strings.dailyHeadline1
+                  : seed?.kind === "friend"
+                    ? strings.friendHeadline1
+                    : strings.headline1}
                 <br />
-                <span className="text-[var(--wd-green)]">{strings.headline2}</span>
+                <span className="text-[var(--wd-green)]">
+                  {seed?.kind === "daily"
+                    ? strings.dailyHeadline2
+                    : seed?.kind === "friend"
+                      ? strings.friendHeadline2
+                      : strings.headline2}
+                </span>
               </h1>
-              <div className="flex flex-col gap-2.5" role="radiogroup">
+              {seed && (
+                <div className="rounded-[18px] border border-[var(--wd-green)] px-4 py-3.5 text-right">
+                  <p dir="auto" className="text-[15px] font-bold">
+                    {seed.kind === "daily" ? strings.dailyMode : strings.friendMode}
+                  </p>
+                  {seed.kind === "friend" && beat !== null && (
+                    <p
+                      dir="auto"
+                      className="mt-1 text-[22px] font-extrabold text-[var(--wd-green)]"
+                    >
+                      {strings.toBeat.replace("{n}", String(beat))}
+                    </p>
+                  )}
+                </div>
+              )}
+              <div className={cn("flex flex-col gap-2.5", seed && "hidden")} role="radiogroup">
                 {WORD_DROP_MODES.map((m, index) => {
                   const disabled = m === "hard" && !hardOk;
                   const selected = mode === m && !disabled;
@@ -522,6 +662,51 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
                   );
                 })}
               </div>
+              {!seed && (
+                <div className="flex flex-col gap-3 rounded-[18px] border border-[var(--wd-line)] px-4 py-3.5">
+                  <div dir="auto" className="text-right">
+                    <p className="text-[15px] font-bold">{strings.dailyTitle}</p>
+                    <p className="text-[12.5px] text-[var(--wd-mute)]">{strings.dailyLine}</p>
+                  </div>
+                  {board && board.countries.length > 0 && (
+                    <div className="border-t border-[var(--wd-line)]">
+                      {board.countries.slice(0, 3).map((row, index) => (
+                        <div
+                          key={row.country}
+                          dir="auto"
+                          className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-[var(--wd-line)] py-2.5 text-[14px]"
+                        >
+                          <span
+                            dir="ltr"
+                            className={cn(
+                              "font-extrabold tabular-nums",
+                              index === 0 ? "text-[var(--wd-green)]" : "text-[var(--wd-mute)]",
+                            )}
+                          >
+                            {index + 1}
+                          </span>
+                          <span>
+                            {countryName(row.country, locale)}
+                            <span className="ms-2 text-[11.5px] text-[var(--wd-mute)]">
+                              {strings.playersCount.replace("{n}", String(row.players))}
+                            </span>
+                          </span>
+                          <b dir="ltr" className="tabular-nums">
+                            {row.average}
+                          </b>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Link
+                    href={dailyHref}
+                    prefetch={false}
+                    className="grid min-h-12 place-items-center rounded-2xl border border-[var(--wd-line)] text-[15px] font-bold hover:border-[var(--wd-green)] hover:text-[var(--wd-green)]"
+                  >
+                    {strings.dailyStart}
+                  </Link>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-2.5 px-5 pb-5">
               <p dir="auto" className="text-center text-[12.5px] text-[var(--wd-mute)]">
@@ -761,6 +946,60 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
                     {strings.newBest.replace("{n}", String(result.beat))}
                   </p>
                 )}
+                {versusLine() && (
+                  <p
+                    dir="auto"
+                    className={cn(
+                      "mt-2.5 text-right text-[17px] font-bold",
+                      versus !== null && versus > 0 ? "text-[var(--wd-green)]" : "text-white",
+                    )}
+                  >
+                    {versusLine()}
+                  </p>
+                )}
+                {seed?.kind === "daily" && !signedIn && (
+                  <p dir="auto" className="mt-2.5 text-right text-[15px] text-[var(--wd-mute)]">
+                    {strings.signInToRank}
+                  </p>
+                )}
+                {placeLine() && (
+                  <div dir="auto" className="mt-2.5 text-right">
+                    <p className="text-[17px] font-bold text-[var(--wd-green)]">{placeLine()}</p>
+                    {daily?.improved === false && daily.best !== undefined && (
+                      <p className="text-[13px] text-[var(--wd-mute)]">
+                        {strings.dayBest.replace("{n}", String(daily.best))}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {daily?.board && daily.board.countries.length > 0 && (
+                  <div className="mt-3 border-t border-[var(--wd-line)]">
+                    <p dir="auto" className="py-2 text-right text-[12.5px] text-[var(--wd-mute)]">
+                      {strings.countriesTitle}
+                    </p>
+                    {daily.board.countries.slice(0, 5).map((row, index) => (
+                      <div
+                        key={row.country}
+                        dir="auto"
+                        className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-t border-[var(--wd-line)] py-2.5 text-[14px]"
+                      >
+                        <span
+                          dir="ltr"
+                          className={cn(
+                            "font-extrabold tabular-nums",
+                            index === 0 ? "text-[var(--wd-green)]" : "text-[var(--wd-mute)]",
+                          )}
+                        >
+                          {index + 1}
+                        </span>
+                        <span>{countryName(row.country, locale)}</span>
+                        <b dir="ltr" className="tabular-nums">
+                          {row.average}
+                        </b>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-3 border-y border-[var(--wd-line)]">
@@ -824,7 +1063,32 @@ export function WordDropGame({ pool, bankOpen }: { pool: DropWord[]; bankOpen: b
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-2.5 px-5 pb-5">
+            <div className="relative flex flex-col gap-2.5 px-5 pb-5">
+              {notice && (
+                <p
+                  role="status"
+                  dir="auto"
+                  className="absolute inset-x-5 -top-11 rounded-xl bg-white px-3 py-2 text-center text-[13px] font-semibold text-black"
+                >
+                  {notice}
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => void onChallenge()}
+                  className="min-h-[50px] rounded-2xl border border-[var(--wd-line)] bg-black px-2 text-[14.5px] font-bold hover:border-[var(--wd-mute)]"
+                >
+                  {strings.challengeFriend}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void onShareCard()}
+                  className="min-h-[50px] rounded-2xl border border-[var(--wd-line)] bg-black px-2 text-[14.5px] font-bold hover:border-[var(--wd-mute)]"
+                >
+                  {strings.shareResult}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setScreen("start")}
