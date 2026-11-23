@@ -723,7 +723,13 @@ export function WordDropGame({
         @media (prefers-reduced-motion:reduce){.wd-anim{animation-duration:.01s !important}}
       `}</style>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
+      <div
+        className={cn(
+          "mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col",
+          // Tablet and laptop: the play field gets room, the start and end pages become two columns.
+          screen === "play" ? "md:max-w-3xl" : "md:max-w-5xl",
+        )}
+      >
         {screen === "start" && (
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="flex items-center justify-between px-5 pt-5">
@@ -738,8 +744,17 @@ export function WordDropGame({
                 <X className="size-4" aria-hidden="true" />
               </Link>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-6 pb-4">
-              <h1 dir="auto" className="text-right text-[34px] leading-[1.2] font-extrabold">
+            <div
+              className={cn(
+                "flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-6 pb-4 md:px-8 md:pt-10",
+                !seed && "md:grid md:grid-cols-2 md:content-start md:items-start md:gap-x-12",
+                seed && "md:mx-auto md:w-full md:max-w-xl",
+              )}
+            >
+              <h1
+                dir="auto"
+                className="text-right text-[34px] leading-[1.2] font-extrabold md:col-span-2 md:text-[48px]"
+              >
                 {seed?.kind === "daily"
                   ? strings.dailyHeadline1
                   : seed?.kind === "friend"
@@ -778,7 +793,10 @@ export function WordDropGame({
                   {strings.emptyPool}
                 </p>
               )}
-              <div className={cn("flex flex-col gap-2.5", seed && "hidden")} role="radiogroup">
+              <div
+                className={cn("flex flex-col gap-2.5 md:gap-3", seed && "hidden")}
+                role="radiogroup"
+              >
                 {modes.map((m, index) => {
                   const disabled = m === "hard" && !hardOk;
                   const selected = mode === m && !disabled;
@@ -821,95 +839,97 @@ export function WordDropGame({
                   );
                 })}
               </div>
-              {!seed && personal.length >= MIN_PERSONAL && mode !== "sentences" && (
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={useMine}
-                  onClick={() => setUseMine((on) => !on)}
-                  className={cn(
-                    "grid grid-cols-[1fr_auto] items-center gap-4 rounded-[18px] border bg-black px-4 py-3 text-right transition-colors",
-                    useMine ? "border-[var(--wd-green)]" : "border-[var(--wd-line)]",
-                  )}
-                >
-                  <span dir="auto">
-                    <span
-                      className={cn(
-                        "block text-[15px] font-bold",
-                        useMine && "text-[var(--wd-green)]",
-                      )}
-                    >
-                      {strings.myWordsTitle}
-                    </span>
-                    <span className="block text-[12.5px] text-[var(--wd-mute)]">
-                      {strings.myWordsLine.replace("{n}", String(personal.length))}
-                    </span>
-                  </span>
-                  <span
-                    aria-hidden="true"
+              <div className="contents md:flex md:flex-col md:gap-6">
+                {!seed && personal.length >= MIN_PERSONAL && mode !== "sentences" && (
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={useMine}
+                    onClick={() => setUseMine((on) => !on)}
                     className={cn(
-                      "flex h-6 w-11 items-center rounded-full border px-0.5 transition-colors",
-                      useMine
-                        ? "justify-end border-[var(--wd-green)] bg-[var(--wd-green)]"
-                        : "justify-start border-[var(--wd-line)]",
+                      "grid grid-cols-[1fr_auto] items-center gap-4 rounded-[18px] border bg-black px-4 py-3 text-right transition-colors",
+                      useMine ? "border-[var(--wd-green)]" : "border-[var(--wd-line)]",
                     )}
                   >
+                    <span dir="auto">
+                      <span
+                        className={cn(
+                          "block text-[15px] font-bold",
+                          useMine && "text-[var(--wd-green)]",
+                        )}
+                      >
+                        {strings.myWordsTitle}
+                      </span>
+                      <span className="block text-[12.5px] text-[var(--wd-mute)]">
+                        {strings.myWordsLine.replace("{n}", String(personal.length))}
+                      </span>
+                    </span>
                     <span
+                      aria-hidden="true"
                       className={cn(
-                        "size-4 rounded-full",
-                        useMine ? "bg-black" : "bg-[var(--wd-mute)]",
+                        "flex h-6 w-11 items-center rounded-full border px-0.5 transition-colors",
+                        useMine
+                          ? "justify-end border-[var(--wd-green)] bg-[var(--wd-green)]"
+                          : "justify-start border-[var(--wd-line)]",
                       )}
-                    />
-                  </span>
-                </button>
-              )}
-              {!seed && (
-                <div className="flex flex-col gap-3 rounded-[18px] border border-[var(--wd-line)] px-4 py-3.5">
-                  <div dir="auto" className="text-right">
-                    <p className="text-[15px] font-bold">{strings.dailyTitle}</p>
-                    <p className="text-[12.5px] text-[var(--wd-mute)]">{strings.dailyLine}</p>
-                  </div>
-                  {board && board.countries.length > 0 && (
-                    <div className="border-t border-[var(--wd-line)]">
-                      {board.countries.slice(0, 3).map((row, index) => (
-                        <div
-                          key={row.country}
-                          dir="auto"
-                          className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-[var(--wd-line)] py-2.5 text-[14px]"
-                        >
-                          <span
-                            dir="ltr"
-                            className={cn(
-                              "font-extrabold tabular-nums",
-                              index === 0 ? "text-[var(--wd-green)]" : "text-[var(--wd-mute)]",
-                            )}
-                          >
-                            {index + 1}
-                          </span>
-                          <span>
-                            {countryName(row.country, locale)}
-                            <span className="ms-2 text-[11.5px] text-[var(--wd-mute)]">
-                              {strings.playersCount.replace("{n}", String(row.players))}
-                            </span>
-                          </span>
-                          <b dir="ltr" className="tabular-nums">
-                            {row.average}
-                          </b>
-                        </div>
-                      ))}
+                    >
+                      <span
+                        className={cn(
+                          "size-4 rounded-full",
+                          useMine ? "bg-black" : "bg-[var(--wd-mute)]",
+                        )}
+                      />
+                    </span>
+                  </button>
+                )}
+                {!seed && (
+                  <div className="flex flex-col gap-3 rounded-[18px] border border-[var(--wd-line)] px-4 py-3.5">
+                    <div dir="auto" className="text-right">
+                      <p className="text-[15px] font-bold">{strings.dailyTitle}</p>
+                      <p className="text-[12.5px] text-[var(--wd-mute)]">{strings.dailyLine}</p>
                     </div>
-                  )}
-                  <Link
-                    href={dailyHref}
-                    prefetch={false}
-                    className="grid min-h-12 place-items-center rounded-2xl border border-[var(--wd-line)] text-[15px] font-bold hover:border-[var(--wd-green)] hover:text-[var(--wd-green)]"
-                  >
-                    {strings.dailyStart}
-                  </Link>
-                </div>
-              )}
+                    {board && board.countries.length > 0 && (
+                      <div className="border-t border-[var(--wd-line)]">
+                        {board.countries.slice(0, 3).map((row, index) => (
+                          <div
+                            key={row.country}
+                            dir="auto"
+                            className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-[var(--wd-line)] py-2.5 text-[14px]"
+                          >
+                            <span
+                              dir="ltr"
+                              className={cn(
+                                "font-extrabold tabular-nums",
+                                index === 0 ? "text-[var(--wd-green)]" : "text-[var(--wd-mute)]",
+                              )}
+                            >
+                              {index + 1}
+                            </span>
+                            <span>
+                              {countryName(row.country, locale)}
+                              <span className="ms-2 text-[11.5px] text-[var(--wd-mute)]">
+                                {strings.playersCount.replace("{n}", String(row.players))}
+                              </span>
+                            </span>
+                            <b dir="ltr" className="tabular-nums">
+                              {row.average}
+                            </b>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <Link
+                      href={dailyHref}
+                      prefetch={false}
+                      className="grid min-h-12 place-items-center rounded-2xl border border-[var(--wd-line)] text-[15px] font-bold hover:border-[var(--wd-green)] hover:text-[var(--wd-green)]"
+                    >
+                      {strings.dailyStart}
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col gap-2.5 px-5 pb-5">
+            <div className="flex flex-col gap-2.5 px-5 pb-5 md:mx-auto md:w-full md:max-w-md md:px-0 md:pb-8">
               <p dir="auto" className="text-center text-[12.5px] text-[var(--wd-mute)]">
                 {strings.source}
               </p>
@@ -1120,7 +1140,7 @@ export function WordDropGame({
                 placeholder={strings.placeholder}
                 aria-label={strings.placeholder}
                 className={cn(
-                  "wd-anim h-14 w-full rounded-2xl border bg-black px-4 text-center text-[22px] font-bold tracking-wider text-white outline-none placeholder:text-[var(--wd-line)] focus:border-[var(--wd-green)]",
+                  "wd-anim h-14 w-full rounded-2xl border bg-black px-4 text-center text-[22px] font-bold tracking-wider text-white outline-none placeholder:text-[var(--wd-line)] focus:border-[var(--wd-green)] md:h-16 md:text-[26px]",
                   shake ? "border-[var(--wd-red)]" : "border-[var(--wd-line)]",
                 )}
                 style={shake ? { animation: "wd-shake .25s" } : undefined}
@@ -1131,8 +1151,11 @@ export function WordDropGame({
 
         {screen === "end" && result && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-8 pb-4">
-              <div dir="ltr" className="flex flex-wrap items-baseline justify-end gap-x-7 gap-y-1">
+            <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-8 pb-4 md:grid md:grid-cols-2 md:content-start md:items-start md:gap-x-12 md:px-8 md:pt-12">
+              <div
+                dir="ltr"
+                className="flex flex-wrap items-baseline justify-end gap-x-7 gap-y-1 md:col-start-1"
+              >
                 <div className="flex items-baseline gap-2">
                   <small dir="auto" className="text-[15px] text-[var(--wd-mute)]">
                     {strings.points}
@@ -1151,7 +1174,7 @@ export function WordDropGame({
                 </div>
               </div>
 
-              <div>
+              <div className="md:col-start-1">
                 <p dir="auto" className="mb-2.5 text-right text-[15px]">
                   {strings.accuracyLine}
                 </p>
@@ -1227,7 +1250,7 @@ export function WordDropGame({
                 )}
               </div>
 
-              <div className="grid grid-cols-3 border-y border-[var(--wd-line)]">
+              <div className="grid grid-cols-3 border-y border-[var(--wd-line)] md:col-start-1">
                 {[
                   { n: result.wpm, label: strings.wordsPerMinute },
                   { n: result.words, label: strings.wordsTyped },
@@ -1248,7 +1271,7 @@ export function WordDropGame({
                 ))}
               </div>
 
-              <div>
+              <div className="md:col-start-2 md:row-span-3 md:row-start-1">
                 <p dir="auto" className="mb-2.5 text-right text-[12.5px] text-[var(--wd-mute)]">
                   {result.missed.length === 0
                     ? strings.noMisses
@@ -1288,7 +1311,7 @@ export function WordDropGame({
                 )}
               </div>
             </div>
-            <div className="relative flex flex-col gap-2.5 px-5 pb-5">
+            <div className="relative flex flex-col gap-2.5 px-5 pb-5 md:mx-auto md:w-full md:max-w-md md:px-0 md:pb-8">
               {notice && (
                 <p
                   role="status"
