@@ -7,6 +7,7 @@ import {
   BookMarked,
   Headphones,
   Home,
+  Keyboard,
   LayoutGrid,
   Library,
   Lightbulb,
@@ -32,6 +33,7 @@ import {
 } from "@/lib/contact/instagram";
 import { ruleStrings } from "@/lib/daily-rule/strings";
 import { videoNewLabel, videoStrings } from "@/lib/video-dictation/strings";
+import { wordDropStrings } from "@/lib/word-drop/strings";
 import { wordsHubStrings } from "@/lib/words-hub/strings";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +89,7 @@ export function LearnSidebar({
   mobilePath = false,
   rulesEnabled = false,
   videoEnabled = false,
+  wordDropEnabled = false,
   contactInstagram = false,
   wordBankEnabled = false,
   wordsHub = false,
@@ -102,6 +105,8 @@ export function LearnSidebar({
   rulesEnabled?: boolean;
   /** The "videoDictation" permission, resolved for this visitor: «فيديو» is a menu item from md: up, and a tile in the phone's More sheet. */
   videoEnabled?: boolean;
+  /** The "wordDrop" permission, resolved for this visitor: «Word Drop» (the falling-words typing game) is a menu item from md: up, and a tile in the phone's More sheet. */
+  wordDropEnabled?: boolean;
   /** The "contactInstagram" permission, resolved for this visitor: the «تواصل معنا» box at the foot of the md: sidebar, and the last tile of the phone's More sheet. */
   contactInstagram?: boolean;
   /** The "wordBank" permission or the saved words ("Personal word cards"), resolved for this visitor (and signed in): «كلماتي» is a menu item right before Word Lists from md: up, and a tile in the phone's More sheet. */
@@ -140,7 +145,9 @@ export function LearnSidebar({
                 ? "passages"
                 : pathname.startsWith("/learn/video")
                   ? "video"
-                  : pathname.startsWith("/learn/word-lists")
+                  : pathname.startsWith("/learn/word-drop")
+                    ? "word-drop"
+                    : pathname.startsWith("/learn/word-lists")
                     ? "word-lists"
                     : pathname.startsWith("/learn/words")
                       ? wordsHub
@@ -176,11 +183,18 @@ export function LearnSidebar({
       icon: ListChecks,
     },
     { key: "rules", href: "/learn/rules", label: ruleStrings(locale).myRules, icon: Lightbulb },
+    {
+      key: "word-drop",
+      href: "/learn/word-drop",
+      label: wordDropStrings(locale).navLabel,
+      icon: Keyboard,
+    },
   ].filter(
     (item) =>
       (item.key !== "library" || showLibrary) &&
       (item.key !== "passages" || passagesEnabled) &&
       (item.key !== "video" || videoEnabled) &&
+      (item.key !== "word-drop" || wordDropEnabled) &&
       (item.key !== "rules" || rulesEnabled) &&
       (item.key !== "words" || (wordBankEnabled && !wordsHub)),
   );
@@ -233,6 +247,16 @@ export function LearnSidebar({
                 label: t.nav.library,
                 icon: Library,
                 tag: t.mobilePath.moreSubscribers,
+              },
+            ]
+          : []),
+        ...(wordDropEnabled
+          ? [
+              {
+                key: "word-drop",
+                href: "/learn/word-drop",
+                label: wordDropStrings(locale).navLabel,
+                icon: Keyboard,
               },
             ]
           : []),

@@ -64,6 +64,7 @@ export const ROLLOUT_IDS = [
   "storyCoversNew",
   "inAppPayStrip",
   "germanTrack",
+  "wordDrop",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -733,6 +734,20 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
       "Only the look and the order change: the plans, the prices, the payment methods, the terms and every check on the server are untouched.",
       "The rating quoted is the sum over every section (lessons, stories, words, Passages and Video), rounded down like before.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  wordDrop: {
+    id: "wordDrop",
+    audience: "learner",
+    title: "Word Drop (the falling-words typing game)",
+    description:
+      "A two-minute typing game: words fall from the top of the screen and the learner types each one before it reaches the bottom. Three lives, a combo, and a speed that adapts (faster after a clean streak, slower after a miss). Three modes: Easy (the word is shown), Medium (its Arabic meaning is shown and the learner types the English word) and Hard (the word is only heard, from its recorded clip). The words come from the Word Lists groups of the learner's own level, and a word that was missed comes back sooner in the same round. The end page shows the score, the accuracy, the speed and the missed words, and a tap on a missed word saves it to «كلماتي».",
+    notes: [
+      "Admins only for now: a menu item (md: up, and a tile in the phone's More sheet) and the page /learn/word-drop exist only while this is open for you.",
+      "Needs no table and adds no load while playing: the round runs entirely in the browser. The page reads three Word Lists groups and one cached batch of word clips when it opens; the only write is the optional tap that saves a missed word.",
+      "Saving a missed word to «كلماتي» needs the Words bank permission to be open for the same people; without it the missed words are shown but not saved.",
+      "Hard mode only offers words that already have a stored clip, and is switched off when fewer than eight words have one. The browser's own voice is never used.",
+      "The best score is remembered in the learner's own browser only; there is no leaderboard yet.",
     ],
   },
   mobilePath: {

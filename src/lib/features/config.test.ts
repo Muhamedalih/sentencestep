@@ -451,6 +451,7 @@ test("rollouts: resolveFeatures leaves every Permissions feature closed for ever
       inAppPayStrip: false,
 
       germanTrack: false,
+      wordDrop: false,
     });
   }
 });

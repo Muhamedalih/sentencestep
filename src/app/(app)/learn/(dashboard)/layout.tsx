@@ -80,6 +80,7 @@ export default async function LearnDashboardLayout({ children }: { children: Rea
             mobilePath={features.rollouts.mobilePath}
             rulesEnabled={Boolean(user) && features.rollouts.dailyRule}
             videoEnabled={features.rollouts.videoDictation}
+            wordDropEnabled={features.rollouts.wordDrop}
             contactInstagram={features.rollouts.contactInstagram}
             wordBankEnabled={
               Boolean(user) && (features.rollouts.wordBank || features.personalCards.page)
