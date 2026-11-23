@@ -65,12 +65,16 @@ const PALETTE = {
 } as CSSProperties;
 
 const BEST_KEY = "wordDropBest";
+/** A silent one-sample recording: played on the tap on Start to unlock the audio element. */
+const SILENT_CLIP =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
 /** How fast a round runs: seconds a tile takes to cross the screen at speed 1, the gap between tiles (a multiple of the usual), and how many can be on screen. Sentences are slower and fewer: they are longer to type. */
 const PACE: Record<WordDropMode, { fall: number; gap: number; max: number }> = {
-  easy: { fall: 10, gap: 1, max: MAX_ON_SCREEN },
-  mid: { fall: 10, gap: 1, max: MAX_ON_SCREEN },
-  hard: { fall: 10, gap: 1, max: MAX_ON_SCREEN },
-  sentences: { fall: 17, gap: 2.4, max: 2 },
+  easy: { fall: 22, gap: 1, max: MAX_ON_SCREEN },
+  mid: { fall: 22, gap: 1, max: MAX_ON_SCREEN },
+  // Hard also needs a moment to hear the word and play it again.
+  hard: { fall: 24, gap: 1.15, max: 3 },
+  sentences: { fall: 30, gap: 2.2, max: 2 },
 };
 /** A tile whose bottom edge passes (field height - this) has hit the bottom. */
 const BOTTOM_MARGIN = 6;
@@ -288,17 +292,32 @@ export function WordDropGame({
     };
   }, []);
 
-  const playClip = useCallback((url: string | null) => {
-    if (!url) return;
+  /** One audio element for the whole game, so the tap on Start can unlock it (a phone only lets a clip play that a tap allowed) and every later clip reuses it. */
+  const clipPlayer = useCallback((): HTMLAudioElement | null => {
     try {
-      audio.current?.pause();
-      const clip = new Audio(url);
-      audio.current = clip;
-      void clip.play().catch(() => undefined);
+      if (!audio.current) audio.current = new Audio();
+      return audio.current;
     } catch {
-      // A clip that will not play just stays silent; the word is still on screen as a hint.
+      return null;
     }
   }, []);
+
+  const playClip = useCallback(
+    (url: string | null) => {
+      if (!url) return;
+      try {
+        const clip = clipPlayer();
+        if (!clip) return;
+        clip.muted = false;
+        clip.src = url;
+        clip.currentTime = 0;
+        void clip.play().catch(() => undefined);
+      } catch {
+        // A clip that will not play just stays silent; the word is still on screen as a hint.
+      }
+    },
+    [clipPlayer],
+  );
 
   const popAt = useCallback(
     (text: string, frac: number, y: number, bad: boolean) => {
@@ -547,6 +566,25 @@ export function WordDropGame({
     const kind: RoundKind = seed ? seed.kind : "free";
     setPlayed({ seed: roundSeed, kind, mode, own });
     report({ event: "started", mode, kind, level });
+    // The tap on Start also unlocks the game's audio element (a silent clip), so the word's recording can play after it is typed.
+    try {
+      const clip = clipPlayer();
+      if (clip) {
+        clip.muted = true;
+        clip.src = SILENT_CLIP;
+        void clip
+          .play()
+          .then(() => {
+            clip.pause();
+            clip.muted = false;
+          })
+          .catch(() => {
+            clip.muted = false;
+          });
+      }
+    } catch {
+      // No audio on this browser: the game is played in silence.
+    }
     // Flushed so the input exists when focus is asked for inside this tap, which is what lets a phone open its keyboard.
     flushSync(() => {
       setScreen("play");
@@ -561,7 +599,7 @@ export function WordDropGame({
     inputRef.current?.focus({ preventScroll: true });
     spawn(r, 0);
     frame.current = requestAnimationFrame(tick);
-  }, [freePool, level, mineOn, mode, personal, pool, seed, sentencePool, spawn, tick]);
+  }, [clipPlayer, freePool, level, mineOn, mode, personal, pool, seed, sentencePool, spawn, tick]);
 
   const complete = useCallback(
     (r: Round, live: Live) => {
@@ -569,6 +607,8 @@ export function WordDropGame({
       r.correct += 1;
       r.combo += 1;
       r.best = Math.max(r.best, r.combo);
+      // The recording of the word plays once it is typed right (Hard already played it as the tile appeared).
+      if (r.mode === "easy" || r.mode === "mid") playClip(live.word.audioUrl);
       r.chars += live.word.en.replace(/ /g, "").length;
       r.score += pointsForText(r.combo, wordCountOf(live.word.en));
       r.factor = speedAfterCorrect(r.factor);
@@ -581,7 +621,7 @@ export function WordDropGame({
       );
       syncHud(r);
     },
-    [popAt, syncHud],
+    [playClip, popAt, syncHud],
   );
 
   function onType(value: string) {
