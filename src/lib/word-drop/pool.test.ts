@@ -184,5 +184,5 @@ test("tiles that start apart on a narrow field never overlap while they fall at 
 });
 
 test("a round cannot hold more words than the quickest pace allows", () => {
-  assert.ok(MAX_ROUND_WORDS >= 90 && MAX_ROUND_WORDS <= 100);
+  assert.ok(MAX_ROUND_WORDS >= 45 && MAX_ROUND_WORDS <= 60);
 });

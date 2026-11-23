@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  BASE_GAP_MS,
   SPEED_MAX,
   SPEED_MIN,
   accuracyPercent,
@@ -12,6 +13,7 @@ import {
   pointsFor,
   shortMeaning,
   speedAfterCorrect,
+  spawnGapMs,
   speedAfterMiss,
   wordsPerMinute,
   type DropWord,
@@ -129,4 +131,19 @@ test("the pool keeps droppable words once each, with their short meaning, senten
   assert.equal(pool[0]!.audioUrl, "https://clips.example/aunt.mp3");
   assert.equal(pool[1]!.meaning, "primo");
   assert.equal(pool[1]!.audioUrl, null);
+});
+
+test("the pace stays humane: a new word every 4.8 s at the start, never faster than every 2.7 s, and the top speed takes the whole round to reach", () => {
+  assert.equal(spawnGapMs(1), BASE_GAP_MS);
+  assert.equal(BASE_GAP_MS, 4800);
+  assert.ok(spawnGapMs(SPEED_MAX) > 2600);
+  let factor = 1;
+  let words = 0;
+  while (factor < SPEED_MAX) {
+    factor = speedAfterCorrect(factor);
+    words += 1;
+  }
+  assert.ok(words >= 35);
+  // One miss costs several words of progress.
+  assert.ok(speedAfterCorrect(speedAfterMiss(1)) < 1);
 });

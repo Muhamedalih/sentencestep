@@ -27,12 +27,21 @@ export const START_LIVES = 3;
 export const MAX_ON_SCREEN = 4;
 /** Hard mode needs a clip for every word it asks; with fewer than this many words that have one, it stays closed. */
 export const MIN_HARD_WORDS = 8;
-/** The speed factor's bounds: the round starts at 1, rises after correct words and falls after a miss. */
-export const SPEED_MIN = 0.7;
+/**
+ * The speed factor's bounds: the round starts at 1, rises a little after each correct word and falls
+ * after a miss. Tuned with a model of a learner who works the lowest tile first (a reaction time plus
+ * so much a letter): a below-average typist (about 3.5 s for a 6-letter word) lasts the whole round, a
+ * slow one (about 4.5 s) nearly does, and a fast one is pushed up towards the top speed.
+ */
+export const SPEED_MIN = 0.6;
 export const SPEED_MAX = 1.8;
+export const SPEED_UP = 0.02;
+export const SPEED_DOWN = 0.15;
+/** The gap between two new words at speed 1. */
+export const BASE_GAP_MS = 4800;
 /** The most words a round can ever hold: the quickest spawn gap fills the round, plus the tiles that can be on screen at once. No honest score has more correct words than this. */
 export const MAX_ROUND_WORDS =
-  Math.ceil((ROUND_SECONDS * 1000) / (2400 / SPEED_MAX)) + MAX_ON_SCREEN + 1;
+  Math.ceil((ROUND_SECONDS * 1000) / (BASE_GAP_MS / SPEED_MAX)) + MAX_ON_SCREEN + 1;
 /** Sentences mode: the sentence's length in words, and the level it opens at. */
 export const SENTENCE_MIN_WORDS = 3;
 export const SENTENCE_MAX_WORDS = 6;
@@ -85,11 +94,11 @@ export function pointsForText(combo: number, words: number): number {
 }
 
 export function speedAfterCorrect(factor: number): number {
-  return Math.min(SPEED_MAX, factor + 0.05);
+  return Math.min(SPEED_MAX, factor + SPEED_UP);
 }
 
 export function speedAfterMiss(factor: number): number {
-  return Math.max(SPEED_MIN, factor - 0.1);
+  return Math.max(SPEED_MIN, factor - SPEED_DOWN);
 }
 
 /** Points for a correct word: 10, plus 2 for each word of the current combo (the combo counts up to 10). */
@@ -111,7 +120,7 @@ export function wordsPerMinute(correctLetters: number, secondsPlayed: number): n
 
 /** Seconds between two new words: shorter as the speed factor rises. */
 export function spawnGapMs(factor: number): number {
-  return 2400 / factor;
+  return BASE_GAP_MS / factor;
 }
 
 /** The word the typed letters belong to: among the falling words that start with them, the one closest to the bottom. */

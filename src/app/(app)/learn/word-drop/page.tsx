@@ -47,7 +47,7 @@ function firstParam(value: string | string[] | undefined): string | undefined {
  * sender actually played) and the daily challenge deals the same words to all players of a level. The
  * learner's own words (their weakest «كلماتي» rows) come as a separate list the start page can put in
  * front of a free round. Sentences mode (level 2 and 3) takes its short sentences from the same groups.
- * Hard mode needs one batch of word clips, read only for a free round (a seeded round is Easy or Medium).
+ * One batch of word clips is read for every round: Hard mode asks them and the other modes play a word's clip once it is typed right.
  */
 export default async function WordDropPage({
   searchParams,
@@ -91,13 +91,11 @@ export default async function WordDropPage({
     if (buildPool(words, new Map()).length >= WANTED_WORDS) break;
   }
 
-  // Clips are only for Hard mode, which a seeded round does not offer.
-  const clips = seed
-    ? new Map<string, string>()
-    : await lookupWordListVoiceAudio([
-        ...words.map((word) => word.targetWord),
-        ...weakest.map((row) => row.word),
-      ]);
+  // The recording of each word: Hard mode asks it, and every other mode plays it once the word is typed right.
+  const clips = await lookupWordListVoiceAudio([
+    ...words.map((word) => word.targetWord),
+    ...weakest.map((row) => row.word),
+  ]);
   const pool = buildPool(words, clips).slice(0, MAX_POOL);
   const personal = seed
     ? []
