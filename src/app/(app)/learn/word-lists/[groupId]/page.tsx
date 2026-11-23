@@ -127,7 +127,7 @@ export default async function WordGroupPracticePage({
           supportTitle: group.supportTitle ?? (locale ? group.titleAr : undefined),
           level: group.level,
         }}
-        words={buildLadderWords(group.words, checks)}
+        words={buildLadderWords(group.words, { ...checks, voiceId })}
         voiceId={voiceId ?? null}
         bankFeed={Boolean(user) && features.rollouts.wordBank}
         todayISO={todayISO}

@@ -1,4 +1,5 @@
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { secondVoiceFor, voiceForWordAt } from "@/lib/voice/german-voice-pair";
 import { hashText, normalizeTextForVoice } from "@/lib/voice/resolution";
 
 /**
@@ -120,11 +121,27 @@ export async function resolveGroupPlaybackVoices(
 }
 
 export async function resolveWordGroupPlaybackVoiceId(
-  group: { voiceId?: string | null; words: readonly { targetWord: string }[] },
+  group: { voiceId?: string | null; words: readonly { targetWord: string; order?: number }[] },
   defaultVoiceId: string,
 ): Promise<string> {
   if (!group.voiceId || group.voiceId === defaultVoiceId) return defaultVoiceId;
   try {
+    // A topic with two voices (German): each word is ready in ITS voice, the woman's words (1st, 3rd...) in hers
+    // and the man's in his; the topic is switched over only when every word of both is ready.
+    const second = secondVoiceFor(group.voiceId);
+    if (second) {
+      const ordered = [...group.words].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const [womans, mans] = [
+        ordered.filter((_, i) => voiceForWordAt(group.voiceId, i) === group.voiceId),
+        ordered.filter((_, i) => voiceForWordAt(group.voiceId, i) === second),
+      ];
+      const [first, other] = await Promise.all([
+        countReadyWordClips(group.voiceId, womans),
+        countReadyWordClips(second, mans),
+      ]);
+      const total = first.total + other.total;
+      return total > 0 && first.ready + other.ready >= total ? group.voiceId : defaultVoiceId;
+    }
     const { ready, total } = await countReadyWordClips(group.voiceId, group.words);
     return total > 0 && ready >= total ? group.voiceId : defaultVoiceId;
   } catch (error) {

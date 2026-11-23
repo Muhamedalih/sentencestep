@@ -68,7 +68,9 @@ export default async function WordsSessionPage() {
     if (!group || group.words.length === 0) continue;
     const voiceId = (await resolveWordGroupPlaybackVoiceId(group, defaultVoiceId)) ?? null;
     ladderByTopic.set(group.id, {
-      words: new Map(buildLadderWords(group.words, checks).map((word) => [word.id, word])),
+      words: new Map(
+        buildLadderWords(group.words, { ...checks, voiceId }).map((word) => [word.id, word]),
+      ),
       voiceId,
     });
   }

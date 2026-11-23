@@ -175,8 +175,9 @@ export function LadderRound({
   const { prefetchPronunciation } = usePronunciationSettings();
   useEffect(() => {
     for (const item of words) {
-      const voice = item.topic ? item.topic.voiceId : voiceId;
-      if (item.audioUrl || !voice) continue;
+      // A German word carries its own voice (the woman's or the man's), see german-voice-pair.ts.
+      const voice = item.voiceId ?? (item.topic ? item.topic.voiceId : voiceId);
+      if ((item.audioUrl && !item.voiceId) || !voice) continue;
       prefetchPronunciation({ contentType: "word", contentId: item.id, voiceId: voice });
     }
   }, [words, voiceId, prefetchPronunciation]);
@@ -316,6 +317,11 @@ export function LadderRound({
 
   const step: LadderStep | null = card?.step ?? null;
   const audio = step === "meet" || step === "listen" || step === "type";
+  // A German topic has two voices (see german-voice-pair.ts), each word spoken by one of them in every step:
+  // the word carries its own voice, set when the round was built. Every other topic is unchanged.
+  const topicVoice = word?.topic ? word.topic.voiceId : voiceId;
+  const speaker = word?.voiceId ?? topicVoice;
+  const speakerIsOwn = speaker !== topicVoice;
   const replay = useCallback(() => settingsRef.current?.replay(), []);
 
   // Position of this screen inside its kind ("1 of 4"). The screens a miss adds carry no position:
@@ -389,11 +395,11 @@ export function LadderRound({
                 <LessonSettings
                   ref={settingsRef}
                   text={word.word}
-                  audioUrl={word.audioUrl}
+                  audioUrl={speakerIsOwn ? null : word.audioUrl}
                   autoPlay={audio && typedWrong === null}
                   resetKey={`${pos}:${word.id}:${card?.step}`}
                   inputRef={inputRef}
-                  kokoroVoiceId={word.topic ? word.topic.voiceId : voiceId}
+                  kokoroVoiceId={speaker}
                   contentType="word"
                   contentId={word.id}
                 />

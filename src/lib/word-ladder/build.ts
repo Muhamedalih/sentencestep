@@ -1,5 +1,6 @@
 import { definitionOf, meaningChoices, spellingChoices, termOf } from "@/lib/word-ladder/options";
 import type { LadderWord } from "@/lib/word-ladder/types";
+import { secondVoiceFor, voiceForWordAt } from "@/lib/voice/german-voice-pair";
 import { BLANK_TOKEN } from "@/types/word-lists";
 import type { VocabularyWord } from "@/types/word-lists";
 
@@ -21,6 +22,8 @@ export function buildLadderWords(
   options: {
     known: ReadonlySet<string>;
     ipaOf?: (word: string) => string | null | undefined;
+    /** The topic's playback voice: when it has a pair (German), each word gets its own voice, woman and man by turns. */
+    voiceId?: string | null;
   },
 ): LadderWord[] {
   const ordered = [...words].sort((a, b) => a.order - b.order);
@@ -56,6 +59,9 @@ export function buildLadderWords(
         seed: `s:${word.id}`,
       }),
       audioUrl: word.audioUrl ?? null,
+      ...(secondVoiceFor(options.voiceId)
+        ? { voiceId: voiceForWordAt(options.voiceId, index) }
+        : {}),
     };
   });
 }
