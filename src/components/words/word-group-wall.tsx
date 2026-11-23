@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, GraduationCap, Layers, PencilLine, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, GraduationCap, Layers, PencilLine, Target } from "lucide-react";
 
 import { MasteryRankBadge } from "@/components/words/mastery-rank-badge";
 import { CountUp } from "@/components/words/count-up";
@@ -15,6 +15,8 @@ import { useWordProgress } from "@/hooks/use-word-progress";
 import { difficultyForLevel, tierSupportLabel } from "@/lib/levels";
 import { TIER_BADGE_CLASS } from "@/lib/tier-colors";
 import { cn } from "@/lib/utils";
+import { allRounds } from "@/lib/word-ladder/rounds";
+import { ladderStrings } from "@/lib/word-ladder/strings";
 import { splitWordHint } from "@/lib/word-lists-hint";
 import { formatIpa } from "@/lib/word-lists-ipa";
 import {
@@ -61,11 +63,14 @@ export function WordGroupWall({
   group,
   states,
   today,
+  rounds = false,
 }: {
   group: WordGroup;
   states: Readonly<Record<string, MasteryState>> | null;
   /** The learner's calendar date, "YYYY-MM-DD" — what "due" is measured against. */
   today: string;
+  /** The rounds screen is open for this learner (permission wordLadder): the wall offers each round to pick. */
+  rounds?: boolean;
 }) {
   const { locale, dir, t } = useLocale();
   const copy = t.wordLists.redesign;
@@ -243,6 +248,14 @@ export function WordGroupWall({
         </div>
       </header>
 
+      {rounds && (
+        <RoundPicker
+          groupId={group.id}
+          words={words}
+          isDone={(word) => isLoaded && isWordCompleted(word.id)}
+        />
+      )}
+
       <section aria-labelledby="word-wall-heading">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div dir={dir}>
@@ -296,6 +309,65 @@ export function WordGroupWall({
         )}
       </section>
     </div>
+  );
+}
+
+/**
+ * The topic's rounds as cards, each with its words and a button that opens exactly that round (the
+ * learner picks, instead of always meeting the first unfinished one). The topic's lock is checked by
+ * the page itself, so a locked topic never gets here without Premium.
+ */
+function RoundPicker({
+  groupId,
+  words,
+  isDone,
+}: {
+  groupId: string;
+  words: VocabularyWord[];
+  isDone: (word: VocabularyWord) => boolean;
+}) {
+  const { locale, dir } = useLocale();
+  const s = ladderStrings(locale);
+  const rounds = allRounds(words);
+  if (rounds.length < 2) return null;
+  return (
+    <section aria-labelledby="word-rounds-heading" className="mb-10">
+      <div className="mb-4" dir={dir}>
+        <h2 id="word-rounds-heading" className="text-xl font-semibold tracking-tight">
+          {s.pickHeading}
+        </h2>
+        <p className="text-muted-foreground text-sm">{s.pickHint}</p>
+      </div>
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {rounds.map((round) => {
+          const finished = round.words.every(isDone);
+          return (
+            <li
+              key={round.number}
+              className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4"
+            >
+              <div className="flex items-center justify-between gap-2" dir={dir}>
+                <span className="text-sm font-semibold">{s.pickRoundName(round.number)}</span>
+                {finished && (
+                  <span className="text-success inline-flex items-center gap-1 text-xs font-semibold">
+                    <Check className="size-3.5" aria-hidden="true" />
+                    {s.pickDone}
+                  </span>
+                )}
+              </div>
+              <p className="text-foreground/80 flex-1 text-sm leading-relaxed" dir="ltr">
+                {round.words.map((word) => word.targetWord).join(" · ")}
+              </p>
+              <Button asChild variant={finished ? "outline" : "default"} size="sm">
+                <Link href={`/learn/word-lists/${groupId}?round=${round.number}`}>
+                  <span dir="auto">{s.pickPractice}</span>
+                </Link>
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

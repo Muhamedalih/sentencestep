@@ -34,6 +34,12 @@ export interface LadderStrings {
   startRound: (n: number) => string;
   /** The link to the topic's whole list of words. */
   allWords: (total: number) => string;
+  /** The word page's rounds section: its heading, a line under it, a round's name, its button and the finished mark. */
+  pickHeading: string;
+  pickHint: string;
+  pickRoundName: (n: number) => string;
+  pickPractice: string;
+  pickDone: string;
   /** The topic is finished: its title, then the button to go round again. */
   topicDone: (title: string) => string;
   again: string;
@@ -96,6 +102,11 @@ const AR: LadderStrings = {
   roundOf: (n, c) => `الجولة ${n} من ${c}`,
   startRound: (n) => `ابدأ الجولة ${n}`,
   allWords: (t) => `كل كلمات المجموعة (${t})`,
+  pickHeading: "اختر الجولة التي تريدها",
+  pickHint: "كل جولة 3 أو 4 كلمات. افتح أي جولة وتدرّب عليها مباشرة.",
+  pickRoundName: (n) => `الجولة ${n}`,
+  pickPractice: "تدرّب",
+  pickDone: "أنهيتها",
   topicDone: (title) => `أنهيت كل كلمات ${title}`,
   again: "ابدأ من البداية",
   level: (l) => levelAr[l - 1] ?? "",
@@ -152,6 +163,11 @@ const EN: LadderStrings = {
   roundOf: (n, c) => `Round ${n} of ${c}`,
   startRound: (n) => `Start round ${n}`,
   allWords: (t) => `All the topic's words (${t})`,
+  pickHeading: "Pick the round you want",
+  pickHint: "Each round is 3 or 4 words. Open any round and practise it right away.",
+  pickRoundName: (n) => `Round ${n}`,
+  pickPractice: "Practise",
+  pickDone: "Finished",
   topicDone: (title) => `You finished every word of ${title}`,
   again: "Start again",
   level: (l) => levelEn[l - 1] ?? "",
@@ -201,6 +217,11 @@ const ES: LadderStrings = {
   roundOf: (n, c) => `Ronda ${n} de ${c}`,
   startRound: (n) => `Empezar la ronda ${n}`,
   allWords: (t) => `Todas las palabras del tema (${t})`,
+  pickHeading: "Elige la ronda que quieras",
+  pickHint: "Cada ronda tiene 3 o 4 palabras. Abre cualquiera y practícala al instante.",
+  pickRoundName: (n) => `Ronda ${n}`,
+  pickPractice: "Practicar",
+  pickDone: "Terminada",
   topicDone: (title) => `Terminaste todas las palabras de ${title}`,
   again: "Empezar de nuevo",
   level: (l) => levelEs[l - 1] ?? "",
@@ -250,6 +271,11 @@ const TR: LadderStrings = {
   roundOf: (n, c) => `Tur ${n} / ${c}`,
   startRound: (n) => `${n}. turu başlat`,
   allWords: (t) => `Konunun tüm kelimeleri (${t})`,
+  pickHeading: "İstediğin turu seç",
+  pickHint: "Her tur 3 veya 4 kelimedir. İstediğin turu aç ve hemen çalış.",
+  pickRoundName: (n) => `Tur ${n}`,
+  pickPractice: "Çalış",
+  pickDone: "Bitti",
   topicDone: (title) => `${title} konusunun tüm kelimelerini bitirdin`,
   again: "Baştan başla",
   level: (l) => levelTr[l - 1] ?? "",

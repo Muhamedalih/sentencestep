@@ -74,3 +74,39 @@ export function planRound<T extends { id: string }>(
     total: words.length,
   };
 }
+
+/**
+ * The topic's rounds as they are cut from its own order, whatever the learner has finished: round 1
+ * is the first words, round 2 the next, and so on (the same sizes as `roundSizes`). This is what a
+ * learner picks from; `planRound` is still what "Start" opens (the first round with open words).
+ */
+export function allRounds<T>(words: readonly T[]): { number: number; words: T[] }[] {
+  const rounds: { number: number; words: T[] }[] = [];
+  let from = 0;
+  for (const size of roundSizes(words.length)) {
+    rounds.push({ number: rounds.length + 1, words: words.slice(from, from + size) });
+    from += size;
+  }
+  return rounds;
+}
+
+/**
+ * Round `number` picked by the learner, finished words included (they can go round again). `done`
+ * counts the topic's finished words that are NOT in this round, so the finish page's "N of M" still
+ * reads as "before this round". Null when the topic has no such round.
+ */
+export function pickRound<T extends { id: string }>(
+  words: readonly T[],
+  number: number,
+  completed: ReadonlySet<string> | readonly string[],
+): RoundPlan<T> | null {
+  const rounds = allRounds(words);
+  const round = rounds[number - 1];
+  if (!round) return null;
+  const finished = completed instanceof Set ? completed : new Set(completed);
+  const inRound = new Set(round.words.map((word) => word.id));
+  const topic = new Set(words.map((word) => word.id));
+  let done = 0;
+  for (const id of finished) if (topic.has(id) && !inRound.has(id)) done++;
+  return { words: round.words, number, count: rounds.length, done, total: words.length };
+}

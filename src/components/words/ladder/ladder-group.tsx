@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { LadderRound } from "@/components/words/ladder/ladder-round";
 import { LadderTopic } from "@/components/words/ladder/ladder-topic";
 import { WordSplit } from "@/components/words/word-split";
 import { useWordProgress } from "@/hooks/use-word-progress";
-import { planRound } from "@/lib/word-ladder/rounds";
+import { pickRound, planRound } from "@/lib/word-ladder/rounds";
 import type { RoundPlan } from "@/lib/word-ladder/rounds";
 import type { LadderWord } from "@/lib/word-ladder/types";
 
@@ -25,6 +25,7 @@ export function LadderGroup({
   bankFeed,
   todayISO,
   split,
+  initialRound,
 }: {
   group: { id: string; title: string; supportTitle?: string; level: number };
   words: LadderWord[];
@@ -33,6 +34,8 @@ export function LadderGroup({
   todayISO: string;
   /** The picture beside the words (permission wordsSplit): the topic's picture, or absent for the screens as they were. */
   split?: { coverUrl: string | null };
+  /** The round picked on the topic's word page (?round=N): it opens once the learner's progress is read. */
+  initialRound?: number;
 }) {
   const { isLoaded, completedWordIds, markWordComplete } = useWordProgress();
   const [view, setView] = useState<"topic" | "round" | "exam">("topic");
@@ -49,6 +52,18 @@ export function LadderGroup({
     return finished;
   }, [completedWordIds, fresh, topicIds, visitDone]);
   const plan = useMemo(() => planRound(words, done), [words, done]);
+
+  // The picked round opens once, as soon as the saved progress is known (so the "N of M" before it is true).
+  const pickedOnce = useRef(false);
+  useEffect(() => {
+    if (!initialRound || pickedOnce.current || !isLoaded) return;
+    pickedOnce.current = true;
+    const picked = pickRound(words, initialRound, done);
+    if (!picked) return;
+    setActive(picked);
+    setRunKey((key) => key + 1);
+    setView("round");
+  }, [initialRound, isLoaded, words, done]);
 
   const start = useCallback((next: RoundPlan<LadderWord> | null) => {
     if (!next) return;
@@ -121,7 +136,7 @@ export function LadderGroup({
       group={group}
       plan={plan}
       words={words}
-      loading={!isLoaded}
+      loading={!isLoaded || Boolean(initialRound && !pickedOnce.current)}
       split={Boolean(split)}
       onStart={() => start(plan)}
       onAgain={again}
