@@ -252,6 +252,31 @@ export type AnalyticsEvent =
       properties: { source: WordsRoundSource; count: number };
     }
   | {
+      name: "WORD_DROP_STARTED";
+      category: "ENGAGEMENT";
+      /** A round of Word Drop (the falling-words typing game, Admins only for now) began: its `mode` (easy, mid, hard, sentences), its `kind` (a free round, the daily challenge, or a friend's challenge link) and the learner's `level` (1 to 3). Counts only: no word, no name. A reload or "another round" counts again. */
+      properties: { mode: string; kind: string; level: number };
+    }
+  | {
+      name: "WORD_DROP_FINISHED";
+      category: "ENGAGEMENT";
+      /** A Word Drop round ended (time ran out or the lives did): the same `mode`, `kind` and `level`, plus the `score`, the `accuracy` (whole percent of letters typed right) and the number of `words` typed. Read with WORD_DROP_STARTED: how many who start finish, and how a daily or friend's round compares with a free one. */
+      properties: {
+        mode: string;
+        kind: string;
+        level: number;
+        score: number;
+        accuracy: number;
+        words: number;
+      };
+    }
+  | {
+      name: "WORD_DROP_SHARED";
+      category: "ENGAGEMENT";
+      /** The end page of a Word Drop round was used to share: the result's picture (`card`) or a challenge link (`link`: copied or sent through the share sheet), after a round of this `kind`. */
+      properties: { how: string; kind: string };
+    }
+  | {
       name: "VIDEO_STARTED";
       category: "ENGAGEMENT";
       /** A video of Video dictation («فيديو») was opened: its practice screen was shown (a visit, so a reload counts again). `sentences`: how many sentences the video asks, read on the server. Guests are recorded too (no account). Read with VIDEO_FINISHED: how many who open a video reach its end, and how long that takes. */

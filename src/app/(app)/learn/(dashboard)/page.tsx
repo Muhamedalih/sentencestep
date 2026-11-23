@@ -343,6 +343,7 @@ export default async function LearnHomePage({
             isPremiumUser={isPremiumUser}
             hasWeakWords={reviewWaiting.count > 0}
             mobilePath={mobilePath}
+            wordDrop={features.rollouts.wordDrop}
             banners={
               <>
                 {expiryEndsAt && <PremiumExpiryBanner endsAt={expiryEndsAt} className="mb-6" />}

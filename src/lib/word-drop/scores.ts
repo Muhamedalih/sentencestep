@@ -5,7 +5,7 @@
  * are plausibility limits, not a proof. Pure and client-safe.
  */
 
-import { ROUND_SECONDS } from "./engine";
+import { MAX_ROUND_WORDS, ROUND_SECONDS } from "./engine";
 import { utcDay } from "./seed";
 
 export interface DailyScoreInput {
@@ -20,10 +20,16 @@ export interface DailyScoreInput {
 
 /** The most points one word can earn (10, plus 2 for each of a combo of ten). */
 export const MAX_POINTS_PER_WORD = 30;
-/** The fewest seconds a word can take to read and type, however fast: a round cannot hold more words than this allows. */
-const MIN_SECONDS_PER_WORD = 0.35;
-export const MAX_WORDS = Math.floor(ROUND_SECONDS / MIN_SECONDS_PER_WORD);
+/** The fewest points a correct word earns (the base, no combo yet). */
+export const MIN_POINTS_PER_WORD = 10;
+/** A round holds no more words than the quickest spawn pace allows (see MAX_ROUND_WORDS in the engine). */
+export const MAX_WORDS = MAX_ROUND_WORDS;
 export const MAX_WPM = 300;
+/** A word has 3 to 10 letters, and wpm counts five letters as one word over at least 15 seconds and at most the whole round. */
+const MIN_LETTERS = 3;
+const MAX_LETTERS = 10;
+const MIN_MINUTES = 15 / 60;
+const MAX_MINUTES = ROUND_SECONDS / 60;
 
 function wholeNumber(value: unknown, min: number, max: number): number | null {
   return typeof value === "number" && Number.isInteger(value) && value >= min && value <= max
@@ -55,5 +61,10 @@ export function parseDailyScore(input: unknown, now: Date = new Date()): DailySc
   if (score > words * MAX_POINTS_PER_WORD) return null;
   // A round with words has points: a zero-word round is recorded as a zero, never as a score.
   if (words === 0 && score !== 0) return null;
+  // Every word earns at least its base points.
+  if (score < words * MIN_POINTS_PER_WORD) return null;
+  // The speed must fit the words: wpm = letters / 5 / minutes, with 3 to 10 letters a word over 15 s to 2 min (a point of rounding allowed).
+  if (wpm > Math.ceil((words * MAX_LETTERS) / 5 / MIN_MINUTES) + 1) return null;
+  if (wpm < Math.floor((words * MIN_LETTERS) / 5 / MAX_MINUTES) - 1) return null;
   return { day: raw.day as string, level: level as 1 | 2 | 3, score, accuracy, wpm, words };
 }

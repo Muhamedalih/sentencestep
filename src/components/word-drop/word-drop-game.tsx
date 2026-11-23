@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
 import { Check, Volume2, X } from "lucide-react";
@@ -8,23 +8,41 @@ import { Check, Volume2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { recordBankWordAction } from "@/lib/word-bank/actions";
-import { submitDailyScoreAction, type DailyOutcome } from "@/lib/word-drop/actions";
-import { newToken, friendSeed, seededRandom, type RoundSeed } from "@/lib/word-drop/seed";
+import {
+  submitDailyScoreAction,
+  trackWordDropAction,
+  type DailyOutcome,
+} from "@/lib/word-drop/actions";
+import { isPlausibleDay } from "@/lib/word-drop/scores";
+import {
+  newToken,
+  friendSeed,
+  parseSeed,
+  seededRandom,
+  type RoundSeed,
+} from "@/lib/word-drop/seed";
+import type { RoundKind, WordDropReport } from "@/lib/word-drop/tracking";
 import { renderShareCard, shareImage, shareLink } from "@/lib/word-drop/share-card";
 import type { DailyBoard } from "@/lib/word-drop/store";
 import {
   MAX_ON_SCREEN,
   MIN_HARD_WORDS,
+  MIN_SENTENCES,
   ROUND_SECONDS,
+  SPAWN_Y,
   START_LIVES,
   WORD_DROP_MODES,
   accuracyPercent,
   createDeck,
+  findSpot,
+  mergePools,
   pickTarget,
-  pointsFor,
+  pointsForText,
   spawnGapMs,
   speedAfterCorrect,
   speedAfterMiss,
+  tileSize,
+  wordCountOf,
   wordsPerMinute,
   type Deck,
   type DropWord,
@@ -47,16 +65,28 @@ const PALETTE = {
 } as CSSProperties;
 
 const BEST_KEY = "wordDropBest";
-/** Seconds a tile takes to cross the screen at speed 1. */
-const FALL_SECONDS = 10;
-/** The tile's height plus a margin: a word whose top passes (field height - this) has hit the bottom. */
-const TILE_ROOM = 84;
+/** How fast a round runs: seconds a tile takes to cross the screen at speed 1, the gap between tiles (a multiple of the usual), and how many can be on screen. Sentences are slower and fewer: they are longer to type. */
+const PACE: Record<WordDropMode, { fall: number; gap: number; max: number }> = {
+  easy: { fall: 10, gap: 1, max: MAX_ON_SCREEN },
+  mid: { fall: 10, gap: 1, max: MAX_ON_SCREEN },
+  hard: { fall: 10, gap: 1, max: MAX_ON_SCREEN },
+  sentences: { fall: 17, gap: 2.4, max: 2 },
+};
+/** A tile whose bottom edge passes (field height - this) has hit the bottom. */
+const BOTTOM_MARGIN = 6;
+/** The room the fall keeps under a tile's height, so the speed does not depend on the tile. */
+const FALL_ROOM = 84;
+/** A free round puts the learner's own words first only when there are at least this many. */
+const MIN_PERSONAL = 4;
 
 interface Live {
   uid: number;
   word: DropWord;
-  /** Where across the field the tile sits, 0 (left edge) to 1 (right edge). */
-  frac: number;
+  /** The tile's left edge in pixels, its size, and its top: fixed when it appears so two tiles are kept apart (see findSpot). */
+  x: number;
+  w: number;
+  h: number;
+  font: number;
   y: number;
   el: HTMLDivElement | null;
 }
@@ -64,6 +94,7 @@ interface Live {
 interface Pop {
   id: number;
   text: string;
+  /** Where across the field the note sits, 0 to 1. */
   frac: number;
   y: number;
   bad: boolean;
@@ -88,9 +119,10 @@ interface Round {
   lastSpawn: number;
   last: number;
   deck: Deck;
-  /** Where tiles appear: repeatable for a seeded round, random otherwise. */
-  rand: () => number;
+  /** How many tiles have appeared: a seeded round draws each tile's place from its own number, so the places do not depend on the timing of the frames. */
+  spawned: number;
   uid: number;
+  mode: WordDropMode;
   prevLen: number;
   /** The letters now in the input (the screen's own copy lives in state). */
   typedValue: string;
@@ -114,6 +146,11 @@ interface Result {
   beat: number | null;
 }
 
+/** Fire-and-forget: a report that fails is not worth a word to the learner, who is already playing. */
+function report(details: WordDropReport): void {
+  void trackWordDropAction(details).catch(() => undefined);
+}
+
 function readBest(): number {
   try {
     const raw = window.localStorage.getItem(BEST_KEY);
@@ -132,6 +169,11 @@ function writeBest(score: number): void {
   }
 }
 
+/** What a note says when a word lands or falls: the word and, when it has one, its meaning. */
+function popLabel(word: DropWord): string {
+  return word.meaning ? `${word.en} · ${word.meaning}` : word.en;
+}
+
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.ceil(seconds));
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
@@ -139,6 +181,10 @@ function clock(seconds: number): string {
 
 interface WordDropGameProps {
   pool: DropWord[];
+  /** The learner's own words (weakest first), which a free round can put in front. */
+  personal: DropWord[];
+  /** Short sentences for sentences mode (level 2 and 3 only; empty otherwise). */
+  sentencePool: DropWord[];
   bankOpen: boolean;
   signedIn: boolean;
   /** The level the words belong to. */
@@ -166,6 +212,8 @@ function countryName(code: string, locale: string | null): string {
 
 export function WordDropGame({
   pool,
+  personal,
+  sentencePool,
   bankOpen,
   signedIn,
   level,
@@ -179,6 +227,15 @@ export function WordDropGame({
 
   const [screen, setScreen] = useState<"start" | "play" | "end">("start");
   const [mode, setMode] = useState<WordDropMode>(seed ? seed.mode : "easy");
+  // The learner's own words first: on whenever there are enough of them (a round like that cannot be sent as a challenge).
+  const [useMine, setUseMine] = useState(personal.length >= MIN_PERSONAL);
+  /** What the round just played was: its seed (null when it cannot be sent as a challenge) and its kind, for the end page and the reports. */
+  const [played, setPlayed] = useState<{
+    seed: RoundSeed | null;
+    kind: RoundKind;
+    mode: WordDropMode;
+    own: boolean;
+  }>({ seed, kind: seed ? seed.kind : "free", mode, own: false });
   const [daily, setDaily] = useState<DailyOutcome | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [hud, setHud] = useState<Hud>({
@@ -206,7 +263,16 @@ export function WordDropGame({
   const popSeq = useRef(0);
   const lastHud = useRef<Hud | null>(null);
 
-  const hardOk = pool.filter((word) => word.audioUrl !== null).length >= MIN_HARD_WORDS;
+  const mineOn = !seed && useMine && personal.length >= MIN_PERSONAL;
+  const freePool = useMemo(
+    () => (mineOn ? mergePools(personal, pool) : pool),
+    [mineOn, personal, pool],
+  );
+  const hardOk = freePool.filter((word) => word.audioUrl !== null).length >= MIN_HARD_WORDS;
+  const sentencesOk = !seed && sentencePool.length >= MIN_SENTENCES;
+  /** The modes offered on the start page: sentences only where the pool has enough of them. */
+  const modes = WORD_DROP_MODES.filter((m) => m !== "sentences" || sentencesOk);
+  const poolEmpty = pool.length === 0 && sentencePool.length === 0;
 
   const later = useCallback((ms: number, run: () => void) => {
     const id = window.setTimeout(run, ms);
@@ -284,41 +350,69 @@ export function WordDropGame({
       });
       setSaved(new Set());
       setDaily(null);
-      // The daily challenge keeps the better score of the day for a signed-in learner and answers with the ranking.
-      if (seed?.kind === "daily" && signedIn) {
+      const accuracy = accuracyPercent(r.typed, r.wrong);
+      report({
+        event: "finished",
+        mode: r.mode,
+        kind: seed ? seed.kind : "free",
+        level,
+        score: r.score,
+        accuracy,
+        words: r.correct,
+      });
+      // The daily challenge keeps the better score of the day for a signed-in learner and answers with the ranking
+      // (a daily link of a past day can still be played, but it is not recorded).
+      if (seed?.kind === "daily" && signedIn && isPlausibleDay(seed.key)) {
         void submitDailyScoreAction({
           day: seed.key,
           level: seed.level,
           score: r.score,
-          accuracy: accuracyPercent(r.typed, r.wrong),
+          accuracy,
           wpm: wordsPerMinute(r.chars, ROUND_SECONDS - Math.max(0, r.remaining)),
           words: r.correct,
-        }).then(setDaily);
+        })
+          .then(setDaily)
+          .catch(() => setDaily({ ok: false }));
       }
       later(700, () => setScreen("end"));
     },
-    [later, seed, signedIn],
+    [later, level, seed, signedIn],
   );
 
+  /** Puts the next word on screen where it does not sit on another tile; false (and nothing taken from the deck) when the tiles near the top leave no room yet. */
   const spawn = useCallback(
-    (r: Round, now: number, activeMode: WordDropMode) => {
-      const word = r.deck.next();
+    (r: Round, now: number): boolean => {
+      const word = r.deck.peek();
+      const fieldWidth = fieldRef.current?.clientWidth ?? 320;
+      const size = tileSize(r.mode, word, fieldWidth);
+      // A seeded round draws each tile's place from its own number; a free round just rolls.
+      const rand = seed ? seededRandom(`${seed.raw}.p${r.spawned}`) : Math.random;
+      const x = findSpot({
+        fieldWidth,
+        tile: size,
+        others: r.live.map((other) => ({ x: other.x, y: other.y, w: other.w, h: other.h })),
+        rand,
+      });
+      if (x === null) return false;
+      r.deck.next();
       r.uid += 1;
-      // Pick a spot that does not sit on top of a tile that has only just appeared.
-      let frac = r.rand();
-      for (let tries = 0; tries < 8; tries += 1) {
-        const candidate = r.rand();
-        if (!r.live.some((other) => other.y < 100 && Math.abs(other.frac - candidate) < 0.3)) {
-          frac = candidate;
-          break;
-        }
-      }
-      r.live.push({ uid: r.uid, word, frac, y: -10, el: null });
+      r.spawned += 1;
+      r.live.push({
+        uid: r.uid,
+        word,
+        x,
+        w: size.w,
+        h: size.h,
+        font: size.font,
+        y: SPAWN_Y,
+        el: null,
+      });
       r.lastSpawn = now;
       setLiveView([...r.live]);
-      if (activeMode === "hard") playClip(word.audioUrl);
+      if (r.mode === "hard") playClip(word.audioUrl);
+      return true;
     },
-    [playClip],
+    [playClip, seed],
   );
 
   const missWord = useCallback(
@@ -343,8 +437,8 @@ export function WordDropGame({
       setLockUid(target ? target.other.uid : null);
       setHit((count) => count + 1);
       popAt(
-        `${live.word.en} · ${live.word.meaning}`,
-        live.frac,
+        popLabel(live.word),
+        live.x / Math.max(1, fieldRef.current?.clientWidth ?? 320),
         (fieldRef.current?.clientHeight ?? 300) - 110,
         true,
       );
@@ -355,33 +449,34 @@ export function WordDropGame({
   );
 
   const tick = useCallback(
-    (now: number, activeMode: WordDropMode) => {
+    (now: number) => {
       const r = round.current;
       if (!r || !r.running) return;
       const dt = Math.min(0.05, (now - r.last) / 1000);
       r.last = now;
       r.remaining -= dt;
       const height = fieldRef.current?.clientHeight ?? 400;
-      const speed = ((height - TILE_ROOM) / FALL_SECONDS) * r.factor;
+      const pace = PACE[r.mode];
+      const speed = ((height - FALL_ROOM) / pace.fall) * r.factor;
       r.elapsedMs += dt * 1000;
-      if (r.live.length < MAX_ON_SCREEN && r.elapsedMs - r.lastSpawn > spawnGapMs(r.factor)) {
-        spawn(r, r.elapsedMs, activeMode);
+      if (r.live.length < pace.max && r.elapsedMs - r.lastSpawn > spawnGapMs(r.factor) * pace.gap) {
+        spawn(r, r.elapsedMs);
       }
       for (const live of [...r.live]) {
         live.y += speed * dt;
         if (live.el) {
-          live.el.style.transform = `translate(-${live.frac * 100}%, ${live.y}px)`;
+          live.el.style.transform = `translateY(${live.y}px)`;
           const hintEl = live.el.querySelector<HTMLElement>("[data-hint]");
           if (hintEl) hintEl.textContent = live.y > height * 0.45 ? `${live.word.en[0]} …` : "";
         }
-        if (live.y > height - TILE_ROOM) missWord(r, live);
+        if (live.y + live.h > height - BOTTOM_MARGIN) missWord(r, live);
       }
       syncHud(r);
       if (r.remaining <= 0) {
         finish(r);
         return;
       }
-      frame.current = requestAnimationFrame((t) => tick(t, activeMode));
+      frame.current = requestAnimationFrame(tick);
     },
     [finish, missWord, spawn, syncHud],
   );
@@ -390,11 +485,34 @@ export function WordDropGame({
     cancelAnimationFrame(frame.current);
     timers.current.forEach((id) => window.clearTimeout(id));
     timers.current = [];
-    const words = mode === "hard" ? pool.filter((word) => word.audioUrl !== null) : pool;
+    // Which words, and which seed. A seeded page plays its seed. A free round of the level's words is seeded
+    // on the spot (a fresh friend's seed), so the challenge link it ends with deals exactly these words in
+    // this order; a round of the learner's own words, of Hard (clips differ) or of sentences cannot be.
+    let words: DropWord[];
+    let roundSeed: RoundSeed | null = seed;
+    let own = false;
+    let priority: ReadonlySet<string> = new Set();
+    if (seed) {
+      words = pool;
+    } else if (mode === "sentences") {
+      words = sentencePool;
+      roundSeed = null;
+    } else if (mode === "hard") {
+      words = freePool.filter((word) => word.audioUrl !== null);
+      roundSeed = null;
+      own = mineOn;
+      if (mineOn) priority = new Set(personal.map((word) => word.id));
+    } else if (mineOn) {
+      words = freePool;
+      roundSeed = null;
+      own = true;
+      priority = new Set(personal.map((word) => word.id));
+    } else {
+      words = pool;
+      roundSeed = parseSeed(friendSeed(newToken(), level, mode === "easy" ? "easy" : "mid"));
+    }
     if (words.length === 0) return;
     const now = performance.now();
-    // A seeded round deals the same words in the same order, at the same places, to everyone who plays the seed.
-    const rand = seed ? seededRandom(`${seed.raw}.places`) : Math.random;
     const r: Round = {
       running: true,
       lives: START_LIVES,
@@ -412,14 +530,23 @@ export function WordDropGame({
       elapsedMs: 0,
       lastSpawn: 0,
       last: now,
-      deck: createDeck(words, seed ? seededRandom(`${seed.raw}.deck`) : Math.random),
-      rand,
+      // A seeded round deals the same words in the same order to everyone who plays the seed.
+      deck: createDeck(
+        words,
+        roundSeed ? seededRandom(`${roundSeed.raw}.deck`) : Math.random,
+        priority,
+      ),
+      spawned: 0,
       uid: 0,
+      mode,
       prevLen: 0,
       typedValue: "",
     };
     round.current = r;
     lastHud.current = null;
+    const kind: RoundKind = seed ? seed.kind : "free";
+    setPlayed({ seed: roundSeed, kind, mode, own });
+    report({ event: "started", mode, kind, level });
     // Flushed so the input exists when focus is asked for inside this tap, which is what lets a phone open its keyboard.
     flushSync(() => {
       setScreen("play");
@@ -432,9 +559,9 @@ export function WordDropGame({
       setHud({ score: 0, lives: START_LIVES, combo: 0, seconds: ROUND_SECONDS });
     });
     inputRef.current?.focus({ preventScroll: true });
-    spawn(r, 0, mode);
-    frame.current = requestAnimationFrame((t) => tick(t, mode));
-  }, [mode, pool, seed, spawn, tick]);
+    spawn(r, 0);
+    frame.current = requestAnimationFrame(tick);
+  }, [freePool, level, mineOn, mode, personal, pool, seed, sentencePool, spawn, tick]);
 
   const complete = useCallback(
     (r: Round, live: Live) => {
@@ -442,11 +569,16 @@ export function WordDropGame({
       r.correct += 1;
       r.combo += 1;
       r.best = Math.max(r.best, r.combo);
-      r.chars += live.word.en.length;
-      r.score += pointsFor(r.combo);
+      r.chars += live.word.en.replace(/ /g, "").length;
+      r.score += pointsForText(r.combo, wordCountOf(live.word.en));
       r.factor = speedAfterCorrect(r.factor);
       setLiveView([...r.live]);
-      popAt(`${live.word.en} · ${live.word.meaning}`, live.frac, live.y, false);
+      popAt(
+        popLabel(live.word),
+        live.x / Math.max(1, fieldRef.current?.clientWidth ?? 320),
+        live.y,
+        false,
+      );
       syncHud(r);
     },
     [popAt, syncHud],
@@ -456,7 +588,15 @@ export function WordDropGame({
     const r = round.current;
     if (!r || !r.running) return;
     setWrongScript(/[؀-ۿ]/.test(value));
-    const clean = value.toLowerCase().replace(/[^a-z]/g, "");
+    // A sentence is typed with its spaces (never a leading space or two in a row); a word is letters only.
+    const clean =
+      r.mode === "sentences"
+        ? value
+            .toLowerCase()
+            .replace(/[^a-z ]/g, "")
+            .replace(/^ +/, "")
+            .replace(/ {2,}/g, " ")
+        : value.toLowerCase().replace(/[^a-z]/g, "");
     let next = clean;
     if (clean.length > r.prevLen) {
       r.typed += 1;
@@ -490,7 +630,8 @@ export function WordDropGame({
 
   async function saveMissed(word: DropWord) {
     playClip(word.audioUrl);
-    if (!bankOpen || saved.has(word.id)) return;
+    // A sentence is not a word of the bank: only the clip (none for a sentence) and the screen's own list.
+    if (!bankOpen || saved.has(word.id) || word.en.includes(" ")) return;
     const answer = await recordBankWordAction({
       word: word.en,
       outcome: "missed",
@@ -500,6 +641,7 @@ export function WordDropGame({
       homeSentence: word.sentence ?? undefined,
     });
     if (answer.ok) setSaved((current) => new Set(current).add(word.id));
+    else say(strings.saveFailed);
   }
 
   function say(text: string) {
@@ -537,26 +679,34 @@ export function WordDropGame({
       tagline: strings.cardTagline,
       footer: placeLine() ?? versusLine(),
     });
-    if (!blob) return;
+    if (!blob) {
+      say(strings.shareFailed);
+      return;
+    }
     const outcome = await shareImage(blob, strings.shareText.replace("{n}", String(result.score)));
     if (outcome === "saved") say(strings.cardSaved);
+    else if (outcome === "failed") say(strings.shareFailed);
+    if (outcome !== "failed") report({ event: "shared", how: "card", kind: played.kind });
   }
 
+  /** The challenge link of the round just played: the same seed, so a friend gets exactly these words in this order. */
   async function onChallenge() {
-    if (!result) return;
-    const challengeMode = mode === "easy" ? "easy" : "mid";
-    const url = `${window.location.origin}/learn/word-drop?seed=${friendSeed(newToken(), level, challengeMode)}&beat=${result.score}`;
+    if (!result || !played.seed) return;
+    const url = `${window.location.origin}/learn/word-drop?seed=${played.seed.raw}&beat=${result.score}`;
     const outcome = await shareLink(
       url,
       strings.challengeText.replace("{n}", String(result.score)),
     );
     if (outcome === "copied") say(strings.linkCopied);
+    else if (outcome === "failed") say(strings.shareFailed);
+    if (outcome !== "failed") report({ event: "shared", how: "link", kind: played.kind });
   }
 
   const modeLabel: Record<WordDropMode, { name: string; hint: string }> = {
     easy: { name: strings.easy, hint: strings.easyHint },
     mid: { name: strings.mid, hint: strings.midHint },
     hard: { name: strings.hard, hint: strings.hardHint },
+    sentences: { name: strings.sentences, hint: strings.sentencesHint },
   };
 
   return (
@@ -619,8 +769,17 @@ export function WordDropGame({
                   )}
                 </div>
               )}
+              {poolEmpty && (
+                <p
+                  dir="auto"
+                  role="status"
+                  className="rounded-[18px] border border-[var(--wd-red)] px-4 py-3.5 text-right text-[15px]"
+                >
+                  {strings.emptyPool}
+                </p>
+              )}
               <div className={cn("flex flex-col gap-2.5", seed && "hidden")} role="radiogroup">
-                {WORD_DROP_MODES.map((m, index) => {
+                {modes.map((m, index) => {
                   const disabled = m === "hard" && !hardOk;
                   const selected = mode === m && !disabled;
                   return (
@@ -662,6 +821,48 @@ export function WordDropGame({
                   );
                 })}
               </div>
+              {!seed && personal.length >= MIN_PERSONAL && mode !== "sentences" && (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={useMine}
+                  onClick={() => setUseMine((on) => !on)}
+                  className={cn(
+                    "grid grid-cols-[1fr_auto] items-center gap-4 rounded-[18px] border bg-black px-4 py-3 text-right transition-colors",
+                    useMine ? "border-[var(--wd-green)]" : "border-[var(--wd-line)]",
+                  )}
+                >
+                  <span dir="auto">
+                    <span
+                      className={cn(
+                        "block text-[15px] font-bold",
+                        useMine && "text-[var(--wd-green)]",
+                      )}
+                    >
+                      {strings.myWordsTitle}
+                    </span>
+                    <span className="block text-[12.5px] text-[var(--wd-mute)]">
+                      {strings.myWordsLine.replace("{n}", String(personal.length))}
+                    </span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "flex h-6 w-11 items-center rounded-full border px-0.5 transition-colors",
+                      useMine
+                        ? "justify-end border-[var(--wd-green)] bg-[var(--wd-green)]"
+                        : "justify-start border-[var(--wd-line)]",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "size-4 rounded-full",
+                        useMine ? "bg-black" : "bg-[var(--wd-mute)]",
+                      )}
+                    />
+                  </span>
+                </button>
+              )}
               {!seed && (
                 <div className="flex flex-col gap-3 rounded-[18px] border border-[var(--wd-line)] px-4 py-3.5">
                   <div dir="auto" className="text-right">
@@ -715,7 +916,7 @@ export function WordDropGame({
               <button
                 type="button"
                 onClick={start}
-                disabled={pool.length === 0}
+                disabled={poolEmpty || (mode !== "sentences" && pool.length === 0)}
                 className="min-h-[54px] rounded-2xl border border-[var(--wd-green)] bg-black text-[17px] font-bold text-[var(--wd-green)] transition-colors hover:bg-[var(--wd-green)] hover:text-black active:bg-[var(--wd-green)] active:text-black disabled:opacity-45"
               >
                 {strings.start}
@@ -792,25 +993,26 @@ export function WordDropGame({
                 const n = locked ? typed.length : 0;
                 const en = live.word.en;
                 const mask = n > 0 ? `${en.slice(0, n)} ${"·".repeat(en.length - n)}` : "";
+                const tileMode = played.mode;
                 return (
                   <div
                     key={live.uid}
                     ref={(el) => {
                       live.el = el;
-                      if (el) el.style.transform = `translate(-${live.frac * 100}%, ${live.y}px)`;
+                      if (el) el.style.transform = `translateY(${live.y}px)`;
                     }}
                     className="absolute top-0 will-change-transform"
-                    style={{ left: `${live.frac * 100}%` }}
+                    style={{ left: live.x, width: live.w }}
                   >
                     <div
                       className={cn(
-                        "flex min-w-[84px] flex-col items-center gap-px rounded-2xl border-2 bg-[var(--wd-tile)] px-4 pt-2 pb-1.5 text-center text-[var(--wd-tile-ink)]",
+                        "flex w-full flex-col items-center gap-px overflow-hidden rounded-2xl border-2 bg-[var(--wd-tile)] px-3 pt-2 pb-1.5 text-center text-[var(--wd-tile-ink)]",
                         locked
                           ? "border-[var(--wd-green)] shadow-[0_0_0_3px_oklch(0.72_0.19_150/0.25)]"
                           : "border-transparent",
                       )}
                     >
-                      {mode === "easy" && (
+                      {tileMode === "easy" && (
                         <>
                           <span className="text-[19px] leading-tight font-extrabold whitespace-nowrap">
                             <span className="text-[var(--wd-green-ink)]">{en.slice(0, n)}</span>
@@ -821,7 +1023,7 @@ export function WordDropGame({
                           </span>
                         </>
                       )}
-                      {mode === "mid" && (
+                      {tileMode === "mid" && (
                         <>
                           <span
                             dir="auto"
@@ -834,7 +1036,7 @@ export function WordDropGame({
                           </span>
                         </>
                       )}
-                      {mode === "hard" && (
+                      {tileMode === "hard" && (
                         <>
                           <button
                             type="button"
@@ -853,6 +1055,24 @@ export function WordDropGame({
                           />
                           <span className="min-h-[18px] text-[13px] font-extrabold tracking-[0.16em] text-[var(--wd-green-ink)]">
                             {mask}
+                          </span>
+                        </>
+                      )}
+                      {tileMode === "sentences" && (
+                        <>
+                          <span
+                            dir="ltr"
+                            className="text-[16px] leading-snug font-extrabold"
+                            style={{ overflowWrap: "anywhere" }}
+                          >
+                            <span className="text-[var(--wd-green-ink)]">{en.slice(0, n)}</span>
+                            {en.slice(n)}
+                          </span>
+                          <span
+                            dir="auto"
+                            className="line-clamp-2 min-h-4 text-xs text-[var(--wd-tile-mute)]"
+                          >
+                            {live.word.meaning}
                           </span>
                         </>
                       )}
@@ -957,6 +1177,11 @@ export function WordDropGame({
                     {versusLine()}
                   </p>
                 )}
+                {seed?.kind === "daily" && signedIn && daily && !daily.ok && (
+                  <p dir="auto" className="mt-2.5 text-right text-[15px] text-[var(--wd-mute)]">
+                    {daily.reason === "limit" ? strings.rankLimit : strings.rankFailed}
+                  </p>
+                )}
                 {seed?.kind === "daily" && !signedIn && (
                   <p dir="auto" className="mt-2.5 text-right text-[15px] text-[var(--wd-mute)]">
                     {strings.signInToRank}
@@ -1027,7 +1252,7 @@ export function WordDropGame({
                 <p dir="auto" className="mb-2.5 text-right text-[12.5px] text-[var(--wd-mute)]">
                   {result.missed.length === 0
                     ? strings.noMisses
-                    : `${strings.missedTitle}${bankOpen ? ` · ${strings.tapToSave}` : ""}`}
+                    : `${strings.missedTitle}${bankOpen && played.mode !== "sentences" ? ` · ${strings.tapToSave}` : ""}`}
                 </p>
                 {result.missed.length > 0 && (
                   <div className="grid grid-cols-3 gap-2.5 pb-2">
@@ -1073,14 +1298,21 @@ export function WordDropGame({
                   {notice}
                 </p>
               )}
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => void onChallenge()}
-                  className="min-h-[50px] rounded-2xl border border-[var(--wd-line)] bg-black px-2 text-[14.5px] font-bold hover:border-[var(--wd-mute)]"
-                >
-                  {strings.challengeFriend}
-                </button>
+              {played.own && (
+                <p dir="auto" className="text-center text-[12.5px] text-[var(--wd-mute)]">
+                  {strings.noChallengeOwn}
+                </p>
+              )}
+              <div className={cn("grid gap-2.5", played.seed ? "grid-cols-2" : "grid-cols-1")}>
+                {played.seed && (
+                  <button
+                    type="button"
+                    onClick={() => void onChallenge()}
+                    className="min-h-[50px] rounded-2xl border border-[var(--wd-line)] bg-black px-2 text-[14.5px] font-bold hover:border-[var(--wd-mute)]"
+                  >
+                    {strings.challengeFriend}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => void onShareCard()}
