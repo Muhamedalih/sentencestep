@@ -6,6 +6,7 @@ import { WordGroupUnavailable } from "@/components/learning/word-group-unavailab
 import { WordGroupWall } from "@/components/words/word-group-wall";
 import { isAdmin } from "@/lib/admin/access";
 import { hasPremiumAccess } from "@/lib/billing/access";
+import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getWordGroupById } from "@/lib/word-lists";
 import {
@@ -41,7 +42,13 @@ export default async function WordGroupWallPage({
 }: {
   params: Promise<{ groupId: string }>;
 }) {
-  if (!(await getWordsRedesignEnabled())) notFound();
+  // The rounds screen of a topic (the wordLadder permission) links here as «all the topic's words», so
+  // it opens for whoever has either the redesign or the rounds: otherwise that link was a 404.
+  const [redesign, features] = await Promise.all([
+    getWordsRedesignEnabled(),
+    getEffectiveFeatures(),
+  ]);
+  if (!redesign && !features.rollouts.wordLadder) notFound();
 
   const { groupId } = await params;
   const locale = await getLocale();
