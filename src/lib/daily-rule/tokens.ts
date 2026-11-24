@@ -17,7 +17,7 @@ export interface Token {
   end: number;
 }
 
-const WORD = /[A-Za-z]+(?:['’][A-Za-z]+)*|\d+/g;
+const WORD = /[A-Za-zÀ-ɏ]+(?:['’][A-Za-zÀ-ɏ]+)*|\d+/g;
 
 export function tokenize(sentence: string): Token[] {
   const tokens: Token[] = [];
@@ -39,10 +39,22 @@ export function aroundToken(sentence: string, token: Token): { before: string; a
   return { before: sentence.slice(0, token.start), after: sentence.slice(token.end) };
 }
 
+/**
+ * German letters set aside, so a keyboard without them is not wrong: ä, ö, ü and ß are read as a, o, u and ss
+ * (both the typed answer and the right one go through this, so only the plain spelling is compared).
+ */
+export function foldGerman(text: string): string {
+  return text
+    .replace(/ß/g, "ss")
+    .replace(/ẞ/g, "SS")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .normalize("NFC");
+}
+
 /** What a learner typed, prepared for comparison: NFKC, straight quotes, single spaces, no edge punctuation. */
 export function normalizeAnswer(typed: string): string {
-  return typed
-    .normalize("NFKC")
+  return foldGerman(typed.normalize("NFKC"))
     .replace(/[‘’`]/g, "'")
     .replace(/\s+/g, " ")
     .trim()
@@ -55,7 +67,7 @@ export type Diagnosis = "correct" | "missing-s" | "missing-ed" | "extra-s" | "a-
 
 export function diagnose(typed: string, target: string): Diagnosis {
   const got = normalizeAnswer(typed);
-  const want = target.toLowerCase();
+  const want = normalizeAnswer(target);
   if (got === want) return "correct";
   if (want.endsWith("ed") && (got === want.slice(0, -2) || got === want.slice(0, -1)))
     return "missing-ed";

@@ -6,6 +6,7 @@
  */
 
 import type { BaseMatchKind, MatchKind } from "./ladder";
+import { deCandidates, isDeMatchKind } from "./de/matchers";
 import { extraMatcher } from "./matchers-more";
 import type { Token } from "./tokens";
 
@@ -66,6 +67,7 @@ export function candidatesFor(kind: MatchKind, tokens: readonly Token[], text: s
 
   // A rule no word shows has no matcher; the rules added after the first 39 have theirs in matchers-more.ts.
   if (kind === "none") return [];
+  if (isDeMatchKind(kind)) return deCandidates(kind, tokens, text);
   const extra = extraMatcher(kind);
   if (extra) return extra({ tokens, text, w, question, at, all });
 

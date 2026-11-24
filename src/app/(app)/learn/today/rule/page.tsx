@@ -3,12 +3,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DailyRuleRunner } from "@/components/today/daily-rule-runner";
-import { LEVEL_LABEL, ladderForLevel } from "@/lib/daily-rule/levels";
+import { LEVEL_LABEL, ladderForLevel, languageOfRuleId } from "@/lib/daily-rule/levels";
 import { loadPracticeVisit, loadRuleVisit } from "@/lib/daily-rule/load";
 import { teachFor } from "@/lib/daily-rule/teach";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -48,10 +49,11 @@ export default async function TodayRulePage({
     back?: string;
   }>;
 }) {
-  const [features, user, locale] = await Promise.all([
+  const [features, user, locale, language] = await Promise.all([
     getEffectiveFeatures(),
     getCurrentUser(),
     getLocale(),
+    getLearnLanguage(),
   ]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
@@ -65,7 +67,9 @@ export default async function TodayRulePage({
       todayISO,
       ruleId: practice,
     });
-    const practiceLadder = practiceVisit ? ladderForLevel(practiceVisit.level) : null;
+    const practiceLadder = practiceVisit
+      ? ladderForLevel(practiceVisit.level, languageOfRuleId(practice))
+      : null;
     if (!practiceVisit || !practiceLadder) {
       redirect(`/learn/rules/${encodeURIComponent(practice)}?practice=none`);
     }
@@ -83,10 +87,12 @@ export default async function TodayRulePage({
   }
 
   const progress = await fetchProgressCached(todayISO).catch(() => null);
-  const level = progress?.startingLevel ?? 1;
+  // The German course starts at A1 for everyone: the starting level is an English one.
+  const level = language === "de" ? 1 : (progress?.startingLevel ?? 1);
   const dailyMode = daily === "1";
   const redoMode = redo === "1";
-  const fromStory = recall !== "1" && typeof from === "string" && from.length > 0;
+  const fromStory =
+    language !== "de" && recall !== "1" && typeof from === "string" && from.length > 0;
   // `back=rules`: the lesson was started from the rule library («التالية» card), so it ends there.
   const onward = dailyMode
     ? back === "rules"
@@ -104,6 +110,7 @@ export default async function TodayRulePage({
     level,
     daily: dailyMode && !fromStory,
     redo: redoMode,
+    language,
   });
   // The day's row names the story finished today, whose sentences may not be askable (no stored
   // recording): then the day's rule comes from the learner's own finished texts, as the row does without one.
@@ -116,9 +123,10 @@ export default async function TodayRulePage({
       level,
       daily: true,
       redo: redoMode,
+      language,
     });
   }
-  const ladder = visit ? ladderForLevel(visit.level) : null;
+  const ladder = visit ? ladderForLevel(visit.level, language) : null;
   if (!visit || !ladder) redirect(onward);
 
   return (

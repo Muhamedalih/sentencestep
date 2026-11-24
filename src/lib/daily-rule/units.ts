@@ -6,6 +6,7 @@
 
 import type { SupportLocale } from "@/lib/i18n/locales";
 
+import { DE_UNITS } from "./de/units";
 import type { RuleLevel } from "./ladder";
 import { lines, type Lines } from "./teach-types";
 
@@ -176,7 +177,7 @@ export const UNITS: readonly UnitSpec[] = [
   ),
 ];
 
-const BY_ID = new Map(UNITS.map((item) => [item.id, item]));
+const BY_ID = new Map([...UNITS, ...DE_UNITS].map((item) => [item.id, item]));
 
 export function unitById(id: string): UnitSpec | undefined {
   return BY_ID.get(id);
