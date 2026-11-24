@@ -1196,3 +1196,30 @@ html[data-keyboard] .kb-hide {
     opacity: 1;
   }
 }
+
+/* The stars of the upgrade pop-up (upgradeModal): a gentle wave, one star after the other. */
+@keyframes upgrade-star-twinkle {
+  0%,
+  55%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  18% {
+    transform: scale(1.35) rotate(-12deg);
+    filter: brightness(1.35);
+  }
+  34% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+}
+.upgrade-star {
+  transform-origin: center;
+  animation: upgrade-star-twinkle 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-star {
+    animation: none;
+  }
+}

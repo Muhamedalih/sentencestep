@@ -65,6 +65,7 @@ export const ROLLOUT_IDS = [
   "inAppPayStrip",
   "germanTrack",
   "wordDrop",
+  "upgradeModal",
 ] as const;
 
 export type RolloutId = (typeof ROLLOUT_IDS)[number];
@@ -733,6 +734,19 @@ export const ROLLOUTS: Record<RolloutId, RolloutDef> = {
     notes: [
       "Only the look and the order change: the plans, the prices, the payment methods, the terms and every check on the server are untouched.",
       "The rating quoted is the sum over every section (lessons, stories, words, Passages and Video), rounded down like before.",
+      "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
+    ],
+  },
+  upgradeModal: {
+    id: "upgradeModal",
+    audience: "learner",
+    title: "Upgrade: a pop-up instead of the plans page",
+    description:
+      "Pressing a locked lesson, story, passage or word list, or any “Upgrade” button inside the learning area, opens a small dark pop-up over the same screen instead of leaving for the plans page. Step one: the title, the real rating (animated stars), four things Premium opens, one price line and one big white button “Start from $1.17 a month”. Step two (after the button): the three plans with their monthly price (the 3-month one marked “Most chosen”, the 6-month one “Best value”), the ways to pay with their logos (Visa, Mastercard, Binance Pay, and Vodafone Cash first and already chosen for a visitor in Egypt) and a big white pay button with the amount.",
+    notes: [
+      "Only the way in changes: the prices, the plans, the payment methods, the terms and every check on the server are the ones the plans page uses (the same checkout action).",
+      "The pop-up asks the server for its figures only when it opens, so no page gets slower. A visitor who is not signed in, or who already has Premium, is sent to the plans page as before.",
+      "The plans page itself, the emails that link to it and the pages shown after paying are untouched.",
       "Closed by default, so only admins see it until it is opened to others on the Permissions page.",
     ],
   },
