@@ -36,6 +36,13 @@ export const ABANDONED_MAX_AGE_MS = 30 * HOUR_MS;
  */
 export const ABANDONED_STATUSES = ["created", "pending", "cancelled", "expired"] as const;
 
+/**
+ * The Vodafone Cash email: an order still unpaid ten minutes after it was opened. The scheduler runs
+ * every five minutes (and can be late), so an order is looked for from ten minutes to three hours old.
+ */
+export const VODAFONE_SOON_MIN_AGE_MS = 10 * 60 * 1000;
+export const VODAFONE_SOON_MAX_AGE_MS = 3 * HOUR_MS;
+
 /** A declined payment. A learner with one in the window gets no checkout reminder. */
 export const FAILED_STATUS = "failed";
 

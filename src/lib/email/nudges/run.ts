@@ -4,6 +4,7 @@ import { getLaunchOffer } from "@/lib/billing/launch-offer-queries";
 import { effectiveRate } from "@/lib/billing/egypt-wallet/rate";
 import { createEgyptWalletStore } from "@/lib/billing/egypt-wallet/store";
 import { buildPlanViews } from "@/lib/billing/plan-views";
+import { EGYPT_WALLET_PROVIDER } from "@/lib/billing/egypt-wallet/constants";
 import { PLAN_IDS, planPriceCents } from "@/lib/billing/plans";
 import type { PlanId } from "@/lib/billing/plans";
 import { isBinancePayConfigured, isEgyptWalletConfigured } from "@/lib/billing/provider-registry";
@@ -20,6 +21,7 @@ import {
   nudgeLanguage,
   reminderEmail,
   sessionReminderEmail,
+  vodafoneSoonEmail,
 } from "@/lib/email/nudges/copy";
 import type { CheckoutHelp, NudgeLanguage } from "@/lib/email/nudges/copy";
 import {
@@ -31,6 +33,8 @@ import {
   DAY_ONE_MAX_AGE_MS,
   DAY_ONE_MIN_AGE_MS,
   FAILED_STATUS,
+  VODAFONE_SOON_MAX_AGE_MS,
+  VODAFONE_SOON_MIN_AGE_MS,
   abandonedBucket,
   canEmailAccount,
   checkoutHelpFor,
@@ -957,11 +961,92 @@ function egpPriceOf(tier: string, plan: PlanId, ratePerUsd: number | undefined):
 }
 
 /**
+ * "You can finish whenever you like": a learner whose Vodafone Cash order is still unpaid ten minutes
+ * after they opened it (looked for from 10 minutes to 3 hours old, the scheduler running every five).
+ * Nobody is held out of it, and it shares the checkout reminder's two-week ledger entry, so a learner
+ * who got this one is not also sent the daily checkout reminder (and never gets either twice in two
+ * weeks). One narrow read when nothing is waiting: no learner, no further query.
+ */
+export async function runVodafoneSoonNudge(options: {
+  origin: string;
+  now: Date;
+  dryRun: boolean;
+}): Promise<NudgeRunSummary> {
+  const { origin, now, dryRun } = options;
+  const summary = emptySummary(dryRun);
+  const limit = gate(summary);
+  if (limit === null) return summary;
+
+  const db = createServiceRoleClient();
+  const { data: orders, error } = await db
+    .from("payment_orders")
+    .select("user_id")
+    .eq("provider", EGYPT_WALLET_PROVIDER)
+    .eq("provider_env", "live")
+    .in("status", ["created", "pending"])
+    .gte("created_at", new Date(now.getTime() - VODAFONE_SOON_MAX_AGE_MS).toISOString())
+    .lte("created_at", new Date(now.getTime() - VODAFONE_SOON_MIN_AGE_MS).toISOString())
+    .limit(500);
+  if (error) throw error;
+  const ids = Array.from(new Set((orders ?? []).map((o) => o.user_id)));
+  if (ids.length === 0) return summary;
+
+  summary.warmup = await warmupStatus(now);
+  const bucket = abandonedBucket(now);
+  const [paid, exclusions, profiles] = await Promise.all([
+    chunked(ids, (c) =>
+      db.from("payment_orders").select("user_id").eq("status", "fulfilled").in("user_id", c),
+    ),
+    loadExclusions(db, ids, "CHECKOUT_ABANDONED", now),
+    chunked(ids, (c) =>
+      db.from("profiles").select("id, display_name, preferred_language").in("id", c),
+    ),
+  ]);
+  const everPaid = new Set(paid.map((row) => row.user_id));
+  const handled = new Set(
+    exclusions.ledger
+      .filter((row) => row.dedupe_key === `CHECKOUT_ABANDONED:${bucket}`)
+      .map((row) => row.user_id),
+  );
+  const profileById = new Map(profiles.map((p) => [p.id, p]));
+
+  const recipients: Recipient[] = [];
+  for (const id of ids) {
+    if (everPaid.has(id) || exclusions.premium.has(id)) summary.skipped.premium += 1;
+    else if (exclusions.optedOut.has(id)) summary.skipped.optedOut += 1;
+    else if (handled.has(id)) summary.skipped.alreadyHandled += 1;
+    else {
+      const profile = profileById.get(id);
+      recipients.push({
+        userId: id,
+        displayName: profile?.display_name ?? null,
+        language: nudgeLanguage(profile?.preferred_language),
+      });
+    }
+  }
+  summary.candidates = recipients.length;
+
+  await processRecipients({
+    db,
+    recipients,
+    summary,
+    limit,
+    origin,
+    priority: "important",
+    skipHoldout: true,
+    makeEvent: () => ({ type: "CHECKOUT_ABANDONED", bucket }),
+    buildEmail: (r, unsubscribe) =>
+      vodafoneSoonEmail({ origin, displayName: r.displayName, language: r.language, unsubscribe }),
+  });
+  return summary;
+}
+
+/**
  * Sends ONE sample of an email to an address, to see it in a real inbox (while the SES account is
  * still in its sandbox that address must be a verified one). Touches no learner, writes nothing.
  */
 export async function sendNudgePreview(options: {
-  kind: "day-one" | "abandoned" | "reminder" | "session-reminder";
+  kind: "day-one" | "abandoned" | "reminder" | "session-reminder" | "vodafone-soon";
   to: string;
   language: NudgeLanguage;
   origin: string;
@@ -973,7 +1058,9 @@ export async function sendNudgePreview(options: {
   const content =
     kind === "day-one"
       ? dayOneNudgeEmail({ origin, displayName: null, language })
-      : kind === "session-reminder"
+      : kind === "vodafone-soon"
+        ? vodafoneSoonEmail({ origin, displayName: null, language })
+        : kind === "session-reminder"
         ? sessionReminderEmail({ origin, displayName: null, language })
         : kind === "reminder"
           ? reminderEmail({
@@ -998,7 +1085,7 @@ export async function sendNudgePreview(options: {
             });
   // A sample goes the same way the real one would, so a preview also proves that route works.
   const result = await sendTemplateEmail(to, content, {
-    priority: kind === "abandoned" || kind === "session-reminder" ? "important" : "bulk",
+    priority: kind === "abandoned" || kind === "session-reminder" || kind === "vodafone-soon" ? "important" : "bulk",
   });
   return result.status === "sent"
     ? { status: "sent" }
