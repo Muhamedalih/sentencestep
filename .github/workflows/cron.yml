@@ -27,6 +27,7 @@ on:
     - cron: "*/10 * * * *" # payments-reconcile
     - cron: "15 7 * * *" # premium-expiry-reminders
     - cron: "7 * * * *" # session-reminders (every hour)
+    - cron: "*/5 * * * *" # vodafone-soon (the ten-minute Vodafone Cash email)
   workflow_dispatch: {} # lets an admin trigger any/all sweeps on demand from the Actions tab
 
 jobs:
@@ -138,6 +139,21 @@ jobs:
           code=$(curl -sS -o response.txt -w "%{http_code}" -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://sentencestep.com/api/cron/session-reminders)
+          cat response.txt; echo
+          if [ "$code" = "404" ]; then echo "Route not deployed yet; skipping."; exit 0; fi
+          test "$code" -lt 400
+
+  # A Vodafone Cash order still unpaid ten minutes after it was opened gets one short, kind email
+  # (src/app/api/cron/vodafone-soon). Every five minutes; one narrow read when nothing is waiting.
+  # Sends nothing until NUDGE_EMAIL_MAX_PER_RUN is set on the server. A 404 means the route is not
+  # deployed yet (this file can reach the default branch before the app does): not a failure.
+  vodafone-soon:
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/vodafone-soon
+        run: |
+          code=$(curl -sS -o response.txt -w "%{http_code}" -X GET             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"             https://sentencestep.com/api/cron/vodafone-soon)
           cat response.txt; echo
           if [ "$code" = "404" ]; then echo "Route not deployed yet; skipping."; exit 0; fi
           test "$code" -lt 400

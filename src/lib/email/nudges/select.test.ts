@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 
 import { dedupeKeyFor, shouldNotify } from "@/lib/email/events";
 import {
+  VODAFONE_SOON_MAX_AGE_MS,
+  VODAFONE_SOON_MIN_AGE_MS,
   BLOCKED_MAX_AGE_MS,
   BLOCKED_MIN_ORDERS,
   HOUR_MS,
@@ -125,4 +127,10 @@ test("checkoutHelpFor: Vodafone Cash for an order priced in Egypt, Binance Pay f
 test("the one-off for stuck payers: two weeks back, at least two orders", () => {
   assert.equal(BLOCKED_MAX_AGE_MS, 14 * 24 * HOUR_MS);
   assert.equal(BLOCKED_MIN_ORDERS, 2);
+});
+
+test("the Vodafone Cash email window: from ten minutes to three hours after the order opened", () => {
+  assert.equal(VODAFONE_SOON_MIN_AGE_MS, 10 * 60 * 1000);
+  assert.ok(VODAFONE_SOON_MAX_AGE_MS > VODAFONE_SOON_MIN_AGE_MS * 5, "a late scheduler run still catches the order");
+  assert.ok(VODAFONE_SOON_MAX_AGE_MS < 24 * 3_600_000);
 });

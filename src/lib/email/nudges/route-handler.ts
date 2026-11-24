@@ -7,6 +7,7 @@ import {
   runDayOneNudge,
   runReminderNudge,
   runSessionReminders,
+  runVodafoneSoonNudge,
   sendNudgePreview,
 } from "@/lib/email/nudges/run";
 import { getRequestOrigin } from "@/lib/request-origin";
@@ -26,7 +27,7 @@ const EMAIL_SHAPE = /^[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+$/;
  */
 export async function handleNudgeRequest(
   request: Request,
-  kind: "day-one" | "abandoned" | "reminder" | "session-reminder",
+  kind: "day-one" | "abandoned" | "reminder" | "session-reminder" | "vodafone-soon",
 ): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
@@ -73,7 +74,9 @@ export async function handleNudgeRequest(
         ? runDayOneNudge
         : kind === "reminder"
           ? runReminderNudge
-          : runSessionReminders;
+          : kind === "vodafone-soon"
+            ? runVodafoneSoonNudge
+            : runSessionReminders;
     const summary = await run({ origin, now: new Date(), dryRun: params.get("dry") === "1" });
     return NextResponse.json(summary);
   } catch (error) {

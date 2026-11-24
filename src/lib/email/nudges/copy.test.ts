@@ -9,6 +9,7 @@ import {
   nudgeLanguage,
   reminderEmail,
   sessionReminderEmail,
+  vodafoneSoonEmail,
 } from "./copy";
 import type { NudgeLanguage } from "./copy";
 
@@ -302,4 +303,17 @@ test("sessionReminderEmail: carries the one-click unsubscribe link and headers w
     "<https://sentencestep.com/api/unsubscribe?token=abc>",
   );
   assert.match(email.text, /^Hi,/);
+});
+
+test("vodafoneSoonEmail: every language is short, links to the upgrade page, promises nothing extra, and Arabic is gender-neutral", () => {
+  for (const language of LANGUAGES) {
+    const email = vodafoneSoonEmail({ origin: ORIGIN, displayName: null, language });
+    assert.ok(email.subject.length > 5 && email.subject.length < 70, language);
+    assert.ok(email.html.includes(`${ORIGIN}/upgrade`), language);
+    assert.ok(email.text.includes(`${ORIGIN}/upgrade`), language);
+    assert.ok(!FORBIDDEN.test(email.text), language);
+    assert.ok(!/\$|USD|EGP|جنيه/.test(email.text), `no price in ${language}`);
+  }
+  const ar = vodafoneSoonEmail({ origin: ORIGIN, displayName: null, language: "ar" });
+  assert.ok(!/تقدر|بدأتِ|بدأت |تحبين/.test(ar.text), "no gendered address");
 });

@@ -567,3 +567,77 @@ export function abandonedCheckoutEmail({
     unsubscribe,
   });
 }
+
+/**
+ * The ten-minute Vodafone Cash email (owner's request 2026-11-24): someone opened a Vodafone Cash
+ * order and ten minutes later it is still unpaid. Short and kind, a gentle "you can finish whenever
+ * you like"; written without gender (an account has none), and with no price, offer or countdown.
+ */
+interface VodafoneSoonCopy {
+  subject: string;
+  preview: string;
+  heading: string;
+  lead: string;
+  how: string;
+  reply: string;
+  cta: string;
+}
+
+const VODAFONE_SOON: Record<NudgeLanguage, VodafoneSoonCopy> = {
+  ar: {
+    subject: "يمكنك إكمال الدفع متى ما أحببت",
+    preview: "طلب فودافون كاش ما زال بانتظارك",
+    heading: "طلبك ما زال بانتظارك",
+    lead: "لاحظنا أن طلب تفعيل Premium عبر فودافون كاش لم يكتمل بعد، ربما نُسي أو شغلتك أمور أخرى.",
+    how: "يمكنك إكمال الدفع في أي وقت من صفحة الترقية، وتنفتح Premium تلقائياً عند وصول التحويل.",
+    reply: "وإن واجهتك أي مشكلة، ردّ على هذه الرسالة ونساعدك.",
+    cta: "أكمل الدفع",
+  },
+  es: {
+    subject: "Puedes completar el pago cuando quieras",
+    preview: "Tu pedido de Vodafone Cash sigue esperando",
+    heading: "Tu pedido sigue esperando",
+    lead: "Vimos que tu pedido de Premium con Vodafone Cash aún no se completó; quizá se olvidó o te surgió algo.",
+    how: "Puedes terminar el pago en cualquier momento desde la página de Premium, y Premium se activa solo cuando llega la transferencia.",
+    reply: "Si tuviste algún problema, responde a este correo y te ayudamos.",
+    cta: "Completar el pago",
+  },
+  tr: {
+    subject: "Ödemeyi istediğiniz zaman tamamlayabilirsiniz",
+    preview: "Vodafone Cash siparişiniz sizi bekliyor",
+    heading: "Siparişiniz sizi bekliyor",
+    lead: "Vodafone Cash ile Premium siparişinizin henüz tamamlanmadığını gördük; belki unutuldu ya da başka bir iş çıktı.",
+    how: "Ödemeyi istediğiniz zaman yükseltme sayfasından tamamlayabilirsiniz; transfer ulaşınca Premium kendiliğinden açılır.",
+    reply: "Bir sorun yaşadıysanız bu e-postayı yanıtlayın, yardımcı olalım.",
+    cta: "Ödemeyi tamamla",
+  },
+  en: {
+    subject: "You can finish your payment whenever you like",
+    preview: "Your Vodafone Cash order is still waiting",
+    heading: "Your order is still waiting",
+    lead: "We noticed your Premium order with Vodafone Cash hasn't been completed yet; maybe it slipped your mind or something came up.",
+    how: "You can finish the payment any time from the upgrade page, and Premium opens by itself when the transfer arrives.",
+    reply: "If anything got in the way, just reply to this email and we'll help.",
+    cta: "Finish paying",
+  },
+};
+
+export function vodafoneSoonEmail({
+  origin,
+  displayName,
+  language,
+  unsubscribe,
+}: NudgeEmailInput): EmailContent {
+  const v = VODAFONE_SOON[language];
+  return render(language, {
+    subject: v.subject,
+    preview: v.preview,
+    heading: v.heading,
+    paragraphs: [v.lead, v.how, v.reply],
+    cta: v.cta,
+    ctaUrl: `${origin}/upgrade`,
+    settingsUrl: `${origin}/learn/settings`,
+    displayName,
+    unsubscribe,
+  });
+}
