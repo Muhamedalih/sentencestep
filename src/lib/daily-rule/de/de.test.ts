@@ -13,9 +13,9 @@ import { diagnoseAny, normalizeAnswer, tokenize } from "@/lib/daily-rule/tokens"
 import { unitById } from "@/lib/daily-rule/units";
 
 const ARABIC = /[؀-ۿ]/;
-// While the course is being written: DE_ONLY=a1 checks only the rules whose id starts with de-a1.
-const ONLY = process.env.DE_ONLY ? `de-${process.env.DE_ONLY}` : "";
-const RULES = ALL_DE_RULES.filter((rule) => rule.id.startsWith(ONLY));
+// While the course is being written: DE_ONLY="de-a1" (a regular expression) checks only the matching rule ids.
+const ONLY = new RegExp(process.env.DE_ONLY ?? "");
+const RULES = ALL_DE_RULES.filter((rule) => ONLY.test(rule.id));
 
 test("the German syllabus: 150 rules, A1 45, A2–B1 60, B2 45, ids de-a1-01 ... de-b2-45 without gaps", () => {
   assert.equal(DE_SYLLABUS.length, 150);

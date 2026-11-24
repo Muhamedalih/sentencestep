@@ -96,7 +96,7 @@ const A2: readonly SyllabusEntry[] = [
   a2(9, "de-a2-dative", "the dative: dem / einem", "case", "de-dat-article"),
   a2(10, "de-a2-dative", "mir / dir / ihm / ihnen", "pronoun", "de-dat-pronoun"),
   a2(11, "de-a2-dative", "verbs with the dative", "case", "de-dat-verbs"),
-  a2(12, "de-a2-dative", "dative before accusative", "word-order", "none"),
+  a2(12, "de-a2-dative", "two objects: who gets what", "word-order", "none"),
   a2(13, "de-a2-dative", "prepositions that take the dative", "preposition", "de-prep-dat-article"),
   a2(14, "de-a2-dative", "stehen / stellen, liegen / legen", "preposition", "none"),
   a2(15, "de-a2-dative", "possessives in the dative", "determiner", "de-dat-possessive"),
