@@ -392,6 +392,7 @@ export function WordGroupCard({
       <motion.div variants={fadeInUp} className="group relative">
         <Link
           href={`/learn/word-lists/${group.id}`}
+          data-upgrade-next={`/learn/word-lists/${group.id}`}
           aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
           className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-[14px] outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
@@ -421,6 +422,7 @@ export function WordGroupCard({
       <motion.div variants={fadeInUp}>
         <Link
           href={`/learn/word-lists/${group.id}`}
+          data-upgrade-next={`/learn/word-lists/${group.id}`}
           aria-label={t.premium.lockedContentAriaLabel.replace("{title}", group.title)}
           className="focus-visible:ring-ring focus-visible:ring-offset-background block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >

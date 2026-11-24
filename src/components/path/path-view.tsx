@@ -198,6 +198,7 @@ function StationRow({
     <li>
       <Link
         href={`/learn/normal/${lesson.id}`}
+        data-upgrade-next={state === "locked" ? `/learn/normal/${lesson.id}` : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-colors",
           finished

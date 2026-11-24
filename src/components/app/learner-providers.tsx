@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { UpgradeModalHost } from "@/components/billing/upgrade-modal-host";
 import { AuthUserProvider } from "@/components/providers/auth-user-provider";
 import { FeatureProvider } from "@/components/providers/feature-provider";
 import { LessonCompletionThemeProvider } from "@/components/providers/lesson-completion-theme-provider";
@@ -91,7 +92,11 @@ export async function LearnerProviders({
             <TypingSoundSettingsProvider settings={typingSoundSettings}>
               <LessonFontSettingsProvider settings={lessonFontSettings}>
                 <LessonCompletionThemeProvider theme={lessonCompletionTheme}>
-                  <PronunciationSettingsProvider>{children}</PronunciationSettingsProvider>
+                  <PronunciationSettingsProvider>
+                    {children}
+                    {/* The upgrade pop-up (permission upgradeModal): listens for presses on locked cards and plans links. */}
+                    {!asGuest && <UpgradeModalHost />}
+                  </PronunciationSettingsProvider>
                 </LessonCompletionThemeProvider>
               </LessonFontSettingsProvider>
             </TypingSoundSettingsProvider>

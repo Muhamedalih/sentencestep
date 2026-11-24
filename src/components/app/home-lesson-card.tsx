@@ -41,6 +41,7 @@ export function HomeLessonCard({
     <motion.div variants={fadeInUp} className="group h-full">
       <Link
         href={`/learn/normal/${lesson.id}`}
+        data-upgrade-next={locked ? `/learn/normal/${lesson.id}` : undefined}
         aria-label={
           locked ? t.premium.lockedContentAriaLabel.replace("{title}", lesson.title) : lesson.title
         }
