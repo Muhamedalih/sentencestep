@@ -21,7 +21,12 @@ import type { DailyQuestsPayload } from "@/lib/features/quests";
 import { isTodayMode, splitToday, testCardState } from "@/lib/today/home-layout";
 import { requiredQuests, sentenceTestAvailable } from "@/lib/today/quests";
 import { ruleRowLinks, ruleRowTarget } from "@/lib/daily-rule/home-row";
-import { hasRuleLadder, hasRuleToTeach, ruleById } from "@/lib/daily-rule/levels";
+import {
+  hasRuleLadder,
+  hasRuleToTeach,
+  languageOfRuleId,
+  ruleById,
+} from "@/lib/daily-rule/levels";
 import { getLessonSummaries } from "@/lib/content";
 import { loadTodayStoryDone } from "@/lib/today/load";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
@@ -82,7 +87,10 @@ async function dailyRuleRow(open: boolean): Promise<RuleRowState | undefined> {
     ...ruleRowLinks(target, answeredToday),
     levelLabel: target.levelLabel,
     answeredToday,
-    libraryCount: states.filter((row) => ruleById(row.ruleId) !== undefined).length,
+    // English Home: German rules (permission germanTrack) live in the same table and are not counted here.
+    libraryCount: states.filter(
+      (row) => languageOfRuleId(row.ruleId) === "en" && ruleById(row.ruleId) !== undefined,
+    ).length,
     libraryHref: "/learn/rules",
   };
 }

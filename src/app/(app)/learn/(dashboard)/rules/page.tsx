@@ -8,6 +8,7 @@ import { buildLibrary } from "@/lib/daily-rule/library";
 import { TIMEZONE_COOKIE, localISODateInTimeZone } from "@/lib/features/learner-date";
 import { getEffectiveFeatures } from "@/lib/features/queries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getLearnLanguage } from "@/lib/learn-language-server";
 import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { getCurrentUser } from "@/lib/supabase/auth";
@@ -25,10 +26,11 @@ export const metadata: Metadata = { title: "My rules" };
  * missing learner_rules table (the migration not applied yet) reads as "no rules yet".
  */
 export default async function RulesPage() {
-  const [features, user, locale] = await Promise.all([
+  const [features, user, locale, language] = await Promise.all([
     getEffectiveFeatures(),
     getCurrentUser(),
     getLocale(),
+    getLearnLanguage(),
   ]);
   if (!features.rollouts.dailyRule || !features.rollouts.todaySession || !user) redirect("/learn");
 
@@ -50,9 +52,11 @@ export default async function RulesPage() {
       library={buildLibrary({
         states,
         today: todayISO,
-        level: progress?.startingLevel ?? 1,
+        // The German course starts at A1 for everyone: the starting level is an English one.
+        level: language === "de" ? 1 : (progress?.startingLevel ?? 1),
         locale,
         preview: admin,
+        language,
       })}
       locale={locale}
       preview={admin}

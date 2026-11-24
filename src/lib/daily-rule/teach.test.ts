@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ALL_RULES } from "@/lib/daily-rule/levels";
+import { ALL_DE_RULES, ALL_RULES } from "@/lib/daily-rule/levels";
 import { parseMarked, stripMarks } from "@/lib/daily-rule/marks";
 import { TEACH, inLocale, teachFor, type Lines } from "@/lib/daily-rule/teach";
 import { SUPPORT_LOCALES } from "@/lib/i18n/locales";
@@ -20,13 +20,16 @@ function everyLine(): { where: string; lines: Lines }[] {
 }
 
 test("every rule on every ladder has its teaching, and nothing else is taught", () => {
-  assert.deepEqual(Object.keys(TEACH).sort(), ALL_RULES.map((rule) => rule.id).sort());
+  assert.deepEqual(
+    Object.keys(TEACH).sort(),
+    [...ALL_RULES, ...ALL_DE_RULES].map((rule) => rule.id).sort(),
+  );
   assert.equal(teachFor("a1-01")?.right, "She [is] at home.");
   assert.equal(teachFor("nope"), undefined);
 });
 
 test("the right and the wrong sentence of every rule differ, and each shows its part", () => {
-  for (const rule of ALL_RULES) {
+  for (const rule of [...ALL_RULES, ...ALL_DE_RULES]) {
     const teach = TEACH[rule.id]!;
     assert.notEqual(
       stripMarks(teach.right),

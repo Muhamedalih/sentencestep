@@ -9,6 +9,7 @@
  */
 
 import type { SupportLocale } from "@/lib/i18n/locales";
+import type { TargetLanguage } from "@/lib/learn-language";
 import { difficultyForLevel, type Difficulty } from "@/lib/levels";
 
 import type { RuleSpec } from "./ladder";
@@ -90,10 +91,13 @@ export function buildLibrary(input: {
   locale: SupportLocale | null;
   /** An admin's view: every level is on the map, and every rule carries its idea whether it is met or not. */
   preview?: boolean;
+  /** The language of the course (English when absent). */
+  language?: TargetLanguage;
 }): Library {
+  const language = input.language ?? "en";
   const preview = input.preview === true;
   const states = new Map(input.states.map((row) => [row.ruleId, row] as const));
-  const teaching = teachingLevel(input.level, new Set(states.keys()));
+  const teaching = teachingLevel(input.level, new Set(states.keys()), language);
 
   const status = (rule: RuleSpec): LibraryStatus => {
     const state = states.get(rule.id)!;
@@ -111,7 +115,7 @@ export function buildLibrary(input: {
   const levels: LibraryLevel[] = [];
 
   for (const number of LEVEL_NUMBERS) {
-    const ladder = ladderForLevel(number);
+    const ladder = ladderForLevel(number, language);
     if (!ladder) continue;
     const metHere = ladder.filter((rule) => states.has(rule.id));
     met += metHere.length;

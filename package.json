@@ -43,7 +43,7 @@
     "test:i18n": "tsx --test src/lib/i18n/locales.test.ts src/lib/i18n/format-date.test.ts src/lib/i18n/format-days.test.ts src/lib/i18n/format-count.test.ts src/lib/i18n/format-minutes.test.ts src/lib/i18n/content-translations.test.ts src/lib/i18n/dictionary/parity.test.ts src/components/marketing/legal-documents.test.ts src/lib/i18n/dictionary/gate-copy.test.ts",
     "test:features": "tsx --test src/lib/features/config.test.ts src/lib/features/dictation.test.ts src/lib/peek-glyph.test.ts src/lib/features/from-memory.test.ts src/lib/features/streak-freeze.test.ts src/lib/features/quests.test.ts src/lib/features/badges.test.ts src/lib/features/daily-session.test.ts src/lib/features/learner-date.test.ts src/lib/session-end/session-end.test.ts src/lib/session-end/reminder.test.ts src/lib/rollouts/config.test.ts src/lib/today/plan.test.ts src/lib/today/next.test.ts src/lib/today/end-state.test.ts src/lib/today/quests.test.ts src/lib/today/session-words.test.ts src/lib/today/home-layout.test.ts src/lib/today/run-state.test.ts src/lib/today/fit-zoom.test.ts src/lib/rollouts/preview.test.ts src/lib/home-plan/plan.test.ts src/lib/cards/anki.test.ts",
     "test:translation": "tsx --test src/lib/translation/validate.test.ts src/lib/translation/completeness.test.ts src/lib/translation/candidates.test.ts src/lib/translation/generate.test.ts",
-    "test:daily-rule": "tsx --test src/lib/daily-rule/*.test.ts",
+    "test:daily-rule": "tsx --test src/lib/daily-rule/*.test.ts src/lib/daily-rule/de/*.test.ts",
     "test:video": "tsx --test src/lib/video-dictation/video-dictation.test.ts",
     "test:word-drop": "tsx --test src/lib/word-drop/*.test.ts",
     "test:public-pages": "tsx --test src/lib/public-pages/*.test.ts",

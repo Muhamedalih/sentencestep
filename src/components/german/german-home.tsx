@@ -9,7 +9,9 @@ import { fetchProgressCached } from "@/lib/progress/cached";
 import { todayLocalISODate } from "@/lib/progress/streak";
 import { localISODateInTimeZone, TIMEZONE_COOKIE } from "@/lib/features/learner-date";
 import { fetchWordProgressAction } from "@/lib/word-progress/actions";
+import { ALL_DE_RULES } from "@/lib/daily-rule/levels";
 import { GERMAN_ID_PREFIX } from "@/lib/learn-language";
+import { fetchLearnerRuleStates } from "@/lib/supabase/queries/learner-rules";
 import type { SupportLocale } from "@/lib/i18n/locales";
 
 type Row = { href: string; title: string; subtitle?: string; done: number; total: number };
@@ -36,7 +38,7 @@ export async function GermanHome({
   const arabic = locale === "ar";
   const timeZone = (await cookies()).get(TIMEZONE_COOKIE)?.value;
   const learnerToday = localISODateInTimeZone(timeZone);
-  const [lessons, stories, groups, passages, progress, passageProgress, wordProgress] =
+  const [lessons, stories, groups, passages, progress, passageProgress, wordProgress, ruleStates] =
     await Promise.all([
       getDraftLessonSummaries("normal", locale ?? undefined, "de").catch(() => []),
       getDraftLessonSummaries("stories", locale ?? undefined, "de").catch(() => []),
@@ -45,6 +47,8 @@ export async function GermanHome({
       userId ? fetchProgressCached(todayLocalISODate()).catch(() => undefined) : undefined,
       userId ? fetchPassageProgress(userId) : Promise.resolve([]),
       userId ? fetchWordProgressAction().catch(() => ({ completedWordIds: [] })) : undefined,
+      // The German rules the learner has met (the rule table also holds their English ones: ids start with "de-").
+      userId ? fetchLearnerRuleStates(userId).catch(() => []) : Promise.resolve([]),
     ]);
   // Words typed correctly in the German lists only: German word ids all start with "de-".
   const doneWords = new Set(
@@ -81,6 +85,8 @@ export async function GermanHome({
   const nextPassage = pickNext(passages, donePassages);
   const nextGroup = groups.find((g) => !finishedGroups.includes(g)) ?? groups[0];
 
+  const metRules = ruleStates.filter((row) => row.ruleId.startsWith(GERMAN_ID_PREFIX)).length;
+
   const rows: { label: string; row: Row | undefined }[] = [
     {
       label: arabic ? "الدرس التالي" : "Next lesson",
@@ -110,6 +116,30 @@ export async function GermanHome({
         subtitle: nextGroup.titleAr,
         done: finishedGroups.length,
         total: groups.length,
+      },
+    },
+    {
+      label: arabic ? "القاعدة اليومية" : "Rule of the day",
+      row: {
+        href: "/learn/today/rule?daily=1",
+        title: "Regel des Tages",
+        subtitle: arabic
+          ? "قاعدة جديدة كل يوم بالشرح، ثم تمرين قصير"
+          : "One new rule a day, then a short practice",
+        done: metRules,
+        total: ALL_DE_RULES.length,
+      },
+    },
+    {
+      label: arabic ? "قواعدي" : "My rules",
+      row: {
+        href: "/learn/rules",
+        title: "Grammatik",
+        subtitle: arabic
+          ? "كل قواعد الألمانية الـ150 في مكان واحد"
+          : "All 150 German rules in one place",
+        done: metRules,
+        total: ALL_DE_RULES.length,
       },
     },
     {

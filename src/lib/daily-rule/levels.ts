@@ -5,13 +5,15 @@
  * no ladder has no rule of the day yet.
  */
 
+import { DE_A1_LADDER, DE_A2_LADDER, DE_B2_LADDER } from "./de/ladders";
 import { A1_LADDER, type RuleLevel, type RuleSpec } from "./ladder";
 import { A2_LADDER, B2_LADDER } from "./ladder-higher";
 
-const LADDERS: Partial<Record<number, readonly RuleSpec[]>> = {
-  1: A1_LADDER,
-  2: A2_LADDER,
-  3: B2_LADDER,
+import { GERMAN_ID_PREFIX, type TargetLanguage } from "@/lib/learn-language";
+
+const LADDERS: Record<TargetLanguage, Partial<Record<number, readonly RuleSpec[]>>> = {
+  en: { 1: A1_LADDER, 2: A2_LADDER, 3: B2_LADDER },
+  de: { 1: DE_A1_LADDER, 2: DE_A2_LADDER, 3: DE_B2_LADDER },
 };
 
 /** The short level name on the card and on Home's row. */
@@ -22,12 +24,20 @@ export const MAX_WORDS_BY_LEVEL: Partial<Record<number, number>> = { 1: 14, 2: 1
 /** The learner's level (1 = A1, 2 = A2–B1, 3 = B2) that a rule's own level belongs to. */
 export const LEVEL_NUMBER: Record<RuleLevel, number> = { A1: 1, "A2-B1": 2, B2: 3 };
 
-export function ladderForLevel(level: number): readonly RuleSpec[] | null {
-  return LADDERS[level] ?? null;
+/** The language a rule id belongs to: German ids start with "de-". */
+export function languageOfRuleId(id: string): TargetLanguage {
+  return id.startsWith(GERMAN_ID_PREFIX) ? "de" : "en";
 }
 
-export function hasRuleLadder(level: number): boolean {
-  return ladderForLevel(level) !== null;
+export function ladderForLevel(
+  level: number,
+  language: TargetLanguage = "en",
+): readonly RuleSpec[] | null {
+  return LADDERS[language][level] ?? null;
+}
+
+export function hasRuleLadder(level: number, language: TargetLanguage = "en"): boolean {
+  return ladderForLevel(level, language) !== null;
 }
 
 /**
@@ -35,10 +45,14 @@ export function hasRuleLadder(level: number): boolean {
  * (the course goes on to A2–B1 after A1, and to B2 after A2–B1; B2 is the last). `met` holds the ids of the
  * rules the learner has met.
  */
-export function teachingLevel(level: number, met: ReadonlySet<string>): number {
+export function teachingLevel(
+  level: number,
+  met: ReadonlySet<string>,
+  language: TargetLanguage = "en",
+): number {
   let current = level;
   while (current < 3) {
-    const ladder = ladderForLevel(current);
+    const ladder = ladderForLevel(current, language);
     if (!ladder || ladder.some((rule) => !met.has(rule.id))) break;
     current += 1;
   }
@@ -46,23 +60,43 @@ export function teachingLevel(level: number, met: ReadonlySet<string>): number {
 }
 
 /** Whether a learner at this level still has a rule to be taught (some rule of their teaching level is not met). */
-export function hasRuleToTeach(level: number, met: ReadonlySet<string>): boolean {
-  const ladder = ladderForLevel(teachingLevel(level, met));
+export function hasRuleToTeach(
+  level: number,
+  met: ReadonlySet<string>,
+  language: TargetLanguage = "en",
+): boolean {
+  const ladder = ladderForLevel(teachingLevel(level, met, language), language);
   return ladder !== null && ladder.some((rule) => !met.has(rule.id));
 }
 
-/** Every rule of every level: a stored answer is checked against this list. */
+/** Every English rule of every level: a stored answer is checked against this list. */
 export const ALL_RULES: readonly RuleSpec[] = [...A1_LADDER, ...A2_LADDER, ...B2_LADDER];
 
-export function ruleById(id: string): RuleSpec | undefined {
-  return ALL_RULES.find((rule) => rule.id === id);
+/** Every German rule of every level. */
+export const ALL_DE_RULES: readonly RuleSpec[] = [
+  ...DE_A1_LADDER,
+  ...DE_A2_LADDER,
+  ...DE_B2_LADDER,
+];
+
+/** Every rule of one language's course, in the order the course opens them. */
+export function rulesOf(language: TargetLanguage): readonly RuleSpec[] {
+  return language === "de" ? ALL_DE_RULES : ALL_RULES;
 }
 
-/** The rule before and the rule after one in the order of the whole course (A1, then A2–B1, then B2): the admin preview's arrows. */
+const BY_ID = new Map([...ALL_RULES, ...ALL_DE_RULES].map((rule) => [rule.id, rule] as const));
+
+/** The rule with that id, in either course. */
+export function ruleById(id: string): RuleSpec | undefined {
+  return BY_ID.get(id);
+}
+
+/** The rule before and the rule after one in the order of its own course (A1, then A2–B1, then B2): the admin preview's arrows. */
 export function neighbourRules(id: string): { previous?: RuleSpec; next?: RuleSpec } {
-  const index = ALL_RULES.findIndex((rule) => rule.id === id);
+  const list = rulesOf(languageOfRuleId(id));
+  const index = list.findIndex((rule) => rule.id === id);
   if (index < 0) return {};
-  const previous = ALL_RULES[index - 1];
-  const next = ALL_RULES[index + 1];
+  const previous = list[index - 1];
+  const next = list[index + 1];
   return { ...(previous ? { previous } : {}), ...(next ? { next } : {}) };
 }
