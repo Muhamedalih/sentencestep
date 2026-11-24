@@ -4,7 +4,7 @@
  * (a container query, not the window), so a narrow window and a phone get the same layout.
  */
 export const WORD_DROP_CSS = `
-.wd-root{background:var(--wd-bg);--wd-ease:cubic-bezier(.2,.7,.2,1)}
+.wd-root{background:linear-gradient(var(--wd-bg),var(--wd-bg) 40%,var(--wd-bg2));--wd-ease:cubic-bezier(.2,.7,.2,1)}
 .wd-stage{container-name:wd;container-type:inline-size;position:relative;height:100%;max-width:1160px;margin:0 auto;display:flex;flex-direction:column;min-height:0}
 .wd-stage svg{display:block}
 .wd-eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--wd-mute)}
@@ -13,8 +13,9 @@ export const WORD_DROP_CSS = `
 .wd-xbtn[aria-pressed="false"]{opacity:.6}
 .wd-btn{display:grid;place-items:center;min-height:54px;border-radius:16px;border:1px solid var(--wd-line);background:var(--wd-bg);font-size:15px;font-weight:700;padding:0 14px;transition:border-color .15s,background .15s,color .15s}
 .wd-btn:hover{border-color:var(--wd-mute)}
-.wd-btn.main{border-color:var(--wd-acc);color:var(--wd-acc);font-size:17px}
-.wd-btn.main:hover,.wd-btn.main:active{background:var(--wd-acc);color:#000}
+.wd-btn.main{border-color:var(--wd-acc);background:var(--wd-acc);color:oklch(.16 .02 265);font-size:17px;font-weight:800;box-shadow:0 0 28px var(--wd-acc-a),inset 0 1px 0 rgb(255 255 255/.4)}
+.wd-btn.main:hover{box-shadow:0 0 38px oklch(.72 .15 262/.45),inset 0 1px 0 rgb(255 255 255/.4)}
+.wd-btn.main:active{transform:translateY(1px)}
 .wd-btn:disabled{opacity:.45}
 
 /* ---------- play ---------- */
@@ -58,12 +59,13 @@ export const WORD_DROP_CSS = `
 
 .wd-tile{position:absolute;left:0;top:0;will-change:transform}
 .wd-card{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15em;border-radius:.8em;background:var(--wd-tile);color:var(--wd-tile-ink);padding:.5em .9em .45em;text-align:center;overflow:visible;
-  box-shadow:inset 0 1px 0 rgb(255 255 255/.75),0 8px 18px -10px oklch(0 0 0/.7),0 0 0 2px oklch(.65 .21 25/calc(var(--wd-d,0)*.9));
+  background-image:linear-gradient(#fff,transparent 85%);
+  box-shadow:0 12px 24px -12px oklch(0 0 0/.75),0 0 22px oklch(.72 .15 262/.22),0 0 0 2px oklch(.65 .21 25/calc(var(--wd-d,0)*.9));
   animation:wd-tin .4s var(--wd-ease) backwards;transition:transform .16s var(--wd-ease),opacity .22s,box-shadow .2s}
 @keyframes wd-tin{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
 .wd-field.has-lock .wd-tile:not(.lock) .wd-card{opacity:.5}
 .wd-tile.lock .wd-card{transform:scale(1.05)}
-.wd-tile.boss .wd-card{box-shadow:inset 0 1px 0 rgb(255 255 255/.75),0 0 0 2px var(--wd-acc),0 8px 18px -10px oklch(0 0 0/.7)}
+.wd-tile.boss .wd-card{box-shadow:0 12px 24px -12px oklch(0 0 0/.75),0 0 0 2px var(--wd-acc),0 0 28px oklch(.72 .15 262/.5)}
 .wd-x3{position:absolute;top:-9px;right:-6px;background:var(--wd-acc);color:#000;border-radius:999px;font-size:11px;font-weight:800;padding:1px 8px}
 .wd-w{display:flex;font-size:1em;font-weight:800;line-height:1.15;letter-spacing:.01em;direction:ltr}
 .wd-w i,.wd-mask i{font-style:normal;position:relative;transition:color .12s}
@@ -86,7 +88,7 @@ export const WORD_DROP_CSS = `
 .wd-hint{min-height:1.1em;font-size:.65em;font-weight:600;color:var(--wd-tile-mute)}
 
 .wd-typer{grid-column:1;grid-row:3;position:relative;padding:12px 22px 20px;text-align:center}
-.wd-typed{position:relative;height:50px;display:flex;justify-content:center;align-items:center;font-size:36px;font-weight:800;letter-spacing:.04em;direction:ltr}
+.wd-typed{position:relative;height:60px;width:min(100%,460px);margin:0 auto;display:flex;justify-content:center;align-items:center;font-size:34px;font-weight:800;letter-spacing:.04em;direction:ltr;border:2px solid var(--wd-acc);border-radius:18px;background:oklch(.12 .005 265/.72);box-shadow:0 0 30px var(--wd-acc-a)}
 .wd-typed .c{display:inline-block}
 .wd-typed .c.n{animation:wd-pop .14s var(--wd-ease)}
 .wd-typed .ph{font-size:20px;font-weight:700;color:oklch(.42 .015 265);letter-spacing:0;margin-inline-start:6px}
@@ -125,10 +127,12 @@ export const WORD_DROP_CSS = `
 /* ---------- start ---------- */
 .wd-top{display:flex;justify-content:space-between;align-items:center;padding:20px 22px 0}
 .wd-st{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);grid-template-rows:auto 1fr;grid-template-areas:"l r" "f r";column-gap:56px;padding:32px 52px 30px;overflow:auto}
-.wd-st-left{grid-area:l}
+.wd-st-left{grid-area:l;display:flex;flex-direction:column;align-items:flex-start}
+.wd-logo{margin:0;font-size:88px;line-height:1;font-weight:800;letter-spacing:-.015em;color:#fff;text-shadow:0 0 44px oklch(.72 .15 262/.38)}
+.wd-logo span{color:var(--wd-acc)}
 .wd-st-right{grid-area:r}
 .wd-st-foot{grid-area:f;align-self:end}
-.wd-st-left h1{margin:6px 0 14px;font-size:62px;line-height:1.12;font-weight:800;text-align:right}
+.wd-st-left h1{margin:14px 0 12px;font-size:38px;line-height:1.2;font-weight:700;text-align:right;color:oklch(.85 .02 265)}
 .wd-st-left h1 span{color:var(--wd-acc)}
 .wd-st-left p.src{margin:0;color:var(--wd-mute);text-align:right;font-size:14px}
 .wd-st-foot{display:flex;flex-direction:column;gap:10px;max-width:380px;width:100%}
@@ -206,7 +210,8 @@ export const WORD_DROP_CSS = `
   .wd-st{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;grid-template-areas:"l" "r" "f";row-gap:14px;padding:12px 20px 0}
   .wd-st-foot{position:sticky;bottom:0;align-self:auto;padding:10px 0 18px;background:var(--wd-bg)}
   .wd-en{grid-template-columns:minmax(0,1fr);gap:20px;padding:18px 20px 16px}
-  .wd-st-left h1{font-size:36px;margin:8px 0}
+  .wd-logo{font-size:54px}
+  .wd-st-left h1{font-size:24px;margin:8px 0}
   .wd-st-left p.src{display:none}
   .wd-st-foot{max-width:none}
   .wd-mini{width:96px;height:60px}

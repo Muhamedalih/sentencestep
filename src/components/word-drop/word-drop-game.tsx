@@ -74,9 +74,11 @@ import { WORD_DROP_CSS } from "./word-drop-styles";
 
 /** The page's own look: a deep ink board, one cobalt accent, red only for danger, pale word tiles. */
 const PALETTE = {
-  "--wd-bg": "oklch(0.14 0.016 265)",
-  "--wd-board": "oklch(0.175 0.022 265)",
-  "--wd-line": "oklch(0.27 0.015 265)",
+  // Graphite: a near-neutral dark grey, so the cobalt accent is the only colour on the page.
+  "--wd-bg": "oklch(0.145 0.004 265)",
+  "--wd-bg2": "oklch(0.2 0.007 265)",
+  "--wd-board": "oklch(0.175 0.006 265)",
+  "--wd-line": "oklch(0.28 0.008 265)",
   "--wd-mute": "oklch(0.66 0.01 265)",
   "--wd-acc": "oklch(0.72 0.15 262)",
   "--wd-acc-ink": "oklch(0.45 0.17 262)",
@@ -93,7 +95,8 @@ const SILENT_CLIP =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
 /** How fast a round runs: seconds a tile takes to cross the screen at speed 1, the gap between tiles (a multiple of the usual), and how many can be on screen. Sentences are slower and fewer: they are longer to type. */
 const PACE: Record<WordDropMode, { fall: number; gap: number; max: number }> = {
-  easy: { fall: 22, gap: 1, max: MAX_ON_SCREEN },
+  // Easy falls 15% faster than it did at 22 s. The gap between tiles is unchanged on purpose: a quicker spawn would let a round hold more words than the server's score check (MAX_ROUND_WORDS) allows.
+  easy: { fall: 22 / 1.15, gap: 1, max: MAX_ON_SCREEN },
   mid: { fall: 22, gap: 1, max: MAX_ON_SCREEN },
   // Hard also needs a moment to hear the word and play it again.
   hard: { fall: 24, gap: 1.15, max: 3 },
@@ -1034,13 +1037,16 @@ export function WordDropGame({
         {screen === "start" && (
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="wd-top">
-              <span className="wd-eyebrow">Word Drop</span>
+              <span aria-hidden="true" />
               <Link href="/learn" aria-label={strings.exit} className="wd-xbtn">
                 <X className="size-4" aria-hidden="true" />
               </Link>
             </div>
             <div className="wd-st">
               <div className="wd-st-left">
+                <p className="wd-logo" dir="ltr" aria-label="Word Drop">
+                  word <span>drop</span>
+                </p>
                 <h1 dir="auto">
                   {seed?.kind === "daily"
                     ? strings.dailyHeadline1
